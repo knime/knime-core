@@ -57,15 +57,9 @@ import org.junit.experimental.theories.Theories;
 import org.junit.experimental.theories.Theory;
 import org.junit.runner.RunWith;
 import org.knime.core.data.DataRow;
-import org.knime.core.data.join.JoinImplementation.JoinProgressMonitor;
-import org.knime.core.data.join.JoinSpecification.OutputRowOrder;
-import org.knime.core.data.join.JoinerFactory.JoinAlgorithm;
-import org.knime.core.data.join.results.JoinContainer;
-import org.knime.core.data.join.results.JoinResults.OutputCombined;
-import org.knime.core.data.join.results.JoinResults.OutputMode;
-import org.knime.core.data.join.results.JoinResults.OutputSplit;
-import org.knime.core.data.join.results.LeftRightSortedJoinContainer;
-import org.knime.core.data.join.results.UnorderedJoinContainer;
+import org.knime.core.data.join.results.JoinResult;
+import org.knime.core.data.join.results.JoinResult.OutputCombined;
+import org.knime.core.data.join.results.JoinResult.OutputSplit;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.InvalidSettingsException;
@@ -108,33 +102,20 @@ public class BlockHashJoinTest extends JoinTest {
         // consider in memory and partial in memory (on disk doesn't make a difference compared to partial in memory)
         assumeThat(executionMode, is(not(Execution.ON_DISK)));
 
-        System.out.println(String.format("getSingleTable %-15s %-15s %-15s", joinMode, order.m_rowOrder, executionMode));
+        System.out.println(String.format("getSingleTable %-15s %-10s %-10s %-15s", input, joinMode.name(),
+            order.m_rowOrder.name(), executionMode.name()));
 
         // create the joiner
         JoinSpecification joinSpec = input.getJoinSpecification(joinMode, order.m_rowOrder);
-
-        // only to get the progress monitor
-        HybridHashJoin hybrid = (HybridHashJoin)JoinerFactory.JoinAlgorithm.HYBRID_HASH.getFactory().
-                create(joinSpec, JoinTestInput.EXEC);
-        JoinProgressMonitor mon = hybrid.m_progress;
-        mon.m_assumeMemoryLow = executionMode != Execution.IN_MEMORY;
-
-        JoinContainer results = order.m_rowOrder == OutputRowOrder.ARBITRARY
-            ? UnorderedJoinContainer.create(OutputMode.OutputCombined, JoinAlgorithm.AUTO.getFactory().create(joinSpec, JoinTestInput.EXEC), JoinTestInput.EXEC, false, false)
-            : LeftRightSortedJoinContainer.create(OutputMode.OutputCombined, JoinAlgorithm.AUTO.getFactory().create(joinSpec, JoinTestInput.EXEC), JoinTestInput.EXEC, false, false);
-
-        // test data would need to be in auxiliary format with annotated row offsets.
-        // only relevant when splitting the join problem in several independent join problems.
-        boolean extractRowOffsets = false;
-        BlockHashJoin blockHashJoin = new BlockHashJoin(JoinTestInput.EXEC, mon, joinSpec, extractRowOffsets);
+        BlockHashJoin blockHashJoin = new BlockHashJoin(joinSpec, JoinTestInput.EXEC);
+        blockHashJoin.getProgress().m_assumeMemoryLow = executionMode != Execution.IN_MEMORY;
 
         // do the join
-        blockHashJoin.join(results);
-        BufferedDataTable result = ((OutputCombined)results).getTable();
+        JoinResult<OutputCombined> results = blockHashJoin.joinOutputCombined();
 
         // compare to expected results
         DataRow[] expected = input.ordered(joinMode, order.m_rowOrder);
-        order.m_validator.accept(result, expected);
+        order.m_validator.accept(results.getResults().getTable(), expected);
 
     }
 
@@ -155,32 +136,20 @@ public class BlockHashJoinTest extends JoinTest {
         // consider in memory and partial in memory (on disk doesn't make a difference compared to partial in memory)
         assumeThat(executionMode, is(not(Execution.ON_DISK)));
 
-        System.out.println(String.format("separateOutput %-15s %-15s %-15s", joinMode, order.m_rowOrder, executionMode));
+        System.out.println(String.format("getSingleTable %-15s %-10s %-10s %-15s", input, joinMode.name(),
+            order.m_rowOrder.name(), executionMode.name()));
 
         // create the joiner
         JoinSpecification joinSpec = input.getJoinSpecification(joinMode, order.m_rowOrder);
-
-        // only to get the progress monitor
-        HybridHashJoin hybrid = (HybridHashJoin)JoinerFactory.JoinAlgorithm.HYBRID_HASH.getFactory().
-                create(joinSpec, JoinTestInput.EXEC);
-        JoinProgressMonitor mon = hybrid.m_progress;
-        mon.m_assumeMemoryLow = executionMode != Execution.IN_MEMORY;
-
-        // test data would need to be in auxiliary format with annotated row offsets.
-        // only relevant when splitting the join problem in several independent join problems.
-        boolean extractRowOffsets = false;
-        JoinContainer container = order.m_rowOrder == OutputRowOrder.ARBITRARY
-            ? UnorderedJoinContainer.create(OutputMode.OutputSplit, JoinAlgorithm.AUTO.getFactory().create(joinSpec, JoinTestInput.EXEC), JoinTestInput.EXEC, extractRowOffsets, extractRowOffsets)
-            : LeftRightSortedJoinContainer.create(OutputMode.OutputSplit, JoinAlgorithm.AUTO.getFactory().create(joinSpec, JoinTestInput.EXEC), JoinTestInput.EXEC, extractRowOffsets, extractRowOffsets);
+        BlockHashJoin blockHashJoin = new BlockHashJoin(joinSpec, JoinTestInput.EXEC);
+        blockHashJoin.getProgress().m_assumeMemoryLow = executionMode != Execution.IN_MEMORY;
 
         // do the join
-        BlockHashJoin blockHashJoin = new BlockHashJoin(JoinTestInput.EXEC, mon, joinSpec, extractRowOffsets);
-        blockHashJoin.join(container);
-        OutputSplit results = (OutputSplit)container;
+        JoinResult<OutputSplit> results = blockHashJoin.joinOutputSplit();
 
         if(joinMode.m_retainMatches) {
             DataRow[] expectedMatches = input.ordered(JoinMode.INNER, order.m_rowOrder);
-            BufferedDataTable actual = results.getMatches();
+            BufferedDataTable actual = results.getResults().getMatches();
             order.m_validator.accept(actual, expectedMatches);
         }
 
@@ -188,14 +157,14 @@ public class BlockHashJoinTest extends JoinTest {
             // validate left unmatched rows by comparing the produced left unmatched rows with the expected join result
             // for a left antijoin (only left unmatched rows)
             DataRow[] expectedLeft = input.leftOuter(order.m_rowOrder);
-            BufferedDataTable actual = results.getLeftOuter();
+            BufferedDataTable actual = results.getResults().getLeftOuter();
             order.m_validator.accept(actual, expectedLeft);
         }
 
         if (joinMode.m_retainRightUnmatched) {
             // validate right unmatched rows
             DataRow[] expectedRight = input.rightOuter(order.m_rowOrder);
-            BufferedDataTable actual = results.getRightOuter();
+            BufferedDataTable actual = results.getResults().getRightOuter();
             order.m_validator.accept(actual, expectedRight);
         }
 

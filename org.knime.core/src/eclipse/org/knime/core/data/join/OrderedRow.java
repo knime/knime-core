@@ -48,9 +48,6 @@
  */
 package org.knime.core.data.join;
 
-import java.util.function.ObjLongConsumer;
-import java.util.function.ToLongFunction;
-
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -60,10 +57,9 @@ import org.knime.core.data.DataTableSpecCreator;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.LongCell;
-import org.knime.core.data.join.HybridHashJoin.DiskBackedHashPartitions;
 import org.knime.core.data.join.JoinSpecification.OutputRowOrder;
-import org.knime.core.data.join.results.LeftRightSortedJoinContainer;
-import org.knime.core.data.join.results.NWayMergeContainer;
+import org.knime.core.data.join.results.JoinResult.RowHandlerCancelable;
+import org.knime.core.data.join.results.LeftRightSorted;
 
 /**
  * Tools to add a long column to tables. This is used to annotate the offset of a row in its source table to the row.
@@ -76,22 +72,24 @@ import org.knime.core.data.join.results.NWayMergeContainer;
  * {@link OutputRowOrder#DETERMINISTIC} or {@link OutputRowOrder#LEFT_RIGHT}.
  *
  * @see NWayMergeContainer.SortedChunks#nWayMerge
- * @see LeftRightSortedJoinContainer#getTable()
+ * @see LeftRightSorted#getTable()
  *
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  * @since 4.2
  */
 @SuppressWarnings("javadoc")
-public abstract class OrderedRow { // implements DataRow, Comparable<OrderedRow>
-
-    // not meant to be instantiated
-    private OrderedRow() {
-    }
+public interface OrderedRow { // implements DataRow, Comparable<OrderedRow>
 
     /**
      * Extracts the row order (= offset in containing table) from a persisted row.
      */
-    public static final ToLongFunction<DataRow> OFFSET_EXTRACTOR = row -> ((LongCell)row.getCell(0)).getLongValue();
+    public static long getOffset(final DataRow row) {
+        return ((LongCell)row.getCell(0)).getLongValue();
+    }
+
+    public static int compareUnsignedOffsets(final DataRow row1, final DataRow row2){
+        return Long.compareUnsigned(OrderedRow.getOffset(row1), OrderedRow.getOffset(row2));
+    }
 
     /**
      * Creates a new table spec with an additional long column. The column is used to hold the offset of the probe input
@@ -124,10 +122,12 @@ public abstract class OrderedRow { // implements DataRow, Comparable<OrderedRow>
         DataCell[] cells = new DataCell[row.getNumCells() + 1];
         int cell = 0;
         // add long row in the correct position
-        cells[cell++] = new LongCell(rowOffset);
+        cells[cell] = new LongCell(rowOffset);
+        cell++;
         // copy row contents
         for (int i = 0; i < row.getNumCells(); i++) {
-            cells[cell++] = row.getCell(i);
+            cells[cell] = row.getCell(i);
+            cell++;
         }
         return new DefaultRow(row.getKey(), cells);
     }
@@ -188,11 +188,13 @@ public abstract class OrderedRow { // implements DataRow, Comparable<OrderedRow>
         DataCell[] cells = new DataCell[numCells];
         int cell = 0;
         if (storeOffset) {
-            cells[cell++] = new LongCell(rowOffset);
+            cells[cell] = new LongCell(rowOffset);
+            cell++;
         }
         // keep only join columns and include columns
         for (int i = 0; i < copyCellIndices.length; i++) {
-            cells[cell++] = row.getCell(copyCellIndices[i]);
+            cells[cell] = row.getCell(copyCellIndices[i]);
+            cell++;
         }
         // optionally store row offset
 
@@ -206,8 +208,8 @@ public abstract class OrderedRow { // implements DataRow, Comparable<OrderedRow>
      * @param rowHandler the original row handler
      * @return the rowHandler function composed with an offset extractor and removal step.
      */
-    public static ObjLongConsumer<DataRow> extractOffsets(final ObjLongConsumer<DataRow> rowHandler) {
-        return ((row, offset) -> rowHandler.accept(row, OrderedRow.OFFSET_EXTRACTOR.applyAsLong(row)));
+    public static <T extends RowHandlerCancelable> RowHandlerCancelable extractOffsets(final T rowHandler) {
+        return (row, offset) -> rowHandler.accept(row, OrderedRow.getOffset(row));
     }
 
     /**

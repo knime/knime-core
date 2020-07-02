@@ -297,18 +297,22 @@ public class JoinTableSettings {
         validate(m_includeColumnNames, "include", spec);
 
         // join and include columns
-        m_joinColumnNames = getJoinClauses().stream().filter(JoinColumn::isColumn).map(JoinColumn::toColumnName)
+        m_joinColumnNames = m_joinClauses.stream().filter(JoinColumn::isColumn).map(JoinColumn::toColumnName)
             .collect(Collectors.toList());
         // make sure join column names are present in the data table specification
         validate(m_joinColumnNames, "join", spec);
 
-        m_joinClauseColumns = getJoinClauses().stream().mapToInt(clause -> clause.toColumnIndex(spec)).toArray();
+        m_joinClauseColumns = m_joinClauses.stream().mapToInt(clause -> clause.toColumnIndex(spec)).toArray();
 
         m_includeColumns = spec.columnsToIndices(includeColumns);
         // working table specification
         m_materializeColumnIndices =
-            IntStream.concat(Arrays.stream(m_joinClauseColumns), Arrays.stream(m_includeColumns)).distinct() // column is materialized only once
-                .filter(i -> i >= 0) // only actual columns, no special join columns
+            IntStream.concat(Arrays.stream(m_joinClauseColumns), Arrays.stream(m_includeColumns))
+                // column is materialized only once
+                .distinct()
+                // only actual columns, no special join columns
+                .filter(i -> i >= 0)
+                // in order of appearance in the original table
                 .sorted().toArray();
 
         m_materializedCells = Optional.empty();
@@ -349,7 +353,7 @@ public class JoinTableSettings {
     /**
      * @param bufferedDataTable
      */
-    public void setTable(final BufferedDataTable bufferedDataTable) {
+    public final void setTable(final BufferedDataTable bufferedDataTable) {
         m_forTable = Optional.of(bufferedDataTable);
         m_materializedCells = Optional.of(m_materializeColumnIndices.length * bufferedDataTable.size());
         m_tableSpec = bufferedDataTable.getDataTableSpec();
@@ -432,10 +436,8 @@ public class JoinTableSettings {
 
         } catch (InvalidSettingsException ex) {
             // This can't happen since we can't invalidate valid settings by removing unused columns
-            assert false;
-            return null;
+            throw new IllegalStateException(ex);
         }
-
     }
 
     /**

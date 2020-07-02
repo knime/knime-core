@@ -794,13 +794,19 @@ public abstract class JoinTestInput {
      * Helper to create tables in concise notation.
      *
      * @param columnNames comma-separated header, e.g., "Column1,ColumnB,ColumnZ"
-     * @param rows each string being input to {@link #defaultRow(String...)}
+     * @param rows each string being input to {@link #defaultRow(String)}
+     * @return a table with the given rows
      */
-    static BufferedDataTable table(final String columnNames, final String... rows) {
+    public static BufferedDataTable table(final String columnNames, final String... rows) {
         return table(columnNames, Arrays.stream(rows).map(JoinTestInput::defaultRow).toArray(DataRow[]::new));
     }
 
-    static BufferedDataTable table(final String columnNames, final DataRow... rows) {
+    /**
+     * @param columnNames
+     * @param rows
+     * @return table with the given rows
+     */
+    public static BufferedDataTable table(final String columnNames, final DataRow... rows) {
         return table(columnNames, false, rows);
     }
 

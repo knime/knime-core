@@ -60,9 +60,8 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DefaultRow;
-import org.knime.core.data.join.HybridHashJoin.DiskBackedHashPartitions.DiskBucket;
 import org.knime.core.data.join.JoinTableSettings.JoinColumn;
-import org.knime.core.data.join.results.JoinResults;
+import org.knime.core.data.join.results.JoinResult;
 import org.knime.core.node.InvalidSettingsException;
 
 /**
@@ -423,8 +422,8 @@ public class JoinSpecification {
 
     /**
      * Columns to include from the given table when producing results in single table format
-     * ({@link JoinResults#getTable()}) or when producing join results for the matched rows output
-     * ({@link JoinResults#getMatches()}).
+     * ({@link JoinResult#getTable()}) or when producing join results for the matched rows output
+     * ({@link JoinResult#getMatches()}).
      *
      * @param side left or right input table
      * @return the indices of the columns to include. Result depends on whether {@link #isMergeJoinColumns()}.
@@ -572,7 +571,7 @@ public class JoinSpecification {
 
     /**
      * Projects a row to only the included columns. This does not depend on {@link #isMergeJoinColumns()} as it assumes
-     * that we're producing separate tables as a basis for a single combined table {@link JoinResults#getTable()}.
+     * that we're producing separate tables as a basis for a single combined table {@link JoinResult#getTable()}.
      * Note that for matches, getting rid of non-included columns is taken care of in
      * {@link #rowJoin(DataRow, DataRow)}.
      *
@@ -581,7 +580,7 @@ public class JoinSpecification {
      * @return only the cells selected for inclusion. For the left table, the included columns in the separate output are the
      * same as
      * , either to be output directly as unmatched row, or to be padded
-     *         with missing values when producing {@link JoinResults#getTable()}
+     *         with missing values when producing {@link JoinResult#getTable()}
      */
     public DataRow rowProjectOuter(final InputTable side, final DataRow row) {
         int[] includes = getSettings(side).getIncludeColumns();

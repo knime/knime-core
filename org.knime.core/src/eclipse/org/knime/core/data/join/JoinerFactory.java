@@ -64,8 +64,9 @@ import org.knime.core.node.InvalidSettingsException;
 public interface JoinerFactory {
 
     public enum JoinAlgorithm {
-        HYBRID_HASH("Hybrid Hash Join", HybridHashJoin::new),
-        AUTO("Automatic", CostModelFactory.Instance);
+//        HYBRID_HASH("Hybrid Hash Join", HybridHashJoin::new),
+        AUTO("Automatic", CostModelFactory.INSTANCE),
+        NESTED_LOOP("Block hash join", BlockHashJoin::new);
 
         private final String m_text;
         private final JoinerFactory m_factory;

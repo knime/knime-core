@@ -61,15 +61,14 @@ import org.knime.core.node.InvalidSettingsException;
  * @since 4.2
  *
  */
-public class CostModelFactory implements JoinerFactory {
+public final class CostModelFactory implements JoinerFactory {
 
-    private CostModelFactory() {
+    private CostModelFactory() {}
 
-    }
-    public static CostModelFactory Instance = new CostModelFactory();
+    public static final CostModelFactory INSTANCE = new CostModelFactory();
 
     @Override
     public JoinImplementation create(final JoinSpecification settings, final ExecutionContext exec) throws InvalidSettingsException {
-        return new HybridHashJoin(settings, exec);
+        return new BlockHashJoin(settings, exec);
     }
 }

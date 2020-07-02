@@ -48,20 +48,17 @@
 package org.knime.core.data.join;
 
 import java.lang.management.ManagementFactory;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
 
 import javax.management.InstanceNotFoundException;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
-import org.knime.core.data.join.HybridHashJoin.DiskBackedHashPartitions;
-import org.knime.core.data.join.HybridHashJoin.DiskBackedHashPartitions.DiskBucket;
 import org.knime.core.data.join.JoinSpecification.InputTable;
-import org.knime.core.data.join.results.JoinResults.OutputCombined;
-import org.knime.core.data.join.results.JoinResults.OutputSplit;
+import org.knime.core.data.join.results.JoinResult;
+import org.knime.core.data.join.results.JoinResult.OutputCombined;
+import org.knime.core.data.join.results.JoinResult.OutputSplit;
 import org.knime.core.data.util.memory.MemoryAlertSystem;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -70,7 +67,6 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeProgressMonitor;
-import org.knime.core.node.streamable.StreamableFunction;
 
 /**
  * A join implementation executes the join by iterating over the provided tables and generating output rows from
@@ -110,47 +106,16 @@ public abstract class JoinImplementation {
     protected JoinImplementation(final JoinSpecification settings, final ExecutionContext exec) {
         m_exec = exec;
         m_joinSpecification = settings;
-        m_left = settings.getSettings(InputTable.LEFT).getTable().get();
-        m_right = settings.getSettings(InputTable.RIGHT).getTable().get();
+        m_left = settings.getSettings(InputTable.LEFT).getTable()
+            .orElseThrow(() -> new IllegalStateException("No left input table provided."));
+        m_right = settings.getSettings(InputTable.RIGHT).getTable()
+            .orElseThrow(() -> new IllegalStateException("No right input table provided."));
+        m_progress = new JoinProgressMonitor();
     }
 
-    public abstract OutputCombined joinOutputCombined() throws CanceledExecutionException, InvalidSettingsException;
+    public abstract JoinResult<OutputCombined> joinOutputCombined() throws CanceledExecutionException, InvalidSettingsException;
 
-    public abstract OutputSplit joinOutputSplit() throws CanceledExecutionException, InvalidSettingsException;
-
-    /**
-     * Validates the settings in the passed <code>NodeSettings</code> object. The specified settings is checked for
-     * completeness and consistency.
-     *
-     * @param s The settings to validate.
-     * @throws InvalidSettingsException If the validation of the settings failed.
-     */
-    public static void validateSettings(final JoinSpecification s) throws InvalidSettingsException {
-//        if (s.getDuplicateHandling() == null) {
-//            throw new InvalidSettingsException("No duplicate handling method selected");
-//        }
-//        if (s.getJoinMode() == null) {
-//            throw new InvalidSettingsException("No join mode selected");
-//        }
-//        if ((s.getLeftJoinColumns() == null) || s.getLeftJoinColumns().length < 1 || s.getRightJoinColumns() == null
-//            || s.getRightJoinColumns().length < 1) {
-//            throw new InvalidSettingsException("Please define at least one joining column pair.");
-//        }
-//        if (s.getLeftJoinColumns() != null && s.getRightJoinColumns() != null
-//            && s.getLeftJoinColumns().length != s.getRightJoinColumns().length) {
-//            throw new InvalidSettingsException(
-//                "Number of columns selected from the top table and from " + "the bottom table do not match");
-//        }
-//
-//        if (s.getDuplicateHandling().equals(ColumnNameDisambiguation.AppendSuffix)
-//            && (s.getDuplicateColumnSuffix() == null || s.getDuplicateColumnSuffix().isEmpty())) {
-//            throw new InvalidSettingsException("No suffix for duplicate columns provided");
-//        }
-//        if (s.getMaxOpenFiles() < 3) {
-//            throw new InvalidSettingsException("Maximum number of open files must be at least 3.");
-//        }
-
-    }
+    public abstract JoinResult<OutputSplit> joinOutputSplit() throws CanceledExecutionException, InvalidSettingsException;
 
     /**
      * @return the logical aspects of the join, such as whether to output unmatched rows, etc.
@@ -184,7 +149,7 @@ public abstract class JoinImplementation {
     /**
      * @param maxOpenFiles the maximum number of intermediate files to use during joining.
      */
-    public JoinImplementation setMaxOpenFiles(final int maxOpenFiles) throws InvalidSettingsException {
+    public JoinImplementation setMaxOpenFiles(final int maxOpenFiles) {
         m_maxOpenFiles = maxOpenFiles;
         return this;
     }
@@ -204,11 +169,6 @@ public abstract class JoinImplementation {
         m_enableHiliting = enableHiliting;
         return this;
     }
-
-    /**
-     * @return
-     */
-    protected abstract StreamableFunction getStreamableFunction();
 
     /**
      * @return the progress
@@ -281,7 +241,10 @@ public abstract class JoinImplementation {
             MBeanServer server = ManagementFactory.getPlatformMBeanServer();
             try {
                 ObjectName name = new ObjectName("org.knime.base.node.preproc.joiner3.jmx:type=HybridHashJoin");
-                try { server.unregisterMBean(name); } catch(InstanceNotFoundException e) {}
+                try {
+                    server.unregisterMBean(name);
+                } catch (InstanceNotFoundException e) {
+                }
                 server.registerMBean(this, name);
             } catch (Exception e) { System.err.println(e.getMessage()); }
         }
@@ -344,27 +307,27 @@ public abstract class JoinImplementation {
             m_numHashPartitionsOnDisk = n;
         }
 
-        /**
-         * Compute bucket size statistics to see how well the hash function distributes groups to buckets.
-         *
-         * @param probeBuckets the number of rows in the probe table partitions on disk
-         * @param hashBucketsOnDisk the number of rows in the hash input table partitions on disk
-         */
-        public void setBucketSizes(final DiskBucket[] probeBuckets, final DiskBucket[] hashBucketsOnDisk) {
-
-            m_probeBucketSizes = Arrays.stream(probeBuckets)
-                .mapToLong(b -> b.m_workingTable.getTable().map(BufferedDataTable::size).orElse(0L)).toArray();
-            //                DescriptiveStatistics stats =
-            //                    new DescriptiveStatistics(Arrays.stream(probeBucketSizes).mapToDouble(l -> l).toArray());
-            //                probeBucketSizeAverage = stats.getMean();
-            //                probeBucketSizeCoV = stats.getStandardDeviation() / stats.getMean();
-            m_hashBucketSizes = Arrays.stream(hashBucketsOnDisk).filter(Objects::nonNull)
-                .mapToLong(b -> b.m_workingTable.getTable().map(BufferedDataTable::size).orElse(0L)).toArray();
-            //                DescriptiveStatistics stats =
-            //                    new DescriptiveStatistics(Arrays.stream(hashBucketSizes).mapToDouble(l -> l).toArray());
-            //                hashBucketSizeAverage = stats.getMean();
-            //                hashBucketSizeCoV = stats.getStandardDeviation() / stats.getMean();
-        }
+//        /**
+//         * Compute bucket size statistics to see how well the hash function distributes groups to buckets.
+//         *
+//         * @param probeBuckets the number of rows in the probe table partitions on disk
+//         * @param hashBucketsOnDisk the number of rows in the hash input table partitions on disk
+//         */
+//        public void setBucketSizes(final DiskBucket[] probeBuckets, final DiskBucket[] hashBucketsOnDisk) {
+//
+//            m_probeBucketSizes = Arrays.stream(probeBuckets)
+//                .mapToLong(b -> b.m_workingTable.getTable().map(BufferedDataTable::size).orElse(0L)).toArray();
+//            //                DescriptiveStatistics stats =
+//            //                    new DescriptiveStatistics(Arrays.stream(probeBucketSizes).mapToDouble(l -> l).toArray());
+//            //                probeBucketSizeAverage = stats.getMean();
+//            //                probeBucketSizeCoV = stats.getStandardDeviation() / stats.getMean();
+//            m_hashBucketSizes = Arrays.stream(hashBucketsOnDisk).filter(Objects::nonNull)
+//                .mapToLong(b -> b.m_workingTable.getTable().map(BufferedDataTable::size).orElse(0L)).toArray();
+//            //                DescriptiveStatistics stats =
+//            //                    new DescriptiveStatistics(Arrays.stream(hashBucketSizes).mapToDouble(l -> l).toArray());
+//            //                hashBucketSizeAverage = stats.getMean();
+//            //                hashBucketSizeCoV = stats.getStandardDeviation() / stats.getMean();
+//        }
 
         public void setMessage(final String message) { m_monitor.setMessage(message); }
 
@@ -400,9 +363,14 @@ public abstract class JoinImplementation {
             MBeanServer server = ManagementFactory.getPlatformMBeanServer();
             try {
                 ObjectName name = new ObjectName("org.knime.base.node.preproc.joiner3.jmx:type=MemoryFiller");
-                try { server.unregisterMBean(name); } catch(InstanceNotFoundException e) {}
+                try {
+                    server.unregisterMBean(name);
+                } catch (InstanceNotFoundException e) {
+                }
                 server.registerMBean(new FillMemoryForTesting(), name);
-            } catch (Exception e) { System.err.println(e.getMessage()); }
+            } catch (Exception e) {
+                System.err.println(e.getMessage());
+            }
         }
 
         List<double[]> memoryConsumer = new LinkedList<>();

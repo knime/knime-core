@@ -53,15 +53,13 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.TreeSet;
 import java.util.function.Function;
-import java.util.function.ObjLongConsumer;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
-import org.knime.core.data.join.HybridHashJoin.DiskBackedHashPartitions;
-import org.knime.core.data.join.HybridHashJoin.DiskBackedHashPartitions.DiskBucket;
 import org.knime.core.data.join.JoinSpecification.InputTable;
 import org.knime.core.data.join.JoinSpecification.OutputRowOrder;
-import org.knime.core.data.join.results.JoinResults;
+import org.knime.core.data.join.results.JoinResult;
+import org.knime.core.data.join.results.JoinResult.RowHandlerCancelable;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.CanceledExecutionException.CancelChecker;
@@ -73,9 +71,13 @@ import gnu.trove.strategy.HashingStrategy;
 
 /**
  * Index for rows in a table. Provides fast lookup of join partners via
- * {@link #joinSingleRow(JoinTuple, DataRow, long, JoinResults)}. Can be flushed to disk using {@link #toDisk()}. This
+<<<<<<< HEAD
+ * {@link #joinSingleRow(JoinTuple, DataRow, long, JoinResult)}. Can be flushed to disk using {@link #toDisk()}. This
  * does not serialize the index structure, it just flushes to disk the rows stored in the index using a
  * {@link BufferedDataTable}.
+=======
+ * {@link #joinSingleRow(JoinTuple, DataRow, long, JoinResults)}. Can be flushed to disk using {@link #toDisk()}.
+>>>>>>> 65ee5f4050365315c38ca0aab8cc21d67f282d75
  *
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  */
@@ -89,7 +91,7 @@ class HashIndex {
     private static final Function<DataCell[], List<DataRow>> newRowList = k -> new ArrayList<DataRow>();
 
     /** Puts the join results here. */
-    final JoinResults m_joinContainer;
+    final JoinResult m_joinContainer;
 
     /**
      * The hash rows in order of their addition to the index (which is hash input row order). <br/>
@@ -118,7 +120,7 @@ class HashIndex {
 
     /**
      * The i-th bit stores whether the i-th entry of m_rows has had a join partner in the probe table so far, as found
-     * during a previous call to {@link #joinSingleRow(JoinTuple, DataRow, JoinResults)}
+     * during a previous call to {@link #joinSingleRow(JoinTuple, DataRow, JoinResult)}
      */
     private final BitSet m_matched;
 
@@ -131,7 +133,6 @@ class HashIndex {
      */
     private final TObjectIntCustomHashMap<DataRow> m_hashrowInternalOffsets;
 
-    private final JoinTableSettings m_hashSettings;
     private final JoinTableSettings m_probeSettings;
 
     private final JoinSpecification m_joinSpecification;
@@ -165,11 +166,11 @@ class HashIndex {
      * @param hashSide the join specification talks about left and right tables. hashside tells the index which side is
      *            being indexed and which side is used as probe
      * @param checkCanceled to enable interrupting expensive operations, such as
-     *            {@link #forUnmatchedHashRows(ObjLongConsumer)} and (in extreme cases)
+     *            {@link #forUnmatchedHashRows(RowHandlerCancelable)} and (in extreme cases)
      *            {@link #joinSingleRow(DataRow, long)}
      */
     @SuppressWarnings("serial")
-    HashIndex(final JoinSpecification joinSpecification, final JoinResults joinContainer,
+    HashIndex(final JoinSpecification joinSpecification, final JoinResult joinContainer,
         final JoinSpecification.InputTable hashSide, final CancelChecker checkCanceled) {
 
         m_joinSpecification = joinSpecification;
@@ -180,7 +181,6 @@ class HashIndex {
         // probe/hash row settings
         InputTable probeSide = hashSide.other();
         m_trackMatchedHashRows = m_joinSpecification.getSettings(hashSide).m_retainUnmatched;
-        m_hashSettings = m_joinSpecification.getSettings(hashSide);
         m_probeSettings = m_joinSpecification.getSettings(probeSide);
 
         // row offsets and unmatched rows
@@ -244,12 +244,8 @@ class HashIndex {
 
         if (joinTuple == null) {
             // do not add to index structure. can't be matched by anything
-            //          System.out.println(String.format("unmatched hash Row=%s", hashRow));
             m_joinContainer.unmatched(m_hashSide).accept(row, offset);
         } else {
-            //          System.out.println(
-            //              String.format("index hash row %s using %s", hashRow, Arrays.toString(joinAttributeValues)));
-
             if (m_joinSpecification.isConjunctive()) {
                 List<DataRow> rowList = m_indexes.get(0).computeIfAbsent(joinTuple, newRowList);
                 rowList.add(row);
@@ -272,34 +268,37 @@ class HashIndex {
     }
 
     /**
-     * @param probeRow
-     * @param probeRowOffset TODO
-     * @return true if the execution was canceled, false if the execution was not canceled
-     * @throws CanceledExecutionException
+     * @param probeRow the row that provides the join column values for which we search join partners
+     * @param probeRowOffset the offset of the probe row in its source table (for sorting)
+     * @return true iff the execution was canceled
      */
-    public boolean joinSingleRow(final DataRow probeRow, final long probeRowOffset) throws CanceledExecutionException {
+    public void joinSingleRow(final DataRow probeRow, final long probeRowOffset) throws CanceledExecutionException {
 
         List<DataRow> matching =
             m_joinSpecification.isConjunctive() ? matchConjunctive(probeRow) : matchDisjunctive(probeRow);
 
+        // no indexed row has the same values in the join columns as the probe row
         if (matching == null) {
-
-            m_joinContainer.unmatched(m_hashSide.other()).accept(probeRow, probeRowOffset);
-
+            // the probe row is potentially unmatched (depends on whether the index is comprehensive)
+            m_joinContainer.unmatched(m_probeSettings.getSide()).accept(probeRow, probeRowOffset);
         } else {
-
+            // these rows have the same values in the join columns as the probe row
             for (DataRow hashRow : matching) {
 
+                // could be quite a few rows that match
                 m_checkCanceled.checkCanceled();
 
+                // mark hash row as matched if keeping track
                 int internalOffset = m_hashrowInternalOffsets.get(hashRow);
                 if (m_trackMatchedHashRows) {
                     m_matched.set(internalOffset);
                 }
 
-                // we can't skip this since the join container needs to know that the probe row is not unmatched
+                // retrieve the offset of the hash row in the hash input table
                 long hashRowOrder = m_rowOffsets.get(internalOffset);
 
+                // even if we don't retain matches, we can't skip this since the join container may needs to cancel
+                // the unmatched status of a probe row
                 DataRow left = m_probeSettings.getSide().isLeft() ? probeRow : hashRow;
                 DataRow right = m_probeSettings.getSide().isLeft() ? hashRow : probeRow;
 
@@ -309,8 +308,6 @@ class HashIndex {
                 m_joinContainer.addMatch(left, leftOrder, right, rightOrder);
             }
         }
-
-        return false;
     }
 
     /**
@@ -322,7 +319,6 @@ class HashIndex {
      */
     private List<DataRow> matchConjunctive(final DataRow probeRow) {
         DataCell[] key = JoinTuple.get(m_probeSettings, probeRow);
-//        System.out.println(String.format("looking up probeRow=%s using %s", probeRow, Arrays.toString(key)));
         return m_indexes.get(0).get(key);
     }
 
@@ -358,7 +354,7 @@ class HashIndex {
      * @throws CanceledExecutionException
      *
      */
-    public void forUnmatchedHashRows(final ObjLongConsumer<DataRow> handler)
+    public void forUnmatchedHashRows(final RowHandlerCancelable handler)
         throws CanceledExecutionException {
 
         if (!m_trackMatchedHashRows) {
@@ -375,24 +371,25 @@ class HashIndex {
 
     }
 
-    /**
-     * Only hash buckets are migrated to disk, probe rows are put into DiskBuckets directly
-     */
-    DiskBucket toDisk(final DiskBackedHashPartitions partitioner) {
-
-        // release memory
-        m_indexes.clear();
-
-        DiskBucket result = partitioner.new DiskBucket(m_hashSettings);
-
-        for (int i = m_rows.size(); i-- > 0;) {
-            result.add(m_rows.get(i), m_rowOffsets.get(i));
-            // release memory
-            m_rows.set(i, null);
-        }
-
-        return result;
-    }
+//    /**
+//     * Only hash buckets are migrated to disk, probe rows are put into DiskBuckets directly. This does not serialize the
+//     * index structure, it just flushes to disk the rows stored in the index using a {@link BufferedDataTable}.
+//     */
+//    DiskBucket toDisk(final DiskBackedHashPartitions partitioner) {
+//
+//        // release memory
+//        m_indexes.clear();
+//
+//        DiskBucket result = partitioner.new DiskBucket(m_hashSettings);
+//
+//        for (int i = m_rows.size(); i-- > 0;) {
+//            result.add(m_rows.get(i), m_rowOffsets.get(i));
+//            // release memory
+//            m_rows.set(i, null);
+//        }
+//
+//        return result;
+//    }
 
     public int numAddedRows() {
         return m_rows.size();

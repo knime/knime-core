@@ -50,7 +50,6 @@ package org.knime.core.data.join.results;
 
 import static org.junit.Assert.assertEquals;
 import static org.knime.core.data.join.JoinTestInput.cell;
-import static org.knime.core.data.join.JoinTestInput.col;
 import static org.knime.core.data.join.JoinTestInput.defaultRow;
 
 import org.junit.Test;
@@ -63,7 +62,8 @@ import org.knime.core.data.join.JoinTableSettings;
 import org.knime.core.data.join.JoinTableSettings.JoinColumn;
 import org.knime.core.data.join.JoinTestInput;
 import org.knime.core.data.join.JoinerFactory.JoinAlgorithm;
-import org.knime.core.data.join.results.JoinResults.OutputMode;
+import org.knime.core.data.join.results.JoinResult.OutputCombined;
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.InvalidSettingsException;
 
 /**
@@ -74,28 +74,27 @@ public class JoinContainerTest {
 
     private static final int LEFT = 0, RIGHT = 1;
 
-    DataTableSpec[] m_specs;
+    private final DataTableSpec[] m_specs = new DataTableSpec[2];
 
-    JoinTableSettings[] m_settings;
+    private final JoinTableSettings[] m_settings = new JoinTableSettings[2];
 
-    DataRow[] m_rows;
+    private final DataRow[] m_rows;
 
     /**
      * @throws InvalidSettingsException
      */
     public JoinContainerTest() throws InvalidSettingsException {
-        super();
-        m_specs = new DataTableSpec[]{new DataTableSpec(col("A"), col("B"), col("C"), col("D"), col("E")),
-            new DataTableSpec(col("U"), col("V"), col("W"), col("A"), col("Y"), col("Z"))};
-        m_settings = new JoinTableSettings[2];
-        // left join columns  A B C D, include A C E
-        m_settings[LEFT] = new JoinTableSettings(true, JoinColumn.array("A", "B", "C", "D"), new String[]{"A", "C", "E"},
-            InputTable.LEFT, m_specs[LEFT]);
-        // right join columns A Y Z A, include U V A
-        m_settings[RIGHT] = new JoinTableSettings(true, JoinColumn.array("A", "Y", "Z", "A"), new String[]{"U", "V", "A"},
-            InputTable.RIGHT, m_specs[RIGHT]);
-
         m_rows = new DataRow[]{defaultRow("left,a,b,c,d,e"), defaultRow("right,u,v,w,x,y,z")};
+
+        BufferedDataTable left = JoinTestInput.table("A,B,C,D,E", m_rows[0]);
+        BufferedDataTable right = JoinTestInput.table("U,V,W,A,Y,Z", m_rows[1]);
+        m_specs[LEFT] = left.getDataTableSpec();
+        m_specs[RIGHT] = right.getDataTableSpec();
+        m_settings[LEFT] = new JoinTableSettings(true, JoinColumn.array("A", "B", "C", "D"),
+            new String[]{"A", "C", "E"}, InputTable.LEFT, left);
+        m_settings[RIGHT] = new JoinTableSettings(true, JoinColumn.array("A", "Y", "Z", "A"),
+            new String[]{"U", "V", "A"}, InputTable.RIGHT, right);
+
     }
 
     /**
@@ -117,8 +116,8 @@ public class JoinContainerTest {
 
         JoinSpecification jspec =
             new JoinSpecification.Builder(m_settings[LEFT], m_settings[RIGHT]).mergeJoinColumns(true).build();
-        JoinContainer container =
-            UnorderedJoinContainer.create(OutputMode.OutputCombined, JoinAlgorithm.AUTO.getFactory().create(jspec, JoinTestInput.EXEC), JoinTestInput.EXEC, false, false);
+        JoinContainer<OutputCombined> container = (JoinContainer<OutputCombined>)Unsorted
+                .createCombined(JoinAlgorithm.AUTO.getFactory().create(jspec, JoinTestInput.EXEC), false, false);
 
         { // pad left
             DataRow padded = container.rightToSingleTableFormat(m_rows[RIGHT]);
@@ -159,8 +158,8 @@ public class JoinContainerTest {
 
         JoinSpecification jspec =
             new JoinSpecification.Builder(m_settings[LEFT], m_settings[RIGHT]).mergeJoinColumns(false).build();
-        JoinContainer container =
-            UnorderedJoinContainer.create(OutputMode.OutputCombined, JoinAlgorithm.AUTO.getFactory().create(jspec, JoinTestInput.EXEC), JoinTestInput.EXEC, false, false);
+        JoinContainer<OutputCombined> container = (JoinContainer<OutputCombined>)Unsorted
+            .createCombined(JoinAlgorithm.AUTO.getFactory().create(jspec, JoinTestInput.EXEC), false, false);
 
         { // pad left
             DataRow padded = container.rightToSingleTableFormat(m_rows[RIGHT]);

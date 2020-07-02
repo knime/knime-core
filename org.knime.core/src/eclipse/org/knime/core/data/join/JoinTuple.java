@@ -123,7 +123,6 @@ public interface JoinTuple {
      *         code.
      */
     public static int disjunctiveHashCode(final DataCell[] cells, final int i) {
-        // TODO replace this with DataCell strides to allow for join predicates in disjunctive normal form.
         return cells[i].hashCode();
     }
 
@@ -143,7 +142,6 @@ public interface JoinTuple {
             public boolean equals(final DataCell[] o1, final DataCell[] o2) {
                 for (int i = 0; i < o1.length; i++) {
 
-                    // TODO the hybrid hash join discards rows with missing cells, so maybe one could remove this check.
                     if (o1[i].isMissing() || o2[i].isMissing()) {
                         return false;
                     }
@@ -168,13 +166,11 @@ public interface JoinTuple {
 
             @Override
             public int computeHashCode(final DataCell[] joinClauseSides) {
-                // TODO replace this with DataCell strides to allow for join predicates in disjunctive normal form.
                 return joinClauseSides[i].hashCode();
             }
 
             @Override
             public boolean equals(final DataCell[] o1, final DataCell[] o2) {
-                // TODO the hybrid hash join discards rows with missing cells, so maybe one could remove this check.
                 if (o1[i].isMissing() || o2[i].isMissing()) {
                     return false;
                 }

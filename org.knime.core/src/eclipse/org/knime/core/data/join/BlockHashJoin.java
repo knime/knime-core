@@ -49,21 +49,25 @@
 package org.knime.core.data.join;
 
 import java.util.Optional;
-import java.util.function.ObjLongConsumer;
 import java.util.function.Supplier;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.container.CloseableRowIterator;
-import org.knime.core.data.join.HybridHashJoin.DiskBackedHashPartitions.DiskBucket;
-import org.knime.core.data.join.JoinImplementation.JoinProgressMonitor;
 import org.knime.core.data.join.JoinSpecification.InputTable;
-import org.knime.core.data.join.results.JoinContainer;
-import org.knime.core.data.join.results.JoinResults;
+import org.knime.core.data.join.JoinSpecification.OutputRowOrder;
+import org.knime.core.data.join.results.JoinResult;
+import org.knime.core.data.join.results.JoinResult.Output;
+import org.knime.core.data.join.results.JoinResult.OutputCombined;
+import org.knime.core.data.join.results.JoinResult.OutputSplit;
+import org.knime.core.data.join.results.JoinResult.RowHandlerCancelable;
+import org.knime.core.data.join.results.LeftRightSorted;
+import org.knime.core.data.join.results.Unsorted;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.CanceledExecutionException.CancelChecker;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.InvalidSettingsException;
 
 /**
  * Implements a nested loop join that can have extremely small memory footprint, at the cost of additional iterations
@@ -94,30 +98,49 @@ import org.knime.core.node.ExecutionContext;
  *
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  */
-class BlockHashJoin {
-
-    private final ExecutionContext m_exec;
-
-    //    private final
-    private final JoinProgressMonitor m_progress;
-
-    final JoinSpecification m_joinSpecification;
-
-    /**
-     * @param exec
-     * @param progress
-     * @param joinSpecification
-     * @param extractRowOffsets
-     */
-    BlockHashJoin(final ExecutionContext exec, final JoinProgressMonitor progress,
-        final JoinSpecification joinSpecification, final boolean extractRowOffsets) {
-        m_exec = exec;
-        m_progress = progress;
-        m_joinSpecification = joinSpecification;
-        m_extractRowOffsets = extractRowOffsets;
-    }
+@SuppressWarnings("javadoc")
+class BlockHashJoin extends JoinImplementation {
 
     final boolean m_extractRowOffsets;
+
+    /**
+     * @param joinSpecification
+     * @param exec
+     */
+    BlockHashJoin(final JoinSpecification joinSpecification, final ExecutionContext exec) {
+        super(joinSpecification, exec);
+        // this is only needed if the input has been annotated with offsets already, e.g., by a hybrid hash join
+        // that sent the input rows to disk previously
+        m_extractRowOffsets = false;
+    }
+
+    @Override
+    public JoinResult<OutputCombined> joinOutputCombined() throws CanceledExecutionException, InvalidSettingsException {
+        // deduplication is only necessary in disjunctive join mode, when results may be produced in several partitions
+        final boolean deduplicateResults = false;
+        // deferred collection is initially off, but will be turned on in case the join can't be done in memory
+        final boolean deferUnmatchedRows = false;
+
+        final JoinResult<OutputCombined> results = m_joinSpecification.getOutputRowOrder() == OutputRowOrder.ARBITRARY
+            ? Unsorted.createCombined(this, deduplicateResults, deferUnmatchedRows)
+            : LeftRightSorted.createCombined(this, deduplicateResults, deferUnmatchedRows);
+
+        return join(results);
+    }
+
+    @Override
+    public JoinResult<OutputSplit> joinOutputSplit() throws CanceledExecutionException, InvalidSettingsException {
+        // deduplication is only necessary in disjunctive join mode, when results may be produced in several partitions
+        final boolean deduplicateResults = false;
+        // deferred collection is initially off, but will be turned on in case the join can't be done in memory
+        final boolean deferUnmatchedRows = false;
+
+        final JoinResult<OutputSplit> results = m_joinSpecification.getOutputRowOrder() == OutputRowOrder.ARBITRARY
+            ? Unsorted.createSplit(this, deduplicateResults, deferUnmatchedRows)
+            : LeftRightSorted.createSplit(this, deduplicateResults, deferUnmatchedRows);
+
+        return join(results);
+    }
 
     /**
      * @param results where to put join results (matches and unmatched rows)
@@ -125,33 +148,32 @@ class BlockHashJoin {
      * @param rightUnmatchedRows unmatched row handler for unmatched rows from the right table
      * @throws CanceledExecutionException
      */
-    void join(final JoinContainer results) throws CanceledExecutionException {
+    <T extends Output> JoinResult<T> join(final JoinResult<T> results) throws CanceledExecutionException {
 
         // if only one of the input tables is present, add its rows to the unmatched results
         if (incompleteInput(m_joinSpecification, results)) {
-            return;
+            return results;
         }
 
-        InputTable hashSide = HashIndex.smallerTable(m_joinSpecification);
-        InputTable probeSide = hashSide.other();
+        final InputTable hashSide = HashIndex.smallerTable(m_joinSpecification);
+        final InputTable probeSide = hashSide.other();
 
-//        System.out.println(String.format("hashSide=%s", hashSide));
+        final JoinTableSettings hashSettings = m_joinSpecification.getSettings(hashSide);
+        final JoinTableSettings probeSettings = m_joinSpecification.getSettings(probeSide);
 
-        JoinTableSettings hashSettings = m_joinSpecification.getSettings(hashSide);
-        JoinTableSettings probeSettings = m_joinSpecification.getSettings(probeSide);
-
-        BufferedDataTable probe = probeSettings.getTable().orElseThrow(IllegalStateException::new);
-        BufferedDataTable hash = hashSettings.getTable().orElseThrow(IllegalStateException::new);
+        final BufferedDataTable probe = probeSettings.getTable().orElseThrow(IllegalStateException::new);
+        final BufferedDataTable hash = hashSettings.getTable().orElseThrow(IllegalStateException::new);
 
         // if the join problem we're solving here comes from a partition, the row offsets have changed.
         // in case they matter, we can extract them from an auxiliary column added to the rows
-        ObjLongConsumer<DataRow> unmatchedHashRows = extractOffsets(results.unmatched(hashSide));
-
-//        System.out.println(String.format("extractRowOffsets=%s", m_extractRowOffsets));
+        final RowHandlerCancelable unmatchedHashRows = extractOffsets(results.unmatched(hashSide));
 
         // this is an incomplete index, as it represents only the hash rows indexed in one pass over the probe input
-        Supplier<HashIndex> newHashIndex =
+        final Supplier<HashIndex> newHashIndex =
             () -> new HashIndex(m_joinSpecification, results, hashSide, m_progress::isCanceled);
+
+        // this may be a partial index (if memory runs low) and thus may be replaced with an index covering the next
+        // rows of the hash input
         HashIndex index = newHashIndex.get();
 
         // grab and index as many hash input rows as possible (ideally all)
@@ -162,7 +184,7 @@ class BlockHashJoin {
 
                 DataRow hashRow = hashRows.next();
                 if (m_extractRowOffsets) {
-                    rowOffset = OrderedRow.OFFSET_EXTRACTOR.applyAsLong(hashRow);
+                    rowOffset = OrderedRow.getOffset(hashRow);
                 }
 
                 DataCell[] joinAttributeValues = JoinTuple.get(hashSettings, hashRow);
@@ -176,10 +198,9 @@ class BlockHashJoin {
                     results.setDeferUnmatchedRows(probeSide, true);
 
                     // switch from caching unmatched rows to just marking unmatched rows and collecting them later
-                    // TODO pass on the signal via join container probeRowHandler.lowMemory();
-//                    System.out
-//                        .println(String.format("Flushing pass over probe input (%s) against partialIndex with %s rows",
-//                            probeSide, index.numAddedRows()));
+                    results.lowMemory();
+
+                    // process probe input once to be able to clear out the current hash index
                     singlePass(probe, index, unmatchedHashRows);
                     index = newHashIndex.get();
                 }
@@ -193,29 +214,19 @@ class BlockHashJoin {
         } // close hash input row iterator
 
         // process pending hash index contents
-//        System.out.println(String.format("Final pass over probe input (%s) against partialIndex with %s rows",
-//            probeSide, index.numAddedRows()));
         singlePass(probe, index, unmatchedHashRows);
+
+        return results;
 
     }
 
-    private void singlePass(final BufferedDataTable probe, final HashIndex partialIndex, final ObjLongConsumer<DataRow> unmatchedHashRows)
+    private void singlePass(final BufferedDataTable probe, final HashIndex partialIndex, final RowHandlerCancelable unmatchedHashRows)
         throws CanceledExecutionException {
 
         CancelChecker checkCanceled = CancelChecker.checkCanceledPeriodically(m_exec);
-        JoinResults.enumerateWithResources(probe, extractOffsets((t, value) -> {
-            try {
-                partialIndex.joinSingleRow(t, value);
-            } catch (CanceledExecutionException ex) {
-                // TODO this is a bit rough
-                throw new IllegalStateException();
-            }
-        }), checkCanceled);
+        JoinResult.enumerateWithResources(probe, extractOffsets(partialIndex::joinSingleRow), checkCanceled);
 
         partialIndex.forUnmatchedHashRows(unmatchedHashRows);
-
-        // all results have been produced in probe-hash row order.
-        partialIndex.m_joinContainer.sortedChunkEnd();
     }
 
     /**
@@ -228,7 +239,7 @@ class BlockHashJoin {
      * @return true if the input is incomplete
      * @throws CanceledExecutionException
      */
-    private boolean incompleteInput(final JoinSpecification joinSpecification, final JoinResults container)
+    private <T extends Output> boolean incompleteInput(final JoinSpecification joinSpecification, final JoinResult<T> container)
         throws CanceledExecutionException {
 
         if (!joinSpecification.getSettings(InputTable.LEFT).hasTable()
@@ -243,24 +254,23 @@ class BlockHashJoin {
             if (presentTable.isPresent() && !absent.getTable().isPresent()) {
                 // collect rows from present table as unmatched
                 if (present.isRetainUnmatched()) {
-                    JoinResults.enumerateWithResources(presentTable.get(),
+                    JoinResult.enumerateWithResources(presentTable.get(),
                         extractOffsets(container.unmatched(presentSide)),
                         CancelChecker.checkCanceledPeriodically(m_exec));
                 }
-                container.sortedChunkEnd();
                 // only one table is present.
-//                System.out.println("Incomplete input to nested loop join.");
                 return true;
             }
         }
         return false;
     }
 
-    final ObjLongConsumer<DataRow> extractOffsets(final ObjLongConsumer<DataRow> rowHandler) {
+    final <T extends RowHandlerCancelable> RowHandlerCancelable extractOffsets(final T rowHandler) {
         if (m_extractRowOffsets) {
             return OrderedRow.extractOffsets(rowHandler);
         } else {
             return rowHandler;
         }
     }
+
 }
