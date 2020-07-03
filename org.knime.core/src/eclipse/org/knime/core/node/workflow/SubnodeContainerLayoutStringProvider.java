@@ -186,7 +186,7 @@ public final class SubnodeContainerLayoutStringProvider {
             return false;
         }
         SubnodeContainerLayoutStringProvider other = (SubnodeContainerLayoutStringProvider)obj;
-        return StringUtils.equals(m_currentLayoutString, other.getLayoutString());
+        return StringUtils.equals(m_currentLayoutString, other.m_currentLayoutString);
     }
 
     /**

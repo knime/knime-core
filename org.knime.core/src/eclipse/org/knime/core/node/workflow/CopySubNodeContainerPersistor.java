@@ -101,7 +101,7 @@ public class CopySubNodeContainerPersistor
         }
         m_virtualInNodeIDSuffix = original.getVirtualInNode().getID().getIndex();
         m_virtualOutNodeIDSuffix = original.getVirtualOutNode().getID().getIndex();
-        m_subnodeLayoutStringProvider = original.getSubnodeLayoutStringProvider().copy();
+        m_subnodeLayoutStringProvider = original.getSubnodeLayoutStringProvider();
         m_hideInWizard = original.isHideInWizard();
         m_customCSS = new String(original.getCssStyles());
         m_componentMetadata = original.getMetadata();

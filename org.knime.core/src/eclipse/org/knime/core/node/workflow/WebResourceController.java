@@ -503,7 +503,6 @@ public abstract class WebResourceController {
         WizardPageContent page = new WizardPageContent(pageID, resultMap, layoutStringProvider.getLayoutString(),
             translatorList, managerList);
         page.setInfoMap(infoMap);
-        subNC.setSubnodeLayoutStringProvider(layoutStringProvider);
         return page;
     }
 

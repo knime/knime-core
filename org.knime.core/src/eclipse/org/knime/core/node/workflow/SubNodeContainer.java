@@ -2184,7 +2184,7 @@ public final class SubNodeContainer extends SingleNodeContainer
      * @since 4.2
      */
     public SubnodeContainerLayoutStringProvider getSubnodeLayoutStringProvider() {
-        return m_subnodeLayoutStringProvider;
+        return m_subnodeLayoutStringProvider.copy();
     }
 
     /**
@@ -2193,7 +2193,7 @@ public final class SubNodeContainer extends SingleNodeContainer
      */
     public void setSubnodeLayoutStringProvider(final SubnodeContainerLayoutStringProvider layoutStringProvider) {
         if (!m_subnodeLayoutStringProvider.equals(layoutStringProvider)) {
-            m_subnodeLayoutStringProvider = layoutStringProvider;
+            m_subnodeLayoutStringProvider.setLayoutString(layoutStringProvider.getLayoutString());
             if (isProject()) {
                 //differently handled if this is a component project
                 //otherwise the setDirty event will just be past to the parent (which is ROOT)
