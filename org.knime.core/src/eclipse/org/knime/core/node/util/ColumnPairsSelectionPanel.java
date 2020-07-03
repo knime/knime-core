@@ -122,7 +122,7 @@ public class ColumnPairsSelectionPanel extends JPanel {
         m_fillComponent = new JPanel();
         m_fillComponent.setBackground(Color.WHITE);
         m_persistentAddButton = new JButton("Add matching criterion");
-        m_persistentAddButton.setToolTipText("Append row at the end");
+        m_persistentAddButton.setToolTipText("Append matching criterion");
         m_persistentAddButton.addActionListener(new ActionListener() {
             /**  {@inheritDoc} */
             @Override
@@ -288,12 +288,12 @@ public class ColumnPairsSelectionPanel extends JPanel {
         renderer.attachTo(m_rightComboBoxes.get(index));
         initComboBox(m_specs[1], m_rightComboBoxes.get(index), rightSelected);
         JButton addButton = new JButton("+");
-        addButton.setToolTipText("Add row preceding this.");
+        addButton.setToolTipText("Add matching criterion above this.");
         addButton.addActionListener(m_addButtonListener);
         m_addButtons.add(index, addButton);
         JButton removeButton = new JButton("-");
         removeButton.addActionListener(m_removeButtonListener);
-        removeButton.setToolTipText("Remove this row.");
+        removeButton.setToolTipText("Remove this matching criterion.");
         m_removeButtons.add(index, removeButton);
 
         // if the first row was added
@@ -314,7 +314,7 @@ public class ColumnPairsSelectionPanel extends JPanel {
 
         // if the last row was removed
         if (m_leftComboBoxes.size() == 0) {
-            m_persistentAddButton.setText("Add row");
+            m_persistentAddButton.setText("Add matching criterion");
         }
 
     }
@@ -454,20 +454,27 @@ public class ColumnPairsSelectionPanel extends JPanel {
          */
         @Override
         public void paintComponent(final Graphics g) {
+            int anchorLeft = 0;
+            int offsetLeft = 10;
             if (m_leftComboBoxes.size() > 0) {
-                int offset = (m_leftComboBoxes.get(0).getSize().width
-                        - m_leftHeader.getPreferredSize().width) / 2;
-                m_leftHeader.setLocation(new Point(
-                        m_leftComboBoxes.get(0).getX() + offset, 0));
-                m_leftHeader.setSize(m_leftHeader.getPreferredSize());
+                anchorLeft = m_leftComboBoxes.get(0).getX();
+                // center the label over combobox
+                offsetLeft = (m_leftComboBoxes.get(0).getSize().width - m_leftHeader.getPreferredSize().width) / 2;
             }
+            int anchorRight = this.getWidth()/2;
+            int offsetRight = 10;
             if (m_rightComboBoxes.size() > 0) {
-                int offset = (m_rightComboBoxes.get(0).getSize().width
-                        - m_rightHeader.getPreferredSize().width) / 2;
-                m_rightHeader.setLocation(new Point(
-                        m_rightComboBoxes.get(0).getX() + offset, 0));
-                m_rightHeader.setSize(m_rightHeader.getPreferredSize());
+                anchorRight = m_rightComboBoxes.get(0).getX();
+                // center the label over combobox
+                offsetRight = (m_rightComboBoxes.get(0).getSize().width - m_rightHeader.getPreferredSize().width) / 2;
             }
+
+            m_leftHeader.setLocation(new Point(anchorLeft + offsetLeft, 0));
+            m_rightHeader.setLocation(new Point(anchorRight + offsetRight, 0));
+
+            m_leftHeader.setSize(m_leftHeader.getPreferredSize());
+            m_rightHeader.setSize(m_rightHeader.getPreferredSize());
+
             super.paintComponent(g);
         }
     }
