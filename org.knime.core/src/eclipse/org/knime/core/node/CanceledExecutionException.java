@@ -112,16 +112,47 @@ public class CanceledExecutionException extends Exception {
             final long skipEveryNInvocations) {
             return new CancelChecker() {
                 long m_skipNext = skipEveryNInvocations;
-
+                double invocations = 0;
+                double maxInvocations;
                 @Override
                 public void checkCanceled() throws CanceledExecutionException {
                     if (--m_skipNext == 0) {
+                        if(maxInvocations != 0) {
+                            exec.getProgressMonitor().setProgress(invocations/maxInvocations);
+                        }
                         exec.checkCanceled();
                         m_skipNext = skipEveryNInvocations;
                     }
                 }
             };
+        }
 
+        /**
+         * @param exec the context to check for cancelation
+         * @param executeEveryNthInvocation check cancelation only on every n-th invocation of {@link #checkCanceled()} to
+         *            save some time. If you want every call to the cancel checker to be executed, pass a value of 1 or less.
+         * @param targetInvocations the total number of invocations of the cancel checker.
+         * @return an object that periodically tests the execution context for cancelation
+         */
+        public static CancelChecker checkCanceledPeriodicallyWithProgress(final ExecutionContext exec,
+            final long executeEveryNthInvocation, final long targetInvocations) {
+            return new CancelChecker() {
+                long m_skipNext = executeEveryNthInvocation;
+                double m_invocations = 0;
+                long m_maxInvocations = targetInvocations;
+                @Override
+                public void checkCanceled() throws CanceledExecutionException {
+                    m_invocations++;
+                    m_skipNext--;
+                    if (m_skipNext < 0) {
+                        if(m_maxInvocations != 0) {
+                            exec.getProgressMonitor().setProgress(m_invocations/m_maxInvocations);
+                        }
+                        exec.checkCanceled();
+                        m_skipNext = executeEveryNthInvocation;
+                    }
+                }
+            };
         }
     }
 }

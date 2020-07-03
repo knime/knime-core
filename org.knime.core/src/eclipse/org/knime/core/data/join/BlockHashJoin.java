@@ -176,6 +176,8 @@ class BlockHashJoin extends JoinImplementation {
         // rows of the hash input
         HashIndex index = newHashIndex.get();
 
+        getProgress().setMessage("Indexing smaller table.");
+
         // grab and index as many hash input rows as possible (ideally all)
         try (CloseableRowIterator hashRows = hash.iterator()) {
 
@@ -205,7 +207,7 @@ class BlockHashJoin extends JoinImplementation {
                     index = newHashIndex.get();
                 }
 
-                m_progress.setProgressAndCheckCanceled(0.333 * rowOffset / hash.size());
+                m_progress.setProgressAndCheckCanceled(rowOffset / hash.size());
 
                 rowOffset++;
 
@@ -223,7 +225,9 @@ class BlockHashJoin extends JoinImplementation {
     private void singlePass(final BufferedDataTable probe, final HashIndex partialIndex, final RowHandlerCancelable unmatchedHashRows)
         throws CanceledExecutionException {
 
-        CancelChecker checkCanceled = CancelChecker.checkCanceledPeriodically(m_exec);
+        getProgress().setMessage("Single pass over larger table.");
+
+        CancelChecker checkCanceled = CancelChecker.checkCanceledPeriodicallyWithProgress(m_exec, 100, probe.size());
         JoinResult.enumerateWithResources(probe, extractOffsets(partialIndex::joinSingleRow), checkCanceled);
 
         partialIndex.forUnmatchedHashRows(unmatchedHashRows);
