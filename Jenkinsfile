@@ -46,7 +46,7 @@ try {
 
 	stage('Sonarqube analysis') {
 		env.lastStage = env.STAGE_NAME
-		workflowTests.runSonar([])
+		workflowTests.runSonar()
 	}
 } catch (ex) {
 	currentBuild.result = 'FAILURE'
