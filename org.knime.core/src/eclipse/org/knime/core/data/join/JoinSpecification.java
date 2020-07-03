@@ -373,13 +373,10 @@ public class JoinSpecification {
         final UnaryOperator<String> disambiguator) {
         String disambiguated = name;
         // detect if the disambiguator fails and fix by concatenating its answer to the previous name instead of using it
-        boolean firstAttempt = true;
         while (isAmbiguous.test(disambiguated)) {
-            // change name to disambiguate, e.g., append a suffix
-            disambiguated = disambiguator.apply(disambiguated);
             // use the disambiguator output only on first attempt, afterwards
-            disambiguated = firstAttempt ? disambiguated : disambiguated.concat(disambiguated);
-            firstAttempt = false;
+            boolean faultyDisambiguator = disambiguated.equals(disambiguator.apply(disambiguated));
+            disambiguated = faultyDisambiguator ? disambiguated.concat(disambiguated) : disambiguator.apply(disambiguated);
         }
         return disambiguated;
 

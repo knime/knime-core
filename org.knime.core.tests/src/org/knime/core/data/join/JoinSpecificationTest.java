@@ -209,6 +209,34 @@ public class JoinSpecificationTest {
     }
 
     /**
+     * Test the case in which a column name disambiguator produces a column name that is also already taken in the left table.
+     */
+    @Test
+    public void testDoubleClash() throws InvalidSettingsException {
+        DataTableSpec left = new DataTableSpec(col("A"), col("B"), col("A (disambiguated)"));
+        DataTableSpec right = new DataTableSpec(col("A"), col("B"), col("C"));
+        JoinTableSettings leftSettings =
+            new JoinTableSettings(false, JoinColumn.array("A"), new String[]{"A", "B", "A (disambiguated)"}, InputTable.LEFT, left);
+        JoinTableSettings rightSettings =
+            new JoinTableSettings(false, JoinColumn.array("A"), new String[]{"A", "B", "C"}, InputTable.RIGHT, right);
+
+        JoinSpecification joinSpec =
+            new JoinSpecification.Builder(leftSettings, rightSettings).columnNameDisambiguator(s -> s.concat(" (disambiguated)")) // won't disambiguate column name
+                .build();
+
+        DataTableSpec spec = joinSpec.specForMatchTable();
+        System.out.println(String.format("spec=%s", spec));
+
+        // named like this
+        int[] indices = spec.columnsToIndices("A", "B", "A (disambiguated)", "A (disambiguated) (disambiguated)", "B (disambiguated)", "C");
+        int[] expectedIndices = IntStream.range(0, spec.getNumColumns()).toArray();
+        assertArrayEquals(expectedIndices, indices);
+
+        assertEquals(expectedIndices.length, spec.getNumColumns());
+
+    }
+
+    /**
      * Test that a column name disambiguator that doesn't change the string doesn't cause an infinite loop
      *
      * @throws InvalidSettingsException

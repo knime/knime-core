@@ -184,7 +184,7 @@ public class JoinTableSettings {
             /**
              * Indicates that the row key of a data row shall be used as value in a join column equality clause.
              */
-            ROW_KEY("___$RowKey$____ac59075b", -100);
+            ROW_KEY("$RowID$", -100);
 
         static boolean isNot(final Object o) {
             return !(o instanceof SpecialJoinColumn);
