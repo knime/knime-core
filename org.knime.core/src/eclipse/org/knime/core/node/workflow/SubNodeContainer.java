@@ -2192,8 +2192,7 @@ public final class SubNodeContainer extends SingleNodeContainer
      * @since 4.2
      */
     public void setSubnodeLayoutStringProvider(final SubnodeContainerLayoutStringProvider layoutStringProvider) {
-        if (StringUtils.equals(m_subnodeLayoutStringProvider.getLayoutString(),
-                layoutStringProvider.getLayoutString())) {
+        if (!m_subnodeLayoutStringProvider.equals(layoutStringProvider)) {
             m_subnodeLayoutStringProvider = layoutStringProvider;
             if (isProject()) {
                 //differently handled if this is a component project

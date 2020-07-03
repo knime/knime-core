@@ -49,6 +49,7 @@
 package org.knime.core.node.workflow;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 /**
  * Functional wrapper class for what was a simple String layout representation before version 4.2.0. This class can be
@@ -171,5 +172,30 @@ public final class SubnodeContainerLayoutStringProvider {
             new SubnodeContainerLayoutStringProvider(m_loadedLayoutString);
         newLayoutStringProvider.setLayoutString(m_currentLayoutString);
         return newLayoutStringProvider;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (obj.getClass() != getClass()) {
+            return false;
+        }
+        SubnodeContainerLayoutStringProvider other = (SubnodeContainerLayoutStringProvider)obj;
+        return StringUtils.equals(m_currentLayoutString, other.getLayoutString());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder()
+                .append(m_currentLayoutString)
+                .toHashCode();
     }
 }
