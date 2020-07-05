@@ -288,6 +288,9 @@ public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNod
         boolean valid = validateCurrentValueInView();
         if (valid) {
             String jsonString = retrieveCurrentValueFromView();
+            if (jsonString == null || jsonString.equals("{}")) {
+                return false;
+            }
             try {
                 VAL viewValue = getModel().createEmptyViewValue();
                 viewValue.loadFromStream(new ByteArrayInputStream(jsonString.getBytes(Charset.forName("UTF-8"))));
