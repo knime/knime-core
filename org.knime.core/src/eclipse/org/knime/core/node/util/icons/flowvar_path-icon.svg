@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   viewBox="0 0 16 16"
+   version="1.1"
+   id="svg25"
+   sodipodi:docname="flowvar_path-icon.svg"
+   inkscape:version="0.92.3 (2405546, 2018-03-11)">
+  <metadata
+     id="metadata29">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="2560"
+     inkscape:window-height="1348"
+     id="namedview27"
+     showgrid="false"
+     inkscape:zoom="41.7193"
+     inkscape:cx="3.9172323"
+     inkscape:cy="7.2416646"
+     inkscape:window-x="1920"
+     inkscape:window-y="27"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="flowvar_double" />
+  <defs
+     id="defs14">
+    <style
+       id="style2">.cls-1{fill:#ff4b4b;}.cls-2{fill:#fff;}.cls-3{fill:gray;}.cls-4{fill:#4d4d4d;}</style>
+    <symbol
+       id="Border_type"
+       data-name="Border_type"
+       viewBox="0 0 16 16">
+      <rect
+         class="cls-2"
+         x="0.5"
+         y="0.5"
+         width="15"
+         height="15"
+         id="rect4" />
+      <path
+         class="cls-3"
+         d="M15,1V15H1V1H15m1-1H0V16H16V0Z"
+         id="path6" />
+    </symbol>
+    <symbol
+       id="Border_flowvar"
+       data-name="Border_flowvar"
+       viewBox="0 0 16 16">
+      <use
+         width="16"
+         height="16"
+         xlink:href="#Border_type"
+         id="use9" />
+      <circle
+         class="cls-1"
+         cx="12"
+         cy="4"
+         r="2"
+         id="circle11" />
+    </symbol>
+  </defs>
+  <title
+     id="title16">flowvar_double</title>
+  <g
+     id="Layer_2"
+     data-name="Layer 2">
+    <g
+       id="rework">
+      <g
+         id="flowvar_double">
+        <use
+           width="16"
+           height="16"
+           xlink:href="#Border_flowvar"
+           id="use18" />
+        <text
+           xml:space="preserve"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#4d4d4d;fill-opacity:1;stroke:#4d4d4d;stroke-width:0.40000001;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           x="2.8053286"
+           y="10.566839"
+           id="text838"><tspan
+             sodipodi:role="line"
+             id="tspan836"
+             x="2.8053286"
+             y="10.566839">p</tspan></text>
+      </g>
+    </g>
+  </g>
+</svg>

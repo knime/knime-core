@@ -196,6 +196,8 @@ public enum SharedIcons {
     TYPE_IMAGE("icons/image.png"),
     /** Long type icon **/
     TYPE_LONG("icons/long.png"),
+    /** Path type icon **/
+    TYPE_PATH("icons/path.png"),
     /** Port type icon **/
     TYPE_PORT("icons/port.png"),
     /** String type icon **/
@@ -256,6 +258,8 @@ public enum SharedIcons {
     /** Flow variable long array
      * @since 4.1**/
     FLOWVAR_LONG_ARRAY("icons/flowvar_long_array.png"),
+    /** Flow variable path **/
+    FLOWVAR_PATH("icons/flowvar_path.png"),
     /** Flow variable string **/
     FLOWVAR_STRING("icons/flowvar_string.png"),
     /** Flow variable string array
