@@ -158,8 +158,8 @@ public interface NodeContainerParent {
     /**
      * Determines whether this container parent is a project (i.e. the node container at the 'upper-most' level).
      *
-     * @since 4.2
      * @return <code>true</code> if this node container is a project, otherwise <code>false</code>
+     * @since 4.2
      */
     default public boolean isProject() {
         return false;

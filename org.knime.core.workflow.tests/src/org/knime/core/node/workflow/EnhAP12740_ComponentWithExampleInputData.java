@@ -242,16 +242,6 @@ public class EnhAP12740_ComponentWithExampleInputData extends WorkflowTestCase {
         assertFalse("no node state changes expected", componentProject.getTrackedChanges().get().hasNodeStateChanges());
     }
 
-    /**
-     * Removes loaded components from the project map.
-     */
-    @After
-    public void closeLoadedComponents() {
-        for (NodeID id : m_loadedComponentNodeIDs) {
-            WorkflowManager.ROOT.removeProject(id);
-        }
-    }
-
     private void assertComponentLoadingResult(final LoadResult lr, final int expectedNodeStateChanges) {
         int numNodeStateChanges = assertComponentLoadingResult(lr.getChildren());
         assertThat("unexpected number of node state changes", numNodeStateChanges, is(expectedNodeStateChanges));
@@ -283,18 +273,4 @@ public class EnhAP12740_ComponentWithExampleInputData extends WorkflowTestCase {
         }
         return countNodeStateChanges;
     }
-
-    private MetaNodeLinkUpdateResult loadComponent(final File componentDir, final ExecutionMonitor exec,
-        final WorkflowLoadHelper loadHelper)
-        throws IOException, InvalidSettingsException, CanceledExecutionException, UnsupportedWorkflowVersionException {
-        URI componentURI = componentDir.toURI();
-        TemplateNodeContainerPersistor loadPersistor =
-            loadHelper.createTemplateLoadPersistor(componentDir, componentURI);
-        MetaNodeLinkUpdateResult loadResult =
-            new MetaNodeLinkUpdateResult("Shared instance from \"" + componentURI + "\"");
-        WorkflowManager.ROOT.load(loadPersistor, loadResult, exec, false);
-        m_loadedComponentNodeIDs.add(loadResult.getLoadedInstance().getID());
-        return loadResult;
-    }
-
 }

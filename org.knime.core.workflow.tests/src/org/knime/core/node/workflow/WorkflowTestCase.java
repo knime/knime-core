@@ -51,6 +51,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
+import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -69,10 +70,13 @@ import org.junit.Assert;
 import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
+import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
+import org.knime.core.node.workflow.WorkflowPersistor.MetaNodeLinkUpdateResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.ThreadUtils;
@@ -95,6 +99,8 @@ public abstract class WorkflowTestCase {
     private final NodeLogger m_logger = NodeLogger.getLogger(getClass());
 
     private WorkflowManager m_manager;
+
+	private List<NodeID> m_loadedComponentNodeIDs = new ArrayList<>(0);
 
     protected NodeID loadAndSetWorkflow() throws Exception {
         File workflowDir = getDefaultWorkflowDirectory();
@@ -153,6 +159,19 @@ public abstract class WorkflowTestCase {
         }
         return loadResult;
     }
+    
+	protected MetaNodeLinkUpdateResult loadComponent(final File componentDir, final ExecutionMonitor exec,
+			final WorkflowLoadHelper loadHelper) throws IOException, InvalidSettingsException,
+			CanceledExecutionException, UnsupportedWorkflowVersionException {
+		URI componentURI = componentDir.toURI();
+		TemplateNodeContainerPersistor loadPersistor = loadHelper.createTemplateLoadPersistor(componentDir,
+				componentURI);
+		MetaNodeLinkUpdateResult loadResult = new MetaNodeLinkUpdateResult(
+				"Shared instance from \"" + componentURI + "\"");
+		WorkflowManager.ROOT.load(loadPersistor, loadResult, exec, false);
+		m_loadedComponentNodeIDs.add(loadResult.getLoadedInstance().getID());
+		return loadResult;
+	}
 
     /**
      * @return
@@ -494,6 +513,11 @@ public abstract class WorkflowTestCase {
     @After
     public void tearDown() throws Exception {
         closeWorkflow();
+        
+        // dispose loaded components
+        for (NodeID id : m_loadedComponentNodeIDs) {
+            WorkflowManager.ROOT.removeProject(id);
+        }
 
         // Executed after each test, checks that there are no open workflows dangling around.
         final List<NodeContainer> newDanglingWorkflows = getDanglingWorkflows();
