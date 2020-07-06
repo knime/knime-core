@@ -237,6 +237,43 @@ public class JoinSpecificationTest {
     }
 
     /**
+     * Test the output spec generation for two sequential joins with lots of duplicate columns and all combinations of
+     * merge join columns on/off for the first and the second join, respectively. This was built around a use case where
+     * the output spec contained duplicate column names.
+     */
+    @Test
+    public void joinJoinedResults() throws InvalidSettingsException {
+        // a simple test table, with specs as produced by data generator node
+        BufferedDataTable original =
+            JoinTestInput.table("xx,xy,yx,yy,M", new DataRow[0]);
+        JoinTableSettings firstLeftSettings = new JoinTableSettings(true, JoinColumn.array("xx"),
+            original.getDataTableSpec().getColumnNames(), InputTable.LEFT, original);
+        JoinTableSettings firstRightSettings = new JoinTableSettings(true, JoinColumn.array("yx"),
+            original.getDataTableSpec().getColumnNames(), InputTable.RIGHT, original);
+
+        //this has the output specs of a table produced by a concat operation of original with the self-join result (see below)
+        BufferedDataTable concated = JoinTestInput.table("xx,xy,yx,yy,M,xx=xy,yx (#1),yy (#1),M (#1)", new DataRow[0]);
+        JoinTableSettings concatedSettings = new JoinTableSettings(true, JoinColumn.array("xx"),
+            concated.getDataTableSpec().getColumnNames(), InputTable.LEFT, concated);
+
+        for (boolean mergeFirst : new boolean[]{false, true}) {
+            for (boolean mergeSecond : new boolean[]{false, true}) {
+                // compute the output spec for a self join on the original table
+                JoinSpecification selfJoin = new JoinSpecification.Builder(firstLeftSettings, firstRightSettings)
+                    .mergeJoinColumns(mergeFirst).build();
+                DataTableSpec selfJoinSpec = selfJoin.specForMatchTable();
+
+                // now join the self-join result with the concated table
+                JoinTableSettings selfJoinSettings = new JoinTableSettings(true, JoinColumn.array("xx"),
+                    selfJoinSpec.getColumnNames(), InputTable.RIGHT, selfJoinSpec);
+                JoinSpecification followUpJoin = new JoinSpecification.Builder(concatedSettings, selfJoinSettings)
+                    .mergeJoinColumns(mergeSecond).build();
+                DataTableSpec followUpJoinSpec = followUpJoin.specForMatchTable();
+            }
+        }
+    }
+
+    /**
      * Test that a column name disambiguator that doesn't change the string doesn't cause an infinite loop
      *
      * @throws InvalidSettingsException

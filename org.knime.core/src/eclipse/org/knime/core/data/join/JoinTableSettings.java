@@ -63,6 +63,8 @@ import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.InvalidSettingsException;
 
+import com.google.common.collect.ImmutableList;
+
 /**
  * Bundle included columns, join columns, etc. for a given input table. Two {@link JoinTableSettings} can be combined
  * into a {@link JoinSpecification}. <br/>
@@ -230,7 +232,7 @@ public class JoinTableSettings {
      * column name in {@link #getTableSpec()}. The contents do not have to be unique, as for instance a column name may
      * appear in multiple join clauses.
      */
-    private final List<JoinColumn> m_joinClauses;
+    private final ImmutableList<JoinColumn> m_joinClauses;
 
     /**
      * Column offsets containing the values for the join clauses, might include negative values for
@@ -241,14 +243,14 @@ public class JoinTableSettings {
     /**
      * @see #getJoinColumnNames()
      */
-    private final List<String> m_joinColumnNames;
+    private final ImmutableList<String> m_joinColumnNames;
 
     /**
      * Names of the columns to include from this table in the result table. The contents are unique, as each column is
      * either included or not. This doesn't have to cover join columns. The result table may also include columns from
      * the other input table.
      */
-    private final List<String> m_includeColumnNames;
+    private final ImmutableList<String> m_includeColumnNames;
 
     /** Column offsets of the included columns in the original table. */
     final int[] m_includeColumns;
@@ -291,14 +293,15 @@ public class JoinTableSettings {
         m_side = side;
         m_retainUnmatched = retainUnmatched;
 
-        m_joinClauses = Arrays.asList(joinColumns);
+        m_joinClauses = ImmutableList.copyOf(joinColumns);
 
-        m_includeColumnNames = Arrays.stream(includeColumns).collect(Collectors.toList());
+        m_includeColumnNames = ImmutableList.copyOf(includeColumns);
         validate(m_includeColumnNames, "include", spec);
 
         // join and include columns
-        m_joinColumnNames = m_joinClauses.stream().filter(JoinColumn::isColumn).map(JoinColumn::toColumnName)
-            .collect(Collectors.toList());
+        m_joinColumnNames = ImmutableList.copyOf(
+            m_joinClauses.stream().filter(JoinColumn::isColumn).map(JoinColumn::toColumnName).toArray(String[]::new));
+
         // make sure join column names are present in the data table specification
         validate(m_joinColumnNames, "join", spec);
 

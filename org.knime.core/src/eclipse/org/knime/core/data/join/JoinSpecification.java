@@ -255,24 +255,23 @@ public class JoinSpecification {
      * @return concatenate the columns of the left and right table and filter for included columns.
      */
     private DataTableSpec specForNormalMatchTable() {
-        // look up the data column specifications in the left table by their name
-        final DataTableSpec leftSpec = getSettings(InputTable.LEFT).getTableSpec();
-        // look up the right data column specifications by name
-        // change names if they clash with column name from left table
-        DataTableSpec rightSpec = getSettings(InputTable.RIGHT).getTableSpec();
-        List<DataColumnSpec> rightColSpecs = new ArrayList<>();
-        List<String> leftIncludes = getSettings(InputTable.LEFT).getIncludeColumnNames();
 
-        // look up column specs for names and change column names to getRightTargetColumnNames
-        int[] rightIncludes = getSettings(InputTable.RIGHT).m_includeColumns;
-        for (int i = 0; i < rightIncludes.length; i++) {
-            DataColumnSpec spec = rightSpec.getColumnSpec(rightIncludes[i]);
-            rightColSpecs.add(columnDisambiguate(spec, s -> leftSpec.containsName(s) && leftIncludes.contains(s)));
+        // add all included columns from the left table to the output spec
+        final List<String> resultColumnNames = new ArrayList<>(getSettings(InputTable.LEFT).getIncludeColumnNames());
+        // resolve names to column specifications
+        final List<DataColumnSpec> resultColumns = resultColumnNames.stream()
+            .map(getSettings(InputTable.LEFT).getTableSpec()::getColumnSpec).collect(Collectors.toList());
+
+        final DataTableSpec rightSpec = getSettings(InputTable.RIGHT).getTableSpec();
+        // change names if they clash with column name from left table
+        for (int includedColumn : getSettings(InputTable.RIGHT).getIncludeColumns()) {
+            DataColumnSpec spec = rightSpec.getColumnSpec(includedColumn);
+            DataColumnSpec disambiguated = columnDisambiguate(spec, resultColumnNames::contains);
+            resultColumnNames.add(disambiguated.getName());
+            resultColumns.add(disambiguated);
         }
 
-        return new DataTableSpec(
-            Stream.concat(leftIncludes.stream().map(leftSpec::getColumnSpec), rightColSpecs.stream())
-                .toArray(DataColumnSpec[]::new));
+        return new DataTableSpec(resultColumns.toArray(new DataColumnSpec[resultColumns.size()]));
 
     }
 
