@@ -218,6 +218,8 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
 
     private final boolean m_isProject;
 
+    private final boolean m_isComponentProject;
+
     private NodeSettingsRO m_workflowSett;
 
     private final List<ReferencedFile> m_obsoleteNodeDirectories;
@@ -250,6 +252,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
         m_connectionSet = new HashSet<ConnectionContainerTemplate>();
         m_obsoleteNodeDirectories = new ArrayList<ReferencedFile>();
         m_isProject = isProject;
+        m_isComponentProject = loadHelper.isTemplateProject();
     }
 
     /** {@inheritDoc} */
@@ -395,7 +398,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
      */
     @Override
     public WorkflowContext getWorkflowContext() {
-        return isProject() ? getMetaPersistor().getLoadHelper().getWorkflowContext() : null;
+        return isProject() || m_isComponentProject ? getMetaPersistor().getLoadHelper().getWorkflowContext() : null;
     }
 
     /** {@inheritDoc} */

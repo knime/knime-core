@@ -87,7 +87,7 @@ public class ContextObjectSupplierUI implements ContextObjectSupplier, UI {
     private static <C> Optional<C> getObjOfClass(final Class<C> contextObjClass, final NodeContainer srcObj) {
         //order of checking important
         if (WorkflowManagerUI.class.isAssignableFrom(contextObjClass)) {
-            return Optional.of((C)getRootParent(NodeContainerWrapper.wrap(srcObj)));
+            return Optional.of((C)getProjectWFM(NodeContainerWrapper.wrap(srcObj)));
         } else if (NodeContainerUI.class.isAssignableFrom(contextObjClass)) {
             return Optional.of((C)NodeContainerWrapper.wrap(srcObj));
         } else {
@@ -99,11 +99,11 @@ public class ContextObjectSupplierUI implements ContextObjectSupplier, UI {
     private static <C> Optional<C> getObjOfClass(final Class<C> contextObjClass, final NodeContainerUI srcObj) {
         //order of checking important here
         if (WorkflowManagerUI.class.isAssignableFrom(contextObjClass)) {
-            return Optional.of((C)getRootParent(srcObj));
+            return Optional.of((C)getProjectWFM(srcObj));
         } else if (NodeContainerUI.class.isAssignableFrom(contextObjClass)) {
             return Optional.of((C)srcObj);
         } else if (WorkflowManager.class.isAssignableFrom(contextObjClass)) {
-            return (Optional<C>)Wrapper.unwrapWFMOptional(getRootParent(srcObj));
+            return (Optional<C>)Wrapper.unwrapWFMOptional(getProjectWFM(srcObj));
         } else if (NodeContainer.class.isAssignableFrom(contextObjClass)) {
             return (Optional<C>)Wrapper.unwrapNCOptional(srcObj);
         } else {
@@ -112,13 +112,13 @@ public class ContextObjectSupplierUI implements ContextObjectSupplier, UI {
     }
 
     @SuppressWarnings("cast")
-    private static WorkflowManagerUI getRootParent(final NodeContainerUI nc) {
+    private static WorkflowManagerUI getProjectWFM(final NodeContainerUI nc) {
         if (nc == null) {
             return null;
         }
 
         if (Wrapper.wraps(nc, NodeContainer.class)) {
-            return WorkflowManagerWrapper.wrap(getRootParent(Wrapper.unwrapNC(nc)));
+            return WorkflowManagerWrapper.wrap(NodeContainerParent.getProjectWFM(Wrapper.unwrapNC(nc)));
         }
 
         // find the actual workflow and not the metanode the container may be in
@@ -130,14 +130,4 @@ public class ContextObjectSupplierUI implements ContextObjectSupplier, UI {
         return parent;
     }
 
-    private static WorkflowManager getRootParent(final NodeContainer nc) {
-        // find the actual workflow and not the metanode the container may be in
-        NodeContainerParent parent = nc instanceof WorkflowManager ? (WorkflowManager)nc : nc.getDirectNCParent();
-
-        while (!(parent instanceof WorkflowManager && ((WorkflowManager)parent).isProject())) {
-            assert parent != null : "Parent item can't be null as a project parent is expected";
-            parent = parent.getDirectNCParent();
-        }
-        return (WorkflowManager)parent;
-    }
 }

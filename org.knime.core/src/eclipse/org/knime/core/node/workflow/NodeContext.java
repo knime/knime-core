@@ -384,24 +384,6 @@ public final class NodeContext {
     private static final class DefaultContextObjectSupplier implements ContextObjectSupplier {
 
         /**
-         * Determines the 'upper-most' parent of the given node container.
-         *
-         * @param nc the node container to find the parent for
-         *
-         * @return the root workflow manager of the give node container
-         */
-        private static WorkflowManager getRootParent(final NodeContainer nc) {
-            // find the actual workflow and not the metanode the container may be in
-            NodeContainerParent parent = nc instanceof WorkflowManager ? (WorkflowManager)nc : nc.getDirectNCParent();
-
-            while (!(parent instanceof WorkflowManager && ((WorkflowManager)parent).isProject())) {
-                assert parent != null : "Parent item can't be null as a project parent is expected";
-                parent = parent.getDirectNCParent();
-            }
-            return (WorkflowManager)parent;
-        }
-
-        /**
          * {@inheritDoc}
          */
         @SuppressWarnings("unchecked")
@@ -410,7 +392,7 @@ public final class NodeContext {
             if (srcObj instanceof NodeContainer) {
                 //order of checking important
                 if (WorkflowManager.class.isAssignableFrom(contextObjClass)) {
-                    return Optional.of((C)getRootParent((NodeContainer)srcObj));
+                    return Optional.of((C)NodeContainerParent.getProjectWFM((NodeContainer)srcObj));
                 } else if (NodeContainer.class.isAssignableFrom(contextObjClass)) {
                     return Optional.of((C)srcObj);
                 } else {

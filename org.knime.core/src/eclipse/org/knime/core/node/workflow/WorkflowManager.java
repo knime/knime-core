@@ -530,7 +530,7 @@ public final class WorkflowManager extends NodeContainer
         m_credentialsStore = new CredentialsStore(this, persistor.getCredentials());
         m_cipher = persistor.getWorkflowCipher();
         WorkflowContext workflowContext;
-        if (isProject) {
+        if (isProject || isComponentProjectWFM()) {
             workflowContext = persistor.getWorkflowContext();
             if (workflowContext == null && getNodeContainerDirectory() != null) { // real projects have a file loc
                 LOGGER.warn("No workflow context available for " + m_name, new Throwable());
@@ -1048,6 +1048,7 @@ public final class WorkflowManager extends NodeContainer
      * @return This property.
      * @since 2.6
      */
+    @Override
     public boolean isProject() {
         return this == ROOT || getReentrantLockInstance() != getDirectNCParent().getReentrantLockInstance();
     }
