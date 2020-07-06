@@ -189,6 +189,18 @@ public final class WizardExecutionController extends WebResourceController imple
     }
 
     /**
+     * @return the last wizard page visited or an empty optional if there is none
+     * @since 4.2
+     */
+    public Optional<NodeID> getLastWizardPageNodeID() {
+        if (m_promptedSubnodeIDSuffixes.isEmpty()) {
+            return Optional.empty();
+        } else {
+            return Optional.of(toNodeID(m_promptedSubnodeIDSuffixes.peek()));
+        }
+    }
+
+    /**
      * @return <code>true</code> if execution has been started, i.e. {@link #stepFirst()} has been called, otherwise
      *         <code>false</code>
      * @since 4.2
