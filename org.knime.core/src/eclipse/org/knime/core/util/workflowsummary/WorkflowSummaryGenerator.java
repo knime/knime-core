@@ -602,12 +602,16 @@ public final class WorkflowSummaryGenerator {
                     if (nc instanceof SingleNodeContainer) {
                         // the outgoing stack of a SingleNodeContainer only contains variables owned by that node
                         FlowObjectStack fos = ((SingleNodeContainer)nc).getOutgoingFlowObjectStack();
-                        return fos == null ? null : fos.getAllAvailableFlowVariables().values().stream()//
-                            .filter(f -> f.getScope() == Scope.Flow)//
-                            .map(FlowVariable::create).collect(Collectors.toList());
-                    } else {
-                        return null;
+                        if (fos != null) {
+                            List<FlowVariable> vars = fos.getAllAvailableFlowVariables().values().stream()//
+                                .filter(f -> f.getScope() == Scope.Flow)//
+                                .map(FlowVariable::create).collect(Collectors.toList());
+                            if (!vars.isEmpty()) {
+                                return vars;
+                            }
+                        }
                     }
+                    return null;
                 }
 
             };
