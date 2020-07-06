@@ -2490,4 +2490,60 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.dialog.ExternalNodeDataTest">
+        <filter id="305422471">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.dialog.ExternalNodeDataTest"/>
+                <message_argument value="org.knime.core_4.1.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.util.PathUtilsTest">
+        <filter id="305422471">
+            <message_arguments>
+                <message_argument value="org.knime.core.util.PathUtilsTest"/>
+                <message_argument value="org.knime.core_4.1.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.util.workflowalizer.AbstractWorkflowalizerTest">
+        <filter id="305422471">
+            <message_arguments>
+                <message_argument value="org.knime.core.util.workflowalizer.AbstractWorkflowalizerTest"/>
+                <message_argument value="org.knime.core_4.1.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.util.workflowalizer.JSONTest">
+        <filter id="305422471">
+            <message_arguments>
+                <message_argument value="org.knime.core.util.workflowalizer.JSONTest"/>
+                <message_argument value="org.knime.core_4.1.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.util.workflowalizer.WorkflowFileVisitor">
+        <filter id="305422471">
+            <message_arguments>
+                <message_argument value="org.knime.core.util.workflowalizer.WorkflowFileVisitor"/>
+                <message_argument value="org.knime.core_4.1.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.util.workflowalizer.Workflowalizer410Test">
+        <filter id="305422471">
+            <message_arguments>
+                <message_argument value="org.knime.core.util.workflowalizer.Workflowalizer410Test"/>
+                <message_argument value="org.knime.core_4.1.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.util.workflowalizer.WorkflowalizerTest">
+        <filter id="305422471">
+            <message_arguments>
+                <message_argument value="org.knime.core.util.workflowalizer.WorkflowalizerTest"/>
+                <message_argument value="org.knime.core_4.1.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
 </component>
