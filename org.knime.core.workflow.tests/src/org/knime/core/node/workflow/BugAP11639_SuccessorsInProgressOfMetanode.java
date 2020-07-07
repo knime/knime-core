@@ -86,7 +86,7 @@ public class BugAP11639_SuccessorsInProgressOfMetanode extends WorkflowTestCase 
 		m_datagen_10_0_1 = createNodeID(wfId, 10, 0, 1);
 		m_datagen_10_0_5 = createNodeID(wfId, 10, 0, 5);
 		m_wfm.executeAll();
-		Awaitility.await().atMost(10, TimeUnit.SECONDS).pollInterval(100, TimeUnit.MILLISECONDS).untilAsserted(() -> {
+		Awaitility.await().atMost(20, TimeUnit.SECONDS).pollInterval(100, TimeUnit.MILLISECONDS).untilAsserted(() -> {
 			assertTrue(m_metanode_8.getNodeContainerState().isExecuted());
 			assertTrue(m_component_10.getNodeContainerState().isExecuted());
 		});
