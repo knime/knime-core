@@ -2306,7 +2306,7 @@ public final class SubNodeContainer extends SingleNodeContainer
             NodeExecutionJobManager jobManager = m_wfm.getJobManager();
             m_wfm.setJobManager(ThreadNodeExecutionJobManager.INSTANCE);
             m_wfm.resetAndConfigureAll();
-            m_wfm.executeAllAndWaitUntilDone();
+            executeWorkflowAndWait(m_wfm);
             if (!m_wfm.getInternalState().isExecuted()) {
                 cancelExecution();
                 m_wfm.resetAndConfigureAll();
@@ -2321,6 +2321,34 @@ public final class SubNodeContainer extends SingleNodeContainer
         } finally {
             m_isPerformingActionCalledFromParent = false;
        }
+    }
+
+    /** Called by {@link #setInactive()} to run all nodes in the contained workflow. */
+    private static void executeWorkflowAndWait(final WorkflowManager wfm) {
+        Runnable inBackgroundRunner = () -> {
+            try {
+                wfm.executeAllAndWaitUntilDoneInterruptibly();
+            } catch (InterruptedException e) {
+                wfm.cancelExecution();
+                Thread.currentThread().interrupt();
+            }
+        };
+        ThreadPool currentPool = ThreadPool.currentPool();
+        if (currentPool != null) {
+            // ordinary workflow execution
+            try {
+                currentPool.runInvisible(() -> {
+                    inBackgroundRunner.run();
+                    return null;
+                });
+            } catch (ExecutionException ee) {
+                LOGGER.error(ee.getCause().getClass().getSimpleName()
+                		+ " while waiting for inner workflow to complete", ee);
+            }
+        } else {
+            // streaming execution
+            inBackgroundRunner.run();
+        }
     }
 
     /** {@inheritDoc} */
