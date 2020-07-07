@@ -288,6 +288,7 @@ public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNod
         boolean valid = validateCurrentValueInView();
         if (valid) {
             String jsonString = retrieveCurrentValueFromView();
+            // compare to not existing or default value @see use of WizardNodeView.EMPTY_OBJECT_STRING
             if (jsonString == null || jsonString.equals("{}")) {
                 return false;
             }
