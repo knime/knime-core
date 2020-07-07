@@ -103,23 +103,22 @@ public class CanceledExecutionException extends Exception {
         }
 
         /**
-         * @param exec the context to check for cancelation
-         * @param skipEveryNInvocations check cancelation only on every n-th invocation of {@link #checkCanceled()} to
+         * Create a cancel checker that skips every n-th call to {@link #checkCanceled()}.
+         *
+         * @param exec the context to check for cancellation
+         * @param skipEveryNInvocations check cancellation only on every n-th invocation of {@link #checkCanceled()} to
          *            save some time
-         * @return an object that periodically tests the execution context for cancelation
+         * @return an object that periodically tests the execution context for cancellation
          */
         public static CancelChecker checkCanceledPeriodically(final ExecutionContext exec,
             final long skipEveryNInvocations) {
             return new CancelChecker() {
                 long m_skipNext = skipEveryNInvocations;
-                double invocations = 0;
-                double maxInvocations;
+
                 @Override
                 public void checkCanceled() throws CanceledExecutionException {
-                    if (--m_skipNext == 0) {
-                        if(maxInvocations != 0) {
-                            exec.getProgressMonitor().setProgress(invocations/maxInvocations);
-                        }
+                    m_skipNext--;
+                    if (m_skipNext < 0) {
                         exec.checkCanceled();
                         m_skipNext = skipEveryNInvocations;
                     }
@@ -128,25 +127,41 @@ public class CanceledExecutionException extends Exception {
         }
 
         /**
-         * @param exec the context to check for cancelation
-         * @param executeEveryNthInvocation check cancelation only on every n-th invocation of {@link #checkCanceled()} to
-         *            save some time. If you want every call to the cancel checker to be executed, pass a value of 1 or less.
+         * Create a cancel checker that skips every n-th call to to {@link #checkCanceled()} and updates progress on the
+         * given execution context on every non-skipped call of {@link #checkCanceled()}.
+         *
+         * @param exec the context to check for cancellation
+         * @param executeEveryNthInvocation check cancellation only on every n-th invocation of {@link #checkCanceled()}
+         *            to save some time. If you want every call to the cancel checker to be executed, pass a value of 1
+         *            or less.
          * @param targetInvocations the total number of invocations of the cancel checker.
-         * @return an object that periodically tests the execution context for cancelation
+         * @return an object that periodically tests the execution context for cancellation
          */
         public static CancelChecker checkCanceledPeriodicallyWithProgress(final ExecutionContext exec,
             final long executeEveryNthInvocation, final long targetInvocations) {
             return new CancelChecker() {
+                /**
+                 * Ignore the next m_skipNext calls to checkCanceled()
+                 */
                 long m_skipNext = executeEveryNthInvocation;
+
+                /**
+                 * The number of times checkCanceled() was called on this object.
+                 */
                 double m_invocations = 0;
-                long m_maxInvocations = targetInvocations;
+
+                /**
+                 * The number of invocations of checkCanceled() that is considered 100% progress.
+                 */
+                final long m_maxInvocations = targetInvocations;
+
                 @Override
                 public void checkCanceled() throws CanceledExecutionException {
                     m_invocations++;
                     m_skipNext--;
                     if (m_skipNext < 0) {
-                        if(m_maxInvocations != 0) {
-                            exec.getProgressMonitor().setProgress(m_invocations/m_maxInvocations);
+                        if (m_maxInvocations != 0) {
+                            exec.getProgressMonitor().setProgress(m_invocations / m_maxInvocations);
                         }
                         exec.checkCanceled();
                         m_skipNext = executeEveryNthInvocation;
