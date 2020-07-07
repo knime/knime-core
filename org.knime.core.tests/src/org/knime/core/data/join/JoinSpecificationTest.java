@@ -303,6 +303,37 @@ public class JoinSpecificationTest {
     }
 
     /**
+     * Test that appending a space as disambiguator works.
+     */
+    @Test
+    public void spaceDisambiguator() throws InvalidSettingsException {
+        DataTableSpec abc = new DataTableSpec(col("A"), col("B"), col("C"));
+        JoinTableSettings leftSettings =
+            new JoinTableSettings(false, JoinColumn.array(SpecialJoinColumn.ROW_KEY), new String[]{"A", "B", "C"}, InputTable.LEFT, abc);
+        JoinTableSettings rightSettings =
+            new JoinTableSettings(false, JoinColumn.array(SpecialJoinColumn.ROW_KEY), new String[]{"A", "B", "C"}, InputTable.RIGHT, abc);
+
+        for(boolean mergeJoinColumns : new boolean[] {false, true}) {
+
+        JoinSpecification joinSpec =
+            new JoinSpecification.Builder(leftSettings, rightSettings)
+                .columnNameDisambiguator(s -> s.concat(" "))
+                .mergeJoinColumns(mergeJoinColumns)
+                .build();
+
+            DataTableSpec spec = joinSpec.specForMatchTable();
+
+            // named like this
+            int[] indices = spec.columnsToIndices("A", "B", "C", "AA", "BB", "CC");
+            int[] expectedIndices = IntStream.range(0, spec.getNumColumns()).toArray();
+            assertArrayEquals(expectedIndices, indices);
+
+            assertEquals(expectedIndices.length, spec.getNumColumns());
+        }
+
+    }
+
+    /**
      * Test that the number of conjunctive groups is returned correctly for match any and match all
      *
      * @throws InvalidSettingsException

@@ -299,7 +299,11 @@ public class JoinSpecification {
                         leftOutputColumns.add(colSpec);
                     } else {
                         // otherwise output a new column with name "Col1=Col2" instead of this column
-                        String newName = name.concat("=").concat(String.join("=", rightNames));
+                        String newName = name;
+                        // can be empty if join partners are special join columns
+                        if(! rightNames.isEmpty()) {
+                            newName = name.concat("=").concat(String.join("=", rightNames));
+                        }
                         DataColumnSpecCreator newSpec = new DataColumnSpecCreator(colSpec);
                         newSpec.setName(newName);
                         newSpec.removeAllHandlers();
@@ -373,8 +377,9 @@ public class JoinSpecification {
         String disambiguated = name;
         // detect if the disambiguator fails and fix by concatenating its answer to the previous name instead of using it
         while (isAmbiguous.test(disambiguated)) {
-            // use the disambiguator output only on first attempt, afterwards
-            boolean faultyDisambiguator = disambiguated.equals(disambiguator.apply(disambiguated));
+            // DataColumnSpec.setName(name) will trim the given name, so appending spaces won't help
+            String effectiveColumnName = disambiguator.apply(disambiguated).trim();
+            boolean faultyDisambiguator = disambiguated.equals(effectiveColumnName);
             disambiguated = faultyDisambiguator ? disambiguated.concat(disambiguated) : disambiguator.apply(disambiguated);
         }
         return disambiguated;
