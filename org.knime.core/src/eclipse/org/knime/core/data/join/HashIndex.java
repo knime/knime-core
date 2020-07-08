@@ -71,13 +71,9 @@ import gnu.trove.strategy.HashingStrategy;
 
 /**
  * Index for rows in a table. Provides fast lookup of join partners via
-<<<<<<< HEAD
  * {@link #joinSingleRow(JoinTuple, DataRow, long, JoinResult)}. Can be flushed to disk using {@link #toDisk()}. This
  * does not serialize the index structure, it just flushes to disk the rows stored in the index using a
  * {@link BufferedDataTable}.
-=======
- * {@link #joinSingleRow(JoinTuple, DataRow, long, JoinResults)}. Can be flushed to disk using {@link #toDisk()}.
->>>>>>> 65ee5f4050365315c38ca0aab8cc21d67f282d75
  *
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  */

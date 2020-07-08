@@ -111,7 +111,7 @@ public class JoinSpecification {
          *         {@link InputTable#values()}, but in case another constant is added, code may break in different
          *         places.
          */
-        public static InputTable[] leftRight() {
+        static InputTable[] leftRight() {
             return LEFT_RIGHT;
         }
     }
@@ -372,7 +372,7 @@ public class JoinSpecification {
      * @param disambiguator a way to make the name unique
      * @return the fixed column name, may be unchanged.
      */
-    public static String columnDisambiguate(final String name, final Predicate<String> isAmbiguous,
+    static String columnDisambiguate(final String name, final Predicate<String> isAmbiguous,
         final UnaryOperator<String> disambiguator) {
         String disambiguated = name;
         // detect if the disambiguator fails and fix by concatenating its answer to the previous name instead of using it
@@ -395,7 +395,7 @@ public class JoinSpecification {
      *            the name longer to eventually succeed, but the method has a safety net for that.
      * @return a data column spec with a unique name, according to predicate
      */
-    public static DataColumnSpec columnDisambiguate(final DataColumnSpec columnSpec, final Predicate<String> isAmbiguous,
+    static DataColumnSpec columnDisambiguate(final DataColumnSpec columnSpec, final Predicate<String> isAmbiguous,
         final UnaryOperator<String> disambiguator) {
 
         String name = columnSpec.getName();
@@ -417,7 +417,7 @@ public class JoinSpecification {
      * @return the result of {@link JoinSpecification#columnDisambiguate(DataColumnSpec, Predicate, UnaryOperator)} with this
      *         object's {@link #getColumnNameDisambiguator()}.
      */
-    public DataColumnSpec columnDisambiguate(final DataColumnSpec columnSpec, final Predicate<String> isAmbiguous) {
+    DataColumnSpec columnDisambiguate(final DataColumnSpec columnSpec, final Predicate<String> isAmbiguous) {
         return JoinSpecification.columnDisambiguate(columnSpec, isAmbiguous, getColumnNameDisambiguator());
     }
 
@@ -735,7 +735,7 @@ public class JoinSpecification {
             return new JoinSpecification(this);
         }
 
-        public JoinSpecification buildTrusted() {
+        JoinSpecification buildTrusted() {
             try {
                 return build();
             } catch (InvalidSettingsException ex) {
@@ -807,7 +807,7 @@ public class JoinSpecification {
     /**
      * @return the number of conjunctions in the join predicate.
      */
-    public int numConjunctiveGroups() {
+    int numConjunctiveGroups() {
         // the number of join clauses is always equal for left and right side
         int numJoinClauses = getSettings(InputTable.LEFT).getJoinClauses().size();
         return isConjunctive() ? 1 : numJoinClauses;

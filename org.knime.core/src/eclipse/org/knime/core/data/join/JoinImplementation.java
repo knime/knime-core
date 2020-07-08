@@ -81,29 +81,29 @@ import org.knime.core.node.NodeProgressMonitor;
 public abstract class JoinImplementation {
 
     /** This can change and the auxiliary data structures should be updated accordingly. */
-    protected final JoinSpecification m_joinSpecification;
+    final JoinSpecification m_joinSpecification;
 
     /** Logger to print debug info to. */
     static final NodeLogger LOGGER = NodeLogger.getLogger(JoinImplementation.class);
 
-    protected JoinProgressMonitor m_progress;
+    JoinProgressMonitor m_progress;
 
-    protected final ExecutionContext m_exec;
+    final ExecutionContext m_exec;
 
     private boolean m_enableHiliting = false;
 
-    protected int m_maxOpenFiles = 300;
+    int m_maxOpenFiles = 300;
 
     double m_memoryLimitFraction = 0.9;
 
-    protected BufferedDataTable m_left;
+    BufferedDataTable m_left;
 
-    protected BufferedDataTable m_right;
+    BufferedDataTable m_right;
 
     /**
      * @throws InvalidSettingsException
      */
-    protected JoinImplementation(final JoinSpecification settings, final ExecutionContext exec) {
+    JoinImplementation(final JoinSpecification settings, final ExecutionContext exec) {
         m_exec = exec;
         m_joinSpecification = settings;
         m_left = settings.getSettings(InputTable.LEFT).getTable()
@@ -135,14 +135,14 @@ public abstract class JoinImplementation {
     /**
      * @return the maxOpenFiles
      */
-    public int getMaxOpenFiles() {
+    int getMaxOpenFiles() {
         return m_maxOpenFiles;
     }
 
     /**
      * @return the memoryLimitFraction
      */
-    public double getMemoryLimitFraction() {
+    double getMemoryLimitFraction() {
         return m_memoryLimitFraction;
     }
 
@@ -157,7 +157,7 @@ public abstract class JoinImplementation {
     /**
      * @param memoryLimitFraction the memoryLimitFraction to set
      */
-    public JoinImplementation setMemoryLimitFraction(final double memoryLimitFraction) {
+    JoinImplementation setMemoryLimitFraction(final double memoryLimitFraction) {
         m_memoryLimitFraction = memoryLimitFraction;
         return this;
     }
@@ -173,14 +173,14 @@ public abstract class JoinImplementation {
     /**
      * @return the progress
      */
-    protected JoinProgressMonitor getProgress() {
+    JoinProgressMonitor getProgress() {
         return m_progress;
     }
 
     /**
      * @param progress the progress to set
      */
-    protected void setProgress(final JoinProgressMonitor progress) {
+    void setProgress(final JoinProgressMonitor progress) {
         this.m_progress = progress;
     }
 
@@ -233,7 +233,7 @@ public abstract class JoinImplementation {
 
         double m_hashBucketSizeCoV;
 
-        public JoinProgressMonitor() {
+        JoinProgressMonitor() {
 
             m_monitor = m_exec.getProgressMonitor();
             m_canceled = CancelChecker.checkCanceledPeriodically(m_exec);
@@ -254,7 +254,7 @@ public abstract class JoinImplementation {
          * @param checkBackInMs ignore queries after this one for the next x milliseconds
          * @return whether heap space is running out
          */
-        public boolean isMemoryLow(final long checkBackInMs) {
+        boolean isMemoryLow(final long checkBackInMs) {
             if (System.currentTimeMillis() >= m_checkBackAfter ||
                     getNumPartitionsOnDisk() < m_desiredPartitionsOnDisk) { // ignore throttling for testing with desiredPartitionsOnDisk
                 m_checkBackAfter = System.currentTimeMillis() + checkBackInMs;
@@ -266,7 +266,7 @@ public abstract class JoinImplementation {
             return false;
         }
 
-        public void reset() {
+        void reset() {
             m_recommendedUsingMoreMemory = false;
             m_monitor.setProgress(0);
 
@@ -292,13 +292,13 @@ public abstract class JoinImplementation {
          * @param progress between 0 and 1
          * @throws CanceledExecutionException
          */
-        public void setProgressAndCheckCanceled(final double progress) throws CanceledExecutionException {
+        void setProgressAndCheckCanceled(final double progress) throws CanceledExecutionException {
             m_canceled.checkCanceled();
             m_monitor.setProgress(progress);
         }
 
         /** inform this object about the actual number of partition pairs that are flushed to disk */
-        public void setNumPartitionsOnDisk(final int n) {
+        void setNumPartitionsOnDisk(final int n) {
             if (!m_recommendedUsingMoreMemory && n > 0) {
                 LOGGER.warn("Run KNIME with more main memory to speed up the join. "
                     + "The smaller table is too large to execute the join in memory. ");
@@ -329,10 +329,10 @@ public abstract class JoinImplementation {
 //            //                hashBucketSizeCoV = stats.getStandardDeviation() / stats.getMean();
 //        }
 
-        public void setMessage(final String message) { m_monitor.setMessage(message); }
+        void setMessage(final String message) { m_monitor.setMessage(message); }
 
-        public void incProbeRowsProcessedInMemory() { m_probeRowsProcessedInMemory++; }
-        public void incProbeRowsProcessedFromDisk() { m_probeRowsProcessedFromDisk++; }
+        void incProbeRowsProcessedInMemory() { m_probeRowsProcessedInMemory++; }
+        void incProbeRowsProcessedFromDisk() { m_probeRowsProcessedFromDisk++; }
 
         @Override public int getNumBuckets() { return m_numBuckets; }
         @Override public int getNumPartitionsOnDisk() { return m_numHashPartitionsOnDisk; }
@@ -357,7 +357,7 @@ public abstract class JoinImplementation {
      * Allows filling the heap to test low memory situations.
      * @author Carl Witt, KNIME AG, Zurich, Switzerland
      */
-    public static class FillMemoryForTesting implements FillMemoryForTestingMXBean {
+    /*public*/ static class FillMemoryForTesting implements FillMemoryForTestingMXBean {
 
         static {
             MBeanServer server = ManagementFactory.getPlatformMBeanServer();
@@ -389,12 +389,12 @@ public abstract class JoinImplementation {
         }
     }
 
-    public static interface FillMemoryForTestingMXBean{
+    /*public*/ static interface FillMemoryForTestingMXBean{
         void fillHeap(float targetPercentage);
         void releaseTestAllocations();
     }
 
-    public interface HybridHashJoinMXBean {
+    /*public*/ interface HybridHashJoinMXBean {
         /** @return the number of partition pairs that have been flushed to disk. */
         int getNumPartitionsOnDisk();
 

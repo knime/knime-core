@@ -113,7 +113,7 @@ public class JoinTableSettings {
          *         {@link DataTableSpec#findColumnIndex(String)}. If this is a {@link SpecialJoinColumn} then the
          *         indicator index returned by {@link SpecialJoinColumn#getColumnIndexIndicator()}
          */
-        public int toColumnIndex(final DataTableSpec spec) {
+        int toColumnIndex(final DataTableSpec spec) {
             if (m_columnName == null) {
                 return m_specialColumn.getColumnIndexIndicator();
             } else {
@@ -207,14 +207,14 @@ public class JoinTableSettings {
         /**
          * @return the reserved name for this special join column
          */
-        public String getColumnNameIndicator() {
+        String getColumnNameIndicator() {
             return m_columnNameIndicator;
         }
 
         /**
          * @return the reserved column offset for this non-existing join column
          */
-        public int getColumnIndexIndicator() {
+        int getColumnIndexIndicator() {
             return m_columnIndexIndicator;
         }
 
@@ -349,7 +349,7 @@ public class JoinTableSettings {
      * @return the number of cells in join and include columns, or zero if no table has been set
      *         {@link #setTable(BufferedDataTable)}
      */
-    protected Optional<Long> getMaterializedCells() {
+    Optional<Long> getMaterializedCells() {
         return m_materializedCells;
     }
 
@@ -373,14 +373,14 @@ public class JoinTableSettings {
     /**
      * @return whether the input data returned by {@link #getTable()} is already available
      */
-    public boolean hasTable() {
+    boolean hasTable() {
         return getTable().isPresent();
     }
 
     /**
      * @param tableSpec the tableSpec to set
      */
-    protected void setTableSpec(final DataTableSpec tableSpec) {
+    void setTableSpec(final DataTableSpec tableSpec) {
         m_tableSpec = tableSpec;
     }
 
@@ -389,7 +389,7 @@ public class JoinTableSettings {
      *         the spec is created first, in which case this object just holds the specification until
      *         {@link #setTable(BufferedDataTable)} is called.
      */
-    public DataTableSpec getTableSpec() {
+    DataTableSpec getTableSpec() {
         return m_tableSpec;
     }
 
@@ -420,7 +420,7 @@ public class JoinTableSettings {
      * @param storeRowOffsets whether to add a column for row offsets
      * @return the format of the table used to store rows for a disk-based join
      */
-    public JoinTableSettings condensed(final boolean storeRowOffsets) {
+    JoinTableSettings condensed(final boolean storeRowOffsets) {
 
         // keep only materialized columns
         final ColumnRearranger materializedColFilter = new ColumnRearranger(getTableSpec());
@@ -452,52 +452,52 @@ public class JoinTableSettings {
      * @return a data row ready for addition in a {@link BufferedDataContainer} with the same spec as returned by
      *         {@link #condensed(boolean)}.
      */
-    public DataRow condensed(final DataRow row, final long rowOffset, final boolean storeOffset) {
+    DataRow condensed(final DataRow row, final long rowOffset, final boolean storeOffset) {
         return OrderedRow.materialize(this, row, rowOffset, storeOffset);
     }
 
     /** @return whether this is the configuration for the left-hand input table of a join or the right-hand input. */
-    public InputTable getSide() {
+    InputTable getSide() {
         return m_side;
     }
 
     /** @return Whether to output unmatched rows from this input table in the join results. */
-    protected boolean isRetainUnmatched() {
+    boolean isRetainUnmatched() {
         return m_retainUnmatched;
     }
 
     /**
      * @return the set of column names mentioned in the {@link #getJoinClauses()}, i.e., not the special join columns
      */
-    public List<String> getJoinColumnNames() {
+    List<String> getJoinColumnNames() {
         return m_joinColumnNames;
     }
 
     /**
      * @return the set of column names selected for inclusion in the output
      */
-    public List<String> getIncludeColumnNames() {
+    List<String> getIncludeColumnNames() {
         return m_includeColumnNames;
     }
 
     /**
      * @return the sequence of left/right hand sides of the join clauses
      */
-    public List<JoinColumn> getJoinClauses() {
+    List<JoinColumn> getJoinClauses() {
         return m_joinClauses;
     }
 
     /**
      * @return the joinClauseColumns
      */
-    protected int[] getJoinClauseColumns() {
+    int[] getJoinClauseColumns() {
         return m_joinClauseColumns;
     }
 
     /**
      * @return the indices of the columns to include in the result
      */
-    public int[] getIncludeColumns() {
+    int[] getIncludeColumns() {
         return m_includeColumns;
     }
 

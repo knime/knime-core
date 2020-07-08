@@ -84,7 +84,7 @@ import gnu.trove.strategy.HashingStrategy;
  * @see HashIndex
  */
 @SuppressWarnings("javadoc")
-public interface JoinTuple {
+final class JoinTuple {
 
     /**
      *
@@ -95,7 +95,7 @@ public interface JoinTuple {
      *         the same data cell, if the corresponding column (or special join column) appears multiple times in the
      *         join clauses. For instance, for A=X && A=Z this method would return [A, A] for the left table side.
      */
-    public static DataCell[] get(final JoinTableSettings tableSettings, final DataRow row) {
+    static DataCell[] get(final JoinTableSettings tableSettings, final DataRow row) {
         int[] joinClauseColumns = tableSettings.getJoinClauseColumns();
         DataCell[] cells = new DataCell[joinClauseColumns.length];
         for (int i = 0; i < cells.length; i++) {
@@ -112,7 +112,7 @@ public interface JoinTuple {
      * @param cells the join column values (as extracted by {@link #get(JoinTableSettings, DataRow)}).
      * @return a hash code such that two join tuples with identical values will have the same hash code
      */
-    public static int conjunctiveHashCode(final DataCell[] cells) {
+    static int conjunctiveHashCode(final DataCell[] cells) {
         return Arrays.hashCode(cells);
     }
 
@@ -122,7 +122,7 @@ public interface JoinTuple {
      * @return a hash code such that two join tuples with identical values in the i-th clause will have the same hash
      *         code.
      */
-    public static int disjunctiveHashCode(final DataCell[] cells, final int i) {
+    static int disjunctiveHashCode(final DataCell[] cells, final int i) {
         return cells[i].hashCode();
     }
 
@@ -130,7 +130,7 @@ public interface JoinTuple {
      * @return strategy that maps rows to the same bucket if they have the same value in all their join clauses
      */
     @SuppressWarnings("serial")
-    public static HashingStrategy<DataCell[]> hashConjunctive() {
+    static HashingStrategy<DataCell[]> hashConjunctive() {
         return new HashingStrategy<DataCell[]>() {
 
             @Override
@@ -160,7 +160,7 @@ public interface JoinTuple {
      * @return strategy that maps rows to the same bucket if they have the same values in the i-th conjunctive clause
      */
     @SuppressWarnings("serial")
-    public static HashingStrategy<DataCell[]> hashDisjunctiveClause(final int i) {
+    static HashingStrategy<DataCell[]> hashDisjunctiveClause(final int i) {
 
         return new HashingStrategy<DataCell[]>() {
 
@@ -178,6 +178,10 @@ public interface JoinTuple {
                 return o1[i].equals(o2[i]);
             }
         };
+    }
+
+    private JoinTuple() {
+        // utility class
     }
 
 }

@@ -61,11 +61,11 @@ import org.knime.core.node.InvalidSettingsException;
  * @since 4.2
  *
  */
-public final class CostModelFactory implements JoinerFactory {
+final class CostModelFactory implements JoinerFactory {
 
     private CostModelFactory() {}
 
-    public static final CostModelFactory INSTANCE = new CostModelFactory();
+    static final CostModelFactory INSTANCE = new CostModelFactory();
 
     @Override
     public JoinImplementation create(final JoinSpecification settings, final ExecutionContext exec) throws InvalidSettingsException {

@@ -78,12 +78,12 @@ import org.knime.core.data.join.results.LeftRightSorted;
  * @since 4.2
  */
 @SuppressWarnings("javadoc")
-public interface OrderedRow { // implements DataRow, Comparable<OrderedRow>
+public final class OrderedRow { // implements DataRow, Comparable<OrderedRow>
 
     /**
      * Extracts the row order (= offset in containing table) from a persisted row.
      */
-    public static long getOffset(final DataRow row) {
+    static long getOffset(final DataRow row) {
         return ((LongCell)row.getCell(0)).getLongValue();
     }
 
@@ -180,7 +180,7 @@ public interface OrderedRow { // implements DataRow, Comparable<OrderedRow>
      *         offset
      * @see JoinTableSettings#condensed(DataRow, long, boolean)
      */
-    public static DataRow materialize(final JoinTableSettings joinTable, final DataRow row, final long rowOffset,
+    static DataRow materialize(final JoinTableSettings joinTable, final DataRow row, final long rowOffset,
         final boolean storeOffset) {
 
         int[] copyCellIndices = joinTable.m_materializeColumnIndices;
@@ -208,7 +208,7 @@ public interface OrderedRow { // implements DataRow, Comparable<OrderedRow>
      * @param rowHandler the original row handler
      * @return the rowHandler function composed with an offset extractor and removal step.
      */
-    public static <T extends RowHandlerCancelable> RowHandlerCancelable extractOffsets(final T rowHandler) {
+    static <T extends RowHandlerCancelable> RowHandlerCancelable extractOffsets(final T rowHandler) {
         return (row, offset) -> rowHandler.accept(row, OrderedRow.getOffset(row));
     }
 
@@ -228,6 +228,10 @@ public interface OrderedRow { // implements DataRow, Comparable<OrderedRow>
         // add right offset in the lower order bits
         result += right;
         return result;
+    }
+
+    private OrderedRow() {
+        // utility class
     }
 
 }

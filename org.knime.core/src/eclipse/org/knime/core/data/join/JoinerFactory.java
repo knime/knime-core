@@ -63,7 +63,7 @@ import org.knime.core.node.InvalidSettingsException;
 @FunctionalInterface
 public interface JoinerFactory {
 
-    public enum JoinAlgorithm {
+    enum JoinAlgorithm {
 //        HYBRID_HASH("Hybrid Hash Join", HybridHashJoin::new),
         AUTO("Automatic", CostModelFactory.INSTANCE),
         NESTED_LOOP("Block hash join", BlockHashJoin::new);
@@ -85,7 +85,7 @@ public interface JoinerFactory {
         }
     }
 
-    public JoinImplementation create(final JoinSpecification settings, final ExecutionContext exec)
+    JoinImplementation create(final JoinSpecification settings, final ExecutionContext exec)
         throws InvalidSettingsException;
 
 }
