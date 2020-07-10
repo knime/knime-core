@@ -58,6 +58,7 @@ import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.config.base.ConfigBaseRO;
+import org.knime.core.node.rpc.AbstractRpcClient;
 import org.knime.core.node.web.WebTemplate;
 import org.knime.core.node.workflow.NodeAnnotation;
 import org.knime.core.node.workflow.NodeContainer;
@@ -462,5 +463,14 @@ public interface NodeContainerUI extends NodeProgressListener, NodeContainerStat
      * @since 3.2
      */
     NodeLocks getNodeLocks();
+
+    /**
+     * To be called from rpc clients - not needed for local, for remote, picks an endpoint and forwards ui data request
+     * to be transported to remote node model and collects the response in `out`. <br/>
+     * (De-)serialization is handled by {@link AbstractRpcClient}.
+     *
+     * @return serialized result
+     */
+    String doRpc(String remoteProcedureCall);
 
 }

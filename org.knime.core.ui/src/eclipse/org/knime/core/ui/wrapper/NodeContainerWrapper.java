@@ -424,4 +424,9 @@ public abstract class NodeContainerWrapper<W extends NodeContainer> extends Abst
         return unwrap().getNodeLocks();
     }
 
+    @Override
+    public String doRpc(final String remoteProcedureCall) {
+        throw new UnsupportedOperationException();
+    }
+
 }

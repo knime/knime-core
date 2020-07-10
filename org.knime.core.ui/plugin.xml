@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.4"?>
 <plugin>
+   <extension
+         point="org.knime.core.RpcTransportFactory">
+      <RpcTransportFactory
+            factoryClass="org.knime.core.ui.node.workflow.async.NodeContainerRpcTransportFactory">
+      </RpcTransportFactory>
+   </extension>
 
 </plugin>

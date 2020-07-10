@@ -20,6 +20,7 @@
    <extension-point id="DataColumnMetaDataType" name="DataColumnMetaDataType" schema="schema/DataColumnMetaDataType.exsd"/>
    <extension-point id="FlowVariableType" name="FlowVariableType" schema="schema/FlowVariableType.exsd"/>
    <extension-point id="ImageContentFactory" name="Contributes custom image content to an image port object (NO public API)" schema="schema/ImageContentFactory.exsd"/>
+   <extension-point id="RpcTransportFactory" name="RpcTransportFactory" schema="schema/RpcTransportFactory.exsd"/>
    <extension
          point="org.knime.core.NodeExecutionJobManagerFactory">
       <NodeExecutionJobManagerFactory

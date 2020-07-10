@@ -90,6 +90,8 @@ Export-Package: log4j,
  org.knime.core.node.port.pmml.schemata,
  org.knime.core.node.port.viewproperty,
  org.knime.core.node.property.hilite,
+ org.knime.core.node.rpc,
+ org.knime.core.node.rpc.json,
  org.knime.core.node.streamable,
  org.knime.core.node.streamable.simple,
  org.knime.core.node.tableview,
@@ -162,7 +164,8 @@ Require-Bundle: org.eclipse.osgi;bundle-version="[3.10.0,4.0.0)";visibility:=ree
  com.fasterxml.jackson.datatype.jackson-datatype-jsr310;bundle-version="[2.7.1,3.0.0)",
  com.google.guava;bundle-version="[19.0.0,20.0.0)",
  com.fasterxml.jackson.dataformat.jackson-dataformat-xml;bundle-version="[2.10.2,3.0.0)",
- net.sf.trove4j;bundle-version="3.0.3"
+ net.sf.trove4j;bundle-version="3.0.3",
+ com.github.briandilley.jsonrpc4j
 Eclipse-RegisterBuddy: org.apache.log4j
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
