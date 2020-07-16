@@ -636,7 +636,7 @@ public abstract class NodeDialogPane {
 
     /**
      * Override this method in order to react on events induced by the Cancel
-     * button from the surrounding dialog.
+     * button from the surrounding dialog. This method is call in the Event Dispatch Thread.
      */
     public void onCancel() {
         // default implementation does nothing.
@@ -651,13 +651,10 @@ public abstract class NodeDialogPane {
         try {
             // Editor values have to be committed, otherwise they will keep their data after reopening of the dialog
             // Bug 5031
-            ViewUtils.invokeAndWaitInEDT(new Runnable() {
-                @Override
-                public void run() {
-                    commitComponentsRecursively(getPanel());
-                }
+            ViewUtils.invokeAndWaitInEDT(() -> {
+                commitComponentsRecursively(getPanel());
+                onCancel();
             });
-            onCancel();
         } finally {
             NodeContext.removeLastContext();
         }
@@ -671,7 +668,7 @@ public abstract class NodeDialogPane {
         m_specs = null;
         NodeContext.pushContext(m_nodeContext);
         try {
-            onClose();
+            ViewUtils.invokeAndWaitInEDT(() -> onClose());
         } finally {
             NodeContext.removeLastContext();
         }
@@ -681,7 +678,7 @@ public abstract class NodeDialogPane {
 
     /**
      * Override this method in order to react on events if the surrounding
-     * dialog is supposed to be closed.
+     * dialog is supposed to be closed. The method is called in the Event Dispatch Thread.
      */
     public void onClose() {
         // default implementation does nothing.
@@ -689,7 +686,7 @@ public abstract class NodeDialogPane {
 
     /**
      * Override this method in order to react on events if the surrounding
-     * dialog is supposed to be opened.
+     * dialog is supposed to be opened. The method is called in the Event Dispatch Thread.
      */
     public void onOpen() {
         // default implementation does nothing.
@@ -701,7 +698,7 @@ public abstract class NodeDialogPane {
     final void callOnOpen() {
         NodeContext.pushContext(m_nodeContext);
         try {
-            onOpen();
+            ViewUtils.invokeAndWaitInEDT(() -> onOpen());
         } finally {
             NodeContext.removeLastContext();
         }
