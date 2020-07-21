@@ -1014,16 +1014,18 @@ public abstract class SingleNodeContainer extends NodeContainer {
      */
     public boolean isMemberOfScope() {
         synchronized (m_nodeMutex) {
-            // we need to check if either a FlowScopeObject is on the stack or of
-            // the node is the end of a Scope (since those don't have their own
-            // scope object on the outgoing stack anymore.
-            FlowObjectStack fos = getFlowObjectStack();
+            // Scope end and scope start nodes are members of the scope
+            if (isModelCompatibleTo(ScopeEndNode.class) || isModelCompatibleTo(ScopeStartNode.class)) {
+                return true;
+            }
+            // Check if a FlowScopeContext is on the stack
+            // and make sure it is not a FlowSubnodeScopeContext: Components are not part of a scope
+            final FlowObjectStack fos = getFlowObjectStack();
             if (fos == null) {
                 return false;
             }
-            return (this.isModelCompatibleTo(ScopeEndNode.class)
-                    || this.isModelCompatibleTo(ScopeStartNode.class)
-                    || (null != fos.peek(FlowScopeContext.class)));
+            final FlowScopeContext fsc = fos.peek(FlowScopeContext.class);
+            return fsc != null && !(fsc instanceof FlowSubnodeScopeContext);
         }
     }
 
