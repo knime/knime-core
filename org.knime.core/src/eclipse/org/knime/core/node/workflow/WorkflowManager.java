@@ -9948,10 +9948,11 @@ public final class WorkflowManager extends NodeContainer
      * @since 2.12
      */
     public Map<String, ExternalNodeData> getInputNodes() {
-        List<ExternalParameterHandle<ExternalNodeData>> inputNodes = getExternalParameterHandles(InputNode.class,
-            i -> i.getInputData().getID(), i -> i.getInputData(), true, true);
+        List<ExternalParameterHandle<ExternalNodeData>> inputNodes =
+            getExternalParameterHandles(InputNode.class, i -> i.getInputData().getID(), InputNode::getInputData,
+                InputNode::isUseAlwaysFullyQualifiedParameterName, true, true);
         return inputNodes.stream().collect(Collectors.toMap(
-            ExternalParameterHandle::getParameterNameFullyQualified,
+            ExternalParameterHandle::getParameterName,
             ExternalParameterHandle::getParameterValue));
     }
 
@@ -9977,10 +9978,11 @@ public final class WorkflowManager extends NodeContainer
      * @since 2.12
      */
     public Map<String, ExternalNodeData> getExternalOutputs() {
-        List<ExternalParameterHandle<ExternalNodeData>> outputNodes = getExternalParameterHandles(OutputNode.class,
-            o -> o.getExternalOutput().getID(), o -> o.getExternalOutput(), true, true);
+        List<ExternalParameterHandle<ExternalNodeData>> outputNodes =
+            getExternalParameterHandles(OutputNode.class, o -> o.getExternalOutput().getID(),
+                OutputNode::getExternalOutput, OutputNode::isUseAlwaysFullyQualifiedParameterName, true, true);
           return outputNodes.stream().collect(Collectors.toMap(
-                ExternalParameterHandle::getParameterNameFullyQualified,
+                ExternalParameterHandle::getParameterName,
                 ExternalParameterHandle::getParameterValue));
     }
 
@@ -9998,7 +10000,7 @@ public final class WorkflowManager extends NodeContainer
     @SuppressWarnings("rawtypes")
     public Map<String, DialogNode> getConfigurationNodes(final boolean excludeNonSources) {
         final List<ExternalParameterHandle<DialogNode>> inputNodes =
-            getExternalParameterHandles(DialogNode.class, i -> i.getParameterName(), i -> i, false, false);
+            getExternalParameterHandles(DialogNode.class, i -> i.getParameterName(), i -> i, e -> true, false, false);
         return inputNodes.stream()
             .filter(e -> !InputNode.class.isAssignableFrom(e.getParameterValue().getClass())
                 && (!excludeNonSources || isSourceNode(e.getOwnerNodeContainer().getID())))
@@ -10085,8 +10087,8 @@ public final class WorkflowManager extends NodeContainer
             CheckUtils.checkState(!getNodeContainerState().isExecutionInProgress(),
                 "Cannot apply new parameters - workflow still in execution");
 
-            List<ExternalParameterHandle<V>> inputNodes = getExternalParameterHandles(nodeModelClass, getParamName, null,
-                recurseIntoMetaNodes, recurseIntoSubnodes);
+            List<ExternalParameterHandle<V>> inputNodes = getExternalParameterHandles(nodeModelClass, getParamName,
+                null, e -> true, recurseIntoMetaNodes, recurseIntoSubnodes);
 
             // will contain all nodes that need a new data object
             List<Pair<NativeNodeContainer, V>> valuesToSetList = new LinkedList<>();
@@ -10130,15 +10132,16 @@ public final class WorkflowManager extends NodeContainer
      *
      * @param nodeModelClass either {@link InputNode}.class or {@link OutputNode}.class.
      * @param getParamKey resolves the parameter key from the input or output.
-     * @param getParamValue TODO
+     * @param getParamValue resolves the actual payload
+     * @param getUseFQParamName reflects {@link InputNode#isUseAlwaysFullyQualifiedParameterName()} (also for Outputs)
      * @param recurseIntoMetaNodes Whether to recurse into contained metanodes.
      * @param recurseIntoSubnodes Whether to recurse into contained components.
      * @return List of nodes with their parameter names unified.
      */
     // package scope for tests
     <T, V> List<ExternalParameterHandle<V>> getExternalParameterHandles(final Class<T> nodeModelClass,
-        final Function<T, String> getParamKey, final Function<T, V> getParamValue, final boolean recurseIntoMetaNodes,
-        final boolean recurseIntoSubnodes) {
+        final Function<T, String> getParamKey, final Function<T, V> getParamValue, final Predicate<T> getUseFQParamName,
+        final boolean recurseIntoMetaNodes, final boolean recurseIntoSubnodes) {
         List<ExternalParameterHandle<V>> result = new ArrayList<>();
         try (WorkflowLock lock = lock()) {
             Map<NodeID, T> externalParameterMap =
@@ -10167,28 +10170,30 @@ public final class WorkflowManager extends NodeContainer
             // create result list, make keys unique where needed but also retain the fully qualified parameter name
             for (Map.Entry<NodeID, T> entry : externalParameterMap.entrySet()) {
                 final NodeID nodeID = entry.getKey();
+                T nodeModel = entry.getValue();
                 final NodeContainer nodeContainer = findNodeContainer(nodeID);
                 NodeContext.pushContext(nodeContainer);
                 try {
-                    String parameterNameShort = getParamKey.apply(entry.getValue());
+                    String parameterNameShort = getParamKey.apply(nodeModel);
                     String parameterKey = parameterNameShort;
                     // this ID = 0:3, nodeID = 0:3:5:0:2:2 => nodeIDRelativePath = 5:0:2:2
                     String nodeIDRelativePath = StringUtils.removeStart(nodeID.toString(), getID().toString() + ":");
                     // nodeIDRelativePath = 5:0:2:2 --> 5:2:2 (':0' are internals of a subnode)
                     nodeIDRelativePath = StringUtils.remove(nodeIDRelativePath, ":0");
                     String parameterNameFullyQualified =
-                        (parameterNameShort.isEmpty() ? "" : parameterNameShort + "-") + nodeIDRelativePath;
+                        (parameterNameShort.isEmpty() ? "" : (parameterNameShort + "-")) + nodeIDRelativePath;
                     if (nonUniqueParameterNames.contains(parameterNameShort)) {
                         parameterNameShort = parameterNameFullyQualified;
                     }
                     V paramValue = null;
 
                     if (getParamValue != null) {
-                        paramValue = getParamValue.apply(entry.getValue());
+                        paramValue = getParamValue.apply(nodeModel);
                     }
 
                     result.add(new ExternalParameterHandle<V>(parameterNameShort, parameterNameFullyQualified,
-                        (NativeNodeContainer)nodeContainer, paramValue, parameterKey));
+                        getUseFQParamName.test(nodeModel), (NativeNodeContainer)nodeContainer, paramValue,
+                        parameterKey));
                 } finally {
                     NodeContext.removeLastContext();
                 }

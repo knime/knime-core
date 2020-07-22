@@ -50,17 +50,16 @@ package org.knime.core.node.workflow;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.knime.core.node.dialog.DialogNode;
 import org.knime.core.node.dialog.ExternalNodeData;
-import org.knime.core.node.dialog.InputNode;
 import org.knime.core.node.util.CheckUtils;
 
 /**
  * Class used internally in the {@link WorkflowManager} to describe the relevant pieces of a node that is used as a
  * external parameter (e.g. injected via REST). The parameter values can be, e.g., configuration values for
- * {@link DialogNode}s or input values for {@link InputNode}s. It wraps the parameterized value object along with the
- * parameter name, unified across all parameters in the workflow. The latter is important in case two nodes in the
- * workflow use the same parameter name ... it's suffixed with the node's ID.
+ * {@link org.knime.core.node.dialog.DialogNode}s or input values for {@link org.knime.core.node.dialog.InputNode}s. It
+ * wraps the parameterized value object along with the parameter name, unified across all parameters in the workflow.
+ * The latter is important in case two nodes in the workflow use the same parameter name ... it's suffixed with the
+ * node's ID.
  *
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
@@ -71,20 +70,25 @@ final class ExternalParameterHandle<V> {
 
     private final String m_parameterNameFullyQualified;
 
+    private final boolean m_isUseAlwaysFullyQualifiedParameterName;
+
     private final NativeNodeContainer m_ownerNodeContainer;
 
     private V m_parameterValue;
 
     /**
-     * @param parameterNameShort e.g. "foo-bar" or "foo-bar-9:3"
+     * @param parameterNameShort e.g. "foo-bar" or "foo-bar-9:3" (used in case of conflicts)
      * @param parameterNameFullyQualified e.g. "foo-bar-9:3"
+     * @param isUseAlwaysFullyQualifiedParameterName If the node was configured to prefer short names over long names,
+     *            as per {@link org.knime.core.node.dialog.InputNode#isUseAlwaysFullyQualifiedParameterName()}
      * @param ownerNodeContainer e.g. the node that contributes or receives the REST parameter.
      * @param externalParameterValue the actual data, can be <code>null</code> if this handle is only used to set a new
      *            parameter value
      * @param parameterKey the unique id for the parameter (i.e. parameter name without node id)
      */
     ExternalParameterHandle(final String parameterNameShort, final String parameterNameFullyQualified,
-        final NativeNodeContainer ownerNodeContainer, final V externalParameterValue, final String parameterKey) {
+        final boolean isUseAlwaysFullyQualifiedParameterName, final NativeNodeContainer ownerNodeContainer,
+        final V externalParameterValue, final String parameterKey) {
         m_parameterNameShort = CheckUtils.checkNotNull(parameterNameShort);
         m_parameterNameFullyQualified = CheckUtils.checkNotNull(parameterNameFullyQualified);
         CheckUtils.checkArgument(StringUtils.startsWith(parameterNameFullyQualified, parameterNameShort),
@@ -92,6 +96,7 @@ final class ExternalParameterHandle<V> {
             parameterNameFullyQualified, parameterNameShort);
         CheckUtils.checkArgument(ExternalNodeData.PARAMETER_NAME_PATTERN.matcher(parameterNameFullyQualified).matches(),
             "No match on \"%s\" (regex \"%s\")", parameterNameShort, ExternalNodeData.PARAMETER_NAME_PATTERN.pattern());
+        m_isUseAlwaysFullyQualifiedParameterName = isUseAlwaysFullyQualifiedParameterName;
 
         m_ownerNodeContainer = CheckUtils.checkNotNull(ownerNodeContainer);
         m_parameterValue = externalParameterValue;
@@ -108,6 +113,18 @@ final class ExternalParameterHandle<V> {
     /** @return the parameterNameFullyQualified */
     String getParameterNameFullyQualified() {
         return m_parameterNameFullyQualified;
+    }
+
+    /**
+     * Get the parameter name used to identify this handle. This is either the short name or the fully qualified name,
+     * depending on how the node was configured to use. (Note also that the "short name" still may be fully qualified
+     * in case of name conflicts in the workflow.)
+     *
+     * @return the parameter name to use
+     * @see org.knime.core.node.dialog.InputNode#isUseAlwaysFullyQualifiedParameterName()
+     */
+    String getParameterName() {
+        return m_isUseAlwaysFullyQualifiedParameterName ? m_parameterNameFullyQualified : m_parameterNameShort;
     }
 
     /** @return the ownerNodeContainer */
