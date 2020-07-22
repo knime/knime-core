@@ -82,7 +82,7 @@ public class BugAP6906_UniqueParameterNames extends WorkflowTestCase {
     @Test
     public void testOutputNamesPositive() throws Exception {
         List<ExternalParameterHandle<ExternalNodeData>> outputNodeList = getManager().getExternalParameterHandles(
-            OutputNode.class, o -> o.getExternalOutput().getID(), o -> o.getExternalOutput(), true, true);
+            OutputNode.class, o -> o.getExternalOutput().getID(), o -> o.getExternalOutput(), e -> true, true, true);
         Assert.assertThat("Wrong number of output nodes", outputNodeList.size(), is(2));
         List<String> shortNames = outputNodeList.stream()
                 .map(ExternalParameterHandle::getParameterNameShort)
@@ -101,7 +101,7 @@ public class BugAP6906_UniqueParameterNames extends WorkflowTestCase {
     @Test
     public void testInputNamesPositive() throws Exception {
         List<ExternalParameterHandle<ExternalNodeData>> inputNodes = getManager().getExternalParameterHandles(
-            InputNode.class, i -> i.getInputData().getID(), InputNode::getInputData, true, true);
+            InputNode.class, i -> i.getInputData().getID(), InputNode::getInputData, e -> true, true, true);
         Assert.assertThat("Wrong number of input nodes", inputNodes.size(), is(5));
 
         List<String> shortNames = inputNodes.stream()

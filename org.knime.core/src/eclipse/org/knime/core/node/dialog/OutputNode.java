@@ -37,4 +37,19 @@ public interface OutputNode {
      * @return an external output, never <code>null</code>
      */
     public ExternalNodeData getExternalOutput();
+
+    /**
+     * Allows nodes to veto the use of fully qualified parameter names. That is, if returned <code>false</code> then the
+     * node suggests to use the short name ("output-table") over its long name ("output-table-14") in an API description
+     * (e.g. Swagger). However, even if <code>false</code> is returned the framework will still use the long variant
+     * when conflicting parameter names are used. <br />
+     * This came into existence as part of AP-14686. This default implementation returns <code>true</code> in order to
+     * guarantee backward compatibility.
+     *
+     * @return <code>true</code> here but potentially overwritten by nodes (especially Container nodes)
+     * @since 4.3
+     */
+    default boolean isUseAlwaysFullyQualifiedParameterName() {
+        return true;
+    }
 }

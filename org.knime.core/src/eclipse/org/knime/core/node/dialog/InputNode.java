@@ -60,7 +60,7 @@ public interface InputNode {
     /**
      * Returns a template for the expected input data. Clients may use the templates, replace values, and set the via
      * {@link #setInputData(ExternalNodeData)}. If the node reads larger amount from an external resource you must
-     * specifiy a URL in the data object (e.g. the default location from the dialog).
+     * specify a URL in the data object (e.g. the default location from the dialog).
      *
      * @return a template for the input data
      */
@@ -76,7 +76,6 @@ public interface InputNode {
      */
     void validateInputData(ExternalNodeData inputData) throws InvalidSettingsException;
 
-
     /**
      * Sets the input for the node. Implementations must make sure that the nodes internal configuration is updated
      * accordingly so that the next execution uses the provided input data. If the data is not applicable (which should
@@ -87,4 +86,20 @@ public interface InputNode {
      * @throws InvalidSettingsException if the data is invalid
      */
     void setInputData(ExternalNodeData inputData) throws InvalidSettingsException;
+
+    /**
+     * Allows nodes to veto the use of fully qualified parameter names. That is, if returned <code>false</code> then the
+     * node suggests to use the short name ("input-table") over its long name ("input-table-14") in an API description
+     * (e.g. Swagger). However, even if <code>false</code> is returned the framework will still use the long variant
+     * when conflicting parameter names are used. <br />
+     * This came into existence as part of AP-14686. This default implementation returns <code>true</code> in order to
+     * guarantee backward compatibility.
+     *
+     * @return <code>true</code> here but potentially overwritten by nodes (especially Container nodes)
+     * @since 4.3
+     */
+    default boolean isUseAlwaysFullyQualifiedParameterName() {
+        return true;
+    }
+
 }
