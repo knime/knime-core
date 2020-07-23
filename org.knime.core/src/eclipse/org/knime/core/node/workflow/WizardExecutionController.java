@@ -161,6 +161,39 @@ public final class WizardExecutionController extends WebResourceController imple
         return m_waitingSubnodes.contains(source);
     }
 
+    /**
+     * Determines whether the wizard execution is halted at a page that is represented by the very last node in that branch (i.e. no
+     * further execution required).
+     *
+     * @return <code>true</code> if workflow is halted at a wizard page with no outgoing connections, otherwise
+     *         <code>false</code>
+     * @since 4.3
+     */
+    public boolean isHaltedAtTerminalWizardPage() {
+        if (hasCurrentWizardPage()) {
+            NodeID wizardPage = getCurrentWizardPageNodeID();
+            return m_manager.getOutgoingConnectionsFor(wizardPage).isEmpty();
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Determines whether the wizard execution is halted at a page that is represented by a node with successors.
+     *
+     * @return <code>true</code> if workflow is halted at a wizard page with outgoing connections, otherwise
+     *         <code>false</code>
+     * @since 4.3
+     */
+    public boolean isHaltedAtNonTerminalWizardPage() {
+        if (hasCurrentWizardPage()) {
+            NodeID wizardPage = getCurrentWizardPageNodeID();
+            return !m_manager.getOutgoingConnectionsFor(wizardPage).isEmpty();
+        } else {
+            return false;
+        }
+    }
+
     /** Get the current wizard page. Throws exception if none is available (as per {@link #hasCurrentWizardPage()}.
      * @return The current wizard page.
      * @since 3.4
