@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" 
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
 
@@ -16,7 +15,7 @@
 	<packaging>pom</packaging>
 
 	<properties>
-		<revision>4.2.0</revision>
+		<revision>4.3.0</revision>
 		<changelist>-SNAPSHOT</changelist>
 		<feature-branch-extension.branchListProperty>git.branch</feature-branch-extension.branchListProperty>
 		<feature-branch-extension.appendArtifactoryProperties>false</feature-branch-extension.appendArtifactoryProperties>
@@ -201,8 +200,8 @@
 				</executions>
 				<configuration>
 					<excludes>
-						<plugin id="org.eclipse.ant.optional.junit" />
-						<plugin id="org.apache.xerces.clfix" />
+						<plugin id="org.eclipse.ant.optional.junit"/>
+						<plugin id="org.apache.xerces.clfix"/>
 					</excludes>
 				</configuration>
 			</plugin>
