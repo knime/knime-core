@@ -30,7 +30,7 @@ try {
             }
         },
         'Testing: MacOs': {
-            node('macosx') {
+            node('macosx && workflow-tests') {
                 checkout scm
                 knimetools.runIntegratedWorkflowTests(profile: 'test')
             }
