@@ -286,23 +286,7 @@ public class DataContainer implements RowAppender {
      * @since 4.2
      */
     public CloseableTable getCloseableTable() {
-        final ContainerTable delegate = getBufferedTable();
-        return new CloseableTable() {
-            @Override
-            public void close() {
-                delegate.clear();
-            }
-
-            @Override
-            public RowIterator iterator() {
-                return delegate.iterator();
-            }
-
-            @Override
-            public DataTableSpec getDataTableSpec() {
-                return delegate.getDataTableSpec();
-            }
-        };
+        return getBufferedTable();
     }
 
     /**

@@ -54,11 +54,18 @@ import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
  * @since 4.2
  * @noreference This interface is not intended to be referenced by clients.
  */
-public interface ContainerTable extends KnowsRowCountTable {
+public interface ContainerTable extends KnowsRowCountTable, CloseableTable {
 
     /**
      * @return the table id
      */
     int getTableId();
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    default void close() {
+        clear();
+    }
 }
