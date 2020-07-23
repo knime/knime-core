@@ -215,24 +215,31 @@ public class DataTableSorter extends AbstractTableSorter {
      */
     public CloseableTable sort(final ExecutionMonitor exec) throws CanceledExecutionException {
         DataTable delegate = super.sortInternal(exec);
-        return new CloseableTable() {
-            @Override
-            public void close() {
-                if (delegate != getInputTable() && delegate instanceof ContainerTable) {
-                    ((ContainerTable)delegate).clear();
+
+        // only allow closing this delegate if it's not the input table.
+        // FIXME Why does the DataTableSorter need to understand that it shouldn't be able to
+        // close a table? That's state logic which should be caught in the design.
+        if (delegate != getInputTable() && delegate instanceof CloseableTable) {
+            return (CloseableTable)delegate;
+        } else {
+            return new CloseableTable() {
+                @Override
+                public void close() {
+                    // we don't know how to close this guy.
                 }
-            }
 
-            @Override
-            public RowIterator iterator() {
-                return delegate.iterator();
-            }
+                @Override
+                public RowIterator iterator() {
+                    return delegate.iterator();
+                }
 
-            @Override
-            public DataTableSpec getDataTableSpec() {
-                return delegate.getDataTableSpec();
-            }
-        };
+                @Override
+                public DataTableSpec getDataTableSpec() {
+                    return delegate.getDataTableSpec();
+                }
+            };
+
+        }
     }
 
     /** {@inheritDoc} */
