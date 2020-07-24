@@ -46,6 +46,7 @@ package org.knime.core.node.workflow;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -67,6 +68,7 @@ import org.junit.rules.ExpectedException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.dialog.DialogNode;
+import org.knime.core.node.dialog.ExternalNodeData;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.util.CoreConstants;
 import org.knime.core.util.FileUtil;
@@ -200,4 +202,30 @@ public class EnhAP12286_ExternalConfiguration extends WorkflowTestCase {
         exception.expectMessage("Parameter name \"number-input\" doesn't match any node in the workflow");
         getManager().setConfigurationNodes(configuration);
     }
+
+	/**
+	 * Tests the {@link WorkflowManager#getConfigurationNodes()} and
+	 * {@link WorkflowManager#setConfigurationNodes(Map)}-methods.
+	 *
+	 * @throws Exception
+	 */
+	@SuppressWarnings({ "rawtypes", "deprecation" })
+	@Test
+	public void testGetAndSetConfigurationNodesFromString() throws Exception {
+		executeAllAndWait();
+		checkState(m_stringConfiguration_1, InternalNodeContainerState.EXECUTED);
+
+		Map<String, DialogNode> configurationNodes = getManager().getConfigurationNodes(true);
+		assertEquals("unexptected number of config nodes", configurationNodes.size(), 10);
+
+		Map<String, String> configuration = new HashMap<>();
+		configuration.put("string-input", "new_config");
+		getManager().setConfigurationNodesFromString(configuration);
+		checkState(m_stringConfiguration_1, InternalNodeContainerState.CONFIGURED);
+		checkState(m_doubleConfiguration_2, InternalNodeContainerState.EXECUTED);
+		FlowObjectStack outgoingFlowObjectStack = ((NativeNodeContainer) getManager()
+				.getNodeContainer(m_stringConfiguration_1)).getOutgoingFlowObjectStack();
+		assertEquals("flow variable hasn't been set",
+				outgoingFlowObjectStack.getAvailableFlowVariables().get("string-input").getStringValue(), "new_config");
+	}
 }

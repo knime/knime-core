@@ -10031,6 +10031,32 @@ public final class WorkflowManager extends NodeContainer
         }, false, false);
     }
 
+    /**
+     * Sets the configuration of the nodes referenced by the given parameter names. Only considers nodes on the top
+     * level. Respective nodes will be reset.
+     *
+     * @param configuration a map of parameter names and the new to be set configuration value as
+     *            {@link ExternalNodeData}
+     * @throws InvalidSettingsException if there is no node for a given parameter name or the validation of the new
+     *             configuration value failed
+     * @throws JsonException if configuration couldn't be parsed from the {@link ExternalNodeData}
+     *
+     * @since 4.2
+     */
+    @SuppressWarnings("unchecked")
+    public void setConfigurationNodesFromString(final Map<String, String> configuration)
+        throws InvalidSettingsException, JsonException {
+        setExternalParameterValues(configuration, DialogNode.class, i -> i.getParameterName(), (n, v) -> {
+            DialogNodeValue val = n.createEmptyDialogValue();
+            val.loadFromString(v);
+            n.validateDialogValue(val);
+        }, (n, v) -> {
+            DialogNodeValue val = n.createEmptyDialogValue();
+            val.loadFromString(v);
+            n.setDialogValue(val);
+        }, false, false);
+    }
+
     private interface BiConsumer<T, V> {
         void accept(T model, V value) throws InvalidSettingsException;
     }
