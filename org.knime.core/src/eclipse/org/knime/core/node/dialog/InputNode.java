@@ -96,7 +96,7 @@ public interface InputNode {
      * guarantee backward compatibility.
      *
      * @return <code>true</code> here but potentially overwritten by nodes (especially Container nodes)
-     * @since 4.3
+     * @since 4.2
      */
     default boolean isUseAlwaysFullyQualifiedParameterName() {
         return true;

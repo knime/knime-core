@@ -30,6 +30,7 @@ package org.knime.core.node.dialog;
  * @noimplement This interface is not intended to be implemented by clients, it may change without notice
  */
 public interface OutputNode {
+
     /**
      * Returns an object representing the node's external output. If the node is not yet executed, the returned object
      * may be empty and not contain any values.
@@ -47,7 +48,7 @@ public interface OutputNode {
      * guarantee backward compatibility.
      *
      * @return <code>true</code> here but potentially overwritten by nodes (especially Container nodes)
-     * @since 4.3
+     * @since 4.2
      */
     default boolean isUseAlwaysFullyQualifiedParameterName() {
         return true;

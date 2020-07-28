@@ -7,6 +7,12 @@
                 <message_argument value="4.1.0"/>
             </message_arguments>
         </filter>
+        <filter id="923795461">
+            <message_arguments>
+                <message_argument value="4.2.0"/>
+                <message_argument value="4.2.0"/>
+            </message_arguments>
+        </filter>
     </resource>
     <resource path="META-INF/MANIFEST.MF" type="org.eclipse.core.runtime.IPluginDescriptor">
         <filter comment="removed as part of Eclipse update" id="305422471">
@@ -40,6 +46,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.dialog.ExternalNodeDataTest">
+        <filter id="305422471">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.dialog.ExternalNodeDataTest"/>
+                <message_argument value="org.knime.core_4.1.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.workflow.FSConnectionKeyAccessor">
         <filter comment="Removes FSConnection flow variable type in 4.2.0 (which existed but was @noreference in 4.1.0)" id="305324134">
             <message_arguments>
@@ -64,10 +78,58 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.util.PathUtilsTest">
+        <filter id="305422471">
+            <message_arguments>
+                <message_argument value="org.knime.core.util.PathUtilsTest"/>
+                <message_argument value="org.knime.core_4.1.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="META-INF/MANIFEST.MF" type="org.knime.core.util.SWTUtilities">
         <filter comment="moved to org.knime.core.ui.util" id="305324134">
             <message_arguments>
                 <message_argument value="org.knime.core.util.SWTUtilities"/>
+                <message_argument value="org.knime.core_4.1.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.util.workflowalizer.AbstractWorkflowalizerTest">
+        <filter id="305422471">
+            <message_arguments>
+                <message_argument value="org.knime.core.util.workflowalizer.AbstractWorkflowalizerTest"/>
+                <message_argument value="org.knime.core_4.1.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.util.workflowalizer.JSONTest">
+        <filter id="305422471">
+            <message_arguments>
+                <message_argument value="org.knime.core.util.workflowalizer.JSONTest"/>
+                <message_argument value="org.knime.core_4.1.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.util.workflowalizer.WorkflowFileVisitor">
+        <filter id="305422471">
+            <message_arguments>
+                <message_argument value="org.knime.core.util.workflowalizer.WorkflowFileVisitor"/>
+                <message_argument value="org.knime.core_4.1.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.util.workflowalizer.Workflowalizer410Test">
+        <filter id="305422471">
+            <message_arguments>
+                <message_argument value="org.knime.core.util.workflowalizer.Workflowalizer410Test"/>
+                <message_argument value="org.knime.core_4.1.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.util.workflowalizer.WorkflowalizerTest">
+        <filter id="305422471">
+            <message_arguments>
+                <message_argument value="org.knime.core.util.workflowalizer.WorkflowalizerTest"/>
                 <message_argument value="org.knime.core_4.1.0"/>
             </message_arguments>
         </filter>
@@ -2341,208 +2403,6 @@
             <message_arguments>
                 <message_argument value="org.knime.core.util.GUIDeadlockDetector"/>
                 <message_argument value="createStacktrace()"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/xmlbeans/org/knime/node/v212/NodeType.java" type="org.knime.node.v212.NodeType">
-        <filter id="388194388">
-            <message_arguments>
-                <message_argument value="org.knime.node.v212.NodeType"/>
-                <message_argument value="INT_LOOP_END"/>
-                <message_argument value="8"/>
-            </message_arguments>
-        </filter>
-        <filter id="388194388">
-            <message_arguments>
-                <message_argument value="org.knime.node.v212.NodeType"/>
-                <message_argument value="INT_LOOP_START"/>
-                <message_argument value="7"/>
-            </message_arguments>
-        </filter>
-        <filter id="388194388">
-            <message_arguments>
-                <message_argument value="org.knime.node.v212.NodeType"/>
-                <message_argument value="INT_OTHER"/>
-                <message_argument value="10"/>
-            </message_arguments>
-        </filter>
-        <filter id="388194388">
-            <message_arguments>
-                <message_argument value="org.knime.node.v212.NodeType"/>
-                <message_argument value="INT_QUICK_FORM"/>
-                <message_argument value="9"/>
-            </message_arguments>
-        </filter>
-        <filter id="388194388">
-            <message_arguments>
-                <message_argument value="org.knime.node.v212.NodeType"/>
-                <message_argument value="INT_SCOPE_END"/>
-                <message_argument value="13"/>
-            </message_arguments>
-        </filter>
-        <filter id="388194388">
-            <message_arguments>
-                <message_argument value="org.knime.node.v212.NodeType"/>
-                <message_argument value="INT_SCOPE_START"/>
-                <message_argument value="12"/>
-            </message_arguments>
-        </filter>
-        <filter id="388194388">
-            <message_arguments>
-                <message_argument value="org.knime.node.v212.NodeType"/>
-                <message_argument value="INT_UNKNOWN"/>
-                <message_argument value="11"/>
-            </message_arguments>
-        </filter>
-        <filter id="403767336">
-            <message_arguments>
-                <message_argument value="org.knime.node.v212.NodeType"/>
-                <message_argument value="INT_WIDGET"/>
-            </message_arguments>
-        </filter>
-        <filter id="403767336">
-            <message_arguments>
-                <message_argument value="org.knime.node.v212.NodeType"/>
-                <message_argument value="WIDGET"/>
-            </message_arguments>
-        </filter>
-        <filter id="1211105284">
-            <message_arguments>
-                <message_argument value="INT_WIDGET"/>
-            </message_arguments>
-        </filter>
-        <filter id="1211105284">
-            <message_arguments>
-                <message_argument value="WIDGET"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/xmlbeans/org/knime/node/v31/NodeType.java" type="org.knime.node.v31.NodeType">
-        <filter id="388194388">
-            <message_arguments>
-                <message_argument value="org.knime.node.v31.NodeType"/>
-                <message_argument value="INT_LOOP_END"/>
-                <message_argument value="8"/>
-            </message_arguments>
-        </filter>
-        <filter id="388194388">
-            <message_arguments>
-                <message_argument value="org.knime.node.v31.NodeType"/>
-                <message_argument value="INT_LOOP_START"/>
-                <message_argument value="7"/>
-            </message_arguments>
-        </filter>
-        <filter id="388194388">
-            <message_arguments>
-                <message_argument value="org.knime.node.v31.NodeType"/>
-                <message_argument value="INT_OTHER"/>
-                <message_argument value="10"/>
-            </message_arguments>
-        </filter>
-        <filter id="388194388">
-            <message_arguments>
-                <message_argument value="org.knime.node.v31.NodeType"/>
-                <message_argument value="INT_QUICK_FORM"/>
-                <message_argument value="9"/>
-            </message_arguments>
-        </filter>
-        <filter id="388194388">
-            <message_arguments>
-                <message_argument value="org.knime.node.v31.NodeType"/>
-                <message_argument value="INT_SCOPE_END"/>
-                <message_argument value="13"/>
-            </message_arguments>
-        </filter>
-        <filter id="388194388">
-            <message_arguments>
-                <message_argument value="org.knime.node.v31.NodeType"/>
-                <message_argument value="INT_SCOPE_START"/>
-                <message_argument value="12"/>
-            </message_arguments>
-        </filter>
-        <filter id="388194388">
-            <message_arguments>
-                <message_argument value="org.knime.node.v31.NodeType"/>
-                <message_argument value="INT_UNKNOWN"/>
-                <message_argument value="11"/>
-            </message_arguments>
-        </filter>
-        <filter id="403767336">
-            <message_arguments>
-                <message_argument value="org.knime.node.v31.NodeType"/>
-                <message_argument value="INT_WIDGET"/>
-            </message_arguments>
-        </filter>
-        <filter id="403767336">
-            <message_arguments>
-                <message_argument value="org.knime.node.v31.NodeType"/>
-                <message_argument value="WIDGET"/>
-            </message_arguments>
-        </filter>
-        <filter id="1211105284">
-            <message_arguments>
-                <message_argument value="INT_WIDGET"/>
-            </message_arguments>
-        </filter>
-        <filter id="1211105284">
-            <message_arguments>
-                <message_argument value="WIDGET"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.dialog.ExternalNodeDataTest">
-        <filter id="305422471">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.dialog.ExternalNodeDataTest"/>
-                <message_argument value="org.knime.core_4.1.0"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.util.PathUtilsTest">
-        <filter id="305422471">
-            <message_arguments>
-                <message_argument value="org.knime.core.util.PathUtilsTest"/>
-                <message_argument value="org.knime.core_4.1.0"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.util.workflowalizer.AbstractWorkflowalizerTest">
-        <filter id="305422471">
-            <message_arguments>
-                <message_argument value="org.knime.core.util.workflowalizer.AbstractWorkflowalizerTest"/>
-                <message_argument value="org.knime.core_4.1.0"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.util.workflowalizer.JSONTest">
-        <filter id="305422471">
-            <message_arguments>
-                <message_argument value="org.knime.core.util.workflowalizer.JSONTest"/>
-                <message_argument value="org.knime.core_4.1.0"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.util.workflowalizer.WorkflowFileVisitor">
-        <filter id="305422471">
-            <message_arguments>
-                <message_argument value="org.knime.core.util.workflowalizer.WorkflowFileVisitor"/>
-                <message_argument value="org.knime.core_4.1.0"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.util.workflowalizer.Workflowalizer410Test">
-        <filter id="305422471">
-            <message_arguments>
-                <message_argument value="org.knime.core.util.workflowalizer.Workflowalizer410Test"/>
-                <message_argument value="org.knime.core_4.1.0"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.util.workflowalizer.WorkflowalizerTest">
-        <filter id="305422471">
-            <message_arguments>
-                <message_argument value="org.knime.core.util.workflowalizer.WorkflowalizerTest"/>
-                <message_argument value="org.knime.core_4.1.0"/>
             </message_arguments>
         </filter>
     </resource>
