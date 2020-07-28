@@ -63,6 +63,8 @@ public interface ContainerTable extends KnowsRowCountTable, CloseableTable {
 
     /**
      * {@inheritDoc}
+     *
+     * @since 4.3
      */
     @Override
     default void close() {
