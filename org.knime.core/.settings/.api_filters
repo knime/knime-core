@@ -2225,6 +2225,15 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/util/filter/NameFilterPanel.java" type="org.knime.core.node.util.filter.NameFilterPanel">
+        <filter comment="added in 4.2.1 really" id="1141899266">
+            <message_arguments>
+                <message_argument value="4.3"/>
+                <message_argument value="4.2"/>
+                <message_argument value="clearSearchFields()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/wizard/AbstractWizardNodeView.java" type="org.knime.core.node.wizard.AbstractWizardNodeView">
         <filter id="576725006">
             <message_arguments>
