@@ -1050,6 +1050,18 @@ public abstract class NameFilterPanel<T> extends JPanel {
         repaint();
     }
 
+    /** Clears the search boxes above the twin lists and updates the UI and filters.
+     * @since 4.3
+     */
+    public void clearSearchFields() {
+        m_inclSearchField.setText("");
+        m_exclSearchField.setText("");
+        updateRowFilter(m_inclSearchField.getText(), m_inclSorter);
+        updateRowFilter(m_exclSearchField.getText(), m_exclSorter);
+        updateFilterView(m_inclTable, m_inclCards, m_inclTablePlaceholder, m_inclSearchField.getText());
+        updateFilterView(m_exclTable, m_exclCards, m_exclTablePlaceholder, m_exclSearchField.getText());
+    }
+
     /**
      * Save this configuration.
      *
