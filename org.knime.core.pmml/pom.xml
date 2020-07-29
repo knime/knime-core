@@ -14,6 +14,10 @@
 	<artifactId>org.knime.core.pmml</artifactId>
 	<packaging>${packaging.default}</packaging>
 
+	<properties>
+		<revision>4.2.0</revision>
+	</properties>
+
     <build>
         <plugins>
             <plugin>

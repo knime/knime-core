@@ -12,6 +12,10 @@
 	<artifactId>org.knime.core.tests</artifactId>
 	<packaging>eclipse-test-plugin</packaging>
 
+	<properties>
+		<revision>4.2.0</revision>
+	</properties>
+
 	<build>
 		<plugins>
 			<plugin>
