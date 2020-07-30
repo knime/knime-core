@@ -1244,7 +1244,9 @@ public final class FileUtil {
     /**
      * Tries to open an output URL connection to the given URL. If the URL is an http URL the given HTTP method is set
      * and the response code following the initial request is evaluated. Otherwise the connection is simply configured
-     * for output.
+     * for output.<br/>
+     * <b>Important:</b> make sure to disconnect properly in case the connection is http (see
+     * {@link WrappedURLOutputStream} and {@link #openOutputStream(URL, String, Map)}).
      *
      * @param url any URL
      * @param httpMethod the HTTP method in case the url is http
@@ -1259,8 +1261,10 @@ public final class FileUtil {
     /**
      * Tries to open an output URL connection to the given URL. If the URL is an http URL the given HTTP method is set
      * and the response code following the initial request is evaluated. Otherwise the connection is simply configured
-     * for output. You can pass optional properties (or headers) that are set before the connection is opened, e.g.
-     * a "Content-Type" for the data you are going to send.
+     * for output. You can pass optional properties (or headers) that are set before the connection is opened, e.g. a
+     * "Content-Type" for the data you are going to send.<br/>
+     * <b>Important:</b> make sure to disconnect properly in case the connection is http (see
+     * {@link WrappedURLOutputStream} and {@link #openOutputStream(URL, String, Map)}).
      *
      * @param url any URL
      * @param httpMethod the HTTP method in case the url is http
@@ -1285,6 +1289,41 @@ public final class FileUtil {
         urlConnection.connect();
 
         return urlConnection;
+    }
+
+    /**
+     * Tries to open an output URL connection to the given URL and returns its output stream. If the URL is an http URL
+     * the given HTTP method is set and the response code following the initial request is evaluated. Otherwise the
+     * connection is simply configured for output.<br/>
+     * In case the output stream is closed the underlying connection is also closed.
+     *
+     * @param url any URL
+     * @param httpMethod the HTTP method in case the url is http
+     * @return a URLConnection configured for output
+     * @throws IOException if an I/O error occurs
+     * @since 4.1
+     */
+    public static OutputStream openOutputStream(final URL url, final String httpMethod) throws IOException {
+        return openOutputStream(url, httpMethod, Collections.emptyMap());
+    }
+
+    /**
+     * Tries to open an output URL connection to the given URL and returns its output stream. If the URL is an http URL
+     * the given HTTP method is set and the response code following the initial request is evaluated. Otherwise the
+     * connection is simply configured for output. You can pass optional properties (or headers) that are set before the
+     * connection is opened, e.g. a "Content-Type" for the data you are going to send.<br/>
+     * In case the output stream is closed the underlying connection is also closed.
+     *
+     * @param url any URL
+     * @param httpMethod the HTTP method in case the url is http
+     * @param properties a (potentially empty) map with request properties (headers); must not be <code>null</code>
+     * @return a URLConnection configured for output
+     * @throws IOException if an I/O error occurs
+     * @since 4.1
+     */
+    public static OutputStream openOutputStream(final URL url, final String httpMethod,
+        final Map<String, String> properties) throws IOException {
+        return new WrappedURLOutputStream(openOutputConnection(url, httpMethod, properties));
     }
 
     /**
@@ -1318,7 +1357,7 @@ public final class FileUtil {
         URLConnection conn = url.openConnection();
         conn.setConnectTimeout(timeout);
         conn.setReadTimeout(timeout);
-        return conn.getInputStream();
+        return new WrappedURLInputStream(conn);
     }
 
     /** Opens a buffered input stream for the location (file path or URL).
