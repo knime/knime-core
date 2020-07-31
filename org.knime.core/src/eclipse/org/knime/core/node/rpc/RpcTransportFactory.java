@@ -55,6 +55,9 @@ package org.knime.core.node.rpc;
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  *
+ * @noreference This class is not intended to be referenced by clients.
+ * @noextend This class is not intended to be subclassed by clients.
+ *
  * @since 4.3
  */
 public interface RpcTransportFactory {

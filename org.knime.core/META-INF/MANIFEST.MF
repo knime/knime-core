@@ -165,7 +165,7 @@ Require-Bundle: org.eclipse.osgi;bundle-version="[3.10.0,4.0.0)";visibility:=ree
  com.google.guava;bundle-version="[19.0.0,20.0.0)",
  com.fasterxml.jackson.dataformat.jackson-dataformat-xml;bundle-version="[2.10.2,3.0.0)",
  net.sf.trove4j;bundle-version="3.0.3",
- com.github.briandilley.jsonrpc4j
+ com.github.briandilley.jsonrpc4j;bundle-version="[1.5.2,2.0.0)"
 Eclipse-RegisterBuddy: org.apache.log4j
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8

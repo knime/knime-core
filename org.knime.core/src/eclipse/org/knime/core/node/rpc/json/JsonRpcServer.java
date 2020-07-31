@@ -60,10 +60,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 /**
  * A wrapper for the jsonrpc4j library; a simple delegate that allows for exchanging the JSON-RPC implementation.
  *
- * @param <T> the node data service interface type; defines which methods are offered by the node model to retrieve data
+ * @param <T> the node data service interface type; defines which methods are offered by the node model to retrieve
+ *            data. See also {@link JsonRpcClient} for requirements on this interface.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
+ *
+ * @noreference This class is not intended to be referenced by clients.
+ * @noextend This class is not intended to be subclassed by clients.
  *
  * @since 4.3
  */
@@ -81,7 +85,7 @@ public class JsonRpcServer<T> implements RpcServer<T> {
      * @param handler implementation of the node data service interface
      */
     public JsonRpcServer(final T handler) {
-        this(handler, ObjectMapperUtil.getInstance().getNodeDataServiceObjectMapper());
+        this(handler, ObjectMapperUtil.getInstance().getObjectMapper());
     }
 
     /**

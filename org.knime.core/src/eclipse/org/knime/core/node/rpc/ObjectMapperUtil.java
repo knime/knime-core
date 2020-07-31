@@ -9,8 +9,12 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
  * Utility class around Jackson's {@link ObjectMapper}. It set's up an {@link ObjectMapper}.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
+ * @author Carl Witt, KNIME AG, Zurich, Switzerland
+ *
+ * @noreference This class is not intended to be referenced by clients.
+ * @noextend This class is not intended to be subclassed by clients.
+ *
  * @since 4.3
- * TODO review the necessity and content of this class.
  */
 public final class ObjectMapperUtil {
     private static final ObjectMapperUtil INSTANCE = new ObjectMapperUtil();
@@ -25,8 +29,6 @@ public final class ObjectMapperUtil {
     }
 
     private ObjectMapper m_mapper = null;
-    private ObjectMapper m_binaryMapper = null;
-    private ObjectMapper m_nodeDataServiceMapper = null;
 
     private ObjectMapperUtil() {
         //utility class
@@ -60,20 +62,4 @@ public final class ObjectMapperUtil {
         return mapper;
     }
 
-    /**
-     * @return object mapper used to marshall parameters and results for calls to a node model's data service
-     * @since 4.11
-     */
-    public ObjectMapper getNodeDataServiceObjectMapper() {
-        if (m_nodeDataServiceMapper == null) {
-            m_nodeDataServiceMapper = createNodeDataServiceObjectMapper();
-        }
-        return m_nodeDataServiceMapper;
-    }
-
-    private static ObjectMapper createNodeDataServiceObjectMapper() {
-        ObjectMapper mapper = new ObjectMapper();
-        configureObjectMapper(mapper);
-        return mapper;
-    }
 }

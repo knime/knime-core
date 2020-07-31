@@ -61,6 +61,9 @@ import java.io.OutputStream;
  * @param <T> The node data service interface, i.e., the methods offered by the node model to the node dialog/view to
  *            retrieve data.
  *
+ * @noreference This class is not intended to be referenced by clients.
+ * @noextend This class is not intended to be subclassed by clients.
+ *
  * @since 4.3
  */
 public interface RpcServer<T> {

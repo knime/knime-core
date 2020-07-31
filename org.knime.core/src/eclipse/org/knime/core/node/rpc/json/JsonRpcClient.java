@@ -52,35 +52,40 @@ import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import org.knime.core.node.rpc.AbstractRpcClient;
+import org.knime.core.node.rpc.ObjectMapperUtil;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.TextNode;
 import com.fasterxml.jackson.databind.type.TypeFactory;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 
 /**
  * A JSON-RPC based implementation of a node data service client.
  *
- * @param <T> the node data service interface type; defines which methods are offered by the node model to retrieve data
+ * @param <T> the node data service interface type; defines which methods are offered by the node model to retrieve
+ *            data. The parameters and return type of a method defined in the interface are subjected to serialization
+ *            with an {@link ObjectMapper}. Jackson serialization works out-of-the-box on simple bean-like classes. In
+ *            more advanced cases, parameter types and result types have to use Jackson annotations like
+ *            {@link JsonAutoDetect} to control the serialization behavior.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
+ *
+ * @noreference This class is not intended to be referenced by clients.
+ * @noextend This class is not intended to be subclassed by clients.
  *
  * @since 4.3
  */
 public class JsonRpcClient<T> extends AbstractRpcClient<T> {
 
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    static {
-        OBJECT_MAPPER.registerModule(new Jdk8Module());
-    }
+    private static final Supplier<ObjectMapper> OBJECT_MAPPER = () -> ObjectMapperUtil.getInstance().getObjectMapper();
 
     private final ObjectMapper m_mapper;
 
@@ -91,18 +96,18 @@ public class JsonRpcClient<T> extends AbstractRpcClient<T> {
 
     /**
      * @param serviceInterface the data retrieval interface offered to the node dialog/view by the node model. This
-     *            interface is defined and implemented by the node developer.
+     *            interface is defined and implemented by the node developer. See {@link JsonRpcClient} for details.
      */
     public JsonRpcClient(final Class<T> serviceInterface) {
-        this(serviceInterface, OBJECT_MAPPER);
+        this(serviceInterface, OBJECT_MAPPER.get());
     }
 
     /**
      * @param serviceInterface the data retrieval interface offered to the node dialog/view by the node model. This
-     *            interface is defined and implemented by the node developer.
+     *            interface is defined and implemented by the node developer. See {@link JsonRpcClient} for details.
      * @param mapper used to provide custom serialization for the parameters and results of a remote procedure call
      */
-    public JsonRpcClient(final Class<T> serviceInterface, final ObjectMapper mapper){
+    public JsonRpcClient(final Class<T> serviceInterface, final ObjectMapper mapper) {
         super(serviceInterface);
         m_mapper = mapper;
     }
@@ -114,7 +119,7 @@ public class JsonRpcClient<T> extends AbstractRpcClient<T> {
 
         // if a method has zero parameters, add an empty params array
         ArrayNode parameters = request.arrayNode();
-        if(args != null) {
+        if (args != null) {
             for (int i = 0; i < args.length; i++) {
                 parameters.addPOJO(args[i]);
             }
@@ -131,8 +136,9 @@ public class JsonRpcClient<T> extends AbstractRpcClient<T> {
         return request.toString();
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    protected <R> R convertResult(final String response, final Object valueType) {
+    protected <R> R convertResult(final String response, final Type valueType) throws Exception {
 
         if (valueType == void.class) {
             return null;
@@ -143,19 +149,22 @@ public class JsonRpcClient<T> extends AbstractRpcClient<T> {
             && ((ParameterizedType)valueType).getRawType().equals(Optional.class);
 
         try {
-            // we're transporting a JSON-RPC formatted String within a JSON-RPC response's result field
-            // thus the value of result is escaped (it is represented as a text node).
-            // restore the original (unescaped string) by interpreting the inner response as a text node
-            String jsonRpcRepresentation = m_mapper.readValue(response, TextNode.class).textValue();
-            // then inflate the inner response by interpreting the unescaped string as JSON
-            JsonNode jsonRpcResponse = m_mapper.readValue(jsonRpcRepresentation, JsonNode.class);
-            // then retrieve the result from the inner JSON-RPC tree
+            // inflate the JSON-RPC response to retrieve result
+            JsonNode jsonRpcResponse = m_mapper.readValue(response, JsonNode.class);
             JsonNode resultNode = jsonRpcResponse.get("result");
 
             // instead of an result, an error can be set
-            if(resultNode == null) {
+            if (resultNode == null) {
                 JsonNode errorNode = jsonRpcResponse.get("error");
-                throw new RuntimeException(String.format("The remote node model returned an error: %s", errorNode));
+                // TODO proper failure handling
+                try {
+                    String exceptionClassName = errorNode.get("data").get("exceptionTypeName").asText();
+                    Class<? extends Exception> exceptionClass =
+                        (Class<? extends Exception>)Class.forName(exceptionClassName);
+                    throw exceptionClass.newInstance();
+                } catch (ClassNotFoundException | InstantiationException | IllegalAccessException ex) {
+                    throw new RuntimeException(String.format("The remote node model returned an error: %s", errorNode));
+                }
             }
 
             if (outerTypeIsOptional) {
@@ -169,9 +178,7 @@ public class JsonRpcClient<T> extends AbstractRpcClient<T> {
                 return (R)Optional.ofNullable(result);
             } else {
                 // in case we have generic types (List, Map, etc.), we need to convert JSON to POJO with a complex type
-                JavaType complexType = TypeFactory.defaultInstance().constructType((Type)valueType);
-                // restore POJO using a JSON parser constructed from resultNode;
-                // this extra step seems to be necessary for generic types
+                JavaType complexType = TypeFactory.defaultInstance().constructType(valueType);
                 Object result = m_mapper.convertValue(resultNode, complexType);
                 return (R)result;
             }

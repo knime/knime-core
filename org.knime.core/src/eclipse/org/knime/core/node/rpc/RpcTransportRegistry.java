@@ -58,7 +58,6 @@ import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
-import org.knime.core.node.ExtensionTableLoader;
 import org.knime.core.node.NodeLogger;
 
 /**
@@ -67,12 +66,11 @@ import org.knime.core.node.NodeLogger;
  *
  * @author Martin Horn, KNIME AG, Zurich, Switzerland
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
+ *
+ * @noreference This class is not intended to be referenced by clients.
+ * @noextend This class is not intended to be subclassed by clients.
  */
 final class RpcTransportRegistry {
-
-    private RpcTransportRegistry() {
-        // utility
-    }
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(RpcTransportRegistry.class);
 
@@ -82,6 +80,10 @@ final class RpcTransportRegistry {
      * The cached instance, as collected by {@link #collectRpcMessageTransportFactory()}.
      */
     private static RpcTransportFactory m_rpcTransportFactory;
+
+    private RpcTransportRegistry() {
+        // utility
+    }
 
     /**
      * Returns a delegate to org.knime.core.ui NodeContainerUI, which in turn is implemented by the gateway's
@@ -133,9 +135,8 @@ final class RpcTransportRegistry {
                 cfe.getContributor().getName());
             return ext;
         } catch (CoreException ex) {
-            // TODO
-            LOGGER.error(String.format("Could not create '%s' from extension '%s': %s",
-                ExtensionTableLoader.class.getName(), cfe.getContributor().getName(), ex.getMessage()), ex);
+            LOGGER.error(String.format("Looking for an implementation of the RpcTransportFactory extension point,\n"
+                + "but could not process extension %s: %s", cfe.getContributor().getName(), ex.getMessage()), ex);
         }
         return null;
     }

@@ -57,7 +57,11 @@ import org.knime.core.ui.node.workflow.NodeContainerUI;
  * A mechanism to expose the {@link NodeContainerUI#doRpc(String)} to org.knime.core without adding a dependency
  * from org.knime.core to org.knime.core.ui.
  *
+ * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
+ *
+ * @noreference This class is not intended to be referenced by clients.
+ * @noextend This class is not intended to be subclassed by clients.
  */
 public class NodeContainerRpcTransportFactory implements RpcTransportFactory {
 
