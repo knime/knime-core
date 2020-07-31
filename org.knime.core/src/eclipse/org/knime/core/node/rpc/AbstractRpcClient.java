@@ -280,10 +280,10 @@ public abstract class AbstractRpcClient<T> implements RpcClient<T> {
                 ByteArrayOutputStream response = new ByteArrayOutputStream()) {
             localServer.handleRequest(request, response);
             debugLogger
-                .debug(String.format("[Node data service local testing] Node model response: %s", requestString));
+                .debug(String.format("[Node data service local testing] Node model response: %s", response));
             Object result = convertResult(response.toString(defaultCharset.name()), method.getGenericReturnType());
             debugLogger.debug(String.format("[Node data service local testing] Object unmarshalled from response: %s",
-                requestString));
+                result));
             return result;
         }
     }
