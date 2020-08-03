@@ -74,7 +74,7 @@ import org.knime.core.data.convert.DataCellFactoryMethod;
  *
  * @author ohl, University of Konstanz
  */
-public class SparseBitVectorCell extends DataCell implements BitVectorValue {
+public class SparseBitVectorCell extends DataCell implements SparseBitVectorValue {
     /**
      * Convenience access member for
      * <code>DataType.getType(SparseBitVectorCell.class)</code>.

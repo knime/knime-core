@@ -88,6 +88,25 @@
          </renderer>
       </dataValue>
       <dataValue
+            valueClass="org.knime.core.data.vector.bitvector.SparseBitVectorValue">
+         <renderer
+               rendererFactoryClass="org.knime.core.data.renderer.BitVectorValueStringRenderer$HexRendererFactory"
+               suggestAsDefault="false">
+         </renderer>
+         <renderer
+               rendererFactoryClass="org.knime.core.data.renderer.BitVectorValueStringRenderer$BinRendererFactory"
+               suggestAsDefault="true">
+         </renderer>
+         <renderer
+               rendererFactoryClass="org.knime.core.data.renderer.BitVectorValuePixelRenderer$Factory"
+               suggestAsDefault="false">
+         </renderer>
+         <renderer
+               rendererFactoryClass="org.knime.core.data.renderer.BitVectorValueStringRenderer$SetBitsRendererFactory"
+               suggestAsDefault="false">
+         </renderer>
+      </dataValue>
+      <dataValue
             valueClass="org.knime.core.data.BooleanValue">
          <renderer
                rendererFactoryClass="org.knime.core.data.renderer.BooleanValueRenderer$Factory"
