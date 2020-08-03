@@ -209,8 +209,16 @@ public interface BitVectorValue extends DataValue {
 
         /** Only subclasses are allowed to instantiate this class. */
         protected BitVectorUtilityFactory() {
-            super(BitVectorValue.class);
+            this(BitVectorValue.class);
         }
+
+        /**
+         * @param valueClass ...
+         */
+        BitVectorUtilityFactory(final Class<? extends DataValue> valueClass) {
+            super(valueClass);
+        }
+
 
         /**
          * {@inheritDoc}
