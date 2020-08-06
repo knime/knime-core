@@ -53,8 +53,11 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
- * An {@link RpcClient} implementation is used by a node dialog or node view to retrieve data from its (possibly remote)
+ * An {@link RpcSingleClient} implementation is used by a node dialog or node view to retrieve data from its (possibly remote)
  * node model.
+ *
+ * @param <S> The node data service interface, i.e., the methods offered by the node model to the node dialog/view to
+ *            retrieve data.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
@@ -64,7 +67,7 @@ import java.util.function.Function;
  *
  * @since 4.3
  */
-public interface RpcClient {
+public interface RpcSingleClient<S> extends RpcClient {
 
     /**
      * Used to call a method on the node model's data service interface and retrieve the result. Example usage:
@@ -72,7 +75,7 @@ public interface RpcClient {
      * <pre>
      * RpcClient m_rpcClient = ...
      * Future&lt;List&lt;SomeType>> future =
-     *      m_rpcClient.callServiceWithRes(MyService.class, nodeDataService -> nodeDataService.getSomeData(someParameter));
+     *      m_rpcClient.callServiceWithRes(nodeDataService -> nodeDataService.getSomeData(someParameter));
      * try {
      *     List&lt;SomeType> results = future.get(3, TimeUnit.SECONDS);
      * } catch (TimeoutException timeoutException) {
@@ -81,49 +84,34 @@ public interface RpcClient {
      *
      * @param serviceEvaluator the service evaluator is given an implementation of the node model's data service. It
      *            then calls one of the methods on the node model's service interface and returns the result.
-     * @param serviceInterface the interface of the service to call to
+     *
      * @param <R> the result type of the invoked method.
      * @return a {@link Future} containing the result of the invoked method.
      */
-    default <S, R> Future<R> callServiceWithRes(final Class<S> serviceInterface,
-        final Function<S, R> serviceEvaluator) {
-        return callServiceWithRes(serviceInterface, serviceInterface.getSimpleName(), serviceEvaluator);
+    <R> Future<R> callServiceWithRes(Function<S, R> serviceEvaluator);
+
+    @SuppressWarnings("unchecked")
+    @Override
+    default <S2, R> java.util.concurrent.Future<R> callServiceWithRes(final Class<S2> serviceInterface,
+        final String serviceName, final Function<S2, R> serviceEvaluator) {
+        return callServiceWithRes((Function<S, R>)serviceEvaluator);
     }
 
     /**
-     * See {@link #callServiceWithRes(Class, Function)}.
-     *
-     * @param <S>
-     * @param <R>
-     * @param serviceInterface
-     * @param serviceName
-     * @param serviceEvaluator
-     * @return the result
-     */
-    <S, R> Future<R> callServiceWithRes(Class<S> serviceInterface, String serviceName, Function<S, R> serviceEvaluator);
-
-    /**
-     * Similar to {@link #callServiceWithRes(Class, Function)} but for void methods. For instance:
+     * Similar to {@link #callServiceWithRes(Function)} but for void methods. For instance:
      * {@code Future<Void> future = m_rpcClient.callService(nodeDataService -> nodeDataService.sendSomeData(someData));}
      *
-     * @param serviceInterface the interface of the service to call to
      * @param serviceConsumer used to invoke the method on the service interface
      * @return an empty future
      */
-    default <S> Future<Void> callService(final Class<S> serviceInterface, final Consumer<S> serviceConsumer) {
-        return callService(serviceInterface, serviceInterface.getSimpleName(), serviceConsumer);
-    }
+    Future<Void> callService(Consumer<S> serviceConsumer);
 
-    /**
-     * See {@link #callService(Class, Consumer)}.
-     *
-     * @param <S>
-     * @param serviceInterface
-     * @param serviceName
-     * @param serviceConsumer
-     * @return a future
-     */
-    <S> Future<Void> callService(Class<S> serviceInterface, String serviceName, Consumer<S> serviceConsumer);
+    @SuppressWarnings("unchecked")
+    @Override
+    default <S2> Future<Void> callService(final Class<S2> serviceInterface, final String serviceName,
+        final Consumer<S2> serviceConsumer) {
+        return callService((Consumer<S>)serviceConsumer);
+    }
 
     /**
      * Gives direct access to the service implementation. Please note that a call to the service might block for a while
@@ -131,26 +119,15 @@ public interface RpcClient {
      * to not block the ui!
      *
      * @param serviceInterface the interface to get the service implementation for
-     * @param <S>
      * @return the service implementation
      */
-    default <S> S getService(final Class<S> serviceInterface) {
-        return getService(serviceInterface, serviceInterface.getSimpleName());
+    S getService();
+
+    @SuppressWarnings("unchecked")
+    @Override
+    default <S2> S2 getService(final Class<S2> serviceInterface, final String serviceName) {
+        return (S2)getService();
     }
 
-    /**
-     * See {@link #getService(Class)}.
-     * @param <S>
-     * @param serviceInterface
-     * @param serviceName
-     * @return the service implementation
-     */
-    <S> S getService(Class<S> serviceInterface, String serviceName);
-
-    /**
-     * @return <code>true</code> if this rpc client is connected to a server, or <code>false</code> if the call are just
-     *         forwarded to a local implementation.
-     */
-    boolean isConnectedRemotely();
 
 }

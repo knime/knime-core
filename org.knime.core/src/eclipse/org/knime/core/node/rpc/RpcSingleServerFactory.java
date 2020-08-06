@@ -56,23 +56,25 @@ import org.knime.core.node.NodeModel;
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  *
- * @param <T> The node model type that provides the node data service.
+ * @param <M> The node model type
+ * @param <S> The node data service interface, i.e., the methods offered by the node model to the node dialog/view to
+ *            retrieve data.
  *
  * @noreference This class is not intended to be referenced by clients.
  * @noextend This class is not intended to be subclassed by clients.
  *
  * @since 4.3
  */
-public interface RpcServerFactory<T extends NodeModel> {
+public interface RpcSingleServerFactory<M extends NodeModel, S> {
 
     /**
      * Used by the framework to register a node model's data service.
      *
-     * @param nodeModel the node model that offers the node data service; might be practical if the node model also
+     * @param nodeModel the node model for optional access; might be practical if the node model also
      *            implements its service interface and thus also serves as the handler for requests
      * @return an rpc server provided by the node model that is then used to serve requests from remote node
      *         dialogs/view.
      */
-    public RpcServer createRpcServer(final T nodeModel);
+    public RpcSingleServer<S> createRpcServer(final M nodeModel);
 
 }

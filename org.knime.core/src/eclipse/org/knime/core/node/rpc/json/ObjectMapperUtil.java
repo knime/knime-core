@@ -1,4 +1,4 @@
-package org.knime.core.node.rpc;
+package org.knime.core.node.rpc.json;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,7 +16,7 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
  *
  * @since 4.3
  */
-public final class ObjectMapperUtil {
+final class ObjectMapperUtil {
     private static final ObjectMapperUtil INSTANCE = new ObjectMapperUtil();
 
     /**

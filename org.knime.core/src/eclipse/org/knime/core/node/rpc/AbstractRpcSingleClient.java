@@ -44,95 +44,95 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Jul 14, 2020 (carlwitt): created
+ *   Jul 13, 2020 (hornm): created
  */
-package org.knime.core.node.rpc.json;
+package org.knime.core.node.rpc;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.HashMap;
-import java.util.Map;
+import java.lang.reflect.Method;
+import java.util.concurrent.Future;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
-import org.knime.core.node.rpc.RpcServer;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.googlecode.jsonrpc4j.JsonRpcMultiServer;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.rpc.json.JsonRpcClient;
 
 /**
- * A wrapper for the jsonrpc4j library; a simple delegate that allows for exchanging the JSON-RPC implementation.
- *
- * The service interface and their handler registered with this server need to either follow a certain convention or a
- * custom {@link ObjectMapper} (for de-/serialization) needs to be provided. For more details see
- * {@link JsonRpcSingleClient}.
+ * Base class for node data service client implementations, such as {@link JsonRpcClient}.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  *
+ * @since 4.3
+ *
  * @noreference This class is not intended to be referenced by clients.
  * @noextend This class is not intended to be subclassed by clients.
  *
- * @since 4.3
+ * @param <S> the node model's service interface that defines the methods that can be used by the dialog/view to obtain
+ *            data from it
  */
-public class JsonRpcServer implements RpcServer {
+public abstract class AbstractRpcSingleClient<S> extends AbstractRpcClient implements RpcSingleClient<S> {
 
     /**
-     * Node data service implementors. Can be local (directly execute using node model) or remote (execute using remote
-     * node model).
+     * The data retrieval interface offered to the node dialog/view by the node model. This interface is defined and
+     * implemented by the node developer.
      */
-    private final Map<String, Object> m_handlers = new HashMap<>();
-
-    private JsonRpcMultiServer m_jsonRpcServer;
+    private final Class<S> m_serviceInterface;
 
     /**
-     * Json rpc server with default object mapper.
+     * @param serviceInterface the data retrieval interface offered to the node dialog/view by the node model. This
+     *            interface is defined and implemented by the node developer.
      */
-    public JsonRpcServer() {
-        this(ObjectMapperUtil.getInstance().getObjectMapper());
-    }
-
-    /**
-     * @param mapper allows customized serialization of java objects into JSON
-     */
-    public JsonRpcServer(final ObjectMapper mapper) {
-        m_jsonRpcServer = new JsonRpcMultiServer(mapper);
-    }
-
-    /**
-     * Adds a new service handler to the server. The simple class name of the service interface is used as service name!
-     * The service name is used in the json-rpc request method property to specify service to use (e.g.
-     * <code>MyService.theMethodToCall</code>)
-     *
-     * @param serviceInterface the interface implemented by the handler (i.e. node data service)
-     * @param handler the handler implementation
-     * @param <T> the type of the handler
-     */
-    public <T> void addService(final Class<T> serviceInterface, final T handler) {
-        addService(serviceInterface.getSimpleName(), handler);
-    }
-
-    /**
-     * Adds a new service handler to the server.
-     *
-     * @param serviceName the unique name for the service (determines how the client addresses the services in the json
-     *            rpc request)
-     * @param handler the handler implementation
-     * @param <T> the type of the handler
-     */
-    public <T> void addService(final String serviceName, final T handler) {
-        m_jsonRpcServer.addService(serviceName, handler);
-        m_handlers.put(serviceName, handler);
-    }
-
-    @Override
-    public void handleRequest(final InputStream in, final OutputStream out) throws IOException {
-        m_jsonRpcServer.handleRequest(in, out);
+    public AbstractRpcSingleClient(final Class<S> serviceInterface) {
+        super();
+        m_serviceInterface = serviceInterface;
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public <S> S getHandler(final String serviceName) {
-        return (S)m_handlers.get(serviceName);
+    protected <N extends NodeModel> RpcServer getRpcServerFromNodeFactory(final N nodeModel, final NodeFactory<NodeModel> factory) {
+        if (factory instanceof RpcSingleServerFactory) {
+            return ((RpcSingleServerFactory<N, S>)factory).createRpcServer(nodeModel);
+        } else {
+            return null;
+        }
+    }
+
+    @Override
+    protected String convertCall(final String serviceName, final Method method, final Object[] args) {
+        return convertCall(method, args);
+    }
+
+    /**
+     * See {@link AbstractRpcClient#convertCall(String, Method, Object[])}.
+     * @param method
+     * @param args
+     * @return the call as string
+     */
+    protected abstract String convertCall(Method method, Object[] args);
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public <R> Future<R> callServiceWithRes(final Function<S, R> serviceEvaluator) {
+        return super.callServiceWithRes(m_serviceInterface, serviceEvaluator);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Future<Void> callService(final Consumer<S> serviceConsumer) {
+        return super.callService(m_serviceInterface, serviceConsumer);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public S getService() {
+        return super.getService(m_serviceInterface);
     }
 
 }

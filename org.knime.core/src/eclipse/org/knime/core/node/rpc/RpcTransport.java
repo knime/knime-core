@@ -49,9 +49,9 @@
 package org.knime.core.node.rpc;
 
 /**
- * To deliver remote procedure calls to a remote (different machine and/or language) node model, different mechanisms
- * can be used. This interface abstracts from the mechanism used, to deliver the remote procedure call and to receive
- * the response.
+ * To deliver remote procedure calls to a remote (different machine and/or language) rpc server provided by a node
+ * factory, different mechanisms can be used. This interface abstracts from the mechanism used, to deliver the remote
+ * procedure call and to receive the response.
  *
  * @see RpcTransportFactory
  *

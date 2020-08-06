@@ -50,11 +50,12 @@ package org.knime.core.node.rpc;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
@@ -80,16 +81,8 @@ import org.knime.core.node.workflow.NodeContext;
  * @noreference This class is not intended to be referenced by clients.
  * @noextend This class is not intended to be subclassed by clients.
  *
- * @param <T> the node model's service interface that defines the methods that can be used by the dialog/view to obtain
- *            data from it
  */
-public abstract class AbstractRpcClient<T> implements RpcClient<T> {
-
-    /**
-     * The data retrieval interface offered to the node dialog/view by the node model. This interface is defined and
-     * implemented by the node developer.
-     */
-    private final Class<T> m_serviceInterface;
+public abstract class AbstractRpcClient implements RpcClient {
 
     /**
      * Used to transport the serialized remote procedure call to a remote node model.
@@ -102,13 +95,13 @@ public abstract class AbstractRpcClient<T> implements RpcClient<T> {
      * {@link #callServiceWithRes(Function)} will forward requests of the node dialog/view to a remote server. The field
      * is null until the first access triggers an invocation of {@link #createRpcServer()} which returns an Optional.
      */
-    private Optional<RpcServer<T>> m_rpcServer;
+    private Optional<RpcServer> m_rpcServer;
 
     /**
-     * An instance of the {@link #getServiceInterface()} that executes each method remotely. Is null if the execution is
-     * local.
+     * A map of service interfaces to a proxy-implementation of them for remote service calls. Serves as a cache of the
+     * proxy instances.
      */
-    private T m_remoteProxyServiceInterface;
+    private final Map<Class<?>, Object> m_remoteProxyServiceHandler;
 
     /**
      * A debug flag for node developers to simplify testing serialization.
@@ -116,26 +109,26 @@ public abstract class AbstractRpcClient<T> implements RpcClient<T> {
     private boolean m_alwaysSerializeForTesting = false;
 
     /**
-     * @param serviceInterface the data retrieval interface offered to the node dialog/view by the node model. This
-     *            interface is defined and implemented by the node developer.
+     *
      */
-    public AbstractRpcClient(final Class<T> serviceInterface) {
-        m_serviceInterface = serviceInterface;
+    public AbstractRpcClient() {
         m_rpcTransport = RpcTransportRegistry.getRpcMessageTransportFactory().createRpcTransport();
+        m_remoteProxyServiceHandler = new HashMap<>();
     }
 
     /**
      * Converts a call to the node model's data service interface to String.<br/>
      * For instance, method countChars("abc", 'b') on a ServiceInterface could be represented in JSON-RPC as {"jsonrpc":
      * "2.0", "method": "countChars", "params": ["abc", "b"], "id": 3}
+     * @param serviceName the name of the service to be called
      * @param method name of the method to call, as provided by the interface this client is generically typed to
      * @param args method parameters for the invocation
      * @return the representation of the method call
      */
-    protected abstract String convertCall(Method method, Object[] args);
+    protected abstract String convertCall(String serviceName, Method method, Object[] args);
 
     /**
-     * Counterpart for {@link #convertCall(Method, Object[])}, parses response and converts back to the method return
+     * Counterpart for {@link #convertCall(String, Method, Object[])}, parses response and converts back to the method return
      * type declared by the service interface this client is generically typed to.
      *
      * @param response the result of the remote procedure call
@@ -143,59 +136,80 @@ public abstract class AbstractRpcClient<T> implements RpcClient<T> {
      *            {@code SomeInterface.class.getMethod("someMethodName").getReturnType()}
      * @param <R> the return type of the method invoked via remote procedure call
      * @return the result as a java object of the specified type
-     * @throws Exception an exception thrown by the node model why processing the request.
+     * @throws Exception an exception thrown by the rpc client implementation when processing the request
      */
-    protected abstract <R> R convertResult(String response, final Type valueType) throws Exception;
+    protected abstract <R> R convertResult(String response, final Type valueType) throws Exception; //NOSONAR
 
     /**
      * @see #m_rpcServer
      */
-    private Optional<RpcServer<T>> getRpcServer() {
-        // if the field is null, we haven't called tried to create a server before;
+    private Optional<RpcServer> getRpcServer() {
+        // if the field is null, we haven't tried to create a server before
         // if the field is an empty Optional, we called it before and didn't get a local handler (working remotely)
         if (m_rpcServer == null) { //NOSONAR -- to avoid repeatedly calling createRpcServer
-            m_rpcServer = Optional.ofNullable(createRpcServer());
+            m_rpcServer = createRpcServer();
         }
         return m_rpcServer;
     }
 
     /**
-     * Determine whether we're working local or remote.
-     *
-     * @return the node model's server if working local or null if working remotely.
+     * @return the node model's server if working local or an empty optional if working remotely.
      */
     @SuppressWarnings("unchecked")
-    private <N extends NodeModel> RpcServer<T> createRpcServer() {
+    private <N extends NodeModel> Optional<RpcServer> createRpcServer() {
         NodeContainer nc = NodeContext.getContext().getNodeContainer();
         if (nc instanceof NativeNodeContainer) {
             N nodeModel = (N)((NativeNodeContainer)nc).getNodeModel();
 
             NodeFactory<NodeModel> factory = ((NativeNodeContainer)nc).getNode().getFactory();
-            if (factory instanceof RpcServerFactory) {
-                return ((RpcServerFactory<N, T>)factory).createRpcServer(nodeModel);
-            }
+            return Optional.of(getRpcServerFromNodeFactory(nodeModel, factory));
         }
-        return null;
+        return Optional.empty();
+    }
+
+    /**
+     * Creates an rpc server from the provided node factory.
+     *
+     * @param nodeModel
+     * @param factory
+     * @param <N>
+     * @return the server, never <code>null</code>
+     */
+    @SuppressWarnings("unchecked")
+    protected <N extends NodeModel> RpcServer getRpcServerFromNodeFactory(final N nodeModel,
+        final NodeFactory<NodeModel> factory) {
+        if (factory instanceof RpcServerFactory) {
+            return ((RpcServerFactory<N>)factory).createRpcServer(nodeModel);
+        } else {
+            return null;
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <S> S getService(final Class<S> serviceInterface, final String serviceName) {
+        return (S)getRpcServer().map(s -> s.getHandler(serviceName))
+            .orElseGet(() -> getRemoteProxy(serviceInterface, serviceName));
     }
 
     @Override
-    public Future<Void> callService(final Consumer<T> serviceEvaluator) {
-        return callServiceWithRes(s -> {
+    public <S> Future<Void> callService(final Class<S> serviceInterface, final String serviceName,
+        final Consumer<S> serviceEvaluator) {
+        return callServiceWithRes(serviceInterface, serviceName, s -> {
             serviceEvaluator.accept(s);
             return null;
         });
     }
 
     @Override
-    public <R> Future<R> callServiceWithRes(final Function<T, R> serviceEvaluator) {
+    public <S, R> Future<R> callServiceWithRes(final Class<S> serviceInterface, final String serviceName,
+        final Function<S, R> serviceEvaluator) {
 
-        if(isAlwaysSerializeForTesting()) {
-            return handleLocalWithSerialization(serviceEvaluator);
+        if (isAlwaysSerializeForTesting()) {
+            return handleLocalWithSerialization(serviceInterface, serviceName, serviceEvaluator);
         }
 
-        T service = getRpcServer()
-            .map(RpcServer<T>::getHandler)
-            .orElseGet(this::getRemoteProxy);
+        S service = getService(serviceInterface);
 
         CompletableFuture<R> result = new CompletableFuture<>();
         result.complete(serviceEvaluator.apply(service));
@@ -207,18 +221,22 @@ public abstract class AbstractRpcClient<T> implements RpcClient<T> {
      * testing. Uses the {@link RpcServer} provided by the node model's factory to handle the request, but uses a simple
      * local InputStream/OutputStream to handle the request instead of the remote {@link RpcTransport}.
      *
+     * @param serviceInterface
+     * @param serviceName
      * @param serviceEvaluator
      * @return
      */
-    private <R> Future<R> handleLocalWithSerialization(final Function<T, R> serviceEvaluator) {
+    private <S, R> Future<R> handleLocalWithSerialization(final Class<S> serviceInterface, final String serviceName,
+        final Function<S, R> serviceEvaluator) {
 
         if(m_rpcServer == null) { //NOSONAR
             m_rpcServer = getRpcServer();
         }
 
         @SuppressWarnings("unchecked")
-        T debugServiceProxy = (T)Proxy.newProxyInstance(m_serviceInterface.getClassLoader(),
-            new Class[]{m_serviceInterface}, this::handleInvocationLocalTesting);
+        S debugServiceProxy =
+            (S)Proxy.newProxyInstance(serviceInterface.getClassLoader(), new Class[]{serviceInterface},
+                (proxy, method, params) -> handleInvocationLocalTesting(serviceName, method, params));
 
         R result = serviceEvaluator.apply(debugServiceProxy);
         CompletableFuture<R> future = new CompletableFuture<>();
@@ -228,51 +246,40 @@ public abstract class AbstractRpcClient<T> implements RpcClient<T> {
     }
 
     /**
+     * @param serviceInterface
+     * @param serviceName
      * @return an instance of the node data service interface that forwards each call to a remote node model.
      */
     @SuppressWarnings("unchecked")
-    private T getRemoteProxy() {
-        if (m_remoteProxyServiceInterface == null) {
-            m_remoteProxyServiceInterface = (T)Proxy.newProxyInstance(
-                m_serviceInterface.getClassLoader(),
-                new Class[]{m_serviceInterface},
-                this::handleInvocationRemote);
-        }
-        return m_remoteProxyServiceInterface;
+    private <S> S getRemoteProxy(final Class<S> serviceInterface, final String serviceName) {
+        Object proxy = m_remoteProxyServiceHandler.computeIfAbsent(serviceInterface,
+            k -> createRemoteProxyHandler(k, serviceName));
+        return (S)proxy;
     }
 
-    /**
-     * An {@link InvocationHandler} that forwards a call to the {@link #getServiceInterface()} to a remote node model.
-     *
-     * @param proxy only for signature compatibility with {@link InvocationHandler} functional interface
-     * @param method the method invoked on the node data service interface
-     * @param params the parameters passed to the method invocation
-     * @return the response of the node model, after deserialization
-     * @throws Exception an exception thrown by the node model while handling the request (the exception instance is
-     *             unmarshalled after transport)
-     */
-    private Object handleInvocationRemote(final Object proxy, final Method method, final Object[] params)
-        throws Exception {
-        String request = convertCall(method, params);
-        String response = m_rpcTransport.sendAndReceive(request);
-        // TODO save some memory via streaming? e.g., new PipedOutputStream();
-        return convertResult(response, method.getGenericReturnType());
+    @SuppressWarnings("unchecked")
+    private <S> S createRemoteProxyHandler(final Class<S> serviceInterface, final String serviceName) {
+        return (S)Proxy.newProxyInstance(serviceInterface.getClassLoader(), new Class[]{serviceInterface},
+            (proxy, method, params) -> {
+                String request = convertCall(serviceName, method, params);
+                String response = m_rpcTransport.sendAndReceive(request);
+                // TODO save some memory via streaming? e.g., new PipedOutputStream() //NOSONAR
+                return convertResult(response, method.getGenericReturnType());
+            });
     }
 
     /**
      * A debug service invocation handler for {@link #handleLocalWithSerialization(Function)}.
-     *
-     * @param proxy only for signature compatibility with {@link InvocationHandler} functional interface
      */
-    private Object handleInvocationLocalTesting(final Object proxy, final Method method, final Object[] params)
+    private Object handleInvocationLocalTesting(final String serviceName, final Method method, final Object[] params)
         throws Exception {
 
         NodeLogger debugLogger = NodeLogger.getLogger(AbstractRpcClient.class);
 
-        final RpcServer<T> localServer = m_rpcServer
+        final RpcServer localServer = m_rpcServer
             .orElseThrow(() -> new IllegalStateException("Can not test serialization locally when working remotely."));
 
-        String requestString = convertCall(method, params);
+        String requestString = convertCall(serviceName, method, params);
         debugLogger.debug(
             String.format("[Node data service local testing] Remote procedure call to node model : %s", requestString));
         Charset defaultCharset = Charset.defaultCharset();
@@ -302,6 +309,14 @@ public abstract class AbstractRpcClient<T> implements RpcClient<T> {
      */
     public boolean isAlwaysSerializeForTesting() {
         return m_alwaysSerializeForTesting;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isConnectedRemotely() {
+        return getRpcServer().isPresent();
     }
 
 }

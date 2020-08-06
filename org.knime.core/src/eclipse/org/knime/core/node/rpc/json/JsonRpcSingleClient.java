@@ -48,23 +48,26 @@
  */
 package org.knime.core.node.rpc.json;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.HashMap;
-import java.util.Map;
+import java.lang.reflect.Method;
+import java.lang.reflect.Type;
+import java.util.function.Supplier;
 
-import org.knime.core.node.rpc.RpcServer;
+import org.knime.core.node.rpc.AbstractRpcSingleClient;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.googlecode.jsonrpc4j.JsonRpcMultiServer;
 
 /**
- * A wrapper for the jsonrpc4j library; a simple delegate that allows for exchanging the JSON-RPC implementation.
+ * A JSON-RPC based implementation of a node data service client.
  *
- * The service interface and their handler registered with this server need to either follow a certain convention or a
- * custom {@link ObjectMapper} (for de-/serialization) needs to be provided. For more details see
- * {@link JsonRpcSingleClient}.
+ * TODO: somehow keep backward-compatibility when a node implementer switches from a single json-rpc server to a (multi)
+ * json rpc server (the service name need to be provided in the later)
+ *
+ * @param <S> the node data service interface type; defines which methods are offered by the node model to retrieve
+ *            data. The parameters and return type of a method defined in the interface are subjected to serialization
+ *            with an {@link ObjectMapper}. Jackson serialization works out-of-the-box on simple bean-like classes. In
+ *            more advanced cases, parameter types and result types have to use Jackson annotations like
+ *            {@link JsonAutoDetect} to control the serialization behavior.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
@@ -74,65 +77,45 @@ import com.googlecode.jsonrpc4j.JsonRpcMultiServer;
  *
  * @since 4.3
  */
-public class JsonRpcServer implements RpcServer {
+public class JsonRpcSingleClient<S> extends AbstractRpcSingleClient<S> {
+
+    private static final Supplier<ObjectMapper> OBJECT_MAPPER = () -> ObjectMapperUtil.getInstance().getObjectMapper();
+
+    private final ObjectMapper m_mapper;
 
     /**
-     * Node data service implementors. Can be local (directly execute using node model) or remote (execute using remote
-     * node model).
+     * Used in the JSON-RPC call as id to correlate the request with the response.
      */
-    private final Map<String, Object> m_handlers = new HashMap<>();
-
-    private JsonRpcMultiServer m_jsonRpcServer;
+    long m_callId = 0;
 
     /**
-     * Json rpc server with default object mapper.
+     * @param serviceInterface the data retrieval interface offered to the node dialog/view by the node model. This
+     *            interface is defined and implemented by the node developer. See {@link JsonRpcSingleClient} for details.
      */
-    public JsonRpcServer() {
-        this(ObjectMapperUtil.getInstance().getObjectMapper());
+    public JsonRpcSingleClient(final Class<S> serviceInterface) {
+        this(serviceInterface, OBJECT_MAPPER.get());
     }
 
     /**
-     * @param mapper allows customized serialization of java objects into JSON
+     * @param serviceInterface the data retrieval interface offered to the node dialog/view by the node model. This
+     *            interface is defined and implemented by the node developer. See {@link JsonRpcSingleClient} for details.
+     * @param mapper used to provide custom serialization for the parameters and results of a remote procedure call
      */
-    public JsonRpcServer(final ObjectMapper mapper) {
-        m_jsonRpcServer = new JsonRpcMultiServer(mapper);
-    }
-
-    /**
-     * Adds a new service handler to the server. The simple class name of the service interface is used as service name!
-     * The service name is used in the json-rpc request method property to specify service to use (e.g.
-     * <code>MyService.theMethodToCall</code>)
-     *
-     * @param serviceInterface the interface implemented by the handler (i.e. node data service)
-     * @param handler the handler implementation
-     * @param <T> the type of the handler
-     */
-    public <T> void addService(final Class<T> serviceInterface, final T handler) {
-        addService(serviceInterface.getSimpleName(), handler);
-    }
-
-    /**
-     * Adds a new service handler to the server.
-     *
-     * @param serviceName the unique name for the service (determines how the client addresses the services in the json
-     *            rpc request)
-     * @param handler the handler implementation
-     * @param <T> the type of the handler
-     */
-    public <T> void addService(final String serviceName, final T handler) {
-        m_jsonRpcServer.addService(serviceName, handler);
-        m_handlers.put(serviceName, handler);
+    public JsonRpcSingleClient(final Class<S> serviceInterface, final ObjectMapper mapper) {
+        super(serviceInterface);
+        m_mapper = mapper;
     }
 
     @Override
-    public void handleRequest(final InputStream in, final OutputStream out) throws IOException {
-        m_jsonRpcServer.handleRequest(in, out);
+    protected String convertCall(final Method method, final Object[] args) {
+        String res = JsonRpcClient.convertCall(null, method, args, m_mapper, m_callId);
+        m_callId++;
+        return res;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public <S> S getHandler(final String serviceName) {
-        return (S)m_handlers.get(serviceName);
+    protected <R> R convertResult(final String response, final Type valueType) throws Exception {
+        return JsonRpcClient.convertResult(response, valueType, m_mapper);
     }
 
 }
