@@ -188,45 +188,23 @@ public class ConfigEditTreeNodePanel extends JPanel {
             }
         });
         m_exposeAsVariableField = new JTextField(12);
-        if (!ConfigEditJTree.ROW_SHOULD_FILL_WIDTH) {
-            m_exposeAsVariableField.setPreferredSize(VALUE_INPUTS_SIZE);
-        }
+        m_exposeAsVariableField.setPreferredSize(VALUE_INPUTS_SIZE);
         m_exposeAsVariableField.addFocusListener(l);
 
         add(m_keyLabel);
-        if (ConfigEditJTree.ROW_SHOULD_FILL_WIDTH) {
-            add(Box.createHorizontalGlue());
-            add(Box.createVerticalStrut(MINIMUM_HEIGHT));
-        }
         if (!ConfigEditTreeRenderer.PLATFORM_IS_MAC) {
-            if (ConfigEditJTree.ROW_SHOULD_FILL_WIDTH) {
-                add(Box.createHorizontalGlue());
-            }
             add(Box.createHorizontalStrut(6));
         }
         if (isForConfig) {
-            if (ConfigEditJTree.ROW_SHOULD_FILL_WIDTH) {
-                add(Box.createHorizontalGlue());
-            }
             add(m_valueComboBox);
-            if (ConfigEditJTree.ROW_SHOULD_FILL_WIDTH) {
-                add(Box.createHorizontalGlue());
-            }
             if (!ConfigEditTreeRenderer.PLATFORM_IS_MAC) {
                 add(Box.createHorizontalStrut(6));
-                if (ConfigEditJTree.ROW_SHOULD_FILL_WIDTH) {
-                    add(Box.createHorizontalGlue());
-                }
             }
             add(m_exposeAsVariableField);
-            if (!ConfigEditJTree.ROW_SHOULD_FILL_WIDTH) {
-                m_exposeAsVariableField.setMaximumSize(m_exposeAsVariableField.getPreferredSize());
-            }
+            m_exposeAsVariableField.setMaximumSize(m_exposeAsVariableField.getPreferredSize());
         }
-        if (!ConfigEditJTree.ROW_SHOULD_FILL_WIDTH) {
-            add(Box.createHorizontalGlue());
-            add(Box.createVerticalStrut(MINIMUM_HEIGHT));
-        }
+        add(Box.createHorizontalGlue());
+        add(Box.createVerticalStrut(MINIMUM_HEIGHT));
 
         m_parentRenderer = owningRenderer;
 
@@ -255,12 +233,8 @@ public class ConfigEditTreeNodePanel extends JPanel {
     }
 
     int computeMinimumWidth() {
-        if (ConfigEditJTree.ROW_SHOULD_FILL_WIDTH) {
-            return getPreferredSize().width;
-        } else {
-            return m_keyLabel.getPreferredSize().width + m_valueComboBox.getPreferredSize().width
-                                + m_exposeAsVariableField.getPreferredSize().width;
-        }
+        return m_keyLabel.getPreferredSize().width + m_valueComboBox.getPreferredSize().width
+                + m_exposeAsVariableField.getPreferredSize().width;
     }
 
     void setVisibleWidth(final int w) {
@@ -268,25 +242,8 @@ public class ConfigEditTreeNodePanel extends JPanel {
     }
 
     @Override
-    public Dimension getPreferredSize() {
-        if (ConfigEditJTree.ROW_SHOULD_FILL_WIDTH) {
-            final int insets = m_parentRenderer.getTotalWidthInsets(m_keyIcon);
-
-            return new Dimension((m_visibleWidth - insets), (MINIMUM_HEIGHT + 4));
-        } else {
-            return super.getPreferredSize();
-        }
-    }
-
-    @SuppressWarnings("unused") // ROW_SHOULD_FILL_WIDTH being false triggers Eclipse here, but not above... ??
-    @Override
     public void setBounds(final int x, final int y, final int width, final int height) {
         int widthToUse = width;
-        if (ConfigEditJTree.ROW_SHOULD_FILL_WIDTH && m_panelIntendedForEditor) {
-            final int insets = m_parentRenderer.getTotalWidthInsets(m_keyIcon);
-
-            widthToUse = (m_visibleWidth - insets);
-        }
 
         super.setBounds(x, y, widthToUse, height);
     }
@@ -341,9 +298,7 @@ public class ConfigEditTreeNodePanel extends JPanel {
             }
         }
         m_valueComboBox.setSize(VALUE_INPUTS_SIZE);
-        if (!ConfigEditJTree.ROW_SHOULD_FILL_WIDTH) {
-            m_valueComboBox.setMaximumSize(m_valueComboBox.getPreferredSize());
-        }
+        m_valueComboBox.setMaximumSize(m_valueComboBox.getPreferredSize());
 
         if ((match == null) && (m_flowObjectStack != null)) {
             final Map<String, FlowVariable> allVars

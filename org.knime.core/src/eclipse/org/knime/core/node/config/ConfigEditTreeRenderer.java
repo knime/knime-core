@@ -247,26 +247,16 @@ public class ConfigEditTreeRenderer extends DefaultTreeCellRenderer {
         // the x, y and width nudges are due to the editor placing the node panel in a different location
         //      than where this component renders
         final int x = insets.left + drawWidthForIcon(getIcon()) - 4;
-        final int y = insets.top + (ConfigEditJTree.ROW_SHOULD_FILL_WIDTH ? 2 : -1);
+        final int y = insets.top - 1;
         final int widthToUse;
-        if (ConfigEditJTree.ROW_SHOULD_FILL_WIDTH) {
-            widthToUse = m_parentTree.getWidth();
-        } else {
-            final int paneMinimumWidth = m_active.computeMinimumWidth();
-            final int thisWidth = getWidth();
-            widthToUse = (thisWidth > paneMinimumWidth) ? thisWidth : paneMinimumWidth;
-        }
+        final int paneMinimumWidth = m_active.computeMinimumWidth();
+        final int thisWidth = getWidth();
+        widthToUse = (thisWidth > paneMinimumWidth) ? thisWidth : paneMinimumWidth;
         final int width = widthToUse + (PLATFORM_IS_MAC ? 0 : 10) + 4;
         final int height = getHeight() - insets.top - insets.bottom + 2;
         m_paintBounds.setBounds(x, y, width, height);
 
-        final Dimension paneSize;
-        if (ConfigEditJTree.ROW_SHOULD_FILL_WIDTH) {
-            paneSize = m_active.getPreferredSize();
-        } else {
-            paneSize = new Dimension(width, height);
-        }
-        m_active.setSize(paneSize);
+        m_active.setSize(new Dimension(width, height));
         m_active.validate();
         m_active.setBackground(selected ? getBackgroundSelectionColor()
                                         : getBackgroundNonSelectionColor());
