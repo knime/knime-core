@@ -468,6 +468,7 @@ public interface NodeContainerUI extends NodeProgressListener, NodeContainerStat
      * To be called from rpc clients - not needed for local, for remote, picks an endpoint and forwards ui data request
      * to be transported to remote node model and collects the response in `out`. <br/>
      * (De-)serialization is handled by {@link AbstractRpcClient}.
+     * @param remoteProcedureCall the rpc serialized as a string
      *
      * @return serialized result
      */

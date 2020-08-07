@@ -48,12 +48,9 @@
  */
 package org.knime.core.node.rpc;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
-import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -63,7 +60,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.rpc.json.JsonRpcClient;
 import org.knime.core.node.workflow.NativeNodeContainer;
@@ -113,6 +109,18 @@ public abstract class AbstractRpcClient implements RpcClient {
      */
     public AbstractRpcClient() {
         m_rpcTransport = RpcTransportRegistry.getRpcMessageTransportFactory().createRpcTransport();
+        m_remoteProxyServiceHandler = new HashMap<>();
+    }
+
+    /**
+     * Constructor to initialize a rpc client for testing purposes only.
+     *
+     * @param rpcTransport a custom rpc transport for testing
+     */
+    protected AbstractRpcClient(final RpcTransport rpcTransport) {
+        m_rpcTransport = rpcTransport;
+        m_rpcServer = Optional.empty();
+        m_alwaysSerializeForTesting = true;
         m_remoteProxyServiceHandler = new HashMap<>();
     }
 
@@ -204,45 +212,11 @@ public abstract class AbstractRpcClient implements RpcClient {
     @Override
     public <S, R> Future<R> callServiceWithRes(final Class<S> serviceInterface, final String serviceName,
         final Function<S, R> serviceEvaluator) {
-
-        if (isAlwaysSerializeForTesting()) {
-            return handleLocalWithSerialization(serviceInterface, serviceName, serviceEvaluator);
-        }
-
         S service = getService(serviceInterface);
 
         CompletableFuture<R> result = new CompletableFuture<>();
         result.complete(serviceEvaluator.apply(service));
         return result;
-    }
-
-    /**
-     * Only to make testing for node developers easier. Used when {@link #isAlwaysSerializeForTesting()} is on for
-     * testing. Uses the {@link RpcServer} provided by the node model's factory to handle the request, but uses a simple
-     * local InputStream/OutputStream to handle the request instead of the remote {@link RpcTransport}.
-     *
-     * @param serviceInterface
-     * @param serviceName
-     * @param serviceEvaluator
-     * @return
-     */
-    private <S, R> Future<R> handleLocalWithSerialization(final Class<S> serviceInterface, final String serviceName,
-        final Function<S, R> serviceEvaluator) {
-
-        if(m_rpcServer == null) { //NOSONAR
-            m_rpcServer = getRpcServer();
-        }
-
-        @SuppressWarnings("unchecked")
-        S debugServiceProxy =
-            (S)Proxy.newProxyInstance(serviceInterface.getClassLoader(), new Class[]{serviceInterface},
-                (proxy, method, params) -> handleInvocationLocalTesting(serviceName, method, params));
-
-        R result = serviceEvaluator.apply(debugServiceProxy);
-        CompletableFuture<R> future = new CompletableFuture<>();
-        future.complete(result);
-        return future;
-
     }
 
     /**
@@ -266,49 +240,6 @@ public abstract class AbstractRpcClient implements RpcClient {
                 // TODO save some memory via streaming? e.g., new PipedOutputStream() //NOSONAR
                 return convertResult(response, method.getGenericReturnType());
             });
-    }
-
-    /**
-     * A debug service invocation handler for {@link #handleLocalWithSerialization(Function)}.
-     */
-    private Object handleInvocationLocalTesting(final String serviceName, final Method method, final Object[] params)
-        throws Exception {
-
-        NodeLogger debugLogger = NodeLogger.getLogger(AbstractRpcClient.class);
-
-        final RpcServer localServer = m_rpcServer
-            .orElseThrow(() -> new IllegalStateException("Can not test serialization locally when working remotely."));
-
-        String requestString = convertCall(serviceName, method, params);
-        debugLogger.debug(
-            String.format("[Node data service local testing] Remote procedure call to node model : %s", requestString));
-        Charset defaultCharset = Charset.defaultCharset();
-        try (ByteArrayInputStream request = new ByteArrayInputStream(requestString.getBytes(defaultCharset));
-                ByteArrayOutputStream response = new ByteArrayOutputStream()) {
-            localServer.handleRequest(request, response);
-            debugLogger
-                .debug(String.format("[Node data service local testing] Node model response: %s", response));
-            Object result = convertResult(response.toString(defaultCharset.name()), method.getGenericReturnType());
-            debugLogger.debug(String.format("[Node data service local testing] Object unmarshalled from response: %s",
-                result));
-            return result;
-        }
-    }
-
-    /**
-     * For testing. Enable serialization when working locally in order to check whether it works correctly without a server and executor in place to
-     * actually perform a remote procedure call.
-     * @param alwaysSerializeForTesting
-     */
-    public void setAlwaysSerializeForTesting(final boolean alwaysSerializeForTesting) {
-        m_alwaysSerializeForTesting = alwaysSerializeForTesting;
-    }
-
-    /**
-     * @return whether the {@link #setAlwaysSerializeForTesting(boolean)} debug flag is set
-     */
-    public boolean isAlwaysSerializeForTesting() {
-        return m_alwaysSerializeForTesting;
     }
 
     /**

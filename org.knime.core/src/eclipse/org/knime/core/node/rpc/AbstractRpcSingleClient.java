@@ -88,6 +88,17 @@ public abstract class AbstractRpcSingleClient<S> extends AbstractRpcClient imple
         m_serviceInterface = serviceInterface;
     }
 
+    /**
+     * Constructor to initialize a rpc client for testing purposes only.
+     *
+     * @param serviceInterface
+     * @param rpcTransport a custom rpc transport implementation for testing
+     */
+    protected AbstractRpcSingleClient(final Class<S> serviceInterface, final RpcTransport rpcTransport) {
+        super(rpcTransport);
+        m_serviceInterface = serviceInterface;
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     protected <N extends NodeModel> RpcServer getRpcServerFromNodeFactory(final N nodeModel, final NodeFactory<NodeModel> factory) {

@@ -63,6 +63,7 @@ package org.knime.core.node.rpc;
  *
  * @since 4.3
  */
+@FunctionalInterface
 public interface RpcTransport {
 
     /**

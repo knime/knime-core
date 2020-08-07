@@ -53,6 +53,7 @@ import java.lang.reflect.Type;
 import java.util.function.Supplier;
 
 import org.knime.core.node.rpc.AbstractRpcSingleClient;
+import org.knime.core.node.rpc.RpcTransport;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -104,6 +105,15 @@ public class JsonRpcSingleClient<S> extends AbstractRpcSingleClient<S> {
     public JsonRpcSingleClient(final Class<S> serviceInterface, final ObjectMapper mapper) {
         super(serviceInterface);
         m_mapper = mapper;
+    }
+
+    /**
+     * Constructor to initialize a json rpc client for testing.
+     */
+    JsonRpcSingleClient(final Class<S> serviceInterface, final ObjectMapper mapper,
+        final RpcTransport rpcTransport) {
+        super(serviceInterface, rpcTransport);
+        m_mapper = mapper == null ? OBJECT_MAPPER.get() : mapper;
     }
 
     @Override

@@ -79,7 +79,7 @@ final class RpcTransportRegistry {
     /**
      * The cached instance, as collected by {@link #collectRpcMessageTransportFactory()}.
      */
-    private static RpcTransportFactory RPC_TRANSPORT_FACTORY;
+    private static RpcTransportFactory rpcTransportFactory;
 
     private RpcTransportRegistry() {
         // utility
@@ -93,10 +93,10 @@ final class RpcTransportRegistry {
      *         model on a remote machine.
      */
     static RpcTransportFactory getRpcMessageTransportFactory() {
-        if(RPC_TRANSPORT_FACTORY == null) {
-            RPC_TRANSPORT_FACTORY = collectRpcMessageTransportFactory();
+        if(rpcTransportFactory == null) {
+            rpcTransportFactory = collectRpcMessageTransportFactory();
         }
-        return RPC_TRANSPORT_FACTORY;
+        return rpcTransportFactory;
     }
 
     /**

@@ -105,9 +105,9 @@ public class JsonRpcServer implements RpcServer {
      *
      * @param serviceInterface the interface implemented by the handler (i.e. node data service)
      * @param handler the handler implementation
-     * @param <T> the type of the handler
+     * @param <S> the type of the handler
      */
-    public <T> void addService(final Class<T> serviceInterface, final T handler) {
+    public <S> void addService(final Class<S> serviceInterface, final S handler) {
         addService(serviceInterface.getSimpleName(), handler);
     }
 
@@ -117,9 +117,9 @@ public class JsonRpcServer implements RpcServer {
      * @param serviceName the unique name for the service (determines how the client addresses the services in the json
      *            rpc request)
      * @param handler the handler implementation
-     * @param <T> the type of the handler
+     * @param <S> the type of the handler
      */
-    public <T> void addService(final String serviceName, final T handler) {
+    public <S> void addService(final String serviceName, final S handler) {
         m_jsonRpcServer.addService(serviceName, handler);
         m_handlers.put(serviceName, handler);
     }

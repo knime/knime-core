@@ -55,6 +55,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 import org.knime.core.node.rpc.AbstractRpcClient;
+import org.knime.core.node.rpc.RpcTransport;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JavaType;
@@ -101,6 +102,14 @@ public class JsonRpcClient extends AbstractRpcClient {
         m_mapper = mapper;
     }
 
+    /**
+     * Constructor to initialize a json rpc client for testing.
+     */
+    JsonRpcClient(final ObjectMapper mapper, final RpcTransport rpcTransport) {
+        super(rpcTransport);
+        m_mapper = mapper == null ? OBJECT_MAPPER.get() : mapper;
+    }
+
     @Override
     protected String convertCall(final String serviceName, final Method method, final Object[] args) {
         String res = convertCall(serviceName, method, args, m_mapper, m_callId);
@@ -136,24 +145,24 @@ public class JsonRpcClient extends AbstractRpcClient {
     @SuppressWarnings("unchecked")
     static <R> R convertResult(final String response, final Type valueType, final ObjectMapper mapper)
         throws Exception { //NOSONAR
-        if (valueType == void.class) {
-            return null;
-        }
-
-        // special handling when the result is of type java.util.Optional
-        boolean outerTypeIsOptional = valueType instanceof ParameterizedType
-            && ((ParameterizedType)valueType).getRawType().equals(Optional.class);
 
         try {
-            // inflate the JSON-RPC response to retrieve result
             JsonNode jsonRpcResponse = mapper.readValue(response, JsonNode.class);
-            JsonNode resultNode = jsonRpcResponse.get("result");
-
+            JsonNode errorNode = jsonRpcResponse.get("error");
+            if (valueType == void.class && errorNode == null) {
+                return null;
+            }
             // instead of an result, an error can be set
-            if (resultNode == null) {
-                errorResponseToException(jsonRpcResponse);
+            if (errorNode != null) {
+                errorResponseToException(errorNode);
             }
 
+            // inflate the JSON-RPC response to retrieve result
+            JsonNode resultNode = jsonRpcResponse.get("result");
+
+            // special handling when the result is of type java.util.Optional
+            boolean outerTypeIsOptional = valueType instanceof ParameterizedType
+                && ((ParameterizedType)valueType).getRawType().equals(Optional.class);
             if (outerTypeIsOptional) {
                 // this case exists because Jackson 2.11 seems to deserialize Optional incorrectly
                 // (always returns Optional.empty, even when providing a value, because it's using the BeanDeserializer?)
@@ -174,8 +183,7 @@ public class JsonRpcClient extends AbstractRpcClient {
         }
     }
 
-    private static void errorResponseToException(final JsonNode jsonRpcResponse) throws Exception { //NOSONAR
-        JsonNode errorNode = jsonRpcResponse.get("error");
+    private static void errorResponseToException(final JsonNode errorNode) throws Exception { //NOSONAR
         try {
             String exceptionClassName = errorNode.get("data").get("exceptionTypeName").asText();
             @SuppressWarnings("unchecked")
