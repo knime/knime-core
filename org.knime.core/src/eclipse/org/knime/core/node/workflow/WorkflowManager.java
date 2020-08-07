@@ -2685,12 +2685,37 @@ public final class WorkflowManager extends NodeContainer
      * not meant to be used by multiple clients (only one steps back/forth in the workflow), though this is not asserted
      * by the returned controller object.
      *
+     * IMPORTANT NOTE: this method has a side-effect and will change the wizard execution controller. E.g.
+     * {@link #isInWizardExecution()} might return a different result after this method-call.
+     *
      * @return A controller for the wizard execution (a new or a previously created and modified instance, i.e. never
      *         <code>null</code>).
      * @throws IllegalStateException If this workflow is not a project.
      * @since 2.10
+     * @deprecated use {@link #setAndGetWizardExecutionController()} instead
      */
+    @Deprecated
     public WizardExecutionController getWizardExecutionController() {
+        CheckUtils.checkState(isProject(), "Workflow '%s' is not a project", getNameWithID());
+        try (WorkflowLock lock = lock()) {
+            if (!(m_executionController instanceof WizardExecutionController)) {
+                m_executionController = new WizardExecutionController(this);
+            }
+            return (WizardExecutionController)m_executionController;
+        }
+    }
+
+    /**
+     * Creates lazy and returns an instance that controls the wizard execution of this workflow. These controller are
+     * not meant to be used by multiple clients (only one steps back/forth in the workflow), though this is not asserted
+     * by the returned controller object.
+     *
+     * @return A controller for the wizard execution (a new or a previously created and modified instance, i.e. never
+     *         <code>null</code>).
+     * @throws IllegalStateException If this workflow is not a project.
+     * @since 4.3
+     */
+    public WizardExecutionController setAndGetWizardExecutionController() {
         CheckUtils.checkState(isProject(), "Workflow '%s' is not a project", getNameWithID());
         try (WorkflowLock lock = lock()) {
             if (!(m_executionController instanceof WizardExecutionController)) {
