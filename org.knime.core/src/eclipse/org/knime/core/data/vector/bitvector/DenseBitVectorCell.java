@@ -48,7 +48,6 @@
 package org.knime.core.data.vector.bitvector;
 
 import java.io.IOException;
-import java.math.BigInteger;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellDataInput;
@@ -239,8 +238,9 @@ public class DenseBitVectorCell extends DataCell implements BitVectorValue {
         @Override
         @DataCellFactoryMethod(name = "String (Binary\u2192Dense)")
         public DataCell createCell(final String input) {
-            BigInteger big = new BigInteger(input, 2);
-            return new DenseBitVectorCell(new DenseBitVector(big.toString(16)));
+            DenseBitVectorCellFactory cellFactory = new DenseBitVectorCellFactory(input.length());
+            BitVectorUtil.parseFromBinaryString(input, cellFactory);
+            return cellFactory.createDataCell();
         }
 
         /**

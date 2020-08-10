@@ -228,4 +228,29 @@ public final class BitVectorUtil {
         }
         return count;
     }
+
+    /** Used by cell factories for dense and sparse bit vectors to read a binary string (00010101000...).
+     * @param input the non-null string
+     * @param bitVector the bit vector populate, usually a {@link DenseBitVectorCellFactory} or so.
+     * @throws IllegalArgumentException If there are other characters than '0' or '1' in the string.
+     */
+    static void parseFromBinaryString(final String input, final BitVector bitVector) {
+        // bit significance is documented ... org.knime.core.data.vector.bitvector.BitVector.toBinaryString()
+        // (it's reverse...)
+        for (int i = 0, length = input.length(); i < length; i++) {
+            boolean isSet;
+            switch (input.charAt(i)) {
+                case '0':
+                    isSet = false;
+                    break;
+                case '1':
+                    isSet = true;
+                    break;
+                default:
+                    throw new IllegalArgumentException("Not a bit string (0/1): " + input);
+            }
+            bitVector.set((long)length - i - 1, isSet);
+        }
+    }
+
 }

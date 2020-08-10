@@ -48,7 +48,6 @@
 package org.knime.core.data.vector.bitvector;
 
 import java.io.IOException;
-import java.math.BigInteger;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellDataInput;
@@ -247,8 +246,9 @@ public class SparseBitVectorCell extends DataCell implements SparseBitVectorValu
         @Override
         @DataCellFactoryMethod(name = "String (Binary\u2192Sparse)")
         public DataCell createCell(final String input) {
-            BigInteger big = new BigInteger(input, 2);
-            return new SparseBitVectorCell(new SparseBitVector(big.toString(16)));
+            SparseBitVectorCellFactory cellFactory = new SparseBitVectorCellFactory(input.length());
+            BitVectorUtil.parseFromBinaryString(input, cellFactory);
+            return cellFactory.createDataCell();
         }
 
         /**
