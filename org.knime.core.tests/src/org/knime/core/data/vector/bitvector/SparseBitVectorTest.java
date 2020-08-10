@@ -46,6 +46,8 @@ package org.knime.core.data.vector.bitvector;
 
 import java.util.Arrays;
 
+import org.knime.core.data.DataCell;
+
 import junit.framework.TestCase;
 
 /**
@@ -912,6 +914,14 @@ public class SparseBitVectorTest extends TestCase {
         assertTrue(!bv256.intersects(bv130));
     }
 
+    public void testParseFromBinaryString() {
+        String s = "0010011000010"; // used to cause trouble, see AP-14892
+        DataCell cell = new SparseBitVectorCell.Factory().createCell(s);
+        assertEquals(SparseBitVectorCell.class, cell.getClass());
+        String toBinaryS = ((SparseBitVectorCell)cell).toBinaryString();
+        assertEquals(s, toBinaryS);
+    }
+
     public void testToBinaryString() {
         SparseBitVector bv = new SparseBitVector("1F03");
         assertEquals(bv.toBinaryString(), "0001111100000011");
@@ -950,42 +960,42 @@ public class SparseBitVectorTest extends TestCase {
                 "502004031204000812483400000898010";
         bv = new SparseBitVector(hex);
         assertEquals(hex, bv.toHexString());
-        
+
         bv = new SparseBitVector(3);
         assertEquals("0", bv.toHexString());
-        
+
         bv = new SparseBitVector("0");
         assertEquals("0", bv.toHexString());
-        
+
         bv = new SparseBitVector(4);
         assertEquals("0", bv.toHexString());
-        
+
         bv = new SparseBitVector(8);
         assertEquals("00", bv.toHexString());
     }
-    
+
     public void testSubsequence(){
     	try {
     		new SparseBitVector("10f0").subSequence(-1, 0);
-    		fail("Exception Expected");			
+    		fail("Exception Expected");
 		} catch (IllegalArgumentException e) {
 		}
-    	
+
     	try {
     		new SparseBitVector("10f0").subSequence(0, -2);
-    		fail("Exception Expected");			
+    		fail("Exception Expected");
 		} catch (IllegalArgumentException e) {
 		}
-    	
+
        	try {
     		new SparseBitVector("10f0").subSequence(0, 17);
-    		fail("Exception Expected");			
+    		fail("Exception Expected");
 		} catch (IllegalArgumentException e) {
 		}
-       	
+
        	try {
     		new SparseBitVector("10f0").subSequence(5, 4);
-    		fail("Exception Expected");			
+    		fail("Exception Expected");
 		} catch (IllegalArgumentException e) {
 		}
       	assertEquals("", new SparseBitVector("").subSequence(0, 0).toHexString());
@@ -995,19 +1005,19 @@ public class SparseBitVectorTest extends TestCase {
        	assertEquals("043", new SparseBitVector("10f0").subSequence(6, 16).toHexString());
        	assertEquals("3", new SparseBitVector("10f0").subSequence(4, 6).toHexString());
     }
-    
+
     public void testBug5077(){
     	SparseBitVector sparseBit = new SparseBitVector("1000000000000000001");
     	SparseBitVector sparseBit2 = new SparseBitVector("101");
-    	
+
     	SparseBitVector next = new SparseBitVector("1000000000000000101");
-		
+
     	assertEquals(next.toHexString(), sparseBit2.or(sparseBit).toHexString());
     	assertEquals(next.toHexString(), sparseBit.or(sparseBit2).toHexString());
-		
+
 		assertEquals("0000000000000000001", sparseBit.and(sparseBit2).toHexString());
 		assertEquals("0000000000000000001", sparseBit2.and(sparseBit).toHexString());
-		
+
 		assertEquals("1000000000000000100", sparseBit.xor(sparseBit2).toHexString());
 		assertEquals("1000000000000000100", sparseBit2.xor(sparseBit).toHexString());
     }

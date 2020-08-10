@@ -47,6 +47,7 @@ package org.knime.core.data.vector.bitvector;
 import static org.junit.Assert.assertThat;
 
 import org.hamcrest.core.Is;
+import org.knime.core.data.DataCell;
 
 import junit.framework.TestCase;
 
@@ -1036,6 +1037,14 @@ public class DenseBitVectorTest extends TestCase {
 		assertEquals("1000000000000000100", denseBit2.xor(denseBit).toHexString());
     }
 
+    public void testParseFromBinaryString() {
+        String s = "0010011000010"; // used to cause trouble, see AP-14892
+        DataCell cell = new DenseBitVectorCell.Factory().createCell(s);
+        assertEquals(DenseBitVectorCell.class, cell.getClass());
+        String toBinaryS = ((DenseBitVectorCell)cell).toBinaryString();
+        assertEquals(s, toBinaryS);
+    }
+
     public void testToBinaryString() {
         DenseBitVector bv = new DenseBitVector("1F03");
         assertEquals(bv.toBinaryString(), "0001111100000011");
@@ -1097,4 +1106,5 @@ public class DenseBitVectorTest extends TestCase {
 
         assertThat("Hashcode for " + bits + " not equal", sparse.hashCode(), Is.is(dense.hashCode()));
     }
+
 }
