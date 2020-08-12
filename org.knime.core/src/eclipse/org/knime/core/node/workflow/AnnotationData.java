@@ -487,6 +487,27 @@ public class AnnotationData implements Cloneable {
     /** Formatting rule on the text; similar to SWT style range. */
     public static final class StyleRange implements Cloneable {
 
+        /**
+         * The font style constant indicating a normal weight, non-italic font (value is 0).
+         *
+         * @since 4.3
+         */
+        public static final int NORMAL = 0;
+
+        /**
+         * The font style constant indicating a bold weight font (value is 1&lt;&lt;0).
+         *
+         * @since 4.3
+         */
+        public static final int BOLD = 1 << 0;
+
+        /**
+         * The font style constant indicating an italic font (value is 1&lt;&lt;1).
+         *
+         * @since 4.3
+         */
+        public static final int ITALIC = 1 << 1;
+
         private int m_start;
 
         private int m_length;
