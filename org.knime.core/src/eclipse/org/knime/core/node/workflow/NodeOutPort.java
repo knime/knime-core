@@ -45,6 +45,7 @@
 package org.knime.core.node.workflow;
 
 import java.awt.Rectangle;
+import java.util.OptionalInt;
 
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
@@ -104,6 +105,14 @@ public interface NodeOutPort extends NodePort, NodeStateChangeListener, NodeCont
      * @since 3.2
      */
     public SingleNodeContainer getConnectedNodeContainer();
+
+    /**
+     * Similar to {@link #getConnectedNodeContainer()} get the index of the 'unwrapped' port. For native nodes that is
+     * the same as {@link #getPortIndex()}, for metanode ports this might be different or empty (when not connected)
+     * @return port index of connected port.
+     * @since 4.3
+     */
+    public OptionalInt getConnectedOutport();
 
     /**
      * Returns the hilite handler for this port as set by the node this port is

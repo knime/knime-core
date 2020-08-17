@@ -49,6 +49,7 @@ package org.knime.core.node.workflow;
 
 import java.awt.Rectangle;
 import java.util.LinkedHashSet;
+import java.util.OptionalInt;
 import java.util.Set;
 
 import javax.swing.SwingUtilities;
@@ -261,6 +262,11 @@ public class NodeContainerOutPort extends NodePortAdaptor implements NodeOutPort
     @Override
     public SingleNodeContainer getConnectedNodeContainer() {
         return m_snc;
+    }
+
+    @Override
+    public OptionalInt getConnectedOutport() {
+        return OptionalInt.of(getPortIndex());
     }
 
     /** {@inheritDoc}

@@ -277,7 +277,8 @@ public final class PortObjectRepository {
     public static NodeID addPortObjectReferenceReaderWithNodeReference(final NodeOutPort outport,
         final NodeID srcParentID, final WorkflowManager wfm, final int nodeIDSuffix) {
         NodeID sourceNodeID = outport.getConnectedNodeContainer().getID();
-        int portIndex = outport.getPortIndex();
+        int portIndex =
+            outport.getConnectedOutport().orElseThrow(() -> new IllegalStateException("Node is set, but no port"));
 
         List<FlowVariable> variables = outport.getFlowObjectStack().getAllAvailableFlowVariables().values().stream()
             .filter(f -> f.getScope() == Scope.Flow).collect(Collectors.toList());
