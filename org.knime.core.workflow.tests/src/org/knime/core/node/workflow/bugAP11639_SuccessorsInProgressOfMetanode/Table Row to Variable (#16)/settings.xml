@@ -10,29 +10,23 @@
 </config>
 <config key="Variable_1">
 <entry key="type" type="xstring" value="variable"/>
-<entry key="name" type="xstring" value="Cluster Membership"/>
-<entry key="class" type="xstring" value="STRING"/>
-<entry key="value" type="xstring" value="missing"/>
-</config>
-<config key="Variable_2">
-<entry key="type" type="xstring" value="variable"/>
 <entry key="name" type="xstring" value="Universe_1_1"/>
 <entry key="class" type="xstring" value="DOUBLE"/>
 <entry key="value" type="xdouble" value="0.0"/>
 </config>
-<config key="Variable_3">
+<config key="Variable_2">
 <entry key="type" type="xstring" value="variable"/>
 <entry key="name" type="xstring" value="Universe_1_0"/>
 <entry key="class" type="xstring" value="DOUBLE"/>
 <entry key="value" type="xdouble" value="0.0"/>
 </config>
-<config key="Variable_4">
+<config key="Variable_3">
 <entry key="type" type="xstring" value="variable"/>
 <entry key="name" type="xstring" value="Universe_0_1"/>
 <entry key="class" type="xstring" value="DOUBLE"/>
 <entry key="value" type="xdouble" value="0.0"/>
 </config>
-<config key="Variable_5">
+<config key="Variable_4">
 <entry key="type" type="xstring" value="variable"/>
 <entry key="name" type="xstring" value="Universe_0_0"/>
 <entry key="class" type="xstring" value="DOUBLE"/>
