@@ -6,7 +6,7 @@
 <entry key="type" type="xstring" value="variable"/>
 <entry key="name" type="xstring" value="patcount"/>
 <entry key="class" type="xstring" value="INTEGER"/>
-<entry key="value" type="xint" value="1115400"/>
+<entry key="value" type="xint" value="5"/>
 </config>
 </config>
 <config key="internal_node_subsettings">
@@ -15,7 +15,7 @@
 <config key="model">
 <entry key="stddeviation" type="xdouble" value="0.1"/>
 <entry key="noise" type="xdouble" value="0.0"/>
-<entry key="patcount" type="xint" value="1115400"/>
+<entry key="patcount" type="xint" value="5"/>
 <entry key="seed" type="xint" value="620433164"/>
 <config key="clustercount">
 <entry key="array-size" type="xint" value="2"/>
@@ -41,7 +41,7 @@
 <entry key="node-bundle-name" type="xstring" value="KNIME Base Nodes"/>
 <entry key="node-bundle-symbolic-name" type="xstring" value="org.knime.base"/>
 <entry key="node-bundle-vendor" type="xstring" value="KNIME AG, Zurich, Switzerland"/>
-<entry key="node-bundle-version" type="xstring" value="4.2.0.qualifier"/>
+<entry key="node-bundle-version" type="xstring" value="4.3.0.qualifier"/>
 <entry key="node-feature-name" type="xstring" isnull="true" value=""/>
 <entry key="node-feature-symbolic-name" type="xstring" isnull="true" value=""/>
 <entry key="node-feature-vendor" type="xstring" isnull="true" value=""/>

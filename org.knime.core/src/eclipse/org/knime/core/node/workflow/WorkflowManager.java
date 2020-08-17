@@ -4817,9 +4817,17 @@ public final class WorkflowManager extends NodeContainer
             } else {
                 successor = parent.getNodeContainer(cc.getDest());
             }
-            if (successor.getNodeContainerState().isExecutionInProgress()
-                || parent.hasSuccessorInProgress(successor.getID())) {
+
+            if (successor.getNodeContainerState().isExecutionInProgress()) {
                 return true;
+            } else if (successor != parent && parent.hasSuccessorInProgress(successor.getID())) {
+                return true;
+            } else if (successor == parent && parent.hasSuccessorsInProgress(cc.getDestPort())) {
+                // corner case: if this metanode is directly connected to the parent
+                // -> check if the parent has successors in progress only at that individual port
+                return true;
+            } else {
+                //
             }
         }
         return false;
