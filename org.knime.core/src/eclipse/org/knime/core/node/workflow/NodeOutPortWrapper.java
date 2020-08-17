@@ -49,6 +49,7 @@ package org.knime.core.node.workflow;
 
 import java.awt.Rectangle;
 import java.util.LinkedHashSet;
+import java.util.OptionalInt;
 import java.util.Set;
 
 import org.knime.core.node.port.PortObject;
@@ -201,6 +202,11 @@ public class NodeOutPortWrapper extends NodePortAdaptor implements NodeOutPort {
     @Override
     public SingleNodeContainer getConnectedNodeContainer() {
         return m_underlyingPort == null ? null : m_underlyingPort.getConnectedNodeContainer();
+    }
+
+    @Override
+    public OptionalInt getConnectedOutport() {
+        return m_underlyingPort == null ? OptionalInt.empty() : m_underlyingPort.getConnectedOutport();
     }
 
     /**
