@@ -2326,6 +2326,15 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/NodeOutPort.java" type="org.knime.core.node.workflow.NodeOutPort">
+        <filter id="1209008130">
+            <message_arguments>
+                <message_argument value="4.3"/>
+                <message_argument value="4.2"/>
+                <message_argument value="getConnectedOutport()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/SubNodeContainer.java" type="org.knime.core.node.workflow.SubNodeContainer">
         <filter id="338792546">
             <message_arguments>
