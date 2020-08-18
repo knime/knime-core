@@ -44,11 +44,11 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTINGREMOTELY;
@@ -60,7 +60,11 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestRule;
+import org.junit.rules.Timeout;
+import org.junit.runners.model.TestTimedOutException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.util.FileUtil;
@@ -74,6 +78,12 @@ public class BugAP5712_CloseWhileStreaming extends WorkflowTestCase {
 
     private static final String LOCK_ID = "bug_ap_5712";
 
+	@Rule
+	public Timeout m_globalTimeout = Timeout.seconds(5);
+	
+	@Rule(order = Integer.MIN_VALUE)
+	public TestRule m_dumpCallStackOnErrorRule = new DumpCallStackOnErrorRule(TestTimedOutException.class);
+	
     private File m_workflowDir;
     private NodeID m_tableView_4;
     private NodeID m_streamSubnode_5;
@@ -96,7 +106,7 @@ public class BugAP5712_CloseWhileStreaming extends WorkflowTestCase {
         return loadResult;
     }
 
-    @Test(timeout = 5000L)
+    @Test
     public void testRunToCompletion() throws Exception {
         WorkflowManager manager = getManager();
         checkState(manager, IDLE);
@@ -121,7 +131,7 @@ public class BugAP5712_CloseWhileStreaming extends WorkflowTestCase {
         checkState(manager, EXECUTED);
     }
 
-    @Test(timeout = 5000L)
+    @Test
     public void testSaveLoadWhileExecuting() throws Exception {
         WorkflowManager manager = getManager();
         ReentrantLock execLock = BlockingRepository.get(LOCK_ID);

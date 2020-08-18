@@ -67,6 +67,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.FileLocator;
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.rules.TestWatcher;
 import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
@@ -600,6 +601,40 @@ public abstract class WorkflowTestCase {
         protected int getSecondsToWaitAtMost() {
             return -1;
         }
+    }
+    
+    /** Utility 'rule' that will cause test failures to log the current call stack to NodeLogger.error IF the
+     * failure cause is of a certain exception class.
+     * 
+     * <p>
+     * To be used like...
+     * 
+     * <pre>
+     * &#064;Rule(order = Integer.MIN_VALUE)
+     * public TestRule m_dumpCallStackOnErrorRule = new DumpCallStackOnErrorRule(TestTimedOutException.class);
+     * </pre>
+     */
+    protected final class DumpCallStackOnErrorRule extends TestWatcher {
+
+    	private Class<? extends Throwable>[] m_triggeringExceptionClasses;
+
+		@SafeVarargs
+		DumpCallStackOnErrorRule(final Class<? extends Throwable>... triggeringExceptionClass) {
+			m_triggeringExceptionClasses = triggeringExceptionClass;
+		}
+    	
+		protected void failed(Throwable e, org.junit.runner.Description description) {
+			boolean shouldLog = m_triggeringExceptionClasses.length == 0 ||
+					Arrays.stream(m_triggeringExceptionClasses).anyMatch(t -> t.isAssignableFrom(e.getClass()));
+			if (shouldLog) {
+				String jvmStacktraces = ThreadUtils.getJVMStacktraces();
+				NodeLogger logger = NodeLogger.getLogger(WorkflowTestCase.this.getClass());
+				// logger has a limit of 10k chars -- can't dump all into one
+				logger.errorWithFormat("---- BEGIN Thread Dump On %s ----", e.getClass().getSimpleName());
+				Arrays.stream(jvmStacktraces.split("\n")).forEach(logger::error);
+				logger.errorWithFormat("----- END Thread Dump On %s -----", e.getClass().getSimpleName());
+			}
+		}
     }
 
 }
