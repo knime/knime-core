@@ -96,17 +96,13 @@ public final class VoidTable implements KnowsRowCountTable {
         return m_spec;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    @SuppressWarnings("resource")
     @Override
     public DataRowCursor cursor() {
         return new FallbackDataRowCursor(iterator(), getDataTableSpec());
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    @SuppressWarnings("resource")
     @Override
     public DataRowCursor cursor(final TableFilter filter) {
         return new FallbackDataRowCursor(iteratorWithFilter(filter), getDataTableSpec());

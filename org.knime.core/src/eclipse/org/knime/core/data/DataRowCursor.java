@@ -45,7 +45,11 @@
  */
 package org.knime.core.data;
 
+import java.util.NoSuchElementException;
+import java.util.Optional;
+
 import org.knime.core.node.BufferedDataTable;
+
 
 /**
  * A DataRowCursor allows for (potentially) faster access to a {@link BufferedDataTable} than a {@link RowIterator}.
@@ -61,15 +65,15 @@ public interface DataRowCursor extends AutoCloseable {
     /**
      * Check if there are more rows available.
      *
-     * @return if <source>true</source> it's save to call {@link #forward()}.
+     * @return <source>true</source> if it is save to call {@link #forward()}, false otherwise
      */
     boolean canForward();
 
     /**
-     * Forwards cursor to next position. The {@link DataRowCursor} starts at -1 and therefore {@link #forward()} has to
-     * be called before accessing the {@link DataValue}s.
+     * Forwards cursor to next position. Cursor has to be forwarded once before accessing the {@link DataValue
+     * DataValues}.
      *
-     * @return if <source>true</source>, more rows are available.
+     * @return <source>true</source> if cursor was forwarded successfully to the next row, false otherwise
      */
     boolean forward();
 
@@ -85,24 +89,53 @@ public interface DataRowCursor extends AutoCloseable {
      * values accessed through the {@link DataValue} instance can change after {@link #forward()} has been called.
      *
      * @param <D> type of the {@link DataValue}
-     * @param index the column index.
+     * @param index the column index
      *
      * @return the {@link DataValue} at column index or <source>null</source> if {@link DataValue} is not available, for
      *         example if the column has been filtered out. In case {@link #isMissing(int)} returns
      *         <source>true</source> the returned instance is a {@link MissingValue}.
+     *
+     * @throws NoSuchElementException if the cursor is at an invalid position
      */
     <D extends DataValue> D getValue(int index);
 
     /**
-     * If <source>true</<source> getValue will return `MissingValue` to get missing value cause.
+     * If <code>true</<code> getValue will return `MissingValue` to get missing value cause.
      *
      * @param index column index
-     * @return <source>true</source> if value at index is missing
+     * @return <code>true</code> if value at index is missing
+     *
+     * @throws NoSuchElementException if the cursor is at an invalid position
      */
     boolean isMissing(int index);
 
     /**
+     * Returns the error message that explains why the cell is missing, or an empty optional if no such message has been
+     * set. This method is not to be called for non-missing values.
+     *
+     * @param index column index
+     * @return the error associated with a missing value at the given column index, if present
+     *
+     * @throws IllegalStateException if {@link #isMissing(int)} at the given column index does not return
+     *             <code>true</code>
+     * @throws NoSuchElementException if the cursor is at an invalid position
+     *
+     * @see MissingValue#getError()
+     */
+    Optional<String> getMissingValueError(final int index);
+
+    /**
      * @return the {@link RowKeyValue}
+     *
+     * @throws NoSuchElementException if the cursor is at an invalid position
      */
     RowKeyValue getRowKeyValue();
+
+    /**
+     * Closes this resource, relinquishing any underlying resources. This method is invoked automatically on objects
+     * managed by the try-with-resources statement. Potential IOExceptions will be logged. This method is idempotent,
+     * i.e., it can be called repeatedly without side effects.
+     */
+    @Override
+    void close();
 }

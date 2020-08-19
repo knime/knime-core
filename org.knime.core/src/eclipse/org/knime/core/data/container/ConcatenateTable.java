@@ -185,18 +185,14 @@ public final class ConcatenateTable implements KnowsRowCountTable {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    @SuppressWarnings("resource")
     @Override
     public DataRowCursor cursor() {
         // TODO More efficient implementation: with slow performance in case of fast tables (cells are created in case of `iterator()` :-()
         return new FallbackDataRowCursor(iterator(), getDataTableSpec());
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    @SuppressWarnings("resource")
     @Override
     public DataRowCursor cursor(final TableFilter filter) {
         // TODO More efficient implementation: with slow performance in case of fast tables (cells are created in case of `iterator()` :-()

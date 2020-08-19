@@ -120,17 +120,11 @@ public final class WrappedTable implements KnowsRowCountTable {
         return m_table.size();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public DataRowCursor cursor() {
         return m_table.cursor();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public DataRowCursor cursor(final TableFilter filter) {
         return m_table.cursor(filter);

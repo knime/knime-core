@@ -127,17 +127,13 @@ public final class BufferedContainerTable implements ContainerTable {
         return m_spec;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    @SuppressWarnings("resource")
     @Override
     public DataRowCursor cursor() {
         return new FallbackDataRowCursor(iterator(), getDataTableSpec());
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    @SuppressWarnings("resource")
     @Override
     public DataRowCursor cursor(final TableFilter filter) {
         return new FallbackDataRowCursor(iteratorWithFilter(filter), getDataTableSpec());

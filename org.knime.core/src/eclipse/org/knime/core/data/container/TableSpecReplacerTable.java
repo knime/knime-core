@@ -209,17 +209,11 @@ public final class TableSpecReplacerTable implements KnowsRowCountTable {
         return m_reference.iterator();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public DataRowCursor cursor() {
         return m_reference.cursor();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public DataRowCursor cursor(final TableFilter filter) {
         return m_reference.cursor(filter);

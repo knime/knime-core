@@ -45,19 +45,59 @@
  */
 package org.knime.core.data.container;
 
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+import java.util.Optional;
+
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataRowCursor;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataValue;
+import org.knime.core.data.MissingValue;
+import org.knime.core.data.RowKey;
 import org.knime.core.data.RowKeyValue;
 
 /**
  * Fallback implementation of {@link DataRowCursor} based on {@link CloseableRowIterator}.
  *
  * @author Christian Dietz, KNIME GmbH, Konstanz
- * @since 4.2
  */
 final class FallbackDataRowCursor implements DataRowCursor {
+
+    private static final class InvalidDataRow implements DataRow {
+
+        private static final InvalidDataRow INSTANCE = new InvalidDataRow();
+
+        private static final String ISE_ERROR_MSG = "This method should not be called.";
+
+        private static final String NSEE_ERROR_MSG = "Cursor at invalid position.";
+
+        private InvalidDataRow() {
+            // singleton
+        }
+
+        @Override
+        public Iterator<DataCell> iterator() {
+            throw new IllegalStateException(ISE_ERROR_MSG);
+        }
+
+        @Override
+        public int getNumCells() {
+            throw new IllegalStateException(ISE_ERROR_MSG);
+        }
+
+        @Override
+        public RowKey getKey() {
+            throw new NoSuchElementException(NSEE_ERROR_MSG);
+        }
+
+        @Override
+        public DataCell getCell(final int index) {
+            throw new NoSuchElementException(NSEE_ERROR_MSG);
+        }
+
+    }
 
     private final CloseableRowIterator m_delegate;
 
@@ -67,6 +107,7 @@ final class FallbackDataRowCursor implements DataRowCursor {
 
     FallbackDataRowCursor(final CloseableRowIterator delegate, final DataTableSpec spec) {
         m_delegate = delegate;
+        m_currentRow = InvalidDataRow.INSTANCE;
         m_numValues = spec.getNumColumns();
     }
 
@@ -77,12 +118,19 @@ final class FallbackDataRowCursor implements DataRowCursor {
 
     @Override
     public boolean forward() {
-        m_currentRow = m_delegate.next();
-        return canForward();
+        if (canForward()) {
+            m_currentRow = m_delegate.next();
+            return true;
+        }
+        if (m_currentRow != InvalidDataRow.INSTANCE) {
+            m_currentRow = InvalidDataRow.INSTANCE;
+            m_delegate.close();
+        }
+        return false;
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() {
         m_delegate.close();
     }
 
@@ -101,6 +149,14 @@ final class FallbackDataRowCursor implements DataRowCursor {
     @Override
     public boolean isMissing(final int index) {
         return m_currentRow.getCell(index).isMissing();
+    }
+
+    @Override
+    public Optional<String> getMissingValueError(final int index) {
+        if (isMissing(index)) {
+            return Optional.ofNullable(((MissingValue)m_currentRow.getCell(index)).getError());
+        }
+        throw new IllegalStateException(String.format("Value at index %d is not missing.", index));
     }
 
     @Override

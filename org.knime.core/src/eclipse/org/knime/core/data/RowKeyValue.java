@@ -49,6 +49,8 @@ package org.knime.core.data;
  * Value representation of a RowKey
  *
  * @author Christian Dietz, KNIME GmbH, Konstanz
+ * @noimplement This interface is not intended to be implemented by clients.
+ * @noextend This interface is not intended to be extended by clients.
  * @since 4.3
  */
 public interface RowKeyValue {

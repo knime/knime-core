@@ -202,18 +202,14 @@ public final class JoinedTable implements KnowsRowCountTable {
     public void putIntoTableRepository(final WorkflowDataRepository dataRepository) {
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    @SuppressWarnings("resource")
     @Override
     public DataRowCursor cursor() {
         // TODO efficient implementation for joined tables, not based on #iterator();
         return new FallbackDataRowCursor(iterator(), getDataTableSpec());
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    @SuppressWarnings("resource")
     @Override
     public DataRowCursor cursor(final TableFilter filter) {
         // TODO efficient implementation for joined tables, not based on #iterator();
