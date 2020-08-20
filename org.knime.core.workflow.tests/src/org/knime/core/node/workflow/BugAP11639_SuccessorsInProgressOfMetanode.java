@@ -75,6 +75,8 @@ public class BugAP11639_SuccessorsInProgressOfMetanode extends WorkflowTestCase 
 	private NodeID m_colfilter_8_6;
 	private NodeID m_colfilter_15_7_6;
 	private NodeID m_colfilter_15_8_6;
+	private NodeID m_colfilter_20_7_6;
+	private NodeID m_colfilter_20_8_6;
 
 	@Before
 	public void setupAndExecute() throws Exception {
@@ -89,6 +91,8 @@ public class BugAP11639_SuccessorsInProgressOfMetanode extends WorkflowTestCase 
 		m_datagen_10_0_5 = createNodeID(wfId, 10, 0, 5);
 		m_colfilter_15_7_6 = createNodeID(wfId, 15, 7, 6);
 		m_colfilter_15_8_6 = createNodeID(wfId, 15, 8, 6);
+		m_colfilter_20_7_6 = createNodeID(wfId, 20, 7, 6);
+		m_colfilter_20_8_6 = createNodeID(wfId, 20, 8, 6);
 		m_wfm.executeAll();
 		Awaitility.await().atMost(20, TimeUnit.SECONDS).pollInterval(100, TimeUnit.MILLISECONDS).untilAsserted(() -> {
 			assertTrue(m_metanode_8.getNodeContainerState().isExecuted());
@@ -118,6 +122,9 @@ public class BugAP11639_SuccessorsInProgressOfMetanode extends WorkflowTestCase 
 		// bug AP-14915
 		assertFalse(m_wfm.findNodeContainer(m_colfilter_15_8_6).getParent().canResetNode(m_colfilter_15_8_6));
 		assertTrue(m_wfm.findNodeContainer(m_colfilter_15_7_6).getParent().canResetNode(m_colfilter_15_7_6));
+		assertFalse(m_wfm.findNodeContainer(m_colfilter_20_8_6).getParent().canResetNode(m_colfilter_20_8_6));
+		assertTrue(m_wfm.findNodeContainer(m_colfilter_20_7_6).getParent().canResetNode(m_colfilter_20_7_6));
+		
 	}
 
 	@Test
