@@ -51,6 +51,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.ExecutionMonitor;
@@ -424,4 +425,14 @@ public class WorkflowLoadHelper {
         return persistor;
     }
 
+    /**
+     * Returns the system default credentials when run on KNIME Server. These credentials are derived from the logged in
+     * user and are used for the Credentials nodes (Quickform, Widget, and Configuration).
+     *
+     * @return The system default credentials or an empty Optional if not present.
+     * @since 4.2
+     */
+    public Optional<Credentials> getSystemDefaultCredentials() {
+        return Optional.empty();
+    }
 }
