@@ -4811,23 +4811,18 @@ public final class WorkflowManager extends NodeContainer
         WorkflowManager parent = getParent();
         Set<ConnectionContainer> outConns = parent.getOutgoingConnectionsFor(getID(), portIdx);
         for (ConnectionContainer cc : outConns) {
-            NodeContainer successor;
             if (cc.getDest().equals(parent.getID())) {
-                successor = parent;
+                if (parent.hasSuccessorsInProgress(cc.getDestPort())) {
+                    // corner case: if this metanode is directly connected to the parent
+                    // -> check if the parent has successors in progress only at that individual port
+                    return true;
+                }
             } else {
-                successor = parent.getNodeContainer(cc.getDest());
-            }
-
-            if (successor.getNodeContainerState().isExecutionInProgress()) {
-                return true;
-            } else if (successor != parent && parent.hasSuccessorInProgress(successor.getID())) {
-                return true;
-            } else if (successor == parent && parent.hasSuccessorsInProgress(cc.getDestPort())) {
-                // corner case: if this metanode is directly connected to the parent
-                // -> check if the parent has successors in progress only at that individual port
-                return true;
-            } else {
-                //
+                NodeContainer successor = parent.getNodeContainer(cc.getDest());
+                if (successor.getNodeContainerState().isExecutionInProgress()
+                    || parent.hasSuccessorInProgress(successor.getID())) {
+                    return true;
+                }
             }
         }
         return false;
