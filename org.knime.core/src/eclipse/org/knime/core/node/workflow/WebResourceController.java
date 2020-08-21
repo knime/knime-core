@@ -553,18 +553,32 @@ public abstract class WebResourceController {
         if (handler == null || !knownHiLiteHandlers.add(handler)) {
             return;
         }
-        Set<HiLiteTranslator> translators = handler.getHiLiteTranslators();
-        for (HiLiteTranslator translator : translators) {
+        String handlerId = handler.getHiliteHandlerID().toString();
+        LOGGER.debugWithFormat("Starting to iterate over hilite translators of handler %s", handlerId);
+        Set<HiLiteTranslator> translatorsToCheck = handler.getHiLiteTranslators();
+        Set<HiLiteTranslator> translatorsToFollow = new LinkedHashSet<>();
+        for (HiLiteTranslator translator : translatorsToCheck) {
             if (translator != null && knownTranslators.add(translator)) {
-                followHiLiteTranslator(translator, knownHiLiteHandlers, knownTranslators, knownManagers);
+                translatorsToFollow.add(translator);
             }
         }
-        Set<HiLiteManager> managers = handler.getHiLiteManagers();
-        for (HiLiteManager manager : managers) {
+        LOGGER.debugWithFormat("End iterating over hilite translators of handler %s (%d in total)", handlerId,
+            translatorsToFollow.size());
+        translatorsToFollow.forEach(
+            translator -> followHiLiteTranslator(translator, knownHiLiteHandlers, knownTranslators, knownManagers));
+
+        LOGGER.debugWithFormat("Starting to iterate over hilite managers of handler %s", handlerId);
+        Set<HiLiteManager> managersToCheck = handler.getHiLiteManagers();
+        Set<HiLiteManager> managersToFollow = new LinkedHashSet<>();
+        for (HiLiteManager manager : managersToCheck) {
             if (manager != null && knownManagers.add(manager)) {
-                followHiLiteManager(manager, knownHiLiteHandlers, knownTranslators, knownManagers);
+                managersToFollow.add(manager);
             }
         }
+        LOGGER.debugWithFormat("End iterating over hilite managers of handler %s (%d in total)", handlerId,
+            managersToFollow.size());
+        managersToFollow
+            .forEach(manager -> followHiLiteManager(manager, knownHiLiteHandlers, knownTranslators, knownManagers));
     }
 
     private void followHiLiteTranslator(final HiLiteTranslator translator, final Set<HiLiteHandler> knownHiLiteHandlers,
