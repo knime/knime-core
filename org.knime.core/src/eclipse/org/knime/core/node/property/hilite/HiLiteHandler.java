@@ -180,6 +180,7 @@ public class HiLiteHandler {
      */
     final void addHiLiteTranslator(final HiLiteTranslator hiliteTranslator) {
         if (hiliteTranslator != null) {
+            LOGGER.debug("Adding hilite translator to handler " + m_hiliteHandlerID);
             m_hiliteTranslators.add(hiliteTranslator);
         }
     }
@@ -193,6 +194,7 @@ public class HiLiteHandler {
      */
     final boolean removeHiLiteTranslator(final HiLiteTranslator hiliteTranslator) {
         if (hiliteTranslator != null) {
+            LOGGER.debug("Removing hilite translator from handler " + m_hiliteHandlerID);
             return m_hiliteTranslators.remove(hiliteTranslator);
         }
         return false;
@@ -217,6 +219,7 @@ public class HiLiteHandler {
      */
     final void addHiLiteManager(final HiLiteManager hiliteManager) {
         if (hiliteManager != null) {
+            LOGGER.debug("Adding hilite manager to handler " + m_hiliteHandlerID);
             m_hiliteManagers.add(hiliteManager);
         }
     }
@@ -230,6 +233,7 @@ public class HiLiteHandler {
      */
     final boolean removeHiLiteManager(final HiLiteManager hiliteManager) {
         if (hiliteManager != null) {
+            LOGGER.debug("Removing hilite manager from handler " + m_hiliteHandlerID);
             return m_hiliteManagers.remove(hiliteManager);
         }
         return false;
