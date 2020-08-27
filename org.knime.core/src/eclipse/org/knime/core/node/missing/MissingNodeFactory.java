@@ -54,6 +54,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.config.ConfigWO;
 import org.knime.core.node.port.PortType;
+import org.knime.core.util.workflowalizer.NodeAndBundleInformation;
 import org.knime.node2012.FullDescriptionDocument.FullDescription;
 import org.knime.node2012.InPortDocument.InPort;
 import org.knime.node2012.IntroDocument.Intro;
@@ -89,6 +90,13 @@ public class MissingNodeFactory extends DynamicNodeFactory<MissingNodeModel> {
         m_additionalFactorySettings = additionalFactorySettings;
         m_inTypes = ins;
         m_outTypes = outs;
+    }
+
+    /**
+     * @return known information about the missing node and its source bundle
+     */
+    public NodeAndBundleInformation getNodeAndBundleInfo() {
+        return m_nodeInfo;
     }
 
     /**
