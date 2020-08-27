@@ -14,4 +14,8 @@
 
 	<artifactId>org.knime.update.core</artifactId>
 	<packaging>eclipse-repository</packaging>
+	
+	<properties>
+		<revision>4.3.0</revision>
+	</properties>
 </project>

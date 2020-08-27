@@ -13,6 +13,10 @@
 	<groupId>org.knime</groupId>
 	<artifactId>org.knime.core.data.uritype</artifactId>
 	<packaging>${packaging.default}</packaging>
+	
+	<properties>
+		<revision>4.3.0</revision>
+	</properties>
 
     <build>
         <plugins>
