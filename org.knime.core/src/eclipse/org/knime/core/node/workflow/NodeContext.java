@@ -307,11 +307,12 @@ public final class NodeContext {
     static Deque<NodeContext> getContextStack() {
         Deque<NodeContext> stack = THREAD_LOCAL.get();
         if (stack == null) {
-            stack = new ArrayDeque<NodeContext>(4);
+            stack = new ArrayDeque<>(4);
             THREAD_LOCAL.set(stack);
         } else if (stack.size() > 10) {
-            NodeLogger.getLogger(NodeContext.class).coding("Node context stack has more than 10 elements (" + stack.size()
-                + "), looks like we are leaking contexts somewhere");
+            NodeLogger.getLogger(NodeContext.class)
+                .codingWithoutContext("Node context stack has more than 10 elements (" + stack.size()
+                    + "), looks like we are leaking contexts somewhere");
         }
         return stack;
     }

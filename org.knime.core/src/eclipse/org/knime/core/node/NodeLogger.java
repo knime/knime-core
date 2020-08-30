@@ -289,6 +289,11 @@ public final class NodeLogger {
      */
     private static final int MAX_CHARS = 10000;
 
+    /**
+     * The prefix when logging coding messages (they end up on 'error' but are prefixed by this value).
+     */
+    private static final String CODING_PROBLEM_PREFIX = "CODING PROBLEM\t";
+
     /** Default log file appender. */
     private static final Appender LOG_FILE_APPENDER;
 
@@ -653,7 +658,6 @@ public final class NodeLogger {
         m_logger.debug(o);
     }
 
-
     /**
      * @param layout checks if any of the KNIME specific flags e.g. node id is set in the layout pattern and ensures
      * that the corresponding boolean flag is enabled.
@@ -809,7 +813,7 @@ public final class NodeLogger {
      * Removes any extra workflow directory appender if it exists.
      * @param workflowDir the directory of the workflow that should no longer be logged
      */
-    private void removeWorkflowDirAppender(final File workflowDir) {
+    private static void removeWorkflowDirAppender(final File workflowDir) {
         if (workflowDir == null) {
             //if the workflowDir is null we do not need to remove the extra log appender
             return;
@@ -935,8 +939,8 @@ public final class NodeLogger {
      * @param o the message to print
      */
     public void coding(final Object o) {
-        if (KNIMEConstants.ASSERTIONS_ENABLED || EclipseUtil.isRunFromSDK()) {
-            getLoggerInternal().error(getLogObject("CODING PROBLEM\t" + o));
+        if (isToLogCodingMessages()) {
+            getLoggerInternal().error(getLogObject(CODING_PROBLEM_PREFIX + o));
         }
     }
 
@@ -948,8 +952,21 @@ public final class NodeLogger {
      * @param t the exception to log at debug level, including its stack trace
      */
     public void coding(final Object o, final Throwable t) {
-        if (KNIMEConstants.ASSERTIONS_ENABLED || EclipseUtil.isRunFromSDK()) {
-            getLoggerInternal().error(getLogObject("CODING PROBLEM\t" + o), t);
+        if (isToLogCodingMessages()) {
+            getLoggerInternal().error(getLogObject(CODING_PROBLEM_PREFIX + o), t);
+        }
+    }
+
+    /**
+     * Write coding message into this logger. The message is logged without a node context. This method should only
+     * be used when you know that there is no node context available.
+     *
+     * @param o The object to print.
+     * @since 4.3
+     */
+    public void codingWithoutContext(final Object o) {
+        if (isToLogCodingMessages()) {
+            m_logger.error(CODING_PROBLEM_PREFIX + o);
         }
     }
 
@@ -1048,7 +1065,7 @@ public final class NodeLogger {
      * @since 2.10
      */
     public void codingWithFormat(final String format, final Object... args) {
-        if (KNIMEConstants.ASSERTIONS_ENABLED || EclipseUtil.isRunFromSDK()) {
+        if (isToLogCodingMessages()) {
             coding(String.format(format, args));
         }
     }
@@ -1236,6 +1253,13 @@ public final class NodeLogger {
      */
     public boolean isEnabledFor(final LEVEL level) {
         return getLoggerInternal().isEnabledFor(transLEVEL(level));
+    }
+
+    /**
+     * @return <code>true</code> if assertions are on or run from the SDK.
+     */
+    private static boolean isToLogCodingMessages() {
+        return KNIMEConstants.ASSERTIONS_ENABLED || EclipseUtil.isRunFromSDK();
     }
 
     /**
