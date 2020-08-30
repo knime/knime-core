@@ -59,6 +59,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -301,12 +302,11 @@ public class ConfigEditTreeNodePanel extends JPanel {
         m_valueComboBox.setMaximumSize(m_valueComboBox.getPreferredSize());
 
         if ((match == null) && (m_flowObjectStack != null)) {
-            final Map<String, FlowVariable> allVars
-                        = m_flowObjectStack.getAllAvailableFlowVariables();
+            final Map<String, FlowVariable> allVars = m_flowObjectStack.getAllAvailableFlowVariables();
             if (allVars.containsKey(usedVariable)) {
                 final FlowVariable v = allVars.get(usedVariable);
                 final String error = "Variable \"" + usedVariable + "\" has wrong type (" + v.getVariableType()
-                                        + "), expected " + selType;
+                    + "), expected " + selType;
                 final ComboBoxElement cbe = new ComboBoxElement(v, error);
                 m_valueComboBoxModel.addElement(cbe);
                 match = cbe;
@@ -338,11 +338,10 @@ public class ConfigEditTreeNodePanel extends JPanel {
     }
 
     private void addPlaceholderForInvalidVariable(final String usedVariable, final VariableType<?> selType) {
-        // show name in variable in arrows; makes also sure to
-        // not violate the namespace of the variable (could be
-        // node-local variable, which can't be created outside
-        // the workflow package)
-        final String errorName = "<" + usedVariable + ">";
+        // place holder variable is created by this piece of code and must not violate scope namings as otherwise
+        // "new FlowVariable(..." will throw an exception ... prefix with '_' then
+        String knimePrefix = FlowVariable.Scope.Global.getPrefix(); // really only "knime"
+        final String errorName = usedVariable.replaceFirst("^" + Pattern.quote(knimePrefix), "_" + knimePrefix);
         final FlowVariable virtualVar;
         virtualVar = createVirtualVariableNew(selType, errorName);
         final String error = "Invalid variable \"" + usedVariable + "\"";
@@ -365,9 +364,7 @@ public class ConfigEditTreeNodePanel extends JPanel {
         if (selVar instanceof ComboBoxElement) {
             final ComboBoxElement cbe = (ComboBoxElement)selVar;
             if (!EMPTY_COMBOBOX_ELEMENT.equals(cbe)) {
-                if (cbe.m_errorString == null) {
-                    v = cbe.m_variable.getName();
-                }
+                v = cbe.m_variable.getName();
             }
         }
         m_treeNode.setUseVariableName(StringUtils.isNotEmpty(v) ? v : null);
