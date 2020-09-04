@@ -17,24 +17,9 @@ try {
         'Tycho Build': {
 	        knimetools.defaultTychoBuild('org.knime.update.core')
         },
-        'Testing: Linux': {
-            node("ubuntu18.04 && workflow-tests") {
-                checkout scm
-                knimetools.runIntegratedWorkflowTests(profile: 'test')
-            }
+        'Integrated Workflowtests': {
+                workflowTests.runIntegratedWorkflowTests(profile: 'test')
          },
-        'Testing: Windows': {
-            node('windows && p2-director') {
-                checkout scm
-                knimetools.runIntegratedWorkflowTests(profile: 'test')
-            }
-        },
-        'Testing: MacOs': {
-            node('macosx && workflow-tests') {
-                checkout scm
-                knimetools.runIntegratedWorkflowTests(profile: 'test')
-            }
-        },
      )
 
     workflowTests.runTests(
