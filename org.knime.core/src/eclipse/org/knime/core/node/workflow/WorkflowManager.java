@@ -577,8 +577,10 @@ public final class WorkflowManager extends NodeContainer
 
     /**
      * @return workflow
+     * @noreference This method is not intended to be referenced by clients.
+     * @since 4.3
      */
-    Workflow getWorkflow() {
+    public Workflow getWorkflow() {
         return m_workflow;
     }
 
