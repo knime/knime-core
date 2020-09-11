@@ -186,14 +186,14 @@
         "required": true,
         "defaultValue": {
             "@class": "org.knime.js.base.node.configuration.input.fileupload.FileUploadDialogNodeValue",
-            "pathValid": true,
             "path": "/tmp",
+            "pathValid": true,
             "fileName": "tmp"
         },
         "currentValue": {
             "@class": "org.knime.js.base.node.configuration.input.fileupload.FileUploadDialogNodeValue",
-            "pathValid": true,
             "path": "/tmp",
+            "pathValid": true,
             "fileName": "tmp"
         },
         "fileTypes": [
@@ -251,14 +251,14 @@
         "defaultValue": {
             "@class": "org.knime.js.base.node.configuration.input.credentials.CredentialsDialogNodeValue",
             "username": "test",
-            "isSavePassword": true,
-            "magicDefaultPassword": "*************"
+            "magicDefaultPassword": "*************",
+            "isSavePassword": true
         },
         "currentValue": {
             "@class": "org.knime.js.base.node.configuration.input.credentials.CredentialsDialogNodeValue",
             "username": "test",
-            "isSavePassword": true,
-            "magicDefaultPassword": "*************"
+            "magicDefaultPassword": "*************",
+            "isSavePassword": true
         },
         "promptUsername": true,
         "useServerLoginCredentials": false,
