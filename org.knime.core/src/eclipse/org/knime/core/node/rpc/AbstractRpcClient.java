@@ -86,6 +86,11 @@ public abstract class AbstractRpcClient implements RpcClient {
     private final RpcTransport m_rpcTransport;
 
     /**
+     * Maps a service interface to a proxy-implementation of it for remote service calls. Serves as a cache.
+     */
+    private final Map<Class<?>, Object> m_remoteProxyServiceHandler = new HashMap<>();
+
+    /**
      * If the node model lives in the same JVM, the optional contains the service implementation. If the node model is
      * on a different machine or in a different language, the optional is empty, in which case
      * {@link #callServiceWithRes(Function)} will forward requests of the node dialog/view to a remote server. The field
@@ -94,40 +99,27 @@ public abstract class AbstractRpcClient implements RpcClient {
     private Optional<RpcServer> m_rpcServer;
 
     /**
-     * A map of service interfaces to a proxy-implementation of them for remote service calls. Serves as a cache of the
-     * proxy instances.
+     * Get the rpc transport from the extension point.
      */
-    private final Map<Class<?>, Object> m_remoteProxyServiceHandler;
-
-    /**
-     * A debug flag for node developers to simplify testing serialization.
-     */
-    private boolean m_alwaysSerializeForTesting = false;
-
-    /**
-     *
-     */
-    public AbstractRpcClient() {
+    protected AbstractRpcClient() {
         m_rpcTransport = RpcTransportRegistry.getRpcMessageTransportFactory().createRpcTransport();
-        m_remoteProxyServiceHandler = new HashMap<>();
     }
 
     /**
-     * Constructor to initialize a rpc client for testing purposes only.
+     * For testing only: Constructor to initialize an rpc client with custom transport.
      *
      * @param rpcTransport a custom rpc transport for testing
      */
     protected AbstractRpcClient(final RpcTransport rpcTransport) {
         m_rpcTransport = rpcTransport;
+        // for testing, we want to simulate remote execution
         m_rpcServer = Optional.empty();
-        m_alwaysSerializeForTesting = true;
-        m_remoteProxyServiceHandler = new HashMap<>();
     }
 
     /**
      * Converts a call to the node model's data service interface to String.<br/>
-     * For instance, method countChars("abc", 'b') on a ServiceInterface could be represented in JSON-RPC as {"jsonrpc":
-     * "2.0", "method": "countChars", "params": ["abc", "b"], "id": 3}
+     * For instance, method countChars("abc", 'b') on a service interface could be represented in JSON-RPC as
+     * {"jsonrpc": "2.0", "method": "countChars", "params": ["abc", "b"], "id": 3}
      * @param serviceName the name of the service to be called
      * @param method name of the method to call, as provided by the interface this client is generically typed to
      * @param args method parameters for the invocation
@@ -136,8 +128,8 @@ public abstract class AbstractRpcClient implements RpcClient {
     protected abstract String convertCall(String serviceName, Method method, Object[] args);
 
     /**
-     * Counterpart for {@link #convertCall(String, Method, Object[])}, parses response and converts back to the method return
-     * type declared by the service interface this client is generically typed to.
+     * Counterpart for {@link #convertCall(String, Method, Object[])}, parses response and converts back to the method
+     * return type declared by the service interface.
      *
      * @param response the result of the remote procedure call
      * @param valueType the return type of the method invoked via remote procedure call, e.g., as returned by
@@ -154,7 +146,7 @@ public abstract class AbstractRpcClient implements RpcClient {
     private Optional<RpcServer> getRpcServer() {
         // if the field is null, we haven't tried to create a server before
         // if the field is an empty Optional, we called it before and didn't get a local handler (working remotely)
-        if (m_rpcServer == null) { //NOSONAR -- to avoid repeatedly calling createRpcServer
+        if (null == m_rpcServer) { //NOSONAR -- to avoid repeatedly calling createRpcServer
             m_rpcServer = createRpcServer();
         }
         return m_rpcServer;
@@ -247,7 +239,7 @@ public abstract class AbstractRpcClient implements RpcClient {
      */
     @Override
     public boolean isConnectedRemotely() {
-        return getRpcServer().isPresent();
+        return !getRpcServer().isPresent();
     }
 
 }

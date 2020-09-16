@@ -49,7 +49,8 @@
 package org.knime.core.node.rpc;
 
 /**
- * An {@link RpcSingleServer} implementation is used to serve remote requests to a node data service.
+ * Convenience specialization of {@link RpcServer} for the case where there is only node data service interface, which
+ * the user then doesn't have to specify on every call.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  * @author Carl Witt, KNIME AG, Zurich, Switzerland

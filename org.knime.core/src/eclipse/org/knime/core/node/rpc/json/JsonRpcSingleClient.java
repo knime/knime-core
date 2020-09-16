@@ -54,6 +54,7 @@ import java.util.function.Supplier;
 
 import org.knime.core.node.rpc.AbstractRpcSingleClient;
 import org.knime.core.node.rpc.RpcTransport;
+import org.knime.core.node.util.CheckUtils;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -104,14 +105,13 @@ public class JsonRpcSingleClient<S> extends AbstractRpcSingleClient<S> {
      */
     public JsonRpcSingleClient(final Class<S> serviceInterface, final ObjectMapper mapper) {
         super(serviceInterface);
-        m_mapper = mapper;
+        m_mapper = CheckUtils.checkNotNull(mapper, "Object mapper passed to JSON-RPC client must not be null.");
     }
 
     /**
-     * Constructor to initialize a json rpc client for testing.
+     * For testing only: Constructor to initialize a JSON-RPC client with a test rpc transport.
      */
-    JsonRpcSingleClient(final Class<S> serviceInterface, final ObjectMapper mapper,
-        final RpcTransport rpcTransport) {
+    JsonRpcSingleClient(final Class<S> serviceInterface, final ObjectMapper mapper, final RpcTransport rpcTransport) {
         super(serviceInterface, rpcTransport);
         m_mapper = mapper == null ? OBJECT_MAPPER.get() : mapper;
     }

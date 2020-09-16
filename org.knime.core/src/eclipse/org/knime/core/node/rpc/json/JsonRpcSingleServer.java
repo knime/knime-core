@@ -53,14 +53,16 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import org.knime.core.node.rpc.RpcSingleServer;
+import org.knime.core.node.util.CheckUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
- * A wrapper for the jsonrpc4j library; a simple delegate that allows for exchanging the JSON-RPC implementation.
+ * A convenience specialization of {@link JsonRpcServer} that supports only one service interface and thus spares the
+ * user from specifying the service interface name every time.
  *
- * If this single json rpc server is used, only the method name is required to address the node data service in
- * the json-rpc request from the client.
+ * If this single json rpc server is used, only the method name is required to address the node data service in the
+ * JSON-RPC request from the client.
  *
  * @param <S> the node data service interface type; defines which methods are offered by the node model to retrieve
  *            data. See also {@link JsonRpcClient} for requirements on this interface.
@@ -76,8 +78,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class JsonRpcSingleServer<S> implements RpcSingleServer<S> {
 
     /**
-     * Node data service implementor. Can be local (directly execute using node model) or remote (execute using remote
-     * node model).
+     * Node data service implementor. Can be local (node model lives in the same JVM as client) or remote.
      */
     private S m_handler;
 
@@ -95,7 +96,8 @@ public class JsonRpcSingleServer<S> implements RpcSingleServer<S> {
      * @param mapper allows customized serialization of java objects into JSON
      */
     public JsonRpcSingleServer(final S handler, final ObjectMapper mapper) {
-        m_handler = handler;
+        CheckUtils.checkNotNull(mapper, "Object mapper passed to JSON-RPC server must not be null.");
+        m_handler = CheckUtils.checkNotNull(handler, "The node data service implementation must not be null.");
         m_jsonRpcServer = new com.googlecode.jsonrpc4j.JsonRpcServer(mapper, handler);
     }
 

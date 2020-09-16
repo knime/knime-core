@@ -49,6 +49,7 @@
 package org.knime.core.node.rpc.json;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -97,23 +98,37 @@ public class JsonRpcDeSerializationTest {
      */
     @Test
     public void testJsonRpcClientDeSerialization() {
+        // test registration of two instances of the same service
+        Pair<String, Object> service1a = Pair.create("Service1a", new ServiceImpl());
+        Pair<String, Object> service1b = Pair.create("Service1b", new ServiceImpl());
+        Pair<String, Object> service2 = Pair.create("Service2", new OtherServiceImpl());
         @SuppressWarnings("unchecked")
-        RpcClient client =
-            JsonRpcTestUtil.createRpcClientInstanceForTesting(null, Pair.create(Service.class, new ServiceImpl()));
-        Service service = client.getService(Service.class);
-        assertNotNull(service
-            .listOfObjectsWithComplexParam(Arrays.asList(new ObjectWithPublicFields(), new ObjectWithPublicFields())));
-        service.voidFunction("bar");
-        assertNotNull(service.optionalReturn().get()); //NOSONAR
-        assertFalse(service.optionalReturnEmpty().isPresent());
-        ObjectWithGettersAndSetters obj = service.getObjectWithGettersAndSetters();
-        assertThat(obj.getProp1(), is("test"));
-        assertThat(obj.getProp2(), is(123.321));
+        RpcClient client = JsonRpcTestUtil.createRpcClientInstanceForTesting(null, service1a, service1b, service2);
+
+        // test the two instances of Service
+        for (Service serviceImpl : new Service[]{client.getService(Service.class, "Service1a"),
+            client.getService(Service.class, "Service1b")}) {
+
+            assertNotNull(serviceImpl.listOfObjectsWithComplexParam(
+                Arrays.asList(new ObjectWithPublicFields(), new ObjectWithPublicFields())));
+            serviceImpl.voidFunction("bar");
+            assertNotNull(serviceImpl.optionalReturn().get()); //NOSONAR
+            assertFalse(serviceImpl.optionalReturnEmpty().isPresent());
+            ObjectWithGettersAndSetters obj = serviceImpl.getObjectWithGettersAndSetters();
+            assertThat(obj.getProp1(), is("test"));
+            assertThat(obj.getProp2(), is(123.321));
+        }
+
+        // the the OtherService instance
+        OtherService otherServiceImpl = client.getService(OtherService.class, "Service2");
+        Map<String, ObjectWithGettersAndSetters> map = otherServiceImpl.map();
+        assertNotNull(map);
+        assertThat(map.size(), equalTo(1));
     }
 
     /**
      * Tests correct conversion of an exception thrown in a service method into the same re-thrown exception (parsed
-     * from a json-rpc error).
+     * from a JSON-RPC error).
      */
     @Test(expected = IllegalStateException.class)
     public void testJsonRpcSingleClientServerError() {
@@ -178,9 +193,21 @@ public class JsonRpcDeSerializationTest {
 
         @Override
         public ObjectWithGettersAndSetters getObjectWithGettersAndSetters() {
-            ObjectWithGettersAndSetters res = new ObjectWithGettersAndSetters();
-            res.setProp1("test");
-            res.setProp2(123.321);
+            return new ObjectWithGettersAndSetters();
+        }
+    }
+
+    @SuppressWarnings("javadoc")
+    public interface OtherService {
+        public Map<String, ObjectWithGettersAndSetters> map();
+    }
+
+    @SuppressWarnings("javadoc")
+    public static class OtherServiceImpl implements OtherService {
+        @Override
+        public Map<String, ObjectWithGettersAndSetters> map() {
+            Map<String, ObjectWithGettersAndSetters> res = new HashMap<>();
+            res.put(new ObjectWithPublicFields().toString(), new ObjectWithGettersAndSetters());
             return res;
         }
     }
@@ -194,10 +221,9 @@ public class JsonRpcDeSerializationTest {
 
     @SuppressWarnings("javadoc")
     public static class ObjectWithGettersAndSetters {
+        private String m_prop1 = "test";
 
-        private String m_prop1;
-
-        private double m_prop2;
+        private double m_prop2 = 123.321;
 
         public void setProp1(final String prop1) {
             m_prop1 = prop1;

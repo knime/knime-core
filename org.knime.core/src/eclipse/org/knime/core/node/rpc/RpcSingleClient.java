@@ -53,8 +53,8 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
- * An {@link RpcSingleClient} implementation is used by a node dialog or node view to retrieve data from its (possibly remote)
- * node model.
+ * Convenience specialization of {@link RpcClient} for the case where there is only node data service interface, which
+ * the user then doesn't have to specify on every call.
  *
  * @param <S> The node data service interface, i.e., the methods offered by the node model to the node dialog/view to
  *            retrieve data.

@@ -55,12 +55,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.knime.core.node.rpc.RpcServer;
+import org.knime.core.node.util.CheckUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.googlecode.jsonrpc4j.JsonRpcMultiServer;
 
 /**
- * A wrapper for the jsonrpc4j library; a simple delegate that allows for exchanging the JSON-RPC implementation.
+ * A wrapper for the {@link JsonRpcMultiServer}; a simple delegate in case we want to exchange the JSON-RPC
+ * implementation.
  *
  * The service interface and their handler registered with this server need to either follow a certain convention or a
  * custom {@link ObjectMapper} (for de-/serialization) needs to be provided. For more details see
@@ -77,15 +79,16 @@ import com.googlecode.jsonrpc4j.JsonRpcMultiServer;
 public class JsonRpcServer implements RpcServer {
 
     /**
-     * Node data service implementors. Can be local (directly execute using node model) or remote (execute using remote
-     * node model).
+     * Node data service implementations. Can be local (directly execute using node model in the same JVM) or remote
+     * (execute using remote node model). Simply records what is added to {@link #m_jsonRpcServer}, since the API
+     * doesn't have a getService() method.
      */
     private final Map<String, Object> m_handlers = new HashMap<>();
 
-    private JsonRpcMultiServer m_jsonRpcServer;
+    private final JsonRpcMultiServer m_jsonRpcServer;
 
     /**
-     * Json rpc server with default object mapper.
+     * JSON-RPC server with default object mapper.
      */
     public JsonRpcServer() {
         this(ObjectMapperUtil.getInstance().getObjectMapper());
@@ -95,17 +98,18 @@ public class JsonRpcServer implements RpcServer {
      * @param mapper allows customized serialization of java objects into JSON
      */
     public JsonRpcServer(final ObjectMapper mapper) {
+        CheckUtils.checkNotNull(mapper, "Object mapper passed to JSON-RPC server must not be null.");
         m_jsonRpcServer = new JsonRpcMultiServer(mapper);
     }
 
     /**
-     * Adds a new service handler to the server. The simple class name of the service interface is used as service name!
-     * The service name is used in the json-rpc request method property to specify service to use (e.g.
+     * Adds a new service handler to the server. The simple class name of the service interface is used as service name.
+     * The service name is used in the JSON-RPC request method property to specify the service to use (e.g.
      * <code>MyService.theMethodToCall</code>)
      *
+     * @param <S> the type of the handler
      * @param serviceInterface the interface implemented by the handler (i.e. node data service)
      * @param handler the handler implementation
-     * @param <S> the type of the handler
      */
     public <S> void addService(final Class<S> serviceInterface, final S handler) {
         addService(serviceInterface.getSimpleName(), handler);
@@ -114,16 +118,22 @@ public class JsonRpcServer implements RpcServer {
     /**
      * Adds a new service handler to the server.
      *
-     * @param serviceName the unique name for the service (determines how the client addresses the services in the json
-     *            rpc request)
-     * @param handler the handler implementation
      * @param <S> the type of the handler
+     * @param serviceName the unique name for the service (the name must be stated in the method field of the JSON-RPC
+     *            request, e.g., <code>"method": "ServiceName.someMethod"</code>)
+     * @param handler the handler implementation
      */
     public <S> void addService(final String serviceName, final S handler) {
+        CheckUtils.checkNotNull(handler, "Service implementation passed to JSON-RPC server must not be null.");
         m_jsonRpcServer.addService(serviceName, handler);
         m_handlers.put(serviceName, handler);
     }
 
+    /**
+     * Handles a single request from the given InputStream, that is, a single JsonNode is read from the stream and
+     * treated as a JSON-RPC request. All responses are written to the given OutputStream. The method to call needs to
+     * include the simple name of the service interface, see {@link #addService(Class, Object)}.
+     */
     @Override
     public void handleRequest(final InputStream in, final OutputStream out) throws IOException {
         m_jsonRpcServer.handleRequest(in, out);

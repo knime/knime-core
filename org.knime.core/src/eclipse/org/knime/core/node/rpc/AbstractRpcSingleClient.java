@@ -55,10 +55,12 @@ import java.util.function.Function;
 
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;
-import org.knime.core.node.rpc.json.JsonRpcClient;
+import org.knime.core.node.rpc.json.JsonRpcSingleClient;
+import org.knime.core.node.util.CheckUtils;
 
 /**
- * Base class for node data service client implementations, such as {@link JsonRpcClient}.
+ * Base class for node data service client implementations that support only one service interface, such as
+ * {@link JsonRpcSingleClient}.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
@@ -84,12 +86,11 @@ public abstract class AbstractRpcSingleClient<S> extends AbstractRpcClient imple
      *            interface is defined and implemented by the node developer.
      */
     public AbstractRpcSingleClient(final Class<S> serviceInterface) {
-        super();
-        m_serviceInterface = serviceInterface;
+        m_serviceInterface = CheckUtils.checkNotNull(serviceInterface, "Service interface type must not be null.");
     }
 
     /**
-     * Constructor to initialize a rpc client for testing purposes only.
+     * For testing only: Constructor to initialize an rpc client with custom transport.
      *
      * @param serviceInterface
      * @param rpcTransport a custom rpc transport implementation for testing
@@ -101,7 +102,8 @@ public abstract class AbstractRpcSingleClient<S> extends AbstractRpcClient imple
 
     @SuppressWarnings("unchecked")
     @Override
-    protected <N extends NodeModel> RpcServer getRpcServerFromNodeFactory(final N nodeModel, final NodeFactory<NodeModel> factory) {
+    protected <N extends NodeModel> RpcServer getRpcServerFromNodeFactory(final N nodeModel,
+        final NodeFactory<NodeModel> factory) {
         if (factory instanceof RpcSingleServerFactory) {
             return ((RpcSingleServerFactory<N, S>)factory).createRpcServer(nodeModel);
         } else {

@@ -87,7 +87,7 @@ public final class JsonRpcTestUtil {
     public static <S> RpcSingleClient<S> createRpcSingleClientInstanceForTesting(final Class<S> serviceInterface,
         final S handler, final ObjectMapper mapper) {
         JsonRpcSingleServer<S> server =
-            mapper == null ? new JsonRpcSingleServer<>(handler) : new JsonRpcSingleServer<>(handler, mapper);
+            null == mapper ? new JsonRpcSingleServer<>(handler) : new JsonRpcSingleServer<>(handler, mapper);
         return createRpcSingleClientInstanceForTesting(serviceInterface, mapper, new TestRpcTransport(server));
     }
 
@@ -110,14 +110,14 @@ public final class JsonRpcTestUtil {
      * de-/serialization of your service.
      *
      * @param mapper if <code>null</code> the default mapper will be used
-     * @param serviceInterfaceAndHandler the service interface and handler to register with the test server
+     * @param serviceInterfaceNameAndHandler the service interface and handler to register with the test server
      * @return the rpc client for testing purposes
      */
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    @SuppressWarnings({"unchecked"})
     public static RpcClient createRpcClientInstanceForTesting(final ObjectMapper mapper,
-        final Pair<Class, Object>... serviceInterfaceAndHandler) {
-        JsonRpcServer server = mapper == null ? new JsonRpcServer() : new JsonRpcServer(mapper);
-        for (Pair<Class, Object> p : serviceInterfaceAndHandler) {
+        final Pair<String, Object>... serviceInterfaceNameAndHandler) {
+        JsonRpcServer server = null == mapper ? new JsonRpcServer() : new JsonRpcServer(mapper);
+        for (Pair<String, Object> p : serviceInterfaceNameAndHandler) {
             server.addService(p.getFirst(), p.getSecond());
         }
         return createRpcClientInstanceForTesting(mapper, new TestRpcTransport(server));

@@ -56,6 +56,7 @@ import java.util.function.Supplier;
 
 import org.knime.core.node.rpc.AbstractRpcClient;
 import org.knime.core.node.rpc.RpcTransport;
+import org.knime.core.node.util.CheckUtils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JavaType;
@@ -78,7 +79,7 @@ import com.fasterxml.jackson.databind.type.TypeFactory;
  */
 public class JsonRpcClient extends AbstractRpcClient {
 
-    private static final Supplier<ObjectMapper> OBJECT_MAPPER = () -> ObjectMapperUtil.getInstance().getObjectMapper();
+    private static final Supplier<ObjectMapper> OBJECT_MAPPER = ObjectMapperUtil.getInstance()::getObjectMapper;
 
     private final ObjectMapper m_mapper;
 
@@ -88,7 +89,7 @@ public class JsonRpcClient extends AbstractRpcClient {
     private long m_callId = 0;
 
     /**
-     * The json rpc client initialized with the default object mapper.
+     * The JSON-RPC client initialized with a default object mapper.
      */
     public JsonRpcClient() {
         this(OBJECT_MAPPER.get());
@@ -98,16 +99,16 @@ public class JsonRpcClient extends AbstractRpcClient {
      * @param mapper used to provide custom serialization for the parameters and results of a remote procedure call
      */
     public JsonRpcClient(final ObjectMapper mapper) {
-        super();
-        m_mapper = mapper;
+        m_mapper = CheckUtils.checkNotNull(mapper, "Object mapper passed to JSON-RPC client must not be null.");
     }
 
     /**
-     * Constructor to initialize a json rpc client for testing.
+     * For testing only: Constructor to initialize a JSON-RPC client with a test transport method.
+     * @param mapper if null, a default object mapper is used
      */
     JsonRpcClient(final ObjectMapper mapper, final RpcTransport rpcTransport) {
         super(rpcTransport);
-        m_mapper = mapper == null ? OBJECT_MAPPER.get() : mapper;
+        m_mapper = null == mapper ? OBJECT_MAPPER.get() : mapper;
     }
 
     @Override
@@ -117,20 +118,22 @@ public class JsonRpcClient extends AbstractRpcClient {
         return res;
     }
 
-    static String convertCall(final String serviceName, final Method method, final Object[] args, final ObjectMapper mapper,
-        final long callId) {
+    static String convertCall(final String serviceName, final Method method, final Object[] args,
+        final ObjectMapper mapper, final long callId) {
         ObjectNode request = mapper.createObjectNode();
 
-        // if a method has zero parameters, add an empty params array
+        // if a method has zero parameters, add an empty parameter array
         ArrayNode parameters = request.arrayNode();
-        if (args != null) {
+        if (null != args) {
             for (int i = 0; i < args.length; i++) {
                 parameters.addPOJO(args[i]);
             }
         }
 
+        String methodScope = null != serviceName ? (serviceName + ".") : "";
+
         request.put("jsonrpc", "2.0").put("id", callId)
-            .put("method", (serviceName != null ? (serviceName + ".") : "") + method.getName())
+            .put("method", methodScope + method.getName())
             .set("params", parameters);
 
         return request.toString();
@@ -139,7 +142,6 @@ public class JsonRpcClient extends AbstractRpcClient {
     @Override
     protected <R> R convertResult(final String response, final Type valueType) throws Exception {
         return convertResult(response, valueType, m_mapper);
-
     }
 
     @SuppressWarnings("unchecked")
@@ -149,7 +151,7 @@ public class JsonRpcClient extends AbstractRpcClient {
         try {
             JsonNode jsonRpcResponse = mapper.readValue(response, JsonNode.class);
             JsonNode errorNode = jsonRpcResponse.get("error");
-            if (valueType == void.class && errorNode == null) {
+            if (void.class == valueType && null == errorNode) {
                 return null;
             }
             // instead of an result, an error can be set
@@ -162,10 +164,10 @@ public class JsonRpcClient extends AbstractRpcClient {
 
             // special handling when the result is of type java.util.Optional
             boolean outerTypeIsOptional = valueType instanceof ParameterizedType
-                && ((ParameterizedType)valueType).getRawType().equals(Optional.class);
+                && Optional.class.equals(((ParameterizedType)valueType).getRawType());
             if (outerTypeIsOptional) {
-                // this case exists because Jackson 2.11 seems to deserialize Optional incorrectly
-                // (always returns Optional.empty, even when providing a value, because it's using the BeanDeserializer?)
+                // this case exists because Jackson 2.11 seems to deserialize Optional incorrectly (always returns
+                // Optional.empty, even when providing a value, because it's using the BeanDeserializer?)
                 ParameterizedType parameterizedType = (ParameterizedType)valueType;
                 // the type that is wrapped by the optional
                 Class<?> innerType = (Class<?>)parameterizedType.getActualTypeArguments()[0];
@@ -179,7 +181,7 @@ public class JsonRpcClient extends AbstractRpcClient {
                 return (R)result;
             }
         } catch (JsonProcessingException jsonException) {
-            throw new IllegalStateException("Problem while deserialization of json rpc response", jsonException);
+            throw new IllegalStateException("Problem while deserialization of JSON-RPC response", jsonException);
         }
     }
 
@@ -188,7 +190,7 @@ public class JsonRpcClient extends AbstractRpcClient {
             String exceptionClassName = errorNode.get("data").get("exceptionTypeName").asText();
             @SuppressWarnings("unchecked")
             Class<? extends Exception> exceptionClass = (Class<? extends Exception>)Class.forName(exceptionClassName);
-            throw exceptionClass.newInstance();
+            throw exceptionClass.getDeclaredConstructor().newInstance();
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException ex) {
             throw new IllegalStateException(
                 String.format("The error returned by rpc server couldn't be turned into an exception: %s", errorNode),

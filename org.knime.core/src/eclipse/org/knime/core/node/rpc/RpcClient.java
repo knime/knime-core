@@ -67,22 +67,24 @@ import java.util.function.Function;
 public interface RpcClient {
 
     /**
-     * Used to call a method on the node model's data service interface and retrieve the result. Example usage:
+     * Calls a method on the node model's data service implementation of the interface and returns the result. Assumes
+     * that the service is registered under the name <code>serviceInterface.getSimpleName()</code>. Example usage:
      *
      * <pre>
      * RpcClient m_rpcClient = ...
      * Future&lt;List&lt;SomeType>> future =
-     *      m_rpcClient.callServiceWithRes(MyService.class, nodeDataService -> nodeDataService.getSomeData(someParameter));
+     *      m_rpcClient.callServiceWithRes(MyService.class, service -> service.getSomeData(someParameter));
      * try {
      *     List&lt;SomeType> results = future.get(3, TimeUnit.SECONDS);
      * } catch (TimeoutException timeoutException) {
      *     ...
      * </pre>
      *
+     * @param <S> the interface type of the service to use
+     * @param <R> the result type of the invoked method
      * @param serviceEvaluator the service evaluator is given an implementation of the node model's data service. It
      *            then calls one of the methods on the node model's service interface and returns the result.
      * @param serviceInterface the interface of the service to call to
-     * @param <R> the result type of the invoked method.
      * @return a {@link Future} containing the result of the invoked method.
      */
     default <S, R> Future<R> callServiceWithRes(final Class<S> serviceInterface,
@@ -91,13 +93,26 @@ public interface RpcClient {
     }
 
     /**
-     * See {@link #callServiceWithRes(Class, Function)}.
+     * Calls a method on the node model's data service implementation of the given interface registered under the given
+     * name and returns the result. Example usage:
      *
-     * @param <S>
-     * @param <R>
-     * @param serviceInterface
-     * @param serviceName
-     * @param serviceEvaluator
+     * <pre>
+     * RpcClient m_rpcClient = ...
+     * Future&lt;List&lt;SomeType>> future =
+     *      m_rpcClient.callServiceWithRes(MyService.class, "MyServiceInstance3", s -> s.getSomeData(someParameter));
+     * try {
+     *     List&lt;SomeType> results = future.get(3, TimeUnit.SECONDS);
+     * } catch (TimeoutException timeoutException) {
+     *     ...
+     * </pre>
+     *
+     * @param <S> the interface type of the service to use
+     * @param <R> the result type of the invoked method
+     * @param serviceInterface the interface of the service to call to
+     * @param serviceName the name under which the service interface is registered at the server, see
+     *            {@link RpcServer#getHandler(String)}
+     * @param serviceEvaluator the service evaluator is given an implementation of the node model's data service. It
+     *            then calls one of the methods on the node model's service interface and returns the result.
      * @return the result
      */
     <S, R> Future<R> callServiceWithRes(Class<S> serviceInterface, String serviceName, Function<S, R> serviceEvaluator);
@@ -106,6 +121,7 @@ public interface RpcClient {
      * Similar to {@link #callServiceWithRes(Class, Function)} but for void methods. For instance:
      * {@code Future<Void> future = m_rpcClient.callService(nodeDataService -> nodeDataService.sendSomeData(someData));}
      *
+     * @param <S> the interface type of the service to use
      * @param serviceInterface the interface of the service to call to
      * @param serviceConsumer used to invoke the method on the service interface
      * @return an empty future
@@ -117,11 +133,12 @@ public interface RpcClient {
     /**
      * See {@link #callService(Class, Consumer)}.
      *
-     * @param <S>
-     * @param serviceInterface
-     * @param serviceName
-     * @param serviceConsumer
-     * @return a future
+     * @param <S> the interface type of the service to use
+     * @param serviceInterface the interface of the service to call
+     * @param serviceName the name under which the service interface is registered at the server, see
+     *            {@link RpcServer#getHandler(String)}
+     * @param serviceConsumer used to invoke the method on the service interface
+     * @return an empty future
      */
     <S> Future<Void> callService(Class<S> serviceInterface, String serviceName, Consumer<S> serviceConsumer);
 

@@ -53,7 +53,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
- * An {@link RpcServer} implementation is used to serve remote requests to (multiple) node data service(s).
+ * An {@link RpcServer} implementation is used to serve remote requests to one or more node data services.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
@@ -66,9 +66,10 @@ import java.io.OutputStream;
 public interface RpcServer {
 
     /**
-     * @param serviceInterface the interface the handler implements
+     * Returns the service implementation associated to the name <code>serviceInterface.getSimpleName()</code>
      * @param <S> the node data service interface (i.e., the methods offered by the node model to the node dialog/view
-     *            to retrieve data) to get the handler for
+     *            to retrieve data)
+     * @param serviceInterface an interface the handler implements
      * @return an implementation of the service interface
      */
     default <S> S getHandler(final Class<S> serviceInterface) {
@@ -77,17 +78,20 @@ public interface RpcServer {
 
     /**
      * See {@link #getHandler(Class)}.
-     * @param <S>
-     * @param serviceName
-     * @return the service handler
+     *
+     * @param <S> the node data service interface (i.e., the methods offered by the node model to the node dialog/view
+     *            to retrieve data)
+     * @param serviceName the name of the interface that identifies the implementation of the node data service
+     *            interface to return
+     * @return a service implementation
      */
     <S> S getHandler(String serviceName);
 
     /**
-     * Handle a remote procedure call.
+     * Handles a single request.
      *
-     * @param in
-     * @param out
+     * @param in contains the request
+     * @param out receives the response
      * @throws IOException
      */
     void handleRequest(InputStream in, OutputStream out) throws IOException;
