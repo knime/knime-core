@@ -45,9 +45,6 @@
  */
 package org.knime.core.data;
 
-import java.util.NoSuchElementException;
-import java.util.Optional;
-
 import org.knime.core.node.BufferedDataTable;
 
 
@@ -55,81 +52,32 @@ import org.knime.core.node.BufferedDataTable;
  * A DataRowCursor allows for (potentially) faster access to a {@link BufferedDataTable} than a {@link RowIterator}.
  *
  * @author Christian Dietz, KNIME GmbH
- * @since 4.3
+ * @since 4.2.2
  *
  * @apiNote API still experimental. It might change in future releases of KNIME Analytics Platform.
+ *
  * @noreference This interface is not intended to be referenced by clients.
+ * @noextend This interface is not intended to be extended by clients.
  */
-public interface DataRowCursor extends AutoCloseable {
+public interface RowCursor extends AutoCloseable, RowAccess {
 
     /**
      * Check if there are more rows available.
      *
-     * @return <source>true</source> if it is save to call {@link #forward()}, false otherwise
+     * @return <source>true</source> if it is save to call {@link #poll()}, false otherwise
      */
-    boolean canForward();
+    boolean canPoll();
 
     /**
-     * Forwards cursor to next position. Cursor has to be forwarded once before accessing the {@link DataValue
+     * Polls a row. Cursor has to be polled before accessing the {@link DataValue
      * DataValues}.
      *
-     * @return <source>true</source> if cursor was forwarded successfully to the next row, false otherwise
-     */
-    boolean forward();
-
-    /**
-     * @return number of values.
-     */
-    int getNumValues();
-
-    /**
-     * Get a {@link DataValue} at a given position.
-     *
      * NB: It's not guaranteed that {@link #getValue(int)} will always return a new {@link DataValue} instance, i.e. the
-     * values accessed through the {@link DataValue} instance can change after {@link #forward()} has been called.
+     * values accessed through the {@link DataValue} instance can or cannot change after {@link #poll()} has been called.
      *
-     * @param <D> type of the {@link DataValue}
-     * @param index the column index
-     *
-     * @return the {@link DataValue} at column index or <source>null</source> if {@link DataValue} is not available, for
-     *         example if the column has been filtered out. In case {@link #isMissing(int)} returns
-     *         <source>true</source> the returned instance is a {@link MissingValue}.
-     *
-     * @throws NoSuchElementException if the cursor is at an invalid position
+     * @return <source>true</source> if another row can be polled.
      */
-    <D extends DataValue> D getValue(int index);
-
-    /**
-     * If <code>true</<code> getValue will return `MissingValue` to get missing value cause.
-     *
-     * @param index column index
-     * @return <code>true</code> if value at index is missing
-     *
-     * @throws NoSuchElementException if the cursor is at an invalid position
-     */
-    boolean isMissing(int index);
-
-    /**
-     * Returns the error message that explains why the cell is missing, or an empty optional if no such message has been
-     * set. This method is not to be called for non-missing values.
-     *
-     * @param index column index
-     * @return the error associated with a missing value at the given column index, if present
-     *
-     * @throws IllegalStateException if {@link #isMissing(int)} at the given column index does not return
-     *             <code>true</code>
-     * @throws NoSuchElementException if the cursor is at an invalid position
-     *
-     * @see MissingValue#getError()
-     */
-    Optional<String> getMissingValueError(final int index);
-
-    /**
-     * @return the {@link RowKeyValue}
-     *
-     * @throws NoSuchElementException if the cursor is at an invalid position
-     */
-    RowKeyValue getRowKeyValue();
+    boolean poll();
 
     /**
      * Closes this resource, relinquishing any underlying resources. This method is invoked automatically on objects

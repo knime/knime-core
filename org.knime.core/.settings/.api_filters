@@ -22,6 +22,38 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.data.container.BufferedRowContainerFactory">
+        <filter id="305324134">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.BufferedRowContainerFactory"/>
+                <message_argument value="org.knime.core_4.3.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.data.container.RowContainer">
+        <filter id="305324134">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.RowContainer"/>
+                <message_argument value="org.knime.core_4.3.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.data.container.RowContainerFactory">
+        <filter id="305324134">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.RowContainerFactory"/>
+                <message_argument value="org.knime.core_4.3.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.data.container.RowContainerFactoryRegistry">
+        <filter id="305324134">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.RowContainerFactoryRegistry"/>
+                <message_argument value="org.knime.core_4.3.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="META-INF/MANIFEST.MF" type="org.knime.core.eclipseUtil.GlobalClassCreator">
         <filter comment="buddy class loading deactivated" id="305324134">
             <message_arguments>
@@ -1920,6 +1952,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/data/RowKeyValue.java" type="org.knime.core.data.RowKeyValue">
+        <filter id="1109393411">
+            <message_arguments>
+                <message_argument value="4.2.2"/>
+                <message_argument value="org.knime.core.data.RowKeyValue"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/data/cache/WindowCacheTable.java" type="org.knime.core.data.cache.WindowCacheTable">
         <filter id="576725006">
             <message_arguments>
@@ -2119,6 +2159,20 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.BufferedDataContainer"/>
                 <message_argument value="getLocalTableRepository()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/BufferedDataTable.java" type="org.knime.core.node.BufferedDataTable">
+        <filter id="1142947843">
+            <message_arguments>
+                <message_argument value="4.2.2"/>
+                <message_argument value="cursor()"/>
+            </message_arguments>
+        </filter>
+        <filter id="1142947843">
+            <message_arguments>
+                <message_argument value="4.2.2"/>
+                <message_argument value="cursor(TableFilter)"/>
             </message_arguments>
         </filter>
     </resource>

@@ -51,9 +51,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.zip.ZipOutputStream;
 
-import org.knime.core.data.DataRowCursor;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.IDataRepository;
+import org.knime.core.data.RowCursor;
 import org.knime.core.data.container.filter.TableFilter;
 import org.knime.core.data.container.storage.TableStoreFormat;
 import org.knime.core.node.BufferedDataTable;
@@ -129,14 +129,14 @@ public final class BufferedContainerTable implements ContainerTable {
 
     @SuppressWarnings("resource")
     @Override
-    public DataRowCursor cursor() {
-        return new FallbackDataRowCursor(iterator(), getDataTableSpec());
+    public RowCursor cursor() {
+        return new FallbackRowCursor(iterator(), getDataTableSpec());
     }
 
     @SuppressWarnings("resource")
     @Override
-    public DataRowCursor cursor(final TableFilter filter) {
-        return new FallbackDataRowCursor(iteratorWithFilter(filter), getDataTableSpec());
+    public RowCursor cursor(final TableFilter filter) {
+        return new FallbackRowCursor(iteratorWithFilter(filter), getDataTableSpec());
     }
 
     /**

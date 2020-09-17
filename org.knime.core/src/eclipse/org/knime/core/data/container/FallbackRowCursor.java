@@ -51,19 +51,19 @@ import java.util.Optional;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
-import org.knime.core.data.DataRowCursor;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.MissingValue;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.RowKeyValue;
+import org.knime.core.data.RowCursor;
 
 /**
- * Fallback implementation of {@link DataRowCursor} based on {@link CloseableRowIterator}.
+ * Fallback implementation of {@link RowCursor} based on {@link CloseableRowIterator}.
  *
  * @author Christian Dietz, KNIME GmbH, Konstanz
  */
-final class FallbackDataRowCursor implements DataRowCursor {
+final class FallbackRowCursor implements RowCursor {
 
     private static final class InvalidDataRow implements DataRow {
 
@@ -105,20 +105,20 @@ final class FallbackDataRowCursor implements DataRowCursor {
 
     private int m_numValues;
 
-    FallbackDataRowCursor(final CloseableRowIterator delegate, final DataTableSpec spec) {
+    FallbackRowCursor(final CloseableRowIterator delegate, final DataTableSpec spec) {
         m_delegate = delegate;
         m_currentRow = InvalidDataRow.INSTANCE;
         m_numValues = spec.getNumColumns();
     }
 
     @Override
-    public boolean canForward() {
+    public boolean canPoll() {
         return m_delegate.hasNext();
     }
 
     @Override
-    public boolean forward() {
-        if (canForward()) {
+    public boolean poll() {
+        if (canPoll()) {
             m_currentRow = m_delegate.next();
             return true;
         }
@@ -160,7 +160,7 @@ final class FallbackDataRowCursor implements DataRowCursor {
     }
 
     @Override
-    public int getNumValues() {
+    public int getNumColumns() {
         return m_numValues;
     }
 }

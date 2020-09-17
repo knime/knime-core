@@ -44,56 +44,51 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   May 25, 2020 (dietzc): created
+ *   May 9, 2020 (dietzc): created
  */
 package org.knime.core.data.container;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.IDataRepository;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
-import org.knime.core.data.filestore.internal.NotInWorkflowWriteFileStoreHandler;
 
 /**
- * {@link RowContainerFactory} implementation to create {@link RowContainer}s used < 4.2 and beyond.
+ * Factory to create {@link DataContainerDelegate}s.
  *
  * @author Christian Dietz, KNIME GmbH, Konstanz
- * @since 4.2
+ * @since 4.2.2
  *
- * @noinstantiate This class is not intended to be instantiated by clients.
- * @noreference This class is not intended to be referenced by clients.
+ * @noextend This class is not intended to be subclassed by clients. Experimental API.
+ * @noreference This class is not intended to be referenced by clients. Experimental API.
  */
-public final class BufferedRowContainerFactory implements RowContainerFactory {
-
-    public static final String HUMAN_READABLE_NAME = "Default (DataContainer)";
-
-    @Override
-    public boolean supports(final DataTableSpec spec) {
-        return true;
-    }
-
-    @Override
-    public RowContainer create(final DataTableSpec spec, final DataContainerSettings settings,
-        final IDataRepository repository, final ILocalDataRepository localRepository,
-        final IWriteFileStoreHandler fileStoreHandler) {
-        return new BufferedRowContainer(spec, settings, repository, localRepository,
-            initFileStoreHandler(fileStoreHandler, repository));
-    }
-
-    private static IWriteFileStoreHandler initFileStoreHandler(final IWriteFileStoreHandler fileStoreHandler,
-        final IDataRepository repository) {
-        IWriteFileStoreHandler nonNull = fileStoreHandler;
-        if (nonNull == null) {
-            nonNull = NotInWorkflowWriteFileStoreHandler.create();
-            nonNull.addToRepository(repository);
-        }
-        return nonNull;
-    }
+public interface DataContainerDelegateFactory {
 
     /**
-     * {@inheritDoc}
+     * Make sure to call this method before
+     * {@link #create(DataTableSpec, DataContainerSettings, IDataRepository, ILocalDataRepository, IWriteFileStoreHandler)}.
+     *
+     * @param spec the {@link DataTableSpec}, which is checked for compatibility with the {@link DataContainerDelegateFactory}.
+     * @return <source>true</source> if {@link DataContainerDelegateFactory} can create a {@link DataContainerDelegate} for the provided
+     *         spec.
      */
-    @Override
-    public String getName() {
-        return HUMAN_READABLE_NAME;
-    }
+    boolean supports(DataTableSpec spec);
+
+    /**
+     * Creates a new {@link DataContainerDelegate}. Call {@link #supports(DataTableSpec)} before creating a {@link DataContainerDelegate}
+     * to ensure compatibility of the {@link DataTableSpec} with the created {@link DataContainerDelegate}.
+     *
+     * @param spec used to create {@link DataContainerDelegate}.
+     * @param settings of the {@link DataContainerDelegate}
+     * @param repository the global data repository (per workflow)
+     * @param localRepository the local data repository (per node)
+     * @param fileStoreHandler the file store handler
+     *
+     * @return the created {@link DataContainerDelegate}
+     */
+    DataContainerDelegate create(final DataTableSpec spec, final DataContainerSettings settings,
+        final IDataRepository repository, final ILocalDataRepository localRepository,
+        final IWriteFileStoreHandler fileStoreHandler);
+
+    /** @return non-blank short name shown in the preference page, e.g. "Arrow". */
+    public String getName();
 }

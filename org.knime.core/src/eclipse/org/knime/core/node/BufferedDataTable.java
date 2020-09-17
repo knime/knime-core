@@ -70,12 +70,12 @@ import javax.swing.SwingUtilities;
 import org.apache.commons.io.FileUtils;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
-import org.knime.core.data.DataRowCursor;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.IDataRepository;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.RowCursor;
 import org.knime.core.data.container.BlobSupportDataRow;
 import org.knime.core.data.container.BufferedContainerTable;
 import org.knime.core.data.container.CloseableRowIterator;
@@ -353,28 +353,28 @@ public final class BufferedDataTable implements DataTable, PortObject {
     }
 
     /**
-     * Provides a {@link DataRowCursor} to access rows of this table.
+     * Provides a {@link RowCursor} to access rows of this table.
      *
-     * @return {@link DataRowCursor} to access rows of a table.
+     * @return {@link RowCursor} to access rows of a table.
      * @apiNote Must not to be called by clients. Experimental API.
-     * @since 4.3
+     * @since 4.2.2
      */
-    public DataRowCursor cursor(){
+    public RowCursor cursor(){
         return m_delegate.cursor();
     }
 
     /**
-     * Provides a {@link DataRowCursor} to access rows of this table that is filtered according to a given
+     * Provides a {@link RowCursor} to access rows of this table that is filtered according to a given
      * {@link TableFilter} and can be iterated over. The filtering won't change this BufferedDataTable or impact
      * subsequent calls of this method with other filters.
      *
      * @param filter to filter rows and columns.
      *
-     * @return {@link DataRowCursor} to access rows of a table.
+     * @return {@link RowCursor} to access rows of a table.
      * @apiNote Must not to be called by clients. Experimental API.
-     * @since 4.3
+     * @since 4.2.2
      */
-    public DataRowCursor cursor(final TableFilter filter) {
+    public RowCursor cursor(final TableFilter filter) {
         return m_delegate.cursor(filter);
     }
 
@@ -1038,20 +1038,20 @@ public final class BufferedDataTable implements DataTable, PortObject {
         public CloseableRowIterator iterator();
 
         /**
-         * @return {@link DataRowCursor} to access rows of a table.
+         * @return {@link RowCursor} to access rows of a table.
          * @apiNote Must not to be called by clients. Experimental API.
          * @since 4.3
          */
-        DataRowCursor cursor();
+        RowCursor cursor();
 
         /**
          * @param filter to filter rows and columns.
          *
-         * @return {@link DataRowCursor} to access rows of a table.
+         * @return {@link RowCursor} to access rows of a table.
          * @apiNote Must not to be called by clients. Experimental API.
          * @since 4.3
          */
-        DataRowCursor cursor(final TableFilter filter);
+        RowCursor cursor(final TableFilter filter);
 
         /**
          * Provides a {@link CloseableRowIterator} that is filtered according to a given {@link TableFilter}. The

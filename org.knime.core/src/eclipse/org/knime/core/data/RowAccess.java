@@ -44,55 +44,73 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Apr 30, 2020 (dietzc): created
+ *   Sep 10, 2020 (dietzc): created
  */
-package org.knime.core.data.container;
+package org.knime.core.data;
 
-import org.knime.core.data.DataRow;
-import org.knime.core.data.DataTableSpec;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 
 /**
- * RowContainer store {@link DataRow}s and are able to provide a {@link ContainerTable} after RowContainer#close()' was
- * called.
+ * Read input.
  *
- * NB: {@link RowContainer} abstracts from previous implementations of {@link DataContainer}.
+ * @author Christian Dietz
+ * @since 4.2.2
  *
- * @author Christian Dietz, KNIME GmbH
- * @since 4.2
+ * @apiNote API still experimental. It might change in future releases of KNIME Analytics Platform.
+ *
+ * @noreference This interface is not intended to be referenced by clients.
+ * @noextend This interface is not intended to be extended by clients.
  */
-public interface RowContainer extends RowAppender, AutoCloseable {
-
-    @Override
-    void close();
+public interface RowAccess {
+    /**
+     * @return number of columns.
+     */
+    int getNumColumns();
 
     /**
-     * Can only be called after RowContainer#close() has been called.
+     * Get a {@link DataValue} at a given position.
      *
-     * @return the underlying {@link ContainerTable}.
-     */
-    ContainerTable getTable();
-
-    /**
-     * Clears the RowContainer, i.e. all associated temporary data and memory will be removed.
-     */
-    void clear();
-
-    /**
-     * @return size of the RowContainer. Can increase until RowContainer is closed.
-     */
-    long size();
-
-    /**
-     * @return the underlying {@link DataTableSpec}. On close, the {@link DataTableSpec} will comprise domain
-     *         information for each column.
-     */
-    DataTableSpec getTableSpec();
-
-    /**
-     * Set the maximum number of possible values for a nominal domain
+     * @param <D> type of the {@link DataValue}
+     * @param index the column index
      *
-     * @param maxPossibleValues the maximum number of parameters for a nominal domain.
+     * @return the {@link DataValue} at column index or <source>null</source> if {@link DataValue} is not available, for
+     *         example if the column has been filtered out. In case {@link #isMissing(int)} returns
+     *         <source>true</source> the returned instance is a {@link MissingValue}.
+     *
+     * @throws NoSuchElementException if the cursor is at an invalid position
      */
-    @Deprecated
-    void setMaxPossibleValues(int maxPossibleValues);
+    <D extends DataValue> D getValue(int index);
+
+    /**
+     * If <code>true</<code> getValue will return `MissingValue` to get missing value cause.
+     *
+     * @param index column index
+     * @return <code>true</code> if value at index is missing
+     *
+     * @throws NoSuchElementException if the cursor is at an invalid position
+     */
+    boolean isMissing(int index);
+
+    /**
+     * Returns the error message that explains why the cell is missing, or an empty optional if no such message has been
+     * set. This method is not to be called for non-missing values.
+     *
+     * @param index column index
+     * @return the error associated with a missing value at the given column index, if present
+     *
+     * @throws IllegalStateException if {@link #isMissing(int)} at the given column index does not return
+     *             <code>true</code>
+     * @throws NoSuchElementException if the cursor is at an invalid position
+     *
+     * @see MissingValue#getError()
+     */
+    Optional<String> getMissingValueError(final int index);
+
+    /**
+     * @return the {@link RowKeyValue}
+     *
+     * @throws NoSuchElementException if the cursor is at an invalid position
+     */
+    RowKeyValue getRowKeyValue();
 }

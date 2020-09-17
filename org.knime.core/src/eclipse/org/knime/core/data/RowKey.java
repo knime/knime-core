@@ -96,6 +96,8 @@ public final class RowKey implements RowKeyValue {
         }
         if (obj instanceof RowKey) {
             return ((RowKey)obj).m_id.equals(m_id);
+        } else if (obj instanceof RowKeyValue) {
+            return ((RowKeyValue)obj).getString().equals(m_id);
         }
         return false;
     }

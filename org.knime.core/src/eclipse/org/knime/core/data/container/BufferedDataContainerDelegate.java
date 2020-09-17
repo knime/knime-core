@@ -98,7 +98,7 @@ import org.knime.core.util.DuplicateChecker;
 import org.knime.core.util.DuplicateKeyException;
 
 /**
- * {@link RowContainer} implementation using {@link Buffer} and {@link TableStoreFormat}.
+ * {@link DataContainerDelegate} implementation using {@link Buffer} and {@link TableStoreFormat}.
  * Previously implemented in {@link DataContainer}. Separated out to make it exchangeable.
  *
  * @author Bernd Wiswedel, KNIME GmbH
@@ -107,7 +107,7 @@ import org.knime.core.util.DuplicateKeyException;
  *
  * @since 4.2
  */
-class BufferedRowContainer implements RowContainer {
+class BufferedDataContainerDelegate implements DataContainerDelegate {
 
     /** The executor, which runs the IO tasks. Currently used only while writing rows. */
     static final ThreadPoolExecutor ASYNC_EXECUTORS;
@@ -260,7 +260,7 @@ class BufferedRowContainer implements RowContainer {
      * @param withForceSequentialRowHandling
      * @param repository
      */
-    BufferedRowContainer(final DataTableSpec spec, final DataContainerSettings settings,
+    BufferedDataContainerDelegate(final DataTableSpec spec, final DataContainerSettings settings,
         final IDataRepository repository, final ILocalDataRepository localRepository,
         final IWriteFileStoreHandler fileStoreHandler) {
         CheckUtils.checkArgumentNotNull(spec, "Spec must not be null!");

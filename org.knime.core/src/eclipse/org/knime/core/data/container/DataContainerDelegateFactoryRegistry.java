@@ -74,149 +74,151 @@ import org.osgi.framework.FrameworkUtil;
  * Collects extensions from the extension point and provides it to the framework.
  *
  * @author Christian Dietz, KNIME GmbH Konstanz
- * @since 4.2
+ * @since 4.2.2
  *
- * @noextend This class is not intended to be subclassed by clients.
- * @noreference This class is not intended to be referenced by clients.
+ * @noextend This class is not intended to be subclassed by clients. Experimental API.
+ * @noreference This class is not intended to be referenced by clients. Experimental API.
  */
-public final class RowContainerFactoryRegistry {
+public final class DataContainerDelegateFactoryRegistry {
 
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(RowContainerFactoryRegistry.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(DataContainerDelegateFactoryRegistry.class);
 
-    private static final String EXT_POINT_ID = "org.knime.core.RowContainer";
+    private static final String EXT_POINT_ID = "org.knime.core.DataContainerDelegate";
 
     private static final IEclipsePreferences CORE_PREFS =
-        InstanceScope.INSTANCE.getNode(FrameworkUtil.getBundle(RowContainerFactoryRegistry.class).getSymbolicName());
+        InstanceScope.INSTANCE.getNode(FrameworkUtil.getBundle(DataContainerDelegateFactoryRegistry.class).getSymbolicName());
 
     private static final IEclipsePreferences CORE_DEFAULT_PREFS =
-        DefaultScope.INSTANCE.getNode(FrameworkUtil.getBundle(RowContainerFactoryRegistry.class).getSymbolicName());
+        DefaultScope.INSTANCE.getNode(FrameworkUtil.getBundle(DataContainerDelegateFactoryRegistry.class).getSymbolicName());
 
-    /** Preference constant for selecting row container factory. */
-    public static final String PREF_KEY_ROWCONTAINER_FACTORY = "knime.core.row-container-factory";
+    /** Preference constant for selecting data container factory. */
+    public static final String PREF_KEY_DATACONTAINER_DELEGATE_FACTORY = "knime.core.data-container-delegate-factory";
 
-    private static RowContainerFactoryRegistry INSTANCE = createInstance();
+    private static DataContainerDelegateFactoryRegistry INSTANCE = createInstance();
 
-    private static RowContainerFactoryRegistry createInstance() {
+    private static DataContainerDelegateFactoryRegistry createInstance() {
         IExtensionRegistry registry = Platform.getExtensionRegistry();
         IExtensionPoint point = registry.getExtensionPoint(EXT_POINT_ID);
 
-        List<RowContainerFactory> factoryList = Stream.of(point.getExtensions())
+        List<DataContainerDelegateFactory> factoryList = Stream.of(point.getExtensions())
             .flatMap(ext -> Stream.of(ext.getConfigurationElements())).map(cfe -> readFactory(cfe))
             .filter(f -> f != null).sorted(Comparator.comparing(f -> f.getClass().getSimpleName(), (a, b) -> {
                 // sort formats so that the "KNIME standard" format comes first.
                 if (Objects.equals(a, b)) {
                     return 0;
-                } else if (BufferedRowContainerFactory.class.getName().equals(a)) {
+                } else if (BufferedDataContainerDelegateFactory.class.getName().equals(a)) {
                     return -1;
-                } else if (BufferedRowContainerFactory.class.getName().equals(b)) {
+                } else if (BufferedDataContainerDelegateFactory.class.getName().equals(b)) {
                     return +1;
                 } else {
                     return a.compareTo(b);
                 }
             })).collect(Collectors.toList());
 
-        boolean hasFallback = factoryList.stream().anyMatch(f -> f.getClass().equals(BufferedRowContainerFactory.class));
-        CheckUtils.checkState(hasFallback, "No fallback row container factory registered, expected '%s' but not present in '%s'",
-            RowContainerFactory.class.getName(),
+        boolean hasFallback = factoryList.stream().anyMatch(f -> f.getClass().equals(BufferedDataContainerDelegateFactory.class));
+        CheckUtils.checkState(hasFallback, "No fallback data container delegate factory registered, expected '%s' but not present in '%s'",
+            DataContainerDelegateFactory.class.getName(),
             StringUtils.join(factoryList.stream().map(f -> f.getClass().getName()).iterator(), ", "));
 
-        return new RowContainerFactoryRegistry(factoryList);
+        return new DataContainerDelegateFactoryRegistry(factoryList);
     }
 
-    private static RowContainerFactory readFactory(final IConfigurationElement cfe) {
+    private static DataContainerDelegateFactory readFactory(final IConfigurationElement cfe) {
         try {
-            RowContainerFactory f = (RowContainerFactory)cfe.createExecutableExtension("factoryClass");
-            LOGGER.debugWithFormat("Added row container factory '%s' from '%s'", f.getClass().getName(),
+            DataContainerDelegateFactory f = (DataContainerDelegateFactory)cfe.createExecutableExtension("factoryClass");
+            LOGGER.debugWithFormat("Added data container delegate factory '%s' from '%s'", f.getClass().getName(),
                 cfe.getContributor().getName());
             return f;
         } catch (CoreException ex) {
             LOGGER.error(String.format("Could not create '%s' from extension '%s': %s",
-                RowContainerFactory.class.getName(), cfe.getContributor().getName(), ex.getMessage()), ex);
+                DataContainerDelegateFactory.class.getName(), cfe.getContributor().getName(), ex.getMessage()), ex);
         }
         return null;
     }
 
     /** @return the instance to use. */
-    public static RowContainerFactoryRegistry getInstance() {
+    public static DataContainerDelegateFactoryRegistry getInstance() {
         return INSTANCE;
     }
 
-    private final List<RowContainerFactory> m_rowContainerFactories;
+    private final List<DataContainerDelegateFactory> m_dataContainerDelegateFactories;
 
-    private RowContainerFactoryRegistry(final List<RowContainerFactory> rowContainerFactories) {
-        m_rowContainerFactories = Collections.unmodifiableList(rowContainerFactories);
+    private DataContainerDelegateFactoryRegistry(final List<DataContainerDelegateFactory> dataContainerFactories) {
+        m_dataContainerDelegateFactories = Collections.unmodifiableList(dataContainerFactories);
     }
 
     /**
-     * The 'default' row container factory as defined by the default preference scope, or the standard KNIME row container factory if unset. This
-     * method is used by the preference page and should not be used by clients otherwise.
+     * The 'default' data container delegate factory as defined by the default preference scope, or the standard KNIME
+     * data container delegate factory if unset. This method is used by the preference page and should not be used by
+     * clients otherwise.
      *
      * @return non-null 'default' format.
-     * @see #getInstanceRowContainerFactory()
+     * @see #getInstanceDataContainerDelegateFactory()
      */
-    public RowContainerFactory getDefaultRowContainerFactory() {
+    public DataContainerDelegateFactory getDefaultDataContainerFactory() {
         String defaultFactoryClassName;
         if (KNIMEConstants.isNightlyBuild()) {
-            defaultFactoryClassName = BufferedRowContainerFactory.class.getName();
+            defaultFactoryClassName = BufferedDataContainerDelegateFactory.class.getName();
             // TODO make this the nightly build default once we're there
             // defaultFactoryClassName = "XYZ Arrow";
         } else {
-            defaultFactoryClassName = BufferedRowContainerFactory.class.getName();
+            defaultFactoryClassName = BufferedDataContainerDelegateFactory.class.getName();
         }
-        String defaultID = CORE_DEFAULT_PREFS.get(PREF_KEY_ROWCONTAINER_FACTORY, defaultFactoryClassName);
-        Optional<RowContainerFactory> defaultFactory =
-            m_rowContainerFactories.stream().filter(f -> f.getClass().getName().equals(defaultID)).findFirst();
+        String defaultID = CORE_DEFAULT_PREFS.get(PREF_KEY_DATACONTAINER_DELEGATE_FACTORY, defaultFactoryClassName);
+        Optional<DataContainerDelegateFactory> defaultFactory =
+            m_dataContainerDelegateFactories.stream().filter(f -> f.getClass().getName().equals(defaultID)).findFirst();
         if (!defaultFactory.isPresent()) {
-            LOGGER.warnWithFormat("Invalid row container factory '%s' -- using standard KNIME data container instead.", defaultID);
+            LOGGER.warnWithFormat("Invalid data container delegate factory '%s' -- using standard KNIME data container delegate instead.", defaultID);
         }
-        return defaultFactory.orElse(m_rowContainerFactories.get(0));
+        return defaultFactory.orElse(m_dataContainerDelegateFactories.get(0));
     }
 
     /**
-     * @return the row container factory as defined by the KNIME preferences or the default instead. This is is what is actually used
+     * @return the data container delegate factory as defined by the KNIME preferences or the default instead. This is is what is actually used
      *         by the core.
      */
-    public RowContainerFactory getInstanceRowContainerFactory() {
-        String result = CORE_PREFS.get(PREF_KEY_ROWCONTAINER_FACTORY, null); // instance scope prefs
+    public DataContainerDelegateFactory getInstanceDataContainerDelegateFactory() {
+        String result = CORE_PREFS.get(PREF_KEY_DATACONTAINER_DELEGATE_FACTORY, null); // instance scope prefs
         if (result == null) {
-            return getDefaultRowContainerFactory();
+            return getDefaultDataContainerFactory();
         }
         final String resultFinal = result;
-        Optional<RowContainerFactory> match =
-            m_rowContainerFactories.stream().filter(f -> f.getClass().getName().equals(resultFinal)).findFirst();
+        Optional<DataContainerDelegateFactory> match =
+            m_dataContainerDelegateFactories.stream().filter(f -> f.getClass().getName().equals(resultFinal)).findFirst();
         if (!match.isPresent()) {
-            LOGGER.warnWithFormat("Invalid row container factory '%s' -- using standard KNIME data container instead.", result);
-            return m_rowContainerFactories.get(0);
+            LOGGER.warnWithFormat("Invalid data container delegate factory '%s' -- using standard KNIME data container delegate instead.", result);
+            return m_dataContainerDelegateFactories.get(0);
         }
         return match.get();
     }
 
-    /** @return the row container factories in an unmodifiable list. */
-    public List<RowContainerFactory> getRowContainerFactories() {
-        return m_rowContainerFactories;
+    /** @return the data container delegate factories in an unmodifiable list. */
+    public List<DataContainerDelegateFactory> getDataContainerDelegateFactories() {
+        return m_dataContainerDelegateFactories;
     }
 
     /**
      * @param spec the spec of the table to write.
-     * @return the row container factories accepting to write that schema, if possible {@link #getInstanceRowContainerFactory()}.
+     * @return the data container delegate factories accepting to write that schema, if possible
+     *         {@link #getInstanceDataContainerDelegateFactory()}.
      */
-    public RowContainerFactory getRowContainerFactoryFor(final DataTableSpec spec) {
-        RowContainerFactory instanceRowContainerFactory = getInstanceRowContainerFactory();
-        if (instanceRowContainerFactory.supports(spec)) {
-            return instanceRowContainerFactory;
+    public DataContainerDelegateFactory getDataContainerDelegateFactoryFor(final DataTableSpec spec) {
+        DataContainerDelegateFactory instanceDataContainerFactory = getInstanceDataContainerDelegateFactory();
+        if (instanceDataContainerFactory.supports(spec)) {
+            return instanceDataContainerFactory;
         }
-        return m_rowContainerFactories.stream().filter(f -> f.supports(spec)).findFirst()
-            .orElseThrow(() -> new InternalError("No registered row container factory accepts the current table schema."));
+        return m_dataContainerDelegateFactories.stream().filter(f -> f.supports(spec)).findFirst()
+            .orElseThrow(() -> new InternalError("No registered data container factory accepts the current table schema."));
     }
 
     /**
      * @param fullyQualifiedClassName class name in question
-     * @return the row container factory with the given class name - used to restore a previously saved table.
+     * @return the data container factory with the given class name - used to restore a previously saved table.
      * @throws IllegalArgumentException If the factory is unknown (usually means: not installed)
      */
-    public RowContainerFactory getRowContainerFactory(final String fullyQualifiedClassName)
+    public DataContainerDelegateFactory getDataContainerDelegateFactory(final String fullyQualifiedClassName)
         throws IllegalArgumentException {
-        return m_rowContainerFactories.stream()//
+        return m_dataContainerDelegateFactories.stream()//
             .filter(f -> f.getClass().getName().equals(fullyQualifiedClassName))//
             .findFirst()//
             .orElseThrow(() -> new IllegalArgumentException(fullyQualifiedClassName));
@@ -225,9 +227,9 @@ public final class RowContainerFactoryRegistry {
     /** {@inheritDoc} */
     @Override
     public String toString() {
-        StringBuilder b = new StringBuilder("RowContainer Factories: [");
+        StringBuilder b = new StringBuilder("DataContainerDelegateFactories: [");
         b.append(String.join(", ",
-            m_rowContainerFactories.stream().map(s -> s.getClass().getName()).collect(Collectors.toList())))
+            m_dataContainerDelegateFactories.stream().map(s -> s.getClass().getName()).collect(Collectors.toList())))
             .append("]");
         return b.toString();
     }

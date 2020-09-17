@@ -42,21 +42,58 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
+ *
+ * History
+ *   May 25, 2020 (dietzc): created
  */
-package org.knime.core.data;
+package org.knime.core.data.container;
+
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.IDataRepository;
+import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
+import org.knime.core.data.filestore.internal.NotInWorkflowWriteFileStoreHandler;
 
 /**
- * Value representation of a RowKey
+ * {@link DataContainerDelegateFactory} implementation to create {@link DataContainerDelegate}s used < 4.2 and beyond.
  *
  * @author Christian Dietz, KNIME GmbH, Konstanz
+ * @since 4.2
  *
- * @since 4.2.2
+ * @noinstantiate This class is not intended to be instantiated by clients.
+ * @noreference This class is not intended to be referenced by clients.
  */
-public interface RowKeyValue {
+public final class BufferedDataContainerDelegateFactory implements DataContainerDelegateFactory {
+
+    public static final String HUMAN_READABLE_NAME = "Default (DataContainer)";
+
+    @Override
+    public boolean supports(final DataTableSpec spec) {
+        return true;
+    }
+
+    @Override
+    public DataContainerDelegate create(final DataTableSpec spec, final DataContainerSettings settings,
+        final IDataRepository repository, final ILocalDataRepository localRepository,
+        final IWriteFileStoreHandler fileStoreHandler) {
+        return new BufferedDataContainerDelegate(spec, settings, repository, localRepository,
+            initFileStoreHandler(fileStoreHandler, repository));
+    }
+
+    private static IWriteFileStoreHandler initFileStoreHandler(final IWriteFileStoreHandler fileStoreHandler,
+        final IDataRepository repository) {
+        IWriteFileStoreHandler nonNull = fileStoreHandler;
+        if (nonNull == null) {
+            nonNull = NotInWorkflowWriteFileStoreHandler.create();
+            nonNull.addToRepository(repository);
+        }
+        return nonNull;
+    }
 
     /**
-     * @return row key represented as a String
+     * {@inheritDoc}
      */
-    String getString();
-
+    @Override
+    public String getName() {
+        return HUMAN_READABLE_NAME;
+    }
 }

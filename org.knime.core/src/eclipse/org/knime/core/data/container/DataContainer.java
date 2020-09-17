@@ -126,7 +126,7 @@ public class DataContainer implements RowAppender {
         MAX_POSSIBLE_VALUES = defaults.getMaxDomainValues();
     }
 
-    private RowContainer m_rowContainer;
+    private DataContainerDelegate m_delegate;
 
     private DataTableSpec m_spec;
 
@@ -210,7 +210,7 @@ public class DataContainer implements RowAppender {
      * @param fileStoreHandler a filestore handler
      * @param forceCopyOfBlobs true, if blobs should be copied
      * @param rowKeys if <code>true</code>, {@link RowKey}s are expected to be part of a {@link DataRow}.
-     * @param enableDataContainerV2 if <code>true</code> extension point for {@link RowContainerFactory}s can be used.
+     * @param enableDataContainerV2 if <code>true</code> extension point for {@link DataContainerDelegateFactory}s can be used.
      * @throws IllegalArgumentException If <code>maxCellsInMemory</code> &lt; 0 or the spec is null
      * @since 4.2
      */
@@ -245,7 +245,7 @@ public class DataContainer implements RowAppender {
 
     private DataContainer(final DataTableSpec spec, final DataContainerSettings settings,
         final IDataRepository repository, final ILocalDataRepository localRepository,
-        final IWriteFileStoreHandler fileStoreHandler, final boolean enableDataContainerV2) {
+        final IWriteFileStoreHandler fileStoreHandler, final boolean enableDataContainerDelegates) {
         m_spec = spec;
         m_localRepository = localRepository;
         m_cancellationListener = new ICancellationListener() {
@@ -254,24 +254,24 @@ public class DataContainer implements RowAppender {
             public void onCancel() {
                 // handle case where something goes wrong during row container instantiation
                 // listener is removed by cancellation impl
-                if (m_rowContainer != null) {
-                    m_rowContainer.clear();
+                if (m_delegate != null) {
+                    m_delegate.clear();
                 }
             }
         };
         m_localRepository.addCancellationListener(m_cancellationListener);
         m_spec = spec;
 
-        final RowContainerFactory selected;
-        if (enableDataContainerV2) {
+        final DataContainerDelegateFactory selected;
+        if (enableDataContainerDelegates) {
             // try to use row container factory selected in preference page, if not compatible to spec, fallback to default.
-            selected = RowContainerFactoryRegistry.getInstance().getRowContainerFactoryFor(spec);
+            selected = DataContainerDelegateFactoryRegistry.getInstance().getDataContainerDelegateFactoryFor(spec);
         } else {
             // force default implementation (i.e. < 4.2)
-            selected = RowContainerFactoryRegistry.getInstance().getDefaultRowContainerFactory();
+            selected = DataContainerDelegateFactoryRegistry.getInstance().getDefaultDataContainerFactory();
         }
 
-        m_rowContainer = selected.create(spec, settings, repository, localRepository, fileStoreHandler);
+        m_delegate = selected.create(spec, settings, repository, localRepository, fileStoreHandler);
     }
 
     /**
@@ -300,12 +300,12 @@ public class DataContainer implements RowAppender {
      */
     @Deprecated
     public void dispose() {
-        m_rowContainer.clear();
+        m_delegate.clear();
     }
 
     @Override
     public void addRowToTable(final DataRow row) {
-        m_rowContainer.addRowToTable(row);
+        m_delegate.addRowToTable(row);
     }
 
     /**
@@ -316,7 +316,7 @@ public class DataContainer implements RowAppender {
      * @throws IllegalStateException If <code>isClosed()</code> returns <code>false</code>
      */
     protected final ContainerTable getBufferedTable() {
-        return m_rowContainer.getTable();
+        return m_delegate.getTable();
     }
 
     /**
@@ -333,7 +333,7 @@ public class DataContainer implements RowAppender {
         if (!isClosed()) {
             throw new IllegalStateException("Cannot get table: container is not closed.");
         }
-        return m_rowContainer.getTable();
+        return m_delegate.getTable();
     }
 
     /**
@@ -345,8 +345,8 @@ public class DataContainer implements RowAppender {
      * @throws DataContainerException If the duplicate check fails for an unknown IO problem
      */
     public void close() {
-        m_rowContainer.close();
-        ContainerTable table = m_rowContainer.getTable();
+        m_delegate.close();
+        ContainerTable table = m_delegate.getTable();
         m_localRepository.addTable(table);
         m_localRepository.removeCancellationListener(m_cancellationListener);
         m_isClosed = true;
@@ -383,12 +383,12 @@ public class DataContainer implements RowAppender {
      * @since 3.0
      */
     public long size() {
-        return m_rowContainer.size();
+        return m_delegate.size();
     }
 
     /* Used in tests */
-    RowContainer getRowContainer() {
-        return m_rowContainer;
+    DataContainerDelegate getDataContainerDelegate() {
+        return m_delegate;
     }
 
     /**
@@ -399,7 +399,7 @@ public class DataContainer implements RowAppender {
      * @throws IllegalArgumentException If the value &lt; 0
      */
     public void setMaxPossibleValues(final int maxPossibleValues) {
-        m_rowContainer.setMaxPossibleValues(maxPossibleValues);
+        m_delegate.setMaxPossibleValues(maxPossibleValues);
     }
 
     /**
@@ -409,7 +409,7 @@ public class DataContainer implements RowAppender {
      */
     public DataTableSpec getTableSpec() {
         if (isClosed()) {
-            return m_rowContainer.getTableSpec();
+            return m_delegate.getTableSpec();
         } else if (isOpen()) {
             return m_spec;
         }
@@ -495,7 +495,7 @@ public class DataContainer implements RowAppender {
     public static void writeToStream(final DataTable table, final OutputStream out, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException {
         // TODO switch according to table implementation.
-        BufferedRowContainer.writeToStream(table, out, exec);
+        BufferedDataContainerDelegate.writeToStream(table, out, exec);
     }
 
     /**
@@ -527,7 +527,7 @@ public class DataContainer implements RowAppender {
      */
     public static ContainerTable readFromStream(final InputStream in) throws IOException {
         // TODO how do we know which deserializer to use?
-        return BufferedRowContainer.readFromStream(in);
+        return BufferedDataContainerDelegate.readFromStream(in);
     }
 
     /**
@@ -543,7 +543,7 @@ public class DataContainer implements RowAppender {
     // RearrangeColumnsTable when it reads a table that has been written
     // with KNIME 1.1.x or before.
     static ContainerTable readFromZip(final ReferencedFile zipFileRef, final boolean rowKeys) throws IOException {
-        return BufferedRowContainer.readFromZip(zipFileRef, rowKeys);
+        return BufferedDataContainerDelegate.readFromZip(zipFileRef, rowKeys);
     }
 
     /**
@@ -558,7 +558,7 @@ public class DataContainer implements RowAppender {
      */
     protected static ContainerTable readFromZipDelayed(final ReferencedFile zipFile, final DataTableSpec spec,
         final int bufferID, final WorkflowDataRepository dataRepository) {
-        return BufferedRowContainer.readFromZipDelayed(zipFile, spec, bufferID, dataRepository);
+        return BufferedDataContainerDelegate.readFromZipDelayed(zipFile, spec, bufferID, dataRepository);
     }
 
     /**
@@ -569,7 +569,7 @@ public class DataContainer implements RowAppender {
      * @return Table contained in <code>zipFile</code>.
      */
     static ContainerTable readFromZipDelayed(final CopyOnAccessTask c, final DataTableSpec spec) {
-        return BufferedRowContainer.readFromZipDelayed(c, spec);
+        return BufferedDataContainerDelegate.readFromZipDelayed(c, spec);
     }
 
     /** the temp file will have a time stamp in its name. */
