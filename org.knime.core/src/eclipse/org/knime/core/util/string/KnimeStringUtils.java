@@ -423,6 +423,34 @@ public class KnimeStringUtils {
     }
 
     /**
+     * Checks if a string contains another string.
+     *
+     * @param str    The haystack string to search in
+     * @param search The needle string to search for
+     * @return True iff <code>search</code> appears as a substring in <code>str</code>
+     * @since 4.2
+     */
+    public static boolean contains(final String str, final String search) {
+        return KnimeStringUtils.contains(str, search, "");
+    }
+
+    /**
+     * Checks if a string contains another string, optionally with word boundaries or ignoring case.
+     *
+     * @param str       The haystack string to search in
+     * @param search    The needle string to search for
+     * @param modifiers String of single characters describing search options.
+     * @return True iff <code>search</code> appears as a substring in <code>str</code> with respect to
+     * the search options given in <code>modifiers</code>
+     * @since 4.2
+     */
+    public static boolean contains(final String str, final String search, final String modifiers) {
+        // Technically, the `b` (backwards) modifier is supported here as well,
+        // but it does not affect the result.
+        return KnimeStringUtils.indexOf(str, search, modifiers) >= 0;
+    }
+
+    /**
      * Returns true if needle has word boundaries in str at position index.
      */
     private static boolean hasWordBoundaries(final CharSequence str, final CharSequence needle, final int index) {
