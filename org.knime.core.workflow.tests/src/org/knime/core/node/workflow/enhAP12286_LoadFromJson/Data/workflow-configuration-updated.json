@@ -56,7 +56,8 @@
     },
     "file-input-7": {
         "type": "string",
-        "default": "/tmp3"
+        "default": "/tmp3",
+        "fileName":""
     },
     "integer-slider-6": {
         "type": "integer",
