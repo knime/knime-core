@@ -1,24 +1,24 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <!-- Schema file written by PDE -->
-<schema targetNamespace="org.knime.core" xmlns="http://www.w3.org/2001/XMLSchema">
+<schema targetNamespace="org.knime.core.data" xmlns="http://www.w3.org/2001/XMLSchema">
 <annotation>
-      <appInfo>
-         <meta.schema plugin="org.knime.core" id="DataContainerDelegate" name="DataContainerDelegate"/>
-      </appInfo>
+      <appinfo>
+         <meta.schema plugin="org.knime.core.data" id="TableBackend" name="TableBackend"/>
+      </appinfo>
       <documentation>
-         (Framework private) extension point to register additional data container delegates.
+         (Framework private) extension point to register additional TableBackends.
       </documentation>
    </annotation>
 
    <element name="extension">
       <annotation>
-         <appInfo>
+         <appinfo>
             <meta.element />
-         </appInfo>
+         </appinfo>
       </annotation>
       <complexType>
          <sequence minOccurs="1" maxOccurs="unbounded">
-            <element ref="DataContainerDelegate"/>
+            <element ref="TableBackend"/>
          </sequence>
          <attribute name="point" type="string" use="required">
             <annotation>
@@ -30,30 +30,30 @@
       </complexType>
    </element>
 
-   <element name="DataContainerDelegate">
+   <element name="TableBackend">
       <annotation>
          <documentation>
-            A DataContainerDelegate is used to collect DataRows when creating a new DataTable.
+            A TableBackend is used to read and write data
          </documentation>
       </annotation>
       <complexType>
-         <attribute name="factoryClass" type="string" use="required">
+         <attribute name="backend" type="string" use="required">
             <annotation>
                <documentation>
-                  The factory to create a new type of DataContainerDelegate
+                  The factory to create a new type of TableBackend
                </documentation>
-               <appInfo>
-                  <meta.attribute kind="java" basedOn=":org.knime.core.data.container.DataContainerDelegateFactory"/>
-               </appInfo>
+               <appinfo>
+                  <meta.attribute kind="java" basedOn=":org.knime.core.data.TableBackend"/>
+               </appinfo>
             </annotation>
          </attribute>
       </complexType>
    </element>
 
    <annotation>
-      <appInfo>
+      <appinfo>
          <meta.section type="since"/>
-      </appInfo>
+      </appinfo>
       <documentation>
          KNIME 4.2.2
       </documentation>
@@ -61,9 +61,9 @@
 
 
    <annotation>
-      <appInfo>
+      <appinfo>
          <meta.section type="apiinfo"/>
-      </appInfo>
+      </appinfo>
       <documentation>
          No public API
       </documentation>
@@ -71,11 +71,11 @@
 
 
    <annotation>
-      <appInfo>
+      <appinfo>
          <meta.section type="copyright"/>
-      </appInfo>
+      </appinfo>
       <documentation>
-         DataContainerDelegate KNIME AG, Zurich, Switzerland
+         TableBackend KNIME AG, Zurich, Switzerland
       </documentation>
    </annotation>
 

@@ -42,59 +42,37 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- *
- * History
- *   Sep 10, 2020 (dietzc): created
  */
 package org.knime.core.data;
 
-import java.util.NoSuchElementException;
+import java.io.IOException;
+import java.util.Map;
+
+import org.knime.core.data.container.DataContainerSettings;
+import org.knime.core.node.ExecutionContext;
 
 /**
- * Read access to a row.
+ * TODO - this class needs to be replaced by some API which makes the API accessible via ExecutionContext
  *
- * @author Christian Dietz
- * @since 4.2.2
+ * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
  *
  * @apiNote API still experimental. It might change in future releases of KNIME Analytics Platform.
  *
  * @noreference This interface is not intended to be referenced by clients.
  * @noextend This interface is not intended to be extended by clients.
  */
-public interface RowAccess {
-    /**
-     * @return number of columns.
-     */
-    int getNumColumns();
+public final class RowContainerFactory {
 
-    /**
-     * Get a {@link DataValue} at a given position.
-     *
-     * @param <D> type of the {@link DataValue}
-     * @param index the column index
-     *
-     * @return the {@link DataValue} at column index or <source>null</source> if {@link DataValue} is not available, for
-     *         example if the column has been filtered out. In case {@link #isMissing(int)} returns
-     *         <source>true</source> the returned instance is a {@link MissingValue}.
-     *
-     * @throws NoSuchElementException if the cursor is at an invalid position
-     */
-    <D extends DataValue> D getValue(int index);
+    private RowContainerFactory() {
+    }
 
-    /**
-     * If <code>true</<code> getValue will return `MissingValue` to get missing value cause.
-     *
-     * @param index column index
-     * @return <code>true</code> if value at index is missing
-     *
-     * @throws NoSuchElementException if the cursor is at an invalid position
-     */
-    boolean isMissing(int index);
-
-    /**
-     * @return the {@link RowKeyValue}
-     *
-     * @throws NoSuchElementException if the cursor is at an invalid position
-     */
-    RowKeyValue getRowKeyValue();
+    public static RowContainerCustomKey createCustomKey(final ExecutionContext context, final DataTableSpec spec,
+        final DataContainerSettings settings, final Map<Integer, DataTypeConfig> additionalConfigs) throws IOException {
+        /*
+         * TODO Bernd: Selection should happen based on workflow settings!
+         */
+        final TableBackend backend =
+            TableBackendRegistry.getInstance().getTableBackend("org.knime.core.data.columnar.ColumnarTableBackend");
+        return backend.create(context, spec, settings, additionalConfigs);
+    }
 }

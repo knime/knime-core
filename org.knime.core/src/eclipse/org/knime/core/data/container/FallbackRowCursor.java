@@ -47,16 +47,14 @@ package org.knime.core.data.container;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import java.util.Optional;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataValue;
-import org.knime.core.data.MissingValue;
+import org.knime.core.data.RowCursor;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.RowKeyValue;
-import org.knime.core.data.RowCursor;
 
 /**
  * Fallback implementation of {@link RowCursor} based on {@link CloseableRowIterator}.
@@ -149,14 +147,6 @@ final class FallbackRowCursor implements RowCursor {
     @Override
     public boolean isMissing(final int index) {
         return m_currentRow.getCell(index).isMissing();
-    }
-
-    @Override
-    public Optional<String> getMissingValueError(final int index) {
-        if (isMissing(index)) {
-            return Optional.ofNullable(((MissingValue)m_currentRow.getCell(index)).getError());
-        }
-        throw new IllegalStateException(String.format("Value at index %d is not missing.", index));
     }
 
     @Override

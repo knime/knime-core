@@ -42,59 +42,42 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- *
- * History
- *   Sep 10, 2020 (dietzc): created
  */
 package org.knime.core.data;
 
-import java.util.NoSuchElementException;
+import java.io.IOException;
+
+import org.knime.core.data.values.WriteValue;
+import org.knime.core.node.BufferedDataTable;
 
 /**
- * Read access to a row.
- *
- * @author Christian Dietz
- * @since 4.2.2
- *
- * @apiNote API still experimental. It might change in future releases of KNIME Analytics Platform.
+ * TODO
+ * 
+ * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
+ * 
+ * @apiNote API still experimental. It might change in future releases of KNIME
+ *          Analytics Platform.
  *
  * @noreference This interface is not intended to be referenced by clients.
  * @noextend This interface is not intended to be extended by clients.
  */
-public interface RowAccess {
-    /**
-     * @return number of columns.
-     */
-    int getNumColumns();
+public interface RowWriteCursor<R> extends RowWriteAccess, AutoCloseable {
 
-    /**
-     * Get a {@link DataValue} at a given position.
-     *
-     * @param <D> type of the {@link DataValue}
-     * @param index the column index
-     *
-     * @return the {@link DataValue} at column index or <source>null</source> if {@link DataValue} is not available, for
-     *         example if the column has been filtered out. In case {@link #isMissing(int)} returns
-     *         <source>true</source> the returned instance is a {@link MissingValue}.
-     *
-     * @throws NoSuchElementException if the cursor is at an invalid position
-     */
-    <D extends DataValue> D getValue(int index);
+	/**
+	 * Called after values have been added using the {@link WriteValue}s.
+	 */
+	void push();
 
-    /**
-     * If <code>true</<code> getValue will return `MissingValue` to get missing value cause.
-     *
-     * @param index column index
-     * @return <code>true</code> if value at index is missing
-     *
-     * @throws NoSuchElementException if the cursor is at an invalid position
-     */
-    boolean isMissing(int index);
+	@Override
+	void close();
 
-    /**
-     * @return the {@link RowKeyValue}
-     *
-     * @throws NoSuchElementException if the cursor is at an invalid position
-     */
-    RowKeyValue getRowKeyValue();
+	/**
+	 * TODO debate finish vs. finishTable
+	 * 
+	 * @return {@link BufferedDataTable} representing all rows added to the
+	 *         container.
+	 * @throws IOException
+	 */
+
+	R finish() throws IOException;
 }

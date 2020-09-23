@@ -1998,6 +1998,12 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/data/container/DataContainer.java" type="org.knime.core.data.container.DataContainer">
+        <filter id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.DataContainer"/>
+                <message_argument value="DataContainer(DataTableSpec, boolean, int, boolean, IDataRepository, ILocalDataRepository, IWriteFileStoreHandler, boolean, boolean, boolean)"/>
+            </message_arguments>
+        </filter>
         <filter id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.core.data.container.DataContainer"/>

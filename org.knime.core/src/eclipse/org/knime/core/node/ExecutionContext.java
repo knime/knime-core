@@ -59,6 +59,8 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.IDataRepository;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.TableBackend;
+import org.knime.core.data.TableBackendRegistry;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.ConcatenateTable;
 import org.knime.core.data.container.ContainerTable;
@@ -395,9 +397,26 @@ public class ExecutionContext extends ExecutionMonitor {
         final boolean initDomain, final int maxCellsInMemory, final boolean rowKeys) {
         boolean forceCopyOfBlobs = m_node.isModelCompatibleTo(LoopEndNode.class)
                 || m_node.isModelCompatibleTo(VirtualSubNodeOutputNodeModel.class);
+
+        /*
+         * TODO BERND
+         * I think here you want to get the selected backend from the workflow...
+         */
+        // THIS IF CODE PATH NEEDS TO BE REMOVED AS SOON AS WE HAVE FEATURE PARITY for new backend!
+        TableBackend backend =
+            TableBackendRegistry.getInstance().getTableBackend("org.knime.core.data.columnar.ColumnarTableBackend");
+        if (!backend.supports(spec)) {
+            // fallback for testing...
+            backend = TableBackendRegistry.getInstance()
+                .getTableBackend("org.knime.core.data.container.BufferedTableBackend");
+        }else {
+            LOGGER.info("Using ColumnarTableBackend.");
+        }
+
+
         return new BufferedDataContainer(spec, initDomain, m_node,
                 m_memoryPolicy, forceCopyOfBlobs, maxCellsInMemory, m_dataRepository,
-                m_localTableRepository, m_fileStoreHandler, rowKeys);
+                m_localTableRepository, m_fileStoreHandler, rowKeys, backend);
     }
 
     /**

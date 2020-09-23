@@ -85,7 +85,6 @@ public final class DoubleCell extends DataCell
     public static final DataType TYPE =
         DataType.getType(DoubleCell.class);
 
-
     /**
      * Returns the factory to read/write DataCells of this class from/to
      * a DataInput/DataOutput. This method is called via reflection.

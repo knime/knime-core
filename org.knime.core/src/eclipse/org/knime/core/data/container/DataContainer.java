@@ -59,6 +59,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.IDataRepository;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.TableBackend;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.NotInWorkflowDataRepository;
 import org.knime.core.data.util.NonClosableInputStream;
@@ -194,7 +195,8 @@ public class DataContainer implements RowAppender {
      * @noreference This constructor is not intended to be referenced by clients.
      */
     public DataContainer(final DataTableSpec spec, final DataContainerSettings settings) {
-        this(spec, settings, NotInWorkflowDataRepository.newInstance(), new DefaultLocalDataRepository(), null, false);
+        this(spec, settings, NotInWorkflowDataRepository.newInstance(), new DefaultLocalDataRepository(), null,
+            /* TODO Default. Always required? */ new BufferedTableBackend());
     }
 
     /**
@@ -210,20 +212,21 @@ public class DataContainer implements RowAppender {
      * @param fileStoreHandler a filestore handler
      * @param forceCopyOfBlobs true, if blobs should be copied
      * @param rowKeys if <code>true</code>, {@link RowKey}s are expected to be part of a {@link DataRow}.
-     * @param enableDataContainerV2 if <code>true</code> extension point for {@link DataContainerDelegateFactory}s can be used.
+     * @param backend if <code>true</code> extension point for {@link DataContainerDelegateFactory}s can be
+     *            used.
      * @throws IllegalArgumentException If <code>maxCellsInMemory</code> &lt; 0 or the spec is null
-     * @since 4.2
+     * @since 4.3
      */
     protected DataContainer(final DataTableSpec spec, final boolean initDomain, final int maxCellsInMemory,
         final boolean forceSynchronousIO, final IDataRepository repository,
         final ILocalDataRepository localTableRepository, final IWriteFileStoreHandler fileStoreHandler,
-        final boolean forceCopyOfBlobs, final boolean rowKeys, final boolean enableDataContainerV2) {
+        final boolean forceCopyOfBlobs, final boolean rowKeys, final TableBackend backend) {
         this(spec,
             DataContainerSettings.getDefault().withInitializedDomain(initDomain).withMaxCellsInMemory(maxCellsInMemory)
                 .withForceSequentialRowHandling(
                     forceSynchronousIO || DataContainerSettings.getDefault().isForceSequentialRowHandling())
                 .withForceCopyOfBlobs(forceCopyOfBlobs).withRowKeysEnabled(rowKeys),
-            repository, localTableRepository, fileStoreHandler, enableDataContainerV2);
+            repository, localTableRepository, fileStoreHandler, backend);
     }
 
     /**
@@ -245,7 +248,7 @@ public class DataContainer implements RowAppender {
 
     private DataContainer(final DataTableSpec spec, final DataContainerSettings settings,
         final IDataRepository repository, final ILocalDataRepository localRepository,
-        final IWriteFileStoreHandler fileStoreHandler, final boolean enableDataContainerDelegates) {
+        final IWriteFileStoreHandler fileStoreHandler, final TableBackend backend) {
         m_spec = spec;
         m_localRepository = localRepository;
         m_cancellationListener = new ICancellationListener() {
@@ -261,17 +264,7 @@ public class DataContainer implements RowAppender {
         };
         m_localRepository.addCancellationListener(m_cancellationListener);
         m_spec = spec;
-
-        final DataContainerDelegateFactory selected;
-        if (enableDataContainerDelegates) {
-            // try to use row container factory selected in preference page, if not compatible to spec, fallback to default.
-            selected = DataContainerDelegateFactoryRegistry.getInstance().getDataContainerDelegateFactoryFor(spec);
-        } else {
-            // force default implementation (i.e. < 4.2)
-            selected = DataContainerDelegateFactoryRegistry.getInstance().getDefaultDataContainerFactory();
-        }
-
-        m_delegate = selected.create(spec, settings, repository, localRepository, fileStoreHandler);
+        m_delegate = backend.create(spec, settings, repository, localRepository, fileStoreHandler);
     }
 
     /**

@@ -42,59 +42,41 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- *
- * History
- *   Sep 10, 2020 (dietzc): created
  */
 package org.knime.core.data;
 
-import java.util.NoSuchElementException;
+import java.util.Map;
+
+import org.knime.core.data.container.DataContainerDelegate;
+import org.knime.core.data.container.DataContainerSettings;
+import org.knime.core.data.container.ILocalDataRepository;
+import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
+import org.knime.core.node.ExecutionContext;
 
 /**
- * Read access to a row.
+ * TODO
  *
- * @author Christian Dietz
- * @since 4.2.2
- *
- * @apiNote API still experimental. It might change in future releases of KNIME Analytics Platform.
+ * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
+ * @since 4.3
  *
  * @noreference This interface is not intended to be referenced by clients.
  * @noextend This interface is not intended to be extended by clients.
  */
-public interface RowAccess {
-    /**
-     * @return number of columns.
-     */
-    int getNumColumns();
+public interface TableBackend {
+
+    boolean supports(DataTableSpec spec);
+
+    // Legacy
+    DataContainerDelegate create(DataTableSpec spec, DataContainerSettings settings, IDataRepository repository,
+        ILocalDataRepository localRepository, IWriteFileStoreHandler fileStoreHandler);
 
     /**
-     * Get a {@link DataValue} at a given position.
-     *
-     * @param <D> type of the {@link DataValue}
-     * @param index the column index
-     *
-     * @return the {@link DataValue} at column index or <source>null</source> if {@link DataValue} is not available, for
-     *         example if the column has been filtered out. In case {@link #isMissing(int)} returns
-     *         <source>true</source> the returned instance is a {@link MissingValue}.
-     *
-     * @throws NoSuchElementException if the cursor is at an invalid position
+     * @param spec
+     * @param rowKeyConfig
+     * @param settings
+     * @param additionalConfigs
+     * @return
      */
-    <D extends DataValue> D getValue(int index);
-
-    /**
-     * If <code>true</<code> getValue will return `MissingValue` to get missing value cause.
-     *
-     * @param index column index
-     * @return <code>true</code> if value at index is missing
-     *
-     * @throws NoSuchElementException if the cursor is at an invalid position
-     */
-    boolean isMissing(int index);
-
-    /**
-     * @return the {@link RowKeyValue}
-     *
-     * @throws NoSuchElementException if the cursor is at an invalid position
-     */
-    RowKeyValue getRowKeyValue();
+    RowContainerCustomKey create(ExecutionContext context, DataTableSpec spec, DataContainerSettings settings,
+        Map<Integer, DataTypeConfig> additionalConfigs);
 }

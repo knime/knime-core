@@ -49,6 +49,7 @@ package org.knime.core.node;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.IDataRepository;
+import org.knime.core.data.TableBackend;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.container.DataContainerSettings;
@@ -137,7 +138,7 @@ public class BufferedDataContainer extends DataContainer {
             final IDataRepository dataRepository,
             final ILocalDataRepository localTableRepository,
             final IWriteFileStoreHandler fileStoreHandler,
-            final boolean rowKeys) {
+            final boolean rowKeys, final TableBackend backend) {
         /**
          * Force sequential handling of rows when the node is a loop end: At a loop end, rows containing blobs need to
          * be written instantly as their owning buffer is discarded in the next loop iteration, see bug 2935. To be
@@ -152,7 +153,7 @@ public class BufferedDataContainer extends DataContainer {
              * body+end, see also WorkflowManager.resetAndConfigureAffectedLoopContext() (can be reproduced using unit
              * test Bug4409_inactiveInnerLoop
              */
-            fileStoreHandler, forceCopyOfBlobs, rowKeys, true);
+            fileStoreHandler, forceCopyOfBlobs, rowKeys, backend);
         m_node = node;
     }
 

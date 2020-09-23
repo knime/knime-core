@@ -42,58 +42,22 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- *
- * History
- *   May 25, 2020 (dietzc): created
  */
-package org.knime.core.data.container;
+package org.knime.core.data.values;
 
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.IDataRepository;
-import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
-import org.knime.core.data.filestore.internal.NotInWorkflowWriteFileStoreHandler;
+import org.knime.core.data.IntValue;
 
 /**
- * {@link DataContainerDelegateFactory} implementation to create {@link DataContainerDelegate}s used < 4.2 and beyond.
+ * TODO
+ * 
+ * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
+ * 
+ * @apiNote API still experimental. It might change in future releases of KNIME
+ *          Analytics Platform.
  *
- * @author Christian Dietz, KNIME GmbH, Konstanz
- * @since 4.2
- *
- * @noinstantiate This class is not intended to be instantiated by clients.
- * @noreference This class is not intended to be referenced by clients.
+ * @noreference This interface is not intended to be referenced by clients.
+ * @noextend This interface is not intended to be extended by clients.
  */
-public final class BufferedDataContainerDelegateFactory implements DataContainerDelegateFactory {
-
-    public static final String HUMAN_READABLE_NAME = "Default (DataContainer)";
-
-    @Override
-    public boolean supports(final DataTableSpec spec) {
-        return true;
-    }
-
-    @Override
-    public DataContainerDelegate create(final DataTableSpec spec, final DataContainerSettings settings,
-        final IDataRepository repository, final ILocalDataRepository localRepository,
-        final IWriteFileStoreHandler fileStoreHandler) {
-        return new BufferedDataContainerDelegate(spec, settings, repository, localRepository,
-            initFileStoreHandler(fileStoreHandler, repository));
-    }
-
-    private static IWriteFileStoreHandler initFileStoreHandler(final IWriteFileStoreHandler fileStoreHandler,
-        final IDataRepository repository) {
-        IWriteFileStoreHandler nonNull = fileStoreHandler;
-        if (nonNull == null) {
-            nonNull = NotInWorkflowWriteFileStoreHandler.create();
-            nonNull.addToRepository(repository);
-        }
-        return nonNull;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getName() {
-        return HUMAN_READABLE_NAME;
-    }
+public interface IntWriteValue extends WriteValue<IntValue> {
+	void setIntValue(int value);
 }

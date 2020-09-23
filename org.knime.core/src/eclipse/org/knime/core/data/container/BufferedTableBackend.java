@@ -44,57 +44,60 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Sep 10, 2020 (dietzc): created
+ *   Sep 23, 2020 (dietzc): created
  */
-package org.knime.core.data;
+package org.knime.core.data.container;
 
-import java.util.NoSuchElementException;
+import java.util.Map;
+
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataTypeConfig;
+import org.knime.core.data.IDataRepository;
+import org.knime.core.data.RowContainerCustomKey;
+import org.knime.core.data.TableBackend;
+import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
+import org.knime.core.data.filestore.internal.NotInWorkflowWriteFileStoreHandler;
+import org.knime.core.node.ExecutionContext;
 
 /**
- * Read access to a row.
+ * TODO
  *
- * @author Christian Dietz
- * @since 4.2.2
- *
- * @apiNote API still experimental. It might change in future releases of KNIME Analytics Platform.
+ * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
+ * @since 4.3
  *
  * @noreference This interface is not intended to be referenced by clients.
  * @noextend This interface is not intended to be extended by clients.
  */
-public interface RowAccess {
-    /**
-     * @return number of columns.
-     */
-    int getNumColumns();
+public class BufferedTableBackend implements TableBackend {
 
-    /**
-     * Get a {@link DataValue} at a given position.
-     *
-     * @param <D> type of the {@link DataValue}
-     * @param index the column index
-     *
-     * @return the {@link DataValue} at column index or <source>null</source> if {@link DataValue} is not available, for
-     *         example if the column has been filtered out. In case {@link #isMissing(int)} returns
-     *         <source>true</source> the returned instance is a {@link MissingValue}.
-     *
-     * @throws NoSuchElementException if the cursor is at an invalid position
-     */
-    <D extends DataValue> D getValue(int index);
+    @Override
+    public DataContainerDelegate create(final DataTableSpec spec, final DataContainerSettings settings,
+        final IDataRepository repository, final ILocalDataRepository localRepository,
+        final IWriteFileStoreHandler fileStoreHandler) {
+        return new BufferedDataContainerDelegate(spec, settings, repository, localRepository,
+            initFileStoreHandler(fileStoreHandler, repository));
+    }
 
-    /**
-     * If <code>true</<code> getValue will return `MissingValue` to get missing value cause.
-     *
-     * @param index column index
-     * @return <code>true</code> if value at index is missing
-     *
-     * @throws NoSuchElementException if the cursor is at an invalid position
-     */
-    boolean isMissing(int index);
+    @Override
+    public RowContainerCustomKey create(final ExecutionContext context, final DataTableSpec spec,
+        final DataContainerSettings settings, final Map<Integer, DataTypeConfig> additionalConfigs) {
+        return new BufferedRowContainer(
+            context.createDataContainer(spec, settings.getInitializeDomain(), settings.getMaxCellsInMemory()));
+    }
 
-    /**
-     * @return the {@link RowKeyValue}
-     *
-     * @throws NoSuchElementException if the cursor is at an invalid position
-     */
-    RowKeyValue getRowKeyValue();
+    @Override
+    public boolean supports(final DataTableSpec spec) {
+        return true;
+    }
+
+    private static IWriteFileStoreHandler initFileStoreHandler(final IWriteFileStoreHandler fileStoreHandler,
+        final IDataRepository repository) {
+        IWriteFileStoreHandler nonNull = fileStoreHandler;
+        if (nonNull == null) {
+            nonNull = NotInWorkflowWriteFileStoreHandler.create();
+            nonNull.addToRepository(repository);
+        }
+        return nonNull;
+    }
+
 }
