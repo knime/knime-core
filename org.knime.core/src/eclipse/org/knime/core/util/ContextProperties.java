@@ -157,6 +157,10 @@ public final class ContextProperties {
         }
         if (CONTEXT_PROPERTY_WORKFLOW_PATH.equals(property)) {
             final WorkflowContext context = manager.getContext();
+            if (context.getRelativeRemotePath().isPresent()) {
+                return context.getRelativeRemotePath().get();
+            }
+
             final File wfLocation =
                 context.getOriginalLocation() == null ? context.getCurrentLocation() : context.getOriginalLocation();
             final File mpLocation = context.getMountpointRoot();
