@@ -53,6 +53,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.WorkflowContext;
@@ -113,6 +114,11 @@ public final class ContextProperties {
     public static final String CONTEXT_PROPERTY_LAST_MODIFIED = "context.workflow.last.time.modified";
 
     /**
+     * Context variable name for job id when run on server.
+     */
+    private static final String CONTEXT_PROPERTY_JOB_ID = "context.job.id";
+
+    /**
      * The list of all context properties.
      */
     private static final List<String> CONTEXT_PROPERTIES;
@@ -128,6 +134,7 @@ public final class ContextProperties {
         contextProperties.add(CONTEXT_PROPERTY_EDITOR);
         contextProperties.add(CONTEXT_PROPERTY_CREATION_DATE);
         contextProperties.add(CONTEXT_PROPERTY_LAST_MODIFIED);
+        contextProperties.add(CONTEXT_PROPERTY_JOB_ID);
         contextProperties.trimToSize();
         CONTEXT_PROPERTIES = Collections.unmodifiableList(contextProperties);
     }
@@ -143,6 +150,10 @@ public final class ContextProperties {
         final WorkflowManager manager = NodeContext.getContext().getWorkflowManager();
         if (CONTEXT_PROPERTY_WORKFLOW_NAME.equals(property)) {
             return manager.getName();
+        }
+        if (CONTEXT_PROPERTY_JOB_ID.equals(property)) {
+            final WorkflowContext context = manager.getContext();
+            return context == null ? null : context.getJobId().map(UUID::toString).orElse(null);
         }
         if (CONTEXT_PROPERTY_WORKFLOW_PATH.equals(property)) {
             final WorkflowContext context = manager.getContext();
