@@ -9,7 +9,7 @@
         </filter>
         <filter id="923795461">
             <message_arguments>
-                <message_argument value="4.2.1"/>
+                <message_argument value="4.2.2"/>
                 <message_argument value="4.2.0"/>
             </message_arguments>
         </filter>
@@ -2120,14 +2120,6 @@
                 <message_argument value="4.0"/>
                 <message_argument value="4.1"/>
                 <message_argument value="getBundleName()"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/node/ExtensionTable.java" type="org.knime.core.node.ExtensionTable">
-        <filter id="576725006">
-            <message_arguments>
-                <message_argument value="KnowsRowCountTable"/>
-                <message_argument value="ExtensionTable"/>
             </message_arguments>
         </filter>
     </resource>
