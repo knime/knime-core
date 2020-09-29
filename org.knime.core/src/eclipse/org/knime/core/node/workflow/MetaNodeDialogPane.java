@@ -52,7 +52,6 @@ import java.awt.FlowLayout;
 import java.awt.event.ItemEvent;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -160,8 +159,7 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
         m_dialogNodePanels.clear();
         // remove all quickform components from current panel
         m_panel.removeAll();
-        List<Pair<Integer, Pair<NodeID, MetaNodeDialogNode>>> sortedNodeList =
-                new ArrayList<Pair<Integer, Pair<NodeID, MetaNodeDialogNode>>>();
+        List<Pair<Integer, Pair<NodeID, MetaNodeDialogNode>>> sortedNodeList = new ArrayList<>();
         for (Map.Entry<NodeID, MetaNodeDialogNode> e : nodes.entrySet()) {
             // only accept old qf nodes for metanodes
             if (m_metaNodeDialogType != MetaNodeDialogType.SUBNODE && e.getValue() instanceof QuickFormInputNode) {
@@ -176,8 +174,7 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
                         config.createController();
                 m_nodes.put(e.getKey(), e.getValue());
                 m_quickFormInputNodePanels.put(e.getKey(), quickform);
-                Pair<Integer, Pair<NodeID, MetaNodeDialogNode>> weightNodePair =
-                    new Pair<Integer, Pair<NodeID, MetaNodeDialogNode>>(
+                Pair<Integer, Pair<NodeID, MetaNodeDialogNode>> weightNodePair = Pair.create(
                             config.getWeight(), new Pair<NodeID, MetaNodeDialogNode>(e.getKey(), e.getValue()));
                 sortedNodeList.add(weightNodePair);
             // only accept new qf nodes for subnodes
@@ -193,8 +190,7 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
                     m_nodes.put(e.getKey(), e.getValue());
                     m_dialogNodePanels.put(e.getKey(), dialogPanel);
                     Pair<Integer, Pair<NodeID, MetaNodeDialogNode>> weightNodePair =
-                            new Pair<Integer, Pair<NodeID, MetaNodeDialogNode>>(
-                                    Integer.MAX_VALUE, new Pair<NodeID, MetaNodeDialogNode>(e.getKey(), e.getValue()));
+                        Pair.create(Integer.MAX_VALUE, Pair.create(e.getKey(), e.getValue()));
                     sortedNodeList.add(weightNodePair);
                 } catch (Exception ex) {
                     LOGGER.error("The dialog pane for node " + e.getKey() + " could not be created.", ex);
@@ -202,14 +198,7 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
             }
         }
 
-        Collections.sort(sortedNodeList, new Comparator<Pair<Integer, Pair<NodeID, MetaNodeDialogNode>>>() {
-            /** {@inheritDoc} */
-            @Override
-            public int compare(final Pair<Integer, Pair<NodeID, MetaNodeDialogNode>> o1,
-                final Pair<Integer, Pair<NodeID, MetaNodeDialogNode>> o2) {
-                return o1.getFirst() - o2.getFirst();
-            }
-        });
+        Collections.sort(sortedNodeList, (o1, o2) -> o1.getFirst() - o2.getFirst());
 
         for (Pair<Integer, Pair<NodeID, MetaNodeDialogNode>> weightNodePair : sortedNodeList) {
             NodeID id = weightNodePair.getSecond().getFirst();

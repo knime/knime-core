@@ -5679,7 +5679,7 @@ public final class WorkflowManager extends NodeContainer
     // WFM as NodeContainer: Dialog related implementations
     /////////////////////////////////////////////////////////
 
-    private NodeDialogPane m_nodeDialogPane;
+    private MetaNodeDialogPane m_nodeDialogPane;
 
     /** {@inheritDoc} */
     @Override
@@ -5692,10 +5692,10 @@ public final class WorkflowManager extends NodeContainer
     @Override
     NodeDialogPane getDialogPaneWithSettings(final PortObjectSpec[] inSpecs, final PortObject[] inData)
         throws NotConfigurableException {
-        NodeDialogPane dialogPane = getDialogPane();
+        MetaNodeDialogPane dialogPane = getDialogPane();
         // find all quickform input nodes and update meta dialog
         Map<NodeID, MetaNodeDialogNode> nodes = findNodes(MetaNodeDialogNode.class, false);
-        ((MetaNodeDialogPane)dialogPane).setQuickformNodes(nodes);
+        dialogPane.setQuickformNodes(nodes);
         NodeSettings settings = getNodeSettings();
         Node.invokeDialogInternalLoad(dialogPane, settings, inSpecs, inData, new FlowObjectStack(getID()),
             new CredentialsProvider(this, m_credentialsStore), getDirectNCParent().isWriteProtected());
@@ -5715,7 +5715,7 @@ public final class WorkflowManager extends NodeContainer
 
     /** {@inheritDoc} */
     @Override
-    NodeDialogPane getDialogPane() {
+    MetaNodeDialogPane getDialogPane() {
         if (m_nodeDialogPane == null) {
             if (hasDialog()) {
                 // create metanode dialog with quickforms
