@@ -56,6 +56,7 @@ import static org.knime.core.node.workflow.InternalNodeContainerState.IDLE;
 import static org.knime.core.node.workflow.InternalNodeContainerState.UNCONFIGURED_MARKEDFOREXEC;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.junit.After;
@@ -66,8 +67,10 @@ import org.junit.rules.TestRule;
 import org.junit.rules.Timeout;
 import org.junit.runners.model.TestTimedOutException;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.util.FileUtil;
+import org.knime.core.util.ThreadUtils;
 import org.knime.testing.node.blocking.BlockingRepository;
 
 /**
@@ -151,7 +154,17 @@ public class BugAP5712_CloseWhileStreaming extends WorkflowTestCase {
             assertTrue(manager.canCancelAll());
             getLogger().error("Canceling...");
             manager.getParent().cancelExecution(manager);
-            waitWhileInExecution();
+            try {
+				waitWhileInExecution();
+			} catch (Throwable t) {
+				String jvmStacktraces = ThreadUtils.getJVMStacktraces();
+				NodeLogger logger = NodeLogger.getLogger(this.getClass());
+				// logger has a limit of 10k chars -- can't dump all into one
+				logger.errorWithFormat("---- BEGIN Thread Dump On %s ----", t.getClass().getSimpleName());
+				Arrays.stream(jvmStacktraces.split("\n")).forEach(logger::error);
+				logger.errorWithFormat("----- END Thread Dump On %s -----", t.getClass().getSimpleName());
+				throw t;
+			}
         } finally {
             execLock.unlock();
         }
