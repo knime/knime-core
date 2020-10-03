@@ -168,6 +168,7 @@ public abstract class ExtensionTable implements ContainerTable {
      * Create the actual buffered data table.
      * @param exec The context, used to set ownership on table.
      * @return a newly created buffered data table
+     * @since 4.3
      */
     public final BufferedDataTable create(final ExecutionContext exec) {
         BufferedDataTable table = new BufferedDataTable(this, exec.getDataRepository());
