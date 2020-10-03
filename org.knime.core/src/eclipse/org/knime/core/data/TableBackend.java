@@ -79,4 +79,8 @@ public interface TableBackend {
      */
     RowContainerCustomKey create(ExecutionContext context, DataTableSpec spec, DataContainerSettings settings,
         Map<Integer, DataTypeConfig> additionalConfigs);
+
+    String getShortName();
+
+    String getDescription();
 }

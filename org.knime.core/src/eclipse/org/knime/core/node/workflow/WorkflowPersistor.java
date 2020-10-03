@@ -158,6 +158,14 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
      */
     List<Credentials> getCredentials();
 
+    /**
+     * @return table backend settings on the workflow level. Null for metanodes (and subnodes), never null for projects.
+     * @since 4.3
+     */
+    default WorkflowTableBackendSettings getWorkflowTableBackendSettings() {
+        return null;
+    }
+
     /** @return (non-mull) map of annotations. */
     List<WorkflowAnnotation> getWorkflowAnnotations();
 

@@ -68,6 +68,7 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.TreeMap;
 
+import org.knime.core.data.TableBackend;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -93,6 +94,7 @@ import org.knime.core.util.workflowalizer.AuthorInformation;
  *
  * @author wiswedel, University of Konstanz
  */
+@SuppressWarnings("javadoc")
 public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeContainerPersistor {
 
     /** KNIME Node type: native, meta or sub node.*/
@@ -205,6 +207,8 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
     private List<FlowVariable> m_workflowVariables;
 
     private List<Credentials> m_credentials;
+
+    private WorkflowTableBackendSettings m_tableBackendSettings;
 
     private List<WorkflowAnnotation> m_workflowAnnotations;
 
@@ -391,6 +395,11 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
     @Override
     public List<Credentials> getCredentials() {
         return m_credentials;
+    }
+
+    @Override
+    public WorkflowTableBackendSettings getWorkflowTableBackendSettings() {
+        return m_tableBackendSettings;
     }
 
     /** {@inheritDoc}
@@ -604,6 +613,17 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
             setDirtyAfterLoad();
             loadResult.addError(error);
             m_credentials = Collections.emptyList();
+        }
+
+        try {
+            m_tableBackendSettings = loadTableBackendSettings(m_workflowSett);
+        } catch (InvalidSettingsException e) {
+            String error = "Unable to table backend settings: " + e.getMessage();
+            getLogger().debug(error, e);
+            setNeedsResetAfterLoad();
+            setDirtyAfterLoad();
+            loadResult.addError(error, true);
+            m_tableBackendSettings = isProject() ? new WorkflowTableBackendSettings() : null;
         }
 
         try {
@@ -1582,6 +1602,19 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
     }
 
     /**
+     * Loads table backend settings (only for workflow projects).
+     */
+    WorkflowTableBackendSettings loadTableBackendSettings(final NodeSettingsRO settings)
+            throws InvalidSettingsException {
+        if (!isProject()) {
+            return null;
+        } else {
+            // added in 4.2.2
+            return WorkflowTableBackendSettings.loadSettingsInModel(settings);
+        }
+    }
+
+    /**
      * Load annotations (added in v2.3).
      *
      * @param settings to load from
@@ -1914,6 +1947,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
             FileNodeContainerMetaPersistor.save(preFilledSettings, wm, workflowDirRef);
             saveWorkflowVariables(wm, preFilledSettings);
             saveCredentials(wm, preFilledSettings);
+            saveTableBackend(wm, preFilledSettings);
             saveWorkflowAnnotations(wm, preFilledSettings);
 
             NodeSettingsWO nodesSettings = saveSettingsForNodes(preFilledSettings);
@@ -2108,9 +2142,16 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
         }
     }
 
+    /** Save the {@link TableBackend} set on workflow projects.
+     * @since 4.3
+     */
+    protected static void saveTableBackend(final WorkflowManager wfm, final NodeSettingsWO settings) {
+        wfm.getTableBackendSettings().ifPresent(backendSettings -> backendSettings.saveSettingsTo(settings));
+    }
+
     protected static void saveWorkflowAnnotations(final WorkflowManager manager, final NodeSettingsWO settings) {
         Collection<WorkflowAnnotation> annotations = manager.getWorkflowAnnotations();
-        if (annotations.size() == 0) {
+        if (annotations.isEmpty()) {
             return;
         }
         NodeSettingsWO annoSettings = settings.addNodeSettings("annotations");

@@ -50,6 +50,7 @@ import java.util.Map;
 
 import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.workflow.WorkflowTableBackendSettings;
 
 /**
  * TODO - this class needs to be replaced by some API which makes the API accessible via ExecutionContext
@@ -68,11 +69,7 @@ public final class RowContainerFactory {
 
     public static RowContainerCustomKey createCustomKey(final ExecutionContext context, final DataTableSpec spec,
         final DataContainerSettings settings, final Map<Integer, DataTypeConfig> additionalConfigs) throws IOException {
-        /*
-         * TODO Bernd: Selection should happen based on workflow settings!
-         */
-        final TableBackend backend =
-            TableBackendRegistry.getInstance().getTableBackend("org.knime.core.data.columnar.ColumnarTableBackend");
+        final TableBackend backend = WorkflowTableBackendSettings.getTableBackendForCurrentContext();
         return backend.create(context, spec, settings, additionalConfigs);
     }
 }

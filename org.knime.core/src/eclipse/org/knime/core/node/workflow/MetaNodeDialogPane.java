@@ -46,7 +46,10 @@
 package org.knime.core.node.workflow;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
 import java.awt.FlowLayout;
+import java.awt.event.ItemEvent;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -56,10 +59,15 @@ import java.util.Map;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
+import javax.swing.DefaultListCellRenderer;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
+import org.knime.core.data.TableBackend;
+import org.knime.core.data.TableBackendRegistry;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeLogger;
@@ -72,6 +80,7 @@ import org.knime.core.node.dialog.DialogNodeRepresentation;
 import org.knime.core.node.dialog.DialogNodeValue;
 import org.knime.core.node.dialog.MetaNodeDialogNode;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.util.ViewUtils;
 import org.knime.core.quickform.AbstractQuickFormConfiguration;
 import org.knime.core.quickform.AbstractQuickFormValueInConfiguration;
 import org.knime.core.quickform.QuickFormConfigurationPanel;
@@ -88,37 +97,43 @@ import org.knime.core.util.Pair;
 public final class MetaNodeDialogPane extends NodeDialogPane {
 
     private static NodeLogger LOGGER = NodeLogger.getLogger(MetaNodeDialogPane.class);
+    
+    enum MetaNodeDialogType {
+        WORKFLOW,
+        METANODE,
+        SUBNODE
+    }
 
+    private final MetaNodeDialogType m_metaNodeDialogType;
     private final Map<NodeID, MetaNodeDialogNode> m_nodes;
     private final Map<NodeID, QuickFormConfigurationPanel> m_quickFormInputNodePanels;
     private final Map<NodeID, DialogNodePanel> m_dialogNodePanels;
+    private final TableBackendSelectorPanel m_tableBackendSelectorPanel;
     private final JPanel m_panel;
-    private final boolean m_usedInSubnode;
 
-    /** Constructor. */
-    public MetaNodeDialogPane() {
-        this(false);
-    }
-
-    /** Constructor.
-     * @param usedInSubnode false for meta nodes, true for sub node.
-     * @since 3.6*/
-    public MetaNodeDialogPane(final boolean usedInSubnode) {
-        m_nodes = new LinkedHashMap<NodeID, MetaNodeDialogNode>();
-        m_quickFormInputNodePanels = new LinkedHashMap<NodeID, QuickFormConfigurationPanel>();
-        m_dialogNodePanels = new LinkedHashMap<NodeID, DialogNodePanel>();
+    /**  @param metaNodeDialogType represents where this dialog is used. */
+    MetaNodeDialogPane(final MetaNodeDialogType metaNodeDialogType) {
+        m_nodes = new LinkedHashMap<>();
+        m_quickFormInputNodePanels = new LinkedHashMap<>();
+        m_dialogNodePanels = new LinkedHashMap<>();
 
         m_panel = new JPanel();
         final BoxLayout boxLayout = new BoxLayout(m_panel, BoxLayout.Y_AXIS);
         m_panel.setLayout(boxLayout);
         addTab("Options", new JScrollPane(m_panel));
-        m_usedInSubnode = usedInSubnode;
+        m_metaNodeDialogType = metaNodeDialogType;
+        if (metaNodeDialogType == MetaNodeDialogType.WORKFLOW) {
+            m_tableBackendSelectorPanel = new TableBackendSelectorPanel();
+            addTab("Table Backend", new JScrollPane(m_tableBackendSelectorPanel));
+        } else {
+            m_tableBackendSelectorPanel = null;
+        }
     }
 
     /** {@inheritDoc} */
     @Override
     protected void addFlowVariablesTab() {
-        if (m_usedInSubnode) {
+        if (m_metaNodeDialogType == MetaNodeDialogType.SUBNODE) {
             super.addFlowVariablesTab();
         } else {
             // no op: disables flow variables tab
@@ -149,7 +164,7 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
                 new ArrayList<Pair<Integer, Pair<NodeID, MetaNodeDialogNode>>>();
         for (Map.Entry<NodeID, MetaNodeDialogNode> e : nodes.entrySet()) {
             // only accept old qf nodes for metanodes
-            if (!m_usedInSubnode && e.getValue() instanceof QuickFormInputNode) {
+            if (m_metaNodeDialogType != MetaNodeDialogType.SUBNODE && e.getValue() instanceof QuickFormInputNode) {
                 AbstractQuickFormConfiguration
                     <? extends AbstractQuickFormValueInConfiguration> config =
                         ((QuickFormInputNode)e.getValue()).getConfiguration();
@@ -166,7 +181,7 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
                             config.getWeight(), new Pair<NodeID, MetaNodeDialogNode>(e.getKey(), e.getValue()));
                 sortedNodeList.add(weightNodePair);
             // only accept new qf nodes for subnodes
-            } else if (m_usedInSubnode && e.getValue() instanceof DialogNode) {
+            } else if (m_metaNodeDialogType == MetaNodeDialogType.SUBNODE && e.getValue() instanceof DialogNode) {
                 DialogNodeRepresentation<? extends DialogNodeValue> representation
                     = ((DialogNode)e.getValue()).getDialogRepresentation();
                 if (((DialogNode)e.getValue()).isHideInDialog() || representation == null) {
@@ -226,7 +241,7 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
 
         if (m_nodes.isEmpty()) {
             String msg;
-            if (m_usedInSubnode) {
+            if (m_metaNodeDialogType == MetaNodeDialogType.SUBNODE) {
                 msg = "Component is not configurable.<br>Please include Configuration nodes.";
             } else {
                 msg = "Metanode is not configurable.";
@@ -257,6 +272,9 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
                     nodeValue.saveToNodeSettings(subSettings);
                 }
             }
+        }
+        if (m_metaNodeDialogType == MetaNodeDialogType.WORKFLOW) {
+            m_tableBackendSelectorPanel.toBackendSettings().saveSettingsTo(settings);
         }
     }
 
@@ -293,6 +311,63 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
                     // no op
                 }
             }
+        }
+        if (m_metaNodeDialogType == MetaNodeDialogType.WORKFLOW) {
+            m_tableBackendSelectorPanel.load(WorkflowTableBackendSettings.loadSettingsInDialog(settings));
+        }
+    }
+
+    @SuppressWarnings("serial")
+    private static final class TableBackendSelectorPanel extends JPanel {
+
+        private final JComboBox<TableBackend> m_tableBackendCombo;
+        private final JPanel m_descriptionPanel;
+
+        /**
+         *
+         */
+        TableBackendSelectorPanel() {
+            super(new BorderLayout());
+            List<TableBackend> availableBackends = TableBackendRegistry.getInstance().getTableBackends();
+            m_tableBackendCombo = new JComboBox<>(availableBackends.toArray(new TableBackend[0]));
+            m_tableBackendCombo.setRenderer(new DefaultListCellRenderer() { // NOSONAR
+                @Override
+                public Component getListCellRendererComponent(final JList<?> list, final Object value, final int index,
+                    final boolean isSelected, final boolean cellHasFocus) {
+                    Object newValue = value instanceof TableBackend ? ((TableBackend)value).getShortName() : value;
+                    return super.getListCellRendererComponent(list, newValue, index, isSelected, cellHasFocus);
+                }
+            });
+            m_descriptionPanel = new JPanel(new BorderLayout());
+            m_tableBackendCombo.addItemListener(e -> {
+                if (e.getStateChange() == ItemEvent.SELECTED) {
+                    onNewBackendSelected();
+                }
+            });
+            onNewBackendSelected();
+            JPanel northPanel = ViewUtils.getInFlowLayout(FlowLayout.CENTER, m_tableBackendCombo);
+            northPanel.setBorder(BorderFactory.createTitledBorder(" Selected Table Implementation "));
+            add(northPanel, BorderLayout.NORTH);
+            m_descriptionPanel.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, Color.BLACK));
+            add(m_descriptionPanel, BorderLayout.CENTER);
+        }
+
+        private void onNewBackendSelected() {
+            m_descriptionPanel.removeAll();
+            TableBackend selectedItem = (TableBackend)m_tableBackendCombo.getSelectedItem();
+            JLabel jLabel = new JLabel(selectedItem.getDescription());
+            m_descriptionPanel.add(ViewUtils.getInFlowLayout(jLabel));
+            m_descriptionPanel.invalidate();
+            m_descriptionPanel.validate();
+            m_descriptionPanel.repaint();
+        }
+
+        void load(final WorkflowTableBackendSettings settings) {
+            m_tableBackendCombo.setSelectedItem(settings.getTableBackend());
+        }
+
+        WorkflowTableBackendSettings toBackendSettings() {
+            return new WorkflowTableBackendSettings((TableBackend)m_tableBackendCombo.getSelectedItem());
         }
     }
 

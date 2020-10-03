@@ -81,6 +81,7 @@ import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.KNIMEJob;
 import org.knime.core.node.workflow.LoopEndNode;
 import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
+import org.knime.core.node.workflow.WorkflowTableBackendSettings;
 import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeOutputNodeModel;
 import org.knime.core.util.DuplicateKeyException;
 
@@ -398,19 +399,13 @@ public class ExecutionContext extends ExecutionMonitor {
         boolean forceCopyOfBlobs = m_node.isModelCompatibleTo(LoopEndNode.class)
                 || m_node.isModelCompatibleTo(VirtualSubNodeOutputNodeModel.class);
 
-        /*
-         * TODO BERND
-         * I think here you want to get the selected backend from the workflow...
-         */
         // THIS IF CODE PATH NEEDS TO BE REMOVED AS SOON AS WE HAVE FEATURE PARITY for new backend!
-        TableBackend backend =
-            TableBackendRegistry.getInstance().getTableBackend("org.knime.core.data.columnar.ColumnarTableBackend");
+        TableBackend backend = WorkflowTableBackendSettings.getTableBackendForCurrentContext();
         if (!backend.supports(spec)) {
             // fallback for testing...
-            backend = TableBackendRegistry.getInstance()
-                .getTableBackend("org.knime.core.data.container.BufferedTableBackend");
-        }else {
-            LOGGER.info("Using ColumnarTableBackend.");
+            backend = TableBackendRegistry.getInstance().getDefaultBackend();
+        } else {
+            LOGGER.infoWithFormat("Using Table Backend \"%s\".", backend.getClass().getSimpleName());
         }
 
 

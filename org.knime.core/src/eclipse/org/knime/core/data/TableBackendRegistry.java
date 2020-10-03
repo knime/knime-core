@@ -156,4 +156,13 @@ public class TableBackendRegistry {
             .append("]");
         return b.toString();
     }
+
+    /** @return the {@link BufferedTableBackend} instance (never null). */
+    public TableBackend getDefaultBackend() {
+        return m_backends.stream() //
+            .filter(tb -> Objects.equals(tb.getClass(), BufferedTableBackend.class)) //
+            .findFirst() //
+            .orElseThrow(
+                () -> new IllegalStateException(BufferedTableBackend.class.getSimpleName() + " not available"));
+    }
 }

@@ -123,6 +123,7 @@ import org.knime.core.node.wizard.ViewHideable;
 import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.workflow.ComponentMetadata.ComponentMetadataBuilder;
 import org.knime.core.node.workflow.ConnectionContainer.ConnectionType;
+import org.knime.core.node.workflow.MetaNodeDialogPane.MetaNodeDialogType;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.TemplateType;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
@@ -891,11 +892,7 @@ public final class SubNodeContainer extends SingleNodeContainer
      */
     @Override
     public InputStream getIconAsStream() {
-        if (m_metadata.getIcon().isPresent()) {
-            return new ByteArrayInputStream(m_metadata.getIcon().get());
-        } else {
-            return null;
-        }
+        return m_metadata.getIcon().map(ByteArrayInputStream::new).orElse(null);
     }
 
     /**
@@ -985,7 +982,7 @@ public final class SubNodeContainer extends SingleNodeContainer
         if (m_nodeDialogPane == null) {
             if (hasDialog()) {
                 // create sub node dialog with dialog nodes
-                m_nodeDialogPane = new MetaNodeDialogPane(true);
+                m_nodeDialogPane = new MetaNodeDialogPane(MetaNodeDialogType.SUBNODE);
                 // job managers tab
                 if (NodeExecutionJobManagerPool.getNumberOfJobManagersFactories() > 1) {
                     // TODO: set the SplitType depending on the nodemodel

@@ -159,6 +159,7 @@ import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.ConnectionContainer.ConnectionType;
 import org.knime.core.node.workflow.CredentialsStore.CredentialsNode;
 import org.knime.core.node.workflow.FlowLoopContext.RestoredFlowLoopContext;
+import org.knime.core.node.workflow.MetaNodeDialogPane.MetaNodeDialogType;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.TemplateType;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.UpdateStatus;
@@ -290,6 +291,14 @@ public final class WorkflowManager extends NodeContainer
 
     /** for internal usage, holding output table references and file store handlers */
     private final WorkflowDataRepository m_dataRepository;
+
+    /**
+     * The table backend used for all nodes in a workflow project. (Field is null for metanodes and WFMs in subnodes,
+     * never null for projects)
+     *
+     * @since 4.3
+     */
+    private WorkflowTableBackendSettings m_tableBackendSettings;
 
     /**
      * Password store. This object is associated with each meta-node (contained metanodes have their own password
@@ -453,6 +462,7 @@ public final class WorkflowManager extends NodeContainer
             } else {
                 m_workflowContext = null;
             }
+            m_tableBackendSettings = new WorkflowTableBackendSettings();
         } else {
             // ...synchronize across border
             m_workflowLock = new WorkflowLock(this, m_directNCParent);
@@ -567,6 +577,7 @@ public final class WorkflowManager extends NodeContainer
         if (isProject) {
             m_workflowLock = new WorkflowLock(this);
             m_dataRepository = persistor.getWorkflowDataRepository();
+            m_tableBackendSettings = CheckUtils.checkArgumentNotNull(persistor.getWorkflowTableBackendSettings());
         } else {
             m_workflowLock = new WorkflowLock(this, m_directNCParent);
             m_dataRepository = workflowDataRepository;
@@ -5708,7 +5719,8 @@ public final class WorkflowManager extends NodeContainer
         if (m_nodeDialogPane == null) {
             if (hasDialog()) {
                 // create metanode dialog with quickforms
-                m_nodeDialogPane = new MetaNodeDialogPane();
+                m_nodeDialogPane =
+                    new MetaNodeDialogPane(isProject() ? MetaNodeDialogType.WORKFLOW : MetaNodeDialogType.METANODE);
                 // workflow manager jobs can't be split
                 m_nodeDialogPane.addJobMgrTab(SplitType.DISALLOWED);
             } else {
@@ -7861,6 +7873,13 @@ public final class WorkflowManager extends NodeContainer
     }
 
     /**
+     * @return the tableBackendSettings for workflow projects (non-empty) or an empty optional for non-projects.
+     */
+    Optional<WorkflowTableBackendSettings> getTableBackendSettings() {
+        return Optional.ofNullable(m_tableBackendSettings);
+    }
+
+    /**
      * @param directory The directory to load from
      * @param exec The execution monitor
      * @param loadHelper The load helper
@@ -9167,6 +9186,9 @@ public final class WorkflowManager extends NodeContainer
                 }
             }
         }
+        if (isProject()) {
+            m_tableBackendSettings = WorkflowTableBackendSettings.loadSettingsInModel(modelSettings);
+        }
     }
 
     /** {@inheritDoc} */
@@ -9176,7 +9198,7 @@ public final class WorkflowManager extends NodeContainer
 
         // TODO: as we don't have a node model associated with the wfm, we must
         // do the same thing a dialog does when saving settings (it assumes
-        // existance of a node).
+        // existence of a node).
         //        Node.SettingsLoaderAndWriter l = new Node.SettingsLoaderAndWriter();
         //        NodeSettings model = new NodeSettings("field_ignored");
         //        NodeSettings variables;
@@ -9193,6 +9215,12 @@ public final class WorkflowManager extends NodeContainer
             if (config != null) {
                 config.getValueConfiguration().saveValue(subSettings);
             }
+        }
+
+        if (isProject()) {
+            // unfortunately this was added much later and quickforms (above) are stored in the root of "model" settings
+            // (then again, quickforms are only saved via their index -- no name conflict to be expected)
+            m_tableBackendSettings.saveSettingsTo(modelSettings);
         }
 
         SingleNodeContainerSettings s = new SingleNodeContainerSettings();

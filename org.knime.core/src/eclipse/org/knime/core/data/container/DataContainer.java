@@ -69,6 +69,7 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.workflow.WorkflowDataRepository;
+import org.knime.core.node.workflow.WorkflowTableBackendSettings;
 import org.knime.core.util.DuplicateKeyException;
 import org.knime.core.util.FileUtil;
 
@@ -196,7 +197,7 @@ public class DataContainer implements RowAppender {
      */
     public DataContainer(final DataTableSpec spec, final DataContainerSettings settings) {
         this(spec, settings, NotInWorkflowDataRepository.newInstance(), new DefaultLocalDataRepository(), null,
-            /* TODO Default. Always required? */ new BufferedTableBackend());
+            WorkflowTableBackendSettings.getTableBackendForCurrentContext());
     }
 
     /**

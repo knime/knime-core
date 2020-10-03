@@ -68,7 +68,7 @@ import org.knime.core.node.ExecutionContext;
  * @noreference This interface is not intended to be referenced by clients.
  * @noextend This interface is not intended to be extended by clients.
  */
-public class BufferedTableBackend implements TableBackend {
+public final class BufferedTableBackend implements TableBackend {
 
     @Override
     public DataContainerDelegate create(final DataTableSpec spec, final DataContainerSettings settings,
@@ -81,13 +81,27 @@ public class BufferedTableBackend implements TableBackend {
     @Override
     public RowContainerCustomKey create(final ExecutionContext context, final DataTableSpec spec,
         final DataContainerSettings settings, final Map<Integer, DataTypeConfig> additionalConfigs) {
-        return new BufferedRowContainer(
-            context.createDataContainer(spec, settings.getInitializeDomain(), settings.getMaxCellsInMemory()));
+        throw new UnsupportedOperationException("Not yet implemented");
     }
 
     @Override
     public boolean supports(final DataTableSpec spec) {
         return true;
+    }
+
+    @Override
+    public String getShortName() {
+        return "Default";
+    }
+
+    @Override
+    public String getDescription() {
+        return new StringBuilder("<html><body>") //
+                .append("<p>Default table backend, which supports all possible data types. <br />") //
+                .append("If unsure, use this.</p>") //
+                .append("<p>Additional table backends are available via KNIME Labs.</p>") //
+                .append("</body></html>") //
+                .toString();
     }
 
     private static IWriteFileStoreHandler initFileStoreHandler(final IWriteFileStoreHandler fileStoreHandler,
@@ -98,6 +112,17 @@ public class BufferedTableBackend implements TableBackend {
             nonNull.addToRepository(repository);
         }
         return nonNull;
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        // instance should be a singleton but can't be due to Eclipse Extension Point instantiation
+        return obj != null && obj.getClass() == getClass();
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 
 }
