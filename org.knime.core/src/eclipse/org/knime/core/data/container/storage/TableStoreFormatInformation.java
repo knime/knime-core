@@ -135,4 +135,18 @@ public final class TableStoreFormatInformation implements KNIMEComponentInformat
             return Optional.empty();
         }
     }
+
+    /** Represents missing {@link org.knime.core.data.TableBackend}. Technically speaking a table backend has nothing
+     * to do with a table store format but the error handling code path is so similar that we (mis-)use this class here.
+     * @param bundle ...
+     * @param feature ...
+     * @param shortname usually the value of {@link org.knime.core.data.TableBackend#getShortName()}.
+     * @return the info.
+     * @since 4.3
+     */
+    public static final TableStoreFormatInformation forTableBackend(final String bundle, final String feature,
+        final String shortname) {
+        return new TableStoreFormatInformation(bundle, feature, shortname);
+    }
+
 }

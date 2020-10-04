@@ -85,6 +85,7 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
+import org.knime.core.node.workflow.WorkflowTableBackendSettings.TableBackendUnknownException;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.LockFailedException;
@@ -618,11 +619,14 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
         try {
             m_tableBackendSettings = loadTableBackendSettings(m_workflowSett);
         } catch (InvalidSettingsException e) {
-            String error = "Unable to table backend settings: " + e.getMessage();
+            String error = "Unable to table backend: " + e.getMessage();
             getLogger().debug(error, e);
             setNeedsResetAfterLoad();
             setDirtyAfterLoad();
             loadResult.addError(error, true);
+            if (e instanceof TableBackendUnknownException) { // NOSONAR
+                loadResult.addMissingTableFormat(((TableBackendUnknownException)e).getFormatInfo());
+            }
             m_tableBackendSettings = isProject() ? new WorkflowTableBackendSettings() : null;
         }
 
@@ -1602,7 +1606,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
     }
 
     /**
-     * Loads table backend settings (only for workflow projects).
+     * Loads table backend settings (only for workflow projects). Might throw {@link TableBackendUnknownException}.
      */
     WorkflowTableBackendSettings loadTableBackendSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {

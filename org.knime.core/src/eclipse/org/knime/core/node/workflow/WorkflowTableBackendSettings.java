@@ -48,12 +48,18 @@
  */
 package org.knime.core.node.workflow;
 
+import java.util.Optional;
+
+import org.eclipse.equinox.p2.metadata.IInstallableUnit;
 import org.knime.core.data.TableBackend;
 import org.knime.core.data.TableBackendRegistry;
+import org.knime.core.data.container.storage.TableStoreFormatInformation;
+import org.knime.core.eclipseUtil.OSGIHelper;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.CheckUtils;
+import org.osgi.framework.Bundle;
 
 /**
  * Represents the configuration as to which {@link TableBackend} is used in a workflow project
@@ -63,18 +69,15 @@ import org.knime.core.node.util.CheckUtils;
  */
 public final class WorkflowTableBackendSettings {
 
-    /**
-     *
-     */
     private static final String CFG_TABLE_BACKEND = "tableBackend";
     private static final String CFG_TABLE_BACKEND_CLASS = "class";
+    private static final String CFG_TABLE_BACKEND_BUNDLE = "bundle";
+    private static final String CFG_TABLE_BACKEND_FEATURE = "feature";
+    private static final String CFG_TABLE_BACKEND_SHORTNAME = "shortname";
 
     private static final TableBackend DEFAULT_BACKEND = TableBackendRegistry.getInstance().getDefaultBackend();
     private final TableBackend m_tableBackend;
 
-    /**
-     *
-     */
     WorkflowTableBackendSettings() {
         this(DEFAULT_BACKEND);
     }
@@ -100,7 +103,11 @@ public final class WorkflowTableBackendSettings {
             try {
                 tableBackend = TableBackendRegistry.getInstance().getTableBackend(className);
             } catch (IllegalArgumentException ex) {
-                throw new InvalidSettingsException("Table Backend Implementation not found: " + ex.getMessage(), ex);
+                String bundle = tableBackendSettings.getString(CFG_TABLE_BACKEND_BUNDLE, null);
+                String feature = tableBackendSettings.getString(CFG_TABLE_BACKEND_FEATURE, null);
+                String shortname = tableBackendSettings.getString(CFG_TABLE_BACKEND_SHORTNAME, className);
+                throw new TableBackendUnknownException("Table backend implementation not found: " + ex.getMessage(),
+                    TableStoreFormatInformation.forTableBackend(bundle, feature, shortname), ex);
             }
         } else {
             tableBackend = DEFAULT_BACKEND;
@@ -120,6 +127,11 @@ public final class WorkflowTableBackendSettings {
         if (!m_tableBackend.equals(DEFAULT_BACKEND)) {
             NodeSettingsWO tableBackendSettings = settings.addNodeSettings(CFG_TABLE_BACKEND);
             tableBackendSettings.addString(CFG_TABLE_BACKEND_CLASS, m_tableBackend.getClass().getName());
+            Bundle bundle = OSGIHelper.getBundle(m_tableBackend.getClass());
+            Optional<IInstallableUnit> feature = OSGIHelper.getFeature(bundle);
+            tableBackendSettings.addString(CFG_TABLE_BACKEND_BUNDLE, bundle != null ? bundle.getSymbolicName() : null);
+            tableBackendSettings.addString(CFG_TABLE_BACKEND_FEATURE, feature.map(IInstallableUnit::getId).orElse(null));
+            tableBackendSettings.addString(CFG_TABLE_BACKEND_SHORTNAME, m_tableBackend.getShortName());
         }
     }
 
@@ -142,6 +154,23 @@ public final class WorkflowTableBackendSettings {
     @Override
     public String toString() {
         return String.format("backend: %s", m_tableBackend.getClass().getSimpleName());
+    }
+
+    @SuppressWarnings("serial")
+    static final class TableBackendUnknownException extends InvalidSettingsException {
+
+        private final TableStoreFormatInformation m_formatInfo; // NOSONAR
+
+        TableBackendUnknownException(final String msg, final TableStoreFormatInformation formatInfo,
+            final Throwable cause) {
+            super(msg, cause);
+            m_formatInfo = formatInfo;
+        }
+
+        TableStoreFormatInformation getFormatInfo() {
+            return m_formatInfo;
+        }
+
     }
 
 }
