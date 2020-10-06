@@ -4725,6 +4725,10 @@ public final class WorkflowManager extends NodeContainer
      * @return true if the node can safely be reset.
      */
     public boolean canResetNode(final NodeID nodeID) {
+        return canResetNode(nodeID, this::hasSuccessorInProgress);
+    }
+
+    boolean canResetNode(final NodeID nodeID, final Predicate<NodeID> hasSuccessorsInProgress) {
         try (WorkflowLock lock = lock()) {
             NodeContainer nc = m_workflow.getNode(nodeID);
             if (nc == null) {
@@ -4733,7 +4737,7 @@ public final class WorkflowManager extends NodeContainer
             // (a) this node is resetable
             // (b) no successors is running or queued.
             // (c) not contained in a sub node that has executing successors
-            return nc.canPerformReset() && !hasSuccessorInProgress(nodeID) && canResetContainedNodes();
+            return nc.canPerformReset() && !hasSuccessorsInProgress.test(nodeID) && canResetContainedNodes();
         }
     }
 
@@ -5163,6 +5167,10 @@ public final class WorkflowManager extends NodeContainer
      * @return true if node can be executed.
      */
     public boolean canExecuteNode(final NodeID nodeID) {
+        return canExecuteNode(nodeID, this::hasExecutablePredecessor);
+    }
+
+    boolean canExecuteNode(final NodeID nodeID, final Predicate<NodeID> hasExecutablePredecessors) {
         try (WorkflowLock lock = lock()) {
             NodeContainer nc = m_workflow.getNode(nodeID);
             if (nc == null) {
@@ -5173,7 +5181,35 @@ public final class WorkflowManager extends NodeContainer
                 return true;
             }
             // check predecessors:
-            return hasExecutablePredecessor(nodeID);
+            return hasExecutablePredecessors.test(nodeID);
+        }
+    }
+
+    private DependentNodeProperties m_dependentNodeProperties = null;
+
+    /**
+     * This method serves to speed up the calls of the {@link #canExecuteNode(NodeID)} and {@link #canResetNode(NodeID)}
+     * methods, if intended to be called for many (usually all) nodes that are contained in this workflow.
+     *
+     * Explanation: The mentioned methods require to determine the 'executable predecessors' or 'executing successors'
+     * which is normally done every time they are called. However, if this method is used beforehand, the 'executable
+     * predecessors' and 'executing successors' are determined in one go for all nodes.
+     *
+     * @return the {@link DependentNodeProperties} object which contains the pre-calculated can-reset and can-execute
+     *         predicates. NOT automatically kept in sync with the workflow. This method needs to be called again to
+     *         update the predicates.
+     *
+     * @noreference This method is not intended to be referenced by clients.
+     *
+     * @since 4.3
+     */
+    public DependentNodeProperties determineDependentNodeProperties() {
+        try (WorkflowLock lock = lock()) {
+            if (m_dependentNodeProperties == null) {
+                m_dependentNodeProperties = new DependentNodeProperties(this);
+            }
+            m_dependentNodeProperties.update();
+            return m_dependentNodeProperties;
         }
     }
 
@@ -5183,7 +5219,7 @@ public final class WorkflowManager extends NodeContainer
      * @param nodeID id of node
      * @return true if at least one predecessor can be executed.
      */
-    private boolean hasExecutablePredecessor(final NodeID nodeID) {
+    boolean hasExecutablePredecessor(final NodeID nodeID) {
         assert m_workflowLock.isHeldByCurrentThread();
         if (this.getID().equals(nodeID)) { // we are talking about this WFM
             return getParent().hasExecutablePredecessor(nodeID);
@@ -5193,7 +5229,7 @@ public final class WorkflowManager extends NodeContainer
             // of its action buttons one last time
             return false;
         }
-        // get all predeccessors of the node, including the WFM itself if there are  connections:
+        // get all predecessors of the node, including the WFM itself if there are  connections:
         Set<NodeID> nodes = m_workflow.getPredecessors(nodeID);
         for (NodeID id : nodes) {
             if (this.getID().equals(id)) {

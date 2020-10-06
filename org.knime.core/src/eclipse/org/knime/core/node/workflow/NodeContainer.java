@@ -401,7 +401,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
      * @noreference This method is not intended to be referenced by clients.
      */
     public Optional<TrackedChanges> getTrackedChanges() {
-        return getChangesTracker().map(ct -> ct.getTrackedChanges());
+        return getChangesTracker().map(ChangesTracker::getTrackedChanges);
     }
 
     public boolean addNodePropertyChangedListener(
@@ -898,7 +898,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
         for (NodeStateChangeListener l : m_stateChangeListeners) {
             l.stateChanged(e);
         }
-        findChangesTracker().ifPresent(ct -> ct.nodeStateChange());
+        findChangesTracker().ifPresent(ChangesTracker::nodeStateChange);
     }
 
     /** {@inheritDoc} */
