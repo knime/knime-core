@@ -91,13 +91,18 @@ import org.knime.core.util.Pair;
  * (such as memory policy and job selector panel).
  *
  * @author Bernd Wiswedel, University of Konstanz
+ * @noreference This class is not intended to be referenced by clients.
  */
 @SuppressWarnings({"unchecked", "rawtypes" })
 public final class MetaNodeDialogPane extends NodeDialogPane {
 
-    private static NodeLogger LOGGER = NodeLogger.getLogger(MetaNodeDialogPane.class);
-    
-    enum MetaNodeDialogType {
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(MetaNodeDialogPane.class);
+
+    /** Type of dialog.
+     * @noreference This enum is not intended to be referenced by clients.
+     * @since 4.3
+     */
+    public enum MetaNodeDialogType {
         WORKFLOW,
         METANODE,
         SUBNODE
@@ -110,8 +115,9 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
     private final TableBackendSelectorPanel m_tableBackendSelectorPanel;
     private final JPanel m_panel;
 
-    /**  @param metaNodeDialogType represents where this dialog is used. */
-    MetaNodeDialogPane(final MetaNodeDialogType metaNodeDialogType) {
+    /**  @param metaNodeDialogType represents where this dialog is used.
+     * @since 4.3 */
+    public MetaNodeDialogPane(final MetaNodeDialogType metaNodeDialogType) {
         m_nodes = new LinkedHashMap<>();
         m_quickFormInputNodePanels = new LinkedHashMap<>();
         m_dialogNodePanels = new LinkedHashMap<>();
