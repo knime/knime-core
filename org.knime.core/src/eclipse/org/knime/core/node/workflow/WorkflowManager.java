@@ -577,7 +577,8 @@ public final class WorkflowManager extends NodeContainer
         if (isProject) {
             m_workflowLock = new WorkflowLock(this);
             m_dataRepository = persistor.getWorkflowDataRepository();
-            m_tableBackendSettings = CheckUtils.checkArgumentNotNull(persistor.getWorkflowTableBackendSettings());
+            WorkflowTableBackendSettings tableBackendSet = persistor.getWorkflowTableBackendSettings();
+            m_tableBackendSettings = tableBackendSet != null ? tableBackendSet : new WorkflowTableBackendSettings();
         } else {
             m_workflowLock = new WorkflowLock(this, m_directNCParent);
             m_dataRepository = workflowDataRepository;
