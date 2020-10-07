@@ -280,7 +280,6 @@ public final class Node implements NodeModelWarningListener {
         }
         m_factory = nodeFactory;
         if (creationConfig == null && m_factory instanceof ConfigurableNodeFactory) {
-            // TODO: optional of nullable ist sinnlos wir wissen dass es null ist
             m_creationConfig = ((ConfigurableNodeFactory<NodeModel>)m_factory).createNodeCreationConfig();
         } else {
             m_creationConfig = creationConfig;
