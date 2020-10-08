@@ -341,7 +341,7 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
             });
             onNewBackendSelected();
             JPanel northPanel = ViewUtils.getInFlowLayout(FlowLayout.CENTER, m_tableBackendCombo);
-            northPanel.setBorder(BorderFactory.createTitledBorder(" Selected Table Implementation "));
+            northPanel.setBorder(BorderFactory.createTitledBorder(" Selected Table Backend "));
             add(northPanel, BorderLayout.NORTH);
             m_descriptionPanel.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, Color.BLACK));
             add(m_descriptionPanel, BorderLayout.CENTER);

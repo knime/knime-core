@@ -97,11 +97,10 @@ public final class BufferedTableBackend implements TableBackend {
     @Override
     public String getDescription() {
         return new StringBuilder("<html><body>") //
-                .append("<p>Default table backend, which supports all possible data types. <br />") //
-                .append("If unsure, use this.</p>") //
-                .append("<p>Additional table backends are available via KNIME Labs.</p>") //
-                .append("</body></html>") //
-                .toString();
+            .append("<p>Default table backend, which supports all possible data types. <br />") //
+            .append("<br /><br /><br /><br /><br /><br />") //
+            .append("</body></html>") //
+            .toString();
     }
 
     private static IWriteFileStoreHandler initFileStoreHandler(final IWriteFileStoreHandler fileStoreHandler,
