@@ -64,6 +64,9 @@ import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
 import org.knime.core.data.filestore.FileStoreFactory;
+import org.knime.core.data.v2.ValueFactory;
+import org.knime.core.data.v2.value.DefaultRowKeyValueFactory;
+import org.knime.core.data.v2.value.VoidRowKeyFactory;
 import org.knime.core.internal.SerializerMethodLoader;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.CheckUtils;
@@ -87,6 +90,12 @@ public final class DataTypeRegistry {
     private final Map<String, Class<? extends DataValue>> m_valueClassMap = new ConcurrentHashMap<>();
 
     private Collection<DataType> m_allDataTypes;
+
+    private final Map<String, Class<? extends ValueFactory<?, ?>>> m_valueFactoryClassMap = new ConcurrentHashMap<>();
+
+    private boolean m_cellToValueFactoryInitialized = false;
+
+    private final Map<String, String> m_cellToValueFactoryMap = new ConcurrentHashMap<>();
 
     private static final DataTypeRegistry INSTANCE = new DataTypeRegistry();
 
@@ -113,6 +122,8 @@ public final class DataTypeRegistry {
         m_cellClassMap.put(DataCell.class.getName(), DataCell.class);
         m_cellClassMap.put(DataType.MissingCell.class.getName(), DataType.MissingCell.class);
         m_valueClassMap.put(DataValue.class.getName(), DataValue.class);
+        m_valueFactoryClassMap.put(DefaultRowKeyValueFactory.class.getName(), DefaultRowKeyValueFactory.class);
+        m_valueFactoryClassMap.put(VoidRowKeyFactory.class.getName(), VoidRowKeyFactory.class);
     }
 
     /**
@@ -305,6 +316,57 @@ public final class DataTypeRegistry {
         }
     }
 
+    /**
+     * Returns the {@link ValueFactory} class for the given class name. This method looks through all registered
+     * {@link ValueFactory} implementations. If no data value factory implementation is found, an empty optional is
+     * returned.
+     *
+     * @param valueFactoryClass the class name
+     * @return an optional containing the requested value factory cell class
+     * @since 4.3
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public Optional<Class<? extends ValueFactory<?, ?>>> getValueFactoryClass(final String valueFactoryClass) {
+        final Class<? extends ValueFactory<?, ?>> value = m_valueFactoryClassMap.get(valueFactoryClass);
+        if (value != null) {
+            return Optional.of(value);
+        }
+        // Update the Map (might activate the plugin for this class)
+        updateValueFactoryClassMap(valueFactoryClass);
+        return Optional.ofNullable(m_valueFactoryClassMap.get(valueFactoryClass));
+    }
+
+    /**
+     * Find the {@link ValueFactory} registered for the given type.
+     *
+     * @param type the {@link DataType}
+     * @return an {@link Optional} holding the class of the {@link ValueFactory} if one is registered.
+     *         <code>Optional.empty()</code> if no {@link ValueFactory} is registered for the given type.
+     * @since 4.3
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public Optional<Class<? extends ValueFactory<?, ?>>> getValueFactoryFor(final DataType type) {
+        final Class<? extends DataCell> cellClass = type.getCellClass();
+        // No fixed cell class -> There is no according ValueFactory
+        if (cellClass == null) {
+            return Optional.empty();
+        }
+
+        // Get the Factory class (no plugin needs to be activated to get the mapping)
+        if (!m_cellToValueFactoryInitialized) {
+            initCellToValueFactoryMap();
+        }
+        final String factoryClass = m_cellToValueFactoryMap.get(cellClass.getName());
+
+        // No value factory for this cell class
+        if (factoryClass == null) {
+            return Optional.empty();
+        }
+
+        // Get the value factory class
+        return getValueFactoryClass(factoryClass);
+    }
+
     private <T extends DataCell> Optional<DataCellSerializer<T>>
         scanExtensionPointForSerializer(final String cellClassName) {
         // not found => scan extension point
@@ -377,6 +439,56 @@ public final class DataTypeRegistry {
             for (Class<?> c : clazz.getInterfaces()) {
                 collectValueInterfaces(c);
             }
+        }
+    }
+
+    /** Fills {@link #m_cellToValueFactoryMap} if not already filled. Adds all values and does not activate plugins. */
+    private synchronized void initCellToValueFactoryMap() {
+        if (!m_cellToValueFactoryInitialized) {
+            final IExtensionRegistry registry = Platform.getExtensionRegistry();
+            final IExtensionPoint point = registry.getExtensionPoint(EXT_POINT_ID);
+
+            Stream.of(point.getExtensions()) //
+                .flatMap(ext -> Stream.of(ext.getConfigurationElements())) //
+                .filter(e -> (e.getAttribute("factoryValue") != null)) //
+                .forEach(e -> m_cellToValueFactoryMap.put(e.getAttribute("cellClass"), e.getAttribute("factoryValue")));
+            m_cellToValueFactoryInitialized = true;
+        }
+    }
+
+    /**
+     * Updates {@link #m_valueFactoryClassMap} to find the value class asked for. Activates the plugin of the given
+     * ValueFactory class.
+     */
+    private void updateValueFactoryClassMap(final String valueFactoryClassName) {
+        final IExtensionRegistry registry = Platform.getExtensionRegistry();
+        final IExtensionPoint point = registry.getExtensionPoint(EXT_POINT_ID);
+
+        Stream.of(point.getExtensions()) //
+            .flatMap(ext -> Stream.of(ext.getConfigurationElements())) //
+            .filter(e -> (e.getAttribute("factoryValue") != null)) // ValueFactory defined
+            .filter(e -> m_cellClassMap.containsKey(e.getAttribute("cellClass")) // Extension already loaded
+                || valueFactoryClassName.equals(e.getAttribute("factoryValue"))) // Explicitly asked for this value factory
+            .forEach(this::addValueFactoryClassMapping);
+    }
+
+    /** Put the value factory defined in the given configuration element into {@link #m_valueFactoryClassMap}. */
+    private void addValueFactoryClassMapping(final IConfigurationElement e) {
+        final String valueFactoryClassName = e.getAttribute("factoryValue");
+
+        try {
+            // Create an instance
+            final ValueFactory<?, ?> f = (ValueFactory<?, ?>)e.createExecutableExtension("factoryValue");
+            @SuppressWarnings("unchecked")
+            // Get the class
+            final Class<? extends ValueFactory<?, ?>> valueFactoryClass =
+                (Class<? extends ValueFactory<?, ?>>)f.getClass();
+            // Put the class into the map
+            m_valueFactoryClassMap.put(valueFactoryClassName, valueFactoryClass);
+        } catch (final CoreException ex) {
+            NodeLogger.getLogger(DataTypeRegistry.class) //
+                .coding("The value factory class '" + valueFactoryClassName + "' registered at extension point '"
+                    + EXT_POINT_ID + "' could not be created. Ignoring extension.", ex);
         }
     }
 }

@@ -53,36 +53,26 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.IDataRepository;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.TableBackend;
 import org.knime.core.data.collection.ListCell;
-import org.knime.core.data.collection.ListDataValue;
 import org.knime.core.data.collection.SetCell;
-import org.knime.core.data.collection.SetDataValue;
 import org.knime.core.data.collection.SparseListCell;
-import org.knime.core.data.collection.SparseListDataValue;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
-import org.knime.core.data.def.LongCell;
-import org.knime.core.data.def.StringCell;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.v2.value.DefaultRowKeyValueFactory;
 import org.knime.core.data.v2.value.DoubleListValueFactory;
 import org.knime.core.data.v2.value.DoubleSetValueFactory;
 import org.knime.core.data.v2.value.DoubleSparseListValueFactory;
-import org.knime.core.data.v2.value.DoubleValueFactory;
 import org.knime.core.data.v2.value.IntListValueFactory;
-import org.knime.core.data.v2.value.IntValueFactory;
-import org.knime.core.data.v2.value.ListValueFactory;
-import org.knime.core.data.v2.value.LongValueFactory;
-import org.knime.core.data.v2.value.SetValueFactory;
-import org.knime.core.data.v2.value.SparseListValueFactory;
-import org.knime.core.data.v2.value.StringValueFactory;
 import org.knime.core.data.v2.value.VoidRowKeyFactory;
 import org.knime.core.data.v2.value.VoidValueFactory;
 import org.knime.core.data.v2.value.cell.DataCellValueFactory;
@@ -165,18 +155,12 @@ public final class ValueSchema {
     private static final ValueFactory<?, ?> findValueFactory(final DataType type,
         final Map<DataType, String> factoryMapping, final DataCellSerializerFactory cellSerializerFactory,
         final IWriteFileStoreHandler fileStoreHandler) {
-        /* TODO extension point -- AP-15324 */
+
         final ValueFactory<?, ?> factory;
+
+        // Use special value factories for list/sets of primitive types
         if (type == null) {
             factory = VoidValueFactory.INSTANCE;
-        } else if (type == DoubleCell.TYPE) {
-            factory = DoubleValueFactory.INSTANCE;
-        } else if (type == IntCell.TYPE) {
-            factory = IntValueFactory.INSTANCE;
-        } else if (type == LongCell.TYPE) {
-            factory = LongValueFactory.INSTANCE;
-        } else if (type == StringCell.TYPE) {
-            factory = StringValueFactory.INSTANCE;
         } else if (DataType.getType(SparseListCell.class, DoubleCell.TYPE).equals(type)) {
             factory = DoubleSparseListValueFactory.INSTANCE;
         } else if (DataType.getType(ListCell.class, DoubleCell.TYPE).equals(type)) {
@@ -185,18 +169,22 @@ public final class ValueSchema {
             factory = IntListValueFactory.INSTANCE;
         } else if (DataType.getType(SetCell.class, DoubleCell.TYPE).equals(type)) {
             factory = DoubleSetValueFactory.INSTANCE;
-        } else if (type.isCompatible(SparseListDataValue.class)) {
-            factory = new SparseListValueFactory();
-        } else if (type.isCompatible(ListDataValue.class)) {
-            factory = new ListValueFactory();
-        } else if (type.isCompatible(SetDataValue.class)) {
-            factory = new SetValueFactory();
         } else {
-            factory = new DataCellValueFactory(cellSerializerFactory, fileStoreHandler, type);
+            // Get the value factory from the extension point
+            final Optional<Class<? extends ValueFactory<?, ?>>> factoryClass =
+                DataTypeRegistry.getInstance().getValueFactoryFor(type);
+            if (factoryClass.isPresent()) {
+                // Use the registered value factory
+                factory = instantiateValueFactory(factoryClass.get());
+            } else {
+                // Use the fallback which works for all cells
+                factory = new DataCellValueFactory(cellSerializerFactory, fileStoreHandler, type);
+            }
         }
 
         // Collection types need to be initialized
         if (factory instanceof CollectionValueFactory) {
+            assert type != null; // type cannot be null because VoidValueFactory is not instanceof CollectionValueFactory
             @SuppressWarnings("null")
             final DataType elementType = type.getCollectionElementType();
             final ValueFactory<?, ?> elementFactory =
@@ -205,6 +193,22 @@ public final class ValueSchema {
         }
         factoryMapping.put(type, factory.getClass().getName());
         return factory;
+    }
+
+    private static ValueFactory<?, ?> instantiateValueFactory(final Class<?> valueFactoryClass) {
+        try {
+            final Constructor<?> constructor = valueFactoryClass.getConstructor();
+            return (ValueFactory<?, ?>)constructor.newInstance();
+        } catch (final IllegalAccessException | IllegalArgumentException | NoSuchMethodException ex) {
+            throw new IllegalStateException("The ValueFactory must have a public empty constructor.", ex);
+        } catch (final InvocationTargetException ex) {
+            throw new IllegalStateException("The ValueFactory constructor must not throw an exception.", ex);
+        } catch (final SecurityException ex) {
+            throw new IllegalStateException("Instantiating of the ValueFactory faile with an SecurityException.", ex);
+        } catch (final InstantiationException ex) {
+            // This cannot happen because we write the fully qualified class name of instantiated objects
+            throw new IllegalStateException("The ValueFactory must not be abstract.", ex);
+        }
     }
 
     /**
@@ -309,7 +313,8 @@ public final class ValueSchema {
         private static ValueFactory<?, ?> getValueFactory(final DataType type,
             final Map<DataType, String> factoryMapping, final DataCellSerializerFactory cellSerializerFactory,
             final IDataRepository dataRepository) {
-            final ValueFactory<?, ?> factory = instantiateValueFactory(type, factoryMapping);
+            final String valueFactoryClassName = factoryMapping.get(type);
+            final ValueFactory<?, ?> factory = instantiateValueFactory(valueFactoryClassName);
 
             // Initialize
             if (factory instanceof CollectionValueFactory) {
@@ -323,31 +328,14 @@ public final class ValueSchema {
             return factory;
         }
 
-        private static ValueFactory<?, ?> instantiateValueFactory(final DataType type,
-            final Map<DataType, String> factoryMapping) {
-            return instantiateValueFactory(factoryMapping.get(type));
-        }
-
         private static ValueFactory<?, ?> instantiateValueFactory(final String className) {
-            try {
-                final Class<?> clazz = Class.forName(className);
-                final Constructor<?> constructor = clazz.getConstructor();
-                return (ValueFactory<?, ?>)constructor.newInstance();
-            } catch (final ClassNotFoundException ex) {
+            final Optional<Class<? extends ValueFactory<?, ?>>> valueFactoryClass =
+                DataTypeRegistry.getInstance().getValueFactoryClass(className);
+            if (!valueFactoryClass.isPresent()) {
                 throw new IllegalStateException(
-                    "The ValueFactory '" + className + "' could not be found. Are you missing a KNIME Extension?", ex);
-            } catch (final IllegalAccessException | IllegalArgumentException | NoSuchMethodException ex) {
-                throw new IllegalStateException("The ValueFactory must have a public empty constructor.", ex);
-            } catch (final InvocationTargetException ex) {
-                throw new IllegalStateException("The ValueFactory constructor must not throw an exception.", ex);
-            } catch (final SecurityException ex) {
-                throw new IllegalStateException("Instantiating of the ValueFactory faile with an SecurityException.",
-                    ex);
-            } catch (final InstantiationException ex) {
-                // This cannot happen because we write the fully qualified class name of instantiated objects
-                throw new IllegalStateException("The ValueFactory must not be abstract.", ex);
+                    "The ValueFactory '" + className + "' could not be found. Are you missing a KNIME Extension?");
             }
+            return ValueSchema.instantiateValueFactory(valueFactoryClass.get());
         }
-
     }
 }

@@ -69,9 +69,6 @@ public final class VoidRowKeyFactory implements RowKeyValueFactory<ReadAccess, W
     /** Stateless instance of VoidRowKeyValue */
     public static final VoidRowKeyFactory INSTANCE = new VoidRowKeyFactory();
 
-    private VoidRowKeyFactory() {
-    }
-
     @Override
     public RowKeyReadValue createReadValue(final ReadAccess reader) {
         return VoidRowKeyReadValue.READ_VALUE_INSTANCE;

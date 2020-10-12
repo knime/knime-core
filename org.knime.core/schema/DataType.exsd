@@ -63,6 +63,18 @@ A DataCellFactory is optional, however generic input nodes won&apos;t be able to
                </appInfo>
             </annotation>
          </attribute>
+         <attribute name="factoryValue" type="string">
+            <annotation>
+               <documentation>
+                  An implementation providing efficient read and write into a low-level (columnar) table backend. This attribute was added as part of KNIME v4.3. This value factory provides means to circumvent to avoid costly DataCell generation when writing and reading KNIME tables. The implementation is only used when the workflow is configured to use a non-default Columnar Table Backend.
+
+Type definition may choose to not provide this implementation in which case a fallback implementation using object creation (DataCell) is used.
+               </documentation>
+               <appInfo>
+                  <meta.attribute kind="java" basedOn=":org.knime.core.data.schema.ValueFactory"/>
+               </appInfo>
+            </annotation>
+         </attribute>
       </complexType>
    </element>
 
@@ -111,16 +123,15 @@ A DataCellFactory is optional, however generic input nodes won&apos;t be able to
       </appInfo>
       <documentation>
          &lt;extension point=&quot;org.knime.core.DataType&quot;&gt;
-	&lt;DataType
-		cellClass=&quot;org.knime.core.data.def.IntCell&quot;
+ &lt;DataType
+  cellClass=&quot;org.knime.core.data.def.IntCell&quot;
         factoryClass=&quot;org.knime.core.data.def.IntCell$IntCellFactory&quot;&gt;
-		&lt;serializer
-			cellClass=&quot;org.knime.core.data.def.IntCell&quot;
-			serializerClass=&quot;org.knime.core.data.def.IntCell$IntCellSerializer&quot;&gt;
-		&lt;/serializer&gt;
-	&lt;/DataType&gt;
+  &lt;serializer
+   cellClass=&quot;org.knime.core.data.def.IntCell&quot;
+   serializerClass=&quot;org.knime.core.data.def.IntCell$IntCellSerializer&quot;&gt;
+  &lt;/serializer&gt;
+ &lt;/DataType&gt;
 &lt;/extension&gt;
-
       </documentation>
    </annotation>
 
@@ -131,7 +142,6 @@ A DataCellFactory is optional, however generic input nodes won&apos;t be able to
       </appInfo>
       <documentation>
          All DataTypes in the KNIME core are registered via this extension point, therefore simply have a look at the sources of org.knime.core.
-
       </documentation>
    </annotation>
 
