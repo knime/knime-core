@@ -228,7 +228,7 @@ public final class RearrangeColumnsTable implements KnowsRowCountTable {
                 assert index == appendColCount;
                 DataTableSpec appendSpec = new DataTableSpec(appendColSpecs);
                 if (subSettings.containsKey(CFG_APPEND_TABLE_TYPE) && subSettings.getInt(CFG_APPEND_TABLE_TYPE) == EXTENSION_TABLE_TYPE) {
-                    m_appendTable = ExtensionTable.loadExtensionTable(f, appendSpec, subSettings, tblRep, exec);
+                    m_appendTable = ExtensionTable.loadExtensionTable(f, appendSpec, subSettings, tblRep, exec, dataRepository);
                 } else {
                     CopyOnAccessTask noKeyBufferOnAccessTask =
                         new CopyOnAccessTask(f, appendSpec, tableID, dataRepository, false);

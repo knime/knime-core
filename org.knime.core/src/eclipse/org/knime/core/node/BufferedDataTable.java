@@ -867,7 +867,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
                     }
                     t = new BufferedDataTable(replTable, dataRepository);
                 } else if (tableType.equals(TABLE_TYPE_EXTENSION)) {
-                    ExtensionTable et = ExtensionTable.loadExtensionTable(fileRef, spec, s, tblRep, exec);
+                    ExtensionTable et = ExtensionTable.loadExtensionTable(fileRef, spec, s, tblRep, exec, dataRepository);
                     t = new BufferedDataTable(et, dataRepository);
                 } else {
                     assert false : "Insufficent case switch: " + tableType;

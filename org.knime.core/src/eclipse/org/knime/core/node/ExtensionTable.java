@@ -52,6 +52,7 @@ import java.util.Map;
 import javax.swing.JComponent;
 
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.IDataRepository;
 import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.WrappedTable;
@@ -90,16 +91,20 @@ public abstract class ExtensionTable implements ContainerTable {
 
         private final ExecutionMonitor m_executionMonitor;
 
+        private final IDataRepository m_repository;
+
         private LoadContext(final ReferencedFile dataFileRef,
                 final DataTableSpec tableSpec,
                 final NodeSettingsRO settings,
                 final Map<Integer, BufferedDataTable> tableRepository,
-                final ExecutionMonitor executionMonitor) {
+                final ExecutionMonitor executionMonitor,
+                final IDataRepository repository) {
             m_dataFileRef = dataFileRef;
             m_tableSpec = tableSpec;
             m_settings = settings;
             m_tableRepository = tableRepository;
             m_executionMonitor = executionMonitor;
+            m_repository = repository;
         }
 
         /**
@@ -138,6 +143,13 @@ public abstract class ExtensionTable implements ContainerTable {
          */
         public ExecutionMonitor getExecutionMonitor() {
             return m_executionMonitor;
+        }
+
+        /**
+         * @return the data repository
+         */
+        public IDataRepository getDataRepository() {
+            return m_repository;
         }
 
     }
@@ -253,14 +265,40 @@ public abstract class ExtensionTable implements ContainerTable {
      * @throws CanceledExecutionException If canceled
      * @since 4.2
      * @noreference This method is not intended to be referenced by clients.
+     * @deprecated Use {@link #loadExtensionTable(ReferencedFile, DataTableSpec, NodeSettingsRO, Map, ExecutionMonitor, IDataRepository)} instead.
+     *        This method internally call that method and set {@link IDataRepository} to null.
      */
+    @Deprecated
     public static ExtensionTable loadExtensionTable(final ReferencedFile fileRef, final DataTableSpec spec,
         final NodeSettingsRO s, final Map<Integer, BufferedDataTable> tblRep, final ExecutionMonitor exec)
+        throws InvalidSettingsException, IOException, CanceledExecutionException {
+        return loadExtensionTable(fileRef, spec, s, tblRep, exec, null);
+
+    }
+
+    /** Load the extension, used internally from {@link BufferedDataTable}.
+     * @param fileRef To load from, it's a referenced file so that
+     *        implementations can delay the reading to when it's necessary.
+     * @param spec The table specification.
+     * @param s The settings object
+     * @param tblRep The global table map.
+     * @param exec Progress monitor.
+     * @param dataRepository IDataRepository for FileStoreCells and BlobCells
+     * @return the loaded table
+     * @throws InvalidSettingsException If settings are invalid
+     * @throws IOException If reading fails
+     * @throws CanceledExecutionException If canceled
+     * @since 4.2
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public static ExtensionTable loadExtensionTable(final ReferencedFile fileRef, final DataTableSpec spec,
+        final NodeSettingsRO s, final Map<Integer, BufferedDataTable> tblRep, final ExecutionMonitor exec,
+        final IDataRepository dataRepository)
         throws InvalidSettingsException, IOException, CanceledExecutionException {
 
         final String tableImpl = s.getString(CFG_TABLE_IMPL);
         NodeSettingsRO derivedSettings = s.getNodeSettings(CFG_TABLE_DERIVED_SETTINGS);
-        LoadContext context = new LoadContext(fileRef, spec, derivedSettings, tblRep, exec);
+        LoadContext context = new LoadContext(fileRef, spec, derivedSettings, tblRep, exec, dataRepository);
 
         return ExtensionTableRegistry.getInstance().loadExtensionTable(context, tableImpl);
 
