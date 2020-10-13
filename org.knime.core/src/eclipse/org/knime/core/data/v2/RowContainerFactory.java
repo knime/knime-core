@@ -55,6 +55,7 @@ import org.knime.core.node.workflow.WorkflowTableBackendSettings;
 
 /**
  * TODO move to execution context
+ * @since 4.3
  */
 public final class RowContainerFactory {
 

@@ -140,6 +140,8 @@ public final class ObjectAccess {
      */
     public interface ObjectSerializer<T> {
 
+        // TODO Christian -- throws IOException
+
         /**
          * Deserializes byte[] to object
          *

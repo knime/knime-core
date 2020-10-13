@@ -400,7 +400,7 @@ public class ExecutionContext extends ExecutionMonitor {
 
         // THIS IF CODE PATH NEEDS TO BE REMOVED AS SOON AS WE HAVE FEATURE PARITY for new backend!
         TableBackend backend = WorkflowTableBackendSettings.getTableBackendForCurrentContext();
-        LOGGER.infoWithFormat("Using Table Backend \"%s\".", backend.getClass().getSimpleName());
+        LOGGER.debugWithFormat("Using Table Backend \"%s\".", backend.getClass().getSimpleName());
 
         return new BufferedDataContainer(spec, initDomain, m_node,
                 m_memoryPolicy, forceCopyOfBlobs, maxCellsInMemory, m_dataRepository,

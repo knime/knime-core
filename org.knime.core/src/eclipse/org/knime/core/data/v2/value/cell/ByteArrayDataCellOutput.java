@@ -52,6 +52,7 @@ import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataCellSerializer;
+import org.knime.core.data.container.LongUTFDataOutputStream;
 import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.filestore.FileStoreCell;
 import org.knime.core.data.filestore.FileStoreKey;
@@ -74,11 +75,12 @@ final class ByteArrayDataCellOutput implements DataCellDataOutput, AutoCloseable
 
     private final ByteArrayOutputStream m_byteStream;
 
-    private final DataOutputStream m_delegateStream;
+    private final LongUTFDataOutputStream m_delegateStream;
 
     ByteArrayDataCellOutput(final DataCellSerializerFactory factory, final IWriteFileStoreHandler fsHandler) {
         m_byteStream = new ByteArrayOutputStream(64);
-        m_delegateStream = new DataOutputStream(m_byteStream);
+        // TODO Christian
+        m_delegateStream = new LongUTFDataOutputStream(new DataOutputStream(m_byteStream));
         m_factory = factory;
         m_fsHandler = fsHandler;
     }

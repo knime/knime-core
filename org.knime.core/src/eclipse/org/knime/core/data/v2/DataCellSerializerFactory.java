@@ -27,6 +27,7 @@ import org.knime.core.node.config.ConfigWO;
  * serialization time.
  *
  * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
+ * @since 4.3
  */
 public final class DataCellSerializerFactory {
 
@@ -115,10 +116,10 @@ public final class DataCellSerializerFactory {
         final byte[] indices = new byte[cells.length];
         int index = 0;
 
-        // TODO Bernd should we store the cellType name or the class of the serializer (backwards compatibility).
         for (final Entry<Byte, DataCellSerializerInfo> entry : m_byIdx.entrySet()) {
             cells[index] = entry.getValue().m_cellType.getName();
-            indices[index++] = entry.getValue().m_internalIndex;
+            indices[index] = entry.getValue().m_internalIndex;
+            index++;
         }
         childConfig.addByteArray(CFG_SERIALIZER_INDICES, indices);
         childConfig.addStringArray(CFG_SERIALIZER_CELL_TYPES, cells);
@@ -136,10 +137,9 @@ public final class DataCellSerializerFactory {
         final String[] cells = childConfig.getStringArray(CFG_SERIALIZER_CELL_TYPES);
         final byte[] indices = childConfig.getByteArray(CFG_SERIALIZER_INDICES);
         for (int i = 0; i < indices.length; i++) {
-            // TODO Bernd see todo in saveTo
-            final Class<? extends DataCell> type = REGISTRY.getCellClass(cells[i]).get();
+            final Class<? extends DataCell> type = REGISTRY.getCellClass(cells[i]).get(); // NOSONAR
             final DataCellSerializerInfo info =
-                new DataCellSerializerInfo(type, indices[i], REGISTRY.getSerializer(type).get());
+                new DataCellSerializerInfo(type, indices[i], REGISTRY.getSerializer(type).get()); // NOSONAR
             m_byIdx.put(indices[i], info);
             m_byType.put(type, info);
         }
@@ -189,7 +189,7 @@ public final class DataCellSerializerFactory {
         }
     }
 
-    private static class JavaNativeSerializer implements DataCellSerializer<DataCell> {
+    private static final class JavaNativeSerializer implements DataCellSerializer<DataCell> {
 
         private static final DataCellSerializerInfo INSTANCE = new DataCellSerializerInfo(DataCell.class,
             KNIMEStreamConstants.BYTE_TYPE_SERIALIZATION, new JavaNativeSerializer());
@@ -210,7 +210,6 @@ public final class DataCellSerializerFactory {
                 final ObjectInputStream ois = new ObjectInputStream((InputStream)input);
                 return (DataCell)ois.readObject();
             } catch (ClassNotFoundException e) {
-                // TODO logging
                 throw new IOException(e);
             }
         }

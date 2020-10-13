@@ -131,7 +131,7 @@ public final class DataCellValueFactory
     }
 
     /* DataCellAccessSpec based on {@link ObjectAccessSpec}. */
-    private final static class DataCellAccessSpec implements ObjectAccessSpec<DataCell> {
+    private static final class DataCellAccessSpec implements ObjectAccessSpec<DataCell> {
 
         private final DataCellSerializerFactory m_factory;
 
@@ -171,7 +171,7 @@ public final class DataCellValueFactory
     }
 
     /* {@link ObjectSerializer} for arbitrary {@link DataCell}s */
-    private final static class DataCellObjectSerializer implements ObjectSerializer<DataCell> {
+    private static final class DataCellObjectSerializer implements ObjectSerializer<DataCell> {
 
         private final DataCellSerializerFactory m_factory;
 

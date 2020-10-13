@@ -50,6 +50,8 @@ package org.knime.core.data;
 
 import java.util.Comparator;
 
+import org.knime.core.node.util.CheckUtils;
+
 /**
  * {@link Comparator} on {@link DataValue}s delegating to a {@link DataValueComparator}.
  *
@@ -69,7 +71,7 @@ public final class DataValueComparatorDelegator<D extends DataValue> implements 
      * @param delegate the delegate
      */
     public DataValueComparatorDelegator(final DataValueComparator delegate) {
-        m_delegate = delegate;
+        m_delegate = CheckUtils.checkArgumentNotNull(delegate, "Argument must not be null");
     }
 
     @Override

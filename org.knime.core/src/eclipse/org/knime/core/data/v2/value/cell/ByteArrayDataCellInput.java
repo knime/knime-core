@@ -53,6 +53,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellDataInput;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.IDataRepository;
+import org.knime.core.data.container.LongUTFDataInputStream;
 import org.knime.core.data.filestore.FileStoreCell;
 import org.knime.core.data.filestore.FileStoreKey;
 import org.knime.core.data.filestore.FileStoreUtil;
@@ -64,7 +65,7 @@ import org.knime.core.data.v2.DataCellSerializerFactory;
  * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
  * @since 4.3
  */
-class ByteArrayDataCellInput extends DataInputStream implements DataCellDataInput {
+final class ByteArrayDataCellInput extends LongUTFDataInputStream implements DataCellDataInput {
 
     private final DataCellSerializerFactory m_factory;
 
@@ -74,7 +75,7 @@ class ByteArrayDataCellInput extends DataInputStream implements DataCellDataInpu
 
     ByteArrayDataCellInput(final DataCellSerializerFactory factory, final IDataRepository dataRepository,
         final byte[] bytes) {
-        super(new ByteArrayInputStream(bytes, 1, bytes.length - 1));
+        super(new DataInputStream(new ByteArrayInputStream(bytes, 1, bytes.length - 1)));
 
         m_factory = factory;
         m_serializer = m_factory.getSerializerByIdx(bytes[0]).getSerializer();

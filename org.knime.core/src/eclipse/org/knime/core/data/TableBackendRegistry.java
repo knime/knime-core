@@ -73,21 +73,21 @@ import org.knime.core.node.util.CheckUtils;
  * @noreference This interface is not intended to be referenced by clients.
  * @noextend This interface is not intended to be extended by clients.
  */
-public class TableBackendRegistry {
+public final class TableBackendRegistry {
 
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(TableBackend.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(TableBackendRegistry.class);
 
     private static final String EXT_POINT_ID = "org.knime.core.TableBackend";
 
-    private static TableBackendRegistry INSTANCE = createInstance();
+    private static final TableBackendRegistry INSTANCE = createInstance();
 
     private static TableBackendRegistry createInstance() {
         IExtensionRegistry registry = Platform.getExtensionRegistry();
         IExtensionPoint point = registry.getExtensionPoint(EXT_POINT_ID);
 
         List<TableBackend> backendList = Stream.of(point.getExtensions())
-            .flatMap(ext -> Stream.of(ext.getConfigurationElements())).map(cfe -> readBackend(cfe))
-            .filter(Objects::nonNull).sorted(Comparator.comparing(f -> f.getClass().getName(), (a, b) -> {
+            .flatMap(ext -> Stream.of(ext.getConfigurationElements())).map(TableBackendRegistry::readBackend)
+            .filter(Objects::nonNull).sorted(Comparator.comparing(f -> f.getClass().getName(), (a, b) -> { // NOSONAR
                 // sort formats so that the "KNIME standard" format comes first.
                 if (Objects.equals(a, b)) {
                     return 0;
@@ -123,7 +123,7 @@ public class TableBackendRegistry {
     }
 
     /** @return the instance to use. */
-    public final static TableBackendRegistry getInstance() {
+    public static final TableBackendRegistry getInstance() {
         return INSTANCE;
     }
 

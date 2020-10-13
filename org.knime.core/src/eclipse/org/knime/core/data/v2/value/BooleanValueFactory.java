@@ -69,6 +69,7 @@ import org.knime.core.data.v2.access.BooleanAccess.BooleanWriteAccess;
  * {@link ValueFactory} implementation for {@link BooleanCell}.
  *
  * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
+ * @since 4.3
  */
 public class BooleanValueFactory implements ValueFactory<BooleanReadAccess, BooleanWriteAccess> {
 

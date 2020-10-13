@@ -70,7 +70,7 @@ import org.knime.core.data.v2.access.VoidAccess.VoidAccessSpec;
  *
  * @noextend This interface is not intended to be extended by clients.
  */
-public interface AccessSpec<R extends ReadAccess, W extends WriteAccess> {
+public interface AccessSpec<R extends ReadAccess, W extends WriteAccess> { // NOSONAR
 
     /**
      * @param <T> result of visit

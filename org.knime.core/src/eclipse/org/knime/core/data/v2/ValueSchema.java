@@ -87,8 +87,10 @@ import org.knime.core.node.NodeSettingsWO;
  * i.e. {@link ValueSchema#getNumColumns()} equals {@link DataTableSpec#getNumColumns()} + 1;
  *
  * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
+ * @noreference This class is not intended to be referenced by clients.
+ * @since 4.3
  */
-// TODO Bernd do we want to interface this?
+// TODO do we want to interface this?
 public final class ValueSchema {
 
     private final DataTableSpec m_spec;
@@ -164,14 +166,14 @@ public final class ValueSchema {
      * @param handler file-store handler
      * @return the value schema.
      */
-    public final static ValueSchema create(final DataTableSpec spec, final RowKeyType rowKeyType,
+    public static final ValueSchema create(final DataTableSpec spec, final RowKeyType rowKeyType,
         final IWriteFileStoreHandler handler) {
 
         final DataCellSerializerFactory factory = new DataCellSerializerFactory();
 
         final ValueFactory<?, ?>[] factories = new ValueFactory[spec.getNumColumns() + 1];
         factories[0] = getRowKeyFactory(rowKeyType);
-        for (int i = factories.length; --i >= 1;) {
+        for (int i = 1; i < factories.length; i++) {
             factories[i] = findNativeValueFactory(spec.getColumnSpec(i - 1).getType());
             if (factories[i] == null) {
                 factories[i] = new DataCellValueFactory(factory, handler);
@@ -180,8 +182,8 @@ public final class ValueSchema {
         return new ValueSchema(spec, factories, rowKeyType, factory);
     }
 
-    private final static ValueFactory<?, ?> findNativeValueFactory(final DataType type) {
-        /* TODO extension point */
+    private static final ValueFactory<?, ?> findNativeValueFactory(final DataType type) {
+        /* TODO extension point -- AP-15324 */
         if (type == DoubleCell.TYPE) {
             return DoubleValueFactory.INSTANCE;
         } else if (type == IntCell.TYPE) {
@@ -192,8 +194,9 @@ public final class ValueSchema {
             return StringValueFactory.INSTANCE;
         } else if (type == BooleanCell.TYPE) {
             return BooleanValueFactory.INSTANCE;
+        } else {
+            return null;
         }
-        return null;
     }
 
     /**

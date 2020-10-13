@@ -72,6 +72,7 @@ import org.knime.core.data.v2.access.ObjectAccess.ObjectWriteAccess;
  * {@link ValueFactory} implementation for {@link StringCell}.
  *
  * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
+ * @since 4.3
  */
 public class StringValueFactory implements ValueFactory<ObjectReadAccess<String>, ObjectWriteAccess<String>> {
 
