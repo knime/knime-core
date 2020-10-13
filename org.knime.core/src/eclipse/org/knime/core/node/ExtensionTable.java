@@ -147,6 +147,7 @@ public abstract class ExtensionTable implements ContainerTable {
 
         /**
          * @return the data repository
+         * @since 4.3
          */
         public IDataRepository getDataRepository() {
             return m_repository;
