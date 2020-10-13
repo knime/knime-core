@@ -43,24 +43,26 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  */
-package org.knime.core.data.values;
+package org.knime.core.data.v2;
 
-import org.knime.core.data.NominalValue;
-import org.knime.core.data.StringValue;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataValue;
+import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.v2.value.DoubleValueFactory.DoubleWriteValue;
 
 /**
- * TODO
- * 
- * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
- * 
- * @apiNote API still experimental. It might change in future releases of KNIME
- *          Analytics Platform.
+ * Important Note for developers: We assume a 1-to-1 association from a {@link DataCell} to a {@link WriteValue}, for
+ * example {@link DoubleWriteValue} to {@link DoubleCell#TYPE}.
  *
- * @noreference This interface is not intended to be referenced by clients.
- * @noextend This interface is not intended to be extended by clients.
+ * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
+ * @param <D> associated {@link DataValue}.
+ * @since 4.3
+ *
+ * @apiNote API still experimental. It might change in future releases of KNIME Analytics Platform.
  */
-public interface StringReadValue extends //
-		StringValue, //
-		NominalValue, //
-		DataCellReadValue {
+public interface WriteValue<D extends DataValue> {
+    /**
+     * @param value the value to set
+     */
+    void setValue(D value);
 }

@@ -42,42 +42,42 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
+ *
+ * History
+ *   Sep 27, 2020 (dietzc): created
  */
-package org.knime.core.data;
+package org.knime.core.data.v2.access;
 
-import java.io.IOException;
-
-import org.knime.core.data.values.WriteValue;
-import org.knime.core.node.BufferedDataTable;
+import org.knime.core.data.v2.value.IntValueFactory.IntReadValue;
+import org.knime.core.data.v2.value.IntValueFactory.IntWriteValue;
 
 /**
- * TODO
- * 
- * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
- * 
- * @apiNote API still experimental. It might change in future releases of KNIME
- *          Analytics Platform.
+ * Definition of {@link IntAccess}.
  *
- * @noreference This interface is not intended to be referenced by clients.
- * @noextend This interface is not intended to be extended by clients.
+ * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
+ * @since 4.3
  */
-public interface RowWriteCursor<R> extends RowWriteAccess, AutoCloseable {
+@SuppressWarnings("javadoc")
+public final class IntAccess {
 
-	/**
-	 * Called after values have been added using the {@link WriteValue}s.
-	 */
-	void push();
+    private IntAccess() {
+    }
 
-	@Override
-	void close();
+    public static final class IntAccessSpec implements AccessSpec<IntReadAccess, IntWriteAccess> {
+        public static final IntAccessSpec INSTANCE = new IntAccessSpec();
 
-	/**
-	 * TODO debate finish vs. finishTable
-	 * 
-	 * @return {@link BufferedDataTable} representing all rows added to the
-	 *         container.
-	 * @throws IOException
-	 */
+        private IntAccessSpec() {
+        }
 
-	R finish() throws IOException;
+        @Override
+        public <V> V accept(final AccessSpecMapper<V> v) {
+            return v.visit(this);
+        }
+    }
+
+    public interface IntReadAccess extends ReadAccess, IntReadValue {
+    }
+
+    public interface IntWriteAccess extends WriteAccess, IntWriteValue {
+    }
 }

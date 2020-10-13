@@ -43,20 +43,36 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  */
-package org.knime.core.data;
-
-import org.knime.core.node.BufferedDataTable;
+package org.knime.core.data.v2;
 
 /**
- * TODO
- * 
- * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
- * 
- * @apiNote API still experimental. It might change in future releases of KNIME
- *          Analytics Platform.
+ * Write access to a data row.
  *
- * @noreference This interface is not intended to be referenced by clients.
- * @noextend This interface is not intended to be extended by clients.
+ * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
+ * @since 4.3
+ *
+ * @apiNote API still experimental. It might change in future releases of KNIME Analytics Platform.
  */
-public interface RowContainer extends RowWriteCursor<BufferedDataTable> {
+public interface RowWriteAccess {
+
+    /**
+     * Get the write value at a certain column index.
+     *
+     * @param <W> type of the {@link WriteValue}
+     * @param index column index of {@link WriteValue}
+     * @return the WriteValue
+     */
+    <W extends WriteValue<?>> W getWriteValue(int index);
+
+    /**
+     * @return number of columns
+     */
+    int getNumColumns();
+
+    /**
+     * Set a value missing at the given index.
+     *
+     * @param index of the column.
+     */
+    void setMissing(int index);
 }

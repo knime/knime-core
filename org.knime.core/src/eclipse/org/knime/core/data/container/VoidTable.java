@@ -52,8 +52,8 @@ import java.io.IOException;
 
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.RowCursor;
 import org.knime.core.data.container.filter.TableFilter;
+import org.knime.core.data.v2.RowCursor;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 import org.knime.core.node.CanceledExecutionException;

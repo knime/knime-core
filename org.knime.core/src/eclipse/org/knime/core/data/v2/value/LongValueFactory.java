@@ -43,26 +43,79 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  */
-package org.knime.core.data.values;
+package org.knime.core.data.v2.value;
 
 import org.knime.core.data.BoundedValue;
+import org.knime.core.data.ComplexNumberValue;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.data.FuzzyIntervalValue;
+import org.knime.core.data.FuzzyNumberValue;
 import org.knime.core.data.LongValue;
+import org.knime.core.data.def.LongCell;
+import org.knime.core.data.v2.ReadValue;
+import org.knime.core.data.v2.ValueFactory;
+import org.knime.core.data.v2.WriteValue;
+import org.knime.core.data.v2.access.LongAccess.LongAccessSpec;
+import org.knime.core.data.v2.access.LongAccess.LongReadAccess;
+import org.knime.core.data.v2.access.LongAccess.LongWriteAccess;
 
 /**
- * TODO
- * 
- * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
- * 
- * @apiNote API still experimental. It might change in future releases of KNIME
- *          Analytics Platform.
+ * {@link ValueFactory} implementation for {@link LongCell}.
  *
- * @noreference This interface is not intended to be referenced by clients.
- * @noextend This interface is not intended to be extended by clients.
+ * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
+ * @since 4.3
  */
-public interface LongReadValue extends //
-		LongValue, //
-		DoubleValue, //
-		BoundedValue, //
-		DataCellReadValue {
+public final class LongValueFactory implements ValueFactory<LongReadAccess, LongWriteAccess> {
+
+    /** Stateless instance of LongValueFactory */
+    public static final LongValueFactory INSTANCE = new LongValueFactory();
+
+    private LongValueFactory() {
+    }
+
+
+    @Override
+    public LongAccessSpec getSpec() {
+        return LongAccessSpec.INSTANCE;
+    }
+
+    @Override
+    public LongReadValue createReadValue(final LongReadAccess reader) {
+        return reader;
+    }
+
+    @Override
+    public LongWriteValue createWriteValue(final LongWriteAccess writer) {
+        return writer;
+    }
+
+    /**
+     * {@link ReadValue} equivalent to {@link LongCell}.
+     *
+     * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
+     * @since 4.3
+     */
+    public interface LongReadValue extends //
+        LongValue, //
+        DoubleValue, //
+        BoundedValue, //
+        ReadValue, //
+        ComplexNumberValue, //
+        FuzzyNumberValue, //
+        FuzzyIntervalValue {
+    }
+
+    /**
+     * {@link WriteValue} equivalent to {@link LongCell}.
+     *
+     * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
+     * @since 4.3
+     */
+    public interface LongWriteValue extends WriteValue<LongValue> {
+
+        /**
+         * @param value the long value to set
+         */
+        void setLongValue(long value);
+    }
 }

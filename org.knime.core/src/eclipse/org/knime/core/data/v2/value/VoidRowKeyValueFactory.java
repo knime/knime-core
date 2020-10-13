@@ -42,24 +42,71 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
+ *
+ * History
+ *   Oct 5, 2020 (dietzc): created
  */
-package org.knime.core.data.values;
+package org.knime.core.data.v2.value;
 
-import org.knime.core.data.BooleanValue;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataValue;
+import org.knime.core.data.v2.ReadValue;
+import org.knime.core.data.v2.RowKeyReadValue;
+import org.knime.core.data.v2.ValueFactory;
+import org.knime.core.data.v2.WriteValue;
+import org.knime.core.data.v2.access.ReadAccess;
+import org.knime.core.data.v2.access.VoidAccess.VoidAccessSpec;
+import org.knime.core.data.v2.access.WriteAccess;
 
 /**
- * TODO
- * 
- * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
- * 
- * @apiNote API still experimental. It might change in future releases of KNIME
- *          Analytics Platform.
+ * {@link ValueFactory} for void types. Basically place holders inside a table. Could be used for e.g. empty columns.
  *
- * @noreference This interface is not intended to be referenced by clients.
- * @noextend This interface is not intended to be extended by clients.
+ * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
+ * @since 4.3
  */
-public interface BooleanWriteValue extends WriteValue<BooleanValue> {
-	void setBooleanValue(boolean value);
-}
+public final class VoidRowKeyValueFactory implements ValueFactory<ReadAccess, WriteAccess> {
 
-// TODO: implement ComplexNumberValue, FuzzyNumberValue, FuzzyIntervalValue.
+    /** Stateless instance of VoidRowKeyValue */
+    public static final VoidRowKeyValueFactory INSTANCE = new VoidRowKeyValueFactory();
+
+    private VoidRowKeyValueFactory() {
+    }
+
+    @Override
+    public ReadValue createReadValue(final ReadAccess reader) {
+        return VoidRowKeyReadValue.READ_VALUE_INSTANCE;
+    }
+
+    @Override
+    public WriteValue<?> createWriteValue(final WriteAccess writer) {
+        return VoidRowKeyWriteValue.WRITE_VALUE_INSTANCE;
+    }
+
+    @Override
+    public VoidAccessSpec getSpec() {
+        return VoidAccessSpec.INSTANCE;
+    }
+
+    private static final class VoidRowKeyReadValue implements RowKeyReadValue {
+        private final static VoidRowKeyReadValue READ_VALUE_INSTANCE = new VoidRowKeyReadValue();
+
+        @Override
+        public DataCell getDataCell() {
+            return null;
+        }
+
+        @Override
+        public String getString() {
+            return null;
+        }
+    }
+
+    private static final class VoidRowKeyWriteValue implements WriteValue<DataValue> {
+        private final static VoidRowKeyWriteValue WRITE_VALUE_INSTANCE = new VoidRowKeyWriteValue();
+
+        @Override
+        public void setValue(final DataValue value) {
+        }
+    }
+
+}

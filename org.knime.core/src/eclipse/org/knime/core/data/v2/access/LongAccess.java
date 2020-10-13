@@ -42,28 +42,42 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
+ *
+ * History
+ *   Sep 27, 2020 (dietzc): created
  */
-package org.knime.core.data.values;
+package org.knime.core.data.v2.access;
 
-import org.knime.core.data.DoubleValue;
-import org.knime.core.data.IntValue;
-import org.knime.core.data.LongValue;
+import org.knime.core.data.v2.value.LongValueFactory.LongReadValue;
+import org.knime.core.data.v2.value.LongValueFactory.LongWriteValue;
 
 /**
- * TODO
- * 
- * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
- * 
- * @apiNote API still experimental. It might change in future releases of KNIME
- *          Analytics Platform.
+ * Definition of {@link LongAccess}.
  *
- * @noreference This interface is not intended to be referenced by clients.
- * @noextend This interface is not intended to be extended by clients.
+ * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
+ * @since 4.3
  */
-public interface IntReadValue extends //
-		IntValue, //
-		DoubleValue, //
-		LongValue, //
-		DataCellReadValue//
-{
+@SuppressWarnings("javadoc")
+public final class LongAccess {
+
+    private LongAccess() {
+    }
+
+    public static final class LongAccessSpec implements AccessSpec<LongReadAccess, LongWriteAccess> {
+        public static final LongAccessSpec INSTANCE = new LongAccessSpec();
+
+        private LongAccessSpec() {
+        }
+
+        @Override
+        public <V> V accept(final AccessSpecMapper<V> v) {
+            return v.visit(this);
+        }
+    }
+
+    public interface LongReadAccess extends ReadAccess, LongReadValue {
+    }
+
+    public interface LongWriteAccess extends WriteAccess, LongWriteValue {
+    }
 }

@@ -43,21 +43,32 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  */
-package org.knime.core.data.values;
+package org.knime.core.data.v2;
 
-import org.knime.core.data.DataValue;
+import org.knime.core.data.RowKeyValue;
+import org.knime.core.node.BufferedDataTable;
 
 /**
- * TODO
- * 
- * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
- * 
- * @apiNote API still experimental. It might change in future releases of KNIME
- *          Analytics Platform.
+ * {@link RowWriteCursor} implementation which allows the API consumer to provide custom {@link RowKeyValue}s as
+ * strings. Creates a new {@link BufferedDataTable} on {@link #finish()};
  *
- * @noreference This interface is not intended to be referenced by clients.
- * @noextend This interface is not intended to be extended by clients.
+ * NB: Row keys must be unique.
+ *
+ * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
+ * @since 4.3
+ *
+ * @apiNote API still experimental. It might change in future releases of KNIME Analytics Platform.
  */
-public interface WriteValue<D extends DataValue> {
-	void setValue(D value);
+public interface RowContainerCustomKey extends RowWriteCursor<BufferedDataTable> {
+
+    /**
+     * @param key string representation of the unique row key.
+     */
+    void setRowKey(String key);
+
+    /**
+     * @param key {@link RowKeyValue} representation of the unique row key.
+     */
+    void setRowKey(RowKeyValue key);
+
 }

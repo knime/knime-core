@@ -42,59 +42,30 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- *
- * History
- *   Sep 10, 2020 (dietzc): created
  */
-package org.knime.core.data;
+package org.knime.core.data.v2;
 
-import java.util.NoSuchElementException;
+import java.io.IOException;
+
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.TableBackend;
+import org.knime.core.data.container.DataContainerSettings;
+import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.workflow.WorkflowTableBackendSettings;
 
 /**
- * Read access to a row.
- *
- * @author Christian Dietz
- * @since 4.2.2
- *
- * @apiNote API still experimental. It might change in future releases of KNIME Analytics Platform.
- *
- * @noreference This interface is not intended to be referenced by clients.
- * @noextend This interface is not intended to be extended by clients.
+ * TODO move to execution context
  */
-public interface RowAccess {
-    /**
-     * @return number of columns.
-     */
-    int getNumColumns();
+public final class RowContainerFactory {
 
-    /**
-     * Get a {@link DataValue} at a given position.
-     *
-     * @param <D> type of the {@link DataValue}
-     * @param index the column index
-     *
-     * @return the {@link DataValue} at column index or <source>null</source> if {@link DataValue} is not available, for
-     *         example if the column has been filtered out. In case {@link #isMissing(int)} returns
-     *         <source>true</source> the returned instance is a {@link MissingValue}.
-     *
-     * @throws NoSuchElementException if the cursor is at an invalid position
-     */
-    <D extends DataValue> D getValue(int index);
+    private RowContainerFactory() {
+    }
 
-    /**
-     * If <code>true</<code> getValue will return `MissingValue` to get missing value cause.
-     *
-     * @param index column index
-     * @return <code>true</code> if value at index is missing
-     *
-     * @throws NoSuchElementException if the cursor is at an invalid position
-     */
-    boolean isMissing(int index);
+    public static RowContainerCustomKey createCustomKey(final ExecutionContext context, final DataTableSpec spec,
+        final DataContainerSettings settings) throws IOException {
+        final TableBackend backend = WorkflowTableBackendSettings.getTableBackendForCurrentContext();
 
-    /**
-     * @return the {@link RowKeyValue}
-     *
-     * @throws NoSuchElementException if the cursor is at an invalid position
-     */
-    RowKeyValue getRowKeyValue();
+        // TODO where to get the null null from in this scenario?
+        return backend.create(context, spec, settings, null, null);
+    }
 }

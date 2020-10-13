@@ -42,25 +42,60 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
+ *
+ * History
+ *   Sep 10, 2020 (dietzc): created
  */
-package org.knime.core.data.values;
+package org.knime.core.data.v2;
 
-import org.knime.core.data.BoundedValue;
-import org.knime.core.data.DoubleValue;
+import java.util.NoSuchElementException;
+
+import org.knime.core.data.DataValue;
+import org.knime.core.data.MissingValue;
+import org.knime.core.data.RowKeyValue;
 
 /**
- * TODO
- * 
- * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
- * 
- * @apiNote API still experimental. It might change in future releases of KNIME
- *          Analytics Platform.
+ * Read access to a data row.
  *
- * @noreference This interface is not intended to be referenced by clients.
- * @noextend This interface is not intended to be extended by clients.
+ * @author Christian Dietz
+ * @since 4.3
+ *
+ * @apiNote API still experimental. It might change in future releases of KNIME Analytics Platform.
  */
-public interface DoubleReadValue extends //
-		DataCellReadValue, //
-		DoubleValue, //
-		BoundedValue {
+public interface RowAccess {
+    /**
+     * @return number of columns.
+     */
+    int getNumColumns();
+
+    /**
+     * Get a {@link DataValue} at a given position.
+     *
+     * @param <D> type of the {@link DataValue}
+     * @param index the column index
+     *
+     * @return the {@link DataValue} at column index or <source>null</source> if {@link DataValue} is not available, for
+     *         example if the column has been filtered out. In case {@link #isMissing(int)} returns
+     *         <source>true</source> the returned instance is a {@link MissingValue}.
+     *
+     * @throws NoSuchElementException if the cursor is at an invalid position
+     */
+    <D extends DataValue> D getValue(int index);
+
+    /**
+     * If <code>true</<code> getValue will return `MissingValue` to get missing value cause.
+     *
+     * @param index column index
+     * @return <code>true</code> if value at index is missing
+     *
+     * @throws NoSuchElementException if the cursor is at an invalid position
+     */
+    boolean isMissing(int index);
+
+    /**
+     * @return the {@link RowKeyValue}
+     *
+     * @throws NoSuchElementException if the cursor is at an invalid position
+     */
+    RowKeyValue getRowKeyValue();
 }

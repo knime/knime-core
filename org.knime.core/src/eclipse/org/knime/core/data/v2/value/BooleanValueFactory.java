@@ -42,41 +42,89 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
+ *
+ * History
+ *   Oct 7, 2020 (dietzc): created
  */
-package org.knime.core.data;
+package org.knime.core.data.v2.value;
 
-import org.knime.core.data.values.WriteValue;
+import org.knime.core.data.BooleanValue;
+import org.knime.core.data.BoundedValue;
+import org.knime.core.data.ComplexNumberValue;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.data.FuzzyIntervalValue;
+import org.knime.core.data.FuzzyNumberValue;
+import org.knime.core.data.IntValue;
+import org.knime.core.data.LongValue;
+import org.knime.core.data.NominalValue;
+import org.knime.core.data.def.BooleanCell;
+import org.knime.core.data.v2.ReadValue;
+import org.knime.core.data.v2.ValueFactory;
+import org.knime.core.data.v2.WriteValue;
+import org.knime.core.data.v2.access.BooleanAccess.BooleanAccessSpec;
+import org.knime.core.data.v2.access.BooleanAccess.BooleanReadAccess;
+import org.knime.core.data.v2.access.BooleanAccess.BooleanWriteAccess;
 
 /**
- * TODO
- * 
- * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
- * 
- * @apiNote API still experimental. It might change in future releases of KNIME
- *          Analytics Platform.
+ * {@link ValueFactory} implementation for {@link BooleanCell}.
  *
- * @noreference This interface is not intended to be referenced by clients.
- * @noextend This interface is not intended to be extended by clients.
+ * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
  */
-public interface RowWriteAccess {
+public class BooleanValueFactory implements ValueFactory<BooleanReadAccess, BooleanWriteAccess> {
 
-	// TODO API is asymmetric to RowRead (missing value etc).
+    /**
+     * Stateless instance of BooleanValueFactory.
+     */
+    public final static BooleanValueFactory INSTANCE = new BooleanValueFactory();
 
-	/**
-	 * Get the write value at a certain column index.
-	 *
-	 * @param <W>   type of the {@link WriteValue}
-	 * @param index column index of {@link WriteValue}
-	 * @return the WriteValue
-	 */
-	<W extends WriteValue<?>> W getWriteValue(int index);
+    private BooleanValueFactory() {
+    }
 
-	/**
-	 * @return number of columns
-	 */
-	int getNumColumns();
+    @Override
+    public BooleanAccessSpec getSpec() {
+        return BooleanAccessSpec.INSTANCE;
+    }
 
-	void setMissing(int index);
+    @Override
+    public BooleanReadValue createReadValue(final BooleanReadAccess reader) {
+        return reader;
+    }
 
-//    void setMissing(int index, String cause);
+    @Override
+    public BooleanWriteValue createWriteValue(final BooleanWriteAccess writer) {
+        return writer;
+    }
+
+    /**
+     * {@link ReadValue} equivalent to {@link BooleanCell}.
+     *
+     * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
+     * @since 4.3
+     */
+    public static interface BooleanReadValue extends //
+        BooleanValue, //
+        DoubleValue, //
+        BoundedValue, //
+        LongValue, //
+        IntValue, //
+        NominalValue, //
+        ComplexNumberValue, //
+        FuzzyNumberValue, //
+        FuzzyIntervalValue, //
+        ReadValue {
+    }
+
+    /**
+     * {@link WriteValue} equivalent to {@link BooleanCell}.
+     *
+     * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
+     * @since 4.3
+     */
+    public static interface BooleanWriteValue extends WriteValue<BooleanValue> {
+
+        /**
+         * @param value the boolean to set.
+         */
+        void setBooleanValue(boolean value);
+    }
 }

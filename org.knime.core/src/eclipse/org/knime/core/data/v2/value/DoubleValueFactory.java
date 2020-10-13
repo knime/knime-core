@@ -43,33 +43,76 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  */
-package org.knime.core.data.values;
+package org.knime.core.data.v2.value;
 
-import org.knime.core.data.RowKeyValue;
+import org.knime.core.data.BoundedValue;
+import org.knime.core.data.ComplexNumberValue;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.data.FuzzyIntervalValue;
+import org.knime.core.data.FuzzyNumberValue;
+import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.v2.ReadValue;
+import org.knime.core.data.v2.ValueFactory;
+import org.knime.core.data.v2.WriteValue;
+import org.knime.core.data.v2.access.DoubleAccess.DoubleAccessSpec;
+import org.knime.core.data.v2.access.DoubleAccess.DoubleReadAccess;
+import org.knime.core.data.v2.access.DoubleAccess.DoubleWriteAccess;
 
 /**
- * TODO
- * 
- * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
- * 
- * @apiNote API still experimental. It might change in future releases of KNIME
- *          Analytics Platform.
+ * {@link ValueFactory} implementation for {@link DoubleCell}.
  *
- * @noreference This interface is not intended to be referenced by clients.
- * @noextend This interface is not intended to be extended by clients.
+ * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
+ * @since 4.3
  */
-public interface RowKeyWriteValue extends WriteValue<RowKeyReadValue> {
-	/**
-	 * TODO
-	 *
-	 * @param key
-	 */
-	void setRowKey(String key);
+public final class DoubleValueFactory implements ValueFactory<DoubleReadAccess, DoubleWriteAccess> {
 
-	/**
-	 * TODO
-	 *
-	 * @param key
-	 */
-	void setRowKey(RowKeyValue key);
+    /** Stateless instanceof of DoubleValueFactory */
+    public final static DoubleValueFactory INSTANCE = new DoubleValueFactory();
+
+    private DoubleValueFactory() {
+    }
+
+    @Override
+    public DoubleAccessSpec getSpec() {
+        return DoubleAccessSpec.INSTANCE;
+    }
+
+    @Override
+    public DoubleReadValue createReadValue(final DoubleReadAccess reader) {
+        return reader;
+    }
+
+    @Override
+    public DoubleWriteValue createWriteValue(final DoubleWriteAccess writer) {
+        return writer;
+    }
+
+    /**
+     * {@link ReadValue} equivalent to {@link DoubleCell}.
+     *
+     * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
+     * @since 4.3
+     */
+    public interface DoubleReadValue extends //
+        DoubleValue, //
+        BoundedValue, //
+        ReadValue, //
+        ComplexNumberValue, //
+        FuzzyNumberValue, //
+        FuzzyIntervalValue {
+    }
+
+    /**
+     * {@link WriteValue} equivalent to {@link DoubleCell}.
+     *
+     * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
+     * @since 4.3
+     */
+    public interface DoubleWriteValue extends WriteValue<DoubleValue> {
+
+        /**
+         * @param value the double to set
+         */
+        void setDoubleValue(double value);
+    }
 }

@@ -43,22 +43,24 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  */
-package org.knime.core.data.values;
-
-import org.knime.core.data.LongValue;
-
+package org.knime.core.data.v2;
 
 /**
- * TODO
- * 
- * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
- * 
- * @apiNote API still experimental. It might change in future releases of KNIME
- *          Analytics Platform.
+ * {@link RowKeyType}s.
  *
- * @noreference This interface is not intended to be referenced by clients.
- * @noextend This interface is not intended to be extended by clients.
+ * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
+ * @since 4.3
+ *
+ * @apiNote API still experimental. It might change in future releases of KNIME Analytics Platform.
  */
-public interface LongWriteValue extends WriteValue<LongValue> {
-	void setLongValue(long value);
+public enum RowKeyType {
+        /**
+         * Custom, string based row keys are provided by API consumer
+         */
+        CUSTOM,
+
+        /**
+         * No row key is created.
+         */
+        NOKEY;
 }

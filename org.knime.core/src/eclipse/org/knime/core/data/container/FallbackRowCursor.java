@@ -52,9 +52,9 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataValue;
-import org.knime.core.data.RowCursor;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.RowKeyValue;
+import org.knime.core.data.v2.RowCursor;
 
 /**
  * Fallback implementation of {@link RowCursor} based on {@link CloseableRowIterator}.

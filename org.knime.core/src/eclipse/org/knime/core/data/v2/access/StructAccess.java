@@ -42,20 +42,86 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
+ *
+ * History
+ *   Oct 9, 2020 (dietzc): created
  */
-package org.knime.core.data;
+package org.knime.core.data.v2.access;
 
 /**
- * TODO
- * 
- * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
- * 
- * @apiNote API still experimental. It might change in future releases of KNIME
- *          Analytics Platform.
+ * Struct access to underlying data structures.
  *
- * @noreference This interface is not intended to be referenced by clients.
- * @noextend This interface is not intended to be extended by clients.
+ * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
+ * @since 4.3
  */
-public enum RowKeyConfig {
-	CUSTOM, NOKEY;
+public final class StructAccess {
+
+    private StructAccess() {
+    }
+
+    /**
+     * StructAccessSpec defines the inner types of a struct.
+     *
+     * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
+     * @since 4.3
+     */
+    public static final class StructAccessSpec implements AccessSpec<StructReadAccess, StructWriteAccess> {
+
+        private final AccessSpec<?, ?>[] m_inner;
+
+        /**
+         * @param inner AccessSpecs of the struct.
+         */
+        public StructAccessSpec(final AccessSpec<?, ?>... inner) {
+            m_inner = inner;
+        }
+
+        /**
+         * @return the inner specs
+         */
+        public AccessSpec<?, ?>[] getInnerSpecs() {
+            return m_inner;
+        }
+
+        @Override
+        public <V> V accept(final AccessSpecMapper<V> v) {
+            return v.visit(this);
+        }
+    }
+
+    /**
+     * Read access to a struct.
+     *
+     * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
+     * @since 4.3
+     */
+    public interface StructReadAccess extends ReadAccess {
+
+        /**
+         * Get {@link ReadAccess} to an inner {@link ReadAccess}.
+         *
+         * @param <R> type
+         * @param index of inner type
+         * @return {@link ReadAccess} to inner types of the struct
+         */
+        <R extends ReadAccess> R getInnerReadAccessAt(int index);
+    }
+
+    /**
+     * Write access to a struct.
+     *
+     * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
+     * @since 4.3
+     */
+    public interface StructWriteAccess extends WriteAccess {
+
+        /**
+         * Get {@link WriteAccess} to an inner {@link WriteAccess}.
+         *
+         * @param <W> type
+         * @param index of inner type
+         * @return {@link WriteAccess} to inner types of the struct
+         */
+        <W extends WriteAccess> W getWriteAccessAt(int index);
+    }
 }

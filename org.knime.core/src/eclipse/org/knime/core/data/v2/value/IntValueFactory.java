@@ -42,22 +42,84 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
+ *
+ * History
+ *   Oct 2, 2020 (dietzc): created
  */
-package org.knime.core.data.values;
+package org.knime.core.data.v2.value;
 
+import org.knime.core.data.BoundedValue;
+import org.knime.core.data.ComplexNumberValue;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.data.FuzzyIntervalValue;
+import org.knime.core.data.FuzzyNumberValue;
+import org.knime.core.data.IntValue;
+import org.knime.core.data.LongValue;
+import org.knime.core.data.def.IntCell;
+import org.knime.core.data.v2.ReadValue;
+import org.knime.core.data.v2.ValueFactory;
+import org.knime.core.data.v2.WriteValue;
+import org.knime.core.data.v2.access.IntAccess.IntAccessSpec;
+import org.knime.core.data.v2.access.IntAccess.IntReadAccess;
+import org.knime.core.data.v2.access.IntAccess.IntWriteAccess;
 
 /**
- * TODO
- * 
- * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
- * 
- * @apiNote API still experimental. It might change in future releases of KNIME
- *          Analytics Platform.
+ * {@link ValueFactory} implementation for {@link IntCell}.
  *
- * @noreference This interface is not intended to be referenced by clients.
- * @noextend This interface is not intended to be extended by clients.
+ * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
+ * @since 4.3
  */
-public interface DoubleWriteValue extends WriteValue<DoubleValue> {
-	void setDoubleValue(double value);
+public final class IntValueFactory implements ValueFactory<IntReadAccess, IntWriteAccess> {
+
+    /** Stateless instance of IntValueFactory */
+    public static final IntValueFactory INSTANCE = new IntValueFactory();
+
+    private IntValueFactory() {
+    }
+
+    @Override
+    public IntAccessSpec getSpec() {
+        return IntAccessSpec.INSTANCE;
+    }
+
+    @Override
+    public IntReadValue createReadValue(final IntReadAccess access) {
+        return access;
+    }
+
+    @Override
+    public IntWriteValue createWriteValue(final IntWriteAccess access) {
+        return access;
+    }
+
+    /**
+     * {@link ReadValue} equivalent to {@link IntCell}.
+     *
+     * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
+     * @since 4.3
+     */
+    public interface IntReadValue extends //
+        ReadValue, //
+        IntValue, //
+        DoubleValue, //
+        ComplexNumberValue, //
+        FuzzyNumberValue, //
+        FuzzyIntervalValue, //
+        BoundedValue, //
+        LongValue {
+    }
+
+    /**
+     * {@link WriteValue} equivalent to {@link IntCell}.
+     *
+     * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
+     * @since 4.3
+     */
+    public interface IntWriteValue extends WriteValue<IntValue> {
+
+        /**
+         * @param value the int value to set
+         */
+        void setIntValue(int value);
+    }
 }

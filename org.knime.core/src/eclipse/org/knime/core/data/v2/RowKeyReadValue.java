@@ -43,21 +43,19 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  */
-package org.knime.core.data.values;
+package org.knime.core.data.v2;
 
-import org.knime.core.data.DataCell;
+import org.knime.core.data.RowKeyValue;
 
 /**
- * TODO
- * 
- * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
- * 
- * @apiNote API still experimental. It might change in future releases of KNIME
- *          Analytics Platform.
+ * Marker interface for a {@link ReadValue} to access row keys. Only (but always) present in {@link ValueSchema}s at
+ * column index 0.
  *
- * @noreference This interface is not intended to be referenced by clients.
- * @noextend This interface is not intended to be extended by clients.
+ * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
+ * @since 4.3
+ *
+ * @apiNote API still experimental. It might change in future releases of KNIME Analytics Platform.
  */
-public interface DataCellReadValue extends ReadValue {
-	DataCell getDataCell();
+public interface RowKeyReadValue extends ReadValue, RowKeyValue {
+    // NB: marker interface
 }

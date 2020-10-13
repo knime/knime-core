@@ -42,48 +42,42 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
+ *
+ * History
+ *   Sep 27, 2020 (dietzc): created
  */
-package org.knime.core.data;
+package org.knime.core.data.v2.access;
 
-import org.knime.core.node.BufferedDataTable;
-
+import org.knime.core.data.v2.value.BooleanValueFactory.BooleanReadValue;
+import org.knime.core.data.v2.value.BooleanValueFactory.BooleanWriteValue;
 
 /**
- * A DataRowCursor allows for (potentially) faster access to a {@link BufferedDataTable} than a {@link RowIterator}.
+ * Definition of {@link BooleanAccess}.
  *
- * @author Christian Dietz, KNIME GmbH
- * @since 4.2.2
- *
- * @apiNote API still experimental. It might change in future releases of KNIME Analytics Platform.
- *
- * @noreference This interface is not intended to be referenced by clients.
- * @noextend This interface is not intended to be extended by clients.
+ * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
+ * @since 4.3
  */
-public interface RowCursor extends AutoCloseable, RowAccess {
+@SuppressWarnings("javadoc")
+public final class BooleanAccess {
 
-    /**
-     * Check if there are more rows available.
-     *
-     * @return <source>true</source> if it is save to call {@link #poll()}, false otherwise
-     */
-    boolean canPoll();
+    private BooleanAccess() {
+    }
 
-    /**
-     * Polls a row. Cursor has to be polled before accessing the {@link DataValue
-     * DataValues}.
-     *
-     * NB: It's not guaranteed that {@link #getValue(int)} will always return a new {@link DataValue} instance, i.e. the
-     * values accessed through the {@link DataValue} instance can or cannot change after {@link #poll()} has been called.
-     *
-     * @return <source>true</source> if another row can be polled.
-     */
-    boolean poll();
+    public static final class BooleanAccessSpec implements AccessSpec<BooleanReadAccess, BooleanWriteAccess> {
+        public static final BooleanAccessSpec INSTANCE = new BooleanAccessSpec();
 
-    /**
-     * Closes this resource, relinquishing any underlying resources. This method is invoked automatically on objects
-     * managed by the try-with-resources statement. Potential IOExceptions will be logged. This method is idempotent,
-     * i.e., it can be called repeatedly without side effects.
-     */
-    @Override
-    void close();
+        private BooleanAccessSpec() {
+        }
+
+        @Override
+        public <V> V accept(final AccessSpecMapper<V> v) {
+            return v.visit(this);
+        }
+    }
+
+    public interface BooleanReadAccess extends ReadAccess, BooleanReadValue {
+    }
+
+    public interface BooleanWriteAccess extends WriteAccess, BooleanWriteValue {
+    }
 }

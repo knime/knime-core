@@ -43,33 +43,46 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  */
-package org.knime.core.data;
+package org.knime.core.data.v2;
 
-import java.io.IOException;
-import java.util.Map;
-
-import org.knime.core.data.container.DataContainerSettings;
-import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.workflow.WorkflowTableBackendSettings;
+import org.knime.core.data.DataValue;
 
 /**
- * TODO - this class needs to be replaced by some API which makes the API accessible via ExecutionContext
+ * {@link RowAccess} implemenation allowing for iterative read access to a data storage.
  *
- * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
+ * @author Christian Dietz, KNIME GmbH
+ * @since 4.2.2
  *
  * @apiNote API still experimental. It might change in future releases of KNIME Analytics Platform.
  *
  * @noreference This interface is not intended to be referenced by clients.
  * @noextend This interface is not intended to be extended by clients.
  */
-public final class RowContainerFactory {
+public interface RowCursor extends AutoCloseable, RowAccess {
 
-    private RowContainerFactory() {
-    }
+    /**
+     * Check if there are more rows available.
+     *
+     * @return <source>true</source> if it is save to call {@link #poll()}, false otherwise
+     */
+    boolean canPoll();
 
-    public static RowContainerCustomKey createCustomKey(final ExecutionContext context, final DataTableSpec spec,
-        final DataContainerSettings settings, final Map<Integer, DataTypeConfig> additionalConfigs) throws IOException {
-        final TableBackend backend = WorkflowTableBackendSettings.getTableBackendForCurrentContext();
-        return backend.create(context, spec, settings, additionalConfigs);
-    }
+    /**
+     * Polls a row. Cursor has to be polled before accessing the {@link DataValue DataValues}.
+     *
+     * NB: It's not guaranteed that {@link #getValue(int)} will always return a new {@link DataValue} instance, i.e. the
+     * values accessed through the {@link DataValue} instance can or cannot change after {@link #poll()} has been
+     * called.
+     *
+     * @return <source>true</source> if another row can be polled.
+     */
+    boolean poll();
+
+    /**
+     * Closes this resource, relinquishing any underlying resources. This method is invoked automatically on objects
+     * managed by the try-with-resources statement. Potential IOExceptions will be logged. This method is idempotent,
+     * i.e., it can be called repeatedly without side effects.
+     */
+    @Override
+    void close();
 }

@@ -42,33 +42,22 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- */
-package org.knime.core.data.values;
-
-import org.knime.core.data.BooleanValue;
-import org.knime.core.data.BoundedValue;
-import org.knime.core.data.DoubleValue;
-import org.knime.core.data.IntValue;
-import org.knime.core.data.LongValue;
-import org.knime.core.data.NominalValue;
-
-/**
- * TODO
- * 
- * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
- * 
- * @apiNote API still experimental. It might change in future releases of KNIME
- *          Analytics Platform.
  *
- * @noreference This interface is not intended to be referenced by clients.
- * @noextend This interface is not intended to be extended by clients.
+ * History
+ *   Sep 27, 2020 (dietzc): created
  */
-public interface BooleanReadValue extends //
-		BooleanValue, //
-		DoubleValue, //
-		BoundedValue, //
-		LongValue, //
-		IntValue, //
-		NominalValue, //
-		DataCellReadValue {
+package org.knime.core.data.v2.access;
+
+/***
+ * Provides write access to an underlying data structure.
+ *
+ * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
+ * @since 4.3
+ */
+public interface WriteAccess {
+
+    /**
+     * Sets the value missing. Default is missing.
+     */
+    void setMissing();
 }

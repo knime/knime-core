@@ -53,9 +53,9 @@ import java.util.zip.ZipOutputStream;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.IDataRepository;
-import org.knime.core.data.RowCursor;
 import org.knime.core.data.container.filter.TableFilter;
 import org.knime.core.data.container.storage.TableStoreFormat;
+import org.knime.core.data.v2.RowCursor;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 import org.knime.core.node.CanceledExecutionException;

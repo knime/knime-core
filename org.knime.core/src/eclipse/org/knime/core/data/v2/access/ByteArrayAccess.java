@@ -42,22 +42,43 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
+ *
+ * History
+ *   Sep 27, 2020 (dietzc): created
  */
-package org.knime.core.data.values;
-
-import org.knime.core.data.IntValue;
+package org.knime.core.data.v2.access;
 
 /**
- * TODO
- * 
- * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
- * 
- * @apiNote API still experimental. It might change in future releases of KNIME
- *          Analytics Platform.
+ * Definition of {@link ByteArrayAccess}.
  *
- * @noreference This interface is not intended to be referenced by clients.
- * @noextend This interface is not intended to be extended by clients.
+ * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
+ * @since 4.3
  */
-public interface IntWriteValue extends WriteValue<IntValue> {
-	void setIntValue(int value);
+@SuppressWarnings("javadoc")
+public final class ByteArrayAccess {
+
+    private ByteArrayAccess() {
+    }
+
+    public static final class ByteArrayAccessSpec implements AccessSpec<VarBinaryReadAccess, VarBinaryWriteAccess> {
+        public static final ByteArrayAccess INSTANCE = new ByteArrayAccess();
+
+        private ByteArrayAccessSpec() {
+        }
+
+        @Override
+        public <V> V accept(final AccessSpecMapper<V> v) {
+            return v.visit(this);
+        }
+    }
+
+    public interface VarBinaryReadAccess extends ReadAccess {
+
+        byte[] getByteArray();
+    }
+
+    public interface VarBinaryWriteAccess extends WriteAccess {
+
+        void setByteArray(byte[] value);
+    }
 }

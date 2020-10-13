@@ -42,22 +42,39 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
+ *
+ * History
+ *   Sep 27, 2020 (dietzc): created
  */
-package org.knime.core.data.values;
+package org.knime.core.data.v2.access;
 
-import org.knime.core.data.RowKeyValue;
+import org.knime.core.data.v2.value.DoubleValueFactory.DoubleReadValue;
+import org.knime.core.data.v2.value.DoubleValueFactory.DoubleWriteValue;
 
 /**
- * TODO
- * 
- * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
- * 
- * @apiNote API still experimental. It might change in future releases of KNIME
- *          Analytics Platform.
- *
- * @noreference This interface is not intended to be referenced by clients.
- * @noextend This interface is not intended to be extended by clients.
+ * @since 4.3
  */
-public interface RowKeyReadValue extends ReadValue, RowKeyValue {
-	// NB: marker interface
+@SuppressWarnings("javadoc")
+public final class DoubleAccess {
+
+    private DoubleAccess() {
+    }
+
+    public static final class DoubleAccessSpec implements AccessSpec<DoubleReadAccess, DoubleWriteAccess> {
+        public static final DoubleAccessSpec INSTANCE = new DoubleAccessSpec();
+
+        private DoubleAccessSpec() {
+        }
+
+        @Override
+        public <V> V accept(final AccessSpecMapper<V> v) {
+            return v.visit(this);
+        }
+    }
+
+    public interface DoubleReadAccess extends ReadAccess, DoubleReadValue {
+    }
+
+    public interface DoubleWriteAccess extends WriteAccess, DoubleWriteValue {
+    }
 }

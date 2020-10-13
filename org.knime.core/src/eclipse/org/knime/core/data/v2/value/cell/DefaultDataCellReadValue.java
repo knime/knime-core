@@ -43,25 +43,28 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  */
-package org.knime.core.data;
+package org.knime.core.data.v2.value.cell;
 
-import org.knime.core.node.BufferedDataTable;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.v2.WrappedReadValue;
+import org.knime.core.data.v2.access.ObjectAccess.ObjectReadAccess;
 
 /**
- * TODO
- * 
- * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
- * 
- * @apiNote API still experimental. It might change in future releases of KNIME
- *          Analytics Platform.
+ * Default implementation of a {@link WrappedReadValue}.
  *
- * @noreference This interface is not intended to be referenced by clients.
- * @noextend This interface is not intended to be extended by clients.
+ * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
+ * @since 4.3
  */
-public interface RowContainerCustomKey extends RowWriteCursor<BufferedDataTable> {
+final class DefaultDataCellReadValue implements WrappedReadValue {
 
-	void setRowKey(String rowKey);
+    private final ObjectReadAccess<DataCell> m_access;
 
-	void setRowKey(RowKeyValue rowKey);
+    DefaultDataCellReadValue(final ObjectReadAccess<DataCell> access) {
+        m_access = access;
+    }
 
+    @Override
+    public DataCell getDataCell() {
+        return m_access.getObject();
+    }
 }

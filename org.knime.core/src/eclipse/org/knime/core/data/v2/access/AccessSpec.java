@@ -43,21 +43,64 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  */
-package org.knime.core.data.values;
+package org.knime.core.data.v2.access;
 
-import org.knime.core.data.StringValue;
+import org.knime.core.data.v2.access.BooleanAccess.BooleanAccessSpec;
+import org.knime.core.data.v2.access.ByteArrayAccess.ByteArrayAccessSpec;
+import org.knime.core.data.v2.access.DoubleAccess.DoubleAccessSpec;
+import org.knime.core.data.v2.access.DoubleAccess.DoubleReadAccess;
+import org.knime.core.data.v2.access.DoubleAccess.DoubleWriteAccess;
+import org.knime.core.data.v2.access.IntAccess.IntAccessSpec;
+import org.knime.core.data.v2.access.LongAccess.LongAccessSpec;
+import org.knime.core.data.v2.access.ObjectAccess.ObjectAccessSpec;
+import org.knime.core.data.v2.access.StructAccess.StructAccessSpec;
+import org.knime.core.data.v2.access.VoidAccess.VoidAccessSpec;
 
 /**
- * TODO
- * 
- * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
- * 
- * @apiNote API still experimental. It might change in future releases of KNIME
- *          Analytics Platform.
+ * Specification of a {@link ReadAccess} and {@link WriteAccess}. Provides all information about their configuration.
+ * For example {@link DoubleAccessSpec} provides configuration for {@link DoubleReadAccess} and
+ * {@link DoubleWriteAccess}.
  *
- * @noreference This interface is not intended to be referenced by clients.
+ *
+ * @param <R> type of {@link ReadAccess} associated with the {@link AccessSpec}.
+ * @param <W> type of {@link WriteAccess} associated with the {@link AccessSpec}.
+ *
+ * @author Christian Dietz, KNIME GmbH, Germany, Konstanz
+ * @since 4.3
+ *
  * @noextend This interface is not intended to be extended by clients.
  */
-public interface StringWriteValue extends WriteValue<StringValue> {
-	void setStringValue(String value);
+public interface AccessSpec<R extends ReadAccess, W extends WriteAccess> {
+
+    /**
+     * @param <T> result of visit
+     * @param mapper to visit
+     * @return result of the visit.
+     */
+    <T> T accept(final AccessSpecMapper<T> mapper);
+
+    /**
+     * AccessSpecMapper implementation.
+     *
+     * @author Christian Dietz, KNIME GmbH, Konstanz
+     */
+    @SuppressWarnings("javadoc")
+    public static interface AccessSpecMapper<T> {
+
+        T visit(final BooleanAccessSpec spec);
+
+        T visit(final DoubleAccessSpec spec);
+
+        T visit(final ObjectAccessSpec<?> spec);
+
+        T visit(final IntAccessSpec spec);
+
+        T visit(final LongAccessSpec spec);
+
+        T visit(final VoidAccessSpec spec);
+
+        T visit(final ByteArrayAccessSpec spec);
+
+        T visit(final StructAccessSpec spec);
+    }
 }

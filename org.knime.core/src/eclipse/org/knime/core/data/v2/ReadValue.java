@@ -42,21 +42,29 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
+ *
+ * History
+ *   Oct 6, 2020 (dietzc): created
  */
-package org.knime.core.data.values;
+package org.knime.core.data.v2;
 
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DataValue;
 
 /**
- * TODO
- * 
- * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
- * 
- * @apiNote API still experimental. It might change in future releases of KNIME
- *          Analytics Platform.
+ * {@link DataValue} implementation which knows how to create a DataCell.
  *
- * @noreference This interface is not intended to be referenced by clients.
- * @noextend This interface is not intended to be extended by clients.
+ * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
+ * @since 4.3
+ *
+ * @apiNote API still experimental. It might change in future releases of KNIME Analytics Platform.
  */
 public interface ReadValue extends DataValue {
+
+    /**
+     * NB: DataCells created with this method are immutable.
+     *
+     * @return a new {@link DataCell}.
+     */
+    DataCell getDataCell();
 }
