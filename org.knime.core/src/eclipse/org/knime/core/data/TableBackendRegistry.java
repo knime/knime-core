@@ -63,9 +63,11 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.CheckUtils;
 
 /**
- * TODO
+ * Registry for TableBackend extension point.
  *
  * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
+ * @author Bernd Wiswedel, KNIME GmbH, Konstanz, Germany
+ *
  * @since 4.3
  *
  * @noreference This interface is not intended to be referenced by clients.
@@ -121,7 +123,7 @@ public class TableBackendRegistry {
     }
 
     /** @return the instance to use. */
-    public static TableBackendRegistry getInstance() {
+    public final static TableBackendRegistry getInstance() {
         return INSTANCE;
     }
 
@@ -132,7 +134,7 @@ public class TableBackendRegistry {
     }
 
     /** @return the data container delegate factories in an unmodifiable list. */
-    public List<TableBackend> getTableBackends() {
+    public final List<TableBackend> getTableBackends() {
         return m_backends;
     }
 
@@ -141,14 +143,13 @@ public class TableBackendRegistry {
      * @return the table backend with the given class name - used to restore a previously saved table.
      * @throws IllegalArgumentException If the backend is unknown (usually means: not installed)
      */
-    public TableBackend getTableBackend(final String fullyQualifiedClassName) throws IllegalArgumentException {
+    public final TableBackend getTableBackend(final String fullyQualifiedClassName) throws IllegalArgumentException {
         return m_backends.stream()//
             .filter(f -> f.getClass().getName().equals(fullyQualifiedClassName))//
             .findFirst()//
             .orElseThrow(() -> new IllegalArgumentException(fullyQualifiedClassName));
     }
 
-    /** {@inheritDoc} */
     @Override
     public String toString() {
         StringBuilder b = new StringBuilder("TableBackends: [");
@@ -158,7 +159,7 @@ public class TableBackendRegistry {
     }
 
     /** @return the {@link BufferedTableBackend} instance (never null). */
-    public TableBackend getDefaultBackend() {
+    public final TableBackend getDefaultBackend() {
         return m_backends.stream() //
             .filter(tb -> Objects.equals(tb.getClass(), BufferedTableBackend.class)) //
             .findFirst() //

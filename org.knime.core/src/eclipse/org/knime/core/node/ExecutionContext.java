@@ -60,7 +60,6 @@ import org.knime.core.data.IDataRepository;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.TableBackend;
-import org.knime.core.data.TableBackendRegistry;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.ConcatenateTable;
 import org.knime.core.data.container.ContainerTable;
@@ -401,13 +400,7 @@ public class ExecutionContext extends ExecutionMonitor {
 
         // THIS IF CODE PATH NEEDS TO BE REMOVED AS SOON AS WE HAVE FEATURE PARITY for new backend!
         TableBackend backend = WorkflowTableBackendSettings.getTableBackendForCurrentContext();
-        if (!backend.supports(spec)) {
-            // fallback for testing...
-            backend = TableBackendRegistry.getInstance().getDefaultBackend();
-        } else {
-            LOGGER.infoWithFormat("Using Table Backend \"%s\".", backend.getClass().getSimpleName());
-        }
-
+        LOGGER.infoWithFormat("Using Table Backend \"%s\".", backend.getClass().getSimpleName());
 
         return new BufferedDataContainer(spec, initDomain, m_node,
                 m_memoryPolicy, forceCopyOfBlobs, maxCellsInMemory, m_dataRepository,

@@ -213,8 +213,7 @@ public class DataContainer implements RowAppender {
      * @param fileStoreHandler a filestore handler
      * @param forceCopyOfBlobs true, if blobs should be copied
      * @param rowKeys if <code>true</code>, {@link RowKey}s are expected to be part of a {@link DataRow}.
-     * @param backend if <code>true</code> extension point for {@link DataContainerDelegateFactory}s can be
-     *            used.
+     * @param backend the {@link TableBackend} to be used to create a {@link DataContainerDelegate}.
      * @throws IllegalArgumentException If <code>maxCellsInMemory</code> &lt; 0 or the spec is null
      * @since 4.3
      */
@@ -264,7 +263,6 @@ public class DataContainer implements RowAppender {
             }
         };
         m_localRepository.addCancellationListener(m_cancellationListener);
-        m_spec = spec;
         m_delegate = backend.create(spec, settings, repository, localRepository, fileStoreHandler);
     }
 

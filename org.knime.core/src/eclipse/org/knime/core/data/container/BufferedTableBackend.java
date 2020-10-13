@@ -48,19 +48,16 @@
  */
 package org.knime.core.data.container;
 
-import java.util.Map;
-
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataTypeConfig;
 import org.knime.core.data.IDataRepository;
-import org.knime.core.data.RowContainerCustomKey;
 import org.knime.core.data.TableBackend;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.NotInWorkflowWriteFileStoreHandler;
+import org.knime.core.data.v2.RowContainerCustomKey;
 import org.knime.core.node.ExecutionContext;
 
 /**
- * TODO
+ * Default implementation of {@link TableBackend} using {@link DataContainer} and {@link DataContainerDelegate}s.
  *
  * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
  * @since 4.3
@@ -80,13 +77,8 @@ public final class BufferedTableBackend implements TableBackend {
 
     @Override
     public RowContainerCustomKey create(final ExecutionContext context, final DataTableSpec spec,
-        final DataContainerSettings settings, final Map<Integer, DataTypeConfig> additionalConfigs) {
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
-
-    @Override
-    public boolean supports(final DataTableSpec spec) {
-        return true;
+        final DataContainerSettings settings, final IDataRepository repository, final IWriteFileStoreHandler handler) {
+        throw new UnsupportedOperationException("nyi");
     }
 
     @Override

@@ -104,7 +104,6 @@ import org.knime.core.util.DuplicateKeyException;
  * @author Bernd Wiswedel, KNIME GmbH
  * @author Mark Ortmann, KNIME GmbH
  * @author Christian Dietz, KNIME GmbH
- *
  * @since 4.2
  */
 class BufferedDataContainerDelegate implements DataContainerDelegate {
