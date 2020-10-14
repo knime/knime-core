@@ -163,6 +163,9 @@ public enum SharedIcons {
     SORT_A_Z("icons/sort_a_z.png"),
     /** Sort z a with arrow **/
     SORT_Z_A("icons/sort_z_a.png"),
+    /** Drag handle for indicating draggable objects
+     * @since 4.3**/
+    DRAG_HANDLE("icons/drag-handle.png"),
     /**
      * Types
      */
