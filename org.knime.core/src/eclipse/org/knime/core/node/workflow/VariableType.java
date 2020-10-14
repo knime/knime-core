@@ -1576,7 +1576,12 @@ public abstract class VariableType<T> {
 
             @Override
             String asString() {
-                return get();
+                String value = get();
+                if (value != null) {
+                    return value;
+                } else {
+                    return "null";
+                }
             }
         }
 
