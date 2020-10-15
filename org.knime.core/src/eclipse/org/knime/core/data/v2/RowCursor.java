@@ -48,10 +48,10 @@ package org.knime.core.data.v2;
 import org.knime.core.data.DataValue;
 
 /**
- * {@link RowAccess} implemenation allowing for iterative read access to a data storage.
+ * {@link RowAccess} implementation allowing for iterative read access to a data storage.
  *
- * @author Christian Dietz, KNIME GmbH
- * @since 4.2.2
+ * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
+ * @since 4.3
  *
  * @apiNote API still experimental. It might change in future releases of KNIME Analytics Platform.
  *
