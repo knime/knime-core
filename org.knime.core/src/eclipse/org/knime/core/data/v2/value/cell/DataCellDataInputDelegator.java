@@ -46,14 +46,13 @@
 package org.knime.core.data.v2.value.cell;
 
 import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
+import java.io.DataInput;
 import java.io.IOException;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellDataInput;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.IDataRepository;
-import org.knime.core.data.container.LongUTFDataInputStream;
 import org.knime.core.data.filestore.FileStoreCell;
 import org.knime.core.data.filestore.FileStoreKey;
 import org.knime.core.data.filestore.FileStoreUtil;
@@ -65,7 +64,7 @@ import org.knime.core.data.v2.DataCellSerializerFactory;
  * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
  * @since 4.3
  */
-final class ByteArrayDataCellInput extends LongUTFDataInputStream implements DataCellDataInput {
+final class DataCellDataInputDelegator implements DataCellDataInput {
 
     private final DataCellSerializerFactory m_factory;
 
@@ -73,13 +72,20 @@ final class ByteArrayDataCellInput extends LongUTFDataInputStream implements Dat
 
     private final DataCellSerializer<DataCell> m_serializer;
 
-    ByteArrayDataCellInput(final DataCellSerializerFactory factory, final IDataRepository dataRepository,
-        final byte[] bytes) {
-        super(new DataInputStream(new ByteArrayInputStream(bytes, 1, bytes.length - 1)));
+    private final DataInput m_delegate;
+
+    DataCellDataInputDelegator(final DataCellSerializerFactory factory, //
+        final IDataRepository dataRepository, //
+        final DataInput input) {
 
         m_factory = factory;
-        m_serializer = m_factory.getSerializerByIdx(bytes[0]).getSerializer();
+        try {
+            m_serializer = m_factory.getSerializerByIdx(input.readByte()).getSerializer();
+        } catch (IOException ex) {
+            throw new IllegalStateException(ex);
+        }
         m_dataRepository = dataRepository;
+        m_delegate = input;
     }
 
     @Override
@@ -93,6 +99,81 @@ final class ByteArrayDataCellInput extends LongUTFDataInputStream implements Dat
         }
 
         return result;
+    }
+
+    @Override
+    public void readFully(final byte[] b) throws IOException {
+        m_delegate.readFully(b);
+    }
+
+    @Override
+    public void readFully(final byte[] b, final int off, final int len) throws IOException {
+        m_delegate.readFully(b, off, len);
+    }
+
+    @Override
+    public int skipBytes(final int n) throws IOException {
+        return m_delegate.skipBytes(n);
+    }
+
+    @Override
+    public boolean readBoolean() throws IOException {
+        return m_delegate.readBoolean();
+    }
+
+    @Override
+    public byte readByte() throws IOException {
+        return m_delegate.readByte();
+    }
+
+    @Override
+    public int readUnsignedByte() throws IOException {
+        return m_delegate.readUnsignedByte();
+    }
+
+    @Override
+    public short readShort() throws IOException {
+        return m_delegate.readShort();
+    }
+
+    @Override
+    public int readUnsignedShort() throws IOException {
+        return m_delegate.readUnsignedShort();
+    }
+
+    @Override
+    public char readChar() throws IOException {
+        return m_delegate.readChar();
+    }
+
+    @Override
+    public int readInt() throws IOException {
+        return m_delegate.readInt();
+    }
+
+    @Override
+    public long readLong() throws IOException {
+        return m_delegate.readLong();
+    }
+
+    @Override
+    public float readFloat() throws IOException {
+        return m_delegate.readFloat();
+    }
+
+    @Override
+    public double readDouble() throws IOException {
+        return m_delegate.readDouble();
+    }
+
+    @Override
+    public String readLine() throws IOException {
+        return m_delegate.readLine();
+    }
+
+    @Override
+    public String readUTF() throws IOException {
+        return m_delegate.readUTF();
     }
 
     private FileStoreKey[] readFileStoreKeys() throws IOException {

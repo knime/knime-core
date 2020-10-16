@@ -45,6 +45,8 @@
  */
 package org.knime.core.data.v2.value.cell;
 
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.IOException;
 
 import org.knime.core.data.DataCell;
@@ -187,23 +189,17 @@ public final class DataCellValueFactory
         }
 
         @Override
-        public DataCell deserialize(final byte[] bytes) {
-            try (final ByteArrayDataCellInput stream = new ByteArrayDataCellInput(m_factory, m_dataRepository, bytes)) {
-                return stream.readDataCell();
-            } catch (IOException ex) {
-                // TODO logging
-                throw new RuntimeException(ex);
-            } catch (Exception ex1) {
-                // TODO logging
-                throw new RuntimeException(ex1);
-            }
+        public DataCell deserialize(final DataInput input) throws IOException {
+            final DataCellDataInputDelegator stream =
+                new DataCellDataInputDelegator(m_factory, m_dataRepository, input);
+            return stream.readDataCell();
         }
 
         @Override
-        public byte[] serialize(final DataCell cell) {
-            try (final ByteArrayDataCellOutput stream = new ByteArrayDataCellOutput(m_factory, m_fsHandler)) {
+        public void serialize(final DataCell cell, final DataOutput output) {
+            try (final DataCellDataOutputDelegator stream =
+                new DataCellDataOutputDelegator(m_factory, m_fsHandler, output)) {
                 stream.writeDataCell(cell);
-                return stream.toByteArray();
             } catch (IOException ex) {
                 // TODO logging
                 throw new RuntimeException(ex);

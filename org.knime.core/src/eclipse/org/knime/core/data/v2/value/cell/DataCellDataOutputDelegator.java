@@ -45,14 +45,13 @@
  */
 package org.knime.core.data.v2.value.cell;
 
-import java.io.DataOutputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataCellSerializer;
-import org.knime.core.data.container.LongUTFDataOutputStream;
 import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.filestore.FileStoreCell;
 import org.knime.core.data.filestore.FileStoreKey;
@@ -67,20 +66,17 @@ import org.knime.core.data.v2.DataCellSerializerFactory.DataCellSerializerInfo;
  * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
  * @since 4.3
  */
-final class ByteArrayDataCellOutput implements DataCellDataOutput, AutoCloseable {
+final class DataCellDataOutputDelegator implements DataCellDataOutput, AutoCloseable {
 
     private final DataCellSerializerFactory m_factory;
 
     private final IWriteFileStoreHandler m_fsHandler;
 
-    private final ByteArrayOutputStream m_byteStream;
+    private final DataOutput m_delegate;
 
-    private final LongUTFDataOutputStream m_delegateStream;
-
-    ByteArrayDataCellOutput(final DataCellSerializerFactory factory, final IWriteFileStoreHandler fsHandler) {
-        m_byteStream = new ByteArrayOutputStream(64);
-        // TODO Christian
-        m_delegateStream = new LongUTFDataOutputStream(new DataOutputStream(m_byteStream));
+    DataCellDataOutputDelegator(final DataCellSerializerFactory factory, final IWriteFileStoreHandler fsHandler,
+        final DataOutput output) {
+        m_delegate = output;
         m_factory = factory;
         m_fsHandler = fsHandler;
     }
@@ -113,11 +109,6 @@ final class ByteArrayDataCellOutput implements DataCellDataOutput, AutoCloseable
         return false;
     }
 
-    byte[] toByteArray() throws IOException {
-        m_delegateStream.flush();
-        return m_byteStream.toByteArray();
-    }
-
     @Override
     public void writeDataCell(final DataCell cell) throws IOException {
         final DataCellSerializerInfo info = m_factory.getSerializer(cell);
@@ -132,77 +123,76 @@ final class ByteArrayDataCellOutput implements DataCellDataOutput, AutoCloseable
 
     @Override
     public void write(final int b) throws IOException {
-        m_byteStream.write(b);
+        m_delegate.write(b);
     }
 
     @Override
     public void write(final byte[] b) throws IOException {
-        m_byteStream.write(b);
+        m_delegate.write(b);
     }
 
     @Override
     public void write(final byte[] b, final int off, final int len) throws IOException {
-        m_byteStream.write(b, off, len);
+        m_delegate.write(b, off, len);
     }
 
     @Override
     public void writeByte(final int v) throws IOException {
-        m_byteStream.write(v);
+        m_delegate.write(v);
     }
 
     @Override
     public void writeBoolean(final boolean v) throws IOException {
-        m_delegateStream.writeBoolean(v);
+        m_delegate.writeBoolean(v);
     }
 
     @Override
     public void writeShort(final int v) throws IOException {
-        m_delegateStream.writeShort(v);
+        m_delegate.writeShort(v);
     }
 
     @Override
     public void writeChar(final int v) throws IOException {
-        m_delegateStream.writeChar(v);
+        m_delegate.writeChar(v);
     }
 
     @Override
     public void writeInt(final int v) throws IOException {
-        m_delegateStream.writeInt(v);
+        m_delegate.writeInt(v);
     }
 
     @Override
     public void writeLong(final long v) throws IOException {
-        m_delegateStream.writeLong(v);
+        m_delegate.writeLong(v);
     }
 
     @Override
     public void writeFloat(final float v) throws IOException {
-        m_delegateStream.writeFloat(v);
+        m_delegate.writeFloat(v);
     }
 
     @Override
     public void writeDouble(final double v) throws IOException {
-        m_delegateStream.writeDouble(v);
+        m_delegate.writeDouble(v);
     }
 
     @Override
     public void writeBytes(final String s) throws IOException {
-        m_delegateStream.writeBytes(s);
+        m_delegate.writeBytes(s);
     }
 
     @Override
     public void writeChars(final String s) throws IOException {
-        m_delegateStream.writeChars(s);
+        m_delegate.writeChars(s);
     }
 
     @Override
     public void writeUTF(final String s) throws IOException {
-        m_delegateStream.writeUTF(s);
+        m_delegate.writeUTF(s);
     }
 
     @Override
     public void close() throws Exception {
-        m_delegateStream.close();
-        m_byteStream.close();
+        // nothing
     }
 }

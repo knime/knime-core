@@ -48,6 +48,10 @@
  */
 package org.knime.core.data.v2.access;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+
 import org.knime.core.data.BoundedValue;
 import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.NominalValue;
@@ -140,22 +144,22 @@ public final class ObjectAccess {
      */
     public interface ObjectSerializer<T> {
 
-        // TODO Christian -- throws IOException
-
         /**
          * Deserializes byte[] to object
          *
-         * @param bytes to deserialize
+         * @param access to bytes to deserialize
          * @return the deserialized object
+         * @throws IOException error during serialization
          */
-        T deserialize(final byte[] bytes);
+        T deserialize(final DataInput access) throws IOException;
 
         /**
          * Serializes object into byte[].
          *
-         * @param object to serialize
-         * @return serialized byte[]
+         * @param object the obj to serialize
+         * @param access to serialize to
+         * @throws IOException error during serialization
          */
-        byte[] serialize(final T object);
+        void serialize(final T object, final DataOutput access) throws IOException;
     }
 }

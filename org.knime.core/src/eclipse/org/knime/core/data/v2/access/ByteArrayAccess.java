@@ -48,6 +48,8 @@
  */
 package org.knime.core.data.v2.access;
 
+import java.io.DataInput;
+
 /**
  * Definition of {@link ByteArrayAccess}.
  *
@@ -72,7 +74,7 @@ public final class ByteArrayAccess {
         }
     }
 
-    public interface VarBinaryReadAccess extends ReadAccess {
+    public interface VarBinaryReadAccess extends ReadAccess, DataInput {
 
         byte[] getByteArray();
     }
@@ -80,5 +82,7 @@ public final class ByteArrayAccess {
     public interface VarBinaryWriteAccess extends WriteAccess {
 
         void setByteArray(byte[] value);
+
+        void setByteArray(byte[] array, int i, int limit);
     }
 }
