@@ -57,7 +57,6 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.IDataRepository;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.TableBackend;
-import org.knime.core.data.def.BooleanCell;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.LongCell;
@@ -66,7 +65,6 @@ import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.v2.access.AccessSpec;
 import org.knime.core.data.v2.access.ReadAccess;
 import org.knime.core.data.v2.access.WriteAccess;
-import org.knime.core.data.v2.value.BooleanValueFactory;
 import org.knime.core.data.v2.value.CustomRowKeyValueFactory;
 import org.knime.core.data.v2.value.DoubleValueFactory;
 import org.knime.core.data.v2.value.IntValueFactory;
@@ -192,8 +190,6 @@ public final class ValueSchema {
             return LongValueFactory.INSTANCE;
         } else if (type == StringCell.TYPE) {
             return StringValueFactory.INSTANCE;
-        } else if (type == BooleanCell.TYPE) {
-            return BooleanValueFactory.INSTANCE;
         } else {
             return null;
         }
