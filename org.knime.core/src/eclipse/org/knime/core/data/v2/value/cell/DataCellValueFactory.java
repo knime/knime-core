@@ -196,18 +196,11 @@ public final class DataCellValueFactory
         }
 
         @Override
-        public void serialize(final DataCell cell, final DataOutput output) {
+        public void serialize(final DataCell cell, final DataOutput output) throws IOException {
             try (final DataCellDataOutputDelegator stream =
                 new DataCellDataOutputDelegator(m_factory, m_fsHandler, output)) {
                 stream.writeDataCell(cell);
-            } catch (IOException ex) {
-                // TODO logging
-                throw new RuntimeException(ex);
-            } catch (Exception ex1) {
-                // TODO logging
-                throw new RuntimeException(ex1);
             }
-
         }
     }
 }

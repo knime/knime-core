@@ -192,7 +192,7 @@ final class DataCellDataOutputDelegator implements DataCellDataOutput, AutoClose
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() {
         // nothing
     }
 }
