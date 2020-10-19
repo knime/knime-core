@@ -51,7 +51,6 @@ import java.io.IOException;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellDataInput;
-import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.IDataRepository;
 import org.knime.core.data.filestore.FileStoreCell;
 import org.knime.core.data.filestore.FileStoreKey;
@@ -70,8 +69,6 @@ final class DataCellDataInputDelegator implements DataCellDataInput {
 
     private final IDataRepository m_dataRepository;
 
-    private final DataCellSerializer<DataCell> m_serializer;
-
     private final DataInput m_delegate;
 
     DataCellDataInputDelegator(final DataCellSerializerFactory factory, //
@@ -79,19 +76,13 @@ final class DataCellDataInputDelegator implements DataCellDataInput {
         final DataInput input) {
 
         m_factory = factory;
-        try {
-            m_serializer = m_factory.getSerializerByIdx(input.readByte()).getSerializer();
-        } catch (IOException ex) {
-            throw new IllegalStateException(ex);
-        }
         m_dataRepository = dataRepository;
         m_delegate = input;
     }
 
     @Override
     public DataCell readDataCell() throws IOException {
-        final DataCell result = m_serializer.deserialize(this);
-
+        final DataCell result = m_factory.getSerializerByIdx(readByte()).getSerializer().deserialize(this);
         if (FileStoreCell.class.isAssignableFrom(result.getClass())) {
             final FileStoreKey[] fileStoreKeys = readFileStoreKeys();
             final FileStoreCell fsCell = (FileStoreCell)result;
