@@ -97,6 +97,7 @@ import org.knime.core.util.Pair;
 public final class MetaNodeDialogPane extends NodeDialogPane {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(MetaNodeDialogPane.class);
+    private static final String OPTIONS_TAB_NAME = "Options";
 
     /** Type of dialog.
      * @noreference This enum is not intended to be referenced by clients.
@@ -125,7 +126,7 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
         m_panel = new JPanel();
         final BoxLayout boxLayout = new BoxLayout(m_panel, BoxLayout.Y_AXIS);
         m_panel.setLayout(boxLayout);
-        addTab("Options", new JScrollPane(m_panel));
+        addTab(OPTIONS_TAB_NAME, new JScrollPane(m_panel));
         m_metaNodeDialogType = metaNodeDialogType;
         if (metaNodeDialogType == MetaNodeDialogType.WORKFLOW) {
             m_tableBackendSelectorPanel = new TableBackendSelectorPanel();
@@ -231,6 +232,15 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
                 p.add(nodePanel, BorderLayout.CENTER);
                 dpanel.add(p);
                 m_panel.add(dpanel);
+            }
+        }
+
+        // no configuration on workflows using "quickforms", functionality got deprecated/legacy'ed with 3.5 (AP-7774)
+        // only old style QuickFormInputNode are supported -- hide the tab by default
+        if (m_metaNodeDialogType == MetaNodeDialogType.WORKFLOW) {
+            removeTab(OPTIONS_TAB_NAME); // now removed by default starting with 4.3
+            if (!m_nodes.isEmpty()) {
+                addTabAt(0, OPTIONS_TAB_NAME, m_panel);
             }
         }
 

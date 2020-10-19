@@ -5682,11 +5682,9 @@ public final class WorkflowManager extends NodeContainer
 
     private MetaNodeDialogPane m_nodeDialogPane;
 
-    /** {@inheritDoc} */
     @Override
     public boolean hasDialog() {
-        int c = NodeExecutionJobManagerPool.getNumberOfJobManagersFactories();
-        return c > 1 || findNodes(MetaNodeDialogNode.class, true).size() > 0;
+        return true; // show dialog unconditionally -- allow user to change executors or table backend
     }
 
     /** {@inheritDoc} */
