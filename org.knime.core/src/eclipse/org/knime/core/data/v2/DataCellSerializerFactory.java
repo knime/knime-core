@@ -5,9 +5,10 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
 
 import org.knime.core.data.DataCell;
@@ -48,19 +49,19 @@ public final class DataCellSerializerFactory {
      */
     private final Map<Class<? extends DataCell>, DataCellSerializerInfo> m_byType;
 
-    private final Map<Byte, DataCellSerializerInfo> m_byIdx;
+    private final DataCellSerializerInfo[] m_byIdx;
 
     /*
      * Internal index
      */
-    private byte m_internalIndex = Byte.MIN_VALUE + 10;
+    private byte m_internalIndex = 0;
 
     /**
      * Constructor
      */
     public DataCellSerializerFactory() {
         m_byType = new HashMap<>();
-        m_byIdx = new HashMap<>();
+        m_byIdx = new DataCellSerializerInfo[Byte.MAX_VALUE];
     }
 
     /**
@@ -81,7 +82,7 @@ public final class DataCellSerializerFactory {
                 if (pair.isPresent()) {
                     res = new DataCellSerializerInfo(type, m_internalIndex, REGISTRY.getSerializer(type).get());
                     m_byType.put(type, res);
-                    m_byIdx.put(m_internalIndex, res);
+                    m_byIdx[m_internalIndex] = res;
                     m_internalIndex++;
                 } else {
                     res = JavaNativeSerializer.INSTANCE;
@@ -101,7 +102,7 @@ public final class DataCellSerializerFactory {
         if (index == KNIMEStreamConstants.BYTE_TYPE_SERIALIZATION) {
             return JavaNativeSerializer.INSTANCE;
         } else {
-            return m_byIdx.get(index);
+            return m_byIdx[index];
         }
     }
 
@@ -112,17 +113,22 @@ public final class DataCellSerializerFactory {
      */
     public final void saveTo(final ConfigWO settings) {
         final Config childConfig = settings.addConfig(CFG_SERIALIZER_MAPPINGS);
-        final String[] cells = new String[m_byIdx.size()];
-        final byte[] indices = new byte[cells.length];
-        int index = 0;
-
-        for (final Entry<Byte, DataCellSerializerInfo> entry : m_byIdx.entrySet()) {
-            cells[index] = entry.getValue().m_cellType.getName();
-            indices[index] = entry.getValue().m_internalIndex;
-            index++;
+        final List<String> cells = new ArrayList<>();
+        final List<Byte> indices = new ArrayList<>();
+        for (int i = 0; i < m_byIdx.length; i++) {
+            if (m_byIdx[i] != null) {
+                cells.add(m_byIdx[i].m_cellType.getName());
+                indices.add(m_byIdx[i].m_internalIndex);
+            }
         }
-        childConfig.addByteArray(CFG_SERIALIZER_INDICES, indices);
-        childConfig.addStringArray(CFG_SERIALIZER_CELL_TYPES, cells);
+        final byte[] indicesArray = new byte[indices.size()];
+        final String[] cellsArray = new String[cells.size()];
+        for (int i = 0; i < indicesArray.length; i++) {
+            indicesArray[i] = indices.get(i);
+            cellsArray[i] = cells.get(i);
+        }
+        childConfig.addByteArray(CFG_SERIALIZER_INDICES, indicesArray);
+        childConfig.addStringArray(CFG_SERIALIZER_CELL_TYPES, cellsArray);
     }
 
     /**
@@ -140,7 +146,7 @@ public final class DataCellSerializerFactory {
             final Class<? extends DataCell> type = REGISTRY.getCellClass(cells[i]).get(); // NOSONAR
             final DataCellSerializerInfo info =
                 new DataCellSerializerInfo(type, indices[i], REGISTRY.getSerializer(type).get()); // NOSONAR
-            m_byIdx.put(indices[i], info);
+            m_byIdx[indices[i]] = info;
             m_byType.put(type, info);
         }
     }
