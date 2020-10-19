@@ -110,12 +110,12 @@ public final class TableStoreFormatInformation implements KNIMEComponentInformat
 
     @Override
     public Optional<String> getBundleSymbolicName() {
-        return Optional.of(m_bundleName);
+        return Optional.ofNullable(m_bundleName);
     }
 
     @Override
     public Optional<String> getFeatureSymbolicName() {
-        return Optional.of(m_featureName);
+        return Optional.ofNullable(m_featureName);
     }
 
     @Override
