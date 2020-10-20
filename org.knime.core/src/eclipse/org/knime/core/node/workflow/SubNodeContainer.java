@@ -46,6 +46,7 @@
  */
 package org.knime.core.node.workflow;
 
+import static java.util.stream.Collectors.toList;
 import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 
 import java.io.ByteArrayInputStream;
@@ -99,7 +100,6 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.dialog.DialogNode;
-import org.knime.core.node.dialog.DialogNodeRepresentation;
 import org.knime.core.node.dialog.DialogNodeValue;
 import org.knime.core.node.dialog.EnabledDialogNodeModelFilter;
 import org.knime.core.node.dialog.MetaNodeDialogNode;
@@ -767,7 +767,6 @@ public final class SubNodeContainer extends SingleNodeContainer
 
     /* -------------------- NodeContainer info properties -------------- */
 
-    @SuppressWarnings("rawtypes")
     /**
      * {@inheritDoc}
      */
@@ -782,16 +781,11 @@ public final class SubNodeContainer extends SingleNodeContainer
             sDescription = StringUtils.abbreviate(sDescription, 200);
         }
 
-        final Map<NodeID, DialogNode> nodes =
-            m_wfm.findNodes(DialogNode.class, new EnabledDialogNodeModelFilter(), false);
-        final List<String> optionNames = new ArrayList<String>();
-        final List<String> optionDescriptions = new ArrayList<String>();
-        for (final DialogNode dialogNode : nodes.values()) {
-            final DialogNodeRepresentation representation = dialogNode.getDialogRepresentation();
-            if (representation instanceof SubNodeDescriptionProvider) {
-                optionNames.add(((SubNodeDescriptionProvider)representation).getLabel());
-                optionDescriptions.add(((SubNodeDescriptionProvider)representation).getDescription());
-            }
+        final List<String> optionNames = new ArrayList<>();
+        final List<String> optionDescriptions = new ArrayList<>();
+        for (SubNodeDescriptionProvider<? extends DialogNodeValue> desc : getDialogDescriptions()) {
+            optionNames.add(desc.getLabel());
+            optionDescriptions.add(desc.getDescription());
         }
         try {
             // Document
@@ -833,6 +827,17 @@ public final class SubNodeContainer extends SingleNodeContainer
             LOGGER.warn("Could not generate Component description", e);
         }
         return null;
+    }
+
+    /**
+     * @return a list of descriptions for all the visible dialog options
+     * @since 4.3
+     */
+    @SuppressWarnings("rawtypes")
+    public List<SubNodeDescriptionProvider<? extends DialogNodeValue>> getDialogDescriptions() {
+        return m_wfm.findNodes(DialogNode.class, new EnabledDialogNodeModelFilter(), false).values().stream()
+            .map(DialogNode::getDialogRepresentation).filter(r -> r instanceof SubNodeDescriptionProvider)
+            .map(p -> (SubNodeDescriptionProvider)p).collect(toList());
     }
 
     private void refreshPortNames() {
