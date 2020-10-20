@@ -140,9 +140,9 @@ public interface DataCellSerializer<T extends DataCell> extends Serializer<T> {
             } else {
                 return c;
             }
-        } catch (NoSuchMethodException ex) {
+        } catch (NoSuchMethodException | ClassCastException ex) {
             // this is not possible
-            throw new AssertionError("Someone removed the 'deserialize' method from this interface");
+            throw new AssertionError("Someone removed the 'deserialize' method from this interface", ex);
         }
     }
 }
