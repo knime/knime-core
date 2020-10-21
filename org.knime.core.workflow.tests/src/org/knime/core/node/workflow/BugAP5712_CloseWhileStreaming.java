@@ -81,8 +81,8 @@ public class BugAP5712_CloseWhileStreaming extends WorkflowTestCase {
 
     private static final String LOCK_ID = "bug_ap_5712";
 
-	@Rule
-	public Timeout m_globalTimeout = Timeout.seconds(5);
+//	@Rule
+//	public Timeout m_globalTimeout = Timeout.seconds(5);
 	
 	@Rule(order = Integer.MIN_VALUE)
 	public TestRule m_dumpCallStackOnErrorRule = new DumpCallStackOnErrorRule(TestTimedOutException.class);
@@ -152,11 +152,15 @@ public class BugAP5712_CloseWhileStreaming extends WorkflowTestCase {
             checkState(m_tableView_4, UNCONFIGURED_MARKEDFOREXEC);
             manager.save(m_workflowDir, new ExecutionMonitor(), true);
             assertTrue(manager.canCancelAll());
+            
+            printInternalStates(manager, "pre-cancel");
             getLogger().error("Canceling...");
             manager.getParent().cancelExecution(manager);
+            printInternalStates(manager, "post-cancel");
             try {
 				waitWhileInExecution();
 			} catch (Throwable t) {
+				printInternalStates(manager, "on exception");
 				String jvmStacktraces = ThreadUtils.getJVMStacktraces();
 				NodeLogger logger = NodeLogger.getLogger(this.getClass());
 				// logger has a limit of 10k chars -- can't dump all into one
@@ -165,6 +169,7 @@ public class BugAP5712_CloseWhileStreaming extends WorkflowTestCase {
 				logger.errorWithFormat("----- END Thread Dump On %s -----", t.getClass().getSimpleName());
 				throw t;
 			}
+            printInternalStates(manager, "post-wait");
         } finally {
             execLock.unlock();
         }
@@ -177,6 +182,20 @@ public class BugAP5712_CloseWhileStreaming extends WorkflowTestCase {
         // the framework saves them as IDLE and the load-routines will update the state ... and warn.
         assertTrue("should have warnings on state - unpredictable during #save", loadResult.hasWarningEntries());
         manager = getManager();
+    }
+    
+    void printInternalStates(WorkflowManager manager, String occurrence) {
+    	NodeID component = new NodeID(m_streamSubnode_5, 0);
+    	getLogger().errorWithFormat("---- BEGIN Node States on %s ----", occurrence);
+    	getLogger().errorWithFormat("manager: %s", manager.getInternalState());
+    	getLogger().errorWithFormat("  component: %s", findNodeContainer(m_streamSubnode_5).getInternalState());
+    	getLogger().errorWithFormat("    datagen: %s", findNodeContainer(new NodeID(component, 1)).getInternalState());
+    	getLogger().errorWithFormat("    colfilter: %s", findNodeContainer(new NodeID(component, 2)).getInternalState());
+    	getLogger().errorWithFormat("    block: %s", findNodeContainer(new NodeID(component, 8)).getInternalState());
+    	getLogger().errorWithFormat("    transpose: %s", findNodeContainer(new NodeID(component, 6)).getInternalState());
+    	getLogger().errorWithFormat("    sampling: %s", findNodeContainer(new NodeID(component, 7)).getInternalState());
+    	getLogger().errorWithFormat("  tableview: %s", findNodeContainer(m_tableView_4).getInternalState());
+    	getLogger().errorWithFormat("---- END Node States on %s ----", occurrence);
     }
 
     /** {@inheritDoc} */
