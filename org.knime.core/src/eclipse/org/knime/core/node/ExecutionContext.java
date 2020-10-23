@@ -63,6 +63,7 @@ import org.knime.core.data.TableBackend;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.ConcatenateTable;
 import org.knime.core.data.container.ContainerTable;
+import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.data.container.DefaultLocalDataRepository;
 import org.knime.core.data.container.ILocalDataRepository;
 import org.knime.core.data.container.JoinedTable;
@@ -75,6 +76,7 @@ import org.knime.core.data.filestore.FileStoreCell;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.NotInWorkflowDataRepository;
 import org.knime.core.data.filestore.internal.ROWriteFileStoreHandler;
+import org.knime.core.data.v2.RowContainerCustomKey;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.KNIMEJob;
@@ -694,6 +696,36 @@ public class ExecutionContext extends ExecutionMonitor {
         NodeProgressMonitor subProgress = createSilentSubProgressMonitor(maxProg);
         return new ExecutionContext(subProgress, m_node, m_memoryPolicy, m_dataRepository, m_localTableRepository,
             m_fileStoreHandler);
+    }
+
+    /**
+     * Create a new RowContainer for direct write access to storage.
+     *
+     * @param spec the spec to create the RowContainer
+     * @return a new RowContainer with CustomKeys.
+     *
+     * @noreference This method is not intended to be referenced by clients.
+     * @implNote Highly experimental API added with KNIME AP 4.3 - Can change with future released of KNIME AP.
+     */
+    public final RowContainerCustomKey createRowContainer(final DataTableSpec spec) {
+        return createRowContainer(spec, false);
+    }
+
+    /**
+     * Create a new RowContainer for direct write access to storage.
+     *
+     * @param spec the spec to create the RowContainer
+     * @param initDomains <source>true</source> if domains should be initialized with domains of spec.
+     * @return a new RowContainer with CustomKeys.
+     *
+     * @noreference This method is not intended to be referenced by clients.
+     * @implNote Highly experimental API added with KNIME AP 4.3 - Can change with future released of KNIME AP.
+     */
+    public final RowContainerCustomKey createRowContainer(final DataTableSpec spec, final boolean initDomains) {
+        final TableBackend backend = WorkflowTableBackendSettings.getTableBackendForCurrentContext();
+        LOGGER.debugWithFormat("Using Table Backend \"%s\".", backend.getClass().getSimpleName());
+        return backend.create(this, spec, DataContainerSettings.getDefault().withInitializedDomain(initDomains),
+            getDataRepository(), getFileStoreHandler());
     }
 
     /** @return the fileStoreHandler the handler set at construction time (possibly null if run in 3rd party exec) */
