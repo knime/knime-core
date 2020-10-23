@@ -49,6 +49,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -60,7 +61,6 @@ import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
 import org.knime.core.data.container.BufferedTableBackend;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.util.CheckUtils;
 
 /**
  * Registry for TableBackend extension point.
@@ -77,11 +77,27 @@ public final class TableBackendRegistry {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(TableBackendRegistry.class);
 
+    /** Denotes the class name of the backend that is used for newly created workflows. By default it's the standard
+     * buffered data table backend ({@link BufferedTableBackend}) but can be changed to a columnar table backend
+     * (value is <code>org.knime.core.data.columnar.ColumnarTableBackend</code>).
+     */
+    public static final String PROPERTY_TABLE_BACKEND_IMPLEMENTATION = "knime.tablebackend";
+
+    /** If {@link #PROPERTY_TABLE_BACKEND_IMPLEMENTATION} is set, force this backend implementation also onto nodes
+     * that exist in old workflows that were executed with a different. It's highly recommended to not set this
+     * property as this can lead to workflows having tables stored in different backend implementations. It should only
+     * be used in test set-ups.
+     *
+     * <p>
+     * Value is <code>true</code> or <code>false</code> (default).
+     */
+    public static final String PROPERTY_TABLE_BACKEND_IMPLEMENTATION_FORCE = "knime.tablebackend.force";
+
     private static final String EXT_POINT_ID = "org.knime.core.TableBackend";
 
-    private static final TableBackendRegistry INSTANCE = createInstance();
+    private static final TableBackendRegistry INSTANCE;
 
-    private static TableBackendRegistry createInstance() {
+    static {
         IExtensionRegistry registry = Platform.getExtensionRegistry();
         IExtensionPoint point = registry.getExtensionPoint(EXT_POINT_ID);
 
@@ -100,13 +116,42 @@ public final class TableBackendRegistry {
                 }
             })).collect(Collectors.toList());
 
-        boolean hasFallback = backendList.stream().anyMatch(f -> f.getClass().equals(BufferedTableBackend.class));
-        CheckUtils.checkState(hasFallback,
-            "No fallback table backend registered, expected '%s' but not present in '%s'",
-            BufferedTableBackend.class.getName(),
-            StringUtils.join(backendList.stream().map(f -> f.getClass().getName()).iterator(), ", "));
+        TableBackend defaultBackend = backendList.stream() //
+            .filter(f -> f.getClass().equals(BufferedTableBackend.class)) //
+            .findFirst() //
+            .orElseThrow(() -> new IllegalStateException(
+                String.format("No fallback table backend registered, expected '%s' but not present in '%s'",
+                    BufferedTableBackend.class.getName(),
+                    StringUtils.join(backendList.stream().map(f -> f.getClass().getName()).iterator(), ", "))));
 
-        return new TableBackendRegistry(backendList);
+        String defBackendString = System.getProperty(PROPERTY_TABLE_BACKEND_IMPLEMENTATION);
+        if (defBackendString != null) {
+            Optional<TableBackend> customDefaultBackendOptional = backendList.stream()
+                .filter(backend -> Objects.equals(backend.getClass().getName(), defBackendString)).findFirst();
+            if (customDefaultBackendOptional.isPresent()) {
+                defaultBackend = customDefaultBackendOptional.get();
+                LOGGER.debugWithFormat("Using new default table format: \"%s\" (%s)", defaultBackend.getShortName(),
+                    defaultBackend.getClass().getName());
+            } else {
+                LOGGER.errorWithFormat(
+                    "System property \"%s\" refers to an implementation \"%s\" but it's not "
+                        + "available. Valid values are {%s}",
+                    PROPERTY_TABLE_BACKEND_IMPLEMENTATION, defBackendString, backendList.stream() //
+                        .map(TableBackend::getClass) //
+                        .map(Class::getName) //
+                        .map(s -> "\"" + s + "\"") //
+                        .collect(Collectors.joining(", ")));
+            }
+        }
+
+        boolean forceDefaultBackendOnOldWorkflows = Boolean.getBoolean(PROPERTY_TABLE_BACKEND_IMPLEMENTATION_FORCE);
+        if (forceDefaultBackendOnOldWorkflows) {
+            LOGGER.warnWithFormat("Forcing table format \"%s\" onto existing (old) workflows -- do not rely on any "
+                    + "workflow created using this instance (review %s property to change this)",
+                defaultBackend.getClass().getName(), PROPERTY_TABLE_BACKEND_IMPLEMENTATION_FORCE);
+        }
+
+        INSTANCE = new TableBackendRegistry(backendList, defaultBackend, forceDefaultBackendOnOldWorkflows);
     }
 
     private static TableBackend readBackend(final IConfigurationElement cfe) {
@@ -129,8 +174,15 @@ public final class TableBackendRegistry {
 
     private final List<TableBackend> m_backends;
 
-    private TableBackendRegistry(final List<TableBackend> dataContainerFactories) {
+    private final TableBackend m_defaultBackend;
+
+    private final boolean m_forceDefaultBackendOnOldWorkflows;
+
+    private TableBackendRegistry(final List<TableBackend> dataContainerFactories, final TableBackend defaultBackend,
+        final boolean forceDefaultBackendOnOldWorkflows) {
         m_backends = Collections.unmodifiableList(dataContainerFactories);
+        m_defaultBackend = defaultBackend;
+        m_forceDefaultBackendOnOldWorkflows = forceDefaultBackendOnOldWorkflows;
     }
 
     /** @return the data container delegate factories in an unmodifiable list. */
@@ -143,11 +195,37 @@ public final class TableBackendRegistry {
      * @return the table backend with the given class name - used to restore a previously saved table.
      * @throws IllegalArgumentException If the backend is unknown (usually means: not installed)
      */
-    public final TableBackend getTableBackend(final String fullyQualifiedClassName) throws IllegalArgumentException {
+    public final TableBackend getTableBackend(final String fullyQualifiedClassName) {
         return m_backends.stream()//
             .filter(f -> f.getClass().getName().equals(fullyQualifiedClassName))//
             .findFirst()//
             .orElseThrow(() -> new IllegalArgumentException(fullyQualifiedClassName));
+    }
+
+    /**
+     * @return the {@link BufferedTableBackend} or whatever is specified via
+     *         {@link #PROPERTY_TABLE_BACKEND_IMPLEMENTATION}
+     */
+    public final TableBackend getDefaultBackendForNewWorkflows() {
+        return m_defaultBackend;
+    }
+
+    /**
+     * @return the backend that was used prior KNIME 4.3, that is before it could be set on a workflow level. Used
+     * as default when workflows are loaded that don't have the corresponding option set. ({@link BufferedTableBackend}.
+     */
+    public final TableBackend getPre43TableBackend() {
+        return m_backends.stream().filter(b -> b.getClass().equals(BufferedTableBackend.class)).findFirst()
+            .orElseThrow(() -> new IllegalStateException(BufferedTableBackend.class.getName() + " not found in list"));
+    }
+
+    /**
+     * @return <code>true</code> if the default table format is forced onto workflows that are created &lt;4.3 (no table
+     * backend selected). This should only be true in test set-ups.
+     * @see #PROPERTY_TABLE_BACKEND_IMPLEMENTATION_FORCE
+     */
+    public boolean isForceDefaultBackendOnOldWorkflows() {
+        return m_forceDefaultBackendOnOldWorkflows;
     }
 
     @Override
@@ -156,14 +234,5 @@ public final class TableBackendRegistry {
         b.append(String.join(", ", m_backends.stream().map(s -> s.getClass().getName()).collect(Collectors.toList())))
             .append("]");
         return b.toString();
-    }
-
-    /** @return the {@link BufferedTableBackend} instance (never null). */
-    public final TableBackend getDefaultBackend() {
-        return m_backends.stream() //
-            .filter(tb -> Objects.equals(tb.getClass(), BufferedTableBackend.class)) //
-            .findFirst() //
-            .orElseThrow(
-                () -> new IllegalStateException(BufferedTableBackend.class.getSimpleName() + " not available"));
     }
 }

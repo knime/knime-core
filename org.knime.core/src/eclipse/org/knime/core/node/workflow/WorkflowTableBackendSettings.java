@@ -75,11 +75,10 @@ public final class WorkflowTableBackendSettings {
     private static final String CFG_TABLE_BACKEND_FEATURE = "feature";
     private static final String CFG_TABLE_BACKEND_SHORTNAME = "shortname";
 
-    private static final TableBackend DEFAULT_BACKEND = TableBackendRegistry.getInstance().getDefaultBackend();
     private final TableBackend m_tableBackend;
 
     WorkflowTableBackendSettings() {
-        this(DEFAULT_BACKEND);
+        this(TableBackendRegistry.getInstance().getDefaultBackendForNewWorkflows());
     }
 
     WorkflowTableBackendSettings(final TableBackend tableBackend) {
@@ -96,12 +95,15 @@ public final class WorkflowTableBackendSettings {
     static WorkflowTableBackendSettings loadSettingsInModel(final NodeSettingsRO settings)
         throws InvalidSettingsException {
         TableBackend tableBackend;
-        if (settings.containsKey(CFG_TABLE_BACKEND)) {
+        final TableBackendRegistry registry = TableBackendRegistry.getInstance();
+        if (registry.isForceDefaultBackendOnOldWorkflows()) {
+            tableBackend = registry.getDefaultBackendForNewWorkflows();
+        } else if (settings.containsKey(CFG_TABLE_BACKEND)) {
             NodeSettingsRO tableBackendSettings = settings.getNodeSettings(CFG_TABLE_BACKEND);
             String className = CheckUtils.checkSettingNotNull(tableBackendSettings.getString(CFG_TABLE_BACKEND_CLASS),
                 "Table Backend Class must not be null");
             try {
-                tableBackend = TableBackendRegistry.getInstance().getTableBackend(className);
+                tableBackend = registry.getTableBackend(className);
             } catch (IllegalArgumentException ex) {
                 String bundle = tableBackendSettings.getString(CFG_TABLE_BACKEND_BUNDLE, null);
                 String feature = tableBackendSettings.getString(CFG_TABLE_BACKEND_FEATURE, null);
@@ -110,7 +112,7 @@ public final class WorkflowTableBackendSettings {
                     TableStoreFormatInformation.forTableBackend(bundle, feature, shortname), ex);
             }
         } else {
-            tableBackend = DEFAULT_BACKEND;
+            tableBackend = registry.getPre43TableBackend();
         }
         return new WorkflowTableBackendSettings(tableBackend);
     }
@@ -124,7 +126,7 @@ public final class WorkflowTableBackendSettings {
     }
 
     void saveSettingsTo(final NodeSettingsWO settings) {
-        if (!m_tableBackend.equals(DEFAULT_BACKEND)) {
+        if (!m_tableBackend.equals(TableBackendRegistry.getInstance().getPre43TableBackend())) {
             NodeSettingsWO tableBackendSettings = settings.addNodeSettings(CFG_TABLE_BACKEND);
             tableBackendSettings.addString(CFG_TABLE_BACKEND_CLASS, m_tableBackend.getClass().getName());
             Bundle bundle = OSGIHelper.getBundle(m_tableBackend.getClass());
@@ -145,10 +147,10 @@ public final class WorkflowTableBackendSettings {
             WorkflowManager wfm = context.getWorkflowManager();
             if (wfm != null) {
                 return wfm.getTableBackendSettings().map(WorkflowTableBackendSettings::getTableBackend)
-                    .orElse(DEFAULT_BACKEND);
+                    .orElse(TableBackendRegistry.getInstance().getDefaultBackendForNewWorkflows());
             }
         }
-        return DEFAULT_BACKEND;
+        return TableBackendRegistry.getInstance().getDefaultBackendForNewWorkflows();
     }
 
     @Override
