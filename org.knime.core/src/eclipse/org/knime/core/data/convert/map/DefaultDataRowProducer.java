@@ -50,7 +50,7 @@ package org.knime.core.data.convert.map;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
-import org.knime.core.data.MissingCell;
+import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.CellFactory;
 import org.knime.core.data.convert.datacell.BooleanToDataCellConverter;
@@ -253,7 +253,7 @@ public final class DefaultDataRowProducer<S extends Source<?>, PP extends Produc
         @Override
         protected final DataCell map(final PP params) throws Exception {
             if (m_producer.producesMissingCellValue(m_source, params)) {
-                return new MissingCell(null);
+                return DataType.getMissingCell();
             } else {
                 return m_converter.convertDouble(m_producer.produceDoubleCellValue(m_source, params));
             }
@@ -269,7 +269,7 @@ public final class DefaultDataRowProducer<S extends Source<?>, PP extends Produc
         @Override
         protected final DataCell map(final PP params) throws Exception {
             if (m_producer.producesMissingCellValue(m_source, params)) {
-                return new MissingCell(null);
+                return DataType.getMissingCell();
             } else {
                 return m_converter.convertInt(m_producer.produceIntCellValue(m_source, params));
             }
@@ -285,7 +285,7 @@ public final class DefaultDataRowProducer<S extends Source<?>, PP extends Produc
         @Override
         protected final DataCell map(final PP params) throws Exception {
             if (m_producer.producesMissingCellValue(m_source, params)) {
-                return new MissingCell(null);
+                return DataType.getMissingCell();
             } else {
                 return m_converter.convertLong(m_producer.produceLongCellValue(m_source, params));
             }
@@ -302,7 +302,7 @@ public final class DefaultDataRowProducer<S extends Source<?>, PP extends Produc
         @Override
         protected final DataCell map(final PP params) throws Exception {
             if (m_producer.producesMissingCellValue(m_source, params)) {
-                return new MissingCell(null);
+                return DataType.getMissingCell();
             } else {
                 return m_converter.convertBoolean(m_producer.produceBooleanCellValue(m_source, params));
             }
@@ -318,7 +318,7 @@ public final class DefaultDataRowProducer<S extends Source<?>, PP extends Produc
         @Override
         protected final DataCell map(final PP params) throws Exception {
             if (m_producer.producesMissingCellValue(m_source, params)) {
-                return new MissingCell(null);
+                return DataType.getMissingCell();
             } else {
                 return m_converter.convertFloat(m_producer.produceFloatCellValue(m_source, params));
             }
@@ -334,7 +334,7 @@ public final class DefaultDataRowProducer<S extends Source<?>, PP extends Produc
         @Override
         protected final DataCell map(final PP params) throws Exception {
             if (m_producer.producesMissingCellValue(m_source, params)) {
-                return new MissingCell(null);
+                return DataType.getMissingCell();
             } else {
                 return m_converter.convertByte(m_producer.produceByteCellValue(m_source, params));
             }
@@ -350,7 +350,7 @@ public final class DefaultDataRowProducer<S extends Source<?>, PP extends Produc
         @Override
         protected final DataCell map(final PP params) throws Exception {
             if (m_producer.producesMissingCellValue(m_source, params)) {
-                return new MissingCell(null);
+                return DataType.getMissingCell();
             } else {
                 return m_converter.convertShort(m_producer.produceShortCellValue(m_source, params));
             }
@@ -366,7 +366,7 @@ public final class DefaultDataRowProducer<S extends Source<?>, PP extends Produc
         @Override
         protected final DataCell map(final PP params) throws Exception {
             if (m_producer.producesMissingCellValue(m_source, params)) {
-                return new MissingCell(null);
+                return DataType.getMissingCell();
             } else {
                 return m_converter.convertChar(m_producer.produceCharCellValue(m_source, params));
             }
@@ -383,7 +383,7 @@ public final class DefaultDataRowProducer<S extends Source<?>, PP extends Produc
         protected final DataCell map(final PP params) throws Exception {
             final Object value = m_producer.produceCellValue(m_source, params);
             if (value == null) {
-                return new MissingCell(null);
+                return DataType.getMissingCell();
             } else {
                 return m_converter.convertUnsafe(value);
             }
