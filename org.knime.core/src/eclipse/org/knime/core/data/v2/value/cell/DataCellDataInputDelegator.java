@@ -47,7 +47,9 @@ package org.knime.core.data.v2.value.cell;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInput;
+import java.io.EOFException;
 import java.io.IOException;
+import java.io.InputStream;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellDataInput;
@@ -63,7 +65,7 @@ import org.knime.core.data.v2.DataCellSerializerFactory;
  * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
  * @since 4.3
  */
-final class DataCellDataInputDelegator implements DataCellDataInput {
+final class DataCellDataInputDelegator extends InputStream implements DataCellDataInput {
 
     private final DataCellSerializerFactory m_factory;
 
@@ -177,4 +179,24 @@ final class DataCellDataInputDelegator implements DataCellDataInput {
     public String readUTF() throws IOException {
         return m_delegate.readUTF();
     }
+
+    @Override
+    public int read() throws IOException {
+        try {
+            return m_delegate.readUnsignedByte();
+        } catch (EOFException e) { // NOSONAR
+            return -1;
+        }
+    }
+
+    @Override
+    public int read(final byte[] b, final int off, final int len) throws IOException {
+        try {
+            m_delegate.readFully(b, off, len);
+            return len;
+        } catch (EOFException e) { // NOSONAR
+            return -1;
+        }
+    }
+
 }

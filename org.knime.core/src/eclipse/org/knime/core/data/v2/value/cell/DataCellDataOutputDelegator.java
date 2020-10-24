@@ -48,6 +48,7 @@ package org.knime.core.data.v2.value.cell;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.io.OutputStream;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellDataOutput;
@@ -66,7 +67,7 @@ import org.knime.core.data.v2.DataCellSerializerFactory.DataCellSerializerInfo;
  * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
  * @since 4.3
  */
-final class DataCellDataOutputDelegator implements DataCellDataOutput, AutoCloseable {
+final class DataCellDataOutputDelegator extends OutputStream implements DataCellDataOutput {
 
     private final DataCellSerializerFactory m_factory;
 
@@ -179,10 +180,5 @@ final class DataCellDataOutputDelegator implements DataCellDataOutput, AutoClose
     @Override
     public void writeUTF(final String s) throws IOException {
         m_delegate.writeUTF(s);
-    }
-
-    @Override
-    public void close() {
-        // nothing
     }
 }
