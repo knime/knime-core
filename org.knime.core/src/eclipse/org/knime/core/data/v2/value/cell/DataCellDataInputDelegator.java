@@ -83,13 +83,22 @@ final class DataCellDataInputDelegator implements DataCellDataInput {
     @Override
     public DataCell readDataCell() throws IOException {
         final DataCell result = m_factory.getSerializerByIdx(readByte()).getSerializer().deserialize(this);
-        if (FileStoreCell.class.isAssignableFrom(result.getClass())) {
+        if (result instanceof FileStoreCell) {
             final FileStoreKey[] fileStoreKeys = readFileStoreKeys();
             final FileStoreCell fsCell = (FileStoreCell)result;
             FileStoreUtil.retrieveFileStoreHandlersFrom(fsCell, fileStoreKeys, m_dataRepository);
         }
 
         return result;
+    }
+
+    private FileStoreKey[] readFileStoreKeys() throws IOException {
+        int numFileStoreKeys = readInt();
+        FileStoreKey[] fileStoreKeys = new FileStoreKey[numFileStoreKeys];
+        for (int fsIdx = 0; fsIdx < numFileStoreKeys; fsIdx++) {
+            fileStoreKeys[fsIdx] = FileStoreKey.load(this);
+        }
+        return fileStoreKeys;
     }
 
     @Override
@@ -166,14 +175,4 @@ final class DataCellDataInputDelegator implements DataCellDataInput {
     public String readUTF() throws IOException {
         return m_delegate.readUTF();
     }
-
-    private FileStoreKey[] readFileStoreKeys() throws IOException {
-        int numFileStoreKeys = readInt();
-        FileStoreKey[] fileStoreKeys = new FileStoreKey[numFileStoreKeys];
-        for (int fsIdx = 0; fsIdx < numFileStoreKeys; fsIdx++) {
-            fileStoreKeys[fsIdx] = FileStoreKey.load(this);
-        }
-        return fileStoreKeys;
-    }
-
 }

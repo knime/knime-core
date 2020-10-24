@@ -56,6 +56,7 @@ import org.knime.core.data.IDataRepository;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.filestore.FileStoreCell;
+import org.knime.core.data.filestore.FileStoreKey;
 import org.knime.core.data.filestore.FileStoreUtil;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.v2.DataCellSerializerFactory;
@@ -127,7 +128,7 @@ public final class DataCellValueFactory
 
     @Override
     public WriteValue<? extends DataCell> createWriteValue(final ObjectWriteAccess<DataCell> access) {
-        return new DefaultDataCellWriteValue(access, m_fsHandler);
+        return new DefaultDataCellWriteValue(access, m_fsHandler, m_dataRepository);
     }
 
     @Override
@@ -164,19 +165,38 @@ public final class DataCellValueFactory
 
         private final IWriteFileStoreHandler m_fsHandler;
 
+        private final IDataRepository m_dataRepository;
+
         private final ObjectWriteAccess<DataCell> m_access;
 
-        DefaultDataCellWriteValue(final ObjectWriteAccess<DataCell> access, final IWriteFileStoreHandler fsHandler) {
+        DefaultDataCellWriteValue(final ObjectWriteAccess<DataCell> access, final IWriteFileStoreHandler fsHandler,
+            final IDataRepository repository) {
             m_access = access;
             m_fsHandler = fsHandler;
+            m_dataRepository = repository;
         }
 
         @Override
         public void setValue(final DataCell cell) {
             if (cell instanceof FileStoreCell) {
                 final FileStoreCell fsCell = (FileStoreCell)cell;
+
+                // TODO WHEN DO WE HAVE TO DO THIS PRIOR TO SAVE?
+                // -- ONLY if mustBeFlushedPriorToSave is true?
                 if (mustBeFlushedPriorSave(fsCell)) {
                     try {
+                        final FileStore[] fileStores = FileStoreUtil.getFileStores(fsCell);
+                        final FileStoreKey[] fileStoreKeys = new FileStoreKey[fileStores.length];
+
+                        for (int fileStoreIndex = 0; fileStoreIndex < fileStoreKeys.length; fileStoreIndex++) {
+                            fileStoreKeys[fileStoreIndex] =
+                                m_fsHandler.translateToLocal(fileStores[fileStoreIndex], fsCell);
+                        }
+
+                        // TODO we want to avoid postConstruct here.
+                        FileStoreUtil.retrieveFileStoreHandlersFrom(fsCell, fileStoreKeys, m_dataRepository);
+
+                        // TODO Do we need to flush here?
                         FileStoreUtil.invokeFlush(fsCell);
                     } catch (IOException ex) {
                         throw new IllegalStateException(ex);

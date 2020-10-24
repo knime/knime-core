@@ -85,12 +85,12 @@ final class DataCellDataOutputDelegator implements DataCellDataOutput, AutoClose
         final FileStore[] fileStores = FileStoreUtil.getFileStores(fsCell);
         final FileStoreKey[] fileStoreKeys = new FileStoreKey[fileStores.length];
 
+        // TODO In case we already did that in DataCellValueFactory WriteValue, can we avoid doing this again? Is it harmful?
         for (int fileStoreIndex = 0; fileStoreIndex < fileStoreKeys.length; fileStoreIndex++) {
-            // TODO code is different from AbstractTableStoreWriter#211. In case of bug, this would be a good place to start looking...
             fileStoreKeys[fileStoreIndex] = m_fsHandler.translateToLocal(fileStores[fileStoreIndex], fsCell);
         }
 
-        // TODO Bernd Required if we flush when adding the cell in DataCellValueFactory anyways?
+        // In case we didn't flush yet.
         FileStoreUtil.invokeFlush(fsCell);
 
         writeInt(fileStoreKeys.length);
