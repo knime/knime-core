@@ -82,25 +82,25 @@ final class DataCellDataOutputDelegator implements DataCellDataOutput, AutoClose
     }
 
     private void handleFileStoreCell(final FileStoreCell fsCell) throws IOException {
-        if (mustBeFlushedPriorSave(fsCell)) {
-            final FileStore[] fileStores = FileStoreUtil.getFileStores(fsCell);
-            final FileStoreKey[] fileStoreKeys = new FileStoreKey[fileStores.length];
-            for (int fileStoreIndex = 0; fileStoreIndex < fileStoreKeys.length; fileStoreIndex++) {
-                // TODO code is different from AbstractTableStoreWriter#211. In case of bug, this would be a good place to start looking...
-                fileStoreKeys[fileStoreIndex] = m_fsHandler.translateToLocal(fileStores[fileStoreIndex], fsCell);
-            }
+        final FileStore[] fileStores = FileStoreUtil.getFileStores(fsCell);
+        final FileStoreKey[] fileStoreKeys = new FileStoreKey[fileStores.length];
 
-            FileStoreUtil.invokeFlush(fsCell);
+        for (int fileStoreIndex = 0; fileStoreIndex < fileStoreKeys.length; fileStoreIndex++) {
+            // TODO code is different from AbstractTableStoreWriter#211. In case of bug, this would be a good place to start looking...
+            fileStoreKeys[fileStoreIndex] = m_fsHandler.translateToLocal(fileStores[fileStoreIndex], fsCell);
+        }
 
-            writeInt(fileStoreKeys.length);
-            for (FileStoreKey fsKey : fileStoreKeys) {
-                fsKey.save(this);
-            }
+        FileStoreUtil.invokeFlush(fsCell);
+
+        writeInt(fileStoreKeys.length);
+        for (FileStoreKey fsKey : fileStoreKeys) {
+            fsKey.save(this);
         }
     }
 
+    // TODO why do we need to flush? problem with heap cache!
     private boolean mustBeFlushedPriorSave(final FileStoreCell cell) {
-        FileStore[] fileStores = FileStoreUtil.getFileStores(cell);
+        final FileStore[] fileStores = FileStoreUtil.getFileStores(cell);
         for (FileStore fs : fileStores) {
             if (m_fsHandler.mustBeFlushedPriorSave(fs)) {
                 return true;

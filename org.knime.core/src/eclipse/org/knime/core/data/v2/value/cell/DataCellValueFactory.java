@@ -104,7 +104,7 @@ public final class DataCellValueFactory
      */
     public DataCellValueFactory(final DataCellSerializerFactory factory,
         final IWriteFileStoreHandler fileStoreHandler) {
-        this(factory, fileStoreHandler, null);
+        this(factory, fileStoreHandler, fileStoreHandler.getDataRepository());
     }
 
     /**
