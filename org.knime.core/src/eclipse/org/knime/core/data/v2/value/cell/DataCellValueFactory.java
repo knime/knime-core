@@ -54,6 +54,9 @@ import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.IDataRepository;
 import org.knime.core.data.RowIterator;
+import org.knime.core.data.filestore.FileStore;
+import org.knime.core.data.filestore.FileStoreCell;
+import org.knime.core.data.filestore.FileStoreUtil;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.v2.DataCellSerializerFactory;
 import org.knime.core.data.v2.ReadValue;
@@ -124,7 +127,7 @@ public final class DataCellValueFactory
 
     @Override
     public WriteValue<? extends DataCell> createWriteValue(final ObjectWriteAccess<DataCell> access) {
-        return new DefaultDataCellWriteValue(access);
+        return new DefaultDataCellWriteValue(access, m_fsHandler);
     }
 
     @Override
@@ -159,16 +162,40 @@ public final class DataCellValueFactory
      */
     private static class DefaultDataCellWriteValue implements WriteValue<DataCell> {
 
+        private final IWriteFileStoreHandler m_fsHandler;
+
         private final ObjectWriteAccess<DataCell> m_access;
 
-        DefaultDataCellWriteValue(final ObjectWriteAccess<DataCell> access) {
+        DefaultDataCellWriteValue(final ObjectWriteAccess<DataCell> access, final IWriteFileStoreHandler fsHandler) {
             m_access = access;
+            m_fsHandler = fsHandler;
         }
 
         @Override
         public void setValue(final DataCell cell) {
+            if (cell instanceof FileStoreCell) {
+                final FileStoreCell fsCell = (FileStoreCell)cell;
+                if (mustBeFlushedPriorSave(fsCell)) {
+                    try {
+                        FileStoreUtil.invokeFlush(fsCell);
+                    } catch (IOException ex) {
+                        throw new IllegalStateException(ex);
+                    }
+                }
+            }
             // NB: Missing Value checks is expected to happen before cell is actually written. See RowWriteAccess.
             m_access.setObject(cell);
+        }
+
+        // TODO why do we need to flush? problem with heap cache!
+        private boolean mustBeFlushedPriorSave(final FileStoreCell cell) {
+            final FileStore[] fileStores = FileStoreUtil.getFileStores(cell);
+            for (FileStore fs : fileStores) {
+                if (m_fsHandler.mustBeFlushedPriorSave(fs)) {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 

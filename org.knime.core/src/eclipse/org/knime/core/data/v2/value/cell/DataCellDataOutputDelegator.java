@@ -90,23 +90,13 @@ final class DataCellDataOutputDelegator implements DataCellDataOutput, AutoClose
             fileStoreKeys[fileStoreIndex] = m_fsHandler.translateToLocal(fileStores[fileStoreIndex], fsCell);
         }
 
+        // TODO Bernd Required if we flush when adding the cell in DataCellValueFactory anyways?
         FileStoreUtil.invokeFlush(fsCell);
 
         writeInt(fileStoreKeys.length);
         for (FileStoreKey fsKey : fileStoreKeys) {
             fsKey.save(this);
         }
-    }
-
-    // TODO why do we need to flush? problem with heap cache!
-    private boolean mustBeFlushedPriorSave(final FileStoreCell cell) {
-        final FileStore[] fileStores = FileStoreUtil.getFileStores(cell);
-        for (FileStore fs : fileStores) {
-            if (m_fsHandler.mustBeFlushedPriorSave(fs)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     @Override
