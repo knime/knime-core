@@ -24,7 +24,7 @@ try {
 
     workflowTests.runTests(
         dependencies: [
-            repositories: ['knime-json', 'knime-python', 'knime-filehandling',
+            repositories: ['knime-core', 'knime-json', 'knime-python', 'knime-filehandling',
                 'knime-datageneration', 'knime-jep', 'knime-js-base', 'knime-cloud', 'knime-database', 'knime-kerberos',
 				'knime-textprocessing', 'knime-dl4j', 'knime-virtual', 'knime-r', 'knime-streaming', 'knime-cluster']
         ]
