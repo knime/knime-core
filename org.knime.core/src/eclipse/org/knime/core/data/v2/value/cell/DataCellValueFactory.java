@@ -215,6 +215,23 @@ public final class DataCellValueFactory
         }
     }
 
+    /*
+     * Default implementation of a {@link WrappedReadValue}.
+     */
+    private static final class DefaultDataCellReadValue implements WrappedReadValue {
+
+        private final ObjectReadAccess<DataCell> m_access;
+
+        DefaultDataCellReadValue(final ObjectReadAccess<DataCell> access) {
+            m_access = access;
+        }
+
+        @Override
+        public DataCell getDataCell() {
+            return m_access.getObject();
+        }
+    }
+
     /* {@link ObjectSerializer} for arbitrary {@link DataCell}s */
     private static final class DataCellObjectSerializer implements ObjectSerializer<DataCell> {
 
