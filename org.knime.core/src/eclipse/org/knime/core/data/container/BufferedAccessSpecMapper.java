@@ -96,7 +96,7 @@ import org.knime.core.data.v2.access.WriteAccess;
  */
 final class BufferedAccessSpecMapper implements AccessSpecMapper<BufferedAccess> {
 
-    final static BufferedAccessSpecMapper INSTANCE = new BufferedAccessSpecMapper();
+    static final BufferedAccessSpecMapper INSTANCE = new BufferedAccessSpecMapper();
 
     private BufferedAccessSpecMapper() {
     }
@@ -145,7 +145,7 @@ final class BufferedAccessSpecMapper implements AccessSpecMapper<BufferedAccess>
         return new BufferedByteArrayAccess();
     }
 
-    private final static class BufferedByteArrayAccess
+    private static final class BufferedByteArrayAccess
         implements VarBinaryReadAccess, VarBinaryWriteAccess, BufferedAccess {
 
         private boolean m_isMissing = true;
@@ -182,7 +182,7 @@ final class BufferedAccessSpecMapper implements AccessSpecMapper<BufferedAccess>
 
     }
 
-    private final static class BufferedVoidAccess implements BufferedAccess {
+    private static final class BufferedVoidAccess implements BufferedAccess {
 
         private static final BufferedVoidAccess VOID_ACCESS_INSTANCE = new BufferedVoidAccess();
 
@@ -196,11 +196,12 @@ final class BufferedAccessSpecMapper implements AccessSpecMapper<BufferedAccess>
 
         @Override
         public void setMissing() {
+            // not to be called
         }
 
     }
 
-    private final static class BufferedBooleanAccess implements BooleanReadAccess, BooleanWriteAccess, BufferedAccess {
+    private static final class BufferedBooleanAccess implements BooleanReadAccess, BooleanWriteAccess, BufferedAccess {
 
         private byte m_value;
 
@@ -222,17 +223,17 @@ final class BufferedAccessSpecMapper implements AccessSpecMapper<BufferedAccess>
         }
 
         @Override
-        public long getLongValue() {
+        public long getLongValue() { // NOSONAR
             return m_value;
         }
 
         @Override
-        public int getIntValue() {
+        public int getIntValue() { // NOSONAR
             return m_value;
         }
 
         @Override
-        public double getRealValue() {
+        public double getRealValue() { // NOSONAR
             return m_value;
         }
 
@@ -242,32 +243,32 @@ final class BufferedAccessSpecMapper implements AccessSpecMapper<BufferedAccess>
         }
 
         @Override
-        public double getMinSupport() {
+        public double getMinSupport() { // NOSONAR
             return m_value;
         }
 
         @Override
-        public double getCore() {
+        public double getCore() { // NOSONAR
             return m_value;
         }
 
         @Override
-        public double getMaxSupport() {
+        public double getMaxSupport() { // NOSONAR
             return m_value;
         }
 
         @Override
-        public double getMinCore() {
+        public double getMinCore() { // NOSONAR
             return m_value;
         }
 
         @Override
-        public double getMaxCore() {
+        public double getMaxCore() { // NOSONAR
             return m_value;
         }
 
         @Override
-        public double getCenterOfGravity() {
+        public double getCenterOfGravity() { // NOSONAR
             return m_value;
         }
 
@@ -294,7 +295,7 @@ final class BufferedAccessSpecMapper implements AccessSpecMapper<BufferedAccess>
 
     }
 
-    private final static class BufferedLongAccess implements LongReadAccess, LongWriteAccess, BufferedAccess {
+    private static final class BufferedLongAccess implements LongReadAccess, LongWriteAccess, BufferedAccess {
 
         private long m_value;
 
@@ -311,7 +312,7 @@ final class BufferedAccessSpecMapper implements AccessSpecMapper<BufferedAccess>
         }
 
         @Override
-        public double getDoubleValue() {
+        public double getDoubleValue() { // NOSONAR
             return m_value;
         }
 
@@ -321,7 +322,7 @@ final class BufferedAccessSpecMapper implements AccessSpecMapper<BufferedAccess>
         }
 
         @Override
-        public double getRealValue() {
+        public double getRealValue() { // NOSONAR
             return m_value;
         }
 
@@ -331,32 +332,32 @@ final class BufferedAccessSpecMapper implements AccessSpecMapper<BufferedAccess>
         }
 
         @Override
-        public double getMinSupport() {
+        public double getMinSupport() { // NOSONAR
             return m_value;
         }
 
         @Override
-        public double getCore() {
+        public double getCore() { // NOSONAR
             return m_value;
         }
 
         @Override
-        public double getMaxSupport() {
+        public double getMaxSupport() { // NOSONAR
             return m_value;
         }
 
         @Override
-        public double getMinCore() {
+        public double getMinCore() { // NOSONAR
             return m_value;
         }
 
         @Override
-        public double getMaxCore() {
+        public double getMaxCore() { // NOSONAR
             return m_value;
         }
 
         @Override
-        public double getCenterOfGravity() {
+        public double getCenterOfGravity() { // NOSONAR
             return m_value;
         }
 
@@ -378,7 +379,7 @@ final class BufferedAccessSpecMapper implements AccessSpecMapper<BufferedAccess>
 
     }
 
-    private final static class BufferedIntAccess implements IntReadAccess, IntWriteAccess, BufferedAccess {
+    private static final class BufferedIntAccess implements IntReadAccess, IntWriteAccess, BufferedAccess {
 
         private int m_value;
 
@@ -400,52 +401,52 @@ final class BufferedAccessSpecMapper implements AccessSpecMapper<BufferedAccess>
         }
 
         @Override
-        public double getDoubleValue() {
+        public double getDoubleValue() { // NOSONAR
             return m_value;
         }
 
         @Override
-        public double getRealValue() {
+        public double getRealValue() { // NOSONAR
             return m_value;
         }
 
         @Override
-        public double getImaginaryValue() {
+        public double getImaginaryValue() { // NOSONAR
             return 0;
         }
 
         @Override
-        public double getMinSupport() {
+        public double getMinSupport() { // NOSONAR
             return m_value;
         }
 
         @Override
-        public double getCore() {
+        public double getCore() { // NOSONAR
             return m_value;
         }
 
         @Override
-        public double getMaxSupport() {
+        public double getMaxSupport() { // NOSONAR
             return m_value;
         }
 
         @Override
-        public double getMinCore() {
+        public double getMinCore() { // NOSONAR
             return m_value;
         }
 
         @Override
-        public double getMaxCore() {
+        public double getMaxCore() { // NOSONAR
             return m_value;
         }
 
         @Override
-        public double getCenterOfGravity() {
+        public double getCenterOfGravity() { // NOSONAR
             return m_value;
         }
 
         @Override
-        public long getLongValue() {
+        public long getLongValue() { // NOSONAR
             return m_value;
         }
 
@@ -467,7 +468,7 @@ final class BufferedAccessSpecMapper implements AccessSpecMapper<BufferedAccess>
 
     }
 
-    private final static class BufferedDoubleAccess implements DoubleWriteAccess, DoubleReadAccess, BufferedAccess {
+    private static final class BufferedDoubleAccess implements DoubleWriteAccess, DoubleReadAccess, BufferedAccess {
 
         private double m_value;
 
@@ -495,7 +496,7 @@ final class BufferedAccessSpecMapper implements AccessSpecMapper<BufferedAccess>
         }
 
         @Override
-        public double getRealValue() {
+        public double getRealValue() { // NOSONAR
             return m_value;
         }
 
@@ -505,32 +506,32 @@ final class BufferedAccessSpecMapper implements AccessSpecMapper<BufferedAccess>
         }
 
         @Override
-        public double getMinSupport() {
+        public double getMinSupport() { // NOSONAR
             return m_value;
         }
 
         @Override
-        public double getCore() {
+        public double getCore() { // NOSONAR
             return m_value;
         }
 
         @Override
-        public double getMaxSupport() {
+        public double getMaxSupport() { // NOSONAR
             return m_value;
         }
 
         @Override
-        public double getMinCore() {
+        public double getMinCore() { // NOSONAR
             return m_value;
         }
 
         @Override
-        public double getMaxCore() {
+        public double getMaxCore() { // NOSONAR
             return m_value;
         }
 
         @Override
-        public double getCenterOfGravity() {
+        public double getCenterOfGravity() { // NOSONAR
             return m_value;
         }
 
@@ -545,7 +546,7 @@ final class BufferedAccessSpecMapper implements AccessSpecMapper<BufferedAccess>
         }
     }
 
-    private final static class BufferedStructAccess implements StructWriteAccess, StructReadAccess, BufferedAccess {
+    private static final class BufferedStructAccess implements StructWriteAccess, StructReadAccess, BufferedAccess {
 
         private final BufferedAccess[] m_inner;
 
@@ -587,7 +588,7 @@ final class BufferedAccessSpecMapper implements AccessSpecMapper<BufferedAccess>
         }
     }
 
-    private final static class BufferedObjectAccess<T>
+    private static final class BufferedObjectAccess<T>
         implements ObjectWriteAccess<T>, ObjectReadAccess<T>, BufferedAccess {
 
         private T m_object = null;

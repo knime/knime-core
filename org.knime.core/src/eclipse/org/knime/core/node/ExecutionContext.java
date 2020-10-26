@@ -699,20 +699,41 @@ public class ExecutionContext extends ExecutionMonitor {
     }
 
     /**
-     * Create a new RowContainer for direct write access to storage.
+     * Create a new {@link RowContainerCustomKey} for direct write access to storage. This is a new write API added in
+     * version 4.3, allowing tables to be created without cell creation overhead. An implementation would look as
+     * follows:
+     * <pre>
+     *     final long nrRows = ...
+     *     final DataTableSpec spec = ...
+     *     BufferedDataTable table;
+     *     try (final RowContainerCustomKey cursor = exec.createRowContainer(spec)) {
+     *         for (long i = 0; i < nrRows; i++) {
+     *             final String key = "Row" + i;
+     *             exec.setProgress((double) i / nrRows, () -> ...);
+     *             exec.checkCanceled();
+     *             cursor.setRowKey(key);
+     *             cursor.&lt;DoubleWriteValue>getWriteValue(j).setValue(Math.random());
+     *             cursor.&lt;IntWriteValue>getWriteValue(j).setValue((int)(100 * Math.random()));
+     *             cursor.push();
+     *         }
+     *         table = cursor.finish();
+     *     }
+     * </pre>
      *
      * @param spec the spec to create the RowContainer
      * @return a new RowContainer with CustomKeys.
      *
      * @noreference This method is not intended to be referenced by clients.
      * @implNote Highly experimental API added with KNIME AP 4.3 - Can change with future released of KNIME AP.
+     * @since 4.3
      */
     public final RowContainerCustomKey createRowContainer(final DataTableSpec spec) {
         return createRowContainer(spec, false);
     }
 
     /**
-     * Create a new RowContainer for direct write access to storage.
+     * Create a new RowContainer for direct write access to storage. This method is analogous to
+     * {@link #createRowContainer(DataTableSpec)} with the option to set the initialization of the domain.
      *
      * @param spec the spec to create the RowContainer
      * @param initDomains <source>true</source> if domains should be initialized with domains of spec.
@@ -720,6 +741,7 @@ public class ExecutionContext extends ExecutionMonitor {
      *
      * @noreference This method is not intended to be referenced by clients.
      * @implNote Highly experimental API added with KNIME AP 4.3 - Can change with future released of KNIME AP.
+     * @since 4.3
      */
     public final RowContainerCustomKey createRowContainer(final DataTableSpec spec, final boolean initDomains) {
         final TableBackend backend = WorkflowTableBackendSettings.getTableBackendForCurrentContext();

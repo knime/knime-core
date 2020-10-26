@@ -74,7 +74,7 @@ import org.knime.core.node.BufferedDataTable;
  */
 final class BufferedRowContainerCustomKey implements RowContainerCustomKey {
 
-    private final static DataCell MISSING_CELL = DataType.getMissingCell();
+    private static final DataCell MISSING_CELL = DataType.getMissingCell();
 
     private final BufferedDataContainer m_delegate;
 

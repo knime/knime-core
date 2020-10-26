@@ -52,11 +52,13 @@ import org.knime.core.node.BufferedDataTable;
  * {@link RowWriteCursor} implementation which allows the API consumer to provide custom {@link RowKeyValue}s as
  * strings. Creates a new {@link BufferedDataTable} on {@link #finish()};
  *
- * NB: Row keys must be unique.
+ * <p>For code examples and the creation of row containers, see the corresponding methods in
+ * {@link org.knime.core.node.ExecutionContext#createRowContainer(org.knime.core.data.DataTableSpec) ExecutionContext}.
  *
  * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
  * @since 4.3
- *
+ * @noextend This interface is not intended to be extended by clients.
+ * @noimplement This interface is not intended to be implemented by clients.
  * @apiNote API still experimental. It might change in future releases of KNIME Analytics Platform.
  */
 public interface RowContainerCustomKey extends RowWriteCursor<BufferedDataTable> {
