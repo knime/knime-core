@@ -137,20 +137,23 @@ public abstract class FileStoreCell extends DataCell implements FlushCallback {
 
     /**
      * @noreference This method is not intended to be referenced by clients.
-     * @since 3.7
+     * @since 4.3
      */
-    final void retrieveFileStoreHandlersFrom(final FileStoreKey[] keys,
-        final IDataRepository dataRepository) throws IOException {
-        m_fileStoreProxies = new FileStoreProxy[keys.length];
+    final void retrieveFileStoreHandlersFrom(final FileStoreKey[] fileStoreKeys, final IDataRepository repository,
+        final boolean postConstruct) throws IOException {
+        m_fileStoreProxies = new FileStoreProxy[fileStoreKeys.length];
         int fsIdx = 0;
-        for (FileStoreKey key : keys) {
+        for (FileStoreKey key : fileStoreKeys) {
             FileStoreProxy proxy = new FileStoreProxy();
-            proxy.retrieveFileStoreHandlerFrom(key, dataRepository);
+            proxy.retrieveFileStoreHandlerFrom(key, repository);
             m_fileStoreProxies[fsIdx] = proxy;
             fsIdx++;
         }
-        postConstruct();
+        if (postConstruct) {
+            postConstruct();
+        }
     }
+
 
     /** Called after the cell is deserialized from a stream. Clients
      * can now access the file.
@@ -216,5 +219,4 @@ public abstract class FileStoreCell extends DataCell implements FlushCallback {
     public int hashCode() {
         return Arrays.hashCode(m_fileStoreProxies);
     }
-
 }

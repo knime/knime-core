@@ -86,6 +86,8 @@ final class DataCellDataInputDelegator implements DataCellDataInput {
         if (result instanceof FileStoreCell) {
             final FileStoreKey[] fileStoreKeys = readFileStoreKeys();
             final FileStoreCell fsCell = (FileStoreCell)result;
+
+            // call post contruct because cell is read from disc
             FileStoreUtil.retrieveFileStoreHandlersFrom(fsCell, fileStoreKeys, m_dataRepository);
         }
 

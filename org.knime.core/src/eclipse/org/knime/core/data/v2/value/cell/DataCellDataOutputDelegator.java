@@ -94,7 +94,7 @@ final class DataCellDataOutputDelegator implements DataCellDataOutput, AutoClose
         FileStoreUtil.invokeFlush(fsCell);
 
         writeInt(fileStoreKeys.length);
-        for (FileStoreKey fsKey : fileStoreKeys) {
+        for (final FileStoreKey fsKey : fileStoreKeys) {
             fsKey.save(this);
         }
     }

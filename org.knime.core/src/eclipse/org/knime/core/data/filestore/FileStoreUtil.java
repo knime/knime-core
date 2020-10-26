@@ -64,7 +64,8 @@ import org.knime.core.data.filestore.internal.WriteFileStoreHandler;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.NodeLogger;
 
-/** Internal helper class, not to be used by clients.
+/**
+ * Internal helper class, not to be used by clients.
  *
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  * @since 2.6
@@ -74,7 +75,6 @@ public final class FileStoreUtil {
     private FileStoreUtil() {
         // no op
     }
-
 
     /** @noreference This method is not intended to be referenced by clients. */
     public static FileStoreKey getFileStoreKey(final FileStore store) {
@@ -113,7 +113,8 @@ public final class FileStoreUtil {
 
     /** @noreference This method is not intended to be referenced by clients. */
     public static List<FileStore> getFileStores(final FileStorePortObject po) {
-        return IntStream.range(0, po.getFileStoreCount()).mapToObj(i -> po.getFileStore(i)).collect(Collectors.toList());
+        return IntStream.range(0, po.getFileStoreCount()).mapToObj(i -> po.getFileStore(i))
+            .collect(Collectors.toList());
     }
 
     /** @noreference This method is not intended to be referenced by clients. */
@@ -134,9 +135,9 @@ public final class FileStoreUtil {
         } else if (flushCallback instanceof FileStorePortObject) {
             ((FileStorePortObject)flushCallback).callFlushIfNeeded();
         } else {
-            NodeLogger.getLogger(FileStoreUtil.class).coding("Unknown implementation of a "
-                    + FlushCallback.class.getSimpleName() + ": "
-                    + flushCallback == null ? "<null>" : flushCallback.getClass().getName());
+            NodeLogger.getLogger(FileStoreUtil.class).coding(
+                "Unknown implementation of a " + FlushCallback.class.getSimpleName() + ": " + flushCallback == null
+                    ? "<null>" : flushCallback.getClass().getName());
         }
     }
 
@@ -145,19 +146,26 @@ public final class FileStoreUtil {
      */
     public static void retrieveFileStoreHandlersFrom(final FileStoreCell fsCell, final FileStoreKey[] fileStoreKeys,
         final IDataRepository repository) throws IOException {
-        fsCell.retrieveFileStoreHandlersFrom(fileStoreKeys, repository);
+        retrieveFileStoreHandlersFrom(fsCell, fileStoreKeys, repository, true);
+    }
+
+    /**
+     * @since 4.3
+     */
+    public static void retrieveFileStoreHandlersFrom(final FileStoreCell fsCell, final FileStoreKey[] fileStoreKeys,
+        final IDataRepository repository, final boolean postConstruct) throws IOException {
+        fsCell.retrieveFileStoreHandlersFrom(fileStoreKeys, repository, postConstruct);
     }
 
     /** @noreference This method is not intended to be referenced by clients. */
-    public static void retrieveFileStoreHandlerFrom(final FileStorePortObject object,
-        final List<FileStoreKey> keys, final IDataRepository repository) throws IOException {
+    public static void retrieveFileStoreHandlerFrom(final FileStorePortObject object, final List<FileStoreKey> keys,
+        final IDataRepository repository) throws IOException {
         object.retrieveFileStoreHandlerFrom(keys, repository);
     }
 
     /** @noreference This method is not intended to be referenced by clients. */
-    public static void retrieveFileStoreHandlers(
-        final FileStorePortObject sourceFSObj, final FileStorePortObject resultFSObj,
-        final IWriteFileStoreHandler newHandler) throws IOException {
+    public static void retrieveFileStoreHandlers(final FileStorePortObject sourceFSObj,
+        final FileStorePortObject resultFSObj, final IWriteFileStoreHandler newHandler) throws IOException {
         List<FileStoreProxy> sourceFSProxies = sourceFSObj.getFileStoreProxies();
         List<FileStoreKey> sourceFSKeys = new ArrayList<FileStoreKey>(sourceFSProxies.size());
         IDataRepository commonDataRepository = null;
@@ -174,22 +182,21 @@ public final class FileStoreUtil {
                 commonDataRepository = dataRepository;
             } else {
                 assert commonDataRepository == dataRepository : "File Stores in port object have different data "
-                        + "repositories: " + commonDataRepository + " vs. " + dataRepository;
+                    + "repositories: " + commonDataRepository + " vs. " + dataRepository;
             }
         }
-        IDataRepository resultRepos = newHandler != null
-                ? newHandler.getDataRepository() : commonDataRepository;
+        IDataRepository resultRepos = newHandler != null ? newHandler.getDataRepository() : commonDataRepository;
         resultFSObj.retrieveFileStoreHandlerFrom(sourceFSKeys, resultRepos);
     }
 
     /** @noreference This method is not intended to be referenced by clients. */
-    public static FileStore createFileStore(
-            final WriteFileStoreHandler handler, final FileStoreKey key) {
+    public static FileStore createFileStore(final WriteFileStoreHandler handler, final FileStoreKey key) {
         return new FileStore(handler, key);
     }
 
-    /** Resolve the execution context from a file store factory ... only sensible for factories that live in a context
-     * of a workflow.
+    /**
+     * Resolve the execution context from a file store factory ... only sensible for factories that live in a context of
+     * a workflow.
      *
      * @param fileStoreFactory The factory (null is OK).
      * @return The corresponding execution context.

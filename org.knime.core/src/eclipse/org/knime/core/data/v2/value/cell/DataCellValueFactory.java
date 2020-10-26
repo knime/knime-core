@@ -181,8 +181,7 @@ public final class DataCellValueFactory
             if (cell instanceof FileStoreCell) {
                 final FileStoreCell fsCell = (FileStoreCell)cell;
 
-                // TODO WHEN DO WE HAVE TO DO THIS PRIOR TO SAVE?
-                // -- ONLY if mustBeFlushedPriorToSave is true?
+                // handle loops
                 if (mustBeFlushedPriorSave(fsCell)) {
                     try {
                         final FileStore[] fileStores = FileStoreUtil.getFileStores(fsCell);
@@ -193,11 +192,8 @@ public final class DataCellValueFactory
                                 m_fsHandler.translateToLocal(fileStores[fileStoreIndex], fsCell);
                         }
 
-                        // TODO we want to avoid postConstruct here.
-                        FileStoreUtil.retrieveFileStoreHandlersFrom(fsCell, fileStoreKeys, m_dataRepository);
-
-                        // TODO Do we need to flush here?
-                        FileStoreUtil.invokeFlush(fsCell);
+                        // update file store keys without calling post-construct.
+                        FileStoreUtil.retrieveFileStoreHandlersFrom(fsCell, fileStoreKeys, m_dataRepository, false);
                     } catch (IOException ex) {
                         throw new IllegalStateException(ex);
                     }
