@@ -57,7 +57,7 @@ import org.knime.core.data.RowKeyValue;
 import org.knime.core.data.container.BufferedAccessSpecMapper.BufferedAccess;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.v2.ReadValue;
-import org.knime.core.data.v2.RowContainerCustomKey;
+import org.knime.core.data.v2.CustomKeyRowContainer;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.ValueSchema;
 import org.knime.core.data.v2.WriteValue;
@@ -67,12 +67,12 @@ import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 
 /**
- * Legacy implementation for RowContainerCustomKey using {@link DataContainer}s as storage backend.
+ * Legacy implementation for CustomKeyRowContainer using {@link DataContainer}s as storage backend.
  *
  * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
  * @since 4.3
  */
-final class BufferedRowContainerCustomKey implements RowContainerCustomKey {
+final class CustomKeyBufferedRowContainer implements CustomKeyRowContainer {
 
     private static final DataCell MISSING_CELL = DataType.getMissingCell();
 
@@ -87,7 +87,7 @@ final class BufferedRowContainerCustomKey implements RowContainerCustomKey {
     // volatile thingies
     private RowKey m_rowKey;
 
-    BufferedRowContainerCustomKey(final BufferedDataContainer delegate, final ValueSchema schema) {
+    CustomKeyBufferedRowContainer(final BufferedDataContainer delegate, final ValueSchema schema) {
         m_delegate = delegate;
         m_cells = new DataCell[schema.getNumColumns() - 1];
         m_readValues = new NullableReadValue[schema.getNumColumns()];

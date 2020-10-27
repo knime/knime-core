@@ -56,9 +56,13 @@ package org.knime.core.data.v2;
 public interface RowWriteAccess {
 
     /**
-     * Get the write value at a certain column index.
+     * Get the write value at a certain column index. Not that when used as {@link RowContainer} clients are required to
+     * fetch the <code>WriteValue</code> on a per row basis (the instance may change between rows, e.g. when advancing
+     * to new pages in the underlying storage). Implementations will know what type to expect (see
+     * {@link org.knime.core.node.ExecutionContext#createRowContainer(org.knime.core.data.DataTableSpec)
+     * ExecutionContext} for an example.)
      *
-     * @param <W> type of the {@link WriteValue}
+     * @param <W> type of the {@link WriteValue}. for an example).
      * @param index column index of {@link WriteValue}
      * @return the WriteValue
      */

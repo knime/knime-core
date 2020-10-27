@@ -50,7 +50,7 @@ import org.knime.core.data.container.DataContainerDelegate;
 import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.data.container.ILocalDataRepository;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
-import org.knime.core.data.v2.RowContainerCustomKey;
+import org.knime.core.data.v2.CustomKeyRowContainer;
 import org.knime.core.node.ExecutionContext;
 
 /**
@@ -85,7 +85,7 @@ public interface TableBackend {
         ILocalDataRepository localRepository, IWriteFileStoreHandler fileStoreHandler);
 
     /**
-     * Creates a new {@link RowContainerCustomKey}.
+     * Creates a new {@link CustomKeyRowContainer}.
      *
      * @param context the execution context
      * @param spec of the table
@@ -93,9 +93,9 @@ public interface TableBackend {
      * @param repository the data repository
      * @param handler the file-store handler
      *
-     * @return a new {@link RowContainerCustomKey}
+     * @return a new {@link CustomKeyRowContainer}
      */
-    RowContainerCustomKey create(ExecutionContext context, DataTableSpec spec, DataContainerSettings settings,
+    CustomKeyRowContainer create(ExecutionContext context, DataTableSpec spec, DataContainerSettings settings,
         IDataRepository repository, IWriteFileStoreHandler handler);
 
     /**

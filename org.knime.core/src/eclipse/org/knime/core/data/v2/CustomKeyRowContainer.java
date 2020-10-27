@@ -61,7 +61,7 @@ import org.knime.core.node.BufferedDataTable;
  * @noimplement This interface is not intended to be implemented by clients.
  * @apiNote API still experimental. It might change in future releases of KNIME Analytics Platform.
  */
-public interface RowContainerCustomKey extends RowWriteCursor<BufferedDataTable> {
+public interface CustomKeyRowContainer extends RowContainer {
 
     /**
      * @param key string representation of the unique row key.

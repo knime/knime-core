@@ -53,7 +53,7 @@ import org.knime.core.data.IDataRepository;
 import org.knime.core.data.TableBackend;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.NotInWorkflowWriteFileStoreHandler;
-import org.knime.core.data.v2.RowContainerCustomKey;
+import org.knime.core.data.v2.CustomKeyRowContainer;
 import org.knime.core.data.v2.RowKeyType;
 import org.knime.core.data.v2.ValueSchema;
 import org.knime.core.node.BufferedDataContainer;
@@ -79,12 +79,12 @@ public final class BufferedTableBackend implements TableBackend {
     }
 
     @Override
-    public RowContainerCustomKey create(final ExecutionContext context, final DataTableSpec spec,
+    public CustomKeyRowContainer create(final ExecutionContext context, final DataTableSpec spec,
         final DataContainerSettings settings, final IDataRepository repository, final IWriteFileStoreHandler handler) {
         final BufferedDataContainer container =
             context.createDataContainer(spec, settings.getInitializeDomain(), settings.getMaxCellsInMemory());
         final ValueSchema schema = ValueSchema.create(spec, RowKeyType.CUSTOM, null);
-        return new BufferedRowContainerCustomKey(container, schema);
+        return new CustomKeyBufferedRowContainer(container, schema);
     }
 
     @Override
