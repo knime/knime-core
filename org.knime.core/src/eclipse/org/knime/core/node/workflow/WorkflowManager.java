@@ -5298,7 +5298,7 @@ public final class WorkflowManager extends NodeContainer
     public boolean canCancelAll() {
         // added as part of fix for bug 6534 - this method is called often also indirectly via change events
         // as part of a reset - do the best to not lock parent instance
-        if (isProject()) {
+        if (isProject() || isComponentWFM()) {
             // does not acquire parent workflow lock
             return getInternalState().isExecutionInProgress();
         } else {

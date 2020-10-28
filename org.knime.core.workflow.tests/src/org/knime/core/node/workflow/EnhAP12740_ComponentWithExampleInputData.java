@@ -129,6 +129,9 @@ public class EnhAP12740_ComponentWithExampleInputData extends WorkflowTestCase {
             "Execution of shared component failed. Node messages: "
                 + wfm.getNodeMessages(NodeMessage.Type.WARNING, NodeMessage.Type.ERROR),
             componentProject.getVirtualOutNode().getInternalState(), is(InternalNodeContainerState.EXECUTED));
+        
+        // bug NXT-355: NPE when calling wfm.canCancelAll()
+        assertFalse(wfm.canCancelAll());
 
         /* save and open without example input data */
         component.saveAsTemplate(componentDir, new ExecutionMonitor());
