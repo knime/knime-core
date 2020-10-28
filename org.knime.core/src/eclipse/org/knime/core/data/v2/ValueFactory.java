@@ -58,6 +58,9 @@ import org.knime.core.data.v2.access.WriteAccess;
  * themselves. The {@link AccessSpec} defines the requirements to this data storage and also provides additional meta
  * data to create the storage.
  *
+ * Implementations of {@link ValueFactory} must have an empty public constructor to create an instance of the value
+ * factory from its class name.
+ *
  * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
  *
  * @param <R> type of read access

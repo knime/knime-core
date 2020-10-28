@@ -48,8 +48,11 @@
  */
 package org.knime.core.data.v2;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
@@ -95,6 +98,8 @@ public final class ValueSchema {
 
     private final ValueFactory<?, ?>[] m_factories;
 
+    private final Map<DataType, String> m_factoryMapping;
+
     private final RowKeyType m_rowKeyType;
 
     private final DataCellSerializerFactory m_factory;
@@ -103,11 +108,13 @@ public final class ValueSchema {
 
     ValueSchema(final DataTableSpec spec, //
         final ValueFactory<?, ?>[] factories, //
+        final Map<DataType, String> factoryMapping, //
         final RowKeyType type, //
         final DataCellSerializerFactory factory) {
         m_spec = spec;
         m_rowKeyType = type;
         m_factories = factories;
+        m_factoryMapping = factoryMapping;
         m_factory = factory;
         m_numColumns = m_spec.getNumColumns() + 1;
     }
@@ -164,38 +171,51 @@ public final class ValueSchema {
      *
      * @param spec the data table spec to derive the {@link ValueSchema} from.
      * @param rowKeyType type of the {@link RowKey}
-     * @param handler file-store handler
+     * @param fileStoreHandler file-store handler
      * @return the value schema.
      */
     public static final ValueSchema create(final DataTableSpec spec, final RowKeyType rowKeyType,
-        final IWriteFileStoreHandler handler) {
+        final IWriteFileStoreHandler fileStoreHandler) {
 
-        final DataCellSerializerFactory factory = new DataCellSerializerFactory();
+        final DataCellSerializerFactory cellSerializerFactory = new DataCellSerializerFactory();
+        final Map<DataType, String> factoryMapping = new HashMap<>();
 
         final ValueFactory<?, ?>[] factories = new ValueFactory[spec.getNumColumns() + 1];
         factories[0] = getRowKeyFactory(rowKeyType);
         for (int i = 1; i < factories.length; i++) {
-            factories[i] = findNativeValueFactory(spec.getColumnSpec(i - 1).getType());
-            if (factories[i] == null) {
-                factories[i] = new DataCellValueFactory(factory, handler);
-            }
+            final DataType type = spec.getColumnSpec(i - 1).getType();
+            factories[i] = findValueFactory(type, factoryMapping, cellSerializerFactory, fileStoreHandler);
         }
-        return new ValueSchema(spec, factories, rowKeyType, factory);
+        return new ValueSchema(spec, factories, factoryMapping, rowKeyType, cellSerializerFactory);
     }
 
-    private static final ValueFactory<?, ?> findNativeValueFactory(final DataType type) {
+    /** Find the factory for the given type (or DataCellValueFactory) and add it to the mapping */
+    private static final ValueFactory<?, ?> findValueFactory(final DataType type,
+        final Map<DataType, String> factoryMapping, final DataCellSerializerFactory cellSerializerFactory,
+        final IWriteFileStoreHandler fileStoreHandler) {
         /* TODO extension point -- AP-15324 */
+        final ValueFactory<?, ?> factory;
         if (type == DoubleCell.TYPE) {
-            return DoubleValueFactory.INSTANCE;
+            factory = DoubleValueFactory.INSTANCE;
         } else if (type == IntCell.TYPE) {
-            return IntValueFactory.INSTANCE;
+            factory = IntValueFactory.INSTANCE;
         } else if (type == LongCell.TYPE) {
-            return LongValueFactory.INSTANCE;
+            factory = LongValueFactory.INSTANCE;
         } else if (type == StringCell.TYPE) {
-            return StringValueFactory.INSTANCE;
+            factory = StringValueFactory.INSTANCE;
         } else {
-            return null;
+            factory = new DataCellValueFactory(cellSerializerFactory, fileStoreHandler);
         }
+
+        // Collection types need to be initialized
+        if (factory instanceof CollectionValueFactory) {
+            final DataType elementType = type.getCollectionElementType();
+            final ValueFactory<?, ?> elementFactory =
+                findValueFactory(elementType, factoryMapping, cellSerializerFactory, fileStoreHandler);
+            ((CollectionValueFactory<?, ?>)factory).initialize(elementFactory, elementType);
+        }
+        factoryMapping.put(type, factory.getClass().getName());
+        return factory;
     }
 
     /**
@@ -232,7 +252,9 @@ public final class ValueSchema {
 
         private static final String CFG_ROW_KEY_CONFIG = "row_key_config";
 
-        private static final String CFG_KEY_MAPPED_DATA_TYPES = "mapped_data_types";
+        private static final String CFG_KEY_FACTORY_MAPPING_KEYS = "factory_mapping_keys";
+
+        private static final String CFG_KEY_FACTORY_MAPPING_VALUES = "factory_mapping_values";
 
         private Serializer() {
         }
@@ -243,22 +265,18 @@ public final class ValueSchema {
          * @param schema the ValueSchema to save.
          * @param settings the settings to save the ValueSchema to.
          */
-        public final static void save(final ValueSchema schema, final NodeSettingsWO settings) {
+        public static final void save(final ValueSchema schema, final NodeSettingsWO settings) {
 
             // save row key config
             settings.addString(CFG_ROW_KEY_CONFIG, schema.m_rowKeyType.name());
 
-            // we need to remember which settings we have saved via legacy data cell and
-            // which via ValueFactories.
-            final Set<DataType> mapped = new HashSet<>();
-            final DataTableSpec sourceSpec = schema.getSourceSpec();
-            for (int i = 0; i < sourceSpec.getNumColumns(); i++) {
-                final ValueFactory<?, ?> factoryAt = schema.getFactoryAt(i + 1);
-                if (!(factoryAt instanceof DataCellValueFactory)) {
-                    mapped.add(sourceSpec.getColumnSpec(i).getType());
-                }
-            }
-            settings.addDataTypeArray(CFG_KEY_MAPPED_DATA_TYPES, mapped.toArray(new DataType[mapped.size()]));
+            // We need to remember which datatypes have been mapped to which ValueFactory
+            final Map<DataType, String> factoryMapping = schema.m_factoryMapping;
+            final DataType[] factoryMappingKeys = factoryMapping.keySet().toArray(new DataType[0]);
+            final String[] factoryMappingValues =
+                Arrays.stream(factoryMappingKeys).map(factoryMapping::get).toArray(String[]::new);
+            settings.addDataTypeArray(CFG_KEY_FACTORY_MAPPING_KEYS, factoryMappingKeys);
+            settings.addStringArray(CFG_KEY_FACTORY_MAPPING_VALUES, factoryMappingValues);
 
             // now store all info required to restore DataCellValueFactories
             schema.m_factory.saveTo(settings);
@@ -268,39 +286,80 @@ public final class ValueSchema {
          * Loads a ValueSchema from the given settings.
          *
          * @param source the source {@link DataTableSpec}.
-         * @param repository the data repository to restore file store cells.
+         * @param dataRepository the data repository to restore file store cells.
          * @param settings to save the value schema to.
          * @return the loaded {@link ValueSchema}.
          *
          * @throws InvalidSettingsException
          */
-        public final static ValueSchema load(final DataTableSpec source, final IDataRepository repository,
+        public static final ValueSchema load(final DataTableSpec source, final IDataRepository dataRepository,
             final NodeSettingsRO settings) throws InvalidSettingsException {
 
-            // load all the things
+            // Load the row key config
             final RowKeyType rowKeyConfig = RowKeyType.valueOf(settings.getString(CFG_ROW_KEY_CONFIG));
-            final DataType[] mappedTypes = settings.getDataTypeArray(CFG_KEY_MAPPED_DATA_TYPES);
-            final Set<DataType> types = new HashSet<>();
-            for (int i = 0; i < mappedTypes.length; i++) {
-                types.add(mappedTypes[i]);
+
+            // Load the factory mapping
+            final DataType[] factoryMappingKeys = settings.getDataTypeArray(CFG_KEY_FACTORY_MAPPING_KEYS);
+            final String[] factoryMappingValues = settings.getStringArray(CFG_KEY_FACTORY_MAPPING_VALUES);
+            final Map<DataType, String> factoryMapping = new HashMap<>();
+            for (int i = 0; i < factoryMappingKeys.length; i++) {
+                factoryMapping.put(factoryMappingKeys[i], factoryMappingValues[i]);
             }
-            final DataCellSerializerFactory factory = new DataCellSerializerFactory();
-            factory.loadFrom(settings);
 
+            // Load the cell serializer factory
+            final DataCellSerializerFactory cellSerializerFactory = new DataCellSerializerFactory();
+            cellSerializerFactory.loadFrom(settings);
+
+            // Get the factories for the specs
             final ValueFactory<?, ?>[] factories = new ValueFactory[source.getNumColumns() + 1];
-
             factories[0] = getRowKeyFactory(rowKeyConfig);
             for (int i = 1; i < factories.length; i++) {
                 final DataType type = source.getColumnSpec(i - 1).getType();
-                if (types.contains(type)) {
-                    factories[i] = findNativeValueFactory(type);
-                } else {
-                    factories[i] = new DataCellValueFactory(factory, repository);
-                }
+                factories[i] = getValueFactory(type, factoryMapping, cellSerializerFactory, dataRepository);
             }
 
-            return new ValueSchema(source, factories, rowKeyConfig, factory);
+            return new ValueSchema(source, factories, factoryMapping, rowKeyConfig, cellSerializerFactory);
+        }
+
+        private static ValueFactory<?, ?> getValueFactory(final DataType type,
+            final Map<DataType, String> factoryMapping, final DataCellSerializerFactory cellSerializerFactory,
+            final IDataRepository dataRepository) {
+            final ValueFactory<?, ?> factory = instantiateValueFactory(type, factoryMapping);
+
+            // Initialize
+            if (factory instanceof CollectionValueFactory) {
+                // TODO should we check that there is an element type?
+                final DataType elementType = type.getCollectionElementType();
+                ((CollectionValueFactory<?, ?>)factory).initialize(
+                    getValueFactory(elementType, factoryMapping, cellSerializerFactory, dataRepository), elementType);
+            } else if (factory instanceof DataCellValueFactory) {
+                ((DataCellValueFactory)factory).initialize(cellSerializerFactory, dataRepository);
+            }
+            return factory;
+        }
+
+        private static ValueFactory<?, ?> instantiateValueFactory(final DataType type,
+            final Map<DataType, String> factoryMapping) {
+            try {
+                final String className = factoryMapping.get(type);
+                final Class<?> clazz = Class.forName(className);
+                final Constructor<?> constructor = clazz.getConstructor();
+                return (ValueFactory<?, ?>)constructor.newInstance();
+            } catch (final ClassNotFoundException ex) {
+                throw new IllegalStateException(
+                    "The ValueFactory '" + factoryMapping + "' could not be found. Are you missing a KNIME Extension?",
+                    ex);
+            } catch (final IllegalAccessException | IllegalArgumentException | NoSuchMethodException ex) {
+                throw new IllegalStateException("The ValueFactory must have a public empty constructor.", ex);
+            } catch (final InvocationTargetException ex) {
+                throw new IllegalStateException("The ValueFactory constructor must not throw an exception.", ex);
+            } catch (final SecurityException ex) {
+                throw new IllegalStateException("Instantiating of the ValueFactory faile with an SecurityException.",
+                    ex);
+            } catch (final InstantiationException ex) {
+                // This cannot happen because we write the fully qualified class name of instantiated objects
+                throw new IllegalStateException("The ValueFactory must not be abstract.", ex);
+            }
         }
     }
-
 }

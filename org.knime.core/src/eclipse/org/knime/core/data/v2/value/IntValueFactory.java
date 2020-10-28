@@ -74,9 +74,6 @@ public final class IntValueFactory implements ValueFactory<IntReadAccess, IntWri
     /** Stateless instance of IntValueFactory */
     public static final IntValueFactory INSTANCE = new IntValueFactory();
 
-    private IntValueFactory() {
-    }
-
     @Override
     public IntAccessSpec getSpec() {
         return IntAccessSpec.INSTANCE;

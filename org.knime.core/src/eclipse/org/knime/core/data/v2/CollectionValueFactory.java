@@ -42,76 +42,34 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
+ *
+ * History
+ *   Oct 1, 2020 (marcel): created
  */
-package org.knime.core.data.v2.value;
+package org.knime.core.data.v2;
 
-import org.knime.core.data.BoundedValue;
-import org.knime.core.data.ComplexNumberValue;
-import org.knime.core.data.DoubleValue;
-import org.knime.core.data.FuzzyIntervalValue;
-import org.knime.core.data.FuzzyNumberValue;
-import org.knime.core.data.LongValue;
-import org.knime.core.data.def.LongCell;
-import org.knime.core.data.v2.ReadValue;
-import org.knime.core.data.v2.ValueFactory;
-import org.knime.core.data.v2.WriteValue;
-import org.knime.core.data.v2.access.LongAccess.LongAccessSpec;
-import org.knime.core.data.v2.access.LongAccess.LongReadAccess;
-import org.knime.core.data.v2.access.LongAccess.LongWriteAccess;
+import org.knime.core.data.DataType;
+import org.knime.core.data.collection.CollectionDataValue;
+import org.knime.core.data.v2.access.ReadAccess;
+import org.knime.core.data.v2.access.WriteAccess;
 
 /**
- * {@link ValueFactory} implementation for {@link LongCell}.
+ * A {@link ValueFactory} for {@link CollectionDataValue}s. After creating instances of this {@link ValueFactory} using
+ * the empty public constructor, {@link #initialize(ValueFactory, DataType)} is called with a factory to create
+ * {@link WriteValue}s and {@link ReadValue}s of the element type.
  *
- * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
+ * @param <R> type of read access
+ * @param <W> type of write access
  * @since 4.3
+ * @author Benjamin Wilhelm, KNIME GmbH, Konstanz, Germany
  */
-public final class LongValueFactory implements ValueFactory<LongReadAccess, LongWriteAccess> {
-
-    /** Stateless instance of LongValueFactory */
-    public static final LongValueFactory INSTANCE = new LongValueFactory();
-
-    @Override
-    public LongAccessSpec getSpec() {
-        return LongAccessSpec.INSTANCE;
-    }
-
-    @Override
-    public LongReadValue createReadValue(final LongReadAccess reader) {
-        return reader;
-    }
-
-    @Override
-    public LongWriteValue createWriteValue(final LongWriteAccess writer) {
-        return writer;
-    }
+public interface CollectionValueFactory<R extends ReadAccess, W extends WriteAccess> extends ValueFactory<R, W> {
 
     /**
-     * {@link ReadValue} equivalent to {@link LongCell}.
+     * Called to initialize the value factory for a specific element type.
      *
-     * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
-     * @since 4.3
+     * @param elementValueFactory a {@link ValueFactory} to create elements of the collection
+     * @param elementType the {@link DataType} of the elements
      */
-    public interface LongReadValue extends //
-        LongValue, //
-        DoubleValue, //
-        BoundedValue, //
-        ReadValue, //
-        ComplexNumberValue, //
-        FuzzyNumberValue, //
-        FuzzyIntervalValue {
-    }
-
-    /**
-     * {@link WriteValue} equivalent to {@link LongCell}.
-     *
-     * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
-     * @since 4.3
-     */
-    public interface LongWriteValue extends WriteValue<LongValue> {
-
-        /**
-         * @param value the long value to set
-         */
-        void setLongValue(long value);
-    }
+    void initialize(ValueFactory<?, ?> elementValueFactory, DataType elementType);
 }

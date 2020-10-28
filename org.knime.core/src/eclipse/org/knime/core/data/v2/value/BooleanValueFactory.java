@@ -73,13 +73,8 @@ import org.knime.core.data.v2.access.BooleanAccess.BooleanWriteAccess;
  */
 public class BooleanValueFactory implements ValueFactory<BooleanReadAccess, BooleanWriteAccess> {
 
-    /**
-     * Stateless instance of BooleanValueFactory.
-     */
-    public final static BooleanValueFactory INSTANCE = new BooleanValueFactory();
-
-    private BooleanValueFactory() {
-    }
+    /** Stateless instance of BooleanValueFactory */
+    public static final BooleanValueFactory INSTANCE = new BooleanValueFactory();
 
     @Override
     public BooleanAccessSpec getSpec() {

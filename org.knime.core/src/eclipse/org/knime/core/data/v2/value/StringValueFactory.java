@@ -75,10 +75,7 @@ public class StringValueFactory implements ValueFactory<ObjectReadAccess<String>
     /**
      * Stateless instance of StringValueFactory.
      */
-    public final static StringValueFactory INSTANCE = new StringValueFactory();
-
-    private StringValueFactory() {
-    }
+    public static final StringValueFactory INSTANCE = new StringValueFactory();
 
     @Override
     public StringAccessSpec getSpec() {

@@ -87,17 +87,17 @@ import org.knime.core.data.v2.access.ObjectAccess.ObjectWriteAccess;
 public final class DataCellValueFactory
     implements ValueFactory<ObjectReadAccess<DataCell>, ObjectWriteAccess<DataCell>> {
 
-    private final DataCellSerializerFactory m_factory;
+    private DataCellSerializerFactory m_factory;
 
-    private final IWriteFileStoreHandler m_fsHandler;
+    private IWriteFileStoreHandler m_fsHandler;
 
-    private final IDataRepository m_dataRepository;
+    private IDataRepository m_dataRepository;
 
-    private DataCellValueFactory(final DataCellSerializerFactory factory, final IWriteFileStoreHandler fileStoreHandler,
-        final IDataRepository repository) {
-        m_factory = factory;
-        m_fsHandler = fileStoreHandler;
-        m_dataRepository = repository;
+    /**
+     * Empty framework constructor. Call {@link #initialize(DataCellSerializerFactory, IDataRepository)} after using
+     * this constructor.
+     */
+    public DataCellValueFactory() {
     }
 
     /**
@@ -108,7 +108,9 @@ public final class DataCellValueFactory
      */
     public DataCellValueFactory(final DataCellSerializerFactory factory,
         final IWriteFileStoreHandler fileStoreHandler) {
-        this(factory, fileStoreHandler, fileStoreHandler.getDataRepository());
+        m_factory = factory;
+        m_fsHandler = fileStoreHandler;
+        m_dataRepository = fileStoreHandler.getDataRepository();
     }
 
     /**
@@ -117,8 +119,10 @@ public final class DataCellValueFactory
      * @param factory used to retrieve {@link DataCellSerializer}s
      * @param repository to deal with (potentially) written file stores.
      */
-    public DataCellValueFactory(final DataCellSerializerFactory factory, final IDataRepository repository) {
-        this(factory, null, repository);
+    public void initialize(final DataCellSerializerFactory factory, final IDataRepository repository) {
+        m_factory = factory;
+        m_fsHandler = null;
+        m_dataRepository = repository;
     }
 
     @Override

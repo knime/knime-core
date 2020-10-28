@@ -66,11 +66,8 @@ import org.knime.core.data.v2.access.DoubleAccess.DoubleWriteAccess;
  */
 public final class DoubleValueFactory implements ValueFactory<DoubleReadAccess, DoubleWriteAccess> {
 
-    /** Stateless instanceof of DoubleValueFactory */
-    public final static DoubleValueFactory INSTANCE = new DoubleValueFactory();
-
-    private DoubleValueFactory() {
-    }
+    /** Stateless instance of of DoubleValueFactory */
+    public static final DoubleValueFactory INSTANCE = new DoubleValueFactory();
 
     @Override
     public DoubleAccessSpec getSpec() {
