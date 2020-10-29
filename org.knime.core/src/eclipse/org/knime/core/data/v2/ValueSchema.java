@@ -64,6 +64,8 @@ import org.knime.core.data.collection.ListCell;
 import org.knime.core.data.collection.ListDataValue;
 import org.knime.core.data.collection.SetCell;
 import org.knime.core.data.collection.SetDataValue;
+import org.knime.core.data.collection.SparseListCell;
+import org.knime.core.data.collection.SparseListDataValue;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.LongCell;
@@ -75,12 +77,14 @@ import org.knime.core.data.v2.access.WriteAccess;
 import org.knime.core.data.v2.value.CustomRowKeyValueFactory;
 import org.knime.core.data.v2.value.DoubleListValueFactory;
 import org.knime.core.data.v2.value.DoubleSetValueFactory;
+import org.knime.core.data.v2.value.DoubleSparseListValueFactory;
 import org.knime.core.data.v2.value.DoubleValueFactory;
 import org.knime.core.data.v2.value.IntListValueFactory;
 import org.knime.core.data.v2.value.IntValueFactory;
 import org.knime.core.data.v2.value.ListValueFactory;
 import org.knime.core.data.v2.value.LongValueFactory;
 import org.knime.core.data.v2.value.SetValueFactory;
+import org.knime.core.data.v2.value.SparseListValueFactory;
 import org.knime.core.data.v2.value.StringValueFactory;
 import org.knime.core.data.v2.value.VoidRowKeyValueFactory;
 import org.knime.core.data.v2.value.cell.DataCellValueFactory;
@@ -212,12 +216,16 @@ public final class ValueSchema {
             factory = LongValueFactory.INSTANCE;
         } else if (type == StringCell.TYPE) {
             factory = StringValueFactory.INSTANCE;
+        } else if (DataType.getType(SparseListCell.class, DoubleCell.TYPE).equals(type)) {
+            factory = DoubleSparseListValueFactory.INSTANCE;
         } else if (DataType.getType(ListCell.class, DoubleCell.TYPE).equals(type)) {
             factory = DoubleListValueFactory.INSTANCE;
         } else if (DataType.getType(ListCell.class, IntCell.TYPE).equals(type)) {
             factory = IntListValueFactory.INSTANCE;
         } else if (DataType.getType(SetCell.class, DoubleCell.TYPE).equals(type)) {
             factory = DoubleSetValueFactory.INSTANCE;
+        } else if (type.isCompatible(SparseListDataValue.class)) {
+            factory = new SparseListValueFactory();
         } else if (type.isCompatible(ListDataValue.class)) {
             factory = new ListValueFactory();
         } else if (type.isCompatible(SetDataValue.class)) {
