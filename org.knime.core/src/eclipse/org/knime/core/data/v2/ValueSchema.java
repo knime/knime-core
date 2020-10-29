@@ -60,6 +60,8 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.IDataRepository;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.TableBackend;
+import org.knime.core.data.collection.ListCell;
+import org.knime.core.data.collection.ListDataValue;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.LongCell;
@@ -69,8 +71,11 @@ import org.knime.core.data.v2.access.AccessSpec;
 import org.knime.core.data.v2.access.ReadAccess;
 import org.knime.core.data.v2.access.WriteAccess;
 import org.knime.core.data.v2.value.CustomRowKeyValueFactory;
+import org.knime.core.data.v2.value.DoubleListValueFactory;
 import org.knime.core.data.v2.value.DoubleValueFactory;
+import org.knime.core.data.v2.value.IntListValueFactory;
 import org.knime.core.data.v2.value.IntValueFactory;
+import org.knime.core.data.v2.value.ListValueFactory;
 import org.knime.core.data.v2.value.LongValueFactory;
 import org.knime.core.data.v2.value.StringValueFactory;
 import org.knime.core.data.v2.value.VoidRowKeyValueFactory;
@@ -203,6 +208,12 @@ public final class ValueSchema {
             factory = LongValueFactory.INSTANCE;
         } else if (type == StringCell.TYPE) {
             factory = StringValueFactory.INSTANCE;
+        } else if (DataType.getType(ListCell.class, DoubleCell.TYPE).equals(type)) {
+            factory = DoubleListValueFactory.INSTANCE;
+        } else if (DataType.getType(ListCell.class, IntCell.TYPE).equals(type)) {
+            factory = IntListValueFactory.INSTANCE;
+        } else if (type.isCompatible(ListDataValue.class)) {
+            factory = new ListValueFactory();
         } else {
             factory = new DataCellValueFactory(cellSerializerFactory, fileStoreHandler);
         }
