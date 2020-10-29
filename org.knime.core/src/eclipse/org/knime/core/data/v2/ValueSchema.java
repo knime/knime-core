@@ -62,6 +62,8 @@ import org.knime.core.data.RowKey;
 import org.knime.core.data.TableBackend;
 import org.knime.core.data.collection.ListCell;
 import org.knime.core.data.collection.ListDataValue;
+import org.knime.core.data.collection.SetCell;
+import org.knime.core.data.collection.SetDataValue;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.LongCell;
@@ -72,11 +74,13 @@ import org.knime.core.data.v2.access.ReadAccess;
 import org.knime.core.data.v2.access.WriteAccess;
 import org.knime.core.data.v2.value.CustomRowKeyValueFactory;
 import org.knime.core.data.v2.value.DoubleListValueFactory;
+import org.knime.core.data.v2.value.DoubleSetValueFactory;
 import org.knime.core.data.v2.value.DoubleValueFactory;
 import org.knime.core.data.v2.value.IntListValueFactory;
 import org.knime.core.data.v2.value.IntValueFactory;
 import org.knime.core.data.v2.value.ListValueFactory;
 import org.knime.core.data.v2.value.LongValueFactory;
+import org.knime.core.data.v2.value.SetValueFactory;
 import org.knime.core.data.v2.value.StringValueFactory;
 import org.knime.core.data.v2.value.VoidRowKeyValueFactory;
 import org.knime.core.data.v2.value.cell.DataCellValueFactory;
@@ -212,8 +216,12 @@ public final class ValueSchema {
             factory = DoubleListValueFactory.INSTANCE;
         } else if (DataType.getType(ListCell.class, IntCell.TYPE).equals(type)) {
             factory = IntListValueFactory.INSTANCE;
+        } else if (DataType.getType(SetCell.class, DoubleCell.TYPE).equals(type)) {
+            factory = DoubleSetValueFactory.INSTANCE;
         } else if (type.isCompatible(ListDataValue.class)) {
             factory = new ListValueFactory();
+        } else if (type.isCompatible(SetDataValue.class)) {
+            factory = new SetValueFactory();
         } else {
             factory = new DataCellValueFactory(cellSerializerFactory, fileStoreHandler);
         }
