@@ -52,6 +52,7 @@ import java.util.stream.Stream;
 
 import org.knime.core.data.BooleanValue;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataValue;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.LongValue;
@@ -60,6 +61,9 @@ import org.knime.core.data.def.BooleanCell;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.LongCell;
+import org.knime.core.data.v2.ReadValue;
+import org.knime.core.data.v2.ValueFactory;
+import org.knime.core.data.v2.WriteValue;
 import org.knime.core.data.v2.access.AccessSpec;
 import org.knime.core.data.v2.access.AccessSpec.AccessSpecMapper;
 import org.knime.core.data.v2.access.BooleanAccess.BooleanAccessSpec;
@@ -74,6 +78,9 @@ import org.knime.core.data.v2.access.DoubleAccess.DoubleWriteAccess;
 import org.knime.core.data.v2.access.IntAccess.IntAccessSpec;
 import org.knime.core.data.v2.access.IntAccess.IntReadAccess;
 import org.knime.core.data.v2.access.IntAccess.IntWriteAccess;
+import org.knime.core.data.v2.access.ListAccess.ListAccessSpec;
+import org.knime.core.data.v2.access.ListAccess.ListReadAccess;
+import org.knime.core.data.v2.access.ListAccess.ListWriteAccess;
 import org.knime.core.data.v2.access.LongAccess.LongAccessSpec;
 import org.knime.core.data.v2.access.LongAccess.LongReadAccess;
 import org.knime.core.data.v2.access.LongAccess.LongWriteAccess;
@@ -143,6 +150,11 @@ final class BufferedAccessSpecMapper implements AccessSpecMapper<BufferedAccess>
     @Override
     public BufferedAccess visit(final ByteArrayAccessSpec spec) {
         return new BufferedByteArrayAccess();
+    }
+
+    @Override
+    public BufferedAccess visit(final ListAccessSpec<?, ?> spec) {
+        return new BufferedListAccess<>(spec);
     }
 
     private static final class BufferedByteArrayAccess
@@ -611,6 +623,73 @@ final class BufferedAccessSpecMapper implements AccessSpecMapper<BufferedAccess>
         @Override
         public void setMissing() {
             m_object = null;
+        }
+    }
+
+    private static final class BufferedListAccess<A extends BufferedAccess>
+        implements ListReadAccess, ListWriteAccess, BufferedAccess {
+
+        private final AccessSpec<A, A> m_innerSpecs;
+
+        private final ValueFactory<A, A> m_innerValueFactory;
+
+        private BufferedAccess[] m_inner;
+
+        BufferedListAccess(final ListAccessSpec<?, ?> spec) {
+            @SuppressWarnings("unchecked")
+            final ListAccessSpec<A, A> bufferedListSpec = (ListAccessSpec<A, A>)spec;
+            m_innerSpecs = bufferedListSpec.getInnerSpecs();
+            m_innerValueFactory = bufferedListSpec.getInnerValueFactory();
+        }
+
+        // ReadAccess
+
+        @Override
+        public boolean isMissing() {
+            return m_inner == null;
+        }
+
+        @Override
+        public boolean isMissing(final int index) {
+            return m_inner[index].isMissing();
+        }
+
+        @Override
+        public <R extends ReadValue> R getReadValue(final int index) {
+            @SuppressWarnings("unchecked")
+            A access = (A)m_inner[index];
+            @SuppressWarnings("unchecked")
+            final R value = (R)m_innerValueFactory.createReadValue(access);
+            return value;
+        }
+
+        @Override
+        public int size() {
+            return m_inner.length;
+        }
+
+        // Write Access
+
+        @Override
+        public void setMissing() {
+            m_inner = null;
+        }
+
+        @Override
+        public <D extends DataValue, W extends WriteValue<D>> W getWriteValue(final int index) {
+            @SuppressWarnings("unchecked")
+            final A access = (A)m_inner[index];
+            @SuppressWarnings("unchecked")
+            final W value = (W)m_innerValueFactory.createWriteValue(access);
+            return value;
+        }
+
+        @Override
+        public void create(final int size) {
+            m_inner = new BufferedAccess[size];
+            for (int i = 0; i < size; i++) {
+                m_inner[i] = m_innerSpecs.accept(BufferedAccessSpecMapper.INSTANCE);
+            }
         }
     }
 }
