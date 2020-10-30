@@ -4728,6 +4728,25 @@ public final class WorkflowManager extends NodeContainer
         return canResetNode(nodeID, this::hasSuccessorInProgress);
     }
 
+    /**
+     * Checks whether this workflow can be reset globally. It takes into account all the contained nodes as well as
+     * executing downstream nodes the workflow itself is connected to (i.e. if this workflow is part of a metanode or a
+     * component).
+     *
+     * @return <code>true</code> if this workflow can be reset globally, otherwise <code>false</code>
+     * @since 4.3
+     */
+    public boolean canResetAll() {
+        if (isProject() || isComponentProjectWFM()) {
+            return canPerformReset();
+        } else if (isComponentWFM()) {
+            SubNodeContainer component = (SubNodeContainer)getDirectNCParent();
+            return component.getParent().canResetNode(component.getID());
+        } else {
+            return getParent().canResetNode(this.getID());
+        }
+    }
+
     boolean canResetNode(final NodeID nodeID, final Predicate<NodeID> hasSuccessorsInProgress) {
         try (WorkflowLock lock = lock()) {
             NodeContainer nc = m_workflow.getNode(nodeID);
@@ -5298,9 +5317,12 @@ public final class WorkflowManager extends NodeContainer
     public boolean canCancelAll() {
         // added as part of fix for bug 6534 - this method is called often also indirectly via change events
         // as part of a reset - do the best to not lock parent instance
-        if (isProject() || isComponentWFM()) {
+        if (isProject() || isComponentProjectWFM()) {
             // does not acquire parent workflow lock
             return getInternalState().isExecutionInProgress();
+        } else if (isComponentWFM()) {
+            SubNodeContainer component = (SubNodeContainer)getDirectNCParent();
+            return component.getParent().canCancelNode(component.getID());
         } else {
             // acquires lock of parent instance ... which is the same as of this instance
             return getParent().canCancelNode(this.getID());

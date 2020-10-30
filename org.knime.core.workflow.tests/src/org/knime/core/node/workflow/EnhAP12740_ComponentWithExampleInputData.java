@@ -50,17 +50,12 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
-import java.io.IOException;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
@@ -130,9 +125,6 @@ public class EnhAP12740_ComponentWithExampleInputData extends WorkflowTestCase {
                 + wfm.getNodeMessages(NodeMessage.Type.WARNING, NodeMessage.Type.ERROR),
             componentProject.getVirtualOutNode().getInternalState(), is(InternalNodeContainerState.EXECUTED));
         
-        // bug NXT-355: NPE when calling wfm.canCancelAll()
-        assertFalse(wfm.canCancelAll());
-
         /* save and open without example input data */
         component.saveAsTemplate(componentDir, new ExecutionMonitor());
         loadResult = loadComponent(componentDir, new ExecutionMonitor(), loadHelper);
@@ -243,6 +235,28 @@ public class EnhAP12740_ComponentWithExampleInputData extends WorkflowTestCase {
         wfm.removeNode(stringManipulation_9);
         assertTrue("other changes expected", componentProject.getTrackedChanges().get().hasOtherChanges());
         assertFalse("no node state changes expected", componentProject.getTrackedChanges().get().hasNodeStateChanges());
+    }
+    
+    /**
+     * Tests global actions on a component project workflow.
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void testActionsOnComponentProjectWorkflow() throws Exception {
+    	// save and open component project
+        SubNodeContainer component = (SubNodeContainer)getManager().getNodeContainer(m_component_10);
+        File componentDir = FileUtil.createTempDir(getClass().getSimpleName());
+        component.saveAsTemplate(componentDir, new ExecutionMonitor(), null);
+        WorkflowLoadHelper loadHelper = new WorkflowLoadHelper(true, true, null);
+        MetaNodeLinkUpdateResult loadResult = loadComponent(componentDir, new ExecutionMonitor(), loadHelper);
+        SubNodeContainer componentProject = (SubNodeContainer)loadResult.getLoadedInstance();
+
+        // bug NXT-355: NPE when calling wfm.canCancelAll()
+        assertFalse(componentProject.getWorkflowManager().canCancelAll());
+        
+        // enh NXT-359: can-reset-all introduced on workflow level
+        assertFalse(componentProject.getWorkflowManager().canResetAll());
     }
 
     private void assertComponentLoadingResult(final LoadResult lr, final int expectedNodeStateChanges) {

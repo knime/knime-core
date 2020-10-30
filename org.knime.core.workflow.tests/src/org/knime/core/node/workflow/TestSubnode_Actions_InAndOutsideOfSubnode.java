@@ -194,6 +194,22 @@ public class TestSubnode_Actions_InAndOutsideOfSubnode extends WorkflowTestCase 
         time = System.currentTimeMillis() - time;
         assertTrue(String.format("Tests on workflow took too long (%d ms but limit at %d)", time, MAX_TIME_MS), time <= MAX_TIME_MS);
     }
+    
+	/**
+	 * Tests the {@link WorkflowManager#canResetAll()} and
+	 * {@link WorkflowManager#canCancelAll()}, especially for a component's
+	 * workflow.
+	 */
+    @Test
+	public void testCanResetAllAndCanCancelAllOnWorkflow() {
+		WorkflowManager wfm = getManager();
+		assertFalse(wfm.canResetAll());
+		assertFalse(wfm.canCancelAll());
+
+		WorkflowManager componentWfm = ((SubNodeContainer) wfm.getNodeContainer(m_subnode12)).getWorkflowManager();
+		assertFalse(componentWfm.canResetAll());
+		assertFalse(componentWfm.canCancelAll());
+	}
 
     /** {@inheritDoc} */
     @Override
