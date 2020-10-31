@@ -99,6 +99,8 @@ public final class ValueSchema {
 
     private final DataCellSerializerFactory m_factory;
 
+    private int m_numColumns;
+
     ValueSchema(final DataTableSpec spec, //
         final ValueFactory<?, ?>[] factories, //
         final RowKeyType type, //
@@ -107,6 +109,7 @@ public final class ValueSchema {
         m_rowKeyType = type;
         m_factories = factories;
         m_factory = factory;
+        m_numColumns = m_spec.getNumColumns() + 1;
     }
 
     /**
@@ -130,7 +133,7 @@ public final class ValueSchema {
      * @return the number of columns in this schema.
      */
     public final int getNumColumns() {
-        return m_spec.getNumColumns() + 1;
+        return m_numColumns;
     }
 
     /**
