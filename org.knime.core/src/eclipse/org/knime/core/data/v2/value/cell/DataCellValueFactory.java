@@ -45,38 +45,30 @@
  */
 package org.knime.core.data.v2.value.cell;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.util.ArrayList;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellSerializer;
+import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.IDataRepository;
 import org.knime.core.data.RowIterator;
-import org.knime.core.data.filestore.FileStore;
-import org.knime.core.data.filestore.FileStoreCell;
-import org.knime.core.data.filestore.FileStoreKey;
-import org.knime.core.data.filestore.FileStoreUtil;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.v2.DataCellSerializerFactory;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.RowCursor;
 import org.knime.core.data.v2.ValueFactory;
-import org.knime.core.data.v2.WrappedReadValue;
 import org.knime.core.data.v2.WriteValue;
 import org.knime.core.data.v2.access.AccessSpec;
-import org.knime.core.data.v2.access.ObjectAccess.ObjectAccessSpec;
 import org.knime.core.data.v2.access.ObjectAccess.ObjectReadAccess;
-import org.knime.core.data.v2.access.ObjectAccess.ObjectSerializer;
 import org.knime.core.data.v2.access.ObjectAccess.ObjectWriteAccess;
 
 /**
- *
- * {@link ValueFactory} to write and read arbitrary {@link DataCell}s. The created {@link WrappedReadValue}s are special
- * compared to other {@link ReadValue}s in the sense that they are actually just suppliers of {@link DataCell}'s and
- * don't represent a {@link DataValue} themselves. Needs special casing in corresponding {@link RowIterator} and
- * {@link RowCursor} implementations.
+ * {@link ValueFactory} to write and read arbitrary {@link DataCell}s. Needs special casing in corresponding
+ * {@link RowIterator} and {@link RowCursor} implementations.
  *
  * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
  * @since 4.3
@@ -93,6 +85,8 @@ public final class DataCellValueFactory
 
     private IDataRepository m_dataRepository;
 
+    private DataType m_type;
+
     /**
      * Empty framework constructor. Call {@link #initialize(DataCellSerializerFactory, IDataRepository)} after using
      * this constructor.
@@ -106,9 +100,10 @@ public final class DataCellValueFactory
      * @param factory used to retrieve {@link DataCellSerializer}s
      * @param fileStoreHandler to deal with file stores.
      */
-    public DataCellValueFactory(final DataCellSerializerFactory factory,
-        final IWriteFileStoreHandler fileStoreHandler) {
+    public DataCellValueFactory(final DataCellSerializerFactory factory, final IWriteFileStoreHandler fileStoreHandler,
+        final DataType type) {
         m_factory = factory;
+        m_type = type;
         m_fsHandler = fileStoreHandler;
         m_dataRepository = fileStoreHandler.getDataRepository();
     }
@@ -119,15 +114,28 @@ public final class DataCellValueFactory
      * @param factory used to retrieve {@link DataCellSerializer}s
      * @param repository to deal with (potentially) written file stores.
      */
-    public void initialize(final DataCellSerializerFactory factory, final IDataRepository repository) {
+    public void initialize(final DataCellSerializerFactory factory, final IDataRepository repository,
+        final DataType type) {
         m_factory = factory;
+        m_type = type;
         m_fsHandler = null;
         m_dataRepository = repository;
     }
 
     @Override
     public ReadValue createReadValue(final ObjectReadAccess<DataCell> access) {
-        return new DefaultDataCellReadValue(access);
+        final ArrayList<Class<? extends DataValue>> types = new ArrayList<>(m_type.getValueClasses());
+        types.add(ReadValue.class);
+        final Class<?>[] array = types.toArray(new Class<?>[types.size()]);
+
+        Class<? extends DataCell> cellClass = m_type.getCellClass();
+        final ClassLoader loader;
+        if (cellClass == null) {
+            loader = DataCell.class.getClassLoader();
+        } else {
+            loader = cellClass.getClassLoader();
+        }
+        return (ReadValue)Proxy.newProxyInstance(loader, array, new DataCellInvocationHandler(access));
     }
 
     @Override
@@ -140,131 +148,30 @@ public final class DataCellValueFactory
         return new DataCellAccessSpec(m_factory, m_fsHandler, m_dataRepository);
     }
 
-    /* DataCellAccessSpec based on {@link ObjectAccessSpec}. */
-    private static final class DataCellAccessSpec implements ObjectAccessSpec<DataCell> {
+    private final static class DataCellInvocationHandler implements InvocationHandler {
 
-        private final DataCellSerializerFactory m_factory;
-
-        private final IWriteFileStoreHandler m_fsHandler;
-
-        private final IDataRepository m_dataRepository;
-
-        public DataCellAccessSpec(final DataCellSerializerFactory factory, final IWriteFileStoreHandler fsHandler,
-            final IDataRepository repository) {
-            m_factory = factory;
-            m_fsHandler = fsHandler;
-            m_dataRepository = repository;
-        }
-
-        @Override
-        public ObjectSerializer<DataCell> getSerializer() {
-            return new DataCellObjectSerializer(m_factory, m_fsHandler, m_dataRepository);
-        }
-    }
-
-    /*
-     * WriteValue accepting all DataCells
-     */
-    private static class DefaultDataCellWriteValue implements WriteValue<DataCell> {
-
-        private final IWriteFileStoreHandler m_fsHandler;
-
-        private final IDataRepository m_dataRepository;
-
-        private final ObjectWriteAccess<DataCell> m_access;
-
-        DefaultDataCellWriteValue(final ObjectWriteAccess<DataCell> access, final IWriteFileStoreHandler fsHandler,
-            final IDataRepository repository) {
-            m_access = access;
-            m_fsHandler = fsHandler;
-            m_dataRepository = repository;
-        }
-
-        @Override
-        public void setValue(final DataCell cell) {
-            if (cell instanceof FileStoreCell) {
-                final FileStoreCell fsCell = (FileStoreCell)cell;
-
-                // handle loops
-                if (mustBeFlushedPriorSave(fsCell)) {
-                    try {
-                        final FileStore[] fileStores = FileStoreUtil.getFileStores(fsCell);
-                        final FileStoreKey[] fileStoreKeys = new FileStoreKey[fileStores.length];
-
-                        for (int fileStoreIndex = 0; fileStoreIndex < fileStoreKeys.length; fileStoreIndex++) {
-                            fileStoreKeys[fileStoreIndex] =
-                                m_fsHandler.translateToLocal(fileStores[fileStoreIndex], fsCell);
-                        }
-
-                        // update file store keys without calling post-construct.
-                        FileStoreUtil.retrieveFileStoreHandlersFrom(fsCell, fileStoreKeys, m_dataRepository, false);
-                    } catch (IOException ex) {
-                        throw new IllegalStateException(ex);
-                    }
-                }
-            }
-            // NB: Missing Value checks is expected to happen before cell is actually written. See RowWriteAccess.
-            m_access.setObject(cell);
-        }
-
-        // TODO why do we need to flush? problem with heap cache!
-        private boolean mustBeFlushedPriorSave(final FileStoreCell cell) {
-            final FileStore[] fileStores = FileStoreUtil.getFileStores(cell);
-            for (FileStore fs : fileStores) {
-                if (m_fsHandler.mustBeFlushedPriorSave(fs)) {
-                    return true;
-                }
-            }
-            return false;
-        }
-    }
-
-    /*
-     * Default implementation of a {@link WrappedReadValue}.
-     */
-    private static final class DefaultDataCellReadValue implements WrappedReadValue {
+        private final Method m_getDataCell;
 
         private final ObjectReadAccess<DataCell> m_access;
 
-        DefaultDataCellReadValue(final ObjectReadAccess<DataCell> access) {
+        private DataCellInvocationHandler(final ObjectReadAccess<DataCell> access) {
             m_access = access;
+            try {
+                m_getDataCell = ReadValue.class.getMethod("getDataCell");
+            } catch (Exception ex) {
+                throw new IllegalStateException("Fatal: Proxy can't be setup.", ex);
+            }
         }
 
         @Override
-        public DataCell getDataCell() {
-            return m_access.getObject();
-        }
-    }
-
-    /* {@link ObjectSerializer} for arbitrary {@link DataCell}s */
-    private static final class DataCellObjectSerializer implements ObjectSerializer<DataCell> {
-
-        private final DataCellSerializerFactory m_factory;
-
-        private final IWriteFileStoreHandler m_fsHandler;
-
-        private final IDataRepository m_dataRepository;
-
-        DataCellObjectSerializer(final DataCellSerializerFactory factory, final IWriteFileStoreHandler handler,
-            final IDataRepository repository) {
-            m_factory = factory;
-            m_fsHandler = handler;
-            m_dataRepository = repository;
-        }
-
-        @Override
-        public DataCell deserialize(final DataInput input) throws IOException {
-            final DataCellDataInputDelegator stream =
-                new DataCellDataInputDelegator(m_factory, m_dataRepository, input);
-            return stream.readDataCell();
-        }
-
-        @Override
-        public void serialize(final DataCell cell, final DataOutput output) throws IOException {
-            try (final DataCellDataOutputDelegator stream =
-                new DataCellDataOutputDelegator(m_factory, m_fsHandler, output)) {
-                stream.writeDataCell(cell);
+        public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
+            final DataCell cell = m_access.getObject();
+            if (method.equals(m_getDataCell)) {
+                return cell;
+            } else {
+                return method.invoke(cell, args);
             }
         }
     }
+
 }

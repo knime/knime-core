@@ -231,7 +231,7 @@ public final class ValueSchema {
         } else if (type.isCompatible(SetDataValue.class)) {
             factory = new SetValueFactory();
         } else {
-            factory = new DataCellValueFactory(cellSerializerFactory, fileStoreHandler);
+            factory = new DataCellValueFactory(cellSerializerFactory, fileStoreHandler, type);
         }
 
         // Collection types need to be initialized
@@ -360,7 +360,7 @@ public final class ValueSchema {
                 ((CollectionValueFactory<?, ?>)factory).initialize(
                     getValueFactory(elementType, factoryMapping, cellSerializerFactory, dataRepository), elementType);
             } else if (factory instanceof DataCellValueFactory) {
-                ((DataCellValueFactory)factory).initialize(cellSerializerFactory, dataRepository);
+                ((DataCellValueFactory)factory).initialize(cellSerializerFactory, dataRepository, type);
             }
             return factory;
         }
