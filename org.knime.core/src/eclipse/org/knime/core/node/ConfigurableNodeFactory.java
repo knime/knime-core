@@ -55,6 +55,7 @@ import java.util.function.Predicate;
 import org.apache.commons.lang3.ArrayUtils;
 import org.knime.core.node.context.ModifiableNodeCreationConfiguration;
 import org.knime.core.node.context.NodeCreationConfiguration;
+import org.knime.core.node.context.ports.ExtendablePortGroup;
 import org.knime.core.node.context.ports.ModifiablePortsConfiguration;
 import org.knime.core.node.context.ports.PortGroupConfiguration;
 import org.knime.core.node.context.ports.impl.DefaultExchangeablePortGroup;
@@ -222,8 +223,7 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
         private void addFixedPortGroup(final String pGrpId, final PortType[] fixedPortTypes,
             final boolean definesInputPorts, final boolean definesOutputPorts) {
             validateStaticPortGroupArguments(pGrpId, fixedPortTypes);
-            m_portConfigs.put(pGrpId,
-                new DefaultFixedPortGroup(fixedPortTypes, definesInputPorts, definesOutputPorts));
+            m_portConfigs.put(pGrpId, new DefaultFixedPortGroup(fixedPortTypes, definesInputPorts, definesOutputPorts));
         }
 
         /**
@@ -257,7 +257,7 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
          */
         public void addExtendableInputPortGroup(final String pGrpId, final PortType[] fixedPortTypes,
             final PortType... supportedTypes) {
-            addExtendablePortGroup(pGrpId, fixedPortTypes, supportedTypes, true, false);
+            addExtendableInputPortGroupWithDefault(pGrpId, fixedPortTypes, new PortType[0], supportedTypes);
         }
 
         /**
@@ -270,8 +270,38 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
          */
         public void addExtendableInputPortGroup(final String pGrpId, final PortType[] fixedPortTypes,
             final Predicate<PortType> supportedTypesPredicate) {
-            addExtendablePortGroup(pGrpId, fixedPortTypes, getSupportedTypes(supportedTypesPredicate), true,
-                false);
+            addExtendableInputPortGroupWithDefault(pGrpId, fixedPortTypes, new PortType[0], supportedTypesPredicate);
+        }
+
+        /**
+         * Adds an extendable input port group configuration.
+         *
+         * @param pGrpId the port group identifier
+         * @param fixedPortTypes the fixed port types
+         * @param defaultPortTypes the default port types, that is, the ports that are present when creating the node
+         *            for the first time but that can be removed by the user afterwards, unlike the fixed ports
+         * @param supportedTypes the supported port types
+         * @since 4.3
+         */
+        public void addExtendableInputPortGroupWithDefault(final String pGrpId, final PortType[] fixedPortTypes,
+            final PortType[] defaultPortTypes, final PortType... supportedTypes) {
+            addExtendablePortGroup(pGrpId, fixedPortTypes, defaultPortTypes, supportedTypes, true, false);
+        }
+
+        /**
+         * Adds an extendable input port group configuration.
+         *
+         * @param pGrpId the port group identifier
+         * @param fixedPortTypes the fixed port types
+         * @param defaultPortTypes the default port types, that is, the ports that are present when creating the node
+         *            for the first time but that can be removed by the user afterwards, unlike the fixed ports
+         * @param supportedTypesPredicate the predicate that identifies supported {@link PortType PortTypes}
+         * @since 4.3
+         */
+        public void addExtendableInputPortGroupWithDefault(final String pGrpId, final PortType[] fixedPortTypes,
+            final PortType[] defaultPortTypes, final Predicate<PortType> supportedTypesPredicate) {
+            addExtendableInputPortGroupWithDefault(pGrpId, fixedPortTypes, defaultPortTypes,
+                getSupportedTypes(supportedTypesPredicate));
         }
 
         /**
@@ -305,7 +335,7 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
          */
         public void addExtendableOutputPortGroup(final String pGrpId, final PortType[] fixedPortTypes,
             final PortType... supportedTypes) {
-            addExtendablePortGroup(pGrpId, fixedPortTypes, supportedTypes, false, true);
+            addExtendableOutputPortGroupWithDefault(pGrpId, fixedPortTypes, new PortType[0], supportedTypes);
         }
 
         /**
@@ -318,8 +348,38 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
          */
         public void addExtendableOutputPortGroup(final String pGrpId, final PortType[] fixedPortTypes,
             final Predicate<PortType> supportedTypesPredicate) {
-            addExtendablePortGroup(pGrpId, fixedPortTypes, getSupportedTypes(supportedTypesPredicate), false,
-                true);
+            addExtendableOutputPortGroupWithDefault(pGrpId, fixedPortTypes, new PortType[0], supportedTypesPredicate);
+        }
+
+        /**
+         * Adds an extendable output port group configuration.
+         *
+         * @param pGrpId the port group identifier
+         * @param fixedPortTypes the fixed port types
+         * @param defaultPortTypes the default port types, that is, the ports that are present when creating the node
+         *            for the first time but that can be removed by the user afterwards, unlike the fixed ports
+         * @param supportedTypes the supported port types
+         * @since 4.3
+         */
+        public void addExtendableOutputPortGroupWithDefault(final String pGrpId, final PortType[] fixedPortTypes,
+            final PortType[] defaultPortTypes, final PortType... supportedTypes) {
+            addExtendablePortGroup(pGrpId, fixedPortTypes, defaultPortTypes, supportedTypes, false, true);
+        }
+
+        /**
+         * Adds an extendable output port group configuration.
+         *
+         * @param pGrpId the port group identifier
+         * @param fixedPortTypes the fixed port types
+         * @param defaultPortTypes the default port types, that is, the ports that are present when creating the node
+         *            for the first time but that can be removed by the user afterwards, unlike the fixed ports
+         * @param supportedTypesPredicate the predicate that identifies supported {@link PortType PortTypes}
+         * @since 4.3
+         */
+        public void addExtendableOutputPortGroupWithDefault(final String pGrpId, final PortType[] fixedPortTypes,
+            final PortType[] defaultPortTypes, final Predicate<PortType> supportedTypesPredicate) {
+            addExtendableOutputPortGroupWithDefault(pGrpId, fixedPortTypes, defaultPortTypes,
+                getSupportedTypes(supportedTypesPredicate));
         }
 
         /**
@@ -339,8 +399,7 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
          * @param supportedTypesPredicate the predicate that identifies supported {@link PortType PortTypes}
          * @since 4.2
          */
-        public void addExtendablePortGroup(final String pGrpId,
-            final Predicate<PortType> supportedTypesPredicate) {
+        public void addExtendablePortGroup(final String pGrpId, final Predicate<PortType> supportedTypesPredicate) {
             addExtendablePortGroup(pGrpId, new PortType[0], supportedTypesPredicate);
         }
 
@@ -353,7 +412,7 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
          */
         public void addExtendablePortGroup(final String pGrpId, final PortType[] fixedPortTypes,
             final PortType... supportedTypes) {
-            addExtendablePortGroup(pGrpId, fixedPortTypes, supportedTypes, true, true);
+            addExtendablePortGroupWithDefault(pGrpId, fixedPortTypes, new PortType[0], supportedTypes);
         }
 
         /**
@@ -366,7 +425,38 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
          */
         public void addExtendablePortGroup(final String pGrpId, final PortType[] fixedPortTypes,
             final Predicate<PortType> supportedTypesPredicate) {
-            addExtendablePortGroup(pGrpId, fixedPortTypes, getSupportedTypes(supportedTypesPredicate));
+            addExtendablePortGroupWithDefault(pGrpId, fixedPortTypes, new PortType[0], supportedTypesPredicate);
+        }
+
+        /**
+         * Adds an extendable port group configuration.
+         *
+         * @param pGrpId the port group identifier
+         * @param fixedPortTypes the fixed port types
+         * @param defaultPortTypes the default port types, that is, the ports that are present when creating the node
+         *            for the first time but that can be removed by the user afterwards, unlike the fixed ports
+         * @param supportedTypes the supported port types
+         * @since 4.3
+         */
+        public void addExtendablePortGroupWithDefault(final String pGrpId, final PortType[] fixedPortTypes,
+            final PortType[] defaultPortTypes, final PortType... supportedTypes) {
+            addExtendablePortGroup(pGrpId, fixedPortTypes, defaultPortTypes, supportedTypes, true, true);
+        }
+
+        /**
+         * Adds an extendable port group configuration.
+         *
+         * @param pGrpId the port group identifier
+         * @param fixedPortTypes the fixed port types
+         * @param defaultPortTypes the default port types, that is, the ports that are present when creating the node
+         *            for the first time but that can be removed by the user afterwards, unlike the fixed ports
+         * @param supportedTypesPredicate the predicate that identifies supported {@link PortType PortTypes}
+         * @since 4.3
+         */
+        public void addExtendablePortGroupWithDefault(final String pGrpId, final PortType[] fixedPortTypes,
+            final PortType[] defaultPortTypes, final Predicate<PortType> supportedTypesPredicate) {
+            addExtendablePortGroupWithDefault(pGrpId, fixedPortTypes, defaultPortTypes,
+                getSupportedTypes(supportedTypesPredicate));
         }
 
         private static PortType[] getSupportedTypes(final Predicate<PortType> predicate) {
@@ -375,10 +465,15 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
         }
 
         private void addExtendablePortGroup(final String pGrpId, final PortType[] fixedPortTypes,
-            final PortType[] supportedTypes, final boolean definesInputPorts, final boolean definesOutputPorts) {
-            validateExtendablePortGroupArguments(pGrpId, fixedPortTypes, supportedTypes);
-            m_portConfigs.put(pGrpId,
-                new DefaultExtendablePortGroup(fixedPortTypes, supportedTypes, definesInputPorts, definesOutputPorts));
+            final PortType[] defaultPortTypes, final PortType[] supportedTypes, final boolean definesInputPorts,
+            final boolean definesOutputPorts) {
+            validateExtendablePortGroupArguments(pGrpId, fixedPortTypes, defaultPortTypes, supportedTypes);
+            final ExtendablePortGroup group =
+                new DefaultExtendablePortGroup(fixedPortTypes, supportedTypes, definesInputPorts, definesOutputPorts);
+            for (final PortType port : defaultPortTypes) {
+                group.addPort(port);
+            }
+            m_portConfigs.put(pGrpId, group);
         }
 
         /**
@@ -388,7 +483,7 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
          * @param optionalPorts the optional port types
          */
         public void addOptionalInputPortGroup(final String pGrpId, final PortType... optionalPorts) {
-            addOptionalPortGroup(pGrpId, optionalPorts, true, false);
+            addOptionalInputPortGroupWithDefault(pGrpId, null, optionalPorts);
         }
 
         /**
@@ -399,7 +494,35 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
          * @since 4.2
          */
         public void addOptionalInputPortGroup(final String pGrpId, final Predicate<PortType> optionalPortsPredicate) {
-            addOptionalPortGroup(pGrpId, getSupportedTypes(optionalPortsPredicate), true, false);
+            addOptionalInputPortGroupWithDefault(pGrpId, null, optionalPortsPredicate);
+        }
+
+        /**
+         * Adds an optional input port group configuration.
+         *
+         * @param pGrpId the port group identifier
+         * @param defaultPort the default port type, that is, the port that is present when creating the node for the
+         *            first time but that can be removed by the user afterwards.
+         * @param optionalPorts the optional port types
+         * @since 4.3
+         */
+        public void addOptionalInputPortGroupWithDefault(final String pGrpId, final PortType defaultPort,
+            final PortType... optionalPorts) {
+            addOptionalPortGroup(pGrpId, defaultPort, optionalPorts, true, false);
+        }
+
+        /**
+         * Adds an optional input port group configuration.
+         *
+         * @param pGrpId the port group identifier
+         * @param defaultPort the default port type, that is, the port that is present when creating the node for the
+         *            first time but that can be removed by the user afterwards.
+         * @param optionalPortsPredicate the predicate identifying the optional port types
+         * @since 4.3
+         */
+        public void addOptionalInputPortGroupWithDefault(final String pGrpId, final PortType defaultPort,
+            final Predicate<PortType> optionalPortsPredicate) {
+            addOptionalInputPortGroupWithDefault(pGrpId, defaultPort, getSupportedTypes(optionalPortsPredicate));
         }
 
         /**
@@ -409,7 +532,7 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
          * @param optionalPorts the optional port types
          */
         public void addOptionalOutputPortGroup(final String pGrpId, final PortType... optionalPorts) {
-            addOptionalPortGroup(pGrpId, optionalPorts, false, true);
+            addOptionalOutputPortGroupWithDefault(pGrpId, null, optionalPorts);
         }
 
         /**
@@ -420,7 +543,35 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
          * @since 4.2
          */
         public void addOptionalOutputPortGroup(final String pGrpId, final Predicate<PortType> optionalPortsPredicate) {
-            addOptionalPortGroup(pGrpId, getSupportedTypes(optionalPortsPredicate), false, true);
+            addOptionalOutputPortGroupWithDefault(pGrpId, null, optionalPortsPredicate);
+        }
+
+        /**
+         * Adds an optional output port group configuration.
+         *
+         * @param pGrpId the port group identifier
+         * @param defaultPort the default port type, that is, the port that is present when creating the node for the
+         *            first time but that can be removed by the user afterwards.
+         * @param optionalPorts the optional port types
+         * @since 4.3
+         */
+        public void addOptionalOutputPortGroupWithDefault(final String pGrpId, final PortType defaultPort,
+            final PortType... optionalPorts) {
+            addOptionalPortGroup(pGrpId, defaultPort, optionalPorts, false, true);
+        }
+
+        /**
+         * Adds an optional output port group configuration.
+         *
+         * @param pGrpId the port group identifier
+         * @param defaultPort the default port type, that is, the port that is present when creating the node for the
+         *            first time but that can be removed by the user afterwards.
+         * @param optionalPortsPredicate the predicate identifying the optional port types
+         * @since 4.3
+         */
+        public void addOptionalOutputPortGroupWithDefault(final String pGrpId, final PortType defaultPort,
+            final Predicate<PortType> optionalPortsPredicate) {
+            addOptionalOutputPortGroupWithDefault(pGrpId, defaultPort, getSupportedTypes(optionalPortsPredicate));
         }
 
         /**
@@ -430,7 +581,7 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
          * @param optionalPorts the optional port types
          */
         public void addOptionalPortGroup(final String pGrpId, final PortType... optionalPorts) {
-            addOptionalPortGroup(pGrpId, optionalPorts, true, true);
+            addOptionalPortGroupWithDefault(pGrpId, null, optionalPorts);
         }
 
         /**
@@ -440,16 +591,47 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
          * @param optionalPortsPredicate the predicate identifying optional port types
          * @since 4.2
          */
-        public void addOptionalPortGroup(final String pGrpId,
-            final Predicate<PortType> optionalPortsPredicate) {
-            addOptionalPortGroup(pGrpId, getSupportedTypes(optionalPortsPredicate), true, true);
+        public void addOptionalPortGroup(final String pGrpId, final Predicate<PortType> optionalPortsPredicate) {
+            addOptionalPortGroupWithDefault(pGrpId, null, optionalPortsPredicate);
         }
 
-        private void addOptionalPortGroup(final String pGrpId, final PortType[] optionalPorts,
-            final boolean definesInputPorts, final boolean definesOutputPorts) {
+        /**
+         * Adds an optional port group configuration.
+         *
+         * @param pGrpId the port group identifier
+         * @param defaultPort the default port type, that is, the port that is present when creating the node for the
+         *            first time but that can be removed by the user afterwards.
+         * @param optionalPorts the optional port types
+         * @since 4.3
+         */
+        public void addOptionalPortGroupWithDefault(final String pGrpId, final PortType defaultPort,
+            final PortType... optionalPorts) {
+            addOptionalPortGroup(pGrpId, defaultPort, optionalPorts, true, true);
+        }
+
+        /**
+         * Adds an optional port group configuration.
+         *
+         * @param pGrpId the port group identifier
+         * @param defaultPort the default port type, that is, the port that is present when creating the node for the
+         *            first time but that can be removed by the user afterwards.
+         * @param optionalPortsPredicate the predicate identifying the optional port types
+         * @since 4.3
+         */
+        public void addOptionalPortGroupWithDefault(final String pGrpId, final PortType defaultPort,
+            final Predicate<PortType> optionalPortsPredicate) {
+            addOptionalPortGroupWithDefault(pGrpId, defaultPort, getSupportedTypes(optionalPortsPredicate));
+        }
+
+        private void addOptionalPortGroup(final String pGrpId, final PortType defaultPort,
+            final PortType[] optionalPorts, final boolean definesInputPorts, final boolean definesOutputPorts) {
             validateOptionalPortGroupArguments(pGrpId, optionalPorts);
-            m_portConfigs.put(pGrpId, new DefaultExtendablePortGroup(new PortType[0], optionalPorts,
-                definesInputPorts, definesOutputPorts, 1));
+            final ExtendablePortGroup group = new DefaultExtendablePortGroup(new PortType[0], optionalPorts,
+                definesInputPorts, definesOutputPorts, 1);
+            if (defaultPort != null) {
+                group.addPort(defaultPort);
+            }
+            m_portConfigs.put(pGrpId, group);
         }
 
         private void validatePortGrpIdentifier(final String pGrpId) {
@@ -467,9 +649,10 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
         }
 
         private void validateExtendablePortGroupArguments(final String pGrpId, final PortType[] staticPorts,
-            final PortType[] supportedTypes) {
+            final PortType[] defaultPorts, final PortType[] supportedTypes) {
             validatePortGrpIdentifier(pGrpId);
             CheckUtils.checkArgumentNotNull(staticPorts, "The static ports cannot be null");
+            CheckUtils.checkArgumentNotNull(defaultPorts, "The default ports cannot be null");
             CheckUtils.checkArgumentNotNull(supportedTypes, "The supported port types cannot be null");
             CheckUtils.checkArgument(supportedTypes != null && supportedTypes.length > 0,
                 "The supported port types have to contain at least element");
