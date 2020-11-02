@@ -123,4 +123,5 @@ public class BooleanValueFactory implements ValueFactory<BooleanReadAccess, Bool
          */
         void setBooleanValue(boolean value);
     }
+
 }

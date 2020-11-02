@@ -112,4 +112,5 @@ public final class DoubleValueFactory implements ValueFactory<DoubleReadAccess, 
          */
         void setDoubleValue(double value);
     }
+
 }
