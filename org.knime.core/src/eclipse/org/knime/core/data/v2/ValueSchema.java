@@ -87,6 +87,7 @@ import org.knime.core.data.v2.value.SetValueFactory;
 import org.knime.core.data.v2.value.SparseListValueFactory;
 import org.knime.core.data.v2.value.StringValueFactory;
 import org.knime.core.data.v2.value.VoidRowKeyValueFactory;
+import org.knime.core.data.v2.value.VoidValueFactory;
 import org.knime.core.data.v2.value.cell.DataCellValueFactory;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
@@ -208,7 +209,9 @@ public final class ValueSchema {
         final IWriteFileStoreHandler fileStoreHandler) {
         /* TODO extension point -- AP-15324 */
         final ValueFactory<?, ?> factory;
-        if (type == DoubleCell.TYPE) {
+        if (type == null) {
+            factory = VoidValueFactory.INSTANCE;
+        } else if (type == DoubleCell.TYPE) {
             factory = DoubleValueFactory.INSTANCE;
         } else if (type == IntCell.TYPE) {
             factory = IntValueFactory.INSTANCE;
