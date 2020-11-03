@@ -88,7 +88,7 @@ public final class DataCellValueFactory
     private DataType m_type;
 
     /**
-     * Empty framework constructor. Call {@link #initialize(DataCellSerializerFactory, IDataRepository)} after using
+     * Empty framework constructor. Call {@link #initialize(DataCellSerializerFactory, IDataRepository, DataType)} after using
      * this constructor.
      */
     public DataCellValueFactory() {
@@ -99,6 +99,7 @@ public final class DataCellValueFactory
      *
      * @param factory used to retrieve {@link DataCellSerializer}s
      * @param fileStoreHandler to deal with file stores.
+     * @param type type associated with cells
      */
     public DataCellValueFactory(final DataCellSerializerFactory factory, final IWriteFileStoreHandler fileStoreHandler,
         final DataType type) {
@@ -113,6 +114,7 @@ public final class DataCellValueFactory
      *
      * @param factory used to retrieve {@link DataCellSerializer}s
      * @param repository to deal with (potentially) written file stores.
+     * @param type type associated with cells
      */
     public void initialize(final DataCellSerializerFactory factory, final IDataRepository repository,
         final DataType type) {
