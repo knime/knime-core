@@ -53,8 +53,6 @@ import java.util.concurrent.Future;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.rpc.json.JsonRpcSingleClient;
 import org.knime.core.node.util.CheckUtils;
 
@@ -98,17 +96,6 @@ public abstract class AbstractRpcSingleClient<S> extends AbstractRpcClient imple
     protected AbstractRpcSingleClient(final Class<S> serviceInterface, final RpcTransport rpcTransport) {
         super(rpcTransport);
         m_serviceInterface = serviceInterface;
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    protected <N extends NodeModel> RpcServer getRpcServerFromNodeFactory(final N nodeModel,
-        final NodeFactory<NodeModel> factory) {
-        if (factory instanceof RpcSingleServerFactory) {
-            return ((RpcSingleServerFactory<N, S>)factory).createRpcServer(nodeModel);
-        } else {
-            return null;
-        }
     }
 
     @Override

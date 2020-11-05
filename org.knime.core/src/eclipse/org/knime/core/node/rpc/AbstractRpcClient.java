@@ -175,11 +175,10 @@ public abstract class AbstractRpcClient implements RpcClient {
      * @param <N>
      * @return the server, never <code>null</code>
      */
-    @SuppressWarnings("unchecked")
-    protected <N extends NodeModel> RpcServer getRpcServerFromNodeFactory(final N nodeModel,
+    private static <N extends NodeModel> RpcServer getRpcServerFromNodeFactory(final N nodeModel,
         final NodeFactory<NodeModel> factory) {
-        if (factory instanceof RpcServerFactory) {
-            return ((RpcServerFactory<N>)factory).createRpcServer(nodeModel);
+        if (factory instanceof NodeRpcServerFactory) {
+            return ((NodeRpcServerFactory)factory).createRpcServer(nodeModel);
         } else {
             return null;
         }

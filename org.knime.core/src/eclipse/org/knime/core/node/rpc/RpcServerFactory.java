@@ -48,8 +48,6 @@
  */
 package org.knime.core.node.rpc;
 
-import org.knime.core.node.NodeModel;
-
 /**
  * To be implemented by a node model's factory if the node model provides a node data service.
  *
@@ -63,16 +61,15 @@ import org.knime.core.node.NodeModel;
  *
  * @since 4.3
  */
-public interface RpcServerFactory<T extends NodeModel> {
+public interface RpcServerFactory<T> {
 
     /**
      * Used by the framework to register a node model's data service.
      *
-     * @param nodeModel the node model that offers the node data service; might be practical if the node model also
-     *            implements its service interface and thus also serves as the handler for requests
+     * @param target the object the rpc server is targeting, e.g. where to get the data from
      * @return an rpc server provided by the node model that is then used to serve requests from remote node
      *         dialogs/view.
      */
-    public RpcServer createRpcServer(final T nodeModel);
+    public RpcServer createRpcServer(final T target);
 
 }

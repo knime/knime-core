@@ -137,7 +137,7 @@ public final class JsonRpcTestUtil {
 
     private static final class TestRpcTransport implements RpcTransport {
 
-        private RpcServer m_server;
+        private final RpcServer m_server;
 
         private TestRpcTransport(final RpcServer server) {
             m_server = server;
