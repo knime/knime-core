@@ -44,32 +44,42 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Jul 28, 2020 (carlwitt): created
+ *   Jul 13, 2020 (hornm): created
  */
-package org.knime.core.ui.node.workflow.async;
-
-import org.knime.core.node.workflow.NodeContext;
-import org.knime.core.rpc.RpcTransport;
-import org.knime.core.rpc.RpcTransportFactory;
-import org.knime.core.ui.node.workflow.NodeContainerUI;
+package org.knime.core.rpc;
 
 /**
- * A mechanism to expose the {@link NodeContainerUI#doRpc(String)} to org.knime.core without adding a dependency
- * from org.knime.core to org.knime.core.ui.
+ * Convenience specialization of {@link RpcServer} for the case where there is only node data service interface, which
+ * the user then doesn't have to specify on every call.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  *
+ * @param <S> The node data service interface, i.e., the methods offered by the node model to the node dialog/view to
+ *            retrieve data.
+ *
  * @noreference This class is not intended to be referenced by clients.
  * @noextend This class is not intended to be subclassed by clients.
+ *
+ * @since 4.3
  */
-public class NodeContainerRpcTransportFactory implements RpcTransportFactory {
+public interface RpcSingleServer<S> extends RpcServer {
 
+    /**
+     * @return an implementation of the service interface.
+     */
+    S getHandler();
+
+    @SuppressWarnings("unchecked")
     @Override
-    public RpcTransport createRpcTransport() {
-        NodeContainerUI nodeContainerUI = NodeContext.getContext().getContextObjectForClass(NodeContainerUI.class)
-            .orElseThrow(IllegalStateException::new);
-        return nodeContainerUI::doRpc;
+    default <S2> S2 getHandler(final Class<S2> serviceInterface) {
+        return (S2)getHandler();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    default <S2> S2 getHandler(final String serviceName) {
+        return (S2)getHandler();
     }
 
 }

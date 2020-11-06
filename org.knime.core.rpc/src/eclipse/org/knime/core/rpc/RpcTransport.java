@@ -44,32 +44,34 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Jul 28, 2020 (carlwitt): created
+ *   Jul 27, 2020 (carlwitt): created
  */
-package org.knime.core.ui.node.workflow.async;
-
-import org.knime.core.node.workflow.NodeContext;
-import org.knime.core.rpc.RpcTransport;
-import org.knime.core.rpc.RpcTransportFactory;
-import org.knime.core.ui.node.workflow.NodeContainerUI;
+package org.knime.core.rpc;
 
 /**
- * A mechanism to expose the {@link NodeContainerUI#doRpc(String)} to org.knime.core without adding a dependency
- * from org.knime.core to org.knime.core.ui.
+ * To deliver remote procedure calls to a remote (different machine and/or language) rpc server provided by a node
+ * factory, different mechanisms can be used. This interface abstracts from the mechanism used, to deliver the remote
+ * procedure call and to receive the response.
+ *
+ * @see RpcTransportFactory
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  *
  * @noreference This class is not intended to be referenced by clients.
  * @noextend This class is not intended to be subclassed by clients.
+ *
+ * @since 4.3
  */
-public class NodeContainerRpcTransportFactory implements RpcTransportFactory {
+@FunctionalInterface
+public interface RpcTransport {
 
-    @Override
-    public RpcTransport createRpcTransport() {
-        NodeContainerUI nodeContainerUI = NodeContext.getContext().getContextObjectForClass(NodeContainerUI.class)
-            .orElseThrow(IllegalStateException::new);
-        return nodeContainerUI::doRpc;
-    }
+    /**
+     * @param rpc a remote procedure call, e.g., in JSON-RPC format, e.g., {"jsonrpc": "2.0", "method": "someMethod",
+     *            "params": [1, "text"]}
+     * @return the serialized return of the remotely invoked method, e.g., containing a JSON-RPC formatted result, like
+     *         {"jsonrpc": "2.0", "result": ...}
+     */
+    String sendAndReceive(String rpc);
 
 }

@@ -44,32 +44,32 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Jul 28, 2020 (carlwitt): created
+ *   Jul 27, 2020 (carlwitt): created
  */
-package org.knime.core.ui.node.workflow.async;
-
-import org.knime.core.node.workflow.NodeContext;
-import org.knime.core.rpc.RpcTransport;
-import org.knime.core.rpc.RpcTransportFactory;
-import org.knime.core.ui.node.workflow.NodeContainerUI;
+package org.knime.core.rpc;
 
 /**
- * A mechanism to expose the {@link NodeContainerUI#doRpc(String)} to org.knime.core without adding a dependency
- * from org.knime.core to org.knime.core.ui.
+ * To be implemented by a node model's factory if the node model provides a node data service.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  *
+ * @param <T> The node model type that provides the node data service.
+ *
  * @noreference This class is not intended to be referenced by clients.
  * @noextend This class is not intended to be subclassed by clients.
+ *
+ * @since 4.3
  */
-public class NodeContainerRpcTransportFactory implements RpcTransportFactory {
+public interface RpcServerFactory<T> {
 
-    @Override
-    public RpcTransport createRpcTransport() {
-        NodeContainerUI nodeContainerUI = NodeContext.getContext().getContextObjectForClass(NodeContainerUI.class)
-            .orElseThrow(IllegalStateException::new);
-        return nodeContainerUI::doRpc;
-    }
+    /**
+     * Used by the framework to register a node model's data service.
+     *
+     * @param target the object the rpc server is targeting, e.g. where to get the data from
+     * @return an rpc server provided by the node model that is then used to serve requests from remote node
+     *         dialogs/view.
+     */
+    public RpcServer createRpcServer(final T target);
 
 }

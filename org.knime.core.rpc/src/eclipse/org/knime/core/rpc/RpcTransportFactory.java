@@ -44,32 +44,27 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Jul 28, 2020 (carlwitt): created
+ *   Jul 27, 2020 (hornm): created
  */
-package org.knime.core.ui.node.workflow.async;
-
-import org.knime.core.node.workflow.NodeContext;
-import org.knime.core.rpc.RpcTransport;
-import org.knime.core.rpc.RpcTransportFactory;
-import org.knime.core.ui.node.workflow.NodeContainerUI;
+package org.knime.core.rpc;
 
 /**
- * A mechanism to expose the {@link NodeContainerUI#doRpc(String)} to org.knime.core without adding a dependency
- * from org.knime.core to org.knime.core.ui.
+ * Used in defining the RpcTransportFactory extension point (which exposes the NodeContainerUI class from
+ * org.knime.core.ui to org.knime.core) in order to send remote procedure calls.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  *
  * @noreference This class is not intended to be referenced by clients.
  * @noextend This class is not intended to be subclassed by clients.
+ *
+ * @since 4.3
  */
-public class NodeContainerRpcTransportFactory implements RpcTransportFactory {
+public interface RpcTransportFactory {
 
-    @Override
-    public RpcTransport createRpcTransport() {
-        NodeContainerUI nodeContainerUI = NodeContext.getContext().getContextObjectForClass(NodeContainerUI.class)
-            .orElseThrow(IllegalStateException::new);
-        return nodeContainerUI::doRpc;
-    }
+    /**
+     * @return an implementation that allows sending remote procedure calls.
+     */
+    RpcTransport createRpcTransport();
 
 }

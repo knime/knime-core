@@ -59,7 +59,6 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.config.base.ConfigBaseRO;
-import org.knime.core.node.rpc.AbstractRpcClient;
 import org.knime.core.node.web.WebTemplate;
 import org.knime.core.node.workflow.NodeAnnotation;
 import org.knime.core.node.workflow.NodeContainer;
@@ -78,6 +77,7 @@ import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodeUIInformationListener;
 import org.knime.core.node.workflow.OutPortView;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.rpc.AbstractRpcClient;
 import org.knime.core.ui.UI;
 
 /**

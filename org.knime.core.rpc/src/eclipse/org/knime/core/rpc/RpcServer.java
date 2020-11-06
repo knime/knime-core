@@ -44,32 +44,56 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Jul 28, 2020 (carlwitt): created
+ *   Jul 13, 2020 (hornm): created
  */
-package org.knime.core.ui.node.workflow.async;
+package org.knime.core.rpc;
 
-import org.knime.core.node.workflow.NodeContext;
-import org.knime.core.rpc.RpcTransport;
-import org.knime.core.rpc.RpcTransportFactory;
-import org.knime.core.ui.node.workflow.NodeContainerUI;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
- * A mechanism to expose the {@link NodeContainerUI#doRpc(String)} to org.knime.core without adding a dependency
- * from org.knime.core to org.knime.core.ui.
+ * An {@link RpcServer} implementation is used to serve remote requests to one or more node data services.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  *
  * @noreference This class is not intended to be referenced by clients.
  * @noextend This class is not intended to be subclassed by clients.
+ *
+ * @since 4.3
  */
-public class NodeContainerRpcTransportFactory implements RpcTransportFactory {
+public interface RpcServer {
 
-    @Override
-    public RpcTransport createRpcTransport() {
-        NodeContainerUI nodeContainerUI = NodeContext.getContext().getContextObjectForClass(NodeContainerUI.class)
-            .orElseThrow(IllegalStateException::new);
-        return nodeContainerUI::doRpc;
+    /**
+     * Returns the service implementation associated to the name <code>serviceInterface.getSimpleName()</code>
+     * @param <S> the node data service interface (i.e., the methods offered by the node model to the node dialog/view
+     *            to retrieve data)
+     * @param serviceInterface an interface the handler implements
+     * @return an implementation of the service interface
+     */
+    default <S> S getHandler(final Class<S> serviceInterface) {
+        return getHandler(serviceInterface.getSimpleName());
     }
+
+    /**
+     * See {@link #getHandler(Class)}.
+     *
+     * @param <S> the node data service interface (i.e., the methods offered by the node model to the node dialog/view
+     *            to retrieve data)
+     * @param serviceName the name of the interface that identifies the implementation of the node data service
+     *            interface to return
+     * @return a service implementation
+     */
+    <S> S getHandler(String serviceName);
+
+    /**
+     * Handles a single request.
+     *
+     * @param in contains the request
+     * @param out receives the response
+     * @throws IOException
+     */
+    void handleRequest(InputStream in, OutputStream out) throws IOException;
 
 }
