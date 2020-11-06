@@ -55,13 +55,14 @@ import org.knime.core.data.DataValue;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.RowKeyValue;
 import org.knime.core.data.v2.RowCursor;
+import org.knime.core.data.v2.RowRead;
 
 /**
  * Fallback implementation of {@link RowCursor} based on {@link CloseableRowIterator}.
  *
  * @author Christian Dietz, KNIME GmbH, Konstanz
  */
-final class FallbackRowCursor implements RowCursor {
+final class FallbackRowCursor implements RowCursor, RowRead {
 
     private static final class InvalidDataRow implements DataRow {
 
@@ -110,21 +111,16 @@ final class FallbackRowCursor implements RowCursor {
     }
 
     @Override
-    public boolean canPoll() {
-        return m_delegate.hasNext();
-    }
-
-    @Override
-    public boolean poll() {
-        if (canPoll()) {
+    public RowRead forward() {
+        if (m_delegate.hasNext()) {
             m_currentRow = m_delegate.next();
-            return true;
+            return this;
         }
         if (m_currentRow != InvalidDataRow.INSTANCE) {
             m_currentRow = InvalidDataRow.INSTANCE;
             m_delegate.close();
         }
-        return false;
+        return null;
     }
 
     @Override
@@ -133,7 +129,7 @@ final class FallbackRowCursor implements RowCursor {
     }
 
     @Override
-    public RowKeyValue getRowKeyValue() {
+    public RowKeyValue getRowKey() {
         return m_currentRow.getKey();
     }
 
@@ -152,5 +148,10 @@ final class FallbackRowCursor implements RowCursor {
     @Override
     public int getNumColumns() {
         return m_numValues;
+    }
+
+    @Override
+    public boolean canForward() {
+        return m_delegate.hasNext();
     }
 }

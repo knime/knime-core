@@ -42,34 +42,18 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
+ *
+ * History
+ *   Nov 10, 2020 (dietzc): created
  */
 package org.knime.core.data.v2;
 
-import java.io.IOException;
-
 /**
- * Implementation of a {@link RowWriteAccess}, allowing for iterative write access to a data storage.
- *
- * @param <R> defines the return value on {@link #finish()}.
+ * Cursor over RowWrites
  *
  * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
  * @since 4.3
- *
- * @apiNote API still experimental. It might change in future releases of KNIME Analytics Platform.
  */
-public interface RowWriteCursor<R> extends RowWriteAccess, AutoCloseable {
-
-    /**
-     * Called after values have been added using the {@link WriteValue}s.
-     */
-    void push();
-
-    /**
-     * @return Data structure allowing to read from added rows.
-     * @throws IOException
-     */
-    R finish() throws IOException;
-
-    @Override
-    void close();
+public interface RowWriteCursor extends Cursor<RowWrite> {
+    // NB: Marker interface
 }

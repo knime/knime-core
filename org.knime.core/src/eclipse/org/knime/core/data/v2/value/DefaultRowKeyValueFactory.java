@@ -45,13 +45,13 @@
  */
 package org.knime.core.data.v2.value;
 
-import org.knime.core.data.DataCell;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.RowKeyValue;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.data.v2.RowKeyReadValue;
+import org.knime.core.data.v2.RowKeyValueFactory;
+import org.knime.core.data.v2.RowKeyWriteValue;
 import org.knime.core.data.v2.ValueFactory;
-import org.knime.core.data.v2.WriteValue;
 import org.knime.core.data.v2.access.ObjectAccess.ObjectAccessSpec;
 import org.knime.core.data.v2.access.ObjectAccess.ObjectReadAccess;
 import org.knime.core.data.v2.access.ObjectAccess.ObjectSerializer;
@@ -59,24 +59,23 @@ import org.knime.core.data.v2.access.ObjectAccess.ObjectWriteAccess;
 import org.knime.core.data.v2.value.StringValueFactory.StringObjectSerializer;
 
 /**
- * {@link ValueFactory} implementation for custom {@link RowKeyReadValue} and {@link CustomRowKeyWriteValue}. 'Custom'
- * means, that the user can define the {@link RowKey} as needed as String (in contrast to no RowKey or Auto-generated
- * RowKeys).
+ * {@link ValueFactory} implementation for custom {@link RowKeyValue} and {@link RowKeyWriteValue}. 'Custom' means, that
+ * the user can define the {@link RowKey} as needed as String.
  *
- * NB: RowKeys must be unique.
+ * NB: RowKeys must are unique.
  *
  * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
  * @since 4.3
  */
-public final class CustomRowKeyValueFactory
-    implements ValueFactory<ObjectReadAccess<String>, ObjectWriteAccess<String>> {
+public final class DefaultRowKeyValueFactory
+    implements RowKeyValueFactory<ObjectReadAccess<String>, ObjectWriteAccess<String>> {
 
     /**
-     * Stateless instance of CustomRowKeyValueFactory.
+     * Stateless instance.
      */
-    public final static CustomRowKeyValueFactory INSTANCE = new CustomRowKeyValueFactory();
+    public final static DefaultRowKeyValueFactory INSTANCE = new DefaultRowKeyValueFactory();
 
-    private CustomRowKeyValueFactory() {
+    private DefaultRowKeyValueFactory() {
     }
 
     @Override
@@ -86,36 +85,12 @@ public final class CustomRowKeyValueFactory
 
     @Override
     public RowKeyReadValue createReadValue(final ObjectReadAccess<String> reader) {
-        return new CustomRowKeyReadValue(reader);
+        return new DefaultRowKeyReadValue(reader);
     }
 
     @Override
-    public CustomRowKeyWriteValue createWriteValue(final ObjectWriteAccess<String> writer) {
-        return new DefaultCustomRowKeyWriteValue(writer);
-    }
-
-    /**
-     * {@link WriteValue} to write (custom-) row keys.
-     *
-     * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
-     * @since 4.3
-     *
-     * @apiNote API still experimental. It might change in future releases of KNIME Analytics Platform.
-     */
-    public interface CustomRowKeyWriteValue extends WriteValue<RowKeyReadValue> {
-        /**
-         * Set a unique row key.
-         *
-         * @param key the row key
-         */
-        void setRowKey(String key);
-
-        /**
-         * Set a unique row key.
-         *
-         * @param key the row key
-         */
-        void setRowKey(RowKeyValue key);
+    public RowKeyWriteValue createWriteValue(final ObjectWriteAccess<String> writer) {
+        return new DefaultRowKeyWriteValue(writer);
     }
 
     /* ObjectAccessSpec for CustomRowKeyValueFactories  */
@@ -130,17 +105,12 @@ public final class CustomRowKeyValueFactory
     }
 
     /* Simple CustomRowKeyWriteValue */
-    private final class DefaultCustomRowKeyWriteValue implements CustomRowKeyWriteValue {
+    private final class DefaultRowKeyWriteValue implements RowKeyWriteValue {
 
         private final ObjectWriteAccess<String> m_access;
 
-        public DefaultCustomRowKeyWriteValue(final ObjectWriteAccess<String> access) {
+        public DefaultRowKeyWriteValue(final ObjectWriteAccess<String> access) {
             m_access = access;
-        }
-
-        @Override
-        public void setValue(final RowKeyReadValue value) {
-            m_access.setObject(value.getString());
         }
 
         @Override
@@ -154,19 +124,23 @@ public final class CustomRowKeyValueFactory
             m_access.setObject(key.getString());
         }
 
+        @Override
+        public void setValue(final RowKeyReadValue value) {
+            setRowKey(value.getStringValue());
+        }
     }
 
     /* Simple CustomRowKeyReadValue */
-    private final class CustomRowKeyReadValue implements RowKeyReadValue {
+    private final class DefaultRowKeyReadValue implements RowKeyReadValue {
 
         private final ObjectReadAccess<String> m_access;
 
-        public CustomRowKeyReadValue(final ObjectReadAccess<String> access) {
+        public DefaultRowKeyReadValue(final ObjectReadAccess<String> access) {
             m_access = access;
         }
 
         @Override
-        public DataCell getDataCell() {
+        public StringCell getDataCell() {
             return new StringCell(m_access.getObject());
         }
 

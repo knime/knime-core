@@ -44,69 +44,24 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 5, 2020 (dietzc): created
+ *   Sep 10, 2020 (dietzc): created
  */
-package org.knime.core.data.v2.value;
+package org.knime.core.data.v2;
 
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataValue;
-import org.knime.core.data.v2.ReadValue;
-import org.knime.core.data.v2.RowKeyReadValue;
-import org.knime.core.data.v2.ValueFactory;
-import org.knime.core.data.v2.WriteValue;
-import org.knime.core.data.v2.access.ReadAccess;
-import org.knime.core.data.v2.access.VoidAccess.VoidAccessSpec;
-import org.knime.core.data.v2.access.WriteAccess;
+import org.knime.core.data.RowKeyValue;
 
 /**
- * {@link ValueFactory} for void types. Basically place holders inside a table. Could be used for e.g. empty columns.
+ * Read access to a data row.
  *
- * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
+ * @author Christian Dietz
  * @since 4.3
+ *
+ * @apiNote API still experimental. It might change in future releases of KNIME Analytics Platform.
  */
-public final class VoidRowKeyValueFactory implements ValueFactory<ReadAccess, WriteAccess> {
-
-    /** Stateless instance of VoidRowKeyValue */
-    public static final VoidRowKeyValueFactory INSTANCE = new VoidRowKeyValueFactory();
-
-    private VoidRowKeyValueFactory() {
-    }
-
-    @Override
-    public ReadValue createReadValue(final ReadAccess reader) {
-        return VoidRowKeyReadValue.READ_VALUE_INSTANCE;
-    }
-
-    @Override
-    public WriteValue<?> createWriteValue(final WriteAccess writer) {
-        return VoidRowKeyWriteValue.WRITE_VALUE_INSTANCE;
-    }
-
-    @Override
-    public VoidAccessSpec getSpec() {
-        return VoidAccessSpec.INSTANCE;
-    }
-
-    private static final class VoidRowKeyReadValue implements RowKeyReadValue {
-        private final static VoidRowKeyReadValue READ_VALUE_INSTANCE = new VoidRowKeyReadValue();
-
-        @Override
-        public DataCell getDataCell() {
-            return null;
-        }
-
-        @Override
-        public String getString() {
-            return null;
-        }
-    }
-
-    private static final class VoidRowKeyWriteValue implements WriteValue<DataValue> {
-        private final static VoidRowKeyWriteValue WRITE_VALUE_INSTANCE = new VoidRowKeyWriteValue();
-
-        @Override
-        public void setValue(final DataValue value) {
-        }
-    }
+public interface RowRead extends RowValueRead {
+    /**
+     * @return the {@link RowKeyReadValue}
+     */
+    RowKeyValue getRowKey();
 
 }

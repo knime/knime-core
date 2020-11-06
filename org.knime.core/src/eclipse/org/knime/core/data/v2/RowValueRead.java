@@ -48,11 +48,7 @@
  */
 package org.knime.core.data.v2;
 
-import java.util.NoSuchElementException;
-
 import org.knime.core.data.DataValue;
-import org.knime.core.data.MissingValue;
-import org.knime.core.data.RowKeyValue;
 
 /**
  * Read access to a data row.
@@ -62,7 +58,8 @@ import org.knime.core.data.RowKeyValue;
  *
  * @apiNote API still experimental. It might change in future releases of KNIME Analytics Platform.
  */
-public interface RowAccess {
+public interface RowValueRead {
+
     /**
      * @return number of columns.
      */
@@ -76,26 +73,15 @@ public interface RowAccess {
      *
      * @return the {@link DataValue} at column index or <source>null</source> if {@link DataValue} is not available, for
      *         example if the column has been filtered out. In case {@link #isMissing(int)} returns
-     *         <source>true</source> the returned instance is a {@link MissingValue}.
-     *
-     * @throws NoSuchElementException if the cursor is at an invalid position
+     *         <source>true</source> value of returned {@link DataValue} is not deterministic.
      */
     <D extends DataValue> D getValue(int index);
 
     /**
-     * If <code>true</<code> getValue will return `MissingValue` to get missing value cause.
+     * If <code>true</<code>, calls to {@link #getValue(int)} are non-deterministic.
      *
      * @param index column index
      * @return <code>true</code> if value at index is missing
-     *
-     * @throws NoSuchElementException if the cursor is at an invalid position
      */
     boolean isMissing(int index);
-
-    /**
-     * @return the {@link RowKeyValue}
-     *
-     * @throws NoSuchElementException if the cursor is at an invalid position
-     */
-    RowKeyValue getRowKeyValue();
 }

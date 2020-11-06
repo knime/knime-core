@@ -71,10 +71,7 @@ import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.LongCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
-import org.knime.core.data.v2.access.AccessSpec;
-import org.knime.core.data.v2.access.ReadAccess;
-import org.knime.core.data.v2.access.WriteAccess;
-import org.knime.core.data.v2.value.CustomRowKeyValueFactory;
+import org.knime.core.data.v2.value.DefaultRowKeyValueFactory;
 import org.knime.core.data.v2.value.DoubleListValueFactory;
 import org.knime.core.data.v2.value.DoubleSetValueFactory;
 import org.knime.core.data.v2.value.DoubleSparseListValueFactory;
@@ -86,7 +83,7 @@ import org.knime.core.data.v2.value.LongValueFactory;
 import org.knime.core.data.v2.value.SetValueFactory;
 import org.knime.core.data.v2.value.SparseListValueFactory;
 import org.knime.core.data.v2.value.StringValueFactory;
-import org.knime.core.data.v2.value.VoidRowKeyValueFactory;
+import org.knime.core.data.v2.value.VoidRowKeyFactory;
 import org.knime.core.data.v2.value.VoidValueFactory;
 import org.knime.core.data.v2.value.cell.DataCellValueFactory;
 import org.knime.core.node.InvalidSettingsException;
@@ -97,9 +94,6 @@ import org.knime.core.node.NodeSettingsWO;
  * A ValueSchema wraps a {@link DataTableSpec} by mapping each {@link DataColumnSpec} via it's {@link DataType} to a
  * {@link ValueFactory}. {@link TableBackend} implementations leverage the {@link ValueFactory}s in turn as a canonical,
  * logical access layer, independent from it's physical implementation.
- *
- * NB: All value schemas will always have a {@link ValueFactory} producing a {@link RowKeyReadValue} at column index 0,
- * i.e. {@link ValueSchema#getNumColumns()} equals {@link DataTableSpec#getNumColumns()} + 1;
  *
  * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
  * @noreference This class is not intended to be referenced by clients.
@@ -114,30 +108,16 @@ public final class ValueSchema {
 
     private final Map<DataType, String> m_factoryMapping;
 
-    private final RowKeyType m_rowKeyType;
-
     private final DataCellSerializerFactory m_factory;
 
-    private int m_numColumns;
-
     ValueSchema(final DataTableSpec spec, //
-        final ValueFactory<?, ?>[] factories, //
+        final ValueFactory<?, ?>[] colFactories, //
         final Map<DataType, String> factoryMapping, //
-        final RowKeyType type, //
         final DataCellSerializerFactory factory) {
         m_spec = spec;
-        m_rowKeyType = type;
-        m_factories = factories;
+        m_factories = colFactories;
         m_factoryMapping = factoryMapping;
         m_factory = factory;
-        m_numColumns = m_spec.getNumColumns() + 1;
-    }
-
-    /**
-     * @return the rowKeyType
-     */
-    public final RowKeyType getRowKeyType() {
-        return m_rowKeyType;
     }
 
     /**
@@ -148,36 +128,14 @@ public final class ValueSchema {
     }
 
     /**
-     * Number of columns always corresponds to {@link DataTableSpec#getNumColumns()} of source spec + 1. The additional
-     * entry at colIndex = 0 is reserved for the RowKey column.
+     * Get all value factories of the ValueSchema. The value factory at index 0 is a {@link RowKeyValueFactory}, all
+     * other factories are derived from the source {@link DataTableSpec}. This also means that the length of the
+     * returned array equals to {@link DataTableSpec#getNumColumns()} + 1;
      *
-     * @return the number of columns in this schema.
+     * @return the value factories of this value schema.
      */
-    public final int getNumColumns() {
-        return m_numColumns;
-    }
-
-    /**
-     * Get the {@link ValueFactory} at colIndex.
-     *
-     * @param colIndex the index of a column.
-     * @return the {@link ValueFactory} at colIdx.
-     */
-    public final ValueFactory<ReadAccess, WriteAccess> getFactoryAt(final int colIndex) {
-        @SuppressWarnings("unchecked")
-        final ValueFactory<ReadAccess, WriteAccess> factory =
-            (ValueFactory<ReadAccess, WriteAccess>)m_factories[colIndex];
-        return factory;
-    }
-
-    /**
-     * Get the {@link AccessSpec} at colIndex.
-     *
-     * @param colIndex the index of a column.
-     * @return the {@link AccessSpec} at colIdx.
-     */
-    public final AccessSpec<?, ?> getAccessSpecAt(final int colIndex) {
-        return m_factories[colIndex].getSpec();
+    public final ValueFactory<?, ?>[] getValueFactories() {
+        return m_factories;
     }
 
     /**
@@ -193,14 +151,14 @@ public final class ValueSchema {
 
         final DataCellSerializerFactory cellSerializerFactory = new DataCellSerializerFactory();
         final Map<DataType, String> factoryMapping = new HashMap<>();
-
         final ValueFactory<?, ?>[] factories = new ValueFactory[spec.getNumColumns() + 1];
         factories[0] = getRowKeyFactory(rowKeyType);
+
         for (int i = 1; i < factories.length; i++) {
             final DataType type = spec.getColumnSpec(i - 1).getType();
             factories[i] = findValueFactory(type, factoryMapping, cellSerializerFactory, fileStoreHandler);
         }
-        return new ValueSchema(spec, factories, factoryMapping, rowKeyType, cellSerializerFactory);
+        return new ValueSchema(spec, factories, factoryMapping, cellSerializerFactory);
     }
 
     /** Find the factory for the given type (or DataCellValueFactory) and add it to the mapping */
@@ -239,6 +197,7 @@ public final class ValueSchema {
 
         // Collection types need to be initialized
         if (factory instanceof CollectionValueFactory) {
+            @SuppressWarnings("null")
             final DataType elementType = type.getCollectionElementType();
             final ValueFactory<?, ?> elementFactory =
                 findValueFactory(elementType, factoryMapping, cellSerializerFactory, fileStoreHandler);
@@ -252,23 +211,20 @@ public final class ValueSchema {
      * @param rowKeyType
      * @return value factory to support this rowKeyConfig
      */
-    private static ValueFactory<ReadAccess, WriteAccess> getRowKeyFactory(final RowKeyType rowKeyType) {
-        final ValueFactory<?, ?> factory;
-
-        // TODO auto rowkey
+    private static RowKeyValueFactory<?, ?> getRowKeyFactory(final RowKeyType rowKeyType) {
+        final RowKeyValueFactory<?, ?> factory;
         switch (rowKeyType) {
             case CUSTOM:
-                factory = CustomRowKeyValueFactory.INSTANCE;
+                factory = DefaultRowKeyValueFactory.INSTANCE;
                 break;
             case NOKEY:
-                factory = VoidRowKeyValueFactory.INSTANCE;
+                factory = VoidRowKeyFactory.INSTANCE;
                 break;
             default:
                 throw new IllegalArgumentException("Unknown RowKey configuration " + rowKeyType.name() + ".");
 
         }
-        @SuppressWarnings("unchecked")
-        final ValueFactory<ReadAccess, WriteAccess> cast = (ValueFactory<ReadAccess, WriteAccess>)factory;
+        final RowKeyValueFactory<?, ?> cast = factory;
         return cast;
     }
 
@@ -298,7 +254,7 @@ public final class ValueSchema {
         public static final void save(final ValueSchema schema, final NodeSettingsWO settings) {
 
             // save row key config
-            settings.addString(CFG_ROW_KEY_CONFIG, schema.m_rowKeyType.name());
+            settings.addString(CFG_ROW_KEY_CONFIG, schema.m_factories[0].getClass().getName());
 
             // We need to remember which datatypes have been mapped to which ValueFactory
             final Map<DataType, String> factoryMapping = schema.m_factoryMapping;
@@ -326,7 +282,6 @@ public final class ValueSchema {
             final NodeSettingsRO settings) throws InvalidSettingsException {
 
             // Load the row key config
-            final RowKeyType rowKeyConfig = RowKeyType.valueOf(settings.getString(CFG_ROW_KEY_CONFIG));
 
             // Load the factory mapping
             final DataType[] factoryMappingKeys = settings.getDataTypeArray(CFG_KEY_FACTORY_MAPPING_KEYS);
@@ -342,13 +297,13 @@ public final class ValueSchema {
 
             // Get the factories for the specs
             final ValueFactory<?, ?>[] factories = new ValueFactory[source.getNumColumns() + 1];
-            factories[0] = getRowKeyFactory(rowKeyConfig);
+            factories[0] = instantiateValueFactory(settings.getString(CFG_ROW_KEY_CONFIG));
             for (int i = 1; i < factories.length; i++) {
-                final DataType type = source.getColumnSpec(i - 1).getType();
+                final DataType type = source.getColumnSpec(i).getType();
                 factories[i] = getValueFactory(type, factoryMapping, cellSerializerFactory, dataRepository);
             }
 
-            return new ValueSchema(source, factories, factoryMapping, rowKeyConfig, cellSerializerFactory);
+            return new ValueSchema(source, factories, factoryMapping, cellSerializerFactory);
         }
 
         private static ValueFactory<?, ?> getValueFactory(final DataType type,
@@ -370,15 +325,17 @@ public final class ValueSchema {
 
         private static ValueFactory<?, ?> instantiateValueFactory(final DataType type,
             final Map<DataType, String> factoryMapping) {
+            return instantiateValueFactory(factoryMapping.get(type));
+        }
+
+        private static ValueFactory<?, ?> instantiateValueFactory(final String className) {
             try {
-                final String className = factoryMapping.get(type);
                 final Class<?> clazz = Class.forName(className);
                 final Constructor<?> constructor = clazz.getConstructor();
                 return (ValueFactory<?, ?>)constructor.newInstance();
             } catch (final ClassNotFoundException ex) {
                 throw new IllegalStateException(
-                    "The ValueFactory '" + factoryMapping + "' could not be found. Are you missing a KNIME Extension?",
-                    ex);
+                    "The ValueFactory '" + className + "' could not be found. Are you missing a KNIME Extension?", ex);
             } catch (final IllegalAccessException | IllegalArgumentException | NoSuchMethodException ex) {
                 throw new IllegalStateException("The ValueFactory must have a public empty constructor.", ex);
             } catch (final InvocationTargetException ex) {
@@ -391,5 +348,6 @@ public final class ValueSchema {
                 throw new IllegalStateException("The ValueFactory must not be abstract.", ex);
             }
         }
+
     }
 }

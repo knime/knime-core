@@ -42,41 +42,32 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
+ *
+ * History
+ *   Nov 6, 2020 (dietzc): created
  */
 package org.knime.core.data.v2;
 
+import org.knime.core.data.RowKeyValue;
+
 /**
- * Write access to a data row.
  *
  * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
  * @since 4.3
- *
- * @apiNote API still experimental. It might change in future releases of KNIME Analytics Platform.
  */
-public interface RowWriteAccess {
+public interface RowKeyWriteValue extends WriteValue<RowKeyReadValue> {
 
     /**
-     * Get the write value at a certain column index. Not that when used as {@link RowContainer} clients are required to
-     * fetch the <code>WriteValue</code> on a per row basis (the instance may change between rows, e.g. when advancing
-     * to new pages in the underlying storage). Implementations will know what type to expect (see
-     * {@link org.knime.core.node.ExecutionContext#createRowContainer(org.knime.core.data.DataTableSpec)
-     * ExecutionContext} for an example.)
+     * Set a unique row key.
      *
-     * @param <W> type of the {@link WriteValue}. for an example).
-     * @param index column index of {@link WriteValue}
-     * @return the WriteValue
+     * @param key the row key
      */
-    <W extends WriteValue<?>> W getWriteValue(int index);
+    void setRowKey(String key);
 
     /**
-     * @return number of columns
-     */
-    int getNumColumns();
-
-    /**
-     * Set a value missing at the given index.
+     * Set a unique row key.
      *
-     * @param index of the column.
+     * @param key the row key
      */
-    void setMissing(int index);
+    void setRowKey(RowKeyValue key);
 }

@@ -42,70 +42,49 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
+ *
+ * History
+ *   Nov 9, 2020 (dietzc): created
  */
-package org.knime.core.data;
-
-import org.knime.core.data.container.DataContainer;
-import org.knime.core.data.container.DataContainerDelegate;
-import org.knime.core.data.container.DataContainerSettings;
-import org.knime.core.data.container.ILocalDataRepository;
-import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
-import org.knime.core.data.v2.RowContainer;
-import org.knime.core.node.ExecutionContext;
+package org.knime.core.data.v2;
 
 /**
- * TableBackends are used to read and write tables within KNIME AP nodes.
  *
- * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
- * @author Bernd Wiswedel, KNIME GmbH, Konstanz, Germany
- *
+ * @author dietzc
+ * @param <R>
  * @since 4.3
- *
- * @noreference This interface is not intended to be referenced by clients.
- * @noextend This interface is not intended to be extended by clients.
- *
- * @apiNote This interface can change with future releases of KNIME Analytics Platform.
  */
-public interface TableBackend {
+public interface RowValueWrite<R extends RowValueRead> {
 
     /**
-     * This method should never be called outside {@link DataContainer}s.
+     * Copy all values and row keys from this row access
      *
-     * @param spec the spec of the table
-     * @param settings data container settings
-     * @param repository data repository
-     * @param localRepository the local data repository
-     * @param fileStoreHandler the file store handler
-     *
-     * @return {@link DataContainerDelegate}.
-     *
-     * @noreference This method is not intended to be referenced by clients.
+     * @param values to copy values from
      */
-    DataContainerDelegate create(DataTableSpec spec, DataContainerSettings settings, IDataRepository repository,
-        ILocalDataRepository localRepository, IWriteFileStoreHandler fileStoreHandler);
+    void setFrom(final R values);
 
     /**
-     * Creates a new {@link RowContainer}.
+     * Get the write value at a certain column index. Not that when used as {@link RowContainer} clients are required to
+     * fetch the <code>WriteValue</code> on a per row basis (the instance may change between rows, e.g. when advancing
+     * to new pages in the underlying storage). Implementations will know what type to expect (see
+     * {@link org.knime.core.node.ExecutionContext#createRowContainer(org.knime.core.data.DataTableSpec)
+     * ExecutionContext} for an example.)
      *
-     * @param context the execution context
-     * @param spec of the table
-     * @param settings additional settings
-     * @param repository the data repository
-     * @param handler the file-store handler
-     *
-     * @return a new {@link RowContainer}
+     * @param <W> type of the {@link WriteValue}. for an example).
+     * @param index column index of {@link WriteValue}
+     * @return the WriteValue
      */
-    RowContainer create(ExecutionContext context, DataTableSpec spec, DataContainerSettings settings,
-        IDataRepository repository, IWriteFileStoreHandler handler);
+    <W extends WriteValue<?>> W getWriteValue(int index);
 
     /**
-     * @return short, human-readable name of the TableBackend implementation.
+     * @return number of columns
      */
-    String getShortName();
+    int getNumColumns();
 
     /**
-     * @return human-readble description of the TableBackend.
+     * Set a value missing at the given index.
+     *
+     * @param index of the column.
      */
-    String getDescription();
-
+    void setMissing(int index);
 }

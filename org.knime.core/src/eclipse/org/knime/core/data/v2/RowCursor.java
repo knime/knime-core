@@ -45,10 +45,8 @@
  */
 package org.knime.core.data.v2;
 
-import org.knime.core.data.DataValue;
-
 /**
- * {@link RowAccess} implementation allowing for iterative read access to a data storage.
+ * {@link RowRead} implementation allowing for iterative read access to a data storage.
  *
  * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
  * @since 4.3
@@ -58,31 +56,9 @@ import org.knime.core.data.DataValue;
  * @noreference This interface is not intended to be referenced by clients.
  * @noextend This interface is not intended to be extended by clients.
  */
-public interface RowCursor extends AutoCloseable, RowAccess {
-
+public interface RowCursor extends Cursor<RowRead> {
     /**
-     * Check if there are more rows available.
-     *
-     * @return <source>true</source> if it is save to call {@link #poll()}, false otherwise
+     * @return number of columns in the data row
      */
-    boolean canPoll();
-
-    /**
-     * Polls a row. Cursor has to be polled before accessing the {@link DataValue DataValues}.
-     *
-     * NB: It's not guaranteed that {@link #getValue(int)} will always return a new {@link DataValue} instance, i.e. the
-     * values accessed through the {@link DataValue} instance can or cannot change after {@link #poll()} has been
-     * called.
-     *
-     * @return <source>true</source> if another row can be polled.
-     */
-    boolean poll();
-
-    /**
-     * Closes this resource, relinquishing any underlying resources. This method is invoked automatically on objects
-     * managed by the try-with-resources statement. Potential IOExceptions will be logged. This method is idempotent,
-     * i.e., it can be called repeatedly without side effects.
-     */
-    @Override
-    void close();
+    int getNumColumns();
 }

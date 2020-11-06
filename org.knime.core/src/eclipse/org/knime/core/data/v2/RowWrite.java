@@ -42,70 +42,30 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
+ *
+ * History
+ *   Nov 9, 2020 (dietzc): created
  */
-package org.knime.core.data;
+package org.knime.core.data.v2;
 
-import org.knime.core.data.container.DataContainer;
-import org.knime.core.data.container.DataContainerDelegate;
-import org.knime.core.data.container.DataContainerSettings;
-import org.knime.core.data.container.ILocalDataRepository;
-import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
-import org.knime.core.data.v2.RowContainer;
-import org.knime.core.node.ExecutionContext;
+import org.knime.core.data.RowKeyValue;
 
 /**
- * TableBackends are used to read and write tables within KNIME AP nodes.
+ * TODO required without push for streaming
  *
  * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
- * @author Bernd Wiswedel, KNIME GmbH, Konstanz, Germany
- *
  * @since 4.3
- *
- * @noreference This interface is not intended to be referenced by clients.
- * @noextend This interface is not intended to be extended by clients.
- *
- * @apiNote This interface can change with future releases of KNIME Analytics Platform.
  */
-public interface TableBackend {
+public interface RowWrite extends RowValueWrite<RowRead> {
 
     /**
-     * This method should never be called outside {@link DataContainer}s.
-     *
-     * @param spec the spec of the table
-     * @param settings data container settings
-     * @param repository data repository
-     * @param localRepository the local data repository
-     * @param fileStoreHandler the file store handler
-     *
-     * @return {@link DataContainerDelegate}.
-     *
-     * @noreference This method is not intended to be referenced by clients.
+     * @param rowKey the rowkey to set
      */
-    DataContainerDelegate create(DataTableSpec spec, DataContainerSettings settings, IDataRepository repository,
-        ILocalDataRepository localRepository, IWriteFileStoreHandler fileStoreHandler);
+    void setRowKey(final String rowKey);
 
     /**
-     * Creates a new {@link RowContainer}.
-     *
-     * @param context the execution context
-     * @param spec of the table
-     * @param settings additional settings
-     * @param repository the data repository
-     * @param handler the file-store handler
-     *
-     * @return a new {@link RowContainer}
+     * @param rowKey the rowkey to set as value
      */
-    RowContainer create(ExecutionContext context, DataTableSpec spec, DataContainerSettings settings,
-        IDataRepository repository, IWriteFileStoreHandler handler);
-
-    /**
-     * @return short, human-readable name of the TableBackend implementation.
-     */
-    String getShortName();
-
-    /**
-     * @return human-readble description of the TableBackend.
-     */
-    String getDescription();
+    void setRowKey(final RowKeyValue rowKey);
 
 }

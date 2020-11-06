@@ -76,7 +76,7 @@ import org.knime.core.data.filestore.FileStoreCell;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.NotInWorkflowDataRepository;
 import org.knime.core.data.filestore.internal.ROWriteFileStoreHandler;
-import org.knime.core.data.v2.CustomKeyRowContainer;
+import org.knime.core.data.v2.RowContainer;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.KNIMEJob;
@@ -699,9 +699,9 @@ public class ExecutionContext extends ExecutionMonitor {
     }
 
     /**
-     * Create a new {@link CustomKeyRowContainer} for direct write access to storage. This is a new write API added in
-     * version 4.3, allowing tables to be created without cell creation overhead. An implementation would look as
-     * follows:
+     * Create a new {@link RowContainer} for direct write access to storage. This is a new write API added in version
+     * 4.3, allowing tables to be created without cell creation overhead. An implementation would look as follows:
+     *
      * <pre>
      *     final long nrRows = ...
      *     final DataTableSpec spec = ...
@@ -727,7 +727,7 @@ public class ExecutionContext extends ExecutionMonitor {
      * @implNote Highly experimental API added with KNIME AP 4.3 - Can change with future released of KNIME AP.
      * @since 4.3
      */
-    public final CustomKeyRowContainer createRowContainer(final DataTableSpec spec) {
+    public final RowContainer createRowContainer(final DataTableSpec spec) {
         return createRowContainer(spec, false);
     }
 
@@ -743,7 +743,7 @@ public class ExecutionContext extends ExecutionMonitor {
      * @implNote Highly experimental API added with KNIME AP 4.3 - Can change with future released of KNIME AP.
      * @since 4.3
      */
-    public final CustomKeyRowContainer createRowContainer(final DataTableSpec spec, final boolean initDomains) {
+    public final RowContainer createRowContainer(final DataTableSpec spec, final boolean initDomains) {
         final TableBackend backend = WorkflowTableBackendSettings.getTableBackendForCurrentContext();
         LOGGER.debugWithFormat("Using Table Backend \"%s\".", backend.getClass().getSimpleName());
         return backend.create(this, spec, DataContainerSettings.getDefault().withInitializedDomain(initDomains),

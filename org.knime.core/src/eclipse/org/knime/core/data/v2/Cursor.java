@@ -42,70 +42,40 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
+ *
+ * History
+ *   Nov 6, 2020 (dietzc): created
  */
-package org.knime.core.data;
-
-import org.knime.core.data.container.DataContainer;
-import org.knime.core.data.container.DataContainerDelegate;
-import org.knime.core.data.container.DataContainerSettings;
-import org.knime.core.data.container.ILocalDataRepository;
-import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
-import org.knime.core.data.v2.RowContainer;
-import org.knime.core.node.ExecutionContext;
+package org.knime.core.data.v2;
 
 /**
- * TableBackends are used to read and write tables within KNIME AP nodes.
+ * Cursor allows to iterate over a fixed set of <T> from a data source.
  *
  * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
- * @author Bernd Wiswedel, KNIME GmbH, Konstanz, Germany
- *
+ * @param <T> the type of objects which are polled
  * @since 4.3
- *
- * @noreference This interface is not intended to be referenced by clients.
- * @noextend This interface is not intended to be extended by clients.
- *
- * @apiNote This interface can change with future releases of KNIME Analytics Platform.
  */
-public interface TableBackend {
+public interface Cursor<T> extends AutoCloseable {
 
     /**
-     * This method should never be called outside {@link DataContainer}s.
+     * Forwards the cursor by one to the next element.
      *
-     * @param spec the spec of the table
-     * @param settings data container settings
-     * @param repository data repository
-     * @param localRepository the local data repository
-     * @param fileStoreHandler the file store handler
+     * NB: It's not guaranteed that <T> will always be a new instance.
      *
-     * @return {@link DataContainerDelegate}.
-     *
-     * @noreference This method is not intended to be referenced by clients.
+     * @return the element at the current cursor position or null if no new element available
      */
-    DataContainerDelegate create(DataTableSpec spec, DataContainerSettings settings, IDataRepository repository,
-        ILocalDataRepository localRepository, IWriteFileStoreHandler fileStoreHandler);
+    T forward();
 
     /**
-     * Creates a new {@link RowContainer}.
-     *
-     * @param context the execution context
-     * @param spec of the table
-     * @param settings additional settings
-     * @param repository the data repository
-     * @param handler the file-store handler
-     *
-     * @return a new {@link RowContainer}
+     * @return <source>true</source> if more elements are available.
      */
-    RowContainer create(ExecutionContext context, DataTableSpec spec, DataContainerSettings settings,
-        IDataRepository repository, IWriteFileStoreHandler handler);
+    boolean canForward();
 
     /**
-     * @return short, human-readable name of the TableBackend implementation.
+     * Closes this resource, relinquishing any underlying resources. This method is invoked automatically on objects
+     * managed by the try-with-resources statement. Potential IOExceptions will be logged. This method is idempotent,
+     * i.e., it can be called repeatedly without side effects.
      */
-    String getShortName();
-
-    /**
-     * @return human-readble description of the TableBackend.
-     */
-    String getDescription();
-
+    @Override
+    void close();
 }

@@ -42,35 +42,79 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
+ *
+ * History
+ *   Oct 5, 2020 (dietzc): created
  */
-package org.knime.core.data.v2;
+package org.knime.core.data.v2.value;
 
 import org.knime.core.data.RowKeyValue;
-import org.knime.core.node.BufferedDataTable;
+import org.knime.core.data.def.StringCell;
+import org.knime.core.data.v2.RowKeyReadValue;
+import org.knime.core.data.v2.RowKeyValueFactory;
+import org.knime.core.data.v2.RowKeyWriteValue;
+import org.knime.core.data.v2.ValueFactory;
+import org.knime.core.data.v2.access.ReadAccess;
+import org.knime.core.data.v2.access.VoidAccess.VoidAccessSpec;
+import org.knime.core.data.v2.access.WriteAccess;
 
 /**
- * {@link RowWriteCursor} implementation which allows the API consumer to provide custom {@link RowKeyValue}s as
- * strings. Creates a new {@link BufferedDataTable} on {@link #finish()};
- *
- * <p>For code examples and the creation of row containers, see the corresponding methods in
- * {@link org.knime.core.node.ExecutionContext#createRowContainer(org.knime.core.data.DataTableSpec) ExecutionContext}.
+ * {@link ValueFactory} for void types. Basically place holders inside a table. Could be used for e.g. empty columns.
  *
  * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
  * @since 4.3
- * @noextend This interface is not intended to be extended by clients.
- * @noimplement This interface is not intended to be implemented by clients.
- * @apiNote API still experimental. It might change in future releases of KNIME Analytics Platform.
  */
-public interface CustomKeyRowContainer extends RowContainer {
+public final class VoidRowKeyFactory implements RowKeyValueFactory<ReadAccess, WriteAccess> {
 
-    /**
-     * @param key string representation of the unique row key.
-     */
-    void setRowKey(String key);
+    /** Stateless instance of VoidRowKeyValue */
+    public static final VoidRowKeyFactory INSTANCE = new VoidRowKeyFactory();
 
-    /**
-     * @param key {@link RowKeyValue} representation of the unique row key.
-     */
-    void setRowKey(RowKeyValue key);
+    private VoidRowKeyFactory() {
+    }
+
+    @Override
+    public RowKeyReadValue createReadValue(final ReadAccess reader) {
+        return VoidRowKeyReadValue.READ_VALUE_INSTANCE;
+    }
+
+    @Override
+    public RowKeyWriteValue createWriteValue(final WriteAccess writer) {
+        return VoidRowKeyWriteValue.WRITE_VALUE_INSTANCE;
+    }
+
+    @Override
+    public VoidAccessSpec getSpec() {
+        return VoidAccessSpec.INSTANCE;
+    }
+
+    private static final class VoidRowKeyReadValue implements RowKeyReadValue {
+        private final static VoidRowKeyReadValue READ_VALUE_INSTANCE = new VoidRowKeyReadValue();
+
+        @Override
+        public StringCell getDataCell() {
+            return null;
+        }
+
+        @Override
+        public String getString() {
+            return null;
+        }
+    }
+
+    private static final class VoidRowKeyWriteValue implements RowKeyWriteValue {
+        private final static VoidRowKeyWriteValue WRITE_VALUE_INSTANCE = new VoidRowKeyWriteValue();
+
+        @Override
+        public void setRowKey(final String key) {
+        }
+
+        @Override
+        public void setRowKey(final RowKeyValue key) {
+        }
+
+        @Override
+        public void setValue(final RowKeyReadValue value) {
+        }
+    }
 
 }

@@ -62,6 +62,7 @@ import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.filestore.internal.NotInWorkflowDataRepository;
 import org.knime.core.data.v2.RowCursor;
+import org.knime.core.data.v2.RowRead;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.DefaultNodeProgressMonitor;
@@ -122,11 +123,12 @@ public class FallbackIteratorTest {
         final BufferedDataTable fullTable = createTable(0, 16, 16, 0, 16);
         try (RowCursor cursor = fullTable.cursor(); CloseableRowIterator it = fullTable.iterator()) {
             assertEquals(cursor.getNumColumns(), fullTable.getDataTableSpec().getNumColumns());
-            while (cursor.poll()) {
+            while (cursor.canForward()) {
                 assertTrue(it.hasNext());
-                DataRow row = it.next();
+                final RowRead access = cursor.forward();
+                final DataRow row = it.next();
                 for (int i = 0; i < cursor.getNumColumns(); i++) {
-                    cursor.getValue(i).equals(row.getCell(i));
+                    access.getValue(i).equals(row.getCell(i));
                 }
             }
         }

@@ -42,20 +42,29 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
+ *
+ * History
+ *   Nov 8, 2020 (dietzc): created
  */
 package org.knime.core.data.v2;
 
 import org.knime.core.data.RowKeyValue;
+import org.knime.core.data.StringValue;
+import org.knime.core.data.def.StringCell;
 
 /**
- * Marker interface for a {@link ReadValue} to access row keys. Only (but always) present in {@link ValueSchema}s at
- * column index 0.
+ * TODO
  *
  * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
  * @since 4.3
- *
- * @apiNote API still experimental. It might change in future releases of KNIME Analytics Platform.
  */
-public interface RowKeyReadValue extends ReadValue, RowKeyValue {
-    // NB: marker interface
+public interface RowKeyReadValue extends ReadValue, StringValue, RowKeyValue {
+
+    @Override
+    default String getStringValue() {
+        return getString();
+    }
+
+    @Override
+    StringCell getDataCell();
 }

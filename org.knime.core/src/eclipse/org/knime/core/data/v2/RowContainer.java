@@ -42,21 +42,40 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
+ *
+ * History
+ *   Nov 9, 2020 (dietzc): created
  */
 package org.knime.core.data.v2;
+
+import java.io.IOException;
 
 import org.knime.core.node.BufferedDataTable;
 
 /**
- * TODO
- * 
- * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
- * 
- * @apiNote API still experimental. It might change in future releases of KNIME
- *          Analytics Platform.
+ * Container to store new rows. RowContainers automatically extend themselves in case more rows are added.
  *
- * @noreference This interface is not intended to be referenced by clients.
- * @noextend This interface is not intended to be extended by clients.
+ * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
+ * @since 4.3
  */
-public interface RowContainer extends RowWriteCursor<BufferedDataTable> {
+public interface RowContainer extends AutoCloseable {
+
+    /**
+     * Create a new {@link Cursor} over {@link RowWrite}s.
+     *
+     * @implNote NB: Currently only a single cursor is supported i.e. always the same cursor will be returned by this
+     *           method.
+     *
+     * @return a cursor.
+     */
+    RowWriteCursor createCursor();
+
+    /**
+     * Turn {@link RowContainer} content into a {@link BufferedDataTable}. Subsequent calls to {@link #close()} will be
+     * ignored.
+     *
+     * @return a new BufferedDataTable representing
+     * @throws IOException
+     */
+    BufferedDataTable finish() throws IOException;
 }
