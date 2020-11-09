@@ -48,6 +48,12 @@
  */
 package org.knime.core.data.container;
 
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.Period;
+import java.time.ZonedDateTime;
 import java.util.stream.Stream;
 
 import org.knime.core.data.BooleanValue;
@@ -75,24 +81,42 @@ import org.knime.core.data.v2.access.ByteArrayAccess.VarBinaryWriteAccess;
 import org.knime.core.data.v2.access.DoubleAccess.DoubleAccessSpec;
 import org.knime.core.data.v2.access.DoubleAccess.DoubleReadAccess;
 import org.knime.core.data.v2.access.DoubleAccess.DoubleWriteAccess;
+import org.knime.core.data.v2.access.DurationAccess.DurationAccessSpec;
+import org.knime.core.data.v2.access.DurationAccess.DurationReadAccess;
+import org.knime.core.data.v2.access.DurationAccess.DurationWriteAccess;
 import org.knime.core.data.v2.access.IntAccess.IntAccessSpec;
 import org.knime.core.data.v2.access.IntAccess.IntReadAccess;
 import org.knime.core.data.v2.access.IntAccess.IntWriteAccess;
 import org.knime.core.data.v2.access.ListAccess.ListAccessSpec;
 import org.knime.core.data.v2.access.ListAccess.ListReadAccess;
 import org.knime.core.data.v2.access.ListAccess.ListWriteAccess;
+import org.knime.core.data.v2.access.LocalDateAccess.LocalDateAccessSpec;
+import org.knime.core.data.v2.access.LocalDateAccess.LocalDateReadAccess;
+import org.knime.core.data.v2.access.LocalDateAccess.LocalDateWriteAccess;
+import org.knime.core.data.v2.access.LocalDateTimeAccess.LocalDateTimeAccessSpec;
+import org.knime.core.data.v2.access.LocalDateTimeAccess.LocalDateTimeReadAccess;
+import org.knime.core.data.v2.access.LocalDateTimeAccess.LocalDateTimeWriteAccess;
+import org.knime.core.data.v2.access.LocalTimeAccess.LocalTimeAccessSpec;
+import org.knime.core.data.v2.access.LocalTimeAccess.LocalTimeReadAccess;
+import org.knime.core.data.v2.access.LocalTimeAccess.LocalTimeWriteAccess;
 import org.knime.core.data.v2.access.LongAccess.LongAccessSpec;
 import org.knime.core.data.v2.access.LongAccess.LongReadAccess;
 import org.knime.core.data.v2.access.LongAccess.LongWriteAccess;
 import org.knime.core.data.v2.access.ObjectAccess.ObjectAccessSpec;
 import org.knime.core.data.v2.access.ObjectAccess.ObjectReadAccess;
 import org.knime.core.data.v2.access.ObjectAccess.ObjectWriteAccess;
+import org.knime.core.data.v2.access.PeriodAccess.PeriodAccessSpec;
+import org.knime.core.data.v2.access.PeriodAccess.PeriodReadAccess;
+import org.knime.core.data.v2.access.PeriodAccess.PeriodWriteAccess;
 import org.knime.core.data.v2.access.ReadAccess;
 import org.knime.core.data.v2.access.StructAccess.StructAccessSpec;
 import org.knime.core.data.v2.access.StructAccess.StructReadAccess;
 import org.knime.core.data.v2.access.StructAccess.StructWriteAccess;
 import org.knime.core.data.v2.access.VoidAccess.VoidAccessSpec;
 import org.knime.core.data.v2.access.WriteAccess;
+import org.knime.core.data.v2.access.ZonedDateTimeAccess.ZonedDateTimeAccessSpec;
+import org.knime.core.data.v2.access.ZonedDateTimeAccess.ZonedDateTimeReadAccess;
+import org.knime.core.data.v2.access.ZonedDateTimeAccess.ZonedDateTimeWriteAccess;
 
 /**
  * Mapper to map {@link AccessSpec} to the corresponding buffered access implementation.
@@ -155,6 +179,36 @@ final class BufferedAccessSpecMapper implements AccessSpecMapper<BufferedAccess>
     @Override
     public BufferedAccess visit(final ListAccessSpec<?, ?> spec) {
         return new BufferedListAccess<>(spec);
+    }
+
+    @Override
+    public BufferedAccess visit(final LocalDateAccessSpec spec) {
+        return new BufferedLocalDateAcccess();
+    }
+
+    @Override
+    public BufferedAccess visit(final LocalTimeAccessSpec spec) {
+        return new BufferedLocalTimeAcccess();
+    }
+
+    @Override
+    public BufferedAccess visit(final LocalDateTimeAccessSpec spec) {
+        return new BufferedLocalDateTimeAcccess();
+    }
+
+    @Override
+    public BufferedAccess visit(final DurationAccessSpec spec) {
+        return new BufferedDurationAcccess();
+    }
+
+    @Override
+    public BufferedAccess visit(final PeriodAccessSpec spec) {
+        return new BufferedPeriodAcccess();
+    }
+
+    @Override
+    public BufferedAccess visit(final ZonedDateTimeAccessSpec spec) {
+        return new BufferedZonedDateTimeAcccess();
     }
 
     private static final class BufferedByteArrayAccess
@@ -690,6 +744,155 @@ final class BufferedAccessSpecMapper implements AccessSpecMapper<BufferedAccess>
             for (int i = 0; i < size; i++) {
                 m_inner[i] = m_innerSpecs.accept(BufferedAccessSpecMapper.INSTANCE);
             }
+        }
+    }
+
+    private static final class BufferedLocalDateAcccess
+        implements LocalDateReadAccess, LocalDateWriteAccess, BufferedAccess {
+        private LocalDate m_val;
+
+        @Override
+        public boolean isMissing() {
+            return m_val == null;
+        }
+
+        @Override
+        public void setMissing() {
+            m_val = null;
+        }
+
+        @Override
+        public void setLocalDate(final LocalDate val) {
+            m_val = val;
+        }
+
+        @Override
+        public LocalDate getLocalDate() {
+            return m_val;
+        }
+    }
+
+    private static final class BufferedLocalTimeAcccess
+        implements LocalTimeReadAccess, LocalTimeWriteAccess, BufferedAccess {
+        private LocalTime m_val;
+
+        @Override
+        public boolean isMissing() {
+            return m_val == null;
+        }
+
+        @Override
+        public void setMissing() {
+            m_val = null;
+        }
+
+        @Override
+        public void setLocalTime(final LocalTime val) {
+            m_val = val;
+        }
+
+        @Override
+        public LocalTime getLocalTime() {
+            return m_val;
+        }
+    }
+
+    private static final class BufferedLocalDateTimeAcccess
+        implements LocalDateTimeReadAccess, LocalDateTimeWriteAccess, BufferedAccess {
+        private LocalDateTime m_val;
+
+        @Override
+        public boolean isMissing() {
+            return m_val == null;
+        }
+
+        @Override
+        public void setMissing() {
+            m_val = null;
+        }
+
+        @Override
+        public void setLocalDateTime(final LocalDateTime val) {
+            m_val = val;
+        }
+
+        @Override
+        public LocalDateTime getLocalDateTime() {
+            return m_val;
+        }
+    }
+
+    private static final class BufferedDurationAcccess
+        implements DurationReadAccess, DurationWriteAccess, BufferedAccess {
+        private Duration m_val;
+
+        @Override
+        public boolean isMissing() {
+            return m_val == null;
+        }
+
+        @Override
+        public void setMissing() {
+            m_val = null;
+        }
+
+        @Override
+        public void setDuration(final Duration val) {
+            m_val = val;
+        }
+
+        @Override
+        public Duration getDuration() {
+            return m_val;
+        }
+    }
+
+    private static final class BufferedPeriodAcccess implements PeriodReadAccess, PeriodWriteAccess, BufferedAccess {
+        private Period m_val;
+
+        @Override
+        public boolean isMissing() {
+            return m_val == null;
+        }
+
+        @Override
+        public void setMissing() {
+            m_val = null;
+        }
+
+        @Override
+        public void setPeriod(final Period val) {
+            m_val = val;
+        }
+
+        @Override
+        public Period getPeriod() {
+            return m_val;
+        }
+    }
+
+    private static final class BufferedZonedDateTimeAcccess
+        implements ZonedDateTimeReadAccess, ZonedDateTimeWriteAccess, BufferedAccess {
+        private ZonedDateTime m_val;
+
+        @Override
+        public boolean isMissing() {
+            return m_val == null;
+        }
+
+        @Override
+        public void setMissing() {
+            m_val = null;
+        }
+
+        @Override
+        public void setZonedDateTime(final ZonedDateTime val) {
+            m_val = val;
+        }
+
+        @Override
+        public ZonedDateTime getZonedDateTime() {
+            return m_val;
         }
     }
 }
