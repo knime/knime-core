@@ -65,14 +65,28 @@ import org.knime.core.data.TableBackend;
 import org.knime.core.data.collection.ListCell;
 import org.knime.core.data.collection.SetCell;
 import org.knime.core.data.collection.SparseListCell;
+import org.knime.core.data.def.BooleanCell;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.LongCell;
+import org.knime.core.data.def.StringCell;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
+import org.knime.core.data.v2.value.BooleanListValueFactory;
+import org.knime.core.data.v2.value.BooleanSetValueFactory;
+import org.knime.core.data.v2.value.BooleanSparseListValueFactory;
 import org.knime.core.data.v2.value.DefaultRowKeyValueFactory;
 import org.knime.core.data.v2.value.DoubleListValueFactory;
 import org.knime.core.data.v2.value.DoubleSetValueFactory;
 import org.knime.core.data.v2.value.DoubleSparseListValueFactory;
 import org.knime.core.data.v2.value.IntListValueFactory;
+import org.knime.core.data.v2.value.IntSetValueFactory;
+import org.knime.core.data.v2.value.IntSparseListValueFactory;
+import org.knime.core.data.v2.value.LongListValueFactory;
+import org.knime.core.data.v2.value.LongSetValueFactory;
+import org.knime.core.data.v2.value.LongSparseListValueFactory;
+import org.knime.core.data.v2.value.StringListValueFactory;
+import org.knime.core.data.v2.value.StringSetValueFactory;
+import org.knime.core.data.v2.value.StringSparseListValueFactory;
 import org.knime.core.data.v2.value.VoidRowKeyFactory;
 import org.knime.core.data.v2.value.VoidValueFactory;
 import org.knime.core.data.v2.value.cell.DataCellValueFactory;
@@ -161,14 +175,39 @@ public final class ValueSchema {
         // Use special value factories for list/sets of primitive types
         if (type == null) {
             factory = VoidValueFactory.INSTANCE;
+            // Sparse lists
         } else if (DataType.getType(SparseListCell.class, DoubleCell.TYPE).equals(type)) {
             factory = DoubleSparseListValueFactory.INSTANCE;
+        } else if (DataType.getType(SparseListCell.class, IntCell.TYPE).equals(type)) {
+            factory = IntSparseListValueFactory.INSTANCE;
+        } else if (DataType.getType(SparseListCell.class, LongCell.TYPE).equals(type)) {
+            factory = LongSparseListValueFactory.INSTANCE;
+        } else if (DataType.getType(SparseListCell.class, StringCell.TYPE).equals(type)) {
+            factory = StringSparseListValueFactory.INSTANCE;
+        } else if (DataType.getType(SparseListCell.class, BooleanCell.TYPE).equals(type)) {
+            factory = BooleanSparseListValueFactory.INSTANCE;
+            // Lists
         } else if (DataType.getType(ListCell.class, DoubleCell.TYPE).equals(type)) {
             factory = DoubleListValueFactory.INSTANCE;
         } else if (DataType.getType(ListCell.class, IntCell.TYPE).equals(type)) {
             factory = IntListValueFactory.INSTANCE;
+        } else if (DataType.getType(ListCell.class, LongCell.TYPE).equals(type)) {
+            factory = LongListValueFactory.INSTANCE;
+        } else if (DataType.getType(ListCell.class, StringCell.TYPE).equals(type)) {
+            factory = StringListValueFactory.INSTANCE;
+        } else if (DataType.getType(ListCell.class, BooleanCell.TYPE).equals(type)) {
+            factory = BooleanListValueFactory.INSTANCE;
+            // Sets
         } else if (DataType.getType(SetCell.class, DoubleCell.TYPE).equals(type)) {
             factory = DoubleSetValueFactory.INSTANCE;
+        } else if (DataType.getType(SetCell.class, IntCell.TYPE).equals(type)) {
+            factory = IntSetValueFactory.INSTANCE;
+        } else if (DataType.getType(SetCell.class, LongCell.TYPE).equals(type)) {
+            factory = LongSetValueFactory.INSTANCE;
+        } else if (DataType.getType(SetCell.class, StringCell.TYPE).equals(type)) {
+            factory = StringSetValueFactory.INSTANCE;
+        } else if (DataType.getType(SetCell.class, BooleanCell.TYPE).equals(type)) {
+            factory = BooleanSetValueFactory.INSTANCE;
         } else {
             // Get the value factory from the extension point
             final Optional<Class<? extends ValueFactory<?, ?>>> factoryClass =

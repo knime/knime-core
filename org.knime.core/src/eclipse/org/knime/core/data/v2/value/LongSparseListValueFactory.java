@@ -51,31 +51,31 @@ package org.knime.core.data.v2.value;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.OptionalInt;
-import java.util.PrimitiveIterator.OfDouble;
+import java.util.PrimitiveIterator.OfLong;
 
-import org.knime.core.data.DoubleValue;
+import org.knime.core.data.LongValue;
 import org.knime.core.data.collection.SparseListCell;
-import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.def.LongCell;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
 import org.knime.core.data.v2.access.AccessSpec;
-import org.knime.core.data.v2.access.DoubleAccess.DoubleAccessSpec;
-import org.knime.core.data.v2.access.DoubleAccess.DoubleReadAccess;
-import org.knime.core.data.v2.access.DoubleAccess.DoubleWriteAccess;
 import org.knime.core.data.v2.access.IntAccess.IntAccessSpec;
 import org.knime.core.data.v2.access.IntAccess.IntReadAccess;
 import org.knime.core.data.v2.access.IntAccess.IntWriteAccess;
 import org.knime.core.data.v2.access.ListAccess.ListAccessSpec;
 import org.knime.core.data.v2.access.ListAccess.ListReadAccess;
 import org.knime.core.data.v2.access.ListAccess.ListWriteAccess;
+import org.knime.core.data.v2.access.LongAccess.LongAccessSpec;
+import org.knime.core.data.v2.access.LongAccess.LongReadAccess;
+import org.knime.core.data.v2.access.LongAccess.LongWriteAccess;
 import org.knime.core.data.v2.access.StructAccess.StructAccessSpec;
 import org.knime.core.data.v2.access.StructAccess.StructReadAccess;
 import org.knime.core.data.v2.access.StructAccess.StructWriteAccess;
-import org.knime.core.data.v2.value.DoubleListValueFactory.DoubleListReadValue;
-import org.knime.core.data.v2.value.DoubleListValueFactory.DoubleListWriteValue;
-import org.knime.core.data.v2.value.DoubleValueFactory.DoubleReadValue;
-import org.knime.core.data.v2.value.DoubleValueFactory.DoubleWriteValue;
+import org.knime.core.data.v2.value.LongListValueFactory.LongListReadValue;
+import org.knime.core.data.v2.value.LongListValueFactory.LongListWriteValue;
+import org.knime.core.data.v2.value.LongValueFactory.LongReadValue;
+import org.knime.core.data.v2.value.LongValueFactory.LongWriteValue;
 import org.knime.core.data.v2.value.SparseListValueFactory.AbstractSparseIterator;
 import org.knime.core.data.v2.value.SparseListValueFactory.DefaultSparseListReadValue;
 import org.knime.core.data.v2.value.SparseListValueFactory.DefaultSparseListWriteValue;
@@ -83,157 +83,147 @@ import org.knime.core.data.v2.value.SparseListValueFactory.SparseListReadValue;
 import org.knime.core.data.v2.value.SparseListValueFactory.SparseListWriteValue;
 
 /**
- * {@link ValueFactory} implementation for {@link SparseListCell} with elements of type {@link DoubleCell}.
+ * {@link ValueFactory} implementation for {@link SparseListCell} with elements of type {@link LongCell}.
  *
  * @author Benjamin Wilhelm, KNIME GmbH, Konstanz, Germany
  * @since 4.3
  */
-public final class DoubleSparseListValueFactory implements ValueFactory<StructReadAccess, StructWriteAccess> {
+public final class LongSparseListValueFactory implements ValueFactory<StructReadAccess, StructWriteAccess> {
 
-    /** A stateless instance of {@link DoubleSparseListValueFactory} */
-    public static final DoubleSparseListValueFactory INSTANCE = new DoubleSparseListValueFactory();
+    /** A stateless instance of {@link LongSparseListValueFactory} */
+    public static final LongSparseListValueFactory INSTANCE = new LongSparseListValueFactory();
 
     @Override
     public AccessSpec<StructReadAccess, StructWriteAccess> getSpec() {
-        final DoubleAccessSpec defaultAccessSpec = DoubleAccessSpec.INSTANCE;
+        final LongAccessSpec defaultAccessSpec = LongAccessSpec.INSTANCE;
         final IntAccessSpec sizeAccessSpec = IntAccessSpec.INSTANCE;
         final ListAccessSpec<IntReadAccess, IntWriteAccess> indicesAccessSpec =
             new ListAccessSpec<>(IntValueFactory.INSTANCE);
-        final ListAccessSpec<DoubleReadAccess, DoubleWriteAccess> listAccessSpec =
-            new ListAccessSpec<>(DoubleValueFactory.INSTANCE);
+        final ListAccessSpec<LongReadAccess, LongWriteAccess> listAccessSpec =
+            new ListAccessSpec<>(LongValueFactory.INSTANCE);
         return new StructAccessSpec(defaultAccessSpec, sizeAccessSpec, indicesAccessSpec, listAccessSpec);
     }
 
     @Override
-    public DoubleSparseListReadValue createReadValue(final StructReadAccess reader) {
-        return new DefaultDoubleSparseListReadValue(reader.getInnerReadAccessAt(0), reader.getInnerReadAccessAt(1),
+    public LongSparseListReadValue createReadValue(final StructReadAccess reader) {
+        return new DefaultLongSparseListReadValue(reader.getInnerReadAccessAt(0), reader.getInnerReadAccessAt(1),
             reader.getInnerReadAccessAt(2), reader.getInnerReadAccessAt(3));
     }
 
     @Override
-    public DoubleSparseListWriteValue createWriteValue(final StructWriteAccess writer) {
-        return new DefaultDoubleSparseListWriteValue(writer.getWriteAccessAt(0), writer.getWriteAccessAt(1),
+    public LongSparseListWriteValue createWriteValue(final StructWriteAccess writer) {
+        return new DefaultLongSparseListWriteValue(writer.getWriteAccessAt(0), writer.getWriteAccessAt(1),
             writer.getWriteAccessAt(2), writer.getWriteAccessAt(3));
     }
 
     /**
-     * {@link ReadValue} equivalent to {@link SparseListCell} with {@link DoubleCell} elements.
+     * {@link ReadValue} equivalent to {@link SparseListCell} with {@link LongCell} elements.
      *
      * @since 4.3
      */
-    public static interface DoubleSparseListReadValue extends SparseListReadValue, DoubleListReadValue {
+    public static interface LongSparseListReadValue extends SparseListReadValue, LongListReadValue {
     }
 
     /**
-     * {@link WriteValue} equivalent to {@link SparseListCell} with {@link DoubleCell} elements.
+     * {@link WriteValue} equivalent to {@link SparseListCell} with {@link LongCell} elements.
      *
      * @since 4.3
      */
-    public static interface DoubleSparseListWriteValue extends SparseListWriteValue {
+    public static interface LongSparseListWriteValue extends SparseListWriteValue {
 
         /**
          * @param values the values to set
          * @param defaultElement the default element which should not be saved multiple times
          */
-        void setValue(double[] values, double defaultElement);
+        void setValue(long[] values, long defaultElement);
     }
 
-    private static final class DefaultDoubleSparseListReadValue
-        extends DefaultSparseListReadValue<DoubleReadValue, DoubleListReadValue, DoubleReadAccess>
-        implements DoubleSparseListReadValue {
+    private static final class DefaultLongSparseListReadValue
+        extends DefaultSparseListReadValue<LongReadValue, LongListReadValue, LongReadAccess>
+        implements LongSparseListReadValue {
 
-        private DefaultDoubleSparseListReadValue(final DoubleReadAccess defaultAccess, final IntReadAccess sizeAccess,
+        private DefaultLongSparseListReadValue(final LongReadAccess defaultAccess, final IntReadAccess sizeAccess,
             final ListReadAccess indicesAccess, final ListReadAccess listAccess) {
-            super(defaultAccess, sizeAccess, indicesAccess, listAccess, DoubleValueFactory.INSTANCE,
-                DoubleListValueFactory.INSTANCE);
+            super(defaultAccess, sizeAccess, indicesAccess, listAccess, LongValueFactory.INSTANCE,
+                LongListValueFactory.INSTANCE);
         }
 
-        private double getDoubleFromStorage(final int storageIndex) {
-            return m_storageList.getDouble(storageIndex);
+        private long getLongFromStorage(final int storageIndex) {
+            return m_storageList.getLong(storageIndex);
         }
 
         @Override
-        public double getDouble(final int index) {
+        public long getLong(final int index) {
             final OptionalInt storageIndex = storageIndexForIndex(index);
             if (storageIndex.isPresent()) {
-                return getDoubleFromStorage(storageIndex.getAsInt());
+                return getLongFromStorage(storageIndex.getAsInt());
             } else {
-                return m_defaultValue.getDoubleValue();
+                return m_defaultValue.getLongValue();
             }
         }
 
         @Override
-        public double[] getDoubleArray() {
-            final double[] values = new double[size()];
-            final OfDouble iterator = doubleIterator();
+        public long[] getLongArray() {
+            final long[] values = new long[size()];
+            final OfLong iterator = longIterator();
             for (int i = 0; i < values.length; i++) {
-                values[i] = iterator.nextDouble();
+                values[i] = iterator.nextLong();
             }
             return values;
         }
 
         @Override
-        public OfDouble doubleIterator() {
-            return new SparseDoubleIterator();
+        public OfLong longIterator() {
+            return new SparseLongIterator();
         }
 
-        private final class SparseDoubleIterator extends AbstractSparseIterator<Double> implements OfDouble {
+        private final class SparseLongIterator extends AbstractSparseIterator<Long> implements OfLong {
 
-            private final double m_default = m_defaultValue.getDoubleValue();
+            private final long m_default = m_defaultValue.getLongValue();
 
-            private SparseDoubleIterator() {
+            private SparseLongIterator() {
                 super(size(), m_storageList.size(), m_storageIndices::getInt);
             }
 
             @Override
-            public double nextDouble() {
+            public long nextLong() {
                 final OptionalInt storageIndex = nextStorageIndex();
                 if (storageIndex.isPresent()) {
-                    return getDoubleFromStorage(storageIndex.getAsInt());
+                    return getLongFromStorage(storageIndex.getAsInt());
                 } else {
                     return m_default;
                 }
             }
         }
-
-        @Override
-        public int getLength() {
-            return size();
-        }
-
-        @Override
-        public double getValue(final int index) {
-            return getDouble(index);
-        }
     }
 
-    private static final class DefaultDoubleSparseListWriteValue
-        extends DefaultSparseListWriteValue<DoubleValue, DoubleWriteValue, DoubleListWriteValue, DoubleWriteAccess>
-        implements DoubleSparseListWriteValue {
+    private static final class DefaultLongSparseListWriteValue
+        extends DefaultSparseListWriteValue<LongValue, LongWriteValue, LongListWriteValue, LongWriteAccess>
+        implements LongSparseListWriteValue {
 
-        protected DefaultDoubleSparseListWriteValue(final DoubleWriteAccess defaultAccess,
-            final IntWriteAccess sizeAccess, final ListWriteAccess indicesAccess, final ListWriteAccess listAccess) {
-            super(defaultAccess, sizeAccess, indicesAccess, listAccess, DoubleValueFactory.INSTANCE,
-                DoubleListValueFactory.INSTANCE);
+        protected DefaultLongSparseListWriteValue(final LongWriteAccess defaultAccess, final IntWriteAccess sizeAccess,
+            final ListWriteAccess indicesAccess, final ListWriteAccess listAccess) {
+            super(defaultAccess, sizeAccess, indicesAccess, listAccess, LongValueFactory.INSTANCE,
+                LongListValueFactory.INSTANCE);
         }
 
         @Override
-        public void setValue(final double[] values, final double defaultElement) {
+        public void setValue(final long[] values, final long defaultElement) {
             final List<Integer> storageIndices = new ArrayList<>();
-            final List<Double> storageList = new ArrayList<>();
+            final List<Long> storageList = new ArrayList<>();
 
             for (int i = 0; i < values.length; i++) {
-                final double v = values[i];
+                final long v = values[i];
                 if (v != defaultElement) {
                     storageIndices.add(i);
                     storageList.add(v);
                 }
             }
 
-            m_defaultValue.setDoubleValue(defaultElement);
+            m_defaultValue.setLongValue(defaultElement);
             m_sizeValue.setIntValue(storageList.size());
             m_storageIndices.setValue(storageIndices.stream().mapToInt(Integer::intValue).toArray());
-            m_storageList.setValue(storageList.stream().mapToDouble(Double::doubleValue).toArray());
+            m_storageList.setValue(storageList.stream().mapToLong(Long::longValue).toArray());
         }
     }
 }

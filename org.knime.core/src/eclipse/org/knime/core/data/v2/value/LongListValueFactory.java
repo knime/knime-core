@@ -50,130 +50,131 @@ package org.knime.core.data.v2.value;
 
 import java.util.Arrays;
 import java.util.PrimitiveIterator;
-import java.util.PrimitiveIterator.OfInt;
+import java.util.PrimitiveIterator.OfLong;
 
-import org.knime.core.data.IntValue;
+import org.knime.core.data.LongValue;
 import org.knime.core.data.collection.ListCell;
 import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.LongCell;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
-import org.knime.core.data.v2.access.IntAccess.IntReadAccess;
-import org.knime.core.data.v2.access.IntAccess.IntWriteAccess;
 import org.knime.core.data.v2.access.ListAccess.ListAccessSpec;
 import org.knime.core.data.v2.access.ListAccess.ListReadAccess;
 import org.knime.core.data.v2.access.ListAccess.ListWriteAccess;
+import org.knime.core.data.v2.access.LongAccess.LongReadAccess;
+import org.knime.core.data.v2.access.LongAccess.LongWriteAccess;
 import org.knime.core.data.v2.value.IntValueFactory.IntReadValue;
-import org.knime.core.data.v2.value.IntValueFactory.IntWriteValue;
 import org.knime.core.data.v2.value.ListValueFactory.DefaultListReadValue;
 import org.knime.core.data.v2.value.ListValueFactory.DefaultListWriteValue;
 import org.knime.core.data.v2.value.ListValueFactory.ListReadValue;
 import org.knime.core.data.v2.value.ListValueFactory.ListWriteValue;
+import org.knime.core.data.v2.value.LongValueFactory.LongWriteValue;
 
 /**
- * {@link ValueFactory} implementation for {@link ListCell} with elements of type {@link IntCell}.
+ * {@link ValueFactory} implementation for {@link ListCell} with elements of type {@link LongCell}.
  *
  * @author Benjamin Wilhelm, KNIME GmbH, Konstanz, Germany
  * @since 4.3
  */
-public final class IntListValueFactory implements ValueFactory<ListReadAccess, ListWriteAccess> {
+public final class LongListValueFactory implements ValueFactory<ListReadAccess, ListWriteAccess> {
 
-    /** A stateless instance of {@link IntListValueFactory} */
-    public static final IntListValueFactory INSTANCE = new IntListValueFactory();
+    /** A stateless instance of {@link LongListValueFactory} */
+    public static final LongListValueFactory INSTANCE = new LongListValueFactory();
 
     @Override
-    public ListAccessSpec<IntReadAccess, IntWriteAccess> getSpec() {
-        return new ListAccessSpec<>(IntValueFactory.INSTANCE);
+    public ListAccessSpec<LongReadAccess, LongWriteAccess> getSpec() {
+        return new ListAccessSpec<>(LongValueFactory.INSTANCE);
     }
 
     @Override
-    public IntListReadValue createReadValue(final ListReadAccess reader) {
-        return new DefaultIntListReadValue(reader);
+    public LongListReadValue createReadValue(final ListReadAccess reader) {
+        return new DefaultLongListReadValue(reader);
     }
 
     @Override
-    public IntListWriteValue createWriteValue(final ListWriteAccess writer) {
-        return new DefaultIntListWriteValue(writer);
+    public LongListWriteValue createWriteValue(final ListWriteAccess writer) {
+        return new DefaultLongListWriteValue(writer);
     }
 
     /**
-     * {@link ReadValue} equivalent to {@link ListCell} with {@link IntCell} elements.
+     * {@link ReadValue} equivalent to {@link ListCell} with {@link LongCell} elements.
      *
      * @since 4.3
      */
-    public static interface IntListReadValue extends ListReadValue {
+    public static interface LongListReadValue extends ListReadValue {
 
         /**
          * @param index the index in the list
-         * @return the integer value at the index
+         * @return the long value at the index
          * @throws IllegalStateException if the value at this index is missing
          */
-        int getInt(int index);
+        long getLong(int index);
 
         /**
-         * @return the list as a integer array
+         * @return the list as a long array
          * @throws IllegalStateException if the value at one index is missing
          */
-        int[] getIntArray();
+        long[] getLongArray();
 
         /**
-         * @return an iterator over the integer list
+         * @return an iterator over the long list
          * @throws IllegalStateException if the value at one index is missing
          */
-        PrimitiveIterator.OfInt intIterator();
+        PrimitiveIterator.OfLong longIterator();
     }
 
     /**
-     * {@link WriteValue} equivalent to {@link ListCell} with {@link IntCell} elements.
+     * {@link WriteValue} equivalent to {@link ListCell} with {@link LongCell} elements.
      *
      * @since 4.3
      */
-    public static interface IntListWriteValue extends ListWriteValue {
+    public static interface LongListWriteValue extends ListWriteValue {
 
         /**
          * Set the value.
          *
          * @param values a array of int values
          */
-        void setValue(int[] values);
+        void setValue(long[] values);
     }
 
-    private static final class DefaultIntListReadValue extends DefaultListReadValue implements IntListReadValue {
+    private static final class DefaultLongListReadValue extends DefaultListReadValue implements LongListReadValue {
 
-        private DefaultIntListReadValue(final ListReadAccess reader) {
+        private DefaultLongListReadValue(final ListReadAccess reader) {
             super(reader, IntCell.TYPE);
         }
 
         @Override
-        public int getInt(final int index) {
+        public long getLong(final int index) {
             final IntReadValue v = m_reader.getReadValue(index);
             return v.getIntValue();
         }
 
         @Override
-        public int[] getIntArray() {
-            final int[] result = new int[size()];
+        public long[] getLongArray() {
+            final long[] result = new long[size()];
             for (int i = 0; i < result.length; i++) {
-                result[i] = getInt(i);
+                result[i] = getLong(i);
             }
             return result;
         }
 
         @Override
-        public OfInt intIterator() {
-            return Arrays.stream(getIntArray()).iterator();
+        public OfLong longIterator() {
+            return Arrays.stream(getLongArray()).iterator();
         }
     }
 
-    private static final class DefaultIntListWriteValue extends DefaultListWriteValue implements IntListWriteValue {
+    private static final class DefaultLongListWriteValue extends DefaultListWriteValue implements LongListWriteValue {
 
-        private DefaultIntListWriteValue(final ListWriteAccess writer) {
+        private DefaultLongListWriteValue(final ListWriteAccess writer) {
             super(writer);
         }
 
         @Override
-        public void setValue(final int[] values) {
-            this.<IntValue, IntWriteValue> setValue(values.length, (i, v) -> v.setIntValue(values[i]));
+        public void setValue(final long[] values) {
+            this.<LongValue, LongWriteValue> setValue(values.length, (i, v) -> v.setLongValue(values[i]));
         }
     }
 }

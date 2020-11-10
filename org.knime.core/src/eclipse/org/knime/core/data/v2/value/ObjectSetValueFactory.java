@@ -50,107 +50,117 @@ package org.knime.core.data.v2.value;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.PrimitiveIterator;
-import java.util.PrimitiveIterator.OfDouble;
+import java.util.Iterator;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.knime.core.data.DataCell;
 import org.knime.core.data.collection.SetCell;
-import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
-import org.knime.core.data.v2.access.DoubleAccess.DoubleReadAccess;
-import org.knime.core.data.v2.access.DoubleAccess.DoubleWriteAccess;
-import org.knime.core.data.v2.access.ListAccess.ListAccessSpec;
+import org.knime.core.data.v2.access.AccessSpec;
 import org.knime.core.data.v2.access.ListAccess.ListReadAccess;
 import org.knime.core.data.v2.access.ListAccess.ListWriteAccess;
-import org.knime.core.data.v2.value.DoubleListValueFactory.DoubleListReadValue;
-import org.knime.core.data.v2.value.DoubleListValueFactory.DoubleListWriteValue;
+import org.knime.core.data.v2.value.ObjectListValueFactory.ObjectListReadValue;
+import org.knime.core.data.v2.value.ObjectListValueFactory.ObjectListWriteValue;
 import org.knime.core.data.v2.value.SetValueFactory.DefaultSetReadValue;
 import org.knime.core.data.v2.value.SetValueFactory.DefaultSetWriteValue;
 import org.knime.core.data.v2.value.SetValueFactory.SetReadValue;
 import org.knime.core.data.v2.value.SetValueFactory.SetWriteValue;
 
+import com.google.common.base.Objects;
+
 /**
- * {@link ValueFactory} implementation for {@link SetCell} with elements of type {@link DoubleCell}.
+ * Abstract {@link ValueFactory} implementation for {@link SetCell} with object elements. The {@link ObjectSetReadValue}
+ * and {@link ObjectSetWriteValue} allow for direct access to the objects not wrapping them into {@link DataCell}
+ * implementations.
  *
+ * @param <T> the type of the elements
  * @author Benjamin Wilhelm, KNIME GmbH, Konstanz, Germany
  * @since 4.3
  */
-public final class DoubleSetValueFactory implements ValueFactory<ListReadAccess, ListWriteAccess> {
+public abstract class ObjectSetValueFactory<T> implements ValueFactory<ListReadAccess, ListWriteAccess> {
 
-    /** A stateless instance of {@link DoubleSetValueFactory} */
-    public static final DoubleSetValueFactory INSTANCE = new DoubleSetValueFactory();
+    private final ValueFactory<ListReadAccess, ListWriteAccess> m_listValueFactory;
 
-    @Override
-    public ListAccessSpec<DoubleReadAccess, DoubleWriteAccess> getSpec() {
-        return new ListAccessSpec<>(DoubleValueFactory.INSTANCE);
+    /**
+     * @param listValueFactory a {@link ValueFactory} to create a list in which the Set is saved
+     */
+    ObjectSetValueFactory(final ValueFactory<ListReadAccess, ListWriteAccess> listValueFactory) {
+        m_listValueFactory = listValueFactory;
     }
 
     @Override
-    public DoubleSetReadValue createReadValue(final ListReadAccess reader) {
-        return new DefaultDoubleSetReadValue(reader);
+    public ObjectSetReadValue<T> createReadValue(final ListReadAccess access) {
+        return new DefaultObjectSetReadValue<>(access, m_listValueFactory);
     }
 
     @Override
-    public DoubleSetWriteValue createWriteValue(final ListWriteAccess writer) {
-        return new DefaultDoubleSetWriteValue(writer);
+    public ObjectSetWriteValue<T> createWriteValue(final ListWriteAccess access) {
+        return new DefaultObjectSetWriteValue<>(access, m_listValueFactory);
+    }
+
+    @Override
+    public AccessSpec<ListReadAccess, ListWriteAccess> getSpec() {
+        return m_listValueFactory.getSpec();
     }
 
     /**
-     * {@link ReadValue} equivalent to {@link SetCell} with {@link DoubleCell} elements.
+     * {@link ReadValue} equivalent to {@link SetCell} with elements of type T.
      *
+     * @param <T> the type of the elements
      * @since 4.3
      */
-    public interface DoubleSetReadValue extends SetReadValue {
+    public interface ObjectSetReadValue<T> extends SetReadValue {
 
         /**
-         * @param value a double value
+         * @param value an object value
          * @return true if the set contains the value
          */
-        boolean contains(double value);
+        boolean contains(T value);
 
         /**
-         * @return a {@link Set} containing the {@link Double} values
+         * @return a {@link Set} containing the object values
          */
-        Set<Double> getDoubleSet();
+        Set<T> getValueSet();
 
         /**
-         * @return an iterator of the double set
+         * @return an iterator of the object set
          * @throws IllegalStateException if the set contains a missing value
          */
-        PrimitiveIterator.OfDouble doubleIterator();
+        Iterator<T> valueIterator();
     }
 
     /**
-     * {@link WriteValue} equivalent to {@link SetCell} with {@link DoubleCell} elements.
+     * {@link WriteValue} equivalent to {@link SetCell} with elements of type T.
      *
+     * @param <T> the type of the elements
      * @since 4.3
      */
-    public interface DoubleSetWriteValue extends SetWriteValue {
+    public interface ObjectSetWriteValue<T> extends SetWriteValue {
 
         /**
          * Set the value.
          *
-         * @param values a collection of double values
+         * @param values a collection of String values
          */
-        void setDoubleColletionValue(Collection<Double> values);
+        void setColletionValue(Collection<T> values);
     }
 
-    private static final class DefaultDoubleSetReadValue extends DefaultSetReadValue<DoubleListReadValue>
-        implements DoubleSetReadValue {
+    private static final class DefaultObjectSetReadValue<T> extends DefaultSetReadValue<ObjectListReadValue<T>>
+        implements ObjectSetReadValue<T> {
 
-        protected DefaultDoubleSetReadValue(final ListReadAccess reader) {
-            super(reader, DoubleListValueFactory.INSTANCE);
+        protected DefaultObjectSetReadValue(final ListReadAccess reader,
+            final ValueFactory<ListReadAccess, ?> listValueFactory) {
+            super(reader, listValueFactory);
         }
 
         @Override
-        public boolean contains(final double value) {
-            // TODO(benjamin) we can save the values sorted and do binary search
-            final double[] values = m_value.getDoubleArray();
+        public boolean contains(final T value) {
+            final T[] values = m_value.getValueArray();
             for (int i = 0; i < values.length; i++) {
-                if (value == values[i]) {
+                if (Objects.equal(value, values[i])) {
                     return true;
                 }
             }
@@ -158,26 +168,29 @@ public final class DoubleSetValueFactory implements ValueFactory<ListReadAccess,
         }
 
         @Override
-        public Set<Double> getDoubleSet() {
-            return Arrays.stream(m_value.getDoubleArray()).boxed().collect(Collectors.toSet());
+        public Set<T> getValueSet() {
+            return Arrays.stream(m_value.getValueArray()).collect(Collectors.toSet());
         }
 
         @Override
-        public OfDouble doubleIterator() {
-            return m_value.doubleIterator();
+        public Iterator<T> valueIterator() {
+            return m_value.valueIterator();
         }
     }
 
-    private static final class DefaultDoubleSetWriteValue extends DefaultSetWriteValue<DoubleListWriteValue>
-        implements DoubleSetWriteValue {
+    private static final class DefaultObjectSetWriteValue<T> extends DefaultSetWriteValue<ObjectListWriteValue<T>>
+        implements ObjectSetWriteValue<T> {
 
-        protected DefaultDoubleSetWriteValue(final ListWriteAccess writer) {
-            super(writer, DoubleListValueFactory.INSTANCE);
+        protected DefaultObjectSetWriteValue(final ListWriteAccess writer,
+            final ValueFactory<?, ListWriteAccess> listValueFactory) {
+            super(writer, listValueFactory);
         }
 
         @Override
-        public void setDoubleColletionValue(final Collection<Double> values) {
-            m_value.setValue(values.stream().mapToDouble(Double::doubleValue).distinct().toArray());
+        public void setColletionValue(final Collection<T> values) {
+            @SuppressWarnings("unchecked")
+            final T[] array = (T[])values.stream().distinct().toArray();
+            m_value.setValue(array);
         }
     }
 }

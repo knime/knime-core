@@ -51,104 +51,104 @@ package org.knime.core.data.v2.value;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.PrimitiveIterator;
-import java.util.PrimitiveIterator.OfDouble;
+import java.util.PrimitiveIterator.OfLong;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.knime.core.data.collection.SetCell;
-import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.def.LongCell;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
-import org.knime.core.data.v2.access.DoubleAccess.DoubleReadAccess;
-import org.knime.core.data.v2.access.DoubleAccess.DoubleWriteAccess;
 import org.knime.core.data.v2.access.ListAccess.ListAccessSpec;
 import org.knime.core.data.v2.access.ListAccess.ListReadAccess;
 import org.knime.core.data.v2.access.ListAccess.ListWriteAccess;
-import org.knime.core.data.v2.value.DoubleListValueFactory.DoubleListReadValue;
-import org.knime.core.data.v2.value.DoubleListValueFactory.DoubleListWriteValue;
+import org.knime.core.data.v2.access.LongAccess.LongReadAccess;
+import org.knime.core.data.v2.access.LongAccess.LongWriteAccess;
+import org.knime.core.data.v2.value.LongListValueFactory.LongListReadValue;
+import org.knime.core.data.v2.value.LongListValueFactory.LongListWriteValue;
 import org.knime.core.data.v2.value.SetValueFactory.DefaultSetReadValue;
 import org.knime.core.data.v2.value.SetValueFactory.DefaultSetWriteValue;
 import org.knime.core.data.v2.value.SetValueFactory.SetReadValue;
 import org.knime.core.data.v2.value.SetValueFactory.SetWriteValue;
 
 /**
- * {@link ValueFactory} implementation for {@link SetCell} with elements of type {@link DoubleCell}.
+ * {@link ValueFactory} implementation for {@link SetCell} with elements of type {@link LongCell}.
  *
  * @author Benjamin Wilhelm, KNIME GmbH, Konstanz, Germany
  * @since 4.3
  */
-public final class DoubleSetValueFactory implements ValueFactory<ListReadAccess, ListWriteAccess> {
+public final class LongSetValueFactory implements ValueFactory<ListReadAccess, ListWriteAccess> {
 
-    /** A stateless instance of {@link DoubleSetValueFactory} */
-    public static final DoubleSetValueFactory INSTANCE = new DoubleSetValueFactory();
+    /** A stateless instance of {@link LongSetValueFactory} */
+    public static final LongSetValueFactory INSTANCE = new LongSetValueFactory();
 
     @Override
-    public ListAccessSpec<DoubleReadAccess, DoubleWriteAccess> getSpec() {
-        return new ListAccessSpec<>(DoubleValueFactory.INSTANCE);
+    public ListAccessSpec<LongReadAccess, LongWriteAccess> getSpec() {
+        return new ListAccessSpec<>(LongValueFactory.INSTANCE);
     }
 
     @Override
-    public DoubleSetReadValue createReadValue(final ListReadAccess reader) {
-        return new DefaultDoubleSetReadValue(reader);
+    public LongSetReadValue createReadValue(final ListReadAccess reader) {
+        return new DefaultLongSetReadValue(reader);
     }
 
     @Override
-    public DoubleSetWriteValue createWriteValue(final ListWriteAccess writer) {
-        return new DefaultDoubleSetWriteValue(writer);
+    public LongSetWriteValue createWriteValue(final ListWriteAccess writer) {
+        return new DefaultLongSetWriteValue(writer);
     }
 
     /**
-     * {@link ReadValue} equivalent to {@link SetCell} with {@link DoubleCell} elements.
+     * {@link ReadValue} equivalent to {@link SetCell} with {@link LongCell} elements.
      *
      * @since 4.3
      */
-    public interface DoubleSetReadValue extends SetReadValue {
+    public interface LongSetReadValue extends SetReadValue {
 
         /**
-         * @param value a double value
+         * @param value a long value
          * @return true if the set contains the value
          */
-        boolean contains(double value);
+        boolean contains(long value);
 
         /**
-         * @return a {@link Set} containing the {@link Double} values
+         * @return a {@link Set} containing the {@link Long} values
          */
-        Set<Double> getDoubleSet();
+        Set<Long> getLongSet();
 
         /**
-         * @return an iterator of the double set
+         * @return an iterator of the long set
          * @throws IllegalStateException if the set contains a missing value
          */
-        PrimitiveIterator.OfDouble doubleIterator();
+        PrimitiveIterator.OfLong longIterator();
     }
 
     /**
-     * {@link WriteValue} equivalent to {@link SetCell} with {@link DoubleCell} elements.
+     * {@link WriteValue} equivalent to {@link SetCell} with {@link LongCell} elements.
      *
      * @since 4.3
      */
-    public interface DoubleSetWriteValue extends SetWriteValue {
+    public interface LongSetWriteValue extends SetWriteValue {
 
         /**
          * Set the value.
          *
-         * @param values a collection of double values
+         * @param values a collection of long values
          */
-        void setDoubleColletionValue(Collection<Double> values);
+        void setLongColletionValue(Collection<Long> values);
     }
 
-    private static final class DefaultDoubleSetReadValue extends DefaultSetReadValue<DoubleListReadValue>
-        implements DoubleSetReadValue {
+    private static final class DefaultLongSetReadValue extends DefaultSetReadValue<LongListReadValue>
+        implements LongSetReadValue {
 
-        protected DefaultDoubleSetReadValue(final ListReadAccess reader) {
-            super(reader, DoubleListValueFactory.INSTANCE);
+        protected DefaultLongSetReadValue(final ListReadAccess reader) {
+            super(reader, LongListValueFactory.INSTANCE);
         }
 
         @Override
-        public boolean contains(final double value) {
+        public boolean contains(final long value) {
             // TODO(benjamin) we can save the values sorted and do binary search
-            final double[] values = m_value.getDoubleArray();
+            final long[] values = m_value.getLongArray();
             for (int i = 0; i < values.length; i++) {
                 if (value == values[i]) {
                     return true;
@@ -158,26 +158,26 @@ public final class DoubleSetValueFactory implements ValueFactory<ListReadAccess,
         }
 
         @Override
-        public Set<Double> getDoubleSet() {
-            return Arrays.stream(m_value.getDoubleArray()).boxed().collect(Collectors.toSet());
+        public Set<Long> getLongSet() {
+            return Arrays.stream(m_value.getLongArray()).boxed().collect(Collectors.toSet());
         }
 
         @Override
-        public OfDouble doubleIterator() {
-            return m_value.doubleIterator();
+        public OfLong longIterator() {
+            return m_value.longIterator();
         }
     }
 
-    private static final class DefaultDoubleSetWriteValue extends DefaultSetWriteValue<DoubleListWriteValue>
-        implements DoubleSetWriteValue {
+    private static final class DefaultLongSetWriteValue extends DefaultSetWriteValue<LongListWriteValue>
+        implements LongSetWriteValue {
 
-        protected DefaultDoubleSetWriteValue(final ListWriteAccess writer) {
-            super(writer, DoubleListValueFactory.INSTANCE);
+        protected DefaultLongSetWriteValue(final ListWriteAccess writer) {
+            super(writer, LongListValueFactory.INSTANCE);
         }
 
         @Override
-        public void setDoubleColletionValue(final Collection<Double> values) {
-            m_value.setValue(values.stream().mapToDouble(Double::doubleValue).distinct().toArray());
+        public void setLongColletionValue(final Collection<Long> values) {
+            m_value.setValue(values.stream().mapToLong(Long::longValue).distinct().toArray());
         }
     }
 }

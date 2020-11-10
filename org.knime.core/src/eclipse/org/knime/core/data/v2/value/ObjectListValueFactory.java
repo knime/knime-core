@@ -49,131 +49,128 @@
 package org.knime.core.data.v2.value;
 
 import java.util.Arrays;
-import java.util.PrimitiveIterator;
-import java.util.PrimitiveIterator.OfInt;
+import java.util.Iterator;
 
-import org.knime.core.data.IntValue;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataType;
 import org.knime.core.data.collection.ListCell;
-import org.knime.core.data.def.IntCell;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
-import org.knime.core.data.v2.access.IntAccess.IntReadAccess;
-import org.knime.core.data.v2.access.IntAccess.IntWriteAccess;
 import org.knime.core.data.v2.access.ListAccess.ListAccessSpec;
 import org.knime.core.data.v2.access.ListAccess.ListReadAccess;
 import org.knime.core.data.v2.access.ListAccess.ListWriteAccess;
-import org.knime.core.data.v2.value.IntValueFactory.IntReadValue;
-import org.knime.core.data.v2.value.IntValueFactory.IntWriteValue;
+import org.knime.core.data.v2.access.ObjectAccess.ObjectReadAccess;
+import org.knime.core.data.v2.access.ObjectAccess.ObjectWriteAccess;
 import org.knime.core.data.v2.value.ListValueFactory.DefaultListReadValue;
-import org.knime.core.data.v2.value.ListValueFactory.DefaultListWriteValue;
 import org.knime.core.data.v2.value.ListValueFactory.ListReadValue;
 import org.knime.core.data.v2.value.ListValueFactory.ListWriteValue;
 
 /**
- * {@link ValueFactory} implementation for {@link ListCell} with elements of type {@link IntCell}.
+ * Abstract {@link ValueFactory} implementation for {@link ListCell} with object elements. The
+ * {@link ObjectListReadValue} and {@link ObjectListWriteValue} allow for direct access to the objects not wrapping them
+ * into {@link DataCell} implementations.
  *
+ * @param <T> the type of the elements
  * @author Benjamin Wilhelm, KNIME GmbH, Konstanz, Germany
  * @since 4.3
  */
-public final class IntListValueFactory implements ValueFactory<ListReadAccess, ListWriteAccess> {
+public abstract class ObjectListValueFactory<T> implements ValueFactory<ListReadAccess, ListWriteAccess> {
 
-    /** A stateless instance of {@link IntListValueFactory} */
-    public static final IntListValueFactory INSTANCE = new IntListValueFactory();
+    private final ValueFactory<ObjectReadAccess<T>, ObjectWriteAccess<T>> m_innerValueFactory;
 
-    @Override
-    public ListAccessSpec<IntReadAccess, IntWriteAccess> getSpec() {
-        return new ListAccessSpec<>(IntValueFactory.INSTANCE);
+    /**
+     * @param innerValueFactory the {@link ValueFactory} to create the element values of the list
+     */
+    ObjectListValueFactory(final ValueFactory<ObjectReadAccess<T>, ObjectWriteAccess<T>> innerValueFactory) {
+        m_innerValueFactory = innerValueFactory;
     }
 
     @Override
-    public IntListReadValue createReadValue(final ListReadAccess reader) {
-        return new DefaultIntListReadValue(reader);
-    }
-
-    @Override
-    public IntListWriteValue createWriteValue(final ListWriteAccess writer) {
-        return new DefaultIntListWriteValue(writer);
+    public ListAccessSpec<ObjectReadAccess<T>, ObjectWriteAccess<T>> getSpec() {
+        return new ListAccessSpec<>(m_innerValueFactory);
     }
 
     /**
-     * {@link ReadValue} equivalent to {@link ListCell} with {@link IntCell} elements.
+     * {@link ReadValue} equivalent to {@link ListCell} with elements of type T.
      *
+     * @param <T> the type of the elements
      * @since 4.3
      */
-    public static interface IntListReadValue extends ListReadValue {
+    public static interface ObjectListReadValue<T> extends ListReadValue {
 
         /**
          * @param index the index in the list
-         * @return the integer value at the index
+         * @return the object value at the index
          * @throws IllegalStateException if the value at this index is missing
          */
-        int getInt(int index);
+        T getValue(int index);
 
         /**
-         * @return the list as a integer array
+         * @return the list as a object array
          * @throws IllegalStateException if the value at one index is missing
          */
-        int[] getIntArray();
+        T[] getValueArray();
 
         /**
-         * @return an iterator over the integer list
+         * @return an iterator over the object list
          * @throws IllegalStateException if the value at one index is missing
          */
-        PrimitiveIterator.OfInt intIterator();
+        Iterator<T> valueIterator();
     }
 
     /**
-     * {@link WriteValue} equivalent to {@link ListCell} with {@link IntCell} elements.
+     * {@link WriteValue} equivalent to {@link ListCell} with elements of type T.
      *
+     * @param <T> the type of the elements
      * @since 4.3
      */
-    public static interface IntListWriteValue extends ListWriteValue {
+    public static interface ObjectListWriteValue<T> extends ListWriteValue {
 
         /**
          * Set the value.
          *
-         * @param values a array of int values
+         * @param values a array of object values
          */
-        void setValue(int[] values);
+        void setValue(T[] values);
     }
 
-    private static final class DefaultIntListReadValue extends DefaultListReadValue implements IntListReadValue {
+    /**
+     * Abstract implementation of {@link ObjectListReadValue}.
+     *
+     * @param <T> the type of the elements
+     */
+    abstract static class AbstractObjectListReadValue<T> extends DefaultListReadValue
+        implements ObjectListReadValue<T> {
 
-        private DefaultIntListReadValue(final ListReadAccess reader) {
-            super(reader, IntCell.TYPE);
+        /**
+         * @param reader the access to the list
+         * @param type the {@link DataType} of the elements
+         */
+        protected AbstractObjectListReadValue(final ListReadAccess reader, final DataType type) {
+            super(reader, type);
         }
 
-        @Override
-        public int getInt(final int index) {
-            final IntReadValue v = m_reader.getReadValue(index);
-            return v.getIntValue();
-        }
+        /**
+         * Create an empty array of type T. Exists because it is not possible to create generic arrays.
+         *
+         * @param size the size of the array
+         * @return the array
+         */
+        protected abstract T[] createObjectArray(final int size);
 
         @Override
-        public int[] getIntArray() {
-            final int[] result = new int[size()];
+        public T[] getValueArray() {
+            final T[] result = createObjectArray(size());
             for (int i = 0; i < result.length; i++) {
-                result[i] = getInt(i);
+                result[i] = getValue(i);
             }
             return result;
         }
 
         @Override
-        public OfInt intIterator() {
-            return Arrays.stream(getIntArray()).iterator();
-        }
-    }
-
-    private static final class DefaultIntListWriteValue extends DefaultListWriteValue implements IntListWriteValue {
-
-        private DefaultIntListWriteValue(final ListWriteAccess writer) {
-            super(writer);
-        }
-
-        @Override
-        public void setValue(final int[] values) {
-            this.<IntValue, IntWriteValue> setValue(values.length, (i, v) -> v.setIntValue(values[i]));
+        public Iterator<T> valueIterator() {
+            return Arrays.stream(getValueArray()).iterator();
         }
     }
 }

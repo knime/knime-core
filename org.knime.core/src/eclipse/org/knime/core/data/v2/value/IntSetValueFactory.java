@@ -49,11 +49,13 @@
 package org.knime.core.data.v2.value;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.PrimitiveIterator;
 import java.util.PrimitiveIterator.OfInt;
+import java.util.Set;
+import java.util.stream.Collectors;
 
-import org.knime.core.data.IntValue;
-import org.knime.core.data.collection.ListCell;
+import org.knime.core.data.collection.SetCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
@@ -63,23 +65,23 @@ import org.knime.core.data.v2.access.IntAccess.IntWriteAccess;
 import org.knime.core.data.v2.access.ListAccess.ListAccessSpec;
 import org.knime.core.data.v2.access.ListAccess.ListReadAccess;
 import org.knime.core.data.v2.access.ListAccess.ListWriteAccess;
-import org.knime.core.data.v2.value.IntValueFactory.IntReadValue;
-import org.knime.core.data.v2.value.IntValueFactory.IntWriteValue;
-import org.knime.core.data.v2.value.ListValueFactory.DefaultListReadValue;
-import org.knime.core.data.v2.value.ListValueFactory.DefaultListWriteValue;
-import org.knime.core.data.v2.value.ListValueFactory.ListReadValue;
-import org.knime.core.data.v2.value.ListValueFactory.ListWriteValue;
+import org.knime.core.data.v2.value.IntListValueFactory.IntListReadValue;
+import org.knime.core.data.v2.value.IntListValueFactory.IntListWriteValue;
+import org.knime.core.data.v2.value.SetValueFactory.DefaultSetReadValue;
+import org.knime.core.data.v2.value.SetValueFactory.DefaultSetWriteValue;
+import org.knime.core.data.v2.value.SetValueFactory.SetReadValue;
+import org.knime.core.data.v2.value.SetValueFactory.SetWriteValue;
 
 /**
- * {@link ValueFactory} implementation for {@link ListCell} with elements of type {@link IntCell}.
+ * {@link ValueFactory} implementation for {@link SetCell} with elements of type {@link IntCell}.
  *
  * @author Benjamin Wilhelm, KNIME GmbH, Konstanz, Germany
  * @since 4.3
  */
-public final class IntListValueFactory implements ValueFactory<ListReadAccess, ListWriteAccess> {
+public final class IntSetValueFactory implements ValueFactory<ListReadAccess, ListWriteAccess> {
 
-    /** A stateless instance of {@link IntListValueFactory} */
-    public static final IntListValueFactory INSTANCE = new IntListValueFactory();
+    /** A stateless instance of {@link IntSetValueFactory} */
+    public static final IntSetValueFactory INSTANCE = new IntSetValueFactory();
 
     @Override
     public ListAccessSpec<IntReadAccess, IntWriteAccess> getSpec() {
@@ -87,93 +89,95 @@ public final class IntListValueFactory implements ValueFactory<ListReadAccess, L
     }
 
     @Override
-    public IntListReadValue createReadValue(final ListReadAccess reader) {
-        return new DefaultIntListReadValue(reader);
+    public IntSetReadValue createReadValue(final ListReadAccess reader) {
+        return new DefaultIntSetReadValue(reader);
     }
 
     @Override
-    public IntListWriteValue createWriteValue(final ListWriteAccess writer) {
-        return new DefaultIntListWriteValue(writer);
+    public IntSetWriteValue createWriteValue(final ListWriteAccess writer) {
+        return new DefaultIntSetWriteValue(writer);
     }
 
     /**
-     * {@link ReadValue} equivalent to {@link ListCell} with {@link IntCell} elements.
+     * {@link ReadValue} equivalent to {@link SetCell} with {@link IntCell} elements.
      *
      * @since 4.3
      */
-    public static interface IntListReadValue extends ListReadValue {
+    public interface IntSetReadValue extends SetReadValue {
 
         /**
-         * @param index the index in the list
-         * @return the integer value at the index
-         * @throws IllegalStateException if the value at this index is missing
+         * @param value a double value
+         * @return true if the set contains the value
          */
-        int getInt(int index);
+        boolean contains(int value);
 
         /**
-         * @return the list as a integer array
-         * @throws IllegalStateException if the value at one index is missing
+         * @return a {@link Set} containing the {@link Integer} values
          */
-        int[] getIntArray();
+        Set<Integer> getIntSet();
 
         /**
-         * @return an iterator over the integer list
-         * @throws IllegalStateException if the value at one index is missing
+         * @return an iterator of the double set
+         * @throws IllegalStateException if the set contains a missing value
          */
         PrimitiveIterator.OfInt intIterator();
     }
 
     /**
-     * {@link WriteValue} equivalent to {@link ListCell} with {@link IntCell} elements.
+     * {@link WriteValue} equivalent to {@link SetCell} with {@link IntCell} elements.
      *
      * @since 4.3
      */
-    public static interface IntListWriteValue extends ListWriteValue {
+    public interface IntSetWriteValue extends SetWriteValue {
 
         /**
          * Set the value.
          *
-         * @param values a array of int values
+         * @param values a collection of double values
          */
-        void setValue(int[] values);
+        void setIntColletionValue(Collection<Integer> values);
     }
 
-    private static final class DefaultIntListReadValue extends DefaultListReadValue implements IntListReadValue {
+    private static final class DefaultIntSetReadValue extends DefaultSetReadValue<IntListReadValue>
+        implements IntSetReadValue {
 
-        private DefaultIntListReadValue(final ListReadAccess reader) {
-            super(reader, IntCell.TYPE);
+        protected DefaultIntSetReadValue(final ListReadAccess reader) {
+            super(reader, IntListValueFactory.INSTANCE);
         }
 
         @Override
-        public int getInt(final int index) {
-            final IntReadValue v = m_reader.getReadValue(index);
-            return v.getIntValue();
-        }
-
-        @Override
-        public int[] getIntArray() {
-            final int[] result = new int[size()];
-            for (int i = 0; i < result.length; i++) {
-                result[i] = getInt(i);
+        public boolean contains(final int value) {
+            // TODO(benjamin) we can save the values sorted and do binary search
+            final int[] values = m_value.getIntArray();
+            for (int i = 0; i < values.length; i++) {
+                if (value == values[i]) {
+                    return true;
+                }
             }
-            return result;
+            return false;
+        }
+
+        @Override
+        public Set<Integer> getIntSet() {
+            return Arrays.stream(m_value.getIntArray()).boxed().collect(Collectors.toSet());
         }
 
         @Override
         public OfInt intIterator() {
-            return Arrays.stream(getIntArray()).iterator();
+            return m_value.intIterator();
         }
     }
 
-    private static final class DefaultIntListWriteValue extends DefaultListWriteValue implements IntListWriteValue {
+    private static final class DefaultIntSetWriteValue extends DefaultSetWriteValue<IntListWriteValue>
+        implements IntSetWriteValue {
 
-        private DefaultIntListWriteValue(final ListWriteAccess writer) {
-            super(writer);
+        protected DefaultIntSetWriteValue(final ListWriteAccess writer) {
+            super(writer, IntListValueFactory.INSTANCE);
         }
 
         @Override
-        public void setValue(final int[] values) {
-            this.<IntValue, IntWriteValue> setValue(values.length, (i, v) -> v.setIntValue(values[i]));
+        public void setIntColletionValue(final Collection<Integer> values) {
+            m_value.setValue(values.stream().mapToInt(Integer::intValue).distinct().toArray());
         }
     }
 }

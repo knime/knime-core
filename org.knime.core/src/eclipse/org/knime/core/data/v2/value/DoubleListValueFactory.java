@@ -69,6 +69,7 @@ import org.knime.core.data.v2.value.ListValueFactory.DefaultListReadValue;
 import org.knime.core.data.v2.value.ListValueFactory.DefaultListWriteValue;
 import org.knime.core.data.v2.value.ListValueFactory.ListReadValue;
 import org.knime.core.data.v2.value.ListValueFactory.ListWriteValue;
+import org.knime.core.data.vector.doublevector.DoubleVectorValue;
 
 /**
  * {@link ValueFactory} implementation for {@link ListCell} with elements of type {@link DoubleCell}.
@@ -96,16 +97,12 @@ public final class DoubleListValueFactory implements ValueFactory<ListReadAccess
         return new DefaultDoubleListWriteValue(writer);
     }
 
-    /*
-     * TODO(benjamin) Finalize API in AP-14240
-     */
-
     /**
      * {@link ReadValue} equivalent to {@link ListCell} with {@link DoubleCell} elements.
      *
      * @since 4.3
      */
-    public static interface DoubleListReadValue extends ListReadValue {
+    public static interface DoubleListReadValue extends ListReadValue, DoubleVectorValue {
 
         /**
          * @param index the index in the list
@@ -166,6 +163,16 @@ public final class DoubleListValueFactory implements ValueFactory<ListReadAccess
         @Override
         public OfDouble doubleIterator() {
             return Arrays.stream(getDoubleArray()).iterator();
+        }
+
+        @Override
+        public int getLength() {
+            return size();
+        }
+
+        @Override
+        public double getValue(final int index) {
+            return getDouble(index);
         }
     }
 

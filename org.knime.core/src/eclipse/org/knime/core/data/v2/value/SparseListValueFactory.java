@@ -312,8 +312,8 @@ public final class SparseListValueFactory implements CollectionValueFactory<Stru
      * Default implementation of {@link SparseListWriteValue}. List elements are of the type {@link DataCell}. Extend
      * this class to add setter methods that do not wrap the elements in {@link DataCell}.
      *
-     * @param <D> the type of the {@link DataValue} of the {@link WriteValue} T
-     * @param <E> the type of the element {@link ReadValue}.
+     * @param <D> the type of the {@link DataValue} of the {@link WriteValue} E
+     * @param <E> the type of the element {@link WriteValue}.
      * @param <L> the type of the list in which the elements are saved
      * @param <W> the type of the {@link WriteAccess} for the list elements
      * @since 4.3
@@ -321,13 +321,13 @@ public final class SparseListValueFactory implements CollectionValueFactory<Stru
     static class DefaultSparseListWriteValue<D extends DataValue, E extends WriteValue<D>, L extends ListWriteValue, W extends WriteAccess>
         implements SparseListWriteValue {
 
-        private final E m_defaultValue;
+        protected final E m_defaultValue;
 
-        private final IntWriteAccess m_sizeValue;
+        protected final IntWriteAccess m_sizeValue;
 
-        private final IntListWriteValue m_storageIndices;
+        protected final IntListWriteValue m_storageIndices;
 
-        private final L m_storageList;
+        protected final L m_storageList;
 
         /**
          * Create a default {@link SparseListWriteValue}.

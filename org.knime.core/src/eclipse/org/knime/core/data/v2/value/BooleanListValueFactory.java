@@ -48,132 +48,134 @@
  */
 package org.knime.core.data.v2.value;
 
-import java.util.Arrays;
-import java.util.PrimitiveIterator;
-import java.util.PrimitiveIterator.OfInt;
+import java.util.Iterator;
 
-import org.knime.core.data.IntValue;
+import org.knime.core.data.BooleanValue;
 import org.knime.core.data.collection.ListCell;
-import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.BooleanCell;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
-import org.knime.core.data.v2.access.IntAccess.IntReadAccess;
-import org.knime.core.data.v2.access.IntAccess.IntWriteAccess;
+import org.knime.core.data.v2.access.BooleanAccess.BooleanReadAccess;
+import org.knime.core.data.v2.access.BooleanAccess.BooleanWriteAccess;
 import org.knime.core.data.v2.access.ListAccess.ListAccessSpec;
 import org.knime.core.data.v2.access.ListAccess.ListReadAccess;
 import org.knime.core.data.v2.access.ListAccess.ListWriteAccess;
-import org.knime.core.data.v2.value.IntValueFactory.IntReadValue;
-import org.knime.core.data.v2.value.IntValueFactory.IntWriteValue;
+import org.knime.core.data.v2.value.BooleanValueFactory.BooleanReadValue;
+import org.knime.core.data.v2.value.BooleanValueFactory.BooleanWriteValue;
 import org.knime.core.data.v2.value.ListValueFactory.DefaultListReadValue;
 import org.knime.core.data.v2.value.ListValueFactory.DefaultListWriteValue;
 import org.knime.core.data.v2.value.ListValueFactory.ListReadValue;
 import org.knime.core.data.v2.value.ListValueFactory.ListWriteValue;
 
+import com.google.common.primitives.Booleans;
+
 /**
- * {@link ValueFactory} implementation for {@link ListCell} with elements of type {@link IntCell}.
+ * {@link ValueFactory} implementation for {@link ListCell} with elements of type {@link BooleanCell}.
  *
  * @author Benjamin Wilhelm, KNIME GmbH, Konstanz, Germany
  * @since 4.3
  */
-public final class IntListValueFactory implements ValueFactory<ListReadAccess, ListWriteAccess> {
+public final class BooleanListValueFactory implements ValueFactory<ListReadAccess, ListWriteAccess> {
 
-    /** A stateless instance of {@link IntListValueFactory} */
-    public static final IntListValueFactory INSTANCE = new IntListValueFactory();
+    /** A stateless instance of {@link BooleanListValueFactory} */
+    public static final BooleanListValueFactory INSTANCE = new BooleanListValueFactory();
 
     @Override
-    public ListAccessSpec<IntReadAccess, IntWriteAccess> getSpec() {
-        return new ListAccessSpec<>(IntValueFactory.INSTANCE);
+    public ListAccessSpec<BooleanReadAccess, BooleanWriteAccess> getSpec() {
+        return new ListAccessSpec<>(BooleanValueFactory.INSTANCE);
     }
 
     @Override
-    public IntListReadValue createReadValue(final ListReadAccess reader) {
-        return new DefaultIntListReadValue(reader);
+    public BooleanListReadValue createReadValue(final ListReadAccess reader) {
+        return new DefaultBooleanListReadValue(reader);
     }
 
     @Override
-    public IntListWriteValue createWriteValue(final ListWriteAccess writer) {
-        return new DefaultIntListWriteValue(writer);
+    public BooleanListWriteValue createWriteValue(final ListWriteAccess writer) {
+        return new DefaultBooleanListWriteValue(writer);
     }
 
     /**
-     * {@link ReadValue} equivalent to {@link ListCell} with {@link IntCell} elements.
+     * {@link ReadValue} equivalent to {@link ListCell} with {@link BooleanCell} elements.
      *
      * @since 4.3
      */
-    public static interface IntListReadValue extends ListReadValue {
+    public static interface BooleanListReadValue extends ListReadValue {
 
         /**
          * @param index the index in the list
-         * @return the integer value at the index
+         * @return the boolean value at the index
          * @throws IllegalStateException if the value at this index is missing
          */
-        int getInt(int index);
+        boolean getBoolean(int index);
 
         /**
-         * @return the list as a integer array
+         * @return the list as a boolean array
          * @throws IllegalStateException if the value at one index is missing
          */
-        int[] getIntArray();
+        boolean[] getBooleanArray();
 
         /**
-         * @return an iterator over the integer list
+         * @return an iterator over the boolean list
          * @throws IllegalStateException if the value at one index is missing
          */
-        PrimitiveIterator.OfInt intIterator();
+        Iterator<Boolean> booleanIterator();
     }
 
     /**
-     * {@link WriteValue} equivalent to {@link ListCell} with {@link IntCell} elements.
+     * {@link WriteValue} equivalent to {@link ListCell} with {@link BooleanCell} elements.
      *
      * @since 4.3
      */
-    public static interface IntListWriteValue extends ListWriteValue {
+    public static interface BooleanListWriteValue extends ListWriteValue {
 
         /**
          * Set the value.
          *
-         * @param values a array of int values
+         * @param values a array of boolean values
          */
-        void setValue(int[] values);
+        void setValue(boolean[] values);
     }
 
-    private static final class DefaultIntListReadValue extends DefaultListReadValue implements IntListReadValue {
+    private static final class DefaultBooleanListReadValue extends DefaultListReadValue
+        implements BooleanListReadValue {
 
-        private DefaultIntListReadValue(final ListReadAccess reader) {
-            super(reader, IntCell.TYPE);
+        private DefaultBooleanListReadValue(final ListReadAccess reader) {
+            super(reader, BooleanCell.TYPE);
         }
 
         @Override
-        public int getInt(final int index) {
-            final IntReadValue v = m_reader.getReadValue(index);
-            return v.getIntValue();
+        public boolean getBoolean(final int index) {
+            final BooleanReadValue v = m_reader.getReadValue(index);
+            return v.getBooleanValue();
         }
 
         @Override
-        public int[] getIntArray() {
-            final int[] result = new int[size()];
+        public boolean[] getBooleanArray() {
+            final boolean[] result = new boolean[size()];
             for (int i = 0; i < result.length; i++) {
-                result[i] = getInt(i);
+                result[i] = getBoolean(i);
             }
             return result;
         }
 
         @Override
-        public OfInt intIterator() {
-            return Arrays.stream(getIntArray()).iterator();
+        public Iterator<Boolean> booleanIterator() {
+            return Booleans.asList(getBooleanArray()).iterator();
         }
     }
 
-    private static final class DefaultIntListWriteValue extends DefaultListWriteValue implements IntListWriteValue {
+    private static final class DefaultBooleanListWriteValue extends DefaultListWriteValue
+        implements BooleanListWriteValue {
 
-        private DefaultIntListWriteValue(final ListWriteAccess writer) {
+        private DefaultBooleanListWriteValue(final ListWriteAccess writer) {
             super(writer);
         }
 
         @Override
-        public void setValue(final int[] values) {
-            this.<IntValue, IntWriteValue> setValue(values.length, (i, v) -> v.setIntValue(values[i]));
+        public void setValue(final boolean[] values) {
+            this.<BooleanValue, BooleanWriteValue> setValue(values.length, (i, v) -> v.setBooleanValue(values[i]));
         }
     }
 }
