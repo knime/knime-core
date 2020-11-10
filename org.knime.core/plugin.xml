@@ -524,7 +524,8 @@
          </serializer>
       </DataType>
       <DataType
-            cellClass="org.knime.core.data.model.PortObjectCell">
+            cellClass="org.knime.core.data.model.PortObjectCell"
+            factoryValue="org.knime.core.data.v2.value.PortObjectValueFactory">
          <serializer
                cellClass="org.knime.core.data.model.PortObjectCell"
                serializerClass="org.knime.core.data.model.PortObjectCell$PortObjectCellSerializer">
