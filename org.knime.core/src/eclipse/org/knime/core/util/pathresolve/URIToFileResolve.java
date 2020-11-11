@@ -48,6 +48,8 @@ package org.knime.core.util.pathresolve;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.time.ZonedDateTime;
+import java.util.Optional;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 
@@ -112,6 +114,26 @@ public interface URIToFileResolve {
      * @since 2.6
      */
     public File resolveToLocalOrTempFile(final URI uri, IProgressMonitor monitor) throws IOException;
+
+    /**
+     * Resolves the given URI into a local file. If the URI does not represent a local file (e.g. a remote file on a
+     * server) it is downloaded first to a temporary directory and the temporary copy is returned. If a
+     * 'ifModifiedSince' date is provided, it will only be downloaded and returned if the file on the server has been
+     * modified after the provided date.
+     *
+     * If it represents a local file the behavior is the same as in {@link #resolveToFile(URI)}.
+     *
+     * @param uri The URI, e.g. "knime:/MOUNT_ID/some/path/workflow.knime"
+     * @param monitor a progress monitor, must not be <code>null</code>
+     * @param ifModifiedSince the if-modified-since date for a conditional request; can be <code>null</code> to not
+     *            request it conditionally
+     * @return the file represented by the URI or a temporary copy of that file if it represents a remote file; or an
+     *         empty optional if the file hasn't been modified after the provided date
+     * @throws IOException
+     * @since 4.3
+     */
+    public Optional<File> resolveToLocalOrTempFileConditional(final URI uri, IProgressMonitor monitor,
+        ZonedDateTime ifModifiedSince) throws IOException;
 
     /**
      * Returns <code>true</code>, if this is a URI that is relative to the current mountpoint (of the flow it is used

@@ -50,6 +50,8 @@ package org.knime.core.util.pathresolve;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.time.ZonedDateTime;
+import java.util.Optional;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
@@ -174,6 +176,32 @@ public final class ResolverUtil {
             throw new IOException("Can't resolve URI \"" + uri + "\"; no URI resolve service registered");
         }
         return res.resolveToLocalOrTempFile(uri, monitor);
+    }
+
+    /**
+     * Fetches a service implementing the {@link URIToFileResolve} interface and
+     * returns the resolved file.
+     *
+     * @param uri The URI to resolve
+     * @param monitor a progress monitor, must not be <code>null</code>
+     * @param ifModifiedSince the if-modified-since date for a conditional request; can be <code>null</code>
+     * @return The local file or temporary copy of a remote file underlying the
+     *         URI (if any)
+     * @throws IOException If no service is registered or the URI can't be
+     *             resolved.
+     * @since 4.3
+     */
+    public static Optional<File> resolveURItoLocalOrTempFileConditional(final URI uri, final IProgressMonitor monitor,
+        final ZonedDateTime ifModifiedSince) throws IOException {
+        File localFile = resolveURItoLocalFile(uri, monitor);
+        if (localFile != null) {
+            return Optional.of(localFile);
+        }
+        URIToFileResolve res = (URIToFileResolve)serviceTracker.getService();
+        if (res == null) {
+            throw new IOException("Can't resolve URI \"" + uri + "\"; no URI resolve service registered");
+        }
+        return res.resolveToLocalOrTempFileConditional(uri, monitor, ifModifiedSince);
     }
 
     /**
