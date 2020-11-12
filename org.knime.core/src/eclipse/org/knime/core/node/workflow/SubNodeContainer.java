@@ -104,6 +104,7 @@ import org.knime.core.node.dialog.DialogNodeValue;
 import org.knime.core.node.dialog.EnabledDialogNodeModelFilter;
 import org.knime.core.node.dialog.MetaNodeDialogNode;
 import org.knime.core.node.dialog.SubNodeDescriptionProvider;
+import org.knime.core.node.dialog.util.ConfigurationLayoutUtil;
 import org.knime.core.node.exec.ThreadNodeExecutionJobManager;
 import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.interactive.ViewContent;
@@ -263,6 +264,9 @@ public final class SubNodeContainer extends SingleNodeContainer
     /** JSON layout info provider for wizard nodes. */
     private SubnodeContainerLayoutStringProvider m_subnodeLayoutStringProvider;
 
+    /** JSON configuration layout info provider for dialog nodes. */
+    private SubnodeContainerConfigurationStringProvider m_subnodeConfigurationStringProvider;
+
     private boolean m_hideInWizard;
     private String m_customCSS;
 
@@ -302,6 +306,7 @@ public final class SubNodeContainer extends SingleNodeContainer
         m_virtualInNodeIDSuffix = persistor.getVirtualInNodeIDSuffix();
         m_virtualOutNodeIDSuffix = persistor.getVirtualOutNodeIDSuffix();
         m_subnodeLayoutStringProvider = persistor.getSubnodeLayoutStringProvider();
+        m_subnodeConfigurationStringProvider = persistor.getSubnodeConfigurationStringProvider();
         m_hideInWizard = persistor.isHideInWizard();
         m_customCSS = persistor.getCssStyles();
         PortType[] inTypes = new PortType[inPortTemplates.length];
@@ -405,6 +410,7 @@ public final class SubNodeContainer extends SingleNodeContainer
         m_metadata = ComponentMetadata.NONE;
 
         m_subnodeLayoutStringProvider = new SubnodeContainerLayoutStringProvider();
+        m_subnodeConfigurationStringProvider = new SubnodeContainerConfigurationStringProvider();
 
         postLoadWFM();
     }
@@ -959,7 +965,13 @@ public final class SubNodeContainer extends SingleNodeContainer
                 return nodeModel instanceof DialogNode && !((DialogNode)nodeModel).isHideInDialog();
             }
         }, false);
-        ((MetaNodeDialogPane)dialogPane).setQuickformNodes(nodes);
+
+        List<Integer> order = ConfigurationLayoutUtil.getConfigurationOrder(m_subnodeConfigurationStringProvider, nodes, m_wfm);
+        if (order.size() > 0) {
+            ((MetaNodeDialogPane)dialogPane).setQuickformNodes(nodes, order);
+        } else {
+            ((MetaNodeDialogPane)dialogPane).setQuickformNodes(nodes);
+        }
         NodeSettings settings = new NodeSettings("subnode_settings");
         saveSettings(settings);
         // remove the flow variable port from the specs and data
@@ -2185,12 +2197,41 @@ public final class SubNodeContainer extends SingleNodeContainer
     }
 
     /**
-     * @return SubnodeContainerLayoutStringProvider the SubnodeContainerLayoutStringProvider to set
+     * @return the SubnodeContainerConfigurationStringProvider
+     * @since 4.3
+     */
+    public SubnodeContainerConfigurationStringProvider getSubnodeConfigurationLayoutStringProvider() {
+        return m_subnodeConfigurationStringProvider.copy();
+    }
+
+    /**
+     * @param layoutStringProvider the SubnodeContainerLayoutStringProvider to set
      * @since 4.2
      */
     public void setSubnodeLayoutStringProvider(final SubnodeContainerLayoutStringProvider layoutStringProvider) {
         if (!m_subnodeLayoutStringProvider.equals(layoutStringProvider)) {
             m_subnodeLayoutStringProvider = new SubnodeContainerLayoutStringProvider(layoutStringProvider.getLayoutString());
+            if (isProject()) {
+                //differently handled if this is a component project
+                //otherwise the setDirty event will just be past to the parent (which is ROOT)
+                getChangesTracker().ifPresent(ct -> ct.otherChange());
+                //for consistency
+                if (!getWorkflowManager().isDirty()) {
+                    getWorkflowManager().setDirty();
+                }
+            } else {
+                setDirty();
+            }
+        }
+    }
+
+    /**
+     * @param configurationStringProvider the SubnodeContainerConfigurationStringProvider to set
+     * @since 4.3
+     */
+    public void setSubnodeConfigurationStringProvider(final SubnodeContainerConfigurationStringProvider configurationStringProvider) {
+        if (!m_subnodeConfigurationStringProvider.equals(configurationStringProvider)) {
+            m_subnodeConfigurationStringProvider = new SubnodeContainerConfigurationStringProvider(configurationStringProvider.getConfigurationLayoutString());
             if (isProject()) {
                 //differently handled if this is a component project
                 //otherwise the setDirty event will just be past to the parent (which is ROOT)
@@ -2939,4 +2980,5 @@ public final class SubNodeContainer extends SingleNodeContainer
             return getWorkflowManager().canPerformReset();
         }
     }
+
 }

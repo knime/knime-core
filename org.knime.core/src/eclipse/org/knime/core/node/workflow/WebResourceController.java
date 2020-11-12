@@ -72,8 +72,10 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
+import org.knime.core.node.dialog.DialogNode;
 import org.knime.core.node.dialog.ExternalNodeData;
 import org.knime.core.node.dialog.InputNode;
+import org.knime.core.node.dialog.util.ConfigurationLayoutUtil;
 import org.knime.core.node.interactive.ViewRequestHandlingException;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteManager;
@@ -156,6 +158,16 @@ public abstract class WebResourceController {
         @Override
         public boolean include(final WizardNode nodeModel) {
             return !nodeModel.isHideInWizard();
+        }
+    };
+
+    /**Since 4.3 **/
+    /** Filter passed to WFM search methods to find only dialog nodes that are to be displayed. */
+    @SuppressWarnings("rawtypes")
+    public static final NodeModelFilter<DialogNode> NOT_HIDDEN_CONFIGURATION_FILTER = new NodeModelFilter<DialogNode>() {
+        @Override
+        public boolean include(final DialogNode nodeModel) {
+            return !nodeModel.isHideInDialog();
         }
     };
 
@@ -454,12 +466,15 @@ public abstract class WebResourceController {
 
         LinkedHashMap<NodeIDSuffix, WizardNode> resultMap = new LinkedHashMap<NodeIDSuffix, WizardNode>();
         LinkedHashMap<NodeIDSuffix, WizardPageNodeInfo> infoMap = new LinkedHashMap<NodeIDSuffix, WizardPageNodeInfo>();
+        LinkedHashMap<NodeIDSuffix, DialogNode> resultConfigurationMap = new LinkedHashMap<NodeIDSuffix, DialogNode>();
         Set<HiLiteHandler> initialHiliteHandlerSet = new HashSet<HiLiteHandler>();
         SubNodeContainer subNC = manager.getNodeContainer(subnodeID, SubNodeContainer.class, true);
         LinkedHashMap<NodeIDSuffix, SubNodeContainer> sncMap = new LinkedHashMap<NodeIDSuffix, SubNodeContainer>();
         findNestedViewNodes(subNC, resultMap, infoMap, sncMap, initialHiliteHandlerSet);
+        findAllConfigurationNodes(subNC, resultConfigurationMap, infoMap, sncMap, initialHiliteHandlerSet);
         NodeID.NodeIDSuffix pageID = NodeID.NodeIDSuffix.create(manager.getID(), subNC.getID());
         SubnodeContainerLayoutStringProvider layoutStringProvider = subNC.getSubnodeLayoutStringProvider();
+        SubnodeContainerConfigurationStringProvider configurationStringProvider = subNC.getSubnodeConfigurationLayoutStringProvider();
         if (layoutStringProvider.isEmptyLayout()) {
             try {
                 WorkflowManager subWfm = subNC.getWorkflowManager();
@@ -472,6 +487,17 @@ public abstract class WebResourceController {
                 layoutStringProvider.setLayoutString(LayoutUtil.createDefaultLayout(viewMap));
             } catch (IOException ex) {
                 LOGGER.error("Default page layout could not be created: " + ex.getMessage(), ex);
+            }
+        }
+        if (configurationStringProvider.isEmptyLayout()) {
+            try {
+                WorkflowManager subWfm = subNC.getWorkflowManager();
+                Map<NodeIDSuffix, DialogNode> configurationMap = new LinkedHashMap<NodeIDSuffix, DialogNode>();
+                subWfm.findNodes(DialogNode.class, NodeModelFilter.all(), false).entrySet().stream()
+                    .forEach(e -> configurationMap.put(NodeID.NodeIDSuffix.create(manager.getID(), e.getKey()), e.getValue()));
+                configurationStringProvider.setConfigurationLayoutString(ConfigurationLayoutUtil.createDefaultLayout(configurationMap));
+            } catch (IOException ex) {
+                LOGGER.error("Default configuration page layout could not be created: " + ex.getMessage(), ex);
             }
         }
         try {
@@ -487,9 +513,21 @@ public abstract class WebResourceController {
             LOGGER.error("Layout could not be amended by unreferenced views: " + ex.getMessage(), ex);
         }
         try {
+            NodeID containerID = NodeID
+                .fromString(NodeIDSuffix.create(m_manager.getID(), subNC.getWorkflowManager().getID()).toString());
+            org.knime.core.node.dialog.util.ConfigurationLayoutUtil.addUnreferencedViews(configurationStringProvider, resultConfigurationMap, containerID);
+        } catch (IOException ex) {
+            LOGGER.error("Configuration layout could not be amended by unreferenced views: " + ex.getMessage(), ex);
+        }
+        try {
             LayoutUtil.updateLayout(layoutStringProvider);
         } catch (Exception ex) {
             LOGGER.error("Layout could not be updated: " + ex.getMessage(), ex);
+        }
+        try {
+            ConfigurationLayoutUtil.updateLayout(configurationStringProvider);
+        } catch (Exception ex) {
+            LOGGER.error("Configuration layout could not be updated: " + ex.getMessage(), ex);
         }
         Set<HiLiteHandler> knownHiLiteHandlers = new HashSet<HiLiteHandler>();
         Set<HiLiteTranslator> knownTranslators = new HashSet<HiLiteTranslator>();
@@ -543,6 +581,39 @@ public abstract class WebResourceController {
                 NodeID.NodeIDSuffix idSuffix = NodeID.NodeIDSuffix.create(m_manager.getID(), snc.getID());
                 sncMap.put(idSuffix, snc);
                 findNestedViewNodes(snc, resultMap, infoMap, sncMap, initialHiliteHandlerSet);
+            }
+        }
+    }
+
+    /**Since 4.3 **/
+    @SuppressWarnings("rawtypes")
+    private void findAllConfigurationNodes(final SubNodeContainer subNC,
+        final Map<NodeIDSuffix, DialogNode> resultMap, final Map<NodeIDSuffix, WizardPageNodeInfo> infoMap,
+        final Map<NodeIDSuffix, SubNodeContainer>sncMap, final Set<HiLiteHandler> initialHiliteHandlerSet) {
+        WorkflowManager subWFM = subNC.getWorkflowManager();
+        Map<NodeID, DialogNode> dialogNodeMap = subWFM.findNodes(DialogNode.class, NOT_HIDDEN_CONFIGURATION_FILTER, false);
+        for (Map.Entry<NodeID, DialogNode> entry : dialogNodeMap.entrySet()) {
+            NodeContainer nc = subWFM.getNodeContainer(entry.getKey());
+            if ((nc instanceof SingleNodeContainer) && ((SingleNodeContainer)nc).isInactive()) {
+                //skip nodes in inactive branches
+                continue;
+            }
+            NodeID.NodeIDSuffix idSuffix = NodeID.NodeIDSuffix.create(m_manager.getID(), entry.getKey());
+            WizardPageNodeInfo nodeInfo = new WizardPageNodeInfo();
+            nodeInfo.setNodeName(nc.getName());
+            nodeInfo.setNodeAnnotation(nc.getNodeAnnotation().toString());
+            nodeInfo.setNodeState(nc.getInternalState());
+            nodeInfo.setNodeMessage(nc.getNodeMessage());
+            infoMap.put(idSuffix, nodeInfo);
+            if (EXECUTED.equals(nc.getInternalState())) {
+                //regular viewable nodes need to be executed
+                resultMap.put(idSuffix, entry.getValue());
+            }
+            for (int i = 0; i < nc.getNrInPorts() - 1; i++) {
+                HiLiteHandler hiLiteHandler = ((NodeModel)entry.getValue()).getInHiLiteHandler(i);
+                if (hiLiteHandler != null) {
+                    initialHiliteHandlerSet.add(hiLiteHandler);
+                }
             }
         }
     }

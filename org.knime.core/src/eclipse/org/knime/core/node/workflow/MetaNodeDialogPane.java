@@ -166,6 +166,9 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
         m_dialogNodePanels.clear();
         // remove all quickform components from current panel
         m_panel.removeAll();
+
+
+
         List<Pair<Integer, Pair<NodeID, MetaNodeDialogNode>>> sortedNodeList = new ArrayList<>();
         for (Map.Entry<NodeID, MetaNodeDialogNode> e : nodes.entrySet()) {
             // only accept old qf nodes for metanodes
@@ -241,6 +244,80 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
             removeTab(OPTIONS_TAB_NAME); // now removed by default starting with 4.3
             if (!m_nodes.isEmpty()) {
                 addTabAt(0, OPTIONS_TAB_NAME, m_panel);
+            }
+        }
+
+        if (m_nodes.isEmpty()) {
+            String msg;
+            if (m_metaNodeDialogType == MetaNodeDialogType.SUBNODE) {
+                msg = "Component is not configurable.<br>Please include Configuration nodes.";
+            } else {
+                msg = "Metanode is not configurable.";
+            }
+            m_panel.add(new JLabel("<html>" + msg + "</html>"));
+        }
+    }
+
+    /**
+     * Set dialog nodes into this dialog; called just before
+     * {@link #loadSettingsFrom(NodeSettingsRO,
+     * org.knime.core.data.DataTableSpec[])} is called.
+     * Only supports the new QuickForm and Configuration Nodes.
+     * @param nodes the dialog nodes to show settings for
+     * @param order the order, in which the dialog nodes should be shown
+     * @since 4.3
+     */
+    public final void setQuickformNodes(final Map<NodeID, MetaNodeDialogNode> nodes, final List<Integer> order) {
+        m_nodes.clear();
+        m_quickFormInputNodePanels.clear();
+        m_dialogNodePanels.clear();
+        // remove all quickform components from current panel
+        m_panel.removeAll();
+
+        List<Pair<Integer, Pair<NodeID, MetaNodeDialogNode>>> sortedNodeList = new ArrayList<>();
+        for (Map.Entry<NodeID, MetaNodeDialogNode> e : nodes.entrySet()) {
+            Integer orderIndex = Integer.MAX_VALUE;
+            // Add Dialogs in the order received
+            if (order.contains(e.getKey().getIndex())) {
+                orderIndex = order.indexOf(e.getKey().getIndex());
+            }
+            if (m_metaNodeDialogType == MetaNodeDialogType.SUBNODE && e.getValue() instanceof DialogNode) {
+                DialogNodeRepresentation<? extends DialogNodeValue> representation
+                    = ((DialogNode)e.getValue()).getDialogRepresentation();
+                if (((DialogNode)e.getValue()).isHideInDialog() || representation == null) {
+                    // no valid representation
+                    continue;
+                }
+                try {
+                    DialogNodePanel dialogPanel = representation.createDialogPanel();
+                    m_nodes.put(e.getKey(), e.getValue());
+                    m_dialogNodePanels.put(e.getKey(), dialogPanel);
+                    Pair<Integer, Pair<NodeID, MetaNodeDialogNode>> weightNodePair =
+                        Pair.create(orderIndex, Pair.create(e.getKey(), e.getValue()));
+                    sortedNodeList.add(weightNodePair);
+                } catch (Exception ex) {
+                    LOGGER.error("The dialog pane for node " + e.getKey() + " could not be created.", ex);
+                }
+            }
+        }
+
+        Collections.sort(sortedNodeList, (o1, o2) -> o1.getFirst() - o2.getFirst());
+
+        for (Pair<Integer, Pair<NodeID, MetaNodeDialogNode>> weightNodePair : sortedNodeList) {
+            NodeID id = weightNodePair.getSecond().getFirst();
+            MetaNodeDialogNode node = weightNodePair.getSecond().getSecond();
+            if (node instanceof DialogNode) {
+                DialogNodePanel<? extends DialogNodeValue> nodePanel = m_dialogNodePanels.get(id);
+
+                JPanel dpanel = new JPanel();
+                final BoxLayout boxLayout2 = new BoxLayout(dpanel, BoxLayout.Y_AXIS);
+                dpanel.setLayout(boxLayout2);
+                dpanel.setBorder(BorderFactory.createTitledBorder((String) null));
+
+                JPanel p = new JPanel(new BorderLayout());
+                p.add(nodePanel, BorderLayout.CENTER);
+                dpanel.add(p);
+                m_panel.add(dpanel);
             }
         }
 

@@ -67,6 +67,7 @@ public class CopySubNodeContainerPersistor
     private final int m_virtualInNodeIDSuffix;
     private final int m_virtualOutNodeIDSuffix;
     private final SubnodeContainerLayoutStringProvider m_subnodeLayoutStringProvider;
+    private final SubnodeContainerConfigurationStringProvider m_subnodeConfigurationStringProvider;
     private final boolean m_hideInWizard;
     private final String m_customCSS;
     private ComponentMetadata m_componentMetadata;
@@ -102,6 +103,7 @@ public class CopySubNodeContainerPersistor
         m_virtualInNodeIDSuffix = original.getVirtualInNode().getID().getIndex();
         m_virtualOutNodeIDSuffix = original.getVirtualOutNode().getID().getIndex();
         m_subnodeLayoutStringProvider = original.getSubnodeLayoutStringProvider();
+        m_subnodeConfigurationStringProvider = original.getSubnodeConfigurationLayoutStringProvider();
         m_hideInWizard = original.isHideInWizard();
         m_customCSS = new String(original.getCssStyles());
         m_componentMetadata = original.getMetadata();
@@ -158,6 +160,15 @@ public class CopySubNodeContainerPersistor
     @Override
     public SubnodeContainerLayoutStringProvider getSubnodeLayoutStringProvider() {
         return m_subnodeLayoutStringProvider;
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 4.3
+     */
+    @Override
+    public SubnodeContainerConfigurationStringProvider getSubnodeConfigurationStringProvider() {
+        return m_subnodeConfigurationStringProvider;
     }
 
     /**

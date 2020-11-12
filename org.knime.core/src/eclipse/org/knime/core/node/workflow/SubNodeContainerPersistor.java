@@ -79,6 +79,9 @@ public interface SubNodeContainerPersistor extends SingleNodeContainerPersistor 
     /** @since 4.2 */
     SubnodeContainerLayoutStringProvider getSubnodeLayoutStringProvider();
 
+    /** @since 4.3 */
+    SubnodeContainerConfigurationStringProvider getSubnodeConfigurationStringProvider();
+
     /**
      * @since 4.1
      */

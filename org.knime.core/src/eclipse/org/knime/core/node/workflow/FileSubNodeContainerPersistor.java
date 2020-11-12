@@ -109,6 +109,8 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
 
     private SubnodeContainerLayoutStringProvider m_subnodeLayoutStringProvider;
 
+    private SubnodeContainerConfigurationStringProvider m_subnodeConfigurationStringProvider;
+
     private String m_customCSS;
 
     private boolean m_hideInWizard;
@@ -217,6 +219,15 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
     @Override
     public SubnodeContainerLayoutStringProvider getSubnodeLayoutStringProvider() {
         return m_subnodeLayoutStringProvider;
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 4.3
+     */
+    @Override
+    public SubnodeContainerConfigurationStringProvider getSubnodeConfigurationStringProvider() {
+        return m_subnodeConfigurationStringProvider;
     }
 
     /**
@@ -376,6 +387,9 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
         m_hideInWizard = nodeSettings.getBoolean("hideInWizard", false);
 
         m_workflowPersistor.preLoadNodeContainer(parentPersistor, parentSettings, result);
+
+        // added in 4.3
+        m_subnodeConfigurationStringProvider = new SubnodeContainerConfigurationStringProvider(nodeSettings.getString("configurationLayoutJSON", ""));
     }
 
     private WorkflowPortTemplate loadPort(final NodeSettingsRO portSetting,
@@ -504,6 +518,7 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
         subnodeNC.getMetadata().save(settings);
         subnodeNC.getTemplateInformation().save(settings);
         settings.addString("layoutJSON", subnodeNC.getSubnodeLayoutStringProvider().getLayoutString());
+        settings.addString("configurationLayoutJSON", subnodeNC.getSubnodeConfigurationLayoutStringProvider().getConfigurationLayoutString());
         settings.addBoolean("hideInWizard", subnodeNC.isHideInWizard());
         settings.addString("customCSS", subnodeNC.getCssStyles());
         WorkflowManager workflowManager = subnodeNC.getWorkflowManager();
