@@ -68,12 +68,13 @@ import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
 
 /**
- *
  * Helper class to create and persist a mapping between {@link DataCell}s and their {@link DataCellSerializer} at
  * serialization time.
  *
  * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
  * @since 4.3
+ *
+ * @apiNote API still experimental. It might change in future releases of KNIME Analytics Platform.
  */
 public final class DataCellSerializerFactory {
 

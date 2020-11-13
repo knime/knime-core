@@ -52,8 +52,10 @@ package org.knime.core.data.v2;
  * Cursor allows to iterate over a fixed set of <T> from a data source.
  *
  * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
- * @param <T> the type of objects which are polled
+ * @param <T> type of objects
  * @since 4.3
+ *
+ * @apiNote API still experimental. It might change in future releases of KNIME Analytics Platform.
  */
 public interface Cursor<T> extends AutoCloseable {
 

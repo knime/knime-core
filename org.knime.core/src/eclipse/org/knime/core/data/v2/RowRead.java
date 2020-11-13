@@ -53,7 +53,7 @@ import org.knime.core.data.RowKeyValue;
 /**
  * Read access to a data row.
  *
- * @author Christian Dietz
+ * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
  * @since 4.3
  *
  * @apiNote API still experimental. It might change in future releases of KNIME Analytics Platform.

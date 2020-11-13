@@ -49,10 +49,13 @@
 package org.knime.core.data.v2;
 
 /**
+ * Write access to a row.
  *
- * @author dietzc
+ * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
  * @param <R>
  * @since 4.3
+ *
+ * @apiNote API still experimental. It might change in future releases of KNIME Analytics Platform.
  */
 public interface RowValueWrite<R extends RowValueRead> {
 

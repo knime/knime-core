@@ -57,6 +57,8 @@ import org.knime.core.node.BufferedDataTable;
  *
  * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
  * @since 4.3
+ *
+ * @apiNote API still experimental. It might change in future releases of KNIME Analytics Platform.
  */
 public interface RowContainer extends AutoCloseable {
 

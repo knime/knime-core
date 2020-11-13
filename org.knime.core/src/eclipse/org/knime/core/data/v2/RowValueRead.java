@@ -51,7 +51,7 @@ package org.knime.core.data.v2;
 import org.knime.core.data.DataValue;
 
 /**
- * Read access to a data row.
+ * Read access to a row.
  *
  * @author Christian Dietz
  * @since 4.3

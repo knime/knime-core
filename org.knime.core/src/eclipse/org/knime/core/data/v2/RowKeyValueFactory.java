@@ -58,6 +58,8 @@ import org.knime.core.data.v2.access.WriteAccess;
  * @param <R> type of read access
  * @param <W> type of write access
  * @since 4.3
+ *
+ * @apiNote API still experimental. It might change in future releases of KNIME Analytics Platform.
  */
 public interface RowKeyValueFactory<R extends ReadAccess, W extends WriteAccess> extends ValueFactory<R, W> {
 

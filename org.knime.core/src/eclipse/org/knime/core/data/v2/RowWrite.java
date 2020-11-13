@@ -51,10 +51,12 @@ package org.knime.core.data.v2;
 import org.knime.core.data.RowKeyValue;
 
 /**
- * TODO required without push for streaming
+ * Write access to a row with row keys.
  *
  * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
  * @since 4.3
+ *
+ * @apiNote API still experimental. It might change in future releases of KNIME Analytics Platform.
  */
 public interface RowWrite extends RowValueWrite<RowRead> {
 
