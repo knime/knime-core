@@ -96,7 +96,7 @@ import org.knime.core.node.NodeSettingsWO;
  * logical access layer, independent from it's physical implementation.
  *
  * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
-
+ *
  * @since 4.3
  */
 // TODO do we want to interface this?
@@ -299,7 +299,7 @@ public final class ValueSchema {
             final ValueFactory<?, ?>[] factories = new ValueFactory[source.getNumColumns() + 1];
             factories[0] = instantiateValueFactory(settings.getString(CFG_ROW_KEY_CONFIG));
             for (int i = 1; i < factories.length; i++) {
-                final DataType type = source.getColumnSpec(i).getType();
+                final DataType type = source.getColumnSpec(i - 1).getType();
                 factories[i] = getValueFactory(type, factoryMapping, cellSerializerFactory, dataRepository);
             }
 

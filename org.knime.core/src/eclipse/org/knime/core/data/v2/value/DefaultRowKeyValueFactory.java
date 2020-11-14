@@ -75,9 +75,6 @@ public final class DefaultRowKeyValueFactory
      */
     public final static DefaultRowKeyValueFactory INSTANCE = new DefaultRowKeyValueFactory();
 
-    private DefaultRowKeyValueFactory() {
-    }
-
     @Override
     public ObjectAccessSpec<String> getSpec() {
         return CustomRowKeyAccessSpec.SPEC_INSTANCE;
