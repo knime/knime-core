@@ -89,6 +89,8 @@ import com.google.common.base.Objects;
  * @param <T> the type of the elements
  * @author Benjamin Wilhelm, KNIME GmbH, Konstanz, Germany
  * @since 4.3
+ *
+ * @noreference This class is not intended to be referenced by clients.
  */
 public abstract class ObjectSparseListValueFactory<T> implements ValueFactory<StructReadAccess, StructWriteAccess> {
 

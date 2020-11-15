@@ -75,6 +75,8 @@ import org.knime.core.node.port.PortUtil;
  *
  * @author Benjamin Wilhelm, KNIME GmbH, Konstanz, Germany
  * @since 4.3
+ *
+ * @noreference This class is not intended to be referenced by clients.
  */
 public class PortObjectValueFactory
     implements ValueFactory<ObjectReadAccess<PortObject>, ObjectWriteAccess<PortObject>> {

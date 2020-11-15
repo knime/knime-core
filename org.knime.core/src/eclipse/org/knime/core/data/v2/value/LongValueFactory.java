@@ -64,6 +64,8 @@ import org.knime.core.data.v2.access.LongAccess.LongWriteAccess;
  *
  * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
  * @since 4.3
+ *
+ * @noreference This class is not intended to be referenced by clients.
  */
 public final class LongValueFactory implements ValueFactory<LongReadAccess, LongWriteAccess> {
 

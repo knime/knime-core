@@ -75,6 +75,8 @@ import com.google.common.primitives.Booleans;
  *
  * @author Benjamin Wilhelm, KNIME GmbH, Konstanz, Germany
  * @since 4.3
+ *
+ * @noreference This class is not intended to be referenced by clients.
  */
 public final class BooleanListValueFactory implements ValueFactory<ListReadAccess, ListWriteAccess> {
 

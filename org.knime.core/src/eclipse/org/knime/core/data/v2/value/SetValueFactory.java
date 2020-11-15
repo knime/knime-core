@@ -80,6 +80,8 @@ import com.google.common.collect.Lists;
  *
  * @author Benjamin Wilhelm, KNIME GmbH, Konstanz, Germany
  * @since 4.3
+ *
+ * @noreference This class is not intended to be referenced by clients.
  */
 public final class SetValueFactory implements CollectionValueFactory<ListReadAccess, ListWriteAccess> {
 

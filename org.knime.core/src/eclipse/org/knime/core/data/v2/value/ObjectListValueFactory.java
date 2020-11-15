@@ -74,6 +74,8 @@ import org.knime.core.data.v2.value.ListValueFactory.ListWriteValue;
  * @param <T> the type of the elements
  * @author Benjamin Wilhelm, KNIME GmbH, Konstanz, Germany
  * @since 4.3
+ *
+ * @noreference This class is not intended to be referenced by clients.
  */
 public abstract class ObjectListValueFactory<T> implements ValueFactory<ListReadAccess, ListWriteAccess> {
 

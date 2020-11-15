@@ -53,6 +53,8 @@ package org.knime.core.data.v2.access;
  *
  * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
  * @since 4.3
+ *
+ * @noreference This interface is not intended to be referenced by clients.
  */
 public interface WriteAccess {
 

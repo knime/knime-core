@@ -63,7 +63,7 @@ import org.knime.core.data.v2.access.WriteAccess;
  * @since 4.3
  * @author Benjamin Wilhelm, KNIME GmbH, Konstanz, Germany
  *
- * @apiNote API still experimental. It might change in future releases of KNIME Analytics Platform.
+ * @noreference This interface is not intended to be referenced by clients.
  */
 public interface CollectionValueFactory<R extends ReadAccess, W extends WriteAccess> extends ValueFactory<R, W> {
 

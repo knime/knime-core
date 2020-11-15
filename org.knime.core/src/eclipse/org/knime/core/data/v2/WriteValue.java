@@ -58,7 +58,7 @@ import org.knime.core.data.v2.value.DoubleValueFactory.DoubleWriteValue;
  * @param <D> associated {@link DataValue}.
  * @since 4.3
  *
- * @apiNote API still experimental. It might change in future releases of KNIME Analytics Platform.
+ * @noreference This interface is not intended to be referenced by clients.
  */
 public interface WriteValue<D extends DataValue> {
     /**

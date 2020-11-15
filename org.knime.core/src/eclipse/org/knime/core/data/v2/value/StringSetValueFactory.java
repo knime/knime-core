@@ -57,6 +57,8 @@ import org.knime.core.data.v2.ValueFactory;
  *
  * @author Benjamin Wilhelm, KNIME GmbH, Konstanz, Germany
  * @since 4.3
+ *
+ * @noreference This class is not intended to be referenced by clients.
  */
 public final class StringSetValueFactory extends ObjectSetValueFactory<String> {
 

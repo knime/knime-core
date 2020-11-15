@@ -63,6 +63,8 @@ import org.knime.core.data.v2.access.WriteAccess;
  *
  * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
  * @since 4.3
+ *
+ * @noreference This class is not intended to be referenced by clients.
  */
 public final class VoidRowKeyFactory implements RowKeyValueFactory<ReadAccess, WriteAccess> {
 

@@ -76,6 +76,7 @@ import org.knime.core.data.v2.access.ZonedDateTimeAccess.ZonedDateTimeAccessSpec
  * @since 4.3
  *
  * @noextend This interface is not intended to be extended by clients.
+ * @noreference This interface is not intended to be referenced by clients.
  */
 public interface AccessSpec<R extends ReadAccess, W extends WriteAccess> { // NOSONAR
 

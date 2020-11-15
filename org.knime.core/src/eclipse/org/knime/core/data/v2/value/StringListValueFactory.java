@@ -66,6 +66,8 @@ import org.knime.core.data.vector.stringvector.StringVectorValue;
  *
  * @author Benjamin Wilhelm, KNIME GmbH, Konstanz, Germany
  * @since 4.3
+ *
+ * @noreference This class is not intended to be referenced by clients.
  */
 public final class StringListValueFactory extends ObjectListValueFactory<String> {
 

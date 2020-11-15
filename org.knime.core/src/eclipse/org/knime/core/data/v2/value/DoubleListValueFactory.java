@@ -76,6 +76,8 @@ import org.knime.core.data.vector.doublevector.DoubleVectorValue;
  *
  * @author Benjamin Wilhelm, KNIME GmbH, Konstanz, Germany
  * @since 4.3
+ *
+ * @noreference This class is not intended to be referenced by clients.
  */
 public final class DoubleListValueFactory implements ValueFactory<ListReadAccess, ListWriteAccess> {
 

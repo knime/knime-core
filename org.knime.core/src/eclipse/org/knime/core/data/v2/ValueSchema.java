@@ -100,8 +100,9 @@ import org.knime.core.node.NodeSettingsWO;
  * logical access layer, independent from it's physical implementation.
  *
  * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
- *
  * @since 4.3
+ *
+ * @noreference This class is not intended to be referenced by clients.
  */
 // TODO do we want to interface this?
 public final class ValueSchema {

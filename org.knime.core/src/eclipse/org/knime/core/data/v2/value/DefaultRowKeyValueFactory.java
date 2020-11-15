@@ -66,6 +66,8 @@ import org.knime.core.data.v2.value.StringValueFactory.StringObjectSerializer;
  *
  * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
  * @since 4.3
+ *
+ * @noreference This class is not intended to be referenced by clients.
  */
 public final class DefaultRowKeyValueFactory
     implements RowKeyValueFactory<ObjectReadAccess<String>, ObjectWriteAccess<String>> {
@@ -73,7 +75,7 @@ public final class DefaultRowKeyValueFactory
     /**
      * Stateless instance.
      */
-    public final static DefaultRowKeyValueFactory INSTANCE = new DefaultRowKeyValueFactory();
+    public static final DefaultRowKeyValueFactory INSTANCE = new DefaultRowKeyValueFactory();
 
     @Override
     public ObjectAccessSpec<String> getSpec() {

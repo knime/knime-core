@@ -54,7 +54,7 @@ package org.knime.core.data.v2;
  * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
  * @since 4.3
  *
- * @apiNote API still experimental. It might change in future releases of KNIME Analytics Platform.
+ * @noreference This interface is not intended to be referenced by clients.
  */
 public interface RowWriteCursor extends Cursor<RowWrite> {
     // NB: Marker interface

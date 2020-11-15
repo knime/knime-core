@@ -56,6 +56,8 @@ import org.knime.core.data.v2.value.LongValueFactory.LongWriteValue;
  *
  * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
  * @since 4.3
+ *
+ * @noreference This class is not intended to be referenced by clients.
  */
 @SuppressWarnings("javadoc")
 public final class LongAccess {

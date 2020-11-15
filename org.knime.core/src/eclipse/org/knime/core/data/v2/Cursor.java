@@ -55,7 +55,7 @@ package org.knime.core.data.v2;
  * @param <T> type of objects
  * @since 4.3
  *
- * @apiNote API still experimental. It might change in future releases of KNIME Analytics Platform.
+ * @noreference This interface is not intended to be referenced by clients.
  */
 public interface Cursor<T> extends AutoCloseable {
 

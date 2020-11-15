@@ -87,6 +87,8 @@ import org.knime.core.data.v2.value.SparseListValueFactory.SparseListWriteValue;
  *
  * @author Benjamin Wilhelm, KNIME GmbH, Konstanz, Germany
  * @since 4.3
+ *
+ * @noreference This class is not intended to be referenced by clients.
  */
 public final class DoubleSparseListValueFactory implements ValueFactory<StructReadAccess, StructWriteAccess> {
 

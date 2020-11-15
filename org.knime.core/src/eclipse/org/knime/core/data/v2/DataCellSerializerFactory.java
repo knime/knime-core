@@ -74,7 +74,7 @@ import org.knime.core.node.config.ConfigWO;
  * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
  * @since 4.3
  *
- * @apiNote API still experimental. It might change in future releases of KNIME Analytics Platform.
+ * @noreference This class is not intended to be referenced by clients.
  */
 public final class DataCellSerializerFactory {
 

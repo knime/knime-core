@@ -51,7 +51,7 @@ package org.knime.core.data.v2;
  * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
  * @since 4.3
  *
- * @apiNote API still experimental. It might change in future releases of KNIME Analytics Platform.
+ * @noreference This enum is not intended to be referenced by clients.
  */
 public enum RowKeyType {
         /**

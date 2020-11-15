@@ -83,6 +83,8 @@ import com.google.common.collect.ImmutableList;
  *
  * @author Benjamin Wilhelm, KNIME GmbH, Konstanz, Germany
  * @since 4.3
+ *
+ * @noreference This class is not intended to be referenced by clients.
  */
 public final class BooleanSetValueFactory implements ValueFactory<StructReadAccess, StructWriteAccess> {
 

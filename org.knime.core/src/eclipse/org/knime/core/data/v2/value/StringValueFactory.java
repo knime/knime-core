@@ -69,6 +69,8 @@ import org.knime.core.data.v2.access.ObjectAccess.ObjectWriteAccess;
  *
  * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
  * @since 4.3
+ *
+ * @noreference This class is not intended to be referenced by clients.
  */
 public class StringValueFactory implements ValueFactory<ObjectReadAccess<String>, ObjectWriteAccess<String>> {
 
