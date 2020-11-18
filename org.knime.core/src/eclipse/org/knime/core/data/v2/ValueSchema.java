@@ -371,11 +371,23 @@ public final class ValueSchema {
         private static ValueFactory<?, ?> instantiateValueFactory(final String className) {
             final Optional<Class<? extends ValueFactory<?, ?>>> valueFactoryClass =
                 DataTypeRegistry.getInstance().getValueFactoryClass(className);
+
+            final Class<? extends ValueFactory<?, ?>> type;
             if (!valueFactoryClass.isPresent()) {
-                throw new IllegalStateException(
-                    "The ValueFactory '" + className + "' could not be found. Are you missing a KNIME Extension?");
+                // try falling back on DataCellValueFactory
+                try {
+                    @SuppressWarnings("unchecked")
+                    final Class<? extends ValueFactory<?, ?>> cast =
+                        (Class<? extends ValueFactory<?, ?>>)Class.forName(className);
+                    type = cast;
+                } catch (ClassNotFoundException ex) {
+                    throw new IllegalStateException(
+                        "The ValueFactory '" + className + "' could not be found. Are you missing a KNIME Extension?");
+                }
+            } else {
+                type = valueFactoryClass.get();
             }
-            return ValueSchema.instantiateValueFactory(valueFactoryClass.get());
+            return ValueSchema.instantiateValueFactory(type);
         }
     }
 }
