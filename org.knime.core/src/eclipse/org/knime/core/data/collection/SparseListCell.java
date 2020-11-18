@@ -264,8 +264,9 @@ public class SparseListCell extends DataCell implements SparseListDataValue {
         if (index < 0) {
             throw new ArrayIndexOutOfBoundsException("Index can't be negative");
         }
-        if (m_idxs[0] > index
-                || m_idxs[m_idxs.length - 1] < index) {
+        if (m_idxs.length == 0 //
+            || m_idxs[0] > index //
+            || m_idxs[m_idxs.length - 1] < index) {
             // no value set yet - or only higher or lower indices
             return m_defaultElement;
         }
@@ -275,7 +276,7 @@ public class SparseListCell extends DataCell implements SparseListDataValue {
             // no element set at that position
             return m_defaultElement;
         }
-        return m_list.get(index);
+        return m_list.get(storageIdx);
     }
 
     /**
