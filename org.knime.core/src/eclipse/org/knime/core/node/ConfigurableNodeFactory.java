@@ -48,7 +48,10 @@
  */
 package org.knime.core.node;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 
@@ -625,7 +628,7 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
 
         private void addOptionalPortGroup(final String pGrpId, final PortType defaultPort,
             final PortType[] optionalPorts, final boolean definesInputPorts, final boolean definesOutputPorts) {
-            validateOptionalPortGroupArguments(pGrpId, optionalPorts);
+            validateOptionalPortGroupArguments(pGrpId, defaultPort, optionalPorts);
             final ExtendablePortGroup group = new DefaultExtendablePortGroup(new PortType[0], optionalPorts,
                 definesInputPorts, definesOutputPorts, 1);
             if (defaultPort != null) {
@@ -643,7 +646,8 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
 
         private void validateStaticPortGroupArguments(final String pGrpId, final PortType... staticPortTypes) {
             validatePortGrpIdentifier(pGrpId);
-            CheckUtils.checkArgumentNotNull(staticPortTypes, "The static port types cannot be null");
+            checkArgumentArrayNotNull(staticPortTypes,
+                "The static port types cannot be null and cannot contain null entries");
             CheckUtils.checkArgument(staticPortTypes != null && staticPortTypes.length > 0,
                 "At least one static port type has to be set");
         }
@@ -651,18 +655,34 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
         private void validateExtendablePortGroupArguments(final String pGrpId, final PortType[] staticPorts,
             final PortType[] defaultPorts, final PortType[] supportedTypes) {
             validatePortGrpIdentifier(pGrpId);
-            CheckUtils.checkArgumentNotNull(staticPorts, "The static ports cannot be null");
-            CheckUtils.checkArgumentNotNull(defaultPorts, "The default ports cannot be null");
-            CheckUtils.checkArgumentNotNull(supportedTypes, "The supported port types cannot be null");
+            checkArgumentArrayNotNull(staticPorts, "The static ports cannot be null and cannot contain null entries");
+            checkArgumentArrayNotNull(defaultPorts, "The default ports cannot be null and cannot contain null entries");
+            checkArgumentArrayNotNull(supportedTypes,
+                "The supported port types cannot be null and cannot contain null entries");
             CheckUtils.checkArgument(supportedTypes != null && supportedTypes.length > 0,
-                "The supported port types have to contain at least element");
+                "The supported port types have to contain at least one element");
+            checkSupportedTypesContainPorts(supportedTypes, staticPorts,
+                "The supported port types have to contain all the static port types");
+            checkSupportedTypesContainPorts(supportedTypes, defaultPorts,
+                "The supported port types have to contain all the default port types");
         }
 
-        private void validateOptionalPortGroupArguments(final String pGrpId, final PortType... optionalPorts) {
+        private static <T> void checkSupportedTypesContainPorts(final T[] supportedTypes, final T[] ports,
+            final String message) {
+            if (!new HashSet<>(Arrays.asList(supportedTypes)).containsAll(Arrays.asList(ports))) {
+                throw new IllegalArgumentException(message);
+            }
+        }
+
+        private void validateOptionalPortGroupArguments(final String pGrpId, final PortType defaultPort,
+            final PortType... optionalPorts) {
             validatePortGrpIdentifier(pGrpId);
-            CheckUtils.checkArgumentNotNull(optionalPorts, "The optional ports cannot be null");
+            checkArgumentArrayNotNull(optionalPorts,
+                "The optional ports cannot be null and cannot contain null entries");
             CheckUtils.checkArgument(optionalPorts != null && optionalPorts.length > 0,
                 "The optional ports have to contain at least one element");
+            CheckUtils.checkArgument(defaultPort == null || ArrayUtils.contains(optionalPorts, defaultPort),
+                "The optional port types have to contain the default port type");
         }
 
         /**
@@ -715,11 +735,19 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
             final PortType... supportedTypes) {
             validatePortGrpIdentifier(pGrpId);
             CheckUtils.checkArgumentNotNull(defaultType, "The default port type cannot be null");
-            CheckUtils.checkArgumentNotNull(supportedTypes, "The supported port types cannot be null");
+            checkArgumentArrayNotNull(supportedTypes,
+                "The supported port types cannot be null and cannot contain null entries");
             CheckUtils.checkArgument(supportedTypes != null && supportedTypes.length > 1,
                 "The supported types have to contain at least two elements");
             CheckUtils.checkArgument(ArrayUtils.contains(supportedTypes, defaultType),
                 "The supported port types have to contain the default port type");
+        }
+
+        private static <T> void checkArgumentArrayNotNull(final T[] arrayToCheck, final String message) {
+            CheckUtils.checkArgumentNotNull(arrayToCheck, message);
+            if (Arrays.stream(arrayToCheck).anyMatch(Objects::isNull)) {
+                throw new IllegalArgumentException(message);
+            }
         }
     }
 
