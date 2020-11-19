@@ -277,6 +277,7 @@ public final class DoubleCell extends DataCell
          * @return a new double cell
          * @throws NumberFormatException if the string is not a valid double number
          */
+        @DataCellFactoryMethod(name = "String")
         public static DataCell create(final String s) {
             String trimmed = s.trim();
             if (trimmed.isEmpty()) {

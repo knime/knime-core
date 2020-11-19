@@ -162,6 +162,10 @@ public class JavaToDataCellConversionTest {
     public void testToIntCell() throws Exception {
         final IntCell cell = testSimpleConversion(Integer.class, IntCell.TYPE, IntCell.class, new Integer(42));
         assertEquals(42, cell.getIntValue());
+
+        final IntCell cell1 =
+                testSimpleConversion(String.class, IntCell.TYPE, IntCell.class, new Integer(42).toString());
+        assertEquals(42, cell1.getIntValue());
     }
 
     /**
@@ -176,6 +180,10 @@ public class JavaToDataCellConversionTest {
 
         final LongCell cell1 = testSimpleConversion(Integer.class, LongCell.TYPE, LongCell.class, new Integer(412));
         assertEquals(412L, cell1.getLongValue());
+
+        final LongCell cell2 =
+                testSimpleConversion(String.class, LongCell.TYPE, LongCell.class, new Long(42L).toString());
+        assertEquals(42L, cell2.getLongValue());
     }
 
     /**
@@ -188,6 +196,9 @@ public class JavaToDataCellConversionTest {
         final DoubleCell cell =
             testSimpleConversion(Double.class, DoubleCell.TYPE, DoubleCell.class, new Double(Math.PI));
         assertEquals(Math.PI, cell.getDoubleValue(), FUZZY_DOUBLE_TOLERANCE);
+        final DoubleCell cell1 =
+                testSimpleConversion(String.class, DoubleCell.TYPE, DoubleCell.class, new Double(Math.PI).toString());
+            assertEquals(Math.PI, cell1.getDoubleValue(), FUZZY_DOUBLE_TOLERANCE);
     }
 
     /**
@@ -359,8 +370,9 @@ public class JavaToDataCellConversionTest {
         final Collection<Class<?>> set =
             factories.stream().map((factory) -> factory.getSourceType()).collect(Collectors.toSet());
 
-        assertEquals(1, set.size());
+        assertEquals(2, set.size());
         assertTrue(set.contains(Double.class));
+        assertTrue(set.contains(String.class));
     }
 
     /**

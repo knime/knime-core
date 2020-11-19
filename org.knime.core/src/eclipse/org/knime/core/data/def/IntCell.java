@@ -287,6 +287,7 @@ public class IntCell extends DataCell implements IntValue, LongValue,
          * @return a new int cell
          * @throws NumberFormatException if the string is not a valid integer number
          */
+        @DataCellFactoryMethod(name = "String")
         public static DataCell create(final String s) {
             String trimmed = s.trim();
             if (trimmed.isEmpty()) {

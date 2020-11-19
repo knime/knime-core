@@ -245,6 +245,7 @@ public class LongCell extends DataCell implements LongValue, DoubleValue,
          * @return a new long cell
          * @throws NumberFormatException if the string is not a valid long number
          */
+        @DataCellFactoryMethod(name = "String")
         public static DataCell create(final String s) {
             String trimmed = s.trim();
             if (trimmed.isEmpty()) {
