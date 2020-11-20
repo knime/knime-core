@@ -49,7 +49,6 @@
 package org.knime.core.util.workflowsummary;
 
 import static java.util.stream.Collectors.toList;
-import static org.knime.core.util.workflowsummary.WorkflowSummaryUtil.copy;
 
 import java.io.File;
 import java.io.IOException;
@@ -169,19 +168,26 @@ public final class WorkflowSummaryCreator {
      */
     public static WorkflowSummary create(final WorkflowManager wfm, final boolean includeExecutionInfo,
         final List<NodeID> nodesToIgnore) {
-        // creates and materializes the 'hollow' workflow summary object into a 'solid' instance
-        return copy(new WorkflowSummaryImpl(wfm, nodesToIgnore), includeExecutionInfo);
+        return new WorkflowSummaryImpl(wfm, nodesToIgnore, includeExecutionInfo);
     }
 
     private static class WorkflowSummaryImpl implements WorkflowSummary {
 
-        private WorkflowManager m_wfm;
+        private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern(DATE_TIME_FORMAT);
 
-        private List<NodeID> m_nodesToIgnore;
+        private final Environment m_environment;
 
-        WorkflowSummaryImpl(final WorkflowManager wfm, final List<NodeID> nodesToIgnore) {
-            m_wfm = wfm;
-            m_nodesToIgnore = nodesToIgnore;
+        private final Workflow m_workflow;
+
+        private final String m_summaryCreationDateTime;
+
+        WorkflowSummaryImpl(final WorkflowManager wfm, final List<NodeID> nodesToIgnore,
+            final boolean includeExecutionInfo) {
+
+            m_environment = includeExecutionInfo ? createEnvironment() : null;
+            m_workflow = createWorkflow(wfm, nodesToIgnore, includeExecutionInfo);
+
+            m_summaryCreationDateTime = FORMATTER.format(ZonedDateTime.now());
         }
 
         @Override
@@ -191,20 +197,17 @@ public final class WorkflowSummaryCreator {
 
         @Override
         public String getSummaryCreationDateTime() {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_TIME_FORMAT);
-            return formatter.format(ZonedDateTime.now());
+            return m_summaryCreationDateTime;
         }
 
         @Override
         public Environment getEnvironment() {
-            return createEnvironment();
+            return m_environment;
         }
 
         @Override
         public Workflow getWorkflow() {
-            try (WorkflowLock lock = m_wfm.lock()) {
-                return createWorkflow(m_wfm, m_nodesToIgnore);
-            }
+            return m_workflow;
         }
 
         private static Integer getGraphDepth(final NodeContainer nc) {
@@ -216,6 +219,12 @@ public final class WorkflowSummaryCreator {
         }
 
         private static Environment createEnvironment() {
+            final Installation installation = createInstallation();
+            Properties sysProps = System.getProperties();
+            Map<String, String> sysPropsMap = new HashMap<>();
+            for (Entry<?, ?> entry : sysProps.entrySet()) {
+                sysPropsMap.put(entry.getKey().toString(), entry.getValue().toString());
+            }
             return new Environment() {
 
                 @Override
@@ -230,27 +239,23 @@ public final class WorkflowSummaryCreator {
 
                 @Override
                 public Installation getInstallation() {
-                    return createInstallation();
+                    return installation;
                 }
 
                 @Override
                 public Map<String, String> getSystemProperties() {
-                    Properties sysProps = System.getProperties();
-                    Map<String, String> res = new HashMap<>();
-                    for (Entry<?, ?> entry : sysProps.entrySet()) {
-                        res.put(entry.getKey().toString(), entry.getValue().toString());
-                    }
-                    return res;
+                    return sysPropsMap;
                 }
             };
         }
 
         private static Installation createInstallation() {
+            final List<Plugin> plugins = createPlugins();
             return new Installation() {
 
                 @Override
                 public List<Plugin> getPlugins() {
-                    return createPlugins();
+                    return plugins;
                 }
 
             };
@@ -275,231 +280,265 @@ public final class WorkflowSummaryCreator {
             }).collect(toList());
         }
 
-        private static Workflow createWorkflow(final WorkflowManager wfm, final List<NodeID> nodesToIgnore) {
-            return new Workflow() {
+        private static Workflow createWorkflow(final WorkflowManager wfm, final List<NodeID> nodesToIgnore,
+            final boolean includeExecutionInfo) {
+            try (WorkflowLock lock = wfm.lock()) {
+                final String name = wfm.getName();
 
-                @Override
-                public String getName() {
-                    return wfm.getName();
+                // Nodes
+                Stream<NodeContainer> stream = wfm.getNodeContainers().stream();
+                if (nodesToIgnore != null && !nodesToIgnore.isEmpty()) {
+                    stream = stream.filter(nc -> !nodesToIgnore.contains(nc.getID()));
                 }
+                Comparator<NodeContainer> comp = Comparator.comparing((final NodeContainer n) -> {
+                    Integer d = getGraphDepth(n);
+                    // graph depth is null sometimes (don't know why)
+                    return d == null ? -1 : d;
+                }).thenComparing(NodeContainer::getID);
 
-                @Override
-                public List<Node> getNodes() {
-                    Stream<NodeContainer> stream = wfm.getNodeContainers().stream();
-                    if (nodesToIgnore != null && !nodesToIgnore.isEmpty()) {
-                        stream = stream.filter(nc -> !nodesToIgnore.contains(nc.getID()));
+                final List<Node> nodes = stream.sorted(comp::compare)
+                    .map(nc -> createNode(nc, nodesToIgnore, includeExecutionInfo)).collect(Collectors.toList());
+                final List<String> annotations =
+                    wfm.getWorkflowAnnotations().stream().map(wa -> wa.getData().getText()).collect(toList());
+                final WorkflowMetadata metadata = createWorkflowMetadata(wfm);
+
+                return new Workflow() {
+
+                    @Override
+                    public String getName() {
+                        return name;
                     }
-                    Comparator<NodeContainer> comp = Comparator.comparing((final NodeContainer n) -> {
-                        Integer d = getGraphDepth(n);
-                        // graph depth is null sometimes (don't know why)
-                        return d == null ? -1 : d;
-                    }).thenComparing(NodeContainer::getID);
-                    return stream.sorted(comp::compare).map(nc -> createNode(nc, nodesToIgnore)).collect(Collectors.toList());
-                }
 
-                @Override
-                public List<String> getAnnotations() {
-                    return wfm.getWorkflowAnnotations().stream().map(wa -> wa.getData().getText()).collect(toList());
-                }
+                    @Override
+                    public List<Node> getNodes() {
+                        return nodes;
+                    }
 
-                @Override
-                public WorkflowMetadata getMetadata() {
-                    return createWorkflowMetadata(wfm);
-                }
+                    @Override
+                    public List<String> getAnnotations() {
+                        return annotations;
+                    }
 
-            };
+                    @Override
+                    public WorkflowMetadata getMetadata() {
+                        return metadata;
+                    }
+
+                };
+            }
         }
 
-        private static Node createNode(final NodeContainer nc, final List<NodeID> nodesToIgnore) {
+        private static Node createNode(final NodeContainer nc, final List<NodeID> nodesToIgnore,
+            final boolean includeExecutionInfo) {
+            //remove project wfm id
+            final WorkflowManager projectWFM = nc.getParent().getProjectWFM();
+            final String id = NodeIDSuffix.create(projectWFM.getID(), nc.getID()).toString();
+            final String name = nc.getName();
+            final String type = nc.getType().toString();
+            final NodeFactoryKey factoryKey = nc instanceof NativeNodeContainer
+                ? createNodeFactoryKey(((NativeNodeContainer)nc).getNode().getFactory()) : null;
+            final Boolean isMetanode = nc instanceof WorkflowManager ? Boolean.TRUE : null;
+            final Boolean isComponent = nc instanceof SubNodeContainer ? Boolean.TRUE : null;
+            final String state = nc.getNodeContainerState().toString();
+            final Integer graphDepth = WorkflowSummaryImpl.getGraphDepth(nc);
+            List<Setting> settings = null;
+
+            if (nc instanceof SingleNodeContainer) {
+                SingleNodeContainer snc = (SingleNodeContainer)nc;
+                if (nc.getNodeContainerState().isExecuted()) {
+                    try {
+                        settings = createSettings(snc.getModelSettingsUsingFlowObjectStack());
+                    } catch (InvalidSettingsException ex) {
+                        throw new IllegalStateException(
+                            "Problem extracting settings of node '" + snc.getNameWithID() + "'", ex);
+                    }
+                } else {
+                    NodeSettings nodeSettings = snc.getNodeSettings();
+                    if (nodeSettings.containsKey("model")) {
+                        try {
+                            settings = createSettings(nodeSettings.getConfig("model"));
+                        } catch (InvalidSettingsException ex) {
+                            //can never happen - checked before
+                        }
+                    }
+                }
+            }
+
+            final List<Setting> settingsList = settings;
+
+            final Workflow subWorkflow;
+            if (nc instanceof WorkflowManager) {
+                subWorkflow = createWorkflow((WorkflowManager)nc, nodesToIgnore, includeExecutionInfo);
+            } else if (nc instanceof SubNodeContainer) {
+                subWorkflow =
+                    createWorkflow(((SubNodeContainer)nc).getWorkflowManager(), nodesToIgnore, includeExecutionInfo);
+            } else {
+                subWorkflow = null;
+            }
+
+            final List<OutputPort> outputPorts = IntStream.range(0, nc.getNrOutPorts()).mapToObj(i -> {
+                return createOutputPort(i, nc.getOutPort(i), nodesToIgnore, includeExecutionInfo);
+            }).collect(toList());
+            final String annotations =
+                !nc.getNodeAnnotation().getData().isDefault() ? nc.getNodeAnnotation().getText() : null;
+            final ExecutionStatistics executionStatistics = includeExecutionInfo && nc instanceof NativeNodeContainer
+                ? createExecutionStatistics(nc.getNodeTimer()) : null;
+            final Boolean isDeprecated =
+                nc instanceof NativeNodeContainer && ((NativeNodeContainer)nc).getNode().getFactory().isDeprecated()
+                    ? Boolean.TRUE : null;
+
+            final String parentId;
+            if (nc.getParent().isProject()) {
+                parentId = null;
+            } else {
+                //remove project wfm id
+                parentId = NodeIDSuffix.create(projectWFM.getID(), nc.getParent().getID()).toString();
+            }
+
+            final LinkInfo linkInfo = nc instanceof NodeContainerTemplate
+                ? createLinkInfo(((NodeContainerTemplate)nc).getTemplateInformation()) : null;
+
+            List<FlowVariable> variables = null;
+            if (nc instanceof SingleNodeContainer) {
+                // the outgoing stack of a SingleNodeContainer only contains variables owned by that node
+                FlowObjectStack fos = ((SingleNodeContainer)nc).getOutgoingFlowObjectStack();
+                if (fos != null) {
+                    List<FlowVariable> vars = fos.getAllAvailableFlowVariables().values().stream()//
+                        .filter(f -> f.getScope() == Scope.Flow)//
+                        .map(WorkflowSummaryImpl::createFlowVariable).collect(Collectors.toList());
+                    if (!vars.isEmpty()) {
+                        variables = vars;
+                    }
+                }
+            }
+
+            final List<FlowVariable> flowVariables = variables;
+            final JobManager jobManager = createJobManager(nc.getJobManager());
+            final NodeMessage nodeMessage = createNodeMessage(nc.getNodeMessage());
+
             return new Node() {
 
                 @Override
                 public String getId() {
-                    //remove project wfm id
-                    WorkflowManager projectWFM = nc.getParent().getProjectWFM();
-                    return NodeIDSuffix.create(projectWFM.getID(), nc.getID()).toString();
+                    return id;
                 }
 
                 @Override
                 public String getName() {
-                    return nc.getName();
+                    return name;
                 }
 
                 @Override
                 public String getType() {
-                    return nc.getType().toString();
+                    return type;
                 }
 
                 @Override
                 public NodeFactoryKey getFactoryKey() {
-                    if (nc instanceof NativeNodeContainer) {
-                        return createNodeFactoryKey(((NativeNodeContainer)nc).getNode().getFactory());
-                    }
-                    return null;
+                    return factoryKey;
                 }
 
                 @Override
                 public Boolean isMetanode() {
-                    if (nc instanceof WorkflowManager) {
-                        return true;
-                    }
-                    return null;
+                    return isMetanode;
                 }
 
                 @Override
                 public Boolean isComponent() {
-                    if (nc instanceof SubNodeContainer) {
-                        return true;
-                    }
-                    return null;
+                    return isComponent;
                 }
 
                 @Override
                 public String getState() {
-                    return nc.getNodeContainerState().toString();
+                    return state;
                 }
 
                 @Override
                 public Integer getGraphDepth() {
-                    return WorkflowSummaryImpl.getGraphDepth(nc);
+                    return graphDepth;
                 }
 
                 @Override
                 public List<Setting> getSettings() {
-                    if (nc instanceof SingleNodeContainer) {
-                        SingleNodeContainer snc = (SingleNodeContainer)nc;
-                        if (nc.getNodeContainerState().isExecuted()) {
-                            try {
-                                return createSettings(snc.getModelSettingsUsingFlowObjectStack());
-                            } catch (InvalidSettingsException ex) {
-                                throw new IllegalStateException(
-                                    "Problem extracting settings of node '" + snc.getNameWithID() + "'", ex);
-                            }
-                        } else {
-                            NodeSettings nodeSettings = snc.getNodeSettings();
-                            if (nodeSettings.containsKey("model")) {
-                                try {
-                                    return createSettings(nodeSettings.getConfig("model"));
-                                } catch (InvalidSettingsException ex) {
-                                    //can never happen - checked before
-                                }
-                            }
-                        }
-                    }
-                    return null;
+                    return settingsList;
                 }
 
                 @Override
                 public Workflow getSubWorkflow() {
-                    if (nc instanceof WorkflowManager) {
-                        return createWorkflow((WorkflowManager)nc, nodesToIgnore);
-                    } else if (nc instanceof SubNodeContainer) {
-                        return createWorkflow(((SubNodeContainer)nc).getWorkflowManager(), nodesToIgnore);
-                    } else {
-                        return null;
-                    }
+                    return subWorkflow;
                 }
 
                 @Override
                 public List<OutputPort> getOutputs() {
-                    return IntStream.range(0, nc.getNrOutPorts()).mapToObj(i -> {
-                        return createOutputPort(i, nc.getOutPort(i), nodesToIgnore);
-                    }).collect(toList());
+                    return outputPorts;
                 }
 
                 @Override
                 public String getAnnotation() {
-                    if (!nc.getNodeAnnotation().getData().isDefault()) {
-                        return nc.getNodeAnnotation().getText();
-                    }
-                    return null;
+                    return annotations;
                 }
 
                 @Override
                 public ExecutionStatistics getExecutionStatistics() {
-                    if (nc instanceof NativeNodeContainer) {
-                        return createExecutionStatistics(nc.getNodeTimer());
-                    }
-                    return null;
+                    return executionStatistics;
                 }
 
                 @Override
                 public JobManager getJobManager() {
-                    return createJobManager(nc.getJobManager());
+                    return jobManager;
                 }
 
                 @Override
                 public NodeMessage getNodeMessage() {
-                    return createNodeMessage(nc.getNodeMessage());
+                    return nodeMessage;
                 }
 
                 @Override
                 public Boolean isDeprecated() {
-                    if (nc instanceof NativeNodeContainer
-                        && ((NativeNodeContainer)nc).getNode().getFactory().isDeprecated()) {
-                        return true;
-                    } else {
-                        return null;
-                    }
+                    return isDeprecated;
                 }
 
                 @Override
                 public String getParentId() {
-                    if (nc.getParent().isProject()) {
-                        return null;
-                    } else {
-                        //remove project wfm id
-                        WorkflowManager projectWFM = nc.getParent().getProjectWFM();
-                        return NodeIDSuffix.create(projectWFM.getID(), nc.getParent().getID()).toString();
-                    }
+                    return parentId;
                 }
 
                 @Override
                 public LinkInfo getLinkInfo() {
-                    if (nc instanceof NodeContainerTemplate) {
-                        return createLinkInfo(((NodeContainerTemplate)nc).getTemplateInformation());
-                    } else {
-                        return null;
-                    }
+                    return linkInfo;
                 }
 
                 @Override
                 public List<FlowVariable> getFlowVariables() {
-                    if (nc instanceof SingleNodeContainer) {
-                        // the outgoing stack of a SingleNodeContainer only contains variables owned by that node
-                        FlowObjectStack fos = ((SingleNodeContainer)nc).getOutgoingFlowObjectStack();
-                        if (fos != null) {
-                            List<FlowVariable> vars = fos.getAllAvailableFlowVariables().values().stream()//
-                                .filter(f -> f.getScope() == Scope.Flow)//
-                                .map(WorkflowSummaryImpl::createFlowVariable).collect(Collectors.toList());
-                            if (!vars.isEmpty()) {
-                                return vars;
-                            }
-                        }
-                    }
-                    return null;
+                    return flowVariables;
                 }
 
             };
         }
 
         private static NodeFactoryKey createNodeFactoryKey(final NodeFactory<NodeModel> factory) {
+            final String settingsString;
+            if (factory instanceof DynamicNodeFactory) {
+                final NodeSettings settings = new NodeSettings("settings");
+                factory.saveAdditionalFactorySettings(settings);
+                settingsString = JSONConfig.toJSONString(settings, WriterConfig.DEFAULT);
+
+            } else {
+                settingsString = null;
+            }
+
+            final String className = factory.getClass().getCanonicalName();
+
             return new NodeFactoryKey() {
 
                 @Override
                 public String getSettings() {
-                    if (factory instanceof DynamicNodeFactory) {
-                        NodeSettings settings = new NodeSettings("settings");
-                        factory.saveAdditionalFactorySettings(settings);
-                        return JSONConfig.toJSONString(settings, WriterConfig.DEFAULT);
-
-                    }
-                    return null;
+                    return settingsString;
                 }
 
                 @Override
                 public String getClassName() {
-                    return factory.getClass().getCanonicalName();
+                    return className;
                 }
             };
 
@@ -509,16 +548,20 @@ public final class WorkflowSummaryCreator {
             if (msg == org.knime.core.node.workflow.NodeMessage.NONE) {
                 return null;
             }
+
+            final String type = msg.getMessageType().toString();
+            final String message = msg.getMessage();
+
             return new NodeMessage() {
 
                 @Override
                 public String getType() {
-                    return msg.getMessageType().toString();
+                    return type;
                 }
 
                 @Override
                 public String getMessage() {
-                    return msg.getMessage();
+                    return message;
                 }
 
             };
@@ -528,38 +571,45 @@ public final class WorkflowSummaryCreator {
             if (nt.getStartTime() < 0) {
                 return null;
             } else {
+                final long startTime = nt.getStartTime();
+                final long lastExecutionDuration = nt.getLastExecutionDuration();
+                final long executionDurationSinceReset = nt.getExecutionDurationSinceReset();
+                final long executionDurationSinceStart = nt.getExecutionDurationSinceStart();
+                final int executionCountSinceReset = nt.getNrExecsSinceReset();
+                final int executionCountSinceStart = nt.getNrExecsSinceStart();
+
                 return new ExecutionStatistics() {
 
                     @Override
                     public String getLastExecutionStartTime() {
                         DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_TIME_FORMAT);
-                        return formatter.format(ZonedDateTime.ofInstant(Instant.ofEpochMilli(nt.getStartTime()),
+                        return formatter.format(ZonedDateTime.ofInstant(Instant.ofEpochMilli(startTime),
                             Clock.systemDefaultZone().getZone()));
                     }
 
                     @Override
                     public long getLastExecutionDuration() {
-                        return nt.getLastExecutionDuration();
+                        return lastExecutionDuration;
                     }
 
                     @Override
                     public long getExecutionDurationSinceReset() {
-                        return nt.getExecutionDurationSinceReset();
+                        return executionDurationSinceReset;
                     }
 
                     @Override
                     public long getExecutionDurationSinceStart() {
-                        return nt.getExecutionDurationSinceStart();
+                        return executionDurationSinceStart;
                     }
 
                     @Override
                     public int getExecutionCountSinceReset() {
-                        return nt.getNrExecsSinceReset();
+                        return executionCountSinceReset;
                     }
 
                     @Override
                     public int getExecutionCountSinceStart() {
-                        return nt.getNrExecsSinceStart();
+                        return executionCountSinceStart;
                     }
 
                 };
@@ -570,23 +620,29 @@ public final class WorkflowSummaryCreator {
             if (mgr == null) {
                 return null;
             }
+
+            final String id = mgr.getID();
+            final String name = NodeExecutionJobManagerPool.getJobManagerFactory(id).getLabel();
+
+            final NodeSettings ns = new NodeSettings("job_manager_settings");
+            mgr.save(ns);
+            final List<Setting> settings = createSettings(ns);
+
             return new JobManager() {
 
                 @Override
                 public String getId() {
-                    return mgr.getID();
+                    return id;
                 }
 
                 @Override
                 public String getName() {
-                    return NodeExecutionJobManagerPool.getJobManagerFactory(mgr.getID()).getLabel();
+                    return name;
                 }
 
                 @Override
                 public List<Setting> getSettings() {
-                    NodeSettings ns = new NodeSettings("job_manager_settings");
-                    mgr.save(ns);
-                    return createSettings(ns);
+                    return settings;
                 }
 
             };
@@ -672,26 +728,46 @@ public final class WorkflowSummaryCreator {
         }
 
         private static OutputPort createOutputPort(final int index, final NodeOutPort p,
-            final List<NodeID> nodesToIgnore) {
+            final List<NodeID> nodesToIgnore, final boolean includeExecutionInfo) {
+            final String type;
+            if (p.getPortType().equals(BufferedDataTable.TYPE)) {
+                type = "table";
+            } else if (p.getPortType().equals(FlowVariablePortObject.TYPE)) {
+                type = "flowvariable port";
+            } else {
+                type = p.getPortType().toString();
+            }
+
+            final TableSpec tableSpec = p.getPortObjectSpec() instanceof DataTableSpec
+                ? createTableSpec((DataTableSpec)p.getPortObjectSpec()) : null;
+            final String dataSummary =
+                includeExecutionInfo && p.getPortObject() != null ? p.getPortObject().getSummary() : null;
+
+            final SingleNodeContainer nc = p.getConnectedNodeContainer();
+            final List<Successor> successors;
+            if (nc != null) {
+                List<Successor> res = nc.getParent().getOutgoingConnectionsFor(nc.getID(), index).stream()
+                    .filter(cc -> nodesToIgnore == null || !nodesToIgnore.contains(cc.getDest()))
+                    .map(cc -> createSuccessor(cc, nc.getParent().getProjectWFM())).sorted() //for deterministic results for testing
+                    .collect(toList());
+                successors = res.isEmpty() ? null : res;
+            } else {
+                successors = null;
+            }
+
+            final Boolean isInactive =
+                p.getPortObjectSpec() instanceof InactiveBranchPortObjectSpec ? Boolean.TRUE : null;
+
             return new OutputPort() {
 
                 @Override
                 public String getType() {
-                    if (p.getPortType().equals(BufferedDataTable.TYPE)) {
-                        return "table";
-                    } else if (p.getPortType().equals(FlowVariablePortObject.TYPE)) {
-                        return "flowvariable port";
-                    }
-                    return p.getPortType().toString();
+                    return type;
                 }
 
                 @Override
                 public TableSpec getTableSpec() {
-                    if (p.getPortObjectSpec() instanceof DataTableSpec) {
-                        return createTableSpec((DataTableSpec)p.getPortObjectSpec());
-                    } else {
-                        return null;
-                    }
+                    return tableSpec;
                 }
 
                 @Override
@@ -701,39 +777,25 @@ public final class WorkflowSummaryCreator {
 
                 @Override
                 public String getDataSummary() {
-                    if (p.getPortObject() != null) {
-                        return p.getPortObject().getSummary();
-                    } else {
-                        return null;
-                    }
+                    return dataSummary;
                 }
 
                 @Override
                 public List<Successor> getSuccessors() {
-                    SingleNodeContainer nc = p.getConnectedNodeContainer();
-                    if (nc != null) {
-                        List<Successor> res = nc.getParent().getOutgoingConnectionsFor(nc.getID(), index).stream()
-                            .filter(
-                                cc -> nodesToIgnore == null || !nodesToIgnore.contains(cc.getDest()))
-                            .map(cc -> createSuccessor(cc, nc.getParent().getProjectWFM())).sorted() //for deterministic results for testing
-                            .collect(toList());
-                        return res.isEmpty() ? null : res;
-                    }
-                    return null;
+                    return successors;
                 }
 
                 @Override
                 public Boolean isInactive() {
-                    if (p.getPortObjectSpec() instanceof InactiveBranchPortObjectSpec) {
-                        return true;
-                    }
-                    return null;
+                    return isInactive;
                 }
             };
         }
 
         private static Successor createSuccessor(final ConnectionContainer cc, final WorkflowManager projectWfm) {
             final String id = NodeIDSuffix.create(projectWfm.getID(), cc.getDest()).toString();
+            final int portIndex = cc.getDestPort();
+
             return new Successor() {
 
                 @Override
@@ -743,36 +805,43 @@ public final class WorkflowSummaryCreator {
 
                 @Override
                 public int getPortIndex() {
-                    return cc.getDestPort();
+                    return portIndex;
                 }
 
                 @Override
                 public int compareTo(final Successor o) {
                     //required to get deterministic results for testing
-                    return getId().compareTo(o.getId()) * 10 + getPortIndex() - o.getPortIndex();
+                    return id.compareTo(o.getId()) * 10 + portIndex - o.getPortIndex();
                 }
 
             };
         }
 
         private static TableSpec createTableSpec(final DataTableSpec spec) {
+            final List<Column> columns = IntStream.range(0, spec.getNumColumns()).mapToObj(i -> {
+                return createColumn(i, spec.getColumnSpec(i));
+            }).collect(toList());
+
             return new TableSpec() {
 
                 @Override
                 public List<Column> getColumns() {
-                    return IntStream.range(0, spec.getNumColumns()).mapToObj(i -> {
-                        return createColumn(i, spec.getColumnSpec(i));
-                    }).collect(toList());
+                    return columns;
                 }
             };
         }
 
         private static Column createColumn(final int index, final DataColumnSpec colSpec) {
+            final String name = colSpec.getName();
+            final List<ColumnProperty> columnProperties = createColumnProperties(colSpec.getProperties());
+            final ColumnDomain culomnDomain = createColumnDomain(colSpec.getDomain());
+            final String type = colSpec.getType().toString();
+
             return new Column() {
 
                 @Override
                 public String getName() {
-                    return colSpec.getName();
+                    return name;
                 }
 
                 @Override
@@ -782,46 +851,42 @@ public final class WorkflowSummaryCreator {
 
                 @Override
                 public List<ColumnProperty> getColumnProperties() {
-                    return createColumnProperties(colSpec.getProperties());
+                    return columnProperties;
                 }
 
                 @Override
                 public ColumnDomain getColumnDomain() {
-                    return createColumnDomain(colSpec.getDomain());
+                    return culomnDomain;
                 }
 
                 @Override
                 public String getType() {
-                    return colSpec.getType().toString();
+                    return type;
                 }
             };
         }
 
         private static ColumnDomain createColumnDomain(final DataColumnDomain domain) {
+            final List<String> values =
+                domain.hasValues() ? domain.getValues().stream().map(DataCell::toString).collect(toList()) : null;
+            final String upperBound = domain.hasUpperBound() ? domain.getUpperBound().toString() : null;
+            final String lowerBound = domain.hasLowerBound() ? domain.getLowerBound().toString() : null;
+
             return new ColumnDomain() {
 
                 @Override
                 public List<String> getValues() {
-                    if (domain.hasValues()) {
-                        return domain.getValues().stream().map(DataCell::toString).collect(toList());
-                    }
-                    return null;
+                    return values;
                 }
 
                 @Override
                 public String getUpperBound() {
-                    if (domain.hasUpperBound()) {
-                        return domain.getUpperBound().toString();
-                    }
-                    return null;
+                    return upperBound;
                 }
 
                 @Override
                 public String getLowerBound() {
-                    if (domain.hasLowerBound()) {
-                        return domain.getLowerBound().toString();
-                    }
-                    return null;
+                    return lowerBound;
                 }
             };
         }
@@ -830,7 +895,8 @@ public final class WorkflowSummaryCreator {
             Enumeration<String> enumeration = props.properties();
             List<ColumnProperty> res = new ArrayList<>();
             while (enumeration.hasMoreElements()) {
-                String key = enumeration.nextElement();
+                final String key = enumeration.nextElement();
+                final String value = props.getProperty(key);
                 res.add(new ColumnProperty() {
 
                     @Override
@@ -840,7 +906,7 @@ public final class WorkflowSummaryCreator {
 
                     @Override
                     public String getValue() {
-                        return props.getProperty(key);
+                        return value;
                     }
 
                 });
@@ -849,21 +915,25 @@ public final class WorkflowSummaryCreator {
         }
 
         private static FlowVariable createFlowVariable(final org.knime.core.node.workflow.FlowVariable var) {
+            final String name = var.getName();
+            final String type = var.getVariableType().getIdentifier();
+            final String value = var.getValueAsString();
+
             return new FlowVariable() {
 
                 @Override
                 public String getName() {
-                    return var.getName();
+                    return name;
                 }
 
                 @Override
                 public String getType() {
-                    return var.getVariableType().getIdentifier();
+                    return type;
                 }
 
                 @Override
                 public String getValue() {
-                    return var.getValueAsString();
+                    return value;
                 }
 
             };
@@ -873,8 +943,12 @@ public final class WorkflowSummaryCreator {
             Iterator<String> iterator = config.iterator();
             List<Setting> res = new ArrayList<>();
             while (iterator.hasNext()) {
-                String key = iterator.next();
-                AbstractConfigEntry entry = config.getEntry(key);
+                final String key = iterator.next();
+                final AbstractConfigEntry entry = config.getEntry(key);
+                final ConfigEntries type = entry.getType();
+                final String value = type != ConfigEntries.config ? entry.toStringValue() : null;
+                final List<Setting> settings = type == ConfigEntries.config ? createSettings((Config)entry) : null;
+
                 res.add(new Setting() {
 
                     @Override
@@ -884,25 +958,17 @@ public final class WorkflowSummaryCreator {
 
                     @Override
                     public String getValue() {
-                        if (entry.getType() != ConfigEntries.config) {
-                            return entry.toStringValue();
-                        } else {
-                            return null;
-                        }
+                        return value;
                     }
 
                     @Override
                     public String getType() {
-                        return entry.getType().toString();
+                        return type.toString();
                     }
 
                     @Override
                     public List<Setting> getSettings() {
-                        if (entry.getType() == ConfigEntries.config) {
-                            return createSettings((Config)entry);
-                        } else {
-                            return null;
-                        }
+                        return settings;
                     }
 
                 });
@@ -911,23 +977,26 @@ public final class WorkflowSummaryCreator {
         }
 
         private static LinkInfo createLinkInfo(final MetaNodeTemplateInformation info) {
-            info.getSourceURI();
             if (info.getRole() != Role.None) {
+                final String sourceURI = info.getSourceURI() != null ? info.getSourceURI().toString() : null;
+                final String timeStamp = info.getTimeStampString();
+                final String updateStatus = info.getUpdateStatus() != null ? info.getUpdateStatus().name() : null;
+
                 return new LinkInfo() {
 
                     @Override
                     public String getSourceURI() {
-                        return info.getSourceURI() != null ? info.getSourceURI().toString() : null;
+                        return sourceURI;
                     }
 
                     @Override
                     public String getTimeStamp() {
-                        return info.getTimeStampString();
+                        return timeStamp;
                     }
 
                     @Override
                     public String getUpdateStatus() {
-                        return info.getUpdateStatus() != null ? info.getUpdateStatus().name() : null;
+                        return updateStatus;
                     }
                 };
             } else {
