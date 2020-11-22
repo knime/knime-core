@@ -687,7 +687,7 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
     public void loadCredentials(final CredentialsProvider cp) {
         final SettingsModelAuthentication model = (SettingsModelAuthentication)getModel();
         m_credentialField.removeAllItems();
-        final Collection<String> names = cp.listNames();
+        final Collection<String> names = cp != null ? cp.listNames() : null;
         if (names != null) {
             for (final String option : names) {
                 m_credentialField.addItem(option);
