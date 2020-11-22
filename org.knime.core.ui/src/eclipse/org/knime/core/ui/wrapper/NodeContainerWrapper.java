@@ -54,6 +54,7 @@ import java.net.URL;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory.NodeType;
+import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.config.base.ConfigBaseRO;
 import org.knime.core.node.workflow.NativeNodeContainer;
@@ -259,8 +260,8 @@ public abstract class NodeContainerWrapper<W extends NodeContainer> extends Abst
     }
 
     @Override
-    public void applySettingsFromDialog() throws InvalidSettingsException {
-        unwrap().applySettingsFromDialog();
+    public NodeSettings applySettingsFromDialog() throws InvalidSettingsException {
+        return unwrap().applySettingsFromDialog();
     }
 
     /** {@inheritDoc} */

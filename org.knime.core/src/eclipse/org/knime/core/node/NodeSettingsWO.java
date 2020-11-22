@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   12.07.2006 (gabriel): created
  */
@@ -51,7 +51,7 @@ import org.knime.core.node.config.ConfigWO;
 
 /**
  * Write-only <code>NodeSettingsWO</code> interface.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 public interface NodeSettingsWO extends ConfigWO {
@@ -63,12 +63,22 @@ public interface NodeSettingsWO extends ConfigWO {
      * @return A new <code>NodeSettingsWO</code> object.
      */
     NodeSettingsWO addNodeSettings(String key);
-    
+
     /**
-     * Add the given <code>NodeSettings</code> object to this Config using the 
+     * Add the given <code>NodeSettings</code> object to this Config using the
      * key of the argument's <code>NodeSettings</code>.
      * @param settings The object to add to this <code>Config</code>.
      */
     void addNodeSettings(NodeSettings settings);
-    
+
+    /**
+     * Stores a password in weakly encrypted form. Node implementations should pay special attention to only store
+     * passwords in a node configuration when absolutely required since in some installations storing passwords to disc
+     * is forbidden (see {@link org.knime.core.node.KNIMEConstants#PROPERTY_WEAK_PASSWORDS_IN_SETTINGS_FORBIDDEN}. When
+     * handling passwords node implementations should always offer the option to retrieve the password from a
+     * credentials variable (and only the identifier of the credentials object needs to be stored).
+     */
+    @Override
+    void addPassword(String key, String encryptionKey, String value);
+
 }

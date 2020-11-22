@@ -55,6 +55,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialog;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory.NodeType;
+import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.config.base.ConfigBaseRO;
@@ -264,10 +265,11 @@ public interface NodeContainerUI extends NodeProgressListener, NodeContainerStat
 
     /** Take settings from the node's dialog and apply them to the model. Throws
      * an exception if the apply fails.
+     * @return the settings
      *
      * @throws InvalidSettingsException if settings are not applicable.
      */
-    void applySettingsFromDialog() throws InvalidSettingsException;
+    NodeSettings applySettingsFromDialog() throws InvalidSettingsException;
 
     boolean areDialogSettingsValid();
 

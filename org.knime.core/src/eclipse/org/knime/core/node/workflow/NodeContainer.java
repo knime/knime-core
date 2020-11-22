@@ -1068,10 +1068,11 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
 
     /** Take settings from the node's dialog and apply them to the model. Throws
      * an exception if the apply fails.
+     * @return The node settings that got applied (used for post validation, see AP-15442)
      *
      * @throws InvalidSettingsException if settings are not applicable.
      */
-    public void applySettingsFromDialog() throws InvalidSettingsException {
+    public NodeSettings applySettingsFromDialog() throws InvalidSettingsException {
         CheckUtils.checkState(hasDialog(), "Node \"%s\" has no dialog", getName());
         // TODO do we need to reset the node first??
         NodeSettings sett = new NodeSettings("node settings");
@@ -1079,6 +1080,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
         try {
             getDialogPane().finishEditingAndSaveSettingsTo(sett);
             m_parent.loadNodeSettings(getID(), sett);
+            return sett;
         } finally {
             NodeContext.removeLastContext();
         }

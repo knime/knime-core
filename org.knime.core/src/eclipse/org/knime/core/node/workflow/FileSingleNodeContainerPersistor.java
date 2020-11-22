@@ -63,12 +63,14 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodePersistor.LoadNodeModelSettingsFailPolicy;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.config.base.ConfigPasswordEntry;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.FlowLoopContext.RestoredFlowLoopContext;
 import org.knime.core.node.workflow.FlowVariable.Scope;
@@ -254,6 +256,18 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
             result.addError(error);
             getLogger().debug(error, ise);
             setDirtyAfterLoad();
+        }
+        if (modelSettings != null && ConfigPasswordEntry.containsPassword((NodeSettings)modelSettings, true)) {
+            result.addWarning(String.format(
+                "Node stores <null> passwords in its configuration. The workflow was saved by an installation, which "
+                + "doesn't store passwords (as per \"%s\" system property). Node probably needs to be reconfigured.",
+                        KNIMEConstants.PROPERTY_WEAK_PASSWORDS_IN_SETTINGS_FORBIDDEN));
+        } else if (Node.DISALLOW_WEAK_PASSWORDS_IN_NODE_CONFIGURATION && modelSettings != null
+            && ConfigPasswordEntry.containsPassword((NodeSettings)modelSettings, false)) {
+            result.addWarning(String.format(
+                "Node stores passwords in its configuration. These will be lost when saving "
+                    + "the workflow in this installation (as per \"%s\" system property)",
+                KNIMEConstants.PROPERTY_WEAK_PASSWORDS_IN_SETTINGS_FORBIDDEN));
         }
         try {
             modelSettings = loadNCAndWashModelSettings(settingsForNode, modelSettings, tblRep, exec, result);
@@ -637,7 +651,20 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
     protected static void saveSNCSettings(final NodeSettingsWO settings, final SingleNodeContainer snc) {
         // if no settings are stored in the SNCSettings, use the ones from the NodeModel as
         // default (node uses default configuration after new instantiation), fixes bug 4364
-        snc.saveSNCSettings(settings, true);
+        NodeSettings temp = new NodeSettings("key_ignored");
+        snc.saveSNCSettings(temp, true);
+        if (Node.DISALLOW_WEAK_PASSWORDS_IN_NODE_CONFIGURATION && ConfigPasswordEntry.containsPassword(temp, false)) {
+            ConfigPasswordEntry.replacePasswordsWithNull(temp);
+            NodeContext.pushContext(snc);
+            try {
+                NodeLogger.getLogger(FileSingleNodeContainerPersistor.class).debugWithFormat("Settings of node \"%s\" "
+                        + "contains a password, storing it as null/invalid (as per \"%s\" system property)",
+                        snc.getNameWithID(), KNIMEConstants.PROPERTY_WEAK_PASSWORDS_IN_SETTINGS_FORBIDDEN);
+            } finally {
+                NodeContext.removeLastContext();
+            }
+        }
+        temp.copyTo(settings);
     }
 
     protected static void saveFlowObjectStack(final NodeSettingsWO settings, final SingleNodeContainer nc) {
