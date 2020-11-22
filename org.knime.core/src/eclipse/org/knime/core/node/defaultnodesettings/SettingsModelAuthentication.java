@@ -143,6 +143,15 @@ public final class SettingsModelAuthentication extends SettingsModel {
         }
 
         /**
+         * @return true if this type is {@link #PWD} or {@link #USER_PWD}. Added as part of AP-15442 so that
+         * #addPassword method invocations are only done when needed.
+         * @noreference This enum method is not intended to be referenced by clients.
+         */
+        public boolean requiresPassword() {
+            return this == PWD || this == USER_PWD;
+        }
+
+        /**
          * @param actionCommand the action command
          * @return the {@link AuthenticationType} for the action command
          */
@@ -222,8 +231,8 @@ public final class SettingsModelAuthentication extends SettingsModel {
         final String type = config.getString(SELECTED_TYPE);
         final String credential = config.getString(CREDENTIAL);
         final String userName = config.getString(USERNAME);
-        final String pwd = config.getPassword(PASSWORD, secretKey);
         final AuthenticationType authType = AuthenticationType.get(type);
+        final String pwd = authType.requiresPassword() ? config.getPassword(PASSWORD, secretKey) : "";
         switch (authType) {
             case CREDENTIALS:
                 if (credential == null || credential.isEmpty()) {
@@ -264,8 +273,10 @@ public final class SettingsModelAuthentication extends SettingsModel {
     protected void loadSettingsForModel(final NodeSettingsRO settings) throws InvalidSettingsException {
         // no default value, throw an exception instead
         Config config = settings.getConfig(m_configName);
-        setValues(AuthenticationType.valueOf(config.getString(SELECTED_TYPE)), config.getString(CREDENTIAL),
-            config.getString(USERNAME), config.getPassword(PASSWORD, secretKey));
+        AuthenticationType authType = AuthenticationType.valueOf(config.getString(SELECTED_TYPE));
+        String username = config.getString(USERNAME);
+        String password = authType.requiresPassword() ? config.getPassword(PASSWORD, secretKey) : "";
+        setValues(authType, config.getString(CREDENTIAL), username, password);
     }
 
     /**
@@ -295,7 +306,9 @@ public final class SettingsModelAuthentication extends SettingsModel {
         Config config = settings.addConfig(m_configName);
         config.addString(CREDENTIAL, m_credentials);
         config.addString(USERNAME, m_username);
-        config.addPassword(PASSWORD, secretKey, m_password);
+        if (m_type.requiresPassword()) { // only when needed, see AP-15442
+            config.addPassword(PASSWORD, secretKey, m_password);
+        }
         config.addString(SELECTED_TYPE, m_type.name());
     }
 
