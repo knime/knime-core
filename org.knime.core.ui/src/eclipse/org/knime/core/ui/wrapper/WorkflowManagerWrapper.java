@@ -86,6 +86,7 @@ import org.knime.core.ui.node.workflow.WorkflowCopyUI;
 import org.knime.core.ui.node.workflow.WorkflowInPortUI;
 import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.core.ui.node.workflow.WorkflowOutPortUI;
+import org.knime.core.util.CoreConstants;
 import org.knime.core.util.Pair;
 
 /**
@@ -628,7 +629,8 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
 
     @Override
     public boolean hasCredentials() {
-        return !unwrap().getCredentialsStore().listNames().isEmpty();
+        return unwrap().getCredentialsStore().listNames().stream()
+                .anyMatch(c -> !CoreConstants.CREDENTIALS_KNIME_SYSTEM_DEFAULT_ID.equals(c));
     }
 
     @Override

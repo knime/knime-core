@@ -698,7 +698,8 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
     boolean hasDialog();
 
     /**
-     * Indicates whether the workflow has credentials stored.
+     * Indicates whether the workflow has credentials stored (except the implicit <i>knime.system.default</i>
+     * credentials that are set by KNIME Server).
      *
      * @return <code>true</code> if credentials are stored with the workflow
      */
