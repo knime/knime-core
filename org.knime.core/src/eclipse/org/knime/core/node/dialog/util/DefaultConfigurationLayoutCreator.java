@@ -83,11 +83,10 @@ public interface DefaultConfigurationLayoutCreator {
      *
      * @param configurationStringProvider the configuration layout provider, who's layout needs to be already expanded.
      * @param allNodes a map of all nodes with a configuration dialog.
-     * @param containerID the {@link NodeID} of the containing subnode container.
      */
     @SuppressWarnings("rawtypes")
     public void addUnreferencedViews(final SubnodeContainerConfigurationStringProvider configurationStringProvider,
-        final Map<NodeIDSuffix, DialogNode> allNodes, final NodeID containerID);
+        final Map<NodeIDSuffix, DialogNode> allNodes);
 
     /**
      * Updates a configuration layout.

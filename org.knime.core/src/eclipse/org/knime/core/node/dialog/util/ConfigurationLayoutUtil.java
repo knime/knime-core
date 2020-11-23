@@ -108,12 +108,11 @@ public final class ConfigurationLayoutUtil {
      *
      * @param configurationStringProvider the configuration layout provider, who's layout needs to be already expanded.
      * @param allNodes a map of all nodes with a configuration dialog.
-     * @param containerID the {@link NodeID} of the containing subnode container.
      * @throws IOException If no service is registered or the layout cannot be amended.
      */
     public static void addUnreferencedViews(
         final SubnodeContainerConfigurationStringProvider configurationStringProvider,
-        final Map<NodeIDSuffix, DialogNode> allNodes, final NodeID containerID) throws IOException {
+        final Map<NodeIDSuffix, DialogNode> allNodes) throws IOException {
         if (serviceConfigurationTracker == null) {
             throw new IOException("Core bundle is not active, can't add unreferenced views to layout.");
         }
@@ -122,7 +121,7 @@ public final class ConfigurationLayoutUtil {
         if (creator == null) {
             throw new IOException("Can't add unreferenced views to layout; no appropriate service registered.");
         }
-        creator.addUnreferencedViews(configurationStringProvider, allNodes, containerID);
+        creator.addUnreferencedViews(configurationStringProvider, allNodes);
     }
 
     /**
