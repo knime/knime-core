@@ -47,6 +47,7 @@
  */
 package org.knime.core.node.util;
 
+import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -62,6 +63,7 @@ import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
+import javax.swing.plaf.ColorUIResource;
 
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.NodeLogger;
@@ -487,6 +489,14 @@ public final class ViewUtils {
                         sysLaF = UIManager.getCrossPlatformLookAndFeelClassName();
                     }
                     UIManager.setLookAndFeel(sysLaF);
+
+                    // With the UI changes of Big Sur, the JTabbedPane focus tab has a white background and white font.
+                    // This potentially can be removed when we upgrade to JDK 11 or higher as there should be a fix for it.
+                    // Check here: https://bugs.openjdk.java.net/browse/JDK-8251377?jql=labels%20%3D%20macos
+                    // Added with 4.3
+                    if (System.getProperty("os.name").contains("Mac") && Float.valueOf(System.getProperty("os.version")) >= 10.16f ) {
+                        UIManager.put("TabbedPane.selectedTabTitleNormalColor", new ColorUIResource(Color.darkGray));
+                    }
                 } catch (Exception e) {
                     NodeLogger.getLogger(ViewUtils.class).error("Unable to set Look&Feel: " + e.getMessage(), e);
                     // use the default look and feel then.
