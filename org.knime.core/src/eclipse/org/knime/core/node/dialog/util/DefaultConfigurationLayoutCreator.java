@@ -69,14 +69,18 @@ public interface DefaultConfigurationLayoutCreator {
 
     /**
      * Creates a default layout structure as a serialized JSON string.
+     *
      * @param configurationNodes the nodes to include in the layout.
      * @return a default configuration layout structure as JSON string.
      * @throws IOException on creation error.
      */
-    public String createDefaultConfigurationLayout(final Map<NodeIDSuffix, DialogNode> configurationNodes) throws IOException;
+    @SuppressWarnings("rawtypes")
+    public String createDefaultConfigurationLayout(final Map<NodeIDSuffix, DialogNode> configurationNodes)
+        throws IOException;
 
     /**
      * Creates extra rows/columns at the bottom of the configuration layout for all unreferenced nodes.
+     *
      * @param configurationStringProvider the configuration layout provider, who's layout needs to be already expanded.
      * @param allNodes a map of all nodes with a configuration dialog.
      * @param containerID the {@link NodeID} of the containing subnode container.
@@ -87,17 +91,21 @@ public interface DefaultConfigurationLayoutCreator {
 
     /**
      * Updates a configuration layout.
+     *
      * @param configurationStringProvider the configuration layout provider, who's layout needs to be already expanded.
      */
-    public void updateConfigurationLayout(final SubnodeContainerConfigurationStringProvider configurationStringProvider);
+    public void
+        updateConfigurationLayout(final SubnodeContainerConfigurationStringProvider configurationStringProvider);
 
     /**
      * Returns the order of the configuration nodes.
+     *
      * @param configurationStringProvider the configuration layout provider, who's layout needs to be already expanded.
      * @param nodes all available configuration nodes, which are then sorted
      * @param wfm the workflow manager
      * @return returns a List of NodeID's in the configured order
      */
-    public List<Integer> getConfigurationOrder (final SubnodeContainerConfigurationStringProvider configurationStringProvider, final Map<NodeID, MetaNodeDialogNode> nodes,
-       final WorkflowManager wfm);
+    public List<Integer> getConfigurationOrder(
+        final SubnodeContainerConfigurationStringProvider configurationStringProvider,
+        final Map<NodeID, MetaNodeDialogNode> nodes, final WorkflowManager wfm);
 }

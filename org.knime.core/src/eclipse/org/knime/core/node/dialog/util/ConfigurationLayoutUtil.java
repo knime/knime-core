@@ -75,7 +75,8 @@ public final class ConfigurationLayoutUtil {
     static {
         Bundle coreBundle = FrameworkUtil.getBundle(ConfigurationLayoutUtil.class);
         if (coreBundle != null) {
-            serviceConfigurationTracker = new ServiceTracker(coreBundle.getBundleContext(), DefaultConfigurationLayoutCreator.class.getName(), null);
+            serviceConfigurationTracker = new ServiceTracker(coreBundle.getBundleContext(),
+                DefaultConfigurationLayoutCreator.class.getName(), null);
             serviceConfigurationTracker.open();
         } else {
             serviceConfigurationTracker = null;
@@ -84,15 +85,18 @@ public final class ConfigurationLayoutUtil {
 
     /**
      * Creates a default layout structure as a serialized JSON string.
+     *
      * @param configurationNodes the configuration nodes to include in the layout.
      * @return a default layout structure as JSON string.
      * @throws IOException If no service is registered or the default layout cannot be created.
      */
-    public static String createDefaultLayout(final Map<NodeIDSuffix, DialogNode> configurationNodes) throws IOException {
+    public static String createDefaultLayout(final Map<NodeIDSuffix, DialogNode> configurationNodes)
+        throws IOException {
         if (serviceConfigurationTracker == null) {
             throw new IOException("Core bundle is not active, can't create default layout.");
         }
-        DefaultConfigurationLayoutCreator creator = (DefaultConfigurationLayoutCreator)serviceConfigurationTracker.getService();
+        DefaultConfigurationLayoutCreator creator =
+            (DefaultConfigurationLayoutCreator)serviceConfigurationTracker.getService();
         if (creator == null) {
             throw new IOException("Can't create default configuration layout; no appropriate service registered.");
         }
@@ -101,23 +105,25 @@ public final class ConfigurationLayoutUtil {
 
     /**
      * Creates extra rows/columns at the bottom of the layout for all unreferenced nodes.
+     *
      * @param configurationStringProvider the configuration layout provider, who's layout needs to be already expanded.
      * @param allNodes a map of all nodes with a configuration dialog.
      * @param containerID the {@link NodeID} of the containing subnode container.
      * @throws IOException If no service is registered or the layout cannot be amended.
      */
-    public static void addUnreferencedViews(final SubnodeContainerConfigurationStringProvider configurationStringProvider,
+    public static void addUnreferencedViews(
+        final SubnodeContainerConfigurationStringProvider configurationStringProvider,
         final Map<NodeIDSuffix, DialogNode> allNodes, final NodeID containerID) throws IOException {
         if (serviceConfigurationTracker == null) {
             throw new IOException("Core bundle is not active, can't add unreferenced views to layout.");
         }
-        DefaultConfigurationLayoutCreator creator = (DefaultConfigurationLayoutCreator)serviceConfigurationTracker.getService();
+        DefaultConfigurationLayoutCreator creator =
+            (DefaultConfigurationLayoutCreator)serviceConfigurationTracker.getService();
         if (creator == null) {
             throw new IOException("Can't add unreferenced views to layout; no appropriate service registered.");
         }
         creator.addUnreferencedViews(configurationStringProvider, allNodes, containerID);
     }
-
 
     /**
      * Updates a configuration layout if needed.
@@ -128,7 +134,8 @@ public final class ConfigurationLayoutUtil {
         if (serviceConfigurationTracker == null) {
             throw new IllegalStateException("Core bundle is not active, can't update layout.");
         }
-        DefaultConfigurationLayoutCreator creator = (DefaultConfigurationLayoutCreator)serviceConfigurationTracker.getService();
+        DefaultConfigurationLayoutCreator creator =
+            (DefaultConfigurationLayoutCreator)serviceConfigurationTracker.getService();
         if (creator == null) {
             throw new IllegalStateException("Can't update layout; no appropriate service registered.");
         }
@@ -143,11 +150,14 @@ public final class ConfigurationLayoutUtil {
      * @param wfm the workflow manager of the subnode
      * @return returns the order of the configuration nodes as a list of strings
      */
-    public static List<Integer> getConfigurationOrder(final SubnodeContainerConfigurationStringProvider configurationStringProvider, final Map<NodeID, MetaNodeDialogNode> configurationNodes, final WorkflowManager wfm) {
+    public static List<Integer> getConfigurationOrder(
+        final SubnodeContainerConfigurationStringProvider configurationStringProvider,
+        final Map<NodeID, MetaNodeDialogNode> configurationNodes, final WorkflowManager wfm) {
         if (serviceConfigurationTracker == null) {
             throw new IllegalStateException("Core bundle is not active, can't get configuration order.");
         }
-        DefaultConfigurationLayoutCreator creator = (DefaultConfigurationLayoutCreator)serviceConfigurationTracker.getService();
+        DefaultConfigurationLayoutCreator creator =
+            (DefaultConfigurationLayoutCreator)serviceConfigurationTracker.getService();
         if (creator == null) {
             throw new IllegalStateException("Can't update layout; no appropriate service registered.");
         }

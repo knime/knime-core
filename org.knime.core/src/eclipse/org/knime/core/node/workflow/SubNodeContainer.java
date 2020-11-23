@@ -2210,7 +2210,8 @@ public final class SubNodeContainer extends SingleNodeContainer
      */
     public void setSubnodeLayoutStringProvider(final SubnodeContainerLayoutStringProvider layoutStringProvider) {
         if (!m_subnodeLayoutStringProvider.equals(layoutStringProvider)) {
-            m_subnodeLayoutStringProvider = new SubnodeContainerLayoutStringProvider(layoutStringProvider.getLayoutString());
+            m_subnodeLayoutStringProvider =
+                new SubnodeContainerLayoutStringProvider(layoutStringProvider.getLayoutString());
             if (isProject()) {
                 //differently handled if this is a component project
                 //otherwise the setDirty event will just be past to the parent (which is ROOT)
@@ -2229,9 +2230,11 @@ public final class SubNodeContainer extends SingleNodeContainer
      * @param configurationStringProvider the SubnodeContainerConfigurationStringProvider to set
      * @since 4.3
      */
-    public void setSubnodeConfigurationStringProvider(final SubnodeContainerConfigurationStringProvider configurationStringProvider) {
+    public void setSubnodeConfigurationStringProvider(
+        final SubnodeContainerConfigurationStringProvider configurationStringProvider) {
         if (!m_subnodeConfigurationStringProvider.equals(configurationStringProvider)) {
-            m_subnodeConfigurationStringProvider = new SubnodeContainerConfigurationStringProvider(configurationStringProvider.getConfigurationLayoutString());
+            m_subnodeConfigurationStringProvider = new SubnodeContainerConfigurationStringProvider(
+                configurationStringProvider.getConfigurationLayoutString());
             if (isProject()) {
                 //differently handled if this is a component project
                 //otherwise the setDirty event will just be past to the parent (which is ROOT)
