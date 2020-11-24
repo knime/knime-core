@@ -162,8 +162,8 @@ public final class WizardExecutionController extends WebResourceController imple
     }
 
     /**
-     * Determines whether the wizard execution is halted at a page that is represented by the very last node in that branch (i.e. no
-     * further execution required).
+     * Determines whether the wizard execution is halted at a page that is represented by the very last node in that
+     * branch (i.e. no further execution required).
      *
      * @return <code>true</code> if workflow is halted at a wizard page with no outgoing connections, otherwise
      *         <code>false</code>
@@ -203,7 +203,7 @@ public final class WizardExecutionController extends WebResourceController imple
         try (WorkflowLock lock = manager.lock()) {
             NodeContext.pushContext(manager);
             try {
-                CheckUtils.checkState(hasCurrentWizardPageInternal(), "No current wizard page");
+                CheckUtils.checkState(hasCurrentWizardPageInternal(true), "No current wizard page");
                 return getWizardPageInternal(m_waitingSubnodes.get(0));
             } finally {
                 NodeContext.removeLastContext();
@@ -260,16 +260,18 @@ public final class WizardExecutionController extends WebResourceController imple
             checkDiscard();
             NodeContext.pushContext(manager);
             try {
-                return hasCurrentWizardPageInternal();
+                return hasCurrentWizardPageInternal(true);
             } finally {
                 NodeContext.removeLastContext();
             }
         }
     }
 
-    private boolean hasCurrentWizardPageInternal() {
+    private boolean hasCurrentWizardPageInternal(final boolean checkExecuted) {
         assert m_manager.isLockedByCurrentThread();
         if (m_waitingSubnodes.isEmpty()) {
+            return false;
+        } else if (checkExecuted && !areAllNodesExecuted(m_waitingSubnodes, m_manager)) {
             return false;
         } else if (!m_promptedSubnodeIDSuffixes.isEmpty()) {
             //check whether the 'waiting subnode' is the one currently re-executing
@@ -279,6 +281,7 @@ public final class WizardExecutionController extends WebResourceController imple
         } else {
             return true;
         }
+
 //        if (m_promptedSubnodeIDSuffixes.isEmpty()) {
 //            // stepNext not called
 //            return false;
@@ -287,6 +290,10 @@ public final class WizardExecutionController extends WebResourceController imple
 //            return false;
 //        }
 //        return true;
+    }
+
+    private static boolean areAllNodesExecuted(final List<NodeID> nodes, final WorkflowManager wfm) {
+        return nodes.stream().map(wfm::getNodeContainer).allMatch(nc -> nc.getNodeContainerState().isExecuted());
     }
 
     /** Continues the execution and executes up to, incl., the next subnode awaiting input. If no such subnode exists
@@ -321,7 +328,7 @@ public final class WizardExecutionController extends WebResourceController imple
             checkDiscard();
             NodeContext.pushContext(manager);
             try {
-                CheckUtils.checkState(hasCurrentWizardPageInternal(), "No current wizard page");
+                CheckUtils.checkState(hasCurrentWizardPageInternal(true), "No current wizard page");
                 return loadValuesIntoPageInternal(viewContentMap, m_waitingSubnodes.get(0), true, false);
             } finally {
                 NodeContext.removeLastContext();
@@ -352,7 +359,7 @@ public final class WizardExecutionController extends WebResourceController imple
             checkDiscard();
             NodeContext.pushContext(manager);
             try {
-                CheckUtils.checkState(hasCurrentWizardPageInternal(), "No current wizard page");
+                CheckUtils.checkState(hasCurrentWizardPageInternal(true), "No current wizard page");
                 return processViewRequestInternal(m_waitingSubnodes.get(0), nodeID, viewRequest, exec);
             } finally {
                 NodeContext.removeLastContext();
@@ -376,7 +383,7 @@ public final class WizardExecutionController extends WebResourceController imple
     private void stepNextInternal() {
         WorkflowManager manager = m_manager;
         assert manager.isLockedByCurrentThread();
-        CheckUtils.checkState(hasCurrentWizardPageInternal(), "No current wizard page");
+        CheckUtils.checkState(hasCurrentWizardPageInternal(false), "No current wizard page");
         NodeID currentID = m_waitingSubnodes.get(0);
         SubNodeContainer currentNC = manager.getNodeContainer(currentID, SubNodeContainer.class, true);
         if (currentNC.getFlowObjectStack().peek(FlowLoopContext.class) == null) {

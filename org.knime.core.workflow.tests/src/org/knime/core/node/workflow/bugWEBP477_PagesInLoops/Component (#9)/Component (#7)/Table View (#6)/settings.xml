@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config xmlns="http://www.knime.org/2008/09/XMLConfig" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.knime.org/2008/09/XMLConfig http://www.knime.org/XMLConfig_2008_09.xsd" key="settings.xml">
+<entry key="node_file" type="xstring" value="settings.xml"/>
+<config key="flow_stack"/>
+<config key="internal_node_subsettings">
+<entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
+</config>
+<config key="model">
+<entry key="hideInWizard" type="xboolean" value="false"/>
+<config key="columnFilter">
+<entry key="filter-type" type="xstring" value="STANDARD"/>
+<config key="included_names">
+<entry key="array-size" type="xint" value="0"/>
+</config>
+<config key="excluded_names">
+<entry key="array-size" type="xint" value="0"/>
+</config>
+<entry key="enforce_option" type="xstring" value="EnforceExclusion"/>
+<config key="name_pattern">
+<entry key="pattern" type="xstring" value=""/>
+<entry key="type" type="xstring" value="Wildcard"/>
+<entry key="caseSensitive" type="xboolean" value="true"/>
+</config>
+<config key="datatype">
+<config key="typelist">
+<entry key="org.knime.core.data.BooleanValue" type="xboolean" value="false"/>
+<entry key="org.knime.core.data.IntValue" type="xboolean" value="false"/>
+<entry key="org.knime.core.data.DoubleValue" type="xboolean" value="false"/>
+<entry key="org.knime.core.data.LongValue" type="xboolean" value="false"/>
+<entry key="org.knime.core.data.StringValue" type="xboolean" value="false"/>
+<entry key="org.knime.core.data.date.DateAndTimeValue" type="xboolean" value="false"/>
+</config>
+</config>
+</config>
+<entry key="selectionColumnName" type="xstring" value="Selected (JavaScript Table View)"/>
+<entry key="enablePaging" type="xboolean" value="true"/>
+<entry key="initialPageSize" type="xint" value="10"/>
+<entry key="enablePageSizeChange" type="xboolean" value="true"/>
+<config key="allowedPageSizes">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="10"/>
+<entry key="1" type="xint" value="25"/>
+<entry key="2" type="xint" value="50"/>
+<entry key="3" type="xint" value="100"/>
+</config>
+<entry key="enableShowAll" type="xboolean" value="false"/>
+<entry key="enableJumpToPage" type="xboolean" value="false"/>
+<entry key="displayRowColors" type="xboolean" value="true"/>
+<entry key="displayRowIDs" type="xboolean" value="true"/>
+<entry key="displayColumnHeaders" type="xboolean" value="true"/>
+<entry key="displayRowIndex" type="xboolean" value="false"/>
+<entry key="fixedHeaders" type="xboolean" value="false"/>
+<entry key="title" type="xstring" value="Default Table"/>
+<entry key="subtitle" type="xstring" value=""/>
+<entry key="enableSelection" type="xboolean" value="true"/>
+<entry key="enableSearching" type="xboolean" value="true"/>
+<entry key="enableColumnSearching" type="xboolean" value="false"/>
+<entry key="enableSorting" type="xboolean" value="true"/>
+<entry key="enableClearSortButton" type="xboolean" value="false"/>
+<entry key="enableGlobalNumberFormat" type="xboolean" value="false"/>
+<entry key="globalNumberFormatDecimals" type="xint" value="2"/>
+<entry key="displayFullscreenButton" type="xboolean" value="true"/>
+<entry key="enableHideUnselected" type="xboolean" value="true"/>
+<entry key="displayMissingValueAsQuestionMark" type="xboolean" value="true"/>
+<config key="dateTimeFormats_Internals">
+<entry key="SettingsModelID" type="xstring" value="SMID_datetime"/>
+<entry key="EnabledStatus" type="xboolean" value="true"/>
+</config>
+<config key="dateTimeFormats">
+<config key="globalDateTimeLocale_Internals">
+<entry key="SettingsModelID" type="xstring" value="SMID_string"/>
+<entry key="EnabledStatus" type="xboolean" value="true"/>
+</config>
+<entry key="globalDateTimeLocale" type="xstring" value="en"/>
+<config key="globalDateFormat_Internals">
+<entry key="SettingsModelID" type="xstring" value="SMID_string"/>
+<entry key="EnabledStatus" type="xboolean" value="true"/>
+</config>
+<entry key="globalDateFormat" type="xstring" value="YYYY-MM-DD"/>
+<config key="globalLocalDateFormat_Internals">
+<entry key="SettingsModelID" type="xstring" value="SMID_string"/>
+<entry key="EnabledStatus" type="xboolean" value="true"/>
+</config>
+<entry key="globalLocalDateFormat" type="xstring" value="YYYY-MM-DD"/>
+<config key="globalLocalDateTimeFormat_Internals">
+<entry key="SettingsModelID" type="xstring" value="SMID_string"/>
+<entry key="EnabledStatus" type="xboolean" value="true"/>
+</config>
+<entry key="globalLocalDateTimeFormat" type="xstring" value="YYYY-MM-DD"/>
+<config key="globalLocalTimeFormat_Internals">
+<entry key="SettingsModelID" type="xstring" value="SMID_string"/>
+<entry key="EnabledStatus" type="xboolean" value="true"/>
+</config>
+<entry key="globalLocalTimeFormat" type="xstring" value="HH:mm:ss"/>
+<config key="globalZonedDateTimeFormat_Internals">
+<entry key="SettingsModelID" type="xstring" value="SMID_string"/>
+<entry key="EnabledStatus" type="xboolean" value="true"/>
+</config>
+<entry key="globalZonedDateTimeFormat" type="xstring" value="YYYY-MM-DD z"/>
+<config key="timezone_Internals">
+<entry key="SettingsModelID" type="xstring" value="SMID_string"/>
+<entry key="EnabledStatus" type="xboolean" value="true"/>
+</config>
+<entry key="timezone" type="xstring" value="Europe/Rome"/>
+</config>
+<entry key="singleSelection" type="xboolean" value="false"/>
+<entry key="enableClearSelectionButton" type="xboolean" value="true"/>
+<entry key="maxRows" type="xint" value="100000"/>
+<entry key="enableLazyLoading" type="xboolean" value="false"/>
+<entry key="publishSelection" type="xboolean" value="true"/>
+<entry key="subscribeSelection" type="xboolean" value="true"/>
+<entry key="publishFilter" type="xboolean" value="true"/>
+<entry key="subscribeFilter" type="xboolean" value="true"/>
+<entry key="hideUnselected" type="xboolean" value="false"/>
+<entry key="customCSS" type="xstring" value=""/>
+</config>
+<entry key="customDescription" type="xstring" isnull="true" value=""/>
+<entry key="state" type="xstring" value="IDLE"/>
+<entry key="factory" type="xstring" value="org.knime.js.base.node.viz.pagedTable.PagedTableViewNodeFactory"/>
+<entry key="node-name" type="xstring" value="Table View"/>
+<entry key="node-bundle-name" type="xstring" value="KNIME JavaScript Base Views"/>
+<entry key="node-bundle-symbolic-name" type="xstring" value="org.knime.js.views"/>
+<entry key="node-bundle-vendor" type="xstring" value="KNIME AG, Zurich, Switzerland"/>
+<entry key="node-bundle-version" type="xstring" value="4.2.0.v202007072042"/>
+<entry key="node-feature-name" type="xstring" value="KNIME JavaScript Views"/>
+<entry key="node-feature-symbolic-name" type="xstring" value="org.knime.features.js.views.feature.group"/>
+<entry key="node-feature-vendor" type="xstring" value="KNIME AG, Zurich, Switzerland"/>
+<entry key="node-feature-version" type="xstring" value="4.2.0.v202007072042"/>
+<config key="factory_settings"/>
+<entry key="name" type="xstring" value="Table View"/>
+<entry key="hasContent" type="xboolean" value="false"/>
+<entry key="isInactive" type="xboolean" value="false"/>
+<config key="ports">
+<config key="port_1">
+<entry key="index" type="xint" value="1"/>
+<entry key="port_dir_location" type="xstring" isnull="true" value=""/>
+</config>
+</config>
+<config key="filestores">
+<entry key="file_store_location" type="xstring" isnull="true" value=""/>
+<entry key="file_store_id" type="xstring" isnull="true" value=""/>
+</config>
+</config>

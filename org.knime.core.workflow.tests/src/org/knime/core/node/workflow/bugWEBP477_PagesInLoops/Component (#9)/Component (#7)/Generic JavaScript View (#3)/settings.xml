@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config xmlns="http://www.knime.org/2008/09/XMLConfig" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.knime.org/2008/09/XMLConfig http://www.knime.org/XMLConfig_2008_09.xsd" key="settings.xml">
+<entry key="node_file" type="xstring" value="settings.xml"/>
+<config key="flow_stack"/>
+<config key="internal_node_subsettings">
+<entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
+</config>
+<config key="model">
+<entry key="hideInWizard" type="xboolean" value="false"/>
+<entry key="generateView" type="xboolean" value="false"/>
+<entry key="maxRows" type="xint" value="2500"/>
+<entry key="jsCode" type="xstring" value="var body = document.getElementsByTagName('body')[0];%%00010var html = '&lt;h1&gt;Empty GJS View&lt;/h1&gt;';%%00010if (knimeDataTable) {%%00010    html += '&lt;div class=&quot;success&quot;&gt;Data available. Node correctly configured. Table contains ' +%%00010        knimeDataTable.getNumRows() + ' rows.&lt;/div&gt;';%%00010} else {%%00010    html += '&lt;div class=&quot;failure&quot;&gt;No data available.&lt;/div&gt;';%%00010}%%00010body.innerHTML = html;%%00010"/>
+<entry key="jsSVGCode" type="xstring" value=""/>
+<entry key="cssCode" type="xstring" value="body {%%00010    font-family: sans-serif;%%00010}%%00010h1 {%%00010    font-size: 1.5em;%%00010    font-weight: bold;%%00010}%%00010.success {%%00010    color: #006633;%%00010    font-weight: bold;%%00010}%%00010%%00010.failure {%%00010    color: #990000;%%00010    font-weight: bold;%%00010}%%00010"/>
+<config key="dependencies">
+<entry key="array-size" type="xint" value="0"/>
+</config>
+<entry key="waitTime" type="xint" value="0"/>
+<config key="outputVariables">
+<entry key="array-size" type="xint" value="0"/>
+</config>
+<entry key="customCSS" type="xstring" isnull="true" value=""/>
+</config>
+<entry key="customDescription" type="xstring" isnull="true" value=""/>
+<entry key="state" type="xstring" value="IDLE"/>
+<entry key="factory" type="xstring" value="org.knime.js.base.node.viz.generic3.GenericJSViewNodeFactory"/>
+<entry key="node-name" type="xstring" value="Generic JavaScript View"/>
+<entry key="node-bundle-name" type="xstring" value="KNIME JavaScript Base Views"/>
+<entry key="node-bundle-symbolic-name" type="xstring" value="org.knime.js.views"/>
+<entry key="node-bundle-vendor" type="xstring" value="KNIME AG, Zurich, Switzerland"/>
+<entry key="node-bundle-version" type="xstring" value="4.2.0.v202007072042"/>
+<entry key="node-feature-name" type="xstring" value="KNIME JavaScript Views"/>
+<entry key="node-feature-symbolic-name" type="xstring" value="org.knime.features.js.views.feature.group"/>
+<entry key="node-feature-vendor" type="xstring" value="KNIME AG, Zurich, Switzerland"/>
+<entry key="node-feature-version" type="xstring" value="4.2.0.v202007072042"/>
+<config key="factory_settings"/>
+<entry key="name" type="xstring" value="Generic JavaScript View"/>
+<entry key="hasContent" type="xboolean" value="false"/>
+<entry key="isInactive" type="xboolean" value="false"/>
+<config key="ports">
+<config key="port_1">
+<entry key="index" type="xint" value="1"/>
+<entry key="port_dir_location" type="xstring" isnull="true" value=""/>
+</config>
+<config key="port_2">
+<entry key="index" type="xint" value="2"/>
+<entry key="port_dir_location" type="xstring" isnull="true" value=""/>
+</config>
+</config>
+<config key="filestores">
+<entry key="file_store_location" type="xstring" isnull="true" value=""/>
+<entry key="file_store_id" type="xstring" isnull="true" value=""/>
+</config>
+</config>
