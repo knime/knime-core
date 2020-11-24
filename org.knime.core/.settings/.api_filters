@@ -138,11 +138,23 @@
         <filter id="305324134">
             <message_arguments>
                 <message_argument value="org.knime.core.util.workflowsummary.WorkflowSummaryConfiguration"/>
+                <message_argument value="org.knime.core_4.2.3"/>
+            </message_arguments>
+        </filter>
+        <filter id="305324134">
+            <message_arguments>
+                <message_argument value="org.knime.core.util.workflowsummary.WorkflowSummaryConfiguration"/>
                 <message_argument value="org.knime.core_4.3.0"/>
             </message_arguments>
         </filter>
     </resource>
     <resource path="META-INF/MANIFEST.MF" type="org.knime.core.util.workflowsummary.WorkflowSummaryGenerator">
+        <filter id="305324134">
+            <message_arguments>
+                <message_argument value="org.knime.core.util.workflowsummary.WorkflowSummaryGenerator"/>
+                <message_argument value="org.knime.core_4.2.3"/>
+            </message_arguments>
+        </filter>
         <filter id="305324134">
             <message_arguments>
                 <message_argument value="org.knime.core.util.workflowsummary.WorkflowSummaryGenerator"/>
