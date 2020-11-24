@@ -60,6 +60,7 @@ import org.knime.core.data.convert.map.Source.ProducerParameters;
  * @param <ET> Type of external types
  * @param <T> Java type the created producer returns
  * @param <PP> Subclass of {@link ProducerParameters} for the given source type
+ * @since 4.3
  */
 public final class SupplierCellValueProducerFactory<S extends Source<ET>, ET, T, PP extends ProducerParameters<S>>
     extends AbstractCellValueProducerFactory<S, ET, T, PP>
