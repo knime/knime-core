@@ -85,7 +85,8 @@ public interface DefaultConfigurationLayoutCreator {
      * @param allNodes a map of all nodes with a configuration dialog.
      */
     @SuppressWarnings("rawtypes")
-    public void addUnreferencedViews(final SubnodeContainerConfigurationStringProvider configurationStringProvider,
+    public void addUnreferencedDialogNodes(
+        final SubnodeContainerConfigurationStringProvider configurationStringProvider,
         final Map<NodeIDSuffix, DialogNode> allNodes);
 
     /**

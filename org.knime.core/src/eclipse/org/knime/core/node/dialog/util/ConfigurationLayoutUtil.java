@@ -110,7 +110,7 @@ public final class ConfigurationLayoutUtil {
      * @param allNodes a map of all nodes with a configuration dialog.
      * @throws IOException If no service is registered or the layout cannot be amended.
      */
-    public static void addUnreferencedViews(
+    public static void addUnreferencedDialogNodes(
         final SubnodeContainerConfigurationStringProvider configurationStringProvider,
         final Map<NodeIDSuffix, DialogNode> allNodes) throws IOException {
         if (serviceConfigurationTracker == null) {
@@ -121,7 +121,7 @@ public final class ConfigurationLayoutUtil {
         if (creator == null) {
             throw new IOException("Can't add unreferenced views to layout; no appropriate service registered.");
         }
-        creator.addUnreferencedViews(configurationStringProvider, allNodes);
+        creator.addUnreferencedDialogNodes(configurationStringProvider, allNodes);
     }
 
     /**
