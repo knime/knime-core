@@ -345,7 +345,7 @@ public final class WorkflowSummaryCreator {
 
             if (nc instanceof SingleNodeContainer) {
                 SingleNodeContainer snc = (SingleNodeContainer)nc;
-                if (nc.getNodeContainerState().isExecuted()) {
+                if (nc.getNodeContainerState().isExecuted() && !snc.isInactive()) {
                     try {
                         settings = createSettings(snc.getModelSettingsUsingFlowObjectStack());
                     } catch (InvalidSettingsException ex) {
