@@ -16,7 +16,7 @@
 	<packaging>pom</packaging>
 
 	<properties>
-		<revision>4.2.3</revision>
+		<revision>4.2.4</revision>
 		<changelist>-SNAPSHOT</changelist>
 		<feature-branch-extension.branchListProperty>git.branch</feature-branch-extension.branchListProperty>
 		<feature-branch-extension.appendArtifactoryProperties>false</feature-branch-extension.appendArtifactoryProperties>
