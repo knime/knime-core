@@ -48,6 +48,7 @@
  */
 package org.knime.core.data.sort;
 
+import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -66,65 +67,91 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.util.CheckUtils;
 
 /**
- * Implementation of the Fisher Yates shuffle, that guarantees that all n!
- * possible outcomes are possible and equally likely. The shuffling procedure
- * requires only linear runtime. For further details see "Fisher-Yates shuffle",
- * from Dictionary of Algorithms and Data Structures, Paul E. Black, ed., NIST.
+ * Implementation of the Fisher Yates shuffle, that guarantees that all n! possible outcomes are possible and equally
+ * likely. The shuffling procedure requires only linear runtime. For further details see "Fisher-Yates shuffle", from
+ * Dictionary of Algorithms and Data Structures, Paul E. Black, ed., NIST.
  *
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
- * @since 3.6
- * @deprecated Use {@link ClosableShuffler}.
+ * @author Benjamin Wilhelm, KNIME GmbH, Konstanz, Germany
+ * @since 4.3
  */
-@Deprecated
-public final class Shuffler {
+public final class ClosableShuffler implements Closeable {
 
-    private Shuffler() {
-        // static utility class
-    }
+    private final BufferedDataTable m_table;
+
+    private final ExecutionContext m_exec;
+
+    private final long m_seed;
+
+    private BufferedDataTable m_shuffled;
+
+    private BufferedDataTable m_sorted;
 
     /**
-     * Shuffles the <b>table</b> using <b>exec</b> for table creations and progress report.
-     * The <b>seed</b> is used to enable reproducibility.
+     * Create a {@link ClosableShuffler} to shuffle the input table with the given seed (for reproducibility). Call
+     * {@link #getShuffled()} to execute the shuffling and get the shuffled table and call {@link #close()} to clear the
+     * shuffled table and all intermediate tables (deleting temporary files).
      *
      * @param table the table to shuffle
      * @param exec execution context use for creating tables and reporting progress
      * @param seed random seed for permutation generation
-     * @return the shuffled table
-     * @throws CanceledExecutionException
      *
-     * @since 3.6
-     * @deprecated Use {@link ClosableShuffler}.
+     * @since 4.3
      */
-    @Deprecated
-    public static BufferedDataTable shuffle(final BufferedDataTable table, final ExecutionContext exec, final long seed) throws CanceledExecutionException {
+    public ClosableShuffler(final BufferedDataTable table, final ExecutionContext exec, final long seed) {
         CheckUtils.checkArgument(table.size() <= Integer.MAX_VALUE,
-                "It's currently not possible to shuffle tables with more than Integer.MAX_VALUE rows.");
+            "It's currently not possible to shuffle tables with more than Integer.MAX_VALUE rows.");
 
-        RandomNumberAppendFactory randomnumfac =
-                RandomNumberAppendFactory.create(seed, table);
-        ColumnRearranger colre =
-                new ColumnRearranger(table.getDataTableSpec());
-        colre.append(randomnumfac);
-        BufferedDataTable intermediate =
-                exec.createColumnRearrangeTable(table, colre, exec
-                        .createSubProgress(.2));
-        List<String> include = new ArrayList<>();
-        String randomcol = randomnumfac.getColumnSpecs()[0].getName();
-        include.add(randomcol);
-        BufferedDataTableSorter sorter = new BufferedDataTableSorter(intermediate, include, new boolean[]{true});
-        BufferedDataTable sorted = sorter.sort(exec.createSubExecutionContext(0.75));
-        colre = new ColumnRearranger(sorted.getDataTableSpec());
-        colre.remove(randomcol);
-        return exec.createColumnRearrangeTable(sorted, colre, exec
-                        .createSubProgress(.05));
+        m_table = table;
+        m_exec = exec;
+        m_seed = seed;
     }
 
+    /**
+     * Run the shuffling (only on the first call) and get the shuffled table.
+     *
+     * @return the shuffled table
+     * @throws CanceledExecutionException if the execution was canceled
+     * @since 4.3
+     */
+    public BufferedDataTable getShuffled() throws CanceledExecutionException {
+        if (m_shuffled == null) {
+            shuffle();
+        }
+        return m_shuffled;
+    }
+
+    @Override
+    public void close() {
+        m_exec.clearTable(m_sorted);
+        m_exec.clearTable(m_shuffled);
+    }
+
+    private void shuffle() throws CanceledExecutionException {
+        try {
+            final RandomNumberAppendFactory randomnumfac = RandomNumberAppendFactory.create(m_seed, m_table);
+            ColumnRearranger colre = new ColumnRearranger(m_table.getDataTableSpec());
+            colre.append(randomnumfac);
+            BufferedDataTable intermediate =
+                m_exec.createColumnRearrangeTable(m_table, colre, m_exec.createSubProgress(.2));
+            List<String> include = new ArrayList<>();
+            String randomcol = randomnumfac.getColumnSpecs()[0].getName();
+            include.add(randomcol);
+            BufferedDataTableSorter sorter = new BufferedDataTableSorter(intermediate, include, new boolean[]{true});
+            m_sorted = sorter.sort(m_exec.createSubExecutionContext(0.75));
+            colre = new ColumnRearranger(m_sorted.getDataTableSpec());
+            colre.remove(randomcol);
+            m_shuffled = m_exec.createColumnRearrangeTable(m_sorted, colre, m_exec.createSubProgress(.05));
+        } catch (final CanceledExecutionException e) {
+            m_exec.clearTable(m_sorted);
+            throw e;
+        }
+    }
 
     /*
      * The CellFactory adds a shuffled number to each input DataRow.
      */
-    private static final class RandomNumberAppendFactory
-        extends SingleCellFactory {
+    private static final class RandomNumberAppendFactory extends SingleCellFactory {
 
         /** Shuffled row number array. */
         private int[] m_shuffle;
@@ -133,8 +160,7 @@ public final class Shuffler {
         private int m_pos = 0;
 
         /** Constructor. */
-        private RandomNumberAppendFactory(final Long seed,
-                final int rowCount, final DataColumnSpec appendSpec) {
+        private RandomNumberAppendFactory(final Long seed, final int rowCount, final DataColumnSpec appendSpec) {
             super(appendSpec);
             Random random;
             if (seed != null) {
@@ -157,32 +183,30 @@ public final class Shuffler {
                 m_shuffle[r] = m_shuffle[i];
                 m_shuffle[i] = swap;
             }
-       }
+        }
 
         /** {@inheritDoc} */
         @Override
         public DataCell getCell(final DataRow row) {
-           assert (m_pos <= m_shuffle.length);
-           DataCell nextRandomNumberCell = new IntCell(m_shuffle[m_pos]);
-           m_pos++;
-           return nextRandomNumberCell;
+            assert (m_pos <= m_shuffle.length);
+            DataCell nextRandomNumberCell = new IntCell(m_shuffle[m_pos]);
+            m_pos++;
+            return nextRandomNumberCell;
         }
 
         /** Factory method to create a new random number append factory. */
-        private static RandomNumberAppendFactory create(final Long seed,
-                final BufferedDataTable inData) {
+        private static RandomNumberAppendFactory create(final Long seed, final BufferedDataTable inData) {
             final DataTableSpec spec = inData.getDataTableSpec();
             final long tableSize = inData.size();
             CheckUtils.checkArgument(tableSize < Integer.MAX_VALUE,
                 "It's currently not possible to shuffle tables with more than Integer.MAX_VALUE rows.");
-            final int rowCount = (int) tableSize;
+            final int rowCount = (int)tableSize;
             String appendName = "random_row_number";
             int uniquifier = 1;
             while (spec.containsName(appendName)) {
                 appendName = "random_row_number_#" + uniquifier++;
             }
-            DataColumnSpec s = new DataColumnSpecCreator(
-                    appendName, IntCell.TYPE).createSpec();
+            DataColumnSpec s = new DataColumnSpecCreator(appendName, IntCell.TYPE).createSpec();
             return new RandomNumberAppendFactory(seed, rowCount, s);
         }
 
