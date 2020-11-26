@@ -164,7 +164,17 @@ public class NodeFactoryExtensionManager {
     }
 
     /**
-     * Attempts to instantiate a concreate {@link NodeFactory} with the given fully qualified class name. It will first
+     * Provides the node-set factory extension for a factory class name.
+     *
+     * @param factoryClassName the factory class name to get the {@link NodeSetFactoryExtension} for
+     * @return the extensions or an empty optional if not found
+     */
+    public Optional<NodeSetFactoryExtension> getNodeSetFactoryExtension(final String factoryClassName) {
+        return Optional.ofNullable(m_factoryNameToNodeSetFactoryExtensionMap.get(factoryClassName));
+    }
+
+    /**
+     * Attempts to instantiate a concrete {@link NodeFactory} with the given fully qualified class name. It will first
      * consult the regular node extension, then the node set extensions, then node registered through
      * {@link NodeFactory#addLoadedFactory(Class)}, and finally give up an throw an exception.
      *
