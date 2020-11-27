@@ -7616,7 +7616,18 @@ public final class WorkflowManager extends NodeContainer
     static WorkflowManager lazyInitTemplateWorkflowRoot() {
         synchronized (WorkflowManager.class) {
             if (templateWorkflowRoot == null) {
-                templateWorkflowRoot = ROOT.createAndAddProject("Workflow Template Root", new WorkflowCreationHelper());
+                NodeContext.pushContext((NodeContext)null);
+                try {
+                    File tmpDir = FileUtil.createTempDir("templateWorkflowRoot");
+                    WorkflowContext wfctx = new WorkflowContext.Factory(tmpDir).createContext();
+                    templateWorkflowRoot = ROOT.createAndAddProject("Workflow Template Root",
+                        new WorkflowCreationHelper().setWorkflowContext(wfctx));
+                } catch (IOException e) {
+                    LOGGER.warn("Could not create temporary directory for template workflow root.", e);
+                    return null;
+                } finally {
+                    NodeContext.removeLastContext();
+                }
             }
             return templateWorkflowRoot;
         }
