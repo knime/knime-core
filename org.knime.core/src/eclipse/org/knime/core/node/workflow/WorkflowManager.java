@@ -293,7 +293,7 @@ public final class WorkflowManager extends NodeContainer
     private int m_nextAnnotationID = 0;
 
     /** for internal usage, holding output table references and file store handlers */
-    private final WorkflowDataRepository m_dataRepository;
+    private WorkflowDataRepository m_dataRepository;
 
     /**
      * The table backend used for all nodes in a workflow project. (Field is null for metanodes and WFMs in subnodes,
@@ -9418,6 +9418,8 @@ public final class WorkflowManager extends NodeContainer
 
             //unset workflow annotation ids (in case they are about to be used somewhere else)
             getWorkflowAnnotations().forEach(wa -> wa.unsetID());
+
+            m_dataRepository = null;
         }
     }
 
