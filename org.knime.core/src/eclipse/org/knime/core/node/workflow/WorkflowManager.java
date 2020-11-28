@@ -1523,13 +1523,13 @@ public final class WorkflowManager extends NodeContainer
                     // also reset successors of this "port"
                     Set<Integer> outPorts = destWFM.getWorkflow().connectedOutPorts(destPort);
                     for (int i : outPorts) {
-                        resetSuccessors(dest, i);
+                        resetSuccessors(dest, i, true);
                     }
                 }
             } else {
                 // connection leaves workflow
                 assert cc.getType().isLeavingWorkflow();
-                getParent().resetSuccessors(this.getID(), cc.getDestPort());
+                getParent().resetSuccessors(this.getID(), cc.getDestPort(), true);
             }
             // and finally delete connection from workflow
             m_workflow.removeConnection(cc);
@@ -4749,7 +4749,7 @@ public final class WorkflowManager extends NodeContainer
             // this method is called from the parent's doAfterExecute
             // we don't propagate state changes (i.e. argument flag is false)
             // since the check for state changes in the parent will happen next
-            if (!sweep(m_workflow.getNodeIDs(), false)) {
+            if (!sweep(m_workflow.getNodeIDs())) {
                 LOGGER.debug("Some states were invalid, old states are:");
                 LOGGER.debug(stateList);
                 LOGGER.debug("The new (corrected) states are: ");
@@ -5118,7 +5118,7 @@ public final class WorkflowManager extends NodeContainer
      * @param id of node
      */
     private void resetSuccessors(final NodeID id) {
-        resetSuccessors(id, -1);
+        resetSuccessors(id, -1, true);
     }
 
     /**
@@ -5126,8 +5126,9 @@ public final class WorkflowManager extends NodeContainer
      *
      * @param id The id in question
      * @param portID port index or -1 to reset successors connected to any out port.
+     * @param propagateOutside whether to reset the reset outside of this metanode/component (iff...)
      */
-    void resetSuccessors(final NodeID id, final int portID) {
+    void resetSuccessors(final NodeID id, final int portID, final boolean propagateOutside) {
         try (WorkflowLock lock = assertLock()) {
             assert !this.getID().equals(id);
             Set<ConnectionContainer> succs = m_workflow.getConnectionsBySource(id);
@@ -5146,7 +5147,7 @@ public final class WorkflowManager extends NodeContainer
                             // first reset successors of successor
                             if (nc instanceof SingleNodeContainer) {
                                 // for a normal node, ports don't matter
-                                this.resetSuccessors(currID, -1);
+                                this.resetSuccessors(currID, -1, propagateOutside);
                                 // ..then reset immediate successor itself if it was not implicitly
                                 // reset by the successor reset (via an outer loop)
                                 if (nc.isResetable()) {
@@ -5159,7 +5160,7 @@ public final class WorkflowManager extends NodeContainer
                                 // to the outports of interest of this WFM...
                                 Set<Integer> outcomingPorts = wfm.m_workflow.connectedOutPorts(conn.getDestPort());
                                 for (Integer i : outcomingPorts) {
-                                    this.resetSuccessors(currID, i);
+                                    this.resetSuccessors(currID, i, propagateOutside);
                                 }
                                 // Reset nodes inside WFM.
                                 // (cleaning of  loop context affected one level
@@ -5167,7 +5168,7 @@ public final class WorkflowManager extends NodeContainer
                                 wfm.resetNodesInWFMConnectedToInPorts(Collections.singleton(conn.getDestPort()));
                             }
                         }
-                    } else {
+                    } else if (propagateOutside) {
                         assert this.getID().equals(currID);
                         // connection goes to a meta outport!
                         // Only reset nodes which are connected to the currently
@@ -5176,7 +5177,9 @@ public final class WorkflowManager extends NodeContainer
                         // clean loop context affected one level up
                         getParent().resetAndConfigureAffectedLoopContext(this.getID(),
                             Collections.singleton(outGoingPortID));
-                        getParent().resetSuccessors(this.getID(), outGoingPortID);
+                        getParent().resetSuccessors(this.getID(), outGoingPortID, propagateOutside);
+                    } else {
+                        // don't propagate reset downstream of this workflow/metanode
                     }
                 }
             }
@@ -8580,7 +8583,7 @@ public final class WorkflowManager extends NodeContainer
                     cont.setNodeMessage(new NodeMessage(type, messageBuilder.toString()));
             }
         }
-        if (!sweep(nodeIDsInPersistorSet, false) && !isStateChangePredictable) {
+        if (!sweep(nodeIDsInPersistorSet) && !isStateChangePredictable) {
             loadResult.addWarning("Some node states were invalid");
         }
     }
@@ -8852,13 +8855,12 @@ public final class WorkflowManager extends NodeContainer
     }
 
     /**
-     * Performs sanity check on workflow. This is necessary upon load.
+     * Performs sanity check on workflow. This is necessary upon load. Does not interact with parent workflow.
      *
      * @param nodes The nodes to check
-     * @param propagate Whether to also reflect state changes in our parent
      * @return Whether everything was clean before (if false is returned, something was wrong).
      */
-    boolean sweep(final Set<NodeID> nodes, final boolean propagate) {
+    boolean sweep(final Set<NodeID> nodes) {
         boolean wasClean = true;
         try (WorkflowLock lock = lock()) {
             for (NodeID id : m_workflow.createBreadthFirstSortedList(nodes, true).keySet()) {
@@ -8866,7 +8868,7 @@ public final class WorkflowManager extends NodeContainer
                 if (nc instanceof WorkflowManager) {
                     WorkflowManager metaNode = (WorkflowManager)nc;
                     Set<NodeID> metaContent = metaNode.m_workflow.getNodeIDs();
-                    if (!metaNode.sweep(metaContent, false)) {
+                    if (!metaNode.sweep(metaContent)) {
                         wasClean = false;
                     }
                 } else {
@@ -8926,7 +8928,7 @@ public final class WorkflowManager extends NodeContainer
                                 assert nc instanceof SingleNodeContainer;
                                 ((SingleNodeContainer)nc).cancelExecution();
                             case EXECUTED:
-                                resetSuccessors(nc.getID());
+                                resetSuccessors(nc.getID(), -1, false);
                                 if (nc.getInternalState().isExecuted()) {
                                     if (nc instanceof SingleNodeContainer) {
                                         invokeResetOnSingleNodeContainer((SingleNodeContainer)nc);
@@ -8973,7 +8975,7 @@ public final class WorkflowManager extends NodeContainer
                     }
                 }
             }
-            lock.queueCheckForNodeStateChangeNotification(propagate);
+            lock.queueCheckForNodeStateChangeNotification(false);
         }
         return wasClean;
     }

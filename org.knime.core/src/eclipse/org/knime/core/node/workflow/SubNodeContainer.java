@@ -515,7 +515,7 @@ public final class SubNodeContainer extends SingleNodeContainer
             final boolean gotReset = oldState.isExecuted() && !newState.isExecuted();
             if (gotReset) {
                 // a contained node was reset -- trigger reset downstream
-                parent.resetSuccessors(getID(), -1);
+                parent.resetSuccessors(getID(), -1, true);
             }
             boolean outputChanged = setVirtualOutputIntoOutport(newState);
             setInternalState(newState);
