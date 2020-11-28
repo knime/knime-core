@@ -577,7 +577,7 @@
             specSerializer="org.knime.core.node.port.pmml.preproc.PMMLPreprocPortObjectSpec$Serializer">
       </portType>
       <portType
-            hidden="true"
+            hidden="false"
             color="#1eb9dc"
             name="Color"
             objectClass="org.knime.core.node.port.viewproperty.ColorHandlerPortObject"
