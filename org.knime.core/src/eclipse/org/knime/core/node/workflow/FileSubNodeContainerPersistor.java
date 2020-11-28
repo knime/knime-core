@@ -101,7 +101,9 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
 
     private WorkflowPortTemplate[] m_outPortTemplates;
 
-    private final FileWorkflowPersistor m_workflowPersistor;
+    private FileWorkflowPersistor m_workflowPersistor;
+
+    private String m_nameOverwrite;
 
     private int m_virtualInNodeIDSuffix = -1;
 
@@ -131,35 +133,6 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
         final LoadVersion version, final WorkflowDataRepository workflowDataRepository,
         final boolean mustWarnOnDataLoadError) {
         super(nodeSettingsFile, loadHelper, version, workflowDataRepository, mustWarnOnDataLoadError);
-        m_workflowPersistor =
-            new FileWorkflowPersistor(workflowDataRepository, new ReferencedFile(
-                nodeSettingsFile.getParent(), WorkflowPersistor.WORKFLOW_FILE), getLoadHelper(), getLoadVersion(), false) {
-                @Override
-                public void postLoad(final WorkflowManager wfm, final LoadResult loadResult) {
-                    NodeContainerParent ncParent = wfm.getDirectNCParent();
-                    if (!(ncParent instanceof SubNodeContainer)) {
-                        String error = String.format("Parent is not instance of %s but %s",
-                                SubNodeContainer.class.getSimpleName(), ncParent == null ? "<null>" :
-                                    ncParent.getClass().getSimpleName());
-                        LOGGER.error(error);
-                        setNeedsResetAfterLoad();
-                        setDirtyAfterLoad();
-                        loadResult.addError(error);
-                    } else {
-                        SubNodeContainer subnode = (SubNodeContainer)ncParent;
-                        try {
-                            subnode.postLoadWFM();
-                        } catch (Exception e) {
-                            String error =
-                                String.format("Post-load error (%s): %s", e.getClass().getSimpleName(), e.getMessage());
-                            LOGGER.error(error, e);
-                            loadResult.addError(error, false);
-                            setDirtyAfterLoad();
-                            setNeedsResetAfterLoad();
-                        }
-                    }
-                }
-        };
     }
 
     /**
@@ -254,6 +227,11 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
         final LoadResult result) throws InvalidSettingsException, IOException {
         super.preLoadNodeContainer(parentPersistor, parentSettings, result);
         NodeSettingsRO nodeSettings = getNodeSettings(); // assigned by super
+        m_workflowPersistor = createWorkflowPersistor(getMetaPersistor().getNodeSettingsFile(), getWorkflowDataRepository());
+        if (m_nameOverwrite != null) {
+            m_workflowPersistor.setNameOverwrite(m_nameOverwrite);
+            m_nameOverwrite = null;
+        }
         try {
             int i = nodeSettings.getInt("virtual-in-ID");
             CheckUtils.checkSetting(i >= 0, "Node ID < 0: %d", i);
@@ -392,6 +370,40 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
         m_subnodeConfigurationStringProvider = new SubnodeContainerConfigurationStringProvider(nodeSettings.getString("configurationLayoutJSON", ""));
     }
 
+    private FileWorkflowPersistor createWorkflowPersistor(final ReferencedFile nodeSettingsFile,
+        final WorkflowDataRepository workflowDataRepository) {
+        String workflowKNIME = getNodeSettings().getString("workflow-file", WorkflowPersistor.WORKFLOW_FILE);
+        return new FileWorkflowPersistor(workflowDataRepository,
+            new ReferencedFile(nodeSettingsFile.getParent(), workflowKNIME), getLoadHelper(),
+            getLoadVersion(), false) {
+            @Override
+            public void postLoad(final WorkflowManager wfm, final LoadResult loadResult) {
+                NodeContainerParent ncParent = wfm.getDirectNCParent();
+                if (!(ncParent instanceof SubNodeContainer)) {
+                    String error =
+                        String.format("Parent is not instance of %s but %s", SubNodeContainer.class.getSimpleName(),
+                            ncParent == null ? "<null>" : ncParent.getClass().getSimpleName());
+                    LOGGER.error(error);
+                    setNeedsResetAfterLoad();
+                    setDirtyAfterLoad();
+                    loadResult.addError(error);
+                } else {
+                    SubNodeContainer subnode = (SubNodeContainer)ncParent;
+                    try {
+                        subnode.postLoadWFM();
+                    } catch (Exception e) {
+                        String error =
+                            String.format("Post-load error (%s): %s", e.getClass().getSimpleName(), e.getMessage());
+                        LOGGER.error(error, e);
+                        loadResult.addError(error, false);
+                        setDirtyAfterLoad();
+                        setNeedsResetAfterLoad();
+                    }
+                }
+            }
+        };
+    }
+
     private WorkflowPortTemplate loadPort(final NodeSettingsRO portSetting,
         final int max) throws InvalidSettingsException {
         int index = portSetting.getInt("index");
@@ -461,7 +473,11 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
     /** {@inheritDoc} */
     @Override
     public void setNameOverwrite(final String nameOverwrite) {
-        m_workflowPersistor.setNameOverwrite(nameOverwrite);
+        if (m_workflowPersistor == null) {
+            m_nameOverwrite = nameOverwrite;
+        } else {
+            m_workflowPersistor.setNameOverwrite(nameOverwrite);
+        }
     }
 
     /** {@inheritDoc} */
@@ -496,6 +512,8 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
         final ReferencedFile nodeDirRef, final WorkflowSaveHelper saveHelper) throws IOException, CanceledExecutionException,
         LockFailedException {
         NativeNodeContainer virtualInNode = subnodeNC.getVirtualInNode();
+        // added in 4.3, see AP-15029
+        settings.addString("workflow-file", subnodeNC.getCipherFileName(WorkflowPersistor.WORKFLOW_FILE));
         settings.addInt("virtual-in-ID", virtualInNode.getID().getIndex());
         NodeSettingsWO inportsSettings = settings.addNodeSettings("inports");
         // input of subnode is represented by output of virtual in node.

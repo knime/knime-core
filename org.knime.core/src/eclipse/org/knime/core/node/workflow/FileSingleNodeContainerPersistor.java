@@ -165,7 +165,7 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
     }
 
     @Override
-    public FileNodeContainerMetaPersistor getMetaPersistor() {
+    public final FileNodeContainerMetaPersistor getMetaPersistor() {
         return m_metaPersistor;
     }
 
