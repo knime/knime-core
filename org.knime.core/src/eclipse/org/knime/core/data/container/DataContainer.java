@@ -603,8 +603,6 @@ public class DataContainer implements RowAppender {
             date = DATE_FORMAT.format(new Date());
         }
         String fileName = "knime_container_" + date + "_";
-        File f = FileUtil.createTempFile(fileName, suffix, dir, true);
-        f.deleteOnExit();
-        return f;
+        return FileUtil.createTempFile(fileName, suffix, dir, true);
     }
 }
