@@ -185,9 +185,11 @@ public class LoopStartWriteFileStoreHandler extends AbstractReferenceWriteFileSt
         super.clearAndDispose();
         if (m_endNodeCacheWithKeysToPersist != null) {
             m_endNodeCacheWithKeysToPersist.dispose();
+            m_endNodeCacheWithKeysToPersist = null;
         }
         if (m_fileStoresInLoopCache != null) {
             m_fileStoresInLoopCache.dispose();
+            m_fileStoresInLoopCache = null;
         }
     }
 
