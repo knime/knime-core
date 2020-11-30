@@ -5,8 +5,6 @@ Bundle-SymbolicName: org.knime.core.rpc;singleton:=true
 Bundle-Version: 4.3.0.qualifier
 Bundle-ClassPath: .
 Bundle-Vendor: KNIME AG, Zurich, Switzerland
-Eclipse-RegisterBuddy: org.apache.log4j
-Eclipse-BuddyPolicy: dependent
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Require-Bundle: org.knime.core;bundle-version="[4.3.0,5.0.0)",
  com.fasterxml.jackson.core.jackson-databind;bundle-version="[2.11.0,3.0.0)",
