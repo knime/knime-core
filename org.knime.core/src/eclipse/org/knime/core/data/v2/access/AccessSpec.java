@@ -50,19 +50,19 @@ import org.knime.core.data.v2.access.ByteArrayAccess.ByteArrayAccessSpec;
 import org.knime.core.data.v2.access.DoubleAccess.DoubleAccessSpec;
 import org.knime.core.data.v2.access.DoubleAccess.DoubleReadAccess;
 import org.knime.core.data.v2.access.DoubleAccess.DoubleWriteAccess;
-import org.knime.core.data.v2.access.DurationAccess.DurationAccessSpec;
 import org.knime.core.data.v2.access.IntAccess.IntAccessSpec;
 import org.knime.core.data.v2.access.ListAccess.ListAccessSpec;
-import org.knime.core.data.v2.access.LocalDateAccess.LocalDateAccessSpec;
-import org.knime.core.data.v2.access.LocalDateTimeAccess.LocalDateTimeAccessSpec;
-import org.knime.core.data.v2.access.LocalTimeAccess.LocalTimeAccessSpec;
 import org.knime.core.data.v2.access.LongAccess.LongAccessSpec;
+import org.knime.core.data.v2.access.ObjectAccess.DurationAccessSpec;
 import org.knime.core.data.v2.access.ObjectAccess.GenericObjectAccessSpec;
+import org.knime.core.data.v2.access.ObjectAccess.LocalDateAccessSpec;
+import org.knime.core.data.v2.access.ObjectAccess.LocalDateTimeAccessSpec;
+import org.knime.core.data.v2.access.ObjectAccess.LocalTimeAccessSpec;
+import org.knime.core.data.v2.access.ObjectAccess.PeriodAccessSpec;
 import org.knime.core.data.v2.access.ObjectAccess.StringAccessSpec;
-import org.knime.core.data.v2.access.PeriodAccess.PeriodAccessSpec;
+import org.knime.core.data.v2.access.ObjectAccess.ZonedDateTimeAccessSpec;
 import org.knime.core.data.v2.access.StructAccess.StructAccessSpec;
 import org.knime.core.data.v2.access.VoidAccess.VoidAccessSpec;
-import org.knime.core.data.v2.access.ZonedDateTimeAccess.ZonedDateTimeAccessSpec;
 
 /**
  * Specification of a {@link ReadAccess} and {@link WriteAccess}. Provides all information about their configuration.

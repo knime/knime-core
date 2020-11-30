@@ -51,6 +51,12 @@ package org.knime.core.data.v2.access;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.Period;
+import java.time.ZonedDateTime;
 
 import org.knime.core.data.BoundedValue;
 import org.knime.core.data.DataValueComparator;
@@ -170,6 +176,132 @@ public final class ObjectAccess {
         }
 
         // TODO(bejamin) add dict encoding
+    }
+
+    /**
+     * Specification of {@link ObjectReadAccess} and {@link ObjectWriteAccess} for {@link LocalDate}.
+     *
+     * @author Benjamin Wilhelm, KNIME GmbH, Konstanz, Germany
+     * @since 4.3
+     */
+    public static final class LocalDateAccessSpec
+        implements AccessSpec<ObjectReadAccess<LocalDate>, ObjectWriteAccess<LocalDate>> {
+
+        /** The final stateless instance of {@link LocalDateAccessSpec} */
+        public static final LocalDateAccessSpec INSTANCE = new LocalDateAccessSpec();
+
+        private LocalDateAccessSpec() {
+        }
+
+        @Override
+        public <T> T accept(final AccessSpecMapper<T> mapper) {
+            return mapper.visit(this);
+        }
+    }
+
+    /**
+     * Specification of {@link ObjectReadAccess} and {@link ObjectWriteAccess} for {@link LocalDateTime}.
+     *
+     * @author Benjamin Wilhelm, KNIME GmbH, Konstanz, Germany
+     * @since 4.3
+     */
+    public static final class LocalDateTimeAccessSpec
+        implements AccessSpec<ObjectReadAccess<LocalDateTime>, ObjectWriteAccess<LocalDateTime>> {
+
+        /** The final stateless instance of {@link LocalDateTimeAccessSpec} */
+        public static final LocalDateTimeAccessSpec INSTANCE = new LocalDateTimeAccessSpec();
+
+        private LocalDateTimeAccessSpec() {
+        }
+
+        @Override
+        public <T> T accept(final AccessSpecMapper<T> mapper) {
+            return mapper.visit(this);
+        }
+    }
+
+    /**
+     * Specification of {@link ObjectReadAccess} and {@link ObjectWriteAccess} for {@link LocalTime}.
+     *
+     * @author Benjamin Wilhelm, KNIME GmbH, Konstanz, Germany
+     * @since 4.3
+     */
+    public static final class LocalTimeAccessSpec
+        implements AccessSpec<ObjectReadAccess<LocalTime>, ObjectWriteAccess<LocalTime>> {
+
+        /** The final stateless instance of {@link LocalTimeAccessSpec} */
+        public static final LocalTimeAccessSpec INSTANCE = new LocalTimeAccessSpec();
+
+        private LocalTimeAccessSpec() {
+        }
+
+        @Override
+        public <T> T accept(final AccessSpecMapper<T> mapper) {
+            return mapper.visit(this);
+        }
+    }
+
+    /**
+     * Specification of {@link ObjectReadAccess} and {@link ObjectWriteAccess} for {@link Duration}.
+     *
+     * @author Benjamin Wilhelm, KNIME GmbH, Konstanz, Germany
+     * @since 4.3
+     */
+    public static final class DurationAccessSpec
+        implements AccessSpec<ObjectReadAccess<Duration>, ObjectWriteAccess<Duration>> {
+
+        /** The final stateless instance of {@link DurationAccessSpec} */
+        public static final DurationAccessSpec INSTANCE = new DurationAccessSpec();
+
+        private DurationAccessSpec() {
+        }
+
+        @Override
+        public <T> T accept(final AccessSpecMapper<T> mapper) {
+            return mapper.visit(this);
+        }
+    }
+
+    /**
+     * Specification of {@link ObjectReadAccess} and {@link ObjectWriteAccess} for {@link Period}.
+     *
+     * @author Benjamin Wilhelm, KNIME GmbH, Konstanz, Germany
+     * @since 4.3
+     */
+    public static final class PeriodAccessSpec
+        implements AccessSpec<ObjectReadAccess<Period>, ObjectWriteAccess<Period>> {
+
+        /** The final stateless instance of {@link PeriodAccessSpec} */
+        public static final PeriodAccessSpec INSTANCE = new PeriodAccessSpec();
+
+        private PeriodAccessSpec() {
+        }
+
+        @Override
+        public <T> T accept(final AccessSpecMapper<T> mapper) {
+            return mapper.visit(this);
+        }
+    }
+
+    /**
+     * Specification of {@link ObjectReadAccess} and {@link ObjectWriteAccess} for {@link ZonedDateTime}.
+     *
+     * @author Benjamin Wilhelm, KNIME GmbH, Konstanz, Germany
+     * @since 4.3
+     */
+    public static final class ZonedDateTimeAccessSpec
+        implements AccessSpec<ObjectReadAccess<ZonedDateTime>, ObjectWriteAccess<ZonedDateTime>> {
+
+        /** The final stateless instance of {@link ZonedDateTimeAccessSpec} */
+        public static final ZonedDateTimeAccessSpec INSTANCE = new ZonedDateTimeAccessSpec();
+
+        private ZonedDateTimeAccessSpec() {
+        }
+
+        @Override
+        public <T> T accept(final AccessSpecMapper<T> mapper) {
+            return mapper.visit(this);
+        }
     }
 
     /**
