@@ -48,21 +48,15 @@
  */
 package org.knime.core.data.v2.value;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
-
-import org.apache.commons.codec.StringEncoder;
 import org.knime.core.data.NominalValue;
 import org.knime.core.data.StringValue;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
-import org.knime.core.data.v2.access.ObjectAccess.ObjectAccessSpec;
 import org.knime.core.data.v2.access.ObjectAccess.ObjectReadAccess;
-import org.knime.core.data.v2.access.ObjectAccess.ObjectSerializer;
 import org.knime.core.data.v2.access.ObjectAccess.ObjectWriteAccess;
+import org.knime.core.data.v2.access.ObjectAccess.StringAccessSpec;
 
 /**
  * {@link ValueFactory} implementation for {@link StringCell}.
@@ -79,20 +73,11 @@ public class StringValueFactory implements ValueFactory<ObjectReadAccess<String>
      */
     public static final StringValueFactory INSTANCE = new StringValueFactory();
 
+    private static final StringAccessSpec SPEC_INSTANCE = StringAccessSpec.INSTANCE;
+
     @Override
     public StringAccessSpec getSpec() {
-        return StringAccessSpec.SPEC_INSTANCE;
-    }
-
-    /* StringAccessSpec for StringValueFactories  */
-    private static final class StringAccessSpec implements ObjectAccessSpec<String> {
-
-        private final static StringAccessSpec SPEC_INSTANCE = new StringAccessSpec();
-
-        @Override
-        public ObjectSerializer<String> getSerializer() {
-            return new StringObjectSerializer();
-        }
+        return SPEC_INSTANCE;
     }
 
     @Override
@@ -128,28 +113,6 @@ public class StringValueFactory implements ValueFactory<ObjectReadAccess<String>
          * @param value the string value to set
          */
         void setStringValue(String value);
-    }
-
-    /**
-     * {@link ObjectSerializer} for Strings.
-     *
-     * NB: not a singleton as we want to create a new {@link StringEncoder} per instance.
-     *
-     * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
-     * @since 4.3
-     */
-    static final class StringObjectSerializer implements ObjectSerializer<String> {
-
-        @Override
-        public String deserialize(final DataInput access) throws IOException {
-            return access.readUTF();
-        }
-
-        @Override
-        public void serialize(final String object, final DataOutput access) throws IOException {
-            access.writeUTF(object);
-        }
-
     }
 
     private static final class DefaultStringWriteValue implements StringWriteValue {

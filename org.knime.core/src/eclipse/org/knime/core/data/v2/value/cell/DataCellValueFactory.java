@@ -63,6 +63,7 @@ import org.knime.core.data.v2.RowCursor;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
 import org.knime.core.data.v2.access.AccessSpec;
+import org.knime.core.data.v2.access.ObjectAccess.GenericObjectAccessSpec;
 import org.knime.core.data.v2.access.ObjectAccess.ObjectReadAccess;
 import org.knime.core.data.v2.access.ObjectAccess.ObjectWriteAccess;
 
@@ -147,7 +148,7 @@ public final class DataCellValueFactory
 
     @Override
     public AccessSpec<ObjectReadAccess<DataCell>, ObjectWriteAccess<DataCell>> getSpec() {
-        return new DataCellAccessSpec(m_factory, m_fsHandler, m_dataRepository);
+        return new GenericObjectAccessSpec<>(new DataCellObjectSerializer(m_factory, m_fsHandler, m_dataRepository));
     }
 
     private final static class DataCellInvocationHandler implements InvocationHandler {

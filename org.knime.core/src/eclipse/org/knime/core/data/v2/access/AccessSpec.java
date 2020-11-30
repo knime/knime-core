@@ -57,7 +57,8 @@ import org.knime.core.data.v2.access.LocalDateAccess.LocalDateAccessSpec;
 import org.knime.core.data.v2.access.LocalDateTimeAccess.LocalDateTimeAccessSpec;
 import org.knime.core.data.v2.access.LocalTimeAccess.LocalTimeAccessSpec;
 import org.knime.core.data.v2.access.LongAccess.LongAccessSpec;
-import org.knime.core.data.v2.access.ObjectAccess.ObjectAccessSpec;
+import org.knime.core.data.v2.access.ObjectAccess.GenericObjectAccessSpec;
+import org.knime.core.data.v2.access.ObjectAccess.StringAccessSpec;
 import org.knime.core.data.v2.access.PeriodAccess.PeriodAccessSpec;
 import org.knime.core.data.v2.access.StructAccess.StructAccessSpec;
 import org.knime.core.data.v2.access.VoidAccess.VoidAccessSpec;
@@ -99,7 +100,7 @@ public interface AccessSpec<R extends ReadAccess, W extends WriteAccess> { // NO
 
         T visit(final DoubleAccessSpec spec);
 
-        T visit(final ObjectAccessSpec<?> spec);
+        T visit(final GenericObjectAccessSpec<?> spec);
 
         T visit(final IntAccessSpec spec);
 
@@ -124,5 +125,7 @@ public interface AccessSpec<R extends ReadAccess, W extends WriteAccess> { // NO
         T visit(final PeriodAccessSpec spec);
 
         T visit(final ZonedDateTimeAccessSpec spec);
+
+        T visit(final StringAccessSpec spec);
     }
 }

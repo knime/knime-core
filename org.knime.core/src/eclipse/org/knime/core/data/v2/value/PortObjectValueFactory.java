@@ -61,7 +61,7 @@ import org.knime.core.data.model.PortObjectValue;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
-import org.knime.core.data.v2.access.ObjectAccess.ObjectAccessSpec;
+import org.knime.core.data.v2.access.ObjectAccess.GenericObjectAccessSpec;
 import org.knime.core.data.v2.access.ObjectAccess.ObjectReadAccess;
 import org.knime.core.data.v2.access.ObjectAccess.ObjectSerializer;
 import org.knime.core.data.v2.access.ObjectAccess.ObjectWriteAccess;
@@ -84,7 +84,7 @@ public class PortObjectValueFactory
     /** Stateless instance of of {@link PortObjectValueFactory} */
     public static final PortObjectValueFactory INSTANCE = new PortObjectValueFactory();
 
-    private static final PortObjectAccessSpec SPEC_INSTANCE = new PortObjectAccessSpec();
+    private static final GenericObjectAccessSpec<PortObject> SPEC_INSTANCE = new GenericObjectAccessSpec<>(new PortObjectSerializer());
 
     @Override
     public ReadValue createReadValue(final ObjectReadAccess<PortObject> access) {
@@ -97,7 +97,7 @@ public class PortObjectValueFactory
     }
 
     @Override
-    public PortObjectAccessSpec getSpec() {
+    public GenericObjectAccessSpec<PortObject> getSpec() {
         return SPEC_INSTANCE;
     }
 
@@ -120,15 +120,6 @@ public class PortObjectValueFactory
          * @param portObject the {@link PortObject} to set
          */
         void setPortObject(PortObject portObject);
-    }
-
-    /** The access spec defining the serializer */
-    private static final class PortObjectAccessSpec implements ObjectAccessSpec<PortObject> {
-
-        @Override
-        public ObjectSerializer<PortObject> getSerializer() {
-            return new PortObjectSerializer();
-        }
     }
 
     /** The serializer for {@link PortObject} objects */

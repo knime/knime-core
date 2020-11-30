@@ -104,23 +104,39 @@ public final class ObjectAccess {
     }
 
     /**
-     * Specification of {@link ObjectReadAccess} and {@link ObjectWriteAccess}.
+     * Specification of {@link ObjectReadAccess} and {@link ObjectWriteAccess} for arbitrary object that can be
+     * serialized with a given {@link ObjectSerializer}.
      *
      * @param <T> type of object
      *
      * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
      * @since 4.3
      */
-    public interface ObjectAccessSpec<T> extends AccessSpec<ObjectReadAccess<T>, ObjectWriteAccess<T>> {
+    public static final class GenericObjectAccessSpec<T>
+        implements AccessSpec<ObjectReadAccess<T>, ObjectWriteAccess<T>> {
+
+        private final ObjectSerializer<T> m_serializer;
+
+        /**
+         * Create a spec for {@link ObjectReadAccess} and {@link ObjectWriteAccess} with the given serializer.
+         *
+         * @param serializer the serializer to write the object to a {@link DataOutput} and read it from a
+         *            {@link DataInput}.
+         */
+        public GenericObjectAccessSpec(final ObjectSerializer<T> serializer) {
+            m_serializer = serializer;
+        }
 
         /**
          * @return serializer to read/write objects.
          */
-        ObjectSerializer<T> getSerializer();
+        public ObjectSerializer<T> getSerializer() {
+            return m_serializer;
+        }
 
         @Override
-        default <V> V accept(final AccessSpecMapper<V> v) {
-            return v.visit(this);
+        public <V> V accept(final AccessSpecMapper<V> mapper) {
+            return mapper.visit(this);
         }
 
         /**
@@ -128,9 +144,32 @@ public final class ObjectAccess {
          *
          * @return <source>true</source> if dict encoded
          */
-        default boolean isDictEncoded() {
+        public boolean isDictEncoded() {
             return false;
         }
+    }
+
+    /**
+     * Specification of {@link ObjectReadAccess} and {@link ObjectWriteAccess} for {@link String Strings}.
+     *
+     * @author Benjamin Wilhelm, KNIME GmbH, Konstanz, Germany
+     * @since 4.3
+     */
+    public static final class StringAccessSpec
+        implements AccessSpec<ObjectReadAccess<String>, ObjectWriteAccess<String>> {
+
+        /** The final stateless instance of {@link StringAccessSpec} */
+        public static final StringAccessSpec INSTANCE = new StringAccessSpec();
+
+        private StringAccessSpec() {
+        }
+
+        @Override
+        public <T> T accept(final AccessSpecMapper<T> mapper) {
+            return mapper.visit(this);
+        }
+
+        // TODO(bejamin) add dict encoding
     }
 
     /**

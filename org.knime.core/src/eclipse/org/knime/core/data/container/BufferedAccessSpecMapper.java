@@ -102,9 +102,10 @@ import org.knime.core.data.v2.access.LocalTimeAccess.LocalTimeWriteAccess;
 import org.knime.core.data.v2.access.LongAccess.LongAccessSpec;
 import org.knime.core.data.v2.access.LongAccess.LongReadAccess;
 import org.knime.core.data.v2.access.LongAccess.LongWriteAccess;
-import org.knime.core.data.v2.access.ObjectAccess.ObjectAccessSpec;
+import org.knime.core.data.v2.access.ObjectAccess.GenericObjectAccessSpec;
 import org.knime.core.data.v2.access.ObjectAccess.ObjectReadAccess;
 import org.knime.core.data.v2.access.ObjectAccess.ObjectWriteAccess;
+import org.knime.core.data.v2.access.ObjectAccess.StringAccessSpec;
 import org.knime.core.data.v2.access.PeriodAccess.PeriodAccessSpec;
 import org.knime.core.data.v2.access.PeriodAccess.PeriodReadAccess;
 import org.knime.core.data.v2.access.PeriodAccess.PeriodWriteAccess;
@@ -137,7 +138,7 @@ final class BufferedAccessSpecMapper implements AccessSpecMapper<BufferedAccess>
     }
 
     @Override
-    public BufferedAccess visit(final ObjectAccessSpec<?> spec) {
+    public BufferedAccess visit(final GenericObjectAccessSpec<?> spec) {
         return new BufferedObjectAccess<>();
     }
 
@@ -209,6 +210,11 @@ final class BufferedAccessSpecMapper implements AccessSpecMapper<BufferedAccess>
     @Override
     public BufferedAccess visit(final ZonedDateTimeAccessSpec spec) {
         return new BufferedZonedDateTimeAcccess();
+    }
+
+    @Override
+    public BufferedAccess visit(final StringAccessSpec spec) {
+        return new BufferedObjectAccess<String>();
     }
 
     private static final class BufferedByteArrayAccess

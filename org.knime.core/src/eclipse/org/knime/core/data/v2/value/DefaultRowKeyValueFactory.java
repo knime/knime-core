@@ -52,11 +52,9 @@ import org.knime.core.data.v2.RowKeyReadValue;
 import org.knime.core.data.v2.RowKeyValueFactory;
 import org.knime.core.data.v2.RowKeyWriteValue;
 import org.knime.core.data.v2.ValueFactory;
-import org.knime.core.data.v2.access.ObjectAccess.ObjectAccessSpec;
 import org.knime.core.data.v2.access.ObjectAccess.ObjectReadAccess;
-import org.knime.core.data.v2.access.ObjectAccess.ObjectSerializer;
 import org.knime.core.data.v2.access.ObjectAccess.ObjectWriteAccess;
-import org.knime.core.data.v2.value.StringValueFactory.StringObjectSerializer;
+import org.knime.core.data.v2.access.ObjectAccess.StringAccessSpec;
 
 /**
  * {@link ValueFactory} implementation for custom {@link RowKeyValue} and {@link RowKeyWriteValue}. 'Custom' means, that
@@ -78,8 +76,8 @@ public final class DefaultRowKeyValueFactory
     public static final DefaultRowKeyValueFactory INSTANCE = new DefaultRowKeyValueFactory();
 
     @Override
-    public ObjectAccessSpec<String> getSpec() {
-        return CustomRowKeyAccessSpec.SPEC_INSTANCE;
+    public StringAccessSpec getSpec() {
+        return StringAccessSpec.INSTANCE;
     }
 
     @Override
@@ -90,17 +88,6 @@ public final class DefaultRowKeyValueFactory
     @Override
     public RowKeyWriteValue createWriteValue(final ObjectWriteAccess<String> writer) {
         return new DefaultRowKeyWriteValue(writer);
-    }
-
-    /* ObjectAccessSpec for CustomRowKeyValueFactories  */
-    private static final class CustomRowKeyAccessSpec implements ObjectAccessSpec<String> {
-
-        private final static CustomRowKeyAccessSpec SPEC_INSTANCE = new CustomRowKeyAccessSpec();
-
-        @Override
-        public ObjectSerializer<String> getSerializer() {
-            return new StringObjectSerializer();
-        }
     }
 
     /* Simple CustomRowKeyWriteValue */
