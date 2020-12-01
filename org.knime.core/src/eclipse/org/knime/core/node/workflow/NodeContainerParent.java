@@ -161,7 +161,7 @@ public interface NodeContainerParent {
      * @return <code>true</code> if this node container is a project, otherwise <code>false</code>
      * @since 4.2
      */
-    default public boolean isProject() {
+    public default boolean isProject() {
         return false;
     }
 
