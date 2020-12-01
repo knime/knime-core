@@ -83,9 +83,11 @@ public final class ClosableShuffler implements Closeable {
 
     private final long m_seed;
 
-    private BufferedDataTable m_shuffled;
+    private BufferedDataTable m_intermediate;
 
     private BufferedDataTable m_sorted;
+
+    private BufferedDataTable m_shuffled;
 
     /**
      * Create a {@link ClosableShuffler} to shuffle the input table with the given seed (for reproducibility). Call
@@ -125,6 +127,7 @@ public final class ClosableShuffler implements Closeable {
     public void close() {
         m_exec.clearTable(m_sorted);
         m_exec.clearTable(m_shuffled);
+        m_exec.clearTable(m_intermediate);
     }
 
     private void shuffle() throws CanceledExecutionException {
@@ -132,12 +135,11 @@ public final class ClosableShuffler implements Closeable {
             final RandomNumberAppendFactory randomnumfac = RandomNumberAppendFactory.create(m_seed, m_table);
             ColumnRearranger colre = new ColumnRearranger(m_table.getDataTableSpec());
             colre.append(randomnumfac);
-            BufferedDataTable intermediate =
-                m_exec.createColumnRearrangeTable(m_table, colre, m_exec.createSubProgress(.2));
+            m_intermediate = m_exec.createColumnRearrangeTable(m_table, colre, m_exec.createSubProgress(.2));
             List<String> include = new ArrayList<>();
             String randomcol = randomnumfac.getColumnSpecs()[0].getName();
             include.add(randomcol);
-            BufferedDataTableSorter sorter = new BufferedDataTableSorter(intermediate, include, new boolean[]{true});
+            BufferedDataTableSorter sorter = new BufferedDataTableSorter(m_intermediate, include, new boolean[]{true});
             m_sorted = sorter.sort(m_exec.createSubExecutionContext(0.75));
             colre = new ColumnRearranger(m_sorted.getDataTableSpec());
             colre.remove(randomcol);
