@@ -44,6 +44,7 @@
  */
 package org.knime.core.node.workflow;
 
+import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.knime.core.node.util.CheckUtils;
@@ -88,6 +89,8 @@ public class ConnectionContainer implements ConnectionProgressListener {
     private final ConnectionType m_type;
     private boolean m_isFlowVariablePortConnection;
 
+    private ConnectionProgress m_progress = null;
+
     /**
      * Creates new connection.
      *
@@ -122,6 +125,16 @@ public class ConnectionContainer implements ConnectionProgressListener {
      */
     public ConnectionUIInformation getUIInfo() {
         return m_uiInfo;
+    }
+
+    /**
+     * Returns (optionally) available progress information (potentially including a progress message), e.g. in case of
+     * streaming execution.
+     *
+     * @return the progress info or an empty optional if not available
+     */
+    public Optional<ConnectionProgress> getConnectionProgress() {
+        return Optional.ofNullable(m_progress);
     }
 
     /**
@@ -237,6 +250,9 @@ public class ConnectionContainer implements ConnectionProgressListener {
         // set us as source
         ConnectionProgressEvent event =
                 new ConnectionProgressEvent(this, pe.getConnectionProgress());
+
+        m_progress = event.getConnectionProgress();
+
         // forward the event
         notifyProgressListeners(event);
     }
