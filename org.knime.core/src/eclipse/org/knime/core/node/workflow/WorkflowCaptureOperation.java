@@ -59,11 +59,15 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.exec.dataexchange.PortObjectRepository;
 import org.knime.core.node.exec.dataexchange.in.PortObjectInNodeModel;
 import org.knime.core.node.port.PortObject;
@@ -323,8 +327,17 @@ public final class WorkflowCaptureOperation {
             // -> port objects need to be put into the globally available port object repository
             PortObject po = upstreamPort.getPortObject();
             AtomicReference<UUID> id = new AtomicReference<>(PortObjectRepository.getIDFor(po).orElse(null));
+            Consumer<Function<ExecutionContext, UUID>> portObjectIDCallback =
+                virtualScopeContext.getPortObjectIDCallback();
+            if (portObjectIDCallback == null) {
+                // fallback in case it's captured within the temporary metanode created by the Parallel Chunk Loop
+                // to be fixed with https://knime-com.atlassian.net/browse/AP-15877
+                logDataNotAvailableOutsideOfWorkflowWarning(sourceNode);
+                return PortObjectRepository.addPortObjectReferenceReaderWithNodeReference(upstreamPort,
+                    srcWfm.getProjectWFM().getID(), newWfm, sourceID.getIndex());
+            }
             if (id.get() == null) {
-                virtualScopeContext.getPortObjectIDCallback().accept(exec -> {
+                portObjectIDCallback.accept(exec -> {
                     try {
                         id.set(PortObjectRepository.addCopy(po, exec));
                         return id.get();
@@ -334,18 +347,22 @@ public final class WorkflowCaptureOperation {
                     }
                 });
             }
-            return PortObjectRepository.addPortObjectReferenceReaderWithRepoReference(upstreamPort, id.get(),
-                newWfm, sourceID.getIndex());
+            return PortObjectRepository.addPortObjectReferenceReaderWithRepoReference(upstreamPort, id.get(), newWfm,
+                sourceID.getIndex());
         } else {
             if (virtualScopeContext == null && isCaptureScopePartOfVirtualScope) {
-                throw new IllegalStateException(
-                    "The node '" + sourceNode.getNameWithID() + "' is not part of the capture scope but needs to be."
-                        + " Wrap the entire capture scope into a component or"
-                        + " connect the affected node to the capture scope start.");
+                // to be fixed with https://knime-com.atlassian.net/browse/AP-15879
+                logDataNotAvailableOutsideOfWorkflowWarning(sourceNode);
             }
             return PortObjectRepository.addPortObjectReferenceReaderWithNodeReference(upstreamPort,
                 srcWfm.getProjectWFM().getID(), newWfm, sourceID.getIndex());
         }
+    }
+
+    private static void logDataNotAvailableOutsideOfWorkflowWarning(final NodeContainer dataProvidingNode) {
+        NodeLogger.getLogger(WorkflowCaptureOperation.class)
+            .warn("Data of ports reaching into the capture scope of node '" + dataProvidingNode.getNameWithID()
+                + "' will not be available outside of the workflow where it is captured");
     }
 
     private static FlowVirtualScopeContext getVirtualScopeContext(final NodeContainer nc) {
