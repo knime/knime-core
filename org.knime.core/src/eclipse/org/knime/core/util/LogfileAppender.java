@@ -56,6 +56,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.GZIPOutputStream;
 
 import org.apache.commons.io.IOUtils;
@@ -78,10 +79,15 @@ public class LogfileAppender extends RollingFileAppender {
     /** Maximum size of log file before it is split (in bytes). */
     public static final long MAX_LOG_SIZE_DEFAULT = 10 * 1024 * 1024; // 10MB
 
-    private final ExecutorService m_logCompressor = Executors.newSingleThreadExecutor(new ThreadFactory() {
+    /** The executors that compress and rotate log files.
+     * (see AP-15868 -- needs to be static due per "per-workflow" logging.)
+     */
+    private static final ExecutorService LOG_COMPRESSOR_EXECUTOR_SERVICE = Executors.newCachedThreadPool(new ThreadFactory() {
+
+        private final AtomicInteger m_threadCounter = new AtomicInteger(0);
         @Override
         public Thread newThread(final Runnable r) {
-            Thread t = new Thread(r, "KNIME Logfile Compressor");
+            Thread t = new Thread(r, "KNIME-Logfile-Compressor-" + m_threadCounter.getAndIncrement());
             t.setPriority(Thread.MIN_PRIORITY);
             return t;
         }
@@ -166,7 +172,7 @@ public class LogfileAppender extends RollingFileAppender {
             if (Files.isRegularFile(rotatedLogFilePath)) {
                 Files.move(rotatedLogFilePath, tempLog, StandardCopyOption.ATOMIC_MOVE);
 
-                m_logCompressor.submit(() -> {
+                LOG_COMPRESSOR_EXECUTOR_SERVICE.submit(() -> {
                         LogLog.debug("Compressing rotated log file '" + tempLog + "'");
                         Path compressedFile = tempLog.getParent().resolve(NodeLogger.LOG_FILE + ".old.gz");
                         try (final InputStream in = Files.newInputStream(tempLog);
