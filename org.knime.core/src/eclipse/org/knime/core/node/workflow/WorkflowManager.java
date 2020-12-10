@@ -345,6 +345,15 @@ public final class WorkflowManager extends NodeContainer
     /** Non-null object to check if successor execution is allowed - usually it is except for wizard execution. */
     private ExecutionController m_executionController;
 
+    /** Added as part of AP-10548 -- if set the node status update does not propagate to WorkflowManager which only contain
+     * projects (such as {@link #ROOT} or {@link #EXTRACTED_WORKFLOW_ROOT}. This is going to be removed in future versions;
+     * added in a bug fix release (4.2.4)
+     */
+    private static final String PROPERTY_DISABLE_STATUS_ON_ROOT_WFM = "knime.disable.workflow.root.status";
+
+    /** Value of {@link #PROPERTY_DISABLE_STATUS_ON_ROOT_WFM}. */
+    private static final Boolean DISABLE_STATUS_ON_ROOT_WFM = Boolean.getBoolean(PROPERTY_DISABLE_STATUS_ON_ROOT_WFM);
+
     /**
      * The root of everything, a workflow with no in- or outputs. This workflow holds the top level projects.
      */
@@ -5757,10 +5766,17 @@ public final class WorkflowManager extends NodeContainer
      */
     InternalNodeContainerState computeNewState() {
         assert m_workflowLock.isHeldByCurrentThread();
+        final Collection<NodeContainer> nodeValues = m_workflow.getNodeValues();
+        // this is ROOT or  another host for projects -- do not determine state
+        // getting the state from a contained node/workflow will lock that instance, which is expensive (AP-10548)
+        if (DISABLE_STATUS_ON_ROOT_WFM && !nodeValues.isEmpty() && nodeValues.stream() //
+                .allMatch(nc -> nc instanceof WorkflowManager && ((WorkflowManager)nc).isProject())) {
+            return IDLE;
+        }
         int[] nrNodesInState = new int[InternalNodeContainerState.values().length];
         int nrNodes = 0;
         boolean internalNodeHasError = false;
-        for (NodeContainer ncIt : m_workflow.getNodeValues()) {
+        for (NodeContainer ncIt : nodeValues) {
             nrNodesInState[ncIt.getInternalState().ordinal()]++;
             nrNodes++;
             if ((ncIt.getNodeMessage() != null)
