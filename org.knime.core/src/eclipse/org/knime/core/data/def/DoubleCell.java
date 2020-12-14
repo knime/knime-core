@@ -271,6 +271,30 @@ public final class DoubleCell extends DataCell
         }
 
         /**
+         * Creates a new double cell with the given integer value.
+         *
+         * @param i an int
+         * @return a new double cell
+         * @since 4.4
+         */
+        @DataCellFactoryMethod(name = "Integer")
+        public static DataCell create(final int i) {
+            return new DoubleCell(i);
+        }
+
+        /**
+         * Creates a new double cell with the given long value.
+         *
+         * @param l a long
+         * @return a new double cell
+         * @since 4.4
+         */
+        @DataCellFactoryMethod(name = "Long")
+        public static DataCell create(final long l) {
+            return new DoubleCell(l);
+        }
+
+        /**
          * Creates a new double cell by parsing the given string with {@link Double#parseDouble(String)}.
          *
          * @param s a string

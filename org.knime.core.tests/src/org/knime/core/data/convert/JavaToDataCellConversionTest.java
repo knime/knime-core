@@ -187,18 +187,27 @@ public class JavaToDataCellConversionTest {
     }
 
     /**
-     * Test Double -> DoubleCell conversion.
+     * Test Double, long, int -> DoubleCell conversion.
      *
      * @throws Exception When something went wrong
      */
     @Test
     public void testToDoubleCell() throws Exception {
         final DoubleCell cell =
-            testSimpleConversion(Double.class, DoubleCell.TYPE, DoubleCell.class, new Double(Math.PI));
+            testSimpleConversion(Double.class, DoubleCell.TYPE, DoubleCell.class, Double.valueOf(Math.PI));
         assertEquals(Math.PI, cell.getDoubleValue(), FUZZY_DOUBLE_TOLERANCE);
+
         final DoubleCell cell1 =
-                testSimpleConversion(String.class, DoubleCell.TYPE, DoubleCell.class, new Double(Math.PI).toString());
-            assertEquals(Math.PI, cell1.getDoubleValue(), FUZZY_DOUBLE_TOLERANCE);
+            testSimpleConversion(String.class, DoubleCell.TYPE, DoubleCell.class, Double.toString(Math.PI));
+        assertEquals(Math.PI, cell1.getDoubleValue(), FUZZY_DOUBLE_TOLERANCE);
+
+        final DoubleCell cell2 =
+            testSimpleConversion(Integer.class, DoubleCell.TYPE, DoubleCell.class, Integer.MAX_VALUE);
+        assertEquals(Integer.MAX_VALUE, cell2.getDoubleValue(), FUZZY_DOUBLE_TOLERANCE);
+
+        final DoubleCell cell3 =
+            testSimpleConversion(Long.class, DoubleCell.TYPE, DoubleCell.class, Long.MAX_VALUE);
+        assertEquals(Long.MAX_VALUE, cell3.getDoubleValue(), FUZZY_DOUBLE_TOLERANCE);
     }
 
     /**
@@ -308,9 +317,10 @@ public class JavaToDataCellConversionTest {
             JavaToDataCellConverterRegistry.getInstance().getFactoriesForSourceType(Integer.class).stream()
                 .map((factory) -> factory.getDestinationType()).collect(Collectors.toSet());
 
-        assertEquals(2, destTypes.size());
+        assertEquals(3, destTypes.size());
         assertTrue(destTypes.contains(IntCell.TYPE));
         assertTrue(destTypes.contains(LongCell.TYPE));
+        assertTrue(destTypes.contains(DoubleCell.TYPE));
 
         final Collection<DataType> supertypeDestTypes =
             JavaToDataCellConverterRegistry.getInstance().getFactoriesForSourceType(FileInputStream.class).stream()
@@ -331,9 +341,10 @@ public class JavaToDataCellConversionTest {
             JavaToDataCellConverterRegistry.getInstance().getFactoriesForSourceType(Integer[].class).stream()
                 .map((factory) -> factory.getDestinationType()).collect(Collectors.toSet());
 
-        assertEquals(2, destTypes.size());
+        assertEquals(3, destTypes.size());
         assertTrue(destTypes.contains(ListCell.getCollectionType(IntCell.TYPE)));
         assertTrue(destTypes.contains(ListCell.getCollectionType(LongCell.TYPE)));
+        assertTrue(destTypes.contains(ListCell.getCollectionType(DoubleCell.TYPE)));
 
         final Collection<DataType> supertypeDestTypes =
             JavaToDataCellConverterRegistry.getInstance().getFactoriesForSourceType(FileInputStream[].class).stream()
@@ -354,9 +365,10 @@ public class JavaToDataCellConversionTest {
             JavaToDataCellConverterRegistry.getInstance().getFactoriesForSourceType(Integer[][].class).stream()
                 .map((factory) -> factory.getDestinationType()).collect(Collectors.toSet());
 
-        assertEquals(2, destTypes.size());
+        assertEquals(3, destTypes.size());
         assertTrue(destTypes.contains(ListCell.getCollectionType(ListCell.getCollectionType(IntCell.TYPE))));
         assertTrue(destTypes.contains(ListCell.getCollectionType(ListCell.getCollectionType(LongCell.TYPE))));
+        assertTrue(destTypes.contains(ListCell.getCollectionType(ListCell.getCollectionType(DoubleCell.TYPE))));
     }
 
     /**
@@ -370,9 +382,11 @@ public class JavaToDataCellConversionTest {
         final Collection<Class<?>> set =
             factories.stream().map((factory) -> factory.getSourceType()).collect(Collectors.toSet());
 
-        assertEquals(2, set.size());
+        assertEquals(4, set.size());
         assertTrue(set.contains(Double.class));
         assertTrue(set.contains(String.class));
+        assertTrue(set.contains(Long.class));
+        assertTrue(set.contains(Integer.class));
     }
 
     /**

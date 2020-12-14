@@ -91,6 +91,7 @@ import org.knime.core.data.convert.map.SimpleCellValueProducerFactory;
 import org.knime.core.data.convert.map.Source;
 import org.knime.core.data.convert.util.SerializeUtil;
 import org.knime.core.data.def.DefaultRow;
+import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.LongCell;
 import org.knime.core.data.def.StringCell;
@@ -375,12 +376,13 @@ public class MappingFrameworkTest {
 
         final List<ProductionPath> paths =
             MappingFramework.forSourceType(H2OSource.class).getAvailableProductionPaths("INT");
-        assertEquals(2, paths.size());
+        assertEquals(3, paths.size());
 
         final DataType[] outTypes =
             paths.stream().map(p -> p.m_converterFactory.getDestinationType()).toArray(n -> new DataType[n]);
         assertEquals(1, Stream.of(outTypes).filter(s -> s.equals(IntCell.TYPE)).count());
         assertEquals(1, Stream.of(outTypes).filter(s -> s.equals(LongCell.TYPE)).count());
+        assertEquals(1, Stream.of(outTypes).filter(s -> s.equals(DoubleCell.TYPE)).count());
 
         final ProductionPath expectedPath = new ProductionPath(intProducer, JavaToDataCellConverterRegistry
             .getInstance().getConverterFactories(Integer.class, IntCell.TYPE).stream().findFirst().get());
@@ -564,7 +566,9 @@ public class MappingFrameworkTest {
             new ProductionPath(intProducer,
                 convReg.getConverterFactories(Integer.class, IntCell.TYPE).stream().findFirst().get()),
             new ProductionPath(intProducer,
-                convReg.getConverterFactories(Integer.class, LongCell.TYPE).stream().findFirst().get())},
+                convReg.getConverterFactories(Integer.class, LongCell.TYPE).stream().findFirst().get()),
+            new ProductionPath(intProducer,
+                convReg.getConverterFactories(Integer.class, DoubleCell.TYPE).stream().findFirst().get())},
             paths);
     }
 
