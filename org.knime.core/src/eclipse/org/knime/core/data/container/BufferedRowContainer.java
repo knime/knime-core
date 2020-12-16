@@ -146,8 +146,8 @@ final class BufferedRowContainer implements RowContainer, RowWriteCursor {
             final ValueFactory<?, ?>[] factories = schema.getValueFactories();
 
             m_cells = new DataCell[factories.length - 1];
-            m_readValues = new NullableReadValue[m_cells.length];
-            m_writeValues = new WriteValue[m_cells.length];
+            m_readValues = new NullableReadValue[factories.length];
+            m_writeValues = new WriteValue[factories.length];
 
             for (int i = 0; i < factories.length; i++) {
                 final BufferedAccess access = factories[i].getSpec().accept(BufferedAccessSpecMapper.INSTANCE);
