@@ -45,18 +45,34 @@
 package org.knime.testing.node.blocking;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.apache.commons.lang3.tuple.Pair;
+import org.knime.core.node.util.CheckUtils;
+
 /**
  * A static repository of {@link Lock} objects, identified by (String) id.
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public final class BlockingRepository {
 
-    private static final Map<String, ReentrantLock> LOCK_REPOSITORY =
-        new HashMap<String, ReentrantLock>();
+    /** Configures which method is locked (in NodeModel). */
+    public enum LockedMethod {
+            /** Locked during #execute */
+            EXECUTE,
+            /** Locked during #configure */
+            CONFIGURE,
+            /** Locked during #saveInternals */
+            SAVE_INTERNALS
+    }
+
+    private static final Map<Pair<String, LockedMethod>, ReentrantLock> LOCK_REPOSITORY = new HashMap<>();
 
     private BlockingRepository() {
     }
@@ -65,38 +81,65 @@ public final class BlockingRepository {
      * Add a lock to the repository.
      *
      * @param id The id of the lock
+     * @param lockedMethod ...
      * @param lock The lock
      * @throws NullPointerException if either arg is null
      * @throws IllegalArgumentException If id is already in use
      */
-    public static synchronized void put(
-            final String id, final ReentrantLock lock) {
-        if (id == null || lock == null) {
-            throw new IllegalArgumentException("id or lock must not be null");
-        }
-        if (LOCK_REPOSITORY.containsKey(id)) {
-            throw new IllegalArgumentException("Lock ID already in use: " + id);
-        }
-        LOCK_REPOSITORY.put(id, lock);
+    public static synchronized void put(final String id, final LockedMethod lockedMethod, final ReentrantLock lock) {
+        CheckUtils.checkArgument(id != null && lock != null, "id and lock must not be null");
+        Pair<String, LockedMethod> key = Pair.of(id, lockedMethod);
+        CheckUtils.checkArgument(!LOCK_REPOSITORY.containsKey(key), "Lock ID already in use: %s", id);
+        LOCK_REPOSITORY.put(key, lock);
     }
 
     /**
-     * Get the lock associated with the id or null if not present.
+     * Get the lock associated with the id, expecting a non-null return value (otherwise throwing exception).
      *
      * @param id The id of interest
-     * @return The lock or null
+     * @param lockedMethod ...
+     * @return The lock
+     * @throws IllegalStateException If there is no lock assigned for this id and method.
      */
-    public static synchronized ReentrantLock get(final String id) {
-        return LOCK_REPOSITORY.get(id);
+    public static synchronized ReentrantLock getNonNull(final String id, final LockedMethod lockedMethod) {
+        return get(id, lockedMethod).orElseThrow(() -> new IllegalStateException(
+            String.format("No lock set for id '%s' and method '%s'", id, lockedMethod)));
     }
 
     /**
-     * Remove and get the lock associated with the id. (The id will not present
-     * in the map after the call.)
+     * Get the lock associated with the id, or an empty optional if not set.
+     *
+     * @param id The id of interest
+     * @param lockedMethod ...
+     * @return The lock
+     */
+    public static synchronized Optional<ReentrantLock> get(final String id, final LockedMethod lockedMethod) {
+        return Optional.ofNullable(LOCK_REPOSITORY.get(Pair.of(id, lockedMethod)));
+    }
+
+    /**
+     * Remove and get the lock associated with the id.
+     *
      * @param id The id of interest.
+     * @param lockedMethod ...
      * @return The lock previously assigned to the id or null if not present.
      */
-    public static synchronized ReentrantLock remove(final String id) {
-        return LOCK_REPOSITORY.remove(id);
+    public static synchronized ReentrantLock remove(final String id, final LockedMethod lockedMethod) {
+        return LOCK_REPOSITORY.remove(Pair.of(id, lockedMethod));
+    }
+
+    /**
+     * Remove all lock associated with the id.
+     *
+     * @param id The id of interest.
+     */
+    public static synchronized void removeAll(final String id) {
+        for (Iterator<Map.Entry<Pair<String, LockedMethod>, ReentrantLock>> it =
+            LOCK_REPOSITORY.entrySet().iterator(); it.hasNext();) {
+            Entry<Pair<String, LockedMethod>, ReentrantLock> entry = it.next();
+            if (entry.getKey().getLeft().equals(id)) {
+                it.remove();
+            }
+        }
     }
 }

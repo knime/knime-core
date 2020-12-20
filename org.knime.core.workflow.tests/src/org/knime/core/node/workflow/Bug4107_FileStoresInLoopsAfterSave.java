@@ -58,6 +58,7 @@ import org.junit.Test;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.util.FileUtil;
 import org.knime.testing.node.blocking.BlockingRepository;
+import org.knime.testing.node.blocking.BlockingRepository.LockedMethod;
 
 /** Tests fix for bug 4107: "Lazy" FileStoreCells are not properly saved/copied in Parallel Chunk Loops.
  * It executes the workflow half-way (partial loop), then saves, continues execution and then saves/loads. Without
@@ -77,7 +78,7 @@ public class Bug4107_FileStoresInLoopsAfterSave extends WorkflowTestCase {
     @Before
     public void setUp() throws Exception {
         // the id is used here and in the workflow (part of the settings)
-        BlockingRepository.put(LOCK_ID, new ReentrantLock());
+        BlockingRepository.put(LOCK_ID, LockedMethod.EXECUTE, new ReentrantLock());
         m_tmpWorkflowDir = FileUtil.createTempDir(getClass().getSimpleName() + "-tempTestInstance");
         FileUtil.copyDir(getDefaultWorkflowDirectory(), m_tmpWorkflowDir);
         loadFlow();
@@ -99,7 +100,7 @@ public class Bug4107_FileStoresInLoopsAfterSave extends WorkflowTestCase {
         checkState(m_block_23, CONFIGURED);
         checkState(m_loopEnd_22, CONFIGURED);
         checkState(m_testFileStore_19, CONFIGURED);
-        ReentrantLock execLock = BlockingRepository.get(LOCK_ID);
+        ReentrantLock execLock = BlockingRepository.getNonNull(LOCK_ID, LockedMethod.EXECUTE);
         execLock.lock();
         try {
             m.executeUpToHere(m_testFileStore_19);
@@ -128,7 +129,7 @@ public class Bug4107_FileStoresInLoopsAfterSave extends WorkflowTestCase {
     @Override
     @After
     public void tearDown() throws Exception {
-        BlockingRepository.remove(LOCK_ID);
+        BlockingRepository.remove(LOCK_ID, LockedMethod.EXECUTE);
         super.tearDown();
         if (!FileUtil.deleteRecursively(m_tmpWorkflowDir)) {
             getLogger().errorWithFormat("Could not fully delete the temporary workflow dir \"%s\" " +

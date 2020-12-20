@@ -44,19 +44,39 @@
  */
 package org.knime.testing.node.blocking;
 
-import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
-import org.knime.core.node.defaultnodesettings.DialogComponentString;
-import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 /**
  *
  * @author wiswedel, University of Konstanz
  */
-final class BlockingNodeDialogPane extends DefaultNodeSettingsPane {
+public final class BlockingVariableNodeFactory extends NodeFactory<BlockingVariableNodeModel> {
 
-    /** Init gui. */
-    BlockingNodeDialogPane() {
-        SettingsModelString lockModel = AbstractBlockingNodeModel.createLockIDModel();
-        addDialogComponent(new DialogComponentString(lockModel, "Lock ID"));
+    @Override
+    protected NodeDialogPane createNodeDialogPane() {
+        return new BlockingNodeDialogPane();
     }
+
+    @Override
+    public BlockingVariableNodeModel createNodeModel() {
+        return new BlockingVariableNodeModel();
+    }
+
+    @Override
+    public NodeView<BlockingVariableNodeModel> createNodeView(final int index, final BlockingVariableNodeModel model) {
+        return null;
+    }
+
+    @Override
+    protected int getNrNodeViews() {
+        return 0;
+    }
+
+    @Override
+    protected boolean hasDialog() {
+        return true;
+    }
+
 }

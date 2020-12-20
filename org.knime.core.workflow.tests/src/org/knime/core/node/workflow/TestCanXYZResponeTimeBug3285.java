@@ -55,6 +55,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.knime.testing.node.blocking.BlockingRepository;
+import org.knime.testing.node.blocking.BlockingRepository.LockedMethod;
 
 /**
  *
@@ -76,7 +77,7 @@ public class TestCanXYZResponeTimeBug3285 extends WorkflowTestCase {
     @Before
     public void setUp() throws Exception {
         // the id is used here and in the workflow (part of the settings)
-        BlockingRepository.put(LOCK_ID, new ReentrantLock());
+        BlockingRepository.put(LOCK_ID, LockedMethod.EXECUTE, new ReentrantLock());
         NodeID baseID = loadAndSetWorkflow();
         m_dataGen1 = new NodeID(baseID, 1);
         m_firstSplitter2 = new NodeID(baseID, 2);
@@ -160,7 +161,7 @@ public class TestCanXYZResponeTimeBug3285 extends WorkflowTestCase {
         m.addConnection(m_lockProgrammatically100, 1, m_firstSplitter2, 1);
         checkState(m_dataGen1, InternalNodeContainerState.CONFIGURED);
         checkState(m_tableView98, InternalNodeContainerState.CONFIGURED);
-        ReentrantLock execLock = BlockingRepository.get(LOCK_ID);
+        ReentrantLock execLock = BlockingRepository.getNonNull(LOCK_ID, LockedMethod.EXECUTE);
         execLock.lock();
         try {
             m.executeUpToHere(m_tableView98);
@@ -211,7 +212,7 @@ public class TestCanXYZResponeTimeBug3285 extends WorkflowTestCase {
     @Override
     @After
     public void tearDown() throws Exception {
-        BlockingRepository.remove(LOCK_ID);
+        BlockingRepository.remove(LOCK_ID, LockedMethod.EXECUTE);
         super.tearDown();
     }
 

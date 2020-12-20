@@ -61,6 +61,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.knime.testing.node.blocking.BlockingRepository;
+import org.knime.testing.node.blocking.BlockingRepository.LockedMethod;
 
 /**
  *
@@ -77,7 +78,7 @@ public class Chainofnodesoneblocking extends WorkflowTestCase {
     @Before
     public void setUp() throws Exception {
         // the id is used here and in the workflow (part of the settings)
-        BlockingRepository.put(LOCK_ID, new ReentrantLock());
+        BlockingRepository.put(LOCK_ID, LockedMethod.EXECUTE, new ReentrantLock());
         NodeID baseID = loadAndSetWorkflow();
         m_dataGen = new NodeID(baseID, 1);
         m_blocker = new NodeID(baseID, 2);
@@ -99,7 +100,7 @@ public class Chainofnodesoneblocking extends WorkflowTestCase {
     @Test
     public void testBlockingStates() throws Exception {
         WorkflowManager m = getManager();
-        ReentrantLock execLock = BlockingRepository.get(LOCK_ID);
+        ReentrantLock execLock = BlockingRepository.getNonNull(LOCK_ID, LockedMethod.EXECUTE);
         execLock.lock();
         try {
             m.executeUpToHere(m_tblView);
@@ -120,7 +121,7 @@ public class Chainofnodesoneblocking extends WorkflowTestCase {
     @Test
     public void testPropertiesOfExecutingNode() throws Exception {
         WorkflowManager m = getManager();
-        ReentrantLock execLock = BlockingRepository.get(LOCK_ID);
+        ReentrantLock execLock = BlockingRepository.getNonNull(LOCK_ID, LockedMethod.EXECUTE);
         execLock.lock();
         try {
             m.executeUpToHere(m_tblView);
@@ -184,7 +185,7 @@ public class Chainofnodesoneblocking extends WorkflowTestCase {
     @Test
     public void testPropertiesOfMarkedNode() throws Exception {
         WorkflowManager m = getManager();
-        ReentrantLock execLock = BlockingRepository.get(LOCK_ID);
+        ReentrantLock execLock = BlockingRepository.getNonNull(LOCK_ID, LockedMethod.EXECUTE);
         execLock.lock();
         try {
             m.executeUpToHere(m_tblView);
@@ -244,7 +245,7 @@ public class Chainofnodesoneblocking extends WorkflowTestCase {
     @Override
     @After
     public void tearDown() throws Exception {
-        BlockingRepository.remove(LOCK_ID);
+        BlockingRepository.remove(LOCK_ID, LockedMethod.EXECUTE);
         super.tearDown();
     }
 

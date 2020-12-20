@@ -44,19 +44,29 @@
  */
 package org.knime.testing.node.blocking;
 
-import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
-import org.knime.core.node.defaultnodesettings.DialogComponentString;
-import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
+import org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec;
 
 /**
  *
  * @author wiswedel, University of Konstanz
  */
-final class BlockingNodeDialogPane extends DefaultNodeSettingsPane {
+final class BlockingVariableNodeModel extends AbstractBlockingNodeModel {
 
-    /** Init gui. */
-    BlockingNodeDialogPane() {
-        SettingsModelString lockModel = AbstractBlockingNodeModel.createLockIDModel();
-        addDialogComponent(new DialogComponentString(lockModel, "Lock ID"));
+    BlockingVariableNodeModel() {
+        super(FlowVariablePortObject.TYPE_OPTIONAL, FlowVariablePortObject.TYPE);
     }
+
+    @Override
+    PortObject executeImplementation(final PortObject input) {
+        return FlowVariablePortObject.INSTANCE;
+    }
+
+    @Override
+    PortObjectSpec configureImplementation(final PortObjectSpec spec) {
+        return FlowVariablePortObjectSpec.INSTANCE;
+    }
+
 }

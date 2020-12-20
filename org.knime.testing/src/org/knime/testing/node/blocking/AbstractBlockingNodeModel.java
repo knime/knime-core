@@ -46,11 +46,11 @@ package org.knime.testing.node.blocking;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Optional;
 import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
-import org.knime.core.data.DataRow;
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.BufferedDataTable;
+import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
@@ -59,145 +59,98 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.streamable.InputPortRole;
-import org.knime.core.node.streamable.OutputPortRole;
-import org.knime.core.node.streamable.PartitionInfo;
-import org.knime.core.node.streamable.PortInput;
-import org.knime.core.node.streamable.PortOutput;
-import org.knime.core.node.streamable.RowInput;
-import org.knime.core.node.streamable.RowOutput;
-import org.knime.core.node.streamable.StreamableOperator;
+import org.knime.core.node.port.PortType;
+import org.knime.core.node.util.CheckUtils;
+import org.knime.testing.node.blocking.BlockingRepository.LockedMethod;
 
 /**
  *
  * @author wiswedel, University of Konstanz
  */
-class BlockingNodeModel extends NodeModel {
+abstract class AbstractBlockingNodeModel extends NodeModel {
 
     private final SettingsModelString m_lockIDModel;
 
-    /** One data input, one data output.
+    /**
+     * One data input, one data output.
      */
-    BlockingNodeModel() {
-        super(1, 1);
+    AbstractBlockingNodeModel(final PortType input, final PortType output) {
+        super(new PortType[]{input}, new PortType[]{output});
         m_lockIDModel = createLockIDModel();
     }
 
-    /** {@inheritDoc} */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
-            final ExecutionContext exec) throws Exception {
-        Lock lock = getLock();
+    protected final PortObject[] execute(final PortObject[] inData, final ExecutionContext exec) throws Exception {
+        Lock lock = getLock(LockedMethod.EXECUTE).orElseGet(ReentrantLock::new);
         lock.lockInterruptibly();
         try {
-            return inData;
+            return new PortObject[]{executeImplementation(inData[0])};
         } finally {
             lock.unlock();
         }
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public InputPortRole[] getInputPortRoles() {
-        return new InputPortRole[] {InputPortRole.DISTRIBUTED_STREAMABLE};
-    }
+    abstract PortObject executeImplementation(final PortObject input);
 
-    /** {@inheritDoc} */
     @Override
-    public OutputPortRole[] getOutputPortRoles() {
-        return new OutputPortRole[] {OutputPortRole.DISTRIBUTED};
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo,
-        final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-        return new StreamableOperator() {
-            @Override
-            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs,
-                final ExecutionContext exec) throws Exception {
-                Lock lock = getLock();
-                lock.lockInterruptibly();
-                try {
-                    final RowInput rowInput = (RowInput)inputs[0];
-                    final RowOutput rowOutput = (RowOutput)outputs[0];
-                    DataRow r;
-                    while ((r = rowInput.poll()) != null) {
-                        rowOutput.push(r);
-                    }
-                    rowInput.close();
-                    rowOutput.close();
-                } finally {
-                    lock.unlock();
-                }
-            }
-        };
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
-            throws InvalidSettingsException {
+    protected final PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
         String id = m_lockIDModel.getStringValue();
-        if (id == null || id.length() == 0) {
-            throw new InvalidSettingsException("No lock id provided.");
+        CheckUtils.checkSetting(StringUtils.isNotEmpty(id), "No lock id provided.");
+        Lock lock = getLock(LockedMethod.CONFIGURE).orElseGet(ReentrantLock::new);
+        lock.lock();
+        try {
+            return new PortObjectSpec[]{configureImplementation(inSpecs[0])};
+        } finally {
+            lock.unlock();
         }
-        return inSpecs;
     }
 
-    /** {@inheritDoc} */
+    abstract PortObjectSpec configureImplementation(final PortObjectSpec spec);
+
     @Override
     protected void reset() {
     }
 
-    /** {@inheritDoc} */
     @Override
-    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    protected final void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_lockIDModel.loadSettingsFrom(settings);
     }
 
-    /** {@inheritDoc} */
     @Override
-    protected void validateSettings(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    protected final void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_lockIDModel.validateSettings(settings);
     }
 
-    /** {@inheritDoc} */
     @Override
-    protected void saveSettingsTo(final NodeSettingsWO settings) {
+    protected final void saveSettingsTo(final NodeSettingsWO settings) {
         m_lockIDModel.saveSettingsTo(settings);
     }
 
-    /** {@inheritDoc} */
     @Override
-    protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec)
-            throws IOException, CanceledExecutionException {
+    protected final void loadInternals(final File nodeInternDir, final ExecutionMonitor exec)
+        throws IOException, CanceledExecutionException {
     }
 
-    /** {@inheritDoc} */
     @Override
-    protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
-            throws IOException, CanceledExecutionException {
+    protected final void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
+        throws IOException, CanceledExecutionException {
+        Lock lock = getLock(LockedMethod.SAVE_INTERNALS).orElseGet(ReentrantLock::new);
+        lock.lock();
+        lock.unlock();
     }
 
-    private Lock getLock() throws InvalidSettingsException {
-        String id = m_lockIDModel.getStringValue();
-        if (id == null) {
-            throw new InvalidSettingsException("No lock id set");
-        }
-        Lock lock = BlockingRepository.get(id);
-        if (lock == null) {
-            throw new InvalidSettingsException(
-                    "No lock associated with id: " + id);
-        }
-        return lock;
+    final Optional<ReentrantLock> getLock(final LockedMethod lockedMethod) {
+        String id = CheckUtils.checkArgumentNotNull(m_lockIDModel.getStringValue(), "No lock id set");
+        return BlockingRepository.get(id, lockedMethod);
     }
 
-    /** Factory method to create the lock id model.
-     * @return a new model used in dialog and model. */
+    /**
+     * Factory method to create the lock id model.
+     *
+     * @return a new model used in dialog and model.
+     */
     static final SettingsModelString createLockIDModel() {
         return new SettingsModelString("lock_id", null);
     }

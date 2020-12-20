@@ -60,6 +60,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.knime.testing.node.blocking.BlockingRepository;
+import org.knime.testing.node.blocking.BlockingRepository.LockedMethod;
 
 /**
  *
@@ -85,8 +86,8 @@ public class TestSubnode_Actions_InAndOutsideOfSubnode extends WorkflowTestCase 
     @Before
     public void setUp() throws Exception {
         // the id is used here and in the workflow (part of the settings)
-        BlockingRepository.put(INNER_LOCK_ID, new ReentrantLock());
-        BlockingRepository.put(OUTER_LOCK_ID, new ReentrantLock());
+        BlockingRepository.put(INNER_LOCK_ID, LockedMethod.EXECUTE, new ReentrantLock());
+        BlockingRepository.put(OUTER_LOCK_ID, LockedMethod.EXECUTE, new ReentrantLock());
         NodeID baseID = loadAndSetWorkflow();
         m_dataGen1 = new NodeID(baseID, 1);
         m_javaEditInput2 = new NodeID(baseID, 2);
@@ -127,8 +128,8 @@ public class TestSubnode_Actions_InAndOutsideOfSubnode extends WorkflowTestCase 
     @Test
     public void testBlockInnerAndExecuteEnd() throws Exception {
         WorkflowManager m = getManager();
-        ReentrantLock innerLock = BlockingRepository.get(INNER_LOCK_ID);
-        ReentrantLock outerLock = BlockingRepository.get(OUTER_LOCK_ID);
+        ReentrantLock innerLock = BlockingRepository.getNonNull(INNER_LOCK_ID, LockedMethod.EXECUTE);
+        ReentrantLock outerLock = BlockingRepository.getNonNull(OUTER_LOCK_ID, LockedMethod.EXECUTE);
         innerLock.lock();
         outerLock.lock();
         try {
@@ -215,8 +216,8 @@ public class TestSubnode_Actions_InAndOutsideOfSubnode extends WorkflowTestCase 
     @Override
     @After
     public void tearDown() throws Exception {
-        BlockingRepository.remove(INNER_LOCK_ID);
-        BlockingRepository.remove(OUTER_LOCK_ID);
+        BlockingRepository.remove(INNER_LOCK_ID, LockedMethod.EXECUTE);
+        BlockingRepository.remove(OUTER_LOCK_ID, LockedMethod.EXECUTE);
         super.tearDown();
     }
 

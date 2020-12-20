@@ -44,45 +44,81 @@
  */
 package org.knime.testing.node.blocking;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
+import org.knime.core.data.DataRow;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.streamable.InputPortRole;
+import org.knime.core.node.streamable.OutputPortRole;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.PortInput;
+import org.knime.core.node.streamable.PortOutput;
+import org.knime.core.node.streamable.RowInput;
+import org.knime.core.node.streamable.RowOutput;
+import org.knime.core.node.streamable.StreamableOperator;
+import org.knime.testing.node.blocking.BlockingRepository.LockedMethod;
 
 /**
  *
  * @author wiswedel, University of Konstanz
  */
-public final class BlockingNodeFactory extends NodeFactory<BlockingTableNodeModel> {
+final class BlockingTableNodeModel extends AbstractBlockingNodeModel {
 
-    /** {@inheritDoc} */
+    BlockingTableNodeModel() {
+        super(BufferedDataTable.TYPE, BufferedDataTable.TYPE);
+    }
+
     @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new BlockingNodeDialogPane();
+    PortObject executeImplementation(final PortObject input) {
+        return input;
+    }
+
+    @Override
+    PortObjectSpec configureImplementation(final PortObjectSpec spec) {
+        return spec;
     }
 
     /** {@inheritDoc} */
     @Override
-    public BlockingTableNodeModel createNodeModel() {
-        return new BlockingTableNodeModel();
+    public InputPortRole[] getInputPortRoles() {
+        return new InputPortRole[] {InputPortRole.DISTRIBUTED_STREAMABLE};
     }
 
     /** {@inheritDoc} */
     @Override
-    public NodeView<BlockingTableNodeModel> createNodeView(
-            final int viewIndex, final BlockingTableNodeModel nodeModel) {
-        return null;
+    public OutputPortRole[] getOutputPortRoles() {
+        return new OutputPortRole[] {OutputPortRole.DISTRIBUTED};
     }
 
     /** {@inheritDoc} */
     @Override
-    protected int getNrNodeViews() {
-        return 0;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    protected boolean hasDialog() {
-        return true;
+    public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo,
+        final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+        return new StreamableOperator() {
+            @Override
+            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs,
+                final ExecutionContext exec) throws Exception {
+                Lock lock = getLock(LockedMethod.EXECUTE).orElseGet(ReentrantLock::new);
+                lock.lockInterruptibly();
+                try {
+                    final RowInput rowInput = (RowInput)inputs[0];
+                    final RowOutput rowOutput = (RowOutput)outputs[0];
+                    DataRow r;
+                    while ((r = rowInput.poll()) != null) {
+                        rowOutput.push(r);
+                    }
+                    rowInput.close();
+                    rowOutput.close();
+                } finally {
+                    lock.unlock();
+                }
+            }
+        };
     }
 
 }

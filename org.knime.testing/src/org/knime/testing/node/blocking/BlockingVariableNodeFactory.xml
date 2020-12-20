@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode type="Other" icon="blocking.png">
-	<name>Block Programmatically (Table)</name>
+	<name>Block Programmatically (Variable)</name>
 	
 	<shortDescription>
 		Used in unit tests to pause the execution until a prgrammatic "release" is triggered.
@@ -24,7 +24,7 @@
 	</fullDescription>
 	
 	<ports>
-		<inPort index="0" name="Any input table">Any input table</inPort>
-		<outPort index="0" name="Copy of input table">Copy of input table</outPort>
+		<inPort index="0" name="Variable Input">Any variable</inPort>
+		<outPort index="0" name="Variable Output">Input Variables</outPort>
 	</ports>	
 </knimeNode>

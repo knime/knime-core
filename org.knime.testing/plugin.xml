@@ -25,6 +25,11 @@
       </node>
       <node
             category-path="/testing"
+            factory-class="org.knime.testing.node.blocking.BlockingVariableNodeFactory"
+            >
+      </node>
+      <node
+            category-path="/testing"
             factory-class="org.knime.testing.node.differNode.DiffNodeFactory"
             deprecated="true"
             >

@@ -56,6 +56,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.knime.testing.node.blocking.BlockingRepository;
+import org.knime.testing.node.blocking.BlockingRepository.LockedMethod;
 
 /** A simple test using a subnode where the subnode is executing (blocked) and then canceled. The bug would then
  * potentially result in a connected downstream node to remain in a weird (executing state) as the post-execute action
@@ -75,7 +76,7 @@ public class BugAP11710_Subnode_Cancel extends WorkflowTestCase {
     @Before
     public void setUp() throws Exception {
         // the id is used here and in the workflow (part of the settings)
-        BlockingRepository.put(LOCK_ID, new ReentrantLock());
+        BlockingRepository.put(LOCK_ID, LockedMethod.EXECUTE, new ReentrantLock());
         NodeID baseID = loadAndSetWorkflow();
         m_dataGenerator_1 = baseID.createChild(1);
         m_subnode_4 = baseID.createChild(4);
@@ -94,7 +95,7 @@ public class BugAP11710_Subnode_Cancel extends WorkflowTestCase {
         checkState(m_dataGenerator_1, EXECUTED);
         checkState(m_subnode_4, IDLE);
         SubNodeContainer subnode = m.getNodeContainer(m_subnode_4, SubNodeContainer.class, true);
-        ReentrantLock execLock = BlockingRepository.get(LOCK_ID);
+        ReentrantLock execLock = BlockingRepository.getNonNull(LOCK_ID, LockedMethod.EXECUTE);
         execLock.lock();
         try {
             m.executeUpToHere(m_varToTableRow_3);
@@ -126,7 +127,7 @@ public class BugAP11710_Subnode_Cancel extends WorkflowTestCase {
     @Override
     @After
     public void tearDown() throws Exception {
-        BlockingRepository.remove(LOCK_ID);
+        BlockingRepository.remove(LOCK_ID, LockedMethod.EXECUTE);
         super.tearDown();
     }
 
