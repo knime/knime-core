@@ -5879,8 +5879,8 @@ public final class WorkflowManager extends NodeContainer
         final Collection<NodeContainer> nodeValues = m_workflow.getNodeValues();
         // this is ROOT or  another host for projects -- do not determine state
         // getting the state from a contained node/workflow will lock that instance, which is expensive (AP-10548)
-        if (!nodeValues.isEmpty()
-            && nodeValues.stream().allMatch(nc -> nc instanceof WorkflowManager && ((WorkflowManager)nc).isProject())) {
+        if (!nodeValues.isEmpty() && nodeValues.stream() //
+            .allMatch(nc -> nc instanceof NodeContainerParent && ((NodeContainerParent)nc).isProject())) {
             return IDLE;
         }
         int[] nrNodesInState = new int[InternalNodeContainerState.values().length];
