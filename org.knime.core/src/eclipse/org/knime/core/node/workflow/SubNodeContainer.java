@@ -2166,8 +2166,18 @@ public final class SubNodeContainer extends SingleNodeContainer
      */
     @Override
     void setFlowObjectStack(final FlowObjectStack st, final FlowObjectStack outgoingStack) {
-        m_incomingStack = st;
+        if (hasExampleInputData()) {
+            // push flow variables that are persisted with a component project onto the stack, too
+            // (create a new stack for that purpose to not modify the passed one)
+            m_incomingStack = new FlowObjectStack(getID(), st);
+            for (FlowVariable fv : getTemplateInformation().getIncomingFlowVariables()) {
+                m_incomingStack.push(fv);
+            }
+        } else {
+            m_incomingStack = st;
+        }
         m_outgoingStack = outgoingStack;
+
     }
 
     /**
@@ -2175,12 +2185,7 @@ public final class SubNodeContainer extends SingleNodeContainer
      */
     @Override
     public FlowObjectStack getFlowObjectStack() {
-        if (hasExampleInputData() && !getTemplateInformation().getIncomingFlowVariables().isEmpty()) {
-            return FlowObjectStack.createFromFlowVariableList(getTemplateInformation().getIncomingFlowVariables(),
-                getID());
-        } else {
-            return m_incomingStack;
-        }
+        return m_incomingStack;
     }
 
     /**

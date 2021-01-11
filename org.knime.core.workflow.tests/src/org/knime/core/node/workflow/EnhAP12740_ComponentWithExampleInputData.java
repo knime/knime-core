@@ -76,8 +76,6 @@ public class EnhAP12740_ComponentWithExampleInputData extends WorkflowTestCase {
 
     private NodeID m_component_10;
 
-    private List<NodeID> m_loadedComponentNodeIDs = new ArrayList<>();
-
     /**
      * Creates and copies the workflow into a temporary directory.
      *

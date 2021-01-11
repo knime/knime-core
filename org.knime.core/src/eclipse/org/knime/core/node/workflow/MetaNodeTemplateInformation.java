@@ -53,6 +53,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
@@ -174,7 +175,7 @@ public final class MetaNodeTemplateInformation implements Cloneable {
             throw new IllegalStateException("Unsupported role " + role);
         }
         m_exampleInputDataInfo = exampleInputDataInfo;
-        m_incomingFlowVariables = incomingFlowVariables;
+        m_incomingFlowVariables = incomingFlowVariables == null ? Collections.emptyList() : incomingFlowVariables;
     }
 
     /** @return the timestamp date or null if this is not a link. */
@@ -304,12 +305,14 @@ public final class MetaNodeTemplateInformation implements Cloneable {
     }
 
     /**
-     * @return incoming flow variables stored with a component template/project (i.e. component not embedded in a
-     *         workflow). Never <code>null</code>, possibly empty
+     * Returns the incoming flow variables stored with a component template/project (i.e. component not embedded in a
+     * workflow). The returned flow variables do not have an owner set.
+     *
+     * @return the list of flow variables, never <code>null</code>, possibly empty
      * @since 4.1
      */
     public List<FlowVariable> getIncomingFlowVariables() {
-        return m_incomingFlowVariables;
+        return m_incomingFlowVariables.stream().map(FlowObjectStack::cloneUnsetOwner).collect(Collectors.toList());
     }
 
     /** Key for workflow template information. */
@@ -499,7 +502,7 @@ public final class MetaNodeTemplateInformation implements Cloneable {
             }
             if (nestedSettings.containsKey("incomingFlowVariables")) {
                 NodeSettingsRO flowVarSettings = nestedSettings.getNodeSettings("incomingFlowVariables");
-                incomingFlowVariables = new ArrayList<FlowVariable>();
+                incomingFlowVariables = new ArrayList<>();
                 for (String key : flowVarSettings.keySet()) {
                     incomingFlowVariables.add(FlowVariable.load(flowVarSettings.getNodeSettings(key)));
                 }
