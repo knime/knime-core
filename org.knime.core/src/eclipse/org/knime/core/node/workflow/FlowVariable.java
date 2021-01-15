@@ -390,6 +390,16 @@ public final class FlowVariable extends FlowObject {
         return m_value.asString();
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @since 4.4
+     */
+    @Override
+    public NodeID getOwner() {
+        return super.getOwner();
+    }
+
     /** Saves this flow variable to a settings object. This method writes
      * directly into the argument object (no creating of intermediate child).
      * @param settings To save to.
