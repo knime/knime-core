@@ -257,12 +257,7 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
             getLogger().debug(error, ise);
             setDirtyAfterLoad();
         }
-        if (modelSettings != null && ConfigPasswordEntry.containsPassword((NodeSettings)modelSettings, true)) {
-            result.addWarning(String.format(
-                "Node stores <null> passwords in its configuration. The workflow was saved by an installation, which "
-                + "doesn't store passwords (as per \"%s\" system property). Node probably needs to be reconfigured.",
-                        KNIMEConstants.PROPERTY_WEAK_PASSWORDS_IN_SETTINGS_FORBIDDEN));
-        } else if (Node.DISALLOW_WEAK_PASSWORDS_IN_NODE_CONFIGURATION && modelSettings != null
+        if (Node.DISALLOW_WEAK_PASSWORDS_IN_NODE_CONFIGURATION && modelSettings != null
             && ConfigPasswordEntry.containsPassword((NodeSettings)modelSettings, false)) {
             result.addWarning(String.format(
                 "Node stores passwords in its configuration. These will be lost when saving "

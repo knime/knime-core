@@ -142,6 +142,11 @@
 					<url>${knime.xml.p2}</url>
 				</repository>
 				<repository>
+					<id>p2-knime-rest</id>
+					<layout>p2</layout>
+					<url>${knime.rest.p2}</url>
+				</repository>
+				<repository>
 					<id>p2-knime-python</id>
 					<layout>p2</layout>
 					<url>${knime.python.p2}</url>
