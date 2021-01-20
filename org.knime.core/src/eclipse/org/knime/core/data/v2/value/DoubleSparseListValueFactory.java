@@ -224,9 +224,10 @@ public final class DoubleSparseListValueFactory implements ValueFactory<StructRe
             final List<Integer> storageIndices = new ArrayList<>();
             final List<Double> storageList = new ArrayList<>();
 
+            final long defaultElementBits = Double.doubleToLongBits(defaultElement);
             for (int i = 0; i < values.length; i++) {
                 final double v = values[i];
-                if (v != defaultElement) {
+                if (Double.doubleToLongBits(v) != defaultElementBits) {
                     storageIndices.add(i);
                     storageList.add(v);
                 }

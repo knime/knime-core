@@ -152,7 +152,7 @@ public final class DoubleSetValueFactory implements ValueFactory<ListReadAccess,
             // TODO(benjamin) we can save the values sorted and do binary search
             final double[] values = m_value.getDoubleArray();
             for (int i = 0; i < values.length; i++) {
-                if (value == values[i]) {
+                if (Double.doubleToLongBits(value) == Double.doubleToLongBits(values[i])) {
                     return true;
                 }
             }
