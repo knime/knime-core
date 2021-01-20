@@ -380,9 +380,10 @@ public final class ValueSchema {
                     final Class<? extends ValueFactory<?, ?>> cast =
                         (Class<? extends ValueFactory<?, ?>>)Class.forName(className);
                     type = cast;
-                } catch (ClassNotFoundException ex) {
+                } catch (final ClassNotFoundException ex) {
                     throw new IllegalStateException(
-                        "The ValueFactory '" + className + "' could not be found. Are you missing a KNIME Extension?");
+                        "The ValueFactory '" + className + "' could not be found. Are you missing a KNIME Extension?",
+                        ex);
                 }
             } else {
                 type = valueFactoryClass.get();
