@@ -171,46 +171,18 @@ public final class ValueSchema {
         final Map<DataType, String> factoryMapping, final DataCellSerializerFactory cellSerializerFactory,
         final IWriteFileStoreHandler fileStoreHandler) {
 
-        final ValueFactory<?, ?> factory;
+        ValueFactory<?, ?> factory = null;
 
+        // Handle special cases
         // Use special value factories for list/sets of primitive types
         if (type == null) {
             factory = VoidValueFactory.INSTANCE;
-            // Sparse lists
-        } else if (DataType.getType(SparseListCell.class, DoubleCell.TYPE).equals(type)) {
-            factory = DoubleSparseListValueFactory.INSTANCE;
-        } else if (DataType.getType(SparseListCell.class, IntCell.TYPE).equals(type)) {
-            factory = IntSparseListValueFactory.INSTANCE;
-        } else if (DataType.getType(SparseListCell.class, LongCell.TYPE).equals(type)) {
-            factory = LongSparseListValueFactory.INSTANCE;
-        } else if (DataType.getType(SparseListCell.class, StringCell.TYPE).equals(type)) {
-            factory = StringSparseListValueFactory.INSTANCE;
-        } else if (DataType.getType(SparseListCell.class, BooleanCell.TYPE).equals(type)) {
-            factory = BooleanSparseListValueFactory.INSTANCE;
-            // Lists
-        } else if (DataType.getType(ListCell.class, DoubleCell.TYPE).equals(type)) {
-            factory = DoubleListValueFactory.INSTANCE;
-        } else if (DataType.getType(ListCell.class, IntCell.TYPE).equals(type)) {
-            factory = IntListValueFactory.INSTANCE;
-        } else if (DataType.getType(ListCell.class, LongCell.TYPE).equals(type)) {
-            factory = LongListValueFactory.INSTANCE;
-        } else if (DataType.getType(ListCell.class, StringCell.TYPE).equals(type)) {
-            factory = StringListValueFactory.INSTANCE;
-        } else if (DataType.getType(ListCell.class, BooleanCell.TYPE).equals(type)) {
-            factory = BooleanListValueFactory.INSTANCE;
-            // Sets
-        } else if (DataType.getType(SetCell.class, DoubleCell.TYPE).equals(type)) {
-            factory = DoubleSetValueFactory.INSTANCE;
-        } else if (DataType.getType(SetCell.class, IntCell.TYPE).equals(type)) {
-            factory = IntSetValueFactory.INSTANCE;
-        } else if (DataType.getType(SetCell.class, LongCell.TYPE).equals(type)) {
-            factory = LongSetValueFactory.INSTANCE;
-        } else if (DataType.getType(SetCell.class, StringCell.TYPE).equals(type)) {
-            factory = StringSetValueFactory.INSTANCE;
-        } else if (DataType.getType(SetCell.class, BooleanCell.TYPE).equals(type)) {
-            factory = BooleanSetValueFactory.INSTANCE;
         } else {
-            // Get the value factory from the extension point
+            factory = getSpecificCollectionValueFactory(type).orElse(null);
+        }
+
+        // Get the value factory from the extension point
+        if (factory == null) {
             final Optional<Class<? extends ValueFactory<?, ?>>> factoryClass =
                 DataTypeRegistry.getInstance().getValueFactoryFor(type);
             if (factoryClass.isPresent()) {
@@ -233,6 +205,67 @@ public final class ValueSchema {
         }
         factoryMapping.put(type, factory.getClass().getName());
         return factory;
+    }
+
+    private static Optional<ValueFactory<?, ?>> getSpecificCollectionValueFactory(final DataType type) {
+        Optional<ValueFactory<?, ?>> factory;
+        factory = getSpecificSparseListValueFactory(type);
+        if (factory.isPresent()) {
+            return factory;
+        }
+        factory = getSpecificListValueFactory(type);
+        if (factory.isPresent()) {
+            return factory;
+        }
+        return getSpecificSetValueFactory(type);
+    }
+
+    private static Optional<ValueFactory<?, ?>> getSpecificSparseListValueFactory(final DataType type) {
+        ValueFactory<?, ?> factory = null;
+        if (DataType.getType(SparseListCell.class, DoubleCell.TYPE).equals(type)) {
+            factory = DoubleSparseListValueFactory.INSTANCE;
+        } else if (DataType.getType(SparseListCell.class, IntCell.TYPE).equals(type)) {
+            factory = IntSparseListValueFactory.INSTANCE;
+        } else if (DataType.getType(SparseListCell.class, LongCell.TYPE).equals(type)) {
+            factory = LongSparseListValueFactory.INSTANCE;
+        } else if (DataType.getType(SparseListCell.class, StringCell.TYPE).equals(type)) {
+            factory = StringSparseListValueFactory.INSTANCE;
+        } else if (DataType.getType(SparseListCell.class, BooleanCell.TYPE).equals(type)) {
+            factory = BooleanSparseListValueFactory.INSTANCE;
+        }
+        return Optional.ofNullable(factory);
+    }
+
+    private static Optional<ValueFactory<?, ?>> getSpecificListValueFactory(final DataType type) {
+        ValueFactory<?, ?> factory = null;
+        if (DataType.getType(ListCell.class, DoubleCell.TYPE).equals(type)) {
+            factory = DoubleListValueFactory.INSTANCE;
+        } else if (DataType.getType(ListCell.class, IntCell.TYPE).equals(type)) {
+            factory = IntListValueFactory.INSTANCE;
+        } else if (DataType.getType(ListCell.class, LongCell.TYPE).equals(type)) {
+            factory = LongListValueFactory.INSTANCE;
+        } else if (DataType.getType(ListCell.class, StringCell.TYPE).equals(type)) {
+            factory = StringListValueFactory.INSTANCE;
+        } else if (DataType.getType(ListCell.class, BooleanCell.TYPE).equals(type)) {
+            factory = BooleanListValueFactory.INSTANCE;
+        }
+        return Optional.ofNullable(factory);
+    }
+
+    private static Optional<ValueFactory<?, ?>> getSpecificSetValueFactory(final DataType type) {
+        ValueFactory<?, ?> factory = null;
+        if (DataType.getType(SetCell.class, DoubleCell.TYPE).equals(type)) {
+            factory = DoubleSetValueFactory.INSTANCE;
+        } else if (DataType.getType(SetCell.class, IntCell.TYPE).equals(type)) {
+            factory = IntSetValueFactory.INSTANCE;
+        } else if (DataType.getType(SetCell.class, LongCell.TYPE).equals(type)) {
+            factory = LongSetValueFactory.INSTANCE;
+        } else if (DataType.getType(SetCell.class, StringCell.TYPE).equals(type)) {
+            factory = StringSetValueFactory.INSTANCE;
+        } else if (DataType.getType(SetCell.class, BooleanCell.TYPE).equals(type)) {
+            factory = BooleanSetValueFactory.INSTANCE;
+        }
+        return Optional.ofNullable(factory);
     }
 
     private static ValueFactory<?, ?> instantiateValueFactory(final Class<?> valueFactoryClass) {
