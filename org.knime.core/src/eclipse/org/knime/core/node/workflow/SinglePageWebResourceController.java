@@ -61,20 +61,30 @@ import org.knime.core.node.wizard.WizardViewResponse;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 
 /**
- * A utility class received from the workflow manager that allows controlling wizard execution and combined view creation on a single subnode.
+ * A utility class received from the workflow manager that allows the combined view creation for a single subnode.
  *
- * <p>Do not use, no public API.
+ * This class is really only dedicated to 'isolated' single pages. Single page (re-)execution of page that are part of a
+ * wizard is done via {@link WizardExecutionController#reexecuteCurrentPage(NodeIDSuffix, Map)}.
+ *
+ * <p>
+ * Do not use, no public API.
  *
  * @author Christian Albrecht, KNIME.com GmbH, Konstanz, Germany
  * @since 3.4
+ *
+ * @noreference This class is not intended to be referenced by clients.
+ * @noinstantiate This class is not intended to be instantiated by clients.
+ * @noextend This class is not intended to be subclassed by clients.
  */
 public class SinglePageWebResourceController extends WebResourceController {
 
     private final NodeID m_nodeID;
 
     /**
-     * @param manager
-     * @param nodeID
+     * Creates a new controller.
+     *
+     * @param manager the workflow this controller is created for
+     * @param nodeID the id of the component representing the page this controller is created for
      */
     public SinglePageWebResourceController(final WorkflowManager manager, final NodeID nodeID) {
         super(manager);
@@ -126,7 +136,11 @@ public class SinglePageWebResourceController extends WebResourceController {
      * @param viewContentMap the values to validate
      * @param validate true, if validation is supposed to be done before applying the values, false otherwise
      * @param useAsDefault true, if the given value map is supposed to be applied as new node defaults (overwrite node settings), false otherwise (apply temporarily)
-     * @return Null or empty map if validation succeeds, map of errors otherwise
+     *
+     * @throws IllegalStateException if the page is executing or if the associated page is not the 'current' page
+     *             anymore (only if part of a workflow in wizard execution)
+     *
+     * @return an empty map if validation succeeds, map of errors otherwise
      */
     public Map<String, ValidationError> loadValuesIntoPage(final Map<String, String> viewContentMap, final boolean validate, final boolean useAsDefault) {
         WorkflowManager manager = m_manager;
@@ -192,7 +206,11 @@ public class SinglePageWebResourceController extends WebResourceController {
     /**
      * Validates a given set of serialized view values for the given subnode.
      * @param viewContentMap the values to validate
-     * @return Null or empty map if validation succeeds, map of errors otherwise
+     *
+     * @throws IllegalStateException if the page is executing or if the associated page is not the 'current' page
+     *             anymore (only if part of a workflow in wizard execution)
+     *
+     * @return an empty map if validation succeeds, map of errors otherwise
      */
     public Map<String, ValidationError> validateViewValuesInPage(final Map<String, String> viewContentMap) {
         WorkflowManager manager = m_manager;
