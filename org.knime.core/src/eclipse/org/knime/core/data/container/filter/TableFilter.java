@@ -122,10 +122,9 @@ public final class TableFilter {
      * @throws IllegalArgumentException when any argument is invalid
      */
     public void validate(final DataTableSpec spec, final long size) {
-        if (m_toRowIndex.isPresent()) {
-            if (m_toRowIndex.get() >= size) {
-                throw new IndexOutOfBoundsException("Row index must be smaller than " + size);
-            }
+        if ((m_fromRowIndex.isPresent() && m_fromRowIndex.get() >= size)
+            || (m_toRowIndex.isPresent() && m_toRowIndex.get() >= size)) {
+            throw new IndexOutOfBoundsException("Row index must be smaller than " + size);
         }
 
         if (m_columnIndices.isPresent()) {
