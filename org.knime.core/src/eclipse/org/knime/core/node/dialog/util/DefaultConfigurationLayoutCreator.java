@@ -53,7 +53,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.knime.core.node.dialog.DialogNode;
-import org.knime.core.node.dialog.MetaNodeDialogNode;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.SubnodeContainerConfigurationStringProvider;
@@ -105,7 +104,8 @@ public interface DefaultConfigurationLayoutCreator {
      * @param wfm the workflow manager
      * @return returns a List of NodeID's in the configured order
      */
+    @SuppressWarnings({"java:S3740", "rawtypes"}) // DialogNode generics
     public List<Integer> getConfigurationOrder(
         final SubnodeContainerConfigurationStringProvider configurationStringProvider,
-        final Map<NodeID, MetaNodeDialogNode> nodes, final WorkflowManager wfm);
+        final Map<NodeID, DialogNode> nodes, final WorkflowManager wfm);
 }

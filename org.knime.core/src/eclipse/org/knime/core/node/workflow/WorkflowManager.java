@@ -5800,7 +5800,7 @@ public final class WorkflowManager extends NodeContainer
         MetaNodeDialogPane dialogPane = getDialogPane();
         // find all quickform input nodes and update meta dialog
         Map<NodeID, MetaNodeDialogNode> nodes = findNodes(MetaNodeDialogNode.class, false);
-        dialogPane.setQuickformNodes(nodes);
+        dialogPane.setQuickformNodes(nodes, null);
         NodeSettings settings = getNodeSettings();
         Node.invokeDialogInternalLoad(dialogPane, settings, inSpecs, inData, new FlowObjectStack(getID()),
             new CredentialsProvider(this, m_credentialsStore), getDirectNCParent().isWriteProtected());

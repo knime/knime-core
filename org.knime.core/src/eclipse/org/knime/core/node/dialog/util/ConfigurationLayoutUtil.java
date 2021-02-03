@@ -53,7 +53,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.knime.core.node.dialog.DialogNode;
-import org.knime.core.node.dialog.MetaNodeDialogNode;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.SubnodeContainerConfigurationStringProvider;
@@ -149,9 +148,10 @@ public final class ConfigurationLayoutUtil {
      * @param wfm the workflow manager of the subnode
      * @return returns the order of the configuration nodes as a list of strings
      */
+    @SuppressWarnings("java:S3740") // DialogNode generics
     public static List<Integer> getConfigurationOrder(
         final SubnodeContainerConfigurationStringProvider configurationStringProvider,
-        final Map<NodeID, MetaNodeDialogNode> configurationNodes, final WorkflowManager wfm) {
+        final Map<NodeID, DialogNode> configurationNodes, final WorkflowManager wfm) {
         if (serviceConfigurationTracker == null) {
             throw new IllegalStateException("Core bundle is not active, can't get configuration order.");
         }

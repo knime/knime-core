@@ -154,27 +154,16 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
     }
 
     /**
-     * Set quickform nodes into this dialog; called just before
-     * {@link #loadSettingsFrom(NodeSettingsRO,
-     * org.knime.core.data.DataTableSpec[])} is called.
-     * @param nodes the quickform nodes to show settings for
-     * @since 3.6
-     * changed with 4.3
-     */
-    public final void setQuickformNodes(final Map<NodeID, MetaNodeDialogNode> nodes) {
-        setQuickformNodes(nodes, null);
-    }
-
-    /**
      * Set dialog nodes into this dialog; called just before
      * {@link #loadSettingsFrom(NodeSettingsRO,
      * org.knime.core.data.DataTableSpec[])} is called.
      * Only supports the new QuickForm and Configuration Nodes.
      * @param nodes the dialog nodes to show settings for
-     * @param order the order, in which the dialog nodes should be shown
+     * @param order the order, in which the dialog nodes should be shown, possibly null
      * @since 4.3
      */
-    public final void setQuickformNodes(final Map<NodeID, MetaNodeDialogNode> nodes, final List<Integer> order) {
+    public final void setQuickformNodes(final Map<NodeID, ? extends MetaNodeDialogNode> nodes,
+        final List<Integer> order) {
         m_nodes.clear();
         m_quickFormInputNodePanels.clear();
         m_dialogNodePanels.clear();
@@ -182,7 +171,7 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
         m_panel.removeAll();
 
         List<Pair<Integer, Pair<NodeID, MetaNodeDialogNode>>> sortedNodeList = new ArrayList<>();
-        for (Map.Entry<NodeID, MetaNodeDialogNode> e : nodes.entrySet()) {
+        for (Map.Entry<NodeID, ? extends MetaNodeDialogNode> e : nodes.entrySet()) {
             Integer orderIndex = Integer.MAX_VALUE;
             // only accept old qf nodes for metanodes
             if (m_metaNodeDialogType != MetaNodeDialogType.SUBNODE && e.getValue() instanceof QuickFormInputNode) {

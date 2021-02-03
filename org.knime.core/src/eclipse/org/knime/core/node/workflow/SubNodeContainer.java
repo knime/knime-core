@@ -67,6 +67,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -102,7 +103,6 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.dialog.DialogNode;
 import org.knime.core.node.dialog.DialogNodeValue;
 import org.knime.core.node.dialog.EnabledDialogNodeModelFilter;
-import org.knime.core.node.dialog.MetaNodeDialogNode;
 import org.knime.core.node.dialog.SubNodeDescriptionProvider;
 import org.knime.core.node.dialog.util.ConfigurationLayoutUtil;
 import org.knime.core.node.exec.ThreadNodeExecutionJobManager;
@@ -833,11 +833,33 @@ public final class SubNodeContainer extends SingleNodeContainer
      * @return a list of descriptions for all the visible dialog options
      * @since 4.3
      */
-    @SuppressWarnings("rawtypes")
+    @SuppressWarnings({"java:S1452", "java:S3740", "rawtypes"}) // raw types
     public List<SubNodeDescriptionProvider<? extends DialogNodeValue>> getDialogDescriptions() {
-        return m_wfm.findNodes(DialogNode.class, new EnabledDialogNodeModelFilter(), false).values().stream()
-            .map(DialogNode::getDialogRepresentation).filter(r -> r instanceof SubNodeDescriptionProvider)
-            .map(p -> (SubNodeDescriptionProvider)p).collect(toList());
+
+        Map<NodeID, DialogNode> nodes = m_wfm.findNodes(DialogNode.class, new EnabledDialogNodeModelFilter(), false);
+
+        List<Integer> order = ConfigurationLayoutUtil.getConfigurationOrder(
+            m_subnodeConfigurationStringProvider, nodes, m_wfm);
+
+        // Will contain the nodes in the ordering given by `order`.
+        // Nodes not mentioned in `order` will be placed at the end in arbitrary order.
+        TreeMap<Integer, DialogNode> orderedNodes = new TreeMap<>();
+        List<DialogNode> unorderedNodes = new ArrayList<>(nodes.size());
+        nodes.forEach((nodeId, metaNodeDialogNode) -> {
+            int targetIndex = order.indexOf(nodeId.getIndex());
+            if (targetIndex == -1) {
+                unorderedNodes.add(metaNodeDialogNode);
+            } else {
+                orderedNodes.put(targetIndex, metaNodeDialogNode);
+            }
+        });
+        List<DialogNode> res = new ArrayList<>();
+        res.addAll(orderedNodes.values()); // `values` is ordered
+        res.addAll(unorderedNodes);
+
+        return res.stream().map(DialogNode::getDialogRepresentation)
+            .filter(r -> r instanceof SubNodeDescriptionProvider).map(p -> (SubNodeDescriptionProvider)p)
+            .collect(toList());
     }
 
     private void refreshPortNames() {
@@ -963,20 +985,15 @@ public final class SubNodeContainer extends SingleNodeContainer
         throws NotConfigurableException {
         NodeDialogPane dialogPane = getDialogPane();
         // find all dialog nodes and update subnode dialog
-        Map<NodeID, MetaNodeDialogNode> nodes = m_wfm.findNodes(MetaNodeDialogNode.class,
-            new NodeModelFilter<MetaNodeDialogNode>() {
+        Map<NodeID, DialogNode> nodes = m_wfm.findNodes(DialogNode.class, new NodeModelFilter<DialogNode>() { // NOSONAR
             @Override
-            public boolean include(final MetaNodeDialogNode nodeModel) {
-                return nodeModel instanceof DialogNode && !((DialogNode)nodeModel).isHideInDialog();
+            public boolean include(final DialogNode nodeModel) {
+                return !nodeModel.isHideInDialog();
             }
         }, false);
 
         List<Integer> order = ConfigurationLayoutUtil.getConfigurationOrder(m_subnodeConfigurationStringProvider, nodes, m_wfm);
-        if (order.size() > 0) {
-            ((MetaNodeDialogPane)dialogPane).setQuickformNodes(nodes, order);
-        } else {
-            ((MetaNodeDialogPane)dialogPane).setQuickformNodes(nodes);
-        }
+        ((MetaNodeDialogPane)dialogPane).setQuickformNodes(nodes, order);
         NodeSettings settings = new NodeSettings("subnode_settings");
         saveSettings(settings);
         // remove the flow variable port from the specs and data
