@@ -67,6 +67,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -833,11 +834,34 @@ public final class SubNodeContainer extends SingleNodeContainer
      * @return a list of descriptions for all the visible dialog options
      * @since 4.3
      */
-    @SuppressWarnings("rawtypes")
+    @SuppressWarnings({"java:S3740", "rawtypes"}) // raw types
     public List<SubNodeDescriptionProvider<? extends DialogNodeValue>> getDialogDescriptions() {
-        return m_wfm.findNodes(DialogNode.class, new EnabledDialogNodeModelFilter(), false).values().stream()
-            .map(DialogNode::getDialogRepresentation).filter(r -> r instanceof SubNodeDescriptionProvider)
-            .map(p -> (SubNodeDescriptionProvider)p).collect(toList());
+
+        Map<NodeID, DialogNode> nodes = m_wfm.findNodes(DialogNode.class, new EnabledDialogNodeModelFilter(), false);
+
+        Map<NodeID, MetaNodeDialogNode> castUpNodes = new HashMap<>();
+        nodes.forEach(castUpNodes::put);
+        List<Integer> order =
+            ConfigurationLayoutUtil.getConfigurationOrder(m_subnodeConfigurationStringProvider, castUpNodes, m_wfm);
+
+        // Will contain the nodes in the ordering given by `order`. Nodes not mentioned in `order` will be placed at the end in arbitrary order.
+        TreeMap<Integer, DialogNode> orderedNodes = new TreeMap<>();
+        List<DialogNode> unorderedNodes = new ArrayList<>(nodes.size());
+        nodes.forEach((nodeId, metaNodeDialogNode) -> {
+            int targetIndex = order.indexOf(nodeId.getIndex());
+            if (targetIndex == -1) {
+                unorderedNodes.add(metaNodeDialogNode);
+            } else {
+                orderedNodes.put(targetIndex, metaNodeDialogNode);
+            }
+        });
+        List<DialogNode> res = new ArrayList<>();
+        res.addAll(orderedNodes.values()); // `values` is ordered
+        res.addAll(unorderedNodes);
+
+        return res.stream().map(DialogNode::getDialogRepresentation)
+            .filter(r -> r instanceof SubNodeDescriptionProvider).map(p -> (SubNodeDescriptionProvider)p)
+            .collect(toList());
     }
 
     private void refreshPortNames() {
