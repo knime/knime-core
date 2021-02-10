@@ -61,10 +61,11 @@ import org.knime.core.node.wizard.WizardViewResponse;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 
 /**
- * A utility class received from the workflow manager that allows the combined view creation for a single subnode.
+ * A utility class received from the workflow manager that allows the combined view creation for a single subnode (aka
+ * component).
  *
- * This class is really only dedicated to 'isolated' single pages. Single page (re-)execution of page that are part of a
- * wizard is done via {@link WizardExecutionController#reexecuteCurrentPage(NodeIDSuffix, Map)}.
+ * This class is really only dedicated to 'isolated' single pages of components. Single page (re-)execution of page that
+ * are part of a wizard is done via {@link WizardExecutionController#reexecuteSinglePage(NodeIDSuffix, Map)}.
  *
  * <p>
  * Do not use, no public API.
@@ -76,7 +77,7 @@ import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
  * @noinstantiate This class is not intended to be instantiated by clients.
  * @noextend This class is not intended to be subclassed by clients.
  */
-public class SinglePageWebResourceController extends WebResourceController {
+public class CompositeViewController extends WebResourceController {
 
     private final NodeID m_nodeID;
 
@@ -86,7 +87,7 @@ public class SinglePageWebResourceController extends WebResourceController {
      * @param manager the workflow this controller is created for
      * @param nodeID the id of the component representing the page this controller is created for
      */
-    public SinglePageWebResourceController(final WorkflowManager manager, final NodeID nodeID) {
+    public CompositeViewController(final WorkflowManager manager, final NodeID nodeID) {
         super(manager);
         m_nodeID = nodeID;
     }

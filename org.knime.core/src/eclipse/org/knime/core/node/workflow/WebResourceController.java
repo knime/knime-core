@@ -900,7 +900,7 @@ public abstract class WebResourceController {
 
     /**
      * Result value of {@link WizardExecutionController#getCurrentWizardPage()} and
-     * {@link SinglePageWebResourceController#getWizardPage()}.
+     * {@link CompositeViewController#getWizardPage()}.
      */
     public static final class WizardPageContent {
 
