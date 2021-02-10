@@ -367,13 +367,22 @@ public final class WorkflowSummaryCreator {
             final List<Setting> settingsList = settings;
 
             final Workflow subWorkflow;
+            final Boolean isEncrypted;
+            final WorkflowManager wfm;
             if (nc instanceof WorkflowManager) {
-                subWorkflow = createWorkflow((WorkflowManager)nc, nodesToIgnore, includeExecutionInfo);
+                wfm = (WorkflowManager)nc;
             } else if (nc instanceof SubNodeContainer) {
+                wfm = ((SubNodeContainer)nc).getWorkflowManager();
+            } else {
+                wfm = null;
+            }
+            if (wfm != null) {
+                isEncrypted = wfm.isEncrypted() ? Boolean.TRUE : null;
                 subWorkflow =
-                    createWorkflow(((SubNodeContainer)nc).getWorkflowManager(), nodesToIgnore, includeExecutionInfo);
+                    Boolean.TRUE.equals(isEncrypted) ? null : createWorkflow(wfm, nodesToIgnore, includeExecutionInfo);
             } else {
                 subWorkflow = null;
+                isEncrypted = null;
             }
 
             final List<OutputPort> outputPorts = IntStream.range(0, nc.getNrOutPorts()).mapToObj(i -> {
@@ -447,6 +456,11 @@ public final class WorkflowSummaryCreator {
                 public Boolean isComponent() {
                     return isComponent;
                 }
+
+                @Override
+                public Boolean isEncrypted() {
+                    return isEncrypted;
+                };
 
                 @Override
                 public String getState() {
