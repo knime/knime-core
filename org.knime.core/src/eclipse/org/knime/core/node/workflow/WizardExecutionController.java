@@ -515,7 +515,7 @@ public final class WizardExecutionController extends WebResourceController imple
      *
      * @return empty map if validation succeeds, map of errors otherwise
      */
-    public Map<String, ValidationError> reexecuteCurrentPage(final NodeIDSuffix nodeIDToReset,
+    public Map<String, ValidationError> reexecuteSinglePage(final NodeIDSuffix nodeIDToReset,
         final Map<String, String> valueMap) {
         try (WorkflowLock lock = m_manager.lock()) {
             NodeID pageID = getCurrentWizardPageNodeID();
@@ -554,7 +554,7 @@ public final class WizardExecutionController extends WebResourceController imple
      *
      * @throws IllegalStateException if there is no current page
      *
-     * @return a map from node-id (suffix) to the page info ({@link WizardPageNodeInfo})
+     * @return a map from node-id (suffix) to the wizard page node info ({@link WizardPageNodeInfo})
      */
     public Map<NodeIDSuffix, WizardPageNodeInfo> collectNestedWizardNodeInfos() {
         Map<NodeIDSuffix, WizardPageNodeInfo> infoMap = new HashMap<>();
