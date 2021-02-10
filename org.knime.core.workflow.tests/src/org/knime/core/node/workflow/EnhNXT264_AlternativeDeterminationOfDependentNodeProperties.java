@@ -143,6 +143,10 @@ public class EnhNXT264_AlternativeDeterminationOfDependentNodeProperties extends
 		assertFalse(props.canExecuteNode(metanode_219.createChild(196)));
 		assertTrue(props.canExecuteNode(metanode_219.createChild(218)));
 		
+		// Test a metanode with a 'through' connection
+		WorkflowManager metanode_25 = (WorkflowManager) m_wfm.getNodeContainer(parentId.createChild(25));
+		checkCanExecuteAndCanResetFlagsForAllNodes(metanode_25);
+		
 		// test exception
 		assertThrows(NoSuchElementException.class, () -> props.canExecuteNode(parentId));
 		assertThrows(NoSuchElementException.class, () -> props.canResetNode(parentId));

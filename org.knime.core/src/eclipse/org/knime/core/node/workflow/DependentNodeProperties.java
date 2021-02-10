@@ -200,7 +200,9 @@ public final class DependentNodeProperties {
                 return wfm.getParent().getOutgoingConnectionsFor(id).stream()
                     .filter(cc -> cc.getDest().equals(wfm.getID()))
                     .map(cc -> wfm.getOutgoingConnectionsFor(wfm.getID(), cc.getDestPort())).flatMap(Collection::stream)
-                    .map(ConnectionContainer::getDest).collect(toSet());
+                    .map(ConnectionContainer::getDest)
+                    .filter(dest -> !dest.equals(wfm.getID())) // don't include the metanode (wfm) itself
+                    .collect(toSet());
             }
         }
     }
