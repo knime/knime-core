@@ -63,7 +63,7 @@ public final class ByteArrayAccess {
     }
 
     public static final class ByteArrayAccessSpec implements AccessSpec<VarBinaryReadAccess, VarBinaryWriteAccess> {
-        public static final ByteArrayAccess INSTANCE = new ByteArrayAccess();
+        public static final ByteArrayAccessSpec INSTANCE = new ByteArrayAccessSpec();
 
         private ByteArrayAccessSpec() {
         }
@@ -83,6 +83,6 @@ public final class ByteArrayAccess {
 
         void setByteArray(byte[] value);
 
-        void setByteArray(byte[] array, int i, int limit);
+        void setByteArray(byte[] array, int index, int length);
     }
 }

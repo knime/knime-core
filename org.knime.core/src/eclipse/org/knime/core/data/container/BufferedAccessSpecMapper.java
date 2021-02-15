@@ -231,7 +231,7 @@ final class BufferedAccessSpecMapper implements AccessSpecMapper<BufferedAccess>
         @Override
         public void setByteArray(final byte[] array, final int index, final int length) {
             m_value = new byte[length];
-            System.arraycopy(array, 0, m_value, 0, length);
+            System.arraycopy(array, index, m_value, 0, length);
             m_isMissing = false;
         }
 
