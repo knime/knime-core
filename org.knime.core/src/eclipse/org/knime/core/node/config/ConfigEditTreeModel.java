@@ -209,7 +209,7 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
         if (variableValue != null) {
             try {
                 return variableValue.getConfigBase(childKey);
-            } catch (InvalidSettingsException e) {
+            } catch (InvalidSettingsException e) {//NOSONAR
                 // ignore
             }
         }

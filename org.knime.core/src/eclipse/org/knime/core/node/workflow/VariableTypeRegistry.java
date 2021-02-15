@@ -65,7 +65,6 @@ import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.Platform;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.config.Config;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.VariableType.BooleanArrayType;
@@ -158,26 +157,17 @@ public final class VariableTypeRegistry {
         return INSTANCE;
     }
 
-    VariableValue<?> loadValue(final NodeSettingsRO sub) throws InvalidSettingsException {
-        final String identifier = CheckUtils.checkSettingNotNull(sub.getString("class"), "'class' must not be null");
-        final VariableType<?> type = m_variableTypes.get(identifier);
-        CheckUtils.checkSetting(type != null, "No flow variable type for identifier/class '%s'", identifier);
-        @SuppressWarnings("null") // the above check ensures that type is not null
-        final VariableValue<?> value = type.loadValue(sub);
-        return value;
-    }
-
     /**
      * Returns an array of all available flow variable types.</br>
      * I.e. all types defined by the core and registered via the extension point.
      *
      * @return an array of all available flow variable types
      */
-    public VariableType<?>[] getAllTypes() {
+    public VariableType<?>[] getAllTypes() {//NOSONAR every type may have a different generic so there is no other way
         return m_variableTypes.values().toArray(new VariableType[0]);
     }
 
-    Stream<VariableType<?>> stream() {
+    Stream<VariableType<?>> stream() {// NOSONAR every type may have a different generic so there is no other way
         return m_variableTypes.values().stream();
     }
 
@@ -189,7 +179,7 @@ public final class VariableTypeRegistry {
      * @param configKey the key identifying the entry in {@link Config config} that should be overwritten
      * @return the {@link VariableType VariableTypes} that can overwrite the specified config entry
      */
-    public VariableType<?>[] getOverwritingTypes(final Config config, final String configKey) {
+    public VariableType<?>[] getOverwritingTypes(final Config config, final String configKey) {//NOSONAR
         return stream().filter(t -> t.canOverwrite(config, configKey)).toArray(VariableType[]::new);
     }
 
@@ -228,7 +218,7 @@ public final class VariableTypeRegistry {
         final Optional<VariableType<?>> matchingType = getCorrespondingVariableType(config, configKey);
         // necessary to avoid compilation errors
         @SuppressWarnings("rawtypes")
-        final VariableType type = matchingType.orElseThrow(() -> new InvalidSettingsException(
+        final VariableType type = matchingType.orElseThrow(() -> new InvalidSettingsException(//NOSONAR
             String.format("No flow variable with a type available that can overwrite the config '%s'. "
                     + "Are you missing a KNIME extension?", config)));
         // argument compatibility is guaranteed through type
@@ -245,7 +235,7 @@ public final class VariableTypeRegistry {
      * @param configKey the key identifying the entry to create the FlowVariable from
      * @return an {@link Optional} containing the corresponding type if there is one, otherwise {@link Optional#empty()}
      */
-    public Optional<VariableType<?>> getCorrespondingVariableType(final Config config, final String configKey) {
+    public Optional<VariableType<?>> getCorrespondingVariableType(final Config config, final String configKey) {//NOSONAR
         final List<VariableType<?>> correspondingTypes =
             stream().filter(t -> t.canCreateFrom(config, configKey)).collect(toList());
         if (correspondingTypes.size() > 1) {

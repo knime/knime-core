@@ -348,7 +348,7 @@ public final class FlowVariable extends FlowObject {
      *
      * @return the {@link VariableValue} held by this {@link FlowVariable}
      */
-    VariableValue<?> getVariableValue() {
+    VariableValue<?> getVariableValue() {//NOSONAR
         return m_value;
     }
 

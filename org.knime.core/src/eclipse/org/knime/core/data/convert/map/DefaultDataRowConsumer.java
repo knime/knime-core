@@ -125,68 +125,111 @@ public final class DefaultDataRowConsumer<D extends Destination<?>, CP extends C
     @SuppressWarnings("unchecked")
     private Mapper<CP, ?, ?> createPrimitiveMapper(final DataCellToJavaConverterFactory<?, ?> converterFactory,
         final CellValueConsumerFactory<?, ?, ?, ?> consumerFactory) {
-        final Class<?> converterType =
-            ((TypedDataCellToJavaConverterFactory<?, ?, ?>)converterFactory).getConverterType();
-        final Class<?> consumerType = ((TypedCellValueConsumerFactory<?, ?, ?, ?, ?>)consumerFactory).getConsumerType();
+        final PathSpotter pathSpotter = new PathSpotter(converterFactory, consumerFactory);
         // double:
-        if (DataCellToDoubleConverter.class.isAssignableFrom(converterType)
-            && DoubleCellValueConsumer.class.isAssignableFrom(consumerType)) {
+        if (pathSpotter.isDoublePath()) {
             return new DoubleMapper(
                 ((TypedDataCellToJavaConverterFactory<?, ?, DataCellToDoubleConverter<?>>)converterFactory).create(),
                 ((TypedCellValueConsumerFactory<D, ?, ?, CP, DoubleCellValueConsumer<D, CP>>)consumerFactory).create());
         }
         // int:
-        else if (DataCellToIntConverter.class.isAssignableFrom(converterType)
-            && IntCellValueConsumer.class.isAssignableFrom(consumerType)) {
+        else if (pathSpotter.isIntPath()) {
             return new IntMapper(
                 ((TypedDataCellToJavaConverterFactory<?, ?, DataCellToIntConverter<?>>)converterFactory).create(),
                 ((TypedCellValueConsumerFactory<D, ?, ?, CP, IntCellValueConsumer<D, CP>>)consumerFactory).create());
         }
         // long:
-        else if (DataCellToLongConverter.class.isAssignableFrom(converterType)
-            && LongCellValueConsumer.class.isAssignableFrom(consumerType)) {
+        else if (pathSpotter.isLongPath()) {
             return new LongMapper(
                 ((TypedDataCellToJavaConverterFactory<?, ?, DataCellToLongConverter<?>>)converterFactory).create(),
                 ((TypedCellValueConsumerFactory<D, ?, ?, CP, LongCellValueConsumer<D, CP>>)consumerFactory).create());
         }
         // boolean:
-        else if (DataCellToBooleanConverter.class.isAssignableFrom(converterType)
-            && BooleanCellValueConsumer.class.isAssignableFrom(consumerType)) {
+        else if (pathSpotter.isBooleanPath()) {
             return new BooleanMapper(
                 ((TypedDataCellToJavaConverterFactory<?, ?, DataCellToBooleanConverter<?>>)converterFactory).create(),
                 ((TypedCellValueConsumerFactory<D, ?, ?, CP, BooleanCellValueConsumer<D, CP>>)consumerFactory)
                     .create());
         }
         // float:
-        else if (DataCellToFloatConverter.class.isAssignableFrom(converterType)
-            && FloatCellValueConsumer.class.isAssignableFrom(consumerType)) {
+        else if (pathSpotter.isFloatPath()) {
             return new FloatMapper(
                 ((TypedDataCellToJavaConverterFactory<?, ?, DataCellToFloatConverter<?>>)converterFactory).create(),
                 ((TypedCellValueConsumerFactory<D, ?, ?, CP, FloatCellValueConsumer<D, CP>>)consumerFactory).create());
         }
         // byte:
-        else if (DataCellToByteConverter.class.isAssignableFrom(converterType)
-            && ByteCellValueConsumer.class.isAssignableFrom(consumerType)) {
+        else if (pathSpotter.isBytePath()) {
             return new ByteMapper(
                 ((TypedDataCellToJavaConverterFactory<?, ?, DataCellToByteConverter<?>>)converterFactory).create(),
                 ((TypedCellValueConsumerFactory<D, ?, ?, CP, ByteCellValueConsumer<D, CP>>)consumerFactory).create());
         }
         // short:
-        else if (DataCellToShortConverter.class.isAssignableFrom(converterType)
-            && ShortCellValueConsumer.class.isAssignableFrom(consumerType)) {
+        else if (pathSpotter.isShortPath()) {
             return new ShortMapper(
                 ((TypedDataCellToJavaConverterFactory<?, ?, DataCellToShortConverter<?>>)converterFactory).create(),
                 ((TypedCellValueConsumerFactory<D, ?, ?, CP, ShortCellValueConsumer<D, CP>>)consumerFactory).create());
         }
         // char:
-        else if (DataCellToCharConverter.class.isAssignableFrom(converterType)
-            && CharCellValueConsumer.class.isAssignableFrom(consumerType)) {
+        else if (pathSpotter.isCharPath()) {
             return new CharMapper(
                 ((TypedDataCellToJavaConverterFactory<?, ?, DataCellToCharConverter<?>>)converterFactory).create(),
                 ((TypedCellValueConsumerFactory<D, ?, ?, CP, CharCellValueConsumer<D, CP>>)consumerFactory).create());
         } else {
             // no primitive mapper matches -> return null and let caller create a meaningful default
             return null;
+        }
+    }
+
+    private static class PathSpotter {
+
+        private final Class<?> m_converterType;
+
+        private final Class<?> m_consumerType;
+
+        PathSpotter(final DataCellToJavaConverterFactory<?, ?> converterFactory,
+            final CellValueConsumerFactory<?, ?, ?, ?> consumerFactory) {
+            m_converterType = ((TypedDataCellToJavaConverterFactory<?, ?, ?>)converterFactory).getConverterType();
+            m_consumerType = ((TypedCellValueConsumerFactory<?, ?, ?, ?, ?>)consumerFactory).getConsumerType();
+        }
+
+        boolean isDoublePath() {
+            return DataCellToDoubleConverter.class.isAssignableFrom(m_converterType)
+                && DoubleCellValueConsumer.class.isAssignableFrom(m_consumerType);
+        }
+
+        boolean isIntPath() {
+            return DataCellToIntConverter.class.isAssignableFrom(m_converterType)
+                && IntCellValueConsumer.class.isAssignableFrom(m_consumerType);
+        }
+
+        boolean isLongPath() {
+            return DataCellToLongConverter.class.isAssignableFrom(m_converterType)
+                && LongCellValueConsumer.class.isAssignableFrom(m_consumerType);
+        }
+
+        boolean isBooleanPath() {
+            return DataCellToBooleanConverter.class.isAssignableFrom(m_converterType)
+                && BooleanCellValueConsumer.class.isAssignableFrom(m_consumerType);
+        }
+
+        boolean isFloatPath() {
+            return DataCellToFloatConverter.class.isAssignableFrom(m_converterType)
+                && FloatCellValueConsumer.class.isAssignableFrom(m_consumerType);
+        }
+
+        boolean isBytePath() {
+            return DataCellToByteConverter.class.isAssignableFrom(m_converterType)
+                && ByteCellValueConsumer.class.isAssignableFrom(m_consumerType);
+        }
+
+        boolean isShortPath() {
+            return DataCellToShortConverter.class.isAssignableFrom(m_converterType)
+                && ShortCellValueConsumer.class.isAssignableFrom(m_consumerType);
+        }
+
+        boolean isCharPath() {
+            return DataCellToCharConverter.class.isAssignableFrom(m_converterType)
+                && CharCellValueConsumer.class.isAssignableFrom(m_consumerType);
         }
     }
 

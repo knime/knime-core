@@ -179,7 +179,7 @@ public class FlowVariableModel {
      * @return the type of the variable
      * @since 4.2
      */
-    public VariableType<?> getVariableType() {
+    public VariableType<?> getVariableType() {//NOSONAR
         return m_variableType;
     }
 

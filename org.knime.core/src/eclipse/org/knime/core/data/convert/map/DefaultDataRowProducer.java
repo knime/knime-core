@@ -154,67 +154,58 @@ public final class DefaultDataRowProducer<S extends Source<?>, PP extends Produc
     @SuppressWarnings("unchecked") // Type safety is mostly ensured by instance checks.
     private Mapper<PP, ?, ?> createPrimitiveMapper(final CellValueProducerFactory<?, ?, ?, ?> producerFactory,
         final JavaToDataCellConverterFactory<?> converterFactory) {
-        final Class<?> producerType = ((TypedCellValueProducerFactory<?, ?, ?, ?, ?>)producerFactory).getProducerType();
-        final Class<?> converterType = ((TypedJavaToDataCellConverterFactory<?, ?>)converterFactory).getConverterType();
+        final PathSpotter pathSpotter = new PathSpotter(producerFactory, converterFactory);
         // double:
-        if (DoubleCellValueProducer.class.isAssignableFrom(producerType)
-            && DoubleToDataCellConverter.class.isAssignableFrom(converterType)) {
+        if (pathSpotter.isDoublePath()) {
             return new DoubleMapper(
                 ((TypedCellValueProducerFactory<S, ?, ?, PP, DoubleCellValueProducer<S, PP>>)producerFactory).create(),
                 ((TypedJavaToDataCellConverterFactory<?, DoubleToDataCellConverter>)converterFactory)
                     .create(m_fileStoreFactory));
         }
         // int:
-        else if (IntCellValueProducer.class.isAssignableFrom(producerType)
-            && IntToDataCellConverter.class.isAssignableFrom(converterType)) {
+        else if (pathSpotter.isIntPath()) {
             return new IntMapper(
                 ((TypedCellValueProducerFactory<S, ?, ?, PP, IntCellValueProducer<S, PP>>)producerFactory).create(),
                 ((TypedJavaToDataCellConverterFactory<?, IntToDataCellConverter>)converterFactory)
                     .create(m_fileStoreFactory));
         }
         // long:
-        else if (LongCellValueProducer.class.isAssignableFrom(producerType)
-            && LongToDataCellConverter.class.isAssignableFrom(converterType)) {
+        else if (pathSpotter.isLongPath()) {
             return new LongMapper(
                 ((TypedCellValueProducerFactory<S, ?, ?, PP, LongCellValueProducer<S, PP>>)producerFactory).create(),
                 ((TypedJavaToDataCellConverterFactory<?, LongToDataCellConverter>)converterFactory)
                     .create(m_fileStoreFactory));
         }
         // boolean:
-        else if (BooleanCellValueProducer.class.isAssignableFrom(producerType)
-            && BooleanToDataCellConverter.class.isAssignableFrom(converterType)) {
+        else if (pathSpotter.isBooleanPath()) {
             return new BooleanMapper(
                 ((TypedCellValueProducerFactory<S, ?, ?, PP, BooleanCellValueProducer<S, PP>>)producerFactory).create(),
                 ((TypedJavaToDataCellConverterFactory<?, BooleanToDataCellConverter>)converterFactory)
                     .create(m_fileStoreFactory));
         }
         // float:
-        else if (FloatCellValueProducer.class.isAssignableFrom(producerType)
-            && FloatToDataCellConverter.class.isAssignableFrom(converterType)) {
+        else if (pathSpotter.isFloatPath()) {
             return new FloatMapper(
                 ((TypedCellValueProducerFactory<S, ?, ?, PP, FloatCellValueProducer<S, PP>>)producerFactory).create(),
                 ((TypedJavaToDataCellConverterFactory<?, FloatToDataCellConverter>)converterFactory)
                     .create(m_fileStoreFactory));
         }
         // byte:
-        else if (ByteCellValueProducer.class.isAssignableFrom(producerType)
-            && ByteToDataCellConverter.class.isAssignableFrom(converterType)) {
+        else if (pathSpotter.isBytePath()) {
             return new ByteMapper(
                 ((TypedCellValueProducerFactory<S, ?, ?, PP, ByteCellValueProducer<S, PP>>)producerFactory).create(),
                 ((TypedJavaToDataCellConverterFactory<?, ByteToDataCellConverter>)converterFactory)
                     .create(m_fileStoreFactory));
         }
         // short:
-        else if (ShortCellValueProducer.class.isAssignableFrom(producerType)
-            && ShortToDataCellConverter.class.isAssignableFrom(converterType)) {
+        else if (pathSpotter.isShortPath()) {
             return new ShortMapper(
                 ((TypedCellValueProducerFactory<S, ?, ?, PP, ShortCellValueProducer<S, PP>>)producerFactory).create(),
                 ((TypedJavaToDataCellConverterFactory<?, ShortToDataCellConverter>)converterFactory)
                     .create(m_fileStoreFactory));
         }
         // char:
-        else if (CharCellValueProducer.class.isAssignableFrom(producerType)
-            && CharToDataCellConverter.class.isAssignableFrom(converterType)) {
+        else if (pathSpotter.isCharPath()) {
             return new CharMapper(
                 ((TypedCellValueProducerFactory<S, ?, ?, PP, CharCellValueProducer<S, PP>>)producerFactory).create(),
                 ((TypedJavaToDataCellConverterFactory<?, CharToDataCellConverter>)converterFactory)
@@ -222,6 +213,59 @@ public final class DefaultDataRowProducer<S extends Source<?>, PP extends Produc
         } else {
             // no primitive mapper matched -> return null and let caller create the default mapper
             return null;
+        }
+    }
+
+    private static class PathSpotter {
+
+        private final Class<?> producerType;
+
+        private final Class<?> converterType;
+
+        PathSpotter(final CellValueProducerFactory<?, ?, ?, ?> producerFactory,
+            final JavaToDataCellConverterFactory<?> converterFactory) {
+            producerType = ((TypedCellValueProducerFactory<?, ?, ?, ?, ?>)producerFactory).getProducerType();
+            converterType = ((TypedJavaToDataCellConverterFactory<?, ?>)converterFactory).getConverterType();
+        }
+
+        boolean isDoublePath() {
+            return DoubleCellValueProducer.class.isAssignableFrom(producerType)
+                && DoubleToDataCellConverter.class.isAssignableFrom(converterType);
+        }
+
+        boolean isIntPath() {
+            return IntCellValueProducer.class.isAssignableFrom(producerType)
+                && IntToDataCellConverter.class.isAssignableFrom(converterType);
+        }
+
+        boolean isLongPath() {
+            return LongCellValueProducer.class.isAssignableFrom(producerType)
+                && LongToDataCellConverter.class.isAssignableFrom(converterType);
+        }
+
+        boolean isBooleanPath() {
+            return BooleanCellValueProducer.class.isAssignableFrom(producerType)
+                && BooleanToDataCellConverter.class.isAssignableFrom(converterType);
+        }
+
+        boolean isFloatPath() {
+            return FloatCellValueProducer.class.isAssignableFrom(producerType)
+                && FloatToDataCellConverter.class.isAssignableFrom(converterType);
+        }
+
+        boolean isBytePath() {
+            return ByteCellValueProducer.class.isAssignableFrom(producerType)
+                && ByteToDataCellConverter.class.isAssignableFrom(converterType);
+        }
+
+        boolean isShortPath() {
+            return ShortCellValueProducer.class.isAssignableFrom(producerType)
+                && ShortToDataCellConverter.class.isAssignableFrom(converterType);
+        }
+
+        boolean isCharPath() {
+            return CharCellValueProducer.class.isAssignableFrom(producerType)
+                && CharToDataCellConverter.class.isAssignableFrom(converterType);
         }
     }
 

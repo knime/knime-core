@@ -59,7 +59,7 @@ package org.knime.core.node.workflow;
  * @since 4.2
  */
 @FunctionalInterface
-public interface VariableTypeExtension {
+public interface VariableTypeExtension { //NOSONAR this interface represents an extension point
 
     /**
      * Returns the {@link VariableType} registered by this extension.
@@ -68,5 +68,5 @@ public interface VariableTypeExtension {
      *
      * @return the {@link VariableType} registered by this extension
      */
-    VariableType<?> getVariableType();
+    VariableType<?> getVariableType();//NOSONAR only used by the registry which doesn't care about the generic
 }
