@@ -56,6 +56,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.CheckUtils;
@@ -146,7 +147,7 @@ public final class PortObjectIDSettings {
                 break;
         }
         m_copyData = settings.getBoolean("copyData");
-        m_flowVariables = new ArrayList<FlowVariable>();
+        m_flowVariables = new ArrayList<>();
         // added for cluster version 1.0.2
         if (settings.containsKey("flowVariables")) {
             NodeSettingsRO sub = settings.getNodeSettings("flowVariables");
@@ -160,20 +161,33 @@ public final class PortObjectIDSettings {
                 }
 
                 final FlowVariable v;
-                /* Flow variables of types Credentials and FSConnection are handled separately, using the
-                 * credentialsProvider and fsConnectionProvider members, respectively. */
+                /* Flow variables of types Credentials are handled separately, using the credentialsProvider member. */
                 if (typeS.equals(CredentialsType.INSTANCE.getIdentifier())) {
-                    CheckUtils.checkState(m_credentialsProvider != null, "No credentials provider set");
-                    final ICredentials credentials = m_credentialsProvider.get(name);
-                    v = CredentialsStore.newCredentialsFlowVariable(credentials.getName(), credentials.getLogin(),
-                        credentials.getPassword(), false, false);
+                    v = loadCredentialsFlowVariable(child, name);
                 } else {
                     v = FlowVariable.load(child);
                 }
-
                 m_flowVariables.add(v);
             }
         }
+    }
+
+    private FlowVariable loadCredentialsFlowVariable(final NodeSettingsRO child, final String name)
+        throws InvalidSettingsException {
+        if (m_credentialsProvider != null) {
+            try {
+                final ICredentials credentials = m_credentialsProvider.get(name);
+                return CredentialsStore.newCredentialsFlowVariable(credentials.getName(), credentials.getLogin(),
+                    credentials.getPassword(), false, false);
+            } catch (IllegalArgumentException e) {
+                NodeLogger.getLogger(getClass()).debug("Credentials flow variable '" + name
+                    + "' couldn't be initialised with a password. Not found in credentials store.", e);
+            }
+        } else {
+            NodeLogger.getLogger(getClass()).debug("Credentials flow variable '" + name
+                + "' couldn't be initialised with a password. No credentials provider set");
+        }
+        return FlowVariable.load(child);
     }
 
     /** Saves the current settings to a NodeSettings object.
