@@ -106,6 +106,15 @@ public final class WorkflowCaptureOperation {
 
     private NativeNodeContainer m_endNode;
 
+    /**
+     * Creates a new capture operation.
+     *
+     * @param endNodeID the id of the 'capture workflow end' node
+     * @param wfm the workflow manager to capture the workflow fragment in
+     * @throws IllegalScopeException if the scope setup is wrong
+     * @throws IllegalArgumentException if the passed end-node id doesn't represent a 'capture workflow end' node or the
+     *             respective start node is missing
+     */
     WorkflowCaptureOperation(final NodeID endNodeID, final WorkflowManager wfm) throws IllegalScopeException {
         m_endNode = wfm.getNodeContainer(endNodeID, NativeNodeContainer.class, true);
         CheckUtils.checkArgument(m_endNode.getNodeModel() instanceof CaptureWorkflowEndNode,
@@ -156,7 +165,7 @@ public final class WorkflowCaptureOperation {
 
             // collect nodes outside the scope body but connected to the scope body (only incoming)
             Map<Pair<NodeID, Integer>, NodeID> visitedSrcPorts = new HashMap<>(); //maps to 'pasted' node id
-            boolean isCaptureScopePartOfVirtualScope = getVirtualScopeContext(m_startNode, -1) != null;
+            boolean isCaptureScopePartOfVirtualScope = getVirtualScopeContext(m_startNode) != null;
             for (int i = 0; i < allButScopeIDs.length; i++) {
                 NodeContainer oldNode = m_wfm.getNodeContainer(allButScopeIDs[i]);
                 for (int p = 0; p < oldNode.getNrInPorts(); p++) {
@@ -169,17 +178,19 @@ public final class WorkflowCaptureOperation {
                         Pair<NodeID, Integer> currentSrcPort = Pair.create(c.getSource(), c.getSourcePort());
                         if (!visitedSrcPorts.containsKey(currentSrcPort)) {
                             // only add portObjectReader if not inserted already in previous loop iteration
-                            NodeID sourceID = c.getSource();
-                            NodeContainer sourceNode = m_wfm.getNodeContainer(sourceID);
-                            NodeUIInformation sourceUIInformation = sourceNode.getUIInformation();
-                            nodesToDetermineBoundingBox.add(sourceNode);
+
+                            // add port object reader
                             NodeID pastedID =
                                 addPortObjectReferenceReader(m_wfm, tempParent, c, isCaptureScopePartOfVirtualScope);
                             NodeIDSuffix pastedIDSuffix = NodeIDSuffix.create(tempParent.getID(), pastedID);
 
+                            // position
+                            NodeID sourceID = c.getSource();
+                            NodeUIInformation sourceUIInformation =
+                                getSourceNodeAndUIInformation(sourceID, c.getDest(), nodesToDetermineBoundingBox);
                             tempParent.getNodeContainer(pastedID).setUIInformation(sourceUIInformation);
 
-                            //TODO deal with WFMIN-connections
+                            // keeping track
                             visitedSrcPorts.put(Pair.create(c.getSource(), c.getSourcePort()), pastedID);
                             addedPortObjectReaderNodes.add(pastedIDSuffix);
                             portObjectReaderGroups.computeIfAbsent(currentSrcPort.getFirst(), id -> new ArrayList<>())
@@ -194,35 +205,8 @@ public final class WorkflowCaptureOperation {
                 }
             }
 
-            // group and position port object readers
-            for (List<NodeID> readerGroup : portObjectReaderGroups.values()) {
-                for (int i = 0; i < readerGroup.size(); i++) {
-                    NodeUIInformation.moveNodeBy(tempParent.getNodeContainer(readerGroup.get(i)),
-                        new int[]{moveUIDist[0], moveUIDist[1] + i * READERS_VERTICAL_TRANSLATION});
-                }
-                if (readerGroup.size() > 1) {
-                    int[] boundsFirstNode =
-                        tempParent.getNodeContainer(readerGroup.get(0)).getUIInformation().getBounds();
-
-                    //group
-                    CollapseIntoMetaNodeResult res =
-                        tempParent.collapseIntoMetaNode(readerGroup.toArray(new NodeID[readerGroup.size()]),
-                            new WorkflowAnnotation[0], READERS_METANODE_NAME);
-
-                    //update ids
-                    WorkflowManager readersMetanode = (WorkflowManager)tempParent.getNodeContainer(res.getCollapsedMetanodeID());
-                    for (NodeID id : readerGroup) {
-                        NodeIDSuffix suffix = NodeIDSuffix.create(tempParent.getID(), id);
-                        addedPortObjectReaderNodes.remove(suffix);
-                        addedPortObjectReaderNodes.add(NodeIDSuffix.create(tempParent.getID(),
-                            suffix.prependParent(readersMetanode.getID())));
-                    }
-                    //move component
-                    readersMetanode.setUIInformation(NodeUIInformation.builder(readersMetanode.getUIInformation())
-                        .setNodeLocation(boundsFirstNode[0], boundsFirstNode[1], boundsFirstNode[2], boundsFirstNode[3])
-                        .build());
-                }
-            }
+            groupAndPositionPortObjectReaders(tempParent, portObjectReaderGroups, addedPortObjectReaderNodes,
+                moveUIDist);
 
             //transfer editor settings, too
             tempParent.setEditorUIInformation(m_wfm.getEditorUIInformation());
@@ -238,6 +222,39 @@ public final class WorkflowCaptureOperation {
                 tempParent = null;
             }
             throw e;
+        }
+    }
+
+    private static void groupAndPositionPortObjectReaders(final WorkflowManager tempParent,
+        final Map<NodeID, List<NodeID>> portObjectReaderGroups, final Set<NodeIDSuffix> addedPortObjectReaderNodes,
+        final int[] moveUIDist) {
+        for (List<NodeID> readerGroup : portObjectReaderGroups.values()) {
+            for (int i = 0; i < readerGroup.size(); i++) {
+                NodeUIInformation.moveNodeBy(tempParent.getNodeContainer(readerGroup.get(i)),
+                    new int[]{moveUIDist[0], moveUIDist[1] + i * READERS_VERTICAL_TRANSLATION});
+            }
+            if (readerGroup.size() > 1) {
+                int[] boundsFirstNode = tempParent.getNodeContainer(readerGroup.get(0)).getUIInformation().getBounds();
+
+                //group
+                CollapseIntoMetaNodeResult res =
+                    tempParent.collapseIntoMetaNode(readerGroup.toArray(new NodeID[readerGroup.size()]),
+                        new WorkflowAnnotation[0], READERS_METANODE_NAME);
+
+                //update ids
+                WorkflowManager readersMetanode =
+                    (WorkflowManager)tempParent.getNodeContainer(res.getCollapsedMetanodeID());
+                for (NodeID id : readerGroup) {
+                    NodeIDSuffix suffix = NodeIDSuffix.create(tempParent.getID(), id);
+                    addedPortObjectReaderNodes.remove(suffix);
+                    addedPortObjectReaderNodes
+                        .add(NodeIDSuffix.create(tempParent.getID(), suffix.prependParent(readersMetanode.getID())));
+                }
+                //move component
+                readersMetanode.setUIInformation(NodeUIInformation.builder(readersMetanode.getUIInformation())
+                    .setNodeLocation(boundsFirstNode[0], boundsFirstNode[1], boundsFirstNode[2], boundsFirstNode[3])
+                    .build());
+            }
         }
     }
 
@@ -287,6 +304,23 @@ public final class WorkflowCaptureOperation {
         return spec instanceof DataTableSpec ? (DataTableSpec)spec : null;
     }
 
+    private NodeUIInformation getSourceNodeAndUIInformation(final NodeID sourceNodeID, final NodeID destNodeID,
+        final List<NodeContainer> nodes) {
+        if (sourceNodeID.equals(m_wfm.getID())) {
+            // the 'node' is this workflow
+            // -> we don't have ui information (mainly position) available and choose a fixed position relative
+            // to the destination node
+            NodeUIInformation uiInfo = m_wfm.getNodeContainer(destNodeID).getUIInformation();
+            int[] bounds = uiInfo.getBounds();
+            return NodeUIInformation.builder(uiInfo).setNodeLocation(bounds[0] - READERS_VERTICAL_TRANSLATION,
+                bounds[1] - READERS_VERTICAL_TRANSLATION, bounds[2], bounds[3]).build();
+        } else {
+            NodeContainer node = m_wfm.getNodeContainer(sourceNodeID);
+            nodes.add(node);
+            return node.getUIInformation();
+        }
+    }
+
     /**
      * Helper to add 'port object reference reader nodes' that represent the port objects at the source of connections
      * that lead directly into the scope (i.e. not via the scope start, sort of static inputs).
@@ -303,21 +337,24 @@ public final class WorkflowCaptureOperation {
         NodeOutPort upstreamPort;
         int sourcePort = outConn.getSourcePort();
         NodeID sourceID = outConn.getSource();
-        NodeContainer sourceNode = srcWfm.getNodeContainer(sourceID);
+        NodeContainer sourceNode;
         if (sourceID.equals(srcWfm.getID())) {
             assert outConn.getType() == ConnectionType.WFMIN;
+            sourceNode = srcWfm;
             upstreamPort = srcWfm.getInPort(sourcePort).getUnderlyingPort();
         } else {
+            sourceNode = srcWfm.getNodeContainer(sourceID);
             upstreamPort = sourceNode.getOutPort(sourcePort);
         }
-        FlowVirtualScopeContext virtualScopeContext = getVirtualScopeContext(sourceNode, outConn.getSourcePort());
+
+        FlowVirtualScopeContext virtualScopeContext = getVirtualScopeContext(upstreamPort);
         if (sourceNode instanceof NativeNodeContainer
             && ((NativeNodeContainer)sourceNode).getNodeModel() instanceof PortObjectInNodeModel) {
             // it's already a reference reader, just copy the node
             WorkflowPersistor copy = srcWfm.copy(WorkflowCopyContent.builder().setNodeIDs(sourceNode.getID()).build());
             return newWfm.paste(copy).getNodeIDs()[0];
         } else if (virtualScopeContext != null && upstreamPort.getPortObject() != null) {
-            // the captured nodes are part of a 'virtual scope', i.e. nodes will be deleted after execution
+            // the 'static inputs' are part of a 'virtual scope', i.e. nodes will be deleted after execution
             // -> reference reader node can't reference a node port
             // -> port objects need to be put into the globally available port object repository
             if (!virtualScopeContext.getHostNode().isPresent()) {
@@ -360,25 +397,11 @@ public final class WorkflowCaptureOperation {
         }
     }
 
-    private static FlowVirtualScopeContext getVirtualScopeContext(final NodeContainer nc, final int portIdx) {
-        FlowVirtualScopeContext context;
-        if (nc instanceof SingleNodeContainer) {
-            context = nc.getFlowObjectStack().peek(FlowVirtualScopeContext.class);
-        } else if (nc instanceof WorkflowManager && portIdx >= 0) {
-            // get context from the node connected to the metanode output port from within the metanode
-            context = ((WorkflowManager)nc).getOutPort(portIdx).getConnectedNodeContainer().getFlowObjectStack()
-                .peek(FlowVirtualScopeContext.class);
-        } else {
-            context = null;
-        }
+    private static FlowVirtualScopeContext getVirtualScopeContext(final NodeOutPort outPort) {
+        return getVirtualScopeContext(outPort.getConnectedNodeContainer());
+    }
 
-        if (context != null || (nc instanceof WorkflowManager
-            && (((WorkflowManager)nc).isProject() || ((WorkflowManager)nc).isComponentProjectWFM()))) {
-            // context is given or we are already at the workflow root level
-            return context;
-        } else {
-            // if there is no virtual scope, recursively check the parent(s), too
-            return getVirtualScopeContext((NodeContainer)nc.getDirectNCParent(), -1);
-        }
+    private static FlowVirtualScopeContext getVirtualScopeContext(final SingleNodeContainer nc) {
+        return nc.getFlowObjectStack().peek(FlowVirtualScopeContext.class);
     }
 }
