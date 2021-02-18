@@ -57,16 +57,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.exec.dataexchange.PortObjectRepository;
 import org.knime.core.node.exec.dataexchange.in.PortObjectInNodeModel;
@@ -325,44 +320,44 @@ public final class WorkflowCaptureOperation {
             // the captured nodes are part of a 'virtual scope', i.e. nodes will be deleted after execution
             // -> reference reader node can't reference a node port
             // -> port objects need to be put into the globally available port object repository
-            PortObject po = upstreamPort.getPortObject();
-            AtomicReference<UUID> id = new AtomicReference<>(PortObjectRepository.getIDFor(po).orElse(null));
-            Consumer<Function<ExecutionContext, UUID>> portObjectIDCallback =
-                virtualScopeContext.getPortObjectIDCallback();
-            if (portObjectIDCallback == null) {
-                // fallback in case it's captured within the temporary metanode created by the Parallel Chunk Loop
-                // to be fixed with https://knime-com.atlassian.net/browse/AP-15877
-                logDataNotAvailableOutsideOfWorkflowWarning(sourceNode);
+            if (!virtualScopeContext.getHostNode().isPresent()) {
+                // fallback in case it's captured within the temporary metanode created by a node that is not
+                // properly registered with the virtual scope context
+                logDataNotAvailableOutsideOfWorkflowWarning(sourceNode, null);
                 return PortObjectRepository.addPortObjectReferenceReaderWithNodeReference(upstreamPort,
                     srcWfm.getProjectWFM().getID(), newWfm, sourceID.getIndex());
             }
-            if (id.get() == null) {
-                portObjectIDCallback.accept(exec -> {
-                    try {
-                        id.set(PortObjectRepository.addCopy(po, exec));
-                        return id.get();
-                    } catch (IOException | CanceledExecutionException ex) {
-                        // will be handled in the caller code
-                        throw new CompletionException(ex);
-                    }
-                });
+
+            PortObject po = upstreamPort.getPortObject();
+            UUID id = PortObjectRepository.getIDFor(po).orElse(null);
+            if (id == null) {
+                try {
+                    id = virtualScopeContext.addPortObjectToRepositoryAndHostNode(po);
+                } catch (IOException | CanceledExecutionException ex) {
+                    logDataNotAvailableOutsideOfWorkflowWarning(sourceNode, ex);
+                }
             }
-            return PortObjectRepository.addPortObjectReferenceReaderWithRepoReference(upstreamPort, id.get(), newWfm,
+            return PortObjectRepository.addPortObjectReferenceReaderWithRepoReference(upstreamPort, id, newWfm,
                 sourceID.getIndex());
         } else {
             if (virtualScopeContext == null && isCaptureScopePartOfVirtualScope) {
-                // to be fixed with https://knime-com.atlassian.net/browse/AP-15879
-                logDataNotAvailableOutsideOfWorkflowWarning(sourceNode);
+                logDataNotAvailableOutsideOfWorkflowWarning(sourceNode, null);
             }
             return PortObjectRepository.addPortObjectReferenceReaderWithNodeReference(upstreamPort,
                 srcWfm.getProjectWFM().getID(), newWfm, sourceID.getIndex());
         }
     }
 
-    private static void logDataNotAvailableOutsideOfWorkflowWarning(final NodeContainer dataProvidingNode) {
-        NodeLogger.getLogger(WorkflowCaptureOperation.class)
-            .warn("Data of ports reaching into the capture scope of node '" + dataProvidingNode.getNameWithID()
-                + "' will not be available outside of the workflow where it is captured");
+    private static void logDataNotAvailableOutsideOfWorkflowWarning(final NodeContainer dataProvidingNode,
+        final Exception e) {
+        String message = "Data of ports reaching into the capture scope of node '" + dataProvidingNode.getNameWithID()
+            + "' will not be available outside of the workflow where it is captured";
+        NodeLogger logger = NodeLogger.getLogger(WorkflowCaptureOperation.class);
+        if (e != null) {
+            logger.warn(message, e);
+        } else {
+            logger.warn(message);
+        }
     }
 
     private static FlowVirtualScopeContext getVirtualScopeContext(final NodeContainer nc, final int portIdx) {

@@ -123,6 +123,7 @@ import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
@@ -152,6 +153,7 @@ import org.knime.core.node.interactive.ReexecutionCallback;
 import org.knime.core.node.interactive.ViewContent;
 import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectHolder;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
@@ -189,6 +191,8 @@ import org.knime.core.node.workflow.capture.WorkflowSegment;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 import org.knime.core.node.workflow.execresult.WorkflowExecutionResult;
+import org.knime.core.node.workflow.virtual.AbstractVirtualWorkflowNodeModel;
+import org.knime.core.node.workflow.virtual.parchunk.FlowVirtualScopeContext;
 import org.knime.core.node.workflow.virtual.parchunk.ParallelizedChunkContent;
 import org.knime.core.node.workflow.virtual.parchunk.ParallelizedChunkContentMaster;
 import org.knime.core.node.workflow.virtual.parchunk.VirtualParallelizedChunkNodeInput;
@@ -3635,14 +3639,35 @@ public final class WorkflowManager extends NodeContainer
             }
             ParallelizedChunkContentMaster pccm =
                 new ParallelizedChunkContentMaster(subwfm, endNode, startNode.getNrRemoteChunks());
+            final NativeNodeContainer startNC;
+            if (subwfm != null && startNode instanceof AbstractVirtualWorkflowNodeModel) {
+                startNC = (NativeNodeContainer)getNodeContainer(startID);
+            } else {
+                startNC = null;
+            }
+
+            ExecutionContext exec = startNC != null ? startNC.createExecutionContext() : null;
             for (int i = 0; i < startNode.getNrRemoteChunks(); i++) {
                 ParallelizedChunkContent copiedNodes =
                     duplicateLoopBodyInSubWFMandAttach(subwfm, extInConnections, startID, endID, loopNodes, i);
+                if (startNC != null) {
+                    NativeNodeContainer virtualInNode =
+                        (NativeNodeContainer)subwfm.getNodeContainer(copiedNodes.getVirtualInputID());
+                    FlowVirtualScopeContext.registerHostNodeForPortObjectPersistence(startNC, virtualInNode, exec);
+                }
                 copiedNodes.executeChunk();
                 pccm.addParallelChunk(i, copiedNodes);
             }
             // make sure head knows his chunk master (for potential cleanup)
             startNode.setChunkMaster(pccm);
+
+            if (startNC != null && startNode instanceof PortObjectHolder) {
+                // register a callback with the start node; allows the start node to notify the framework
+                // that all the internally held port objects are now available (necessary in case they are available
+                // only after the start node execution is finished)
+                startNode.setNewInternalPortObjectNotifier(() -> startNC.getNode()
+                    .assignInternalHeldObjects(new PortObject[0], null, null, new PortObject[0]));
+            }
         }
     }
 

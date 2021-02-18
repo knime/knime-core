@@ -47,11 +47,22 @@
  */
 package org.knime.core.node.workflow;
 
+import org.knime.core.node.port.PortObjectHolder;
+import org.knime.core.node.workflow.virtual.AbstractVirtualWorkflowNodeModel;
+import org.knime.core.node.workflow.virtual.parchunk.FlowVirtualScopeContext;
 import org.knime.core.node.workflow.virtual.parchunk.ParallelizedChunkContentMaster;
 import org.knime.core.node.workflow.virtual.parchunk.VirtualParallelizedChunkNodeInput;
 
 /**
  * NO API!
+ *
+ * It is recommended that implementations also implement {@link AbstractVirtualWorkflowNodeModel} in order to work
+ * properly with nodes that (indirectly) use
+ * {@link FlowVirtualScopeContext#addPortObjectToRepositoryAndHostNode(org.knime.core.node.port.PortObject)} (e.g.
+ * Integrated Deployment).
+ *
+ * @noimplement This interface is not intended to be implemented by clients.
+ *
  * @author wiswedel, University of Konstanz
  */
 public interface LoopStartParallelizeNode extends LoopStartNode {
@@ -60,18 +71,29 @@ public interface LoopStartParallelizeNode extends LoopStartNode {
      * @param chunkIndex index
      * @return virtual input node for the given chunk
      */
-	public VirtualParallelizedChunkNodeInput getVirtualNodeInput(final int chunkIndex);
+	VirtualParallelizedChunkNodeInput getVirtualNodeInput(final int chunkIndex);
 
 	/**
 	 * @return overall number of remote chunks (excluding the one that is
 	 * processed by the node itself!)
 	 */
-    public int getNrRemoteChunks();
+    int getNrRemoteChunks();
 
     /** Set parallel chunk master so the start node has access to clean up
      * when reset.
      *
      * @param pccm matching @see{ParallelizedChunkContentMaster}
      */
-    public void setChunkMaster(final ParallelizedChunkContentMaster pccm);
+    void setChunkMaster(final ParallelizedChunkContentMaster pccm);
+
+    /**
+     * If the parallel loop start implements the {@link PortObjectHolder}-interface but the internally held port objects
+     * are only available after this node finished its execution, this method allows one to notify the framework that
+     * all the internally held port objects are now available. The framework then updates the port object references
+     * such that they are persisted as soon as the workflow is saved.
+     *
+     * @param notifier the callback to notify the framework that all internally held port objects are now available
+     */
+    void setNewInternalPortObjectNotifier(Runnable notifier);
+
 }
