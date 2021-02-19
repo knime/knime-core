@@ -161,7 +161,7 @@ public final class WorkflowCaptureOperation {
 
             // collect nodes outside the scope body but connected to the scope body (only incoming)
             Map<Pair<NodeID, Integer>, NodeID> visitedSrcPorts = new HashMap<>(); //maps to 'pasted' node id
-            boolean isCaptureScopePartOfVirtualScope = getVirtualScopeContext(m_startNode) != null;
+            boolean isCaptureScopePartOfVirtualScope = getVirtualScopeContext(m_startNode, -1) != null;
             for (int i = 0; i < allButScopeIDs.length; i++) {
                 NodeContainer oldNode = m_wfm.getNodeContainer(allButScopeIDs[i]);
                 for (int p = 0; p < oldNode.getNrInPorts(); p++) {
@@ -315,7 +315,7 @@ public final class WorkflowCaptureOperation {
         } else {
             upstreamPort = sourceNode.getOutPort(sourcePort);
         }
-        FlowVirtualScopeContext virtualScopeContext = getVirtualScopeContext(sourceNode);
+        FlowVirtualScopeContext virtualScopeContext = getVirtualScopeContext(sourceNode, outConn.getSourcePort());
         if (sourceNode instanceof NativeNodeContainer
             && ((NativeNodeContainer)sourceNode).getNodeModel() instanceof PortObjectInNodeModel) {
             // it's already a reference reader, just copy the node
@@ -365,15 +365,25 @@ public final class WorkflowCaptureOperation {
                 + "' will not be available outside of the workflow where it is captured");
     }
 
-    private static FlowVirtualScopeContext getVirtualScopeContext(final NodeContainer nc) {
-        FlowVirtualScopeContext context = nc.getFlowObjectStack().peek(FlowVirtualScopeContext.class);
+    private static FlowVirtualScopeContext getVirtualScopeContext(final NodeContainer nc, final int portIdx) {
+        FlowVirtualScopeContext context;
+        if (nc instanceof SingleNodeContainer) {
+            context = nc.getFlowObjectStack().peek(FlowVirtualScopeContext.class);
+        } else if (nc instanceof WorkflowManager && portIdx >= 0) {
+            // get context from the node connected to the metanode output port from within the metanode
+            context = ((WorkflowManager)nc).getOutPort(portIdx).getConnectedNodeContainer().getFlowObjectStack()
+                .peek(FlowVirtualScopeContext.class);
+        } else {
+            context = null;
+        }
+
         if (context != null || (nc instanceof WorkflowManager
             && (((WorkflowManager)nc).isProject() || ((WorkflowManager)nc).isComponentProjectWFM()))) {
             // context is given or we are already at the workflow root level
             return context;
         } else {
             // if there is no virtual scope, recursively check the parent(s), too
-            return getVirtualScopeContext((NodeContainer)nc.getDirectNCParent());
+            return getVirtualScopeContext((NodeContainer)nc.getDirectNCParent(), -1);
         }
     }
 }
