@@ -216,7 +216,7 @@ public class ConfigEditTreeRenderer extends DefaultTreeCellRenderer {
             }
 
             if (jv != null) {
-                return jv.getViewSize();
+                return new Dimension(-1,-1);
             }
         }
 
