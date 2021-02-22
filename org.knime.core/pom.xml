@@ -19,37 +19,6 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>xmlbeans-maven-plugin</artifactId>
-                <version>2.3.3</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>xmlbeans</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <schemaDirectory>src/eclipse/org/knime/core/node</schemaDirectory>
-                    <sourceSchemas>
-                        <sourceSchema>Node_v1.3.xsd</sourceSchema>
-                        <sourceSchema>Node_v2.10.xsd</sourceSchema>
-                        <sourceSchema>Node_v2.12.xsd</sourceSchema>
-                        <sourceSchema>Node_v2.7.xsd</sourceSchema>
-                        <sourceSchema>Node_v2.8.xsd</sourceSchema>
-                        <sourceSchema>Node_v3.1.xsd</sourceSchema>
-                        <sourceSchema>Node_v3.6.xsd</sourceSchema>
-                        <sourceSchema>Node_v4.1.xsd</sourceSchema>
-                    </sourceSchemas>
-                    <sourceGenerationDirectory>src/xmlbeans</sourceGenerationDirectory>
-                    <xmlConfigs>
-                        <xmlConfig implementation="java.io.File">src/eclipse/org/knime/core/node/node-description.xsdconfig</xmlConfig>
-                    </xmlConfigs>
-                    <outputJar>lib/schemas.jar</outputJar>
-                    <javaSource>1.5</javaSource>
-                </configuration>
-            </plugin>
-            <plugin>
                 <!-- This is required so that XMLBeans don't end up in the main Jar file, too. They are already
                      in lib/schemas.jar. -->
                 <groupId>org.apache.maven.plugins</groupId>

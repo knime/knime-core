@@ -19,26 +19,6 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>xmlbeans-maven-plugin</artifactId>
-                <version>2.3.3</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>xmlbeans</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <sourceGenerationDirectory>src/xmlbeans</sourceGenerationDirectory>
-                    <xmlConfigs>
-                        <xmlConfig implementation="java.io.File">src/main/xsd/pmml-4-2.xsdconfig</xmlConfig>
-                    </xmlConfigs>
-                    <outputJar>lib/schemas.jar</outputJar>
-                    <javaSource>1.5</javaSource>
-                </configuration>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
                 <version>3.1.0</version>
