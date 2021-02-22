@@ -58,6 +58,8 @@ import org.knime.core.data.collection.CellCollection;
 import org.knime.core.data.collection.DefaultBlobSupportDataCellIterator;
 import org.knime.core.data.container.BlobDataCell;
 import org.knime.core.data.container.BlobWrapperDataCell;
+import org.knime.core.data.container.BufferedTableBackend;
+import org.knime.core.node.workflow.WorkflowTableBackendSettings;
 
 /**
  * Abstract implementation of an adapter cell. An adapter cells allows to store several representation of an entity
@@ -354,16 +356,29 @@ public abstract class AdapterCell extends DataCell implements Cloneable, RWAdapt
         public DataCell put(final Class<? extends DataValue> key, final DataCell c) {
             DataCell wrapperCell;
             if (c instanceof BlobWrapperDataCell) {
-                wrapperCell = c;
+                wrapperCell = unwrapIfNeeded((BlobWrapperDataCell)c);
             } else if (c instanceof BlobDataCell) {
-                wrapperCell = new BlobWrapperDataCell((BlobDataCell)c);
+                wrapperCell = wrapIfNeeded((BlobDataCell)c);
             } else {
                 wrapperCell = c;
             }
             return super.put(key, wrapperCell);
         }
 
+        /*
+         * The following three methods are required to avoid creation of BlobWrapperDataCells in backends other than the default backend.
+         */
+        private static DataCell wrapIfNeeded(final BlobDataCell c) {
+            return isLegacyBackend() ? new BlobWrapperDataCell(c) : c;
+        }
 
+        private static DataCell unwrapIfNeeded(final BlobWrapperDataCell c) {
+            return isLegacyBackend() ? c.getCell() : c;
+        }
+
+        private static boolean isLegacyBackend() {
+            return WorkflowTableBackendSettings.getTableBackendForCurrentContext() instanceof BufferedTableBackend;
+        }
     }
 
 }
