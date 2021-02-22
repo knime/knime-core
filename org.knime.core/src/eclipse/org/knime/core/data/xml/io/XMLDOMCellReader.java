@@ -59,10 +59,6 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.apache.xerces.parsers.XMLGrammarCachingConfiguration;
-import org.knime.core.data.util.memory.MemoryAlert;
-import org.knime.core.data.util.memory.MemoryAlertListener;
-import org.knime.core.data.util.memory.MemoryAlertSystem;
 import org.knime.core.data.xml.XMLCellFactory;
 import org.knime.core.data.xml.XMLValue;
 import org.knime.core.node.KNIMEConstants;
@@ -93,8 +89,8 @@ class XMLDOMCellReader implements XMLCellReader {
         if (System.getProperty("org.apache.xerces.xni.parser.XMLParserConfiguration") == null) {
         	// setting this property makes all Xerces parsers use a grammar pool, see
         	// http://xerces.apache.org/xerces2-j/faq-grammars.html#faq-4
-            System.setProperty("org.apache.xerces.xni.parser.XMLParserConfiguration",
-                XMLGrammarCachingConfiguration.class.getName());
+//            System.setProperty("org.apache.xerces.xni.parser.XMLParserConfiguration",
+//                XMLGrammarCachingConfiguration.class.getName());
         }
         PARSER_FAC = DocumentBuilderFactory.newInstance();
 
@@ -109,19 +105,19 @@ class XMLDOMCellReader implements XMLCellReader {
                     + ex.getMessage(), ex);
         }
 
-        MemoryAlertSystem.getInstance().addListener(new MemoryAlertListener() {
-            private final XMLGrammarCachingConfiguration m_conf = new XMLGrammarCachingConfiguration();
-
-            @Override
-            protected boolean memoryAlert(final MemoryAlert alert) {
-                // all XMLGrammarCachingConfigurations use a shared static pool, therefore
-                // freeing this pool also frees the pool used by the parsers
-                NodeLogger.getLogger(XMLDOMCellReader.class)
-                    .debug("Clearing XML grammar cache due to low memory event");
-                m_conf.clearGrammarPool();
-                return false;
-            }
-        });
+//        MemoryAlertSystem.getInstance().addListener(new MemoryAlertListener() {
+//            private final XMLGrammarCachingConfiguration m_conf = new XMLGrammarCachingConfiguration();
+//
+//            @Override
+//            protected boolean memoryAlert(final MemoryAlert alert) {
+//                // all XMLGrammarCachingConfigurations use a shared static pool, therefore
+//                // freeing this pool also frees the pool used by the parsers
+//                NodeLogger.getLogger(XMLDOMCellReader.class)
+//                    .debug("Clearing XML grammar cache due to low memory event");
+//                m_conf.clearGrammarPool();
+//                return false;
+//            }
+//        });
     }
 
 
