@@ -148,7 +148,7 @@ public final class DefaultExtendablePortGroup implements ExtendablePortGroup {
     public void loadSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_configuredTypes.clear();
         @SuppressWarnings("unchecked")
-        Enumeration<NodeSettingsRO> children = settings.children();
+        Enumeration<NodeSettingsRO> children = (Enumeration<NodeSettingsRO>)settings.children();
         while (children.hasMoreElements()) {
             m_configuredTypes.add(PortType.load(children.nextElement()));
         }
