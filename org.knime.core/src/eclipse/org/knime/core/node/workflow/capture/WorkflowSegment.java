@@ -86,8 +86,8 @@ import org.knime.core.util.LockFailedException;
 import org.knime.core.util.VMFileLocker;
 
 /**
- * Represents a sub-workflow by keeping it's own {@link WorkflowManager}-instance - similar to {@link SubNodeContainer}. Unlike
- * the {@link SubNodeContainer}, a workflow fragment
+ * Represents a sub-workflow by keeping it's own {@link WorkflowManager}-instance - similar to {@link SubNodeContainer}.
+ * Unlike the {@link SubNodeContainer}, a workflow segment
  * <ul>
  * <li>is not part of the {@link NodeContainer} hierarchy</li>
  * <li>the input- and output ports a represented by {@link Port}-objects (instead of extra nodes within the same
@@ -98,13 +98,13 @@ import org.knime.core.util.VMFileLocker;
  * additional static input data (e.g. a decision tree model)</li>
  * </ul>
  *
- * Workflow fragment instances are returned by {@link WorkflowManager#createCaptureOperationFor(NodeID)}.
+ * Workflow segment instances are returned by {@link WorkflowManager#createCaptureOperationFor(NodeID)}.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  * @author Marc Bux, KNIME GmbH, Berlin, Germany
  * @since 4.2
  */
-public final class WorkflowFragment {
+public final class WorkflowSegment {
 
     //cached workflow manager
     private WorkflowManager m_wfm = null;
@@ -122,12 +122,12 @@ public final class WorkflowFragment {
     /**
      * Creates a new instance.
      *
-     * @param wfm the workflow manager representing the workflow fragment
-     * @param inputs workflow fragment's inputs
-     * @param outputs workflow fragment's outputs
+     * @param wfm the workflow manager representing the workflow segment
+     * @param inputs workflow segment's inputs
+     * @param outputs workflow segment's outputs
      * @param portObjectReferenceReaderNodes relative node ids of nodes that reference port objects in another workflow
      */
-    public WorkflowFragment(final WorkflowManager wfm, final List<Input> inputs, final List<Output> outputs,
+    public WorkflowSegment(final WorkflowManager wfm, final List<Input> inputs, final List<Output> outputs,
         final Set<NodeIDSuffix> portObjectReferenceReaderNodes) {
         m_wfm = wfm;
         m_name = wfm.getName();
@@ -137,7 +137,7 @@ public final class WorkflowFragment {
     }
 
     /**
-     * Constructor for de-serialization. Initializes the workflow fragment exclusively with metadata. The actual
+     * Constructor for de-serialization. Initializes the workflow segment exclusively with metadata. The actual
      * workflow data is subsequently loaded via {@link #loadWorkflowData(ZipInputStream)}.
      *
      * @param name
@@ -145,7 +145,7 @@ public final class WorkflowFragment {
      * @param outputs
      * @param portObjectReferenceReaderNodes
      */
-    WorkflowFragment(final String name, final List<Input> inputs, final List<Output> outputs,
+    WorkflowSegment(final String name, final List<Input> inputs, final List<Output> outputs,
         final Set<NodeIDSuffix> portObjectReferenceReaderNodes) {
         m_name = CheckUtils.checkArgumentNotNull(name);
         m_inputs = CheckUtils.checkArgumentNotNull(inputs);
@@ -154,20 +154,20 @@ public final class WorkflowFragment {
     }
 
     /**
-     * Loads the workflow representing the fragment.
+     * Loads the workflow representing the segment.
      *
      * Always call {@link #disposeWorkflow()} if the returned workflow manager is not needed anymore!
      *
      * This method (i.e. lazily loading the workflow) might become unnecessary in the future once the workflow manager
      * can be de-/serialized directly to/from a stream.
      *
-     * @return the workflow manager representing the fragment
+     * @return the workflow manager representing the segment
      */
     public WorkflowManager loadWorkflow() {
         if (m_wfm == null) {
             File tmpDir = null;
             try (ZipInputStream in = new ZipInputStream(new ByteArrayInputStream(m_wfmStream))) {
-                tmpDir = FileUtil.createTempDir("workflow_fragment");
+                tmpDir = FileUtil.createTempDir("workflow_segment");
                 FileUtil.unzip(in, tmpDir, 1);
                 WorkflowLoadHelper loadHelper =
                     new WorkflowLoadHelper(new WorkflowContext.Factory(tmpDir).createContext());
@@ -185,7 +185,7 @@ public final class WorkflowFragment {
     }
 
     /**
-     * Disposes the workflow manager cached by this fragment (either loaded via {@link #loadWorkflow()} or passed to the
+     * Disposes the workflow manager cached by this segment (either loaded via {@link #loadWorkflow()} or passed to the
      * constructor). Removes it from the workflow hierarchy and the local reference.
      */
     public void disposeWorkflow() {
@@ -196,12 +196,12 @@ public final class WorkflowFragment {
     }
 
     /**
-     * Disposes the workflow manager cached by this fragment (either loaded via {@link #loadWorkflow()} or passed to the
+     * Disposes the workflow manager cached by this segment (either loaded via {@link #loadWorkflow()} or passed to the
      * constructor). Removes it from the workflow hierarchy and the local reference.
      *
      * If not already done, also serializes the workflow to the internally kept byte stream for later retrieval.
      *
-     * This method only needs to be called if the {@link WorkflowFragment} has been initialized with a new
+     * This method only needs to be called if the {@link WorkflowSegment} has been initialized with a new
      * {@link WorkflowManager}. In all other cases {@link #disposeWorkflow()} is sufficient.
      *
      * @throws IOException thrown if persisting the workflow to the internal in-memory byte stream failed
@@ -214,7 +214,7 @@ public final class WorkflowFragment {
     }
 
     private static byte[] wfmToStream(final WorkflowManager wfm) throws IOException {
-        File tmpDir = FileUtil.createTempDir("workflow_fragment");
+        File tmpDir = FileUtil.createTempDir("workflow_segment");
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ZipOutputStream out = new ZipOutputStream(bos);) {
             WorkflowSaveHelper saveHelper = new WorkflowSaveHelper(false, false);
             wfm.save(tmpDir, saveHelper, new ExecutionMonitor());
@@ -250,7 +250,7 @@ public final class WorkflowFragment {
             if (m_wfm == null) {
                 //only happens if WorkflowFragment is instantiated with a WorkflowManager
                 //and #disposeWorkflow() is called before #save(...)
-                throw new IllegalStateException("Can't save workflow fragment. Workflow has been disposed already.");
+                throw new IllegalStateException("Can't save workflow segment. Workflow has been disposed already.");
             }
             m_wfmStream = wfmToStream(m_wfm);
         }
@@ -260,7 +260,7 @@ public final class WorkflowFragment {
     }
 
     /**
-     * @return the workflow name as stored with the fragment's metadata
+     * @return the workflow name as stored with the segment's metadata
      */
     String getName() {
         return m_name;
@@ -274,7 +274,7 @@ public final class WorkflowFragment {
     }
 
     /**
-     * @return workflow fragment's inputs that are connected to at least one node (in the order of the capture node
+     * @return workflow segment's inputs that are connected to at least one node (in the order of the capture node
      *         start ports)
      */
     public List<Input> getConnectedInputs() {
@@ -282,7 +282,7 @@ public final class WorkflowFragment {
     }
 
     /**
-     * @return workflow fragment's output ports that are connected to a node (in the order of the capture node end
+     * @return workflow segment's output ports that are connected to a node (in the order of the capture node end
      *         ports)
      */
     public List<Output> getConnectedOutputs() {
@@ -290,7 +290,7 @@ public final class WorkflowFragment {
     }
 
     /**
-     * Represents a input/output in a workflow fragment enriched with some additional information.
+     * Represents a input/output in a workflow segment enriched with some additional information.
      */
     public abstract static class IOInfo {
 
@@ -328,7 +328,7 @@ public final class WorkflowFragment {
     }
 
     /**
-     * Represents an input of a workflow fragment.
+     * Represents an input of a workflow segment.
      */
     public static final class Input extends IOInfo {
 
@@ -354,7 +354,7 @@ public final class WorkflowFragment {
         }
 
         /**
-         * @return whether the fragment input is connected to at least one node port
+         * @return whether the segment input is connected to at least one node port
          */
         public boolean isConnected() {
             return !m_connectedPorts.isEmpty();
@@ -362,7 +362,7 @@ public final class WorkflowFragment {
     }
 
     /**
-     * Represents an output of a workflow fragment.
+     * Represents an output of a workflow segment.
      */
     public static final class Output extends IOInfo {
 
@@ -387,7 +387,7 @@ public final class WorkflowFragment {
         }
 
         /**
-         * @return whether a node port is connected to the fragment output
+         * @return whether a node port is connected to the segment output
          */
         public boolean isConnected() {
             return m_connectedPort != null;
@@ -395,7 +395,7 @@ public final class WorkflowFragment {
     }
 
     /**
-     * References/marks ports in the workflow fragment by node id suffix and port index.
+     * References/marks ports in the workflow segment by node id suffix and port index.
      */
     public static final class PortID {
 

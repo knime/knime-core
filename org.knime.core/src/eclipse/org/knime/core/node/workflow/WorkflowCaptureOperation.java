@@ -77,10 +77,10 @@ import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.ConnectionContainer.ConnectionType;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.action.CollapseIntoMetaNodeResult;
-import org.knime.core.node.workflow.capture.WorkflowFragment;
-import org.knime.core.node.workflow.capture.WorkflowFragment.Input;
-import org.knime.core.node.workflow.capture.WorkflowFragment.Output;
-import org.knime.core.node.workflow.capture.WorkflowFragment.PortID;
+import org.knime.core.node.workflow.capture.WorkflowSegment;
+import org.knime.core.node.workflow.capture.WorkflowSegment.Input;
+import org.knime.core.node.workflow.capture.WorkflowSegment.Output;
+import org.knime.core.node.workflow.capture.WorkflowSegment.PortID;
 import org.knime.core.node.workflow.virtual.parchunk.FlowVirtualScopeContext;
 import org.knime.core.util.Pair;
 
@@ -126,11 +126,11 @@ public final class WorkflowCaptureOperation {
     }
 
     /**
-     * Carries out the actual capture-operation and returns the captured sub-workflow as a {@link WorkflowFragment}.
+     * Carries out the actual capture-operation and returns the captured sub-workflow as a {@link WorkflowSegment}.
      *
      * @return the captured sub-workflow
      */
-    public WorkflowFragment capture() {
+    public WorkflowSegment capture() {
         WorkflowManager tempParent = null;
         try (WorkflowLock lock = m_wfm.lock()) {
             NodeID endNodeID = m_endNode.getID();
@@ -235,7 +235,7 @@ public final class WorkflowCaptureOperation {
             List<Input> workflowFragmentInputs = getInputs();
             List<Output> workflowFragmentOutputs = getOutputs();
 
-            return new WorkflowFragment(tempParent, workflowFragmentInputs, workflowFragmentOutputs,
+            return new WorkflowSegment(tempParent, workflowFragmentInputs, workflowFragmentOutputs,
                 addedPortObjectReaderNodes);
         } catch (Exception e) {
             if (tempParent != null) {
@@ -248,7 +248,7 @@ public final class WorkflowCaptureOperation {
 
     /**
      * Returns the input of the (to be) captured sub-workflow, i.e. the same ports {@link #capture()} with a
-     * subsequent {@link WorkflowFragment#getConnectedInputs()} would return.
+     * subsequent {@link WorkflowSegment#getConnectedInputs()} would return.
      *
      * @return the inputs of the (to be) captured workflow fragment
      */
@@ -266,7 +266,7 @@ public final class WorkflowCaptureOperation {
 
     /**
      * Returns the outputs of the (to be) captured sub-workflow, i.e. the same ports {@link #capture()} with a
-     * subsequent {@link WorkflowFragment#getConnectedOutputs()} would return.
+     * subsequent {@link WorkflowSegment#getConnectedOutputs()} would return.
      *
      * @return the outputs of the (to be) captured workflow fragment
      */

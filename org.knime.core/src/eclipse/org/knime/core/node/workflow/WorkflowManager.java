@@ -185,7 +185,7 @@ import org.knime.core.node.workflow.action.InteractiveWebViewsResult;
 import org.knime.core.node.workflow.action.MetaNodeToSubNodeResult;
 import org.knime.core.node.workflow.action.ReplaceNodeResult;
 import org.knime.core.node.workflow.action.SubNodeToMetaNodeResult;
-import org.knime.core.node.workflow.capture.WorkflowFragment;
+import org.knime.core.node.workflow.capture.WorkflowSegment;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 import org.knime.core.node.workflow.execresult.WorkflowExecutionResult;
@@ -3680,7 +3680,7 @@ public final class WorkflowManager extends NodeContainer
      *
      * @param endNodeID the node id that must represent a {@link CaptureWorkflowEndNode}
      *
-     * @return a {@link WorkflowFragment} that represents the captured part
+     * @return a {@link WorkflowSegment} that represents the captured part
      * @throws IllegalScopeException
      * @throws IllegalArgumentException if the given node id doesn't represent a 'capture workflow end node' or the
      *             respective 'capture workflow start node' is missing
@@ -9271,7 +9271,7 @@ public final class WorkflowManager extends NodeContainer
      * user's view). Only applicable if the workflow manager doesn't have any inputs nor outputs, if it's not part of a
      * component (i.e. needs to be a metanode) and if it's not a project workflow manager.
      *
-     * One use case is a node that executes captured fragments ({@link WorkflowFragment}) within the same workflow
+     * One use case is a node that executes captured fragments ({@link WorkflowSegment}) within the same workflow
      * again. The to be executed fragment is copied into a temporary metanode for execution and can be hidden from the
      * user.
      *

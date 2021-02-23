@@ -106,7 +106,7 @@ public class WorkflowPortObject extends AbstractPortObject {
     }
 
     /**
-     * Creates a new port object from a {@link WorkflowFragment}.
+     * Creates a new port object from a {@link WorkflowSegment}.
      *
      * @param spec
      */
@@ -115,7 +115,7 @@ public class WorkflowPortObject extends AbstractPortObject {
     }
 
     /**
-     * Creates a new port object from a {@link WorkflowFragment} plus input data.
+     * Creates a new port object from a {@link WorkflowSegment} plus input data.
      *
      * @param spec the spec
      * @param inputData input data mapped to inputs (by id) of the workflow fragment
@@ -209,7 +209,7 @@ public class WorkflowPortObject extends AbstractPortObject {
 
     @Override
     public String getSummary() {
-        return getSpec().getWorkflowFragment().getName();
+        return getSpec().getWorkflowSegment().getName();
     }
 
     @Override
