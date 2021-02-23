@@ -73,6 +73,8 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortUtil;
 import org.knime.core.node.workflow.FlowVariable;
+import org.knime.core.node.workflow.FlowVariable.Scope;
+import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.FileUtil;
@@ -115,8 +117,17 @@ public final class PortObjectInNodeModel extends NodeModel {
 
     /** Push flow variables onto stack. */
     private void pushFlowVariables() {
-        for (FlowVariable fv : m_portObjectIDSettings.getFlowVariables()) {
-            Node.invokePushFlowVariable(this, fv);
+        if (m_portObjectIDSettings.getReferenceType() == ReferenceType.NODE) {
+            // if a node is referenced we can just take and clone the flow variables of that node
+            // (by that, e.g., passwords of credential flow variables don't get lost)
+            NodeContainer nc = getReferencedNode();
+            nc.getOutPort(m_portObjectIDSettings.getPortIdx()).getFlowObjectStack().getAllAvailableFlowVariables()
+                .values().stream().filter(f -> f.getScope() == Scope.Flow)
+                .forEach(v -> Node.invokePushFlowVariable(this, v.withNewName(v.getName())));
+        } else {
+            for (FlowVariable fv : m_portObjectIDSettings.getFlowVariables()) {
+                Node.invokePushFlowVariable(this, fv);
+            }
         }
     }
 
@@ -132,13 +143,7 @@ public final class PortObjectInNodeModel extends NodeModel {
         throws IOException, CanceledExecutionException, URISyntaxException {
         switch (m_portObjectIDSettings.getReferenceType()) {
             case NODE:
-                WorkflowManager wfm = NodeContext.getContext().getWorkflowManager();
-                if (wfm != null) {
-                    return wfm.findNodeContainer(m_portObjectIDSettings.getNodeIDSuffix().prependParent(wfm.getID()))
-                        .getOutPort(m_portObjectIDSettings.getPortIdx()).getPortObject();
-                } else {
-                    throw new IllegalStateException("Not a local workflow");
-                }
+                return getReferencedNode().getOutPort(m_portObjectIDSettings.getPortIdx()).getPortObject();
             case FILE:
                 return readPOFromURI(exec);
             case REPOSITORY:
@@ -151,6 +156,15 @@ public final class PortObjectInNodeModel extends NodeModel {
                 PortObject cloneOrSelf =
                     m_portObjectIDSettings.isCopyData() ? PortObjectRepository.copy(obj, exec, exec) : obj;
                 return cloneOrSelf;
+        }
+    }
+
+    private NodeContainer getReferencedNode() {
+        WorkflowManager wfm = NodeContext.getContext().getWorkflowManager();
+        if (wfm != null) {
+            return wfm.findNodeContainer(m_portObjectIDSettings.getNodeIDSuffix().prependParent(wfm.getID()));
+        } else {
+            throw new IllegalStateException("Not a local workflow");
         }
     }
 
