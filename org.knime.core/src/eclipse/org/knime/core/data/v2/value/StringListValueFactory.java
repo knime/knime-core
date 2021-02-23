@@ -74,7 +74,13 @@ public final class StringListValueFactory extends ObjectListValueFactory<String>
     /** A stateless instance of {@link StringListValueFactory} */
     public static final StringListValueFactory INSTANCE = new StringListValueFactory();
 
-    private StringListValueFactory() {
+    /**
+     * This constructor is not intended to be called directly. Use the stateless instance
+     * {@link StringListValueFactory#INSTANCE}.
+     *
+     * @noreference This constructor is not intended to be referenced by clients.
+     */
+    public StringListValueFactory() {
         super(StringValueFactory.INSTANCE);
     }
 
