@@ -81,7 +81,13 @@ public final class StringSparseListValueFactory extends ObjectSparseListValueFac
     /** A stateless instance of {@link StringSparseListValueFactory} */
     public static final StringSparseListValueFactory INSTANCE = new StringSparseListValueFactory();
 
-    private StringSparseListValueFactory() {
+    /**
+     * This constructor is not intended to be called directly. Use the stateless instance
+     * {@link StringSparseListValueFactory#INSTANCE}.
+     *
+     * @noreference This constructor is not intended to be referenced by clients.
+     */
+    public StringSparseListValueFactory() {
         super(StringValueFactory.INSTANCE);
     }
 

@@ -65,7 +65,13 @@ public final class StringSetValueFactory extends ObjectSetValueFactory<String> {
     /** A stateless instance of {@link StringSetValueFactory} */
     public static final StringSetValueFactory INSTANCE = new StringSetValueFactory();
 
-    private StringSetValueFactory() {
+    /**
+     * This constructor is not intended to be called directly. Use the stateless instance
+     * {@link StringSetValueFactory#INSTANCE}.
+     *
+     * @noreference This constructor is not intended to be referenced by clients.
+     */
+    public StringSetValueFactory() {
         super(StringListValueFactory.INSTANCE);
     }
 }
