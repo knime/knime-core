@@ -28,8 +28,9 @@ final class DataCellObjectSerializer implements ObjectSerializer<DataCell> {
 
     @Override
     public DataCell deserialize(final DataInput input) throws IOException {
-        final DataCellDataInputDelegator stream = new DataCellDataInputDelegator(m_factory, m_dataRepository, input);
-        return stream.readDataCell();
+        try (DataCellDataInputDelegator stream = new DataCellDataInputDelegator(m_factory, m_dataRepository, input)) {
+            return stream.readDataCell();
+        }
     }
 
     @Override

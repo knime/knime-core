@@ -87,7 +87,7 @@ public final class VoidRowKeyFactory implements RowKeyValueFactory<ReadAccess, W
     }
 
     private static final class VoidRowKeyReadValue implements RowKeyReadValue {
-        private final static VoidRowKeyReadValue READ_VALUE_INSTANCE = new VoidRowKeyReadValue();
+        private static final VoidRowKeyReadValue READ_VALUE_INSTANCE = new VoidRowKeyReadValue();
 
         @Override
         public StringCell getDataCell() {
@@ -101,18 +101,21 @@ public final class VoidRowKeyFactory implements RowKeyValueFactory<ReadAccess, W
     }
 
     private static final class VoidRowKeyWriteValue implements RowKeyWriteValue {
-        private final static VoidRowKeyWriteValue WRITE_VALUE_INSTANCE = new VoidRowKeyWriteValue();
+        private static final VoidRowKeyWriteValue WRITE_VALUE_INSTANCE = new VoidRowKeyWriteValue();
 
         @Override
         public void setRowKey(final String key) {
+            // NOOP (void value)
         }
 
         @Override
         public void setRowKey(final RowKeyValue key) {
+            // NOOP (void value)
         }
 
         @Override
         public void setValue(final RowKeyReadValue value) {
+            // NOOP (void value)
         }
     }
 

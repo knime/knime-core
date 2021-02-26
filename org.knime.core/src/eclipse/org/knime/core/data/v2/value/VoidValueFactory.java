@@ -90,8 +90,8 @@ public final class VoidValueFactory implements ValueFactory<ReadAccess, WriteAcc
     }
 
     private static final class VoidReadValue implements ReadValue {
-        private final static VoidReadValue READ_VALUE_INSTANCE = new VoidReadValue();
-        private final static DataCell MISSING_INSTANCE = DataType.getMissingCell();
+        private static final VoidReadValue READ_VALUE_INSTANCE = new VoidReadValue();
+        private static final DataCell MISSING_INSTANCE = DataType.getMissingCell();
 
         @Override
         public DataCell getDataCell() {
@@ -100,10 +100,11 @@ public final class VoidValueFactory implements ValueFactory<ReadAccess, WriteAcc
     }
 
     private static final class VoidWriteValue implements WriteValue<DataValue> {
-        private final static VoidWriteValue WRITE_VALUE_INSTANCE = new VoidWriteValue();
+        private static final VoidWriteValue WRITE_VALUE_INSTANCE = new VoidWriteValue();
 
         @Override
         public void setValue(final DataValue value) {
+            // NOOP (void value)
         }
     }
 
