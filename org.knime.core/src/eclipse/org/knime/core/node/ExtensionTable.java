@@ -305,4 +305,5 @@ public abstract class ExtensionTable implements ContainerTable {
 
     }
 
+    public abstract File getFile();
 }

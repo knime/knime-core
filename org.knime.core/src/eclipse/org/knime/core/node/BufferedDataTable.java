@@ -285,7 +285,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
      * more efficiently by individual node implementations.
      * @return underlying table.
      */
-    /*package*/ KnowsRowCountTable getDelegate() {
+    public KnowsRowCountTable getDelegate() {
         return m_delegate;
     }
 
