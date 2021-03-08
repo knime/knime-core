@@ -125,7 +125,10 @@ final class VirtualSubNodeOutputNodeDialogPane extends NodeDialogPane {
 
         gbc.gridwidth = 2;
         gbc.weighty = 0;
-        result.add(new JLabel("Choose variables from workflow to be visible outside the Component"), gbc);
+		result.add(new JLabel("<html><body><center>" //
+				+ "<p>Choose variables from workflow to be visible outside the Component</p>" //
+				+ "<p>Note that the selection is populated to all output ports</p>" //
+				+ "</center></body></html>"), gbc);
 
         gbc.gridy += 1;
         gbc.weighty = 1.0;
