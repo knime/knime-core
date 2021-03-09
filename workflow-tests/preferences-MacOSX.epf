@@ -1,0 +1,7 @@
+@org.knime.workbench.core=2.10.0.0043156
+\!/=
+file_export_version=3.0
+/instance/org.knime.python2/pythonEnvironmentType=conda
+/instance/org.knime.python2/condaDirectoryPath=/Users/jenkins/miniconda3
+/instance/org.knime.python2/python2CondaEnvironmentDirectoryPath=/Users/jenkins/miniconda3/envs/py2_knime43
+/instance/org.knime.python2/python3CondaEnvironmentDirectoryPath=/Users/jenkins/miniconda3/envs/py3_knime43
