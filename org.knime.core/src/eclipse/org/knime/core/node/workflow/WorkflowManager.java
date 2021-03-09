@@ -4817,7 +4817,11 @@ public final class WorkflowManager extends NodeContainer
         }
     }
 
-    boolean canResetNode(final NodeID nodeID, final Predicate<NodeID> hasSuccessorsInProgress) {
+    /**
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    @SuppressWarnings("javadoc")
+    public boolean canResetNode(final NodeID nodeID, final Predicate<NodeID> hasSuccessorsInProgress) {
         try (WorkflowLock lock = lock()) {
             NodeContainer nc = m_workflow.getNode(nodeID);
             if (nc == null) {
@@ -4867,8 +4871,10 @@ public final class WorkflowManager extends NodeContainer
      *
      * @param nodeID id of node
      * @return true if at least one successors is currently in progress.
+     *
+     * @noreference This method is not intended to be referenced by clients.
      */
-    boolean hasSuccessorInProgress(final NodeID nodeID) {
+    public boolean hasSuccessorInProgress(final NodeID nodeID) {
         assert m_workflowLock.isHeldByCurrentThread();
         if (this.getID().equals(nodeID)) { // we are talking about this WFM
             return getParent().hasSuccessorInProgress(nodeID);
@@ -5262,7 +5268,11 @@ public final class WorkflowManager extends NodeContainer
         return canExecuteNode(nodeID, this::hasExecutablePredecessor);
     }
 
-    boolean canExecuteNode(final NodeID nodeID, final Predicate<NodeID> hasExecutablePredecessors) {
+    /**
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    @SuppressWarnings("javadoc")
+    public boolean canExecuteNode(final NodeID nodeID, final Predicate<NodeID> hasExecutablePredecessors) {
         try (WorkflowLock lock = lock()) {
             NodeContainer nc = m_workflow.getNode(nodeID);
             if (nc == null) {
@@ -5277,41 +5287,15 @@ public final class WorkflowManager extends NodeContainer
         }
     }
 
-    private DependentNodeProperties m_dependentNodeProperties = null;
-
-    /**
-     * This method serves to speed up the calls of the {@link #canExecuteNode(NodeID)} and {@link #canResetNode(NodeID)}
-     * methods, if intended to be called for many (usually all) nodes that are contained in this workflow.
-     *
-     * Explanation: The mentioned methods require to determine the 'executable predecessors' or 'executing successors'
-     * which is normally done every time they are called. However, if this method is used beforehand, the 'executable
-     * predecessors' and 'executing successors' are determined in one go for all nodes.
-     *
-     * @return the {@link DependentNodeProperties} object which contains the pre-calculated can-reset and can-execute
-     *         predicates. NOT automatically kept in sync with the workflow. This method needs to be called again to
-     *         update the predicates.
-     *
-     * @noreference This method is not intended to be referenced by clients.
-     *
-     * @since 4.3
-     */
-    public DependentNodeProperties determineDependentNodeProperties() {
-        try (WorkflowLock lock = lock()) {
-            if (m_dependentNodeProperties == null) {
-                m_dependentNodeProperties = new DependentNodeProperties(this);
-            }
-            m_dependentNodeProperties.update();
-            return m_dependentNodeProperties;
-        }
-    }
-
     /**
      * Test if any of the predecessors of the given node is executable (=configured).
      *
      * @param nodeID id of node
      * @return true if at least one predecessor can be executed.
+     *
+     * @noreference This method is not intended to be referenced by clients.
      */
-    boolean hasExecutablePredecessor(final NodeID nodeID) {
+    public boolean hasExecutablePredecessor(final NodeID nodeID) {
         assert m_workflowLock.isHeldByCurrentThread();
         if (this.getID().equals(nodeID)) { // we are talking about this WFM
             return getParent().hasExecutablePredecessor(nodeID);

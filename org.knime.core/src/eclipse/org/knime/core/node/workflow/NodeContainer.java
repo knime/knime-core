@@ -341,6 +341,8 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
      *
      * Pending API! Do not use!
      *
+     * Logic will be obsolete once the eclipse-gef-based workflow editor is not supported anymore.
+     *
      * @since 4.1
      * @throws IllegalStateException if this node container is neither a workflow project nor a component project
      * @noreference This method is not intended to be referenced by clients.
@@ -381,6 +383,8 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
      *
      * Pending API! Do not use!
      *
+     * Logic will be obsolete once the eclipse-gef-based workflow editor is not supported anymore.
+     *
      * @return the changes tracker or an empty optional if not available
      *
      * @since 4.1
@@ -395,6 +399,8 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
      * (in case of workflow managers).
      *
      * Pending API! Do not use!
+     *
+     * Logic will be obsolete once the eclipse-gef-based workflow editor is not supported anymore.
      *
      * @return representation of tracked changes, if available
      * @since 4.1

@@ -55,6 +55,8 @@ import org.knime.core.node.workflow.NodeContainer;
  *
  * Pending API! Do not use!
  *
+ * Logic will be obsolete once the eclipse-gef-based workflow editor is not supported anymore.
+ *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  * @since 4.1
  * @noreference This class is not intended to be referenced by clients.
