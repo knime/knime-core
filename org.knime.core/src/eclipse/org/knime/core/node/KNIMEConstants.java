@@ -420,7 +420,7 @@ public final class KNIMEConstants {
 
 
     static {
-        BUILD_DATE = "March 08, 2021";
+        BUILD_DATE = "Nightly build";
         String versionString;
         Bundle coreBundle = OSGIHelper.getBundle("org.knime.core");
         if (coreBundle != null) {
