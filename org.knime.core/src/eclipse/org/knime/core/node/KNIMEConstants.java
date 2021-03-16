@@ -328,6 +328,48 @@ public final class KNIMEConstants {
     // added with AP-15442
     public static final String PROPERTY_WEAK_PASSWORDS_IN_SETTINGS_FORBIDDEN = "knime.settings.passwords.forbidden";
 
+    /**
+     * If <code>true</code> (default <code>false</code>), user input/data in view/wizard page will be sanitized for
+     * potential vulnerabilities before rendering in the browser. The default sanitization behavior can be overridden
+     * with the additional sanitize properties. These additional properties have no effect if this property is
+     * <code>false</code> or empty (default).
+     *
+     * @since 4.4 (AP-16130)
+     */
+    public static final String PROPERTY_SANITIZE_CLIENT_HTML = "knime.settings.sanitize.clientHTML";
+
+    /**
+     * A comma separated list of node names (as seen in the node description; e.g. "Table View") to exclude from
+     * sanitization before being transferred to the client. Default is empty; thereby sanitizing all node data.
+     *
+     * @since 4.4 (AP-16130)
+     */
+    public static final String PROPERTY_SANITIZE_ALLOW_NODES = "knime.settings.sanitize.allowNodes";
+
+    /**
+     * A comma separated list of valid HTML element tags which should be allowed in the sanitized data. Any non-empty
+     * value overrides the default element policy defined by OWASP.
+     *
+     * @since 4.4 (AP-16130)
+     */
+    public static final String PROPERTY_SANITIZE_ALLOW_ELEM = "knime.settings.sanitize.allowElements";
+
+    /**
+     * A comma separated list of valid HTML attribute tags which should be allowed in the sanitized data. Any non-empty
+     * value overrides the default attribute policy defined by OWASP.
+     *
+     * @since 4.4 (AP-16130)
+     */
+    public static final String PROPERTY_SANITIZE_ALLOW_ATTR = "knime.settings.sanitize.allowAttributes";
+
+    /**
+     * If <code>false</code> (default <code>true</code>), all CSS styles will be removed from the final HTML sent to the
+     * client. Otherwise, CSS styles are allowed as defined by the default OWASP policy.
+     *
+     * @since 4.4 (AP-16130)
+     */
+    public static final String PROPERTY_SANITIZE_ALLOW_CSS = "knime.settings.sanitize.allowCSS";
+
     /** @deprecated Use #PROPERTY_DATABASE_FETCHSIZE instead. */
     @Deprecated
     // obsolete as of v2.3
