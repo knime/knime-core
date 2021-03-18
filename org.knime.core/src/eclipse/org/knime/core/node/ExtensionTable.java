@@ -304,6 +304,4 @@ public abstract class ExtensionTable implements ContainerTable {
         return ExtensionTableRegistry.getInstance().loadExtensionTable(context, tableImpl);
 
     }
-
-    public abstract File getFile();
 }
