@@ -1627,7 +1627,12 @@ public abstract class NodeModel implements ViewableModel {
     /** Informs WorkflowManager if the nodes inside the loop (= the loop
      * body) have to be reset &amp; configured inbetween iterations. Default
      * behavior is to reset/configure everytime.
+     * @deprecated As of 4.4 the ability to re-run a loop without prior reset of the loop body is
+     * discouraged and will be removed in future versions of KNIME.
      */
+    @Deprecated
+    // as of today, 2021-03-20, there is no implementation in KNIME that makes use of this property.
+    // property got originally added as part of an 'streaming' experiment in the early days of KNIME
     protected boolean resetAndConfigureLoopBody() {
         return true;
     }

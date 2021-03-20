@@ -2782,8 +2782,12 @@ public final class Node implements NodeModelWarningListener {
     public boolean resetAndConfigureLoopBody() {
         LOGGER.assertLog(NodeContext.getContext() != null,
                 "No node context available, please check call hierarchy and fix it");
-
-        return getNodeModel().resetAndConfigureLoopBody();
+        boolean result = getNodeModel().resetAndConfigureLoopBody();
+        if (!result) {
+            LOGGER.coding("As of 4.4 the ability to re-run a loop without prior reset of the loop body is" +
+                    "discouraged and will be removed in future versions of KNIME Analytics Platform.");
+        }
+        return result;
     }
 
 
