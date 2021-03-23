@@ -3227,8 +3227,7 @@ public final class WorkflowManager extends NodeContainer
                         assert ((NativeNodeContainer)headNode).getNode().getNodeModel()
                             .equals(nnc.getNode().getScopeStartNode(ScopeStartNode.class).orElse(null));
                     } else if (nnc.isModelCompatibleTo(LoopStartNode.class)) {
-                        nnc.getNode().getOutgoingFlowObjectStack().push(new InnerFlowLoopContext());
-                        //                    nnc.getNode().getFlowObjectStack().push(new InnerFlowLoopContext());
+                        pushFlowContextForLoopIteration(nnc);
                     } else {
                         // or not if it's any other type of node
                         nnc.getNode().setScopeStartNode(null);
@@ -3238,6 +3237,28 @@ public final class WorkflowManager extends NodeContainer
             }
             nc.performStateTransitionEXECUTING();
             lock.queueCheckForNodeStateChangeNotification(true);
+        }
+    }
+
+    /**
+     * Prepare stack of a node, which is a loop start node, prior execution. Pushes {@link InnerFlowLoopContext}
+     * and also feeds back loop variables if {@link LoopEndNode#shouldPropagateModifiedVariables()} is set.
+     *
+     * @param startNNC start node.
+     */
+    private void pushFlowContextForLoopIteration(final NativeNodeContainer startNNC) {
+        Node node = startNNC.getNode();
+        assert node.getNodeModel() instanceof LoopStartNode : "Must be a loop start node: " + startNNC.getNameWithID();
+        FlowObjectStack outStack = node.getOutgoingFlowObjectStack();
+        outStack.push(new InnerFlowLoopContext());
+        FlowLoopContext loopContext = outStack.peek(FlowLoopContext.class);
+        if (loopContext.getIterationIndex() > 0) {
+            NativeNodeContainer endNNC = getNodeContainer(loopContext.getTailNode(), NativeNodeContainer.class, true);
+            LoopEndNode loopEnd = (LoopEndNode)endNNC.getNodeModel();
+            if (loopEnd.shouldPropagateModifiedVariables()) {
+                startNNC.getOutgoingFlowObjectStack().pushVariablesWhoseValueDiffer(
+                    startNNC.getFlowObjectStack(), endNNC.getFlowObjectStack());
+            }
         }
     }
 

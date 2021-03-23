@@ -47,6 +47,16 @@
  */
 package org.knime.core.node.workflow;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+
+import org.knime.core.node.Node;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.util.CheckUtils;
+
 /**
  * Complement to @see{LoopStartNode}.
  *
@@ -60,6 +70,118 @@ public interface LoopEndNode extends ScopeEndNode<FlowLoopContext> {
     @Override
     default Class<FlowLoopContext> getFlowScopeContextClass() {
         return FlowLoopContext.class;
+    }
+
+    /**
+     * Specifies whether a loop (start and end) should do special treatment of modified variables. This includes:
+     * <ul>
+     * <li>loop start node to propagate modifications of variables in subsequent loop iterations</li>
+     * <li>loop end node to propagate modifications of 'out-of-scope' variables to its output</li>
+     * </ul>
+     * This property was added in 4.4 (previously this was not possible, i.e. <code>false</code>) and is added
+     * individually to all loop end node implementations, hence this default implementation returns <code>false</code>.
+     *
+     * @return This property (default is <code>false</code>)
+     * @since 4.4
+     */
+    default boolean shouldPropagateModifiedVariables() {
+        return false;
+    }
+
+    /**
+     * Framework code that propagates overwritten variables at a loop end node to its outputs. Any variable that is
+     * assigned within the loop (= on top of the loop context on the node's input stack) it checks if the variables was
+     * declared outside the loop (= prior the loop context) and publish the modified value. Variables defined by
+     * the start node are explicitly excluded (flow control variables causing trouble with nested loops).
+     *
+     * @param endModel The end node, not null
+     *
+     * @since 4.4
+     */
+    static void propagateModifiedVariables(final NodeModel endModel) {
+        FlowObjectStack outgoingStackEndNode = Node.invokeGetOutgoingFlowObjectStack(endModel);
+        FlowObjectStack incomingStackEndNode = Node.invokeGetFlowObjectStack(endModel);
+        Set<String> outsideLoopVarsSet = new HashSet<>();
+        Iterator<FlowObject> it = incomingStackEndNode.iterator();
+
+        /* this node's input stack looks like so...
+         * (lines with indent are special loop controls that the code below searches for)
+         * #iterator goes top to bottom
+         * ---0:6---
+         * "external-sum" (INTEGER: 55)
+         * "internal-sum" (INTEGER: 10)
+         * "external-sum-injected" (INTEGER: 10)
+         * "internal-sum" (INTEGER: 0)
+         * "number" (INTEGER: 10)
+         * "RowID" (STRING: Iteration10)
+         * "currentIteration" (INTEGER: 9)
+         * "maxIterations" (INTEGER: 10)
+         * "external-sum" (INTEGER: 45)
+         *          <Inner Loop Context (#execute) - Owner: 0:2>
+         * "number" (INTEGER: 0)
+         * "RowID" (STRING: )
+         * "currentIteration" (INTEGER: 0)
+         * "maxIterations" (INTEGER: 0)
+         *          <Loop Context (Head 0:2, Tail 0:6)> - iteration 9
+         * "external-sum-injected" (INTEGER: 0)
+         * "knime.workspace" (STRING: /data/dev/eclipse/runtime-KNIME)
+         * "external-sum" (INTEGER: 0)
+         * --------
+         */
+
+        Deque<FlowVariable> loopVarsDeque = collectLoopVariables(it); // consumes it to, incl., 'Loop Context'
+
+        // cache all variables defined outside the loop (strictly upstream or passed in via side-branch)
+        while (it.hasNext()) {
+            FlowObject obj = it.next();
+            if (obj instanceof FlowVariable) {
+                FlowVariable v = (FlowVariable)obj;
+                outsideLoopVarsSet.add(v.getName());
+            }
+        }
+
+        // remove all within-loop-variables (e.g. "currentIteration")
+        loopVarsDeque.removeIf(var -> !outsideLoopVarsSet.contains(var.getName()));
+
+        // push overwritten variable (in reverse order to retain ordering)
+        for (Iterator<FlowVariable> loopVarIt = loopVarsDeque.descendingIterator(); loopVarIt.hasNext();) {
+            outgoingStackEndNode.push(FlowObjectStack.cloneUnsetOwner(loopVarIt.next()));
+        }
+    }
+
+    /**
+     * Traverses iterator and collects & returns loop variables (until 'Inner Loop Context'). Special treatment of
+     * variables of corresponding start node -- they get filtered out (otherwise overwrites, e.g. "currentIteration").
+     * The iterator is positioned to point to variables defined outside the loop.
+     */
+    private static Deque<FlowVariable> collectLoopVariables(final Iterator<FlowObject> it) {
+        final Deque<FlowVariable> loopVarsDeque = new ArrayDeque<>();
+        NodeID startNodeID = null;
+        while (it.hasNext()) {
+            FlowObject obj = it.next();
+            if (obj instanceof InnerFlowLoopContext) {
+                startNodeID = obj.getOwner();
+                break;
+            } else if (obj instanceof FlowVariable) {
+                loopVarsDeque.add((FlowVariable)obj);
+            }
+        }
+        CheckUtils.checkState(startNodeID != null,
+            "Expected to have seen \"%s\" on flow variable stack -- was method called from NodeModel#execute(...)?",
+            InnerFlowLoopContext.class.getSimpleName());
+
+        final NodeID startNodeIDFinal = startNodeID;
+        loopVarsDeque.removeIf(var -> var.getOwner().equals(startNodeIDFinal));
+
+        // traverse until 'Loop Context' (variables push by start node in its #configure method)
+        while (it.hasNext() && !(it.next() instanceof FlowLoopContext)) {
+            // skip, just move iterator
+        }
+        CheckUtils.checkState(it.hasNext(),
+            "Expected to have seen \"%s\" on flow variable stack -- was method called from NodeModel#execute(...)?",
+            FlowLoopContext.class.getSimpleName());
+
+        return loopVarsDeque;
     }
 
 }

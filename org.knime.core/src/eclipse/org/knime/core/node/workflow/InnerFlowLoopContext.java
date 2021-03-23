@@ -78,4 +78,10 @@ public class InnerFlowLoopContext extends FlowObject {
         return super.equals(obj);
     }
 
+    /** {@inheritDoc} */
+    @Override
+    public String toString() {
+        return String.format("<Inner Loop Context (#execute) - Owner: %s>", getOwner());
+    }
+
 }

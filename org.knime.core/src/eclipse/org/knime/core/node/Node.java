@@ -1300,6 +1300,18 @@ public final class Node implements NodeModelWarningListener {
         return dialog.getAvailableFlowVariables(types);
     }
 
+    /**
+     * Widens scope of {@link NodeModel#getOutgoingFlowObjectStack()}.
+     *
+     * @param model ...
+     * @return ...
+     * @since 4.4
+     */
+    @SuppressWarnings("javadoc")
+    public static FlowObjectStack invokeGetOutgoingFlowObjectStack(final NodeModel model) {
+        return model.getOutgoingFlowObjectStack();
+    }
+
     /** Called after execute in order to put the computed result into the
      * outports. It will do a sequence of sanity checks whether the argument
      * is valid (non-null, correct type, etc.)
@@ -2748,15 +2760,6 @@ public final class Node implements NodeModelWarningListener {
     }
 
     /**
-     * @see NodeModel#getLoopStartNode()
-     * @return corresponding loop start node.
-     * @since 2.6
-     */
-    public LoopStartNode getLoopStartNode() {
-        return m_model.getLoopStartNode();
-    }
-
-    /**
      * @see NodeModel#getScopeStartNode(Class)
      * @param startNodeType the type of the scope start node
      * @return corresponding scope start node or an empty optional if the type doesn't match, this node is not a scope
@@ -2765,14 +2768,6 @@ public final class Node implements NodeModelWarningListener {
      */
     public <T extends ScopeStartNode<?>> Optional<T> getScopeStartNode(final Class<T> startNodeType) {
         return m_model.getScopeStartNode(startNodeType);
-    }
-
-    /**
-     * @return corresponding loop end node.
-     * @since 2.6
-     */
-    public LoopEndNode getLoopEndNode() {
-        return m_model.getLoopEndNode();
     }
 
     /**

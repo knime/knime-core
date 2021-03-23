@@ -581,6 +581,12 @@ public abstract class NodeModel implements ViewableModel {
 
         outData = executeModelPostProcessOutput(data, outData, exec);
 
+        // last iteration in loop end node...
+        if (this instanceof LoopEndNode && getLoopContext() == null
+            && ((LoopEndNode)this).shouldPropagateModifiedVariables()) {
+            LoopEndNode.propagateModifiedVariables(this);
+        }
+
         executeModelCheckTableWarnings(outData);
 
         setHasContent(true);

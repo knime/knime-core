@@ -53,6 +53,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Vector;
@@ -530,6 +531,19 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
             }
         }
         return result;
+    }
+
+    void pushVariablesWhoseValueDiffer(final FlowObjectStack startNodeInputStack, final FlowObjectStack endNodeStack) {
+        Map<String, FlowVariable> startVarsMap = startNodeInputStack.getAllAvailableFlowVariables();
+        Map<String, FlowVariable> endVarsMap = endNodeStack.getAllAvailableFlowVariables();
+        final Map<String, FlowVariable> startVarsMap1 = startVarsMap;
+        final Map<String, FlowVariable> endVarsMap1 = endVarsMap;
+        for (Entry<String, FlowVariable> startEntry : startVarsMap1.entrySet()) {
+            FlowVariable varAtEndNode = endVarsMap1.get(startEntry.getKey());
+            if (varAtEndNode != null && !varAtEndNode.equals(startEntry.getValue())) {
+                push(cloneUnsetOwner(varAtEndNode));
+            }
+        }
     }
 
     /**
