@@ -75,7 +75,7 @@ import org.knime.core.node.util.CheckUtils;
  * @author Bernd Wiswedel, KNIME GmbH, Konstanz, Germany
  * @noreference This class is not intended to be referenced by clients.
  */
-public class NodeFactoryExtensionManager {
+public final class NodeFactoryExtensionManager {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(NodeFactoryExtensionManager.class);
 
@@ -99,12 +99,6 @@ public class NodeFactoryExtensionManager {
      * <li>"org.knime.cloud.aws.filehandling.nodes.S3connection.S3ConnectionNodeFactory" -&gt; ...</li>
      * </ul>
      */
-    /** Map of node factory class name to its {@link NodeFactoryExtension}, e.g.
-     * <ul>
-     * <li>"org.knime.base.node.io.filereader.FileReaderNodeFactory" -&gt; ...* </li>
-     * <li>"org.knime.cloud.aws.filehandling.nodes.S3connection.S3ConnectionNodeFactory" -&gt; ...</li>
-     * </ul>
-     */
     private final Map<String, NodeFactoryExtension> m_factoryNameToNodeFactoryExtensionMap = new LinkedHashMap<>();
 
     /** Map of dynamic node factory class name to its {@link NodeSetFactoryExtension}, e.g.
@@ -117,19 +111,21 @@ public class NodeFactoryExtensionManager {
     private final Map<String, NodeSetFactoryExtension> m_factoryNameToNodeSetFactoryExtensionMap =
         new LinkedHashMap<>();
 
+    private List<NodeSetFactoryExtension> m_nodeSetFactoryExtensions;
+
     /**
      * @return the singleton instance
      */
-    public synchronized static NodeFactoryExtensionManager getInstance() {
+    public static synchronized NodeFactoryExtensionManager getInstance() {
         if (instance == null) {
             instance = new NodeFactoryExtensionManager();
             long start = System.currentTimeMillis();
             instance.collectNodeFactoryExtensions();
             long totalNodes = instance.m_factoryNameToNodeFactoryExtensionMap.size();
             long deprecatedNodes = instance.m_factoryNameToNodeFactoryExtensionMap.values()//
-                    .stream().filter(d -> d.isDeprecated()).count();
+                    .stream().filter(NodeFactoryExtension::isDeprecated).count();
             long hiddenNodes = instance.m_factoryNameToNodeFactoryExtensionMap.values()//
-                    .stream().filter(d -> d.isHidden()).count();
+                    .stream().filter(NodeFactoryExtension::isHidden).count();
 
             LOGGER.debugWithFormat("Collected %s extensions... found %d nodes (%d deprecated, %d hidden) in %.1fs",
                 NodeFactory.class.getSimpleName(), totalNodes, deprecatedNodes, hiddenNodes,
@@ -160,11 +156,11 @@ public class NodeFactoryExtensionManager {
      * @return iterator over all known node sets.
      */
     public Iterable<NodeSetFactoryExtension> getNodeSetFactoryExtensions() {
-        return m_factoryNameToNodeSetFactoryExtensionMap.values();
+        return m_nodeSetFactoryExtensions;
     }
 
     /**
-     * Attempts to instantiate a concreate {@link NodeFactory} with the given fully qualified class name. It will first
+     * Attempts to instantiate a concrete {@link NodeFactory} with the given fully qualified class name. It will first
      * consult the regular node extension, then the node set extensions, then node registered through
      * {@link NodeFactory#addLoadedFactory(Class)}, and finally give up an throw an exception.
      *
@@ -217,15 +213,14 @@ public class NodeFactoryExtensionManager {
         IExtensionRegistry registry = Platform.getExtensionRegistry();
         IExtensionPoint point = registry.getExtensionPoint(ID_NODE_SET);
         CheckUtils.checkState(point != null, "Invalid extension point: %s", ID_NODE_SET);
-        @SuppressWarnings("null")
-        List<NodeSetFactoryExtension> nodeSetFactoryExtensions = Arrays.stream(point.getExtensions())//
+        m_nodeSetFactoryExtensions = Arrays.stream(point.getExtensions())//
             .flatMap(ext -> Stream.of(ext.getConfigurationElements()))//
             .parallel()// extensions will be activated in this stream, which is expensive
-            .map(element -> NodeSetFactoryExtension.from(element))//
+            .map(NodeSetFactoryExtension::from)//
             .filter(Optional::isPresent)//
             .map(Optional::get)//
             .collect(Collectors.toList());
-        for (NodeSetFactoryExtension nodeSetFactoryExtension : nodeSetFactoryExtensions) {
+        for (NodeSetFactoryExtension nodeSetFactoryExtension : m_nodeSetFactoryExtensions) {
             nodeSetFactoryExtension.getClassNameToFactoryMap().keySet().stream()
                 .forEach(clName -> m_factoryNameToNodeSetFactoryExtensionMap.put(clName, nodeSetFactoryExtension));
         }
@@ -245,10 +240,10 @@ public class NodeFactoryExtensionManager {
     public String toString() {
         long totalNodes = m_factoryNameToNodeFactoryExtensionMap.size();
         long deprecatedNodes = m_factoryNameToNodeFactoryExtensionMap.values()//
-                .stream().filter(d -> d.isDeprecated()).count();
+                .stream().filter(NodeFactoryExtension::isDeprecated).count();
         long hiddenNodes = m_factoryNameToNodeFactoryExtensionMap.values()//
-                .stream().filter(d -> d.isHidden()).count();
-        long nodesets = m_factoryNameToNodeSetFactoryExtensionMap.values().stream().distinct().count();
+                .stream().filter(NodeFactoryExtension::isHidden).count();
+        long nodesets = m_nodeSetFactoryExtensions.size();
         return String.format("%d nodes (%d deprecated, %d hidden), %d node sets", totalNodes, deprecatedNodes,
             hiddenNodes, nodesets);
     }

@@ -66,7 +66,8 @@ import org.knime.core.node.util.CheckUtils;
  * A singleton class to collect node categories from the respective extension point.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
- * @noreference This class is not intended to be referenced by clients.
+ * @noreference This class is not intended to be referenced by clients@
+ * @since 4.5
  */
 public final class CategoryExtensionManager {
 

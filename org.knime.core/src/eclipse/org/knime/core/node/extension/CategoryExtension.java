@@ -59,6 +59,7 @@ import org.knime.core.node.util.CheckUtils;
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  * @noreference This class is not intended to be referenced by clients.
+ * @since 4.5
  */
 public final class CategoryExtension {
 
@@ -85,7 +86,7 @@ public final class CategoryExtension {
             "Category name in attribute \"%s\" must not be blank (contributing plug-in %s)", NAME,
             configurationElement.getContributor().getName());
         CheckUtils.checkArgument(StringUtils.isNotBlank(m_name),
-            "Cageory path in attribute \"%s\" must not be blank (contributing plug-in %s)", PATH,
+            "Category path in attribute \"%s\" must not be blank (contributing plug-in %s)", PATH,
             configurationElement.getContributor().getName());
         CheckUtils.checkArgument(StringUtils.isNotBlank(m_name),
             "Category level-id in attribute \"%s\" must not be blank (contributing plug-in %s)", LEVEL_ID,
