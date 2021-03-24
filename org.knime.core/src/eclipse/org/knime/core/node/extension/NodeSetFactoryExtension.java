@@ -49,6 +49,7 @@
 package org.knime.core.node.extension;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -91,6 +92,11 @@ public final class NodeSetFactoryExtension {
 
     private final long m_numberOfNodes;
 
+    /**
+     * Cache of node factory instances.
+     */
+    private Map<String, NodeFactory<? extends NodeModel>> m_nodeFactories;
+
 
     /**
      * @param configurationElement
@@ -102,8 +108,8 @@ public final class NodeSetFactoryExtension {
         final Map<Class<? extends NodeFactory<? extends NodeModel>>, Long> classToCountMap) {
         m_configurationElement = configurationElement;
         m_setFactory = setFactory;
-        m_numberOfNodes = classToCountMap.values().stream().collect(Collectors.summingLong(Long::longValue));
-        m_classNameToFactoryMap = classToCountMap.keySet().stream().collect(Collectors.toMap(f -> f.getName(), f -> f));
+        m_numberOfNodes = classToCountMap.values().stream().mapToLong(Long::longValue).sum();
+        m_classNameToFactoryMap = classToCountMap.keySet().stream().collect(Collectors.toMap(Class::getName, f -> f));
     }
 
     /**
@@ -161,6 +167,30 @@ public final class NodeSetFactoryExtension {
      */
     public Collection<String> getNodeFactoryIds() {
         return m_setFactory.getNodeFactoryIds();
+    }
+
+    /**
+     * Gives access to a cached(!) factory instance for the given id. When called for the first time, this single
+     * instance will be created. Every subsequent call with the same id will return the very same instance.
+     *
+     * It is intended to avoid the unnecessary creation of the node factory instances (which is a bit costly due to xml
+     * parsing etc.). Usually used by node repository implementations.
+     *
+     * @param id as per {@link #getNodeFactoryIds()}
+     * @return a factory instance or an empty Optional if there couldn't be found one for the given id
+     */
+    public Optional<NodeFactory<? extends NodeModel>> getNodeFactory(final String id) {
+        if (m_nodeFactories == null) {
+            m_nodeFactories = new HashMap<>();
+        }
+        NodeFactory<? extends NodeModel> factory = m_nodeFactories.get(id);
+        if (factory == null) {
+            factory = createNodeFactory(id).orElse(null);
+        }
+        if (factory == null) {
+            return Optional.empty();
+        }
+        return Optional.of(factory);
     }
 
     /**

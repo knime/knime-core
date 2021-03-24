@@ -89,6 +89,11 @@ public final class NodeFactoryExtension {
     private Boolean m_isDeprecated;
 
     /**
+     * Cache for a node factory instance.
+     */
+    private NodeFactory<? extends NodeModel> m_factory;
+
+    /**
      * @param factoryClassName
      * @param configurationElement
      */
@@ -118,8 +123,8 @@ public final class NodeFactoryExtension {
             boolean isDeprecated = Boolean.parseBoolean(m_configurationElement.getAttribute("deprecated"));
             if (!isDeprecated) {
                 try {
-                    isDeprecated = createFactory().isDeprecated();
-                } catch (InvalidNodeFactoryExtensionException e) {
+                    isDeprecated = getFactory().isDeprecated();
+                } catch (InvalidNodeFactoryExtensionException e) { // NOSONAR
                     // ignore -- someone will call #createFactory later and get the same error
                 }
                 if (isDeprecated) {
@@ -147,6 +152,23 @@ public final class NodeFactoryExtension {
     /** @return the "category-path" field in the extension point or "/". */
     public String getCategoryPath() {
         return ObjectUtils.defaultIfNull(m_configurationElement.getAttribute("category-path"), "/");
+    }
+
+    /**
+     * Gives access to a cached(!) factory instance. When called for the first time, this single instance will be
+     * created. Every subsequent call will return the very same instance.
+     *
+     * It is intended to avoid the unnecessary creation of the node factory instances (which is a bit costly due to xml
+     * parsing etc.). Usually used by node repository implementations.
+     *
+     * @return a factory instance or an empty Optional if there couldn't be found one for the given id
+     * @throws InvalidNodeFactoryExtensionException if the creation on the first call fails
+     */
+    public synchronized NodeFactory<? extends NodeModel> getFactory() throws InvalidNodeFactoryExtensionException {
+        if (m_factory == null) {
+            m_factory = createFactory();
+        }
+        return m_factory;
     }
 
     /** Returns a new factory instance.
