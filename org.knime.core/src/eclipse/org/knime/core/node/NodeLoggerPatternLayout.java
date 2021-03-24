@@ -278,7 +278,7 @@ public class NodeLoggerPatternLayout extends PatternLayout {
             Object msg = event.getMessage();
             if (msg instanceof KNIMELogMessage) {
                 final KNIMELogMessage kmsg = (KNIMELogMessage)msg;
-                final UUID jobID = kmsg.getjobID();
+                final UUID jobID = kmsg.getJobID();
                 if (jobID != null) {
                     return jobID.toString();
                 }

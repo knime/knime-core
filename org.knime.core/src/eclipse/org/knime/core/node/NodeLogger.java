@@ -178,14 +178,14 @@ public final class NodeLogger {
         /**
          * @return the nodeName
          */
-        String getNodeName() {
+        public String getNodeName() {
             return m_nodeName;
         }
 
         /**
          * @return the jobID
          */
-        UUID getjobID() {
+        public UUID getJobID() {
             return m_jobID;
         }
 
