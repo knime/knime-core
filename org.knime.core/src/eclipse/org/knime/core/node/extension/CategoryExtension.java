@@ -112,7 +112,7 @@ public final class CategoryExtension {
      * @return the complete path, i.e. the path concatenated with the level-id
      */
     public String getCompletePath() {
-        String path = m_path.endsWith("/") ? m_path : (m_path + "/");
+        String path = m_path.endsWith("/") ? m_path : (m_path + "/"); // NOSONAR
         return path + m_levelId;
     }
 
@@ -129,8 +129,8 @@ public final class CategoryExtension {
     }
 
     /** @return symbolic name of the plug-in contributing the category/extension. */
-    public String getPlugInSymbolicName() {
-        return m_configurationElement.getContributor().getName();
+    public String getContributingPlugin() {
+        return m_configurationElement.getDeclaringExtension().getNamespaceIdentifier();
     }
 
 }
