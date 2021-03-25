@@ -69,6 +69,11 @@ import org.knime.core.node.ExecutionMonitor;
  */
 public abstract class AbstractCellFactory implements CellFactory {
 
+    /**
+     * Template for the progress message.
+     */
+    private static final String PROGRESS_TEMPLATE = "Processed row %s/%s (\"%s\")";
+
     private final DataColumnSpec[] m_colSpecs;
 
     private int m_maxParallelWorkers = -1;
@@ -249,8 +254,8 @@ public abstract class AbstractCellFactory implements CellFactory {
     @Override
     public void setProgress(final int curRowNr, final int rowCount,
             final RowKey lastKey, final ExecutionMonitor exec) {
-        exec.setProgress(curRowNr / (double)rowCount, "Processed row "
-                + curRowNr + "/" + rowCount + " (\"" + lastKey + "\")");
+        exec.setProgress(curRowNr / (double)rowCount,
+            () -> String.format(PROGRESS_TEMPLATE, curRowNr, rowCount, lastKey));
     }
 
 
@@ -264,7 +269,7 @@ public abstract class AbstractCellFactory implements CellFactory {
             setProgress((int)curRowNr, KnowsRowCountTable.checkRowCount(rowCount), lastKey, exec);
         } else {
             exec.setProgress(curRowNr / (double)rowCount,
-                "Processed row " + curRowNr + "/" + rowCount + " (\"" + lastKey + "\")");
+                () -> String.format(PROGRESS_TEMPLATE, curRowNr, rowCount, lastKey));
         }
     }
 
