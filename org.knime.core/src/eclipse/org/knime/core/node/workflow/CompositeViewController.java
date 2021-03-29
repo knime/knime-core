@@ -48,9 +48,13 @@
  */
 package org.knime.core.node.workflow;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
+import org.knime.core.node.AbstractNodeView.ViewableModel;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.interactive.ViewRequestHandlingException;
@@ -158,7 +162,9 @@ public class CompositeViewController extends WebResourceController {
 
     /**
      * Processes a request issued by a view by calling the appropriate methods on the corresponding node
-     * model and returns the rendered response.
+     * model and returns the rendered response. This request handling is *only* for node-specific requests.
+     * For component-level requests (such as for re-execution), the {@link ViewableModel} impl. should handle
+     * the bulk of the logic regarding composition of the response.
      *
      * @param nodeID The node id of the node that the request belongs to.
      * @param viewRequest The JSON serialized view request
@@ -229,7 +235,7 @@ public class CompositeViewController extends WebResourceController {
     /**
      * Triggers workflow execution up until the given subnode.
      */
-    public void reexecuteSinglePage() {
+    public void executeSinglePage() {
         final WorkflowManager manager = m_manager;
         try (WorkflowLock lock = manager.lock()) {
             checkDiscard();
@@ -237,4 +243,48 @@ public class CompositeViewController extends WebResourceController {
         }
     }
 
+    /**
+     * Utility method to see which downstream nodes will be reset if the provided {@link NodeIDSuffix} is
+     * reset.
+     *
+     * @param nodeToReset the {@link NodeIDSuffix} of the node which will be reset in the composite view.
+     * @return a list of downstream wizard view nodes which will be reset and re-executed based on the provided nodeID
+     *         to reset.
+     *
+     * @since 4.4
+     */
+    public List<String> getDownstreamNodes(final NodeIDSuffix nodeToReset) {
+        try (WorkflowLock lock = m_manager.lock()) {
+            NodeID pageID = m_nodeID;
+            SubNodeContainer snc = (SubNodeContainer)m_manager.getNodeContainer(pageID);
+            WorkflowManager pageWfm = snc.getWorkflowManager();
+            NodeContainer resetNodeContainer = pageWfm.getNodeContainer(nodeToReset.prependParent(pageWfm.getID()));
+            Set<String> downstreamNodeIds = getDownstreamNodes(resetNodeContainer, m_manager.getID());
+            return new ArrayList<>(downstreamNodeIds);
+        }
+    }
+
+    /**
+     *
+     * {@inheritDoc}
+     */
+    @Override
+    public Map<String, ValidationError> reexecuteSinglePage(final NodeIDSuffix nodeIDToReset,
+        final Map<String, String> valueMap) {
+        try (WorkflowLock lock = m_manager.lock()) {
+            NodeID pageID = m_nodeID;
+            SubNodeContainer snc = (SubNodeContainer)m_manager.getNodeContainer(pageID);
+            try (WorkflowLock sncLock = snc.lock()) {
+                WorkflowManager pageWfm = snc.getWorkflowManager();
+                NodeContainer nodeToReset = pageWfm.getNodeContainer(nodeIDToReset.prependParent(pageWfm.getID()));
+                Set<String> downstreamNodeIds = getDownstreamNodes(nodeToReset, m_manager.getID());
+                Map<String, String> filteredViewValues = filterViewValues(downstreamNodeIds, valueMap);
+                Map<String, ValidationError> validationResult = loadValuesIntoPage(filteredViewValues, false, true);
+                if (validationResult == null || validationResult.isEmpty()) {
+                    m_manager.executeUpToHere(pageID);
+                }
+                return validationResult;
+            }
+        }
+    }
 }

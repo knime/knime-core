@@ -875,6 +875,54 @@ public abstract class WebResourceController {
     }
 
     /**
+     * Utility method to find any Wizard View nodes which are downstream dependents of the provided {@link NodeID} in
+     * the same parent context/scope.
+     *
+     * @param nodeToReset the node container for which downstream wizard nodes should be found.
+     * @param parentID the parent {@link NodeID} for the search context.
+     * @return the set of {@link NodeID} strings for wizard nodes downstream of the provided node.
+     *
+     * @since 4.4
+     */
+    protected static Set<String> getDownstreamNodes(final NodeContainer nodeToReset, final NodeID parentID) {
+        return nodeToReset.getParent()
+            .getNodeContainers(Collections.singleton(nodeToReset.getID()), nc -> false, false, true).stream()
+            .map(nc -> NodeIDSuffix.create(parentID, nc.getID()).toString())
+            .collect(HashSet::new, HashSet::add, HashSet::addAll);
+    }
+
+    /**
+     * Utility method to filter a view value map based on the provided inclusive set of {@link NodeID} strings.
+     *
+     * @param resetNodeIds the {@link NodeID} set to include in the value map.
+     * @param viewValues the superset of view values to filter.
+     * @return the subset of matching view values.
+     *
+     * @since 4.4
+     */
+    protected static Map<String, String> filterViewValues(final Set<String> resetNodeIds,
+        final Map<String, String> viewValues) {
+        return viewValues.entrySet().stream().filter(e -> resetNodeIds.contains(e.getKey()))
+            .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+    }
+
+    /**
+     * Re-executes a subset of nodes of the current page. I.e. resets all nodes downstream of the given node (within the
+     * page), loads the provided values into the reset nodes and triggers workflow execution of the entire page. Notes:
+     * Provided values that refer to a node that hasn't been reset will be ignored. If the validation of the input
+     * values fails, the page won't be re-executed and remains reset.
+     *
+     * @param nodeIDToReset the {@link NodeID} of the upstream-most node in the page that shall be reset.
+     * @param valueMap the values to load before re-execution, a map from {@link NodeIDSuffix} strings to parsed view
+     *            values.
+     * @return empty map if validation succeeds, map of errors otherwise
+     *
+     * @since 4.4
+     */
+    public abstract Map<String, ValidationError> reexecuteSinglePage(final NodeIDSuffix nodeIDToReset,
+        final Map<String, String> valueMap);
+
+    /**
      * Composes the NodeID of a subnode.
      *
      * @param subnodeIDSuffix ...

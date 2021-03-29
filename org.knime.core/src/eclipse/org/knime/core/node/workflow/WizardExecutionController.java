@@ -48,17 +48,13 @@ package org.knime.core.node.workflow;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.ArrayUtils;
@@ -501,20 +497,9 @@ public final class WizardExecutionController extends WebResourceController imple
     }
 
     /**
-     * Re-executes a subset of nodes of the current page. I.e. resets all nodes downstream of the given node (within the
-     * page), loads the provided values into the reset nodes and triggers workflow execution of the entire page. Notes:
-     * Provided values that refer to a node that hasn't been reset will be ignored. If the validation of the input
-     * values fails, the page won't be re-executed and remains reset.
-     *
-     * @param nodeIDToReset the id of the node in the page that shall be reset (and all the downstream node of it)
-     * @param valueMap the values to load before re-execution, a map from {@link NodeIDSuffix} strings to parsed view
-     *            values
-     *
-     * @throws IllegalArgumentException if the provided view node-id is not part of the wizard page
-     * @throws IllegalStateException if there is no current page or the current page is in re-execution
-     *
-     * @return empty map if validation succeeds, map of errors otherwise
+     * {@inheritDoc}
      */
+    @Override
     public Map<String, ValidationError> reexecuteSinglePage(final NodeIDSuffix nodeIDToReset,
         final Map<String, String> valueMap) {
         try (WorkflowLock lock = m_manager.lock()) {
@@ -523,8 +508,8 @@ public final class WizardExecutionController extends WebResourceController imple
             WorkflowManager pageWfm =
                 ((SubNodeContainer)m_manager.getNodeContainer(pageID)).getWorkflowManager();
             NodeContainer nodeToReset = pageWfm.getNodeContainer(nodeIDToReset.prependParent(pageWfm.getID()));
-            Collection<NodeContainer> nodesToBeReexecuted = getNodesToBeReexecuted(nodeToReset);
-            Map<String, String> filteredViewValues = filterViewValues(nodesToBeReexecuted, m_manager.getID(), valueMap);
+            Set<String> nodesToRexecute = getDownstreamNodes(nodeToReset,  m_manager.getID());
+            Map<String, String> filteredViewValues = filterViewValues(nodesToRexecute, valueMap);
             Map<String, ValidationError> validationResult = loadValuesIntoCurrentPage(filteredViewValues);
             if (validationResult.isEmpty()) {
                 m_isInSinglePageExecution = true;
@@ -561,20 +546,6 @@ public final class WizardExecutionController extends WebResourceController imple
         findNestedViewNodes((SubNodeContainer)m_manager.getNodeContainer(getCurrentWizardPageNodeID()), null, infoMap,
             null, null);
         return infoMap;
-    }
-
-    private static Collection<NodeContainer> getNodesToBeReexecuted(final NodeContainer nodeToReset) {
-        return nodeToReset.getParent().getNodeContainers(Collections.singleton(nodeToReset.getID()), nc -> false, false,
-            true);
-    }
-
-    private static Map<String, String> filterViewValues(final Collection<NodeContainer> nodesToBeReexecuted,
-        final NodeID parentID, final Map<String, String> viewValues) {
-        HashSet<String> ids =
-            nodesToBeReexecuted.stream().map(nc -> NodeIDSuffix.create(parentID, nc.getID()).toString())
-                .collect(HashSet::new, HashSet::add, HashSet::addAll);
-        return viewValues.entrySet().stream().filter(e -> ids.contains(e.getKey()))
-            .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
     }
 
     private void stepBackInternal() {
