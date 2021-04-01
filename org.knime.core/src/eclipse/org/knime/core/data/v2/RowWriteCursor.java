@@ -48,6 +48,8 @@
  */
 package org.knime.core.data.v2;
 
+import org.knime.core.columnar.cursor.Cursor;
+
 /**
  * Cursor over RowWrites
  *

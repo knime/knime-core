@@ -50,6 +50,7 @@ package org.knime.core.data.v2;
 
 import java.io.IOException;
 
+import org.knime.core.columnar.cursor.Cursor;
 import org.knime.core.node.BufferedDataTable;
 
 /**
