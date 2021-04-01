@@ -48,7 +48,7 @@
  */
 package org.knime.core.data.v2;
 
-import org.knime.core.columnar.cursor.Cursor;
+import org.knime.core.columnar.cursor.LookaheadCursor;
 
 /**
  * Cursor over RowWrites
@@ -58,7 +58,7 @@ import org.knime.core.columnar.cursor.Cursor;
  *
  * @noreference This interface is not intended to be referenced by clients.
  */
-public interface RowWriteCursor extends Cursor<RowWrite> {
+public interface RowWriteCursor extends LookaheadCursor<RowWrite> {
 
     /**
      * {@inheritDoc}

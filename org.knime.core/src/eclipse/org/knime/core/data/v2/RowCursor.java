@@ -45,7 +45,7 @@
  */
 package org.knime.core.data.v2;
 
-import org.knime.core.columnar.cursor.Cursor;
+import org.knime.core.columnar.cursor.LookaheadCursor;
 
 /**
  * {@link RowRead} implementation allowing for iterative read access to a data storage.
@@ -58,7 +58,7 @@ import org.knime.core.columnar.cursor.Cursor;
  * @noreference This interface is not intended to be referenced by clients.
  * @noextend This interface is not intended to be extended by clients.
  */
-public interface RowCursor extends Cursor<RowRead> {
+public interface RowCursor extends LookaheadCursor<RowRead> {
 
     /**
      * {@inheritDoc}

@@ -50,7 +50,7 @@ package org.knime.core.data.v2;
 
 import java.io.IOException;
 
-import org.knime.core.columnar.cursor.Cursor;
+import org.knime.core.columnar.cursor.LookaheadCursor;
 import org.knime.core.node.BufferedDataTable;
 
 /**
@@ -64,7 +64,7 @@ import org.knime.core.node.BufferedDataTable;
 public interface RowContainer extends AutoCloseable {
 
     /**
-     * Create a new {@link Cursor} over {@link RowWrite}s.
+     * Create a new {@link LookaheadCursor} over {@link RowWrite}s.
      *
      * @implNote NB: Currently only a single cursor is supported i.e. always the same cursor will be returned by this
      *           method.
