@@ -59,5 +59,21 @@ import org.knime.core.columnar.cursor.Cursor;
  * @noreference This interface is not intended to be referenced by clients.
  */
 public interface RowWriteCursor extends Cursor<RowWrite> {
-    // NB: Marker interface
+
+    /**
+     * {@inheritDoc}
+     *
+     * Potential IOExceptions will be logged.
+     */
+    @Override
+    RowWrite forward();
+
+    /**
+     * {@inheritDoc}
+     *
+     * Potential IOExceptions will be logged.
+     */
+    @Override
+    void close();
+
 }

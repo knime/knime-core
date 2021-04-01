@@ -59,8 +59,26 @@ import org.knime.core.columnar.cursor.Cursor;
  * @noextend This interface is not intended to be extended by clients.
  */
 public interface RowCursor extends Cursor<RowRead> {
+
+    /**
+     * {@inheritDoc}
+     *
+     * Potential IOExceptions will be logged.
+     */
+    @Override
+    RowRead forward();
+
     /**
      * @return number of columns in the data row
      */
     int getNumColumns();
+
+    /**
+     * {@inheritDoc}
+     *
+     * Potential IOExceptions will be logged.
+     */
+    @Override
+    void close();
+
 }
