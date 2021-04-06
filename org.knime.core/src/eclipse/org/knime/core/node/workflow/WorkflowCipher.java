@@ -50,6 +50,7 @@ package org.knime.core.node.workflow;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
@@ -61,6 +62,7 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
@@ -88,6 +90,10 @@ import org.knime.core.util.crypto.HexUtils;
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  */
 final class WorkflowCipher implements Cloneable {
+
+    /** AP-16296: append some extra bytes in order to disallow old (KNIME AP <4.4) installations
+     * from loading encrypted components. */
+    private static final byte[] PREPEND_TO_KEY = "version_1".getBytes(StandardCharsets.UTF_8);
 
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(WorkflowCipher.class);
@@ -198,6 +204,7 @@ final class WorkflowCipher implements Cloneable {
      * @param out The underlying output, i.e. file output.
      * @return The The ciphered output, possibly wrapped.
      * @throws IOException if that fails. */
+    @SuppressWarnings("resource")
     OutputStream cipherOutput(final WorkflowManager wfm,
             final OutputStream out) throws IOException {
         if (wfm == WorkflowManager.ROOT) {
@@ -251,7 +258,9 @@ final class WorkflowCipher implements Cloneable {
      * @param cipherSettings to save to. */
     void save(final NodeSettingsWO cipherSettings) {
         String passwordDigestHex = HexUtils.bytesToHex(m_passwordDigest);
-        String encryptionKeyHex = HexUtils.bytesToHex(m_secretKey.getEncoded());
+        byte[] key = m_secretKey.getEncoded();
+        key = ArrayUtils.addAll(PREPEND_TO_KEY, key);
+        String encryptionKeyHex = HexUtils.bytesToHex(key);
         cipherSettings.addString("passwordDigest", passwordDigestHex);
         cipherSettings.addString("encryptionKey", encryptionKeyHex);
         cipherSettings.addString("passwordHint", m_passwordHint);
@@ -269,9 +278,28 @@ final class WorkflowCipher implements Cloneable {
         String encryptionKeyHex = cipherSettings.getString("encryptionKey");
         byte[] passwordDigest = HexUtils.hexToBytes(passwordDigestHex);
         byte[] encryptionKey = HexUtils.hexToBytes(encryptionKeyHex);
+        encryptionKey = removeVersionPrefixIfPresent(encryptionKey);
         String hint = cipherSettings.getString("passwordHint");
         SecretKeySpec keySpec = new SecretKeySpec(encryptionKey, "AES");
         return new WorkflowCipher(keySpec, passwordDigest, hint, false);
+    }
+
+    /**
+     * If argument starts with {@link #PREPEND_TO_KEY}, remove it and return it. Otherwise return the argument.
+     */
+    private static byte[] removeVersionPrefixIfPresent(final byte[] encryptionKey) {
+        if (ArrayUtils.getLength(encryptionKey) > PREPEND_TO_KEY.length) {
+            boolean startsWithPrefix = true;
+            for (int i = 0; i < PREPEND_TO_KEY.length; i++) {
+                if (encryptionKey[i] != PREPEND_TO_KEY[i]) {
+                    startsWithPrefix = false;
+                }
+            }
+            if (startsWithPrefix) {
+                return ArrayUtils.subarray(encryptionKey, PREPEND_TO_KEY.length, encryptionKey.length);
+            }
+        }
+        return encryptionKey;
     }
 
     /** {@inheritDoc} */
