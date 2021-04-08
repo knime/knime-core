@@ -1245,6 +1245,19 @@ public final class Node implements NodeModelWarningListener {
         return m_model.executeModel(inData, exEnv, exec);
     }
 
+    /**
+     * Widens scope of {@link NodeModel#getFlowObjectStack()}.
+     *
+     * @param model ...
+     * @return ...
+     * @since 4.4
+     */
+    @SuppressWarnings("javadoc")
+    public static FlowObjectStack invokeGetFlowObjectStack(final NodeModel model) {
+        return model.getFlowObjectStack();
+    }
+
+
     /** Invokes the corresponding package scope method in class NodeModel. Put here to avoid adding API.
      * @param model to call on.
      * @return result of that call

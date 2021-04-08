@@ -47,8 +47,15 @@
  */
 package org.knime.core.node.workflow;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeModel;
+import org.knime.core.node.util.CheckUtils;
 
 /**
  * Complement to {@link ScopeStartNode}.
@@ -81,19 +88,51 @@ public interface ScopeEndNode<T extends FlowScopeContext> {
      * @since 3.1
      */
     default T getFlowContext() {
-        if (this instanceof NodeModel) {
-            NodeModel m = (NodeModel)this;
-            FlowScopeContext fsc = Node.invokePeekFlowScopeContext(m);
-            try {
-                @SuppressWarnings("unchecked")
-            	T t = (T)fsc;
-                return t;
-            } catch (ClassCastException cce) {
-                return null;
-            }
-        } else {
-            throw new IllegalStateException("Not a " + NodeModel.class.getSimpleName());
+        NodeModel m = castToNodeModel(this);
+        FlowScopeContext fsc = Node.invokePeekFlowScopeContext(m);
+        try {
+            @SuppressWarnings("unchecked")
+            T t = (T)fsc;
+            return t;
+        } catch (ClassCastException cce) {
+            return null;
         }
+    }
+
+    /**
+     * Get all variables that were defined or overwritten within this scope, 'oldest' first. Used by implementations
+     * that export scope variables downstream.
+     * @return A new list containing scope variables.
+     * @since 4.4
+     */
+    default List<FlowVariable> getVariablesDefinedInScope() {
+        NodeModel model = castToNodeModel(this);
+        FlowObjectStack inStack = Node.invokeGetFlowObjectStack(model);
+        T flowContext = getFlowContext();
+        Map<String, FlowVariable> result = new LinkedHashMap<>();
+        for (FlowObject o : inStack) {
+            if (o == flowContext) { // NOSONAR
+                break;
+            } else if (o instanceof FlowVariable) {
+                FlowVariable v = (FlowVariable)o;
+                result.putIfAbsent(v.getName(), v);
+            }
+        }
+        List<FlowVariable> list = new ArrayList<>(result.values());
+        Collections.reverse(list);
+        return list;
+    }
+
+    /**
+     * Assumes the argument is an instance of {@link NodeModel} and performs the cast. Otherwise throws an exception.
+     * @param s ...
+     * @return ...
+     */
+    static NodeModel castToNodeModel(final ScopeEndNode<?> s) {
+        CheckUtils.checkState(s instanceof NodeModel,
+            "Not an instance of class %s: %s",
+            NodeModel.class.getSimpleName(), s == null ? "<null>" : s.getClass().getName());
+        return (NodeModel)s;
     }
 
 }
