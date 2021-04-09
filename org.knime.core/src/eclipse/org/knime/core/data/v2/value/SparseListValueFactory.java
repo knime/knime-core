@@ -116,8 +116,8 @@ public final class SparseListValueFactory implements CollectionValueFactory<Stru
         final AccessSpec<ReadAccess, WriteAccess> defaultAccessSpec = m_inner.getSpec();
         final IntAccessSpec sizeAccessSpec = IntAccessSpec.INSTANCE;
         final ListAccessSpec<IntReadAccess, IntWriteAccess> indicesAccessSpec =
-            new ListAccessSpec<>(IntValueFactory.INSTANCE);
-        final ListAccessSpec<ReadAccess, WriteAccess> listAccessSpec = new ListAccessSpec<>(m_inner);
+            new ListAccessSpec<>(IntAccessSpec.INSTANCE);
+        final ListAccessSpec<ReadAccess, WriteAccess> listAccessSpec = new ListAccessSpec<>(m_inner.getSpec());
         return new StructAccessSpec(defaultAccessSpec, sizeAccessSpec, indicesAccessSpec, listAccessSpec);
     }
 
@@ -212,6 +212,11 @@ public final class SparseListValueFactory implements CollectionValueFactory<Stru
             @SuppressWarnings("unchecked")
             final L storageList = (L)listValueFactory.createReadValue(listAccess);
             m_storageList = storageList;
+        }
+
+        @Override
+        public boolean isMissing() {
+            return m_defaultAccess.isMissing();
         }
 
         /**
@@ -355,6 +360,11 @@ public final class SparseListValueFactory implements CollectionValueFactory<Stru
             @SuppressWarnings("unchecked")
             final L createWriteValue = (L)listValueFactory.createWriteValue(listAccess);
             m_storageList = createWriteValue;
+        }
+
+        @Override
+        public void setMissing() {
+            m_defaultValue.setMissing();
         }
 
         @Override

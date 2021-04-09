@@ -13,6 +13,11 @@ final class DefaultDataCellReadValue implements ReadValue {
     }
 
     @Override
+    public boolean isMissing() {
+        return m_access.isMissing();
+    }
+
+    @Override
     public DataCell getDataCell() {
         return m_access.getObject();
     }

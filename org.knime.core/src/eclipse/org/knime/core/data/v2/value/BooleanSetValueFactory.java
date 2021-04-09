@@ -98,14 +98,12 @@ public final class BooleanSetValueFactory implements ValueFactory<StructReadAcce
 
     @Override
     public BooleanSetReadValue createReadValue(final StructReadAccess reader) {
-        return new DefaultBooleanSetReadValue(reader.getInnerReadAccessAt(0), reader.getInnerReadAccessAt(1),
-            reader.getInnerReadAccessAt(2));
+        return new DefaultBooleanSetReadValue(reader);
     }
 
     @Override
     public BooleanSetWriteValue createWriteValue(final StructWriteAccess writer) {
-        return new DefaultBooleanSetWriteValue(writer.getWriteAccessAt(0), writer.getWriteAccessAt(1),
-            writer.getWriteAccessAt(2));
+        return new DefaultBooleanSetWriteValue(writer);
     }
 
     /**
@@ -150,17 +148,24 @@ public final class BooleanSetValueFactory implements ValueFactory<StructReadAcce
 
     private static final class DefaultBooleanSetReadValue implements BooleanSetReadValue {
 
+        private final StructReadAccess m_reader;
+
         private final BooleanReadAccess m_containsTrue;
 
         private final BooleanReadAccess m_containsFalse;
 
         private final BooleanReadAccess m_containsMissing;
 
-        private DefaultBooleanSetReadValue(final BooleanReadAccess containsTrue, final BooleanReadAccess containsFalse,
-            final BooleanReadAccess containsMissing) {
-            m_containsTrue = containsTrue;
-            m_containsFalse = containsFalse;
-            m_containsMissing = containsMissing;
+        private DefaultBooleanSetReadValue(final StructReadAccess reader) {
+            m_reader = reader;
+            m_containsTrue = reader.getInnerReadAccessAt(0);
+            m_containsFalse = reader.getInnerReadAccessAt(1);
+            m_containsMissing = reader.getInnerReadAccessAt(2);
+        }
+
+        @Override
+        public boolean isMissing() {
+            return m_reader.isMissing();
         }
 
         @Override
@@ -242,17 +247,24 @@ public final class BooleanSetValueFactory implements ValueFactory<StructReadAcce
 
     private static final class DefaultBooleanSetWriteValue implements BooleanSetWriteValue {
 
+        private final StructWriteAccess m_writer;
+
         private final BooleanWriteAccess m_containsTrue;
 
         private final BooleanWriteAccess m_containsFalse;
 
         private final BooleanWriteAccess m_containsMissing;
 
-        private DefaultBooleanSetWriteValue(final BooleanWriteAccess containsTrue,
-            final BooleanWriteAccess containsFalse, final BooleanWriteAccess containsMissing) {
-            m_containsTrue = containsTrue;
-            m_containsFalse = containsFalse;
-            m_containsMissing = containsMissing;
+        private DefaultBooleanSetWriteValue(final StructWriteAccess writer) {
+            m_writer = writer;
+            m_containsTrue = writer.getWriteAccessAt(0);
+            m_containsFalse = writer.getWriteAccessAt(1);
+            m_containsMissing = writer.getWriteAccessAt(2);
+        }
+
+        @Override
+        public void setMissing() {
+            m_writer.setMissing();
         }
 
         @Override

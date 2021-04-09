@@ -56,20 +56,7 @@ import java.time.Period;
 import java.time.ZonedDateTime;
 import java.util.stream.Stream;
 
-import org.knime.core.data.BooleanValue;
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataValue;
-import org.knime.core.data.DoubleValue;
-import org.knime.core.data.IntValue;
-import org.knime.core.data.LongValue;
 import org.knime.core.data.container.BufferedAccessSpecMapper.BufferedAccess;
-import org.knime.core.data.def.BooleanCell;
-import org.knime.core.data.def.DoubleCell;
-import org.knime.core.data.def.IntCell;
-import org.knime.core.data.def.LongCell;
-import org.knime.core.data.v2.ReadValue;
-import org.knime.core.data.v2.ValueFactory;
-import org.knime.core.data.v2.WriteValue;
 import org.knime.core.data.v2.access.AccessSpec;
 import org.knime.core.data.v2.access.AccessSpec.AccessSpecMapper;
 import org.knime.core.data.v2.access.BooleanAccess.BooleanAccessSpec;
@@ -278,66 +265,6 @@ final class BufferedAccessSpecMapper implements AccessSpecMapper<BufferedAccess>
         }
 
         @Override
-        public double getDoubleValue() {
-            return m_value;
-        }
-
-        @Override
-        public long getLongValue() { // NOSONAR
-            return m_value;
-        }
-
-        @Override
-        public int getIntValue() { // NOSONAR
-            return m_value;
-        }
-
-        @Override
-        public double getRealValue() { // NOSONAR
-            return m_value;
-        }
-
-        @Override
-        public double getImaginaryValue() {
-            return 0;
-        }
-
-        @Override
-        public double getMinSupport() { // NOSONAR
-            return m_value;
-        }
-
-        @Override
-        public double getCore() { // NOSONAR
-            return m_value;
-        }
-
-        @Override
-        public double getMaxSupport() { // NOSONAR
-            return m_value;
-        }
-
-        @Override
-        public double getMinCore() { // NOSONAR
-            return m_value;
-        }
-
-        @Override
-        public double getMaxCore() { // NOSONAR
-            return m_value;
-        }
-
-        @Override
-        public double getCenterOfGravity() { // NOSONAR
-            return m_value;
-        }
-
-        @Override
-        public DataCell getDataCell() {
-            return m_value == 1 ? BooleanCell.TRUE : BooleanCell.FALSE;
-        }
-
-        @Override
         public void setMissing() {
             m_isMissing = true;
         }
@@ -346,11 +273,6 @@ final class BufferedAccessSpecMapper implements AccessSpecMapper<BufferedAccess>
         public void setBooleanValue(final boolean value) {
             m_value = (byte)(value ? 1 : 0);
             m_isMissing = false;
-        }
-
-        @Override
-        public void setValue(final BooleanValue value) {
-            setBooleanValue(value.getBooleanValue());
         }
 
     }
@@ -372,56 +294,6 @@ final class BufferedAccessSpecMapper implements AccessSpecMapper<BufferedAccess>
         }
 
         @Override
-        public double getDoubleValue() { // NOSONAR
-            return m_value;
-        }
-
-        @Override
-        public DataCell getDataCell() {
-            return new LongCell(m_value);
-        }
-
-        @Override
-        public double getRealValue() { // NOSONAR
-            return m_value;
-        }
-
-        @Override
-        public double getImaginaryValue() {
-            return 0;
-        }
-
-        @Override
-        public double getMinSupport() { // NOSONAR
-            return m_value;
-        }
-
-        @Override
-        public double getCore() { // NOSONAR
-            return m_value;
-        }
-
-        @Override
-        public double getMaxSupport() { // NOSONAR
-            return m_value;
-        }
-
-        @Override
-        public double getMinCore() { // NOSONAR
-            return m_value;
-        }
-
-        @Override
-        public double getMaxCore() { // NOSONAR
-            return m_value;
-        }
-
-        @Override
-        public double getCenterOfGravity() { // NOSONAR
-            return m_value;
-        }
-
-        @Override
         public void setMissing() {
             m_isMissing = true;
         }
@@ -430,11 +302,6 @@ final class BufferedAccessSpecMapper implements AccessSpecMapper<BufferedAccess>
         public void setLongValue(final long value) {
             m_value = value;
             m_isMissing = false;
-        }
-
-        @Override
-        public void setValue(final LongValue value) {
-            setLongValue(value.getLongValue());
         }
 
     }
@@ -451,62 +318,7 @@ final class BufferedAccessSpecMapper implements AccessSpecMapper<BufferedAccess>
         }
 
         @Override
-        public DataCell getDataCell() {
-            return new IntCell(m_value);
-        }
-
-        @Override
         public int getIntValue() {
-            return m_value;
-        }
-
-        @Override
-        public double getDoubleValue() { // NOSONAR
-            return m_value;
-        }
-
-        @Override
-        public double getRealValue() { // NOSONAR
-            return m_value;
-        }
-
-        @Override
-        public double getImaginaryValue() { // NOSONAR
-            return 0;
-        }
-
-        @Override
-        public double getMinSupport() { // NOSONAR
-            return m_value;
-        }
-
-        @Override
-        public double getCore() { // NOSONAR
-            return m_value;
-        }
-
-        @Override
-        public double getMaxSupport() { // NOSONAR
-            return m_value;
-        }
-
-        @Override
-        public double getMinCore() { // NOSONAR
-            return m_value;
-        }
-
-        @Override
-        public double getMaxCore() { // NOSONAR
-            return m_value;
-        }
-
-        @Override
-        public double getCenterOfGravity() { // NOSONAR
-            return m_value;
-        }
-
-        @Override
-        public long getLongValue() { // NOSONAR
             return m_value;
         }
 
@@ -521,11 +333,6 @@ final class BufferedAccessSpecMapper implements AccessSpecMapper<BufferedAccess>
             m_isMissing = false;
         }
 
-        @Override
-        public void setValue(final IntValue value) {
-            setIntValue(value.getIntValue());
-        }
-
     }
 
     private static final class BufferedDoubleAccess implements DoubleWriteAccess, DoubleReadAccess, BufferedAccess {
@@ -535,63 +342,13 @@ final class BufferedAccessSpecMapper implements AccessSpecMapper<BufferedAccess>
         private boolean m_isMissing;
 
         @Override
-        public DataCell getDataCell() {
-            return new DoubleCell(m_value);
-        }
-
-        @Override
         public void setDoubleValue(final double value) {
             m_value = value;
             m_isMissing = false;
         }
 
         @Override
-        public void setValue(final DoubleValue value) {
-            setDoubleValue(value.getDoubleValue());
-        }
-
-        @Override
         public double getDoubleValue() {
-            return m_value;
-        }
-
-        @Override
-        public double getRealValue() { // NOSONAR
-            return m_value;
-        }
-
-        @Override
-        public double getImaginaryValue() {
-            return 0;
-        }
-
-        @Override
-        public double getMinSupport() { // NOSONAR
-            return m_value;
-        }
-
-        @Override
-        public double getCore() { // NOSONAR
-            return m_value;
-        }
-
-        @Override
-        public double getMaxSupport() { // NOSONAR
-            return m_value;
-        }
-
-        @Override
-        public double getMinCore() { // NOSONAR
-            return m_value;
-        }
-
-        @Override
-        public double getMaxCore() { // NOSONAR
-            return m_value;
-        }
-
-        @Override
-        public double getCenterOfGravity() { // NOSONAR
             return m_value;
         }
 
@@ -679,15 +436,12 @@ final class BufferedAccessSpecMapper implements AccessSpecMapper<BufferedAccess>
 
         private final AccessSpec<A, A> m_innerSpecs;
 
-        private final ValueFactory<A, A> m_innerValueFactory;
-
         private BufferedAccess[] m_inner;
 
         BufferedListAccess(final ListAccessSpec<?, ?> spec) {
             @SuppressWarnings("unchecked")
             final ListAccessSpec<A, A> bufferedListSpec = (ListAccessSpec<A, A>)spec;
             m_innerSpecs = bufferedListSpec.getInnerSpecs();
-            m_innerValueFactory = bufferedListSpec.getInnerValueFactory();
         }
 
         // ReadAccess
@@ -703,12 +457,10 @@ final class BufferedAccessSpecMapper implements AccessSpecMapper<BufferedAccess>
         }
 
         @Override
-        public <R extends ReadValue> R getReadValue(final int index) {
+        public <R extends ReadAccess> R getReadAccess(final int index) {
             @SuppressWarnings("unchecked")
-            A access = (A)m_inner[index];
-            @SuppressWarnings("unchecked")
-            final R value = (R)m_innerValueFactory.createReadValue(access);
-            return value;
+            R access = (R)m_inner[index];
+            return access;
         }
 
         @Override
@@ -724,12 +476,10 @@ final class BufferedAccessSpecMapper implements AccessSpecMapper<BufferedAccess>
         }
 
         @Override
-        public <D extends DataValue, W extends WriteValue<D>> W getWriteValue(final int index) {
+        public <W extends WriteAccess> W getWriteAccess(final int index) {
             @SuppressWarnings("unchecked")
-            final A access = (A)m_inner[index];
-            @SuppressWarnings("unchecked")
-            final W value = (W)m_innerValueFactory.createWriteValue(access);
-            return value;
+            final W access = (W)m_inner[index];
+            return access;
         }
 
         @Override

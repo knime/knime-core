@@ -100,9 +100,9 @@ public final class DoubleSparseListValueFactory implements ValueFactory<StructRe
         final DoubleAccessSpec defaultAccessSpec = DoubleAccessSpec.INSTANCE;
         final IntAccessSpec sizeAccessSpec = IntAccessSpec.INSTANCE;
         final ListAccessSpec<IntReadAccess, IntWriteAccess> indicesAccessSpec =
-            new ListAccessSpec<>(IntValueFactory.INSTANCE);
+            new ListAccessSpec<>(IntAccessSpec.INSTANCE);
         final ListAccessSpec<DoubleReadAccess, DoubleWriteAccess> listAccessSpec =
-            new ListAccessSpec<>(DoubleValueFactory.INSTANCE);
+            new ListAccessSpec<>(DoubleAccessSpec.INSTANCE);
         return new StructAccessSpec(defaultAccessSpec, sizeAccessSpec, indicesAccessSpec, listAccessSpec);
     }
 

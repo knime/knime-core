@@ -48,9 +48,6 @@
  */
 package org.knime.core.data.v2.access;
 
-import org.knime.core.data.v2.value.DoubleValueFactory.DoubleReadValue;
-import org.knime.core.data.v2.value.DoubleValueFactory.DoubleWriteValue;
-
 /**
  * @since 4.3
  *
@@ -74,9 +71,11 @@ public final class DoubleAccess {
         }
     }
 
-    public interface DoubleReadAccess extends ReadAccess, DoubleReadValue {
+    public interface DoubleReadAccess extends ReadAccess {
+        double getDoubleValue();
     }
 
-    public interface DoubleWriteAccess extends WriteAccess, DoubleWriteValue {
+    public interface DoubleWriteAccess extends WriteAccess {
+        void setDoubleValue(final double value);
     }
 }

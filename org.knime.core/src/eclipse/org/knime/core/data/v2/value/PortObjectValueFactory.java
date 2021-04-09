@@ -206,6 +206,11 @@ public class PortObjectValueFactory
         }
 
         @Override
+        public boolean isMissing() {
+            return m_access.isMissing();
+        }
+
+        @Override
         public DataCell getDataCell() {
             return new PortObjectCell(getPortObject());
         }
@@ -223,6 +228,11 @@ public class PortObjectValueFactory
 
         private DefaultPortObjectWriteValue(final ObjectWriteAccess<PortObject> access) {
             m_access = access;
+        }
+
+        @Override
+        public void setMissing() {
+            m_access.setMissing();
         }
 
         @Override

@@ -96,17 +96,17 @@ public final class ListValueFactory implements CollectionValueFactory<ListReadAc
 
     @Override
     public ListAccessSpec<ReadAccess, WriteAccess> getSpec() {
-        return new ListAccessSpec<>(m_inner);
+        return new ListAccessSpec<>(m_inner.getSpec());
     }
 
     @Override
     public ListReadValue createReadValue(final ListReadAccess reader) {
-        return new DefaultListReadValue(reader, m_elementType);
+        return new DefaultListReadValue(reader, m_inner, m_elementType);
     }
 
     @Override
     public ListWriteValue createWriteValue(final ListWriteAccess writer) {
-        return new DefaultListWriteValue(writer);
+        return new DefaultListWriteValue(writer, m_inner);
     }
 
     /**
@@ -147,7 +147,13 @@ public final class ListValueFactory implements CollectionValueFactory<ListReadAc
         /** The access to the list. */
         protected final ListReadAccess m_reader;
 
+        private final ValueFactory<?, ?> m_inner;
+
         private final DataType m_elementType;
+
+        private int m_lastIndex = -1;
+
+        private ReadValue m_value;
 
         /**
          * Create a default {@link ListReadValue}.
@@ -155,9 +161,16 @@ public final class ListValueFactory implements CollectionValueFactory<ListReadAc
          * @param reader {@link ListReadAccess} to get the values
          * @param elementType the type of the elements
          */
-        DefaultListReadValue(final ListReadAccess reader, final DataType elementType) {
-            m_elementType = elementType;
+        DefaultListReadValue(final ListReadAccess reader, final ValueFactory<?, ?> inner,
+            final DataType elementType) {
             m_reader = reader;
+            m_inner = inner;
+            m_elementType = elementType;
+        }
+
+        @Override
+        public boolean isMissing() {
+            return m_reader.isMissing();
         }
 
         @Override
@@ -202,7 +215,11 @@ public final class ListValueFactory implements CollectionValueFactory<ListReadAc
         @Override
         public DataCell get(final int index) {
             if (!isMissing(index)) {
-                return m_reader.getReadValue(index).getDataCell();
+                if (index != m_lastIndex) {
+                    m_lastIndex = index;
+                    m_value = m_inner.createReadValue(m_reader.getReadAccess(index));
+                }
+                return m_value.getDataCell();
             } else {
                 return DataType.getMissingCell();
             }
@@ -229,13 +246,21 @@ public final class ListValueFactory implements CollectionValueFactory<ListReadAc
 
         private final ListWriteAccess m_writer;
 
+        private final ValueFactory<?, ?> m_inner;
+
         /**
          * Create a default {@link ListWriteValue}.
          *
          * @param writer {@link ListWriteAccess} to access the values
          */
-        DefaultListWriteValue(final ListWriteAccess writer) {
+        DefaultListWriteValue(final ListWriteAccess writer, final ValueFactory<?, ?> inner) {
             m_writer = writer;
+            m_inner = inner;
+        }
+
+        @Override
+        public void setMissing() {
+            m_writer.setMissing();
         }
 
         @Override
@@ -271,7 +296,9 @@ public final class ListValueFactory implements CollectionValueFactory<ListReadAc
             final BiConsumer<Integer, W> setter) {
             m_writer.create(size);
             for (int i = 0; i < size; i++) {
-                setter.accept(i, m_writer.getWriteValue(i));
+                @SuppressWarnings("unchecked")
+                W value = (W)m_inner.createWriteValue(m_writer.getWriteAccess(i));
+                setter.accept(i, value);
             }
         }
     }

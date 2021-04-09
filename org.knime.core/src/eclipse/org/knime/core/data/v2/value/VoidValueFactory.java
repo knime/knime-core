@@ -94,6 +94,11 @@ public final class VoidValueFactory implements ValueFactory<ReadAccess, WriteAcc
         private static final DataCell MISSING_INSTANCE = DataType.getMissingCell();
 
         @Override
+        public boolean isMissing() {
+            return true;
+        }
+
+        @Override
         public DataCell getDataCell() {
             return MISSING_INSTANCE;
         }
@@ -101,6 +106,11 @@ public final class VoidValueFactory implements ValueFactory<ReadAccess, WriteAcc
 
     private static final class VoidWriteValue implements WriteValue<DataValue> {
         private static final VoidWriteValue WRITE_VALUE_INSTANCE = new VoidWriteValue();
+
+        @Override
+        public void setMissing() {
+            // NOOP (void value)
+        }
 
         @Override
         public void setValue(final DataValue value) {

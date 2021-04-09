@@ -109,9 +109,9 @@ public abstract class ObjectSparseListValueFactory<T> implements ValueFactory<St
         final AccessSpec<ObjectReadAccess<T>, ObjectWriteAccess<T>> defaultAccessSpec = m_innerValueFactory.getSpec();
         final IntAccessSpec sizeAccessSpec = IntAccessSpec.INSTANCE;
         final ListAccessSpec<IntReadAccess, IntWriteAccess> indicesAccessSpec =
-            new ListAccessSpec<>(IntValueFactory.INSTANCE);
+            new ListAccessSpec<>(IntAccessSpec.INSTANCE);
         final ListAccessSpec<ObjectReadAccess<T>, ObjectWriteAccess<T>> listAccessSpec =
-            new ListAccessSpec<>(m_innerValueFactory);
+            new ListAccessSpec<>(m_innerValueFactory.getSpec());
         return new StructAccessSpec(defaultAccessSpec, sizeAccessSpec, indicesAccessSpec, listAccessSpec);
     }
 

@@ -90,7 +90,7 @@ public abstract class ObjectListValueFactory<T> implements ValueFactory<ListRead
 
     @Override
     public ListAccessSpec<ObjectReadAccess<T>, ObjectWriteAccess<T>> getSpec() {
-        return new ListAccessSpec<>(m_innerValueFactory);
+        return new ListAccessSpec<>(m_innerValueFactory.getSpec());
     }
 
     /**
@@ -149,8 +149,9 @@ public abstract class ObjectListValueFactory<T> implements ValueFactory<ListRead
          * @param reader the access to the list
          * @param type the {@link DataType} of the elements
          */
-        protected AbstractObjectListReadValue(final ListReadAccess reader, final DataType type) {
-            super(reader, type);
+        protected AbstractObjectListReadValue(final ListReadAccess reader, final ValueFactory<?, ?> inner,
+            final DataType type) {
+            super(reader, inner, type);
         }
 
         /**

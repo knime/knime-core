@@ -101,9 +101,9 @@ public final class BooleanSparseListValueFactory implements ValueFactory<StructR
         final BooleanAccessSpec defaultAccessSpec = BooleanAccessSpec.INSTANCE;
         final IntAccessSpec sizeAccessSpec = IntAccessSpec.INSTANCE;
         final ListAccessSpec<IntReadAccess, IntWriteAccess> indicesAccessSpec =
-            new ListAccessSpec<>(IntValueFactory.INSTANCE);
+            new ListAccessSpec<>(IntAccessSpec.INSTANCE);
         final ListAccessSpec<BooleanReadAccess, BooleanWriteAccess> listAccessSpec =
-            new ListAccessSpec<>(BooleanValueFactory.INSTANCE);
+            new ListAccessSpec<>(BooleanAccessSpec.INSTANCE);
         return new StructAccessSpec(defaultAccessSpec, sizeAccessSpec, indicesAccessSpec, listAccessSpec);
     }
 

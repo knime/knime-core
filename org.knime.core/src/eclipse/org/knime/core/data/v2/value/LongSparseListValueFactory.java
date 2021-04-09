@@ -100,9 +100,9 @@ public final class LongSparseListValueFactory implements ValueFactory<StructRead
         final LongAccessSpec defaultAccessSpec = LongAccessSpec.INSTANCE;
         final IntAccessSpec sizeAccessSpec = IntAccessSpec.INSTANCE;
         final ListAccessSpec<IntReadAccess, IntWriteAccess> indicesAccessSpec =
-            new ListAccessSpec<>(IntValueFactory.INSTANCE);
+            new ListAccessSpec<>(IntAccessSpec.INSTANCE);
         final ListAccessSpec<LongReadAccess, LongWriteAccess> listAccessSpec =
-            new ListAccessSpec<>(LongValueFactory.INSTANCE);
+            new ListAccessSpec<>(LongAccessSpec.INSTANCE);
         return new StructAccessSpec(defaultAccessSpec, sizeAccessSpec, indicesAccessSpec, listAccessSpec);
     }
 

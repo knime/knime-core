@@ -48,11 +48,6 @@
  */
 package org.knime.core.data.v2.access;
 
-import org.knime.core.data.DataValue;
-import org.knime.core.data.v2.ReadValue;
-import org.knime.core.data.v2.ValueFactory;
-import org.knime.core.data.v2.WriteValue;
-
 /**
  * Definitions of Access for to Lists.
  *
@@ -75,27 +70,20 @@ public final class ListAccess {
     public static final class ListAccessSpec<R extends ReadAccess, W extends WriteAccess>
         implements AccessSpec<ListReadAccess, ListWriteAccess> {
 
-        private final ValueFactory<R, W> m_inner;
+        private final AccessSpec<R, W> m_inner;
 
         /**
-         * @param inner the {@link ValueFactory} for the list elements
+         * @param inner the {@link AccessSpec} for the list elements
          */
-        public ListAccessSpec(final ValueFactory<R, W> inner) {
+        public ListAccessSpec(final AccessSpec<R, W> inner) {
             m_inner = inner;
-        }
-
-        /**
-         * @return the inner {@link ValueFactory} to create values for the elements
-         */
-        public ValueFactory<R, W> getInnerValueFactory() {
-            return m_inner;
         }
 
         /**
          * @return the {@link AccessSpec} of the list elements
          */
         public AccessSpec<R, W> getInnerSpecs() {
-            return m_inner.getSpec();
+            return m_inner;
         }
 
         @Override
@@ -112,15 +100,15 @@ public final class ListAccess {
     public interface ListReadAccess extends ReadAccess {
 
         /**
-         * Get the {@link ReadValue} at the given index in the list. Note that this object should only be used until
+         * Get the {@link ReadAccess} at the given index in the list. Note that this object should only be used until
          * this method is called again. Implementations are allowed to reuse the object when this method is called
          * again.
          *
-         * @param <R> the type of the {@link ReadValue}
+         * @param <R> the type of the {@link ReadAccess}
          * @param index the index in the list
-         * @return the {@link ReadValue} at the given index
+         * @return the {@link ReadAccess} at the given index
          */
-        <R extends ReadValue> R getReadValue(int index);
+        <R extends ReadAccess> R getReadAccess(int index);
 
         /**
          * @param index the index in the list
@@ -142,18 +130,17 @@ public final class ListAccess {
     public interface ListWriteAccess extends WriteAccess {
 
         /**
-         * Get the {@link WriteValue} at the given index in the list. Call this only after starting a new list with
+         * Get the {@link WriteAccess} at the given index in the list. Call this only after starting a new list with
          * {@link #create(int)}.
          *
          * Note that this object should only be used until this method is called again. Implementations are allowed to
          * reuse the object when this method is called again.
          *
-         * @param <D> the type of the {@link DataValue} written by the {@link WriteValue} of type W
-         * @param <W> the type of the {@link WriteValue}
+         * @param <W> the type of the {@link WriteAccess}
          * @param index the index in the list
-         * @return the {@link WriteValue} at the given index
+         * @return the {@link WriteAccess} at the given index
          */
-        <D extends DataValue, W extends WriteValue<D>> W getWriteValue(int index);
+        <W extends WriteAccess> W getWriteAccess(int index);
 
         /**
          * Create a new list with the given size. Call this before accessing the elements.

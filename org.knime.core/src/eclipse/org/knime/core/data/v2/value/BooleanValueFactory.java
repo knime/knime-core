@@ -51,6 +51,7 @@ package org.knime.core.data.v2.value;
 import org.knime.core.data.BooleanValue;
 import org.knime.core.data.BoundedValue;
 import org.knime.core.data.ComplexNumberValue;
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.FuzzyIntervalValue;
 import org.knime.core.data.FuzzyNumberValue;
@@ -85,12 +86,12 @@ public class BooleanValueFactory implements ValueFactory<BooleanReadAccess, Bool
 
     @Override
     public BooleanReadValue createReadValue(final BooleanReadAccess reader) {
-        return reader;
+        return new DefaultBooleanReadValue(reader);
     }
 
     @Override
     public BooleanWriteValue createWriteValue(final BooleanWriteAccess writer) {
-        return writer;
+        return new DefaultBooleanWriteValue(writer);
     }
 
     /**
@@ -124,6 +125,110 @@ public class BooleanValueFactory implements ValueFactory<BooleanReadAccess, Bool
          * @param value the boolean to set.
          */
         void setBooleanValue(boolean value);
+    }
+
+    private static final class DefaultBooleanReadValue extends AbstractValue<BooleanReadAccess>
+        implements BooleanReadValue {
+
+        DefaultBooleanReadValue(final BooleanReadAccess access) {
+            super(access);
+        }
+
+        @Override
+        public double getDoubleValue() {
+            return m_access.getBooleanValue() ? 1 : 0;
+        }
+
+        @Override
+        public long getLongValue() {
+            return m_access.getBooleanValue() ? 1 : 0;
+        }
+
+        @Override
+        public int getIntValue() {
+            return m_access.getBooleanValue() ? 1 : 0;
+        }
+
+        @Override
+        public double getRealValue() {
+            return m_access.getBooleanValue() ? 1 : 0;
+        }
+
+        @Override
+        public double getImaginaryValue() {
+            return 0;
+        }
+
+        @Override
+        public double getMinSupport() {
+            return m_access.getBooleanValue() ? 1 : 0;
+        }
+
+        @Override
+        public double getCore() {
+            return m_access.getBooleanValue() ? 1 : 0;
+        }
+
+        @Override
+        public double getMaxSupport() {
+            return m_access.getBooleanValue() ? 1 : 0;
+        }
+
+        @Override
+        public double getMinCore() {
+            return m_access.getBooleanValue() ? 1 : 0;
+        }
+
+        @Override
+        public double getMaxCore() {
+            return m_access.getBooleanValue() ? 1 : 0;
+        }
+
+        @Override
+        public double getCenterOfGravity() {
+            return m_access.getBooleanValue() ? 1 : 0;
+        }
+
+        @Override
+        public DataCell getDataCell() {
+            return m_access.getBooleanValue() ? BooleanCell.TRUE : BooleanCell.FALSE;
+        }
+
+        @Override
+        public boolean getBooleanValue() {
+            return m_access.getBooleanValue();
+        }
+
+        @Override
+        public boolean isMissing() {
+            return m_access.isMissing();
+        }
+
+    }
+
+    private static final class DefaultBooleanWriteValue extends AbstractValue<BooleanWriteAccess>
+        implements BooleanWriteValue {
+
+        DefaultBooleanWriteValue(final BooleanWriteAccess access) {
+            super(access);
+        }
+
+        @Override
+        public void setValue(final BooleanValue value) {
+            m_access.setBooleanValue(value.getBooleanValue());
+        }
+
+        @Override
+        public void setMissing() {
+            m_access.setMissing();
+        }
+
+        @Override
+        public void setBooleanValue(final boolean value) {
+            m_access.setBooleanValue(value);
+
+        }
+
     }
 
 }

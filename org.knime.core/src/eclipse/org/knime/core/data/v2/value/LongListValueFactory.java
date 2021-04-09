@@ -62,6 +62,7 @@ import org.knime.core.data.v2.WriteValue;
 import org.knime.core.data.v2.access.ListAccess.ListAccessSpec;
 import org.knime.core.data.v2.access.ListAccess.ListReadAccess;
 import org.knime.core.data.v2.access.ListAccess.ListWriteAccess;
+import org.knime.core.data.v2.access.LongAccess.LongAccessSpec;
 import org.knime.core.data.v2.access.LongAccess.LongReadAccess;
 import org.knime.core.data.v2.access.LongAccess.LongWriteAccess;
 import org.knime.core.data.v2.value.IntValueFactory.IntReadValue;
@@ -86,7 +87,7 @@ public final class LongListValueFactory implements ValueFactory<ListReadAccess, 
 
     @Override
     public ListAccessSpec<LongReadAccess, LongWriteAccess> getSpec() {
-        return new ListAccessSpec<>(LongValueFactory.INSTANCE);
+        return new ListAccessSpec<>(LongAccessSpec.INSTANCE);
     }
 
     @Override
@@ -144,12 +145,12 @@ public final class LongListValueFactory implements ValueFactory<ListReadAccess, 
     private static final class DefaultLongListReadValue extends DefaultListReadValue implements LongListReadValue {
 
         private DefaultLongListReadValue(final ListReadAccess reader) {
-            super(reader, IntCell.TYPE);
+            super(reader, LongValueFactory.INSTANCE, IntCell.TYPE);
         }
 
         @Override
         public long getLong(final int index) {
-            final IntReadValue v = m_reader.getReadValue(index);
+            final IntReadValue v = m_reader.getReadAccess(index);
             return v.getIntValue();
         }
 
@@ -171,7 +172,7 @@ public final class LongListValueFactory implements ValueFactory<ListReadAccess, 
     private static final class DefaultLongListWriteValue extends DefaultListWriteValue implements LongListWriteValue {
 
         private DefaultLongListWriteValue(final ListWriteAccess writer) {
-            super(writer);
+            super(writer, LongValueFactory.INSTANCE);
         }
 
         @Override

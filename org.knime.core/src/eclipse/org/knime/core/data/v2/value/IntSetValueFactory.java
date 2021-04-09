@@ -60,6 +60,7 @@ import org.knime.core.data.def.IntCell;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
+import org.knime.core.data.v2.access.IntAccess.IntAccessSpec;
 import org.knime.core.data.v2.access.IntAccess.IntReadAccess;
 import org.knime.core.data.v2.access.IntAccess.IntWriteAccess;
 import org.knime.core.data.v2.access.ListAccess.ListAccessSpec;
@@ -87,7 +88,7 @@ public final class IntSetValueFactory implements ValueFactory<ListReadAccess, Li
 
     @Override
     public ListAccessSpec<IntReadAccess, IntWriteAccess> getSpec() {
-        return new ListAccessSpec<>(IntValueFactory.INSTANCE);
+        return new ListAccessSpec<>(IntAccessSpec.INSTANCE);
     }
 
     @Override

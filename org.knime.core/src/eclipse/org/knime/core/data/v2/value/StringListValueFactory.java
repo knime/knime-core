@@ -114,7 +114,7 @@ public final class StringListValueFactory extends ObjectListValueFactory<String>
         implements StringListReadValue {
 
         private DefaultStringListReadValue(final ListReadAccess reader) {
-            super(reader, StringCell.TYPE);
+            super(reader, StringValueFactory.INSTANCE, StringCell.TYPE);
         }
 
         @Override
@@ -124,7 +124,7 @@ public final class StringListValueFactory extends ObjectListValueFactory<String>
 
         @Override
         public String getValue(final int index) {
-            final StringReadValue v = m_reader.getReadValue(index);
+            final StringReadValue v = m_reader.getReadAccess(index);
             return v.getStringValue();
         }
 
@@ -138,7 +138,7 @@ public final class StringListValueFactory extends ObjectListValueFactory<String>
         implements StringListWriteValue {
 
         private DefaultStringListWriteValue(final ListWriteAccess writer) {
-            super(writer);
+            super(writer, StringValueFactory.INSTANCE);
         }
 
         @Override

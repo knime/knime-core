@@ -48,9 +48,6 @@
  */
 package org.knime.core.data.v2.access;
 
-import org.knime.core.data.v2.value.LongValueFactory.LongReadValue;
-import org.knime.core.data.v2.value.LongValueFactory.LongWriteValue;
-
 /**
  * Definition of {@link LongAccess}.
  *
@@ -77,9 +74,11 @@ public final class LongAccess {
         }
     }
 
-    public interface LongReadAccess extends ReadAccess, LongReadValue {
+    public interface LongReadAccess extends ReadAccess {
+        long getLongValue();
     }
 
-    public interface LongWriteAccess extends WriteAccess, LongWriteValue {
+    public interface LongWriteAccess extends WriteAccess {
+        void setLongValue(long value);
     }
 }

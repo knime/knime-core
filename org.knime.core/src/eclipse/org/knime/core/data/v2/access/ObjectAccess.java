@@ -58,15 +58,9 @@ import java.time.LocalTime;
 import java.time.Period;
 import java.time.ZonedDateTime;
 
-import org.knime.core.data.BoundedValue;
-import org.knime.core.data.DataValueComparator;
-import org.knime.core.data.NominalValue;
-
 /**
  * Definition of {@link ObjectAccess} to read and write arbitrary objects via serialization / deserialization into
- * byte[]. The underlying data table back-end is responsible for caching. Domains for {@link BoundedValue} and
- * {@link NominalValue}s will automatically be calculated. In case of {@link BoundedValue}s the
- * {@link DataValueComparator} is used to compare values.
+ * byte[]. The underlying data table back-end is responsible for caching.
  *
  * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
  * @since 4.3

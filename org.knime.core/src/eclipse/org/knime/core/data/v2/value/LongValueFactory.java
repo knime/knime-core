@@ -47,6 +47,7 @@ package org.knime.core.data.v2.value;
 
 import org.knime.core.data.BoundedValue;
 import org.knime.core.data.ComplexNumberValue;
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.FuzzyIntervalValue;
 import org.knime.core.data.FuzzyNumberValue;
@@ -79,12 +80,12 @@ public final class LongValueFactory implements ValueFactory<LongReadAccess, Long
 
     @Override
     public LongReadValue createReadValue(final LongReadAccess reader) {
-        return reader;
+        return new DefaultLongReadValue(reader);
     }
 
     @Override
     public LongWriteValue createWriteValue(final LongWriteAccess writer) {
-        return writer;
+        return new DefaultLongWriteValue(writer);
     }
 
     /**
@@ -115,5 +116,96 @@ public final class LongValueFactory implements ValueFactory<LongReadAccess, Long
          * @param value the long value to set
          */
         void setLongValue(long value);
+    }
+
+    private static final class DefaultLongReadValue extends AbstractValue<LongReadAccess> implements LongReadValue {
+
+        DefaultLongReadValue(final LongReadAccess access) {
+            super(access);
+        }
+
+        @Override
+        public double getDoubleValue() {
+            return m_access.getLongValue();
+        }
+
+        @Override
+        public DataCell getDataCell() {
+            return new LongCell(m_access.getLongValue());
+        }
+
+        @Override
+        public double getRealValue() {
+            return m_access.getLongValue();
+        }
+
+        @Override
+        public double getImaginaryValue() {
+            return 0;
+        }
+
+        @Override
+        public double getMinSupport() {
+            return m_access.getLongValue();
+        }
+
+        @Override
+        public double getCore() {
+            return m_access.getLongValue();
+        }
+
+        @Override
+        public double getMaxSupport() {
+            return m_access.getLongValue();
+        }
+
+        @Override
+        public double getMinCore() {
+            return m_access.getLongValue();
+        }
+
+        @Override
+        public double getMaxCore() {
+            return m_access.getLongValue();
+        }
+
+        @Override
+        public double getCenterOfGravity() {
+            return m_access.getLongValue();
+        }
+
+        @Override
+        public long getLongValue() {
+            return m_access.getLongValue();
+        }
+
+        @Override
+        public boolean isMissing() {
+            return m_access.isMissing();
+        }
+
+    }
+
+    private static final class DefaultLongWriteValue extends AbstractValue<LongWriteAccess> implements LongWriteValue {
+
+        DefaultLongWriteValue(final LongWriteAccess access) {
+            super(access);
+        }
+
+        @Override
+        public void setValue(final LongValue value) {
+            m_access.setLongValue(value.getLongValue());
+        }
+
+        @Override
+        public void setMissing() {
+            m_access.setMissing();
+        }
+
+        @Override
+        public void setLongValue(final long value) {
+            m_access.setLongValue(value);
+        }
+
     }
 }

@@ -58,6 +58,7 @@ import org.knime.core.data.def.IntCell;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
+import org.knime.core.data.v2.access.IntAccess.IntAccessSpec;
 import org.knime.core.data.v2.access.IntAccess.IntReadAccess;
 import org.knime.core.data.v2.access.IntAccess.IntWriteAccess;
 import org.knime.core.data.v2.access.ListAccess.ListAccessSpec;
@@ -85,7 +86,7 @@ public final class IntListValueFactory implements ValueFactory<ListReadAccess, L
 
     @Override
     public ListAccessSpec<IntReadAccess, IntWriteAccess> getSpec() {
-        return new ListAccessSpec<>(IntValueFactory.INSTANCE);
+        return new ListAccessSpec<>(IntAccessSpec.INSTANCE);
     }
 
     @Override
@@ -143,12 +144,12 @@ public final class IntListValueFactory implements ValueFactory<ListReadAccess, L
     private static final class DefaultIntListReadValue extends DefaultListReadValue implements IntListReadValue {
 
         private DefaultIntListReadValue(final ListReadAccess reader) {
-            super(reader, IntCell.TYPE);
+            super(reader, IntValueFactory.INSTANCE, IntCell.TYPE);
         }
 
         @Override
         public int getInt(final int index) {
-            final IntReadValue v = m_reader.getReadValue(index);
+            final IntReadValue v = m_reader.getReadAccess(index);
             return v.getIntValue();
         }
 
@@ -170,7 +171,7 @@ public final class IntListValueFactory implements ValueFactory<ListReadAccess, L
     private static final class DefaultIntListWriteValue extends DefaultListWriteValue implements IntListWriteValue {
 
         private DefaultIntListWriteValue(final ListWriteAccess writer) {
-            super(writer);
+            super(writer, IntValueFactory.INSTANCE);
         }
 
         @Override

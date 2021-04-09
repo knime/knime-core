@@ -48,9 +48,6 @@
  */
 package org.knime.core.data.v2.access;
 
-import org.knime.core.data.v2.value.IntValueFactory.IntReadValue;
-import org.knime.core.data.v2.value.IntValueFactory.IntWriteValue;
-
 /**
  * Definition of {@link IntAccess}.
  *
@@ -77,9 +74,11 @@ public final class IntAccess {
         }
     }
 
-    public interface IntReadAccess extends ReadAccess, IntReadValue {
+    public interface IntReadAccess extends ReadAccess {
+        int getIntValue();
     }
 
-    public interface IntWriteAccess extends WriteAccess, IntWriteValue {
+    public interface IntWriteAccess extends WriteAccess {
+        void setIntValue(final int value);
     }
 }

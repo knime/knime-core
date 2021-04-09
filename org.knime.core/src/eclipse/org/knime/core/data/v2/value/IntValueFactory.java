@@ -50,6 +50,7 @@ package org.knime.core.data.v2.value;
 
 import org.knime.core.data.BoundedValue;
 import org.knime.core.data.ComplexNumberValue;
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.FuzzyIntervalValue;
 import org.knime.core.data.FuzzyNumberValue;
@@ -83,12 +84,12 @@ public final class IntValueFactory implements ValueFactory<IntReadAccess, IntWri
 
     @Override
     public IntReadValue createReadValue(final IntReadAccess access) {
-        return access;
+        return new DefaultIntReadValue(access);
     }
 
     @Override
     public IntWriteValue createWriteValue(final IntWriteAccess access) {
-        return access;
+        return new DefaultIntWriteValue(access);
     }
 
     /**
@@ -121,4 +122,102 @@ public final class IntValueFactory implements ValueFactory<IntReadAccess, IntWri
          */
         void setIntValue(int value);
     }
+
+    private static final class DefaultIntReadValue extends AbstractValue<IntReadAccess> implements IntReadValue {
+
+        DefaultIntReadValue(final IntReadAccess access) {
+            super(access);
+        }
+
+        @Override
+        public boolean isMissing() {
+            return m_access.isMissing();
+        }
+
+        @Override
+        public int getIntValue() {
+            return m_access.getIntValue();
+        }
+
+        @Override
+        public DataCell getDataCell() {
+            return new IntCell(m_access.getIntValue());
+        }
+
+        @Override
+        public double getDoubleValue() {
+            return m_access.getIntValue();
+        }
+
+        @Override
+        public double getRealValue() {
+            return m_access.getIntValue();
+        }
+
+        @Override
+        public double getImaginaryValue() {
+            return 0;
+        }
+
+        @Override
+        public double getMinSupport() {
+            return m_access.getIntValue();
+        }
+
+        @Override
+        public double getCore() {
+            return m_access.getIntValue();
+        }
+
+        @Override
+        public double getMaxSupport() {
+            return m_access.getIntValue();
+        }
+
+        @Override
+        public double getMinCore() {
+            return m_access.getIntValue();
+        }
+
+        @Override
+        public double getMaxCore() {
+            return m_access.getIntValue();
+        }
+
+        @Override
+        public double getCenterOfGravity() {
+            return m_access.getIntValue();
+        }
+
+        @Override
+        public long getLongValue() {
+            return m_access.getIntValue();
+        }
+
+    }
+
+    private static final class DefaultIntWriteValue extends AbstractValue<IntWriteAccess> implements IntWriteValue {
+
+        DefaultIntWriteValue(final IntWriteAccess access) {
+            super(access);
+        }
+
+        @Override
+        public void setMissing() {
+            m_access.setMissing();
+        }
+
+        @Override
+        public void setIntValue(final int value) {
+            m_access.setIntValue(value);
+        }
+
+        @Override
+        public void setValue(final IntValue value) {
+            m_access.setIntValue(value.getIntValue());
+
+        }
+
+    }
+
 }

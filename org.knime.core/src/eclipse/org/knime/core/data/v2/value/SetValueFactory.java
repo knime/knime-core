@@ -154,6 +154,11 @@ public final class SetValueFactory implements CollectionValueFactory<ListReadAcc
         }
 
         @Override
+        public boolean isMissing() {
+            return m_value.isMissing();
+        }
+
+        @Override
         public DataType getElementType() {
             return m_value.getElementType();
         }
@@ -215,6 +220,11 @@ public final class SetValueFactory implements CollectionValueFactory<ListReadAcc
             @SuppressWarnings("unchecked")
             final L value = (L)listValueFactory.createWriteValue(writer);
             m_value = value;
+        }
+
+        @Override
+        public void setMissing() {
+            m_value.setMissing();
         }
 
         @Override

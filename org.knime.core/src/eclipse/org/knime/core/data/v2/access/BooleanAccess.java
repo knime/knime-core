@@ -48,9 +48,6 @@
  */
 package org.knime.core.data.v2.access;
 
-import org.knime.core.data.v2.value.BooleanValueFactory.BooleanReadValue;
-import org.knime.core.data.v2.value.BooleanValueFactory.BooleanWriteValue;
-
 /**
  * Definition of {@link BooleanAccess}.
  *
@@ -77,9 +74,11 @@ public final class BooleanAccess {
         }
     }
 
-    public interface BooleanReadAccess extends ReadAccess, BooleanReadValue {
+    public interface BooleanReadAccess extends ReadAccess {
+        boolean getBooleanValue();
     }
 
-    public interface BooleanWriteAccess extends WriteAccess, BooleanWriteValue {
+    public interface BooleanWriteAccess extends WriteAccess {
+        void setBooleanValue(boolean value);
     }
 }

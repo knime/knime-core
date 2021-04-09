@@ -63,6 +63,7 @@ import org.knime.core.data.v2.WriteValue;
 import org.knime.core.data.v2.access.ListAccess.ListAccessSpec;
 import org.knime.core.data.v2.access.ListAccess.ListReadAccess;
 import org.knime.core.data.v2.access.ListAccess.ListWriteAccess;
+import org.knime.core.data.v2.access.LongAccess.LongAccessSpec;
 import org.knime.core.data.v2.access.LongAccess.LongReadAccess;
 import org.knime.core.data.v2.access.LongAccess.LongWriteAccess;
 import org.knime.core.data.v2.value.LongListValueFactory.LongListReadValue;
@@ -87,7 +88,7 @@ public final class LongSetValueFactory implements ValueFactory<ListReadAccess, L
 
     @Override
     public ListAccessSpec<LongReadAccess, LongWriteAccess> getSpec() {
-        return new ListAccessSpec<>(LongValueFactory.INSTANCE);
+        return new ListAccessSpec<>(LongAccessSpec.INSTANCE);
     }
 
     @Override

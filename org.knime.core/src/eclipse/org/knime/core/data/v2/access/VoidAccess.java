@@ -58,13 +58,16 @@ package org.knime.core.data.v2.access;
  */
 public final class VoidAccess {
 
+    private VoidAccess() {
+    }
+
     /**
      * Void Spec.
      *
      * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
      * @since 4.3
      */
-    public static class VoidAccessSpec implements AccessSpec<ReadAccess, WriteAccess> {
+    public static final class VoidAccessSpec implements AccessSpec<ReadAccess, WriteAccess> {
 
         /** Default VoidAccessSpec **/
         public static final VoidAccessSpec INSTANCE = new VoidAccessSpec();

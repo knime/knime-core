@@ -42,28 +42,22 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
+ *
+ * History
+ *   9 Apr 2021 (Marc Bux, KNIME GmbH, Berlin, Germany): created
  */
-package org.knime.core.data.v2;
-
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataValue;
-import org.knime.core.data.def.DoubleCell;
-import org.knime.core.data.v2.access.WriteAccess;
-import org.knime.core.data.v2.value.DoubleValueFactory.DoubleWriteValue;
+package org.knime.core.data.v2.value;
 
 /**
- * Important Note for developers: We assume a 1-to-1 association from a {@link DataCell} to a {@link WriteValue}, for
- * example {@link DoubleWriteValue} to {@link DoubleCell#TYPE}.
  *
- * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
- * @param <D> associated {@link DataValue}.
- * @since 4.3
- *
- * @noreference This interface is not intended to be referenced by clients.
+ * @author Marc Bux, KNIME GmbH, Berlin, Germany
  */
-public interface WriteValue<D extends DataValue> extends WriteAccess {
-    /**
-     * @param value the value to set
-     */
-    void setValue(D value);
+class AbstractValue<T> {
+
+    final T m_access;
+
+    AbstractValue(final T access) {
+        m_access = access;
+    }
+
 }

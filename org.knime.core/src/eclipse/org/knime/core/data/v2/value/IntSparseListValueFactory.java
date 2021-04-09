@@ -97,9 +97,9 @@ public final class IntSparseListValueFactory implements ValueFactory<StructReadA
         final IntAccessSpec defaultAccessSpec = IntAccessSpec.INSTANCE;
         final IntAccessSpec sizeAccessSpec = IntAccessSpec.INSTANCE;
         final ListAccessSpec<IntReadAccess, IntWriteAccess> indicesAccessSpec =
-            new ListAccessSpec<>(IntValueFactory.INSTANCE);
+            new ListAccessSpec<>(IntAccessSpec.INSTANCE);
         final ListAccessSpec<IntReadAccess, IntWriteAccess> listAccessSpec =
-            new ListAccessSpec<>(IntValueFactory.INSTANCE);
+            new ListAccessSpec<>(IntAccessSpec.INSTANCE);
         return new StructAccessSpec(defaultAccessSpec, sizeAccessSpec, indicesAccessSpec, listAccessSpec);
     }
 

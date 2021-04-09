@@ -56,6 +56,7 @@ import org.knime.core.data.def.BooleanCell;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
+import org.knime.core.data.v2.access.BooleanAccess.BooleanAccessSpec;
 import org.knime.core.data.v2.access.BooleanAccess.BooleanReadAccess;
 import org.knime.core.data.v2.access.BooleanAccess.BooleanWriteAccess;
 import org.knime.core.data.v2.access.ListAccess.ListAccessSpec;
@@ -85,7 +86,7 @@ public final class BooleanListValueFactory implements ValueFactory<ListReadAcces
 
     @Override
     public ListAccessSpec<BooleanReadAccess, BooleanWriteAccess> getSpec() {
-        return new ListAccessSpec<>(BooleanValueFactory.INSTANCE);
+        return new ListAccessSpec<>(BooleanAccessSpec.INSTANCE);
     }
 
     @Override
@@ -144,12 +145,12 @@ public final class BooleanListValueFactory implements ValueFactory<ListReadAcces
         implements BooleanListReadValue {
 
         private DefaultBooleanListReadValue(final ListReadAccess reader) {
-            super(reader, BooleanCell.TYPE);
+            super(reader, BooleanValueFactory.INSTANCE, BooleanCell.TYPE);
         }
 
         @Override
         public boolean getBoolean(final int index) {
-            final BooleanReadValue v = m_reader.getReadValue(index);
+            final BooleanReadValue v = m_reader.getReadAccess(index);
             return v.getBooleanValue();
         }
 
@@ -172,7 +173,7 @@ public final class BooleanListValueFactory implements ValueFactory<ListReadAcces
         implements BooleanListWriteValue {
 
         private DefaultBooleanListWriteValue(final ListWriteAccess writer) {
-            super(writer);
+            super(writer, BooleanValueFactory.INSTANCE);
         }
 
         @Override

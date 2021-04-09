@@ -47,6 +47,7 @@ package org.knime.core.data.v2.value;
 
 import org.knime.core.data.BoundedValue;
 import org.knime.core.data.ComplexNumberValue;
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.FuzzyIntervalValue;
 import org.knime.core.data.FuzzyNumberValue;
@@ -78,12 +79,12 @@ public final class DoubleValueFactory implements ValueFactory<DoubleReadAccess, 
 
     @Override
     public DoubleReadValue createReadValue(final DoubleReadAccess reader) {
-        return reader;
+        return new DefaultDoubleReadValue(reader);
     }
 
     @Override
     public DoubleWriteValue createWriteValue(final DoubleWriteAccess writer) {
-        return writer;
+        return new DefaultDoubleWriteValue(writer);
     }
 
     /**
@@ -113,6 +114,94 @@ public final class DoubleValueFactory implements ValueFactory<DoubleReadAccess, 
          * @param value the double to set
          */
         void setDoubleValue(double value);
+    }
+
+    private static final class DefaultDoubleReadValue extends AbstractValue<DoubleReadAccess>
+        implements DoubleReadValue {
+
+        DefaultDoubleReadValue(final DoubleReadAccess access) {
+            super(access);
+        }
+
+        @Override
+        public DataCell getDataCell() {
+            return new DoubleCell(m_access.getDoubleValue());
+        }
+
+        @Override
+        public double getRealValue() {
+            return m_access.getDoubleValue();
+        }
+
+        @Override
+        public double getImaginaryValue() {
+            return 0;
+        }
+
+        @Override
+        public double getMinSupport() {
+            return m_access.getDoubleValue();
+        }
+
+        @Override
+        public double getCore() {
+            return m_access.getDoubleValue();
+        }
+
+        @Override
+        public double getMaxSupport() {
+            return m_access.getDoubleValue();
+        }
+
+        @Override
+        public double getMinCore() {
+            return m_access.getDoubleValue();
+        }
+
+        @Override
+        public double getMaxCore() {
+            return m_access.getDoubleValue();
+        }
+
+        @Override
+        public double getCenterOfGravity() {
+            return m_access.getDoubleValue();
+        }
+
+        @Override
+        public double getDoubleValue() {
+            return m_access.getDoubleValue();
+        }
+
+        @Override
+        public boolean isMissing() {
+            return m_access.isMissing();
+        }
+
+    }
+
+    private static final class DefaultDoubleWriteValue extends AbstractValue<DoubleWriteAccess>
+        implements DoubleWriteValue {
+
+        DefaultDoubleWriteValue(final DoubleWriteAccess access) {
+            super(access);
+        }
+
+        @Override
+        public void setDoubleValue(final double value) {
+            m_access.setDoubleValue(value);
+        }
+
+        @Override
+        public void setValue(final DoubleValue value) {
+            m_access.setDoubleValue(value.getDoubleValue());
+        }
+
+        @Override
+        public void setMissing() {
+            m_access.setMissing();
+        }
+
     }
 
 }
