@@ -54,9 +54,9 @@ import org.knime.core.data.DataValue;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
-import org.knime.core.data.v2.access.ReadAccess;
-import org.knime.core.data.v2.access.VoidAccess.VoidAccessSpec;
-import org.knime.core.data.v2.access.WriteAccess;
+import org.knime.core.table.access.ReadAccess;
+import org.knime.core.table.access.WriteAccess;
+import org.knime.core.table.access.VoidAccess.VoidAccessSpec;
 
 /**
  * {@link ValueFactory} for void types. Basically place holders inside a table. Could be used for e.g. empty columns.

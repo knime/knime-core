@@ -62,9 +62,9 @@ import org.knime.core.data.def.BooleanCell;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
-import org.knime.core.data.v2.access.BooleanAccess.BooleanAccessSpec;
-import org.knime.core.data.v2.access.BooleanAccess.BooleanReadAccess;
-import org.knime.core.data.v2.access.BooleanAccess.BooleanWriteAccess;
+import org.knime.core.table.access.BooleanAccess.BooleanAccessSpec;
+import org.knime.core.table.access.BooleanAccess.BooleanReadAccess;
+import org.knime.core.table.access.BooleanAccess.BooleanWriteAccess;
 
 /**
  * {@link ValueFactory} implementation for {@link BooleanCell}.

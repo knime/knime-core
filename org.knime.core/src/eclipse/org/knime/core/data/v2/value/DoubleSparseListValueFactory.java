@@ -59,19 +59,6 @@ import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
-import org.knime.core.data.v2.access.AccessSpec;
-import org.knime.core.data.v2.access.DoubleAccess.DoubleAccessSpec;
-import org.knime.core.data.v2.access.DoubleAccess.DoubleReadAccess;
-import org.knime.core.data.v2.access.DoubleAccess.DoubleWriteAccess;
-import org.knime.core.data.v2.access.IntAccess.IntAccessSpec;
-import org.knime.core.data.v2.access.IntAccess.IntReadAccess;
-import org.knime.core.data.v2.access.IntAccess.IntWriteAccess;
-import org.knime.core.data.v2.access.ListAccess.ListAccessSpec;
-import org.knime.core.data.v2.access.ListAccess.ListReadAccess;
-import org.knime.core.data.v2.access.ListAccess.ListWriteAccess;
-import org.knime.core.data.v2.access.StructAccess.StructAccessSpec;
-import org.knime.core.data.v2.access.StructAccess.StructReadAccess;
-import org.knime.core.data.v2.access.StructAccess.StructWriteAccess;
 import org.knime.core.data.v2.value.DoubleListValueFactory.DoubleListReadValue;
 import org.knime.core.data.v2.value.DoubleListValueFactory.DoubleListWriteValue;
 import org.knime.core.data.v2.value.DoubleValueFactory.DoubleReadValue;
@@ -81,6 +68,19 @@ import org.knime.core.data.v2.value.SparseListValueFactory.DefaultSparseListRead
 import org.knime.core.data.v2.value.SparseListValueFactory.DefaultSparseListWriteValue;
 import org.knime.core.data.v2.value.SparseListValueFactory.SparseListReadValue;
 import org.knime.core.data.v2.value.SparseListValueFactory.SparseListWriteValue;
+import org.knime.core.table.access.AccessSpec;
+import org.knime.core.table.access.DoubleAccess.DoubleAccessSpec;
+import org.knime.core.table.access.DoubleAccess.DoubleReadAccess;
+import org.knime.core.table.access.DoubleAccess.DoubleWriteAccess;
+import org.knime.core.table.access.IntAccess.IntAccessSpec;
+import org.knime.core.table.access.IntAccess.IntReadAccess;
+import org.knime.core.table.access.IntAccess.IntWriteAccess;
+import org.knime.core.table.access.ListAccess.ListAccessSpec;
+import org.knime.core.table.access.ListAccess.ListReadAccess;
+import org.knime.core.table.access.ListAccess.ListWriteAccess;
+import org.knime.core.table.access.StructAccess.StructAccessSpec;
+import org.knime.core.table.access.StructAccess.StructReadAccess;
+import org.knime.core.table.access.StructAccess.StructWriteAccess;
 
 /**
  * {@link ValueFactory} implementation for {@link SparseListCell} with elements of type {@link DoubleCell}.

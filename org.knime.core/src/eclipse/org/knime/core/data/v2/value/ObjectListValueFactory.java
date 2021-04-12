@@ -57,14 +57,14 @@ import org.knime.core.data.collection.ListCell;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
-import org.knime.core.data.v2.access.ListAccess.ListAccessSpec;
-import org.knime.core.data.v2.access.ListAccess.ListReadAccess;
-import org.knime.core.data.v2.access.ListAccess.ListWriteAccess;
-import org.knime.core.data.v2.access.ObjectAccess.ObjectReadAccess;
-import org.knime.core.data.v2.access.ObjectAccess.ObjectWriteAccess;
 import org.knime.core.data.v2.value.ListValueFactory.DefaultListReadValue;
 import org.knime.core.data.v2.value.ListValueFactory.ListReadValue;
 import org.knime.core.data.v2.value.ListValueFactory.ListWriteValue;
+import org.knime.core.table.access.ListAccess.ListAccessSpec;
+import org.knime.core.table.access.ListAccess.ListReadAccess;
+import org.knime.core.table.access.ListAccess.ListWriteAccess;
+import org.knime.core.table.access.ObjectAccess.ObjectReadAccess;
+import org.knime.core.table.access.ObjectAccess.ObjectWriteAccess;
 
 /**
  * Abstract {@link ValueFactory} implementation for {@link ListCell} with object elements. The

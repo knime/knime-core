@@ -54,9 +54,9 @@ import org.knime.core.data.def.StringCell;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
-import org.knime.core.data.v2.access.ObjectAccess.ObjectReadAccess;
-import org.knime.core.data.v2.access.ObjectAccess.ObjectWriteAccess;
-import org.knime.core.data.v2.access.ObjectAccess.StringAccessSpec;
+import org.knime.core.table.access.ObjectAccess.ObjectReadAccess;
+import org.knime.core.table.access.ObjectAccess.ObjectWriteAccess;
+import org.knime.core.table.access.ObjectAccess.StringAccessSpec;
 
 /**
  * {@link ValueFactory} implementation for {@link StringCell}.

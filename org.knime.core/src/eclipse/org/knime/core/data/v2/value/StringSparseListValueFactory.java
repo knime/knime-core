@@ -56,17 +56,17 @@ import org.knime.core.data.def.StringCell;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
-import org.knime.core.data.v2.access.IntAccess.IntReadAccess;
-import org.knime.core.data.v2.access.IntAccess.IntWriteAccess;
-import org.knime.core.data.v2.access.ListAccess.ListReadAccess;
-import org.knime.core.data.v2.access.ListAccess.ListWriteAccess;
-import org.knime.core.data.v2.access.ObjectAccess.ObjectReadAccess;
-import org.knime.core.data.v2.access.ObjectAccess.ObjectWriteAccess;
-import org.knime.core.data.v2.access.StructAccess.StructReadAccess;
-import org.knime.core.data.v2.access.StructAccess.StructWriteAccess;
 import org.knime.core.data.v2.value.StringListValueFactory.StringListReadValue;
 import org.knime.core.data.v2.value.StringValueFactory.StringReadValue;
 import org.knime.core.data.v2.value.StringValueFactory.StringWriteValue;
+import org.knime.core.table.access.IntAccess.IntReadAccess;
+import org.knime.core.table.access.IntAccess.IntWriteAccess;
+import org.knime.core.table.access.ListAccess.ListReadAccess;
+import org.knime.core.table.access.ListAccess.ListWriteAccess;
+import org.knime.core.table.access.ObjectAccess.ObjectReadAccess;
+import org.knime.core.table.access.ObjectAccess.ObjectWriteAccess;
+import org.knime.core.table.access.StructAccess.StructReadAccess;
+import org.knime.core.table.access.StructAccess.StructWriteAccess;
 
 /**
  * {@link ValueFactory} implementation for {@link SparseListCell} with elements of type {@link StringCell}.

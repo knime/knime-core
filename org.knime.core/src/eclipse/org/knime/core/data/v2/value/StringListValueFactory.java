@@ -54,12 +54,12 @@ import org.knime.core.data.def.StringCell;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
-import org.knime.core.data.v2.access.ListAccess.ListReadAccess;
-import org.knime.core.data.v2.access.ListAccess.ListWriteAccess;
 import org.knime.core.data.v2.value.ListValueFactory.DefaultListWriteValue;
 import org.knime.core.data.v2.value.StringValueFactory.StringReadValue;
 import org.knime.core.data.v2.value.StringValueFactory.StringWriteValue;
 import org.knime.core.data.vector.stringvector.StringVectorValue;
+import org.knime.core.table.access.ListAccess.ListReadAccess;
+import org.knime.core.table.access.ListAccess.ListWriteAccess;
 
 /**
  * {@link ValueFactory} implementation for {@link ListCell} with elements of type {@link StringCell}.

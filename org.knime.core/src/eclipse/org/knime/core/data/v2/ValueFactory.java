@@ -48,9 +48,9 @@
  */
 package org.knime.core.data.v2;
 
-import org.knime.core.data.v2.access.AccessSpec;
-import org.knime.core.data.v2.access.ReadAccess;
-import org.knime.core.data.v2.access.WriteAccess;
+import org.knime.core.table.access.AccessSpec;
+import org.knime.core.table.access.ReadAccess;
+import org.knime.core.table.access.WriteAccess;
 
 /**
  * Interface for implementations of {@link ValueFactory}s. Value factories can create logical {@link WriteValue}s and

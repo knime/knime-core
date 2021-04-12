@@ -58,12 +58,6 @@ import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
-import org.knime.core.data.v2.access.DoubleAccess.DoubleAccessSpec;
-import org.knime.core.data.v2.access.DoubleAccess.DoubleReadAccess;
-import org.knime.core.data.v2.access.DoubleAccess.DoubleWriteAccess;
-import org.knime.core.data.v2.access.ListAccess.ListAccessSpec;
-import org.knime.core.data.v2.access.ListAccess.ListReadAccess;
-import org.knime.core.data.v2.access.ListAccess.ListWriteAccess;
 import org.knime.core.data.v2.value.DoubleValueFactory.DoubleReadValue;
 import org.knime.core.data.v2.value.DoubleValueFactory.DoubleWriteValue;
 import org.knime.core.data.v2.value.ListValueFactory.DefaultListReadValue;
@@ -71,6 +65,12 @@ import org.knime.core.data.v2.value.ListValueFactory.DefaultListWriteValue;
 import org.knime.core.data.v2.value.ListValueFactory.ListReadValue;
 import org.knime.core.data.v2.value.ListValueFactory.ListWriteValue;
 import org.knime.core.data.vector.doublevector.DoubleVectorValue;
+import org.knime.core.table.access.DoubleAccess.DoubleAccessSpec;
+import org.knime.core.table.access.DoubleAccess.DoubleReadAccess;
+import org.knime.core.table.access.DoubleAccess.DoubleWriteAccess;
+import org.knime.core.table.access.ListAccess.ListAccessSpec;
+import org.knime.core.table.access.ListAccess.ListReadAccess;
+import org.knime.core.table.access.ListAccess.ListWriteAccess;
 
 /**
  * {@link ValueFactory} implementation for {@link ListCell} with elements of type {@link DoubleCell}.

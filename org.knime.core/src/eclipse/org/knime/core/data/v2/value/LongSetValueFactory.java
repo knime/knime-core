@@ -60,18 +60,18 @@ import org.knime.core.data.def.LongCell;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
-import org.knime.core.data.v2.access.ListAccess.ListAccessSpec;
-import org.knime.core.data.v2.access.ListAccess.ListReadAccess;
-import org.knime.core.data.v2.access.ListAccess.ListWriteAccess;
-import org.knime.core.data.v2.access.LongAccess.LongAccessSpec;
-import org.knime.core.data.v2.access.LongAccess.LongReadAccess;
-import org.knime.core.data.v2.access.LongAccess.LongWriteAccess;
 import org.knime.core.data.v2.value.LongListValueFactory.LongListReadValue;
 import org.knime.core.data.v2.value.LongListValueFactory.LongListWriteValue;
 import org.knime.core.data.v2.value.SetValueFactory.DefaultSetReadValue;
 import org.knime.core.data.v2.value.SetValueFactory.DefaultSetWriteValue;
 import org.knime.core.data.v2.value.SetValueFactory.SetReadValue;
 import org.knime.core.data.v2.value.SetValueFactory.SetWriteValue;
+import org.knime.core.table.access.ListAccess.ListAccessSpec;
+import org.knime.core.table.access.ListAccess.ListReadAccess;
+import org.knime.core.table.access.ListAccess.ListWriteAccess;
+import org.knime.core.table.access.LongAccess.LongAccessSpec;
+import org.knime.core.table.access.LongAccess.LongReadAccess;
+import org.knime.core.table.access.LongAccess.LongWriteAccess;
 
 /**
  * {@link ValueFactory} implementation for {@link SetCell} with elements of type {@link LongCell}.

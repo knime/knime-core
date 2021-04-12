@@ -2,7 +2,7 @@ package org.knime.core.data.v2.value.cell;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.v2.ReadValue;
-import org.knime.core.data.v2.access.ObjectAccess.ObjectReadAccess;
+import org.knime.core.table.access.ObjectAccess.ObjectReadAccess;
 
 final class DefaultDataCellReadValue implements ReadValue {
 

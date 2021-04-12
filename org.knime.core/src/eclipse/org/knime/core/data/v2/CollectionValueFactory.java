@@ -50,8 +50,8 @@ package org.knime.core.data.v2;
 
 import org.knime.core.data.DataType;
 import org.knime.core.data.collection.CollectionDataValue;
-import org.knime.core.data.v2.access.ReadAccess;
-import org.knime.core.data.v2.access.WriteAccess;
+import org.knime.core.table.access.ReadAccess;
+import org.knime.core.table.access.WriteAccess;
 
 /**
  * A {@link ValueFactory} for {@link CollectionDataValue}s. After creating instances of this {@link ValueFactory} using

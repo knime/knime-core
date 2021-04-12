@@ -61,14 +61,14 @@ import org.knime.core.data.model.PortObjectValue;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
-import org.knime.core.data.v2.access.ObjectAccess.GenericObjectAccessSpec;
-import org.knime.core.data.v2.access.ObjectAccess.ObjectReadAccess;
-import org.knime.core.data.v2.access.ObjectAccess.ObjectSerializer;
-import org.knime.core.data.v2.access.ObjectAccess.ObjectWriteAccess;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortUtil;
+import org.knime.core.table.access.ObjectAccess.GenericObjectAccessSpec;
+import org.knime.core.table.access.ObjectAccess.ObjectReadAccess;
+import org.knime.core.table.access.ObjectAccess.ObjectSerializer;
+import org.knime.core.table.access.ObjectAccess.ObjectWriteAccess;
 
 /**
  * {@link ValueFactory} implementation for {@link PortObjectCell}.

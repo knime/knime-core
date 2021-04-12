@@ -50,7 +50,7 @@ package org.knime.core.data.v2;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataValue;
-import org.knime.core.data.v2.access.ReadAccess;
+import org.knime.core.table.access.ReadAccess;
 
 /**
  * {@link DataValue} implementation which knows how to create a DataCell.

@@ -50,8 +50,8 @@ package org.knime.core.data.v2;
 
 import java.io.IOException;
 
-import org.knime.core.columnar.cursor.LookaheadCursor;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.table.cursor.LookaheadCursor;
 
 /**
  * Container to store new rows. RowContainers automatically extend themselves in case more rows are added.

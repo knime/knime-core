@@ -62,10 +62,10 @@ import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.RowCursor;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
-import org.knime.core.data.v2.access.AccessSpec;
-import org.knime.core.data.v2.access.ObjectAccess.GenericObjectAccessSpec;
-import org.knime.core.data.v2.access.ObjectAccess.ObjectReadAccess;
-import org.knime.core.data.v2.access.ObjectAccess.ObjectWriteAccess;
+import org.knime.core.table.access.AccessSpec;
+import org.knime.core.table.access.ObjectAccess.GenericObjectAccessSpec;
+import org.knime.core.table.access.ObjectAccess.ObjectReadAccess;
+import org.knime.core.table.access.ObjectAccess.ObjectWriteAccess;
 
 /**
  * {@link ValueFactory} to write and read arbitrary {@link DataCell}s. Needs special casing in corresponding

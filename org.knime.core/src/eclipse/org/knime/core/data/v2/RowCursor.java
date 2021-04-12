@@ -45,7 +45,7 @@
  */
 package org.knime.core.data.v2;
 
-import org.knime.core.columnar.cursor.LookaheadCursor;
+import org.knime.core.table.cursor.LookaheadCursor;
 
 /**
  * {@link RowRead} implementation allowing for iterative read access to a data storage.

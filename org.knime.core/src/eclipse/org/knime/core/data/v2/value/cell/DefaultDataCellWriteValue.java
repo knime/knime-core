@@ -10,7 +10,7 @@ import org.knime.core.data.filestore.FileStoreKey;
 import org.knime.core.data.filestore.FileStoreUtil;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.v2.WriteValue;
-import org.knime.core.data.v2.access.ObjectAccess.ObjectWriteAccess;
+import org.knime.core.table.access.ObjectAccess.ObjectWriteAccess;
 
 final class DefaultDataCellWriteValue implements WriteValue<DataCell> {
 

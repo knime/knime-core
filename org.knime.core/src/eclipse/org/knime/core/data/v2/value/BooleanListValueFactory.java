@@ -56,18 +56,18 @@ import org.knime.core.data.def.BooleanCell;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
-import org.knime.core.data.v2.access.BooleanAccess.BooleanAccessSpec;
-import org.knime.core.data.v2.access.BooleanAccess.BooleanReadAccess;
-import org.knime.core.data.v2.access.BooleanAccess.BooleanWriteAccess;
-import org.knime.core.data.v2.access.ListAccess.ListAccessSpec;
-import org.knime.core.data.v2.access.ListAccess.ListReadAccess;
-import org.knime.core.data.v2.access.ListAccess.ListWriteAccess;
 import org.knime.core.data.v2.value.BooleanValueFactory.BooleanReadValue;
 import org.knime.core.data.v2.value.BooleanValueFactory.BooleanWriteValue;
 import org.knime.core.data.v2.value.ListValueFactory.DefaultListReadValue;
 import org.knime.core.data.v2.value.ListValueFactory.DefaultListWriteValue;
 import org.knime.core.data.v2.value.ListValueFactory.ListReadValue;
 import org.knime.core.data.v2.value.ListValueFactory.ListWriteValue;
+import org.knime.core.table.access.BooleanAccess.BooleanAccessSpec;
+import org.knime.core.table.access.BooleanAccess.BooleanReadAccess;
+import org.knime.core.table.access.BooleanAccess.BooleanWriteAccess;
+import org.knime.core.table.access.ListAccess.ListAccessSpec;
+import org.knime.core.table.access.ListAccess.ListReadAccess;
+import org.knime.core.table.access.ListAccess.ListWriteAccess;
 
 import com.google.common.primitives.Booleans;
 

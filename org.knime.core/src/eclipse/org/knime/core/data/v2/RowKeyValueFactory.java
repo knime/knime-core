@@ -48,8 +48,8 @@
  */
 package org.knime.core.data.v2;
 
-import org.knime.core.data.v2.access.ReadAccess;
-import org.knime.core.data.v2.access.WriteAccess;
+import org.knime.core.table.access.ReadAccess;
+import org.knime.core.table.access.WriteAccess;
 
 /**
  * {@link ValueFactory} for row keys.

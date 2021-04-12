@@ -52,9 +52,9 @@ import org.knime.core.data.v2.RowKeyReadValue;
 import org.knime.core.data.v2.RowKeyValueFactory;
 import org.knime.core.data.v2.RowKeyWriteValue;
 import org.knime.core.data.v2.ValueFactory;
-import org.knime.core.data.v2.access.ObjectAccess.ObjectReadAccess;
-import org.knime.core.data.v2.access.ObjectAccess.ObjectWriteAccess;
-import org.knime.core.data.v2.access.ObjectAccess.StringAccessSpec;
+import org.knime.core.table.access.ObjectAccess.ObjectReadAccess;
+import org.knime.core.table.access.ObjectAccess.ObjectWriteAccess;
+import org.knime.core.table.access.ObjectAccess.StringAccessSpec;
 
 /**
  * {@link ValueFactory} implementation for custom {@link RowKeyValue} and {@link RowKeyWriteValue}. 'Custom' means, that

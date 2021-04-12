@@ -67,14 +67,14 @@ import org.knime.core.data.def.BooleanCell;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
-import org.knime.core.data.v2.access.BooleanAccess.BooleanAccessSpec;
-import org.knime.core.data.v2.access.BooleanAccess.BooleanReadAccess;
-import org.knime.core.data.v2.access.BooleanAccess.BooleanWriteAccess;
-import org.knime.core.data.v2.access.StructAccess.StructAccessSpec;
-import org.knime.core.data.v2.access.StructAccess.StructReadAccess;
-import org.knime.core.data.v2.access.StructAccess.StructWriteAccess;
 import org.knime.core.data.v2.value.SetValueFactory.SetReadValue;
 import org.knime.core.data.v2.value.SetValueFactory.SetWriteValue;
+import org.knime.core.table.access.BooleanAccess.BooleanAccessSpec;
+import org.knime.core.table.access.BooleanAccess.BooleanReadAccess;
+import org.knime.core.table.access.BooleanAccess.BooleanWriteAccess;
+import org.knime.core.table.access.StructAccess.StructAccessSpec;
+import org.knime.core.table.access.StructAccess.StructReadAccess;
+import org.knime.core.table.access.StructAccess.StructWriteAccess;
 
 import com.google.common.collect.ImmutableList;
 

@@ -66,10 +66,10 @@ import org.knime.core.data.v2.RowWriteCursor;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.ValueSchema;
 import org.knime.core.data.v2.WriteValue;
-import org.knime.core.data.v2.access.ReadAccess;
-import org.knime.core.data.v2.access.WriteAccess;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.table.access.ReadAccess;
+import org.knime.core.table.access.WriteAccess;
 
 /**
  * Legacy implementation for CustomKeyRowContainer using {@link DataContainer}s as storage backend.

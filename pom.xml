@@ -188,6 +188,11 @@
 			<url>${knime.shared.p2}</url>
 		</repository>
 		<repository>
+			<id>p2-knime-table</id>
+			<layout>p2</layout>
+			<url>${knime.p2.repo}/knime-core-table/${git.branch}</url>
+		</repository>
+		<repository>
 			<id>p2-knime-tp</id>
 			<layout>p2</layout>
 			<url>${knime.tp.p2}</url>

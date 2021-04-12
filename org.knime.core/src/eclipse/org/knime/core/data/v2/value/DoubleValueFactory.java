@@ -55,9 +55,9 @@ import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
-import org.knime.core.data.v2.access.DoubleAccess.DoubleAccessSpec;
-import org.knime.core.data.v2.access.DoubleAccess.DoubleReadAccess;
-import org.knime.core.data.v2.access.DoubleAccess.DoubleWriteAccess;
+import org.knime.core.table.access.DoubleAccess.DoubleAccessSpec;
+import org.knime.core.table.access.DoubleAccess.DoubleReadAccess;
+import org.knime.core.table.access.DoubleAccess.DoubleWriteAccess;
 
 /**
  * {@link ValueFactory} implementation for {@link DoubleCell}.

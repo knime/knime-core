@@ -60,9 +60,9 @@ import org.knime.core.data.def.IntCell;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
-import org.knime.core.data.v2.access.IntAccess.IntAccessSpec;
-import org.knime.core.data.v2.access.IntAccess.IntReadAccess;
-import org.knime.core.data.v2.access.IntAccess.IntWriteAccess;
+import org.knime.core.table.access.IntAccess.IntAccessSpec;
+import org.knime.core.table.access.IntAccess.IntReadAccess;
+import org.knime.core.table.access.IntAccess.IntWriteAccess;
 
 /**
  * {@link ValueFactory} implementation for {@link IntCell}.

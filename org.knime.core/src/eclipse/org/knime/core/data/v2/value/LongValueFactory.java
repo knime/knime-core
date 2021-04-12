@@ -56,9 +56,9 @@ import org.knime.core.data.def.LongCell;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
-import org.knime.core.data.v2.access.LongAccess.LongAccessSpec;
-import org.knime.core.data.v2.access.LongAccess.LongReadAccess;
-import org.knime.core.data.v2.access.LongAccess.LongWriteAccess;
+import org.knime.core.table.access.LongAccess.LongAccessSpec;
+import org.knime.core.table.access.LongAccess.LongReadAccess;
+import org.knime.core.table.access.LongAccess.LongWriteAccess;
 
 /**
  * {@link ValueFactory} implementation for {@link LongCell}.
