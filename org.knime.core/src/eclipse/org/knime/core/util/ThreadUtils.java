@@ -53,7 +53,10 @@ import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
@@ -62,6 +65,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.apache.log4j.MDC;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContext;
 
@@ -188,16 +192,20 @@ public final class ThreadUtils {
      */
     public abstract static class RunnableWithContext implements Runnable {
         private final NodeContext m_nodeContext;
+        private final Map<String, Object> m_callerMDC;
 
         /**
          * Default constructor.
          */
+        @SuppressWarnings("unchecked")
         protected RunnableWithContext() {
             m_nodeContext = NodeContext.getContext();
             if (m_nodeContext == null) {
                 logger.debug("Unnecessary usage of RunnableWithContext because no context is available",
                     new UnnecessaryCallException());
             }
+            m_callerMDC = ((MDC.getContext() == null) || MDC.getContext().isEmpty()) ? Collections.emptyMap()
+                : new HashMap<>(MDC.getContext());
         }
 
         /**
@@ -206,10 +214,14 @@ public final class ThreadUtils {
         @Override
         public final void run() {
             NodeContext.pushContext(m_nodeContext);
+            m_callerMDC.entrySet().forEach(e -> MDC.put(e.getKey(), e.getValue()));
             try {
                 runWithContext();
             } finally {
                 NodeContext.removeLastContext();
+                if (MDC.getContext() != null) {
+                    MDC.getContext().clear();
+                }
             }
         }
 
@@ -228,16 +240,20 @@ public final class ThreadUtils {
      */
     public abstract static class CallableWithContext<V> implements Callable<V> {
         private final NodeContext m_nodeContext;
+        private final Map<String, Object> m_callerMDC;
 
         /**
          * Default constructor.
          */
+        @SuppressWarnings("unchecked")
         protected CallableWithContext() {
             m_nodeContext = NodeContext.getContext();
             if (m_nodeContext == null) {
                 logger.debug("Unnecessary usage of CallableWithContext because no context is available",
                     new UnnecessaryCallException());
             }
+            m_callerMDC = ((MDC.getContext() == null) || MDC.getContext().isEmpty()) ? Collections.emptyMap()
+                : new HashMap<>(MDC.getContext());
         }
 
         /**
@@ -246,10 +262,14 @@ public final class ThreadUtils {
         @Override
         public final V call() throws Exception {
             NodeContext.pushContext(m_nodeContext);
+            m_callerMDC.entrySet().forEach(e -> MDC.put(e.getKey(), e.getValue()));
             try {
                 return callWithContext();
             } finally {
                 NodeContext.removeLastContext();
+                if (MDC.getContext() != null) {
+                    MDC.getContext().clear();
+                }
             }
         }
 
@@ -271,18 +291,22 @@ public final class ThreadUtils {
      */
     public abstract static class ThreadWithContext extends Thread {
         private final NodeContext m_nodeContext;
+        private final Map<String, Object> m_callerMDC;
 
         /**
          * Creates a new thread.
          *
          * @see Thread#Thread()
          */
+        @SuppressWarnings("unchecked")
         protected ThreadWithContext() {
             m_nodeContext = NodeContext.getContext();
             if (m_nodeContext == null) {
                 logger.debug("Unnecessary usage of ThreadWithContext because no context is available",
                     new UnnecessaryCallException());
             }
+            m_callerMDC = ((MDC.getContext() == null) || MDC.getContext().isEmpty()) ? Collections.emptyMap()
+                : new HashMap<>(MDC.getContext());
         }
 
         /**
@@ -291,6 +315,7 @@ public final class ThreadUtils {
          * @param name the thread's name
          * @see Thread#Thread(String)
          */
+        @SuppressWarnings("unchecked")
         protected ThreadWithContext(final String name) {
             super(name);
             m_nodeContext = NodeContext.getContext();
@@ -298,6 +323,8 @@ public final class ThreadUtils {
                 logger.debug("Unnecessary usage of ThreadWithContext because no context is available",
                     new UnnecessaryCallException());
             }
+            m_callerMDC = ((MDC.getContext() == null) || MDC.getContext().isEmpty()) ? Collections.emptyMap()
+                : new HashMap<>(MDC.getContext());
         }
 
         /**
@@ -306,10 +333,14 @@ public final class ThreadUtils {
         @Override
         public final void run() {
             NodeContext.pushContext(m_nodeContext);
+            m_callerMDC.entrySet().forEach(e -> MDC.put(e.getKey(), e.getValue()));
             try {
                 runWithContext();
             } finally {
                 NodeContext.removeLastContext();
+                if (MDC.getContext() != null) {
+                    MDC.getContext().clear();
+                }
             }
         }
 

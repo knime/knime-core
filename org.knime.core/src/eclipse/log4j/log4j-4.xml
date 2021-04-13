@@ -44,6 +44,7 @@
                     the depth can be specified e.g. %I{1} prints only last index of the node id
                     if the depth is omitted the complete node id is printed
                 %J = Job id if available
+                %C = Correlation id if available
             -->
             <param name="ConversionPattern" value="%d{ISO8601} : %-5p : %t : %J : %c{1} : %N : %I : %m%n" />
         </layout>
@@ -65,6 +66,7 @@
                     the depth can be specified e.g. %I{1} prints only last index of the node id
                     if the depth is omitted the complete node id is printed
                 %J = Job id if available
+                %C = Correlation id if available
             -->
             <param name="ConversionPattern" value="%-5p %-20Q{1} %-10I %.10000m\n" />
             <!-- Strict pattern that maintains the distance by truncating long qualifiers and node ids

@@ -49,8 +49,10 @@
 package org.knime.core.node;
 
 import java.io.File;
+import java.util.Objects;
 import java.util.UUID;
 
+import org.apache.log4j.MDC;
 import org.apache.log4j.PatternLayout;
 import org.apache.log4j.helpers.FormattingInfo;
 import org.apache.log4j.helpers.PatternConverter;
@@ -58,6 +60,7 @@ import org.apache.log4j.helpers.PatternParser;
 import org.apache.log4j.spi.LoggingEvent;
 import org.knime.core.node.NodeLogger.KNIMELogMessage;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.util.CoreConstants;
 
 /**
  * {@link PatternLayout} implementation that recognises KNIME specific pattern e.g. I for node id, N for node name and
@@ -77,6 +80,8 @@ public class NodeLoggerPatternLayout extends PatternLayout {
     static final char WORKFLOW_DIR = 'W';
     /**Job id pattern.*/
     static final char JOB_ID = 'J';
+    /** Correlation ID pattern. */
+    static final char CORRELATION_ID = 'C';
 
     class LogPatternParser extends PatternParser {
         /**
@@ -108,6 +113,10 @@ public class NodeLoggerPatternLayout extends PatternLayout {
             case JOB_ID:
                 currentLiteral.setLength(0);
                 addConverter(new JobIDLogPatternConverter(formattingInfo));
+                break;
+            case CORRELATION_ID:
+                currentLiteral.setLength(0);
+                addConverter(new CorrelationIDLogPatternConverter(formattingInfo));
                 break;
             default:
                 super.finalizeConverter(c);
@@ -283,7 +292,19 @@ public class NodeLoggerPatternLayout extends PatternLayout {
                     return jobID.toString();
                 }
             }
-            return null;
+            return Objects.toString(MDC.get(CoreConstants.JOB_ID_MDC), null);
+        }
+    }
+
+    class CorrelationIDLogPatternConverter extends PatternConverter {
+        CorrelationIDLogPatternConverter(final FormattingInfo formattingInfo) {
+            super(formattingInfo);
+        }
+
+        /**{@inheritDoc}*/
+        @Override
+        protected String convert(final LoggingEvent event) {
+            return Objects.toString(MDC.get(CoreConstants.CORRELATION_ID_MDC), null);
         }
     }
 
