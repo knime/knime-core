@@ -83,7 +83,7 @@ public class NodeLoggerPatternLayout extends PatternLayout {
     /** Correlation ID pattern. */
     static final char CORRELATION_ID = 'C';
 
-    class LogPatternParser extends PatternParser {
+    static class LogPatternParser extends PatternParser {
         /**
          * @param aPattern the pattern to parse
          */
@@ -124,7 +124,7 @@ public class NodeLoggerPatternLayout extends PatternLayout {
         }
     }
 
-    class NodeIDLogPatternConverter extends PatternConverter {
+    static class NodeIDLogPatternConverter extends PatternConverter {
 
         private final int m_precision;
 
@@ -168,7 +168,7 @@ public class NodeLoggerPatternLayout extends PatternLayout {
         }
     }
 
-    class NodeNameLogPatternConverter extends PatternConverter {
+    static class NodeNameLogPatternConverter extends PatternConverter {
         /**
          * @param formattingInfo
          */
@@ -191,7 +191,7 @@ public class NodeLoggerPatternLayout extends PatternLayout {
         }
     }
 
-    class QualifierPatternConverter extends NodeNameLogPatternConverter {
+    static class QualifierPatternConverter extends NodeNameLogPatternConverter {
         private int m_precision;
 
         /**
@@ -230,7 +230,7 @@ public class NodeLoggerPatternLayout extends PatternLayout {
         }
     }
 
-    class WorkflowDirLogPatternConverter extends PatternConverter {
+    static class WorkflowDirLogPatternConverter extends PatternConverter {
         private int m_precision;
         /**
          * @param formattingInfo
@@ -272,7 +272,7 @@ public class NodeLoggerPatternLayout extends PatternLayout {
         }
     }
 
-    class JobIDLogPatternConverter extends PatternConverter {
+    static class JobIDLogPatternConverter extends PatternConverter {
 
         /**
          * @param formattingInfo
@@ -296,7 +296,7 @@ public class NodeLoggerPatternLayout extends PatternLayout {
         }
     }
 
-    class CorrelationIDLogPatternConverter extends PatternConverter {
+    static class CorrelationIDLogPatternConverter extends PatternConverter {
         CorrelationIDLogPatternConverter(final FormattingInfo formattingInfo) {
             super(formattingInfo);
         }
