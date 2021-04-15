@@ -218,6 +218,11 @@ public class WorkflowPortObject extends AbstractPortObject {
     }
 
     @Override
+    public String toString() {
+        return "Workflow: " + getSpec().getWorkflowName();
+    }
+
+    @Override
     public JComponent[] getViews() {
         if (m_inputData != null) {
             return m_inputData.entrySet().stream().map(e -> {
