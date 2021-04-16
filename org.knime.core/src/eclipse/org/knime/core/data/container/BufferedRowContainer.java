@@ -54,7 +54,6 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.RowKeyValue;
-import org.knime.core.data.container.BufferedAccessSpecMapper.BufferedAccess;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.RowContainer;
@@ -68,6 +67,8 @@ import org.knime.core.data.v2.ValueSchema;
 import org.knime.core.data.v2.WriteValue;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.table.access.BufferedAccessSpecMapper;
+import org.knime.core.table.access.BufferedAccessSpecMapper.BufferedAccess;
 import org.knime.core.table.access.ReadAccess;
 import org.knime.core.table.access.WriteAccess;
 
@@ -150,7 +151,7 @@ final class BufferedRowContainer implements RowContainer, RowWriteCursor {
             m_writeValues = new WriteValue[factories.length];
 
             for (int i = 0; i < factories.length; i++) {
-                final BufferedAccess access = factories[i].getSpec().accept(BufferedAccessSpecMapper.INSTANCE);
+                final BufferedAccess access = BufferedAccessSpecMapper.createBufferedAccess(factories[i].getSpec());
                 @SuppressWarnings("unchecked")
                 final ValueFactory<ReadAccess, ?> readCast = (ValueFactory<ReadAccess, ?>)factories[i];
                 m_readValues[i] = new NullableReadValue(readCast, access);
