@@ -399,6 +399,10 @@ public final class WorkflowCaptureOperation {
      * nodes <br>
      * * stop once we are at the root level (either a workflow project or a workflow of a component project)
      *
+     * NOTE: This a mere workaround!! Because _all_ nodes that are part of a virtual sub-workflow should actually
+     * automatically inherit the {@link FlowVirtualScopeContext} (just like all nodes in a Component automatically
+     * inherit the {@link FlowSubnodeScopeContext}) - see ticket https://knime-com.atlassian.net/browse/AP-16559.
+     *
      * @param nc the node container to find the flow virtual scope context for
      * @return the found {@link FlowVirtualScopeContext} or <code>null</code> if none found
      */
