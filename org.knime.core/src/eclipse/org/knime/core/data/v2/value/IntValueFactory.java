@@ -60,9 +60,9 @@ import org.knime.core.data.def.IntCell;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
-import org.knime.core.table.access.IntAccess.IntAccessSpec;
 import org.knime.core.table.access.IntAccess.IntReadAccess;
 import org.knime.core.table.access.IntAccess.IntWriteAccess;
+import org.knime.core.table.schema.IntDataSpec;
 
 /**
  * {@link ValueFactory} implementation for {@link IntCell}.
@@ -78,8 +78,8 @@ public final class IntValueFactory implements ValueFactory<IntReadAccess, IntWri
     public static final IntValueFactory INSTANCE = new IntValueFactory();
 
     @Override
-    public IntAccessSpec getSpec() {
-        return IntAccessSpec.INSTANCE;
+    public IntDataSpec getSpec() {
+        return IntDataSpec.INSTANCE;
     }
 
     @Override

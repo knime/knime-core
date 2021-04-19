@@ -55,9 +55,9 @@ import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
-import org.knime.core.table.access.DoubleAccess.DoubleAccessSpec;
 import org.knime.core.table.access.DoubleAccess.DoubleReadAccess;
 import org.knime.core.table.access.DoubleAccess.DoubleWriteAccess;
+import org.knime.core.table.schema.DoubleDataSpec;
 
 /**
  * {@link ValueFactory} implementation for {@link DoubleCell}.
@@ -73,8 +73,8 @@ public final class DoubleValueFactory implements ValueFactory<DoubleReadAccess, 
     public static final DoubleValueFactory INSTANCE = new DoubleValueFactory();
 
     @Override
-    public DoubleAccessSpec getSpec() {
-        return DoubleAccessSpec.INSTANCE;
+    public DoubleDataSpec getSpec() {
+        return DoubleDataSpec.INSTANCE;
     }
 
     @Override

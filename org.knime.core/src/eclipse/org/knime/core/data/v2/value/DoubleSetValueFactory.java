@@ -66,12 +66,10 @@ import org.knime.core.data.v2.value.SetValueFactory.DefaultSetReadValue;
 import org.knime.core.data.v2.value.SetValueFactory.DefaultSetWriteValue;
 import org.knime.core.data.v2.value.SetValueFactory.SetReadValue;
 import org.knime.core.data.v2.value.SetValueFactory.SetWriteValue;
-import org.knime.core.table.access.DoubleAccess.DoubleAccessSpec;
-import org.knime.core.table.access.DoubleAccess.DoubleReadAccess;
-import org.knime.core.table.access.DoubleAccess.DoubleWriteAccess;
-import org.knime.core.table.access.ListAccess.ListAccessSpec;
 import org.knime.core.table.access.ListAccess.ListReadAccess;
 import org.knime.core.table.access.ListAccess.ListWriteAccess;
+import org.knime.core.table.schema.DoubleDataSpec;
+import org.knime.core.table.schema.ListDataSpec;
 
 /**
  * {@link ValueFactory} implementation for {@link SetCell} with elements of type {@link DoubleCell}.
@@ -87,8 +85,8 @@ public final class DoubleSetValueFactory implements ValueFactory<ListReadAccess,
     public static final DoubleSetValueFactory INSTANCE = new DoubleSetValueFactory();
 
     @Override
-    public ListAccessSpec<DoubleReadAccess, DoubleWriteAccess> getSpec() {
-        return new ListAccessSpec<>(DoubleAccessSpec.INSTANCE);
+    public ListDataSpec getSpec() {
+        return new ListDataSpec(DoubleDataSpec.INSTANCE);
     }
 
     @Override

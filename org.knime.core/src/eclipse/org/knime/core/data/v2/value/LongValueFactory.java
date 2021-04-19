@@ -56,9 +56,9 @@ import org.knime.core.data.def.LongCell;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
-import org.knime.core.table.access.LongAccess.LongAccessSpec;
 import org.knime.core.table.access.LongAccess.LongReadAccess;
 import org.knime.core.table.access.LongAccess.LongWriteAccess;
+import org.knime.core.table.schema.LongDataSpec;
 
 /**
  * {@link ValueFactory} implementation for {@link LongCell}.
@@ -74,8 +74,8 @@ public final class LongValueFactory implements ValueFactory<LongReadAccess, Long
     public static final LongValueFactory INSTANCE = new LongValueFactory();
 
     @Override
-    public LongAccessSpec getSpec() {
-        return LongAccessSpec.INSTANCE;
+    public LongDataSpec getSpec() {
+        return LongDataSpec.INSTANCE;
     }
 
     @Override

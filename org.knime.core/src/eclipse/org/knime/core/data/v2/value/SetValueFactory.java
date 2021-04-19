@@ -65,11 +65,10 @@ import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
 import org.knime.core.data.v2.value.ListValueFactory.ListReadValue;
 import org.knime.core.data.v2.value.ListValueFactory.ListWriteValue;
-import org.knime.core.table.access.ReadAccess;
-import org.knime.core.table.access.WriteAccess;
-import org.knime.core.table.access.ListAccess.ListAccessSpec;
 import org.knime.core.table.access.ListAccess.ListReadAccess;
 import org.knime.core.table.access.ListAccess.ListWriteAccess;
+import org.knime.core.table.access.WriteAccess;
+import org.knime.core.table.schema.ListDataSpec;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
@@ -94,7 +93,7 @@ public final class SetValueFactory implements CollectionValueFactory<ListReadAcc
     }
 
     @Override
-    public ListAccessSpec<ReadAccess, WriteAccess> getSpec() {
+    public ListDataSpec getSpec() {
         return m_listValueFactory.getSpec();
     }
 

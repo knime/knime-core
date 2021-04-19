@@ -60,11 +60,11 @@ import org.knime.core.data.v2.WriteValue;
 import org.knime.core.data.v2.value.ListValueFactory.DefaultListReadValue;
 import org.knime.core.data.v2.value.ListValueFactory.ListReadValue;
 import org.knime.core.data.v2.value.ListValueFactory.ListWriteValue;
-import org.knime.core.table.access.ListAccess.ListAccessSpec;
 import org.knime.core.table.access.ListAccess.ListReadAccess;
 import org.knime.core.table.access.ListAccess.ListWriteAccess;
 import org.knime.core.table.access.ObjectAccess.ObjectReadAccess;
 import org.knime.core.table.access.ObjectAccess.ObjectWriteAccess;
+import org.knime.core.table.schema.ListDataSpec;
 
 /**
  * Abstract {@link ValueFactory} implementation for {@link ListCell} with object elements. The
@@ -89,8 +89,8 @@ public abstract class ObjectListValueFactory<T> implements ValueFactory<ListRead
     }
 
     @Override
-    public ListAccessSpec<ObjectReadAccess<T>, ObjectWriteAccess<T>> getSpec() {
-        return new ListAccessSpec<>(m_innerValueFactory.getSpec());
+    public ListDataSpec getSpec() {
+        return new ListDataSpec(m_innerValueFactory.getSpec());
     }
 
     /**

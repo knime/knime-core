@@ -65,10 +65,10 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortUtil;
-import org.knime.core.table.access.ObjectAccess.GenericObjectAccessSpec;
 import org.knime.core.table.access.ObjectAccess.ObjectReadAccess;
-import org.knime.core.table.access.ObjectAccess.ObjectSerializer;
 import org.knime.core.table.access.ObjectAccess.ObjectWriteAccess;
+import org.knime.core.table.schema.GenericObjectDataSpec;
+import org.knime.core.table.schema.GenericObjectDataSpec.ObjectDataSerializer;
 
 /**
  * {@link ValueFactory} implementation for {@link PortObjectCell}.
@@ -84,7 +84,7 @@ public class PortObjectValueFactory
     /** Stateless instance of of {@link PortObjectValueFactory} */
     public static final PortObjectValueFactory INSTANCE = new PortObjectValueFactory();
 
-    private static final GenericObjectAccessSpec<PortObject> SPEC_INSTANCE = new GenericObjectAccessSpec<>(new PortObjectSerializer());
+    private static final GenericObjectDataSpec<PortObject> SPEC_INSTANCE = new GenericObjectDataSpec<>(new PortObjectSerializer());
 
     @Override
     public ReadValue createReadValue(final ObjectReadAccess<PortObject> access) {
@@ -97,7 +97,7 @@ public class PortObjectValueFactory
     }
 
     @Override
-    public GenericObjectAccessSpec<PortObject> getSpec() {
+    public GenericObjectDataSpec<PortObject> getSpec() {
         return SPEC_INSTANCE;
     }
 
@@ -123,7 +123,7 @@ public class PortObjectValueFactory
     }
 
     /** The serializer for {@link PortObject} objects */
-    private static final class PortObjectSerializer implements ObjectSerializer<PortObject> {
+    private static final class PortObjectSerializer implements ObjectDataSerializer<PortObject> {
 
         @Override
         public PortObject deserialize(final DataInput access) throws IOException {

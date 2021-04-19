@@ -54,7 +54,7 @@ import org.knime.core.data.v2.RowKeyWriteValue;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.table.access.ObjectAccess.ObjectReadAccess;
 import org.knime.core.table.access.ObjectAccess.ObjectWriteAccess;
-import org.knime.core.table.access.ObjectAccess.StringAccessSpec;
+import org.knime.core.table.schema.StringDataSpec;
 
 /**
  * {@link ValueFactory} implementation for custom {@link RowKeyValue} and {@link RowKeyWriteValue}. 'Custom' means, that
@@ -76,8 +76,8 @@ public final class DefaultRowKeyValueFactory
     public static final DefaultRowKeyValueFactory INSTANCE = new DefaultRowKeyValueFactory();
 
     @Override
-    public StringAccessSpec getSpec() {
-        return StringAccessSpec.INSTANCE;
+    public StringDataSpec getSpec() {
+        return StringDataSpec.INSTANCE;
     }
 
     @Override

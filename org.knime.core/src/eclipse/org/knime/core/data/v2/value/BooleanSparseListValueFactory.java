@@ -69,19 +69,19 @@ import org.knime.core.data.v2.value.SparseListValueFactory.DefaultSparseListRead
 import org.knime.core.data.v2.value.SparseListValueFactory.DefaultSparseListWriteValue;
 import org.knime.core.data.v2.value.SparseListValueFactory.SparseListReadValue;
 import org.knime.core.data.v2.value.SparseListValueFactory.SparseListWriteValue;
-import org.knime.core.table.access.AccessSpec;
-import org.knime.core.table.access.BooleanAccess.BooleanAccessSpec;
 import org.knime.core.table.access.BooleanAccess.BooleanReadAccess;
 import org.knime.core.table.access.BooleanAccess.BooleanWriteAccess;
-import org.knime.core.table.access.IntAccess.IntAccessSpec;
 import org.knime.core.table.access.IntAccess.IntReadAccess;
 import org.knime.core.table.access.IntAccess.IntWriteAccess;
-import org.knime.core.table.access.ListAccess.ListAccessSpec;
 import org.knime.core.table.access.ListAccess.ListReadAccess;
 import org.knime.core.table.access.ListAccess.ListWriteAccess;
-import org.knime.core.table.access.StructAccess.StructAccessSpec;
 import org.knime.core.table.access.StructAccess.StructReadAccess;
 import org.knime.core.table.access.StructAccess.StructWriteAccess;
+import org.knime.core.table.schema.BooleanDataSpec;
+import org.knime.core.table.schema.DataSpec;
+import org.knime.core.table.schema.IntDataSpec;
+import org.knime.core.table.schema.ListDataSpec;
+import org.knime.core.table.schema.StructDataSpec;
 
 /**
  * {@link ValueFactory} implementation for {@link SparseListCell} with elements of type {@link BooleanCell}.
@@ -97,14 +97,12 @@ public final class BooleanSparseListValueFactory implements ValueFactory<StructR
     public static final BooleanSparseListValueFactory INSTANCE = new BooleanSparseListValueFactory();
 
     @Override
-    public AccessSpec<StructReadAccess, StructWriteAccess> getSpec() {
-        final BooleanAccessSpec defaultAccessSpec = BooleanAccessSpec.INSTANCE;
-        final IntAccessSpec sizeAccessSpec = IntAccessSpec.INSTANCE;
-        final ListAccessSpec<IntReadAccess, IntWriteAccess> indicesAccessSpec =
-            new ListAccessSpec<>(IntAccessSpec.INSTANCE);
-        final ListAccessSpec<BooleanReadAccess, BooleanWriteAccess> listAccessSpec =
-            new ListAccessSpec<>(BooleanAccessSpec.INSTANCE);
-        return new StructAccessSpec(defaultAccessSpec, sizeAccessSpec, indicesAccessSpec, listAccessSpec);
+    public DataSpec getSpec() {
+        final BooleanDataSpec defaultDataSpec = BooleanDataSpec.INSTANCE;
+        final IntDataSpec sizeDataSpec = IntDataSpec.INSTANCE;
+        final ListDataSpec indicesDataSpec = new ListDataSpec(IntDataSpec.INSTANCE);
+        final ListDataSpec listDataSpec = new ListDataSpec(BooleanDataSpec.INSTANCE);
+        return new StructDataSpec(defaultDataSpec, sizeDataSpec, indicesDataSpec, listDataSpec);
     }
 
     @Override

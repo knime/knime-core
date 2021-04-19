@@ -65,9 +65,9 @@ import org.knime.core.data.v2.value.SetValueFactory.DefaultSetReadValue;
 import org.knime.core.data.v2.value.SetValueFactory.DefaultSetWriteValue;
 import org.knime.core.data.v2.value.SetValueFactory.SetReadValue;
 import org.knime.core.data.v2.value.SetValueFactory.SetWriteValue;
-import org.knime.core.table.access.AccessSpec;
 import org.knime.core.table.access.ListAccess.ListReadAccess;
 import org.knime.core.table.access.ListAccess.ListWriteAccess;
+import org.knime.core.table.schema.DataSpec;
 
 import com.google.common.base.Objects;
 
@@ -104,7 +104,7 @@ public abstract class ObjectSetValueFactory<T> implements ValueFactory<ListReadA
     }
 
     @Override
-    public AccessSpec<ListReadAccess, ListWriteAccess> getSpec() {
+    public DataSpec getSpec() {
         return m_listValueFactory.getSpec();
     }
 

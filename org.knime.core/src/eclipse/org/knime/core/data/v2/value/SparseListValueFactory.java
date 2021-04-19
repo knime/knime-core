@@ -72,18 +72,18 @@ import org.knime.core.data.v2.value.IntListValueFactory.IntListReadValue;
 import org.knime.core.data.v2.value.IntListValueFactory.IntListWriteValue;
 import org.knime.core.data.v2.value.ListValueFactory.ListReadValue;
 import org.knime.core.data.v2.value.ListValueFactory.ListWriteValue;
-import org.knime.core.table.access.AccessSpec;
-import org.knime.core.table.access.ReadAccess;
-import org.knime.core.table.access.WriteAccess;
-import org.knime.core.table.access.IntAccess.IntAccessSpec;
 import org.knime.core.table.access.IntAccess.IntReadAccess;
 import org.knime.core.table.access.IntAccess.IntWriteAccess;
-import org.knime.core.table.access.ListAccess.ListAccessSpec;
 import org.knime.core.table.access.ListAccess.ListReadAccess;
 import org.knime.core.table.access.ListAccess.ListWriteAccess;
-import org.knime.core.table.access.StructAccess.StructAccessSpec;
+import org.knime.core.table.access.ReadAccess;
 import org.knime.core.table.access.StructAccess.StructReadAccess;
 import org.knime.core.table.access.StructAccess.StructWriteAccess;
+import org.knime.core.table.access.WriteAccess;
+import org.knime.core.table.schema.DataSpec;
+import org.knime.core.table.schema.IntDataSpec;
+import org.knime.core.table.schema.ListDataSpec;
+import org.knime.core.table.schema.StructDataSpec;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
@@ -112,13 +112,12 @@ public final class SparseListValueFactory implements CollectionValueFactory<Stru
     }
 
     @Override
-    public StructAccessSpec getSpec() {
-        final AccessSpec<ReadAccess, WriteAccess> defaultAccessSpec = m_inner.getSpec();
-        final IntAccessSpec sizeAccessSpec = IntAccessSpec.INSTANCE;
-        final ListAccessSpec<IntReadAccess, IntWriteAccess> indicesAccessSpec =
-            new ListAccessSpec<>(IntAccessSpec.INSTANCE);
-        final ListAccessSpec<ReadAccess, WriteAccess> listAccessSpec = new ListAccessSpec<>(m_inner.getSpec());
-        return new StructAccessSpec(defaultAccessSpec, sizeAccessSpec, indicesAccessSpec, listAccessSpec);
+    public StructDataSpec getSpec() {
+        final DataSpec defaultDataSpec = m_inner.getSpec();
+        final IntDataSpec sizeDataSpec = IntDataSpec.INSTANCE;
+        final ListDataSpec indicesDataSpec = new ListDataSpec(IntDataSpec.INSTANCE);
+        final ListDataSpec listDataSpec = new ListDataSpec(m_inner.getSpec());
+        return new StructDataSpec(defaultDataSpec, sizeDataSpec, indicesDataSpec, listDataSpec);
     }
 
     @Override

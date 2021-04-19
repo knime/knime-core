@@ -62,10 +62,10 @@ import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.RowCursor;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
-import org.knime.core.table.access.AccessSpec;
-import org.knime.core.table.access.ObjectAccess.GenericObjectAccessSpec;
 import org.knime.core.table.access.ObjectAccess.ObjectReadAccess;
 import org.knime.core.table.access.ObjectAccess.ObjectWriteAccess;
+import org.knime.core.table.schema.DataSpec;
+import org.knime.core.table.schema.GenericObjectDataSpec;
 
 /**
  * {@link ValueFactory} to write and read arbitrary {@link DataCell}s. Needs special casing in corresponding
@@ -147,8 +147,8 @@ public final class DataCellValueFactory
     }
 
     @Override
-    public AccessSpec<ObjectReadAccess<DataCell>, ObjectWriteAccess<DataCell>> getSpec() {
-        return new GenericObjectAccessSpec<>(new DataCellObjectSerializer(m_factory, m_fsHandler, m_dataRepository));
+    public DataSpec getSpec() {
+        return new GenericObjectDataSpec<DataCell>(new DataCellObjectSerializer(m_factory, m_fsHandler, m_dataRepository));
     }
 
     private final static class DataCellInvocationHandler implements InvocationHandler {

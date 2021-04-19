@@ -8,10 +8,10 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.IDataRepository;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.v2.DataCellSerializerFactory;
-import org.knime.core.table.access.ObjectAccess.ObjectSerializer;
+import org.knime.core.table.schema.GenericObjectDataSpec.ObjectDataSerializer;
 
 /* {@link ObjectSerializer} for arbitrary {@link DataCell}s */
-final class DataCellObjectSerializer implements ObjectSerializer<DataCell> {
+final class DataCellObjectSerializer implements ObjectDataSerializer<DataCell> {
 
     private final DataCellSerializerFactory m_factory;
 

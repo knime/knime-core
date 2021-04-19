@@ -66,18 +66,18 @@ import org.knime.core.data.v2.value.SparseListValueFactory.DefaultSparseListRead
 import org.knime.core.data.v2.value.SparseListValueFactory.DefaultSparseListWriteValue;
 import org.knime.core.data.v2.value.SparseListValueFactory.SparseListReadValue;
 import org.knime.core.data.v2.value.SparseListValueFactory.SparseListWriteValue;
-import org.knime.core.table.access.AccessSpec;
-import org.knime.core.table.access.IntAccess.IntAccessSpec;
 import org.knime.core.table.access.IntAccess.IntReadAccess;
 import org.knime.core.table.access.IntAccess.IntWriteAccess;
-import org.knime.core.table.access.ListAccess.ListAccessSpec;
 import org.knime.core.table.access.ListAccess.ListReadAccess;
 import org.knime.core.table.access.ListAccess.ListWriteAccess;
 import org.knime.core.table.access.ObjectAccess.ObjectReadAccess;
 import org.knime.core.table.access.ObjectAccess.ObjectWriteAccess;
-import org.knime.core.table.access.StructAccess.StructAccessSpec;
 import org.knime.core.table.access.StructAccess.StructReadAccess;
 import org.knime.core.table.access.StructAccess.StructWriteAccess;
+import org.knime.core.table.schema.DataSpec;
+import org.knime.core.table.schema.IntDataSpec;
+import org.knime.core.table.schema.ListDataSpec;
+import org.knime.core.table.schema.StructDataSpec;
 
 import com.google.common.base.Objects;
 
@@ -105,14 +105,12 @@ public abstract class ObjectSparseListValueFactory<T> implements ValueFactory<St
     }
 
     @Override
-    public AccessSpec<StructReadAccess, StructWriteAccess> getSpec() {
-        final AccessSpec<ObjectReadAccess<T>, ObjectWriteAccess<T>> defaultAccessSpec = m_innerValueFactory.getSpec();
-        final IntAccessSpec sizeAccessSpec = IntAccessSpec.INSTANCE;
-        final ListAccessSpec<IntReadAccess, IntWriteAccess> indicesAccessSpec =
-            new ListAccessSpec<>(IntAccessSpec.INSTANCE);
-        final ListAccessSpec<ObjectReadAccess<T>, ObjectWriteAccess<T>> listAccessSpec =
-            new ListAccessSpec<>(m_innerValueFactory.getSpec());
-        return new StructAccessSpec(defaultAccessSpec, sizeAccessSpec, indicesAccessSpec, listAccessSpec);
+    public DataSpec getSpec() {
+        final DataSpec defaultDataSpec = m_innerValueFactory.getSpec();
+        final IntDataSpec sizeDataSpec = IntDataSpec.INSTANCE;
+        final ListDataSpec indicesDataSpec = new ListDataSpec(IntDataSpec.INSTANCE);
+        final ListDataSpec listDataSpec = new ListDataSpec(m_innerValueFactory.getSpec());
+        return new StructDataSpec(defaultDataSpec, sizeDataSpec, indicesDataSpec, listDataSpec);
     }
 
     /**

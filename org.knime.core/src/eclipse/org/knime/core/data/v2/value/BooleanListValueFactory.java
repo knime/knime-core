@@ -62,12 +62,10 @@ import org.knime.core.data.v2.value.ListValueFactory.DefaultListReadValue;
 import org.knime.core.data.v2.value.ListValueFactory.DefaultListWriteValue;
 import org.knime.core.data.v2.value.ListValueFactory.ListReadValue;
 import org.knime.core.data.v2.value.ListValueFactory.ListWriteValue;
-import org.knime.core.table.access.BooleanAccess.BooleanAccessSpec;
-import org.knime.core.table.access.BooleanAccess.BooleanReadAccess;
-import org.knime.core.table.access.BooleanAccess.BooleanWriteAccess;
-import org.knime.core.table.access.ListAccess.ListAccessSpec;
 import org.knime.core.table.access.ListAccess.ListReadAccess;
 import org.knime.core.table.access.ListAccess.ListWriteAccess;
+import org.knime.core.table.schema.BooleanDataSpec;
+import org.knime.core.table.schema.ListDataSpec;
 
 import com.google.common.primitives.Booleans;
 
@@ -85,8 +83,8 @@ public final class BooleanListValueFactory implements ValueFactory<ListReadAcces
     public static final BooleanListValueFactory INSTANCE = new BooleanListValueFactory();
 
     @Override
-    public ListAccessSpec<BooleanReadAccess, BooleanWriteAccess> getSpec() {
-        return new ListAccessSpec<>(BooleanAccessSpec.INSTANCE);
+    public ListDataSpec getSpec() {
+        return new ListDataSpec(BooleanDataSpec.INSTANCE);
     }
 
     @Override

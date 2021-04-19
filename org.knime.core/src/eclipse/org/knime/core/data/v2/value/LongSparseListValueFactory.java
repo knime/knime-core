@@ -68,19 +68,19 @@ import org.knime.core.data.v2.value.SparseListValueFactory.DefaultSparseListRead
 import org.knime.core.data.v2.value.SparseListValueFactory.DefaultSparseListWriteValue;
 import org.knime.core.data.v2.value.SparseListValueFactory.SparseListReadValue;
 import org.knime.core.data.v2.value.SparseListValueFactory.SparseListWriteValue;
-import org.knime.core.table.access.AccessSpec;
-import org.knime.core.table.access.IntAccess.IntAccessSpec;
 import org.knime.core.table.access.IntAccess.IntReadAccess;
 import org.knime.core.table.access.IntAccess.IntWriteAccess;
-import org.knime.core.table.access.ListAccess.ListAccessSpec;
 import org.knime.core.table.access.ListAccess.ListReadAccess;
 import org.knime.core.table.access.ListAccess.ListWriteAccess;
-import org.knime.core.table.access.LongAccess.LongAccessSpec;
 import org.knime.core.table.access.LongAccess.LongReadAccess;
 import org.knime.core.table.access.LongAccess.LongWriteAccess;
-import org.knime.core.table.access.StructAccess.StructAccessSpec;
 import org.knime.core.table.access.StructAccess.StructReadAccess;
 import org.knime.core.table.access.StructAccess.StructWriteAccess;
+import org.knime.core.table.schema.DataSpec;
+import org.knime.core.table.schema.IntDataSpec;
+import org.knime.core.table.schema.ListDataSpec;
+import org.knime.core.table.schema.LongDataSpec;
+import org.knime.core.table.schema.StructDataSpec;
 
 /**
  * {@link ValueFactory} implementation for {@link SparseListCell} with elements of type {@link LongCell}.
@@ -96,14 +96,12 @@ public final class LongSparseListValueFactory implements ValueFactory<StructRead
     public static final LongSparseListValueFactory INSTANCE = new LongSparseListValueFactory();
 
     @Override
-    public AccessSpec<StructReadAccess, StructWriteAccess> getSpec() {
-        final LongAccessSpec defaultAccessSpec = LongAccessSpec.INSTANCE;
-        final IntAccessSpec sizeAccessSpec = IntAccessSpec.INSTANCE;
-        final ListAccessSpec<IntReadAccess, IntWriteAccess> indicesAccessSpec =
-            new ListAccessSpec<>(IntAccessSpec.INSTANCE);
-        final ListAccessSpec<LongReadAccess, LongWriteAccess> listAccessSpec =
-            new ListAccessSpec<>(LongAccessSpec.INSTANCE);
-        return new StructAccessSpec(defaultAccessSpec, sizeAccessSpec, indicesAccessSpec, listAccessSpec);
+    public DataSpec getSpec() {
+        final LongDataSpec defaultDataSpec = LongDataSpec.INSTANCE;
+        final IntDataSpec sizeDataSpec = IntDataSpec.INSTANCE;
+        final ListDataSpec indicesDataSpec = new ListDataSpec(IntDataSpec.INSTANCE);
+        final ListDataSpec listDataSpec = new ListDataSpec(LongDataSpec.INSTANCE);
+        return new StructDataSpec(defaultDataSpec, sizeDataSpec, indicesDataSpec, listDataSpec);
     }
 
     @Override

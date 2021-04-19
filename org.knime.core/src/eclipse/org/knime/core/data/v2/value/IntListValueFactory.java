@@ -64,12 +64,10 @@ import org.knime.core.data.v2.value.ListValueFactory.DefaultListReadValue;
 import org.knime.core.data.v2.value.ListValueFactory.DefaultListWriteValue;
 import org.knime.core.data.v2.value.ListValueFactory.ListReadValue;
 import org.knime.core.data.v2.value.ListValueFactory.ListWriteValue;
-import org.knime.core.table.access.IntAccess.IntAccessSpec;
-import org.knime.core.table.access.IntAccess.IntReadAccess;
-import org.knime.core.table.access.IntAccess.IntWriteAccess;
-import org.knime.core.table.access.ListAccess.ListAccessSpec;
 import org.knime.core.table.access.ListAccess.ListReadAccess;
 import org.knime.core.table.access.ListAccess.ListWriteAccess;
+import org.knime.core.table.schema.IntDataSpec;
+import org.knime.core.table.schema.ListDataSpec;
 
 /**
  * {@link ValueFactory} implementation for {@link ListCell} with elements of type {@link IntCell}.
@@ -85,8 +83,8 @@ public final class IntListValueFactory implements ValueFactory<ListReadAccess, L
     public static final IntListValueFactory INSTANCE = new IntListValueFactory();
 
     @Override
-    public ListAccessSpec<IntReadAccess, IntWriteAccess> getSpec() {
-        return new ListAccessSpec<>(IntAccessSpec.INSTANCE);
+    public ListDataSpec getSpec() {
+        return new ListDataSpec(IntDataSpec.INSTANCE);
     }
 
     @Override

@@ -62,9 +62,9 @@ import org.knime.core.data.def.BooleanCell;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
-import org.knime.core.table.access.BooleanAccess.BooleanAccessSpec;
 import org.knime.core.table.access.BooleanAccess.BooleanReadAccess;
 import org.knime.core.table.access.BooleanAccess.BooleanWriteAccess;
+import org.knime.core.table.schema.BooleanDataSpec;
 
 /**
  * {@link ValueFactory} implementation for {@link BooleanCell}.
@@ -80,8 +80,8 @@ public class BooleanValueFactory implements ValueFactory<BooleanReadAccess, Bool
     public static final BooleanValueFactory INSTANCE = new BooleanValueFactory();
 
     @Override
-    public BooleanAccessSpec getSpec() {
-        return BooleanAccessSpec.INSTANCE;
+    public BooleanDataSpec getSpec() {
+        return BooleanDataSpec.INSTANCE;
     }
 
     @Override

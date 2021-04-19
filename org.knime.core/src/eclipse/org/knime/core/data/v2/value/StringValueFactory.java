@@ -56,7 +56,7 @@ import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
 import org.knime.core.table.access.ObjectAccess.ObjectReadAccess;
 import org.knime.core.table.access.ObjectAccess.ObjectWriteAccess;
-import org.knime.core.table.access.ObjectAccess.StringAccessSpec;
+import org.knime.core.table.schema.StringDataSpec;
 
 /**
  * {@link ValueFactory} implementation for {@link StringCell}.
@@ -73,10 +73,10 @@ public class StringValueFactory implements ValueFactory<ObjectReadAccess<String>
      */
     public static final StringValueFactory INSTANCE = new StringValueFactory();
 
-    private static final StringAccessSpec SPEC_INSTANCE = StringAccessSpec.INSTANCE;
+    private static final StringDataSpec SPEC_INSTANCE = StringDataSpec.INSTANCE;
 
     @Override
-    public StringAccessSpec getSpec() {
+    public StringDataSpec getSpec() {
         return SPEC_INSTANCE;
     }
 

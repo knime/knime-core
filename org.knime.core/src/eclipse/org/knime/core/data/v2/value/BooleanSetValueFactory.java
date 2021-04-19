@@ -69,12 +69,12 @@ import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
 import org.knime.core.data.v2.value.SetValueFactory.SetReadValue;
 import org.knime.core.data.v2.value.SetValueFactory.SetWriteValue;
-import org.knime.core.table.access.BooleanAccess.BooleanAccessSpec;
 import org.knime.core.table.access.BooleanAccess.BooleanReadAccess;
 import org.knime.core.table.access.BooleanAccess.BooleanWriteAccess;
-import org.knime.core.table.access.StructAccess.StructAccessSpec;
 import org.knime.core.table.access.StructAccess.StructReadAccess;
 import org.knime.core.table.access.StructAccess.StructWriteAccess;
+import org.knime.core.table.schema.BooleanDataSpec;
+import org.knime.core.table.schema.StructDataSpec;
 
 import com.google.common.collect.ImmutableList;
 
@@ -92,8 +92,8 @@ public final class BooleanSetValueFactory implements ValueFactory<StructReadAcce
     public static final BooleanSetValueFactory INSTANCE = new BooleanSetValueFactory();
 
     @Override
-    public StructAccessSpec getSpec() {
-        return new StructAccessSpec(BooleanAccessSpec.INSTANCE, BooleanAccessSpec.INSTANCE, BooleanAccessSpec.INSTANCE);
+    public StructDataSpec getSpec() {
+        return new StructDataSpec(BooleanDataSpec.INSTANCE, BooleanDataSpec.INSTANCE, BooleanDataSpec.INSTANCE);
     }
 
     @Override
