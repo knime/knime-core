@@ -120,7 +120,8 @@ public final class WorkflowSegment {
     private final List<Output> m_outputs;
 
     /**
-     * Creates a new instance.
+     * Creates a new instance from a workflow manager. The workflow manager must not be (partially) executed or
+     * executing.
      *
      * @param wfm the workflow manager representing the workflow segment
      * @param inputs workflow segment's inputs
@@ -129,11 +130,17 @@ public final class WorkflowSegment {
      */
     public WorkflowSegment(final WorkflowManager wfm, final List<Input> inputs, final List<Output> outputs,
         final Set<NodeIDSuffix> portObjectReferenceReaderNodes) {
+        checkThatThereAreNoExecutingOrExecutedNodes(wfm);
         m_wfm = wfm;
         m_name = wfm.getName();
         m_inputs = CheckUtils.checkArgumentNotNull(inputs);
         m_outputs = CheckUtils.checkArgumentNotNull(outputs);
         m_portObjectReferenceReaderNodes = CheckUtils.checkArgumentNotNull(portObjectReferenceReaderNodes);
+    }
+
+    private static void checkThatThereAreNoExecutingOrExecutedNodes(final WorkflowManager wfm) {
+        CheckUtils.checkState(!wfm.canResetAll() && !wfm.canCancelAll(),
+            "Workflow segment can't be created from an executing or (partially) executed workflow");
     }
 
     /**
