@@ -171,4 +171,16 @@ public interface FileSystemBrowser {
     String openDialogAndGetSelectedFileName(FileSelectionMode fileSelectionMode, DialogType dialogType,
         Component parent, final String forcedFileExtensionOnSave, String selectedFile, String[] suffixes);
 
+    /**
+     * Opens a dialog to select a workflow and returns the respective path.
+     *
+     * @param dialogType load or save dialog
+     * @param parent the parent for a modal dialog
+     * @param selectedFile the already selected workflow (to be 'pre-selected') or <code>null</code> if none
+     * @return the path to the selected workflow
+     */
+    default String openDialogAndGetSelectedWorkflow(final DialogType dialogType, final Component parent, final String selectedFile) {
+        throw new UnsupportedOperationException("Workflow browser not supported by this file system");
+    }
+
 }
