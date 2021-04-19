@@ -72,36 +72,17 @@ import org.knime.core.node.exec.dataexchange.PortObjectRepository;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectHolder;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.workflow.WorkflowCaptureOperation;
 import org.knime.core.node.workflow.virtual.parchunk.FlowVirtualScopeContext;
-import org.knime.core.node.workflow.virtual.parchunk.VirtualParallelizedChunkPortObjectOutNodeModel;
 
 /**
- * A node which controls the virtual execution of another workflow. The virtual workflow is created within the workflow
- * this node is part of and deleted after its successful execution.
+ * A node which holds a set of port objects and makes them available to down-stream nodes by adding them to the
+ * {@link PortObjectRepository}.
  *
- * With the disposal of the 'virtual' workflow, all port objects created in that workflow (except those that are passed
- * to the virtual output node, {@link VirtualParallelizedChunkPortObjectOutNodeModel}), are disposed, too and not
- * accessible anymore after the finished execution. This, however, is not always desired (see the example use case
- * description below) and there is a mechanism that allows one to keep and store selected port objects with this node
- * model: Right before the virtual workflow is executed,
- * {@link FlowVirtualScopeContext#registerHostNodeForPortObjectPersistence(org.knime.core.node.workflow.NativeNodeContainer, org.knime.core.node.workflow.NativeNodeContainer, org.knime.core.node.ExecutionContext)}
- * needs to be called with this node as parameter. As a result, some port objects (which port objects exactly is not
- * controlled by this node model) are automatically added to the list of port objects (via
- * {@link #addPortObject(UUID, PortObject)}) and subsequently managed (i.e. saved and loaded) by this node model. The
- * port objects are made available to other downstream nodes by registering them at the {@link PortObjectRepository}.
- *
- * An example use case is Integrated Deployment and the Workflow Executor (or the Parallel Chunk Loop): In case the
- * Workflow Executor is supposed to execute a workflow that in turn captures another workflow (i.e. uses the 'Capture
- * Workflow Start' and 'Capture Workflow End' nodes). If this to be captured workflow now has a 'static' input directly
- * connected into the scope, they are usually referenced from the captured workflow segment by their node-id and port
- * index. This, however, is not possible here since the referenced node won't exist anymore after the successful
- * execution of the virtual workflow. Thus, the capture-logic (see {@link WorkflowCaptureOperation}) makes sure that, if
- * a workflow is captured within a virtual (i.e. temporary) workflow, the port objects, which are referenced from the
- * captured workflow segment, are registered in the {@link PortObjectRepository} and passed to the host node of the
- * virtual workflow (i.e. this node model) for persistence. By that, those 'static' inputs are still available to
- * downstream nodes operating on the (in a virtual workflow) captured workflow segment, such as the Workflow Executor
- * or Workflow Writer nodes.
+ * One use case is for nodes that control the execution of a virtual workflow. I.e. a workflow that is created within
+ * this workflow and deleted after it's successful execution. As a result, the {@link FlowVirtualScopeContext}
+ * associated with a virtual workflow adds selected port objects to this node model (via
+ * {@link #addPortObject(UUID, PortObject)}) such that they are still available even after the deletion of the virtual
+ * workflow.
  *
  * @noextend This class is not intended to be subclassed by clients.
  * @noreference This class is not intended to be referenced by clients.
@@ -109,7 +90,7 @@ import org.knime.core.node.workflow.virtual.parchunk.VirtualParallelizedChunkPor
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  * @since 4.4
  */
-public abstract class AbstractVirtualWorkflowNodeModel extends NodeModel implements PortObjectHolder {
+public abstract class AbstractPortObjectRepositoryNodeModel extends NodeModel implements PortObjectHolder {
 
     private static final String CFG_PORT_OBJECT_IDS = "port_object_ids";
 
@@ -123,7 +104,7 @@ public abstract class AbstractVirtualWorkflowNodeModel extends NodeModel impleme
      * @param inPortTypes
      * @param outPortTypes
      */
-    protected AbstractVirtualWorkflowNodeModel(final PortType[] inPortTypes, final PortType[] outPortTypes) {
+    protected AbstractPortObjectRepositoryNodeModel(final PortType[] inPortTypes, final PortType[] outPortTypes) {
         super(inPortTypes, outPortTypes);
     }
 
@@ -131,7 +112,7 @@ public abstract class AbstractVirtualWorkflowNodeModel extends NodeModel impleme
      * @param nrInDataPorts
      * @param nrOutDataPorts
      */
-    protected AbstractVirtualWorkflowNodeModel(final int nrInDataPorts, final int nrOutDataPorts) {
+    protected AbstractPortObjectRepositoryNodeModel(final int nrInDataPorts, final int nrOutDataPorts) {
         super(nrInDataPorts, nrOutDataPorts);
     }
 

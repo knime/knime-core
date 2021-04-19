@@ -191,7 +191,7 @@ import org.knime.core.node.workflow.capture.WorkflowSegment;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 import org.knime.core.node.workflow.execresult.WorkflowExecutionResult;
-import org.knime.core.node.workflow.virtual.AbstractVirtualWorkflowNodeModel;
+import org.knime.core.node.workflow.virtual.AbstractPortObjectRepositoryNodeModel;
 import org.knime.core.node.workflow.virtual.parchunk.FlowVirtualScopeContext;
 import org.knime.core.node.workflow.virtual.parchunk.ParallelizedChunkContent;
 import org.knime.core.node.workflow.virtual.parchunk.ParallelizedChunkContentMaster;
@@ -3640,7 +3640,7 @@ public final class WorkflowManager extends NodeContainer
             ParallelizedChunkContentMaster pccm =
                 new ParallelizedChunkContentMaster(subwfm, endNode, startNode.getNrRemoteChunks());
             final NativeNodeContainer startNC;
-            if (subwfm != null && startNode instanceof AbstractVirtualWorkflowNodeModel) {
+            if (subwfm != null && startNode instanceof AbstractPortObjectRepositoryNodeModel) {
                 startNC = (NativeNodeContainer)getNodeContainer(startID);
             } else {
                 startNC = null;

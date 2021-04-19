@@ -48,7 +48,7 @@
 package org.knime.core.node.workflow;
 
 import org.knime.core.node.port.PortObjectHolder;
-import org.knime.core.node.workflow.virtual.AbstractVirtualWorkflowNodeModel;
+import org.knime.core.node.workflow.virtual.AbstractPortObjectRepositoryNodeModel;
 import org.knime.core.node.workflow.virtual.parchunk.FlowVirtualScopeContext;
 import org.knime.core.node.workflow.virtual.parchunk.ParallelizedChunkContentMaster;
 import org.knime.core.node.workflow.virtual.parchunk.VirtualParallelizedChunkNodeInput;
@@ -56,7 +56,7 @@ import org.knime.core.node.workflow.virtual.parchunk.VirtualParallelizedChunkNod
 /**
  * NO API!
  *
- * It is recommended that implementations also implement {@link AbstractVirtualWorkflowNodeModel} in order to work
+ * It is recommended that implementations also implement {@link AbstractPortObjectRepositoryNodeModel} in order to work
  * properly with nodes that (indirectly) use
  * {@link FlowVirtualScopeContext#addPortObjectToRepositoryAndHostNode(org.knime.core.node.port.PortObject)} (e.g.
  * Integrated Deployment).

@@ -58,7 +58,8 @@ import org.knime.core.node.exec.dataexchange.PortObjectRepository;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.workflow.FlowScopeContext;
 import org.knime.core.node.workflow.NativeNodeContainer;
-import org.knime.core.node.workflow.virtual.AbstractVirtualWorkflowNodeModel;
+import org.knime.core.node.workflow.WorkflowCaptureOperation;
+import org.knime.core.node.workflow.virtual.AbstractPortObjectRepositoryNodeModel;
 
 /**
  * Marks a virtual scope, i.e. a scope (a set of nodes) that is not permanently present and deleted after the execution
@@ -66,6 +67,31 @@ import org.knime.core.node.workflow.virtual.AbstractVirtualWorkflowNodeModel;
  *
  * A virtual scope is marked by the {@link VirtualParallelizedChunkPortObjectInNodeModel} and
  * {@link VirtualParallelizedChunkPortObjectOutNodeModel}.
+ *
+ * With the disposal of the 'virtual' workflow/scope, all port objects created in that workflow (except those that are
+ * passed to the virtual output node, {@link VirtualParallelizedChunkPortObjectOutNodeModel}), are disposed, too and not
+ * accessible anymore after the finished execution. This, however, is not always desired (see the example use case
+ * description below) and there is a mechanism that allows one to keep and store selected port objects with the node
+ * model that controls the virtual workflow execution (called 'host node'): Right before the virtual workflow is
+ * executed,
+ * {@link FlowVirtualScopeContext#registerHostNodeForPortObjectPersistence(org.knime.core.node.workflow.NativeNodeContainer, org.knime.core.node.workflow.NativeNodeContainer, org.knime.core.node.ExecutionContext)}
+ * needs to be called with 'host node' as parameter. As a result, some port objects (which port objects exactly is not
+ * controlled by the 'host node') are automatically added to the list of port objects of the host node (via
+ * {@link AbstractPortObjectRepositoryNodeModel#addPortObject(UUID, PortObject)}) and subsequently managed (i.e. saved
+ * and loaded) by the host node. The port objects are made available to other downstream nodes by registering them at
+ * the {@link PortObjectRepository}.
+ *
+ * An example use case is Integrated Deployment and the Workflow Executor (or the Parallel Chunk Loop): In case the
+ * Workflow Executor is supposed to execute a workflow that in turn captures another workflow (i.e. uses the 'Capture
+ * Workflow Start' and 'Capture Workflow End' nodes). If this to be captured workflow now has a 'static' input directly
+ * connected into the scope, they are usually referenced from the captured workflow segment by their node-id and port
+ * index. This, however, is not possible here since the referenced node won't exist anymore after the successful
+ * execution of the virtual workflow. Thus, the capture-logic (see {@link WorkflowCaptureOperation}) makes sure that, if
+ * a workflow is captured within a virtual (i.e. temporary) workflow, the port objects, which are referenced from the
+ * captured workflow segment, are registered in the {@link PortObjectRepository} and passed to the host node of the
+ * virtual workflow (i.e. this node model) for persistence. By that, those 'static' inputs are still available to
+ * downstream nodes operating on the (in a virtual workflow) captured workflow segment, such as the Workflow Executor or
+ * Workflow Writer nodes.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  *
@@ -78,15 +104,14 @@ public final class FlowVirtualScopeContext extends FlowScopeContext {
     private ExecutionContext m_exec;
 
     /**
-     * Allows one to register a node (whose node model is of type {@link AbstractVirtualWorkflowNodeModel}) with a
+     * Allows one to register a node (whose node model is of type {@link AbstractPortObjectRepositoryNodeModel}) with a
      * virtual scope context. This registered node is used to persist (and thus keep) port objects which would have
-     * otherwise be gone once the virtual execution of the underlying workflow is finished successfully. See
-     * {@link AbstractVirtualWorkflowNodeModel} for more details.
+     * otherwise be gone once the virtual execution of the underlying workflow is finished successfully.
      *
      * This method needs to be called right before the nodes of this virtual scope are executed.
      *
      * @param hostNode the node used for persistence of selected port objects and to provide a file store handler (its
-     *            node model needs to be of type {@link AbstractVirtualWorkflowNodeModel})
+     *            node model needs to be of type {@link AbstractPortObjectRepositoryNodeModel})
      * @param virtualInNode a node with a node model of type {@link VirtualParallelizedChunkPortObjectInNodeModel}, used
      *            to get the virtual scope from
      * @param exec the host node's execution context, mainly used to copy port objects (which are then made available
@@ -94,9 +119,9 @@ public final class FlowVirtualScopeContext extends FlowScopeContext {
      */
     public static void registerHostNodeForPortObjectPersistence(final NativeNodeContainer hostNode,
         final NativeNodeContainer virtualInNode, final ExecutionContext exec) {
-        if (!(hostNode.getNodeModel() instanceof AbstractVirtualWorkflowNodeModel)) {
+        if (!(hostNode.getNodeModel() instanceof AbstractPortObjectRepositoryNodeModel)) {
             throw new IllegalArgumentException(
-                "The host node model is not of type " + AbstractVirtualWorkflowNodeModel.class.getSimpleName());
+                "The host node model is not of type " + AbstractPortObjectRepositoryNodeModel.class.getSimpleName());
         }
         if (!(virtualInNode.getNodeModel() instanceof VirtualParallelizedChunkPortObjectInNodeModel)) {
             throw new IllegalArgumentException("The virtual input node model is not of expected type "
@@ -112,7 +137,7 @@ public final class FlowVirtualScopeContext extends FlowScopeContext {
 
     /**
      * Adds a port object to the {@link PortObjectRepository} (to be available to downstream nodes) and the host node
-     * (whose node model is of type {@link AbstractVirtualWorkflowNodeModel}) for persistence.
+     * (whose node model is of type {@link AbstractPortObjectRepositoryNodeModel}) for persistence.
      *
      * The host node is registered via
      * {@link #registerHostNodeForPortObjectPersistence(NativeNodeContainer, NativeNodeContainer, ExecutionContext)}.
@@ -131,7 +156,7 @@ public final class FlowVirtualScopeContext extends FlowScopeContext {
         }
 
         UUID id = PortObjectRepository.addCopy(po, m_exec);
-        ((AbstractVirtualWorkflowNodeModel)m_nc.getNodeModel()).addPortObject(id, PortObjectRepository.get(id).get()); // NOSONAR
+        ((AbstractPortObjectRepositoryNodeModel)m_nc.getNodeModel()).addPortObject(id, PortObjectRepository.get(id).get()); // NOSONAR
         return id;
     }
 
