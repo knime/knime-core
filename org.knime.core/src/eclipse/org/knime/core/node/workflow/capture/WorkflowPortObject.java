@@ -209,7 +209,7 @@ public class WorkflowPortObject extends AbstractPortObject {
 
     @Override
     public String getSummary() {
-        return getSpec().getWorkflowSegment().getName();
+        return "Workflow: " + getSpec().getWorkflowName();
     }
 
     @Override
