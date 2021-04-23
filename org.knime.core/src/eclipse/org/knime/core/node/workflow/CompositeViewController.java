@@ -279,7 +279,7 @@ public class CompositeViewController extends WebResourceController {
                 NodeContainer nodeToReset = pageWfm.getNodeContainer(nodeIDToReset.prependParent(pageWfm.getID()));
                 Set<String> downstreamNodeIds = getDownstreamNodes(nodeToReset, m_manager.getID());
                 Map<String, String> filteredViewValues = filterViewValues(downstreamNodeIds, valueMap);
-                Map<String, ValidationError> validationResult = loadValuesIntoPage(filteredViewValues, false, true);
+                Map<String, ValidationError> validationResult = loadValuesIntoPage(filteredViewValues, true, true);
                 if (validationResult == null || validationResult.isEmpty()) {
                     m_manager.executeUpToHere(pageID);
                 }

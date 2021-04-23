@@ -190,7 +190,12 @@ public class JsonRpcClient extends AbstractRpcClient {
             String exceptionClassName = errorNode.get("data").get("exceptionTypeName").asText();
             @SuppressWarnings("unchecked")
             Class<? extends Exception> exceptionClass = (Class<? extends Exception>)Class.forName(exceptionClassName);
-            throw exceptionClass.getDeclaredConstructor().newInstance();
+            String message = errorNode.get("data").get("message").asText();
+            if (message != null) {
+                throw exceptionClass.getDeclaredConstructor(String.class).newInstance(message);
+            } else {
+                throw exceptionClass.getDeclaredConstructor().newInstance();
+            }
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException ex) {
             throw new IllegalStateException(
                 String.format("The error returned by rpc server couldn't be turned into an exception: %s", errorNode),

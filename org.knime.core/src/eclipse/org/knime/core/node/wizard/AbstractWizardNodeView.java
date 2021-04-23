@@ -578,17 +578,6 @@ public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNod
     public abstract void pushRequestUpdate(final String monitor);
 
     /**
-     * Wrapper method to allow nodes and controllers to initiate visual updates by pushing events
-     * to their respective views.
-     *
-     * @param response view update to push.
-     * @since 4.4
-     */
-    public final void pushViewUpdate(final WizardViewResponse response) {
-        respondToViewRequest(response);
-    }
-
-    /**
      * Queries extension point for additional {@link AbstractWizardNodeView} implementations.
      *
      * @return A list with all registered view implementations.
