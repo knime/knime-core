@@ -1,4 +1,8 @@
-<?xml version="1.0" encoding="UTF-8"?><project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<?xml version="1.0" encoding="UTF-8"?>
+<project
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+	xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
@@ -11,27 +15,49 @@
 	<groupId>org.knime</groupId>
 	<artifactId>org.knime.core</artifactId>
 	<packaging>${packaging.default}</packaging>
-	
+
 	<properties>
 		<revision>4.4.0</revision>
 	</properties>
 
-    <build>
-        <plugins>
-            <plugin>
-                <!-- This is required so that XMLBeans don't end up in the main Jar file, too. They are already
-                     in lib/schemas.jar. -->
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-resources-plugin</artifactId>
-                <version>3.1.0</version>
-                <configuration>
-                    <skip>true</skip>
-                </configuration>
-            </plugin>
+	<build>
+		<plugins>
 			<plugin>
-				<groupId>org.eclipse.tycho.extras</groupId>
-				<artifactId>tycho-dependency-tools-plugin</artifactId>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<version>3.0.0</version>
+				<executions>
+					<execution>
+						<id>generate schema.jar</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+						<configuration>
+							<target>
+								<property name="compile_classpath" refid="maven.plugin.classpath" />
+								<ant antfile="${project.basedir}/build.xml">
+									<target name="build" />
+								</ant>
+							</target>
+						</configuration>
+					</execution>
+				</executions>
+				<dependencies>
+					<dependency>
+						<groupId>org.apache.xmlbeans</groupId>
+						<artifactId>xmlbeans</artifactId>
+						<version>5.0.0</version>
+						<scope>compile</scope>
+					</dependency>
+					<dependency>
+						<groupId>org.apache.logging.log4j</groupId>
+						<artifactId>log4j-core</artifactId>
+						<version>2.14.0</version>
+						<scope>compile</scope>
+					</dependency>
+				</dependencies>
 			</plugin>
-        </plugins>
-    </build>
+		</plugins>
+	</build>
 </project>

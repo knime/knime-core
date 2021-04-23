@@ -8,7 +8,6 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
-	<classpathentry kind="lib" path="lib/saxon-he-9.2.0.5.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/schemas.jar"/>
 	<classpathentry kind="output" path="bin/eclipse"/>
 </classpath>
