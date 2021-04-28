@@ -54,8 +54,8 @@ import org.knime.core.data.def.StringCell;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
-import org.knime.core.table.access.ObjectAccess.ObjectReadAccess;
-import org.knime.core.table.access.ObjectAccess.ObjectWriteAccess;
+import org.knime.core.table.access.StringAccess.StringReadAccess;
+import org.knime.core.table.access.StringAccess.StringWriteAccess;
 import org.knime.core.table.schema.StringDataSpec;
 
 /**
@@ -66,7 +66,7 @@ import org.knime.core.table.schema.StringDataSpec;
  *
  * @noreference This class is not intended to be referenced by clients.
  */
-public class StringValueFactory implements ValueFactory<ObjectReadAccess<String>, ObjectWriteAccess<String>> {
+public class StringValueFactory implements ValueFactory<StringReadAccess, StringWriteAccess> {
 
     /**
      * Stateless instance of StringValueFactory.
@@ -81,12 +81,12 @@ public class StringValueFactory implements ValueFactory<ObjectReadAccess<String>
     }
 
     @Override
-    public StringReadValue createReadValue(final ObjectReadAccess<String> reader) {
+    public StringReadValue createReadValue(final StringReadAccess reader) {
         return new DefaultStringReadValue(reader);
     }
 
     @Override
-    public StringWriteValue createWriteValue(final ObjectWriteAccess<String> writer) {
+    public StringWriteValue createWriteValue(final StringWriteAccess writer) {
         return new DefaultStringWriteValue(writer);
     }
 
@@ -116,9 +116,9 @@ public class StringValueFactory implements ValueFactory<ObjectReadAccess<String>
     }
 
     private static final class DefaultStringWriteValue implements StringWriteValue {
-        private final ObjectWriteAccess<String> m_access;
+        private final StringWriteAccess m_access;
 
-        private DefaultStringWriteValue(final ObjectWriteAccess<String> access) {
+        private DefaultStringWriteValue(final StringWriteAccess access) {
             m_access = access;
         }
 
@@ -129,20 +129,20 @@ public class StringValueFactory implements ValueFactory<ObjectReadAccess<String>
 
         @Override
         public void setValue(final StringValue value) {
-            m_access.setObject(value.getStringValue());
+            m_access.setStringValue(value.getStringValue());
         }
 
         @Override
         public void setStringValue(final String value) {
-            m_access.setObject(value);
+            m_access.setStringValue(value);
         }
 
     }
 
     private static final class DefaultStringReadValue implements StringReadValue {
-        private final ObjectReadAccess<String> m_access;
+        private final StringReadAccess m_access;
 
-        private DefaultStringReadValue(final ObjectReadAccess<String> access) {
+        private DefaultStringReadValue(final StringReadAccess access) {
             m_access = access;
         }
 
@@ -153,12 +153,12 @@ public class StringValueFactory implements ValueFactory<ObjectReadAccess<String>
 
         @Override
         public String getStringValue() {
-            return m_access.getObject();
+            return m_access.getStringValue();
         }
 
         @Override
         public StringCell getDataCell() {
-            return new StringCell(m_access.getObject());
+            return new StringCell(m_access.getStringValue());
         }
     }
 }

@@ -45,10 +45,13 @@
  */
 package org.knime.core.data.v2.value.cell;
 
+import java.io.DataInput;
+import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
+import java.util.function.Function;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellSerializer;
@@ -62,10 +65,10 @@ import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.RowCursor;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
-import org.knime.core.table.access.ObjectAccess.ObjectReadAccess;
-import org.knime.core.table.access.ObjectAccess.ObjectWriteAccess;
+import org.knime.core.table.access.ByteArrayAccess.VarBinaryReadAccess;
+import org.knime.core.table.access.ByteArrayAccess.VarBinaryWriteAccess;
 import org.knime.core.table.schema.DataSpec;
-import org.knime.core.table.schema.GenericObjectDataSpec;
+import org.knime.core.table.schema.VarBinaryDataSpec;
 
 /**
  * {@link ValueFactory} to write and read arbitrary {@link DataCell}s. Needs special casing in corresponding
@@ -77,8 +80,7 @@ import org.knime.core.table.schema.GenericObjectDataSpec;
  * @noinstantiate This class is not intended to be instantiated by clients.
  * @noreference This class is not intended to be referenced by clients.
  */
-public final class DataCellValueFactory
-    implements ValueFactory<ObjectReadAccess<DataCell>, ObjectWriteAccess<DataCell>> {
+public final class DataCellValueFactory implements ValueFactory<VarBinaryReadAccess, VarBinaryWriteAccess> {
 
     private DataCellSerializerFactory m_factory;
 
@@ -89,8 +91,8 @@ public final class DataCellValueFactory
     private DataType m_type;
 
     /**
-     * Empty framework constructor. Call {@link #initialize(DataCellSerializerFactory, IDataRepository, DataType)} after using
-     * this constructor.
+     * Empty framework constructor. Call {@link #initialize(DataCellSerializerFactory, IDataRepository, DataType)} after
+     * using this constructor.
      */
     public DataCellValueFactory() {
     }
@@ -126,7 +128,7 @@ public final class DataCellValueFactory
     }
 
     @Override
-    public ReadValue createReadValue(final ObjectReadAccess<DataCell> access) {
+    public ReadValue createReadValue(final VarBinaryReadAccess access) {
         final ArrayList<Class<? extends DataValue>> types = new ArrayList<>(m_type.getValueClasses());
         types.add(ReadValue.class);
         final Class<?>[] array = types.toArray(new Class<?>[types.size()]);
@@ -138,37 +140,49 @@ public final class DataCellValueFactory
         } else {
             loader = cellClass.getClassLoader();
         }
-        return (ReadValue)Proxy.newProxyInstance(loader, array, new DataCellInvocationHandler(access));
+        return (ReadValue)Proxy.newProxyInstance(loader, array,
+            new DataCellInvocationHandler(access, m_factory, m_dataRepository));
     }
 
     @Override
-    public WriteValue<? extends DataCell> createWriteValue(final ObjectWriteAccess<DataCell> access) {
-        return new DefaultDataCellWriteValue(access, m_fsHandler, m_dataRepository);
+    public WriteValue<? extends DataCell> createWriteValue(final VarBinaryWriteAccess access) {
+        return new DefaultDataCellWriteValue(access, m_factory, m_dataRepository, m_fsHandler);
     }
 
     @Override
     public DataSpec getSpec() {
-        return new GenericObjectDataSpec<DataCell>(new DataCellObjectSerializer(m_factory, m_fsHandler, m_dataRepository));
+        return VarBinaryDataSpec.INSTANCE;
     }
 
     private final static class DataCellInvocationHandler implements InvocationHandler {
 
         private final Method m_getDataCell;
 
-        private final ObjectReadAccess<DataCell> m_access;
+        private final VarBinaryReadAccess m_access;
 
-        private DataCellInvocationHandler(final ObjectReadAccess<DataCell> access) {
+        private final Function<DataInput, DataCell> m_deserializer;
+
+        private DataCellInvocationHandler(final VarBinaryReadAccess access, final DataCellSerializerFactory factory,
+            final IDataRepository dataRepository) {
             m_access = access;
             try {
                 m_getDataCell = ReadValue.class.getMethod("getDataCell");
             } catch (Exception ex) {
                 throw new IllegalStateException("Fatal: Proxy can't be setup.", ex);
             }
+            m_deserializer = input -> {
+                try (DataCellDataInputDelegator stream =
+                    new DataCellDataInputDelegator(factory, dataRepository, input)) {
+                    return stream.readDataCell();
+                } catch (final IOException ex) {
+                    throw new IllegalStateException("Error during deserialization", ex);
+                }
+            };
         }
 
         @Override
         public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
-            final DataCell cell = m_access.getObject();
+            final DataCell cell = m_access.getObject(m_deserializer);
             if (method.equals(m_getDataCell)) {
                 return cell;
             } else {

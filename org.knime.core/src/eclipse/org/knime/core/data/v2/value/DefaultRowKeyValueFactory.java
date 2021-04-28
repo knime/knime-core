@@ -52,8 +52,8 @@ import org.knime.core.data.v2.RowKeyReadValue;
 import org.knime.core.data.v2.RowKeyValueFactory;
 import org.knime.core.data.v2.RowKeyWriteValue;
 import org.knime.core.data.v2.ValueFactory;
-import org.knime.core.table.access.ObjectAccess.ObjectReadAccess;
-import org.knime.core.table.access.ObjectAccess.ObjectWriteAccess;
+import org.knime.core.table.access.StringAccess.StringReadAccess;
+import org.knime.core.table.access.StringAccess.StringWriteAccess;
 import org.knime.core.table.schema.StringDataSpec;
 
 /**
@@ -67,8 +67,7 @@ import org.knime.core.table.schema.StringDataSpec;
  *
  * @noreference This class is not intended to be referenced by clients.
  */
-public final class DefaultRowKeyValueFactory
-    implements RowKeyValueFactory<ObjectReadAccess<String>, ObjectWriteAccess<String>> {
+public final class DefaultRowKeyValueFactory implements RowKeyValueFactory<StringReadAccess, StringWriteAccess> {
 
     /**
      * Stateless instance.
@@ -81,21 +80,21 @@ public final class DefaultRowKeyValueFactory
     }
 
     @Override
-    public RowKeyReadValue createReadValue(final ObjectReadAccess<String> reader) {
+    public RowKeyReadValue createReadValue(final StringReadAccess reader) {
         return new DefaultRowKeyReadValue(reader);
     }
 
     @Override
-    public RowKeyWriteValue createWriteValue(final ObjectWriteAccess<String> writer) {
+    public RowKeyWriteValue createWriteValue(final StringWriteAccess writer) {
         return new DefaultRowKeyWriteValue(writer);
     }
 
     /* Simple CustomRowKeyWriteValue */
     private final class DefaultRowKeyWriteValue implements RowKeyWriteValue {
 
-        private final ObjectWriteAccess<String> m_access;
+        private final StringWriteAccess m_access;
 
-        public DefaultRowKeyWriteValue(final ObjectWriteAccess<String> access) {
+        public DefaultRowKeyWriteValue(final StringWriteAccess access) {
             m_access = access;
         }
 
@@ -106,13 +105,13 @@ public final class DefaultRowKeyValueFactory
 
         @Override
         public void setRowKey(final String key) {
-            m_access.setObject(key);
+            m_access.setStringValue(key);
 
         }
 
         @Override
         public void setRowKey(final RowKeyValue key) {
-            m_access.setObject(key.getString());
+            m_access.setStringValue(key.getString());
         }
 
         @Override
@@ -124,9 +123,9 @@ public final class DefaultRowKeyValueFactory
     /* Simple CustomRowKeyReadValue */
     private final class DefaultRowKeyReadValue implements RowKeyReadValue {
 
-        private final ObjectReadAccess<String> m_access;
+        private final StringReadAccess m_access;
 
-        public DefaultRowKeyReadValue(final ObjectReadAccess<String> access) {
+        public DefaultRowKeyReadValue(final StringReadAccess access) {
             m_access = access;
         }
 
@@ -137,12 +136,12 @@ public final class DefaultRowKeyValueFactory
 
         @Override
         public StringCell getDataCell() {
-            return new StringCell(m_access.getObject());
+            return new StringCell(m_access.getStringValue());
         }
 
         @Override
         public String getString() {
-            return m_access.getObject();
+            return m_access.getStringValue();
         }
     }
 }

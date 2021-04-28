@@ -48,7 +48,10 @@
  */
 package org.knime.core.data.v2.value;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.OptionalInt;
 
 import org.knime.core.data.StringValue;
 import org.knime.core.data.collection.SparseListCell;
@@ -56,17 +59,30 @@ import org.knime.core.data.def.StringCell;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
+import org.knime.core.data.v2.value.SparseListValueFactory.AbstractSparseIterator;
+import org.knime.core.data.v2.value.SparseListValueFactory.DefaultSparseListReadValue;
+import org.knime.core.data.v2.value.SparseListValueFactory.DefaultSparseListWriteValue;
+import org.knime.core.data.v2.value.SparseListValueFactory.SparseListReadValue;
+import org.knime.core.data.v2.value.SparseListValueFactory.SparseListWriteValue;
 import org.knime.core.data.v2.value.StringListValueFactory.StringListReadValue;
+import org.knime.core.data.v2.value.StringListValueFactory.StringListWriteValue;
 import org.knime.core.data.v2.value.StringValueFactory.StringReadValue;
 import org.knime.core.data.v2.value.StringValueFactory.StringWriteValue;
 import org.knime.core.table.access.IntAccess.IntReadAccess;
 import org.knime.core.table.access.IntAccess.IntWriteAccess;
 import org.knime.core.table.access.ListAccess.ListReadAccess;
 import org.knime.core.table.access.ListAccess.ListWriteAccess;
-import org.knime.core.table.access.ObjectAccess.ObjectReadAccess;
-import org.knime.core.table.access.ObjectAccess.ObjectWriteAccess;
+import org.knime.core.table.access.StringAccess.StringReadAccess;
+import org.knime.core.table.access.StringAccess.StringWriteAccess;
 import org.knime.core.table.access.StructAccess.StructReadAccess;
 import org.knime.core.table.access.StructAccess.StructWriteAccess;
+import org.knime.core.table.schema.DataSpec;
+import org.knime.core.table.schema.IntDataSpec;
+import org.knime.core.table.schema.ListDataSpec;
+import org.knime.core.table.schema.StringDataSpec;
+import org.knime.core.table.schema.StructDataSpec;
+
+import com.google.common.base.Objects;
 
 /**
  * {@link ValueFactory} implementation for {@link SparseListCell} with elements of type {@link StringCell}.
@@ -76,19 +92,21 @@ import org.knime.core.table.access.StructAccess.StructWriteAccess;
  *
  * @noreference This class is not intended to be referenced by clients.
  */
-public final class StringSparseListValueFactory extends ObjectSparseListValueFactory<String> {
+public final class StringSparseListValueFactory implements ValueFactory<StructReadAccess, StructWriteAccess> {
 
     /** A stateless instance of {@link StringSparseListValueFactory} */
     public static final StringSparseListValueFactory INSTANCE = new StringSparseListValueFactory();
 
     /**
-     * This constructor is not intended to be called directly. Use the stateless instance
-     * {@link StringSparseListValueFactory#INSTANCE}.
-     *
-     * @noreference This constructor is not intended to be referenced by clients.
+     * {@inheritDoc}
      */
-    public StringSparseListValueFactory() {
-        super(StringValueFactory.INSTANCE);
+    @Override
+    public DataSpec getSpec() {
+        final StringDataSpec defaultDataSpec = StringDataSpec.INSTANCE;
+        final IntDataSpec sizeDataSpec = IntDataSpec.INSTANCE;
+        final ListDataSpec indicesDataSpec = new ListDataSpec(IntDataSpec.INSTANCE);
+        final ListDataSpec listDataSpec = new ListDataSpec(StringDataSpec.INSTANCE);
+        return new StructDataSpec(defaultDataSpec, sizeDataSpec, indicesDataSpec, listDataSpec);
     }
 
     @Override
@@ -108,7 +126,7 @@ public final class StringSparseListValueFactory extends ObjectSparseListValueFac
      *
      * @since 4.3
      */
-    public static interface StringSparseListReadValue extends ObjectSparseListReadValue<String>, StringListReadValue {
+    public static interface StringSparseListReadValue extends SparseListReadValue, StringListReadValue {
     }
 
     /**
@@ -116,16 +134,61 @@ public final class StringSparseListValueFactory extends ObjectSparseListValueFac
      *
      * @since 4.3
      */
-    public static interface StringSparseListWriteValue extends ObjectSparseListWriteValue<String> {
+    public static interface StringSparseListWriteValue extends SparseListWriteValue {
+
+        void setValue(String[] values, String defaultElement);
+
     }
 
     private static final class DefaultStringSparseListReadValue
-        extends AbstractObjectSparseListReadValue<StringReadValue, String> implements StringSparseListReadValue {
+        extends DefaultSparseListReadValue<StringReadValue, StringListReadValue, StringReadAccess>
+        implements StringSparseListReadValue {
 
-        private DefaultStringSparseListReadValue(final ObjectReadAccess<String> defaultAccess,
-            final IntReadAccess sizeAccess, final ListReadAccess indicesAccess, final ListReadAccess listAccess) {
+        private DefaultStringSparseListReadValue(final StringReadAccess defaultAccess, final IntReadAccess sizeAccess,
+            final ListReadAccess indicesAccess, final ListReadAccess listAccess) {
             super(defaultAccess, sizeAccess, indicesAccess, listAccess, StringValueFactory.INSTANCE,
                 StringListValueFactory.INSTANCE);
+        }
+
+        private String getStringFromStorage(final int storageIndex) {
+            return m_storageList.getValue(storageIndex);
+        }
+
+        @Override
+        public String getString(final int index) {
+            final OptionalInt storageIndex = storageIndexForIndex(index);
+            if (storageIndex.isPresent()) {
+                return getStringFromStorage(storageIndex.getAsInt());
+            } else {
+                return m_defaultValue.getStringValue();
+            }
+        }
+
+        @Override
+        public String[] getStringArray() {
+            final String[] values = new String[size()];
+            final Iterator<String> iterator = stringIterator();
+            for (int i = 0; i < values.length; i++) {
+                values[i] = iterator.next();
+            }
+            return values;
+        }
+
+        @Override
+        public Iterator<String> stringIterator() {
+            final String defaultElement = m_defaultValue.getStringValue();
+            return new AbstractSparseIterator<String>(size(), m_storageIndices.size(), m_storageIndices::getInt) {
+
+                @Override
+                public String next() {
+                    final OptionalInt storageIndex = nextStorageIndex();
+                    if (storageIndex.isPresent()) {
+                        return getStringFromStorage(storageIndex.getAsInt());
+                    } else {
+                        return defaultElement;
+                    }
+                }
+            };
         }
 
         @Override
@@ -134,34 +197,39 @@ public final class StringSparseListValueFactory extends ObjectSparseListValueFac
         }
 
         @Override
-        protected String getDefaultValue() {
-            return m_defaultValue.getStringValue();
+        public String getValue(final int index) {
+            return getString(index);
         }
 
-        @Override
-        protected String[] createObjectArray(final int size) {
-            return new String[size];
-        }
     }
 
     private static final class DefaultStringSparseListWriteValue
-        extends AbstractObjectSparseListWriteValue<StringValue, StringWriteValue, String>
+        extends DefaultSparseListWriteValue<StringValue, StringWriteValue, StringListWriteValue, StringWriteAccess>
         implements StringSparseListWriteValue {
 
-        protected DefaultStringSparseListWriteValue(final ObjectWriteAccess<String> defaultAccess,
+        protected DefaultStringSparseListWriteValue(final StringWriteAccess defaultAccess,
             final IntWriteAccess sizeAccess, final ListWriteAccess indicesAccess, final ListWriteAccess listAccess) {
             super(defaultAccess, sizeAccess, indicesAccess, listAccess, StringValueFactory.INSTANCE,
                 StringListValueFactory.INSTANCE);
         }
 
         @Override
-        protected void setDefaultValue(final String value) {
-            m_defaultValue.setStringValue(value);
-        }
+        public void setValue(final String[] values, final String defaultElement) {
+            final List<Integer> storageIndices = new ArrayList<>();
+            final List<String> storageList = new ArrayList<>();
 
-        @Override
-        protected void setStorageList(final List<String> values) {
-            m_storageList.setValue(values.toArray(new String[0]));
+            for (int i = 0; i < values.length; i++) {
+                final String v = values[i];
+                if (Objects.equal(v, defaultElement)) {
+                    storageIndices.add(i);
+                    storageList.add(v);
+                }
+            }
+
+            m_defaultValue.setStringValue(defaultElement);
+            m_sizeValue.setIntValue(storageList.size());
+            m_storageIndices.setValue(storageIndices.stream().mapToInt(Integer::intValue).toArray());
+            m_storageList.setValue(storageList.stream().toArray(String[]::new));
         }
     }
 }

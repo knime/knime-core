@@ -48,18 +48,26 @@
  */
 package org.knime.core.data.v2.value;
 
+import java.util.Arrays;
+import java.util.Iterator;
+
 import org.knime.core.data.StringValue;
 import org.knime.core.data.collection.ListCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
+import org.knime.core.data.v2.value.ListValueFactory.DefaultListReadValue;
 import org.knime.core.data.v2.value.ListValueFactory.DefaultListWriteValue;
+import org.knime.core.data.v2.value.ListValueFactory.ListReadValue;
+import org.knime.core.data.v2.value.ListValueFactory.ListWriteValue;
 import org.knime.core.data.v2.value.StringValueFactory.StringReadValue;
 import org.knime.core.data.v2.value.StringValueFactory.StringWriteValue;
 import org.knime.core.data.vector.stringvector.StringVectorValue;
 import org.knime.core.table.access.ListAccess.ListReadAccess;
 import org.knime.core.table.access.ListAccess.ListWriteAccess;
+import org.knime.core.table.schema.ListDataSpec;
+import org.knime.core.table.schema.StringDataSpec;
 
 /**
  * {@link ValueFactory} implementation for {@link ListCell} with elements of type {@link StringCell}.
@@ -69,19 +77,14 @@ import org.knime.core.table.access.ListAccess.ListWriteAccess;
  *
  * @noreference This class is not intended to be referenced by clients.
  */
-public final class StringListValueFactory extends ObjectListValueFactory<String> {
+public final class StringListValueFactory implements ValueFactory<ListReadAccess, ListWriteAccess> {
 
     /** A stateless instance of {@link StringListValueFactory} */
     public static final StringListValueFactory INSTANCE = new StringListValueFactory();
 
-    /**
-     * This constructor is not intended to be called directly. Use the stateless instance
-     * {@link StringListValueFactory#INSTANCE}.
-     *
-     * @noreference This constructor is not intended to be referenced by clients.
-     */
-    public StringListValueFactory() {
-        super(StringValueFactory.INSTANCE);
+    @Override
+    public ListDataSpec getSpec() {
+        return new ListDataSpec(StringDataSpec.INSTANCE);
     }
 
     @Override
@@ -99,7 +102,14 @@ public final class StringListValueFactory extends ObjectListValueFactory<String>
      *
      * @since 4.3
      */
-    public static interface StringListReadValue extends ObjectListReadValue<String>, StringVectorValue {
+    public static interface StringListReadValue extends ListReadValue, StringVectorValue {
+
+        String getString(int index);
+
+        String[] getStringArray();
+
+        Iterator<String> stringIterator();
+
     }
 
     /**
@@ -107,10 +117,13 @@ public final class StringListValueFactory extends ObjectListValueFactory<String>
      *
      * @since 4.3
      */
-    public static interface StringListWriteValue extends ObjectListWriteValue<String> {
+    public static interface StringListWriteValue extends ListWriteValue {
+
+        void setValue(String[] values);
+
     }
 
-    private static final class DefaultStringListReadValue extends AbstractObjectListReadValue<String>
+    private static final class DefaultStringListReadValue extends DefaultListReadValue
         implements StringListReadValue {
 
         private DefaultStringListReadValue(final ListReadAccess reader) {
@@ -118,12 +131,7 @@ public final class StringListValueFactory extends ObjectListValueFactory<String>
         }
 
         @Override
-        protected String[] createObjectArray(final int size) {
-            return new String[size];
-        }
-
-        @Override
-        public String getValue(final int index) {
+        public String getString(final int index) {
             final StringReadValue v = m_reader.getReadAccess(index);
             return v.getStringValue();
         }
@@ -132,6 +140,26 @@ public final class StringListValueFactory extends ObjectListValueFactory<String>
         public int getLength() {
             return size();
         }
+
+        @Override
+        public String getValue(final int index) {
+            return getString(index);
+        }
+
+        @Override
+        public String[] getStringArray() {
+            final String[] result = new String[size()];
+            for (int i = 0; i < result.length; i++) {
+                result[i] = getString(i);
+            }
+            return result;
+        }
+
+        @Override
+        public Iterator<String> stringIterator() {
+            return Arrays.stream(getStringArray()).iterator();
+        }
+
     }
 
     private static final class DefaultStringListWriteValue extends DefaultListWriteValue

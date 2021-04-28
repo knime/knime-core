@@ -54,6 +54,8 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.model.PortObjectCell;
@@ -65,10 +67,9 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortUtil;
-import org.knime.core.table.access.ObjectAccess.ObjectReadAccess;
-import org.knime.core.table.access.ObjectAccess.ObjectWriteAccess;
-import org.knime.core.table.schema.GenericObjectDataSpec;
-import org.knime.core.table.schema.GenericObjectDataSpec.ObjectDataSerializer;
+import org.knime.core.table.access.ByteArrayAccess.VarBinaryReadAccess;
+import org.knime.core.table.access.ByteArrayAccess.VarBinaryWriteAccess;
+import org.knime.core.table.schema.VarBinaryDataSpec;
 
 /**
  * {@link ValueFactory} implementation for {@link PortObjectCell}.
@@ -79,26 +80,24 @@ import org.knime.core.table.schema.GenericObjectDataSpec.ObjectDataSerializer;
  * @noreference This class is not intended to be referenced by clients.
  */
 public class PortObjectValueFactory
-    implements ValueFactory<ObjectReadAccess<PortObject>, ObjectWriteAccess<PortObject>> {
+    implements ValueFactory<VarBinaryReadAccess, VarBinaryWriteAccess> {
 
     /** Stateless instance of of {@link PortObjectValueFactory} */
     public static final PortObjectValueFactory INSTANCE = new PortObjectValueFactory();
 
-    private static final GenericObjectDataSpec<PortObject> SPEC_INSTANCE = new GenericObjectDataSpec<>(new PortObjectSerializer());
-
     @Override
-    public ReadValue createReadValue(final ObjectReadAccess<PortObject> access) {
+    public ReadValue createReadValue(final VarBinaryReadAccess access) {
         return new DefaultPortObjectReadValue(access);
     }
 
     @Override
-    public WriteValue<?> createWriteValue(final ObjectWriteAccess<PortObject> access) {
+    public WriteValue<?> createWriteValue(final VarBinaryWriteAccess access) {
         return new DefaultPortObjectWriteValue(access);
     }
 
     @Override
-    public GenericObjectDataSpec<PortObject> getSpec() {
-        return SPEC_INSTANCE;
+    public VarBinaryDataSpec getSpec() {
+        return VarBinaryDataSpec.INSTANCE;
     }
 
     /**
@@ -120,31 +119,6 @@ public class PortObjectValueFactory
          * @param portObject the {@link PortObject} to set
          */
         void setPortObject(PortObject portObject);
-    }
-
-    /** The serializer for {@link PortObject} objects */
-    private static final class PortObjectSerializer implements ObjectDataSerializer<PortObject> {
-
-        @Override
-        public PortObject deserialize(final DataInput access) throws IOException {
-            try (final DataInputWrappingInputStream input = new DataInputWrappingInputStream(access)) {
-                return PortUtil.readObjectFromStream(input, null);
-
-            } catch (final CanceledExecutionException e) {
-                // This cannot happen because the execution context is null
-                throw new IllegalStateException("Deserializing the PortObject was canceled.", e);
-            }
-        }
-
-        @Override
-        public void serialize(final PortObject object, final DataOutput access) throws IOException {
-            try (final DataOutputWrappingOutputStream output = new DataOutputWrappingOutputStream(access)) {
-                PortUtil.writeObjectToStream(object, output, new ExecutionMonitor());
-            } catch (final CanceledExecutionException e) {
-                // This cannot happen because the execution monitor won't be canceld
-                throw new IllegalStateException("Serializing the PortObject was canceled.", e);
-            }
-        }
     }
 
     /** An {@link InputStream} wrapping a {@link DataInput}. */
@@ -199,10 +173,22 @@ public class PortObjectValueFactory
     /** Default implementation of {@link PortObjectReadValue}. */
     private static final class DefaultPortObjectReadValue implements PortObjectReadValue {
 
-        private final ObjectReadAccess<PortObject> m_access;
+        private final VarBinaryReadAccess m_access;
 
-        private DefaultPortObjectReadValue(final ObjectReadAccess<PortObject> access) {
+        private final Function<DataInput, PortObject> m_deserializer;
+
+        private DefaultPortObjectReadValue(final VarBinaryReadAccess access) {
             m_access = access;
+            m_deserializer = input -> {
+                try (final DataInputWrappingInputStream stream = new DataInputWrappingInputStream(input)) {
+                  return PortUtil.readObjectFromStream(stream, null);
+              } catch (final CanceledExecutionException e) {
+                  // This cannot happen because the execution context is null
+                  throw new IllegalStateException("Deserializing the PortObject was canceled.", e);
+              } catch (final IOException ex) {
+                  throw new IllegalStateException("Error during deserialization", ex);
+              }
+            };
         }
 
         @Override
@@ -217,17 +203,29 @@ public class PortObjectValueFactory
 
         @Override
         public PortObject getPortObject() {
-            return m_access.getObject();
+            return m_access.getObject(m_deserializer);
         }
     }
 
     /** Default implementation of {@link PortObjectWriteValue}. */
     private static final class DefaultPortObjectWriteValue implements PortObjectWriteValue {
 
-        private final ObjectWriteAccess<PortObject> m_access;
+        private final VarBinaryWriteAccess m_access;
 
-        private DefaultPortObjectWriteValue(final ObjectWriteAccess<PortObject> access) {
+        private final BiConsumer<DataOutput, PortObject> m_serializer;
+
+        private DefaultPortObjectWriteValue(final VarBinaryWriteAccess access) {
             m_access = access;
+            m_serializer = (output, object) -> {
+                try (final DataOutputWrappingOutputStream stream = new DataOutputWrappingOutputStream(output)) {
+                  PortUtil.writeObjectToStream(object, stream, new ExecutionMonitor());
+              } catch (final CanceledExecutionException e) {
+                  // This cannot happen because the execution monitor won't be canceld
+                    throw new IllegalStateException("Serializing the PortObject was canceled.", e);
+              } catch (final IOException ex) {
+                  throw new IllegalStateException("Error during serialization", ex);
+              }
+            };
         }
 
         @Override
@@ -242,7 +240,7 @@ public class PortObjectValueFactory
 
         @Override
         public void setPortObject(final PortObject portObject) {
-            m_access.setObject(portObject);
+            m_access.setObject(portObject, m_serializer);
         }
     }
 }
