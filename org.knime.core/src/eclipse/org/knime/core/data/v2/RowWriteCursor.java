@@ -48,7 +48,7 @@
  */
 package org.knime.core.data.v2;
 
-import org.knime.core.table.cursor.LookaheadCursor;
+import java.io.Closeable;
 
 /**
  * Cursor over RowWrites
@@ -58,20 +58,26 @@ import org.knime.core.table.cursor.LookaheadCursor;
  *
  * @noreference This interface is not intended to be referenced by clients.
  */
-public interface RowWriteCursor extends LookaheadCursor<RowWrite> {
+public interface RowWriteCursor extends Closeable {
 
     /**
-     * {@inheritDoc}
+     * Forwards the cursor by one to the next element. This next element is not guaranteed to be a new instance.
      *
-     * Potential IOExceptions will be logged.
+     * @return the element at the current cursor position or null if no new element available
      */
-    @Override
     RowWrite forward();
 
     /**
-     * {@inheritDoc}
+     * @return {@code true} if more elements are available, otherwise {@code false}
+     */
+    boolean canForward();
+
+    /**
+     * Closes this resource, relinquishing any underlying resources. This method is invoked automatically on objects
+     * managed by the try-with-resources statement. This method is idempotent, i.e., it can be called repeatedly without
+     * side effects.<br>
      *
-     * Potential IOExceptions will be logged.
+     * Potential IOException will be logged.
      */
     @Override
     void close();

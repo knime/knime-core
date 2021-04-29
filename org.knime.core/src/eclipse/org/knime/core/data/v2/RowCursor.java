@@ -45,7 +45,7 @@
  */
 package org.knime.core.data.v2;
 
-import org.knime.core.table.cursor.LookaheadCursor;
+import java.io.Closeable;
 
 /**
  * {@link RowRead} implementation allowing for iterative read access to a data storage.
@@ -58,15 +58,20 @@ import org.knime.core.table.cursor.LookaheadCursor;
  * @noreference This interface is not intended to be referenced by clients.
  * @noextend This interface is not intended to be extended by clients.
  */
-public interface RowCursor extends LookaheadCursor<RowRead> {
+public interface RowCursor extends Closeable {
 
     /**
-     * {@inheritDoc}
+     * Forwards the cursor by one to the next element. This next element is not guaranteed to be a new instance.
      *
-     * Potential IOExceptions will be logged.
+     * @return the element at the current cursor position or null if no new element available
      */
-    @Override
     RowRead forward();
+
+
+    /**
+     * @return {@code true} if more elements are available, otherwise {@code false}
+     */
+    boolean canForward();
 
     /**
      * @return number of columns in the data row
@@ -74,9 +79,11 @@ public interface RowCursor extends LookaheadCursor<RowRead> {
     int getNumColumns();
 
     /**
-     * {@inheritDoc}
+     * Closes this resource, relinquishing any underlying resources. This method is invoked automatically on objects
+     * managed by the try-with-resources statement. This method is idempotent, i.e., it can be called repeatedly without
+     * side effects.<br>
      *
-     * Potential IOExceptions will be logged.
+     * Potential IOException will be logged.
      */
     @Override
     void close();
