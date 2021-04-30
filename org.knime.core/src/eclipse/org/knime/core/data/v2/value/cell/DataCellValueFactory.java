@@ -45,13 +45,10 @@
  */
 package org.knime.core.data.v2.value.cell;
 
-import java.io.DataInput;
-import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
-import java.util.function.Function;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellSerializer;
@@ -69,6 +66,7 @@ import org.knime.core.table.access.ByteArrayAccess.VarBinaryReadAccess;
 import org.knime.core.table.access.ByteArrayAccess.VarBinaryWriteAccess;
 import org.knime.core.table.schema.DataSpec;
 import org.knime.core.table.schema.VarBinaryDataSpec;
+import org.knime.core.table.schema.VarBinaryDataSpec.ObjectDeserializer;
 
 /**
  * {@link ValueFactory} to write and read arbitrary {@link DataCell}s. Needs special casing in corresponding
@@ -160,7 +158,7 @@ public final class DataCellValueFactory implements ValueFactory<VarBinaryReadAcc
 
         private final VarBinaryReadAccess m_access;
 
-        private final Function<DataInput, DataCell> m_deserializer;
+        private final ObjectDeserializer<DataCell> m_deserializer;
 
         private DataCellInvocationHandler(final VarBinaryReadAccess access, final DataCellSerializerFactory factory,
             final IDataRepository dataRepository) {
@@ -174,8 +172,6 @@ public final class DataCellValueFactory implements ValueFactory<VarBinaryReadAcc
                 try (DataCellDataInputDelegator stream =
                     new DataCellDataInputDelegator(factory, dataRepository, input)) {
                     return stream.readDataCell();
-                } catch (final IOException ex) {
-                    throw new IllegalStateException("Error during deserialization", ex);
                 }
             };
         }

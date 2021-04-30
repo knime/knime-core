@@ -1,8 +1,6 @@
 package org.knime.core.data.v2.value.cell;
 
-import java.io.DataOutput;
 import java.io.IOException;
-import java.util.function.BiConsumer;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.IDataRepository;
@@ -14,10 +12,11 @@ import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.v2.DataCellSerializerFactory;
 import org.knime.core.data.v2.WriteValue;
 import org.knime.core.table.access.ByteArrayAccess.VarBinaryWriteAccess;
+import org.knime.core.table.schema.VarBinaryDataSpec.ObjectSerializer;
 
 final class DefaultDataCellWriteValue implements WriteValue<DataCell> {
 
-    private final BiConsumer<DataOutput, DataCell> m_serializer;
+    private final ObjectSerializer<DataCell> m_serializer;
 
     private final IWriteFileStoreHandler m_fsHandler;
 
@@ -34,8 +33,6 @@ final class DefaultDataCellWriteValue implements WriteValue<DataCell> {
             try (final DataCellDataOutputDelegator stream =
                 new DataCellDataOutputDelegator(factory, m_fsHandler, output)) {
                 stream.writeDataCell(cell);
-            } catch (final IOException ex) {
-                throw new IllegalStateException("Error during serialization", ex);
             }
         };
     }

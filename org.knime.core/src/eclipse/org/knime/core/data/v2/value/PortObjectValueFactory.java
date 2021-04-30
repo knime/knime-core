@@ -54,8 +54,6 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.model.PortObjectCell;
@@ -70,6 +68,8 @@ import org.knime.core.node.port.PortUtil;
 import org.knime.core.table.access.ByteArrayAccess.VarBinaryReadAccess;
 import org.knime.core.table.access.ByteArrayAccess.VarBinaryWriteAccess;
 import org.knime.core.table.schema.VarBinaryDataSpec;
+import org.knime.core.table.schema.VarBinaryDataSpec.ObjectDeserializer;
+import org.knime.core.table.schema.VarBinaryDataSpec.ObjectSerializer;
 
 /**
  * {@link ValueFactory} implementation for {@link PortObjectCell}.
@@ -175,7 +175,7 @@ public class PortObjectValueFactory
 
         private final VarBinaryReadAccess m_access;
 
-        private final Function<DataInput, PortObject> m_deserializer;
+        private final ObjectDeserializer<PortObject> m_deserializer;
 
         private DefaultPortObjectReadValue(final VarBinaryReadAccess access) {
             m_access = access;
@@ -185,8 +185,6 @@ public class PortObjectValueFactory
               } catch (final CanceledExecutionException e) {
                   // This cannot happen because the execution context is null
                   throw new IllegalStateException("Deserializing the PortObject was canceled.", e);
-              } catch (final IOException ex) {
-                  throw new IllegalStateException("Error during deserialization", ex);
               }
             };
         }
@@ -207,7 +205,7 @@ public class PortObjectValueFactory
 
         private final VarBinaryWriteAccess m_access;
 
-        private final BiConsumer<DataOutput, PortObject> m_serializer;
+        private final ObjectSerializer<PortObject> m_serializer;
 
         private DefaultPortObjectWriteValue(final VarBinaryWriteAccess access) {
             m_access = access;
@@ -217,8 +215,6 @@ public class PortObjectValueFactory
               } catch (final CanceledExecutionException e) {
                   // This cannot happen because the execution monitor won't be canceld
                     throw new IllegalStateException("Serializing the PortObject was canceled.", e);
-              } catch (final IOException ex) {
-                  throw new IllegalStateException("Error during serialization", ex);
               }
             };
         }
