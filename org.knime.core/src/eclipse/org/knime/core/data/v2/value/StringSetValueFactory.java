@@ -104,7 +104,6 @@ public final class StringSetValueFactory implements ValueFactory<ListReadAccess,
     /**
      * {@link ReadValue} equivalent to {@link SetCell} with elements of type T.
      *
-     * @param <T> the type of the elements
      * @since 4.3
      */
     public interface StringSetReadValue extends SetReadValue {
@@ -131,7 +130,6 @@ public final class StringSetValueFactory implements ValueFactory<ListReadAccess,
     /**
      * {@link WriteValue} equivalent to {@link SetCell} with elements of type T.
      *
-     * @param <T> the type of the elements
      * @since 4.3
      */
     public interface StringSetWriteValue extends SetWriteValue {

@@ -53,10 +53,10 @@ import org.knime.core.table.access.WriteAccess;
 import org.knime.core.table.schema.DataSpec;
 
 /**
- * Interface for implementations of {@link ValueFactory}s. Value factories can create logical {@link WriteValue}s and
- * {@link ReadValue} which in turn allow access to an underlying data storage, which is independent of the values
- * themselves. The {@link AccessSpec} defines the requirements to this data storage and also provides additional meta
- * data to create the storage.
+ * Interface for implementations of {@link ValueFactory}s. Value factories can create logical {@link WriteValue
+ * WriteValues} and {@link ReadValue ReadValues} which in turn allow access to an underlying data storage, which is
+ * independent of the values themselves. The {@link DataSpec} defines the requirements to this data storage and also
+ * provides additional meta data to create the storage.
  *
  * Implementations of {@link ValueFactory} must have an empty public constructor to create an instance of the value
  * factory from its class name.
@@ -88,9 +88,9 @@ public interface ValueFactory<R extends ReadAccess, W extends WriteAccess> {
     WriteValue<?> createWriteValue(W access);
 
     /**
-     * Creates the {@link AccessSpec}.
+     * Provides the {@link DataSpec}.
      *
-     * @return the {@link AccessSpec} to create the actual data storage.
+     * @return the {@link DataSpec} to create the actual data storage.
      */
     DataSpec getSpec();
 

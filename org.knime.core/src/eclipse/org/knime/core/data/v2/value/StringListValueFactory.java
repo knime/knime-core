@@ -104,10 +104,21 @@ public final class StringListValueFactory implements ValueFactory<ListReadAccess
      */
     public static interface StringListReadValue extends ListReadValue, StringVectorValue {
 
+        /**
+         * @param index at which to obtain the returned String
+         * @return the String at <b>index</b>
+         */
         String getString(int index);
 
+        /**
+         *
+         * @return the content of the list as array
+         */
         String[] getStringArray();
 
+        /**
+         * @return an {@link Iterator} over the Strings in the list
+         */
         Iterator<String> stringIterator();
 
     }
@@ -119,6 +130,9 @@ public final class StringListValueFactory implements ValueFactory<ListReadAccess
      */
     public static interface StringListWriteValue extends ListWriteValue {
 
+        /**
+         * @param values to set
+         */
         void setValue(String[] values);
 
     }

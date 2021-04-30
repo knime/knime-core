@@ -239,8 +239,6 @@ public final class BooleanSetValueFactory implements ValueFactory<StructReadAcce
 
     private static final class DefaultBooleanSetWriteValue implements BooleanSetWriteValue {
 
-        private final StructWriteAccess m_writer;
-
         private final BooleanWriteAccess m_containsTrue;
 
         private final BooleanWriteAccess m_containsFalse;
@@ -248,7 +246,6 @@ public final class BooleanSetValueFactory implements ValueFactory<StructReadAcce
         private final BooleanWriteAccess m_containsMissing;
 
         private DefaultBooleanSetWriteValue(final StructWriteAccess writer) {
-            m_writer = writer;
             m_containsTrue = writer.getWriteAccessAt(0);
             m_containsFalse = writer.getWriteAccessAt(1);
             m_containsMissing = writer.getWriteAccessAt(2);
