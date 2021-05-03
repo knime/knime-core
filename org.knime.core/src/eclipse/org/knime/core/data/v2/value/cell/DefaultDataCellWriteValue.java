@@ -11,7 +11,7 @@ import org.knime.core.data.filestore.FileStoreUtil;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.v2.DataCellSerializerFactory;
 import org.knime.core.data.v2.WriteValue;
-import org.knime.core.table.access.ByteArrayAccess.VarBinaryWriteAccess;
+import org.knime.core.table.access.VarBinaryAccess.VarBinaryWriteAccess;
 import org.knime.core.table.schema.VarBinaryDataSpec.ObjectSerializer;
 
 final class DefaultDataCellWriteValue implements WriteValue<DataCell> {
