@@ -169,11 +169,6 @@ public final class ListValueFactory implements CollectionValueFactory<ListReadAc
         }
 
         @Override
-        public boolean isMissing() {
-            return m_reader.isMissing();
-        }
-
-        @Override
         public DataType getElementType() {
             return m_elementType;
         }
@@ -256,11 +251,6 @@ public final class ListValueFactory implements CollectionValueFactory<ListReadAc
         DefaultListWriteValue(final ListWriteAccess writer, final ValueFactory<?, ?> inner) {
             m_writer = writer;
             m_inner = inner;
-        }
-
-        @Override
-        public void setMissing() {
-            m_writer.setMissing();
         }
 
         @Override

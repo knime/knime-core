@@ -173,11 +173,6 @@ public final class DoubleValueFactory implements ValueFactory<DoubleReadAccess, 
             return m_access.getDoubleValue();
         }
 
-        @Override
-        public boolean isMissing() {
-            return m_access.isMissing();
-        }
-
     }
 
     private static final class DefaultDoubleWriteValue extends AbstractValue<DoubleWriteAccess>
@@ -195,11 +190,6 @@ public final class DoubleValueFactory implements ValueFactory<DoubleReadAccess, 
         @Override
         public void setValue(final DoubleValue value) {
             m_access.setDoubleValue(value.getDoubleValue());
-        }
-
-        @Override
-        public void setMissing() {
-            m_access.setMissing();
         }
 
     }

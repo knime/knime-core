@@ -130,11 +130,6 @@ public final class IntValueFactory implements ValueFactory<IntReadAccess, IntWri
         }
 
         @Override
-        public boolean isMissing() {
-            return m_access.isMissing();
-        }
-
-        @Override
         public int getIntValue() {
             return m_access.getIntValue();
         }
@@ -200,11 +195,6 @@ public final class IntValueFactory implements ValueFactory<IntReadAccess, IntWri
 
         DefaultIntWriteValue(final IntWriteAccess access) {
             super(access);
-        }
-
-        @Override
-        public void setMissing() {
-            m_access.setMissing();
         }
 
         @Override

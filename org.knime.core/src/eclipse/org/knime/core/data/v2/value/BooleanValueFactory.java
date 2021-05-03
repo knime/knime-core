@@ -199,11 +199,6 @@ public class BooleanValueFactory implements ValueFactory<BooleanReadAccess, Bool
             return m_access.getBooleanValue();
         }
 
-        @Override
-        public boolean isMissing() {
-            return m_access.isMissing();
-        }
-
     }
 
     private static final class DefaultBooleanWriteValue extends AbstractValue<BooleanWriteAccess>
@@ -216,11 +211,6 @@ public class BooleanValueFactory implements ValueFactory<BooleanReadAccess, Bool
         @Override
         public void setValue(final BooleanValue value) {
             m_access.setBooleanValue(value.getBooleanValue());
-        }
-
-        @Override
-        public void setMissing() {
-            m_access.setMissing();
         }
 
         @Override

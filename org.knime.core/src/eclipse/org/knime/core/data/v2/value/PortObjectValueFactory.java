@@ -192,11 +192,6 @@ public class PortObjectValueFactory
         }
 
         @Override
-        public boolean isMissing() {
-            return m_access.isMissing();
-        }
-
-        @Override
         public DataCell getDataCell() {
             return new PortObjectCell(getPortObject());
         }
@@ -226,11 +221,6 @@ public class PortObjectValueFactory
                   throw new IllegalStateException("Error during serialization", ex);
               }
             };
-        }
-
-        @Override
-        public void setMissing() {
-            m_access.setMissing();
         }
 
         @Override

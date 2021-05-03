@@ -50,7 +50,6 @@ package org.knime.core.data.v2;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataValue;
-import org.knime.core.table.access.ReadAccess;
 
 /**
  * {@link DataValue} implementation which knows how to create a DataCell.
@@ -60,7 +59,7 @@ import org.knime.core.table.access.ReadAccess;
  *
  * @noreference This interface is not intended to be referenced by clients.
  */
-public interface ReadValue extends DataValue, ReadAccess {
+public interface ReadValue extends DataValue {
 
     /**
      * NB: DataCells created with this method are immutable.

@@ -179,11 +179,6 @@ public final class LongValueFactory implements ValueFactory<LongReadAccess, Long
             return m_access.getLongValue();
         }
 
-        @Override
-        public boolean isMissing() {
-            return m_access.isMissing();
-        }
-
     }
 
     private static final class DefaultLongWriteValue extends AbstractValue<LongWriteAccess> implements LongWriteValue {
@@ -195,11 +190,6 @@ public final class LongValueFactory implements ValueFactory<LongReadAccess, Long
         @Override
         public void setValue(final LongValue value) {
             m_access.setLongValue(value.getLongValue());
-        }
-
-        @Override
-        public void setMissing() {
-            m_access.setMissing();
         }
 
         @Override

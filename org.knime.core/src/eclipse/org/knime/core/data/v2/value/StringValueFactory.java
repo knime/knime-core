@@ -123,11 +123,6 @@ public class StringValueFactory implements ValueFactory<StringReadAccess, String
         }
 
         @Override
-        public void setMissing() {
-            m_access.setMissing();
-        }
-
-        @Override
         public void setValue(final StringValue value) {
             m_access.setStringValue(value.getStringValue());
         }
@@ -144,11 +139,6 @@ public class StringValueFactory implements ValueFactory<StringReadAccess, String
 
         private DefaultStringReadValue(final StringReadAccess access) {
             m_access = access;
-        }
-
-        @Override
-        public boolean isMissing() {
-            return m_access.isMissing();
         }
 
         @Override

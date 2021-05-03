@@ -213,11 +213,6 @@ public final class SparseListValueFactory implements CollectionValueFactory<Stru
             m_storageList = storageList;
         }
 
-        @Override
-        public boolean isMissing() {
-            return m_defaultAccess.isMissing();
-        }
-
         /**
          * @param index the index in the sparse list
          * @return the index in the storage list the value at this location is not the default value
@@ -359,11 +354,6 @@ public final class SparseListValueFactory implements CollectionValueFactory<Stru
             @SuppressWarnings("unchecked")
             final L createWriteValue = (L)listValueFactory.createWriteValue(listAccess);
             m_storageList = createWriteValue;
-        }
-
-        @Override
-        public void setMissing() {
-            m_defaultValue.setMissing();
         }
 
         @Override

@@ -49,7 +49,6 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.v2.value.DoubleValueFactory.DoubleWriteValue;
-import org.knime.core.table.access.WriteAccess;
 
 /**
  * Important Note for developers: We assume a 1-to-1 association from a {@link DataCell} to a {@link WriteValue}, for
@@ -61,7 +60,7 @@ import org.knime.core.table.access.WriteAccess;
  *
  * @noreference This interface is not intended to be referenced by clients.
  */
-public interface WriteValue<D extends DataValue> extends WriteAccess {
+public interface WriteValue<D extends DataValue> {
     /**
      * @param value the value to set
      */

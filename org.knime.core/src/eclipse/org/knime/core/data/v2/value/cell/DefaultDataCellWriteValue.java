@@ -41,11 +41,6 @@ final class DefaultDataCellWriteValue implements WriteValue<DataCell> {
     }
 
     @Override
-    public void setMissing() {
-        m_access.setMissing();
-    }
-
-    @Override
     public void setValue(final DataCell cell) {
         if (cell instanceof FileStoreCell) {
             final FileStoreCell fsCell = (FileStoreCell)cell;

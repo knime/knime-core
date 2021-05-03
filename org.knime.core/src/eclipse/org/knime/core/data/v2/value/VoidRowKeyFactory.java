@@ -90,11 +90,6 @@ public final class VoidRowKeyFactory implements RowKeyValueFactory<ReadAccess, W
         private static final VoidRowKeyReadValue READ_VALUE_INSTANCE = new VoidRowKeyReadValue();
 
         @Override
-        public boolean isMissing() {
-            return true;
-        }
-
-        @Override
         public StringCell getDataCell() {
             return null;
         }
@@ -107,11 +102,6 @@ public final class VoidRowKeyFactory implements RowKeyValueFactory<ReadAccess, W
 
     private static final class VoidRowKeyWriteValue implements RowKeyWriteValue {
         private static final VoidRowKeyWriteValue WRITE_VALUE_INSTANCE = new VoidRowKeyWriteValue();
-
-        @Override
-        public void setMissing() {
-            // NOOP (void value)
-        }
 
         @Override
         public void setRowKey(final String key) {

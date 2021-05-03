@@ -99,11 +99,6 @@ public final class DefaultRowKeyValueFactory implements RowKeyValueFactory<Strin
         }
 
         @Override
-        public void setMissing() {
-            m_access.setMissing();
-        }
-
-        @Override
         public void setRowKey(final String key) {
             m_access.setStringValue(key);
 
@@ -127,11 +122,6 @@ public final class DefaultRowKeyValueFactory implements RowKeyValueFactory<Strin
 
         public DefaultRowKeyReadValue(final StringReadAccess access) {
             m_access = access;
-        }
-
-        @Override
-        public boolean isMissing() {
-            return m_access.isMissing();
         }
 
         @Override

@@ -148,8 +148,6 @@ public final class BooleanSetValueFactory implements ValueFactory<StructReadAcce
 
     private static final class DefaultBooleanSetReadValue implements BooleanSetReadValue {
 
-        private final StructReadAccess m_reader;
-
         private final BooleanReadAccess m_containsTrue;
 
         private final BooleanReadAccess m_containsFalse;
@@ -157,15 +155,9 @@ public final class BooleanSetValueFactory implements ValueFactory<StructReadAcce
         private final BooleanReadAccess m_containsMissing;
 
         private DefaultBooleanSetReadValue(final StructReadAccess reader) {
-            m_reader = reader;
             m_containsTrue = reader.getInnerReadAccessAt(0);
             m_containsFalse = reader.getInnerReadAccessAt(1);
             m_containsMissing = reader.getInnerReadAccessAt(2);
-        }
-
-        @Override
-        public boolean isMissing() {
-            return m_reader.isMissing();
         }
 
         @Override
@@ -260,11 +252,6 @@ public final class BooleanSetValueFactory implements ValueFactory<StructReadAcce
             m_containsTrue = writer.getWriteAccessAt(0);
             m_containsFalse = writer.getWriteAccessAt(1);
             m_containsMissing = writer.getWriteAccessAt(2);
-        }
-
-        @Override
-        public void setMissing() {
-            m_writer.setMissing();
         }
 
         @Override
