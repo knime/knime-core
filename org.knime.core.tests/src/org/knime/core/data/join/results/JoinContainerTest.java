@@ -60,16 +60,16 @@ import org.knime.core.data.join.JoinSpecification;
 import org.knime.core.data.join.JoinSpecification.InputTable;
 import org.knime.core.data.join.JoinTableSettings;
 import org.knime.core.data.join.JoinTableSettings.JoinColumn;
-import org.knime.core.data.join.implementation.JoinerFactory.JoinAlgorithm;
 import org.knime.core.data.join.JoinTestInput;
+import org.knime.core.data.join.implementation.JoinerFactory.JoinAlgorithm;
 import org.knime.core.data.join.results.JoinResult.OutputCombined;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.InvalidSettingsException;
 
 /**
- *
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  */
+@SuppressWarnings("javadoc")
 public class JoinContainerTest {
 
     private static final int LEFT = 0, RIGHT = 1;

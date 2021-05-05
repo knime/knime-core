@@ -77,7 +77,11 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.virtual.parchunk.VirtualParallelizedChunkPortObjectInNodeFactory;
 
-@SuppressWarnings({"unchecked", "rawtypes"})
+/**
+ * Provides two tables to join, a partial join specification (which columns to compare and to include in the output) and
+ * the expected results for different join modes (inner join, outer join, anti join, etc.)
+ */
+@SuppressWarnings({"unchecked", "rawtypes", "javadoc"})
 public abstract class JoinTestInput {
 
     private static final NodeProgressMonitor PROGRESS;
@@ -496,7 +500,6 @@ public abstract class JoinTestInput {
 
     /**
      * Test match any with a clause that doesn't change results (because it produces no matches).
-     * TODO add a test dimension that swaps the join column orders? shouldn't change any result
      */
     public static final JoinTestInput nonAdditionalMatchAny = new SmallInput() {
         @Override
@@ -818,7 +821,8 @@ public abstract class JoinTestInput {
      * @param columnNames comma-separated header, e.g., "Column1,ColumnB,ColumnZ"
      * @param rows each string being input to {@link #defaultRow(String...)}
      */
-    public static BufferedDataTable table(final String columnNames, final boolean storeRowOffsets, final DataRow... rows) {
+    public static BufferedDataTable table(final String columnNames, final boolean storeRowOffsets,
+        final DataRow... rows) {
         DataColumnSpec[] columns = Arrays.stream(columnNames.split(","))
             .map(name -> new DataColumnSpecCreator(name, StringCell.TYPE).createSpec()).toArray(DataColumnSpec[]::new);
         DataTableSpec spec = new DataTableSpec(columns);

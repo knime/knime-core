@@ -73,29 +73,37 @@ import org.knime.core.node.InvalidSettingsException;
 
 /**
  * Tests all combinations of
- * - join types: inner, outer, anti
- * - output orders: arbitrary, probe-hash, left-right
- * - execution modes: in-memory, partially in-memory, on disk
- *
+ * <ul>
+ * <li>join types: inner, outer, anti</li>
+ * <li>output orders: arbitrary, probe-hash, left-right</li>
+ * <li>execution modes: in-memory, partially in-memory, on disk</li>
+ * </ul>
+ * on all inputs in {@link JoinTestInput}
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  */
 @RunWith(Theories.class)
 public class BlockHashJoinTest extends JoinTest {
 
-    // TODO test with true, but that would require test data with annotated offsets
+    /**
+     * For testing materialized row offsets
+     *
+     * TODO should be subsumed by testing {@link Execution#ON_DISK}? Testing explicitly would require test data with
+     * annotated offsets.
+     */
     @DataPoints
-    public static boolean[] doExtractRowOffsets = new boolean[] {false};
+    public static boolean[] doExtractRowOffsets = new boolean[]{false};
 
     /**
-     * TODO match any not yet implemented
+     * The join inputs (tables, join specification, expected join result) to test the algorithm on.
      */
     @DataPoints
     public static List<JoinTestInput> inputs;
     static {
         inputs = new LinkedList<>();
         inputs.addAll(Arrays.asList(JoinTestInput.DISJUNCTIVE));
-//        inputs.addAll(Arrays.asList(JoinTestInput.CONJUNCTIVE));
+        inputs.addAll(Arrays.asList(JoinTestInput.CONJUNCTIVE));
     }
+
     /**
      * @param input the left and right input table
      * @param joinMode which results to retain
@@ -158,13 +166,13 @@ public class BlockHashJoinTest extends JoinTest {
         // do the join
         JoinResult<OutputSplit> results = blockHashJoin.joinOutputSplit();
 
-        if(joinMode.m_retainMatches) {
+        if (joinMode.m_retainMatches) {
             DataRow[] expectedMatches = input.ordered(JoinMode.INNER, order.m_rowOrder);
             BufferedDataTable actual = results.getResults().getMatches();
             order.m_validator.accept(actual, expectedMatches);
         }
 
-        if(joinMode.m_retainLeftUnmatched) {
+        if (joinMode.m_retainLeftUnmatched) {
             // validate left unmatched rows by comparing the produced left unmatched rows with the expected join result
             // for a left antijoin (only left unmatched rows)
             DataRow[] expectedLeft = input.leftOuter(order.m_rowOrder);
@@ -180,6 +188,5 @@ public class BlockHashJoinTest extends JoinTest {
         }
 
     }
-
 
 }

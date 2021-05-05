@@ -473,8 +473,7 @@ public class JoinSpecificationTest {
             JoinTableSettings rightWorkingSettings = rightSettings.condensed(storeRowOffsets);
             rightWorkingSettings.setTable(rightWorkingTable);
 
-            assertArrayEquals(leftSettings.get(leftOriginalRow),
-                leftWorkingSettings.get(leftWorkingRow));
+            assertArrayEquals(leftSettings.get(leftOriginalRow), leftWorkingSettings.get(leftWorkingRow));
 
             JoinSpecification working = original.specWith(leftWorkingSettings, rightWorkingSettings);
 

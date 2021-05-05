@@ -65,9 +65,15 @@ import gnu.trove.set.hash.TCustomHashSet;
 import gnu.trove.strategy.HashingStrategy;
 
 /**
+ * Provides join configuration options to test a join implementation under (e.g., all combinations of retained output
+ * rows, inner join, outer join, left outer, etc.).
+ *
+ * Provides utility methods to compare an output {@link BufferedDataTable} to the expected output specified by
+ * {@link JoinTestInput}.
  *
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  */
+@SuppressWarnings("javadoc")
 public abstract class JoinTest {
 
     /**
@@ -84,8 +90,11 @@ public abstract class JoinTest {
         EMPTY("Empty Join", false, false, false);
 
         public final boolean m_retainLeftUnmatched;
+
         public final boolean m_retainRightUnmatched;
+
         public final boolean m_retainMatches;
+
         private final String m_readable;
 
         private JoinMode(final String readable, final boolean matches, final boolean left, final boolean right) {
@@ -102,20 +111,27 @@ public abstract class JoinTest {
 
     }
 
+    /** Whether to assume the join can be done in memory, partial in memory, or needs to swap everything to disk. */
     public enum Execution {
-        IN_MEMORY(0), PARTIAL_IN_MEMORY(1), ON_DISK(Integer.MAX_VALUE);
+            IN_MEMORY(0), PARTIAL_IN_MEMORY(1), ON_DISK(Integer.MAX_VALUE);
+
         final int m_desiredPartitionsOnDisk;
-        Execution(final int desiredNumPartitionsOnDisk){
+
+        Execution(final int desiredNumPartitionsOnDisk) {
             m_desiredPartitionsOnDisk = desiredNumPartitionsOnDisk;
         }
     }
 
+    /** The desired sorting of the join results. */
     public enum OutputOrder {
-        ARBITRARY(OutputRowOrder.ARBITRARY, JoinTest::assertSetEquality),
-        PROBE_HASH(OutputRowOrder.DETERMINISTIC, JoinTest::assertOrderedEquality),
-        LEGACY(OutputRowOrder.LEFT_RIGHT, JoinTest::assertOrderedEquality);
+            ARBITRARY(OutputRowOrder.ARBITRARY, JoinTest::assertSetEquality),
+            PROBE_HASH(OutputRowOrder.DETERMINISTIC, JoinTest::assertOrderedEquality),
+            LEGACY(OutputRowOrder.LEFT_RIGHT, JoinTest::assertOrderedEquality);
+
         public OutputRowOrder m_rowOrder;
+
         public BiConsumer<BufferedDataTable, DataRow[]> m_validator;
+
         /**
          * @param order
          * @param conform
@@ -149,8 +165,8 @@ public abstract class JoinTest {
             while (it.hasNext()) {
                 DataRow expected = expectedRows[i++];
                 DataRow actual = it.next();
-                assertTrue(String.format("expected %s, got %s", JoinTestInput.dataRowToString(expected), JoinTestInput.dataRowToString(actual)),
-                    compareDataRows.equals(actual, expected));
+                assertTrue(String.format("expected %s, got %s", JoinTestInput.dataRowToString(expected),
+                    JoinTestInput.dataRowToString(actual)), compareDataRows.equals(actual, expected));
             }
         }
     }
@@ -167,13 +183,13 @@ public abstract class JoinTest {
         try (CloseableRowIterator it = results.iterator()) {
             while (it.hasNext()) {
                 DataRow rowInTable = it.next();
-                String message = "Unexpected row: " + rowInTable.toString()
-                    + ". Expected remaining rows: " + Arrays.toString(rows);
+                String message =
+                    "Unexpected row: " + rowInTable.toString() + ". Expected remaining rows: " + Arrays.toString(rows);
                 assertTrue(message, expectedRows.remove(rowInTable));
             }
         }
 
-        assertTrue(String.format("Incomplete result. Missing rows: %s", expectedRows), expectedRows.size()==0);
+        assertTrue(String.format("Incomplete result. Missing rows: %s", expectedRows), expectedRows.size() == 0);
 
     }
 
