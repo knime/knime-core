@@ -53,7 +53,6 @@ import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import org.knime.core.data.DataRow;
-import org.knime.core.data.join.results.JoinResult.RowHandler;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.CanceledExecutionException.CancelChecker;
@@ -61,8 +60,8 @@ import org.knime.core.node.CanceledExecutionException.CancelChecker;
 /**
  * When joining against incomplete indexes, we have to wait until we can decide whether a row is unmatched, since a row
  * might be matched in a different partition (in the disjunctive case, rows go to several partitions) or a future pass
- * over the probe input in {@link BlockHashJoin#join(JoinResult, UnmatchedRows, UnmatchedRows)}. This unmatched row
- * handler stores the offsets of the rows for which a match was found. {@link UnmatchedRows#collectUnmatched()} is used
+ * over the probe input in {@link BlockHashJoin#join(JoinResult, MatchStrategy, MatchStrategy)}. This unmatched row
+ * handler stores the offsets of the rows for which a match was found. {@link MatchStrategy#collectUnmatched()} is used
  * in the end to retrieve the unmatched rows.
  *
  * <h1>Internals</h1>
@@ -75,7 +74,7 @@ import org.knime.core.node.CanceledExecutionException.CancelChecker;
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  */
 @SuppressWarnings("javadoc")
-class UnmatchedRowsDeferred implements UnmatchedRows {
+public class UnmatchedRowsCollector implements RowCollector {
 
     /**
      * The i-th bit is set if the i-th row in the probe input was matched to a row in a partial hash index at least
@@ -89,15 +88,24 @@ class UnmatchedRowsDeferred implements UnmatchedRows {
 
     private final BufferedDataTable m_probeInput;
 
+    /**
+     * Keeps the unmatched rows in memory. If {@link #lowMemory()} is called, this data structure is discarded and the
+     * unmatched rows need to be collected in an additional pass over the input table {@link #m_probeInput}, collecting
+     * a row every time its offset is not contained in {@link #m_wasMatched}.
+     *
+     * A {@link TreeMap} is used to output the candidates in sorted order (according to their offset in the containing
+     * table. This is for instance useful when joining with multiple passes over an input table, which will result in
+     * calls to {@link #unmatched(DataRow, long)} with non-sorted row offset parameters.
+     */
     private TreeMap<Long, DataRow> m_candidates = new TreeMap<>();
 
     /**
-     * @param probeInput the table used as probe input, as processed with {@link UnmatchedRows#matched(DataRow, long)}
-     *            and {@link #unmatched(DataRow, long)}
+     * @param probeInput the table used as probe input, as processed with {@link MatchStrategy#matched(DataRow, long, DataRow, long)}
+     *            and {@link #unmatchedLeft(DataRow, long)}
      * @param unmatched what to do with the unmatched probe rows
      * @param checkCanceled a way to check whether execution was aborted
      */
-    UnmatchedRowsDeferred(final BufferedDataTable probeInput, final RowHandler unmatched,
+    public UnmatchedRowsCollector(final BufferedDataTable probeInput, final RowHandler unmatched,
         final CancelChecker checkCanceled) {
         m_probeInput = probeInput;
         m_unmatched = unmatched;
@@ -105,11 +113,10 @@ class UnmatchedRowsDeferred implements UnmatchedRows {
     }
 
     /**
-     * @param matchedProbeRowOffset this is the row's offset in the partition table, no need store or extract row
-     *            offsets from the super table.
+     * {@inheritDoc}
      */
     @Override
-    public void matched(final DataRow matchedProbeRow, final long matchedProbeRowOffset) {
+    public void matched(final long matchedProbeRowOffset) {
         if (m_candidates != null) {
             m_candidates.remove(matchedProbeRowOffset);
         }
@@ -117,39 +124,38 @@ class UnmatchedRowsDeferred implements UnmatchedRows {
     }
 
     /**
-     * Since we're joining against partial indexes of the hash input, not finding a match isn't informative since the
-     * probe row could be matched during a future pass over the probe input, when different rows of the hash input have
-     * been indexed.
+     * {@inheritDoc}
      */
     @Override
-    public void unmatched(final DataRow unmatchedProbeRow, final long unmatchedProbeRowOffset) {
+    public boolean unmatched(final DataRow unmatchedProbeRow, final long unmatchedProbeRowOffset) {
         if (m_candidates != null) {
             // if the row was matched before, it was removed from the data structure afterwards
             boolean previouslyRemoved = m_wasMatched.get(((int)unmatchedProbeRowOffset));
             // don't put the row in the data structure another time
             if (!previouslyRemoved) {
-                // TODO the candidate can be put in the map twice, but shouldn't be a problem
-                m_candidates.put(unmatchedProbeRowOffset, unmatchedProbeRow);
+                // this will deduplicate multiple additions to the collector (deduplication by comparing row offsets)
+                m_candidates.putIfAbsent(unmatchedProbeRowOffset, unmatchedProbeRow);
             }
         }
+        // signal not to add the row to the results, will be added upon collectUnmatched
+        return false;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void lowMemory() {
         m_candidates = null;
     }
 
     /**
-     * Outputs unmatched rows into the handler {@link #m_unmatched} passed during construction. This method is meant to
-     * be called only once. It is assumed that unmatched rows are produced and collected in the end, NOT produced,
-     * collected, produced, ... This clears all data structures.
-     *
-     * @throws CanceledExecutionException if the {@link CancelChecker} passed at construction signaled that execution is
-     *             canceled
+     * {@inheritDoc}
      */
     @Override
     public void collectUnmatched() throws CanceledExecutionException {
 
+        // use the cached rows to produce output
         if (m_candidates != null) {
             while (!m_candidates.isEmpty()) {
                 m_checkCanceled.checkCanceled();

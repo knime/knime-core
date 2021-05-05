@@ -51,10 +51,10 @@ package org.knime.core.data.join.results;
 import java.util.EnumMap;
 
 import org.knime.core.data.DataRow;
-import org.knime.core.data.join.JoinImplementation;
 import org.knime.core.data.join.JoinSpecification;
 import org.knime.core.data.join.JoinSpecification.InputTable;
 import org.knime.core.data.join.JoinSpecification.OutputRowOrder;
+import org.knime.core.data.join.implementation.JoinImplementation;
 import org.knime.core.data.join.results.JoinResult.OutputCombined;
 import org.knime.core.data.join.results.JoinResult.OutputSplit;
 import org.knime.core.node.BufferedDataContainer;
@@ -70,30 +70,28 @@ import org.knime.core.node.CanceledExecutionException;
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  * @since 4.2
  */
-public class Unsorted {
+public final class Unsorted {
 
     /**
      * @param joinImplementation an implementation of a join algorithm (provides join specification and implementation
      *            details, e.g., whether hiliting is on).
-     * @param deduplicateResults whether to watch out for and eliminate repeated result submissions
      * @param deferUnmatchedRows whether to hold on to unmatched rows until they are collected
      * @return a join container that returns results sorted by left row offset, then right row offset.
      */
     public static JoinResult<OutputSplit> createSplit(final JoinImplementation joinImplementation,
-        final boolean deduplicateResults, final boolean deferUnmatchedRows) {
-        return new Split(joinImplementation, deduplicateResults, deferUnmatchedRows);
+        final boolean deferUnmatchedRows) {
+        return new Split(joinImplementation, deferUnmatchedRows);
     }
 
     /**
      * @param joinImplementation an implementation of a join algorithm (provides join specification and implementation
      *            details, e.g., whether hiliting is on).
-     * @param deduplicateResults whether to watch out for and eliminate repeated result submissions
      * @param deferUnmatchedRows whether to hold on to unmatched rows until they are collected
      * @return a join container that returns results as a combined table
      */
     public static JoinResult<OutputCombined> createCombined(final JoinImplementation joinImplementation,
-        final boolean deduplicateResults, final boolean deferUnmatchedRows) {
-        return new Combined(joinImplementation, deduplicateResults, deferUnmatchedRows);
+        final boolean deferUnmatchedRows) {
+        return new Combined(joinImplementation, deferUnmatchedRows);
     }
 
     /**
@@ -133,22 +131,20 @@ public class Unsorted {
         };
 
         /**
-         * @param joinImplementation as in {@link JoinContainer#JoinContainer(JoinImplementation, boolean, boolean)}
-         * @param deduplicateResults as in {@link JoinContainer#JoinContainer(JoinImplementation, boolean, boolean)}
+         * @param joinImplementation as in {@link JoinContainer#JoinContainer(JoinImplementation, boolean)}
          * @param deferUnmatchedRows
          */
-        Split(final JoinImplementation joinImplementation, final boolean deduplicateResults,
-            final boolean deferUnmatchedRows) {
-            super(joinImplementation, deduplicateResults, deferUnmatchedRows);
+        Split(final JoinImplementation joinImplementation, final boolean deferUnmatchedRows) {
+            super(joinImplementation, deferUnmatchedRows);
             // create working specs and output containers
-            for (ResultType rt : ResultType.matchesAndOuter()) {
+            for (ResultType rt : ResultType.MATCHES_AND_OUTER) {
                 m_splitOutputContainers.put(rt,
                     joinImplementation.getExecutionContext().createDataContainer(m_outputSpecs.get(rt)));
             }
         }
 
         @Override
-        boolean doAddMatch(final DataRow left, final long leftOffset, final DataRow right,
+        public boolean doAddMatch(final DataRow left, final long leftOffset, final DataRow right,
             final long rightOffset) {
             final DataRow match = m_joinSpecification.rowJoin(left, right);
             m_splitOutputContainers.get(ResultType.MATCHES).addRowToTable(match);
@@ -158,7 +154,7 @@ public class Unsorted {
         }
 
         @Override
-        boolean doAddLeftOuter(final DataRow row, final long offset) {
+        public boolean doAddLeftOuter(final DataRow row, final long offset) {
             DataRow leftOuter = m_joinSpecification.rowProjectOuter(InputTable.LEFT, row);
             m_splitOutputContainers.get(ResultType.LEFT_OUTER).addRowToTable(leftOuter);
             addHiliteMapping(ResultType.LEFT_OUTER, leftOuter.getKey(), InputTable.LEFT, row.getKey());
@@ -166,7 +162,7 @@ public class Unsorted {
         }
 
         @Override
-        boolean doAddRightOuter(final DataRow row, final long offset) {
+        public boolean doAddRightOuter(final DataRow row, final long offset) {
             DataRow rightOuter = m_joinSpecification.rowProjectOuter(InputTable.RIGHT, row);
             m_splitOutputContainers.get(ResultType.RIGHT_OUTER).addRowToTable(rightOuter);
             addHiliteMapping(ResultType.RIGHT_OUTER, rightOuter.getKey(), InputTable.RIGHT, row.getKey());
@@ -174,7 +170,8 @@ public class Unsorted {
         }
 
         BufferedDataTable get(final ResultType resultType) throws CanceledExecutionException {
-            if (m_splitOutputResults.get(resultType) == null) {
+
+            if (m_splitOutputResults.get(resultType) == null) { // NOSONAR computeIfAbsent: code may throw exception
                 collectUnmatchedRows(resultType);
                 m_splitOutputContainers.get(resultType).close();
                 m_splitOutputResults.put(resultType, m_splitOutputContainers.get(resultType).getTable());
@@ -216,18 +213,16 @@ public class Unsorted {
 
         /**
          * @param joinImplementation
-         * @param deduplicateResults
          * @param deferUnmatchedRows
          */
-        Combined(final JoinImplementation joinImplementation, final boolean deduplicateResults,
-            final boolean deferUnmatchedRows) {
-            super(joinImplementation, deduplicateResults, deferUnmatchedRows);
+        Combined(final JoinImplementation joinImplementation, final boolean deferUnmatchedRows) {
+            super(joinImplementation, deferUnmatchedRows);
             m_singleTableContainer =
                 joinImplementation.getExecutionContext().createDataContainer(m_outputSpecs.get(ResultType.MATCHES));
         }
 
         @Override
-        boolean doAddMatch(final DataRow left, final long leftOrder, final DataRow right,
+        public boolean doAddMatch(final DataRow left, final long leftOrder, final DataRow right,
             final long rightOrder) {
             DataRow match = m_joinSpecification.rowJoin(left, right);
             m_singleTableContainer.addRowToTable(match);
@@ -237,7 +232,7 @@ public class Unsorted {
         }
 
         @Override
-        boolean doAddLeftOuter(final DataRow row, final long offset) {
+        public boolean doAddLeftOuter(final DataRow row, final long offset) {
             DataRow paddedMerged = leftToSingleTableFormat(row);
             m_singleTableContainer.addRowToTable(paddedMerged);
             addHiliteMapping(ResultType.LEFT_OUTER, paddedMerged.getKey(), InputTable.LEFT, row.getKey());
@@ -245,7 +240,7 @@ public class Unsorted {
         }
 
         @Override
-        boolean doAddRightOuter(final DataRow row, final long offset) {
+        public boolean doAddRightOuter(final DataRow row, final long offset) {
             DataRow paddedMerged = rightToSingleTableFormat(row);
             m_singleTableContainer.addRowToTable(paddedMerged);
             addHiliteMapping(ResultType.RIGHT_OUTER, paddedMerged.getKey(), InputTable.RIGHT, row.getKey());
@@ -256,6 +251,7 @@ public class Unsorted {
         public OutputCombined getResults() {
             return m_outputCombined;
         }
+
     }
 
     private Unsorted() {

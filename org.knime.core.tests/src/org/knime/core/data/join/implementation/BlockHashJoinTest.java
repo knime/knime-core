@@ -46,17 +46,24 @@
  * History
  *   Jun 9, 2020 (carlwitt): created
  */
-package org.knime.core.data.join;
+package org.knime.core.data.join.implementation;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assume.assumeThat;
+
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.junit.experimental.theories.DataPoints;
 import org.junit.experimental.theories.Theories;
 import org.junit.experimental.theories.Theory;
 import org.junit.runner.RunWith;
 import org.knime.core.data.DataRow;
+import org.knime.core.data.join.JoinSpecification;
+import org.knime.core.data.join.JoinTest;
+import org.knime.core.data.join.JoinTestInput;
 import org.knime.core.data.join.results.JoinResult;
 import org.knime.core.data.join.results.JoinResult.OutputCombined;
 import org.knime.core.data.join.results.JoinResult.OutputSplit;
@@ -83,8 +90,12 @@ public class BlockHashJoinTest extends JoinTest {
      * TODO match any not yet implemented
      */
     @DataPoints
-    public static JoinTestInput[] inputs = JoinTestInput.CONJUNCTIVE;
-
+    public static List<JoinTestInput> inputs;
+    static {
+        inputs = new LinkedList<>();
+        inputs.addAll(Arrays.asList(JoinTestInput.DISJUNCTIVE));
+//        inputs.addAll(Arrays.asList(JoinTestInput.CONJUNCTIVE));
+    }
     /**
      * @param input the left and right input table
      * @param joinMode which results to retain

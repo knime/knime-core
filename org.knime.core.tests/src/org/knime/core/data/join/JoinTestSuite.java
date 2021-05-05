@@ -44,31 +44,24 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Apr 27, 2020 (carlwitt): created
+ *   Apr 29, 2021 (carlwitt): created
  */
 package org.knime.core.data.join;
 
-import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.InvalidSettingsException;
+import org.junit.runner.RunWith;
+import org.junit.runners.Suite;
+import org.junit.runners.Suite.SuiteClasses;
+import org.knime.core.data.join.implementation.BlockHashJoinTest;
+import org.knime.core.data.join.results.JoinContainerTest;
 
 /**
  *
- * Selects a join implementation according to data distribution, size, join type, and other table specifications.
- * This implements a rudimentary cost model that estimates which join implementation is the fastest.
- * Could also take into account the available memory
- *
- * @author Carl Witt, KNIME AG, Zurich, Switzerland
- * @since 4.2
- *
+ * @author carlwitt
  */
-final class CostModelFactory implements JoinerFactory {
+@RunWith(Suite.class)
+@SuiteClasses({ JoinSpecificationTest.class,
+        BlockHashJoinTest.class,
+        JoinContainerTest.class})
+public class JoinTestSuite {
 
-    private CostModelFactory() {}
-
-    static final CostModelFactory INSTANCE = new CostModelFactory();
-
-    @Override
-    public JoinImplementation create(final JoinSpecification settings, final ExecutionContext exec) throws InvalidSettingsException {
-        return new BlockHashJoin(settings, exec);
-    }
 }

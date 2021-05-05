@@ -46,21 +46,22 @@
  * History
  *   Jun 17, 2020 (carlwitt): created
  */
-package org.knime.core.data.join;
+package org.knime.core.data.join.implementation;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.BitSet;
-import java.util.Comparator;
 import java.util.List;
-import java.util.TreeSet;
 import java.util.function.Function;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
+import org.knime.core.data.join.JoinSpecification;
 import org.knime.core.data.join.JoinSpecification.InputTable;
 import org.knime.core.data.join.JoinSpecification.OutputRowOrder;
+import org.knime.core.data.join.JoinTableSettings;
 import org.knime.core.data.join.results.JoinResult;
-import org.knime.core.data.join.results.JoinResult.RowHandlerCancelable;
-import org.knime.core.node.BufferedDataTable;
+import org.knime.core.data.join.results.RowHandlerCancelable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.CanceledExecutionException.CancelChecker;
 
@@ -70,10 +71,8 @@ import gnu.trove.map.hash.TCustomHashMap;
 import gnu.trove.strategy.HashingStrategy;
 
 /**
- * Index for rows in a table. Provides fast lookup of join partners via
- * {@link #joinSingleRow(JoinTuple, DataRow, long, JoinResult)}. Can be flushed to disk using {@link #toDisk()}. This
- * does not serialize the index structure, it just flushes to disk the rows stored in the index using a
- * {@link BufferedDataTable}.
+ * Index for rows in a table. Provides fast lookup of join partners of a row by accessing the values in its join
+ * columns.
  *
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  */
@@ -87,7 +86,7 @@ class HashIndex {
     private static final Function<DataCell[], List<DataRow>> newRowList = k -> new ArrayList<DataRow>();
 
     /** Puts the join results here. */
-    final JoinResult m_joinContainer;
+    final JoinResult<?> m_joinContainer;
 
     /**
      * The hash rows in order of their addition to the index (which is hash input row order). <br/>
@@ -102,11 +101,10 @@ class HashIndex {
     private final TLongArrayList m_rowOffsets = new TLongArrayList();
 
     /**
-     * Makes hash input rows accessible via join column value combinations. For each disjunctive clause, a separate
-     * index is needed. The number of indexes is 1 if the join is conjunctive {@link JoinSpecification#isConjunctive()},
-     * or disjunctive with a single conjunctive clause (i.e., user selects match any with a single column pair A=X).
+     * Makes hash input rows accessible via join column value combinations.
      */
-    private final List<TCustomHashMap<DataCell[], List<DataRow>>> m_indexes;
+    private final TCustomHashMap<DataCell[], List<DataRow>> m_indexes =
+        new TCustomHashMap<>(HashIndex.hashConjunctive());
 
     /**
      * Whether to remember which hash rows have had join partners in the probe table to be able to output unmatched hash
@@ -116,16 +114,18 @@ class HashIndex {
 
     /**
      * The i-th bit stores whether the i-th entry of m_rows has had a join partner in the probe table so far, as found
-     * during a previous call to {@link #joinSingleRow(JoinTuple, DataRow, JoinResult)}
+     * during a previous call to {@link #joinSingleRow(JoinTuple, DataRow, JoinResult)}.
+     *
+     * Requires about 1 MB space per 10M rows.
      */
     private final BitSet m_matched;
 
     /**
      * Maps a hash row to its offset in {@link #m_rows}. This internal offset is in turn used to mark the rows that have
-     * been matched to a probe row, by setting the corresponding bit in {@link #m_matched}.
-     * This avoids wrapping DataRows in another object that holds the data row's offset in its source table.
-     * Alternatively, one could also introduce another map from DataRow to long but these internal offsets are also
-     * convenient for addressing in {@link #m_matched} as they are more compact.
+     * been matched to a probe row, by setting the corresponding bit in {@link #m_matched}. This avoids wrapping
+     * DataRows in another object that holds the data row's offset in its source table. Alternatively, one could also
+     * introduce another map from DataRow to long but these internal offsets are also convenient for addressing in
+     * {@link #m_matched} as they are more compact.
      */
     private final TObjectIntCustomHashMap<DataRow> m_hashrowInternalOffsets;
 
@@ -138,8 +138,6 @@ class HashIndex {
      * performance reasons.
      */
     private final CancelChecker m_checkCanceled;
-
-    private final Comparator<DataRow> m_compareByRowOffset;
 
     private InputTable m_hashSide;
 
@@ -166,7 +164,7 @@ class HashIndex {
      *            {@link #joinSingleRow(DataRow, long)}
      */
     @SuppressWarnings("serial")
-    HashIndex(final JoinSpecification joinSpecification, final JoinResult joinContainer,
+    HashIndex(final JoinSpecification joinSpecification, final JoinResult<?> joinContainer,
         final JoinSpecification.InputTable hashSide, final CancelChecker checkCanceled) {
 
         m_joinSpecification = joinSpecification;
@@ -176,57 +174,24 @@ class HashIndex {
 
         // probe/hash row settings
         InputTable probeSide = hashSide.other();
-        m_trackMatchedHashRows = m_joinSpecification.getSettings(hashSide).m_retainUnmatched;
+        m_trackMatchedHashRows = m_joinSpecification.getSettings(hashSide).isRetainUnmatched();
         m_probeSettings = m_joinSpecification.getSettings(probeSide);
 
         // row offsets and unmatched rows
         m_hashrowInternalOffsets = new TObjectIntCustomHashMap<>(new HashingStrategy<DataRow>() {
-            @Override public int computeHashCode(final DataRow object) { return object.getKey().hashCode(); }
-            @Override public boolean equals(final DataRow o1, final DataRow o2) { return o1 == o2; }
+            @Override
+            public int computeHashCode(final DataRow object) {
+                return object.getKey().hashCode();
+            }
+
+            @Override
+            public boolean equals(final DataRow o1, final DataRow o2) {
+                return o1 == o2;
+            }
         });
         m_matched = m_trackMatchedHashRows ? new BitSet() : null;
 
-        // index building
-        int numIndexes = m_joinSpecification.numConjunctiveGroups();
-        m_indexes = new ArrayList<>(numIndexes);
-        if(m_joinSpecification.isConjunctive()) {
-            m_indexes.add(new TCustomHashMap<>(JoinTuple.hashConjunctive()));
-        } else {
-            // add one lookup index for every conjunctive clause
-            for (int i = 0; i < numIndexes; i++) {
-                m_indexes.add(new TCustomHashMap<>(JoinTuple.hashDisjunctiveClause(i)));
-            }
-        }
-
-        // disjunctive join predicates require duplicate elimination across the m_indexes.
-        // this is used for merging the results from every index by eliminating duplicates and sorting the result rows
-        // according to the order they were inserted (by calling addHashRow on this object)
-        m_compareByRowOffset = (hashRow1, hashRow2) -> {
-            long hashRow1Offset = m_rowOffsets.get(m_hashrowInternalOffsets.get(hashRow1));
-            long hashRow2Offset = m_rowOffsets.get(m_hashrowInternalOffsets.get(hashRow2));
-            return Long.compare(hashRow1Offset, hashRow2Offset);
-        };
-
     }
-
-//    /**
-//     * Provides a default parameter for the unmatchedProbeRows parameter. Typically, the unmatched rows from the probe
-//     * input are handled by {@link JoinResults#addLeftOuter(DataRow, long)} or
-//     * {@link JoinResults#addRightOuter(DataRow, long)}. However, in a nested loop join, several passes over the probe
-//     * input are made and unmatched rows must be output only once, which requires a special handler that can be passed
-//     * to the full constructor.
-//     * @param joinSpecification
-//     * @param results
-//     * @param hashSide
-//     * @param checkCanceled
-//     * @throws InvalidSettingsException
-//     *
-//     * @see #HashIndex(JoinSpecification, JoinResults, TObjectLongProcedure, InputTable, BooleanSupplier)
-//     */
-//    public HashIndex(final JoinSpecification joinSpecification, final JoinResults results, final InputTable hashSide,
-//        final CancelChecker checkCanceled) {
-//        this(joinSpecification, results, results.unmatched(hashSide.other()), hashSide, checkCanceled);
-//    }
 
     /**
      *
@@ -242,19 +207,8 @@ class HashIndex {
             // do not add to index structure. can't be matched by anything
             m_joinContainer.unmatched(m_hashSide).accept(row, offset);
         } else {
-            if (m_joinSpecification.isConjunctive()) {
-                List<DataRow> rowList = m_indexes.get(0).computeIfAbsent(joinTuple, newRowList);
-                rowList.add(row);
-            } else {
-                // add the row to every clause index
-                for (int clause = 0; clause < m_indexes.size(); clause++) {
-                    // contains the rows that have a specific combination of values in the join columns of the i-th clause
-                    List<DataRow> clauseRowList = m_indexes.get(clause).computeIfAbsent(joinTuple, newRowList);
-                    // the values corresponding to the clause are extracted by the clause index's hashing strategy
-                    // collisions are avoided via that hashing strategy's equals implementation
-                    clauseRowList.add(row);
-                }
-            }
+            List<DataRow> rowList = m_indexes.computeIfAbsent(joinTuple, newRowList);
+            rowList.add(row);
             // add to index structure
             m_hashrowInternalOffsets.put(row, m_rows.size());
             m_rows.add(row);
@@ -266,12 +220,15 @@ class HashIndex {
     /**
      * @param probeRow the row that provides the join column values for which we search join partners
      * @param probeRowOffset the offset of the probe row in its source table (for sorting)
-     * @return true iff the execution was canceled
+     * @throws CanceledExecutionException if the user cancels the join, this exception is propagated
      */
     public void joinSingleRow(final DataRow probeRow, final long probeRowOffset) throws CanceledExecutionException {
 
-        List<DataRow> matching =
-            m_joinSpecification.isConjunctive() ? matchConjunctive(probeRow) : matchDisjunctive(probeRow);
+        DataCell[] key = m_probeSettings.get(probeRow);
+
+        // null if no matches exist. Otherwise, a list of matching rows in the order they were inserted
+        // using #addHashRow(JoinTuple, DataRow, long)
+        List<DataRow> matching = m_indexes.get(key);
 
         // no indexed row has the same values in the join columns as the probe row
         if (matching == null) {
@@ -301,57 +258,20 @@ class HashIndex {
                 long leftOrder = m_probeSettings.getSide().isLeft() ? probeRowOffset : hashRowOrder;
                 long rightOrder = m_probeSettings.getSide().isLeft() ? hashRowOrder : probeRowOffset;
 
-                m_joinContainer.addMatch(left, leftOrder, right, rightOrder);
+                m_joinContainer.offerMatch(left, leftOrder, right, rightOrder);
             }
         }
-    }
-
-    /**
-     * Find all matching rows among the previously added rows.
-     *
-     * @param probeRow The row to extract the join predicate values from.
-     * @return null if none found. Otherwise, a list of matching rows in order of their insertion with
-     *         {@link #addHashRow(JoinTuple, DataRow, long)}.
-     */
-    private List<DataRow> matchConjunctive(final DataRow probeRow) {
-        DataCell[] key = JoinTuple.get(m_probeSettings, probeRow);
-        return m_indexes.get(0).get(key);
-    }
-
-    /**
-     * Find all matching rows among the previously added rows.
-     * A hash row matches if it matches on any of the join column groups.
-     * <h1>Internals</h1>
-     *
-     * @param probeRow The row to extract the join predicate values from.
-     * @return null if none found. Otherwise, a list of matching rows in order of their insertion with
-     *         {@link #addHashRow(JoinTuple, DataRow, long)}.
-     */
-    private List<DataRow> matchDisjunctive(final DataRow probeRow) {
-
-        TreeSet<DataRow> matches = new TreeSet<>(m_compareByRowOffset);
-
-        DataCell[] asArray = JoinTuple.get(m_probeSettings, probeRow);
-        for (int i = 0; i < m_indexes.size(); i++) {
-            TCustomHashMap<DataCell[], List<DataRow>> tCustomHashMap = m_indexes.get(i);
-            List<DataRow> joinPartners = tCustomHashMap.get(asArray);
-            // join partners is null if the index has no entry for the join tuple
-            if (joinPartners != null) {
-                matches.addAll(joinPartners);
-            }
-        }
-
-        return matches.size() == 0 ? null : new ArrayList<>(matches);
     }
 
     /**
      * Process the hash rows that have not been matched to a probe row during {@link #joinSingleRow(DataRow, long)}
+     *
      * @param handler processes the hash row and its row offset
      * @throws CanceledExecutionException
      *
      */
-    public void forUnmatchedHashRows(final RowHandlerCancelable handler)
-        throws CanceledExecutionException {
+    @SuppressWarnings("javadoc")
+    public void forUnmatchedHashRows(final RowHandlerCancelable handler) throws CanceledExecutionException {
 
         if (!m_trackMatchedHashRows) {
             return;
@@ -367,28 +287,37 @@ class HashIndex {
 
     }
 
-//    /**
-//     * Only hash buckets are migrated to disk, probe rows are put into DiskBuckets directly. This does not serialize the
-//     * index structure, it just flushes to disk the rows stored in the index using a {@link BufferedDataTable}.
-//     */
-//    DiskBucket toDisk(final DiskBackedHashPartitions partitioner) {
-//
-//        // release memory
-//        m_indexes.clear();
-//
-//        DiskBucket result = partitioner.new DiskBucket(m_hashSettings);
-//
-//        for (int i = m_rows.size(); i-- > 0;) {
-//            result.add(m_rows.get(i), m_rowOffsets.get(i));
-//            // release memory
-//            m_rows.set(i, null);
-//        }
-//
-//        return result;
-//    }
-
     public int numAddedRows() {
         return m_rows.size();
+    }
+
+    /**
+     * @return strategy that maps rows to the same bucket if they have the same value in all their join clauses
+     */
+    @SuppressWarnings("serial")
+    static HashingStrategy<DataCell[]> hashConjunctive() {
+        return new HashingStrategy<DataCell[]>() {
+
+            @Override
+            public int computeHashCode(final DataCell[] joinClauseSides) {
+                return Arrays.hashCode(joinClauseSides);
+            }
+
+            @Override
+            public boolean equals(final DataCell[] o1, final DataCell[] o2) {
+                for (int i = 0; i < o1.length; i++) {
+
+                    if (o1[i].isMissing() || o2[i].isMissing()) {
+                        return false;
+                    }
+                    // compare the data cells
+                    if (!o1[i].equals(o2[i])) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        };
     }
 
     /**

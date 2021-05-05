@@ -44,48 +44,20 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Apr 29, 2020 (carlwitt): created
+ *   Apr 29, 2021 (carlwitt): created
  */
-package org.knime.core.data.join;
+package org.knime.core.data.join.results;
 
-import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.data.DataRow;
+import org.knime.core.node.BufferedDataTable;
 
 /**
- * A joiner factory provides a method to create a joiner implementation.
- * This functional interface describes joiner constructor signatures.
- * The provided JoinAlgorithm enum can be used to configure the joiner node, e.g., to select an implementation.
- * See {@link JoinSpecification#getJoinAlgorithm()}.
- *
- * @author Carl Witt, KNIME AG, Zurich, Switzerland
- * @since 4.2
+ * Processes a {@link DataRow} along with its offset in the {@link BufferedDataTable} that contains the row.
  */
 @FunctionalInterface
-public interface JoinerFactory {
-
-    enum JoinAlgorithm {
-//        HYBRID_HASH("Hybrid Hash Join", HybridHashJoin::new),
-        AUTO("Automatic", CostModelFactory.INSTANCE),
-        NESTED_LOOP("Block hash join", BlockHashJoin::new);
-
-        private final String m_text;
-        private final JoinerFactory m_factory;
-
-        private JoinAlgorithm(final String text, final JoinerFactory factory) {
-            m_text = text;
-            m_factory = factory;
-        }
-
-        @Override
-        public String toString() {
-            return m_text;
-        }
-        public JoinerFactory getFactory() {
-            return m_factory;
-        }
-    }
-
-    JoinImplementation create(final JoinSpecification settings, final ExecutionContext exec)
-        throws InvalidSettingsException;
-
+public interface RowHandler extends RowHandlerCancelable {
+    @Override
+    void accept(DataRow row, long offset);
 }
+
+

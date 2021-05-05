@@ -48,7 +48,6 @@
  */
 package org.knime.core.data.join.results;
 
-import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -62,10 +61,10 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DefaultRow;
-import org.knime.core.data.join.JoinImplementation;
 import org.knime.core.data.join.JoinSpecification;
 import org.knime.core.data.join.JoinSpecification.InputTable;
-import org.knime.core.data.join.OrderedRow;
+import org.knime.core.data.join.implementation.JoinImplementation;
+import org.knime.core.data.join.implementation.OrderedRow;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.CanceledExecutionException.CancelChecker;
@@ -81,61 +80,6 @@ import gnu.trove.set.hash.TLongHashSet;
  * @since 4.2
  */
 abstract class JoinContainer<T> implements JoinResult<T> {
-
-    /**
-     * Stores whether a given row offset combination was seen before. Is used to determine whether there was a previous
-     * invocation of {@link JoinContainer#addMatch(DataRow, long, DataRow, long)},
-     * {@link JoinContainer#addLeftOuter(DataRow, long)}, or {@link JoinContainer#addRightOuter(DataRow, long)}. In case
-     * there was a previous invocation with the same row offsets and {@link JoinContainer#isDeduplicateResults()}, the
-     * join result is rejected.
-     *
-     * @author Carl Witt, KNIME AG, Zurich, Switzerland
-     */
-    // TODO can we take this out now that there is no match any?
-    private static class RowOffsetCombinationSet {
-
-        private final TLongHashSet m_set = new TLongHashSet();
-
-        /**
-         * @param leftRowOffset a 32-bit unsigned integer, i.e., at most ~4G
-         * @param rightRowOffset a 32-bit unsigned integer, i.e., at most ~4G
-         * @return whether the combination of row offsets is new, i.e., hasn't been put before
-         */
-        boolean put(final long leftRowOffset, final long rightRowOffset) {
-            return m_set.add(OrderedRow.combinedOffsets(leftRowOffset, rightRowOffset));
-        }
-
-    }
-
-    private static DataCell consensus(final DataRow rightUnmatched, final int[] lookupColumns) {
-        // in case this is not a join column (no lookup columns) just use a missing value
-        DataCell consensus = lookupColumns.length == 0 ? DataType.getMissingCell() : null;
-
-        // in case this column joins on one or more other columns, check whether they all agree to use that value
-        for (int i = 0; i < lookupColumns.length; i++) {
-            // if any of the lookup values is missing, deliver a missing value
-            if (lookupColumns[i] == -1) {
-                return DataType.getMissingCell();
-            } else {
-                DataCell value = rightUnmatched.getCell(lookupColumns[i]);
-                boolean firstValue = i == 0;
-                if (firstValue) {
-                    consensus = value;
-                    // if at least one value does not equal the others, return a missing value
-                } else if (!value.equals(consensus)) {
-                    return DataType.getMissingCell();
-                } else {
-                    // value is not the first value and is equal to all previous values -> consensus can be left as is
-                }
-            }
-        }
-        return consensus;
-    }
-
-    /**
-     * Handlers for unmatched rows. Either output rows directly or defer until collected.
-     */
-    private final Map<InputTable, UnmatchedRows> m_unmatchedRows = new EnumMap<>(InputTable.class);
 
     /** The format of the output table for matches, unmatched rows, etc. */
     final Map<ResultType, DataTableSpec> m_outputSpecs = new EnumMap<>(ResultType.class);
@@ -154,16 +98,21 @@ abstract class JoinContainer<T> implements JoinResult<T> {
     final ExecutionContext m_exec;
 
     /**
-     * Each {@link RowOffsetCombinationSet} checks whether a result with a given combination of row offsets was added
-     * before. The array contains one set for each result type, e.g., for
-     * {@link org.knime.core.data.join.results.JoinResult.ResultType#matchesAndOuter()}.
+     * Whether to reject duplicate submissions to {@link #offerMatch(DataRow, long, DataRow, long)}.
+     * @see #m_seenMatches
      */
-    private final Map<ResultType, RowOffsetCombinationSet> m_caches = new EnumMap<>(ResultType.class);
-
+    private boolean m_deduplicateMatches = false;
     /**
-     * {@link JoinContainer#JoinContainer(JoinImplementation, boolean, boolean)}
+     * Contains the offsets of the rows that have been passed to {@link #offerMatch(DataRow, long, DataRow, long)} since
+     * the first call to {@link #deduplicateMatches()}.
+     *
+     * Is null if {@link #m_deduplicateMatches} is false.
      */
-    private final boolean m_deduplicateResults;
+    private RowOffsetCombinationSet m_seenMatches = null;
+    /**
+     * Handlers for unmatched rows. Either output rows directly or defer until collected.
+     */
+    private final Map<InputTable, RowCollector> m_unmatchedRows = new EnumMap<>(InputTable.class);
 
     /**
      * A mapping for each input table that associates the {@link RowKey} of an input row to the {@link RowKey}s of the
@@ -177,31 +126,21 @@ abstract class JoinContainer<T> implements JoinResult<T> {
     /**
      * @param joinImplementation contains the {@link JoinSpecification} according to which the tables are combined and
      *            additional configuration such as {@link JoinImplementation#isEnableHiliting()}.
-     * @param deduplicateResults If true, invocations of {@link #addMatch(DataRow, long, DataRow, long)},
-     *            {@link #addLeftOuter(DataRow, long)}, and {@link #addRightOuter(DataRow, long)} will reject the given
-     *            row if the method was previously invoked with the same row offsets.
      * @param deferUnmatchedRows If false, output unmatched rows directly. If true, allow calls to
-     *            {@link #addMatch(DataRow, long, DataRow, long)} to cancel the unmatched status of a row until
-     *            collecting the unmatched rows via {@link UnmatchedRowsDeferred#collectUnmatched()}.
+     *            {@link #offerMatch(DataRow, long, DataRow, long)} to cancel the unmatched status of a row until
+     *            collecting the unmatched rows via {@link UnmatchedRowsCollector#collectUnmatched()}.
      */
-    JoinContainer(final JoinImplementation joinImplementation, final boolean deduplicateResults,
-        final boolean deferUnmatchedRows) {
+    JoinContainer(final JoinImplementation joinImplementation, final boolean deferUnmatchedRows) {
         m_joinSpecification = joinImplementation.getJoinSpecification();
         m_exec = joinImplementation.getExecutionContext();
-        m_deduplicateResults = deduplicateResults;
         m_checkCanceled = CancelChecker.checkCanceledPeriodically(m_exec);
+
+        m_unmatchedRows.put(InputTable.LEFT, RowCollector.passThrough());
+        m_unmatchedRows.put(InputTable.RIGHT, RowCollector.passThrough());
 
         m_outputSpecs.put(ResultType.LEFT_OUTER, m_joinSpecification.specForUnmatched(InputTable.LEFT));
         m_outputSpecs.put(ResultType.RIGHT_OUTER, m_joinSpecification.specForUnmatched(InputTable.RIGHT));
         m_outputSpecs.put(ResultType.MATCHES, m_joinSpecification.specForMatchTable());
-
-        if (m_deduplicateResults) {
-            Arrays.stream(ResultType.matchesAndOuter())
-                .forEach(resultType -> m_caches.put(resultType, new RowOffsetCombinationSet()));
-        }
-
-        m_unmatchedRows.put(InputTable.LEFT, unmatchedRowHandler(InputTable.LEFT, deferUnmatchedRows));
-        m_unmatchedRows.put(InputTable.RIGHT, unmatchedRowHandler(InputTable.RIGHT, deferUnmatchedRows));
 
         if (joinImplementation.isEnableHiliting()) {
             m_hiliteMapping = new EnumMap<>(InputTable.class);
@@ -219,107 +158,76 @@ abstract class JoinContainer<T> implements JoinResult<T> {
     }
 
     @Override
-    public void setDeferUnmatchedRows(final InputTable side, final boolean defer) {
-        // TODO why would this ever be called with defer == false?
-
-        boolean previouslyDeferred = m_unmatchedRows.get(side) instanceof UnmatchedRowsDeferred;
-        if (defer && previouslyDeferred) {
-            return;
-        }
-        if (!defer && previouslyDeferred) {
-            throw new IllegalStateException("Can not enable defered unmatched row collection again. "
-                + "This would discard the previously collected results.");
-        }
-
-        m_unmatchedRows.put(side, unmatchedRowHandler(side, defer));
-    }
-
-    private UnmatchedRows unmatchedRowHandler(final InputTable side, final boolean defer) {
-        RowHandler handler = side.isLeft() ? this::doAddLeftOuter : this::doAddRightOuter;
-        if (defer) {
-            BufferedDataTable table =
-                m_joinSpecification.getSettings(side).getTable().orElseThrow(IllegalStateException::new);
-            return new UnmatchedRowsDeferred(table, handler, m_checkCanceled);
-        } else {
-            return UnmatchedRows.completeIndex(handler);
+    public void deferUnmatchedRows(final InputTable side) {
+        if( ! (m_unmatchedRows.get(side) instanceof UnmatchedRowsCollector)) {
+            final RowHandler handler = side.isLeft() ? this::doAddLeftOuter : this::doAddRightOuter;
+            final BufferedDataTable table =
+                    m_joinSpecification.getSettings(side).getTable().orElseThrow(IllegalStateException::new);
+            m_unmatchedRows.put(side, new UnmatchedRowsCollector(table, handler, m_checkCanceled));
         }
     }
-
-    /**
-     * Implementation for adding a matching row pair.
-     *
-     * @param left same as for {@link #addMatch(DataRow, long, DataRow, long)}
-     * @param leftOrder same as for {@link #addMatch(DataRow, long, DataRow, long)}
-     * @param right same as for {@link #addMatch(DataRow, long, DataRow, long)}
-     * @param rightOrder same as for {@link #addMatch(DataRow, long, DataRow, long)}
-     * @return same as for {@link #addMatch(DataRow, long, DataRow, long)}
-     *
-     */
-    abstract boolean doAddMatch(final DataRow left, final long leftOrder, final DataRow right,
-        final long rightOrder);
-
-    /**
-     * Implementation for adding an unmatched row from the left table.
-     *
-     * @param row same as for {@link #addLeftOuter(DataRow, long)}
-     * @param offset same as for {@link #addLeftOuter(DataRow, long)}
-     * @return same as for {@link #addLeftOuter(DataRow, long)}
-     */
-    abstract boolean doAddLeftOuter(final DataRow row, final long offset);
-
-    /**
-     * Implementation for adding an unmatched row from the right table.
-     *
-     * @param row same as for {@link #addRightOuter(DataRow, long)}
-     * @param offset same as for {@link #addRightOuter(DataRow, long)}
-     * @return same as for {@link #addRightOuter(DataRow, long)}
-     */
-    abstract boolean doAddRightOuter(final DataRow row, final long offset);
 
     @Override
     public void lowMemory() {
-        m_unmatchedRows.values().forEach(UnmatchedRows::lowMemory);
+        m_unmatchedRows.values().forEach(RowCollector::lowMemory);
     }
 
+    /**
+     * Offers a pair of rows for which all join criteria are fulfilled. If the match is accepted by
+     * {@link MatchStrategy#matched(DataRow, long, DataRow, long)}, the match is included in the output.
+     *
+     * @param left a row from the left input table
+     * @param leftOrder sort order of the left row, e.g., row offset in the left table
+     * @param right a row from the right input table
+     * @param rightOrder analogous
+     * @return whether the match was accepted.
+     */
     @Override
-    public boolean addMatch(final DataRow left, final long leftOrder, final DataRow right, final long rightOrder) {
-        boolean isFreshValue = !m_deduplicateResults || m_caches.get(ResultType.MATCHES).put(leftOrder, rightOrder);
+    public void offerMatch(final DataRow left, final long leftOrder, final DataRow right, final long rightOrder) {
 
-        // let the deferred probe row handlers know that both rows are matched (irrespective of keeping the match)
-        m_unmatchedRows.get(InputTable.LEFT).matched(left, leftOrder);
-        m_unmatchedRows.get(InputTable.RIGHT).matched(right, rightOrder);
+        m_unmatchedRows.get(InputTable.LEFT).matched(leftOrder);
+        m_unmatchedRows.get(InputTable.RIGHT).matched(rightOrder);
 
-        if (m_joinSpecification.isRetainMatched() && isFreshValue) {
-            return doAddMatch(left, leftOrder, right, rightOrder);
+        boolean fresh = ! m_deduplicateMatches || m_seenMatches.put(leftOrder, rightOrder);
+        if (isRetainMatched() && fresh) {
+            doAddMatch(left, leftOrder, right, rightOrder);
         }
-        return false;
     }
 
+    /**
+     * Adds this row to the unmatched rows from the left table, if {@link #isRetainUnmatched(InputTable)} for
+     * {@link InputTable#LEFT}, otherwise does nothing.
+     *
+     * @param row a row from the left input table
+     * @param offset sort order of the row, e.g., row offset in the table
+     */
     @Override
-    public boolean addLeftOuter(final DataRow row, final long offset) {
-        boolean isFreshValue = !m_deduplicateResults || m_caches.get(ResultType.LEFT_OUTER).put(offset, 0);
+    public void offerLeftOuter(final DataRow row, final long offset) {
 
-        if (m_joinSpecification.isRetainUnmatched(InputTable.LEFT) && isFreshValue) {
-            // if the unmatched rows handler is not deferred, this will call #doAddLeftOuter directly, otherwise
-            // it will collect the row as a candidate for the left unmatched rows output. The row looses its
-            // unmatched status as soon as #addMatch is called with the unmatched candidate row.
-            m_unmatchedRows.get(InputTable.LEFT).unmatched(row, offset);
-            return true;
+        RowCollector handler = m_unmatchedRows.get(InputTable.LEFT);
+
+        // the handler may return false if the row has been matched in an earlier pass over the data
+        if (handler.unmatched(row, offset) && isRetainUnmatched(InputTable.LEFT)) {
+            doAddLeftOuter(row, offset);
         }
-        return false;
     }
 
+    /**
+     * Adds this row to the unmatched rows from the right table, if {@link #isRetainUnmatched(InputTable)} for
+     * {@link InputTable#RIGHT}, otherwise does nothing.
+     *
+     * @param row a row from the right input table
+     * @param offset sort order of the row, e.g., row offset in the table
+     */
     @Override
-    public boolean addRightOuter(final DataRow row, final long offset) {
-        boolean isFreshValue = !m_deduplicateResults || m_caches.get(ResultType.RIGHT_OUTER).put(offset, 0);
-        if (m_joinSpecification.isRetainUnmatched(InputTable.RIGHT) && isFreshValue) {
-            // if the unmatched rows handler is not deferred, this will call #doAddRightOuter directly, otherwise
-            // it will collect the row as a candidate for the right unmatched rows output. The row looses its
-            // unmatched status as soon as #addMatch is called with the unmatched candidate row.
-            m_unmatchedRows.get(InputTable.RIGHT).unmatched(row, offset);
-            return true;
+    public void offerRightOuter(final DataRow row, final long offset) {
+
+        RowCollector handler = m_unmatchedRows.get(InputTable.RIGHT);
+
+        // the handler may return false if the row has been matched in an earlier pass over the data
+        if (handler.unmatched(row, offset) && isRetainUnmatched(InputTable.RIGHT)) {
+            doAddRightOuter(row, offset);
         }
-        return false;
     }
 
     /**
@@ -432,6 +340,7 @@ abstract class JoinContainer<T> implements JoinResult<T> {
         return m_joinSpecification.isRetainUnmatched(side);
     }
 
+    // TODO make hilite mapping a property of the join container, the implementation doesn't need to know about it (I think)
     @Override
     public Optional<Map<RowKey, Set<RowKey>>> getHiliteMapping(final InputTable side, final ResultType resultType) {
 
@@ -460,16 +369,89 @@ abstract class JoinContainer<T> implements JoinResult<T> {
         }
     }
 
+    void collectUnmatchedRows(final InputTable side) throws CanceledExecutionException {
+        m_unmatchedRows.get(side).collectUnmatched();
+    }
+
     void collectUnmatchedRows(final ResultType resultType) throws CanceledExecutionException {
-        // in case unmatched rows are collected deferred, this is the last chance to collect them
         boolean canContainLeftUnmatched = resultType == ResultType.LEFT_OUTER || resultType == ResultType.ALL;
         if (canContainLeftUnmatched && isRetainUnmatched(InputTable.LEFT)) {
-            m_unmatchedRows.get(InputTable.LEFT).collectUnmatched();
+            collectUnmatchedRows(InputTable.LEFT);
         }
         boolean canContainRightUnmatched = resultType == ResultType.RIGHT_OUTER || resultType == ResultType.ALL;
         if (canContainRightUnmatched && isRetainUnmatched(InputTable.RIGHT)) {
-            m_unmatchedRows.get(InputTable.RIGHT).collectUnmatched();
+            collectUnmatchedRows(InputTable.RIGHT);
         }
+    }
+
+
+    /**
+     * Stores whether a given row offset combination was seen before. Is used to determine whether there was a previous
+     * invocation of {@link JoinContainer#addMatch(DataRow, long, DataRow, long)},
+     * {@link JoinContainer#addLeftOuter(DataRow, long)}, or {@link JoinContainer#addRightOuter(DataRow, long)}. In case
+     * there was a previous invocation with the same row offsets and {@link JoinContainer#isDeduplicateResults()}, the
+     * join result is rejected.
+     *
+     * @author Carl Witt, KNIME AG, Zurich, Switzerland
+     */
+    private static class RowOffsetCombinationSet {
+
+        private final TLongHashSet m_set = new TLongHashSet();
+
+        /**
+         * @param leftRowOffset a 32-bit unsigned integer, i.e., at most ~4G
+         * @param rightRowOffset a 32-bit unsigned integer, i.e., at most ~4G
+         * @return whether the combination of row offsets is new, i.e., hasn't been put before
+         */
+        boolean put(final long leftRowOffset, final long rightRowOffset) {
+            // combine both offsets into a single long to avoid Pair<> or similar
+            long combinedOffsets = OrderedRow.combinedOffsets(leftRowOffset, rightRowOffset);
+            return m_set.add(combinedOffsets);
+        }
+
+    }
+
+    /**
+     * After the first call to this method, invocations of
+     * {@link JoinContainer#offerMatch(DataRow, long, DataRow, long)} will keep track of the row offsets of matching
+     * rows and reject future matches that state the same combination of row offsets. For performance reasons, the
+     * {@link DataRow}s will not be compared, just their offsets as passed into
+     * {@link JoinContainer#offerMatch(DataRow, long, DataRow, long)}
+     *
+     * This is used for instance when joining under disjunctive conditions, which may lead to duplicate matches that
+     * need to be filtered out.
+     */
+    @Override
+    public void deduplicateMatches() {
+        if(! m_deduplicateMatches) {
+            m_deduplicateMatches = true;
+            m_seenMatches = new RowOffsetCombinationSet();
+        }
+    }
+
+    private static DataCell consensus(final DataRow rightUnmatched, final int[] lookupColumns) {
+        // in case this is not a join column (no lookup columns) just use a missing value
+        DataCell consensus = lookupColumns.length == 0 ? DataType.getMissingCell() : null;
+
+        // in case this column joins on one or more other columns, check whether they all agree to use that value
+        for (int i = 0; i < lookupColumns.length; i++) {
+            // if any of the lookup values is missing, deliver a missing value
+            if (lookupColumns[i] == -1) {
+                return DataType.getMissingCell();
+            } else {
+                DataCell value = rightUnmatched.getCell(lookupColumns[i]);
+                boolean firstValue = i == 0;
+                if (firstValue) {
+                    consensus = value;
+                    // if at least one value does not equal the others, return a missing value
+                } else if (!value.equals(consensus)) {
+                    return DataType.getMissingCell();
+                } else {
+                    // value is not the first value and is equal to all previous values -> consensus can be left as is
+                }
+            }
+        }
+        return consensus;
     }
 
 }

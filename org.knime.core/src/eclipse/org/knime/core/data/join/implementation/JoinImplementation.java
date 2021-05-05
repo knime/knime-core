@@ -45,7 +45,7 @@
  * History
  *   23.11.2009 (Heiko Hofer): created
  */
-package org.knime.core.data.join;
+package org.knime.core.data.join.implementation;
 
 import java.lang.management.ManagementFactory;
 import java.util.LinkedList;
@@ -55,8 +55,11 @@ import javax.management.InstanceNotFoundException;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
+import org.knime.core.data.join.JoinSpecification;
 import org.knime.core.data.join.JoinSpecification.InputTable;
+import org.knime.core.data.join.JoinSpecification.OutputRowOrder;
 import org.knime.core.data.join.results.JoinResult;
+import org.knime.core.data.join.results.JoinResult.Output;
 import org.knime.core.data.join.results.JoinResult.OutputCombined;
 import org.knime.core.data.join.results.JoinResult.OutputSplit;
 import org.knime.core.data.util.memory.MemoryAlertSystem;
@@ -74,10 +77,8 @@ import org.knime.core.node.NodeProgressMonitor;
  * predicates they support, e.g., {@link NestedLoopJoin} supports only equijoins.
  *
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
- * TODO remove javadoc warning to fix serious ones.
  * @since 4.2
  */
-@SuppressWarnings("javadoc")
 public abstract class JoinImplementation {
 
     /** This can change and the auxiliary data structures should be updated accordingly. */
@@ -113,9 +114,86 @@ public abstract class JoinImplementation {
         m_progress = new JoinProgressMonitor();
     }
 
-    public abstract JoinResult<OutputCombined> joinOutputCombined() throws CanceledExecutionException, InvalidSettingsException;
+    /**
+     * Execute the join as specified by the {@link JoinSpecification} passed to the constructor.
+     *
+     * @param <T> the output result type
+     * @param results container for unmatched and matched rows; the container may be configured to perform additional
+     *            logic, such as removing duplicate matches added to the container or deferred collection of unmatched
+     *            rows.
+     *
+     * @return a container with the results, typically the same container object passed into this method
+     * @throws CanceledExecutionException
+     */
+    public abstract <T extends Output> JoinResult<T> join(JoinResult<T> results) throws CanceledExecutionException;
 
-    public abstract JoinResult<OutputSplit> joinOutputSplit() throws CanceledExecutionException, InvalidSettingsException;
+    /**
+     * Convenience method that creates an appropriate {@link JoinResult} and passes it to {@link #join(JoinResult)}.
+     * @return join results as a single combined table
+     * @throws CanceledExecutionException
+     * @throws InvalidSettingsException
+     */
+    public abstract JoinResult<OutputCombined> joinOutputCombined()
+        throws CanceledExecutionException, InvalidSettingsException;
+
+    /**
+     * Convenience method that creates an appropriate {@link JoinResult} and passes it to {@link #join(JoinResult)}.
+     * @return join results divided by matches, left unmatched rows, and right unmatched rows
+     * @throws CanceledExecutionException
+     * @throws InvalidSettingsException
+     */
+    public abstract JoinResult<OutputSplit> joinOutputSplit()
+        throws CanceledExecutionException, InvalidSettingsException;
+
+    /**
+     * Generic match any join algorithm that decomposes <code>L1=R1 OR L2=R2 OR ... OR LN = LN</code> into N joins on a
+     * single equality criterion (L1=R1, L2=R2, ...). Generic means that the individual join implementations are
+     * instantiated used the provided {@link JoinerFactory}.
+     *
+     * To obtain valid output results, the results of the N joins need to be merged (e.g., unmatched rows need to be
+     * unmatched in all joins; filter duplicate output rows that were created by more than one join). This is realized
+     * by using the {@link JoinResult} as shared state which will filter duplicate matches and allow for collection of
+     * unmatched rows after the last partial join has been completed.
+     *
+     * @param constructor used to construct the joiner objects for each of the N joins
+     * @param results a {@link JoinResult} that is modified for proper use in repeated usage of the individual joins.
+     * @return the {@link JoinResult} passed into the method
+     * @throws InvalidSettingsException
+     * @throws CanceledExecutionException
+     */
+    protected <T extends Output> JoinResult<T> matchAny(final JoinerFactory constructor,
+        final JoinResult<T> results) throws CanceledExecutionException, InvalidSettingsException {
+
+        // we need deduplication of matches since a pair of rows may match under multiple join clauses
+        results.deduplicateMatches();
+        // we need and deferred collection of unmatched rows for both sides, since rows that are unmatched in one join
+        // may be matched in another join on a different join clause
+        results.deferUnmatchedRows(InputTable.LEFT);
+        results.deferUnmatchedRows(InputTable.RIGHT);
+
+        // N from the method javadoc
+        final int clauses = m_joinSpecification.getNumJoinClauses();
+
+        for (int clause = 0; clause < clauses; clause++) {
+
+            // join only on one column pair in each iteration
+            JoinSpecification intermediateJoinSpec = JoinSpecification.Builder.from(m_joinSpecification) // copy spec
+                .usingOnlyJoinClause(clause) // compute intermediate join results for i-th join clause
+                .outputRowOrder(OutputRowOrder.LEFT_RIGHT) // sorted output for efficient merge
+                .conjunctive(true) // every single criterion join can be considered conjunctive
+                .build();
+
+            for (InputTable side : InputTable.both()) {
+                intermediateJoinSpec.getSettings(side)
+                    .setTable(m_joinSpecification.getSettings(side).getTable().orElseThrow(IllegalStateException::new));
+            }
+
+            // do the join
+            JoinImplementation intermediateJoin = constructor.create(intermediateJoinSpec, m_exec);
+            intermediateJoin.join(results);
+        }
+        return results;
+    }
 
     /**
      * @return the logical aspects of the join, such as whether to output unmatched rows, etc.
@@ -149,25 +227,22 @@ public abstract class JoinImplementation {
     /**
      * @param maxOpenFiles the maximum number of intermediate files to use during joining.
      */
-    public JoinImplementation setMaxOpenFiles(final int maxOpenFiles) {
+    public void setMaxOpenFiles(final int maxOpenFiles) {
         m_maxOpenFiles = maxOpenFiles;
-        return this;
     }
 
     /**
      * @param memoryLimitFraction the memoryLimitFraction to set
      */
-    JoinImplementation setMemoryLimitFraction(final double memoryLimitFraction) {
+    void setMemoryLimitFraction(final double memoryLimitFraction) {
         m_memoryLimitFraction = memoryLimitFraction;
-        return this;
     }
 
     /**
      * @param enableHiliting the enableHiliting to set
      */
-    public JoinImplementation setEnableHiliting(final boolean enableHiliting) {
+    public void setEnableHiliting(final boolean enableHiliting) {
         m_enableHiliting = enableHiliting;
-        return this;
     }
 
     /**
@@ -185,7 +260,7 @@ public abstract class JoinImplementation {
     }
 
     /**
-     * @return
+     * @return the execution context for which this was created (e.g., needed to create {@link BufferedDataTable}s)
      */
     public ExecutionContext getExecutionContext() {
         return m_exec;
@@ -420,4 +495,5 @@ public abstract class JoinImplementation {
         double getHashBucketSizeCoV();
         void setAssumeMemoryLow(boolean assume);
     }
+
 }

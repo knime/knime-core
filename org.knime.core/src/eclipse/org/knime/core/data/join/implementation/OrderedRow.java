@@ -46,7 +46,7 @@
  * History
  *   Jun 12, 2020 (carlwitt): created
  */
-package org.knime.core.data.join;
+package org.knime.core.data.join.implementation;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -57,9 +57,11 @@ import org.knime.core.data.DataTableSpecCreator;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.LongCell;
+import org.knime.core.data.join.JoinSpecification;
 import org.knime.core.data.join.JoinSpecification.OutputRowOrder;
-import org.knime.core.data.join.results.JoinResult.RowHandlerCancelable;
+import org.knime.core.data.join.JoinTableSettings;
 import org.knime.core.data.join.results.LeftRightSorted;
+import org.knime.core.data.join.results.RowHandlerCancelable;
 
 /**
  * Tools to add a long column to tables. This is used to annotate the offset of a row in its source table to the row.
@@ -180,10 +182,10 @@ public final class OrderedRow { // implements DataRow, Comparable<OrderedRow>
      *         offset
      * @see JoinTableSettings#condensed(DataRow, long, boolean)
      */
-    static DataRow materialize(final JoinTableSettings joinTable, final DataRow row, final long rowOffset,
+    public static DataRow materialize(final JoinTableSettings joinTable, final DataRow row, final long rowOffset,
         final boolean storeOffset) {
 
-        int[] copyCellIndices = joinTable.m_materializeColumnIndices;
+        int[] copyCellIndices = joinTable.getMaterializeColumnIndices();
         int numCells = copyCellIndices.length + (storeOffset ? 1 : 0);
         DataCell[] cells = new DataCell[numCells];
         int cell = 0;

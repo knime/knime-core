@@ -44,66 +44,71 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Jul 2, 2020 (carlwitt): created
+ *   Apr 30, 2021 (carlwitt): created
  */
 package org.knime.core.data.join.results;
 
 import org.knime.core.data.DataRow;
-import org.knime.core.data.join.results.JoinResult.RowHandler;
 import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.CanceledExecutionException.CancelChecker;
 
 /**
- * A handler for unmatched rows. In the simplest case, it just outputs a row to {@link JoinResult} when passing a row
- * to {@link #unmatched(DataRow, long)}. If a row can be unmatched in one situation and matched in another (e.g., row is
- * joined against an incomoplete index or joined in multiple partitions), this handler provides a
- * {@link #matched(DataRow, long)} that cancels a previous {@link #unmatched(DataRow, long)} call. This will also make
- * all future {@link #unmatched(DataRow, long)} calls on the same row ineffective. <br/>
+ * A handler for unmatched rows. In the simplest case, it just outputs a row to {@link JoinResult} when passing a row to
+ * {@link #unmatchedLeft(DataRow, long)}. If a row can be unmatched in one situation and matched in another (e.g., row
+ * is joined against an incomoplete index or joined in multiple partitions), this handler provides a
+ * {@link #matched(DataRow, long, DataRow, long)} that cancels a previous {@link #unmatchedLeft(DataRow, long)} call.
+ * This will also make all future {@link #unmatchedLeft(DataRow, long)} calls on the same row ineffective. <br/>
  * <br/>
  * If a row is send to disk the subsequent {@link DiskBucket#join(DiskBucket, JoinResult)} will perform a
  * {@link BlockHashJoin#join(JoinResult, UnmatchedRows, UnmatchedRows)} that may generate
- * {@link #matched(DataRow, long)} events, such that unmatched probe and hash rows can only be collected after
- * {@link HybridHashJoin#phase3}. This is done via {@link #collectUnmatched()}.
+ * {@link #matched(DataRow, long, DataRow, long)} events, such that unmatched probe and hash rows can only be collected
+ * after {@link HybridHashJoin#phase3}. This is done via {@link #collectUnmatched()}.
  *
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  */
-@SuppressWarnings("javadoc")
-interface UnmatchedRows {
-
-    void matched(DataRow matchedProbeRow, long matchedProbeRowOffset);
-
-    void unmatched(DataRow unmatchedProbeRow, long unmatchedProbeRowOffset);
+public interface RowCollector {
 
     /**
-     * @throws CanceledExecutionException if execution is canceled during collection of the rows
+     * @param matchedProbeRowOffset this is the row's offset in the partition table, no need store or extract row
+     *            offsets from the super table.
      */
-    void collectUnmatched() throws CanceledExecutionException;
+    void matched(long matchedProbeRowOffset);
 
     /**
-     * Indicates that heap space is running low and we should save heap space if possible.
+     *
+     * Several calls to this method with identical input will <b>not</b> add the row several times, since this just
+     * marks a given row as unmatched.
+     *
+     * Since we're joining against partial indexes of the hash input, not finding a match isn't informative since the
+     * probe row could be matched during a future pass over the probe input, when different rows of the hash input have
+     * been indexed.
      */
+    boolean unmatched(DataRow unmatchedProbeRow, long unmatchedProbeRowOffset);
+
     void lowMemory();
 
     /**
-     * An default unmatched row handler for the conjunctive join case.
+     * Outputs unmatched rows into the handler {@link #m_unmatched} passed during construction. This method is meant to
+     * be called only once. It is assumed that unmatched rows are produced and collected in the end, NOT produced,
+     * collected, produced, ... This clears all data structures.
      *
-     * @param unmatched what to do with unmatched probe rows, e.g., put them in left/right unmatched rows of
-     *            {@link JoinResult}
+     * @throws CanceledExecutionException if the {@link CancelChecker} passed at construction signaled that execution is
+     *             canceled
      *
-     * @return a default row handler used in {@link HybridHashJoin} in a conjunctive join. This is the simple case where
-     *         hash indexes are comprehensive in the sense that unmatched probe rows can't turn out matched later on.
-     *         Similarly, unmatched hash rows can't be part of another partition's hash index that will cause them to be
-     *         matched later on. In this case, all unmatched rows can go straight to the join container.
+     * TODO change contract to something that gets a handler?
      */
-    static UnmatchedRows completeIndex(final RowHandler unmatched) {
-        return new UnmatchedRows() {
+    void collectUnmatched() throws CanceledExecutionException;
+
+    static RowCollector passThrough() {
+        return new RowCollector() {
 
             @Override
-            public void unmatched(final DataRow unmatchedProbeRow, final long unmatchedProbeRowOffset) {
-                unmatched.accept(unmatchedProbeRow, unmatchedProbeRowOffset);
+            public boolean unmatched(final DataRow unmatchedProbeRow, final long unmatchedProbeRowOffset) {
+                return true;
             }
 
             @Override
-            public void matched(final DataRow matchedProbeRow, final long matchedProbeRowOffset) {
+            public void matched(final long matchedProbeRowOffset) {
                 /**
                  * By default, finding a match for the probe row requires no special action other than reporting the
                  * join results to {@link JoinResults}. However, in a {@link BlockHashJoin}, we record which rows have
@@ -126,5 +131,6 @@ interface UnmatchedRows {
             }
         };
     }
+
 
 }

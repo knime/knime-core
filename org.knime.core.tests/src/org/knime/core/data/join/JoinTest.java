@@ -68,12 +68,12 @@ import gnu.trove.strategy.HashingStrategy;
  *
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  */
-abstract class JoinTest {
+public abstract class JoinTest {
 
     /**
      * This enum holds all ways of joining the two tables.
      */
-    enum JoinMode {
+    public enum JoinMode {
         INNER("Inner Join", true, false, false),
         LEFT_OUTER("Left Outer Join", true, true, false),
         RIGHT_OUTER("Right Outer Join", true, false, true),
@@ -114,8 +114,8 @@ abstract class JoinTest {
         ARBITRARY(OutputRowOrder.ARBITRARY, JoinTest::assertSetEquality),
         PROBE_HASH(OutputRowOrder.DETERMINISTIC, JoinTest::assertOrderedEquality),
         LEGACY(OutputRowOrder.LEFT_RIGHT, JoinTest::assertOrderedEquality);
-        OutputRowOrder m_rowOrder;
-        BiConsumer<BufferedDataTable, DataRow[]> m_validator;
+        public OutputRowOrder m_rowOrder;
+        public BiConsumer<BufferedDataTable, DataRow[]> m_validator;
         /**
          * @param order
          * @param conform

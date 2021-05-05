@@ -46,7 +46,7 @@
  * History
  *   Jun 21, 2020 (carlwitt): created
  */
-package org.knime.core.data.join;
+package org.knime.core.data.join.implementation;
 
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -54,14 +54,16 @@ import java.util.function.Supplier;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.container.CloseableRowIterator;
+import org.knime.core.data.join.JoinSpecification;
 import org.knime.core.data.join.JoinSpecification.InputTable;
 import org.knime.core.data.join.JoinSpecification.OutputRowOrder;
+import org.knime.core.data.join.JoinTableSettings;
 import org.knime.core.data.join.results.JoinResult;
 import org.knime.core.data.join.results.JoinResult.Output;
 import org.knime.core.data.join.results.JoinResult.OutputCombined;
 import org.knime.core.data.join.results.JoinResult.OutputSplit;
-import org.knime.core.data.join.results.JoinResult.RowHandlerCancelable;
 import org.knime.core.data.join.results.LeftRightSorted;
+import org.knime.core.data.join.results.RowHandlerCancelable;
 import org.knime.core.data.join.results.Unsorted;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -116,39 +118,63 @@ class BlockHashJoin extends JoinImplementation {
 
     @Override
     public JoinResult<OutputCombined> joinOutputCombined() throws CanceledExecutionException, InvalidSettingsException {
-        // deduplication is only necessary in disjunctive join mode, when results may be produced in several partitions
-        final boolean deduplicateResults = false;
         // deferred collection is initially off, but will be turned on in case the join can't be done in memory
         final boolean deferUnmatchedRows = false;
 
-        final JoinResult<OutputCombined> results = m_joinSpecification.getOutputRowOrder() == OutputRowOrder.ARBITRARY
-            ? Unsorted.createCombined(this, deduplicateResults, deferUnmatchedRows)
-            : LeftRightSorted.createCombined(this, deduplicateResults, deferUnmatchedRows);
+        JoinResult<OutputCombined> results;
 
-        return join(results);
+        results = m_joinSpecification.getOutputRowOrder() == OutputRowOrder.ARBITRARY
+            ? Unsorted.createCombined(this, deferUnmatchedRows)
+            : LeftRightSorted.createCombined(this, deferUnmatchedRows);
+
+        if (m_joinSpecification.isConjunctive()) {
+            return join(results);
+        } else {
+            return matchAny(BlockHashJoin::new, results);
+        }
     }
 
     @Override
     public JoinResult<OutputSplit> joinOutputSplit() throws CanceledExecutionException, InvalidSettingsException {
-        // deduplication is only necessary in disjunctive join mode, when results may be produced in several partitions
-        final boolean deduplicateResults = false;
         // deferred collection is initially off, but will be turned on in case the join can't be done in memory
         final boolean deferUnmatchedRows = false;
 
         final JoinResult<OutputSplit> results = m_joinSpecification.getOutputRowOrder() == OutputRowOrder.ARBITRARY
-            ? Unsorted.createSplit(this, deduplicateResults, deferUnmatchedRows)
-            : LeftRightSorted.createSplit(this, deduplicateResults, deferUnmatchedRows);
+            ? Unsorted.createSplit(this, deferUnmatchedRows)
+            : LeftRightSorted.createSplit(this, deferUnmatchedRows);
 
-        return join(results);
+        if (m_joinSpecification.isConjunctive()) {
+            return join(results);
+        } else {
+            return matchAny(BlockHashJoin::new, results);
+        }
     }
 
     /**
+     * <pre>
+     * algorithm overview:
+        current hash index = empty index
+        1. build phase for the hash index
+         1.a keep addding rows from the hash side input table to the current hash index
+         1.b if memory runs low
+            - signal to the result container that false positive unmatched probe rows may occur
+            - execute 2.
+            - replace the current hash index with an empty new one to save memory
+            - proceed with 1.
+        2. probe phase
+         - iterate over all rows in the probe side input table, looking up their match partners in the current index
+         - collect the unmatched rows in the hash index (because they have seen all probe rows and didn't match)
+           - in the match any case, the unmatched hash rows are also collected in deferred manner
+             (because results.deferUnmatchedRows was called for both tables)
+     * </pre>
+     *
      * @param results where to put join results (matches and unmatched rows)
      * @param leftUnmatchedRows unmatched row handler for unmatched rows from the left table
      * @param rightUnmatchedRows unmatched row handler for unmatched rows from the right table
      * @throws CanceledExecutionException
      */
-    <T extends Output> JoinResult<T> join(final JoinResult<T> results) throws CanceledExecutionException {
+    @Override
+    public <T extends Output> JoinResult<T> join(final JoinResult<T> results) throws CanceledExecutionException {
 
         // if only one of the input tables is present, add its rows to the unmatched results
         if (incompleteInput(m_joinSpecification, results)) {
@@ -164,9 +190,11 @@ class BlockHashJoin extends JoinImplementation {
         final BufferedDataTable probe = probeSettings.getTable().orElseThrow(IllegalStateException::new);
         final BufferedDataTable hash = hashSettings.getTable().orElseThrow(IllegalStateException::new);
 
+        // after each pass, the rows in the hash index have been compared to all rows in the probe table; thus what's
+        // unmatched now is definitely unmatched and can be added to the results
         // if the join problem we're solving here comes from a partition, the row offsets have changed.
         // in case they matter, we can extract them from an auxiliary column added to the rows
-        final RowHandlerCancelable unmatchedHashRows = extractOffsets(results.unmatched(hashSide));
+        final RowHandlerCancelable unmatchedHashRows = optionalExtractOffsets(results.unmatched(hashSide));
 
         // this is an incomplete index, as it represents only the hash rows indexed in one pass over the probe input
         final Supplier<HashIndex> newHashIndex =
@@ -189,25 +217,28 @@ class BlockHashJoin extends JoinImplementation {
                     rowOffset = OrderedRow.getOffset(hashRow);
                 }
 
-                DataCell[] joinAttributeValues = JoinTuple.get(hashSettings, hashRow);
+                DataCell[] joinAttributeValues = hashSettings.get(hashRow);
 
                 index.addHashRow(joinAttributeValues, hashRow, rowOffset);
 
                 // if memory is running low, do a pass over the probe input to be able to clear the hash index
                 boolean memoryLow = m_progress.isMemoryLow(100);
                 if (memoryLow) {
-                    // since we're doing several passes over the probe side, enable deferred handling of unmatched probe rows
-                    results.setDeferUnmatchedRows(probeSide, true);
+                    // since we're doing several passes over the probe side, we might get false positive unmatched rows
+                    // on the probe side (because we're searching for match partners in an incomplete index)
+                    results.deferUnmatchedRows(probeSide);
 
-                    // switch from caching unmatched rows to just marking unmatched rows and collecting them later
+                    // try to free memory, e.g., by switching from caching unmatched rows to just marking unmatched rows
+                    // and collecting them afterwards later
                     results.lowMemory();
 
                     // process probe input once to be able to clear out the current hash index
+                    // however,
                     singlePass(probe, index, unmatchedHashRows);
                     index = newHashIndex.get();
                 }
 
-                m_progress.setProgressAndCheckCanceled(rowOffset / hash.size());
+                m_progress.setProgressAndCheckCanceled(1.0 * rowOffset / hash.size());
 
                 rowOffset++;
 
@@ -228,7 +259,7 @@ class BlockHashJoin extends JoinImplementation {
         getProgress().setMessage("Single pass over larger table.");
 
         CancelChecker checkCanceled = CancelChecker.checkCanceledPeriodicallyWithProgress(m_exec, 100, probe.size());
-        JoinResult.enumerateWithResources(probe, extractOffsets(partialIndex::joinSingleRow), checkCanceled);
+        JoinResult.enumerateWithResources(probe, optionalExtractOffsets(partialIndex::joinSingleRow), checkCanceled);
 
         partialIndex.forUnmatchedHashRows(unmatchedHashRows);
     }
@@ -251,7 +282,7 @@ class BlockHashJoin extends JoinImplementation {
             return true;
         }
 
-        for (InputTable presentSide : InputTable.leftRight()) {
+        for (InputTable presentSide : InputTable.both()) {
             JoinTableSettings present = joinSpecification.getSettings(presentSide);
             JoinTableSettings absent = joinSpecification.getSettings(presentSide.other());
             Optional<BufferedDataTable> presentTable = present.getTable();
@@ -259,7 +290,7 @@ class BlockHashJoin extends JoinImplementation {
                 // collect rows from present table as unmatched
                 if (present.isRetainUnmatched()) {
                     JoinResult.enumerateWithResources(presentTable.get(),
-                        extractOffsets(container.unmatched(presentSide)),
+                        optionalExtractOffsets(container.unmatched(presentSide)),
                         CancelChecker.checkCanceledPeriodically(m_exec));
                 }
                 // only one table is present.
@@ -269,7 +300,7 @@ class BlockHashJoin extends JoinImplementation {
         return false;
     }
 
-    final <T extends RowHandlerCancelable> RowHandlerCancelable extractOffsets(final T rowHandler) {
+    final <T extends RowHandlerCancelable> RowHandlerCancelable optionalExtractOffsets(final T rowHandler) {
         if (m_extractRowOffsets) {
             return OrderedRow.extractOffsets(rowHandler);
         } else {

@@ -55,10 +55,13 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ColumnRearranger;
+import org.knime.core.data.def.StringCell;
 import org.knime.core.data.join.JoinSpecification.InputTable;
+import org.knime.core.data.join.implementation.OrderedRow;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.InvalidSettingsException;
@@ -214,7 +217,7 @@ public class JoinTableSettings {
         /**
          * @return the reserved column offset for this non-existing join column
          */
-        int getColumnIndexIndicator() {
+        public int getColumnIndexIndicator() {
             return m_columnIndexIndicator;
         }
 
@@ -256,7 +259,7 @@ public class JoinTableSettings {
     final int[] m_includeColumns;
 
     /** Which columns of the original table to materialize; union of join columns and retain columns. */
-    final int[] m_materializeColumnIndices;
+    private final int[] m_materializeColumnIndices;
 
     /**
      * The table for which these settings have been created. Used for instance in
@@ -349,7 +352,7 @@ public class JoinTableSettings {
      * @return the number of cells in join and include columns, or zero if no table has been set
      *         {@link #setTable(BufferedDataTable)}
      */
-    Optional<Long> getMaterializedCells() {
+    public Optional<Long> getMaterializedCells() {
         return m_materializedCells;
     }
 
@@ -358,7 +361,7 @@ public class JoinTableSettings {
      */
     public final void setTable(final BufferedDataTable bufferedDataTable) {
         m_forTable = Optional.of(bufferedDataTable);
-        m_materializedCells = Optional.of(m_materializeColumnIndices.length * bufferedDataTable.size());
+        m_materializedCells = Optional.of(getMaterializeColumnIndices().length * bufferedDataTable.size());
         m_tableSpec = bufferedDataTable.getDataTableSpec();
     }
 
@@ -373,7 +376,7 @@ public class JoinTableSettings {
     /**
      * @return whether the input data returned by {@link #getTable()} is already available
      */
-    boolean hasTable() {
+    public boolean hasTable() {
         return getTable().isPresent();
     }
 
@@ -424,7 +427,7 @@ public class JoinTableSettings {
 
         // keep only materialized columns
         final ColumnRearranger materializedColFilter = new ColumnRearranger(getTableSpec());
-        materializedColFilter.keepOnly(m_materializeColumnIndices);
+        materializedColFilter.keepOnly(getMaterializeColumnIndices());
         final DataTableSpec materializedColumns = materializedColFilter.createSpec();
 
         // add row offset column if necessary
@@ -444,6 +447,26 @@ public class JoinTableSettings {
     }
 
     /**
+     * Remove all join clauses except the specified one. Used when breaking down disjunctive joins (match rows that
+     * agree in at least one join clause).
+     *
+     * @param clause zero-based offset of the join clause, e.g., when the join table settings passed to the constructor
+     *            specify join clauses A = X, B = Y, C = Z, and clause is 1, then the new join specification will
+     *            specify only the second join clause, B = Y
+     * @return
+     * @throws InvalidSettingsException if the clause with the given offset does not exist
+     */
+    JoinTableSettings usingOnlyJoinClause(final int clause) throws InvalidSettingsException {
+        if (clause < 0 || clause >= getJoinClauses().size()) {
+            throw new InvalidSettingsException(
+                "Cannot reduce join input table settings to join clause " + clause + ", it does not exist.");
+        }
+        JoinColumn[] joinColumn = new JoinColumn[]{getJoinClauses().get(clause)};
+        String[] includeColumns = getIncludeColumnNames().toArray(String[]::new);
+        return new JoinTableSettings(isRetainUnmatched(), joinColumn, includeColumns, getSide(), getTableSpec());
+    }
+
+    /**
      * Projects a row down to its materialized columns, optionally adding an offset.
      *
      * @param row a row from a table that has the same spec as {@link #getTableSpec()}
@@ -457,12 +480,12 @@ public class JoinTableSettings {
     }
 
     /** @return whether this is the configuration for the left-hand input table of a join or the right-hand input. */
-    InputTable getSide() {
+    public InputTable getSide() {
         return m_side;
     }
 
     /** @return Whether to output unmatched rows from this input table in the join results. */
-    boolean isRetainUnmatched() {
+    public boolean isRetainUnmatched() {
         return m_retainUnmatched;
     }
 
@@ -490,7 +513,7 @@ public class JoinTableSettings {
     /**
      * @return the joinClauseColumns
      */
-    int[] getJoinClauseColumns() {
+    public int[] getJoinClauseColumns() {
         return m_joinClauseColumns;
     }
 
@@ -499,6 +522,34 @@ public class JoinTableSettings {
      */
     int[] getIncludeColumns() {
         return m_includeColumns;
+    }
+
+    /**
+     * @return the materializeColumnIndices
+     */
+    public int[] getMaterializeColumnIndices() {
+        return m_materializeColumnIndices;
+    }
+
+    /**
+     *
+     * @param row the row to extract the join column values from
+     * @return null if any of the values is missing. Otherwise, the column values of the row in the order they are
+     *         referenced in {@link JoinTableSettings#getJoinClauses()}. The array may contain multiple references to
+     *         the same data cell, if the corresponding column (or special join column) appears multiple times in the
+     *         join clauses. For instance, for A=X && A=Z this method would return [A, A] for the left table side.
+     */
+    public DataCell[] get(final DataRow row) {
+        int[] joinClauseColumns = getJoinClauseColumns();
+        DataCell[] cells = new DataCell[joinClauseColumns.length];
+        for (int i = 0; i < cells.length; i++) {
+            cells[i] = joinClauseColumns[i] == SpecialJoinColumn.ROW_KEY.getColumnIndexIndicator()
+                ? new StringCell(row.getKey().getString()) : row.getCell(joinClauseColumns[i]);
+            if (cells[i].isMissing()) {
+                return null;
+            }
+        }
+        return cells;
     }
 
 }

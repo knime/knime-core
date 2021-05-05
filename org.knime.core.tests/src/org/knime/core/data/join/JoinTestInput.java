@@ -64,6 +64,7 @@ import org.knime.core.data.join.JoinSpecification.InputTable;
 import org.knime.core.data.join.JoinSpecification.OutputRowOrder;
 import org.knime.core.data.join.JoinTableSettings.JoinColumn;
 import org.knime.core.data.join.JoinTest.JoinMode;
+import org.knime.core.data.join.implementation.OrderedRow;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.DefaultNodeProgressMonitor;
@@ -123,21 +124,21 @@ public abstract class JoinTestInput {
     /**
      * @return the expected rows in the joined table in the specified order.
      */
-    abstract DataRow[] ordered(final JoinMode mode, final OutputRowOrder order);
+    public abstract DataRow[] ordered(final JoinMode mode, final OutputRowOrder order);
 
     /**
      * @param order the order in which to return the rows
      * @return the unmatched rows from the left table
      */
-    abstract DataRow[] leftOuter(OutputRowOrder order);
+    public abstract DataRow[] leftOuter(OutputRowOrder order);
 
     /**
      * @param order the order in which to return the rows
      * @return the unmatched rows from the right table
      */
-    abstract DataRow[] rightOuter(OutputRowOrder order);
+    public abstract DataRow[] rightOuter(OutputRowOrder order);
 
-    JoinSpecification getJoinSpecification(final JoinMode joinMode, final OutputRowOrder outputRowOrder)
+    public JoinSpecification getJoinSpecification(final JoinMode joinMode, final OutputRowOrder outputRowOrder)
         throws InvalidSettingsException {
 
         JoinTableSettings leftSettings = new JoinTableSettings(joinMode.m_retainLeftUnmatched, m_leftJoinColumns,
@@ -212,7 +213,7 @@ public abstract class JoinTestInput {
         }
 
         @Override
-        DataRow[] ordered(final JoinMode mode, final OutputRowOrder order) {
+        public DataRow[] ordered(final JoinMode mode, final OutputRowOrder order) {
             switch (order) {
                 case ARBITRARY:
                     switch (mode) {
@@ -286,7 +287,7 @@ public abstract class JoinTestInput {
         }
 
         @Override
-        DataRow[] leftOuter(final OutputRowOrder order) {
+        public DataRow[] leftOuter(final OutputRowOrder order) {
             switch (order) {
                 case ARBITRARY:
                 case DETERMINISTIC:
@@ -298,7 +299,7 @@ public abstract class JoinTestInput {
         }
 
         @Override
-        DataRow[] rightOuter(final OutputRowOrder order) {
+        public DataRow[] rightOuter(final OutputRowOrder order) {
             switch (order) {
                 case ARBITRARY:
                     return new DataRow[]{rightDProjected, rightCProjected};
@@ -362,7 +363,7 @@ public abstract class JoinTestInput {
         }
 
         @Override
-        DataRow[] ordered(final JoinMode mode, final OutputRowOrder order) {
+        public DataRow[] ordered(final JoinMode mode, final OutputRowOrder order) {
             switch (mode) {
                 case INNER:
                 case LEFT_OUTER:
@@ -381,12 +382,12 @@ public abstract class JoinTestInput {
         }
 
         @Override
-        DataRow[] leftOuter(final OutputRowOrder order) {
+        public DataRow[] leftOuter(final OutputRowOrder order) {
             return new DataRow[0];
         }
 
         @Override
-        DataRow[] rightOuter(final OutputRowOrder order) {
+        public DataRow[] rightOuter(final OutputRowOrder order) {
             return new DataRow[0];
         }
 
@@ -470,7 +471,7 @@ public abstract class JoinTestInput {
         }
 
         @Override
-        JoinSpecification getJoinSpecification(final JoinMode joinMode, final OutputRowOrder outputRowOrder)
+        public JoinSpecification getJoinSpecification(final JoinMode joinMode, final OutputRowOrder outputRowOrder)
             throws InvalidSettingsException {
 
             JoinTableSettings leftSettings = new JoinTableSettings(joinMode.m_retainLeftUnmatched, m_leftJoinColumns,
@@ -495,6 +496,7 @@ public abstract class JoinTestInput {
 
     /**
      * Test match any with a clause that doesn't change results (because it produces no matches).
+     * TODO add a test dimension that swaps the join column orders? shouldn't change any result
      */
     public static final JoinTestInput nonAdditionalMatchAny = new SmallInput() {
         @Override
@@ -507,7 +509,7 @@ public abstract class JoinTestInput {
         }
 
         @Override
-        JoinSpecification getJoinSpecification(final JoinMode joinMode, final OutputRowOrder outputRowOrder)
+        public JoinSpecification getJoinSpecification(final JoinMode joinMode, final OutputRowOrder outputRowOrder)
             throws InvalidSettingsException {
 
             JoinTableSettings leftSettings = new JoinTableSettings(joinMode.m_retainLeftUnmatched, m_leftJoinColumns,
@@ -546,7 +548,7 @@ public abstract class JoinTestInput {
         }
 
         @Override
-        JoinSpecification getJoinSpecification(final JoinMode joinMode, final OutputRowOrder outputRowOrder)
+        public JoinSpecification getJoinSpecification(final JoinMode joinMode, final OutputRowOrder outputRowOrder)
             throws InvalidSettingsException {
 
             JoinTableSettings leftSettings = new JoinTableSettings(joinMode.m_retainLeftUnmatched, m_leftJoinColumns,
@@ -584,7 +586,7 @@ public abstract class JoinTestInput {
         }
 
         @Override
-        DataRow[] ordered(final JoinMode mode, final OutputRowOrder order) {
+        public DataRow[] ordered(final JoinMode mode, final OutputRowOrder order) {
             switch (order) {
                 case ARBITRARY:
                 case DETERMINISTIC:
@@ -614,7 +616,7 @@ public abstract class JoinTestInput {
 
         /** empty join -> all left rows are unmatched */
         @Override
-        DataRow[] leftOuter(final OutputRowOrder order) {
+        public DataRow[] leftOuter(final OutputRowOrder order) {
             switch (order) {
                 case ARBITRARY:
                     return new DataRow[]{leftAProjected, leftXProjected, leftBProjected};
@@ -628,7 +630,7 @@ public abstract class JoinTestInput {
 
         /** empty join -> all right rows are unmatched */
         @Override
-        DataRow[] rightOuter(final OutputRowOrder order) {
+        public DataRow[] rightOuter(final OutputRowOrder order) {
             switch (order) {
                 case ARBITRARY:
                     return new DataRow[]{rightDProjected, rightXProjected, rightCProjected, rightBProjected};
@@ -670,7 +672,7 @@ public abstract class JoinTestInput {
         }
 
         @Override
-        DataRow[] ordered(final JoinMode mode, final OutputRowOrder order) {
+        public DataRow[] ordered(final JoinMode mode, final OutputRowOrder order) {
             switch (order) {
                 case ARBITRARY:
                 case DETERMINISTIC:
@@ -697,13 +699,13 @@ public abstract class JoinTestInput {
 
         /** empty join -> all left rows are unmatched */
         @Override
-        DataRow[] leftOuter(final OutputRowOrder order) {
+        public DataRow[] leftOuter(final OutputRowOrder order) {
             return new DataRow[0];
         }
 
         /** empty join -> all right rows are unmatched */
         @Override
-        DataRow[] rightOuter(final OutputRowOrder order) {
+        public DataRow[] rightOuter(final OutputRowOrder order) {
             switch (order) {
                 case ARBITRARY:
                     return new DataRow[]{rightDProjected, rightXProjected, rightCProjected, rightBProjected};
@@ -746,7 +748,7 @@ public abstract class JoinTestInput {
         }
 
         @Override
-        DataRow[] ordered(final JoinMode mode, final OutputRowOrder order) {
+        public DataRow[] ordered(final JoinMode mode, final OutputRowOrder order) {
 
             DataRow innerA = defaultRow("Left B+Right B,3,6");
 
@@ -788,7 +790,7 @@ public abstract class JoinTestInput {
             emptyJoinOnRowKeys, emptyHashTable, singleInnerJoin};
 
     public static final JoinTestInput[] DISJUNCTIVE =
-        new JoinTestInput[]{singleColumnMatchAny, nonAdditionalMatchAny, redundantMatchAny};
+        new JoinTestInput[]{nonAdditionalMatchAny, singleColumnMatchAny, redundantMatchAny};
 
     /**
      * Helper to create tables in concise notation.
@@ -816,7 +818,7 @@ public abstract class JoinTestInput {
      * @param columnNames comma-separated header, e.g., "Column1,ColumnB,ColumnZ"
      * @param rows each string being input to {@link #defaultRow(String...)}
      */
-    static BufferedDataTable table(final String columnNames, final boolean storeRowOffsets, final DataRow... rows) {
+    public static BufferedDataTable table(final String columnNames, final boolean storeRowOffsets, final DataRow... rows) {
         DataColumnSpec[] columns = Arrays.stream(columnNames.split(","))
             .map(name -> new DataColumnSpecCreator(name, StringCell.TYPE).createSpec()).toArray(DataColumnSpec[]::new);
         DataTableSpec spec = new DataTableSpec(columns);

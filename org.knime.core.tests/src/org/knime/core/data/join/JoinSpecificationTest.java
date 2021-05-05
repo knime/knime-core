@@ -74,9 +74,13 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.InvalidSettingsException;
 
 /**
- * Tests - join table specification generation - default row key factories (sequence and concat)
- * {@link JoinSpecification#createConcatRowKeysFactory(String)} - column remapping in {@link #testSwapInTables()} -
- * creating {@link JoinTableSettings}
+ * Tests
+ * <ul>
+ * <li>join table specification generation</li>
+ * <li>default row key factories (sequence and concat) {@link JoinSpecification#createConcatRowKeysFactory(String)}</li>
+ * <li>column remapping in {@link #testSwapInTables()}</li>
+ * <li>creating {@link JoinTableSettings}</li>
+ * </ul>
  *
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  */
@@ -154,10 +158,23 @@ public class JoinSpecificationTest {
     }
 
     /**
-     * Test that column names are disambiguated against included columns. For instance, when joining A B C ⨝ A B C
-     * include ✓ ✓ ✓ the resulting output table spec A C B doesn't have name clashes and doesn't need to disambiguate.
+     * Test that column names are disambiguated against included columns. For instance, when joining
      *
-     * When merging join columns A B C ⨝ A B C A=B B=C include ✓ ✓ ✓ ✓ ✓ ✓ join w/ B C out `A=B` C A `A=B (#1)` `B=C`
+     * <pre>
+     *          A B C  ⨝  A B C
+     * include  ✓   ✓       ✓
+     * </pre>
+     *
+     * the resulting output table spec A C B doesn't have name clashes and doesn't need to disambiguate.
+     *
+     * When merging join columns
+     *
+     * <pre>
+     *         A B C  ⨝  A B C A=B B=C
+     * include ✓   ✓     ✓ ✓    ✓   ✓
+     * join w/ B C
+     * out     `A=B` C A `A=B (#1)` `B=C`
+     * </pre>
      *
      * @throws InvalidSettingsException
      */
@@ -210,26 +227,28 @@ public class JoinSpecificationTest {
     }
 
     /**
-     * Test the case in which a column name disambiguator produces a column name that is also already taken in the left table.
+     * Test the case in which a column name disambiguator produces a column name that is also already taken in the left
+     * table.
      */
     @Test
     public void testDoubleClash() throws InvalidSettingsException {
         DataTableSpec left = new DataTableSpec(col("A"), col("B"), col("A (disambiguated)"));
         DataTableSpec right = new DataTableSpec(col("A"), col("B"), col("C"));
-        JoinTableSettings leftSettings =
-            new JoinTableSettings(false, JoinColumn.array("A"), new String[]{"A", "B", "A (disambiguated)"}, InputTable.LEFT, left);
+        JoinTableSettings leftSettings = new JoinTableSettings(false, JoinColumn.array("A"),
+            new String[]{"A", "B", "A (disambiguated)"}, InputTable.LEFT, left);
         JoinTableSettings rightSettings =
             new JoinTableSettings(false, JoinColumn.array("A"), new String[]{"A", "B", "C"}, InputTable.RIGHT, right);
 
-        JoinSpecification joinSpec =
-            new JoinSpecification.Builder(leftSettings, rightSettings).columnNameDisambiguator(s -> s.concat(" (disambiguated)")) // won't disambiguate column name
-                .build();
+        JoinSpecification joinSpec = new JoinSpecification.Builder(leftSettings, rightSettings)
+            .columnNameDisambiguator(s -> s.concat(" (disambiguated)")) // won't disambiguate column name
+            .build();
 
         DataTableSpec spec = joinSpec.specForMatchTable();
         System.out.println(String.format("spec=%s", spec));
 
         // named like this
-        int[] indices = spec.columnsToIndices("A", "B", "A (disambiguated)", "A (disambiguated) (disambiguated)", "B (disambiguated)", "C");
+        int[] indices = spec.columnsToIndices("A", "B", "A (disambiguated)", "A (disambiguated) (disambiguated)",
+            "B (disambiguated)", "C");
         int[] expectedIndices = IntStream.range(0, spec.getNumColumns()).toArray();
         assertArrayEquals(expectedIndices, indices);
 
@@ -257,8 +276,7 @@ public class JoinSpecificationTest {
     @Test
     public void joinJoinedResults() throws InvalidSettingsException {
         // a simple test table, with specs as produced by data generator node
-        BufferedDataTable original =
-            JoinTestInput.table("xx,xy,yx,yy,M", new DataRow[0]);
+        BufferedDataTable original = JoinTestInput.table("xx,xy,yx,yy,M", new DataRow[0]);
         JoinTableSettings firstLeftSettings = new JoinTableSettings(true, JoinColumn.array("xx"),
             original.getDataTableSpec().getColumnNames(), InputTable.LEFT, original);
         JoinTableSettings firstRightSettings = new JoinTableSettings(true, JoinColumn.array("yx"),
@@ -341,18 +359,15 @@ public class JoinSpecificationTest {
     @Test
     public void spaceDisambiguator() throws InvalidSettingsException {
         DataTableSpec abc = new DataTableSpec(col("A"), col("B"), col("C"));
-        JoinTableSettings leftSettings =
-            new JoinTableSettings(false, JoinColumn.array(SpecialJoinColumn.ROW_KEY), new String[]{"A", "B", "C"}, InputTable.LEFT, abc);
-        JoinTableSettings rightSettings =
-            new JoinTableSettings(false, JoinColumn.array(SpecialJoinColumn.ROW_KEY), new String[]{"A", "B", "C"}, InputTable.RIGHT, abc);
+        JoinTableSettings leftSettings = new JoinTableSettings(false, JoinColumn.array(SpecialJoinColumn.ROW_KEY),
+            new String[]{"A", "B", "C"}, InputTable.LEFT, abc);
+        JoinTableSettings rightSettings = new JoinTableSettings(false, JoinColumn.array(SpecialJoinColumn.ROW_KEY),
+            new String[]{"A", "B", "C"}, InputTable.RIGHT, abc);
 
-        for(boolean mergeJoinColumns : new boolean[] {false, true}) {
+        for (boolean mergeJoinColumns : new boolean[]{false, true}) {
 
-        JoinSpecification joinSpec =
-            new JoinSpecification.Builder(leftSettings, rightSettings)
-                .columnNameDisambiguator(s -> s.concat(" "))
-                .mergeJoinColumns(mergeJoinColumns)
-                .build();
+            JoinSpecification joinSpec = new JoinSpecification.Builder(leftSettings, rightSettings)
+                .columnNameDisambiguator(s -> s.concat(" ")).mergeJoinColumns(mergeJoinColumns).build();
 
             DataTableSpec spec = joinSpec.specForMatchTable();
 
@@ -367,12 +382,12 @@ public class JoinSpecificationTest {
     }
 
     /**
-     * Test that the number of conjunctive groups is returned correctly for match any and match all
+     * Test that the number of join conditions is returned correctly for match any and match all
      *
      * @throws InvalidSettingsException
      */
     @Test
-    public void testNumConjunctiveGroups() throws InvalidSettingsException {
+    public void testGetNumJoinConditions() throws InvalidSettingsException {
         DataTableSpec abc = new DataTableSpec(col("A"), col("B"), col("C"));
         JoinTableSettings leftSettings = new JoinTableSettings(false, JoinColumn.array("A", "B", "C"),
             new String[]{"A", "B", "C"}, InputTable.LEFT, abc);
@@ -383,13 +398,13 @@ public class JoinSpecificationTest {
             JoinSpecification joinSpec =
                 new JoinSpecification.Builder(leftSettings, rightSettings).conjunctive(true).build();
 
-            assertEquals(1, joinSpec.numConjunctiveGroups());
+            assertEquals(3, joinSpec.getNumJoinClauses());
         }
 
         { // match any gives three conjunctive groups, one for each join column pair
             JoinSpecification joinSpec =
                 new JoinSpecification.Builder(leftSettings, rightSettings).conjunctive(false).build();
-            assertEquals(3, joinSpec.numConjunctiveGroups());
+            assertEquals(3, joinSpec.getNumJoinClauses());
         }
 
     }
@@ -458,8 +473,8 @@ public class JoinSpecificationTest {
             JoinTableSettings rightWorkingSettings = rightSettings.condensed(storeRowOffsets);
             rightWorkingSettings.setTable(rightWorkingTable);
 
-            assertArrayEquals(JoinTuple.get(leftSettings, leftOriginalRow),
-                JoinTuple.get(leftWorkingSettings, leftWorkingRow));
+            assertArrayEquals(leftSettings.get(leftOriginalRow),
+                leftWorkingSettings.get(leftWorkingRow));
 
             JoinSpecification working = original.specWith(leftWorkingSettings, rightWorkingSettings);
 
@@ -779,23 +794,20 @@ public class JoinSpecificationTest {
     @Test
     public void testIllegalArguments() {
         assertThrows(InvalidSettingsException.class, () ->
-            // must not pass left settings as right settings.
-            new JoinSpecification.Builder(m_settings[RIGHT], m_settings[LEFT]).build()
-        );
+        // must not pass left settings as right settings.
+        new JoinSpecification.Builder(m_settings[RIGHT], m_settings[LEFT]).build());
 
         final DataTableSpec abc = new DataTableSpec(col("A"), col("B"), col("C"));
 
         assertThrows(InvalidSettingsException.class, () ->
-            // can't reference non-existing columns in join or include columns
-            new JoinTableSettings(false, JoinColumn.array("non-existing join column"), new String[]{"A", "B", "C"},
-                InputTable.LEFT, abc)
-        );
+        // can't reference non-existing columns in join or include columns
+        new JoinTableSettings(false, JoinColumn.array("non-existing join column"), new String[]{"A", "B", "C"},
+            InputTable.LEFT, abc));
 
         assertThrows(InvalidSettingsException.class, () ->
-            // can't reference non-existing columns in join or include columns
-            new JoinTableSettings(false, JoinColumn.array("A"), new String[]{"non-existing include column"},
-                InputTable.LEFT, abc)
-        );
+        // can't reference non-existing columns in join or include columns
+        new JoinTableSettings(false, JoinColumn.array("A"), new String[]{"non-existing include column"},
+            InputTable.LEFT, abc));
 
         assertThrows(InvalidSettingsException.class, () -> {
             // can't declare unequal number of join columns in both settings
@@ -807,9 +819,8 @@ public class JoinSpecificationTest {
         });
 
         assertThrows(InvalidSettingsException.class, () ->
-            // declare at least one join column.
-            new JoinTableSettings(false, new JoinColumn[0], new String[]{"A"}, InputTable.LEFT, abc)
-        );
+        // declare at least one join column.
+        new JoinTableSettings(false, new JoinColumn[0], new String[]{"A"}, InputTable.LEFT, abc));
 
     }
 

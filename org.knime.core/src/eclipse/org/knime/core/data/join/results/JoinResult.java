@@ -48,6 +48,8 @@
  */
 package org.knime.core.data.join.results;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -64,8 +66,8 @@ import org.knime.core.node.CanceledExecutionException.CancelChecker;
 
 /**
  * Defines methods for collectors of join output rows. For collecting results, it offers
- * {@link #addMatch(DataRow, long, DataRow, long) addMatch}, {@link #addLeftOuter(DataRow, long) addLeftOuter}, and
- * {@link #addRightOuter(DataRow, long) addRightOuter}.
+ * {@link #offerMatch(DataRow, long, DataRow, long) addMatch}, {@link #offerLeftOuter(DataRow, long) addLeftOuter}, and
+ * {@link #offerRightOuter(DataRow, long) addRightOuter}.
  *
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  * @param <T> the type of the results, either {@link OutputSplit} or {@link OutputCombined}.
@@ -74,8 +76,7 @@ import org.knime.core.node.CanceledExecutionException.CancelChecker;
 public interface JoinResult<T> {
 
     /**
-     * Categories for join results, e.g., matches and unmatched rows. In some situations it is appropriate to refer to
-     * all result types, e.g., for {@link OutputMode#COMBINED}.
+     * Categories for join results, e.g., matches and unmatched rows.
      */
     enum ResultType {
             /** rows that join rows from the left and right input tables */
@@ -87,11 +88,8 @@ public interface JoinResult<T> {
             /** {@link #MATCHES}, {@link #LEFT_OUTER}, and {@link #RIGHT_OUTER} */
             ALL;
 
-        private static final ResultType[] MATCHES_AND_OUTER = new ResultType[]{MATCHES, LEFT_OUTER, RIGHT_OUTER};
-
-        static ResultType[] matchesAndOuter() {
-            return MATCHES_AND_OUTER;
-        }
+        public static final List<ResultType> MATCHES_AND_OUTER =
+            Collections.unmodifiableList(List.of(MATCHES, LEFT_OUTER, RIGHT_OUTER));
     }
 
     /**
@@ -146,30 +144,6 @@ public interface JoinResult<T> {
     }
 
     /**
-     * Processes a {@link DataRow} along with its offset in the {@link BufferedDataTable} that contains the row. In case
-     * the operation needs a long time, it is allowed to throw a {@link CanceledExecutionException}.
-     */
-    @FunctionalInterface
-    static interface RowHandlerCancelable {
-        /**
-         * @param row the data row to process, e.g., index a hash row, look up a probe row, or output an unmatched row.
-         * @param offset the position of the row in the input table it comes from, e.g., for sorting outputs or marking
-         *            rows as matched in a bitset.
-         * @throws CanceledExecutionException
-         */
-        void accept(DataRow row, long offset) throws CanceledExecutionException;
-    }
-
-    /**
-     * Processes a {@link DataRow} along with its offset in the {@link BufferedDataTable} that contains the row.
-     */
-    @FunctionalInterface
-    static interface RowHandler extends RowHandlerCancelable {
-        @Override
-        void accept(DataRow row, long offset);
-    }
-
-    /**
      * Safely process each row in the table using a {@link CloseableRowIterator} that eventually frees resources,
      * checking for cancellation in between row processing.
      *
@@ -210,49 +184,17 @@ public interface JoinResult<T> {
     }
 
     /**
-     * Accepts the given row as a an inner join result if {@link #isRetainMatched()} is true. If
-     * {@link #isRetainMatched()} is false, the operation has no effect.
-     *
-     * @param left a row from the left input table
-     * @param leftOrder sort order of the left row, e.g., row offset in the left table
-     * @param right a row from the right input table
-     * @param rightOrder analogous
-     * @return whether the match was accepted.
-     */
-    boolean addMatch(DataRow left, long leftOrder, DataRow right, long rightOrder);
-
-    /**
-     * Adds this row to the unmatched rows from the left table, if {@link #isRetainUnmatched(InputTable)} for
-     * {@link InputTable#LEFT}, otherwise does nothing.
-     *
-     * @param row a row from the left input table
-     * @param offset sort order of the row, e.g., row offset in the table
-     * @return whether the row was accepted
-     */
-    boolean addLeftOuter(DataRow row, long offset);
-
-    /**
-     * Adds this row to the unmatched rows from the right table, if {@link #isRetainUnmatched(InputTable)} for
-     * {@link InputTable#RIGHT}, otherwise does nothing.
-     *
-     * @param row a row from the right input table
-     * @param offset sort order of the row, e.g., row offset in the table
-     * @return whether the row was accepted
-     */
-    boolean addRightOuter(DataRow row, long offset);
-
-    /**
      * @return the {@link OutputCombined} or {@link OutputSplit} instance providing access to the join results.
      */
     T getResults();
 
-    /** @return whether to keep rows added via {@link #addMatch(DataRow, long, DataRow, long)}. */
+    /** @return whether to keep rows added via {@link #offerMatch(DataRow, long, DataRow, long)}. */
     boolean isRetainMatched();
 
     /**
      * @param side left input table or right input table.
-     * @return whether to keep rows added via {@link #addLeftOuter(DataRow, long)} or
-     *         {@link #addRightOuter(DataRow, long)}.
+     * @return whether to keep rows added via {@link #offerLeftOuter(DataRow, long)} or
+     *         {@link #offerRightOuter(DataRow, long)}.
      */
     boolean isRetainUnmatched(InputTable side);
 
@@ -261,7 +203,7 @@ public interface JoinResult<T> {
      * @return a callback to add unmatched rows from the desired side
      */
     default RowHandler unmatched(final InputTable side) {
-        return side.isLeft() ? this::addLeftOuter : this::addRightOuter;
+        return side.isLeft() ? this::offerLeftOuter : this::offerRightOuter;
     }
 
     /**
@@ -269,15 +211,28 @@ public interface JoinResult<T> {
      */
     void lowMemory();
 
+
     /**
-     * If to-be-joined data is too big to join in memory, the join will be split in several passes. In this case, the
-     * handling of unmatched rows from the table (left/right) that is used as probe input has to be deferred until the
-     * last pass over the probe input has been completed.
+     * Signal that false positive unmatched rows may occur for the given input side, i.e., unmatched rows from that
+     * input side may turn out <b>to be matched later on</b>.<br/>
      *
-     * @param side for which input table to set
-     * @param defer whether to enable deferred collection of unmatched rows
+     * For instance, after a call to {@link #deferUnmatchedRows(InputTable)} with inputSide = {@link InputTable#LEFT} it
+     * is valid to first call {@link #offerLeftOuter(DataRow, long)} for a row X from the left input table and afterwards
+     * {@link #offerMatch(DataRow, long, DataRow, long)} for that same row X. The implementation will then cancel the
+     * unmatched status of X and will not output it as unmatched when calling {@link #getResults()}.
+     *
+     * All calls to this method after the first call for the same input side have no effect - deferred collection is
+     * then already activated.
+     *
+     * @param side
      */
-    void setDeferUnmatchedRows(final InputTable side, final boolean defer);
+    void deferUnmatchedRows(final InputTable side);
+
+    /**
+     * Enable tracking of matches to reject matches in {@link #offerMatch(DataRow, long, DataRow, long)} if they have
+     * been added before.
+     */
+    void deduplicateMatches();
 
     /**
      * Returns a mapping from input row keys to output row keys.
@@ -288,5 +243,64 @@ public interface JoinResult<T> {
      *         side to the rows in the output of the given result type
      */
     Optional<Map<RowKey, Set<RowKey>>> getHiliteMapping(final InputTable side, final ResultType resultType);
+
+    /**
+     * Implementation for adding an unmatched row from the right table.
+     *
+     * @param row same as for {@link #offerRightOuter(DataRow, long)}
+     * @param offset same as for {@link #offerRightOuter(DataRow, long)}
+     * @return same as for {@link #offerRightOuter(DataRow, long)}
+     */
+    boolean doAddRightOuter(final DataRow row, final long offset);
+
+    /**
+     * Implementation for adding an unmatched row from the left table.
+     *
+     * @param row same as for {@link #offerLeftOuter(DataRow, long)}
+     * @param offset same as for {@link #offerLeftOuter(DataRow, long)}
+     * @return same as for {@link #offerLeftOuter(DataRow, long)}
+     */
+    boolean doAddLeftOuter(final DataRow row, final long offset);
+
+    /**
+     * Implementation for adding a matching row pair.
+     *
+     * @param left same as for {@link #offerMatch(DataRow, long, DataRow, long)}
+     * @param leftOrder same as for {@link #offerMatch(DataRow, long, DataRow, long)}
+     * @param right same as for {@link #offerMatch(DataRow, long, DataRow, long)}
+     * @param rightOrder same as for {@link #offerMatch(DataRow, long, DataRow, long)}
+     * @return same as for {@link #offerMatch(DataRow, long, DataRow, long)}
+     *
+     */
+    boolean doAddMatch(final DataRow left, final long leftOrder, final DataRow right, final long rightOrder);
+
+    /**
+     * Accepts the given row as a an inner join result if {@link #isRetainMatched()} is true. If
+     * {@link #isRetainMatched()} is false, the operation has no effect.
+     *
+     * @param left a row from the left input table
+     * @param leftOrder sort order of the left row, e.g., row offset in the left table
+     * @param right a row from the right input table
+     * @param rightOrder analogous
+     */
+    void offerMatch(final DataRow left, final long leftOrder, final DataRow right, final long rightOrder);
+
+    /**
+     * Adds this row to the unmatched rows from the left table, if {@link #isRetainUnmatched(InputTable)} for
+     * {@link InputTable#LEFT}, otherwise does nothing.
+     *
+     * @param row a row from the left input table
+     * @param offset sort order of the row, e.g., row offset in the table
+     */
+    void offerLeftOuter(final DataRow row, final long offset);
+
+    /**
+     * Adds this row to the unmatched rows from the right table, if {@link #isRetainUnmatched(InputTable)} for
+     * {@link InputTable#RIGHT}, otherwise does nothing.
+     *
+     * @param row a row from the right input table
+     * @param offset sort order of the row, e.g., row offset in the table
+     */
+    void offerRightOuter(final DataRow row, final long offset);
 
 }

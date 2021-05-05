@@ -98,7 +98,8 @@ public class JoinSpecification {
              */
             RIGHT;
 
-        InputTable other() {
+        /** @return the opposite input table */
+        public InputTable other() {
             return this == LEFT ? RIGHT : LEFT;
         }
 
@@ -107,14 +108,13 @@ public class JoinSpecification {
             return this == LEFT;
         }
 
-        private static final InputTable[] LEFT_RIGHT = new InputTable[] {LEFT, RIGHT};
+        private static final List<InputTable> LEFT_RIGHT = List.of(LEFT, RIGHT);
 
         /**
-         * @return an array containing the constants {@link #LEFT} and {@link #RIGHT}. One could also use
-         *         {@link InputTable#values()}, but in case another constant is added, code may break in different
-         *         places.
+         * @return both constants {@link #LEFT} and {@link #RIGHT}. One could also use {@link InputTable#values()}, but
+         *         in case another constant is added, code may break in different places.
          */
-        static InputTable[] leftRight() {
+        public static List<InputTable> both() {
             return LEFT_RIGHT;
         }
     }
@@ -431,7 +431,7 @@ public class JoinSpecification {
      *            the name longer to eventually succeed, but the method has a safety net for that.
      * @return a data column spec with a unique name, according to predicate
      */
-    static DataColumnSpec columnDisambiguate(final DataColumnSpec columnSpec, final Predicate<String> isAmbiguous,
+    public static DataColumnSpec columnDisambiguate(final DataColumnSpec columnSpec, final Predicate<String> isAmbiguous,
         final UnaryOperator<String> disambiguator) {
 
         String name = columnSpec.getName();
@@ -655,6 +655,18 @@ public class JoinSpecification {
         private UnaryOperator<String> m_columnNameDisambiguator = s -> s.concat(" (#1)");
 
         /**
+         * @param copyFrom a blueprint JoinSpecification
+         * @return a JoinSpecification with identical settings
+         */
+        public static Builder from(final JoinSpecification copyFrom) {
+            return new Builder(copyFrom.getSettings(InputTable.LEFT), copyFrom.getSettings(InputTable.RIGHT))
+                .conjunctive(copyFrom.isConjunctive()).retainMatched(copyFrom.isRetainMatched())
+                .rowKeyFactory(copyFrom.getRowKeyFactory()).outputRowOrder(copyFrom.getOutputRowOrder())
+                .mergeJoinColumns(copyFrom.isMergeJoinColumns())
+                .columnNameDisambiguator(copyFrom.getColumnNameDisambiguator());
+        }
+
+        /**
          * @param leftSettings specifies which columns to keep, join on, etc. for the left input table
          * @param rightSettings specifies which columns to keep, join on, etc. for the right input table
          */
@@ -744,6 +756,33 @@ public class JoinSpecification {
             this.m_columnNameDisambiguator = columnNameDisambiguator;
             return this;
         }
+
+        /**
+         * Remove all join clauses except the specified one. Used when breaking down disjunctive joins (match rows that agree in at least one join clause).
+         * @param clause zero-based offset of the join clause, e.g., when the join table settings passed to the
+         *            constructor specify join clauses A = X, B = Y, C = Z, and clause is 1, then the new join
+         *            specification will specify only the second join clause, B = Y
+         * @return this for fluent API
+         */
+        public Builder usingOnlyJoinClause(final int clause) throws InvalidSettingsException {
+            m_leftSettings = m_leftSettings.usingOnlyJoinClause(clause);
+            m_rightSettings = m_rightSettings.usingOnlyJoinClause(clause);
+            return this;
+        }
+
+//        /**
+//         * Used for merging join results (deduplication) and hiliting (visualize input rows that were combined into a
+//         * specific output row).
+//         *
+//         * @param trackResultLineage Whether the implementation is supposed to memorize for each output row which two
+//         *            input rows produced it.
+//         * @return this for fluent API
+//         */
+//        public Builder trackResultLineage(final boolean trackResultLineage) {
+//            m_trackResultLineage = trackResultLineage;
+//            return this;
+//        }
+
 
         /**
          * @return the JoinSpecification
@@ -841,12 +880,11 @@ public class JoinSpecification {
     }
 
     /**
-     * @return the number of conjunctions in the join predicate.
+     * @return the number of equality clauses (columnA = columnX) in the join predicate.
      */
-    int numConjunctiveGroups() {
+    public int getNumJoinClauses() {
         // the number of join clauses is always equal for left and right side
-        int numJoinClauses = getSettings(InputTable.LEFT).getJoinClauses().size();
-        return isConjunctive() ? 1 : numJoinClauses;
+        return getSettings(InputTable.LEFT).getJoinClauses().size();
     }
 
     /**
