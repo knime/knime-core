@@ -49,6 +49,7 @@ package org.knime.core.internal;
 
 import java.io.File;
 import java.net.URL;
+import java.util.Arrays;
 
 import org.knime.core.node.KNIMEConstants;
 
@@ -132,6 +133,27 @@ public final class KNIMEPath {
             initDefaultDir();
         }
         return workspaceDir;
+    }
+
+    /**
+     * Sets a custom workspace directory path. Only for testing purposes and will fail if not called from the
+     * TestflowRunnerApplication!
+     *
+     * @param wsDir the workspace directory or <code>null</code> if it should be reset to the default one
+     */
+    public static void setWorkspaceDirPath(final File wsDir) {
+        // precaution to ensure that this is really only be called from the TestflowRunnerApplication
+        if (Arrays.stream(Thread.currentThread().getStackTrace())
+            .noneMatch(e -> e.getClassName().equals("org.knime.testing.core.ng.TestflowRunnerApplication"))) {
+            throw new IllegalStateException(
+                "A custom workspace directory is only allowed to be set by the TestflowRunnerApplication");
+        }
+
+        if (wsDir == null) {
+            initializePaths();
+        } else {
+            workspaceDir = wsDir;
+        }
     }
 
     /**
