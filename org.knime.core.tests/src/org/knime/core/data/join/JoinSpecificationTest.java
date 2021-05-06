@@ -52,6 +52,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.knime.core.data.join.JoinTestInput.cell;
 import static org.knime.core.data.join.JoinTestInput.col;
 
@@ -240,6 +241,18 @@ public class JoinSpecificationTest {
      * Test the output spec generation for two sequential joins with lots of duplicate columns and all combinations of
      * merge join columns on/off for the first and the second join, respectively. This was built around a use case where
      * the output spec contained duplicate column names.
+     *
+     * <pre>
+     * original table  xx xy yx yy M
+     * concated table  xx xy yx yy M xx=xy yx_ yy_ M_
+     * </pre>
+     *
+     * For all combinations of mergeFirst, mergeSeconds
+     * <ol>
+     * <li>B = self-join the original table with merge join columns = mergeFirst</li>
+     * <li>Perform a join of the original table with B using merge join columns = mergeSecond</li>
+     * </ol>
+     * {@link JoinSpecification#specForMatchTable()} will throw an Exception if column name deduplication does not work.
      */
     @Test
     public void joinJoinedResults() throws InvalidSettingsException {
@@ -252,7 +265,7 @@ public class JoinSpecificationTest {
             original.getDataTableSpec().getColumnNames(), InputTable.RIGHT, original);
 
         //this has the output specs of a table produced by a concat operation of original with the self-join result (see below)
-        BufferedDataTable concated = JoinTestInput.table("xx,xy,yx,yy,M,xx=xy,yx (#1),yy (#1),M (#1)", new DataRow[0]);
+        BufferedDataTable concated = JoinTestInput.table("xx,xy,yx,yy,M,xx=xy,yx_,yy_,M_", new DataRow[0]);
         JoinTableSettings concatedSettings = new JoinTableSettings(true, JoinColumn.array("xx"),
             concated.getDataTableSpec().getColumnNames(), InputTable.LEFT, concated);
 
@@ -260,15 +273,35 @@ public class JoinSpecificationTest {
             for (boolean mergeSecond : new boolean[]{false, true}) {
                 // compute the output spec for a self join on the original table
                 JoinSpecification selfJoin = new JoinSpecification.Builder(firstLeftSettings, firstRightSettings)
-                    .mergeJoinColumns(mergeFirst).build();
-                DataTableSpec selfJoinSpec = selfJoin.specForMatchTable();
+                        .mergeJoinColumns(mergeFirst)
+                        .columnNameDisambiguator(s -> s + "_")
+                        .build();
+
+                DataTableSpec selfJoinSpec = null;
+                try {
+                    selfJoinSpec = selfJoin.specForMatchTable();
+                } catch(IllegalArgumentException e) {
+                    fail(String.format("Column name disambiguation failed for mergeFirst = %s %n%s",
+                        mergeFirst, e.getMessage()));
+                }
+
 
                 // now join the self-join result with the concated table
                 JoinTableSettings selfJoinSettings = new JoinTableSettings(true, JoinColumn.array("xx"),
                     selfJoinSpec.getColumnNames(), InputTable.RIGHT, selfJoinSpec);
                 JoinSpecification followUpJoin = new JoinSpecification.Builder(concatedSettings, selfJoinSettings)
-                    .mergeJoinColumns(mergeSecond).build();
-                DataTableSpec followUpJoinSpec = followUpJoin.specForMatchTable();
+                        .columnNameDisambiguator(s -> s + "_")
+                        .mergeJoinColumns(mergeSecond)
+                        .build();
+
+                try {
+                    followUpJoin.specForMatchTable();
+                } catch (IllegalArgumentException e) {
+                    fail(String.format(
+                        "Column name disambiguation failed for mergeFirst = %s mergeSecond = %s %n"
+                            + "Self-join output spec: %s %n" + "%s",
+                        mergeFirst, mergeSecond, selfJoinSpec.toString(), e.getMessage()));
+                }
             }
         }
     }

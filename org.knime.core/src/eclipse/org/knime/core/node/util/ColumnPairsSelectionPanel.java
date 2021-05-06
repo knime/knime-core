@@ -238,6 +238,10 @@ public class ColumnPairsSelectionPanel extends JPanel {
 
     /**
      * Initialize a combo box and set the selected index.
+     * 
+     * Unfortunately, this an expensive operation due to {@link DefaultComboBoxModel#setSelectedItem(Object)} but is
+     * still called multiple times when opening a dialog.
+     * 
      * @param spec the spec of the underlying table
      * @param comboBox the combo box to initialize
      * @param selected the value that should be selected
@@ -263,6 +267,7 @@ public class ColumnPairsSelectionPanel extends JPanel {
             if (null != selected
                     && colSpec.getName().equals(selected)) {
                 foundSelectedItem = true;
+                // this is very slow on large comboboxes
                 comboBoxModel.setSelectedItem(colSpec);
             }
         }

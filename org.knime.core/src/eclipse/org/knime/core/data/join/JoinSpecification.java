@@ -45,7 +45,10 @@
 package org.knime.core.data.join;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
@@ -189,6 +192,7 @@ public class JoinSpecification {
     /**
      * Contains the offsets of the columns in the left and right table to include if join columns are merged. Is null if
      * {@link #isMergeJoinColumns()} is false.
+     * TODO enummap
      */
     private final int[][] m_mergeIncludes = new int[2][];
 
@@ -257,17 +261,20 @@ public class JoinSpecification {
     private DataTableSpec specForNormalMatchTable() {
 
         // add all included columns from the left table to the output spec
-        final List<String> resultColumnNames = new ArrayList<>(getSettings(InputTable.LEFT).getIncludeColumnNames());
         // resolve names to column specifications
-        final List<DataColumnSpec> resultColumns = resultColumnNames.stream()
-            .map(getSettings(InputTable.LEFT).getTableSpec()::getColumnSpec).collect(Collectors.toList());
+        final DataTableSpec leftSpec = getSettings(InputTable.LEFT).getTableSpec();
+        final List<DataColumnSpec> resultColumns = Arrays.stream(getSettings(InputTable.LEFT).getIncludeColumns())
+            .mapToObj(leftSpec::getColumnSpec).collect(Collectors.toList());
+
+        // create a data structure for fast lookup of already used (thus reserved) column names
+        final Set<String> takenNames = new HashSet<>(getSettings(InputTable.LEFT).getIncludeColumnNames());
 
         final DataTableSpec rightSpec = getSettings(InputTable.RIGHT).getTableSpec();
         // change names if they clash with column name from left table
         for (int includedColumn : getSettings(InputTable.RIGHT).getIncludeColumns()) {
             DataColumnSpec spec = rightSpec.getColumnSpec(includedColumn);
-            DataColumnSpec disambiguated = columnDisambiguate(spec, resultColumnNames::contains);
-            resultColumnNames.add(disambiguated.getName());
+            DataColumnSpec disambiguated = columnDisambiguate(spec, takenNames::contains);
+            takenNames.add(disambiguated.getName());
             resultColumns.add(disambiguated);
         }
 
@@ -276,26 +283,49 @@ public class JoinSpecification {
     }
 
     /**
-     * See {@link #isMergeJoinColumns()}
+     * <ol>
+     * <li>Decide which columns to include for the left table</li>
+     * <ol>
+     * A column must either
+     * <ul>
+     * <li>be in the included columns</li>
+     * <li>have a join partner in the right table that is included</li>
+     * </ul>
+     * The name of the column is
+     * <ul>
+     * <li>unchanged if it has no join partners</li>
+     * <li>set to A=B_1...=B_n where A is the name of the column and B_1...B_n are the names of the columns in the right
+     * table to which A is compared</li>
+     * </ul>
+     * </ol>
+     * <li>Decide which columns to include for the right table</li>
+     * </ol>
+     * See {@link Builder#mergeJoinColumns(boolean)}
      */
     private DataTableSpec specForMergedMatchTable() {
 
-        List<String> leftIncludes = getSettings(InputTable.LEFT).getIncludeColumnNames();
-        List<String> leftJoinColumns = getSettings(InputTable.LEFT).getJoinColumnNames();
+        final Set<String> leftIncludes = new HashSet<>(getSettings(InputTable.LEFT).getIncludeColumnNames());
+        final Set<String> leftJoinColumns = new HashSet<>(getSettings(InputTable.LEFT).getJoinColumnNames());
+
+        // create a data structure for fast lookup of already used (thus reserved) column names
+        final Set<String> takenNames = new HashSet<>();
+
+        List<DataColumnSpec> leftOutputColumns = new ArrayList<>();
 
         // columns in the left table must be included explicitly or have a join partner that is included explicitly
         // in order to be included in the output table spec
-        List<DataColumnSpec> leftOutputColumns = new ArrayList<>();
         for (DataColumnSpec colSpec : getSettings(InputTable.LEFT).getTableSpec()) {
             final String name = colSpec.getName();
             boolean includedDirectly = leftIncludes.contains(name);
             if (includedDirectly && !leftJoinColumns.contains(name)) {
+                takenNames.add(colSpec.getName());
                 leftOutputColumns.add(colSpec);
             } else {
                 if (includedDirectly || m_includedViaMerge.test(name)) {
                     List<String> rightNames = columnJoinPartners(InputTable.LEFT, name).collect(Collectors.toList());
                     if (rightNames.contains(name)) {
                         // if one of the join partner columns has the same name, use that name
+                        takenNames.add(colSpec.getName());
                         leftOutputColumns.add(colSpec);
                     } else {
                         // otherwise output a new column with name "Col1=Col2" instead of this column
@@ -307,22 +337,28 @@ public class JoinSpecification {
                         DataColumnSpecCreator newSpec = new DataColumnSpecCreator(colSpec);
                         newSpec.setName(newName);
                         newSpec.removeAllHandlers();
-                        leftOutputColumns.add(columnDisambiguate(newSpec.createSpec(),
-                            s -> leftOutputColumns.stream().anyMatch(spec -> spec.getName().equals(s))));
+                        DataColumnSpec disambiguatedColumn =
+                            columnDisambiguate(newSpec.createSpec(), takenNames::contains);
+                        takenNames.add(disambiguatedColumn.getName());
+                        leftOutputColumns.add(disambiguatedColumn);
                     }
                 }
             }
         }
 
         final List<DataColumnSpec> rightOutputColumns = new ArrayList<>();
+
+        //
         for (int name : m_mergeIncludes[InputTable.RIGHT.ordinal()]) {
             DataColumnSpec columnSpec = getSettings(InputTable.RIGHT).getTableSpec().getColumnSpec(name);
             // in case the included column name clashes with a
             DataColumnSpec disambiguatedColumnSpec =
-                columnDisambiguate(columnSpec, s -> Stream.concat(leftOutputColumns.stream(), rightOutputColumns.stream())
-                    .anyMatch(col -> col.getName().equals(s)));
+                columnDisambiguate(columnSpec, takenNames::contains);
+            takenNames.add(disambiguatedColumnSpec.getName());
             rightOutputColumns.add(disambiguatedColumnSpec);
         }
+
+        // concat left and right column specs
         return new DataTableSpec(
             Stream.concat(leftOutputColumns.stream(), rightOutputColumns.stream()).toArray(DataColumnSpec[]::new));
 
