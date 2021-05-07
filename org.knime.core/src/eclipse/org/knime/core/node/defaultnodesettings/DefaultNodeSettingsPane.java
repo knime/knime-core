@@ -88,6 +88,10 @@ public class DefaultNodeSettingsPane extends NodeDialogPane {
 
     private boolean m_horizontal = false;
 
+    public List<DialogComponent> getDCs() {
+        return m_dialogComponents;
+    }
+
     /**
      * Constructor for DefaultNodeDialogPane.
      */
@@ -295,9 +299,9 @@ public class DefaultNodeSettingsPane extends NodeDialogPane {
 
     /**
      * This method can be overridden to load additional settings. Override
-     * this method if you have mixed input types (different port types). 
+     * this method if you have mixed input types (different port types).
      * Alternatively, if your node only has ordinary data inputs, consider
-     * to overwrite the 
+     * to overwrite the
      * {@link #loadAdditionalSettingsFrom(NodeSettingsRO, DataTableSpec[])}
      * method, which does the type casting already.
      *
@@ -324,10 +328,10 @@ public class DefaultNodeSettingsPane extends NodeDialogPane {
             loadAdditionalSettingsFrom(settings, dtsArray);
         }
     }
-    
+
     /**
      * Override hook to load additional settings when all input ports are
-     * data ports. This method is the specific implementation to 
+     * data ports. This method is the specific implementation to
      * {@link #loadAdditionalSettingsFrom(NodeSettingsRO, PortObjectSpec[])} if
      * all input ports are data ports. All elements in the <code>specs</code>
      * argument are guaranteed to be non-null.
@@ -338,8 +342,8 @@ public class DefaultNodeSettingsPane extends NodeDialogPane {
     public void loadAdditionalSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
     }
-    
-    
+
+
 
     /**
      * This method can be overridden to save additional settings to the given
