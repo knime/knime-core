@@ -52,6 +52,7 @@ import java.net.URL;
 import java.util.Arrays;
 
 import org.knime.core.node.KNIMEConstants;
+import org.knime.core.node.util.CheckUtils;
 
 /**
  * Container for a field, which holds the home directory of KNIME. This class
@@ -136,18 +137,18 @@ public final class KNIMEPath {
     }
 
     /**
-     * Sets a custom workspace directory path. Only for testing purposes and will fail if not called from the
-     * TestflowRunnerApplication!
+     * Sets a custom workspace directory path. Only for testing purposes and will fail if not called from a
+     * workflow-test!
      *
      * @param wsDir the workspace directory or <code>null</code> if it should be reset to the default one
      */
     public static void setWorkspaceDirPath(final File wsDir) {
-        // precaution to ensure that this is really only be called from the TestflowRunnerApplication
-        if (Arrays.stream(Thread.currentThread().getStackTrace())
-            .noneMatch(e -> e.getClassName().equals("org.knime.testing.core.ng.TestflowRunnerApplication"))) {
-            throw new IllegalStateException(
-                "A custom workspace directory is only allowed to be set by the TestflowRunnerApplication");
-        }
+        final String allowedTestClass = "org.knime.testing.core.ng.WorkflowTest";
+        // precaution to ensure that this is really only be called from a test case
+        CheckUtils.checkState(
+            Arrays.stream(Thread.currentThread().getStackTrace())
+                .anyMatch(e -> e.getClassName().equals(allowedTestClass)),
+            "A custom workspace directory is only allowed to be set by the %s", allowedTestClass);
 
         if (wsDir == null) {
             initializePaths();
