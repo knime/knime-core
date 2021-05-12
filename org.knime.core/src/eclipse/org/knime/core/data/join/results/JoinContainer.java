@@ -126,11 +126,8 @@ abstract class JoinContainer<T> implements JoinResult<T> {
     /**
      * @param joinImplementation contains the {@link JoinSpecification} according to which the tables are combined and
      *            additional configuration such as {@link JoinImplementation#isEnableHiliting()}.
-     * @param deferUnmatchedRows If false, output unmatched rows directly. If true, allow calls to
-     *            {@link #offerMatch(DataRow, long, DataRow, long)} to cancel the unmatched status of a row until
-     *            collecting the unmatched rows via {@link UnmatchedRowsCollector#collectUnmatched()}.
      */
-    JoinContainer(final JoinImplementation joinImplementation, final boolean deferUnmatchedRows) {
+    JoinContainer(final JoinImplementation joinImplementation) {
         m_joinSpecification = joinImplementation.getJoinSpecification();
         m_exec = joinImplementation.getExecutionContext();
         m_checkCanceled = CancelChecker.checkCanceledPeriodically(m_exec);
@@ -159,11 +156,12 @@ abstract class JoinContainer<T> implements JoinResult<T> {
 
     @Override
     public void deferUnmatchedRows(final InputTable side) {
-        if( ! (m_unmatchedRows.get(side) instanceof UnmatchedRowsCollector)) {
-            final RowHandler handler = side.isLeft() ? this::doAddLeftOuter : this::doAddRightOuter;
+        boolean collectUnmatched = m_joinSpecification.getSettings(side).isRetainUnmatched();
+        boolean isAleradyDeferred = m_unmatchedRows.get(side) instanceof UnmatchedRowsCollector;
+        if (collectUnmatched && !isAleradyDeferred) {
             final BufferedDataTable table =
-                    m_joinSpecification.getSettings(side).getTable().orElseThrow(IllegalStateException::new);
-            m_unmatchedRows.put(side, new UnmatchedRowsCollector(table, handler, m_checkCanceled));
+                m_joinSpecification.getSettings(side).getTable().orElseThrow(IllegalStateException::new);
+            m_unmatchedRows.put(side, new UnmatchedRowsCollector(table, m_checkCanceled));
         }
     }
 
@@ -173,14 +171,14 @@ abstract class JoinContainer<T> implements JoinResult<T> {
     }
 
     /**
-     * Offers a pair of rows for which all join criteria are fulfilled. If the match is accepted by
-     * {@link MatchStrategy#matched(DataRow, long, DataRow, long)}, the match is included in the output.
+     * Offers a pair of rows for which all join criteria are fulfilled. The match might be rejected if
+     * {@link #deduplicateMatches()} was called before and a match with an identical (row offset in left table, row
+     * offset in right table) pair was added before.
      *
      * @param left a row from the left input table
      * @param leftOrder sort order of the left row, e.g., row offset in the left table
      * @param right a row from the right input table
      * @param rightOrder analogous
-     * @return whether the match was accepted.
      */
     @Override
     public void offerMatch(final DataRow left, final long leftOrder, final DataRow right, final long rightOrder) {
@@ -340,7 +338,6 @@ abstract class JoinContainer<T> implements JoinResult<T> {
         return m_joinSpecification.isRetainUnmatched(side);
     }
 
-    // TODO make hilite mapping a property of the join container, the implementation doesn't need to know about it (I think)
     @Override
     public Optional<Map<RowKey, Set<RowKey>>> getHiliteMapping(final InputTable side, final ResultType resultType) {
 
@@ -369,8 +366,19 @@ abstract class JoinContainer<T> implements JoinResult<T> {
         }
     }
 
+    /**
+     * Once no more rows are added to the {@link JoinContainer}, the unmatched rows are collected prior to creating the
+     * output tables. If unmatched rows are directly output, e.g., using {@link RowCollector#passThrough()}) as
+     * {@link RowCollector}, this will do nothing. When using {@link UnmatchedRowsCollector}, this will now add the
+     * unmatched rows that were on hold to the results.
+     *
+     * @param side whether to collect the left or right unmatched rows
+     * @throws CanceledExecutionException
+     */
     void collectUnmatchedRows(final InputTable side) throws CanceledExecutionException {
-        m_unmatchedRows.get(side).collectUnmatched();
+        // collection happens only once, so no offerings anymore: do add the unmatched rows to the container now.
+        final RowHandler handler = side.isLeft() ? this::doAddLeftOuter : this::doAddRightOuter;
+        m_unmatchedRows.get(side).collectUnmatched(handler);
     }
 
     void collectUnmatchedRows(final ResultType resultType) throws CanceledExecutionException {
