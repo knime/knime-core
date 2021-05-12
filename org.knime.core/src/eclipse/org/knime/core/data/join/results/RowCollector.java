@@ -53,16 +53,9 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.CanceledExecutionException.CancelChecker;
 
 /**
- * A handler for unmatched rows. In the simplest case, it just outputs a row to {@link JoinResult} when passing a row to
- * {@link #unmatchedLeft(DataRow, long)}. If a row can be unmatched in one situation and matched in another (e.g., row
- * is joined against an incomoplete index or joined in multiple partitions), this handler provides a
- * {@link #matched(DataRow, long, DataRow, long)} that cancels a previous {@link #unmatchedLeft(DataRow, long)} call.
- * This will also make all future {@link #unmatchedLeft(DataRow, long)} calls on the same row ineffective. <br/>
- * <br/>
- * If a row is send to disk the subsequent {@link DiskBucket#join(DiskBucket, JoinResult)} will perform a
- * {@link BlockHashJoin#join(JoinResult, UnmatchedRows, UnmatchedRows)} that may generate
- * {@link #matched(DataRow, long, DataRow, long)} events, such that unmatched probe and hash rows can only be collected
- * after {@link HybridHashJoin#phase3}. This is done via {@link #collectUnmatched()}.
+ * A handler for unmatched rows. In the simplest case, it directly outputs all rows passed to
+ * {@link #unmatched(DataRow, long)}. See {@link UnmatchedRowsCollector} for a row collector that implements deferred
+ * collection of unmatched rows.
  *
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  */
@@ -75,30 +68,44 @@ public interface RowCollector {
     void matched(long matchedProbeRowOffset);
 
     /**
+     * Suggest that a given row is unmatched. If the same has been marked as {@link #matched(long)} before, this will
+     * have no effect. If in the future the same row is marked as {@link #matched(long)}, the row will not be output
+     * during {@link #collectUnmatched(RowHandler)}.
      *
-     * Several calls to this method with identical input will <b>not</b> add the row several times, since this just
-     * marks a given row as unmatched.
+     * Several calls to this method with identical rows will <b>not</b> add the row several times, since this just marks
+     * a given row as unmatched.
      *
-     * Since we're joining against partial indexes of the hash input, not finding a match isn't informative since the
-     * probe row could be matched during a future pass over the probe input, when different rows of the hash input have
-     * been indexed.
+     * This is useful when joining against partial indexes of the hash input (due to insufficient heap space) in which
+     * case a probe row can be matched during a future pass over the probe input with a different index. Also useful
+     * during match any, when the result is collected after performing several match all joins, in which case the
+     * unmatched rows can only be collected after the last join.
+     *
+     * @param unmatchedProbeRow a row that doesn't have a matching row in the other table
+     * @param unmatchedProbeRowOffset the row's offset in the table it is contained in
+     * @return false if the row has been previously marked as {@link #matched(long)}, true otherwise.
      */
     boolean unmatched(DataRow unmatchedProbeRow, long unmatchedProbeRowOffset);
 
+    /**
+     * Suggest freeing up heap space.
+     */
     void lowMemory();
 
     /**
-     * Outputs unmatched rows into the handler {@link #m_unmatched} passed during construction. This method is meant to
-     * be called only once. It is assumed that unmatched rows are produced and collected in the end, NOT produced,
-     * collected, produced, ... This clears all data structures.
+     * Processes unmatched rows using the given handler. This method is meant to be called only once, i.e., it is
+     * assumed that unmatched rows are produced and collected in the end, NOT produced, collected, produced, ...
+     *
+     * @param handler process each row that was previously marked with {@link #unmatched(DataRow, long)} and not
+     *            subsequently unmarked with {@link #matched(long)}. No guarantees on the processing order.
      *
      * @throws CanceledExecutionException if the {@link CancelChecker} passed at construction signaled that execution is
      *             canceled
-     *
-     * TODO change contract to something that gets a handler?
      */
-    void collectUnmatched() throws CanceledExecutionException;
+    void collectUnmatched(RowHandler handler) throws CanceledExecutionException;
 
+    /**
+     * @return a default row collector
+     */
     static RowCollector passThrough() {
         return new RowCollector() {
 
@@ -117,7 +124,7 @@ public interface RowCollector {
             }
 
             @Override
-            public void collectUnmatched() {
+            public void collectUnmatched(final RowHandler handler) {
                 /**
                  * If probe rows are output directly, we don't need to collect them in the end.
                  */

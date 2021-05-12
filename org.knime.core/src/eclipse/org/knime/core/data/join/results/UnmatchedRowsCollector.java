@@ -84,8 +84,6 @@ public class UnmatchedRowsCollector implements RowCollector {
 
     private final CancelChecker m_checkCanceled;
 
-    private final RowHandler m_unmatched;
-
     private final BufferedDataTable m_probeInput;
 
     /**
@@ -102,13 +100,10 @@ public class UnmatchedRowsCollector implements RowCollector {
     /**
      * @param probeInput the table used as probe input, as processed with {@link MatchStrategy#matched(DataRow, long, DataRow, long)}
      *            and {@link #unmatchedLeft(DataRow, long)}
-     * @param unmatched what to do with the unmatched probe rows
      * @param checkCanceled a way to check whether execution was aborted
      */
-    public UnmatchedRowsCollector(final BufferedDataTable probeInput, final RowHandler unmatched,
-        final CancelChecker checkCanceled) {
+    public UnmatchedRowsCollector(final BufferedDataTable probeInput, final CancelChecker checkCanceled) {
         m_probeInput = probeInput;
-        m_unmatched = unmatched;
         m_checkCanceled = checkCanceled;
     }
 
@@ -153,21 +148,21 @@ public class UnmatchedRowsCollector implements RowCollector {
      * {@inheritDoc}
      */
     @Override
-    public void collectUnmatched() throws CanceledExecutionException {
+    public void collectUnmatched(final RowHandler handler) throws CanceledExecutionException {
 
         // use the cached rows to produce output
         if (m_candidates != null) {
             while (!m_candidates.isEmpty()) {
                 m_checkCanceled.checkCanceled();
                 Entry<Long, DataRow> unmatchedRow = m_candidates.pollFirstEntry();
-                m_unmatched.accept(unmatchedRow.getValue(), unmatchedRow.getKey());
+                handler.accept(unmatchedRow.getValue(), unmatchedRow.getKey());
             }
             m_candidates.clear();
         } else {
             // do a single pass over the probe input, output every unmatched row into the join results
             RowHandler outputIfUnmatched = (datarow, originalRowOffset) -> {
                 if (!m_wasMatched.get((int)originalRowOffset)) {
-                    m_unmatched.accept(datarow, originalRowOffset);
+                    handler.accept(datarow, originalRowOffset);
                 }
             };
             JoinResult.enumerateWithResources(m_probeInput, outputIfUnmatched, m_checkCanceled);
