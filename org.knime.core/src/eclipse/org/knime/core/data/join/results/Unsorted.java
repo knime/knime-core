@@ -75,23 +75,19 @@ public final class Unsorted {
     /**
      * @param joinImplementation an implementation of a join algorithm (provides join specification and implementation
      *            details, e.g., whether hiliting is on).
-     * @param deferUnmatchedRows whether to hold on to unmatched rows until they are collected
      * @return a join container that returns results sorted by left row offset, then right row offset.
      */
-    public static JoinResult<OutputSplit> createSplit(final JoinImplementation joinImplementation,
-        final boolean deferUnmatchedRows) {
-        return new Split(joinImplementation, deferUnmatchedRows);
+    public static JoinResult<OutputSplit> createSplit(final JoinImplementation joinImplementation) {
+        return new Split(joinImplementation);
     }
 
     /**
      * @param joinImplementation an implementation of a join algorithm (provides join specification and implementation
      *            details, e.g., whether hiliting is on).
-     * @param deferUnmatchedRows whether to hold on to unmatched rows until they are collected
      * @return a join container that returns results as a combined table
      */
-    public static JoinResult<OutputCombined> createCombined(final JoinImplementation joinImplementation,
-        final boolean deferUnmatchedRows) {
-        return new Combined(joinImplementation, deferUnmatchedRows);
+    public static JoinResult<OutputCombined> createCombined(final JoinImplementation joinImplementation) {
+        return new Combined(joinImplementation);
     }
 
     /**
@@ -131,11 +127,10 @@ public final class Unsorted {
         };
 
         /**
-         * @param joinImplementation as in {@link JoinContainer#JoinContainer(JoinImplementation, boolean)}
-         * @param deferUnmatchedRows
+         * @param joinImplementation as in {@link JoinContainer#JoinContainer(JoinImplementation)}
          */
-        Split(final JoinImplementation joinImplementation, final boolean deferUnmatchedRows) {
-            super(joinImplementation, deferUnmatchedRows);
+        Split(final JoinImplementation joinImplementation) {
+            super(joinImplementation);
             // create working specs and output containers
             for (ResultType rt : ResultType.MATCHES_AND_OUTER) {
                 m_splitOutputContainers.put(rt,
@@ -213,10 +208,9 @@ public final class Unsorted {
 
         /**
          * @param joinImplementation
-         * @param deferUnmatchedRows
          */
-        Combined(final JoinImplementation joinImplementation, final boolean deferUnmatchedRows) {
-            super(joinImplementation, deferUnmatchedRows);
+        Combined(final JoinImplementation joinImplementation) {
+            super(joinImplementation);
             m_singleTableContainer =
                 joinImplementation.getExecutionContext().createDataContainer(m_outputSpecs.get(ResultType.MATCHES));
         }

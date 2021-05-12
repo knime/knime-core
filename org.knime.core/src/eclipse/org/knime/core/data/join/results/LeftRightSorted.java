@@ -76,23 +76,19 @@ public final class LeftRightSorted {
     /**
      * @param joinImplementation an implementation of a join algorithm (provides join specification and implementation
      *            details, e.g., whether hiliting is on).
-     * @param deferUnmatchedRows whether to hold on to unmatched rows until they are collected
      * @return a join container that returns results sorted by left row offset, then right row offset.
      */
-    public static JoinResult<OutputSplit> createSplit(final JoinImplementation joinImplementation,
-        final boolean deferUnmatchedRows) {
-        return new Split(joinImplementation, deferUnmatchedRows);
+    public static JoinResult<OutputSplit> createSplit(final JoinImplementation joinImplementation) {
+        return new Split(joinImplementation);
     }
 
     /**
      * @param joinImplementation an implementation of a join algorithm (provides join specification and implementation
      *            details, e.g., whether hiliting is on).
-     * @param deferUnmatchedRows whether to hold on to unmatched rows until they are collected
      * @return a join container that returns results as a combined table
      */
-    public static JoinResult<OutputCombined> createCombined(final JoinImplementation joinImplementation,
-        final boolean deferUnmatchedRows) {
-        return new Combined(joinImplementation, deferUnmatchedRows);
+    public static JoinResult<OutputCombined> createCombined(final JoinImplementation joinImplementation) {
+        return new Combined(joinImplementation);
     }
 
     private static class Split extends JoinContainer<OutputSplit> {
@@ -120,8 +116,8 @@ public final class LeftRightSorted {
             }
         };
 
-        Split(final JoinImplementation joinImplementation, final boolean deferUnmatchedRows) {
-            super(joinImplementation, deferUnmatchedRows);
+        Split(final JoinImplementation joinImplementation) {
+            super(joinImplementation);
 
             // create working specs and output containers
             for (ResultType rt : ResultType.MATCHES_AND_OUTER) {
@@ -264,8 +260,8 @@ public final class LeftRightSorted {
          */
         private BufferedDataTable m_singleTableResult;
 
-        Combined(final JoinImplementation joinImplementation, final boolean deferUnmatchedRows) {
-            super(joinImplementation, deferUnmatchedRows);
+        Combined(final JoinImplementation joinImplementation) {
+            super(joinImplementation);
 
             // add a long column to each output spec for storing the combined left and right row offset
             m_workingSpec = OrderedRow.withOffset(m_outputSpecs.get(ResultType.MATCHES));

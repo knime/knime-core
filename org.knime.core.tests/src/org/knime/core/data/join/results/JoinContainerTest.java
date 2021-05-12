@@ -69,7 +69,6 @@ import org.knime.core.node.InvalidSettingsException;
 /**
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  */
-@SuppressWarnings("javadoc")
 public class JoinContainerTest {
 
     private static final int LEFT = 0, RIGHT = 1;
@@ -117,7 +116,7 @@ public class JoinContainerTest {
         JoinSpecification jspec =
             new JoinSpecification.Builder(m_settings[LEFT], m_settings[RIGHT]).mergeJoinColumns(true).build();
         JoinContainer<OutputCombined> container = (JoinContainer<OutputCombined>)Unsorted
-                .createCombined(JoinAlgorithm.AUTO.getFactory().create(jspec, JoinTestInput.EXEC), false);
+                .createCombined(JoinAlgorithm.AUTO.getFactory().create(jspec, JoinTestInput.EXEC));
 
         { // pad left
             DataRow padded = container.rightToSingleTableFormat(m_rows[RIGHT]);
@@ -159,7 +158,7 @@ public class JoinContainerTest {
         JoinSpecification jspec =
             new JoinSpecification.Builder(m_settings[LEFT], m_settings[RIGHT]).mergeJoinColumns(false).build();
         JoinContainer<OutputCombined> container = (JoinContainer<OutputCombined>)Unsorted
-            .createCombined(JoinAlgorithm.AUTO.getFactory().create(jspec, JoinTestInput.EXEC), false);
+            .createCombined(JoinAlgorithm.AUTO.getFactory().create(jspec, JoinTestInput.EXEC));
 
         { // pad left
             DataRow padded = container.rightToSingleTableFormat(m_rows[RIGHT]);

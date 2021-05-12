@@ -56,15 +56,10 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.data.join.JoinSpecification;
 import org.knime.core.data.join.JoinSpecification.InputTable;
-import org.knime.core.data.join.JoinSpecification.OutputRowOrder;
 import org.knime.core.data.join.JoinTableSettings;
 import org.knime.core.data.join.results.JoinResult;
 import org.knime.core.data.join.results.JoinResult.Output;
-import org.knime.core.data.join.results.JoinResult.OutputCombined;
-import org.knime.core.data.join.results.JoinResult.OutputSplit;
-import org.knime.core.data.join.results.LeftRightSorted;
 import org.knime.core.data.join.results.RowHandlerCancelable;
-import org.knime.core.data.join.results.Unsorted;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.CanceledExecutionException.CancelChecker;
@@ -116,40 +111,6 @@ class BlockHashJoin extends JoinImplementation {
         m_extractRowOffsets = false;
     }
 
-    @Override
-    public JoinResult<OutputCombined> joinOutputCombined() throws CanceledExecutionException, InvalidSettingsException {
-        // deferred collection is initially off, but will be turned on in case the join can't be done in memory
-        final boolean deferUnmatchedRows = false;
-
-        JoinResult<OutputCombined> results;
-
-        results = m_joinSpecification.getOutputRowOrder() == OutputRowOrder.ARBITRARY
-            ? Unsorted.createCombined(this, deferUnmatchedRows)
-            : LeftRightSorted.createCombined(this, deferUnmatchedRows);
-
-        if (m_joinSpecification.isConjunctive()) {
-            return join(results);
-        } else {
-            return matchAny(BlockHashJoin::new, results);
-        }
-    }
-
-    @Override
-    public JoinResult<OutputSplit> joinOutputSplit() throws CanceledExecutionException, InvalidSettingsException {
-        // deferred collection is initially off, but will be turned on in case the join can't be done in memory
-        final boolean deferUnmatchedRows = false;
-
-        final JoinResult<OutputSplit> results = m_joinSpecification.getOutputRowOrder() == OutputRowOrder.ARBITRARY
-            ? Unsorted.createSplit(this, deferUnmatchedRows)
-            : LeftRightSorted.createSplit(this, deferUnmatchedRows);
-
-        if (m_joinSpecification.isConjunctive()) {
-            return join(results);
-        } else {
-            return matchAny(BlockHashJoin::new, results);
-        }
-    }
-
     /**
      * <pre>
      * algorithm overview:
@@ -174,7 +135,12 @@ class BlockHashJoin extends JoinImplementation {
      * @throws CanceledExecutionException
      */
     @Override
-    public <T extends Output> JoinResult<T> join(final JoinResult<T> results) throws CanceledExecutionException {
+    public <T extends Output> JoinResult<T> join(final JoinResult<T> results)
+        throws CanceledExecutionException, InvalidSettingsException {
+
+        if (! m_joinSpecification.isConjunctive()) {
+            return matchAny(BlockHashJoin::new, results);
+        }
 
         // if only one of the input tables is present, add its rows to the unmatched results
         if (incompleteInput(m_joinSpecification, results)) {
@@ -233,7 +199,6 @@ class BlockHashJoin extends JoinImplementation {
                     results.lowMemory();
 
                     // process probe input once to be able to clear out the current hash index
-                    // however,
                     singlePass(probe, index, unmatchedHashRows);
                     index = newHashIndex.get();
                 }

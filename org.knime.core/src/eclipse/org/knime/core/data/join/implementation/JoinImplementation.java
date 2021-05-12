@@ -62,6 +62,8 @@ import org.knime.core.data.join.results.JoinResult;
 import org.knime.core.data.join.results.JoinResult.Output;
 import org.knime.core.data.join.results.JoinResult.OutputCombined;
 import org.knime.core.data.join.results.JoinResult.OutputSplit;
+import org.knime.core.data.join.results.LeftRightSorted;
+import org.knime.core.data.join.results.Unsorted;
 import org.knime.core.data.util.memory.MemoryAlertSystem;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -72,9 +74,8 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeProgressMonitor;
 
 /**
- * A join implementation executes the join by iterating over the provided tables and generating output rows from
- * matching input rows. Implementations differ in their speed/memory-usage tradeoff and also in the type of join
- * predicates they support, e.g., {@link NestedLoopJoin} supports only equijoins.
+ * Base class for algorithms that join two tables. Provides convenience methods such as {@link #joinOutputSplit()}, a
+ * default implementation for hiliting and fields for implementation details, such as the maximum number of open files.
  *
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  * @since 4.2
@@ -124,17 +125,25 @@ public abstract class JoinImplementation {
      *
      * @return a container with the results, typically the same container object passed into this method
      * @throws CanceledExecutionException
+     * @throws InvalidSettingsException
      */
-    public abstract <T extends Output> JoinResult<T> join(JoinResult<T> results) throws CanceledExecutionException;
+    public abstract <T extends Output> JoinResult<T> join(JoinResult<T> results)
+        throws CanceledExecutionException, InvalidSettingsException;
 
     /**
      * Convenience method that creates an appropriate {@link JoinResult} and passes it to {@link #join(JoinResult)}.
+     *
      * @return join results as a single combined table
      * @throws CanceledExecutionException
      * @throws InvalidSettingsException
      */
-    public abstract JoinResult<OutputCombined> joinOutputCombined()
-        throws CanceledExecutionException, InvalidSettingsException;
+    public JoinResult<OutputCombined> joinOutputCombined() throws CanceledExecutionException, InvalidSettingsException {
+
+        final JoinResult<OutputCombined> results = m_joinSpecification.getOutputRowOrder() == OutputRowOrder.ARBITRARY
+            ? Unsorted.createCombined(this) : LeftRightSorted.createCombined(this);
+
+        return join(results);
+    }
 
     /**
      * Convenience method that creates an appropriate {@link JoinResult} and passes it to {@link #join(JoinResult)}.
@@ -142,8 +151,12 @@ public abstract class JoinImplementation {
      * @throws CanceledExecutionException
      * @throws InvalidSettingsException
      */
-    public abstract JoinResult<OutputSplit> joinOutputSplit()
-        throws CanceledExecutionException, InvalidSettingsException;
+    public JoinResult<OutputSplit> joinOutputSplit() throws CanceledExecutionException, InvalidSettingsException {
+        final JoinResult<OutputSplit> results = m_joinSpecification.getOutputRowOrder() == OutputRowOrder.ARBITRARY
+            ? Unsorted.createSplit(this) : LeftRightSorted.createSplit(this);
+
+        return join(results);
+    }
 
     /**
      * Generic match any join algorithm that decomposes <code>L1=R1 OR L2=R2 OR ... OR LN = LN</code> into N joins on a
@@ -161,8 +174,8 @@ public abstract class JoinImplementation {
      * @throws InvalidSettingsException
      * @throws CanceledExecutionException
      */
-    protected <T extends Output> JoinResult<T> matchAny(final JoinerFactory constructor,
-        final JoinResult<T> results) throws CanceledExecutionException, InvalidSettingsException {
+    <T extends Output> JoinResult<T> matchAny(final JoinerFactory constructor, final JoinResult<T> results)
+        throws CanceledExecutionException, InvalidSettingsException {
 
         // we need deduplication of matches since a pair of rows may match under multiple join clauses
         results.deduplicateMatches();
@@ -177,9 +190,9 @@ public abstract class JoinImplementation {
         for (int clause = 0; clause < clauses; clause++) {
 
             // join only on one column pair in each iteration
-            JoinSpecification intermediateJoinSpec = JoinSpecification.Builder.from(m_joinSpecification) // copy spec
+            JoinSpecification intermediateJoinSpec = JoinSpecification.Builder
+                .from(m_joinSpecification) // copy spec
                 .usingOnlyJoinClause(clause) // compute intermediate join results for i-th join clause
-                .outputRowOrder(OutputRowOrder.LEFT_RIGHT) // sorted output for efficient merge
                 .conjunctive(true) // every single criterion join can be considered conjunctive
                 .build();
 
