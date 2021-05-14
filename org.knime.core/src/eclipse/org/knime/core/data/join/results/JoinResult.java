@@ -249,18 +249,16 @@ public interface JoinResult<T> {
      *
      * @param row same as for {@link #offerRightOuter(DataRow, long)}
      * @param offset same as for {@link #offerRightOuter(DataRow, long)}
-     * @return same as for {@link #offerRightOuter(DataRow, long)}
      */
-    boolean doAddRightOuter(final DataRow row, final long offset);
+    void doAddRightOuter(final DataRow row, final long offset);
 
     /**
      * Implementation for adding an unmatched row from the left table.
      *
      * @param row same as for {@link #offerLeftOuter(DataRow, long)}
      * @param offset same as for {@link #offerLeftOuter(DataRow, long)}
-     * @return same as for {@link #offerLeftOuter(DataRow, long)}
      */
-    boolean doAddLeftOuter(final DataRow row, final long offset);
+    void doAddLeftOuter(final DataRow row, final long offset);
 
     /**
      * Implementation for adding a matching row pair.
@@ -269,10 +267,9 @@ public interface JoinResult<T> {
      * @param leftOrder same as for {@link #offerMatch(DataRow, long, DataRow, long)}
      * @param right same as for {@link #offerMatch(DataRow, long, DataRow, long)}
      * @param rightOrder same as for {@link #offerMatch(DataRow, long, DataRow, long)}
-     * @return same as for {@link #offerMatch(DataRow, long, DataRow, long)}
      *
      */
-    boolean doAddMatch(final DataRow left, final long leftOrder, final DataRow right, final long rightOrder);
+    void doAddMatch(final DataRow left, final long leftOrder, final DataRow right, final long rightOrder);
 
     /**
      * Accepts the given row as a an inner join result if {@link #isRetainMatched()} is true. If

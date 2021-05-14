@@ -74,7 +74,7 @@ import org.knime.core.node.CanceledExecutionException.CancelChecker;
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  */
 @SuppressWarnings("javadoc")
-public class UnmatchedRowsCollector implements RowCollector {
+public class DeferredUnmatchedRowCollector implements UnmatchedRowCollector {
 
     /**
      * The i-th bit is set if the i-th row in the probe input was matched to a row in a partial hash index at least
@@ -102,7 +102,7 @@ public class UnmatchedRowsCollector implements RowCollector {
      *            and {@link #unmatchedLeft(DataRow, long)}
      * @param checkCanceled a way to check whether execution was aborted
      */
-    public UnmatchedRowsCollector(final BufferedDataTable probeInput, final CancelChecker checkCanceled) {
+    public DeferredUnmatchedRowCollector(final BufferedDataTable probeInput, final CancelChecker checkCanceled) {
         m_probeInput = probeInput;
         m_checkCanceled = checkCanceled;
     }

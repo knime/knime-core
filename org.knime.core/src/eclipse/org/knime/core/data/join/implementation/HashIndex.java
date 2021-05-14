@@ -195,7 +195,7 @@ class HashIndex {
 
     /**
      *
-     * @param joinTuple data cells holding the values of the columns appearing in the join clauses. can be null to
+     * @param joinTuple data cells holding the values of the columns appearing in the join clauses. Can be null to
      *            indicate that one of the join columns contains a missing value. The row will then be treated as
      *            unmatched rows (missing value equals nothing).
      * @param row

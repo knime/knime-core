@@ -79,6 +79,7 @@ import gnu.trove.set.hash.TLongHashSet;
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  * @since 4.2
  */
+@SuppressWarnings("javadoc") // only for bogus warnings: 'protected' visibility for malformed doc comments hides...
 abstract class JoinContainer<T> implements JoinResult<T> {
 
     /** The format of the output table for matches, unmatched rows, etc. */
@@ -112,7 +113,7 @@ abstract class JoinContainer<T> implements JoinResult<T> {
     /**
      * Handlers for unmatched rows. Either output rows directly or defer until collected.
      */
-    private final Map<InputTable, RowCollector> m_unmatchedRows = new EnumMap<>(InputTable.class);
+    private final Map<InputTable, UnmatchedRowCollector> m_unmatchedRows = new EnumMap<>(InputTable.class);
 
     /**
      * A mapping for each input table that associates the {@link RowKey} of an input row to the {@link RowKey}s of the
@@ -132,8 +133,8 @@ abstract class JoinContainer<T> implements JoinResult<T> {
         m_exec = joinImplementation.getExecutionContext();
         m_checkCanceled = CancelChecker.checkCanceledPeriodically(m_exec);
 
-        m_unmatchedRows.put(InputTable.LEFT, RowCollector.passThrough());
-        m_unmatchedRows.put(InputTable.RIGHT, RowCollector.passThrough());
+        m_unmatchedRows.put(InputTable.LEFT, UnmatchedRowCollector.passThrough());
+        m_unmatchedRows.put(InputTable.RIGHT, UnmatchedRowCollector.passThrough());
 
         m_outputSpecs.put(ResultType.LEFT_OUTER, m_joinSpecification.specForUnmatched(InputTable.LEFT));
         m_outputSpecs.put(ResultType.RIGHT_OUTER, m_joinSpecification.specForUnmatched(InputTable.RIGHT));
@@ -157,17 +158,17 @@ abstract class JoinContainer<T> implements JoinResult<T> {
     @Override
     public void deferUnmatchedRows(final InputTable side) {
         boolean collectUnmatched = m_joinSpecification.getSettings(side).isRetainUnmatched();
-        boolean isAleradyDeferred = m_unmatchedRows.get(side) instanceof UnmatchedRowsCollector;
+        boolean isAleradyDeferred = m_unmatchedRows.get(side) instanceof DeferredUnmatchedRowCollector;
         if (collectUnmatched && !isAleradyDeferred) {
             final BufferedDataTable table =
                 m_joinSpecification.getSettings(side).getTable().orElseThrow(IllegalStateException::new);
-            m_unmatchedRows.put(side, new UnmatchedRowsCollector(table, m_checkCanceled));
+            m_unmatchedRows.put(side, new DeferredUnmatchedRowCollector(table, m_checkCanceled));
         }
     }
 
     @Override
     public void lowMemory() {
-        m_unmatchedRows.values().forEach(RowCollector::lowMemory);
+        m_unmatchedRows.values().forEach(UnmatchedRowCollector::lowMemory);
     }
 
     /**
@@ -176,7 +177,7 @@ abstract class JoinContainer<T> implements JoinResult<T> {
      * offset in right table) pair was added before.
      *
      * @param left a row from the left input table
-     * @param leftOrder sort order of the left row, e.g., row offset in the left table
+     * @param leftOrder left row's offset in the left table
      * @param right a row from the right input table
      * @param rightOrder analogous
      */
@@ -202,7 +203,7 @@ abstract class JoinContainer<T> implements JoinResult<T> {
     @Override
     public void offerLeftOuter(final DataRow row, final long offset) {
 
-        RowCollector handler = m_unmatchedRows.get(InputTable.LEFT);
+        UnmatchedRowCollector handler = m_unmatchedRows.get(InputTable.LEFT);
 
         // the handler may return false if the row has been matched in an earlier pass over the data
         if (handler.unmatched(row, offset) && isRetainUnmatched(InputTable.LEFT)) {
@@ -220,7 +221,7 @@ abstract class JoinContainer<T> implements JoinResult<T> {
     @Override
     public void offerRightOuter(final DataRow row, final long offset) {
 
-        RowCollector handler = m_unmatchedRows.get(InputTable.RIGHT);
+        UnmatchedRowCollector handler = m_unmatchedRows.get(InputTable.RIGHT);
 
         // the handler may return false if the row has been matched in an earlier pass over the data
         if (handler.unmatched(row, offset) && isRetainUnmatched(InputTable.RIGHT)) {
@@ -368,8 +369,8 @@ abstract class JoinContainer<T> implements JoinResult<T> {
 
     /**
      * Once no more rows are added to the {@link JoinContainer}, the unmatched rows are collected prior to creating the
-     * output tables. If unmatched rows are directly output, e.g., using {@link RowCollector#passThrough()}) as
-     * {@link RowCollector}, this will do nothing. When using {@link UnmatchedRowsCollector}, this will now add the
+     * output tables. If unmatched rows are directly output, e.g., using {@link UnmatchedRowCollector#passThrough()}) as
+     * {@link UnmatchedRowCollector}, this will do nothing. When using {@link DeferredUnmatchedRowCollector}, this will now add the
      * unmatched rows that were on hold to the results.
      *
      * @param side whether to collect the left or right unmatched rows
@@ -437,6 +438,15 @@ abstract class JoinContainer<T> implements JoinResult<T> {
         }
     }
 
+    /**
+     * Determine the output value for a right unmatched row that is output in a combined (single) table output format
+     * with merge join columns on. E.g., the single table format may have a merge column for L1=R1=R2 in which case the
+     * values of columns in the right table columns R1 and R2 are compared. If they are equal, output the common value,
+     * if they are unequal, output a missing value.
+     * @param rightUnmatched a row from the right input table
+     * @param lookupColumns the column indices that are to be merged into a single column
+     * @return
+     */
     private static DataCell consensus(final DataRow rightUnmatched, final int[] lookupColumns) {
         // in case this is not a join column (no lookup columns) just use a missing value
         DataCell consensus = lookupColumns.length == 0 ? DataType.getMissingCell() : null;

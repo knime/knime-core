@@ -104,8 +104,6 @@ public abstract class JoinTestInput {
 
     protected String[] m_rightIncludeColumns;
 
-    BufferedDataTable[] m_tables;
-
     protected JoinTestInput() {
         configureJoin();
     }
@@ -142,8 +140,7 @@ public abstract class JoinTestInput {
      */
     public abstract DataRow[] rightOuter(OutputRowOrder order);
 
-    public JoinSpecification getJoinSpecification(final JoinMode joinMode, final OutputRowOrder outputRowOrder)
-        throws InvalidSettingsException {
+    public JoinSpecification getJoinSpecification(final JoinMode joinMode, final OutputRowOrder outputRowOrder) throws InvalidSettingsException {
 
         JoinTableSettings leftSettings = new JoinTableSettings(joinMode.m_retainLeftUnmatched, m_leftJoinColumns,
             m_leftIncludeColumns, InputTable.LEFT, left());
@@ -151,13 +148,86 @@ public abstract class JoinTestInput {
             m_rightIncludeColumns, InputTable.RIGHT, right());
 
         return new JoinSpecification.Builder(leftSettings, rightSettings)
-            .columnNameDisambiguator(name -> name.concat("*")).mergeJoinColumns(false).conjunctive(true)
+            .columnNameDisambiguator(name -> name.concat("*"))
+            // only default, is overridden in, e.g., consensusMatchAny
+            .mergeJoinColumns(false)
+            // only default, is overridden in disjunctive test inputs
+            .conjunctive(true)
             .outputRowOrder(outputRowOrder).rowKeyFactory(JoinSpecification.createConcatRowKeysFactory("+"))
             .retainMatched(joinMode.m_retainMatches).build();
     }
 
     /**
      * Produce both matches and unmatched rows in both input tables. Include one non-join column from each table.
+     *
+     * Left input table:
+     * <table>
+     * <thead>
+     * <tr>
+     * <th>RowID</th>
+     * <th>Join Column</th>
+     * <th>Nonjoin1</th>
+     * <th>Nonjoin2</th>
+     * </tr>
+     * </thead><tbody>
+     * <tr>
+     * <td>A</td>
+     * <td>A</td>
+     * <td>1</td>
+     * <td>2</td>
+     * </tr>
+     * <tr>
+     * <td>B</td>
+     * <td>B</td>
+     * <td>3</td>
+     * <td>4</td>
+     * </tr>
+     * <tr>
+     * <td>X</td>
+     * <td>X</td>
+     * <td>100</td>
+     * <td>101</td>
+     * </tr>
+     * </tbody>
+     * </table>
+     *
+     * Right input table:
+     * <table>
+     * <thead>
+     * <tr>
+     * <th>RowID</th>
+     * <th>Join Column</th>
+     * <th>Nonjoin1</th>
+     * <th>Nonjoin2</th>
+     * </tr>
+     * </thead><tbody>
+     * <tr>
+     * <td>X</td>
+     * <td>X</td>
+     * <td>102</td>
+     * <td>103</td>
+     * </tr>
+     * <tr>
+     * <td>B</td>
+     * <td>B</td>
+     * <td>7</td>
+     * <td>6</td>
+     * </tr>
+     * <tr>
+     * <td>C</td>
+     * <td>?</td>
+     * <td>7</td>
+     * <td>8</td>
+     * </tr>
+     * <tr>
+     * <td>D</td>
+     * <td>D</td>
+     * <td>9</td>
+     * <td>10</td>
+     * </tr>
+     * </tbody>
+     * </table>
+     *
      */
     abstract static class SmallInput extends JoinTestInput {
 
@@ -475,8 +545,7 @@ public abstract class JoinTestInput {
         }
 
         @Override
-        public JoinSpecification getJoinSpecification(final JoinMode joinMode, final OutputRowOrder outputRowOrder)
-            throws InvalidSettingsException {
+        public JoinSpecification getJoinSpecification(final JoinMode joinMode, final OutputRowOrder outputRowOrder) throws InvalidSettingsException {
 
             JoinTableSettings leftSettings = new JoinTableSettings(joinMode.m_retainLeftUnmatched, m_leftJoinColumns,
                 m_leftIncludeColumns, InputTable.LEFT, left());
@@ -512,8 +581,7 @@ public abstract class JoinTestInput {
         }
 
         @Override
-        public JoinSpecification getJoinSpecification(final JoinMode joinMode, final OutputRowOrder outputRowOrder)
-            throws InvalidSettingsException {
+        public JoinSpecification getJoinSpecification(final JoinMode joinMode, final OutputRowOrder outputRowOrder) throws InvalidSettingsException {
 
             JoinTableSettings leftSettings = new JoinTableSettings(joinMode.m_retainLeftUnmatched, m_leftJoinColumns,
                 m_leftIncludeColumns, InputTable.LEFT, left());
@@ -536,7 +604,8 @@ public abstract class JoinTestInput {
     };
 
     /**
-     * Test match any with a single clause - gives same result as conjunctive with single clause.
+     * Test match any with a duplicated join clause - joining on RowID = RowID OR RowID = RowID. This must not change
+     * the results.
      */
     public static final JoinTestInput redundantMatchAny = new SmallInput() {
         @Override
@@ -551,8 +620,7 @@ public abstract class JoinTestInput {
         }
 
         @Override
-        public JoinSpecification getJoinSpecification(final JoinMode joinMode, final OutputRowOrder outputRowOrder)
-            throws InvalidSettingsException {
+        public JoinSpecification getJoinSpecification(final JoinMode joinMode, final OutputRowOrder outputRowOrder) throws InvalidSettingsException {
 
             JoinTableSettings leftSettings = new JoinTableSettings(joinMode.m_retainLeftUnmatched, m_leftJoinColumns,
                 m_leftIncludeColumns, InputTable.LEFT, left());
@@ -570,6 +638,334 @@ public abstract class JoinTestInput {
         @Override
         public String toString() {
             return "redundantMatchAny";
+        }
+
+    };
+
+    /**
+     * Test match any in combination with merge join columns.
+     */
+    public static final JoinTestInput mergeJoinColumnsMatchAny = new SmallInput() {
+        @Override
+        void configureJoin() {
+            // this configuration produces the default results
+            m_leftJoinColumns = JoinColumn.array("Join Column", "Join Column");
+            m_rightJoinColumns = JoinColumn.array(JoinTableSettings.SpecialJoinColumn.ROW_KEY, "Join Column");
+            m_leftIncludeColumns = new String[]{"Nonjoin1"};
+            m_rightIncludeColumns = new String[]{"Nonjoin2"};
+        }
+
+        @Override
+        public JoinSpecification getJoinSpecification(final JoinMode joinMode, final OutputRowOrder outputRowOrder) throws InvalidSettingsException {
+
+            JoinTableSettings leftSettings =
+                new JoinTableSettings(joinMode.m_retainLeftUnmatched, m_leftJoinColumns,
+                m_leftIncludeColumns, InputTable.LEFT, left());
+            JoinTableSettings rightSettings = new JoinTableSettings(joinMode.m_retainRightUnmatched, m_rightJoinColumns,
+                m_rightIncludeColumns, InputTable.RIGHT, right());
+
+            return new JoinSpecification.Builder(leftSettings, rightSettings)
+                .columnNameDisambiguator(name -> name.concat("*"))
+                // merge join columns
+                .mergeJoinColumns(true)
+                // match any
+                .conjunctive(false).outputRowOrder(outputRowOrder)
+                .rowKeyFactory(JoinSpecification.createConcatRowKeysFactory("+"))
+                .retainMatched(joinMode.m_retainMatches).build();
+        }
+
+        @Override
+        public String toString() {
+            return "mergeJoinColumnsMatchAny";
+        }
+
+    };
+
+    /**
+     * Test the contents of cells that belong to a column that results from three merged join columns.
+     */
+    public static final JoinTestInput consensusMatchAny = new JoinTestInput() {
+
+        @Override
+        BufferedDataTable left() {
+            return JoinTestInput.table("A,B",
+                // matches Row1 (1, 10) output (?, 999) 1=1≠10
+                // matches Row2 (10, 1) output (?, 999) 1≠10≠1
+                // matches Row3 (1, ?)  output (?, 999) 1=1≠?
+                // matches Row4 (?, 1)  output (?, 999) 1≠?≠1
+                // matches Row5 (1, 1)  output (1, 999) 1=1=1
+                "Row1,1,999",
+                // doesn't match anything: output left unmatched (?, 999)
+                "Row2,?,999",
+                // doesn't match anything: output left unmatched (-1, 999)
+                "Row3,-1,999"
+                );
+        }
+
+        @Override
+        BufferedDataTable right() {
+            return JoinTestInput.table("X,Y",
+                        "Row1,1,10",
+                        "Row2,10,1",
+                        "Row3,1,?",
+                        "Row4,?,1",
+                        "Row5,1,1",
+                        // unmatched; strictly spoken, although X=Y the output row should be (?, ?) since A=? and thus
+                        // A≠X=Y, however, it seems more convenient to define the merge join columns such that as much
+                        // information as possible is preserved
+                        "Row6,200,200",
+                        // unmatched, output should be (?, ?) since X≠Y and B=? for a right outer match
+                        "Row7,200,300"
+                        );
+        }
+
+        @Override
+        void configureJoin() {
+            m_leftJoinColumns = JoinColumn.array("A", "A");
+            m_rightJoinColumns = JoinColumn.array("X", "Y");
+            m_leftIncludeColumns = new String[]{"A", "B"};
+            m_rightIncludeColumns = new String[]{"X", "Y"};
+        }
+
+        @Override
+        public JoinSpecification getJoinSpecification(final JoinMode joinMode, final OutputRowOrder outputRowOrder)
+            throws InvalidSettingsException {
+            JoinTableSettings leftSettings = new JoinTableSettings(joinMode.m_retainLeftUnmatched, m_leftJoinColumns,
+                m_leftIncludeColumns, InputTable.LEFT, left());
+            JoinTableSettings rightSettings = new JoinTableSettings(joinMode.m_retainRightUnmatched, m_rightJoinColumns,
+                m_rightIncludeColumns, InputTable.RIGHT, right());
+
+            return new JoinSpecification.Builder(leftSettings, rightSettings)
+                .columnNameDisambiguator(name -> name.concat("*"))
+                .mergeJoinColumns(true)
+                // match any
+                .conjunctive(false).outputRowOrder(outputRowOrder)
+                .rowKeyFactory(JoinSpecification.createConcatRowKeysFactory("+"))
+                .retainMatched(joinMode.m_retainMatches).build();
+        }
+
+        @Override
+        public DataRow[] ordered(final JoinMode mode, final OutputRowOrder order) {
+
+            switch (mode) {
+                case INNER:
+                    return new DataRow[] {
+                        defaultRow("Row1+Row1,?,999"),
+                        defaultRow("Row1+Row2,?,999"),
+                        defaultRow("Row1+Row3,?,999"),
+                        defaultRow("Row1+Row4,?,999"),
+                        defaultRow("Row1+Row5,1,999")
+                    };
+                case LEFT_OUTER:
+                    return new DataRow[] {
+                        defaultRow("Row1+Row1,?,999"),
+                        defaultRow("Row1+Row2,?,999"),
+                        defaultRow("Row1+Row3,?,999"),
+                        defaultRow("Row1+Row4,?,999"),
+                        defaultRow("Row1+Row5,1,999"),
+                        defaultRow("Row2+?,?,999"),
+                        defaultRow("Row3+?,-1,999"),
+                    };
+                case RIGHT_OUTER:
+                    return new DataRow[] {
+                        defaultRow("Row1+Row1,?,999"),
+                        defaultRow("Row1+Row2,?,999"),
+                        defaultRow("Row1+Row3,?,999"),
+                        defaultRow("Row1+Row4,?,999"),
+                        defaultRow("Row1+Row5,1,999"),
+                        defaultRow("?+Row6,200,?"),
+                        defaultRow("?+Row7,?,?"),
+                    };
+                case FULL_OUTER:
+                    return new DataRow[] {
+                        defaultRow("Row1+Row1,?,999"),
+                        defaultRow("Row1+Row2,?,999"),
+                        defaultRow("Row1+Row3,?,999"),
+                        defaultRow("Row1+Row4,?,999"),
+                        defaultRow("Row1+Row5,1,999"),
+                        defaultRow("Row2+?,?,999"),
+                        defaultRow("Row3+?,-1,999"),
+                        defaultRow("?+Row6,200,?"),
+                        defaultRow("?+Row7,?,?"),
+                    };
+                case LEFT_ANTI:
+                    return new DataRow[]{
+                        defaultRow("Row2+?,?,999"),
+                        defaultRow("Row3+?,-1,999"),};
+                case RIGHT_ANTI:
+                    return new DataRow[] {
+                        defaultRow("?+Row6,200,?"),
+                        defaultRow("?+Row7,?,?"),
+                    };
+                case FULL_ANTI:
+                    return new DataRow[] {
+                        defaultRow("Row2+?,?,999"),
+                        defaultRow("Row3+?,-1,999"),
+                        defaultRow("?+Row6,200,?"),
+                        defaultRow("?+Row7,?,?"),
+                    };
+                case EMPTY:
+                    return new DataRow[]{};
+                default:
+                    throw new IllegalStateException();
+            }
+        }
+
+        @Override
+        public String toString() {
+            return "consensus with match any test";
+        }
+
+        @Override
+        public DataRow[] leftOuter(final OutputRowOrder order) {
+            return new DataRow[]{
+                defaultRow("Row2,?,999"),
+                defaultRow("Row3,-1,999")};
+        }
+
+        @Override
+        public DataRow[] rightOuter(final OutputRowOrder order) {
+            // output spec is X, Y
+            return new DataRow[]{
+                defaultRow("Row6,200,200"),
+                defaultRow("Row7,200,300")};
+        }
+    };
+
+    /**
+     * Self join a table with match any and test that the various duplicate matches are filtered out as well as various
+     * false positive unmatched rows.
+     *
+     * Consider for instance row (B, B, B) which matches with itself under all three join clauses.
+     *
+     * Consider for instance joining on column 1=2. This leaves rows (D, C, C) and (E, C, C) unmatched. However, these
+     * rows match under join clause 2=3, such that their unmatched status needs to be canceled throughout the join
+     * process.
+     *
+     * <table>
+     * <thead>
+     * <tr>
+     * <th>1</th>
+     * <th>2</th>
+     * <th>3</th>
+     * </tr>
+     * </thead><tbody>
+     * <tr>
+     * <td>A</td>
+     * <td>A</td>
+     * <td>B</td>
+     * </tr>
+     * <tr>
+     * <td>B</td>
+     * <td>B</td>
+     * <td>B</td>
+     * </tr>
+     * <tr>
+     * <td>C</td>
+     * <td>B</td>
+     * <td>B</td>
+     * </tr>
+     * <tr>
+     * <td>D</td>
+     * <td>C</td>
+     * <td>C</td>
+     * </tr>
+     * <tr>
+     * <td>E</td>
+     * <td>C</td>
+     * <td>C</td>
+     * </tr>
+     * </tbody>
+     * </table>
+     *
+     * Expected output of joining T on T with 1=2 OR 1=3 OR 2=3: (0,0), (1,0), (1,1), (1,2), (2,0), (2,1), (2,2), (2,3),
+     * (2,4), (3,3), (3,4), (4,3), (4,4)
+     *
+     */
+    public static final JoinTestInput selfJoinMatchAny = new JoinTestInput() {
+
+        BufferedDataTable m_table =
+            JoinTestInput.table("1,2,3", "0,A,A,B", "1,B,B,B", "2,C,B,B", "3,D,C,C", "4,E,C,C");
+
+        @Override
+        void configureJoin() {
+            m_leftJoinColumns = JoinColumn.array("1","1","2");
+            m_rightJoinColumns = JoinColumn.array("2","3","3");
+            m_leftIncludeColumns = new String[]{};
+            m_rightIncludeColumns = new String[]{};
+        }
+
+        @Override
+        BufferedDataTable left() {
+            return m_table;
+        }
+
+        @Override
+        BufferedDataTable right() {
+            return m_table;
+        }
+
+        @Override
+        public JoinSpecification getJoinSpecification(final JoinMode joinMode, final OutputRowOrder outputRowOrder) throws InvalidSettingsException {
+            JoinTableSettings leftSettings = new JoinTableSettings(joinMode.m_retainLeftUnmatched, m_leftJoinColumns,
+                m_leftIncludeColumns, InputTable.LEFT, left());
+            JoinTableSettings rightSettings = new JoinTableSettings(joinMode.m_retainRightUnmatched, m_rightJoinColumns,
+                m_rightIncludeColumns, InputTable.RIGHT, right());
+
+            return new JoinSpecification.Builder(leftSettings, rightSettings)
+                .columnNameDisambiguator(name -> name.concat("*")).mergeJoinColumns(false)
+                // match any
+                .conjunctive(false).outputRowOrder(outputRowOrder)
+                .rowKeyFactory(JoinSpecification.createConcatRowKeysFactory("+"))
+                .retainMatched(joinMode.m_retainMatches).build();
+        }
+
+        @Override
+        public DataRow[] ordered(final JoinMode mode, final OutputRowOrder order) {
+
+            switch (mode) {
+                case INNER:
+                case LEFT_OUTER:
+                case RIGHT_OUTER:
+                case FULL_OUTER:
+                    return new DataRow[] {
+                        defaultRow("0+0"),
+                        defaultRow("1+0"),
+                        defaultRow("1+1"),
+                        defaultRow("1+2"),
+                        defaultRow("2+0"),
+                        defaultRow("2+1"),
+                        defaultRow("2+2"),
+                        defaultRow("2+3"),
+                        defaultRow("2+4"),
+                        defaultRow("3+3"),
+                        defaultRow("3+4"),
+                        defaultRow("4+3"),
+                        defaultRow("4+4")
+                    };
+                case LEFT_ANTI:
+                case RIGHT_ANTI:
+                case FULL_ANTI:
+                case EMPTY:
+                    return new DataRow[]{};
+                default:
+                    throw new IllegalStateException();
+            }
+        }
+
+        @Override
+        public String toString() {
+            return "self join (no outer in match any)";
+        }
+
+        @Override
+        public DataRow[] leftOuter(final OutputRowOrder order) {
+            return new DataRow[0];
+        }
+
+        @Override
+        public DataRow[] rightOuter(final OutputRowOrder order) {
+            return new DataRow[0];
         }
 
     };
@@ -793,7 +1189,8 @@ public abstract class JoinTestInput {
             emptyJoinOnRowKeys, emptyHashTable, singleInnerJoin};
 
     public static final JoinTestInput[] DISJUNCTIVE =
-        new JoinTestInput[]{nonAdditionalMatchAny, singleColumnMatchAny, redundantMatchAny};
+        new JoinTestInput[]{nonAdditionalMatchAny, singleColumnMatchAny, redundantMatchAny, selfJoinMatchAny,
+            mergeJoinColumnsMatchAny, consensusMatchAny};
 
     /**
      * Helper to create tables in concise notation.

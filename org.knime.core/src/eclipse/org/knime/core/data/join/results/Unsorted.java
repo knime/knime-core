@@ -139,29 +139,26 @@ public final class Unsorted {
         }
 
         @Override
-        public boolean doAddMatch(final DataRow left, final long leftOffset, final DataRow right,
+        public void doAddMatch(final DataRow left, final long leftOffset, final DataRow right,
             final long rightOffset) {
             final DataRow match = m_joinSpecification.rowJoin(left, right);
             m_splitOutputContainers.get(ResultType.MATCHES).addRowToTable(match);
             addHiliteMapping(ResultType.MATCHES, match.getKey(), InputTable.LEFT, left.getKey());
             addHiliteMapping(ResultType.MATCHES, match.getKey(), InputTable.RIGHT, right.getKey());
-            return true;
         }
 
         @Override
-        public boolean doAddLeftOuter(final DataRow row, final long offset) {
+        public void doAddLeftOuter(final DataRow row, final long offset) {
             DataRow leftOuter = m_joinSpecification.rowProjectOuter(InputTable.LEFT, row);
             m_splitOutputContainers.get(ResultType.LEFT_OUTER).addRowToTable(leftOuter);
             addHiliteMapping(ResultType.LEFT_OUTER, leftOuter.getKey(), InputTable.LEFT, row.getKey());
-            return true;
         }
 
         @Override
-        public boolean doAddRightOuter(final DataRow row, final long offset) {
+        public void doAddRightOuter(final DataRow row, final long offset) {
             DataRow rightOuter = m_joinSpecification.rowProjectOuter(InputTable.RIGHT, row);
             m_splitOutputContainers.get(ResultType.RIGHT_OUTER).addRowToTable(rightOuter);
             addHiliteMapping(ResultType.RIGHT_OUTER, rightOuter.getKey(), InputTable.RIGHT, row.getKey());
-            return true;
         }
 
         BufferedDataTable get(final ResultType resultType) throws CanceledExecutionException {
@@ -216,29 +213,26 @@ public final class Unsorted {
         }
 
         @Override
-        public boolean doAddMatch(final DataRow left, final long leftOrder, final DataRow right,
+        public void doAddMatch(final DataRow left, final long leftOrder, final DataRow right,
             final long rightOrder) {
             DataRow match = m_joinSpecification.rowJoin(left, right);
             m_singleTableContainer.addRowToTable(match);
             addHiliteMapping(ResultType.MATCHES, match.getKey(), InputTable.LEFT, left.getKey());
             addHiliteMapping(ResultType.MATCHES, match.getKey(), InputTable.RIGHT, right.getKey());
-            return true;
         }
 
         @Override
-        public boolean doAddLeftOuter(final DataRow row, final long offset) {
+        public void doAddLeftOuter(final DataRow row, final long offset) {
             DataRow paddedMerged = leftToSingleTableFormat(row);
             m_singleTableContainer.addRowToTable(paddedMerged);
             addHiliteMapping(ResultType.LEFT_OUTER, paddedMerged.getKey(), InputTable.LEFT, row.getKey());
-            return true;
         }
 
         @Override
-        public boolean doAddRightOuter(final DataRow row, final long offset) {
+        public void doAddRightOuter(final DataRow row, final long offset) {
             DataRow paddedMerged = rightToSingleTableFormat(row);
             m_singleTableContainer.addRowToTable(paddedMerged);
             addHiliteMapping(ResultType.RIGHT_OUTER, paddedMerged.getKey(), InputTable.RIGHT, row.getKey());
-            return true;
         }
 
         @Override

@@ -61,10 +61,12 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.join.JoinTableSettings.JoinColumn;
-import org.knime.core.data.join.results.JoinResult;
+import org.knime.core.data.join.results.JoinResult.OutputCombined;
+import org.knime.core.data.join.results.JoinResult.OutputSplit;
 import org.knime.core.node.InvalidSettingsException;
 
 /**
@@ -80,7 +82,7 @@ import org.knime.core.node.InvalidSettingsException;
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  * @since 4.2
  */
-public class JoinSpecification {
+public final class JoinSpecification {
 
     /**
      * Constants to refer to either the left or right input table.
@@ -459,8 +461,8 @@ public class JoinSpecification {
 
     /**
      * Columns to include from the given table when producing results in single table format
-     * ({@link JoinResult#getTable()}) or when producing join results for the matched rows output
-     * ({@link JoinResult#getMatches()}).
+     * ({@link OutputCombined#getTable()}) or when producing join results for the matched rows output
+     * ({@link OutputSplit#getMatches()}).
      *
      * @param side left or right input table
      * @return the indices of the columns to include. Result depends on whether {@link #isMergeJoinColumns()}.
@@ -584,6 +586,11 @@ public class JoinSpecification {
      * @see Builder#mergeJoinColumns(boolean)
      */
     public DataRow rowJoin(final DataRow left, final DataRow right) {
+
+        if(!isConjunctive()) {
+            return rowJoinDisjunctive(left, right);
+        }
+
         int[] leftIncludes = getMatchTableIncludeIndices(InputTable.LEFT);
         int[] rightIncludes = getMatchTableIncludeIndices(InputTable.RIGHT);
 
@@ -592,43 +599,91 @@ public class JoinSpecification {
         int cell = 0;
 
         for (int i = 0; i < leftIncludes.length; i++) {
-            dataCells[cell++] = left.getCell(leftIncludes[i]);
+            dataCells[cell] = left.getCell(leftIncludes[i]);
+            cell++;
         }
 
         for (int i = 0; i < rightIncludes.length; i++) {
-            dataCells[cell++] = right.getCell(rightIncludes[i]);
+            dataCells[cell] = right.getCell(rightIncludes[i]);
+            cell++;
         }
-
-        //        System.out.println(String.format("join %s with %s", left,right));
-        //        System.out.println(Arrays.toString(leftIncludes));
-        //        System.out.println(Arrays.toString(rightIncludes));
 
         return new DefaultRow(m_rowKeyFactory.apply(left, right), dataCells);
     }
 
     /**
-     * Projects a row to only the included columns. This does not depend on {@link #isMergeJoinColumns()} as it assumes
-     * that we're producing separate tables as a basis for a single combined table {@link JoinResult#getTable()}.
-     * Note that for matches, getting rid of non-included columns is taken care of in
+     * Concatenates and projects two rows to form an inner join output row. If merge join columns is selected, drops
+     * join columns from the right table, see {@link Builder#mergeJoinColumns(boolean)} for details.
+     *
+     * @param left non-null row from the left input table
+     * @param right non-null row from the right input table
+     *
+     * @return the output row for the inner join results
+     * @see Builder#mergeJoinColumns(boolean)
+     */
+    private DataRow rowJoinDisjunctive(final DataRow left, final DataRow right) {
+        int[] leftIncludes = getMatchTableIncludeIndices(InputTable.LEFT);
+        int[] rightIncludes = getMatchTableIncludeIndices(InputTable.RIGHT);
+
+        final DataCell[] dataCells = new DataCell[leftIncludes.length + rightIncludes.length];
+
+        int[][] mergeLocations = getColumnLeftMergedLocations();
+
+        int cell = 0;
+
+        for (int i = 0; i < leftIncludes.length; i++) {
+            DataCell leftCell = left.getCell(leftIncludes[i]);
+            dataCells[cell] = isMergeJoinColumns() ? consensus(leftCell, right, mergeLocations[i]) : leftCell;
+            cell++;
+        }
+
+        for (int i = 0; i < rightIncludes.length; i++) {
+            dataCells[cell] = right.getCell(rightIncludes[i]);
+            cell++;
+        }
+
+        return new DefaultRow(m_rowKeyFactory.apply(left, right), dataCells);
+    }
+
+    /**
+     * @return
+     */
+    private static DataCell consensus(final DataCell mergeCell, final DataRow right, final int[] mergeLocations) {
+        DataCell consensus = mergeCell;
+
+        // compare the content of all cells merged into the left table's column.
+        // if they agree, use the common value, otherwise return a missing value
+        for (int i = 0; i < mergeLocations.length; i++) {
+            if(!consensus.equals(right.getCell(mergeLocations[i]))) {
+                return DataType.getMissingCell();
+            }
+        }
+
+        return consensus;
+    }
+
+    /**
+     * Projects a row to only the included columns. Used for split output, in which case the output spec for the equals
+     * the input spec of a given table.
+     *
+     * For matches, getting rid of non-included columns is taken care of in
      * {@link #rowJoin(DataRow, DataRow)}.
      *
      * @param side whether to project to the included columns of the left or right input table
-     * @param row a row from the given input table
-     * @return only the cells selected for inclusion. For the left table, the included columns in the separate output are the
-     * same as
-     * , either to be output directly as unmatched row, or to be padded
-     *         with missing values when producing {@link JoinResult#getTable()}
+     * @param unmatchedRow a row without join partner from the given input table
+     * @return a row containing only the cells selected for inclusion.
      */
-    public DataRow rowProjectOuter(final InputTable side, final DataRow row) {
+    public DataRow rowProjectOuter(final InputTable side, final DataRow unmatchedRow) {
         int[] includes = getSettings(side).getIncludeColumns();
         final DataCell[] dataCells = new DataCell[includes.length];
 
         int cell = 0;
 
         for (int i = 0; i < includes.length; i++) {
-            dataCells[cell++] = row.getCell(includes[i]);
+            dataCells[cell] = unmatchedRow.getCell(includes[i]);
+            cell++;
         }
-        return new DefaultRow(row.getKey(), dataCells);
+        return new DefaultRow(unmatchedRow.getKey(), dataCells);
     }
 
     /**
@@ -763,26 +818,13 @@ public class JoinSpecification {
          *            constructor specify join clauses A = X, B = Y, C = Z, and clause is 1, then the new join
          *            specification will specify only the second join clause, B = Y
          * @return this for fluent API
+         * @throws InvalidSettingsException
          */
         public Builder usingOnlyJoinClause(final int clause) throws InvalidSettingsException {
             m_leftSettings = m_leftSettings.usingOnlyJoinClause(clause);
             m_rightSettings = m_rightSettings.usingOnlyJoinClause(clause);
             return this;
         }
-
-//        /**
-//         * Used for merging join results (deduplication) and hiliting (visualize input rows that were combined into a
-//         * specific output row).
-//         *
-//         * @param trackResultLineage Whether the implementation is supposed to memorize for each output row which two
-//         *            input rows produced it.
-//         * @return this for fluent API
-//         */
-//        public Builder trackResultLineage(final boolean trackResultLineage) {
-//            m_trackResultLineage = trackResultLineage;
-//            return this;
-//        }
-
 
         /**
          * @return the JoinSpecification
@@ -810,7 +852,7 @@ public class JoinSpecification {
             return new JoinSpecification(this);
         }
 
-        JoinSpecification buildTrusted() {
+        private JoinSpecification buildTrusted() {
             try {
                 return build();
             } catch (InvalidSettingsException ex) {
@@ -909,7 +951,7 @@ public class JoinSpecification {
 
             @Override
             public RowKey apply(final DataRow t, final DataRow u) {
-                return RowKey.createRowKey(m_nextRowId++);
+                return RowKey.createRowKey(m_nextRowId++); //NOSONAR
             }
         };
     }
@@ -922,9 +964,9 @@ public class JoinSpecification {
     public static BiFunction<DataRow, DataRow, RowKey> createConcatRowKeysFactory(final String separator) {
         return new BiFunction<DataRow, DataRow, RowKey>() {
 
-            final String m_leftUnmatchedSuffix = separator.concat("?");
+            private final String m_leftUnmatchedSuffix = separator.concat("?");
 
-            final String m_rightUnmatchedPrefix = "?".concat(separator);
+            private final String m_rightUnmatchedPrefix = "?".concat(separator);
 
             @Override
             public RowKey apply(final DataRow left, final DataRow right) {

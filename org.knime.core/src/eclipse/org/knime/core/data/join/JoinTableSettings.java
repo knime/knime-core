@@ -75,6 +75,7 @@ import com.google.common.collect.ImmutableList;
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  * @since 4.2
  */
+@SuppressWarnings("javadoc") // only for bogus warnings: 'protected' visibility for malformed doc comments hides...
 public class JoinTableSettings {
 
     /**
@@ -183,7 +184,9 @@ public class JoinTableSettings {
     }
 
     /**
-     * The values of this enum indicate special join columns, such as joining on a row key.
+     * The values of this enum indicate special join columns, such as joining on a row key. Since a
+     * {@link SpecialJoinColumn} does not refer to a regular column, it also doesn't have a column name, just a
+     * placeholder that is reserved to indicate the semantics of joining it with a column (e.g., extract RowKey).
      */
     public enum SpecialJoinColumn {
             /**
@@ -531,6 +534,8 @@ public class JoinTableSettings {
         return m_materializeColumnIndices;
     }
 
+    private static final DataCell[] CANT_MATCH = null;
+
     /**
      *
      * @param row the row to extract the join column values from
@@ -546,7 +551,7 @@ public class JoinTableSettings {
             cells[i] = joinClauseColumns[i] == SpecialJoinColumn.ROW_KEY.getColumnIndexIndicator()
                 ? new StringCell(row.getKey().getString()) : row.getCell(joinClauseColumns[i]);
             if (cells[i].isMissing()) {
-                return null;
+                return CANT_MATCH;
             }
         }
         return cells;

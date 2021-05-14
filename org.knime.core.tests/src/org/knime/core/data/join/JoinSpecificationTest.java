@@ -91,13 +91,16 @@ public class JoinSpecificationTest {
 
     protected static final int RIGHT = 1;
 
-    DataCell[][] m_dataCells = new DataCell[][]{new DataCell[]{cell("a"), cell("b"), cell("c"), cell("d"), cell("e")},
-        new DataCell[]{cell("u"), cell("v"), cell("w"), cell("x"), cell("y"), cell("z")}};
+    DataCell[][] m_dataCells = new DataCell[][]{
+        new DataCell[]{cell("a"), cell("b"), cell("c"), cell("d"), cell("e")},
+        new DataCell[]{cell("u"), cell("v"), cell("w"), cell("x"), cell("y"), cell("z")}
+    };
 
     protected DataRow[] m_rows =
         new DataRow[]{JoinTestInput.defaultRow("left,a,b,c,d,e"), JoinTestInput.defaultRow("right,u,v,w,x,y,z")};
 
-    DataTableSpec[] m_specs = new DataTableSpec[]{new DataTableSpec(col("A"), col("B"), col("C"), col("D"), col("E")),
+    DataTableSpec[] m_specs = new DataTableSpec[]{
+        new DataTableSpec(col("A"), col("B"), col("C"), col("D"), col("E")),
         new DataTableSpec(col("U"), col("V"), col("W"), col("A"), col("Y"), col("Z"))};
 
     protected JoinTableSettings[] m_settings;
@@ -111,9 +114,12 @@ public class JoinSpecificationTest {
     }
 
     /**
-     * Test the data table specification generated for the join result table. This depends on - which columns are
-     * selected for inclusion in the result table - how column names are disambiguated - whether join columns should be
-     * merged
+     * Test the data table specification generated for the join result table. This depends on
+     * <ul>
+     * <li>which columns are selected for inclusion in the result table</li>
+     * <li>how column names are disambiguated</li>
+     * <li>whether join columns should be merged</li>
+     * </ul>
      *
      * @throws InvalidSettingsException
      */
@@ -125,20 +131,15 @@ public class JoinSpecificationTest {
         { // output table specification for matches
             DataTableSpec spec = joinSpec.specForMatchTable();
 
-            // joined table has seven columns
-            assertEquals(6, spec.getNumColumns());
-
-            // named like this
+            // expected output columns
             int[] indices = spec.columnsToIndices("A", "C", "E", "U", "V", "A (right table)");
-            // and in the above order
             int[] expectedIndices = IntStream.range(0, spec.getNumColumns()).toArray();
             assertArrayEquals(expectedIndices, indices);
         }
 
         { // output table specification for unmatched left rows
             DataTableSpec spec = joinSpec.specForUnmatched(InputTable.LEFT);
-            assertEquals(3, spec.getNumColumns());
-            // named like this
+            // expected output columns
             int[] indices = spec.columnsToIndices("A", "C", "E");
             // and in the above order
             int[] expectedIndices = IntStream.range(0, 3).toArray();
@@ -147,8 +148,7 @@ public class JoinSpecificationTest {
 
         { // output table specification for unmatched right rows
             DataTableSpec spec = joinSpec.specForUnmatched(InputTable.RIGHT);
-            assertEquals(3, spec.getNumColumns());
-            // named like this (no disambiguation)
+            // columns should be named like this (no disambiguation)
             int[] indices = spec.columnsToIndices("U", "V", "A");
             // and in the above order
             int[] expectedIndices = IntStream.range(0, spec.getNumColumns()).toArray();
@@ -163,9 +163,10 @@ public class JoinSpecificationTest {
      * <pre>
      *          A B C  ⨝  A B C
      * include  ✓   ✓       ✓
+     * out      A C B
      * </pre>
      *
-     * the resulting output table spec A C B doesn't have name clashes and doesn't need to disambiguate.
+     * B from left is not included and thus B from right table doesn't doesn't need to disambiguation.
      *
      * When merging join columns
      *
@@ -175,6 +176,10 @@ public class JoinSpecificationTest {
      * join w/ B C
      * out     `A=B` C A `A=B (#1)` `B=C`
      * </pre>
+     *
+     * columns in the right table also need to be disambiguated against newly created merge columns (A=B), however, only
+     * if the merge column merges at least one included column (B=C merges B and C, but neither is included), so B=C
+     * from the right table doesn't need to be disambiguated.
      *
      * @throws InvalidSettingsException
      */
@@ -193,10 +198,7 @@ public class JoinSpecificationTest {
 
             DataTableSpec spec = joinSpec.specForMatchTable();
 
-            // joined table has three columns
-            assertEquals(3, spec.getNumColumns());
-
-            // named like this
+            // expected output columns
             int[] indices = spec.columnsToIndices("A", "C", "B");
             int[] expectedIndices = IntStream.range(0, spec.getNumColumns()).toArray();
             assertArrayEquals(expectedIndices, indices);
@@ -211,18 +213,18 @@ public class JoinSpecificationTest {
                 new String[]{"A", "B", "A=B", "B=C"}, InputTable.RIGHT, abcClash);
 
             JoinSpecification joinSpec =
-                new JoinSpecification.Builder(leftSettings, rightSettings).mergeJoinColumns(true).build();
+                new JoinSpecification.Builder(leftSettings, rightSettings)
+                    .mergeJoinColumns(true)
+                    .columnNameDisambiguator(s -> s + " (#1)")
+                    .build();
 
             DataTableSpec spec = joinSpec.specForMatchTable();
 
-            // named like this
+            // expected output columns
             // B from right table is included explicitly but not present in the output because it is merged into A=B
             int[] indices = spec.columnsToIndices("A=B", "C", "A", "A=B (#1)", "B=C");
             int[] expectedIndices = IntStream.range(0, spec.getNumColumns()).toArray();
             assertArrayEquals(expectedIndices, indices);
-
-            // make sure there are no extra columns floating around
-            assertEquals(5, spec.getNumColumns());
         }
     }
 
@@ -494,27 +496,30 @@ public class JoinSpecificationTest {
 
     }
 
+    /**
+     * Test the lookup of columns on which a column joins.
+     */
     @Test
     public void testColumnJoinPartners() throws InvalidSettingsException {
         {
+            // left table's A joins on right table's A
             JoinTableSettings left = new JoinTableSettings(true, JoinColumn.array("A", "B", "C", "D"),
                 new String[]{"A", "C", "E"}, InputTable.LEFT, m_specs[LEFT]);
+            // right table's A is joined upon from left table's A and D
             JoinTableSettings right = new JoinTableSettings(true, JoinColumn.array("A", "Y", "Z", "A"),
                 new String[]{"U", "V", "A"}, InputTable.RIGHT, m_specs[RIGHT]);
 
             JoinSpecification spec = new JoinSpecification.Builder(left, right).mergeJoinColumns(true).build();
 
             List<String> joinPartnersA = spec.columnJoinPartners(InputTable.LEFT, "A").collect(Collectors.toList());
-            assertEquals(joinPartnersA.get(0), "A");
-            assertEquals(joinPartnersA.size(), 1);
+            assertArrayEquals(new String[] {"A"}, joinPartnersA.toArray(String[]::new));
 
             List<String> joinPartnersABackwards =
                 spec.columnJoinPartners(InputTable.RIGHT, "A").collect(Collectors.toList());
-            assertEquals(joinPartnersABackwards.get(0), "A");
-            assertEquals(joinPartnersABackwards.get(1), "D");
-            assertEquals(joinPartnersABackwards.size(), 2);
+            assertArrayEquals(new String[] {"A", "D"}, joinPartnersABackwards.toArray(String[]::new));
         }
         {
+            // left table's A joins on A, Y, Row Key, and A
             JoinTableSettings left = new JoinTableSettings(true, JoinColumn.array("A", "A", "A", "A"),
                 new String[]{"A", "C", "E"}, InputTable.LEFT, m_specs[LEFT]);
             JoinTableSettings right =
@@ -524,10 +529,7 @@ public class JoinSpecificationTest {
             JoinSpecification spec = new JoinSpecification.Builder(left, right).mergeJoinColumns(true).build();
 
             List<String> joinPartnersA = spec.columnJoinPartners(InputTable.LEFT, "A").collect(Collectors.toList());
-            assertEquals(joinPartnersA.get(0), "A");
-            assertEquals(joinPartnersA.get(1), "Y");
-            assertEquals(joinPartnersA.get(2), "A");
-            assertEquals(joinPartnersA.size(), 3);
+            assertArrayEquals(new String[] {"A", "Y", "A"}, joinPartnersA.toArray(String[]::new));
         }
     }
 
@@ -544,35 +546,63 @@ public class JoinSpecificationTest {
      *                   A = C
      * </pre>
      *
-     * @throws InvalidSettingsException
      */
     @Test
-    public void testMergeMultipleJoins() throws InvalidSettingsException {
+    public void testMergeMultipleJoinsLeft() throws InvalidSettingsException {
 
         DataTableSpec abc = new DataTableSpec(col("A"), col("B"), col("C"));
-        JoinTableSettings leftSettings = new JoinTableSettings(false, JoinColumn.array("B", "A", "C"),
+
+        JoinTableSettings leftSettings = new JoinTableSettings(false, JoinColumn.array("A", "A", "A"),
             new String[]{"A", "B", "C"}, InputTable.LEFT, abc);
         JoinTableSettings rightSettings =
             new JoinTableSettings(false, JoinColumn.array("B", "A", "C"), new String[0], InputTable.RIGHT, abc);
 
         JoinSpecification joinSpec =
             new JoinSpecification.Builder(leftSettings, rightSettings).mergeJoinColumns(true).build();
-
         DataTableSpec spec = joinSpec.specForMatchTable();
 
-        // joined table has three columns: A B C
-        assertEquals(3, spec.getNumColumns());
-
-        // named like this
         int[] indices = spec.columnsToIndices("A", "B", "C");
         int[] expectedIndices = IntStream.range(0, spec.getNumColumns()).toArray();
         assertArrayEquals(expectedIndices, indices);
     }
 
     /**
-     * Test the data table specification generated for the join result table. This depends on - which columns are
-     * selected for inclusion in the result table - how column names are disambiguated - whether join columns should be
-     * merged
+     * When multiple columns from the left table join on the same column from the right table, no merge is performed.
+     *
+     * <pre>
+     *         A B C  ⨝  A B C
+     * include ✓ ✓ ✓     ✓   ✓
+     * join w/ B A
+     * out     A `B=A` C C'
+     * </pre>
+     *
+     */
+    @Test
+    public void testMergeMultipleJoinsRight() throws InvalidSettingsException {
+
+        DataTableSpec abc = new DataTableSpec(col("A"), col("B"), col("C"));
+
+        JoinTableSettings leftSettings =
+            new JoinTableSettings(false, JoinColumn.array("A", "B"), new String[]{"A", "B", "C"}, InputTable.LEFT, abc);
+        JoinTableSettings rightSettings =
+            new JoinTableSettings(false, JoinColumn.array("A", "A"), new String[]{"A", "C"}, InputTable.RIGHT, abc);
+
+        JoinSpecification joinSpec = new JoinSpecification.Builder(leftSettings, rightSettings).mergeJoinColumns(true)
+            .columnNameDisambiguator(s -> s + "'").build();
+        DataTableSpec spec = joinSpec.specForMatchTable();
+
+        int[] indices = spec.columnsToIndices("A", "B=A", "C", "C'");
+        int[] expectedIndices = IntStream.range(0, spec.getNumColumns()).toArray();
+        assertArrayEquals(expectedIndices, indices);
+    }
+
+    /**
+     * Test the data table specification generated for the join result table. This depends on
+     * <ul>
+     * <li>which columns are selected for inclusion in the result table</li>
+     * <li>how column names are disambiguated</li>
+     * <li>whether join columns should be merged</li>
+     * </ul>
      *
      * @throws InvalidSettingsException
      */
@@ -605,7 +635,6 @@ public class JoinSpecificationTest {
 
         { // output table specification for unmatched right rows
             DataTableSpec spec = joinSpec.specForUnmatched(InputTable.RIGHT);
-            assertEquals(3, spec.getNumColumns());
             // named like this (no disambiguation)
             int[] indices = spec.columnsToIndices("U", "V", "A");
             // and in the above order
@@ -619,12 +648,18 @@ public class JoinSpecificationTest {
      * Test the join merge columns feature in combination with special join columns (join on row keys).
      *
      * <pre>
-     * left table   A B C D E
-     * include      i   i   i
+     * left table RowID A B C D E
+     * include          ✓   ✓   ✓
      *
      * right table  U V W A Y Z
-     * include      i i   i
+     * include      ✓ ✓   ✓
+     *
+     * join clauses A = A
+     *              RowKey = RowKey
+     *              C = Z
+     *              D = A
      * </pre>
+     * Expected specification: "A", "C=Z", "D=A", "E", "U", "V"
      *
      * @throws InvalidSettingsException
      */
@@ -642,19 +677,15 @@ public class JoinSpecificationTest {
         { // output table specification for matches
             DataTableSpec spec = joinSpec.specForMatchTable();
 
-            // joined table has seven columns
-            assertEquals(6, spec.getNumColumns());
-            System.out.println(spec);
-            // named like this
+            // output columns should be named like this
             int[] indices = spec.columnsToIndices("A", "C=Z", "D=A", "E", "U", "V");
             // and in the above order
-            int[] expectedIndices = IntStream.range(0, 6).toArray();
+            int[] expectedIndices = IntStream.range(0, spec.getNumColumns()).toArray();
             assertArrayEquals(expectedIndices, indices);
         }
 
         { // output table specification for unmatched left rows
             DataTableSpec spec = joinSpec.specForUnmatched(InputTable.LEFT);
-            assertEquals(3, spec.getNumColumns());
             // named like this
             int[] indices = spec.columnsToIndices("A", "C", "E");
             // and in the above order
@@ -675,7 +706,7 @@ public class JoinSpecificationTest {
         // test project
         DataRow leftProjected = joinSpec.rowProjectOuter(InputTable.LEFT, m_rows[LEFT]);
 
-        assertEquals(leftProjected.getNumCells(), 3);
+        assertEquals(3, leftProjected.getNumCells());
 
         // projected row has the cell contents of columns A, C, E
         assertEquals(cell("a"), leftProjected.getCell(0));
@@ -684,12 +715,92 @@ public class JoinSpecificationTest {
 
         DataRow rightProjected = joinSpec.rowProjectOuter(InputTable.RIGHT, m_rows[RIGHT]);
 
-        assertEquals(rightProjected.getNumCells(), 3);
+        assertEquals(3, rightProjected.getNumCells());
 
         // projected row has the cell contents of columns U, V, A (#1)
         assertEquals(cell("u"), rightProjected.getCell(0));
         assertEquals(cell("v"), rightProjected.getCell(1));
         assertEquals(cell("x"), rightProjected.getCell(2));
+
+    }
+
+    /**
+     * Test merging multiple columns with a row key column.
+     *
+     * <pre>
+     * left table  A B C D E
+     * include     ✓   ✓   ✓
+     *
+     * right table  U V W A Y Z
+     * include      ✓     ✓ ✓
+     *
+     * join clauses RowKey = Y
+     *              RowKey = Z
+     *              A = RowKey
+     *              A = U
+     *
+     * </pre>
+     * Expected output spec: A=U C E A.
+     *
+     * @throws InvalidSettingsException
+     */
+    @Test
+    public void testMergeJoinColumnsWithMultipleRowKeys() throws InvalidSettingsException {
+        JoinTableSettings leftSettings = new JoinTableSettings(true, JoinColumn.array(
+            JoinTableSettings.SpecialJoinColumn.ROW_KEY,
+            JoinTableSettings.SpecialJoinColumn.ROW_KEY, "A", "A"),
+                new String[]{"A", "C", "E"}, InputTable.LEFT, m_specs[LEFT]);
+        JoinTableSettings rightSettings =
+            new JoinTableSettings(true, JoinColumn.array("Y", "Z", JoinTableSettings.SpecialJoinColumn.ROW_KEY, "U"),
+                new String[]{"U", "A", "Y"}, InputTable.RIGHT, m_specs[RIGHT]);
+        JoinSpecification joinSpec = new JoinSpecification.Builder(leftSettings, rightSettings)
+            .columnNameDisambiguator(name -> name.concat(" (right table)")).mergeJoinColumns(true).build();
+
+        { // output table specification for matches
+            DataTableSpec spec = joinSpec.specForMatchTable();
+            // output columns should be named like this
+            int[] indices = spec.columnsToIndices("A=U", "C", "E", "A");
+            // and in the above order
+            int[] expectedIndices = IntStream.range(0, spec.getNumColumns()).toArray();
+            assertArrayEquals(expectedIndices, indices);
+        }
+
+        { // output table specification for unmatched left rows
+            DataTableSpec spec = joinSpec.specForUnmatched(InputTable.LEFT);
+            // named like this
+            int[] indices = spec.columnsToIndices("A", "C", "E");
+            // and in the above order
+            int[] expectedIndices = IntStream.range(0, spec.getNumColumns()).toArray();
+            assertArrayEquals(expectedIndices, indices);
+        }
+
+        { // output table specification for unmatched right rows
+            DataTableSpec spec = joinSpec.specForUnmatched(InputTable.RIGHT);
+            // named like this (no disambiguation)
+            int[] indices = spec.columnsToIndices("U", "A", "Y");
+            // and in the above order
+            int[] expectedIndices = IntStream.range(0, spec.getNumColumns()).toArray();
+            assertArrayEquals(expectedIndices, indices);
+        }
+
+        // test project
+        DataRow leftProjected = joinSpec.rowProjectOuter(InputTable.LEFT, m_rows[LEFT]);
+
+        assertEquals(3, leftProjected.getNumCells());
+
+        // projected row has the cell contents of columns A, C, E
+        assertEquals(cell("a"), leftProjected.getCell(0));
+        assertEquals(cell("c"), leftProjected.getCell(1));
+        assertEquals(cell("e"), leftProjected.getCell(2));
+
+        DataRow rightProjected = joinSpec.rowProjectOuter(InputTable.RIGHT, m_rows[RIGHT]);
+
+        assertEquals(3, rightProjected.getNumCells());
+
+        // projected row has the cell contents of columns U, A, Y
+        assertEquals(cell("u"), rightProjected.getCell(0));
+        assertEquals(cell("x"), rightProjected.getCell(1)); // column A contains value x
+        assertEquals(cell("y"), rightProjected.getCell(2));
 
     }
 
@@ -704,7 +815,7 @@ public class JoinSpecificationTest {
 
         DataRow leftProjected = jspec.rowProjectOuter(InputTable.LEFT, m_rows[LEFT]);
 
-        assertEquals(leftProjected.getNumCells(), 3);
+        assertEquals(3, leftProjected.getNumCells());
 
         // projected row has the cell contents of columns A, C, E
         assertEquals(cell("a"), leftProjected.getCell(0));
@@ -713,7 +824,7 @@ public class JoinSpecificationTest {
 
         DataRow rightProjected = jspec.rowProjectOuter(InputTable.RIGHT, m_rows[RIGHT]);
 
-        assertEquals(rightProjected.getNumCells(), 3);
+        assertEquals(3, rightProjected.getNumCells());
 
         // projected row has the cell contents of columns U, V, A (#1)
         assertEquals(cell("u"), rightProjected.getCell(0));

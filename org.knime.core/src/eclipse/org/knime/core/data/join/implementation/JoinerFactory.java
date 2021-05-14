@@ -56,7 +56,6 @@ import org.knime.core.node.InvalidSettingsException;
  * A joiner factory provides a method to create a joiner implementation.
  * This functional interface describes joiner constructor signatures.
  * The provided JoinAlgorithm enum can be used to configure the joiner node, e.g., to select an implementation.
- * See {@link JoinSpecification#getJoinAlgorithm()}.
  *
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  * @since 4.2
@@ -64,6 +63,9 @@ import org.knime.core.node.InvalidSettingsException;
 @FunctionalInterface
 public interface JoinerFactory {
 
+    /**
+     * Registry for join implementations, can be used to let the user select an implementation.
+     */
     enum JoinAlgorithm {
 //        HYBRID_HASH("Hybrid Hash Join", HybridHashJoin::new),
         AUTO("Automatic", BlockHashJoin::new),
@@ -86,6 +88,13 @@ public interface JoinerFactory {
         }
     }
 
+    /**
+     * Common constructor signature for join implementations.
+     * @param settings
+     * @param exec
+     * @return an object that performs a join of two tables.
+     * @throws InvalidSettingsException
+     */
     JoinImplementation create(final JoinSpecification settings, final ExecutionContext exec)
         throws InvalidSettingsException;
 

@@ -78,20 +78,17 @@ import org.knime.core.node.InvalidSettingsException;
  * <li>output orders: arbitrary, probe-hash, left-right</li>
  * <li>execution modes: in-memory, partially in-memory, on disk</li>
  * </ul>
- * on all inputs in {@link JoinTestInput}
+ * The test inputs as defined in {@link JoinTestInput} specify the remaining aspects:
+ * <ul>
+ * <li>match mode: match all, match any</li>
+ * <li>output mode: merge join columns or don't</li>
+ * </ul>
+ *
+ *
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  */
 @RunWith(Theories.class)
 public class BlockHashJoinTest extends JoinTest {
-
-    /**
-     * For testing materialized row offsets
-     *
-     * TODO should be subsumed by testing {@link Execution#ON_DISK}? Testing explicitly would require test data with
-     * annotated offsets.
-     */
-    @DataPoints
-    public static boolean[] doExtractRowOffsets = new boolean[]{false};
 
     /**
      * The join inputs (tables, join specification, expected join result) to test the algorithm on.
@@ -100,7 +97,9 @@ public class BlockHashJoinTest extends JoinTest {
     public static List<JoinTestInput> inputs;
     static {
         inputs = new LinkedList<>();
+        // join test inputs that are configured to use match any, e.g., disjunctive join clauses
         inputs.addAll(Arrays.asList(JoinTestInput.DISJUNCTIVE));
+        // join test inputs that are configured to use match all, e.g., conjunctive join clauses
         inputs.addAll(Arrays.asList(JoinTestInput.CONJUNCTIVE));
     }
 
@@ -114,7 +113,8 @@ public class BlockHashJoinTest extends JoinTest {
      */
     @Theory
     public void testJoinOutputCombined(final JoinTestInput input, final JoinMode joinMode, final OutputOrder order,
-        final Execution executionMode) throws CanceledExecutionException, InvalidSettingsException {
+        final Execution executionMode)
+        throws CanceledExecutionException, InvalidSettingsException {
 
         // TODO fast sort not yet supported
         assumeThat(order, is(not(OutputOrder.PROBE_HASH)));
@@ -143,12 +143,14 @@ public class BlockHashJoinTest extends JoinTest {
      * @param joinMode which results to retain
      * @param order output row order
      * @param executionMode
+     * @param mergeJoinColumns
      * @throws CanceledExecutionException
      * @throws InvalidSettingsException
      */
     @Theory
     public void testJoinOutputSplit(final JoinTestInput input, final JoinMode joinMode, final OutputOrder order,
-        final Execution executionMode) throws CanceledExecutionException, InvalidSettingsException {
+        final Execution executionMode)
+        throws CanceledExecutionException, InvalidSettingsException {
 
         // TODO fast sort not yet supported
         assumeThat(order, is(not(OutputOrder.PROBE_HASH)));

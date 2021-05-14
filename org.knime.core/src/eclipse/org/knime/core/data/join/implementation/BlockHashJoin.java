@@ -138,7 +138,8 @@ class BlockHashJoin extends JoinImplementation {
     public <T extends Output> JoinResult<T> join(final JoinResult<T> results)
         throws CanceledExecutionException, InvalidSettingsException {
 
-        if (! m_joinSpecification.isConjunctive()) {
+        // matchAny will use multiple calls to this method to perform the disjunctive join
+        if (! m_joinSpecification.isConjunctive() && m_joinSpecification.getNumJoinClauses() > 1) {
             return matchAny(BlockHashJoin::new, results);
         }
 

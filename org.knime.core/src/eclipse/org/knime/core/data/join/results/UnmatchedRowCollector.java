@@ -54,12 +54,12 @@ import org.knime.core.node.CanceledExecutionException.CancelChecker;
 
 /**
  * A handler for unmatched rows. In the simplest case, it directly outputs all rows passed to
- * {@link #unmatched(DataRow, long)}. See {@link UnmatchedRowsCollector} for a row collector that implements deferred
+ * {@link #unmatched(DataRow, long)}. See {@link DeferredUnmatchedRowCollector} for a row collector that implements deferred
  * collection of unmatched rows.
  *
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  */
-public interface RowCollector {
+public interface UnmatchedRowCollector {
 
     /**
      * @param matchedProbeRowOffset this is the row's offset in the partition table, no need store or extract row
@@ -106,8 +106,8 @@ public interface RowCollector {
     /**
      * @return a default row collector
      */
-    static RowCollector passThrough() {
-        return new RowCollector() {
+    static UnmatchedRowCollector passThrough() {
+        return new UnmatchedRowCollector() {
 
             @Override
             public boolean unmatched(final DataRow unmatchedProbeRow, final long unmatchedProbeRowOffset) {

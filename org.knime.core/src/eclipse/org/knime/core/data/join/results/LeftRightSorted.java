@@ -130,18 +130,17 @@ public final class LeftRightSorted {
         }
 
         @Override
-        public boolean doAddMatch(final DataRow left, final long leftOffset, final DataRow right, final long rightOffset) {
+        public void doAddMatch(final DataRow left, final long leftOffset, final DataRow right, final long rightOffset) {
             DataRow joinedProjected = m_joinSpecification.rowJoin(left, right);
             DataRow withOffset =
                 OrderedRow.withOffset(joinedProjected, OrderedRow.combinedOffsets(leftOffset, rightOffset));
             m_containers.get(ResultType.MATCHES).addRowToTable(withOffset);
             addHiliteMapping(ResultType.MATCHES, withOffset.getKey(), InputTable.LEFT, left.getKey());
             addHiliteMapping(ResultType.MATCHES, withOffset.getKey(), InputTable.RIGHT, right.getKey());
-            return true;
         }
 
         @Override
-        public boolean doAddLeftOuter(final DataRow row, final long offset) {
+        public void doAddLeftOuter(final DataRow row, final long offset) {
             // use rowProjectOuter to avoid merging join columns
             DataRow projected = m_joinSpecification.rowProjectOuter(InputTable.LEFT, row);
             // no combined offset necessary, since they live in their own table and are sorted separately
@@ -149,11 +148,10 @@ public final class LeftRightSorted {
             DataRow leftOuter = OrderedRow.withOffset(projected, offset);
             m_containers.get(ResultType.LEFT_OUTER).addRowToTable(leftOuter);
             addHiliteMapping(ResultType.LEFT_OUTER, leftOuter.getKey(), InputTable.LEFT, row.getKey());
-            return true;
         }
 
         @Override
-        public boolean doAddRightOuter(final DataRow row, final long offset) {
+        public void doAddRightOuter(final DataRow row, final long offset) {
             // use rowProjectOuter to avoid merging join columns
             DataRow projected = m_joinSpecification.rowProjectOuter(InputTable.RIGHT, row);
             // no combined offset necessary, since they live in their own table and are sorted separately
@@ -161,7 +159,6 @@ public final class LeftRightSorted {
             DataRow rightOuter = OrderedRow.withOffset(projected, offset);
             m_containers.get(ResultType.RIGHT_OUTER).addRowToTable(rightOuter);
             addHiliteMapping(ResultType.RIGHT_OUTER, rightOuter.getKey(), InputTable.RIGHT, row.getKey());
-            return true;
         }
 
         /**
@@ -269,33 +266,30 @@ public final class LeftRightSorted {
         }
 
         @Override
-        public boolean doAddMatch(final DataRow left, final long leftOffset, final DataRow right, final long rightOffset) {
+        public void doAddMatch(final DataRow left, final long leftOffset, final DataRow right, final long rightOffset) {
             DataRow joinedProjected = m_joinSpecification.rowJoin(left, right);
             DataRow match = OrderedRow.withOffset(joinedProjected, OrderedRow.combinedOffsets(leftOffset, rightOffset));
             addHiliteMapping(ResultType.MATCHES, match.getKey(), InputTable.LEFT, left.getKey());
             addHiliteMapping(ResultType.MATCHES, match.getKey(), InputTable.RIGHT, right.getKey());
             m_singleTableContainer.addRowToTable(match);
-            return true;
         }
 
         @Override
-        public boolean doAddLeftOuter(final DataRow row, final long offset) {
+        public void doAddLeftOuter(final DataRow row, final long offset) {
             // use leftToSingleTableFormat to create single table row layout
             DataRow paddedMerged = leftToSingleTableFormat(row);
             DataRow leftOuter = OrderedRow.withOffset(paddedMerged, (offset << 32) | OUTER_ROW_BIT);
             addHiliteMapping(ResultType.LEFT_OUTER, leftOuter.getKey(), InputTable.LEFT, row.getKey());
             m_singleTableContainer.addRowToTable(leftOuter);
-            return true;
         }
 
         @Override
-        public boolean doAddRightOuter(final DataRow row, final long offset) {
+        public void doAddRightOuter(final DataRow row, final long offset) {
             // use leftToSingleTableFormat to create single table row layout
             DataRow paddedMerged = rightToSingleTableFormat(row);
             DataRow rightOuter = OrderedRow.withOffset(paddedMerged, offset | RIGHT_OUTER_BITS);
             m_singleTableContainer.addRowToTable(rightOuter);
             addHiliteMapping(ResultType.RIGHT_OUTER, rightOuter.getKey(), InputTable.RIGHT, row.getKey());
-            return true;
         }
 
         @Override
