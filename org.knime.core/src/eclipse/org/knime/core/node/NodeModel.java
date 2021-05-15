@@ -51,6 +51,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -58,10 +59,12 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.IDataRepository;
 import org.knime.core.data.filestore.FileStorePortObject;
 import org.knime.core.data.filestore.FileStoreUtil;
+import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.node.AbstractNodeView.ViewableModel;
 import org.knime.core.node.interactive.InteractiveNode;
 import org.knime.core.node.interactive.InteractiveView;
@@ -517,56 +520,33 @@ public abstract class NodeModel implements ViewableModel {
     protected abstract void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException;
 
     /**
-     * Invokes the abstract <code>#execute()</code> method of this model. In
-     * addition, this method notifies all assigned views of the model about the
-     * changes.
+     * Invokes the abstract <code>#execute()</code> method of this model. In addition, this method notifies all assigned
+     * views of the model about the changes.
      *
-     * @param rawData An array of <code>PortObject</code> objects holding the data
-     *            from the inputs (includes flow variable port).
+     * @param rawData An array of <code>PortObject</code> objects holding the data from the inputs (includes flow
+     *            variable port).
      * @param exEnv The execution environment used for execution of this model.
-     * @param exec The execution monitor which is passed to the execute method
-     *            of this model.
-     * @return The result of the execution in form of an array with
-     *         <code>DataTable</code> elements, as many as the node has
-     *         outputs.
-     * @throws Exception any exception or error that is fired in the derived
-     *             model will be just forwarded. It may throw an
-     *             CanceledExecutionException if the user pressed cancel during
-     *             execution. Even if the derived model doesn't check, the
-     *             result will be discarded and the exception thrown.
-     * @throws IllegalStateException If the number of <code>PortObject</code>
-     *             objects returned by the derived <code>NodeModel</code>
-     *             does not match the number of outputs. Or if any of them is
-     *             null.
+     * @param exec The execution monitor which is passed to the execute method of this model.
+     * @return The result of the execution in form of an array with <code>DataTable</code> elements, as many as the node
+     *         has outputs.
+     * @throws Exception any exception or error that is fired in the derived model will be just forwarded. It may throw
+     *             an CanceledExecutionException if the user pressed cancel during execution. Even if the derived model
+     *             doesn't check, the result will be discarded and the exception thrown.
+     * @throws IllegalStateException If the number of <code>PortObject</code> objects returned by the derived
+     *             <code>NodeModel</code> does not match the number of outputs. Or if any of them is null.
      * @see #execute(PortObject[],ExecutionContext)
      * @since 2.8
-     * @noreference This method is not intended to be referenced by clients
-     *              (use Node class instead)
+     * @noreference This method is not intended to be referenced by clients (use Node class instead)
      */
-    PortObject[] executeModel(final PortObject[] rawData, final ExecutionEnvironment exEnv,
-            final ExecutionContext exec) throws Exception {
+    PortObject[] executeModel(final PortObject[] rawData, final ExecutionEnvironment exEnv, final ExecutionContext exec)
+        throws Exception {
         final PortObject[] data = ArrayUtils.remove(rawData, 0);
         assert (data != null && data.length == getNrInPorts());
         assert (exec != null);
 
         setWarningMessage(null);
 
-        // check for compatible input PortObjects
-        for (int i = 0; i < data.length; i++) {
-            PortType thisType = getInPortType(i);
-            if (thisType.isOptional() && data[i] == null) {
-                // ignore non-populated optional input
-            } else if (data[i] instanceof InactiveBranchPortObject) {
-                assert this instanceof InactiveBranchConsumer;
-                // allow Inactive POs at InactiveBranchConsumer
-            } else if (!(thisType.getPortObjectClass().isInstance(data[i]))) {
-                m_logger.error("  (Wanted: "
-                        + thisType.getPortObjectClass().getName() + ", "
-                        + "actual: " + data[i].getClass().getName() + ")");
-                throw new IllegalStateException("Connection Error: Mismatch"
-                        + " of input port types (port " + (i) + ").");
-            }
-        }
+        executeModelCheckInput(data);
 
         // temporary storage for result of derived model.
         // EXECUTE DERIVED MODEL
@@ -599,87 +579,9 @@ public abstract class NodeModel implements ViewableModel {
             throw e;
         }
 
-        if (outData == null) {
-            outData = new PortObject[getNrOutPorts()];
-        }
+        outData = executeModelPostProcessOutput(data, outData, exec);
 
-        /* Cleanup operation for nodes that just pass on their input
-         * data table. We need to wrap those here so that the framework
-         * explicitly references them (instead of copying) */
-        for (int i = 0; i < outData.length; i++) {
-            if (outData[i] instanceof BufferedDataTable) {
-                for (int j = 0; j < data.length; j++) {
-                    if (outData[i] == data[j]) {
-                        outData[i] = exec.createWrappedTable((BufferedDataTable)data[j]);
-                    }
-                }
-            } else if (outData[i] instanceof FileStorePortObject) {
-                // file stores can be 'external', e.g. when a model reader node reads an external model file
-                FileStorePortObject fsPO = (FileStorePortObject)outData[i];
-                IDataRepository expectedRep = exec.getDataRepository();
-                IDataRepository actualRep = FileStoreUtil.getFileStores(fsPO).stream()
-                        .map(FileStoreUtil::getFileStoreHandler).map(h -> h.getDataRepository())
-                        .findFirst().orElse(expectedRep);
-                if (actualRep != expectedRep) {
-                    outData[i] = Node.copyPortObject(fsPO, exec);
-                }
-            }
-        }
-
-        // TODO: check outgoing types! (inNode!)
-
-        // if number of out tables does not match: fail
-        if (outData.length != getNrOutPorts()) {
-            throw new IllegalStateException(
-                    "Invalid result. Execution failed. "
-                            + "Reason: Incorrect implementation; the execute"
-                            + " method in " + this.getClass().getSimpleName()
-                            + " returned null or an incorrect number of output"
-                            + " tables.");
-        }
-
-        // check the result, data tables must not be null
-        for (int i = 0; i < outData.length; i++) {
-            // do not check for null output tables if this is the end node
-            // of a loop and another loop iteration is requested
-            if ((getLoopContext() == null) && (outData[i] == null)) {
-                m_logger.error("Execution failed: Incorrect implementation;"
-                        + " the execute method in "
-                        + this.getClass().getSimpleName()
-                        + "returned a null data table at port: " + i);
-                throw new IllegalStateException("Invalid result. "
-                        + "Execution failed, reason: data at output " + i
-                        + " is null.");
-            }
-        }
-        // check meaningfulness of result and warn,
-        // - only if the execute didn't issue a warning already
-        if ((m_warningMessage == null) || (m_warningMessage.length() == 0)) {
-            boolean hasData = false;
-            int bdtPortCount = 0; // number of BDT ports
-            for (int i = 0; i < outData.length; i++) {
-                if (outData[i] instanceof BufferedDataTable) {
-                    // do some sanity checks on PortObjects holding data tables
-                    bdtPortCount += 1;
-                    BufferedDataTable outDataTable =
-                        (BufferedDataTable)outData[i];
-                    if (outDataTable.size() > 0) {
-                        hasData = true;
-                    } else {
-                        m_logger.info("The result table at port " + i
-                                + " contains no rows");
-                    }
-                }
-            }
-            if (!hasData && bdtPortCount > 0) {
-                if (bdtPortCount == 1) {
-                    setWarningMessage("Node created an empty data table.");
-                } else {
-                    setWarningMessage(
-                            "Node created empty data tables on all out-ports.");
-                }
-            }
-        }
+        executeModelCheckTableWarnings(outData);
 
         setHasContent(true);
         PortObject[] rawOutData = new PortObject[getNrOutPorts() + 1];
@@ -687,6 +589,116 @@ public abstract class NodeModel implements ViewableModel {
         System.arraycopy(outData, 0, rawOutData, 1, outData.length);
         return rawOutData;
     } // executeModel(PortObject[],ExecutionMonitor)
+
+    /**
+     * Called from {@link #executeModel(PortObject[], ExecutionEnvironment, ExecutionContext)} to do sanity checks on
+     * input.
+     */
+    private void executeModelCheckInput(final PortObject[] data) {
+        // check for compatible input PortObjects
+        for (int i = 0; i < data.length; i++) {
+            PortType thisType = getInPortType(i);
+            if (thisType.isOptional() && data[i] == null) {
+                // ignore non-populated optional input
+            } else if (data[i] instanceof InactiveBranchPortObject) {
+                assert this instanceof InactiveBranchConsumer;
+                // allow Inactive POs at InactiveBranchConsumer
+            } else if (!(thisType.getPortObjectClass().isInstance(data[i]))) {
+                m_logger.errorWithFormat("  (Wanted: \"%s\", actual: \"%s\")", thisType.getPortObjectClass().getName(),
+                    data[i].getClass().getName());
+                throw new IllegalStateException("Connection Error: Mismatch of input port types (port " + i + ").");
+            }
+        }
+    }
+
+    /**
+     * Called from {@link #executeModel(PortObject[], ExecutionEnvironment, ExecutionContext)} -- post process result
+     * data (wrapping 'copied' tables and treats files stores properly).
+     * @param inData The execute's input data
+     * @param rawOutData The result data (as produced by concrete NodeModel impl.)
+     * @param exec ...
+     * @return ...
+     * @throws IOException
+     * @throws CanceledExecutionException
+     */
+    private PortObject[] executeModelPostProcessOutput(final PortObject[] inData, final PortObject[] rawOutData,
+        final ExecutionContext exec) throws IOException, CanceledExecutionException {
+        PortObject[] outData = Objects.requireNonNullElseGet(rawOutData, () -> new PortObject[getNrOutPorts()]);
+
+        // if number of out tables does not match: fail
+        CheckUtils.checkState(outData.length == getNrOutPorts(),
+                "Invalid result. Execution failed. Reason: Incorrect implementation; the execute method in \"%s\" "
+                + "returned null or an incorrect number of output tables.", getClass().getSimpleName());
+
+        for (int i = 0; i < outData.length; i++) {
+            if (outData[i] instanceof BufferedDataTable) {
+                /* Cleanup operation for nodes that just pass on their input
+                 * data table. We need to wrap those here so that the framework
+                 * explicitly references them (instead of copying) */
+                BufferedDataTable out = (BufferedDataTable)outData[i];
+                Optional<BufferedDataTable> matchingInputTable = Arrays.stream(inData)//
+                    .filter(in -> in == out)//
+                    .map(BufferedDataTable.class::cast)//
+                    .findFirst();
+                outData[i] = matchingInputTable.map(exec::createWrappedTable).orElse(out);
+            } else if (outData[i] instanceof FileStorePortObject) {
+                // file stores can be 'external', e.g. when a model reader node reads an external model file
+                FileStorePortObject fsPO = (FileStorePortObject)outData[i];
+                IDataRepository expectedRep = exec.getDataRepository();
+                IDataRepository actualRep =
+                    FileStoreUtil.getFileStores(fsPO).stream().map(FileStoreUtil::getFileStoreHandler)
+                        .map(IFileStoreHandler::getDataRepository).findFirst().orElse(expectedRep);
+                if (actualRep != expectedRep) {
+                    outData[i] = Node.copyPortObject(fsPO, exec);
+                }
+            }
+        }
+        // check the result, data tables must not be null
+        for (int i = 0; i < outData.length; i++) {
+            // do not check for null output tables if this is the end node
+            // of a loop and another loop iteration is requested
+            if ((getLoopContext() == null) && (outData[i] == null)) {
+                m_logger.error("Execution failed: Incorrect implementation;" + " the execute method in "
+                    + this.getClass().getSimpleName() + "returned a null data table at port: " + i);
+                throw new IllegalStateException(
+                    "Invalid result. " + "Execution failed, reason: data at output " + i + " is null.");
+            }
+        }
+        return outData;
+    }
+
+    /**
+     * Called from {@link #executeModel(PortObject[], ExecutionEnvironment, ExecutionContext)} --
+     * check meaningfulness of result and warn - only if the execute didn't issue a warning already.
+     * @param outData result data of #execute
+     */
+    private void executeModelCheckTableWarnings(final PortObject[] outData) {
+        if (StringUtils.isNotBlank(m_warningMessage)) {
+            // existing warnings on the node take priority
+            return;
+        }
+        boolean hasData = false;
+        int bdtPortCount = 0; // number of BDT ports
+        for (int i = 0; i < outData.length; i++) {
+            if (outData[i] instanceof BufferedDataTable) {
+                // do some sanity checks on PortObjects holding data tables
+                bdtPortCount += 1;
+                BufferedDataTable outDataTable = (BufferedDataTable)outData[i];
+                if (outDataTable.size() > 0) {
+                    hasData = true;
+                } else {
+                    m_logger.info("The result table at port " + i + " contains no rows");
+                }
+            }
+        }
+        if (!hasData && bdtPortCount > 0) {
+            if (bdtPortCount == 1) {
+                setWarningMessage("Node created an empty data table.");
+            } else {
+                setWarningMessage("Node created empty data tables on all out-ports.");
+            }
+        }
+    }
 
     /**
      * Sets the hasContent flag and fires a state change event.
