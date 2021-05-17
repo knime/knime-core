@@ -317,6 +317,26 @@ public final class DataTypeRegistry {
     }
 
     /**
+     * Allows adding serializers to registry of cells which have no extension point (e.g. cells defined by the
+     * framework). Already added serializers can't be overwritten. Attempts to overwrite a already added serializer will
+     * result in a {@link IllegalArgumentException}.
+     *
+     * @param <D> type of DataCell
+     * @param type the type to add
+     * @param serializer the serializer to add
+     *
+     * @noreference This method is not intended to be referenced by clients.
+     * @since 4.4
+     */
+    public <D extends DataCell> void addRuntimeSerializer(final Class<D> type, final DataCellSerializer<D> serializer) {
+        if (m_serializers.containsKey(type)) {
+            throw new IllegalArgumentException("Implementation error: Can't overwrite serializer of type " + type
+                + " with runtime serializer in DataTypeRegistry.");
+        }
+        m_serializers.put(type, serializer);
+    }
+
+    /**
      * Returns the {@link ValueFactory} class for the given class name. This method looks through all registered
      * {@link ValueFactory} implementations. If no data value factory implementation is found, an empty optional is
      * returned.
