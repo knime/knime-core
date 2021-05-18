@@ -64,6 +64,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -772,6 +773,11 @@ public final class SubNodeContainer extends SingleNodeContainer
      */
     @Override
     public Element getXMLDescription() {
+        return getXMLDescription(Locale.US);
+    }
+
+    @Override
+    public Element getXMLDescription(final Locale locale) {
         final String description = getMetadata().getDescription().orElse("");
         String sDescription;
         if (StringUtils.isEmpty(description)) {
@@ -790,8 +796,8 @@ public final class SubNodeContainer extends SingleNodeContainer
         try {
             // Document
             final Document doc =
-                NodeDescription.getDocumentBuilderFactory().newDocumentBuilder().getDOMImplementation()
-                      .createDocument("http://knime.org/node2012", "knimeNode", null);
+                    NodeDescription.getDocumentBuilderFactory().newDocumentBuilder().getDOMImplementation()
+                    .createDocument("http://knime.org/node2012", "knimeNode", null);
             // knimeNode
             final Element knimeNode = doc.getDocumentElement();
             knimeNode.setAttribute("type", "Unknown");
@@ -828,6 +834,7 @@ public final class SubNodeContainer extends SingleNodeContainer
         }
         return null;
     }
+
 
     /**
      * @return a list of descriptions for all the visible dialog options
@@ -1066,11 +1073,8 @@ public final class SubNodeContainer extends SingleNodeContainer
         return false;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public String getInteractiveViewName() {
+    public String getInteractiveViewName(final Locale locale) {
         //TODO: custom view name?
         return getCustomName();
     }
@@ -3010,5 +3014,4 @@ public final class SubNodeContainer extends SingleNodeContainer
             return getWorkflowManager().canPerformReset();
         }
     }
-
 }

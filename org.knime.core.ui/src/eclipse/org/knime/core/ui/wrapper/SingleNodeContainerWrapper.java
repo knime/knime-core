@@ -48,6 +48,8 @@
  */
 package org.knime.core.ui.wrapper;
 
+import java.util.Locale;
+
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.ui.node.workflow.SingleNodeContainerUI;
 import org.w3c.dom.Element;
@@ -89,5 +91,10 @@ public class SingleNodeContainerWrapper<W extends SingleNodeContainer> extends N
     @Override
     public Element getXMLDescription() {
         return unwrap().getXMLDescription();
+    }
+
+    @Override
+    public Element getXMLDescription(final Locale locale) {
+        return unwrap().getXMLDescription(locale);
     }
 }

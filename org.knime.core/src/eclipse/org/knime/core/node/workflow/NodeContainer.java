@@ -48,6 +48,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -1287,8 +1288,21 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
      *
      * @return name of the interactive view or <code>null</code>
      * @since 2.8
+     * @deprecated use {@link #getInteractiveViewName(Locale)} instead
      */
-    public abstract String getInteractiveViewName();
+    @Deprecated(since = "4.5")
+    public String getInteractiveViewName() {
+        return getInteractiveViewName(Locale.US);
+    }
+
+    /**
+     * Returns the name of the interactive view if such a view exists. Otherwise <code>null</code> is returned.
+     *
+     * @param locale the requested locale
+     * @return name of the interactive view or <code>null</code>
+     * @since 2.8
+     */
+    public abstract String getInteractiveViewName(Locale locale);
 
     /**
      * @return interactive view.

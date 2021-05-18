@@ -48,6 +48,8 @@
  */
 package org.knime.core.ui.node.workflow;
 
+import java.util.Locale;
+
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.ui.UI;
 import org.w3c.dom.Element;
@@ -157,8 +159,12 @@ public interface SingleNodeContainerUI extends NodeContainerUI, UI {
 
     /**
      * @return the XML description of the node for the NodeDescription view
+     * @deprecated use {@link #getXMLDescription(Locale)} instead
      */
+    @Deprecated(since = "4.5")
     Element getXMLDescription();
+
+    Element getXMLDescription(Locale locale);
 
 //    /**
 //     * Get the policy for the data outports, that is, keep the output in main

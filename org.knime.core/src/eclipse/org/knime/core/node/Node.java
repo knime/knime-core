@@ -56,9 +56,11 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -260,7 +262,7 @@ public final class Node implements NodeModelWarningListener {
 
     private final ModifiableNodeCreationConfiguration m_creationConfig;
 
-    private final NodeDescription m_adaptedNodeDescription;
+    private final Map<Locale, NodeDescription> m_adaptedNodeDescription = Collections.synchronizedMap(new HashMap<>());
 
     /**
      * Creates a new node by retrieving the model, dialog, and views, from the
@@ -294,22 +296,19 @@ public final class Node implements NodeModelWarningListener {
         } else {
             m_creationConfig = creationConfig;
         }
-        if (m_creationConfig != null) {
-            m_adaptedNodeDescription = m_factory.getNodeDescription()
-                .createUpdatedNodeDescription(m_creationConfig.getPortConfig().orElse(null));
-        } else {
-            m_adaptedNodeDescription = null;
-        }
-        m_name = m_adaptedNodeDescription != null ? m_adaptedNodeDescription.getNodeName().intern()
-            : m_factory.getNodeName().intern();
-        m_model = m_factory.callCreateNodeModel(m_creationConfig, m_adaptedNodeDescription);
+
+        NodeDescription nodeDescription = adaptNodeDescription(Locale.getDefault());
+        m_adaptedNodeDescription.put(Locale.getDefault(), adaptNodeDescription(Locale.getDefault()));
+
+        m_name = nodeDescription.getNodeName();
+        m_model = m_factory.callCreateNodeModel(m_creationConfig, nodeDescription);
         m_model.addWarningListener(this);
-        m_messageListeners = new CopyOnWriteArraySet<NodeMessageListener>();
+        m_messageListeners = new CopyOnWriteArraySet<>();
         // create an extra input port (index: 0) for the optional variables.
         m_inputs = new Input[m_model.getNrInPorts() + 1];
         m_inputs[0] = new Input("Variable Inport", FlowVariablePortObject.TYPE_OPTIONAL);
         for (int i = 1; i < m_inputs.length; i++) {
-            m_inputs[i] = new Input(getInportDescriptionName(i), m_model.getInPortType(i - 1));
+            m_inputs[i] = new Input(getInportDescriptionName(Locale.getDefault(), i), m_model.getInPortType(i - 1));
         }
 
         // create an extra output port (index: 0) for the variables.
@@ -324,14 +323,23 @@ public final class Node implements NodeModelWarningListener {
         for (int i = 1; i < m_outputs.length; i++) {
             m_outputs[i] = new Output();
             m_outputs[i].type = m_model.getOutPortType(i - 1);
-            m_outputs[i].name = getOutportDescriptionName(i);
+            m_outputs[i].name = getOutportDescriptionName(Locale.getDefault(), i);
             m_outputs[i].spec = null;
             m_outputs[i].object = null;
             m_outputs[i].summary = null;
             m_outputs[i].hiliteHdl = m_model.getOutHiLiteHandler(i - 1);
         }
-        m_localTempTables = new HashSet<ContainerTable>();
+        m_localTempTables = new HashSet<>();
         setForceSynchronousIO(false); // may set to true if this is a loop end
+    }
+
+    private NodeDescription adaptNodeDescription(final Locale locale) {
+        if (m_creationConfig != null) {
+            return m_factory.getNodeDescription(locale)
+                    .createUpdatedNodeDescription(m_creationConfig.getPortConfig().orElse(null));
+        } else {
+            return m_factory.getNodeDescription(locale);
+        }
     }
 
     /** Create a persistor that is used to paste a copy of this node into the same or a different workflow.
@@ -698,7 +706,7 @@ public final class Node implements NodeModelWarningListener {
      * @return The node's type.
      */
     public NodeType getType() {
-        return m_adaptedNodeDescription != null ? m_adaptedNodeDescription.getType() : m_factory.getType();
+        return m_factory.getType();
     }
 
     /**
@@ -707,10 +715,23 @@ public final class Node implements NodeModelWarningListener {
      *
      * @return XML description of the node
      * @see org.knime.core.node.NodeFactory#getXMLDescription()
+     * @deprecated use {@link #getXMLDescription(Locale)} instead
      */
+    @Deprecated(since = "4.5")
     public Element getXMLDescription() {
-        return m_adaptedNodeDescription != null ? m_adaptedNodeDescription.getXMLDescription()
-            : m_factory.getXMLDescription();
+        return getXMLDescription(Locale.US);
+    }
+
+    /**
+     * The XML description can be used with the <code>NodeFactoryHTMLCreator</code> in order to get a converted HTML
+     * description of it, which fits the overall KNIME HTML style.
+     *
+     * @param locale the requested locale
+     * @return XML description of the node
+     * @see org.knime.core.node.NodeFactory#getXMLDescription()
+     */
+    public Element getXMLDescription(final Locale locale) {
+        return m_adaptedNodeDescription.computeIfAbsent(locale, this::adaptNodeDescription).getXMLDescription();
     }
 
     /**
@@ -763,13 +784,25 @@ public final class Node implements NodeModelWarningListener {
      *
      * @param index the port index
      * @return the name of the port as specified by the node factory.
+     * @deprecated use {@link #getInportDescriptionName(Locale, int)} instead
      */
+    @Deprecated(since = "4.5")
     public String getInportDescriptionName(final int index) {
+        return getInportDescriptionName(Locale.US, index);
+    }
+
+    /**
+     * Return the name of the port as specified by the node factory (which takes it from the node description).
+     *
+     * @param locale the requested locale
+     * @param index the port index
+     * @return the name of the port as specified by the node factory.
+     */
+    public String getInportDescriptionName(final Locale locale, final int index) {
         if (index <= 0) {
             return "Variable Inport";
         }
-        return m_adaptedNodeDescription != null ? m_adaptedNodeDescription.getInportName(index - 1)
-            : m_factory.getInportName(index - 1);
+        return m_adaptedNodeDescription.computeIfAbsent(locale, this::adaptNodeDescription).getInportName(index - 1);
     }
 
     /**
@@ -799,13 +832,26 @@ public final class Node implements NodeModelWarningListener {
      *
      * @param index the port index
      * @return the name of the port as specified by the node factory.
+     * @deprecated use {@link #getOutportDescriptionName(Locale, int)} instead
      */
+    @Deprecated(since = "4.5")
     public String getOutportDescriptionName(final int index) {
+        return getOutportDescriptionName(Locale.US, index);
+    }
+
+
+    /**
+     * Return the name of the port as specified by the node factory (which takes it from the node description).
+     *
+     * @param locale the requested locale
+     * @param index the port index
+     * @return the name of the port as specified by the node factory.
+     */
+    public String getOutportDescriptionName(final Locale locale, final int index) {
         if (index <= 0) {
             return "Variable Outport";
         }
-        return m_adaptedNodeDescription != null ? m_adaptedNodeDescription.getOutportName(index - 1)
-            : m_factory.getOutportName(index - 1);
+        return m_adaptedNodeDescription.computeIfAbsent(locale, this::adaptNodeDescription).getOutportName(index - 1);
     }
 
     /**
@@ -2018,10 +2064,24 @@ public final class Node implements NodeModelWarningListener {
      *
      * @return name of the interactive view.
      * @since 2.8
+     * @deprecated use {@link #getInteractiveViewName(Locale)} instead
      */
+    @Deprecated(since = "4.5")
     public String getInteractiveViewName() {
-        return hasInteractiveView() || hasWizardView() ? StringUtils.defaultIfEmpty(m_adaptedNodeDescription != null
-            ? m_adaptedNodeDescription.getInteractiveViewName() : m_factory.getInteractiveViewName(),
+        return getInteractiveViewName(Locale.US);
+    }
+
+    /**
+     * Returns the name of the interactive view if such a view exists. If it exists and no name is defined it will
+     * return some error string (indicating a coding problem).
+     *
+     * @param locale the requested locale
+     * @return name of the interactive view.
+     * @since 2.8
+     */
+    public String getInteractiveViewName(final Locale locale) {
+        return hasInteractiveView() || hasWizardView() ? StringUtils.defaultIfEmpty(
+            m_adaptedNodeDescription.computeIfAbsent(locale, this::adaptNodeDescription).getInteractiveViewName(),
             "MISSING VIEW NAME IN NODE DESCRIPTION") : null;
     }
 
@@ -2272,8 +2332,8 @@ public final class Node implements NodeModelWarningListener {
             if (exRef.get() instanceof Error) {
                 throw (Error)exRef.get();
             } else if (exRef.get() instanceof RuntimeException) {
-                NodeLogger.getLogger(Node.class).error(
-                    "Error while creating node dialog for '" + factory.getNodeName() + "': " + exRef.get().getMessage(),
+                NodeLogger.getLogger(Node.class).error("Error while creating node dialog for '"
+                    + factory.getNodeDescription(Locale.getDefault()).getNodeName() + "': " + exRef.get().getMessage(),
                     exRef.get());
                 throw (RuntimeException)exRef.get();
             } else {

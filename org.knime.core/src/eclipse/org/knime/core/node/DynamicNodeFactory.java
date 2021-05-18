@@ -48,6 +48,7 @@
 package org.knime.core.node;
 
 import java.io.InputStream;
+import java.util.Locale;
 import java.util.Optional;
 
 import org.knime.core.eclipseUtil.OSGIHelper;
@@ -86,7 +87,7 @@ public abstract class DynamicNodeFactory<T extends NodeModel> extends NodeFactor
      * XMLBeans (see http://xmlbeans.apache.org/)
      *
      * @param doc the document to add the description to
-     * @deprecated override {@link #createNodeDescription()} instead
+     * @deprecated override {@link #createNodeDescription(Locale)} instead
      */
     @Deprecated
     protected void addNodeDescription(final KnimeNodeDocument doc) {

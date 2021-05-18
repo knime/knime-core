@@ -52,6 +52,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -196,10 +197,10 @@ public class NativeNodeContainer extends SingleNodeContainer {
     /* */
     private void setPortNames() {
         for (int i = 0; i < getNrOutPorts(); i++) {
-            getOutPort(i).setPortName(m_node.getOutportDescriptionName(i));
+            getOutPort(i).setPortName(m_node.getOutportDescriptionName(Locale.getDefault(), i));
         }
         for (int i = 0; i < getNrInPorts(); i++) {
-            getInPort(i).setPortName(m_node.getInportDescriptionName(i));
+            getInPort(i).setPortName(m_node.getInportDescriptionName(Locale.getDefault(), i));
         }
     }
 
@@ -308,8 +309,8 @@ public class NativeNodeContainer extends SingleNodeContainer {
 
     /** {@inheritDoc} */
     @Override
-    public String getInteractiveViewName() {
-        return m_node.getInteractiveViewName();
+    public String getInteractiveViewName(final Locale locale) {
+        return m_node.getInteractiveViewName(locale);
     }
 
     /** {@inheritDoc} */
@@ -1248,7 +1249,15 @@ public class NativeNodeContainer extends SingleNodeContainer {
     /** {@inheritDoc} */
     @Override
     public Element getXMLDescription() {
-        return m_node.getXMLDescription();
+        return getXMLDescription(Locale.US);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Element getXMLDescription(final Locale locale) {
+        return m_node.getXMLDescription(locale);
     }
 
     /** @return non-null meta bundle and node information to this instance. For executed nodes this will

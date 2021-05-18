@@ -52,7 +52,11 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -156,7 +160,7 @@ public abstract class NodeFactory<T extends NodeModel> {
         PARSER = p;
     }
 
-    private NodeDescription m_nodeDescription;
+    private final Map<Locale, NodeDescription> m_nodeDescriptions = Collections.synchronizedMap(new HashMap<>());
 
     private URL m_icon;
 
@@ -196,9 +200,36 @@ public abstract class NodeFactory<T extends NodeModel> {
      * @throws IOException if the XML file cannot be read
      * @throws XmlException if the XML file is not valid
      * @since 2.8
+     * @deprecated use/override {@link #createNodeDescription(Locale)} instead
      */
+    @Deprecated(since = "4.5")
     protected NodeDescription createNodeDescription() throws SAXException, IOException, XmlException {
-        return PARSER.parseDescription(this.getClass());
+        return PARSER.parseDescription(Locale.US, this.getClass()).get();
+    }
+
+
+    /**
+     * Creates the description for this node. The default implementation reads the factory's XML file. Subclasses may
+     * override this method in order to create the description by other means. It's required to provide a node
+     * description for {@link Locale#US}. All other locales are optional and if no description for the requested locale
+     * can be created an empty optional should be returned.
+     *
+     * @param locale the requested locale
+     * @return the node description or an empty optional
+     * @throws SAXException if the XML file is not well-formed
+     * @throws IOException if the XML file cannot be read
+     * @throws XmlException if the XML file is not valid
+     * @since 4.5
+     */
+    protected Optional<NodeDescription> createNodeDescription(final Locale locale)
+        throws SAXException, IOException, XmlException {
+        var nodeDescription = PARSER.parseDescription(locale, this.getClass());
+
+        // this is necessary for subclasses that override #createNodeDescription() but do not override this method (yet)
+        if (!nodeDescription.isPresent() && Locale.US.equals(locale)) {
+            return Optional.ofNullable(createNodeDescription());
+        }
+        return nodeDescription;
     }
 
     /**
@@ -212,32 +243,45 @@ public abstract class NodeFactory<T extends NodeModel> {
             m_logger.debug("Factory is already initialized. Nothing to do.");
             return;
         }
-        try {
-            m_nodeDescription = createNodeDescription();
-        } catch (SAXException ex) {
-            m_logger.error("Broken XML file for node description of " + getClass().getName() + ": " + ex.getMessage(),
-                ex);
-            m_nodeDescription = new NoDescriptionProxy(getClass());
-        } catch (IOException ex) {
-            m_logger.error(
-                "I/O error while reading node description of " + getClass().getName() + ": " + ex.getMessage(), ex);
-            m_nodeDescription = new NoDescriptionProxy(getClass());
-        } catch (XmlException ex) {
-            m_logger.error("Node description of " + getClass().getName() + " does not conform to used XML schema: "
-                + ex.getMessage(), ex);
-            m_nodeDescription = new NoDescriptionProxy(getClass());
-        }
 
-        m_icon = resolveIcon(m_nodeDescription.getIconPath());
+        var nodeDescription = loadAndAugmentNodeDescription(Locale.US);
+        m_nodeDescriptions.put(Locale.US, nodeDescription);
+        m_icon = resolveIcon(nodeDescription.getIconPath());
 
         // DO NOT call "checkConsistency(createNodeModel());" here as
         // that would call an abstract method from within the
         // constructor - local fields in the derived NodeFactory have
         // not been initialized
 
-        addBundleInformation();
+
         addLoadedFactory(getClass());
         m_initialized = true;
+    }
+
+    private NodeDescription loadAndAugmentNodeDescription(final Locale locale) {
+        NodeDescription nodeDescription;
+        try {
+            var optional = createNodeDescription(locale);
+            if (!optional.isPresent()) {
+                return m_nodeDescriptions.get(Locale.US);
+            } else {
+                nodeDescription = optional.get();
+            }
+        } catch (SAXException ex) {
+            m_logger.error("Broken XML file for node description of " + getClass().getName() + ": " + ex.getMessage(),
+                ex);
+            nodeDescription = new NoDescriptionProxy(getClass());
+        } catch (IOException ex) {
+            m_logger.error(
+                "I/O error while reading node description of " + getClass().getName() + ": " + ex.getMessage(), ex);
+            nodeDescription = new NoDescriptionProxy(getClass());
+        } catch (XmlException ex) {
+            m_logger.error("Node description of " + getClass().getName() + " does not conform to used XML schema: "
+                + ex.getMessage(), ex);
+            nodeDescription = new NoDescriptionProxy(getClass());
+        }
+        addBundleInformation(nodeDescription.getXMLDescription());
+        return nodeDescription;
     }
 
     /**
@@ -270,18 +314,41 @@ public abstract class NodeFactory<T extends NodeModel> {
      * Returns the original node description.
      *
      * @return the original node description
+     * @deprecated use {@link #getNodeDescription(Locale)} instead
      */
+    @Deprecated(since = "4.5")
     NodeDescription getNodeDescription() {
-        return m_nodeDescription;
+        return m_nodeDescriptions.computeIfAbsent(Locale.US, l -> new NoDescriptionProxy(getClass()));
+    }
+
+    /**
+     * Returns the node description for the given locale. If no description for this locale exists, the description
+     * for {@link Locale#US} will be returned.
+     *
+     * @param locale the requested locale
+     * @return the node description
+     * @since 4.5
+     */
+    public NodeDescription getNodeDescription(final Locale locale) {
+        return m_nodeDescriptions.computeIfAbsent(locale, this::loadAndAugmentNodeDescription);
+    }
+
+    /**
+     * Returns whether we have a node description for the requested locale.
+     *
+     * @param locale the requested locale
+     * @return <code>true</code> if we have a localized description, <code>false</code> otherwise
+     * @since 4.5
+     */
+    public boolean hasLocalizedDescription(final Locale locale) {
+        return locale.equals(Locale.US) || (getNodeDescription(locale) != getNodeDescription(Locale.US));
     }
 
     /**
      * Adds information about the bundle/feature in which this node resides to the XML description tree. Note that the
      * bundle information does not have a namespace!
      */
-    private void addBundleInformation() {
-        Element root = m_nodeDescription.getXMLDescription();
-
+    private void addBundleInformation(final Element root) {
         if ((root != null) && !(this instanceof MissingNodeFactory)) { // for running in non-osgi context
             NodeAndBundleInformationPersistor nodeInfo = NodeAndBundleInformationPersistor.create(this);
 
@@ -352,11 +419,12 @@ public abstract class NodeFactory<T extends NodeModel> {
      * description of it, which fits the overall KNIME HTML style.
      *
      * @return XML description of this node
+     * @deprecated use {@link #getNodeDescription(Locale)} and access its properties instead
      */
+    @Deprecated(since = "4.5")
     public Element getXMLDescription() {
-        return m_nodeDescription.getXMLDescription();
+        return getNodeDescription().getXMLDescription();
     }
-
 
     /**
      * Loads additional settings to this instance that were saved using
@@ -401,9 +469,11 @@ public abstract class NodeFactory<T extends NodeModel> {
      * Returns the name of this node.
      *
      * @return the node's name
+     * @deprecated use {@link #getNodeDescription(Locale)} and access its properties instead
      */
+    @Deprecated(since = "4.5")
     public final String getNodeName() {
-        return m_nodeDescription.getNodeName();
+        return getNodeDescription().getNodeName();
     }
 
     /**
@@ -411,9 +481,11 @@ public abstract class NodeFactory<T extends NodeModel> {
      *
      * @param index the index of the input port, starting at 0
      * @return an input port name
+     * @deprecated use {@link #getNodeDescription(Locale)} and access its properties instead
      */
+    @Deprecated(since = "4.5")
     public String getInportName(final int index) {
-        String name = m_nodeDescription.getInportName(index);
+        String name = getNodeDescription().getInportName(index);
         return (name == null) ? "No name available" : name;
     }
 
@@ -422,9 +494,11 @@ public abstract class NodeFactory<T extends NodeModel> {
      *
      * @param index the index of the output port, starting at 0
      * @return an output port name
+     * @deprecated use {@link #getNodeDescription(Locale)} and access its properties instead
      */
+    @Deprecated(since = "4.5")
     public String getOutportName(final int index) {
-        String name = m_nodeDescription.getOutportName(index);
+        String name = getNodeDescription().getOutportName(index);
         return (name == null) ? "No name available" : name;
     }
 
@@ -433,9 +507,11 @@ public abstract class NodeFactory<T extends NodeModel> {
      *
      * @param index the index of the input port, starting at 0
      * @return an input port description
+     * @deprecated use {@link #getNodeDescription(Locale)} and access its properties instead
      */
+    @Deprecated(since = "4.5")
     public final String getInportDescription(final int index) {
-        String description = m_nodeDescription.getInportDescription(index);
+        String description = getNodeDescription().getInportDescription(index);
         return (description == null) ? "No description available" : description;
     }
 
@@ -444,9 +520,11 @@ public abstract class NodeFactory<T extends NodeModel> {
      *
      * @param index the index of the output port, starting at 0
      * @return an output port description
+     * @deprecated use {@link #getNodeDescription(Locale)} and access its properties instead
      */
+    @Deprecated(since = "4.5")
     public final String getOutportDescription(final int index) {
-        String description = m_nodeDescription.getOutportDescription(index);
+        String description = getNodeDescription().getOutportDescription(index);
         return (description == null) ? "No description available" : description;
     }
 
@@ -455,9 +533,11 @@ public abstract class NodeFactory<T extends NodeModel> {
      *
      * @param index the index of the view, starting at 0
      * @return a view description
+     * @deprecated use {@link #getNodeDescription(Locale)} and access its properties instead
      */
+    @Deprecated(since = "4.5")
     protected final String getViewDescription(final int index) {
-        String description = m_nodeDescription.getViewDescription(index);
+        String description = getNodeDescription().getViewDescription(index);
         return (description == null) ? "No description available" : description.replaceAll("(?:\\s+|\n)", "");
     }
 
@@ -518,7 +598,7 @@ public abstract class NodeFactory<T extends NodeModel> {
         final NodeDescription description;
         if (creationConfig == null) {
             result = createNodeModel();
-            description = m_nodeDescription;
+            description = getNodeDescription();
         } else {
             assert adaptedDescription != null;
             result = createNodeModel(creationConfig);
@@ -543,9 +623,11 @@ public abstract class NodeFactory<T extends NodeModel> {
      *
      * @param index the view index, starting at 0
      * @return the view's name
+     * @deprecated use {@link #getNodeDescription(Locale)} and access its properties instead
      */
+    @Deprecated(since = "4.5")
     protected final String getNodeViewName(final int index) {
-        String name = m_nodeDescription.getViewName(index);
+        String name = getNodeDescription().getViewName(index);
         return (name == null) ? "NoName" : name;
     }
 
@@ -657,7 +739,7 @@ public abstract class NodeFactory<T extends NodeModel> {
             }
         }
 
-        for (int i = 0; i < m_nodeDescription.getViewCount(); i++) {
+        for (int i = 0; i < getNodeDescription().getViewCount(); i++) {
             if (nodeDescription.getViewDescription(i) == null) {
                 m_logger.coding("Missing description for view " + i);
             }
@@ -670,7 +752,7 @@ public abstract class NodeFactory<T extends NodeModel> {
      * @return the node's type
      */
     public NodeType getType() {
-        return m_nodeDescription.getType();
+        return getNodeDescription().getType();
     }
 
     /**
@@ -718,9 +800,11 @@ public abstract class NodeFactory<T extends NodeModel> {
      *
      * @return name of the interactive view or <code>null</code>
      * @since 2.8
+     * @deprecated use {@link #getNodeDescription(Locale)} and access its properties instead
      */
+    @Deprecated(since = "4.5")
     public String getInteractiveViewName() {
-        return m_nodeDescription.getInteractiveViewName();
+        return getNodeDescription().getInteractiveViewName();
     }
 
     /**
@@ -731,7 +815,7 @@ public abstract class NodeFactory<T extends NodeModel> {
      * @since 3.0
      */
     void setIsDeprecated(final boolean b) {
-        m_nodeDescription.setIsDeprecated(b);
+        getNodeDescription().setIsDeprecated(b);
     }
 
     /**
@@ -755,6 +839,6 @@ public abstract class NodeFactory<T extends NodeModel> {
      * @since 3.4
      */
     boolean isDeprecatedInternal() {
-        return m_nodeDescription.isDeprecated();
+        return getNodeDescription().isDeprecated();
     }
 }

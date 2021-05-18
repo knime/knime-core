@@ -52,6 +52,8 @@ import static org.hamcrest.core.IsInstanceOf.instanceOf;
 import static org.hamcrest.core.IsNull.nullValue;
 import static org.junit.Assert.assertThat;
 
+import java.util.Locale;
+
 import org.apache.xmlbeans.SchemaType;
 import org.apache.xmlbeans.XmlException;
 import org.apache.xmlbeans.XmlObject;
@@ -141,7 +143,7 @@ public class NodeDescriptionTest {
     @Test(expected = XmlException.class)
     public void testUnsupportedDoctype() throws Exception {
         NodeDescriptionParser parser = new NodeDescriptionParser();
-        parser.parseDescription(DTD_v27_unsupportedDoctype.class);
+        parser.parseDescription(Locale.US, DTD_v27_unsupportedDoctype.class);
     }
 
     /**
@@ -152,7 +154,7 @@ public class NodeDescriptionTest {
     @Test(expected = XmlException.class)
     public void testUnsupportedNamespace() throws Exception {
         NodeDescriptionParser parser = new NodeDescriptionParser();
-        parser.parseDescription(XSD_v28_unsupportedNamespace.class);
+        parser.parseDescription(Locale.US, XSD_v28_unsupportedNamespace.class);
     }
 
 
@@ -172,7 +174,7 @@ public class NodeDescriptionTest {
     private void testInvalidDescription(final Class<? extends NodeFactory> factoryClass,
                                         final Class<? extends NodeDescription> expectedProxyClass) throws Exception {
         NodeDescriptionParser parser = new NodeDescriptionParser();
-        NodeDescription description = parser.parseDescription(factoryClass);
+        NodeDescription description = parser.parseDescription(Locale.US, factoryClass).get();
         assertThat("Invalid node description not recognized", (Boolean)expectedProxyClass.getDeclaredMethod("validate")
                 .invoke(description), is(Boolean.FALSE));
     }
@@ -180,7 +182,7 @@ public class NodeDescriptionTest {
     @SuppressWarnings("rawtypes")
     private void testDeprecatedNodeName(final Class<? extends NodeFactory> factoryClass) throws Exception {
         NodeDescriptionParser parser = new NodeDescriptionParser();
-        NodeDescription description = parser.parseDescription(factoryClass);
+        NodeDescription description = parser.parseDescription(Locale.US, factoryClass).get();
         assertThat("Wrong node name extracted from deprecated node", description.getNodeName(),
                    is("My own name (deprecated)"));
 
@@ -191,7 +193,7 @@ public class NodeDescriptionTest {
                                   final Class<? extends NodeDescription> expectedProxyClass,
                                   final String expectedNamespace, final boolean hasInteractiveView) throws Exception {
         NodeDescriptionParser parser = new NodeDescriptionParser();
-        NodeDescription description = parser.parseDescription(factoryClass);
+        NodeDescription description = parser.parseDescription(Locale.US, factoryClass).get();
 
         assertThat("Unexpected proxy class", description, instanceOf(expectedProxyClass));
         assertThat("Valid node description recognized as invalid",

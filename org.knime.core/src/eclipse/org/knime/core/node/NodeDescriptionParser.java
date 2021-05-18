@@ -48,6 +48,8 @@ package org.knime.core.node;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Locale;
+import java.util.Optional;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -70,6 +72,7 @@ import org.xml.sax.SAXException;
  */
 class NodeDescriptionParser {
     private static final EntityResolver RESOLVER = new EntityResolver() {
+        @SuppressWarnings("resource")
         @Override
         public InputSource resolveEntity(final String publicId, final String systemId) throws SAXException, IOException {
             String path;
@@ -123,40 +126,27 @@ class NodeDescriptionParser {
      * descriptions compatible with 2.7. It is assumed that the XML file containing the description is in the same
      * package as the node factory and has exactly the same name but with a <tt>.xml</tt> suffix.
      *
+     * @param locale the requested locale
      * @param factoryClass the class of the factory for which the node description should be read.
      * @return the node description
      * @throws SAXException if the XML file is not well-formed
      * @throws IOException if the XML file cannot be read
      * @throws XmlException if the XML file is not valid
      */
-    @SuppressWarnings("resource")
-    public NodeDescription parseDescription(
+    public Optional<NodeDescription> parseDescription(final Locale locale,
         @SuppressWarnings("rawtypes") final Class<? extends NodeFactory> factoryClass) throws SAXException,
         IOException, XmlException {
 
-        String descriptionFile = factoryClass.getSimpleName() + ".xml";
-        InputStream inStream = factoryClass.getResourceAsStream(descriptionFile);
+        var inStream = findXML(locale, factoryClass);
         if (inStream == null) {
-            // could be a node factory hierarchy, check superclasses for node descriptions
-            Class<?> superClass = factoryClass.getSuperclass();
-            while ((inStream == null) && (superClass != null)) {
-                descriptionFile = superClass.getSimpleName() + ".xml";
-                inStream = superClass.getResourceAsStream(descriptionFile);
-                superClass = superClass.getSuperclass();
-            }
-
-            if (inStream == null) {
-                // OK, this is it, giving up
-                NodeLogger.getLogger(NodeDescriptionParser.class).coding(
-                    "No node description file found for " + factoryClass.getName());
-                return new NoDescriptionProxy(factoryClass);
-            }
+            return Optional.empty();
         }
-
 
         Document doc;
         synchronized (m_parser) {
-            doc = m_parser.parse(inStream);
+            try (inStream) {
+                doc = m_parser.parse(inStream);
+            }
         }
 
         String namespaceUri = doc.getDocumentElement().getNamespaceURI();
@@ -164,40 +154,76 @@ class NodeDescriptionParser {
             DocumentType docType = doc.getDoctype();
             String publicId = (docType != null) ? docType.getPublicId() : null;
             if ((publicId == null) || "-//UNIKN//DTD KNIME Node 2.0//EN".equals(publicId)) {
-                return new NodeDescription27Proxy(doc);
+                return Optional.of(new NodeDescription27Proxy(doc));
             } else if ("-//UNIKN//DTD KNIME Node 1.0//EN".equals(publicId)) {
-                return new NodeDescription13Proxy(doc);
+                return Optional.of(new NodeDescription13Proxy(doc));
             } else {
                 throw new XmlException("Unsupported document type for node description of " + factoryClass.getName()
                     + ": " + publicId);
             }
         } else if (namespaceUri.equals(org.knime.node.v41.KnimeNodeDocument.type.getContentModel().getName()
             .getNamespaceURI())) {
-            return new NodeDescription41Proxy(doc);
+            return Optional.of(new NodeDescription41Proxy(doc));
         } else if (namespaceUri.equals(org.knime.node.v36.KnimeNodeDocument.type.getContentModel().getName()
             .getNamespaceURI())) {
-            return new NodeDescription36Proxy(doc);
+            return Optional.of(new NodeDescription36Proxy(doc));
         } else if (namespaceUri.equals(org.knime.node.v31.KnimeNodeDocument.type.getContentModel().getName()
             .getNamespaceURI())) {
-            return new NodeDescription31Proxy(doc);
+            return Optional.of(new NodeDescription31Proxy(doc));
         } else if (namespaceUri.equals(org.knime.node.v212.KnimeNodeDocument.type.getContentModel().getName()
             .getNamespaceURI())) {
-            return new NodeDescription212Proxy(doc);
+            return Optional.of(new NodeDescription212Proxy(doc));
         } else if (namespaceUri.equals(org.knime.node.v210.KnimeNodeDocument.type.getContentModel().getName()
             .getNamespaceURI())) {
-            return new NodeDescription210Proxy(doc);
+            return Optional.of(new NodeDescription210Proxy(doc));
         } else if (namespaceUri.equals(org.knime.node.v28.KnimeNodeDocument.type.getContentModel().getName()
             .getNamespaceURI())) {
-            return new NodeDescription28Proxy(doc);
+            return Optional.of(new NodeDescription28Proxy(doc));
         } else if (namespaceUri.equals(org.knime.node2012.KnimeNodeDocument.type.getContentModel().getName()
             .getNamespaceURI())) {
-            return new NodeDescription27Proxy(doc);
+            return Optional.of(new NodeDescription27Proxy(doc));
         } else if (namespaceUri.equals(org.knime.node.v13.KnimeNodeDocument.type.getContentModel().getName()
             .getNamespaceURI())) {
-            return new NodeDescription13Proxy(doc);
+            return Optional.of(new NodeDescription13Proxy(doc));
         } else {
             throw new XmlException("Unsupported namespace for node description of " + factoryClass.getName() + ": "
                 + namespaceUri);
         }
+    }
+
+    @SuppressWarnings("resource")
+    private static InputStream findXML(final Locale locale,
+        @SuppressWarnings("rawtypes") final Class<? extends NodeFactory> factoryClass) {
+        String[] search;
+        if (locale.equals(Locale.US)) {
+            search = new String[] {""};
+        } else {
+            search = new String[]{"." + locale.toLanguageTag(), "." + locale.getLanguage()};
+        }
+
+        InputStream inStream = null;
+        for (var s : search) {
+            String descriptionFile = factoryClass.getSimpleName() + s + ".xml";
+            inStream = factoryClass.getResourceAsStream(descriptionFile);
+            if (inStream != null) {
+                return inStream;
+            }
+        }
+
+        for (var s : search) {
+            // could be a node factory hierarchy, check superclasses for node descriptions
+            Class<?> superClass = factoryClass.getSuperclass();
+            String descriptionFile;
+            while (superClass != null) {
+                descriptionFile = superClass.getSimpleName() + s + ".xml";
+                inStream = superClass.getResourceAsStream(descriptionFile);
+                if (inStream != null) {
+                    return inStream;
+                }
+                superClass = superClass.getSuperclass();
+            }
+        }
+
+        return null;
     }
 }

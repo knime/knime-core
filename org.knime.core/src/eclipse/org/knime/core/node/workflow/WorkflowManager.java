@@ -83,6 +83,7 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -9252,9 +9253,8 @@ public final class WorkflowManager extends NodeContainer
         return false;
     }
 
-    /** {@inheritDoc} */
     @Override
-    public String getInteractiveViewName() {
+    public String getInteractiveViewName(Locale locale) {
         return "no view available";
     }
 

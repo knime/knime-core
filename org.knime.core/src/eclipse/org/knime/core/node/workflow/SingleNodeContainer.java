@@ -48,6 +48,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.function.Supplier;
 
@@ -1087,8 +1088,12 @@ public abstract class SingleNodeContainer extends NodeContainer {
 
     /**
      * @return the XML description of the node for the NodeDescription view
+     * @deprecated use {@link #getXMLDescription(Locale)} instead
      */
+    @Deprecated(since = "4.5")
     public abstract Element getXMLDescription();
+
+    public abstract Element getXMLDescription(Locale locale);
 
     /** {@inheritDoc} */
     @Override
