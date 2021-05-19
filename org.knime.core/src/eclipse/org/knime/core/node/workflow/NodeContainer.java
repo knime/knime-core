@@ -85,8 +85,14 @@ import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.action.InteractiveWebViewsResult;
 import org.knime.core.node.workflow.changes.ChangesTracker;
 import org.knime.core.node.workflow.changes.TrackedChanges;
+import org.knime.core.node.workflow.def.DefToCoreUtil;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
+import org.knime.core.node.workflow.execresult.NodeExecutionResult;
+import org.knime.core.workflow.def.NodeAnnotationDef;
+import org.knime.core.workflow.def.NodeDef;
+import org.knime.core.workflow.def.NodeLocksDef;
+import org.knime.core.workflow.def.NodeMessageDef;
 
 /**
  * Abstract super class for containers holding node or just structural
@@ -237,11 +243,10 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
         }
     }
 
-    NodeContainer(final WorkflowManager parent, final NodeID id,
-            final NodeContainerMetaPersistor persistor) {
+    NodeContainer(final WorkflowManager parent, final NodeID id, final NodeContainerMetaPersistor persistor) {
         this(parent, id);
-        assert persistor.getState() != null : "State of node \"" + id
-        + "\" in \"" + persistor.getClass().getSimpleName() + "\" is null";
+        assert persistor.getState() != null : "State of node \"" + id + "\" in \""
+            + persistor.getClass().getSimpleName() + "\" is null";
         m_state = persistor.getState();
         m_jobManager = persistor.getExecutionJobManager();
         if (m_parent == null && !(m_jobManager instanceof ThreadNodeExecutionJobManager)) {
@@ -261,6 +266,37 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
         if (!persistor.getLoadHelper().isTemplateFlow() || persistor.getLoadHelper().isTemplateProject()) {
             m_nodeContainerDirectory = persistor.getNodeContainerDirectory();
         }
+    }
+
+    NodeContainer(final WorkflowManager parent, final NodeID id, final NodeDef nodeDef,
+        final WorkflowLoadHelper loadHelper) {
+        this(parent, id);
+        //        assert persistor.getState() != null : "State of node \"" + id
+//                + "\" in \"" + persistor.getClass().getSimpleName() + "\" is null";
+        m_state = InternalNodeContainerState.valueOf(nodeDef.getState());
+        NodeSettings settings = convert(nodeDef.getNodeSettings());
+        m_jobManager = NodeExecutionJobManagerPool.load(settings);
+        if (m_parent == null && !(m_jobManager instanceof ThreadNodeExecutionJobManager)) {
+            // make sure at least the top node knows how to execute stuff
+            m_jobManager = NodeExecutionJobManagerPool.getDefaultJobManagerFactory().getInstance();
+        }
+        m_customDescription = nodeDef.getCustomDescription();
+        NodeAnnotationDef annoDef = nodeDef.getNodeAnnotation();
+        if (!annoDef.isDefault()) {
+            NodeAnnotationData annoData = new NodeAnnotationData(false);
+            DefToCoreUtil.toNodeAnnotationData(annoData, annoDef);
+            m_annotation.copyFrom(annoData, true);
+        }
+
+        m_uiInformation = DefToCoreUtil.toNodeUIInformation(nodeDef.getNodeUIInfo());
+        NodeLocksDef locksDef = nodeDef.getNodeLocks();
+        m_nodeLocks = DefToCoreUtil.toNodeLocks(nodeDef.getNodeLocks());
+
+        NodeMessageDef messageDef = nodeDef.getNodeMessage();
+        setNodeMessage(new NodeMessage(NodeMessage.Type.valueOf(messageDef.getType()), messageDef.getMessage()));
+//        if (!loadHelper.isTemplateFlow() || loadHelper.isTemplateProject()) {
+//            m_nodeContainerDirectory = persistor.getNodeContainerDirectory();
+//        }
     }
 
     /**
@@ -1575,6 +1611,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
      * @return a directory or <code>null</code>
      * @noreference this is not part of the public API
      */
+    // TODO abstract to general filesystem?
     public final ReferencedFile getNodeContainerDirectory() {
         return m_nodeContainerDirectory;
     }
@@ -1620,6 +1657,10 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
          * wish to synchronize the entire load procedure.
          */
         setNodeMessage(result.getNodeMessage());
+    }
+
+    public void loadExecutionResult(final NodeExecutionResult execRes) {
+       loadExecutionResult(null, null, null);
     }
 
     /** Saves all internals that are necessary to mimic the computed result

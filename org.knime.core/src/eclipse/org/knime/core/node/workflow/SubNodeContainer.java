@@ -150,6 +150,9 @@ import org.knime.core.util.LoadVersion;
 import org.knime.core.util.LockFailedException;
 import org.knime.core.util.Pair;
 import org.knime.core.util.ThreadPool;
+import org.knime.core.workflow.def.ComponentDef;
+import org.knime.core.workflow.def.ComponentPortDef;
+import org.knime.core.workflow.def.WorkflowDef;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -300,6 +303,52 @@ public final class SubNodeContainer extends SingleNodeContainer
             m_outputs[i].setName(t.getPortName());
             m_outports[i] = new NodeContainerOutPort(this, t.getPortType(), t.getPortIndex());
             m_outports[i].setPortName(t.getPortName());
+        }
+        m_inports = new NodeInPort[inPortTemplates.length];
+        m_inHiliteHandler = new HiLiteHandler[inPortTemplates.length - 1];
+        m_virtualInNodeIDSuffix = persistor.getVirtualInNodeIDSuffix();
+        m_virtualOutNodeIDSuffix = persistor.getVirtualOutNodeIDSuffix();
+        m_subnodeLayoutStringProvider = persistor.getSubnodeLayoutStringProvider();
+        m_subnodeConfigurationStringProvider = persistor.getSubnodeConfigurationStringProvider();
+        m_hideInWizard = persistor.isHideInWizard();
+        m_customCSS = persistor.getCssStyles();
+        PortType[] inTypes = new PortType[inPortTemplates.length];
+        for (int i = 0; i < inPortTemplates.length; i++) {
+            inTypes[i] = inPortTemplates[i].getPortType();
+            m_inports[i] = new NodeInPort(i, inTypes[i]);
+            if (i > 0) {
+                // ignore optional variable input port
+                m_inHiliteHandler[i - 1] = new HiLiteHandler();
+            }
+        }
+        m_metadata = persistor.getMetadata();
+        m_templateInformation = persistor.getTemplateInformation();
+    }
+
+    /** Load workflow from persistor.
+    *
+    * @param parent ...
+    * @param id ...
+    * @param persistor ...
+    */
+    SubNodeContainer(final WorkflowManager parent, final NodeID id, final ComponentDef def,
+        final WorkflowLoadHelper loadHelper) {
+        super(parent, id, def, loadHelper);
+        m_subnodeScopeContext = new FlowSubnodeScopeContext(this);
+        WorkflowDef workflowDef = def.getWorkflow();
+        m_wfm = new WorkflowManager(this, null, new NodeID(id, 0), workflowDef, parent.getWorkflowDataRepository(),
+            loadHelper);
+        m_wfm.setJobManager(null);
+        List<ComponentPortDef> inPorts = def.getInPorts();
+        List<ComponentPortDef> outPorts = def.getOutPorts();
+        m_outports = new NodeContainerOutPort[outPorts.size();
+        m_outputs = new Output[outPorts.size()];
+        for (int i = 0; i < m_outports.length; i++) {
+            ComponentPortDef p = outPorts.get(i);
+            m_outputs[i] = new Output(p.getType());
+            m_outputs[i].setName(p.getName());
+            m_outports[i] = new NodeContainerOutPort(this, p.getType(), p.getIndex());
+            m_outports[i].setPortName(p.getName());
         }
         m_inports = new NodeInPort[inPortTemplates.length];
         m_inHiliteHandler = new HiLiteHandler[inPortTemplates.length - 1];
