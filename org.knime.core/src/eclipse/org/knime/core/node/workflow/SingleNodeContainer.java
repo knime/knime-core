@@ -71,6 +71,7 @@ import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.FlowVariable.Scope;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
+import org.knime.core.workflow.def.NodeDef;
 import org.w3c.dom.Element;
 
 /**
@@ -146,6 +147,11 @@ public abstract class SingleNodeContainer extends NodeContainer {
      */
     SingleNodeContainer(final WorkflowManager parent, final NodeID id, final NodeContainerMetaPersistor persistor) {
         super(parent, id, persistor);
+    }
+
+    SingleNodeContainer(final WorkflowManager parent, final NodeID id, final NodeDef def,
+        final WorkflowLoadHelper loadHelper) {
+        super(parent, id, def, loadHelper);
     }
 
     /* ------------------ Views ---------------- */
