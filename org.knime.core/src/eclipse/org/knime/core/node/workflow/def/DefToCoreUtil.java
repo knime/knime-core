@@ -50,6 +50,7 @@ package org.knime.core.node.workflow.def;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Date;
 import java.util.Map;
 
 import org.knime.core.node.InvalidSettingsException;
@@ -67,6 +68,7 @@ import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.workflow.AnnotationData.TextAlignment;
 import org.knime.core.node.workflow.ComponentMetadata;
 import org.knime.core.node.workflow.ComponentMetadata.ComponentMetadataBuilder;
+import org.knime.core.node.workflow.EditorUIInformation;
 import org.knime.core.node.workflow.FileNativeNodeContainerPersistor;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
@@ -74,6 +76,8 @@ import org.knime.core.node.workflow.MetaNodeTemplateInformation.TemplateType;
 import org.knime.core.node.workflow.NodeAnnotationData;
 import org.knime.core.node.workflow.NodeContainer.NodeLocks;
 import org.knime.core.node.workflow.NodeUIInformation;
+import org.knime.core.util.workflowalizer.AuthorInformation;
+import org.knime.core.workflow.def.AuthorInformationDef;
 import org.knime.core.workflow.def.BoundsDef;
 import org.knime.core.workflow.def.ComponentMetadataDef;
 import org.knime.core.workflow.def.ConfigDef;
@@ -84,6 +88,7 @@ import org.knime.core.workflow.def.NodeAnnotationDef;
 import org.knime.core.workflow.def.NodeLocksDef;
 import org.knime.core.workflow.def.NodeUIInfoDef;
 import org.knime.core.workflow.def.TemplateInfoDef;
+import org.knime.core.workflow.def.WorkflowUISettingsDef;
 
 /**
  *
@@ -171,6 +176,25 @@ public class DefToCoreUtil {
         } catch (URISyntaxException ex) {
             throw new RuntimeException(ex);
         }
+    }
+
+    public static EditorUIInformation toEditorUIInformation(final WorkflowUISettingsDef def) {
+        return EditorUIInformation.builder()//
+            .setGridX(def.getGridX())//
+            .setGridY(def.getGridY())//
+            .setHasCurvedConnections(def.isCurvedConnections())//
+            .setShowGrid(def.isShowGrid())//
+            .setSnapToGrid(def.isSnapToGrid())//
+            .setZoomLevel(def.getZoomLevel().doubleValue())//
+            .build();
+    }
+
+    /**
+     * TODO entirely replace it
+     */
+    public static AuthorInformation toAuthorInformation(final AuthorInformationDef def) {
+        return new AuthorInformation(def.getAuthoredBy(), Date.from(def.getAuthoredWhen().toInstant()),
+            def.getLastEditedBy(), Date.from(def.getLastEditedWhen().toInstant()));
     }
 
     /**

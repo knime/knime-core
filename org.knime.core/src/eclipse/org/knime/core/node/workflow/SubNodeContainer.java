@@ -152,7 +152,7 @@ import org.knime.core.util.LockFailedException;
 import org.knime.core.util.Pair;
 import org.knime.core.util.ThreadPool;
 import org.knime.core.workflow.def.ComponentDef;
-import org.knime.core.workflow.def.ComponentPortDef;
+import org.knime.core.workflow.def.PortDef;
 import org.knime.core.workflow.def.WorkflowDef;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
@@ -340,12 +340,12 @@ public final class SubNodeContainer extends SingleNodeContainer
         m_wfm = new WorkflowManager(this, null, new NodeID(id, 0), workflowDef, parent.getWorkflowDataRepository(),
             loadHelper);
         m_wfm.setJobManager(null);
-        List<ComponentPortDef> inPorts = def.getInPorts();
-        List<ComponentPortDef> outPorts = def.getOutPorts();
+        List<PortDef> inPorts = def.getInPorts();
+        List<PortDef> outPorts = def.getOutPorts();
         m_outports = new NodeContainerOutPort[outPorts.size()];
         m_outputs = new Output[outPorts.size()];
         for (int i = 0; i < m_outports.length; i++) {
-            ComponentPortDef p = outPorts.get(i);
+            PortDef p = outPorts.get(i);
             m_outputs[i] = new Output(DefToCoreUtil.toPortType(p.getType()));
             m_outputs[i].setName(p.getName());
             m_outports[i] = new NodeContainerOutPort(this, DefToCoreUtil.toPortType(p.getType()), p.getIndex());
