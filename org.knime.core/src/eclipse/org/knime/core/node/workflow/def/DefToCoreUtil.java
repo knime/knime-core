@@ -48,6 +48,8 @@
  */
 package org.knime.core.node.workflow.def;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Map;
 
 import org.knime.core.node.InvalidSettingsException;
@@ -63,11 +65,17 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.workflow.AnnotationData.TextAlignment;
+import org.knime.core.node.workflow.ComponentMetadata;
+import org.knime.core.node.workflow.ComponentMetadata.ComponentMetadataBuilder;
 import org.knime.core.node.workflow.FileNativeNodeContainerPersistor;
+import org.knime.core.node.workflow.MetaNodeTemplateInformation;
+import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
+import org.knime.core.node.workflow.MetaNodeTemplateInformation.TemplateType;
 import org.knime.core.node.workflow.NodeAnnotationData;
 import org.knime.core.node.workflow.NodeContainer.NodeLocks;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.workflow.def.BoundsDef;
+import org.knime.core.workflow.def.ComponentMetadataDef;
 import org.knime.core.workflow.def.ConfigDef;
 import org.knime.core.workflow.def.ConfigMapDef;
 import org.knime.core.workflow.def.ConfigValueDef;
@@ -75,6 +83,7 @@ import org.knime.core.workflow.def.NativeNodeDef;
 import org.knime.core.workflow.def.NodeAnnotationDef;
 import org.knime.core.workflow.def.NodeLocksDef;
 import org.knime.core.workflow.def.NodeUIInfoDef;
+import org.knime.core.workflow.def.TemplateInfoDef;
 
 /**
  *
@@ -129,16 +138,39 @@ public class DefToCoreUtil {
         }
     }
 
-    public static PortType toPortType(final String objectClassString) throws InvalidSettingsException {
+    public static PortType toPortType(final String objectClassString) {
         if (objectClassString == null) {
-            throw new InvalidSettingsException(
+            // TODO
+            throw new RuntimeException(
                 "No port object class found to create PortType object");
         }
         Class<? extends PortObject> obClass = PortTypeRegistry.getInstance().getObjectClass(objectClassString)
-            .orElseThrow(() -> new InvalidSettingsException(
+            .orElseThrow(() -> new RuntimeException(
                 "Unable to restore port type, " + "can't load class \"" + objectClassString + "\""));
         return PortTypeRegistry.getInstance().getPortType(obClass);
 
+    }
+
+    public static ComponentMetadata toComponentMetadata(final ComponentMetadataDef def) {
+        ComponentMetadataBuilder builder = ComponentMetadata.builder()//
+            .description(def.getDescription())//
+            .icon(def.getIcon());
+        for (int i = 0; i < def.getInPortNames().size(); i++) {
+            builder.addInPortNameAndDescription(def.getInPortNames().get(i), def.getInPortDescriptions().get(i));
+        }
+        for (int i = 0; i < def.getOutPortNames().size(); i++) {
+            builder.addOutPortNameAndDescription(def.getOutPortNames().get(i), def.getOutPortDescriptions().get(i));
+        }
+        return builder.build();
+    }
+
+    public static MetaNodeTemplateInformation toTemplateInfo(final TemplateInfoDef def) {
+        try {
+            return new MetaNodeTemplateInformation(Role.valueOf(def.getRole()), TemplateType.valueOf(def.getType()),
+                new URI(def.getUri()), java.util.Date.from(def.getTimestamp().toInstant()), null, null);
+        } catch (URISyntaxException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     /**

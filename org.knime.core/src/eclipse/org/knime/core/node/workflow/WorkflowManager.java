@@ -526,6 +526,85 @@ public final class WorkflowManager extends NodeContainer
      * @param workflowDataRepository ...
      */
     WorkflowManager(final NodeContainerParent directNCParent, final WorkflowManager parent, final NodeID id,
+        final WorkflowPersistor persistor, final WorkflowDataRepository workflowDataRepository) {
+        super(parent, id, persistor.getMetaPersistor());
+        m_directNCParent = assertParentAssignments(directNCParent, parent);
+        ReferencedFile ncDir = super.getNodeContainerDirectory();
+        final boolean isProject = persistor.isProject();
+        if (ncDir != null && isProject) { // only lock projects
+            if (!ncDir.fileLockRootForVM()) {
+                throw new IllegalStateException("Root directory to workflow \"" + ncDir
+                    + "\" can't be locked although it should have " + "been locked by the load routines");
+            }
+        }
+        m_workflow = new Workflow(this, id);
+        m_name = persistor.getName();
+        m_editorInfo = persistor.getEditorUIInformation();
+        m_templateInformation = persistor.getTemplateInformation();
+        m_authorInformation = persistor.getAuthorInformation();
+        m_loadVersion = persistor.getLoadVersion();
+        m_workflowVariables = new Vector<FlowVariable>(persistor.getWorkflowVariables());
+        m_credentialsStore = new CredentialsStore(this, persistor.getCredentials());
+        m_cipher = persistor.getWorkflowCipher();
+        WorkflowContext workflowContext;
+        if (isProject || isComponentProjectWFM()) {
+            workflowContext = persistor.getWorkflowContext();
+            if (workflowContext == null && getNodeContainerDirectory() != null) { // real projects have a file loc
+                LOGGER.warn("No workflow context available for " + m_name, new Throwable());
+                workflowContext = new WorkflowContext.Factory(getNodeContainerDirectory().getFile()).createContext();
+            }
+            if (workflowContext != null) {
+                workflowContext = createAndSetWorkflowTempDirectory(workflowContext);
+            }
+        } else {
+            workflowContext = null;
+        }
+        m_workflowContext = workflowContext;
+        WorkflowPortTemplate[] inPortTemplates = persistor.getInPortTemplates();
+        m_inPorts = new WorkflowInPort[inPortTemplates.length];
+        for (int i = 0; i < inPortTemplates.length; i++) {
+            WorkflowPortTemplate t = inPortTemplates[i];
+            m_inPorts[i] = new WorkflowInPort(t.getPortIndex(), t.getPortType());
+            m_inPorts[i].setPortName(t.getPortName());
+        }
+        m_inPortsBarUIInfo = persistor.getInPortsBarUIInfo();
+
+        WorkflowPortTemplate[] outPortTemplates = persistor.getOutPortTemplates();
+        m_outPorts = new WorkflowOutPort[outPortTemplates.length];
+        for (int i = 0; i < outPortTemplates.length; i++) {
+            WorkflowPortTemplate t = outPortTemplates[i];
+            m_outPorts[i] = new WorkflowOutPort(t.getPortIndex(), t.getPortType());
+            m_outPorts[i].setPortName(t.getPortName());
+        }
+        m_outPortsBarUIInfo = persistor.getOutPortsBarUIInfo();
+
+        boolean noPorts = m_inPorts.length == 0 && m_outPorts.length == 0;
+        assert !isProject || noPorts; // projects must not have ports
+
+        if (isProject) {
+            m_workflowLock = new WorkflowLock(this);
+            m_dataRepository = persistor.getWorkflowDataRepository();
+            WorkflowTableBackendSettings tableBackendSet = persistor.getWorkflowTableBackendSettings();
+            m_tableBackendSettings = tableBackendSet != null ? tableBackendSet : new WorkflowTableBackendSettings();
+        } else {
+            m_workflowLock = new WorkflowLock(this, m_directNCParent);
+            m_dataRepository = workflowDataRepository;
+        }
+        m_wfmListeners = new CopyOnWriteArrayList<WorkflowListener>();
+        LOGGER.debug("Created subworkflow " + this.getID());
+    }
+
+
+    /**
+     * Constructor - create new workflow from persistor.
+     *
+     * @param directNCParent TODO
+     * @param parent The parent of this workflow
+     * @param id The ID of this workflow
+     * @param persistor Persistor containing the content for this workflow
+     * @param workflowDataRepository ...
+     */
+    WorkflowManager(final NodeContainerParent directNCParent, final WorkflowManager parent, final NodeID id,
         final WorkflowDef def, final WorkflowDataRepository workflowDataRepository, final WorkflowLoadHelper loadHelper) {
         super(parent, id, def, loadHelper);
         m_directNCParent = assertParentAssignments(directNCParent, parent);
@@ -586,7 +665,8 @@ public final class WorkflowManager extends NodeContainer
         if (isProject) {
             m_workflowLock = new WorkflowLock(this);
             m_dataRepository = persistor.getWorkflowDataRepository();
-      kendSettings();
+            WorkflowTableBackendSettings tableBackendSet = persistor.getWorkflowTableBackendSettings();
+            m_tableBackendSettings = tableBackendSet != null ? tableBackendSet : new WorkflowTableBackendSettings();
         } else {
             m_workflowLock = new WorkflowLock(this, m_directNCParent);
             m_dataRepository = workflowDataRepository;
@@ -8267,7 +8347,7 @@ public final class WorkflowManager extends NodeContainer
      * @throws UnsupportedWorkflowVersionException If the version of the workflow is unknown (future version)
      * @throws LockFailedException if the flow can't be locked for opening
      */
-    public WorkflowLoadResult loa(final File directory, final ExecutionMonitor exec,
+    public WorkflowLoadResult load(final File directory, final ExecutionMonitor exec,
         final WorkflowLoadHelper loadHelper, final boolean keepNodeMessages) throws IOException,
         InvalidSettingsException, CanceledExecutionException, UnsupportedWorkflowVersionException, LockFailedException {
         ReferencedFile rootFile = new ReferencedFile(directory);
