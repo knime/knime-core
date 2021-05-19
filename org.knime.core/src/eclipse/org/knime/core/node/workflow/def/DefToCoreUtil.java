@@ -48,12 +48,17 @@
  */
 package org.knime.core.node.workflow.def;
 
+import java.util.Map;
+
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeAndBundleInformationPersistor;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.config.base.AbstractConfigEntry;
+import org.knime.core.node.config.base.ConfigEntries;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortTypeRegistry;
@@ -63,7 +68,9 @@ import org.knime.core.node.workflow.NodeAnnotationData;
 import org.knime.core.node.workflow.NodeContainer.NodeLocks;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.workflow.def.BoundsDef;
+import org.knime.core.workflow.def.ConfigDef;
 import org.knime.core.workflow.def.ConfigMapDef;
+import org.knime.core.workflow.def.ConfigValueDef;
 import org.knime.core.workflow.def.NativeNodeDef;
 import org.knime.core.workflow.def.NodeAnnotationDef;
 import org.knime.core.workflow.def.NodeLocksDef;
@@ -134,9 +141,51 @@ public class DefToCoreUtil {
 
     }
 
+    /**
+     * Create a node settings tree (comprising {@link AbstractConfigEntry}s) from a
+     * {@link ConfigDef} tree.
+     *
+     * @param def an entity containing the recursive node settings
+     */
     public static NodeSettingsRO toNodeSettings(final ConfigMapDef def) {
-        // TODO
-        return null;
+        return toNodeSettings(def, def.getKey());
+    }
+
+    /**
+     * Recursive function to create a node settings tree (comprising {@link AbstractConfigEntry}s) from a
+     * {@link ConfigDef} tree.
+     *
+     * @param def an entity containing the recursive node settings
+     * @param key the name of this subtree
+     */
+    private static NodeSettings toNodeSettings(final ConfigMapDef def, final String key) {
+        final NodeSettings settings = new NodeSettings(key);
+        // recursion anchor
+        if (def instanceof ConfigValueDef) {
+            addLeafToSettings(settings, key, (ConfigValueDef)def);
+        } else {
+            // recurse
+            for (Map.Entry<String, ConfigDef> childEntry : def.getChildren().entrySet()) {
+                final ConfigDef child = childEntry.getValue();
+                if (child instanceof ConfigMapDef) {
+                    settings.addNodeSettings(toNodeSettings((ConfigMapDef)child, childEntry.getKey()));
+                } else {
+                    addLeafToSettings(settings, childEntry.getKey(), (ConfigValueDef)childEntry);
+                }
+            }
+        }
+        return settings;
+    }
+
+    /**
+     * @param settings settings to modify
+     * @param key name of the key of the mapping
+     * @param configuration a string representation of the value with type annotation (saying, e.g., "xdouble"), see
+     *            {@link ConfigEntries}
+     */
+    private static void addLeafToSettings(final NodeSettings settings, final String key, final ConfigValueDef leafDef) {
+        AbstractConfigEntry leaf = ConfigEntries.valueOf(leafDef.getValueType()).createEntry(key, leafDef.getValue());
+        settings.addEntry(leaf);
     }
 
     public static NodeAndBundleInformationPersistor toNodeAndBundleInformationPersistor(final NativeNodeDef def) {
