@@ -140,12 +140,12 @@ public final class MetaNodeTemplateInformation implements Cloneable {
      *
      * @param role The role.
      * @param type the type (non-null for templates, null for links)
-     * @param exampleInputInfo see {@link #getExampleInputDataInfo()}, <code>null</code> if not a component project
+     * @param exampleInputDataInfo see {@link #getExampleInputDataInfo()}, <code>null</code> if not a component project
      *            metadata
      * @param incomingFlowVariables see {@link #getIncomingFlowVariables()}, <code>null</code> if not component project
      *            metadata
      */
-    private MetaNodeTemplateInformation(final Role role, final TemplateType type, final URI uri, final Date timestamp,
+    public MetaNodeTemplateInformation(final Role role, final TemplateType type, final URI uri, final Date timestamp,
         final NodeSettingsRO exampleInputDataInfo, final List<FlowVariable> incomingFlowVariables) {
         if (role == null) {
             throw new NullPointerException("Role must not be null");
