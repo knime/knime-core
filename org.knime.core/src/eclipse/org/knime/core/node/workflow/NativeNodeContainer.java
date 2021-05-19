@@ -101,11 +101,13 @@ import org.knime.core.node.workflow.FlowVariable.Scope;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.action.InteractiveWebViewsResult;
 import org.knime.core.node.workflow.action.InteractiveWebViewsResult.Builder;
+import org.knime.core.node.workflow.def.DefToCoreUtil;
 import org.knime.core.node.workflow.execresult.NativeNodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 import org.knime.core.node.workflow.execresult.NodeExecutionResult;
 import org.knime.core.node.workflow.virtual.parchunk.FlowVirtualScopeContext;
+import org.knime.core.workflow.def.NativeNodeDef;
 import org.w3c.dom.Element;
 
 /**
@@ -163,6 +165,20 @@ public class NativeNodeContainer extends SingleNodeContainer {
             m_nodeAndBundleInformation = persistor.getNodeAndBundleInformation();
         }
         assert m_node != null : persistor.getClass().getSimpleName()
+                + " did not provide Node instance for "
+                + getClass().getSimpleName() + " with id \"" + id + "\"";
+        setPortNames();
+        m_node.addMessageListener(new UnderlyingNodeMessageListener());
+    }
+
+    NativeNodeContainer(final WorkflowManager parent, final NodeID id, final NativeNodeDef def,
+        final WorkflowLoadHelper loadHelper) {
+        super(parent, id, def, loadHelper);
+        m_node = DefToCoreUtil.toNode(def);
+        if (getInternalState().isExecuted()) {
+            m_nodeAndBundleInformation = DefToCoreUtil.toNodeAndBundleInformationPersistor(def);
+        }
+        assert m_node != null : def.getClass().getSimpleName()
                 + " did not provide Node instance for "
                 + getClass().getSimpleName() + " with id \"" + id + "\"";
         setPortNames();

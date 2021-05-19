@@ -209,6 +209,7 @@ import org.knime.core.util.Pair;
 import org.knime.core.util.VMFileLocker;
 import org.knime.core.util.pathresolve.ResolverUtil;
 import org.knime.core.util.workflowalizer.AuthorInformation;
+import org.knime.core.workflow.def.WorkflowDef;
 
 /**
  * Container holding nodes and connections of a (sub) workflow. In contrast to previous implementations, this class will
@@ -525,8 +526,8 @@ public final class WorkflowManager extends NodeContainer
      * @param workflowDataRepository ...
      */
     WorkflowManager(final NodeContainerParent directNCParent, final WorkflowManager parent, final NodeID id,
-        final WorkflowPersistor persistor, final WorkflowDataRepository workflowDataRepository) {
-        super(parent, id, persistor.getMetaPersistor());
+        final WorkflowDef def, final WorkflowDataRepository workflowDataRepository, final WorkflowLoadHelper loadHelper) {
+        super(parent, id, def, loadHelper);
         m_directNCParent = assertParentAssignments(directNCParent, parent);
         ReferencedFile ncDir = super.getNodeContainerDirectory();
         final boolean isProject = persistor.isProject();
@@ -541,11 +542,13 @@ public final class WorkflowManager extends NodeContainer
         m_editorInfo = persistor.getEditorUIInformation();
         m_templateInformation = persistor.getTemplateInformation();
         m_authorInformation = persistor.getAuthorInformation();
-        m_loadVersion = persistor.getLoadVersion();
+        m_loadVersion = def.getVersion(); // ???
         m_workflowVariables = new Vector<FlowVariable>(persistor.getWorkflowVariables());
         m_credentialsStore = new CredentialsStore(this, persistor.getCredentials());
-        m_cipher = persistor.getWorkflowCipher();
+        m_cipher = persistor.getWorkflowCipher(); // ???
         WorkflowContext workflowContext;
+        // TODO
+        loadHelper.getWorkflowContext();
         if (isProject || isComponentProjectWFM()) {
             workflowContext = persistor.getWorkflowContext();
             if (workflowContext == null && getNodeContainerDirectory() != null) { // real projects have a file loc
@@ -583,8 +586,7 @@ public final class WorkflowManager extends NodeContainer
         if (isProject) {
             m_workflowLock = new WorkflowLock(this);
             m_dataRepository = persistor.getWorkflowDataRepository();
-            WorkflowTableBackendSettings tableBackendSet = persistor.getWorkflowTableBackendSettings();
-            m_tableBackendSettings = tableBackendSet != null ? tableBackendSet : new WorkflowTableBackendSettings();
+      kendSettings();
         } else {
             m_workflowLock = new WorkflowLock(this, m_directNCParent);
             m_dataRepository = workflowDataRepository;
@@ -8265,7 +8267,7 @@ public final class WorkflowManager extends NodeContainer
      * @throws UnsupportedWorkflowVersionException If the version of the workflow is unknown (future version)
      * @throws LockFailedException if the flow can't be locked for opening
      */
-    public WorkflowLoadResult load(final File directory, final ExecutionMonitor exec,
+    public WorkflowLoadResult loa(final File directory, final ExecutionMonitor exec,
         final WorkflowLoadHelper loadHelper, final boolean keepNodeMessages) throws IOException,
         InvalidSettingsException, CanceledExecutionException, UnsupportedWorkflowVersionException, LockFailedException {
         ReferencedFile rootFile = new ReferencedFile(directory);
