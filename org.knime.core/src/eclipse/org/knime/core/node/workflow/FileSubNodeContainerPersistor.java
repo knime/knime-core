@@ -427,7 +427,7 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
 
     /** {@inheritDoc} */
     @Override
-    NodeSettingsRO loadNCAndWashModelSettings(final NodeSettingsRO settingsForNode, final NodeSettingsRO modelSettings,
+    public NodeSettingsRO loadNCAndWashModelSettings(final NodeSettingsRO settingsForNode, final NodeSettingsRO modelSettings,
         final Map<Integer, BufferedDataTable> tblRep, final ExecutionMonitor exec, final LoadResult result)
         throws InvalidSettingsException, CanceledExecutionException, IOException {
         return modelSettings;
@@ -435,7 +435,7 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
 
     /** {@inheritDoc} */
     @Override
-    NodeSettingsRO loadSettingsForNode(final LoadResult loadResult) throws IOException {
+    public NodeSettingsRO loadSettingsForNode(final LoadResult loadResult) throws IOException {
         NodeSettingsRO nodeSettings = getNodeSettings();
         if (getLoadVersion().ordinal() < LoadVersion.V280.ordinal()) {
             throw new IOException("No Component in version " + getLoadVersion());

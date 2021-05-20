@@ -48,23 +48,47 @@
  */
 package org.knime.core.node.workflow.def;
 
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeAndBundleInformationPersistor;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.config.base.AbstractConfigEntry;
+import org.knime.core.node.workflow.MetaNodeTemplateInformation;
+import org.knime.core.node.workflow.NodeAnnotation;
 import org.knime.core.node.workflow.NodeContainer.NodeLocks;
+import org.knime.core.node.workflow.NodeMessage;
+import org.knime.core.node.workflow.NodePort;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.workflow.def.ConfigDef;
+import org.knime.core.workflow.def.ConfigMapDef;
 import org.knime.core.workflow.def.NativeNodeDef;
+import org.knime.core.workflow.def.NodeAnnotationDef;
 import org.knime.core.workflow.def.NodeLocksDef;
-import org.knime.core.workflow.def.NodeUISettingsDef;
+import org.knime.core.workflow.def.NodeMessageDef;
+import org.knime.core.workflow.def.NodeUIInfoDef;
+import org.knime.core.workflow.def.PortDef;
+import org.knime.core.workflow.def.StyleDef;
+import org.knime.core.workflow.def.TemplateInfoDef;
+import org.knime.core.workflow.def.impl.DefaultAnnotationDataDef;
+import org.knime.core.workflow.def.impl.DefaultBoundsDef;
 import org.knime.core.workflow.def.impl.DefaultConfigMapDef;
 import org.knime.core.workflow.def.impl.DefaultConfigValueDef;
+import org.knime.core.workflow.def.impl.DefaultNodeAnnotationDef;
+import org.knime.core.workflow.def.impl.DefaultNodeLocksDef;
+import org.knime.core.workflow.def.impl.DefaultNodeMessageDef;
+import org.knime.core.workflow.def.impl.DefaultNodeUIInfoDef;
+import org.knime.core.workflow.def.impl.DefaultPortDef;
+import org.knime.core.workflow.def.impl.DefaultStyleDef;
+import org.knime.core.workflow.def.impl.DefaultTemplateInfoDef;
 
 /**
  *
@@ -75,6 +99,15 @@ public class CoreToDefUtil {
     public static NativeNodeDef toNativeNodeDef(final Node node) {
         //TODO
         return null;
+    }
+
+    public static ConfigMapDef toConfigMapDef(final NodeSettings settings) throws InvalidSettingsException {
+        ConfigDef configDef = toConfigDef(settings);
+        if (configDef instanceof ConfigMapDef) {
+            return (ConfigMapDef)configDef;
+        } else {
+            throw new IllegalArgumentException("TODO");
+        }
     }
 
     /**
@@ -124,14 +157,56 @@ public class CoreToDefUtil {
         return null;
     }
 
-    public static NodeUISettingsDef toNodeUIInformationDef(final NodeUIInformation uiInfoDef) {
-        //TODO
-        return null;
+    public static NodeMessageDef toNodeMessageDef(final NodeMessage nm) {
+        return DefaultNodeMessageDef.builder().setMessage(nm.getMessage()).setType(nm.getMessageType().toString())
+            .build();
+    }
+
+    public static NodeUIInfoDef toNodeUIInfoDef(final NodeUIInformation uiInfoDef) {
+        int[] bounds = uiInfoDef.getBounds();
+        DefaultBoundsDef boundsDef =
+            DefaultBoundsDef.builder().setX(bounds[0]).setY(bounds[1]).setWidth(bounds[2]).setHeight(bounds[3]).build();
+        return DefaultNodeUIInfoDef.builder().setBounds(boundsDef).setDropLocation(uiInfoDef.isDropLocation())
+            .setHasAbsoluteCoordinates(uiInfoDef.hasAbsoluteCoordinates()).setSnapToGrid(uiInfoDef.getSnapToGrid())
+            .setSymbolRelative(uiInfoDef.isSymbolRelative()).build();
     }
 
     public static NodeLocksDef toNodeLocksDef(final NodeLocks def) {
-        //TODO
-        return null;
+        return DefaultNodeLocksDef.builder().setHasConfigureLock(def.hasConfigureLock())
+            .setHasDeleteLock(def.hasDeleteLock()).setHasResetLock(def.hasResetLock()).build();
     }
 
+    public static NodeAnnotationDef toNodeAnnotationDef(final NodeAnnotation na) {
+        List<StyleDef> styles = Arrays.stream(na.getStyleRanges())
+            .map(s -> DefaultStyleDef.builder().setFgcolor(s.getFgColor()).setFontname(s.getFontName())
+                .setFontsize(s.getFontSize()).setFontstyle(s.getFontStyle()).setLength(s.getLength())
+                .setStart(s.getStart()).build())
+            .collect(Collectors.toList());
+        DefaultAnnotationDataDef annoData = DefaultAnnotationDataDef.builder()//
+            .setText(na.getText())//
+            .setAlignment(na.getAlignment().toString())//
+            .setBgcolor(na.getBgColor())//
+            .setBorderColor(na.getBorderColor())//
+            .setBorderSize(na.getBorderSize())//
+            .setDefFontSize(na.getDefaultFontSize())//
+            .setHeight(na.getHeight())//
+            .setWidth(na.getWidth())//
+            .setXCoordinate(na.getX())//
+            .setYCoordinate(na.getY())//
+            .setStyles(styles)//
+            .build();
+        return DefaultNodeAnnotationDef.builder().setDefault(na.getData().isDefault()).setData(annoData).build();
+    }
+
+    public static TemplateInfoDef toTemplateInfoDef(final MetaNodeTemplateInformation i) {
+        // TODO flow variables and example data info
+        return DefaultTemplateInfoDef.builder().setRole(i.getRole().toString())
+            .setTimestamp(OffsetDateTime.ofInstant(i.getTimestamp().toInstant(), ZoneId.systemDefault()))
+            .setType(i.getNodeContainerTemplateType().toString()).build();
+    }
+
+    public static PortDef toPortDef(final NodePort p) {
+        return DefaultPortDef.builder().setIndex(p.getPortIndex()).setName(p.getPortName())
+            .setType(p.getPortType().toString()).build();
+    }
 }

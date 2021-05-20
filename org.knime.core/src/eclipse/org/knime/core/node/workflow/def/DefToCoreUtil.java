@@ -204,7 +204,7 @@ public class DefToCoreUtil {
      *
      * @param def an entity containing the recursive node settings
      */
-    public static NodeSettingsRO toNodeSettings(final ConfigMapDef def) {
+    public static NodeSettings toNodeSettings(final ConfigMapDef def) {
         return toNodeSettings(def, def.getKey());
     }
 
