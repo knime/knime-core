@@ -51,62 +51,56 @@ package org.knime.core.node.workflow.def.impl;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
-import org.knime.core.node.NodeFactory.NodeType;
-import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.workflow.def.AnnotationDef;
+import org.knime.core.node.workflow.def.CoreToDefUtil;
+import org.knime.core.workflow.def.AnnotationDataDef;
 import org.knime.core.workflow.def.AuthorInformationDef;
 import org.knime.core.workflow.def.ConnectionDef;
 import org.knime.core.workflow.def.ConnectionUISettingsDef;
-import org.knime.core.workflow.def.ExtrainfoNodeBoundsDef;
-import org.knime.core.workflow.def.FactorySettingsDef;
-import org.knime.core.workflow.def.FilestoreDef;
-import org.knime.core.workflow.def.NodeAnnotationDef;
 import org.knime.core.workflow.def.NodeDef;
-import org.knime.core.workflow.def.NodeUISettingsDef;
+import org.knime.core.workflow.def.NodeRefDef;
+import org.knime.core.workflow.def.NodeUIInfoDef;
 import org.knime.core.workflow.def.PortDef;
 import org.knime.core.workflow.def.StyleDef;
+import org.knime.core.workflow.def.TemplateInfoDef;
 import org.knime.core.workflow.def.WorkflowCredentialsDef;
 import org.knime.core.workflow.def.WorkflowDef;
-import org.knime.core.workflow.def.WorkflowEditorSettingsDef;
+import org.knime.core.workflow.def.WorkflowUISettingsDef;
 
 /**
  *
  * @author Jannik Löscher, KNIME GmbH, Konstanz, Germany
+ * @author hornm
  * @since 4.4
  */
-public class WorflowDefWorkflowManager implements WorkflowDef {
+public class WorkflowManagerDefWrapper extends NodeContainerDefWrapper implements WorkflowDef {
 
-    private final WorkflowManager m_workflowManager;
+    private final WorkflowManager m_wfm;
 
     /**
-     * @param workflowManager the workflow manager to use as a base
+     * @param wfm the workflow manager to use as a base
      */
-    public WorflowDefWorkflowManager(final WorkflowManager workflowManager) {
-        this.m_workflowManager = workflowManager;
+    public WorkflowManagerDefWrapper(final WorkflowManager wfm) {
+        super(wfm);
+        this.m_wfm = wfm;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public String getVersion() {
-        return m_workflowManager.getLoadVersion().getVersionString();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Map<String, ConnectionDef> getConnections() {
-        final var result = new LinkedHashMap<String, ConnectionDef>();
-        final var connections = m_workflowManager.getConnectionContainers();
+    public List<ConnectionDef> getConnections() {
+        final var result = new ArrayList<ConnectionDef>();
+        final var connections = m_wfm.getConnectionContainers();
         for (final var connection : connections) {
-            result.put(connection.getID().toString(), new ConnectionDef() {
+            result.add(new ConnectionDef() {
 
                 @Override
                 public ConnectionUISettingsDef getUiSettings() {
@@ -119,8 +113,8 @@ public class WorflowDefWorkflowManager implements WorkflowDef {
                 }
 
                 @Override
-                public String getSourceID() {
-                    return connection.getSource().toString();
+                public Integer getSourceID() {
+                    return connection.getSource().getIndex();
                 }
 
                 @Override
@@ -129,8 +123,8 @@ public class WorflowDefWorkflowManager implements WorkflowDef {
                 }
 
                 @Override
-                public String getDestID() {
-                    return connection.getDest().toString();
+                public Integer getDestID() {
+                    return connection.getDest().getIndex();
                 }
             });
         }
@@ -141,9 +135,9 @@ public class WorflowDefWorkflowManager implements WorkflowDef {
      * {@inheritDoc}
      */
     @Override
-    public WorkflowEditorSettingsDef getWorkflowEditorSettings() {
-        final var wfEditorSettings = m_workflowManager.getEditorUIInformation();
-        return new WorkflowEditorSettingsDef() {
+    public WorkflowUISettingsDef getWorkflowEditorSettings() {
+        final var wfEditorSettings = m_wfm.getEditorUIInformation();
+        return new WorkflowUISettingsDef() {
 
             @Override
             public Boolean isSnapToGrid() {
@@ -206,7 +200,7 @@ public class WorflowDefWorkflowManager implements WorkflowDef {
      */
     @Override
     public AuthorInformationDef getAuthorInformation() {
-        final var authorInfo = m_workflowManager.getAuthorInformation();
+        final var authorInfo = m_wfm.getAuthorInformation();
         return new AuthorInformationDef() {
 
             @Override
@@ -241,16 +235,8 @@ public class WorflowDefWorkflowManager implements WorkflowDef {
      * {@inheritDoc}
      */
     @Override
-    public String getCustomDescription() {
-        return m_workflowManager.getCustomDescription();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public WorkflowCredentialsDef getWorkflowCredentials() {
-        return () -> m_workflowManager.getCredentialsStore().toString(); //// ????????
+        return () -> m_wfm.getCredentialsStore().toString(); //// ????????
     }
 
     /**
@@ -259,204 +245,8 @@ public class WorflowDefWorkflowManager implements WorkflowDef {
     @Override
     public Map<String, NodeDef> getNodes() {
         final var result = new LinkedHashMap<String, NodeDef>();
-        for (final var node : m_workflowManager.getNodeContainers()) {
-            result.put(node.getID().toString(), new NodeDef() {
+        for (final var node : m_wfm.getNodeContainers()) {
 
-                @Override
-                public Boolean isNodeIsMeta() {
-                    return NodeType.Meta == node.getType();
-                }
-
-                @Override
-                public Boolean isIsInactive() {
-                    if (node instanceof SingleNodeContainer) {
-                        return ((SingleNodeContainer)node).isInactive();
-                    }
-                    return null;
-                }
-
-                @Override
-                public Boolean hasContent() {
-                    return null; // TODO: where to find this info?
-                }
-
-                @Override
-                public NodeUISettingsDef getUiSettings() {
-                    return () -> new ExtrainfoNodeBoundsDef() {
-                        final int[] m_bounds = node.getUIInformation().getBounds();
-
-                        @Override
-                        public Integer getArraySize() {
-                            return m_bounds.length;
-                        }
-
-                        @Override
-                        public Integer get3() {
-                            return m_bounds[3];
-                        }
-
-                        @Override
-                        public Integer get2() {
-                            return m_bounds[2];
-                        }
-
-                        @Override
-                        public Integer get1() {
-                            return m_bounds[1];
-                        }
-
-                        @Override
-                        public Integer get0() {
-                            return m_bounds[0];
-                        }
-                    };
-                }
-
-                @Override
-                public List<FilestoreDef> getFilestores() {
-                    // TODO Auto-generated method stub
-                    return null;
-                }
-
-                @Override
-                public FactorySettingsDef getInternalNodeSubsettings() {
-                    // TODO Auto-generated method stub
-                    return null;
-                }
-
-                @Override
-                public String getNodeFile() {
-                    // TODO Auto-generated method stub
-                    return null;
-                }
-
-                @Override
-                public FactorySettingsDef getModel() {
-                    // TODO Auto-generated method stub
-                    return null;
-                }
-
-                @Override
-                public NodeAnnotationDef getNodeAnnotation() {
-                    // TODO Auto-generated method stub
-                    return null;
-                }
-
-                @Override
-                public String getCustomDescription() {
-                    // TODO Auto-generated method stub
-                    return null;
-                }
-
-                @Override
-                public String getNodeName() {
-                    // TODO Auto-generated method stub
-                    return null;
-                }
-
-                @Override
-                public String getNodeBundleName() {
-                    // TODO Auto-generated method stub
-                    return null;
-                }
-
-                @Override
-                public String getNodeBundleSymbolicName() {
-                    // TODO Auto-generated method stub
-                    return null;
-                }
-
-                @Override
-                public String getNodeBundleVendor() {
-                    // TODO Auto-generated method stub
-                    return null;
-                }
-
-                @Override
-                public String getNodeBundleVersion() {
-                    // TODO Auto-generated method stub
-                    return null;
-                }
-
-                @Override
-                public String getNodeFeatureName() {
-                    // TODO Auto-generated method stub
-                    return null;
-                }
-
-                @Override
-                public String getNodeFeatureSymbolicName() {
-                    // TODO Auto-generated method stub
-                    return null;
-                }
-
-                @Override
-                public String getNodeFeatureVendor() {
-                    // TODO Auto-generated method stub
-                    return null;
-                }
-
-                @Override
-                public String getNodeFeatureVersion() {
-                    // TODO Auto-generated method stub
-                    return null;
-                }
-
-                @Override
-                public FactorySettingsDef getFactorySettings() {
-                    // TODO Auto-generated method stub
-                    return null;
-                }
-
-                @Override
-                public Map<String, PortDef> getPorts() {
-                    // TODO Auto-generated method stub
-                    return null;
-                }
-
-                @Override
-                public String getName() {
-                    // TODO Auto-generated method stub
-                    return null;
-                }
-
-                @Override
-                public String getFactory() {
-                    // TODO Auto-generated method stub
-                    return null;
-                }
-
-                @Override
-                public String getState() {
-                    // TODO Auto-generated method stub
-                    return null;
-                }
-
-                @Override
-                public String getNodeType() {
-                    // TODO Auto-generated method stub
-                    return null;
-                }
-
-                @Override
-                public String getNodeSettingsFile() {
-                    // TODO Auto-generated method stub
-                    return null;
-                }
-
-                @Override
-                public String getUiClassname() {
-                    // TODO Auto-generated method stub
-                    return null;
-                }
-
-                @Override
-                public Integer getId() {
-                    // TODO Auto-generated method stub
-                    return null;
-                }
-
-            });
         }
         return result;
     }
@@ -465,18 +255,18 @@ public class WorflowDefWorkflowManager implements WorkflowDef {
      * {@inheritDoc}
      */
     @Override
-    public String getName() {
-        return m_workflowManager.getName();
+    public List<NodeRefDef> getNodeRefs() {
+        return null;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Map<String, AnnotationDef> getAnnotations() {
-        final var result = new LinkedHashMap<String, AnnotationDef>();
-        for (final var annotation : m_workflowManager.getWorkflowAnnotations()) {
-            result.put(annotation.getID().toString(), new AnnotationDef() {
+    public List<AnnotationDataDef> getAnnotations() {
+        final var result = new ArrayList<AnnotationDataDef>();
+        for (final var annotation : m_wfm.getWorkflowAnnotations()) {
+            result.add(new AnnotationDataDef() {
 
                 @Override
                 public Integer getYCoordinate() {
@@ -499,10 +289,10 @@ public class WorflowDefWorkflowManager implements WorkflowDef {
                 }
 
                 @Override
-                public Map<String, StyleDef> getStyles() {
-                    final var result = new LinkedHashMap<String, StyleDef>();
+                public List<StyleDef> getStyles() {
+                    final var result = new ArrayList<StyleDef>();
                     for (final var style : annotation.getStyleRanges()) {
-                        result.put(style.toString(), new StyleDef() {
+                        result.add(new StyleDef() {
 
                             @Override
                             public Integer getStart() {
@@ -581,16 +371,58 @@ public class WorflowDefWorkflowManager implements WorkflowDef {
      * {@inheritDoc}
      */
     @Override
-    public String getId() {
-        return m_workflowManager.getID().toString();
+    public String getName() {
+        return m_wfm.getName();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public String getState() {
-        return m_workflowManager.getNodeContainerState().toString();
+    public Boolean isProject() {
+        return m_wfm.isProject();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public TemplateInfoDef getTemplateInfo() {
+        return CoreToDefUtil.toTemplateInfoDef(m_wfm.getTemplateInformation());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<PortDef> getInPorts() {
+        return IntStream.range(0, m_wfm.getNrInPorts()).mapToObj(m_wfm::getInPort).map(CoreToDefUtil::toPortDef)
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<PortDef> getOutPorts() {
+        return IntStream.range(0, m_wfm.getNrOutPorts()).mapToObj(m_wfm::getOutPort).map(CoreToDefUtil::toPortDef)
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeUIInfoDef getInPortsBarUIInfo() {
+        return CoreToDefUtil.toNodeUIInfoDef(m_wfm.getInPortsBarUIInfo());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeUIInfoDef getOutPortsBarUIInfo() {
+        return CoreToDefUtil.toNodeUIInfoDef(m_wfm.getOutPortsBarUIInfo());
     }
 
 }
