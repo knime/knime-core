@@ -188,7 +188,6 @@ import org.knime.core.node.workflow.action.MetaNodeToSubNodeResult;
 import org.knime.core.node.workflow.action.ReplaceNodeResult;
 import org.knime.core.node.workflow.action.SubNodeToMetaNodeResult;
 import org.knime.core.node.workflow.capture.WorkflowSegment;
-import org.knime.core.node.workflow.def.DefToCoreUtil;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 import org.knime.core.node.workflow.execresult.WorkflowExecutionResult;
@@ -211,8 +210,6 @@ import org.knime.core.util.Pair;
 import org.knime.core.util.VMFileLocker;
 import org.knime.core.util.pathresolve.ResolverUtil;
 import org.knime.core.util.workflowalizer.AuthorInformation;
-import org.knime.core.workflow.def.PortDef;
-import org.knime.core.workflow.def.WorkflowDef;
 
 /**
  * Container holding nodes and connections of a (sub) workflow. In contrast to previous implementations, this class will
@@ -580,85 +577,6 @@ public final class WorkflowManager extends NodeContainer
             m_outPorts[i].setPortName(t.getPortName());
         }
         m_outPortsBarUIInfo = persistor.getOutPortsBarUIInfo();
-
-        boolean noPorts = m_inPorts.length == 0 && m_outPorts.length == 0;
-        assert !isProject || noPorts; // projects must not have ports
-
-        if (isProject) {
-            m_workflowLock = new WorkflowLock(this);
-            m_dataRepository = persistor.getWorkflowDataRepository();
-            WorkflowTableBackendSettings tableBackendSet = persistor.getWorkflowTableBackendSettings();
-            m_tableBackendSettings = tableBackendSet != null ? tableBackendSet : new WorkflowTableBackendSettings();
-        } else {
-            m_workflowLock = new WorkflowLock(this, m_directNCParent);
-            m_dataRepository = workflowDataRepository;
-        }
-        m_wfmListeners = new CopyOnWriteArrayList<WorkflowListener>();
-        LOGGER.debug("Created subworkflow " + this.getID());
-    }
-
-
-    /**
-     * Constructor - create new workflow from persistor.
-     *
-     * @param directNCParent TODO
-     * @param parent The parent of this workflow
-     * @param id The ID of this workflow
-     * @param persistor Persistor containing the content for this workflow
-     * @param workflowDataRepository ...
-     */
-    WorkflowManager(final NodeContainerParent directNCParent, final WorkflowManager parent, final NodeID id,
-        final WorkflowDef def, final WorkflowDataRepository workflowDataRepository, final WorkflowLoadHelper loadHelper) {
-        super(parent, id, def, loadHelper);
-        m_directNCParent = assertParentAssignments(directNCParent, parent);
-        ReferencedFile ncDir = super.getNodeContainerDirectory();
-        final boolean isProject = def.isProject();
-        if (ncDir != null && isProject) { // only lock projects
-            if (!ncDir.fileLockRootForVM()) {
-                throw new IllegalStateException("Root directory to workflow \"" + ncDir
-                    + "\" can't be locked although it should have " + "been locked by the load routines");
-            }
-        }
-        m_workflow = new Workflow(this, id);
-        m_name = def.getName();
-        m_editorInfo = DefToCoreUtil.toEditorUIInformation(def.getWorkflowEditorSettings());
-        m_templateInformation = DefToCoreUtil.toTemplateInfo(def.getTemplateInfo());
-        m_authorInformation = DefToCoreUtil.toAuthorInformation(def.getAuthorInformation());
-        m_loadVersion = def.getVersion(); // ???
-        m_workflowVariables = new Vector<FlowVariable>(); // TODO
-        m_credentialsStore = new CredentialsStore(this, Collections.emptyList()); // TODO
-        m_cipher = persistor.getWorkflowCipher(); // ???
-        WorkflowContext workflowContext;
-        if (isProject || isComponentProjectWFM()) {
-            workflowContext = loadHelper.getWorkflowContext();
-            if (workflowContext == null && getNodeContainerDirectory() != null) { // real projects have a file loc
-                LOGGER.warn("No workflow context available for " + m_name, new Throwable());
-                workflowContext = new WorkflowContext.Factory(getNodeContainerDirectory().getFile()).createContext();
-            }
-            if (workflowContext != null) {
-                workflowContext = createAndSetWorkflowTempDirectory(workflowContext);
-            }
-        } else {
-            workflowContext = null;
-        }
-        m_workflowContext = workflowContext;
-        List<PortDef> inPorts = def.getInPorts();
-        m_inPorts = new WorkflowInPort[inPorts.size()];
-        for (int i = 0; i < inPorts.size(); i++) {
-            PortDef p = inPorts.get(i);
-            m_inPorts[i] = new WorkflowInPort(p.getIndex(), DefToCoreUtil.toPortType(p.getType()));
-            m_inPorts[i].setPortName(p.getName());
-        }
-        m_inPortsBarUIInfo = DefToCoreUtil.toNodeUIInformation(def.getInPortsBarUIInfo());
-
-        List<PortDef> outPorts = def.getOutPorts();
-        m_outPorts = new WorkflowOutPort[outPorts.size()];
-        for (int i = 0; i < outPorts.size(); i++) {
-            PortDef p = outPorts.get(i);
-            m_outPorts[i] = new WorkflowOutPort(p.getIndex(), DefToCoreUtil.toPortType(p.getType()));
-            m_outPorts[i].setPortName(p.getName());
-        }
-        m_outPortsBarUIInfo = DefToCoreUtil.toNodeUIInformation(def.getOutPortsBarUIInfo());
 
         boolean noPorts = m_inPorts.length == 0 && m_outPorts.length == 0;
         assert !isProject || noPorts; // projects must not have ports
