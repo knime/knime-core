@@ -48,6 +48,7 @@
  */
 package org.knime.core.node.workflow.def;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -58,20 +59,19 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.workflow.def.ConfigDef;
 import org.knime.core.workflow.def.ConfigMapDef;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 /**
  *
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  */
 public class DefToCoreUtilTest {
 
-    /**
-     * Convert {@link NodeSettings} to {@link ConfigDef} and the {@link ConfigDef} back to {@link NodeSettings}.
-     * Compare the original {@link NodeSettings} with the restored {@link NodeSettings}.
-     */
-    @Test
-    public void testPersistRestore() {
+    private static final NodeSettings original;
 
-        NodeSettings original = new NodeSettings("root");
+    static {
+        original = new NodeSettings("root");
 
         original.addStringArray("colors", "red", "green", "blue");
         original.addString("answerString", "42");
@@ -86,15 +86,24 @@ public class DefToCoreUtilTest {
         original.addLong("answerLong", Long.MIN_VALUE);
         original.addPassword("answerPassword", "zebra", "secret");
 
-        // tree structure
+        // tree structure: org.knime.core.(util|node)
         NodeSettingsWO org = original.addNodeSettings("org");
         NodeSettingsWO knime = org.addNodeSettings("knime");
+        // primitive setting in a tree structure, not only top level
         knime.addLong("loc", Long.MAX_VALUE);
         NodeSettingsWO core = knime.addNodeSettings("core");
         // leafs that are not primitives (addBoolean, addString, ...)
         core.addNodeSettings("util");
         core.addNodeSettings("node");
 
+    }
+
+    /**
+     * Convert {@link NodeSettings} to {@link ConfigDef} and the {@link ConfigDef} back to {@link NodeSettings}.
+     * Compare the original {@link NodeSettings} with the restored {@link NodeSettings}.
+     */
+    @Test
+    public void testPersistRestore() {
         try {
             ConfigDef def = CoreToDefUtil.toConfigDef(original);
             NodeSettings restored = (NodeSettings)DefToCoreUtil.toNodeSettings((ConfigMapDef)def);
@@ -106,6 +115,47 @@ public class DefToCoreUtilTest {
             assertTrue("Configuration not identical to itself", restored.hasIdenticalValue(restored));
             assertTrue("Configuration not identical to itself", original.hasIdenticalValue(original));
             assertTrue("Configuration comparison is not commutative", restored.hasIdenticalValue(original));
+        } catch (InvalidSettingsException e) {
+            fail(e.getMessage());
+        }
+    }
+
+    /**
+     * Test the output of the JSON serializer on a {@link NodeSettings} object represented as a {@link ConfigDef}.
+     */
+    @Test
+    public void testPersistJson() {
+        try {
+
+            ConfigDef def = CoreToDefUtil.toConfigDef(original);
+
+            ObjectMapper mapper = new ObjectMapper();
+
+            final String expected =
+                    "{\"children\":{\"colors\":{\"children\":{\"array-size\":{\"value\":\"3\",\"valueType\":"
+                  + "\"xint\"},\"0\":{\"value\":\"red\",\"valueType\":\"xstring\"},\"1\":{\"value\":\"green\","
+                  + "\"valueType\":\"xstring\"},\"2\":{\"value\":\"blue\",\"valueType\":\"xstring\"}},\"key\":"
+                  + "\"colors\"},\"answerString\":{\"value\":\"42\",\"valueType\":\"xstring\"},\"A v ¬A\":{\"value\":"
+                  + "\"true\",\"valueType\":\"xboolean\"},\"answerInt\":{\"value\":\"-2147483648\",\"valueType\":"
+                  + "\"xint\"},\"answerFloat\":{\"value\":\"1.401298464324817E-45\",\"valueType\":\"xfloat\"},"
+                  + "\"answerDouble\":{\"value\":\"4.9E-324\",\"valueType\":\"xdouble\"},\"answerShort\":{\"value\":"
+                  + "\"-32768\",\"valueType\":\"xshort\"},\"answerByte\":{\"value\":\"-128\",\"valueType\":\"xbyte\"},"
+                  + "\"answerLong\":{\"value\":\"-9223372036854775808\",\"valueType\":\"xlong\"},\"answerPassword\":"
+                  + "{\"value\":\"01434A46863335EB929DB469B557A5B30E\",\"valueType\":\"xpassword\"},\"org\":"
+                  + "{\"children\":{\"knime\":{\"children\":{\"loc\":{\"value\":\"9223372036854775807\","
+                  + "\"valueType\":\"xlong\"},\"core\":{\"children\":{\"util\":{\"value\":\"util\",\"valueType\":"
+                  + "\"config\"},\"node\":{\"value\":\"node\",\"valueType\":\"config\"}},\"key\":\"core\"}},\"key\":"
+                  + "\"knime\"}},\"key\":\"org\"}},\"key\":\"root\"}";
+
+            String actual = mapper.writeValueAsString(def);
+            assertEquals("JSON Serialization of NodeSettings (via ConfigDef) returns unexpected output.", expected,
+                actual);
+
+            String prettyPrintedJson = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(def);
+            System.out.println(prettyPrintedJson);
+
+        } catch (JsonProcessingException e) {
+            fail(e.getMessage());
         } catch (InvalidSettingsException e) {
             fail(e.getMessage());
         }
