@@ -137,7 +137,6 @@ import org.knime.core.node.workflow.WorkflowPersistor.NodeContainerTemplateLinkU
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
 import org.knime.core.node.workflow.action.InteractiveWebViewsResult;
 import org.knime.core.node.workflow.action.InteractiveWebViewsResult.Builder;
-import org.knime.core.node.workflow.def.DefToCoreUtil;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 import org.knime.core.node.workflow.execresult.SubnodeContainerExecutionResult;
@@ -151,9 +150,6 @@ import org.knime.core.util.LoadVersion;
 import org.knime.core.util.LockFailedException;
 import org.knime.core.util.Pair;
 import org.knime.core.util.ThreadPool;
-import org.knime.core.workflow.def.ComponentDef;
-import org.knime.core.workflow.def.PortDef;
-import org.knime.core.workflow.def.WorkflowDef;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -324,52 +320,6 @@ public final class SubNodeContainer extends SingleNodeContainer
         }
         m_metadata = persistor.getMetadata();
         m_templateInformation = persistor.getTemplateInformation();
-    }
-
-    /** Load workflow from persistor.
-    *
-    * @param parent ...
-    * @param id ...
-    * @param persistor ...
-    */
-    SubNodeContainer(final WorkflowManager parent, final NodeID id, final ComponentDef def,
-        final WorkflowLoadHelper loadHelper) {
-        super(parent, id, def, loadHelper);
-        m_subnodeScopeContext = new FlowSubnodeScopeContext(this);
-        WorkflowDef workflowDef = def.getWorkflow();
-        m_wfm = new WorkflowManager(this, null, new NodeID(id, 0), workflowDef, parent.getWorkflowDataRepository(),
-            loadHelper);
-        m_wfm.setJobManager(null);
-        List<PortDef> inPorts = def.getInPorts();
-        List<PortDef> outPorts = def.getOutPorts();
-        m_outports = new NodeContainerOutPort[outPorts.size()];
-        m_outputs = new Output[outPorts.size()];
-        for (int i = 0; i < m_outports.length; i++) {
-            PortDef p = outPorts.get(i);
-            m_outputs[i] = new Output(DefToCoreUtil.toPortType(p.getType()));
-            m_outputs[i].setName(p.getName());
-            m_outports[i] = new NodeContainerOutPort(this, DefToCoreUtil.toPortType(p.getType()), p.getIndex());
-            m_outports[i].setPortName(p.getName());
-        }
-        m_inports = new NodeInPort[inPorts.size()];
-        m_inHiliteHandler = new HiLiteHandler[inPorts.size() - 1];
-        m_virtualInNodeIDSuffix = def.getVirtualInNodeIDSuffix();
-        m_virtualOutNodeIDSuffix = def.getVirtualOutNodeIDSuffix();
-        m_subnodeLayoutStringProvider = new SubnodeContainerLayoutStringProvider(def.getLayoutJSON());
-        m_subnodeConfigurationStringProvider = new SubnodeContainerConfigurationStringProvider(def.getConfigurationLayoutJSON());
-        m_hideInWizard = def.isHideInWizard();
-        m_customCSS = def.getCssStyles();
-        PortType[] inTypes = new PortType[inPorts.size()];
-        for (int i = 0; i < inPorts.size(); i++) {
-            inTypes[i] = DefToCoreUtil.toPortType(inPorts.get(i).getType());
-            m_inports[i] = new NodeInPort(i, inTypes[i]);
-            if (i > 0) {
-                // ignore optional variable input port
-                m_inHiliteHandler[i - 1] = new HiLiteHandler();
-            }
-        }
-        m_metadata = DefToCoreUtil.toComponentMetadata(def.getMetadata());
-        m_templateInformation = DefToCoreUtil.toTemplateInfo(def.getTemplateInfo());
     }
 
     /**

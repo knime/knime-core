@@ -65,6 +65,7 @@ import org.knime.core.node.config.base.ConfigEntries;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortTypeRegistry;
+import org.knime.core.node.workflow.AnnotationData;
 import org.knime.core.node.workflow.AnnotationData.TextAlignment;
 import org.knime.core.node.workflow.ComponentMetadata;
 import org.knime.core.node.workflow.ComponentMetadata.ComponentMetadataBuilder;
@@ -73,10 +74,10 @@ import org.knime.core.node.workflow.FileNativeNodeContainerPersistor;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.TemplateType;
-import org.knime.core.node.workflow.NodeAnnotationData;
 import org.knime.core.node.workflow.NodeContainer.NodeLocks;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.util.workflowalizer.AuthorInformation;
+import org.knime.core.workflow.def.AnnotationDataDef;
 import org.knime.core.workflow.def.AuthorInformationDef;
 import org.knime.core.workflow.def.BoundsDef;
 import org.knime.core.workflow.def.ComponentMetadataDef;
@@ -84,7 +85,6 @@ import org.knime.core.workflow.def.ConfigDef;
 import org.knime.core.workflow.def.ConfigMapDef;
 import org.knime.core.workflow.def.ConfigValueDef;
 import org.knime.core.workflow.def.NativeNodeDef;
-import org.knime.core.workflow.def.NodeAnnotationDef;
 import org.knime.core.workflow.def.NodeLocksDef;
 import org.knime.core.workflow.def.NodeUIInfoDef;
 import org.knime.core.workflow.def.TemplateInfoDef;
@@ -96,7 +96,7 @@ import org.knime.core.workflow.def.WorkflowUISettingsDef;
  */
 public class DefToCoreUtil {
 
-    public static void toNodeAnnotationData(final NodeAnnotationData annoData, final NodeAnnotationDef def) {
+    public static AnnotationData toAnnotationData(final AnnotationData annoData, final AnnotationDataDef def) {
         annoData.setAlignment(TextAlignment.valueOf(def.getAlignment()));
         annoData.setBgColor(def.getBgcolor());
         annoData.setBorderColor(def.getBorderColor());
@@ -106,6 +106,7 @@ public class DefToCoreUtil {
         annoData.setY(def.getYCoordinate());
         annoData.setWidth(def.getWidth());
         annoData.setHeight(def.getHeight());
+        return annoData;
     }
 
     public static Node toNode(final NativeNodeDef def) {
