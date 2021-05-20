@@ -226,7 +226,7 @@ public class DefToCoreUtil {
                 if (child instanceof ConfigMapDef) {
                     settings.addNodeSettings(toNodeSettings((ConfigMapDef)child, childEntry.getKey()));
                 } else {
-                    addLeafToSettings(settings, childEntry.getKey(), (ConfigValueDef)childEntry);
+                    addLeafToSettings(settings, childEntry.getKey(), (ConfigValueDef)childEntry.getValue());
                 }
             }
         }
@@ -234,14 +234,25 @@ public class DefToCoreUtil {
     }
 
     /**
-     * @param settings settings to modify
-     * @param key name of the key of the mapping
+     * Convert a {@link ConfigValueDef} to {@link NodeSettings} and add it to the given node settings.
+     *
+     * @param settings parent node settings to add child to
+     * @param key name of the child
      * @param configuration a string representation of the value with type annotation (saying, e.g., "xdouble"), see
      *            {@link ConfigEntries}
      */
     private static void addLeafToSettings(final NodeSettings settings, final String key, final ConfigValueDef leafDef) {
-        AbstractConfigEntry leaf = ConfigEntries.valueOf(leafDef.getValueType()).createEntry(key, leafDef.getValue());
-        settings.addEntry(leaf);
+
+        final ConfigEntries type = ConfigEntries.valueOf(leafDef.getValueType());
+
+        // ConfigEntries provides constructors for the primitive case
+        // for the recursive case, use NodeSettings.addConfig to append a new NodeSettings as child
+        if(type == ConfigEntries.config) {
+            settings.addConfig(key);
+        } else {
+            final AbstractConfigEntry leaf = type.createEntry(key, leafDef.getValue());
+            settings.addEntry(leaf);
+        }
     }
 
     public static NodeAndBundleInformationPersistor toNodeAndBundleInformationPersistor(final NativeNodeDef def) {
