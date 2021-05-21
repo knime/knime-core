@@ -86,6 +86,7 @@ import org.knime.core.node.workflow.action.InteractiveWebViewsResult;
 import org.knime.core.node.workflow.changes.ChangesTracker;
 import org.knime.core.node.workflow.changes.TrackedChanges;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
+import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult.NodeContainerExecutionResultBuilder;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 import org.knime.core.node.workflow.execresult.NodeExecutionResult;
 
@@ -1647,9 +1648,8 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
      * into the argument.
      * @param result Where to save to.
      */
-    protected void saveExecutionResult(
-            final NodeContainerExecutionResult result) {
-        result.setSuccess(getInternalState().equals(InternalNodeContainerState.EXECUTED));
+    protected void saveExecutionResult(final NodeContainerExecutionResultBuilder result) {
+        result.setSuccess(getInternalState() == InternalNodeContainerState.EXECUTED);
         result.setMessage(m_nodeMessage);
     }
 

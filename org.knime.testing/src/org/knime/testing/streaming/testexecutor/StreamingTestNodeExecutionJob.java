@@ -104,6 +104,7 @@ import org.knime.core.node.workflow.WorkflowLock;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.core.node.workflow.execresult.NativeNodeContainerExecutionResult;
+import org.knime.core.node.workflow.execresult.NativeNodeContainerExecutionResult.NativeNodeContainerExecutionResultBuilder;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 import org.knime.core.node.workflow.execresult.NodeExecutionResult;
 
@@ -440,26 +441,30 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
                     outPortObjectSpecs[i] = outPortObjects[i].getSpec();
                 }
             }
-            NativeNodeContainerExecutionResult execResult = localNodeContainer.createExecutionResult(localExec);
-            NodeExecutionResult nodeExecResult = execResult.getNodeExecutionResult();
-            nodeExecResult.setInternalHeldPortObjects(null);
-            nodeExecResult.setNodeInternDir(null);
-            nodeExecResult.setPortObjects(outPortObjects);
-            nodeExecResult.setPortObjectSpecs(outPortObjectSpecs);
+            NativeNodeContainerExecutionResult trueExecResult = localNodeContainer.createExecutionResult(localExec);
+            NativeNodeContainerExecutionResultBuilder execResultBuilder =
+            		NativeNodeContainerExecutionResult.builder(trueExecResult);
+            NodeExecutionResult nodeExecResult = NodeExecutionResult.builder(trueExecResult.getNodeExecutionResult()) //
+                    .setInternalHeldPortObjects(null) //
+                    .setNodeInternDir(null) //
+                    .setPortObjects(outPortObjects) //
+                    .setPortObjectSpecs(outPortObjectSpecs) //
+                    .build();
             WorkflowPersistor.LoadResult loadResult = new WorkflowPersistor.LoadResult("streaming test exec result");
-            execResult.setSuccess(true);
+            execResultBuilder.setSuccess(true);
+            execResultBuilder.setNodeExecutionResult(nodeExecResult);
             //TODO: since some port objects are null if in an iteration of a loop end node, the execution result cannot be loaded every time
             //possible workaround: check for all port objects to be non-null and only load execution result if that's the case
             //            if (Arrays.stream(outPortObjects).noneMatch(p -> p == null)) {
-            localNodeContainer.loadExecutionResult(execResult, localExec, loadResult);
+            localNodeContainer.loadExecutionResult(execResultBuilder.build(), localExec, loadResult);
             //            }
             if (!m_warningMessages.isEmpty()) {
                 String joinedMessages = m_warningMessages.stream().collect(Collectors.joining("\n"));
                 NodeMessage nm = new NodeMessage(Type.WARNING, joinedMessages);
                 localNodeContainer.setNodeMessage(nm);
-                execResult.setMessage(nm);
+                execResultBuilder.setMessage(nm);
             }
-            return execResult;
+            return execResultBuilder.build();
         } catch (Exception e) {
             //copied from Node.java
             boolean isCanceled = e instanceof CanceledExecutionException;

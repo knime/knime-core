@@ -44,16 +44,15 @@
  */
 package org.knime.core.node.workflow.execresult;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 
-import org.apache.commons.lang3.ClassUtils;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
@@ -63,26 +62,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public class WorkflowExecutionResult extends NodeContainerExecutionResult {
 
-    private final static NodeLogger LOGGER = NodeLogger.getLogger(WorkflowExecutionResult.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(WorkflowExecutionResult.class);
 
-    private Map<NodeID, NodeContainerExecutionResult> m_execResultMap =
-        new LinkedHashMap<NodeID, NodeContainerExecutionResult>();
+    private final Map<NodeID, NodeContainerExecutionResult> m_execResultMap;
 
     private final NodeID m_baseID;
-
-    /**
-     * Creates new workflow execution result with no particular settings.
-     * @param baseID The node id of the workflow (the loading procedure in
-     * the target workflow will correct the prefix).
-     * @throws NullPointerException If the argument is null.
-     */
-    @JsonCreator
-    public WorkflowExecutionResult(@JsonProperty("baseID") final NodeID baseID) {
-        if (baseID == null) {
-            throw new NullPointerException();
-        }
-        m_baseID = baseID;
-    }
 
     /**
      * Copy constructor.
@@ -90,26 +74,10 @@ public class WorkflowExecutionResult extends NodeContainerExecutionResult {
      * @param toCopy The instance to copy.
      * @since 3.5
      */
-    public WorkflowExecutionResult(final WorkflowExecutionResult toCopy) {
+    public WorkflowExecutionResult(final WorkflowExecutionResultBuilder toCopy) {
         super(toCopy);
         m_baseID = toCopy.m_baseID;
-
-        for (Entry<NodeID, NodeContainerExecutionResult> entry : toCopy.m_execResultMap.entrySet()) {
-            final NodeContainerExecutionResult subresultToCopy = entry.getValue();
-            if (subresultToCopy instanceof NativeNodeContainerExecutionResult) {
-                m_execResultMap.put(entry.getKey(),
-                    new NativeNodeContainerExecutionResult((NativeNodeContainerExecutionResult)subresultToCopy));
-            } else if (subresultToCopy instanceof SubnodeContainerExecutionResult) {
-                m_execResultMap.put(entry.getKey(),
-                    new SubnodeContainerExecutionResult((SubnodeContainerExecutionResult)subresultToCopy));
-            } else if (subresultToCopy instanceof WorkflowExecutionResult) {
-                m_execResultMap.put(entry.getKey(),
-                    new WorkflowExecutionResult((WorkflowExecutionResult)subresultToCopy));
-            } else {
-                throw new IllegalStateException(
-                    "Unknown ExecutionResult class: " + ClassUtils.getShortCanonicalName(subresultToCopy, "<null>"));
-            }
-        }
+        m_execResultMap = Collections.unmodifiableMap(toCopy.m_execResultMap);
     }
 
     /** @return The base id of the workflow. Used to amend the node ids in
@@ -125,47 +93,76 @@ public class WorkflowExecutionResult extends NodeContainerExecutionResult {
         return m_execResultMap;
     }
 
-    /**
-     * Private setter for the internal execution result map. For deserialization purposes only.
-     *
-     * @param resultMap A map with NodeContainerExecutionResults
-     */
-    @JsonProperty("execResults")
-    private void setExecutionResultMap(final Map<NodeID, NodeContainerExecutionResult> resultMap) {
-        m_execResultMap = resultMap;
-    }
-
-    /**
-     * Adds the execution result for a child node.
-     * @param id The node id of the child, it must have the "correct" prefix.
-     * @param execResult The execution result for the child
-     * @return <code>true</code> if this map did not contain an entry for
-     *         this child before.
-     * @throws IllegalArgumentException If the id prefix is invalid
-     * @throws NullPointerException If either argument is null
-     */
-    public boolean addNodeExecutionResult(final NodeID id,
-            final NodeContainerExecutionResult execResult) {
-        if (execResult == null || id == null) {
-            throw new NullPointerException();
-        }
-        if (!id.hasSamePrefix(m_baseID)) {
-            throw new IllegalArgumentException("Invalid prefix: " + id
-                    + ", expected " + m_baseID);
-        }
-        return m_execResultMap.put(id, execResult) == null;
-    }
-
     /** {@inheritDoc} */
     @Override
     public NodeContainerExecutionStatus getChildStatus(final int idSuffix) {
         NodeID id = new NodeID(m_baseID, idSuffix);
         NodeContainerExecutionStatus status = m_execResultMap.get(id);
         if (status == null) {
-            LOGGER.debug("No execution status for node with suffix "
-                    + idSuffix + "; return FAILURE");
+            LOGGER.debugWithFormat("No execution status for node with suffix %s; return FAILURE", idSuffix);
             status = NodeContainerExecutionStatus.FAILURE;
         }
         return status;
+    }
+
+    public static WorkflowExecutionResultBuilder builder(final NodeID baseID) {
+        return new WorkflowExecutionResultBuilder(baseID);
+    }
+
+    /**
+     * @param template
+     * @return
+     */
+    public static WorkflowExecutionResultBuilder builder(final WorkflowExecutionResult template) {
+        var result = new WorkflowExecutionResultBuilder(template);
+        template.getExecutionResultMap().entrySet().stream()
+            .forEach(e -> result.addNodeExecutionResult(e.getKey(), e.getValue()));
+        return result;
+    }
+
+    public static final class WorkflowExecutionResultBuilder extends NodeContainerExecutionResultBuilder {
+
+        private Map<NodeID, NodeContainerExecutionResult> m_execResultMap = new LinkedHashMap<>();
+
+        private final NodeID m_baseID;
+
+        /**
+         * Creates new workflow execution result with no particular settings.
+         * @param baseID The node id of the workflow (the loading procedure in
+         * the target workflow will correct the prefix).
+         * @throws NullPointerException If the argument is null.
+         */
+        private WorkflowExecutionResultBuilder(final NodeID baseID) {
+            m_baseID = CheckUtils.checkArgumentNotNull(baseID);
+        }
+
+        /**
+         * @param template
+         */
+        private WorkflowExecutionResultBuilder(final WorkflowExecutionResult template) {
+            super(template);
+            m_baseID = template.getBaseID();
+        }
+
+        /**
+         * Adds the execution result for a child node.
+         * @param id The node id of the child, it must have the "correct" prefix.
+         * @param execResult The execution result for the child
+         * @return <code>true</code> if this map did not contain an entry for
+         *         this child before.
+         * @throws IllegalArgumentException If the id prefix is invalid
+         * @throws NullPointerException If either argument is null
+         */
+        public boolean addNodeExecutionResult(final NodeID id,
+                final NodeContainerExecutionResult execResult) {
+            CheckUtils.checkArgument(id.hasSamePrefix(m_baseID), "Invalid prefix: %s, expected %s", id, m_baseID);
+            return m_execResultMap.put(id, CheckUtils.checkArgumentNotNull(execResult)) == null;
+        }
+
+        @Override
+        public WorkflowExecutionResult build() {
+            return new WorkflowExecutionResult(this);
+        }
+
     }
 }

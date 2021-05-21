@@ -130,6 +130,7 @@ import org.knime.core.node.workflow.ScopeStartNode;
 import org.knime.core.node.workflow.WorkflowDataRepository;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.execresult.NodeExecutionResult;
+import org.knime.core.node.workflow.execresult.NodeExecutionResult.NodeExecutionResultBuilder;
 import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeInputNodeModel;
 import org.knime.core.util.FileUtil;
 import org.w3c.dom.Element;
@@ -369,15 +370,15 @@ public final class Node implements NodeModelWarningListener {
      */
     public NodeExecutionResult createNodeExecutionResult(
             final ExecutionMonitor exec) throws CanceledExecutionException {
-        NodeExecutionResult result = new NodeExecutionResult();
-        result.setWarningMessage(m_model.getWarningMessage());
+        NodeExecutionResultBuilder builder = NodeExecutionResult.builder();
+        builder.setWarningMessage(m_model.getWarningMessage());
         if (hasContent()) {
             File internTempDir;
             try {
                 internTempDir = FileUtil.createTempDir("knime_node_internDir");
                 exec.setMessage("Saving internals");
                 saveInternals(internTempDir, exec.createSubProgress(0.0));
-                result.setNodeInternDir(new ReferencedFile(internTempDir));
+                builder.setNodeInternDir(new ReferencedFile(internTempDir));
             } catch (IOException ioe) {
                 LOGGER.error("Unable to save internals", ioe);
             }
@@ -385,7 +386,7 @@ public final class Node implements NodeModelWarningListener {
         if (m_internalHeldPortObjects != null) {
             PortObject[] internalHeldPortObjects =
                     Arrays.copyOf(m_internalHeldPortObjects, m_internalHeldPortObjects.length);
-            result.setInternalHeldPortObjects(internalHeldPortObjects);
+            builder.setInternalHeldPortObjects(internalHeldPortObjects);
         }
         PortObject[] pos = new PortObject[getNrOutPorts()];
         PortObjectSpec[] poSpecs = new PortObjectSpec[getNrOutPorts()];
@@ -396,8 +397,8 @@ public final class Node implements NodeModelWarningListener {
                 poSpecs[i] = po.getSpec();
             }
         }
-        result.setPortObjects(pos);
-        result.setPortObjectSpecs(poSpecs);
+        builder.setPortObjects(pos);
+        builder.setPortObjectSpecs(poSpecs);
 
         // Add the outgoing flow variables to the execution result
         FlowObjectStack outgoingStack = m_model.getOutgoingFlowObjectStack();
@@ -406,8 +407,8 @@ public final class Node implements NodeModelWarningListener {
             .stream().filter(f -> f.getScope().equals(FlowVariable.Scope.Flow)).collect(Collectors.toList());
         Collections.reverse(nodeFlowVars); // the bottom most element should remain at the bottom of the stack
 
-        result.setFlowVariables(nodeFlowVars);
-        return result;
+        builder.setFlowVariables(nodeFlowVars);
+        return builder.build();
     }
 
     /**

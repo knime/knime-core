@@ -140,6 +140,7 @@ import org.knime.core.node.workflow.action.InteractiveWebViewsResult.Builder;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 import org.knime.core.node.workflow.execresult.SubnodeContainerExecutionResult;
+import org.knime.core.node.workflow.execresult.SubnodeContainerExecutionResult.SubnodeContainerExecutionResultBuilder;
 import org.knime.core.node.workflow.execresult.WorkflowExecutionResult;
 import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeExchange;
 import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeInputNodeFactory;
@@ -1538,16 +1539,16 @@ public final class SubNodeContainer extends SingleNodeContainer
     public SubnodeContainerExecutionResult createExecutionResult(final ExecutionMonitor exec)
             throws CanceledExecutionException {
         try (WorkflowLock lock = lock()) {
-            SubnodeContainerExecutionResult result = new SubnodeContainerExecutionResult(getID());
+            SubnodeContainerExecutionResultBuilder result = SubnodeContainerExecutionResult.builder(getID());
             super.saveExecutionResult(result);
             WorkflowExecutionResult innerResult = m_wfm.createExecutionResult(exec);
             if (innerResult.needsResetAfterLoad()) {
                 result.setNeedsResetAfterLoad();
             }
             // innerResult is success as soon as one of the nodes is a success - be more strict here
-            result.setSuccess(innerResult.isSuccess() && getInternalState().equals(EXECUTED));
+            result.setSuccess(innerResult.isSuccess() && getInternalState() == EXECUTED);
             result.setWorkflowExecutionResult(innerResult);
-            return result;
+            return result.build();
         }
     }
 

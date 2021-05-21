@@ -55,21 +55,13 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
  * @author Bernd Wiswedel, University of Konstanz
  */
 @JsonTypeInfo(use=JsonTypeInfo.Id.CLASS)
-public abstract class NodeContainerExecutionResult
-    implements NodeContainerExecutionStatus {
+public abstract class NodeContainerExecutionResult implements NodeContainerExecutionStatus {
 
-    private NodeMessage m_message;
+    private final NodeMessage m_message;
 
-    private boolean m_needsResetAfterLoad;
+    private final boolean m_needsResetAfterLoad;
 
-    private boolean m_isSuccess;
-
-
-    /**
-     * Creates an empty result.
-     */
-    public NodeContainerExecutionResult() {
-    }
+    private final boolean m_isSuccess;
 
     /**
      * Copy constructor.
@@ -77,10 +69,10 @@ public abstract class NodeContainerExecutionResult
      * @param toCopy Execution result instance to copy from.
      * @since 3.5
      */
-    protected NodeContainerExecutionResult(final NodeContainerExecutionResult toCopy) {
-        m_message = toCopy.m_message;
-        m_needsResetAfterLoad = toCopy.m_needsResetAfterLoad;
-        m_isSuccess = toCopy.m_isSuccess;
+    NodeContainerExecutionResult(final NodeContainerExecutionResultBuilder builder) {
+        m_message = builder.m_message;
+        m_needsResetAfterLoad = builder.m_needsResetAfterLoad;
+        m_isSuccess = builder.m_isSuccess;
     }
 
     /** Get a node message that was set during execution.
@@ -88,31 +80,6 @@ public abstract class NodeContainerExecutionResult
     @JsonProperty("nodeMessage")
     public NodeMessage getNodeMessage() {
         return m_message;
-    }
-
-    /** Set a node message.
-     * @param message the message to set
-     */
-    @JsonProperty("nodeMessage")
-    public void setMessage(final NodeMessage message) {
-        m_message = message;
-    }
-
-    /** Request a reset of the node after loading the result. The node is
-     * allowed to trigger a reset if the loading process causes errors that
-     * invalidate the computed result. */
-    public void setNeedsResetAfterLoad() {
-        m_needsResetAfterLoad = true;
-    }
-
-    /**
-     * Private setter for Json deserialization.
-     *
-     * @param needsResetAfterLoad Whether to request a reset of the node after loading the result.
-     */
-    @JsonProperty("needsResetAfterLoad")
-    private void setNeedsResetAfterLoad(final boolean needsResetAfterLoad) {
-        m_needsResetAfterLoad = needsResetAfterLoad;
     }
 
     /** @return true when the node needs to be reset after loading the results.
@@ -123,24 +90,62 @@ public abstract class NodeContainerExecutionResult
         return m_needsResetAfterLoad;
     }
 
-    /**
-     * @param isSuccess the isSuccess to set
-     */
-    public void setSuccess(final boolean isSuccess) {
-        m_isSuccess = isSuccess;
-    }
-
-    /** {@inheritDoc} */
     @Override
     public boolean isSuccess() {
         return m_isSuccess;
     }
 
-    /** {@inheritDoc} */
     @Override
     public String toString() {
-        return getClass().getSimpleName() + ": "
-            + (isSuccess() ? "success" : "failure");
+        return getClass().getSimpleName() + ": " + (isSuccess() ? "success" : "failure");
+    }
+
+    public abstract static class NodeContainerExecutionResultBuilder {
+
+        private NodeMessage m_message;
+
+        private boolean m_needsResetAfterLoad;
+
+        private boolean m_isSuccess;
+
+        NodeContainerExecutionResultBuilder() {
+        }
+
+        NodeContainerExecutionResultBuilder(final NodeContainerExecutionResult template) {
+            m_message = template.m_message;
+            m_needsResetAfterLoad = template.needsResetAfterLoad();
+            m_isSuccess = template.isSuccess();
+        }
+
+        /** Set a node message.
+         * @param message the message to set
+         * @return this
+         */
+        public NodeContainerExecutionResultBuilder setMessage(final NodeMessage message) {
+            m_message = message;
+            return this;
+        }
+
+        /** Request a reset of the node after loading the result. The node is
+         * allowed to trigger a reset if the loading process causes errors that
+         * invalidate the computed result.
+         * @return this */
+        public NodeContainerExecutionResultBuilder setNeedsResetAfterLoad() {
+            m_needsResetAfterLoad = true;
+            return this;
+        }
+
+        /**
+         * @param isSuccess the isSuccess to set
+         * @return this
+         */
+        public NodeContainerExecutionResultBuilder setSuccess(final boolean isSuccess) {
+            m_isSuccess = isSuccess;
+            return this;
+        }
+
+        public abstract NodeContainerExecutionResult build();
+
     }
 
 }

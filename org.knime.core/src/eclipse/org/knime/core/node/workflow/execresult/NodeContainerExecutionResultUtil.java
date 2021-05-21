@@ -54,6 +54,8 @@ import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.SubNodeContainer;
+import org.knime.core.node.workflow.execresult.NodeExecutionResult.NodeExecutionResultBuilder;
+import org.knime.core.node.workflow.execresult.WorkflowExecutionResult.WorkflowExecutionResultBuilder;
 
 /**
  * Utility class to work with {@linke NodeContainerExecutionResult} objects, e.g. make a deep copy.
@@ -117,8 +119,9 @@ public class NodeContainerExecutionResultUtil {
      *            virtual output node.
      * @param subnodeResult The subnode's execution result that shall be modified.
      * @param portObjects The port objects to set on the subnode's virtual output node.
+     * @return slightly modified clone of <code>subnodeResult</code>
      */
-    public static void setOutputPortObjects(final SubNodeContainer subnode,
+    public static SubnodeContainerExecutionResult createNewWithModifiedOutputPortObjects(final SubNodeContainer subnode,
         final SubnodeContainerExecutionResult subnodeResult, final PortObject[] portObjects) {
 
         CheckUtils.checkArgumentNotNull(portObjects);
@@ -126,12 +129,18 @@ public class NodeContainerExecutionResultUtil {
             "Invalid output length (excl flow vars): " + "%d but expected %d", portObjects.length,
             subnode.getNrOutPorts() - 1);
 
-        WorkflowExecutionResult workflowExecResult = subnodeResult.getWorkflowExecutionResult();
-        NativeNodeContainerExecutionResult outNodeExecResult = (NativeNodeContainerExecutionResult)workflowExecResult
-            .getChildStatus(subnode.getVirtualOutNodeID().getIndex());
-        final NodeExecutionResult nodeResult = outNodeExecResult.getNodeExecutionResult();
+        WorkflowExecutionResultBuilder workflowExecResultBuilder =
+                WorkflowExecutionResult.builder(subnodeResult.getWorkflowExecutionResult());
+        NativeNodeContainerExecutionResult outNodeExecResult = (NativeNodeContainerExecutionResult)subnodeResult
+            .getWorkflowExecutionResult().getChildStatus(subnode.getVirtualOutNodeID().getIndex());
+        final NodeExecutionResultBuilder nodeResult = NodeExecutionResult.builder(outNodeExecResult.getNodeExecutionResult());
         nodeResult.setInternalHeldPortObjects(portObjects);
         nodeResult.setPortObjects(new PortObject[]{FlowVariablePortObject.INSTANCE});
         nodeResult.setPortObjectSpecs(new PortObjectSpec[]{FlowVariablePortObjectSpec.INSTANCE});
+        workflowExecResultBuilder.addNodeExecutionResult(subnode.getVirtualOutNodeID(),
+            NativeNodeContainerExecutionResult.builder(outNodeExecResult).setNodeExecutionResult(nodeResult.build())
+                .build());
+        return SubnodeContainerExecutionResult.builder(subnodeResult)
+            .setWorkflowExecutionResult(workflowExecResultBuilder.build()).build();
     }
 }
