@@ -45,6 +45,7 @@
 package org.knime.core.node.workflow;
 
 import org.junit.Test;
+import org.knime.core.workflow.def.WorkflowDef;
 import org.knime.core.workflow.def.impl.DefaultWorkflowDef;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -64,6 +65,8 @@ public class Enh11762_WorkflowRepresentation extends WorkflowTestCase {
 		mapper.registerModule(new JavaTimeModule());
 
 		String json = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(defaultDef);
+
+		mapper.readValue(json, WorkflowDef.class);
 	}
 
 }

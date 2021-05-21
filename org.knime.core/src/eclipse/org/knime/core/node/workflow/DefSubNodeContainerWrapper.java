@@ -75,6 +75,11 @@ public class DefSubNodeContainerWrapper extends DefSingleNodeContainerWrapper im
         m_nc = nc;
     }
 
+    @Override
+    public String getKind() {
+        return "Component";
+    }
+
     /**
      * {@inheritDoc}
      */

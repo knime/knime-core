@@ -109,12 +109,16 @@ public class CoreToDefUtil {
         return null;
     }
 
-    public static ConfigMapDef toConfigMapDef(final NodeSettings settings) throws InvalidSettingsException {
-        ConfigDef configDef = toConfigDef(settings);
+    public static ConfigMapDef toConfigMapDef(final NodeSettingsRO settings) throws InvalidSettingsException {
+        if (settings == null) {
+            return null;
+        }
+        // TODO don't cast
+        ConfigDef configDef = toConfigDef((NodeSettings) settings);
         if (configDef instanceof ConfigMapDef) {
             return (ConfigMapDef)configDef;
         } else {
-            throw new IllegalArgumentException("TODO");
+            return null;
         }
     }
 

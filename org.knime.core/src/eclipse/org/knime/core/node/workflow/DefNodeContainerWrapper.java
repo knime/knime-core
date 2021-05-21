@@ -74,6 +74,14 @@ public class DefNodeContainerWrapper implements NodeDef {
      * {@inheritDoc}
      */
     @Override
+    public String getKind() {
+        return "Node";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public String getCustomDescription() {
         return m_nc.getCustomDescription();
     }

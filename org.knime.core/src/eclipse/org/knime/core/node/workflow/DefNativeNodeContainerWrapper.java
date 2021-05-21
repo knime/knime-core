@@ -71,6 +71,11 @@ public class DefNativeNodeContainerWrapper extends DefSingleNodeContainerWrapper
         m_nc = nc;
     }
 
+    @Override
+    public String getKind() {
+        return "NativeNode";
+    }
+
     /**
      * {@inheritDoc}
      */
