@@ -98,10 +98,14 @@ import org.knime.core.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.WorkflowCreationHelper;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.execresult.NativeNodeContainerExecutionResult;
+import org.knime.core.node.workflow.execresult.NativeNodeContainerExecutionResult.NativeNodeContainerExecutionResultBuilder;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
+import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult.NodeContainerExecutionResultBuilder;
 import org.knime.core.node.workflow.execresult.NodeExecutionResult;
+import org.knime.core.node.workflow.execresult.NodeExecutionResult.NodeExecutionResultBuilder;
 import org.knime.core.node.workflow.execresult.SubnodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.WorkflowExecutionResult;
+import org.knime.core.node.workflow.execresult.WorkflowExecutionResult.WorkflowExecutionResultBuilder;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.LockFailedException;
 
@@ -473,7 +477,8 @@ public final class SandboxedNodeCreator {
      * @throws CanceledExecutionException
      * @throws IOException
      */
-    public static void copyExistingTablesIntoSandboxContainer(final NodeContainerExecutionResult execResult,
+    public static NodeContainerExecutionResultBuilder copyExistingTablesIntoSandboxContainer(
+        final NodeContainerExecutionResult execResult,
         final NodeContainer sourceNC, final NodeContainer targetNC, final ExecutionMonitor progressMon,
         final boolean copyDataIntoNewContext) throws CanceledExecutionException, IOException {
 
@@ -481,6 +486,8 @@ public final class SandboxedNodeCreator {
 
         if (execResult instanceof NativeNodeContainerExecutionResult) {
             NativeNodeContainerExecutionResult sncResult = (NativeNodeContainerExecutionResult)execResult;
+            NativeNodeContainerExecutionResultBuilder sncResultBuilder =
+                NativeNodeContainerExecutionResult.builder(sncResult);
             // execResult and node types must match
             assert sourceNC instanceof NativeNodeContainer;
             assert targetNC instanceof NativeNodeContainer;
@@ -490,6 +497,7 @@ public final class SandboxedNodeCreator {
                     ? ((SingleNodeContainer)targetNC).createExecutionContext() : null;
 
             NodeExecutionResult ner = sncResult.getNodeExecutionResult();
+            NodeExecutionResultBuilder nerBuilder = NodeExecutionResult.builder(ner);
             // TODO this copy process has to take place in a different place
             // though it needs the final execution context for correct copy
             // of BDT objects
@@ -535,43 +543,41 @@ public final class SandboxedNodeCreator {
                 }
             }
             if (oldInternTables != null) {
-                ner.setInternalHeldPortObjects(newInternTables);
+                nerBuilder.setInternalHeldPortObjects(newInternTables);
             }
-            ner.setPortObjects(resultTables);
+            nerBuilder.setPortObjects(resultTables);
+            sncResultBuilder.setNodeExecutionResult(nerBuilder.build());
+            return sncResultBuilder;
         } else if (execResult instanceof WorkflowExecutionResult) {
             WorkflowExecutionResult wfmResult = (WorkflowExecutionResult)execResult;
             // exec result and node types must match
             WorkflowManager targetWFM = (WorkflowManager)targetNC;
             WorkflowManager sourceWFM = (WorkflowManager)sourceNC;
-            copyIntoSandboxContainerRecursive(sourceWFM, targetWFM, wfmResult, progressMon, copyDataIntoNewContext);
+            return
+                copyIntoSandboxContainerRecursive(sourceWFM, targetWFM, wfmResult, progressMon, copyDataIntoNewContext);
         } else if (execResult instanceof SubnodeContainerExecutionResult) {
             SubnodeContainerExecutionResult subResult = (SubnodeContainerExecutionResult)execResult;
 
             WorkflowExecutionResult wfmResult = subResult.getWorkflowExecutionResult();
             WorkflowManager targetWFM = ((SubNodeContainer)targetNC).getWorkflowManager();
             WorkflowManager sourceWFM = ((SubNodeContainer)sourceNC).getWorkflowManager();
-            copyIntoSandboxContainerRecursive(sourceWFM, targetWFM, wfmResult, progressMon, copyDataIntoNewContext);
+            WorkflowExecutionResultBuilder wfmResultBuilder =
+                copyIntoSandboxContainerRecursive(sourceWFM, targetWFM, wfmResult, progressMon, copyDataIntoNewContext);
+            return SubnodeContainerExecutionResult.builder(subResult)
+                .setWorkflowExecutionResult(wfmResultBuilder.build());
         } else {
             throw new IllegalStateException("Unsupported node result type: " + execResult.getClass().getSimpleName());
         }
     }
 
-    /**
-     * @param sourceWFM
-     * @param targetWFM
-     * @param wfmResult
-     * @param progressMon
-     * @param copyDataIntoNewContext
-     * @throws CanceledExecutionException
-     * @throws IOException
-     */
-    private static void copyIntoSandboxContainerRecursive(final WorkflowManager sourceWFM,
+    private static WorkflowExecutionResultBuilder copyIntoSandboxContainerRecursive(final WorkflowManager sourceWFM,
         final WorkflowManager targetWFM, final WorkflowExecutionResult wfmResult, final ExecutionMonitor progressMon,
         final boolean copyDataIntoNewContext) throws CanceledExecutionException, IOException {
         assert wfmResult.getBaseID().equals(sourceWFM.getID());
 
-        Map<NodeID, NodeContainerExecutionResult> resultMap = wfmResult.getExecutionResultMap();
+        WorkflowExecutionResultBuilder resBuilder = WorkflowExecutionResult.builder(wfmResult);
 
+        Map<NodeID, NodeContainerExecutionResult> resultMap = wfmResult.getExecutionResultMap();
         for (Map.Entry<NodeID, NodeContainerExecutionResult> e : resultMap.entrySet()) {
             ExecutionMonitor sub = progressMon.createSubProgress(1.0 / resultMap.size());
             NodeID sourceID = e.getKey();
@@ -580,9 +586,11 @@ public final class SandboxedNodeCreator {
             NodeContainer nextTarget = targetWFM.getNodeContainer(targetID);
             NodeContainer nextSource = sourceWFM.getNodeContainer(sourceID);
             progressMon.setMessage(nextSource.getNameWithID());
-            copyExistingTablesIntoSandboxContainer(r, nextSource, nextTarget, sub, copyDataIntoNewContext);
+            resBuilder.addNodeExecutionResult(sourceID,
+                copyExistingTablesIntoSandboxContainer(r, nextSource, nextTarget, sub, copyDataIntoNewContext).build());
             sub.setProgress(1.0);
         }
+        return resBuilder;
     }
 
     /** Deep clone of port object. */

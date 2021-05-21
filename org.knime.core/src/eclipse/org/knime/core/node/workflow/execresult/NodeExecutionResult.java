@@ -71,20 +71,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public class NodeExecutionResult implements NodeContentPersistor {
 
-    private PortObject[] m_internalHeldPortObjects;
-    private ReferencedFile m_nodeInternDir;
-    private PortObject[] m_portObjects;
-    private PortObjectSpec[] m_portObjectSpecs;
-    private String m_warningMessage;
-    private boolean m_needsResetAfterLoad;
-    private List<FlowVariable> m_flowVariables;
-
-
-    /**
-     * Creates an empty execution result.
-     */
-    public NodeExecutionResult() {
-    }
+    private final PortObject[] m_internalHeldPortObjects;
+    private final ReferencedFile m_nodeInternDir;
+    private final PortObject[] m_portObjects;
+    private final PortObjectSpec[] m_portObjectSpecs;
+    private final String m_warningMessage;
+    private final boolean m_needsResetAfterLoad;
+    private final List<FlowVariable> m_flowVariables;
 
 
     /**
@@ -94,19 +87,26 @@ public class NodeExecutionResult implements NodeContentPersistor {
      * @since 3.5
      */
     public NodeExecutionResult(final NodeExecutionResult toCopy) {
-        if (toCopy.m_internalHeldPortObjects != null) {
-            m_internalHeldPortObjects =
-                Arrays.copyOf(toCopy.m_internalHeldPortObjects, toCopy.m_internalHeldPortObjects.length);
-        }
+        m_internalHeldPortObjects = ArrayUtils.clone(toCopy.m_internalHeldPortObjects);
         m_nodeInternDir = toCopy.m_nodeInternDir;
-        if (toCopy.m_portObjects != null) {
-            m_portObjects = Arrays.copyOf(toCopy.m_portObjects, toCopy.m_portObjects.length);
-        }
-        if (toCopy.m_portObjectSpecs != null) {
-            m_portObjectSpecs = Arrays.copyOf(toCopy.m_portObjectSpecs, toCopy.m_portObjectSpecs.length);
-        }
+        m_portObjects = ArrayUtils.clone(toCopy.m_portObjects);
+        m_portObjectSpecs = ArrayUtils.clone(toCopy.m_portObjectSpecs);
         m_warningMessage = toCopy.m_warningMessage;
         m_needsResetAfterLoad = toCopy.m_needsResetAfterLoad;
+        m_flowVariables = toCopy.m_flowVariables;
+    }
+
+    /**
+     * @param builder
+     */
+    public NodeExecutionResult(final NodeExecutionResultBuilder builder) {
+        m_internalHeldPortObjects = builder.m_internalHeldPortObjects;
+        m_nodeInternDir = builder.m_nodeInternDir;
+        m_portObjects = builder.m_portObjects;
+        m_portObjectSpecs = builder.m_portObjectSpecs;
+        m_warningMessage = builder.m_warningMessage;
+        m_needsResetAfterLoad = builder.m_needsResetAfterLoad;
+        m_flowVariables = builder.m_flowVariables;
     }
 
     /** {@inheritDoc} */
@@ -133,6 +133,10 @@ public class NodeExecutionResult implements NodeContentPersistor {
         return ArrayUtils.getLength(m_portObjects);
     }
 
+    @Override
+    public void setNeedsResetAfterLoad() {
+        // TODO remove
+    }
 
     /**
      *
@@ -196,62 +200,10 @@ public class NodeExecutionResult implements NodeContentPersistor {
 
     /** {@inheritDoc} */
     @Override
-    public void setNeedsResetAfterLoad() {
-        m_needsResetAfterLoad = true;
-    }
-
-    /**
-     * @param internalHeldTables the internalHeldTables to set
-     */
-    public void setInternalHeldPortObjects(
-            final PortObject[] internalHeldTables) {
-        m_internalHeldPortObjects = internalHeldTables;
-    }
-
-    /**
-     * @param nodeInternDir the referencedFile to set
-     */
-    public void setNodeInternDir(final ReferencedFile nodeInternDir) {
-        m_nodeInternDir = nodeInternDir;
-    }
-
-    /** {@inheritDoc} */
-    @Override
     @JsonIgnore
     public boolean hasContent() {
         return m_nodeInternDir != null;
     }
-
-    /**
-     * @param warningMessage the warningMessage to set
-     */
-    public void setWarningMessage(final String warningMessage) {
-        m_warningMessage = warningMessage;
-    }
-
-    /**
-     * @param portObjects the portObjects to set
-     */
-    public void setPortObjects(final PortObject[] portObjects) {
-        m_portObjects = portObjects;
-    }
-
-    /**
-     * @param portObjectSpecs the portObjectSpecs to set
-     */
-    public void setPortObjectSpecs(final PortObjectSpec[] portObjectSpecs) {
-        m_portObjectSpecs = portObjectSpecs;
-    }
-
-    /**
-     * Saves flow variables that where pushed by the node.
-     *
-     * @param flowVariables A ordered list of flow variables.
-     * @since 3.5 */
-    public void setFlowVariables(final List<FlowVariable> flowVariables) {
-        m_flowVariables = flowVariables;
-    }
-
 
     /** {@inheritDoc}
      * @since 2.6*/
@@ -260,23 +212,6 @@ public class NodeExecutionResult implements NodeContentPersistor {
     public IFileStoreHandler getFileStoreHandler() {
         return null;
     }
-
-    /**
-     * Sets all ports to inactive.
-     *
-     * @since 3.5
-     */
-    public void setInactive() {
-        m_nodeInternDir = null;
-        if (m_portObjects != null) {
-            Arrays.fill(m_portObjects, InactiveBranchPortObject.INSTANCE);
-            Arrays.fill(m_portObjectSpecs, InactiveBranchPortObjectSpec.INSTANCE);
-        }
-        if (m_internalHeldPortObjects != null) {
-            Arrays.fill(m_internalHeldPortObjects, InactiveBranchPortObject.INSTANCE);
-        }
-    }
-
 
     /**
      * Factory method for JSON deserialization.
@@ -296,15 +231,135 @@ public class NodeExecutionResult implements NodeContentPersistor {
         @JsonProperty("needsResetAfterLoad") final boolean needsResetAfterLoad,
         @JsonProperty("warningMsg") final String warningMessage) {
 
-        final NodeExecutionResult toReturn = new NodeExecutionResult();
-        toReturn.setPortObjects(new PortObject[nrOfPortObjects]);
-        toReturn.setPortObjectSpecs(new PortObjectSpec[nrOfPortObjects]);
-        toReturn.setInternalHeldPortObjects(new PortObject[nrOfInternalPortObjects]);
-        if (needsResetAfterLoad) {
-            toReturn.setNeedsResetAfterLoad();
+        final NodeExecutionResultBuilder toReturn = NodeExecutionResult.builder() //
+                .setPortObjects(new PortObject[nrOfPortObjects]) //
+                .setPortObjectSpecs(new PortObjectSpec[nrOfPortObjects]) //
+                .setInternalHeldPortObjects(new PortObject[nrOfInternalPortObjects]) //
+                .setNeedsResetAfterLoad(needsResetAfterLoad) //
+                .setWarningMessage(warningMessage);
+        return toReturn.build();
+    }
+
+    public static NodeExecutionResultBuilder builder() {
+        return new NodeExecutionResultBuilder();
+    }
+
+    public static NodeExecutionResultBuilder builder(final NodeExecutionResult template) {
+        NodeExecutionResultBuilder result = new NodeExecutionResultBuilder();
+        result.m_internalHeldPortObjects = template.m_internalHeldPortObjects;
+        result.m_nodeInternDir = template.m_nodeInternDir;
+        result.m_portObjects = template.m_portObjects;
+        result.m_portObjectSpecs = template.m_portObjectSpecs;
+        result.m_warningMessage = template.m_warningMessage;
+        result.m_needsResetAfterLoad = template.m_needsResetAfterLoad;
+        result.m_flowVariables = template.m_flowVariables;
+        return result;
+    }
+
+    public static final class NodeExecutionResultBuilder {
+
+        private PortObject[] m_internalHeldPortObjects;
+        private ReferencedFile m_nodeInternDir;
+        private PortObject[] m_portObjects;
+        private PortObjectSpec[] m_portObjectSpecs;
+        private String m_warningMessage;
+        private boolean m_needsResetAfterLoad;
+        private List<FlowVariable> m_flowVariables;
+
+        NodeExecutionResultBuilder() {
         }
-        toReturn.setWarningMessage(warningMessage);
-        return toReturn;
+
+        /**
+         * @param internalHeldTables the internalHeldTables to set
+         * @return this
+         */
+        public NodeExecutionResultBuilder setInternalHeldPortObjects(
+                final PortObject[] internalHeldTables) {
+            m_internalHeldPortObjects = internalHeldTables;
+            return this;
+        }
+
+        /**
+         * @param nodeInternDir the referencedFile to set
+         * @return this
+         */
+        public NodeExecutionResultBuilder setNodeInternDir(final ReferencedFile nodeInternDir) {
+            m_nodeInternDir = nodeInternDir;
+            return this;
+        }
+
+        /**
+         * @param warningMessage the warningMessage to set
+         * @return this
+         */
+        public NodeExecutionResultBuilder setWarningMessage(final String warningMessage) {
+            m_warningMessage = warningMessage;
+            return this;
+        }
+
+        /**
+         * @param portObjects the portObjects to set
+         * @return this
+         */
+        public NodeExecutionResultBuilder setPortObjects(final PortObject[] portObjects) {
+            m_portObjects = portObjects;
+            return this;
+        }
+
+        /**
+         * @param portObjectSpecs the portObjectSpecs to set
+         * @return this
+         */
+        public NodeExecutionResultBuilder setPortObjectSpecs(final PortObjectSpec[] portObjectSpecs) {
+            m_portObjectSpecs = portObjectSpecs;
+            return this;
+        }
+
+        /**
+         * Saves flow variables that where pushed by the node.
+         *
+         * @param flowVariables A ordered list of flow variables.
+         * @return this
+         * @since 3.5 */
+        public NodeExecutionResultBuilder setFlowVariables(final List<FlowVariable> flowVariables) {
+            m_flowVariables = flowVariables;
+            return this;
+        }
+
+        /**
+         * @param needsResetAfterLoad the needsResetAfterLoad to set
+         * @return this
+         */
+        public NodeExecutionResultBuilder setNeedsResetAfterLoad(final boolean needsResetAfterLoad) {
+            m_needsResetAfterLoad = needsResetAfterLoad;
+            return this;
+        }
+
+        /**
+         * Sets all ports to inactive.
+         * @return this
+         *
+         * @since 3.5
+         */
+        public NodeExecutionResultBuilder setInactive() {
+            m_nodeInternDir = null;
+            if (m_portObjects != null) {
+                Arrays.fill(m_portObjects, InactiveBranchPortObject.INSTANCE);
+                Arrays.fill(m_portObjectSpecs, InactiveBranchPortObjectSpec.INSTANCE);
+            }
+            if (m_internalHeldPortObjects != null) {
+                Arrays.fill(m_internalHeldPortObjects, InactiveBranchPortObject.INSTANCE);
+            }
+            return this;
+        }
+
+        /**
+         * @return Constructed final object.
+         */
+        public NodeExecutionResult build() {
+            return new NodeExecutionResult(this);
+        }
+
     }
 
 }

@@ -48,7 +48,6 @@ import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.SubNodeContainer;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
@@ -61,48 +60,27 @@ public final class SubnodeContainerExecutionResult extends NodeContainerExecutio
 
     private final NodeID m_baseID;
 
-    private WorkflowExecutionResult m_workflowExecutionResult;
+    private final WorkflowExecutionResult m_workflowExecutionResult;
 
-    /**
-     * Creates new workflow execution result with no particular settings.
-     * @param baseID The node id of the sub node container.
-     * @throws NullPointerException If the argument is null.
-     */
-    @JsonCreator
-    public SubnodeContainerExecutionResult(@JsonProperty("baseID") final NodeID baseID) {
-        m_baseID = CheckUtils.checkArgumentNotNull(baseID, "ID must not be null");
+    private SubnodeContainerExecutionResult(final SubnodeContainerExecutionResultBuilder builder) {
+        super(builder);
+        m_baseID = builder.m_baseID;
+        m_workflowExecutionResult = builder.m_workflowExecutionResult;
     }
 
     /**
-     * Copy constructor.
-     *
-     * @param toCopy The instance to copy.
+     * @return the node id of the sub node container.
      * @since 3.5
      */
-    public SubnodeContainerExecutionResult(final SubnodeContainerExecutionResult toCopy) {
-        super(toCopy);
-        m_baseID = toCopy.m_baseID;
-        m_workflowExecutionResult = new WorkflowExecutionResult(toCopy.m_workflowExecutionResult);
+    @JsonProperty("baseID")
+    public NodeID getBaseID() {
+        return m_baseID;
     }
 
     /** @return Inner workflow execution result set vi. */
     @JsonProperty("workflowExecResult")
     public WorkflowExecutionResult getWorkflowExecutionResult() {
         return m_workflowExecutionResult;
-    }
-
-    /**
-     * Sets inner execution result.
-     * @param workflowExecutionResult To be set, must have correct baseID.
-     * @throws IllegalArgumentException If the id prefix is invalid or argument is null
-     */
-    @JsonProperty("workflowExecResult")
-    public void setWorkflowExecutionResult(final WorkflowExecutionResult workflowExecutionResult) {
-        m_workflowExecutionResult = CheckUtils.checkArgumentNotNull(workflowExecutionResult, "Arg must not be null");
-        CheckUtils.checkArgument(new NodeID(m_baseID, 0).equals(m_workflowExecutionResult.getBaseID()),
-            "Unexpected ID of inner wfm result, expected %s but got %s", new NodeID(m_baseID, 0),
-            m_workflowExecutionResult.getBaseID());
-        m_workflowExecutionResult = workflowExecutionResult;
     }
 
     /** {@inheritDoc} */
@@ -113,12 +91,63 @@ public final class SubnodeContainerExecutionResult extends NodeContainerExecutio
         return m_workflowExecutionResult;
     }
 
-    /**
-     * @return the node id of the sub node container.
-     * @since 3.5
-     */
-    @JsonProperty("baseID")
-    public NodeID getBaseID() {
-        return m_baseID;
+    public static SubnodeContainerExecutionResultBuilder builder(final NodeID baseID) {
+        return new SubnodeContainerExecutionResultBuilder(baseID);
+    }
+
+    public static SubnodeContainerExecutionResultBuilder builder(final SubnodeContainerExecutionResult template) {
+        return new SubnodeContainerExecutionResultBuilder(template);
+    }
+
+    public static final class SubnodeContainerExecutionResultBuilder extends NodeContainerExecutionResultBuilder {
+
+        private final NodeID m_baseID;
+
+        private WorkflowExecutionResult m_workflowExecutionResult;
+
+        private SubnodeContainerExecutionResultBuilder(final NodeID baseID) {
+            m_baseID = CheckUtils.checkArgumentNotNull(baseID, "ID must not be null");
+        }
+
+        /**
+         * @param template
+         */
+        public SubnodeContainerExecutionResultBuilder(final SubnodeContainerExecutionResult template) {
+            super(template);
+            m_baseID = template.getBaseID();
+        }
+
+        /**
+         * Sets inner execution result.
+         * @param workflowExecutionResult To be set, must have correct baseID.
+         * @return this
+         * @throws IllegalArgumentException If the id prefix is invalid or argument is null
+         */
+        @JsonProperty("workflowExecResult")
+        public SubnodeContainerExecutionResultBuilder
+            setWorkflowExecutionResult(final WorkflowExecutionResult workflowExecutionResult) {
+            m_workflowExecutionResult = CheckUtils.checkArgumentNotNull(workflowExecutionResult);
+            CheckUtils.checkArgument(new NodeID(m_baseID, 0).equals(m_workflowExecutionResult.getBaseID()),
+                "Unexpected ID of inner wfm result, expected %s but got %s", new NodeID(m_baseID, 0),
+                m_workflowExecutionResult.getBaseID());
+            m_workflowExecutionResult = workflowExecutionResult;
+            return this;
+        }
+
+        /**
+         * @return ....
+         */
+        @Override
+        public SubnodeContainerExecutionResult build() {
+            return new SubnodeContainerExecutionResult(this);
+        }
+
+        /**
+         * @return the workflowExecutionResult
+         */
+        WorkflowExecutionResult getWorkflowExecutionResult() {
+            return m_workflowExecutionResult;
+        }
+
     }
 }

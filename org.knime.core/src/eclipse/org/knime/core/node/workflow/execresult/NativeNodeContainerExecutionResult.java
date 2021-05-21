@@ -59,23 +59,16 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public class NativeNodeContainerExecutionResult extends NodeContainerExecutionResult {
 
-    private NodeExecutionResult m_nodeExecutionResult;
-
-    /**
-     * Create an empty execution result.
-     */
-    public NativeNodeContainerExecutionResult() {
-    }
+    private final NodeExecutionResult m_nodeExecutionResult;
 
     /**
      * Copy constructor.
      *
-     * @param toCopy Execution result that should be copied.
-     * @since 3.5
+     * @param builder Execution result that should be copied.
      */
-    public NativeNodeContainerExecutionResult(final NativeNodeContainerExecutionResult toCopy) {
-        super(toCopy);
-        m_nodeExecutionResult = new NodeExecutionResult(toCopy.m_nodeExecutionResult);
+    NativeNodeContainerExecutionResult(final NativeNodeContainerExecutionResultBuilder builder) {
+        super(builder);
+        m_nodeExecutionResult = CheckUtils.checkArgumentNotNull(builder.m_nodeExecutionResult);
     }
 
     /** @return The execution result for the node. */
@@ -84,19 +77,47 @@ public class NativeNodeContainerExecutionResult extends NodeContainerExecutionRe
         return m_nodeExecutionResult;
     }
 
-    /**
-     * @param nodeExecutionResult the result to set
-     * @throws NullPointerException If argument is null.
-     */
-    @JsonProperty
-    public void setNodeExecutionResult(final NodeExecutionResult nodeExecutionResult) {
-        m_nodeExecutionResult = CheckUtils.checkArgumentNotNull(nodeExecutionResult);
-    }
-
     /** {@inheritDoc} */
     @Override
     public NodeContainerExecutionStatus getChildStatus(final int idSuffix) {
         throw new IllegalStateException(getClass().getSimpleName() + " has no children");
+    }
+
+    public static NativeNodeContainerExecutionResultBuilder builder() {
+        return new NativeNodeContainerExecutionResultBuilder();
+    }
+
+    public static NativeNodeContainerExecutionResultBuilder builder(final NativeNodeContainerExecutionResult template) {
+        return new NativeNodeContainerExecutionResultBuilder(template);
+    }
+
+    public static final class NativeNodeContainerExecutionResultBuilder extends NodeContainerExecutionResultBuilder {
+
+        NodeExecutionResult m_nodeExecutionResult;
+
+        private NativeNodeContainerExecutionResultBuilder() {
+        }
+
+        private NativeNodeContainerExecutionResultBuilder(final NativeNodeContainerExecutionResult template) {
+            super(template);
+            setNodeExecutionResult(template.getNodeExecutionResult());
+        }
+
+        public NativeNodeContainerExecutionResultBuilder setNodeExecutionResult(final NodeExecutionResult r) {
+            m_nodeExecutionResult = r;
+            return this;
+        }
+
+        @Override
+        public NativeNodeContainerExecutionResultBuilder setSuccess(final boolean isSuccess) {
+            return (NativeNodeContainerExecutionResultBuilder)super.setSuccess(isSuccess);
+        }
+
+        @Override
+        public NativeNodeContainerExecutionResult build() {
+            return new NativeNodeContainerExecutionResult(this);
+        }
+
     }
 
 }
