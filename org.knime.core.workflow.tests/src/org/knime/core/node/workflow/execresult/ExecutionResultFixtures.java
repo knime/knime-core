@@ -60,6 +60,11 @@ import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.NodeMessage.Type;
+import org.knime.core.node.workflow.execresult.NativeNodeContainerExecutionResult.NativeNodeContainerExecutionResultBuilder;
+import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult.NodeContainerExecutionResultBuilder;
+import org.knime.core.node.workflow.execresult.NodeExecutionResult.NodeExecutionResultBuilder;
+import org.knime.core.node.workflow.execresult.SubnodeContainerExecutionResult.SubnodeContainerExecutionResultBuilder;
+import org.knime.core.node.workflow.execresult.WorkflowExecutionResult.WorkflowExecutionResultBuilder;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -74,14 +79,15 @@ public class ExecutionResultFixtures {
      * @return a fixture object
      */
     public static NodeExecutionResult createNodeExecutionResultFixture() {
-        NodeExecutionResult toReturn = new NodeExecutionResult();
-        toReturn.setPortObjects(new PortObject[]{InactiveBranchPortObject.INSTANCE, InactiveBranchPortObject.INSTANCE});
-        toReturn.setPortObjectSpecs(
-            new PortObjectSpec[]{InactiveBranchPortObjectSpec.INSTANCE, InactiveBranchPortObjectSpec.INSTANCE});
-        toReturn.setInternalHeldPortObjects(new PortObject[]{InactiveBranchPortObject.INSTANCE});
-        toReturn.setWarningMessage("a warning");
-        toReturn.setNeedsResetAfterLoad();
-        return toReturn;
+		NodeExecutionResultBuilder toReturn = NodeExecutionResult.builder() //
+				.setPortObjects(
+						new PortObject[] { InactiveBranchPortObject.INSTANCE, InactiveBranchPortObject.INSTANCE })
+				.setPortObjectSpecs(new PortObjectSpec[] { InactiveBranchPortObjectSpec.INSTANCE,
+						InactiveBranchPortObjectSpec.INSTANCE })
+				.setInternalHeldPortObjects(new PortObject[] { InactiveBranchPortObject.INSTANCE })
+				.setWarningMessage("a warning");
+//        .setNeedsResetAfterLoad();
+        return toReturn.build();
     }
 
     /**
@@ -96,10 +102,10 @@ public class ExecutionResultFixtures {
      * @return a fixture object
      */
     public static NativeNodeContainerExecutionResult createNativeNodeContainerExecutionResultFixture(final int someId) {
-        NativeNodeContainerExecutionResult toReturn = new NativeNodeContainerExecutionResult();
+        NativeNodeContainerExecutionResultBuilder toReturn = NativeNodeContainerExecutionResult.builder();
         toReturn.setNodeExecutionResult(createNodeExecutionResultFixture());
         setGeneralNodeContainerProperties(toReturn, "native node error" + someId);
-        return toReturn;
+        return toReturn.build();
     }
 
     /**
@@ -107,11 +113,11 @@ public class ExecutionResultFixtures {
      */
     public static WorkflowExecutionResult createWorkflowExecutionResultFixture() {
         NodeID baseID = NodeID.fromString("0:1:0");
-        WorkflowExecutionResult toReturn = new WorkflowExecutionResult(baseID);
-        toReturn.addNodeExecutionResult(new NodeID(baseID, 0), createNativeNodeContainerExecutionResultFixture(0));
-        toReturn.addNodeExecutionResult(new NodeID(baseID, 1), createNativeNodeContainerExecutionResultFixture(1));
+        WorkflowExecutionResultBuilder toReturn = WorkflowExecutionResult.builder(baseID);
+		toReturn.addNodeExecutionResult(new NodeID(baseID, 0), createNativeNodeContainerExecutionResultFixture(0));
+		toReturn.addNodeExecutionResult(new NodeID(baseID, 1), createNativeNodeContainerExecutionResultFixture(1));
         setGeneralNodeContainerProperties(toReturn, "workflow error");
-        return toReturn;
+        return toReturn.build();
     }
 
     /**
@@ -120,7 +126,7 @@ public class ExecutionResultFixtures {
      * @param execResult Object to set properties on.
      * @param errorMsg An error message to set (as part of {@link NodeMessage})
      */
-    public static void setGeneralNodeContainerProperties(final NodeContainerExecutionResult execResult,
+    public static void setGeneralNodeContainerProperties(final NodeContainerExecutionResultBuilder execResult,
         final String errorMsg) {
         execResult.setMessage(new NodeMessage(Type.ERROR, errorMsg));
         execResult.setNeedsResetAfterLoad();
@@ -150,10 +156,10 @@ public class ExecutionResultFixtures {
      */
     public static SubnodeContainerExecutionResult createSubnodeContainerExecutionResultFixture() {
         WorkflowExecutionResult wfResult = createWorkflowExecutionResultFixture();
-        SubnodeContainerExecutionResult toReturn =
-            new SubnodeContainerExecutionResult(wfResult.getBaseID().getPrefix());
-        toReturn.setWorkflowExecutionResult(wfResult);
-        return toReturn;
+        SubnodeContainerExecutionResultBuilder toReturn = 
+        		SubnodeContainerExecutionResult.builder(wfResult.getBaseID().getPrefix()) //
+        		.setWorkflowExecutionResult(wfResult);
+        return toReturn.build();
     }
 
     /**

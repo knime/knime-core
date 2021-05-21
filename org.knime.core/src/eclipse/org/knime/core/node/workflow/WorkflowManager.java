@@ -189,6 +189,7 @@ import org.knime.core.node.workflow.capture.WorkflowSegment;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 import org.knime.core.node.workflow.execresult.WorkflowExecutionResult;
+import org.knime.core.node.workflow.execresult.WorkflowExecutionResult.WorkflowExecutionResultBuilder;
 import org.knime.core.node.workflow.virtual.AbstractPortObjectRepositoryNodeModel;
 import org.knime.core.node.workflow.virtual.parchunk.FlowVirtualScopeContext;
 import org.knime.core.node.workflow.virtual.parchunk.ParallelizedChunkContent;
@@ -8173,7 +8174,7 @@ public final class WorkflowManager extends NodeContainer
     public WorkflowExecutionResult createExecutionResult(final ExecutionMonitor exec)
         throws CanceledExecutionException {
         try (WorkflowLock lock = lock()) {
-            WorkflowExecutionResult result = new WorkflowExecutionResult(getID());
+            WorkflowExecutionResultBuilder result = WorkflowExecutionResult.builder(getID());
             super.saveExecutionResult(result);
             Set<NodeID> bfsSortedSet = m_workflow.createBreadthFirstSortedList(m_workflow.getNodeIDs(), true).keySet();
             boolean success = false;
@@ -8193,7 +8194,7 @@ public final class WorkflowManager extends NodeContainer
             if (success) {
                 result.setSuccess(true);
             }
-            return result;
+            return result.build();
         }
     }
 
