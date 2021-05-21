@@ -92,6 +92,11 @@ public class DefWorkflowManagerWrapper extends DefNodeContainerWrapper implement
         this.m_wfm = wfm;
     }
 
+    @Override
+    public String getKind() {
+        return "Workflow";
+    }
+
     /**
      * {@inheritDoc}
      */
