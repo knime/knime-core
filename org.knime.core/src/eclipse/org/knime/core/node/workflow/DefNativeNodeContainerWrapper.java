@@ -46,29 +46,27 @@
  * History
  *   May 20, 2021 (hornm): created
  */
-package org.knime.core.node.workflow.def.impl;
+package org.knime.core.node.workflow;
 
-import java.util.List;
-
-import org.knime.core.node.workflow.SubNodeContainer;
-import org.knime.core.workflow.def.ComponentDef;
-import org.knime.core.workflow.def.ComponentMetadataDef;
-import org.knime.core.workflow.def.PortDef;
-import org.knime.core.workflow.def.TemplateInfoDef;
-import org.knime.core.workflow.def.WorkflowDef;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettings;
+import org.knime.core.node.workflow.def.CoreToDefUtil;
+import org.knime.core.workflow.def.ConfigMapDef;
+import org.knime.core.workflow.def.NativeNodeDef;
+import org.knime.core.workflow.def.NodeAndBundleInfoDef;
 
 /**
  *
  * @author hornm
  */
-public class SubNodeContainerDefWrapper extends SingleNodeContainerDefWrapper implements ComponentDef {
+public class DefNativeNodeContainerWrapper extends DefSingleNodeContainerWrapper implements NativeNodeDef {
 
-    private final SubNodeContainer m_nc;
+    private final NativeNodeContainer m_nc;
 
     /**
      * @param nc
      */
-    public SubNodeContainerDefWrapper(final SubNodeContainer nc) {
+    public DefNativeNodeContainerWrapper(final NativeNodeContainer nc) {
         super(nc);
         m_nc = nc;
     }
@@ -77,99 +75,58 @@ public class SubNodeContainerDefWrapper extends SingleNodeContainerDefWrapper im
      * {@inheritDoc}
      */
     @Override
-    public WorkflowDef getWorkflow() {
-        // TODO Auto-generated method stub
-        return null;
+    public NodeAndBundleInfoDef getNodeAndBundleInfo() {
+        return CoreToDefUtil.toNodeAndBundleInfoDef(m_nc.getNodeAndBundleInformation());
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public List<PortDef> getInPorts() {
-        // TODO Auto-generated method stub
-        return null;
+    public ConfigMapDef getFactorySettings() {
+        NodeSettings s = new NodeSettings("factory_settings");
+        m_nc.getNode().getFactory().saveAdditionalFactorySettings(s);
+        try {
+            return CoreToDefUtil.toConfigMapDef(s);
+        } catch (InvalidSettingsException ex) {
+            // TODO
+            throw new RuntimeException(ex);
+        }
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public List<PortDef> getOutPorts() {
-        // TODO Auto-generated method stub
-        return null;
+    public String getName() {
+        return m_nc.getName();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Integer getVirtualInNodeIDSuffix() {
-        // TODO Auto-generated method stub
-        return null;
+    public String getFactory() {
+        return m_nc.getNode().getFactory().getClass().getName();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Integer getVirtualOutNodeIDSuffix() {
-        // TODO Auto-generated method stub
-        return null;
-    }
+    public ConfigMapDef getNodeCreationConfig() {
+        NodeSettings creationConfig = m_nc.getNode().getCopyOfCreationConfig().map(c -> {
+            NodeSettings s = new NodeSettings("creation_config");
+            c.saveSettingsTo(s);
+            return s;
+        }).orElse(null);
+        try {
+            return CoreToDefUtil.toConfigMapDef(creationConfig);
+        } catch (InvalidSettingsException ex) {
+            // TODO
+            throw new RuntimeException(ex);
+        }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getLayoutJSON() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getConfigurationLayoutJSON() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Boolean isHideInWizard() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getCssStyles() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ComponentMetadataDef getMetadata() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public TemplateInfoDef getTemplateInfo() {
-        // TODO Auto-generated method stub
-        return null;
     }
 
 }

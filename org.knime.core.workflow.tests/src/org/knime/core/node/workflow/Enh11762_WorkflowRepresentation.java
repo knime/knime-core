@@ -1,6 +1,5 @@
 /*
  * ------------------------------------------------------------------------
- *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -41,76 +40,30 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
- *
- * History
- *   May 20, 2021 (hornm): created
+ * ------------------------------------------------------------------------
  */
-package org.knime.core.node.workflow.def.impl;
+package org.knime.core.node.workflow;
 
-import org.knime.core.node.workflow.NativeNodeContainer;
-import org.knime.core.workflow.def.ConfigMapDef;
-import org.knime.core.workflow.def.NativeNodeDef;
-import org.knime.core.workflow.def.NodeAndBundleInfoDef;
+import org.junit.Test;
+import org.knime.core.workflow.def.impl.DefaultWorkflowDef;
 
-/**
- *
- * @author hornm
- */
-public class NativeNodeContainerDefWrapper extends SingleNodeContainerDefWrapper implements NativeNodeDef {
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
-    private final NativeNodeContainer m_nc;
+public class Enh11762_WorkflowRepresentation extends WorkflowTestCase {
 
-    /**
-     * @param nc
-     */
-    public NativeNodeContainerDefWrapper(final NativeNodeContainer nc) {
-        super(nc);
-        m_nc = nc;
-    }
+	@Test
+	public void test() throws Exception {
+		loadAndSetWorkflow();
+		WorkflowManager wfm = getManager();
+		DefWorkflowManagerWrapper def = new DefWorkflowManagerWrapper(wfm);
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeAndBundleInfoDef getNodeAndBundleInfo() {
-        // TODO Auto-generated method stub
-        return null;
-    }
+		DefaultWorkflowDef defaultDef = new DefaultWorkflowDef(def);
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ConfigMapDef getFactorySettings() {
-        // TODO Auto-generated method stub
-        return null;
-    }
+		ObjectMapper mapper = new ObjectMapper();
+		mapper.registerModule(new JavaTimeModule());
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getName() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getFactory() {
-        return m_nc.getNode().getFactory().getClass().getName();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ConfigMapDef getNodeCreationConfig() {
-        // TODO Auto-generated method stub
-        return null;
-    }
+		String json = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(defaultDef);
+	}
 
 }

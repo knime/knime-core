@@ -46,11 +46,10 @@
  * History
  *   May 20, 2021 (hornm): created
  */
-package org.knime.core.node.workflow.def.impl;
+package org.knime.core.node.workflow;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.def.CoreToDefUtil;
 import org.knime.core.workflow.def.ConfigMapDef;
 import org.knime.core.workflow.def.NodeAnnotationDef;
@@ -63,20 +62,12 @@ import org.knime.core.workflow.def.NodeUIInfoDef;
  *
  * @author hornm
  */
-public class NodeContainerDefWrapper implements NodeDef {
+public class DefNodeContainerWrapper implements NodeDef {
 
     private NodeContainer m_nc;
 
-    public NodeContainerDefWrapper(final NodeContainer nc) {
+    public DefNodeContainerWrapper(final NodeContainer nc) {
         m_nc = nc;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getType() {
-        return "NodeDef";
     }
 
     /**
@@ -133,7 +124,11 @@ public class NodeContainerDefWrapper implements NodeDef {
     @Override
     public ConfigMapDef getNodeExecutionJobManagerSettings() {
         NodeSettings ns = new NodeSettings("jobmanager");
-        m_nc.getJobManager().save(ns);
+        NodeExecutionJobManager jobManager = m_nc.getJobManager();
+        if (jobManager == null) {
+            return null;
+        }
+        jobManager.save(ns);
         try {
             return CoreToDefUtil.toConfigMapDef(ns);
         } catch (InvalidSettingsException ex) {

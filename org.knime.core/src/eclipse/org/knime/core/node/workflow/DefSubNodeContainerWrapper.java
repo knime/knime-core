@@ -46,24 +46,31 @@
  * History
  *   May 20, 2021 (hornm): created
  */
-package org.knime.core.node.workflow.def.impl;
+package org.knime.core.node.workflow;
 
-import org.knime.core.node.workflow.SingleNodeContainer;
-import org.knime.core.workflow.def.ConfigMapDef;
-import org.knime.core.workflow.def.SingleNodeDef;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
+import org.knime.core.node.workflow.def.CoreToDefUtil;
+import org.knime.core.workflow.def.ComponentDef;
+import org.knime.core.workflow.def.ComponentMetadataDef;
+import org.knime.core.workflow.def.PortDef;
+import org.knime.core.workflow.def.TemplateInfoDef;
+import org.knime.core.workflow.def.WorkflowDef;
 
 /**
  *
  * @author hornm
  */
-public abstract class SingleNodeContainerDefWrapper extends NodeContainerDefWrapper implements SingleNodeDef {
+public class DefSubNodeContainerWrapper extends DefSingleNodeContainerWrapper implements ComponentDef {
 
-    private final SingleNodeContainer m_nc;
+    private final SubNodeContainer m_nc;
 
     /**
      * @param nc
      */
-    public SingleNodeContainerDefWrapper(final SingleNodeContainer nc) {
+    public DefSubNodeContainerWrapper(final SubNodeContainer nc) {
         super(nc);
         m_nc = nc;
     }
@@ -72,35 +79,90 @@ public abstract class SingleNodeContainerDefWrapper extends NodeContainerDefWrap
      * {@inheritDoc}
      */
     @Override
-    public ConfigMapDef getModelSettings() {
-        return null;
+    public WorkflowDef getWorkflow() {
+        return new DefWorkflowManagerWrapper(m_nc.getWorkflowManager());
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public ConfigMapDef getInternalNodeSubSettings() {
-        // TODO Auto-generated method stub
-        return null;
+    public List<PortDef> getInPorts() {
+        return IntStream.range(0, m_nc.getNrInPorts()).mapToObj(m_nc::getInPort).map(CoreToDefUtil::toPortDef)
+            .collect(Collectors.toList());
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public ConfigMapDef getVariableSettings() {
-        // TODO Auto-generated method stub
-        return null;
+    public List<PortDef> getOutPorts() {
+        return IntStream.range(0, m_nc.getNrOutPorts()).mapToObj(m_nc::getOutPort).map(CoreToDefUtil::toPortDef)
+                .collect(Collectors.toList());
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public ConfigMapDef getFlowStack() {
-        // TODO Auto-generated method stub
-        return null;
+    public Integer getVirtualInNodeIDSuffix() {
+        return m_nc.getVirtualInNodeID().getIndex();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Integer getVirtualOutNodeIDSuffix() {
+        return m_nc.getVirtualOutNodeID().getIndex();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getLayoutJSON() {
+        return m_nc.getSubnodeLayoutStringProvider().getLayoutString();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getConfigurationLayoutJSON() {
+        return m_nc.getSubnodeConfigurationLayoutStringProvider().getConfigurationLayoutString();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Boolean isHideInWizard() {
+        return m_nc.isHideInWizard();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getCssStyles() {
+        return m_nc.getCssStyles();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ComponentMetadataDef getMetadata() {
+        return CoreToDefUtil.toComponentMetadataDef(m_nc.getMetadata());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public TemplateInfoDef getTemplateInfo() {
+        return CoreToDefUtil.toTemplateInfoDef(m_nc.getTemplateInformation());
     }
 
 }

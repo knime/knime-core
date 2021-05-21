@@ -46,19 +46,18 @@
  * History
  *   18.05.2021 (loescher): created
  */
-package org.knime.core.node.workflow.def.impl;
+package org.knime.core.node.workflow;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.workflow.def.CoreToDefUtil;
 import org.knime.core.workflow.def.AnnotationDataDef;
 import org.knime.core.workflow.def.AuthorInformationDef;
@@ -73,6 +72,7 @@ import org.knime.core.workflow.def.TemplateInfoDef;
 import org.knime.core.workflow.def.WorkflowCredentialsDef;
 import org.knime.core.workflow.def.WorkflowDef;
 import org.knime.core.workflow.def.WorkflowUISettingsDef;
+import org.knime.core.workflow.def.impl.DefaultNodeRefDef;
 
 /**
  *
@@ -80,14 +80,14 @@ import org.knime.core.workflow.def.WorkflowUISettingsDef;
  * @author hornm
  * @since 4.4
  */
-public class WorkflowManagerDefWrapper extends NodeContainerDefWrapper implements WorkflowDef {
+public class DefWorkflowManagerWrapper extends DefNodeContainerWrapper implements WorkflowDef {
 
     private final WorkflowManager m_wfm;
 
     /**
      * @param wfm the workflow manager to use as a base
      */
-    public WorkflowManagerDefWrapper(final WorkflowManager wfm) {
+    public DefWorkflowManagerWrapper(final WorkflowManager wfm) {
         super(wfm);
         this.m_wfm = wfm;
     }
@@ -104,7 +104,12 @@ public class WorkflowManagerDefWrapper extends NodeContainerDefWrapper implement
 
                 @Override
                 public ConnectionUISettingsDef getUiSettings() {
-                    return () -> connection.getUIInfo().getAllBendpoints().length;
+                    ConnectionUIInformation uiInfo = connection.getUIInfo();
+                    if (uiInfo != null) {
+                        return () -> connection.getUIInfo().getAllBendpoints().length;
+                    } else {
+                        return null;
+                    }
                 }
 
                 @Override
@@ -181,8 +186,7 @@ public class WorkflowManagerDefWrapper extends NodeContainerDefWrapper implement
      */
     @Override
     public String getCreatedBy() {
-        // TODO think about whether this should be the case
-        throw new UnsupportedOperationException("The workflow manager does not have access the creation version.");
+        return KNIMEConstants.VERSION;
     }
 
     /**
@@ -190,9 +194,7 @@ public class WorkflowManagerDefWrapper extends NodeContainerDefWrapper implement
      */
     @Override
     public Boolean isCreatedByNightly() {
-        // TODO think about whether this should be the case
-        throw new UnsupportedOperationException(
-            "The workflow manager does not have access to whether it was created in a nighly build.");
+        return KNIMEConstants.isNightlyBuild();
     }
 
     /**
@@ -244,11 +246,17 @@ public class WorkflowManagerDefWrapper extends NodeContainerDefWrapper implement
      */
     @Override
     public Map<String, NodeDef> getNodes() {
-        final var result = new LinkedHashMap<String, NodeDef>();
-        for (final var node : m_wfm.getNodeContainers()) {
-
-        }
-        return result;
+        return m_wfm.getNodeContainers().stream().collect(Collectors.toMap(nc -> nc.getID().toString(), nc -> {
+            if (nc instanceof WorkflowManager) {
+                return new DefWorkflowManagerWrapper((WorkflowManager)nc);
+            } else if (nc instanceof NativeNodeContainer) {
+                return new DefNativeNodeContainerWrapper((NativeNodeContainer)nc);
+            } else if (nc instanceof SubNodeContainer) {
+                return new DefSubNodeContainerWrapper((SubNodeContainer)nc);
+            } else {
+                throw new IllegalStateException();
+            }
+        }));
     }
 
     /**
@@ -256,7 +264,9 @@ public class WorkflowManagerDefWrapper extends NodeContainerDefWrapper implement
      */
     @Override
     public List<NodeRefDef> getNodeRefs() {
-        return null;
+        return m_wfm.getNodeContainers().stream().map(NodeContainer::getID)
+            .map(id -> DefaultNodeRefDef.builder().setReference(id.toString()).setId(id.getIndex()).build())
+            .collect(Collectors.toList());
     }
 
     /**
