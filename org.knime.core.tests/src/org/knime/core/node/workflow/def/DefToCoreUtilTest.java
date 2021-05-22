@@ -57,7 +57,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.workflow.def.ConfigDef;
-import org.knime.core.workflow.def.ConfigMapDef;
+import org.knime.core.workflow.def.ConfigSubtreeDef;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -84,7 +84,18 @@ public class DefToCoreUtilTest {
         original.addShort("answerShort", Short.MIN_VALUE);
         original.addByte("answerByte", Byte.MIN_VALUE);
         original.addLong("answerLong", Long.MIN_VALUE);
-        original.addPassword("answerPassword", "zebra", "secret");
+        // TODO
+//        original.addPassword("answerPassword", "zebra", "secret");
+
+        original.addBooleanArray("booleans", true, false, false, false, true, false);
+        original.addByteArray("bytes", "bytes".getBytes());
+        original.addCharArray("chars", 'A', 'B', 'C');
+        original.addDoubleArray("doubles", Double.MIN_VALUE, Double.MAX_VALUE);
+        original.addFloatArray("floats", Float.MIN_VALUE, Float.MAX_VALUE);
+        original.addIntArray("ints", 1,2,3,4,5,6,7,8,9);
+        original.addLongArray("longs", Long.MIN_VALUE, Long.MAX_VALUE);
+        original.addShortArray("shorts", Short.MIN_VALUE, Short.MAX_VALUE);
+        original.addStringArray("colors", "red", "green", "blue");
 
         // tree structure: org.knime.core.(util|node)
         NodeSettingsWO org = original.addNodeSettings("org");
@@ -101,12 +112,18 @@ public class DefToCoreUtilTest {
     /**
      * Convert {@link NodeSettings} to {@link ConfigDef} and the {@link ConfigDef} back to {@link NodeSettings}.
      * Compare the original {@link NodeSettings} with the restored {@link NodeSettings}.
+     *
+     * Note that this only tests conversion to Def entitites and back, not the correct restoration of Def entities from
+     * JSON or any other serialization format.
      */
     @Test
-    public void testPersistRestore() {
+    public void testCoreToDefAndBack() {
         try {
+
+            // TODO doubles and floats seem to be written out in scientific notation, i.e., not lossless
+
             ConfigDef def = CoreToDefUtil.toConfigDef(original);
-            NodeSettings restored = (NodeSettings)DefToCoreUtil.toNodeSettings((ConfigMapDef)def);
+            NodeSettings restored = (NodeSettings)DefToCoreUtil.toNodeSettings((ConfigSubtreeDef)def);
 
             // conversion process does not change information
             assertTrue(original.hasIdenticalValue(restored));
@@ -131,28 +148,15 @@ public class DefToCoreUtilTest {
 
             ObjectMapper mapper = new ObjectMapper();
 
-            final String expected =
-                    "{\"children\":{\"colors\":{\"children\":{\"array-size\":{\"value\":\"3\",\"valueType\":"
-                  + "\"xint\"},\"0\":{\"value\":\"red\",\"valueType\":\"xstring\"},\"1\":{\"value\":\"green\","
-                  + "\"valueType\":\"xstring\"},\"2\":{\"value\":\"blue\",\"valueType\":\"xstring\"}},\"key\":"
-                  + "\"colors\"},\"answerString\":{\"value\":\"42\",\"valueType\":\"xstring\"},\"A v ¬A\":{\"value\":"
-                  + "\"true\",\"valueType\":\"xboolean\"},\"answerInt\":{\"value\":\"-2147483648\",\"valueType\":"
-                  + "\"xint\"},\"answerFloat\":{\"value\":\"1.401298464324817E-45\",\"valueType\":\"xfloat\"},"
-                  + "\"answerDouble\":{\"value\":\"4.9E-324\",\"valueType\":\"xdouble\"},\"answerShort\":{\"value\":"
-                  + "\"-32768\",\"valueType\":\"xshort\"},\"answerByte\":{\"value\":\"-128\",\"valueType\":\"xbyte\"},"
-                  + "\"answerLong\":{\"value\":\"-9223372036854775808\",\"valueType\":\"xlong\"},\"answerPassword\":"
-                  + "{\"value\":\"01434A46863335EB929DB469B557A5B30E\",\"valueType\":\"xpassword\"},\"org\":"
-                  + "{\"children\":{\"knime\":{\"children\":{\"loc\":{\"value\":\"9223372036854775807\","
-                  + "\"valueType\":\"xlong\"},\"core\":{\"children\":{\"util\":{\"value\":\"util\",\"valueType\":"
-                  + "\"config\"},\"node\":{\"value\":\"node\",\"valueType\":\"config\"}},\"key\":\"core\"}},\"key\":"
-                  + "\"knime\"}},\"key\":\"org\"}},\"key\":\"root\"}";
+            final String expected = "{\"key\":\"root\",\"children\":{\"colors\":{\"array\":[\"red\",\"green\",\"blue\"],\"itemType\":\"xstring\"},\"answerString\":{\"value\":\"42\",\"itemType\":\"xstring\"},\"A v ¬A\":{\"itemType\":\"xboolean\",\"value\":true},\"answerInt\":{\"value\":-2147483648,\"itemType\":\"xint\"},\"answerFloat\":{\"value\":1.4E-45,\"itemType\":\"xfloat\"},\"answerDouble\":{\"value\":4.9E-324,\"itemType\":\"xdouble\"},\"answerShort\":{\"value\":-32768,\"itemType\":\"xshort\"},\"answerByte\":{\"value\":-128,\"itemType\":\"xbyte\"},\"answerLong\":{\"value\":-9223372036854775808,\"itemType\":\"xlong\"},\"booleans\":{\"array\":[true,false,false,false,true,false],\"itemType\":\"xboolean\"},\"bytes\":{\"value\":\"Ynl0ZXM=\",\"itemType\":\"xbyte\"},\"chars\":{\"array\":[65,66,67],\"itemType\":\"xchar\"},\"doubles\":{\"array\":[4.9E-324,1.7976931348623157E308],\"itemType\":\"xdouble\"},\"floats\":{\"array\":[1.4E-45,3.4028235E38],\"itemType\":\"xfloat\"},\"ints\":{\"array\":[1,2,3,4,5,6,7,8,9],\"itemType\":\"xint\"},\"longs\":{\"array\":[-9223372036854775808,9223372036854775807],\"itemType\":\"xlong\"},\"shorts\":{\"array\":[-32768,32767],\"itemType\":\"xshort\"},\"org\":{\"key\":\"org\",\"children\":{\"knime\":{\"key\":\"knime\",\"children\":{\"loc\":{\"value\":9223372036854775807,\"itemType\":\"xlong\"},\"core\":{\"key\":\"core\",\"children\":{\"util\":{\"key\":\"util\",\"children\":{}},\"node\":{\"key\":\"node\",\"children\":{}}}}}}}}}}";
+
+            String prettyPrintedJson = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(def);
+            System.out.println(prettyPrintedJson);
+            System.out.println(mapper.writeValueAsString(def));
 
             String actual = mapper.writeValueAsString(def);
             assertEquals("JSON Serialization of NodeSettings (via ConfigDef) returns unexpected output.", expected,
                 actual);
-
-            String prettyPrintedJson = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(def);
-            System.out.println(prettyPrintedJson);
 
         } catch (JsonProcessingException e) {
             fail(e.getMessage());

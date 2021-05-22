@@ -51,6 +51,7 @@ package org.knime.core.node.workflow.def;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 import org.knime.core.node.InvalidSettingsException;
@@ -60,6 +61,7 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.base.AbstractConfigEntry;
 import org.knime.core.node.config.base.ConfigEntries;
 import org.knime.core.node.port.PortObject;
@@ -82,8 +84,27 @@ import org.knime.core.workflow.def.AuthorInformationDef;
 import org.knime.core.workflow.def.BoundsDef;
 import org.knime.core.workflow.def.ComponentMetadataDef;
 import org.knime.core.workflow.def.ConfigDef;
-import org.knime.core.workflow.def.ConfigMapDef;
+import org.knime.core.workflow.def.ConfigSubtreeDef;
+import org.knime.core.workflow.def.ConfigValueArrayDef;
+import org.knime.core.workflow.def.ConfigValueBooleanArrayDef;
+import org.knime.core.workflow.def.ConfigValueBooleanDef;
+import org.knime.core.workflow.def.ConfigValueByteArrayDef;
+import org.knime.core.workflow.def.ConfigValueByteDef;
+import org.knime.core.workflow.def.ConfigValueCharArrayDef;
+import org.knime.core.workflow.def.ConfigValueCharDef;
 import org.knime.core.workflow.def.ConfigValueDef;
+import org.knime.core.workflow.def.ConfigValueDoubleArrayDef;
+import org.knime.core.workflow.def.ConfigValueDoubleDef;
+import org.knime.core.workflow.def.ConfigValueFloatArrayDef;
+import org.knime.core.workflow.def.ConfigValueFloatDef;
+import org.knime.core.workflow.def.ConfigValueIntArrayDef;
+import org.knime.core.workflow.def.ConfigValueIntDef;
+import org.knime.core.workflow.def.ConfigValueLongArrayDef;
+import org.knime.core.workflow.def.ConfigValueLongDef;
+import org.knime.core.workflow.def.ConfigValueShortArrayDef;
+import org.knime.core.workflow.def.ConfigValueShortDef;
+import org.knime.core.workflow.def.ConfigValueStringArrayDef;
+import org.knime.core.workflow.def.ConfigValueStringDef;
 import org.knime.core.workflow.def.NativeNodeDef;
 import org.knime.core.workflow.def.NodeLocksDef;
 import org.knime.core.workflow.def.NodeUIInfoDef;
@@ -201,10 +222,10 @@ public class DefToCoreUtil {
     /**
      * Create a node settings tree (comprising {@link AbstractConfigEntry}s) from a
      * {@link ConfigDef} tree.
-     *
+     * TODO change return to ConfigRO
      * @param def an entity containing the recursive node settings
      */
-    public static NodeSettings toNodeSettings(final ConfigMapDef def) {
+    public static ConfigRO toNodeSettings(final ConfigSubtreeDef def) {
         return toNodeSettings(def, def.getKey());
     }
 
@@ -215,23 +236,104 @@ public class DefToCoreUtil {
      * @param def an entity containing the recursive node settings
      * @param key the name of this subtree
      */
-    private static NodeSettings toNodeSettings(final ConfigMapDef def, final String key) {
-        final NodeSettings settings = new NodeSettings(key);
+    private static NodeSettings toNodeSettings(final ConfigDef def, final String key) {
         // recursion anchor
-        if (def instanceof ConfigValueDef) {
-            addLeafToSettings(settings, key, (ConfigValueDef)def);
-        } else {
-            // recurse
-            for (Map.Entry<String, ConfigDef> childEntry : def.getChildren().entrySet()) {
+        if (def instanceof ConfigValueArrayDef) {
+            // this is an array that needs to be coded in the legacy hacky format (NodeSettings with N+1 children,
+            // 1 for array size, N for items
+            return toNodeSettingsArray((ConfigValueArrayDef)def, key);
+        } else if (def instanceof ConfigSubtreeDef){  // this is a subtree, because it has a children map
+            final NodeSettings settings = new NodeSettings(key);
+
+            ConfigSubtreeDef subtree = (ConfigSubtreeDef) def;
+            for (Map.Entry<String, ConfigDef> childEntry : subtree.getChildren().entrySet()) {
                 final ConfigDef child = childEntry.getValue();
-                if (child instanceof ConfigMapDef) {
-                    settings.addNodeSettings(toNodeSettings((ConfigMapDef)child, childEntry.getKey()));
+                // This recursion lookahead is useful because we want to do parentSettings.addBoolean(val) instead of
+                // creating and returning a ConfigBooleanEntry. This way, we don't have to pass the parent down.
+                if(child instanceof ConfigValueDef) {
+                    addLeafToSettings(settings, childEntry.getKey(), child);
                 } else {
-                    addLeafToSettings(settings, childEntry.getKey(), (ConfigValueDef)childEntry.getValue());
+                    // recurse
+                    NodeSettings subTree = toNodeSettings(child, childEntry.getKey());
+                    settings.addNodeSettings(subTree);
                 }
             }
+            return settings;
+        } else {
+            throw new IllegalStateException();
         }
-        return settings;
+    }
+
+    /**
+     * @param def
+     * @return
+     */
+    private static NodeSettings toNodeSettingsArray(final ConfigValueArrayDef def, final String arrayKey) {
+        NodeSettings temp = new NodeSettings("");
+        if (def instanceof ConfigValueBooleanArrayDef) {
+            List<Boolean> values = ((ConfigValueBooleanArrayDef)def).getArray();
+            boolean[] array = new boolean[values.size()];
+            for (int i = 0; i < values.size(); i++) {
+                array[i] = values.get(i);
+            }
+            temp.addBooleanArray(arrayKey, array);
+        } else if (def instanceof ConfigValueByteArrayDef) {
+            temp.addByteArray(arrayKey, ((ConfigValueByteArrayDef)def).getValue());
+        } else if (def instanceof ConfigValueCharArrayDef) {
+            List<Integer> values = ((ConfigValueCharArrayDef)def).getArray();
+            char[] array = new char[values.size()];
+            for (int i = 0; i < values.size(); i++) {
+                array[i] = (char)values.get(i).intValue();
+            }
+            temp.addCharArray(arrayKey, array);
+        } else if (def instanceof ConfigValueDoubleArrayDef) {
+            List<Double> values = ((ConfigValueDoubleArrayDef)def).getArray();
+            double[] array = new double[values.size()];
+            for (int i = 0; i < values.size(); i++) {
+                array[i] = values.get(i);
+            }
+            temp.addDoubleArray(arrayKey, array);
+        } else if (def instanceof ConfigValueFloatArrayDef) {
+            List<Float> values = ((ConfigValueFloatArrayDef)def).getArray();
+            float[] array = new float[values.size()];
+            for (int i = 0; i < values.size(); i++) {
+                array[i] = values.get(i);
+            }
+            temp.addFloatArray(arrayKey, array);
+        } else if (def instanceof ConfigValueIntArrayDef) {
+            List<Integer> values = ((ConfigValueIntArrayDef)def).getArray();
+            int[] array = new int[values.size()];
+            for (int i = 0; i < values.size(); i++) {
+                array[i] = values.get(i);
+            }
+            temp.addIntArray(arrayKey, array);
+        } else if (def instanceof ConfigValueLongArrayDef) {
+            List<Long> values = ((ConfigValueLongArrayDef)def).getArray();
+            long[] array = new long[values.size()];
+            for (int i = 0; i < values.size(); i++) {
+                array[i] = values.get(i);
+            }
+            temp.addLongArray(arrayKey, array);
+        } else if (def instanceof ConfigValueShortArrayDef) {
+            List<Integer> values = ((ConfigValueShortArrayDef)def).getArray();
+            short[] array = new short[values.size()];
+            for (int i = 0; i < values.size(); i++) {
+                array[i] = (short)values.get(i).intValue();
+            }
+            temp.addShortArray(arrayKey, array);
+        } else if (def instanceof ConfigValueStringArrayDef) {
+            List<String> values = ((ConfigValueStringArrayDef)def).getArray();
+            String[] array = new String[values.size()];
+            for (int i = 0; i < values.size(); i++) {
+                array[i] = values.get(i);
+            }
+            temp.addStringArray(arrayKey, array);
+        }
+
+        if (temp.containsKey(arrayKey)) {
+            return (NodeSettings)temp.getEntry(arrayKey);
+        }
+        return null;
     }
 
     /**
@@ -242,18 +344,46 @@ public class DefToCoreUtil {
      * @param configuration a string representation of the value with type annotation (saying, e.g., "xdouble"), see
      *            {@link ConfigEntries}
      */
-    private static void addLeafToSettings(final NodeSettings settings, final String key, final ConfigValueDef leafDef) {
-
-        final ConfigEntries type = ConfigEntries.valueOf(leafDef.getValueType());
-
-        // ConfigEntries provides constructors for the primitive case
-        // for the recursive case, use NodeSettings.addConfig to append a new NodeSettings as child
-        if(type == ConfigEntries.config) {
-            settings.addConfig(key);
-        } else {
-            final AbstractConfigEntry leaf = type.createEntry(key, leafDef.getValue());
-            settings.addEntry(leaf);
+    private static void addLeafToSettings(final NodeSettings settings, final String key, final ConfigDef leafDef) {
+        if(leafDef instanceof ConfigValueBooleanDef) {
+            boolean value = ((ConfigValueBooleanDef) leafDef).isValue();
+            settings.addBoolean(key, value);
         }
+        if(leafDef instanceof ConfigValueCharDef) {
+            char value = (char) ((ConfigValueCharDef) leafDef).getValue().intValue();
+            settings.addChar(key, value);
+        }
+        if(leafDef instanceof ConfigValueDoubleDef) {
+            double value = ((ConfigValueDoubleDef) leafDef).getValue();
+            settings.addDouble(key, value);
+        }
+
+        if(leafDef instanceof ConfigValueFloatDef) {
+            float value = ((ConfigValueFloatDef) leafDef).getValue();
+            settings.addFloat(key, value);
+        }
+        if(leafDef instanceof ConfigValueIntDef) {
+            int value = ((ConfigValueIntDef) leafDef).getValue();
+            settings.addInt(key, value);
+        }
+        if(leafDef instanceof ConfigValueLongDef) {
+            long value = ((ConfigValueLongDef) leafDef).getValue();
+            settings.addLong(key, value);
+        }
+
+        if(leafDef instanceof ConfigValueByteDef) {
+            byte value = (byte) ((ConfigValueByteDef) leafDef).getValue().intValue();
+            settings.addByte(key, value);
+        }
+        if(leafDef instanceof ConfigValueShortDef) {
+            short value = (short) ((ConfigValueShortDef) leafDef).getValue().intValue();
+            settings.addShort(key, value);
+        }
+        if(leafDef instanceof ConfigValueStringDef) {
+            String value = ((ConfigValueStringDef) leafDef).getValue();
+            settings.addString(key, value);
+        }
+        // TODO password need passphrase to decode
     }
 
     public static NodeAndBundleInformationPersistor toNodeAndBundleInformationPersistor(final NativeNodeDef def) {
