@@ -54,15 +54,30 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
+import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.ModelContent;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeAndBundleInformationPersistor;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.base.AbstractConfigEntry;
+import org.knime.core.node.config.base.ConfigBase;
+import org.knime.core.node.config.base.ConfigBaseRO;
+import org.knime.core.node.config.base.ConfigBooleanEntry;
+import org.knime.core.node.config.base.ConfigByteEntry;
+import org.knime.core.node.config.base.ConfigCharEntry;
+import org.knime.core.node.config.base.ConfigDoubleEntry;
+import org.knime.core.node.config.base.ConfigEntries;
+import org.knime.core.node.config.base.ConfigFloatEntry;
+import org.knime.core.node.config.base.ConfigIntEntry;
+import org.knime.core.node.config.base.ConfigLongEntry;
+import org.knime.core.node.config.base.ConfigShortEntry;
+import org.knime.core.node.config.base.ConfigStringEntry;
 import org.knime.core.node.workflow.ComponentMetadata;
 import org.knime.core.node.workflow.ComponentMetadata.ComponentNodeType;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation;
@@ -74,7 +89,8 @@ import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.util.Version;
 import org.knime.core.workflow.def.ComponentMetadataDef;
 import org.knime.core.workflow.def.ConfigDef;
-import org.knime.core.workflow.def.ConfigMapDef;
+import org.knime.core.workflow.def.ConfigSubtreeDef;
+import org.knime.core.workflow.def.ConfigValueBooleanArrayDef;
 import org.knime.core.workflow.def.NativeNodeDef;
 import org.knime.core.workflow.def.NodeAndBundleInfoDef;
 import org.knime.core.workflow.def.NodeAnnotationDef;
@@ -87,8 +103,25 @@ import org.knime.core.workflow.def.TemplateInfoDef;
 import org.knime.core.workflow.def.impl.DefaultAnnotationDataDef;
 import org.knime.core.workflow.def.impl.DefaultBoundsDef;
 import org.knime.core.workflow.def.impl.DefaultComponentMetadataDef;
-import org.knime.core.workflow.def.impl.DefaultConfigMapDef;
-import org.knime.core.workflow.def.impl.DefaultConfigValueDef;
+import org.knime.core.workflow.def.impl.DefaultConfigSubtreeDef;
+import org.knime.core.workflow.def.impl.DefaultConfigValueBooleanArrayDef;
+import org.knime.core.workflow.def.impl.DefaultConfigValueBooleanDef;
+import org.knime.core.workflow.def.impl.DefaultConfigValueByteArrayDef;
+import org.knime.core.workflow.def.impl.DefaultConfigValueByteDef;
+import org.knime.core.workflow.def.impl.DefaultConfigValueCharArrayDef;
+import org.knime.core.workflow.def.impl.DefaultConfigValueCharDef;
+import org.knime.core.workflow.def.impl.DefaultConfigValueDoubleArrayDef;
+import org.knime.core.workflow.def.impl.DefaultConfigValueDoubleDef;
+import org.knime.core.workflow.def.impl.DefaultConfigValueFloatArrayDef;
+import org.knime.core.workflow.def.impl.DefaultConfigValueFloatDef;
+import org.knime.core.workflow.def.impl.DefaultConfigValueIntArrayDef;
+import org.knime.core.workflow.def.impl.DefaultConfigValueIntDef;
+import org.knime.core.workflow.def.impl.DefaultConfigValueLongArrayDef;
+import org.knime.core.workflow.def.impl.DefaultConfigValueLongDef;
+import org.knime.core.workflow.def.impl.DefaultConfigValueShortArrayDef;
+import org.knime.core.workflow.def.impl.DefaultConfigValueShortDef;
+import org.knime.core.workflow.def.impl.DefaultConfigValueStringArrayDef;
+import org.knime.core.workflow.def.impl.DefaultConfigValueStringDef;
 import org.knime.core.workflow.def.impl.DefaultNodeAndBundleInfoDef;
 import org.knime.core.workflow.def.impl.DefaultNodeAnnotationDef;
 import org.knime.core.workflow.def.impl.DefaultNodeLocksDef;
@@ -109,26 +142,24 @@ public class CoreToDefUtil {
         return null;
     }
 
-    public static ConfigMapDef toConfigMapDef(final NodeSettingsRO settings) throws InvalidSettingsException {
+    /**
+     *
+     * TODO use {@link NodeSettingsRO}. The problem is the typed leaf entries (e.g., {@link ConfigBooleanEntry} inherit
+     * from {@link AbstractConfigEntry}, whereas {@link NodeSettingsRO}/ {@link ConfigRO}/ {@link ConfigBaseRO} only
+     * start from {@link ConfigBase}.
+     *
+     * @param settings TODO read-only access to a ConfigBase
+     * @return the node settings in a representation that can be converted to various formats
+     * @throws InvalidSettingsException
+     */
+    public static ConfigSubtreeDef toConfigDef(final NodeSettingsRO settings) throws InvalidSettingsException {
+
         if (settings == null) {
             return null;
         }
         // TODO don't cast
-        ConfigDef configDef = toConfigDef((NodeSettings) settings);
-        if (configDef instanceof ConfigMapDef) {
-            return (ConfigMapDef)configDef;
-        } else {
-            return null;
-        }
-    }
-
-    /**
-     * @param settings settings to persist
-     * @return the node settings in a representation that can be converted to various formats
-     * @throws InvalidSettingsException
-     */
-    public static ConfigDef toConfigDef(final NodeSettings settings) throws InvalidSettingsException {
-        return toConfigDef(settings, settings.getKey());
+        ConfigBase config = (ConfigBase)settings;
+        return (ConfigSubtreeDef)toConfigDef(config, settings.getKey());
     }
 
     /**
@@ -137,31 +168,150 @@ public class CoreToDefUtil {
      *
      * @param settings an entity containing the recursive node settings
      * @param key the name of this subtree
-     * @throws InvalidSettingsException
+     * @throws InvalidSettingsException TODO what about {@link ModelContent}? It's a sibling of {@link NodeSettings}.
      */
-    private static ConfigDef toConfigDef(final NodeSettings settings, final String key)
+    private static ConfigDef toConfigDef(final AbstractConfigEntry settings, final String key)
         throws InvalidSettingsException {
 
-        // create ConfigDef from AbstractConfigurationEntry
-        final Function<AbstractConfigEntry, ConfigDef> aceToDef = e -> DefaultConfigValueDef.builder()
-            .setValue(e.toStringValue()).setValueType(e.getType().name()).build();
+        if (settings instanceof ConfigBase) {
+            // this is a subtree, because every class that extends AbstractConfigEntry and is not a subclass of
+            // ConfigBase is a leaf class
+            ConfigBase subTree = (ConfigBase) settings;
 
-        // recursion anchor
-        if (settings.isLeaf()) {
-            return aceToDef.apply(settings);
-        } else {
-            // recurse
             final Map<String, ConfigDef> children = new LinkedHashMap<>();
-            for (String childKey: settings.keySet()) {
-                final AbstractConfigEntry child = settings.getEntry(childKey);
-                if (settings.getEntry(childKey).isLeaf()) {
-                    children.put(childKey, aceToDef.apply(child));
+            for (String childKey : subTree.keySet()) {
+                // some subtrees are arrays in disguise, don't recurse into those
+                ConfigDef asArrayDef = tryNodeSettingsAsArray(subTree, childKey);
+                if(asArrayDef != null) {
+                    children.put(childKey, asArrayDef);
                 } else {
-                    children.put(childKey, toConfigDef((NodeSettings)settings.getConfig(childKey)));
+                    // recurse
+                    ConfigDef subTreeDef = toConfigDef(subTree.getEntry(childKey), childKey);
+                    children.put(childKey, subTreeDef);
                 }
             }
-            return DefaultConfigMapDef.builder().setKey(key).setChildren(children).build();
+            return DefaultConfigSubtreeDef.builder().setKey(key).setChildren(children).build();
+        } else {
+            // recursion anchor
+            return abstractConfigurationEntryToTypedLeaf(settings).orElseThrow(() -> new IllegalStateException(settings.getKey() + settings.toStringValue()));
         }
+
+    }
+
+    /**
+     * @param innerNode
+     * @return null if no sensible conversion could be made, otherwise an array representation of the matching type,
+     *         like {@link ConfigValueBooleanArrayDef}.
+     */
+    private static ConfigDef tryNodeSettingsAsArray(final ConfigBase innerNode, final String childKey) {
+
+        {
+            boolean[] values = innerNode.getBooleanArray(childKey, null);
+            if (values != null) {
+                List<Boolean> asList =
+                    IntStream.range(0, values.length).mapToObj(idx -> values[idx]).collect(Collectors.toList());
+                return DefaultConfigValueBooleanArrayDef.builder().setArray(asList).setItemType(ConfigEntries.xboolean.name()).build();
+            }
+        }
+        {
+            byte[] values = innerNode.getByteArray(childKey, null);
+            if (values != null) {
+                return DefaultConfigValueByteArrayDef.builder().setValue(values).setItemType(ConfigEntries.xbyte.name()).build();
+            }
+        }
+        {
+            char[] values = innerNode.getCharArray(childKey, null);
+            if (values != null) {
+                List<Integer> asList =
+                    IntStream.range(0, values.length).mapToObj(idx -> Integer.valueOf(values[idx])).collect(Collectors.toList());
+                return DefaultConfigValueCharArrayDef.builder().setArray(asList).setItemType(ConfigEntries.xchar.name()).build();
+            }
+        }
+        {
+            double[] values = innerNode.getDoubleArray(childKey, null);
+            if (values != null) {
+                List<Double> asList =
+                    IntStream.range(0, values.length).mapToObj(idx -> values[idx]).collect(Collectors.toList());
+                return DefaultConfigValueDoubleArrayDef.builder().setArray(asList).setItemType(ConfigEntries.xdouble.name()).build();
+            }
+        }
+        {
+            float[] values = innerNode.getFloatArray(childKey, null);
+            if (values != null) {
+                List<Float> asList =
+                    IntStream.range(0, values.length).mapToObj(idx -> values[idx]).collect(Collectors.toList());
+                return DefaultConfigValueFloatArrayDef.builder().setArray(asList).setItemType(ConfigEntries.xfloat.name()).build();
+            }
+        }
+        {
+            int[] values = innerNode.getIntArray(childKey, null);
+            if (values != null) {
+                List<Integer> asList =
+                    IntStream.range(0, values.length).mapToObj(idx -> values[idx]).collect(Collectors.toList());
+                return DefaultConfigValueIntArrayDef.builder().setArray(asList).setItemType(ConfigEntries.xint.name()).build();
+            }
+        }
+        {
+            long[] values = innerNode.getLongArray(childKey, null);
+            if (values != null) {
+                List<Long> asList =
+                    IntStream.range(0, values.length).mapToObj(idx -> values[idx]).collect(Collectors.toList());
+                return DefaultConfigValueLongArrayDef.builder().setArray(asList).setItemType(ConfigEntries.xlong.name()).build();
+            }
+        }
+        {
+            short[] values = innerNode.getShortArray(childKey, null);
+            if (values != null) {
+                List<Integer> asList =
+                    IntStream.range(0, values.length).mapToObj((idx -> Integer.valueOf(values[idx]))).collect(Collectors.toList());
+                return DefaultConfigValueShortArrayDef.builder().setArray(asList).setItemType(ConfigEntries.xshort.name()).build();
+            }
+        }
+        {
+            String[] values = innerNode.getStringArray(childKey, (String[]) null);
+            if (values != null) {
+                List<String> asList =
+                    IntStream.range(0, values.length).mapToObj(idx -> values[idx]).collect(Collectors.toList());
+                return DefaultConfigValueStringArrayDef.builder().setArray(asList).setItemType(ConfigEntries.xstring.name()).build();
+            }
+        }
+        return null;
+    }
+
+    private static Optional<ConfigDef> abstractConfigurationEntryToTypedLeaf(final AbstractConfigEntry child) {
+        // for children: check whether they are leafs by testing on all leaf types
+        if (child instanceof ConfigBooleanEntry) {
+            return Optional.of(DefaultConfigValueBooleanDef.builder().setValue(((ConfigBooleanEntry)child).getBoolean())
+                .setItemType(ConfigEntries.xboolean.name()).build());
+        } else if (child instanceof ConfigByteEntry) {
+            return Optional.of(DefaultConfigValueByteDef.builder().setValue((int)((ConfigByteEntry)child).getByte())
+                .setItemType(ConfigEntries.xbyte.name()).build());
+        } else if (child instanceof ConfigCharEntry) {
+            return Optional.of(DefaultConfigValueCharDef.builder().setValue((int)((ConfigCharEntry)child).getChar())
+                .setItemType(ConfigEntries.xchar.name()).build());
+        } else if (child instanceof ConfigDoubleEntry) {
+            return Optional.of(DefaultConfigValueDoubleDef.builder().setValue(((ConfigDoubleEntry)child).getDouble())
+                .setItemType(ConfigEntries.xdouble.name()).build());
+        } else if (child instanceof ConfigFloatEntry) {
+            return Optional.of(DefaultConfigValueFloatDef.builder().setValue(((ConfigFloatEntry)child).getFloat())
+                .setItemType(ConfigEntries.xfloat.name()).build());
+        } else if (child instanceof ConfigIntEntry) {
+            return Optional.of(DefaultConfigValueIntDef.builder().setValue(((ConfigIntEntry)child).getInt())
+                .setItemType(ConfigEntries.xint.name()).build());
+        } else if (child instanceof ConfigLongEntry) {
+            return Optional.of(DefaultConfigValueLongDef.builder().setValue(((ConfigLongEntry)child).getLong())
+                .setItemType(ConfigEntries.xlong.name()).build());
+        } /*else if (child instanceof ConfigPasswordEntry) {
+            return Optional
+                .of(DefaultConfigValuePasswordDef.builder().setValue(((ConfigPasswordEntry)child).getPassword()).setItemType(ConfigEntries.xpassword.name()).build());
+          } */ else if (child instanceof ConfigShortEntry) {
+            return Optional.of(DefaultConfigValueShortDef.builder().setValue((int)((ConfigShortEntry)child).getShort())
+                .setItemType(ConfigEntries.xshort.name()).build());
+        } else if (child instanceof ConfigStringEntry) {
+            return Optional.of(DefaultConfigValueStringDef.builder().setValue(((ConfigStringEntry)child).getString())
+                .setItemType(ConfigEntries.xstring.name()).build());
+        }
+        return Optional.empty();
     }
 
     public static NativeNodeDef toNativeNodeDef(final NodeAndBundleInformationPersistor def) {
