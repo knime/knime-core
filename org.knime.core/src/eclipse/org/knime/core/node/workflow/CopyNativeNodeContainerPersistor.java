@@ -49,7 +49,6 @@ package org.knime.core.node.workflow;
 import java.util.Map;
 
 import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.CopyNodePersistor;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
@@ -69,7 +68,6 @@ public class CopyNativeNodeContainerPersistor extends CopySingleNodeContainerPer
     NativeNodeContainerPersistor {
 
     private final NodeFactory<NodeModel> m_nodeFactory;
-    private final CopyNodePersistor m_nodePersistor;
 
     /** The node instance that was created last. It fixes bug 4404 (comes up when a node is pasted
      * multiple times). The usual pattern is:
@@ -103,7 +101,6 @@ public class CopyNativeNodeContainerPersistor extends CopySingleNodeContainerPer
         Node originalNode = original.getNode();
         m_nodeFactory = originalNode.getFactory();
         m_creationConfig = originalNode.getCopyOfCreationConfig().orElse(null);
-        m_nodePersistor = originalNode.createCopyPersistor();
     }
 
     /** {@inheritDoc} */
@@ -145,7 +142,6 @@ public class CopyNativeNodeContainerPersistor extends CopySingleNodeContainerPer
             NodeLogger.getLogger(CopyNativeNodeContainerPersistor.class).debug(
                 "Failed to copy settings into node target: " + e.getMessage(), e);
         }
-        m_nodePersistor.loadInto(m_lastCreatedNode);
     }
 
 }

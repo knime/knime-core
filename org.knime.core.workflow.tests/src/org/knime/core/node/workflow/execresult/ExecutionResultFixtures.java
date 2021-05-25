@@ -129,7 +129,6 @@ public class ExecutionResultFixtures {
     public static void setGeneralNodeContainerProperties(final NodeContainerExecutionResultBuilder execResult,
         final String errorMsg) {
         execResult.setMessage(new NodeMessage(Type.ERROR, errorMsg));
-        execResult.setNeedsResetAfterLoad();
         execResult.setSuccess(true);
     }
 
@@ -145,8 +144,6 @@ public class ExecutionResultFixtures {
         assertThat("Object is not the same", deserialized, not(sameInstance(orig)));
         assertThat("Class is the same", deserialized.getClass(), sameInstance(orig.getClass()));
         assertThat("Node message is equal", deserialized.getNodeMessage(), is(orig.getNodeMessage()));
-        assertThat("Needs reset after load is equal", deserialized.needsResetAfterLoad(),
-            is(orig.needsResetAfterLoad()));
         assertThat("Nr port objects is equal", deserialized.isSuccess(), is(orig.isSuccess()));
     }
 

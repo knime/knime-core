@@ -63,6 +63,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ConfigurableNodeFactory;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.FileNodePersistor;
+import org.knime.core.node.FileNodePersistor.LoadNodeModelSettingsFailPolicy;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeAndBundleInformationPersistor;
@@ -70,7 +71,6 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeFactoryClassMapper;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodePersistor.LoadNodeModelSettingsFailPolicy;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -259,9 +259,9 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
             needsResetAfterLoad();
             result.addError(error);
         }
-        if (m_nodePersistor.isDirtyAfterLoad()) {
-            setDirtyAfterLoad();
-        }
+//        if (m_nodePersistor.isDirtyAfterLoad()) {
+//            setDirtyAfterLoad();
+//        }
         if (m_nodePersistor.needsResetAfterLoad()) {
             setNeedsResetAfterLoad();
         }
