@@ -59,8 +59,6 @@ public abstract class NodeContainerExecutionResult implements NodeContainerExecu
 
     private final NodeMessage m_message;
 
-    private final boolean m_needsResetAfterLoad;
-
     private final boolean m_isSuccess;
 
     /**
@@ -71,7 +69,6 @@ public abstract class NodeContainerExecutionResult implements NodeContainerExecu
      */
     NodeContainerExecutionResult(final NodeContainerExecutionResultBuilder builder) {
         m_message = builder.m_message;
-        m_needsResetAfterLoad = builder.m_needsResetAfterLoad;
         m_isSuccess = builder.m_isSuccess;
     }
 
@@ -80,14 +77,6 @@ public abstract class NodeContainerExecutionResult implements NodeContainerExecu
     @JsonProperty("nodeMessage")
     public NodeMessage getNodeMessage() {
         return m_message;
-    }
-
-    /** @return true when the node needs to be reset after loading the results.
-     * @see #setNeedsResetAfterLoad()
-     */
-    @JsonProperty("needsResetAfterLoad")
-    public boolean needsResetAfterLoad() {
-        return m_needsResetAfterLoad;
     }
 
     @Override
@@ -104,8 +93,6 @@ public abstract class NodeContainerExecutionResult implements NodeContainerExecu
 
         private NodeMessage m_message;
 
-        private boolean m_needsResetAfterLoad;
-
         private boolean m_isSuccess;
 
         NodeContainerExecutionResultBuilder() {
@@ -113,7 +100,6 @@ public abstract class NodeContainerExecutionResult implements NodeContainerExecu
 
         NodeContainerExecutionResultBuilder(final NodeContainerExecutionResult template) {
             m_message = template.m_message;
-            m_needsResetAfterLoad = template.needsResetAfterLoad();
             m_isSuccess = template.isSuccess();
         }
 
@@ -123,15 +109,6 @@ public abstract class NodeContainerExecutionResult implements NodeContainerExecu
          */
         public NodeContainerExecutionResultBuilder setMessage(final NodeMessage message) {
             m_message = message;
-            return this;
-        }
-
-        /** Request a reset of the node after loading the result. The node is
-         * allowed to trigger a reset if the loading process causes errors that
-         * invalidate the computed result.
-         * @return this */
-        public NodeContainerExecutionResultBuilder setNeedsResetAfterLoad() {
-            m_needsResetAfterLoad = true;
             return this;
         }
 

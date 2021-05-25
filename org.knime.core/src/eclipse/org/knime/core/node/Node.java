@@ -337,23 +337,13 @@ public final class Node implements NodeModelWarningListener {
         setForceSynchronousIO(false); // may set to true if this is a loop end
     }
 
-    /** Create a persistor that is used to paste a copy of this node into the same or a different workflow.
-     * (Used by copy&amp;paste actions and undo operations)
-     * @return A new copy persistor (which doesn't copy anything as settings are taken care of by the SNC class).
-     */
-    public CopyNodePersistor createCopyPersistor() {
-        return new CopyNodePersistor();
-    }
-
     /** Load settings and data + internals from a loader instance.
      * @param loader To load from
      * @param exec For progress information/cancelation
      * @param loadResult Where to report errors/warnings to
-     * @throws CanceledExecutionException If canceled.
      * @noreference This method is not intended to be referenced by clients.
      */
-    public void load(final NodePersistor loader, final ExecutionMonitor exec,
-            final LoadResult loadResult) throws CanceledExecutionException {
+    public void load(final FileNodePersistor loader, final ExecutionMonitor exec, final LoadResult loadResult) {
         m_fileStoreHandler = loader.getFileStoreHandler();
         loadDataAndInternals(loader, exec, loadResult);
         exec.setProgress(1.0);
@@ -419,14 +409,14 @@ public final class Node implements NodeModelWarningListener {
      * @noreference This method is not intended to be referenced by clients.
      */
     public NodeExecutionResult createInactiveNodeExecutionResult() {
-        NodeExecutionResult result = new NodeExecutionResult();
         PortObject[] pos = new PortObject[getNrOutPorts()];
         Arrays.fill(pos, InactiveBranchPortObject.INSTANCE);
         PortObjectSpec[] poSpecs = new PortObjectSpec[getNrOutPorts()];
         Arrays.fill(poSpecs, InactiveBranchPortObjectSpec.INSTANCE);
-        result.setPortObjects(pos);
-        result.setPortObjectSpecs(poSpecs);
-        return result;
+        return NodeExecutionResult.builder()//
+                .setPortObjects(pos) //
+                .setPortObjectSpecs(poSpecs) //
+                .build();
     }
 
     /** Check class of the spec instance.
