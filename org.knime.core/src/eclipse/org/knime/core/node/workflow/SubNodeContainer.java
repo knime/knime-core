@@ -1542,9 +1542,6 @@ public final class SubNodeContainer extends SingleNodeContainer
             SubnodeContainerExecutionResultBuilder result = SubnodeContainerExecutionResult.builder(getID());
             super.saveExecutionResult(result);
             WorkflowExecutionResult innerResult = m_wfm.createExecutionResult(exec);
-            if (innerResult.needsResetAfterLoad()) {
-                result.setNeedsResetAfterLoad();
-            }
             // innerResult is success as soon as one of the nodes is a success - be more strict here
             result.setSuccess(innerResult.isSuccess() && getInternalState() == EXECUTED);
             result.setWorkflowExecutionResult(innerResult);

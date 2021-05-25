@@ -105,7 +105,47 @@ import org.knime.core.util.LoadVersion;
  * @noextend This class is not intended to be subclassed by clients.
  * @noinstantiate This class is not intended to be instantiated by clients.
  */
-public class FileNodePersistor implements NodePersistor {
+public class FileNodePersistor implements NodeContentPersistor {
+
+    /** Directory name to save and load the data. */
+    static final String DATA_FILE_DIR = "data";
+
+    static final String CFG_NAME = "name";
+
+    static final String CFG_ISCONFIGURED = "isConfigured";
+
+    static final String CFG_ISEXECUTED = "isExecuted";
+
+    static final String CFG_NODE_MESSAGE = "node_message";
+
+    static final String CFG_SPEC_FILES = "spec_files";
+
+    static final String CFG_HAS_SPEC_FILE = "has_output_spec";
+
+    static final String CFG_DATA_FILE = "data_meta_file";
+
+    static final String CFG_DATA_FILE_DIR = "data_files_directory";
+
+    static final String DATA_FILE_PREFIX = "data_";
+
+    static final String CFG_MODEL_FILES = "model_files";
+
+    static final String MODEL_FILE_PREFIX = "model_";
+
+    static final String CFG_OUTPUT_PREFIX = "output_";
+
+    /** Config key: What memory policy to use for a node outport. */
+    static final String CFG_MEMORY_POLICY = "memory_policy";
+
+    /** Policy on how to behave if the node model settings fails. */
+    public enum LoadNodeModelSettingsFailPolicy {
+        /** reset node, force configure (used when node state is yellow). */
+        FAIL,
+        /** warn using message (used when node state is green). */
+        WARN,
+        /** ignore (used when node state is idle, e.g. node not connected). */
+        IGNORE
+    }
 
     /* Contains all fully qualified path names of previously existing
      *  PMMLPortObjects that have been removed in version v2.4. This is
@@ -135,6 +175,9 @@ public class FileNodePersistor implements NodePersistor {
      * Prefix of associated port folders. (Also used in export wizard, public declaration here.)
      */
     public static final String INTERNAL_TABLE_FOLDER_PREFIX = "internalTables";
+
+    /** Directory name to save and load node internals. */
+    public static final String INTERN_FILE_DIR = "internal";
 
     private final NodeLogger m_logger = NodeLogger.getLogger(getClass());
 
@@ -260,7 +303,7 @@ public class FileNodePersistor implements NodePersistor {
     }
 
     static ReferencedFile getNodeInternDirectory(final ReferencedFile nodeDir) {
-        return new ReferencedFile(nodeDir, INTERN_FILE_DIR);
+        return new ReferencedFile(nodeDir, FileNodePersistor.INTERN_FILE_DIR);
     }
 
     /**
@@ -820,14 +863,11 @@ public class FileNodePersistor implements NodePersistor {
      *
      * @return If node is saved in configured state.
      */
-    @Override
-    public boolean isConfigured() {
+    boolean isConfigured() {
         return m_isConfigured;
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public boolean isExecuted() {
+    boolean isExecuted() {
         return m_isExecuted;
     }
 
@@ -859,17 +899,24 @@ public class FileNodePersistor implements NodePersistor {
         m_needsResetAfterLoad = true;
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public void setDirtyAfterLoad() {
+    /**
+     * Whether this node should be marked as dirty after load. This is true if either the {@link #setDirtyAfterLoad()}
+     * has been set to true or {@link NodeContentPersistor#needsResetAfterLoad()} returns true.
+     *
+     * @return This property.
+     */
+    boolean isDirtyAfterLoad() {
+        return m_isDirtyAfterLoad;
+    }
+
+    /**
+     * Sets the dirty flag on this node. The node will also be dirty if the
+     * {@link NodeContentPersistor#setNeedsResetAfterLoad()} is called.
+     */
+    void setDirtyAfterLoad() {
         m_isDirtyAfterLoad = true;
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public boolean isDirtyAfterLoad() {
-        return m_isDirtyAfterLoad;
-    }
 
     /** {@inheritDoc} */
     @Override

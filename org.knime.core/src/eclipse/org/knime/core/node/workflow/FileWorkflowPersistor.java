@@ -66,6 +66,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.Stack;
 import java.util.TreeMap;
@@ -88,6 +89,7 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.node.workflow.WorkflowTableBackendSettings.TableBackendUnknownException;
+import org.knime.core.node.workflow.execresult.WorkflowExecutionResult;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.LockFailedException;
@@ -1802,6 +1804,10 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
             nodeIDSuffix += 1;
         }
         return nodeIDSuffix;
+    }
+
+    Optional<WorkflowExecutionResult> getExecutionResult() {
+        return Optional.empty();
     }
 
     /**
