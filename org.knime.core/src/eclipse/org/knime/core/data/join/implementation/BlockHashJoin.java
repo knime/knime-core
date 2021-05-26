@@ -98,17 +98,12 @@ import org.knime.core.node.InvalidSettingsException;
 @SuppressWarnings("javadoc")
 class BlockHashJoin extends JoinImplementation {
 
-    final boolean m_extractRowOffsets;
-
     /**
      * @param joinSpecification
      * @param exec
      */
     BlockHashJoin(final JoinSpecification joinSpecification, final ExecutionContext exec) {
         super(joinSpecification, exec);
-        // this is only needed if the input has been annotated with offsets already, e.g., by a hybrid hash join
-        // that sent the input rows to disk previously
-        m_extractRowOffsets = false;
     }
 
     /**
@@ -161,7 +156,7 @@ class BlockHashJoin extends JoinImplementation {
         // unmatched now is definitely unmatched and can be added to the results
         // if the join problem we're solving here comes from a partition, the row offsets have changed.
         // in case they matter, we can extract them from an auxiliary column added to the rows
-        final RowHandlerCancelable unmatchedHashRows = optionalExtractOffsets(results.unmatched(hashSide));
+        final RowHandlerCancelable unmatchedHashRows = results.unmatched(hashSide);
 
         // this is an incomplete index, as it represents only the hash rows indexed in one pass over the probe input
         final Supplier<HashIndex> newHashIndex =
@@ -180,9 +175,6 @@ class BlockHashJoin extends JoinImplementation {
             while (hashRows.hasNext()) {
 
                 DataRow hashRow = hashRows.next();
-                if (m_extractRowOffsets) {
-                    rowOffset = OrderedRow.getOffset(hashRow);
-                }
 
                 DataCell[] joinAttributeValues = hashSettings.get(hashRow);
 
@@ -225,7 +217,7 @@ class BlockHashJoin extends JoinImplementation {
         getProgress().setMessage("Single pass over larger table.");
 
         CancelChecker checkCanceled = CancelChecker.checkCanceledPeriodicallyWithProgress(m_exec, 100, probe.size());
-        JoinResult.enumerateWithResources(probe, optionalExtractOffsets(partialIndex::joinSingleRow), checkCanceled);
+        JoinResult.enumerateWithResources(probe, partialIndex::joinSingleRow, checkCanceled);
 
         partialIndex.forUnmatchedHashRows(unmatchedHashRows);
     }
@@ -255,8 +247,7 @@ class BlockHashJoin extends JoinImplementation {
             if (presentTable.isPresent() && !absent.getTable().isPresent()) {
                 // collect rows from present table as unmatched
                 if (present.isRetainUnmatched()) {
-                    JoinResult.enumerateWithResources(presentTable.get(),
-                        optionalExtractOffsets(container.unmatched(presentSide)),
+                    JoinResult.enumerateWithResources(presentTable.get(), container.unmatched(presentSide),
                         CancelChecker.checkCanceledPeriodically(m_exec));
                 }
                 // only one table is present.
@@ -264,14 +255,6 @@ class BlockHashJoin extends JoinImplementation {
             }
         }
         return false;
-    }
-
-    final <T extends RowHandlerCancelable> RowHandlerCancelable optionalExtractOffsets(final T rowHandler) {
-        if (m_extractRowOffsets) {
-            return OrderedRow.extractOffsets(rowHandler);
-        } else {
-            return rowHandler;
-        }
     }
 
 }
