@@ -70,7 +70,6 @@ import javax.management.Notification;
 import javax.management.NotificationEmitter;
 import javax.management.NotificationListener;
 
-import org.apache.commons.io.FileUtils;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContext;
 
@@ -271,10 +270,6 @@ public final class MemoryAlertSystem {
             final long max = collectionUsage.getMax();
             final double currentUsage = used / max;
             if (currentUsage < m_usageThreshold) {
-                LOGGER.debugWithFormat(
-                    "Tenured gen heap space usage below threshold (%.0f%%) after GC, currently %.0f%% (%.2fGB/%.2fGB)",
-                    m_usageThreshold * 100, currentUsage * 100, used / FileUtils.ONE_GB,
-                    (double)max / FileUtils.ONE_GB);
                 m_lowMemory.set(false);
             }
             m_timeOfLastCheck = System.currentTimeMillis();
@@ -450,11 +445,6 @@ public final class MemoryAlertSystem {
             final double currentUsage = used / max;
 
             if (currentUsage < m_usageThreshold) {
-                LOGGER.debugWithoutContext(String.format(
-                    "Estimated tenured gen heap space usage below threshold (%.0f%%), "
-                        + "currently %.0f%% (%.2fGB/%.2fGB)",
-                    m_usageThreshold * 100, currentUsage * 100, used / FileUtils.ONE_GB,
-                    (double)max / FileUtils.ONE_GB));
                 m_lowMemory.set(false);
             }
             m_timeOfLastCheck = time;
