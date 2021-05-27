@@ -579,6 +579,11 @@ public final class JoinSpecification {
      * Concatenates and projects two rows to form an inner join output row. If merge join columns is selected, drops
      * join columns from the right table, see {@link Builder#mergeJoinColumns(boolean)} for details.
      *
+     * Unlike the conjunctive case covered in {@link #rowJoin(DataRow, DataRow)}, the values of merged columns can
+     * differ for disjunctive joins. Thus, this method performs an additional consensus step when merging in the values
+     * of some right columns into a left column. E.g., L1 = R1 OR L1 = R2 with merge join columns yields a single column
+     * L1=R1=R2 whose contents are determined by {@link #consensus(DataCell, DataRow, int[])}.
+     *
      * @param left non-null row from the left input table
      * @param right non-null row from the right input table
      *
