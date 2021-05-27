@@ -277,7 +277,7 @@ public final class LeftRightSorted {
         @Override
         public void doAddLeftOuter(final DataRow row, final long offset) {
             // use leftToSingleTableFormat to create single table row layout
-            DataRow paddedMerged = leftToSingleTableFormat(row);
+            DataRow paddedMerged = m_joinSpecification.leftToSingleTableFormat(row);
             DataRow leftOuter = OrderedRow.withOffset(paddedMerged, (offset << 32) | OUTER_ROW_BIT);
             addHiliteMapping(ResultType.LEFT_OUTER, leftOuter.getKey(), InputTable.LEFT, row.getKey());
             m_singleTableContainer.addRowToTable(leftOuter);
@@ -286,7 +286,7 @@ public final class LeftRightSorted {
         @Override
         public void doAddRightOuter(final DataRow row, final long offset) {
             // use leftToSingleTableFormat to create single table row layout
-            DataRow paddedMerged = rightToSingleTableFormat(row);
+            DataRow paddedMerged = m_joinSpecification.rightToSingleTableFormat(row);
             DataRow rightOuter = OrderedRow.withOffset(paddedMerged, offset | RIGHT_OUTER_BITS);
             m_singleTableContainer.addRowToTable(rightOuter);
             addHiliteMapping(ResultType.RIGHT_OUTER, rightOuter.getKey(), InputTable.RIGHT, row.getKey());

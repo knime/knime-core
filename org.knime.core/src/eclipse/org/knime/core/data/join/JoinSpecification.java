@@ -579,10 +579,10 @@ public final class JoinSpecification {
      * Concatenates and projects two rows to form an inner join output row. If merge join columns is selected, drops
      * join columns from the right table, see {@link Builder#mergeJoinColumns(boolean)} for details.
      *
-     * Unlike the conjunctive case covered in {@link #rowJoin(DataRow, DataRow)}, the values of merged columns can
-     * differ for disjunctive joins. Thus, this method performs an additional consensus step when merging in the values
-     * of some right columns into a left column. E.g., L1 = R1 OR L1 = R2 with merge join columns yields a single column
-     * L1=R1=R2 whose contents are determined by {@link #consensus(DataCell, DataRow, int[])}.
+     * If a disjunctive join is performed, the values of merged columns can differ. Thus, this method performs an
+     * additional consensus step when merging in the values of some right columns into a left column. E.g., L1 = R1 OR
+     * L1 = R2 with merge join columns yields a single column L1=R1=R2 whose contents are determined by
+     * {@link #consensus(DataCell, DataRow, int[]).
      *
      * @param left non-null row from the left input table
      * @param right non-null row from the right input table
@@ -592,66 +592,45 @@ public final class JoinSpecification {
      */
     public DataRow rowJoin(final DataRow left, final DataRow right) {
 
-        if(!isConjunctive()) {
-            return rowJoinDisjunctive(left, right);
-        }
-
-        int[] leftIncludes = getMatchTableIncludeIndices(InputTable.LEFT);
-        int[] rightIncludes = getMatchTableIncludeIndices(InputTable.RIGHT);
+        final int[] leftIncludes = getMatchTableIncludeIndices(InputTable.LEFT);
+        final int[] rightIncludes = getMatchTableIncludeIndices(InputTable.RIGHT);
 
         final DataCell[] dataCells = new DataCell[leftIncludes.length + rightIncludes.length];
 
         int cell = 0;
 
-        for (int i = 0; i < leftIncludes.length; i++) {
-            dataCells[cell] = left.getCell(leftIncludes[i]);
-            cell++;
+        if (isConjunctive()) {
+            // just use the left table's values for merged join columns, the right tables values are the same
+            for (int i = 0; i < leftIncludes.length; i++) {
+                dataCells[cell] = left.getCell(leftIncludes[i]);
+                cell++;
+            }
+            for (int i = 0; i < rightIncludes.length; i++) {
+                dataCells[cell] = right.getCell(rightIncludes[i]);
+                cell++;
+            }
+        } else {
+            final int[][] mergeLocations = getColumnLeftMergedLocations();
+            // use the left table's values for merged join columns, the right tables values are equal
+            for (int i = 0; i < leftIncludes.length; i++) {
+                DataCell leftCell = left.getCell(leftIncludes[i]);
+                dataCells[cell] = isMergeJoinColumns() ? consensus(leftCell, right, mergeLocations[i]) : leftCell;
+                cell++;
+            }
+            for (int i = 0; i < rightIncludes.length; i++) {
+                dataCells[cell] = right.getCell(rightIncludes[i]);
+                cell++;
+            }
         }
-
-        for (int i = 0; i < rightIncludes.length; i++) {
-            dataCells[cell] = right.getCell(rightIncludes[i]);
-            cell++;
-        }
-
         return new DefaultRow(m_rowKeyFactory.apply(left, right), dataCells);
     }
 
     /**
-     * Concatenates and projects two rows to form an inner join output row. If merge join columns is selected, drops
-     * join columns from the right table, see {@link Builder#mergeJoinColumns(boolean)} for details.
-     *
-     * @param left non-null row from the left input table
-     * @param right non-null row from the right input table
-     *
-     * @return the output row for the inner join results
-     * @see Builder#mergeJoinColumns(boolean)
-     */
-    private DataRow rowJoinDisjunctive(final DataRow left, final DataRow right) {
-        int[] leftIncludes = getMatchTableIncludeIndices(InputTable.LEFT);
-        int[] rightIncludes = getMatchTableIncludeIndices(InputTable.RIGHT);
-
-        final DataCell[] dataCells = new DataCell[leftIncludes.length + rightIncludes.length];
-
-        int[][] mergeLocations = getColumnLeftMergedLocations();
-
-        int cell = 0;
-
-        for (int i = 0; i < leftIncludes.length; i++) {
-            DataCell leftCell = left.getCell(leftIncludes[i]);
-            dataCells[cell] = isMergeJoinColumns() ? consensus(leftCell, right, mergeLocations[i]) : leftCell;
-            cell++;
-        }
-
-        for (int i = 0; i < rightIncludes.length; i++) {
-            dataCells[cell] = right.getCell(rightIncludes[i]);
-            cell++;
-        }
-
-        return new DefaultRow(m_rowKeyFactory.apply(left, right), dataCells);
-    }
-
-    /**
-     * @return
+     * Used when joining matching rows under disjunctive join conditions.
+     * @param mergeCell the data cell in the left input table that the right columns are merged into
+     * @param right access to the values of the right columns
+     * @param mergeLocations offsets of the columns in the right table that are merged into mergeCell
+     * @return if all values (merge cell and all merge locations) agree: that value; otherwise: missing value
      */
     private static DataCell consensus(final DataCell mergeCell, final DataRow right, final int[] mergeLocations) {
         DataCell consensus = mergeCell;
@@ -664,6 +643,41 @@ public final class JoinSpecification {
             }
         }
 
+        return consensus;
+    }
+
+    /**
+     * Determine the output of merging several columns from the right input table into one column.
+     * Used for right unmatched rows that are output in a combined (single) table output format
+     * with merge join columns on. E.g., the single table format may have a merge column for L1=R1=R2 in which case the
+     * values of columns in the right table columns R1 and R2 are compared. If they are equal, output the common value,
+     * if they are unequal, output a missing value.
+     * @param rightUnmatched a row from the right input table
+     * @param lookupColumns the column indices that are to be merged into a single column
+     * @return a cell containing either the common value or a missing value
+     */
+    private static DataCell consensus(final DataRow rightUnmatched, final int[] lookupColumns) {
+        // in case this is not a join column (no lookup columns) just use a missing value
+        DataCell consensus = lookupColumns.length == 0 ? DataType.getMissingCell() : null;
+
+        // in case this column joins on one or more other columns, check whether they all agree to use that value
+        for (int i = 0; i < lookupColumns.length; i++) {
+            // if any of the lookup values is missing, deliver a missing value
+            if (lookupColumns[i] == -1) {
+                return DataType.getMissingCell();
+            } else {
+                DataCell value = rightUnmatched.getCell(lookupColumns[i]);
+                boolean firstValue = i == 0;
+                if (firstValue) {
+                    consensus = value;
+                    // if at least one value does not equal the others, return a missing value
+                } else if (!value.equals(consensus)) {
+                    return DataType.getMissingCell();
+                } else {
+                    // value is not the first value and is equal to all previous values -> consensus can be left as is
+                }
+            }
+        }
         return consensus;
     }
 
@@ -945,6 +959,88 @@ public final class JoinSpecification {
      */
     public int[][] getColumnLeftMergedLocations() {
         return m_columnLeftMergedLocations;
+    }
+
+    /**
+     * Convert a row from the right input table to single match table format. <br/>
+     * Depending on whether join columns are to be merged, the merged columns are removed from the row (also, the
+     * columns not included are removed). If merge join columns is on, the present values from the right outer row are
+     * written to the column of the left table that consumed the join column (can be multiple; if they are all equal,
+     * the value will be used, otherwise a missing value is emitted).
+     *
+     * @param rightUnmatched an unmatched row from the original right input table
+     * @return a data row that contains missing values for all included columns of the right table.
+     */
+    public DataRow rightToSingleTableFormat(final DataRow rightUnmatched) {
+
+        // getMatchTableIncludeIndices is aware of whether merge join columns is selected
+        int[] leftCells = getMatchTableIncludeIndices(InputTable.LEFT);
+        int[] rightCells = getMatchTableIncludeIndices(InputTable.RIGHT);
+
+        final DataCell[] dataCells = new DataCell[leftCells.length + rightCells.length];
+        int cell = 0;
+
+        if (isMergeJoinColumns()) {
+
+            int[][] lookupColumns = getColumnLeftMergedLocations();
+
+            // put values from merged columns into left table
+            for (int i = 0; i < leftCells.length; i++) {
+                // use missing value if this column doesn't merge any columns from the right table
+                dataCells[cell] = consensus(rightUnmatched, lookupColumns[i]);
+                cell++;
+            }
+            // skip the merged join columns
+            for (int i = 0; i < rightCells.length; i++) {
+                dataCells[cell] = rightUnmatched.getCell(rightCells[i]);
+                cell++;
+            }
+
+        } else {
+            // just fill all left table columns with missing values
+            for (int i = 0; i < leftCells.length; i++) {
+                dataCells[cell] = DataType.getMissingCell();
+                cell++;
+            }
+
+            // and append everything that has survived projection to right outer format
+            for (int i = 0; i < rightCells.length; i++) {
+                dataCells[cell] = rightUnmatched.getCell(rightCells[i]);
+                cell++;
+            }
+        }
+        RowKey newKey = getRowKeyFactory().apply(null, rightUnmatched);
+        return new DefaultRow(newKey, dataCells);
+
+    }
+
+    /**
+     * Convert a row from the left input table to the single match table format. <br/>
+     * Depending on whether join columns in the right table are merged, fewer missing values are appended.
+     *
+     * @param leftUnmatched an unmatched row from the left table in the original input format
+     * @return a data row that contains missing values for all included columns of the right table.
+     */
+    public DataRow leftToSingleTableFormat(final DataRow leftUnmatched) {
+
+        int[] leftCells = getMatchTableIncludeIndices(InputTable.LEFT);
+        // this skips merged join columns if merge join columns is on
+        int[] rightCells = getMatchTableIncludeIndices(InputTable.RIGHT);
+
+        final DataCell[] dataCells = new DataCell[leftCells.length + rightCells.length];
+        int cell = 0;
+
+        for (int i = 0; i < leftCells.length; i++) {
+            dataCells[cell] = leftUnmatched.getCell(leftCells[i]);
+            cell++;
+        }
+        for (int i = 0; i < rightCells.length; i++) {
+            dataCells[cell] = DataType.getMissingCell();
+            cell++;
+        }
+
+        RowKey newKey = getRowKeyFactory().apply(leftUnmatched, null);
+        return new DefaultRow(newKey, dataCells);
     }
 
     /**

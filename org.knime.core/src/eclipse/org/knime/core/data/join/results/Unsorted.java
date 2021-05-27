@@ -223,14 +223,14 @@ public final class Unsorted {
 
         @Override
         public void doAddLeftOuter(final DataRow row, final long offset) {
-            DataRow paddedMerged = leftToSingleTableFormat(row);
+            DataRow paddedMerged = m_joinSpecification.leftToSingleTableFormat(row);
             m_singleTableContainer.addRowToTable(paddedMerged);
             addHiliteMapping(ResultType.LEFT_OUTER, paddedMerged.getKey(), InputTable.LEFT, row.getKey());
         }
 
         @Override
         public void doAddRightOuter(final DataRow row, final long offset) {
-            DataRow paddedMerged = rightToSingleTableFormat(row);
+            DataRow paddedMerged = m_joinSpecification.rightToSingleTableFormat(row);
             m_singleTableContainer.addRowToTable(paddedMerged);
             addHiliteMapping(ResultType.RIGHT_OUTER, paddedMerged.getKey(), InputTable.RIGHT, row.getKey());
         }

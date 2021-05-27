@@ -683,16 +683,17 @@ public abstract class JoinTestInput {
 
     /**
      * Test the contents of cells that belong to a column that results from three merged join columns.
+     * Join on A=X OR A=Y
      */
     public static final JoinTestInput consensusMatchAny = new JoinTestInput() {
 
         @Override
         BufferedDataTable left() {
             return JoinTestInput.table("A,B",
-                // matches Row1 (1, 10) output (?, 999) 1=1≠10
-                // matches Row2 (10, 1) output (?, 999) 1≠10≠1
-                // matches Row3 (1, ?)  output (?, 999) 1=1≠?
-                // matches Row4 (?, 1)  output (?, 999) 1≠?≠1
+                // matches Row1 (1, 10) output (?, 999) 1 != 10 in right table
+                // matches Row2 (10, 1) output (?, 999) 10 != 1 in right table
+                // matches Row3 (1, ?)  output (?, 999) 1 != ? in right table
+                // matches Row4 (?, 1)  output (?, 999) ? != 1 in right table
                 // matches Row5 (1, 1)  output (1, 999) 1=1=1
                 "Row1,1,999",
                 // doesn't match anything: output left unmatched (?, 999)
@@ -705,16 +706,15 @@ public abstract class JoinTestInput {
         @Override
         BufferedDataTable right() {
             return JoinTestInput.table("X,Y",
+                        // these rows match Row1 from left table
                         "Row1,1,10",
                         "Row2,10,1",
                         "Row3,1,?",
                         "Row4,?,1",
                         "Row5,1,1",
-                        // unmatched; strictly spoken, although X=Y the output row should be (?, ?) since A=? and thus
-                        // A≠X=Y, however, it seems more convenient to define the merge join columns such that as much
-                        // information as possible is preserved
+                        // unmatched. although A is missing, the output is (A=X=Y = 200, B = ?) since X=Y.
                         "Row6,200,200",
-                        // unmatched, output should be (?, ?) since X≠Y and B=? for a right outer match
+                        // unmatched. single table output is (A=X=Y = ?, B = ?) since X != Y.
                         "Row7,200,300"
                         );
         }

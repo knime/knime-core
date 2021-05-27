@@ -55,12 +55,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
-import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.join.JoinSpecification;
 import org.knime.core.data.join.JoinSpecification.InputTable;
 import org.knime.core.data.join.implementation.JoinImplementation;
@@ -230,87 +227,6 @@ abstract class JoinContainer<T> implements JoinResult<T> {
     }
 
     /**
-     * Convert a row from the left input table to the single match table format. <br/>
-     * Depending on whether join columns in the right table are merged, fewer missing values are appended.
-     *
-     * @param leftUnmatched an unmatched row from the left table in the original input format
-     * @return a data row that contains missing values for all included columns of the right table.
-     */
-    DataRow leftToSingleTableFormat(final DataRow leftUnmatched) {
-
-        int[] leftCells = m_joinSpecification.getMatchTableIncludeIndices(InputTable.LEFT);
-        // this skips merged join columns if merge join columns is on
-        int[] rightCells = m_joinSpecification.getMatchTableIncludeIndices(InputTable.RIGHT);
-
-        final DataCell[] dataCells = new DataCell[leftCells.length + rightCells.length];
-        int cell = 0;
-
-        for (int i = 0; i < leftCells.length; i++) {
-            dataCells[cell] = leftUnmatched.getCell(leftCells[i]);
-            cell++;
-        }
-        for (int i = 0; i < rightCells.length; i++) {
-            dataCells[cell] = DataType.getMissingCell();
-            cell++;
-        }
-
-        RowKey newKey = m_joinSpecification.getRowKeyFactory().apply(leftUnmatched, null);
-        return new DefaultRow(newKey, dataCells);
-    }
-
-    /**
-     * Convert a row from the right input table to single match table format. <br/>
-     * Depending on whether join columns are to be merged, the merged columns are removed from the row (also, the
-     * columns not included are removed). If merge join columns is on, the present values from the right outer row are
-     * written to the column of the left table that consumed the join column (can be multiple; if they are all equal,
-     * the value will be used, otherwise a missing value is emitted).
-     *
-     * @param rightUnmatched an unmatched row from the original right input table
-     * @return a data row that contains missing values for all included columns of the right table.
-     */
-    DataRow rightToSingleTableFormat(final DataRow rightUnmatched) {
-
-        // getMatchTableIncludeIndices is aware of whether merge join columns is selected
-        int[] leftCells = m_joinSpecification.getMatchTableIncludeIndices(InputTable.LEFT);
-        int[] rightCells = m_joinSpecification.getMatchTableIncludeIndices(InputTable.RIGHT);
-
-        final DataCell[] dataCells = new DataCell[leftCells.length + rightCells.length];
-        int cell = 0;
-
-        if (m_joinSpecification.isMergeJoinColumns()) {
-
-            int[][] lookupColumns = m_joinSpecification.getColumnLeftMergedLocations();
-
-            // put values from merged columns into left table
-            for (int i = 0; i < leftCells.length; i++) {
-                dataCells[cell] = consensus(rightUnmatched, lookupColumns[i]);
-                cell++;
-            }
-            // skip the merged join columns
-            for (int i = 0; i < rightCells.length; i++) {
-                dataCells[cell] = rightUnmatched.getCell(rightCells[i]);
-                cell++;
-            }
-
-        } else {
-            // just fill all left table columns with missing values
-            for (int i = 0; i < leftCells.length; i++) {
-                dataCells[cell] = DataType.getMissingCell();
-                cell++;
-            }
-
-            // and append everything that has survived projection to right outer format
-            for (int i = 0; i < rightCells.length; i++) {
-                dataCells[cell] = rightUnmatched.getCell(rightCells[i]);
-                cell++;
-            }
-        }
-        RowKey newKey = m_joinSpecification.getRowKeyFactory().apply(null, rightUnmatched);
-        return new DefaultRow(newKey, dataCells);
-
-    }
-
-    /**
      * Associate an input row to a row in the output.
      *
      * @param resultType whether the output row describes a match or an unmatched row
@@ -436,40 +352,6 @@ abstract class JoinContainer<T> implements JoinResult<T> {
             m_deduplicateMatches = true;
             m_seenMatches = new RowOffsetCombinationSet();
         }
-    }
-
-    /**
-     * Determine the output value for a right unmatched row that is output in a combined (single) table output format
-     * with merge join columns on. E.g., the single table format may have a merge column for L1=R1=R2 in which case the
-     * values of columns in the right table columns R1 and R2 are compared. If they are equal, output the common value,
-     * if they are unequal, output a missing value.
-     * @param rightUnmatched a row from the right input table
-     * @param lookupColumns the column indices that are to be merged into a single column
-     * @return
-     */
-    private static DataCell consensus(final DataRow rightUnmatched, final int[] lookupColumns) {
-        // in case this is not a join column (no lookup columns) just use a missing value
-        DataCell consensus = lookupColumns.length == 0 ? DataType.getMissingCell() : null;
-
-        // in case this column joins on one or more other columns, check whether they all agree to use that value
-        for (int i = 0; i < lookupColumns.length; i++) {
-            // if any of the lookup values is missing, deliver a missing value
-            if (lookupColumns[i] == -1) {
-                return DataType.getMissingCell();
-            } else {
-                DataCell value = rightUnmatched.getCell(lookupColumns[i]);
-                boolean firstValue = i == 0;
-                if (firstValue) {
-                    consensus = value;
-                    // if at least one value does not equal the others, return a missing value
-                } else if (!value.equals(consensus)) {
-                    return DataType.getMissingCell();
-                } else {
-                    // value is not the first value and is equal to all previous values -> consensus can be left as is
-                }
-            }
-        }
-        return consensus;
     }
 
 }

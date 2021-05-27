@@ -119,7 +119,7 @@ public class JoinContainerTest {
                 .createCombined(JoinAlgorithm.AUTO.getFactory().create(jspec, JoinTestInput.EXEC));
 
         { // pad left
-            DataRow padded = container.rightToSingleTableFormat(m_rows[RIGHT]);
+            DataRow padded = container.m_joinSpecification.rightToSingleTableFormat(m_rows[RIGHT]);
 
             assertEquals(cell("x"), padded.getCell(0)); // A=A
             assertEquals(cell("z"), padded.getCell(1)); // C=Z
@@ -130,7 +130,7 @@ public class JoinContainerTest {
         }
 
         { // pad right
-            DataRow padded = container.leftToSingleTableFormat(m_rows[LEFT]);
+            DataRow padded = container.m_joinSpecification.leftToSingleTableFormat(m_rows[LEFT]);
 
             assertEquals(cell("a"), padded.getCell(0));
             assertEquals(cell("c"), padded.getCell(1));
@@ -161,7 +161,7 @@ public class JoinContainerTest {
             .createCombined(JoinAlgorithm.AUTO.getFactory().create(jspec, JoinTestInput.EXEC));
 
         { // pad left
-            DataRow padded = container.rightToSingleTableFormat(m_rows[RIGHT]);
+            DataRow padded = container.m_joinSpecification.rightToSingleTableFormat(m_rows[RIGHT]);
 
             assertEquals(DataType.getMissingCell(), padded.getCell(0)); // A
             assertEquals(DataType.getMissingCell(), padded.getCell(1)); // C
@@ -172,7 +172,7 @@ public class JoinContainerTest {
         }
 
         { // pad right
-            DataRow padded = container.leftToSingleTableFormat(m_rows[LEFT]);
+            DataRow padded = container.m_joinSpecification.leftToSingleTableFormat(m_rows[LEFT]);
 
             assertEquals(cell("a"), padded.getCell(0));
             assertEquals(cell("c"), padded.getCell(1));
