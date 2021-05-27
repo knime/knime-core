@@ -184,10 +184,18 @@ abstract class JoinContainer<T> implements JoinResult<T> {
         m_unmatchedRows.get(InputTable.LEFT).matched(leftOrder);
         m_unmatchedRows.get(InputTable.RIGHT).matched(rightOrder);
 
-        boolean fresh = ! m_deduplicateMatches || m_seenMatches.put(leftOrder, rightOrder);
-        if (isRetainMatched() && fresh) {
+        if (isRetainMatched() && !isDuplicateMatch(leftOrder, rightOrder)) {
+            // if deduplication is on, only add if the row offset combination wasn't added before
             doAddMatch(left, leftOrder, right, rightOrder);
         }
+    }
+
+    /**
+     * @return true if this method has been called before with the same combination of matching rows (as identified by
+     *         their offsets in the containing table)
+     */
+    private boolean isDuplicateMatch(final long leftOrder, final long rightOrder) {
+        return m_deduplicateMatches && !m_seenMatches.put(leftOrder, rightOrder);
     }
 
     /**
