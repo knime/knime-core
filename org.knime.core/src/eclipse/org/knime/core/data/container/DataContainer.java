@@ -44,6 +44,7 @@
  */
 package org.knime.core.data.container;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -51,6 +52,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Optional;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import org.knime.core.data.DataRow;
@@ -67,7 +71,10 @@ import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
+import org.knime.core.node.NodeSettings;
+import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.workflow.WorkflowDataRepository;
 import org.knime.core.node.workflow.WorkflowTableBackendSettings;
 import org.knime.core.util.DuplicateKeyException;
@@ -604,5 +611,41 @@ public class DataContainer implements RowAppender {
         }
         String fileName = "knime_container_" + date + "_";
         return FileUtil.createTempFile(fileName, suffix, dir, true);
+    }
+
+    /**
+     * Opens the zip file and checks whether the first entry is the spec. If so, the spec is parsed and returned.
+     * Otherwise null is returned.
+     *
+     * <p>
+     * This method is used to fix bug #1141: Dialog closes very slowly.
+     *
+     * @param in Input stream
+     * @return The spec or null (null will be returned when the file was written with a version prior 2.0)
+     * @throws IOException If that fails for any reason.
+     * @since 4.4
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    @SuppressWarnings("resource") // The underlying stream should be closed by the caller
+    public static final Optional<DataTableSpec> peekDataTableSpec(final InputStream in) throws IOException {
+        // must not use ZipFile here as it is known to have memory problems
+        // on large files, see e.g.
+        // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=5077277
+        try (ZipInputStream zipIn = new ZipInputStream(new BufferedInputStream(in))) {
+            ZipEntry entry = zipIn.getNextEntry();
+            // hardcoded constants here as we do not want additional
+            // functionality to DataContainer ... at least not yet.
+            if (BufferedDataContainerDelegate.ZIP_ENTRY_SPEC.equals(entry != null ? entry.getName() : "")) {
+                NodeSettingsRO settings = NodeSettings.loadFromXML(new NonClosableInputStream.Zip(zipIn));
+                try {
+                    NodeSettingsRO specSettings = settings.getNodeSettings(BufferedDataContainerDelegate.CFG_TABLESPEC);
+                    return Optional.of(DataTableSpec.load(specSettings));
+                } catch (InvalidSettingsException ise) {
+                    throw new IOException("Unable to read spec from file", ise);
+                }
+            } else {
+                return Optional.empty();
+            }
+        }
     }
 }
