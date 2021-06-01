@@ -53,6 +53,7 @@ import java.io.IOException;
 import java.io.Serializable;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.data.filestore.FileStore;
 
 
 /**
@@ -158,6 +159,8 @@ public abstract class BlobDataCell extends DataCell {
         private int m_indexOfBlobInColumn;
         private boolean m_isUseCompression;
 
+        // NB: only used in conjunction with new columnar backend
+        private FileStore m_fStore;
         /**
          * Create new address object.
          * @param bufferID ID of corresponding buffer.
@@ -172,7 +175,15 @@ public abstract class BlobDataCell extends DataCell {
             m_isUseCompression = isUseCompression;
         }
 
-        /** Set the corresponding address.
+        /**
+         * @param id internal id used in new columnar table backend. ID is required to be JVM unique.
+         */
+        BlobAddress(final FileStore store) {
+            this(-1, -1, USE_COMPRESSION);
+            m_fStore = store;
+        }
+
+        /**
          * @param indexOfBlobInColumn The index of blob in the column.
          */
         public void setIndexOfBlobInColumn(final int indexOfBlobInColumn) {
@@ -187,8 +198,15 @@ public abstract class BlobDataCell extends DataCell {
             return m_bufferID;
         }
 
-        /** @return the column */
-        int getColumn() {
+        /**
+         * Get the index of the column in which the blob is defined
+         *
+         * @return the column index
+         *
+         * @noreference This method is not intended to be referenced by clients.
+         * @since 4.4
+         */
+        public int getColumn() {
             return m_column;
         }
 
@@ -200,9 +218,13 @@ public abstract class BlobDataCell extends DataCell {
 
         /** Get the index of the blob in the columns (if a column only
          * contains blobs, this method returns the row index).
+         *
          * @return The blob row address
+         *
+         * @noreference This method is not intended to be referenced by clients.
+         * @since 4.4
          */
-        int getIndexOfBlobInColumn() {
+        public int getIndexOfBlobInColumn() {
             return m_indexOfBlobInColumn;
         }
 
@@ -260,6 +282,44 @@ public abstract class BlobDataCell extends DataCell {
         public int hashCode() {
             return m_bufferID ^ (m_column << 8)
                 ^ (m_indexOfBlobInColumn << 16);
+        }
+
+        /**
+         * Return {@link BlobAddress} from {@link BlobDataCell}.
+         *
+         * @param cell the cell to extract the address from
+         * @return {@link BlobAddress} of the blobCell in question
+         *
+         * @noreference This method is not intended to be referenced by clients.
+         */
+        public static BlobAddress getAddress(final BlobDataCell cell) {
+            return cell.m_blobAddress;
+        }
+
+       /**
+        * Set the {@link FileStore} for a {@link BlobDataCell} inside it's address. Required for legacy implementation
+        * of fast tables.
+        *
+        * @param cell the {@link BlobDataCell} to which the {@link FileStore} will be associated.
+        * @param store the {@link FileStore}.
+        *
+        * @noreference This method is not intended to be referenced by clients.
+        */
+        public static void setFileStore(final BlobDataCell cell, final FileStore store) {
+            cell.setBlobAddress(new BlobAddress(store));
+        }
+
+        /**
+         * Set the {@link FileStore} for a {@link BlobDataCell} inside it's address. Required for legacy implementation
+         * of fast tables.
+         *
+         * @param address the address to set
+         * @return the FileStore associated with the {@link BlobDataCell}.
+         *
+         * @noreference This method is not intended to be referenced by clients.
+         */
+        public static FileStore getFileStore(final BlobAddress address) {
+            return address.m_fStore;
         }
     }
 }
