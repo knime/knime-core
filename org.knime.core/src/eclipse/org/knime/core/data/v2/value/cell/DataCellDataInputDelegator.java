@@ -69,16 +69,15 @@ final class DataCellDataInputDelegator extends InputStream implements DataCellDa
 
     private final DataCellSerializerFactory m_factory;
 
-    private final IDataRepository m_dataRepository;
+    private final IDataRepository m_repository;
 
     private final DataInput m_delegate;
 
     DataCellDataInputDelegator(final DataCellSerializerFactory factory, //
         final IDataRepository dataRepository, //
         final DataInput input) {
-
         m_factory = factory;
-        m_dataRepository = dataRepository;
+        m_repository = dataRepository;
         m_delegate = input;
     }
 
@@ -89,10 +88,9 @@ final class DataCellDataInputDelegator extends InputStream implements DataCellDa
             final FileStoreKey[] fileStoreKeys = readFileStoreKeys();
             final FileStoreCell fsCell = (FileStoreCell)result;
 
-            // call post contruct because cell is read from disc
-            FileStoreUtil.retrieveFileStoreHandlersFrom(fsCell, fileStoreKeys, m_dataRepository);
+            // call post construct because cell is read from disc
+            FileStoreUtil.retrieveFileStoreHandlersFrom(fsCell, fileStoreKeys, m_repository);
         }
-
         return result;
     }
 

@@ -161,7 +161,7 @@ public final class DataCellValueFactory implements ValueFactory<VarBinaryReadAcc
         private final ObjectDeserializer<DataCell> m_deserializer;
 
         private DataCellInvocationHandler(final VarBinaryReadAccess access, final DataCellSerializerFactory factory,
-            final IDataRepository dataRepository) {
+            final IDataRepository repository) {
             m_access = access;
             try {
                 m_getDataCell = ReadValue.class.getMethod("getDataCell");
@@ -169,8 +169,14 @@ public final class DataCellValueFactory implements ValueFactory<VarBinaryReadAcc
                 throw new IllegalStateException("Fatal: Proxy can't be setup.", ex);
             }
             m_deserializer = input -> {
-                try (DataCellDataInputDelegator stream =
-                    new DataCellDataInputDelegator(factory, dataRepository, input)) {
+                try (final DataCellDataInputDelegator stream =
+                    new DataCellDataInputDelegator(factory, repository, input)) {
+                    final DataCell cell = stream.readDataCell();
+
+                    if (cell instanceof BlobFileStoreCell) {
+                        // requires post construction initialization to create deserializer
+                        ((BlobFileStoreCell)cell).init(factory);
+                    }
                     return stream.readDataCell();
                 }
             };
@@ -178,7 +184,10 @@ public final class DataCellValueFactory implements ValueFactory<VarBinaryReadAcc
 
         @Override
         public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
-            final DataCell cell = m_access.getObject(m_deserializer);
+            DataCell cell = m_access.getObject(m_deserializer);
+            if (cell instanceof BlobFileStoreCell) {
+                cell = ((BlobFileStoreCell)cell).get();
+            }
             if (method.equals(m_getDataCell)) {
                 return cell;
             } else {
