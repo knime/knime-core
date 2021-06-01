@@ -396,7 +396,7 @@ public final class JavaToDataCellConverterRegistry extends
      * @param name the name of the
      * @return
      */
-    private boolean validateFactoryName(final JavaToDataCellConverterFactory<?> factory) {
+    static boolean validateFactoryName(final JavaToDataCellConverterFactory<?> factory) {
         final String name = factory.getName();
         final String className = factory.getSourceType().getSimpleName();
         return name.matches(Pattern.quote(className) + "(| \\(.+\\))");
