@@ -1,6 +1,7 @@
 package org.knime.core.data.convert.map;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataType;
 import org.knime.core.data.convert.datacell.JavaToDataCellConverterFactory;
 import org.knime.core.data.convert.java.DataCellToJavaConverterFactory;
 
@@ -50,6 +51,20 @@ public class ProductionPath {
      */
     public JavaToDataCellConverterFactory<?> getConverterFactory() {
         return m_converterFactory;
+    }
+
+    /**
+     * @return the source type of this path
+     */
+    public Object getSourceType() {
+        return m_producerFactory.getSourceType();
+    }
+
+    /**
+     * @return the destination type of this path
+     */
+    public DataType getDestinationType() {
+        return m_converterFactory.getDestinationType();
     }
 
     @Override
