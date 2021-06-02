@@ -69,15 +69,19 @@ import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.FileTime;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Map.Entry;
 import java.util.Stack;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
@@ -118,7 +122,8 @@ public final class FileUtil {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(FileUtil.class);
 
-    private static final Set<File> TEMP_FILES = Collections.synchronizedSet(new HashSet<File>());
+    // temp files created by FileUtil along with a flag denoting whether these files are to be deleted on shutdown
+    private static final Map<File, Boolean> TEMP_FILES = Collections.synchronizedMap(new HashMap<>());
 
     private static final AtomicLong TEMP_DIR_UNIFIER = new AtomicLong((int)(100000 * Math.random()));
 
@@ -145,12 +150,43 @@ public final class FileUtil {
     public static final Pattern ILLEGAL_FILENAME_CHARS_PATTERN =
         Pattern.compile("[\\p{Cntrl}" + ILLEGAL_FILENAME_CHARS.replace("\\", "\\\\") + "]+");
 
+    /**
+     * Some operating systems delete temp files that have not been touched for some days (e.g., 3 days by default on Mac
+     * OS). This means that if you leave a workflow open for three days, its materialized data might be deleted while it
+     * is still open (see AP-13838). We therefore "touch" all temp files occasionally. The number of hours after which
+     * temp files are touched is determined by this parameter.
+     */
+    private static final int UPDATE_TEMP_FILES_FREQUENCY_HOURS = 23;
+
     static {
+        final var executor = Executors.newSingleThreadScheduledExecutor(r -> new Thread(r, "KNIME-TempFileToucher"));
+
+        executor.scheduleAtFixedRate(() -> {
+            final FileTime now = FileTime.from(ZonedDateTime.now().toInstant());
+
+            synchronized (TEMP_FILES) {
+                // clean TEMP_FILES map, i.e., remove stale entries
+                TEMP_FILES.entrySet().removeIf(e -> !e.getKey().exists());
+
+                // attempt to touch all temp files
+                for (File f : TEMP_FILES.keySet()) {
+                    try {
+                        Files.setLastModifiedTime(f.toPath(), now);
+                    } catch (IOException ex) {
+                        LOGGER.debug("Error when attempting to update the last modified date of a temp file.", ex);
+                    }
+                }
+            }
+        }, UPDATE_TEMP_FILES_FREQUENCY_HOURS, UPDATE_TEMP_FILES_FREQUENCY_HOURS, TimeUnit.HOURS);
+
         ShutdownHelper.getInstance().appendShutdownHook(() -> {
+        	executor.shutdown();
+
             synchronized (TEMP_FILES) {
                 LOGGER.info(String.format("Deleting %d temporary files.", TEMP_FILES.size()));
-                for (File f : TEMP_FILES) {
-                    if (!f.exists()) {
+                for (Entry<File, Boolean> e : TEMP_FILES.entrySet()) {
+                    final File f = e.getKey();
+                    if (!f.exists() || !e.getValue()) {
                         continue;
                     }
 
@@ -908,9 +944,7 @@ public final class FileUtil {
         if (!tempDir.mkdirs()) {
             throw new IOException("Cannot create temporary directory '" + tempDir.getCanonicalPath() + "'.");
         }
-        if (deleteOnExit) {
-            TEMP_FILES.add(tempDir);
-        }
+        TEMP_FILES.put(tempDir, deleteOnExit);
         return tempDir;
     }
 
@@ -965,9 +999,7 @@ public final class FileUtil {
         createTempFile(final String prefix, final String suffix, final File rootDir, final boolean deleteOnExit)
             throws IOException {
         File tmpFile = File.createTempFile(prefix, suffix, rootDir);
-        if (deleteOnExit) {
-            TEMP_FILES.add(tmpFile);
-        }
+        TEMP_FILES.put(tmpFile, deleteOnExit);
         return tmpFile;
     }
 
