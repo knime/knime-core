@@ -224,9 +224,9 @@ public final class JoinSpecification {
         // merge join columns initialize this first, used in leftMergeIncludes
         m_includedViaMerge = new Predicate<String>() {
 
-            List<String> m_leftJoinColumns = getSettings(InputTable.LEFT).getJoinColumnNames();
+            Set<String> m_leftJoinColumns = new HashSet<>(getSettings(InputTable.LEFT).getJoinColumnNames());
 
-            List<String> m_rightIncludes = getSettings(InputTable.RIGHT).getIncludeColumnNames();
+            Set<String> m_rightIncludes = new HashSet<>(getSettings(InputTable.RIGHT).getIncludeColumnNames());
 
             @Override
             public boolean test(final String leftColName) {
@@ -537,7 +537,7 @@ public final class JoinSpecification {
      */
     private int[] columnLeftMergeIncludes() {
 
-        List<String> leftIncludes = getSettings(InputTable.LEFT).getIncludeColumnNames();
+        Set<String> leftIncludes = new HashSet<>(getSettings(InputTable.LEFT).getIncludeColumnNames());
 
         int leftColumns = getSettings(InputTable.LEFT).getTableSpec().getNumColumns();
 
@@ -557,8 +557,8 @@ public final class JoinSpecification {
      */
     private int[] columnRightMergeIncludes() {
 
-        List<String> rightIncludes = getSettings(InputTable.RIGHT).getIncludeColumnNames();
-        List<String> rightJoinColumns = getSettings(InputTable.RIGHT).getJoinColumnNames();
+        Set<String> rightIncludes = new HashSet<>(getSettings(InputTable.RIGHT).getIncludeColumnNames());
+        Set<String> rightJoinColumns = new HashSet<>(getSettings(InputTable.RIGHT).getJoinColumnNames());
 
         int rightColumns = getSettings(InputTable.RIGHT).getTableSpec().getNumColumns();
 
