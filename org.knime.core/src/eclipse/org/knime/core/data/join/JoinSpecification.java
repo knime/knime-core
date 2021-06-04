@@ -62,6 +62,7 @@ import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.LongValue;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.join.JoinTableSettings.JoinColumn;
@@ -157,6 +158,24 @@ public final class JoinSpecification {
     }
 
     /**
+     * Options for comparing the values in join columns.
+     *
+     * @author Carl Witt, KNIME AG, Zurich, Switzerland
+     * @since 4.4
+     */
+    public enum DataCellComparisonMode {
+            /** Two data cells will match if their types and values are equal. */
+            STRICT,
+            /** Two data cells will match if their string representations (toString) are equal. */
+            AS_STRING,
+            /**
+             * Two data cells will match if their type and values are equal OR if they are numeric data cells
+             * (instanceof {@link LongValue}) and their {@link LongValue#getLongValue()} are equal (==).
+             */
+            NUMERIC_AS_LONG;
+    }
+
+    /**
      * See {@link Builder#Builder(JoinTableSettings, JoinTableSettings)}
      */
     private final JoinTableSettings[] m_settings = new JoinTableSettings[2];
@@ -175,6 +194,11 @@ public final class JoinSpecification {
      * See {@link Builder#mergeJoinColumns(boolean)}
      */
     private final boolean m_mergeJoinColumns;
+
+    /**
+     * See {@link Builder#dataCellComparisonMode(DataCellComparisonMode)}
+     */
+    private final DataCellComparisonMode m_dataCellComparisonMode;
 
     /**
      * See {@link Builder#outputRowOrder(OutputRowOrder)}
@@ -220,6 +244,7 @@ public final class JoinSpecification {
         this.m_outputRowOrder = builder.m_outputRowOrder;
         this.m_columnNameDisambiguator = builder.m_columnNameDisambiguator;
         this.m_mergeJoinColumns = builder.m_mergeJoinColumns;
+        this.m_dataCellComparisonMode = builder.m_dataCellComparisonMode;
 
         // merge join columns initialize this first, used in leftMergeIncludes
         m_includedViaMerge = new Predicate<String>() {
@@ -722,6 +747,8 @@ public final class JoinSpecification {
 
         private boolean m_mergeJoinColumns = false;
 
+        private DataCellComparisonMode m_dataCellComparisonMode = DataCellComparisonMode.STRICT;
+
         private OutputRowOrder m_outputRowOrder = OutputRowOrder.ARBITRARY;
 
         private BiFunction<DataRow, DataRow, RowKey> m_rowKeyFactory = createSequenceRowKeysFactory();
@@ -817,6 +844,17 @@ public final class JoinSpecification {
          */
         public Builder mergeJoinColumns(final boolean mergeJoinColumns) {
             this.m_mergeJoinColumns = mergeJoinColumns;
+            return this;
+        }
+
+        /**
+         * Select how {@link DataCell}s are compared when joining.
+         *
+         * @param dataCellComparisonMode an object representing the desired comparison behavior
+         * @return this for fluent API
+         */
+        public Builder dataCellComparisonMode(final DataCellComparisonMode dataCellComparisonMode) {
+            this.m_dataCellComparisonMode = dataCellComparisonMode;
             return this;
         }
 
@@ -917,6 +955,13 @@ public final class JoinSpecification {
      */
     public boolean isMergeJoinColumns() {
         return m_mergeJoinColumns;
+    }
+
+    /**
+     * @return {@link Builder#dataCellComparisonMode(DataCellComparisonMode)}
+     */
+    public DataCellComparisonMode getDataCellComparisonMode() {
+        return m_dataCellComparisonMode;
     }
 
     /**

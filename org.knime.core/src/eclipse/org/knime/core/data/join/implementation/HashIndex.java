@@ -56,6 +56,7 @@ import java.util.function.Function;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
+import org.knime.core.data.LongValue;
 import org.knime.core.data.join.JoinSpecification;
 import org.knime.core.data.join.JoinSpecification.InputTable;
 import org.knime.core.data.join.JoinSpecification.OutputRowOrder;
@@ -80,7 +81,7 @@ class HashIndex {
 
     /**
      * Creates a new list of rows in case there's none already associated to a certain combination of join column values
-     * in {@link #addHashRow(JoinTuple, DataRow, long)}. Must produce a new instance of the type the {@link #m_indexes}
+     * in {@link #addHashRow(JoinTuple, DataRow, long)}. Must produce a new instance of the type the {@link #m_index}
      * map to (=hold as values).
      */
     private static final Function<DataCell[], List<DataRow>> newRowList = k -> new ArrayList<DataRow>();
@@ -103,8 +104,7 @@ class HashIndex {
     /**
      * Makes hash input rows accessible via join column value combinations.
      */
-    private final TCustomHashMap<DataCell[], List<DataRow>> m_indexes =
-        new TCustomHashMap<>(HashIndex.hashConjunctive());
+    private final TCustomHashMap<DataCell[], List<DataRow>> m_index;
 
     /**
      * Whether to remember which hash rows have had join partners in the probe table to be able to output unmatched hash
@@ -172,6 +172,24 @@ class HashIndex {
         m_joinContainer = joinContainer;
         m_checkCanceled = checkCanceled;
 
+        // whether to compare data cells based on value and type, on their string representations, etc.
+        HashingStrategy<DataCell[]> comparisonMode;
+        switch(joinSpecification.getDataCellComparisonMode()) {
+            case STRICT:
+                comparisonMode = hashStrict();
+                break;
+            case AS_STRING:
+                comparisonMode = hashString();
+                break;
+            case NUMERIC_AS_LONG:
+                comparisonMode = hashNumericAsLong();
+                break;
+            default:
+                throw new IllegalStateException("No implementation for the data cell comparison mode "
+                    + joinSpecification.getDataCellComparisonMode());
+        }
+        m_index = new TCustomHashMap<>(comparisonMode);
+
         // probe/hash row settings
         InputTable probeSide = hashSide.other();
         m_trackMatchedHashRows = m_joinSpecification.getSettings(hashSide).isRetainUnmatched();
@@ -207,7 +225,7 @@ class HashIndex {
             // do not add to index structure. can't be matched by anything
             m_joinContainer.unmatched(m_hashSide).accept(row, offset);
         } else {
-            List<DataRow> rowList = m_indexes.computeIfAbsent(joinTuple, newRowList);
+            List<DataRow> rowList = m_index.computeIfAbsent(joinTuple, newRowList);
             rowList.add(row);
             // add to index structure
             m_hashrowInternalOffsets.put(row, m_rows.size());
@@ -228,7 +246,7 @@ class HashIndex {
 
         // null if no matches exist. Otherwise, a list of matching rows in the order they were inserted
         // using #addHashRow(JoinTuple, DataRow, long)
-        List<DataRow> matching = m_indexes.get(key);
+        List<DataRow> matching = m_index.get(key);
 
         // no indexed row has the same values in the join columns as the probe row
         if (matching == null) {
@@ -292,10 +310,11 @@ class HashIndex {
     }
 
     /**
-     * @return strategy that maps rows to the same bucket if they have the same value in all their join clauses
+     * @return strategy that tests whether two rows match by comparing the content AND data types of the values in the
+     *         join columns, e.g., a value in an integer column will never match a value in a long column.
      */
     @SuppressWarnings("serial")
-    static HashingStrategy<DataCell[]> hashConjunctive() {
+    static HashingStrategy<DataCell[]> hashStrict() {
         return new HashingStrategy<DataCell[]>() {
 
             @Override
@@ -319,6 +338,99 @@ class HashIndex {
             }
         };
     }
+
+    /**
+     * @return strategy that tests whether two rows match by comparing the string representations of the values in the
+     *         join columns.
+     */
+    @SuppressWarnings("serial")
+    static HashingStrategy<DataCell[]> hashString() {
+        return new HashingStrategy<DataCell[]>() {
+
+            @Override
+            public int computeHashCode(final DataCell[] joinClauseSides) {
+                if (joinClauseSides == null) {
+                    return 0;
+                }
+
+                int result = 1;
+
+                for (Object element : joinClauseSides) {
+                    result = 31 * result + (element == null ? 0 : element.toString().hashCode());
+                }
+                return result;
+            }
+
+            @Override
+            public boolean equals(final DataCell[] o1, final DataCell[] o2) {
+                for (int i = 0; i < o1.length; i++) {
+
+                    if (o1[i].isMissing() || o2[i].isMissing()) {
+                        return false;
+                    }
+                    // compare the data cells
+                    if (!o1[i].toString().equals(o2[i].toString())) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        };
+    }
+
+    /**
+     * @return strategy that tests whether two rows match by treating values of integer join columns as long values.
+     *         Without this special strategy, their hash codes will differ and thus not match.
+     */
+    @SuppressWarnings("serial")
+    static HashingStrategy<DataCell[]> hashNumericAsLong() {
+        return new HashingStrategy<DataCell[]>() {
+
+            @Override
+            public int computeHashCode(final DataCell[] joinClauseSides) {
+                if (joinClauseSides == null) {
+                    return 0;
+                }
+
+                int result = 1;
+
+                for (DataCell element : joinClauseSides) {
+
+                    if(element instanceof LongValue) {
+                        long value = ((LongValue) element).getLongValue();
+                        result = 31 * result + (int) (value ^ (value >>> 32));
+                    } else {
+                        result = 31 * result + (element == null ? 0 : element.hashCode());
+                    }
+                }
+                return result;
+            }
+
+            @Override
+            public boolean equals(final DataCell[] o1, final DataCell[] o2) {
+                for (int i = 0; i < o1.length; i++) {
+
+                    if (o1[i].isMissing() || o2[i].isMissing()) {
+                        return false;
+                    }
+                    // compare the data cells
+                    if (o1[i] instanceof LongValue && o2[i] instanceof LongValue) {
+                        if (((LongValue)o1[i]).getLongValue() != ((LongValue)o2[i]).getLongValue()) {
+                            return false;
+                        }
+                    } else {
+                        if (!o1[i].equals(o2[i])) {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            }
+        };
+    }
+
+
+
 
     /**
      * @return the input table with the (expected) larger memory footprint as measured by the number of materialized

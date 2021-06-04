@@ -695,7 +695,6 @@ public class JoinSpecificationTest {
 
         { // output table specification for unmatched right rows
             DataTableSpec spec = joinSpec.specForUnmatched(InputTable.RIGHT);
-            assertEquals(3, spec.getNumColumns());
             // named like this (no disambiguation)
             int[] indices = spec.columnsToIndices("U", "V", "A");
             // and in the above order
