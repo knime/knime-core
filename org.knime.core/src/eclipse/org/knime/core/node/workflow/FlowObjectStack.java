@@ -56,6 +56,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.Set;
 import java.util.Vector;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -550,15 +551,22 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
         final Map<String, FlowVariable> startVarsMap1 = startVarsMap;
         final Map<String, FlowVariable> endVarsMap1 = endVarsMap;
         List<String> resultList = new ArrayList<>();
+        Set<String> propagatedVariablesFromPreviousIterationSet = peekOptional(FlowLoopContext.class) //
+            .map(FlowLoopContext::getPropagatedVarsNames) //
+            .orElseThrow(() -> new IllegalFlowObjectStackException(
+                String.format("No '%s' on flow object stack -- stack not belonging to a loop start node",
+                    FlowLoopContext.class.getSimpleName())));
         for (Entry<String, FlowVariable> startEntry : startVarsMap1.entrySet()) {
             FlowVariable varAtEndNode = endVarsMap1.get(startEntry.getKey());
-            if (varAtEndNode != null
-                    && !varAtEndNode.equals(startEntry.getValue())
-                    // 'iterationIndex' is a variable seen in nested loops:
-                    //   -- available upstream: yes (due to nested loop)
-                    //   -- available at this inner loop's end node: yes (loop variable)
-                    //   -- relevant? no: it's a loop control and will confuse the result list
-                    && !m_nodeID.equals(varAtEndNode.getOwner())) {
+            if (varAtEndNode != null //
+                && !varAtEndNode.equals(startEntry.getValue()) //
+                // 'iterationIndex' is a variable seen in nested loops:
+                //   -- available upstream: yes (due to nested loop)
+                //   -- available at this inner loop's end node: yes (loop variable)
+                //   -- relevant? no: it's a loop control and will confuse the result list
+                && (!m_nodeID.equals(varAtEndNode.getOwner()) //
+                        // ok, there is one exception: If the variable was overwritten in previous iteration
+                    || propagatedVariablesFromPreviousIterationSet.contains(varAtEndNode.getName()))) {
                 push(cloneUnsetOwner(varAtEndNode));
                 resultList.add(varAtEndNode.getName());
             }

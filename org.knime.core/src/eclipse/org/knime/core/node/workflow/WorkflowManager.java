@@ -3259,7 +3259,7 @@ public final class WorkflowManager extends NodeContainer
             if (loopEnd.shouldPropagateModifiedVariables()) {
                 List<String> propagatedVars = startNNC.getOutgoingFlowObjectStack()
                     .pushModifiedVariablesForLoopIteration(startNNC.getFlowObjectStack(), endNNC.getFlowObjectStack());
-                innerExecMarker.setPropagatedVarsNames(propagatedVars);
+                loopContext.addPropagatedVarsNames(propagatedVars);
             }
         }
     }

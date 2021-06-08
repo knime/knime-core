@@ -44,6 +44,10 @@
  */
 package org.knime.core.node.workflow;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import org.knime.core.data.filestore.internal.ILoopStartWriteFileStoreHandler;
 import org.knime.core.node.util.ConvenienceMethods;
 
@@ -59,6 +63,36 @@ public class FlowLoopContext extends FlowScopeContext {
     private int m_iterationIndex = 0;
     private ILoopStartWriteFileStoreHandler m_fileStoreHandler;
     private NodeID m_tailNode;
+
+    /**
+     * This field is "transient" and doesn't need to be saved as part of the workflow. Details see
+     * {@link #getPropagatedVarsNames()} and serialization in
+     * {@link org.knime.core.node.workflow.FileSingleNodeContainerPersistor}.
+     */
+    private final Set<String> m_propagatedVarsNamesSet = new HashSet<>();
+
+    /**
+     * @param propagatedVarsNames list of variables described in {@link #getPropagatedVarsNames()}.
+     */
+    void addPropagatedVarsNames(final List<String> propagatedVarsNames) {
+        m_propagatedVarsNamesSet.addAll(propagatedVarsNames);
+    }
+
+    /**
+     * The names of variables that were passed back to a subsequent loop iteration when
+     * {@link LoopEndNode#shouldPropagateModifiedVariables() variables are propagated}. These variables need to be
+     * marked as "special" since in iteration 2++ they are 'owned' by the loop start node. However, variables attached
+     * to start nodes are not propagated to downstream nodes (following the loop end) as per
+     * {@link LoopEndNode#propagateModifiedVariables(org.knime.core.node.NodeModel)}.
+     *
+     * This set is not cleared between subsequent iterations. Once a variable is overwritten in any loop iteration it's
+     * treated special.
+     *
+     * @return the propagatedVarsNames that set (non-null)
+     */
+    Set<String> getPropagatedVarsNames() {
+        return m_propagatedVarsNamesSet;
+    }
 
     public void setTailNode(final NodeID tail) throws IllegalLoopException {
         if (m_tailNode != null && tail != null) {
