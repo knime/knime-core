@@ -3241,7 +3241,7 @@ public final class WorkflowManager extends NodeContainer
     }
 
     /**
-     * Prepare stack of a node, which is a loop start node, prior execution. Pushes {@link InnerFlowLoopContext}
+     * Prepare stack of a node, which is a loop start node, prior execution. Pushes {@link InnerFlowLoopExecuteMarker}
      * and also feeds back loop variables if {@link LoopEndNode#shouldPropagateModifiedVariables()} is set.
      *
      * @param startNNC start node.
@@ -3250,7 +3250,7 @@ public final class WorkflowManager extends NodeContainer
         Node node = startNNC.getNode();
         assert node.getNodeModel() instanceof LoopStartNode : "Must be a loop start node: " + startNNC.getNameWithID();
         FlowObjectStack outStack = node.getOutgoingFlowObjectStack();
-        outStack.push(new InnerFlowLoopContext());
+        outStack.push(new InnerFlowLoopExecuteMarker());
         FlowLoopContext loopContext = outStack.peek(FlowLoopContext.class);
         if (loopContext.getIterationIndex() > 0) {
             NativeNodeContainer endNNC = getNodeContainer(loopContext.getTailNode(), NativeNodeContainer.class, true);
@@ -3485,7 +3485,7 @@ public final class WorkflowManager extends NodeContainer
         // (otherwise we will push the same variables many times...
         // push ISLC back onto the stack is done in doBeforeExecute()!
         final FlowObjectStack headOutgoingStack = headNNC.getOutgoingFlowObjectStack();
-        headOutgoingStack.pop(InnerFlowLoopContext.class);
+        headOutgoingStack.pop(InnerFlowLoopExecuteMarker.class);
         FlowLoopContext flc = headOutgoingStack.peek(FlowLoopContext.class);
         assert !flc.isInactiveScope();
         flc.incrementIterationIndex();

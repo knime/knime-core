@@ -471,7 +471,7 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
                 result.add(new RestoredFlowLoopContext());
                 //                int tailID = sub.getInt("tailID");
             } else if ("loopcontext_execute".equals(type)) {
-                result.add(new InnerFlowLoopContext());
+                result.add(new InnerFlowLoopExecuteMarker());
             } else if ("loopcontext_inactive".equals(type)) {
                 FlowLoopContext flc = new FlowLoopContext();
                 flc.inactiveScope(true);
@@ -683,7 +683,7 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
                     NodeSettingsWO sub = stackSet.addNodeSettings("Inactive_Loop_" + c);
                     sub.addString("type", "loopcontext_inactive");
                 }
-            } else if (s instanceof InnerFlowLoopContext) {
+            } else if (s instanceof InnerFlowLoopExecuteMarker) {
                 NodeSettingsWO sub = stackSet.addNodeSettings("Loop_Execute_" + c);
                 sub.addString("type", "loopcontext_execute");
             } else if (s instanceof FlowCaptureContext) {

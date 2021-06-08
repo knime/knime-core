@@ -58,9 +58,11 @@ package org.knime.core.node.workflow;
  * onto the stack during configure! This object helps to keep the stack
  * clean during the multiple subsequent execute-calls.
  *
+ * @noreference This class is not intended to be referenced by clients.
+ *
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  */
-public class InnerFlowLoopContext extends FlowObject {
+public final class InnerFlowLoopExecuteMarker extends FlowObject {
 
     // no functionality, only a marker object
     // @see FlowLoopContext for proper implementation

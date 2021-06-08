@@ -159,7 +159,7 @@ public interface LoopEndNode extends ScopeEndNode<FlowLoopContext> {
         NodeID startNodeID = null;
         while (it.hasNext()) {
             FlowObject obj = it.next();
-            if (obj instanceof InnerFlowLoopContext) {
+            if (obj instanceof InnerFlowLoopExecuteMarker) {
                 startNodeID = obj.getOwner();
                 break;
             } else if (obj instanceof FlowVariable) {
@@ -168,7 +168,7 @@ public interface LoopEndNode extends ScopeEndNode<FlowLoopContext> {
         }
         CheckUtils.checkState(startNodeID != null,
             "Expected to have seen \"%s\" on flow variable stack -- was method called from NodeModel#execute(...)?",
-            InnerFlowLoopContext.class.getSimpleName());
+            InnerFlowLoopExecuteMarker.class.getSimpleName());
 
         final NodeID startNodeIDFinal = startNodeID;
         loopVarsDeque.removeIf(var -> var.getOwner().equals(startNodeIDFinal));

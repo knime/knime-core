@@ -140,7 +140,7 @@ final class FlowObjectStackView extends JPanel {
                         obj[2] = "Inactive Loop Mark";
                         obj[3] = null;
                     }
-                } else if (s instanceof InnerFlowLoopContext) {
+                } else if (s instanceof InnerFlowLoopExecuteMarker) {
                     obj[2] = "Loop-Execute";
                     obj[3] = null;
                 } else if (s instanceof FlowScopeContext) {
