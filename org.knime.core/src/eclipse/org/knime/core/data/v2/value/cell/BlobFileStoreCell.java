@@ -10,7 +10,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.ref.SoftReference;
-import java.util.UUID;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellDataInput;
@@ -23,7 +22,6 @@ import org.knime.core.data.container.LongUTFDataInputStream;
 import org.knime.core.data.container.LongUTFDataOutputStream;
 import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.filestore.FileStoreCell;
-import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.v2.DataCellSerializerFactory;
 import org.knime.core.data.v2.DataCellSerializerFactory.DataCellSerializerInfo;
 
@@ -60,28 +58,13 @@ final class BlobFileStoreCell extends FileStoreCell {
     @SuppressWarnings({"unchecked", "rawtypes"})
     // For writing
     BlobFileStoreCell(final BlobDataCell cell, //
-        final IWriteFileStoreHandler handler, //
+        final FileStore store, //
         final DataCellSerializerFactory factory) {
-        super(createFileStore(handler, cell));
+        super(store);
         final DataCellSerializerInfo info = factory.getSerializer(cell);
         m_serializerIdx = info.getInternalIndex();
         m_serializer = (DataCellSerializer)info.getSerializer();
         m_cell = cell;
-    }
-
-    private static FileStore createFileStore(final IWriteFileStoreHandler handler, final BlobDataCell cell) {
-        try {
-            final BlobAddress address = BlobAddress.getAddress(cell);
-
-            FileStore store;
-            // either we have already seen the BlobDataCell before in this method or we're reading a .table file with the Table Reader
-            if (address == null || (store = BlobAddress.getFileStore(address)) == null) {
-                BlobAddress.setFileStore(cell, store = handler.createFileStore(UUID.randomUUID().toString()));
-            }
-            return store;
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
-        }
     }
 
     // needs to be called after deserialization

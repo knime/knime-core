@@ -1,10 +1,12 @@
 package org.knime.core.data.v2.value.cell;
 
 import java.io.IOException;
+import java.util.UUID;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.IDataRepository;
 import org.knime.core.data.container.BlobDataCell;
+import org.knime.core.data.container.BlobDataCell.BlobAddress;
 import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.filestore.FileStoreCell;
 import org.knime.core.data.filestore.FileStoreKey;
@@ -46,15 +48,33 @@ final class DefaultDataCellWriteValue implements WriteValue<DataCell> {
     public void setValue(final DataCell cell) {
         // legacy code for BlobDataCells. BlobDataCells are wrapped in FileStoreCells.
         if (cell instanceof BlobDataCell) {
-            setValue(new BlobFileStoreCell((BlobDataCell)cell, // NO-SONAR
-                m_fsHandler, // NO-SONAR
-                m_factory)); // NO-SONAR
+            setValue(wrap((BlobDataCell)cell)); // NO-SONAR
         } else {
             if (cell instanceof FileStoreCell) {
                 handleFileStoreCell(cell);
             }
             m_access.setObject(cell, m_serializer);
         }
+    }
+
+    private BlobFileStoreCell wrap(final BlobDataCell cell) {
+        final BlobAddress address = BlobAddress.getAddress(cell);
+
+        // we've never seen this cell before
+        if (address == null) {
+            BlobAddress.setAddress(cell, UUID.randomUUID().toString());
+        }else {
+            // otherwise we need to check if we have seen the cell
+            // either by checking dict encoding (look at some cache?)
+            // or by activating dict encoding
+        }
+
+        // TODO
+
+
+        new BlobFileStoreCell(cell, // NO-SONAR
+            store, // NO-SONAR
+            m_factory);
     }
 
     private void handleFileStoreCell(final DataCell actual) {

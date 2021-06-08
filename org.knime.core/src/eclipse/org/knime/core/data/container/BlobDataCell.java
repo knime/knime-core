@@ -53,7 +53,6 @@ import java.io.IOException;
 import java.io.Serializable;
 
 import org.knime.core.data.DataCell;
-import org.knime.core.data.filestore.FileStore;
 
 
 /**
@@ -159,28 +158,40 @@ public abstract class BlobDataCell extends DataCell {
         private int m_indexOfBlobInColumn;
         private boolean m_isUseCompression;
 
-        // NB: only used in conjunction with new columnar backend
-        private FileStore m_fStore;
+        private final String m_id;
+
         /**
          * Create new address object.
+         *
          * @param bufferID ID of corresponding buffer.
          * @param column The column index
          * @param isUseCompression Whether or not the file is to be compressed.
          */
-        BlobAddress(final int bufferID, final int column,
-                final boolean isUseCompression) {
+        BlobAddress(final int bufferID, final int column, final boolean isUseCompression) {
+            this(bufferID, column, isUseCompression, null);
+        }
+
+        /**
+         * Create new address object.
+         *
+         * @param bufferID ID of corresponding buffer.
+         * @param column The column index
+         * @param isUseCompression Whether or not the file is to be compressed.
+         * @param an internal, unique id.
+         */
+        BlobAddress(final int bufferID, final int column, final boolean isUseCompression, final String id) {
             m_bufferID = bufferID;
             m_column = column;
             m_indexOfBlobInColumn = -1;
             m_isUseCompression = isUseCompression;
+            m_id = id == null ? toString() : id;
         }
 
         /**
          * @param id internal id used in new columnar table backend. ID is required to be JVM unique.
          */
-        BlobAddress(final FileStore store) {
-            this(-1, -1, USE_COMPRESSION);
-            m_fStore = store;
+        BlobAddress(final String id) {
+            this(-1, -1, USE_COMPRESSION, id);
         }
 
         /**
@@ -202,11 +213,8 @@ public abstract class BlobDataCell extends DataCell {
          * Get the index of the column in which the blob is defined
          *
          * @return the column index
-         *
-         * @noreference This method is not intended to be referenced by clients.
-         * @since 4.4
          */
-        public int getColumn() {
+        int getColumn() {
             return m_column;
         }
 
@@ -220,11 +228,8 @@ public abstract class BlobDataCell extends DataCell {
          * contains blobs, this method returns the row index).
          *
          * @return The blob row address
-         *
-         * @noreference This method is not intended to be referenced by clients.
-         * @since 4.4
          */
-        public int getIndexOfBlobInColumn() {
+        int getIndexOfBlobInColumn() {
             return m_indexOfBlobInColumn;
         }
 
@@ -272,7 +277,7 @@ public abstract class BlobDataCell extends DataCell {
             if (obj instanceof BlobAddress) {
                 BlobAddress a = (BlobAddress)obj;
                 return a.m_bufferID == m_bufferID && a.m_column == m_column
-                    && a.m_indexOfBlobInColumn == m_indexOfBlobInColumn;
+                    && a.m_indexOfBlobInColumn == m_indexOfBlobInColumn && a.m_id == m_id;
             }
             return false;
         }
@@ -296,30 +301,16 @@ public abstract class BlobDataCell extends DataCell {
             return cell.m_blobAddress;
         }
 
-       /**
-        * Set the {@link FileStore} for a {@link BlobDataCell} inside it's address. Required for legacy implementation
-        * of fast tables.
-        *
-        * @param cell the {@link BlobDataCell} to which the {@link FileStore} will be associated.
-        * @param store the {@link FileStore}.
-        *
-        * @noreference This method is not intended to be referenced by clients.
-        */
-        public static void setFileStore(final BlobDataCell cell, final FileStore store) {
-            cell.setBlobAddress(new BlobAddress(store));
-        }
-
         /**
-         * Set the {@link FileStore} for a {@link BlobDataCell} inside it's address. Required for legacy implementation
-         * of fast tables.
+         * Set the {@link BlobAddress} of the provided {@link BlobDataCell}. The {@link BlobAddress} will be the id.
          *
-         * @param address the address to set
-         * @return the FileStore associated with the {@link BlobDataCell}.
+         * @param cell the BlobDataCell to set the address for
+         * @param id the id used as the address.
          *
          * @noreference This method is not intended to be referenced by clients.
          */
-        public static FileStore getFileStore(final BlobAddress address) {
-            return address.m_fStore;
+        public static void setAddress(final BlobDataCell cell, final String id) {
+            cell.m_blobAddress = new BlobAddress(id);
         }
     }
 }
