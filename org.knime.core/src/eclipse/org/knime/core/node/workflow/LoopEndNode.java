@@ -51,6 +51,7 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import org.knime.core.node.Node;
@@ -157,10 +158,12 @@ public interface LoopEndNode extends ScopeEndNode<FlowLoopContext> {
     private static Deque<FlowVariable> collectLoopVariables(final Iterator<FlowObject> it) {
         final Deque<FlowVariable> loopVarsDeque = new ArrayDeque<>();
         NodeID startNodeID = null;
+        List<String> loopExecuteMarkerVars = null;
         while (it.hasNext()) {
             FlowObject obj = it.next();
             if (obj instanceof InnerFlowLoopExecuteMarker) {
                 startNodeID = obj.getOwner();
+                loopExecuteMarkerVars  = ((InnerFlowLoopExecuteMarker)obj).getPropagatedVarsNames();
                 break;
             } else if (obj instanceof FlowVariable) {
                 loopVarsDeque.add((FlowVariable)obj);
@@ -171,9 +174,11 @@ public interface LoopEndNode extends ScopeEndNode<FlowLoopContext> {
             InnerFlowLoopExecuteMarker.class.getSimpleName());
 
         final NodeID startNodeIDFinal = startNodeID;
-        loopVarsDeque.removeIf(var -> var.getOwner().equals(startNodeIDFinal));
+        Set<String> loopExecuteMarkerVarsFinal = new HashSet<>(loopExecuteMarkerVars);
+        loopVarsDeque.removeIf(
+            var -> var.getOwner().equals(startNodeIDFinal) && !loopExecuteMarkerVarsFinal.contains(var.getName()));
 
-        // traverse until 'Loop Context' (variables push by start node in its #configure method)
+        // traverse until 'Loop Context' (variables pushed by start node in its #configure method)
         while (it.hasNext() && !(it.next() instanceof FlowLoopContext)) {
             // skip, just move iterator
         }

@@ -3250,14 +3250,16 @@ public final class WorkflowManager extends NodeContainer
         Node node = startNNC.getNode();
         assert node.getNodeModel() instanceof LoopStartNode : "Must be a loop start node: " + startNNC.getNameWithID();
         FlowObjectStack outStack = node.getOutgoingFlowObjectStack();
-        outStack.push(new InnerFlowLoopExecuteMarker());
+        InnerFlowLoopExecuteMarker innerExecMarker = new InnerFlowLoopExecuteMarker();
+        outStack.push(innerExecMarker);
         FlowLoopContext loopContext = outStack.peek(FlowLoopContext.class);
         if (loopContext.getIterationIndex() > 0) {
             NativeNodeContainer endNNC = getNodeContainer(loopContext.getTailNode(), NativeNodeContainer.class, true);
             LoopEndNode loopEnd = (LoopEndNode)endNNC.getNodeModel();
             if (loopEnd.shouldPropagateModifiedVariables()) {
-                startNNC.getOutgoingFlowObjectStack().pushVariablesWhoseValueDiffer(
-                    startNNC.getFlowObjectStack(), endNNC.getFlowObjectStack());
+                List<String> propagatedVars = startNNC.getOutgoingFlowObjectStack()
+                    .pushModifiedVariablesForLoopIteration(startNNC.getFlowObjectStack(), endNNC.getFlowObjectStack());
+                innerExecMarker.setPropagatedVarsNames(propagatedVars);
             }
         }
     }

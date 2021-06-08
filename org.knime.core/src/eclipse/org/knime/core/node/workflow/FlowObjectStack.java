@@ -241,7 +241,7 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
                 while (nexts[i] != null || its[i].hasNext()) {
                     FlowObject o = nexts[i] != null ? nexts[i] : its[i].next();
                     nexts[i] = null;
-                    if (o instanceof FlowScopeContext) {
+                    if (o instanceof FlowScopeContext || o instanceof InnerFlowLoopExecuteMarker) {
                         // make sure scope contexts belong to same scopes
                         // (can be different objects, though - see bug #3208)
                         if (commonFlowO != null && !commonFlowO.equals(o)) {
@@ -533,17 +533,37 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
         return result;
     }
 
-    void pushVariablesWhoseValueDiffer(final FlowObjectStack startNodeInputStack, final FlowObjectStack endNodeStack) {
+    /**
+     * Push (copies of) variables onto the stack of a start node, which were modified in a loop. Variables must have
+     * existed upstream the start node (as per <code>startNodeInputStack</code>).
+     *
+     * <p>This method is called for loop start node's flow object stack.
+     *
+     * @param startNodeInputStack Input stack of the loop start node
+     * @param endNodeStack Input stack of the loop end node
+     * @return A list of names of variables which were copied.
+     */
+    List<String> pushModifiedVariablesForLoopIteration(final FlowObjectStack startNodeInputStack,
+        final FlowObjectStack endNodeStack) {
         Map<String, FlowVariable> startVarsMap = startNodeInputStack.getAllAvailableFlowVariables();
         Map<String, FlowVariable> endVarsMap = endNodeStack.getAllAvailableFlowVariables();
         final Map<String, FlowVariable> startVarsMap1 = startVarsMap;
         final Map<String, FlowVariable> endVarsMap1 = endVarsMap;
+        List<String> resultList = new ArrayList<>();
         for (Entry<String, FlowVariable> startEntry : startVarsMap1.entrySet()) {
             FlowVariable varAtEndNode = endVarsMap1.get(startEntry.getKey());
-            if (varAtEndNode != null && !varAtEndNode.equals(startEntry.getValue())) {
+            if (varAtEndNode != null
+                    && !varAtEndNode.equals(startEntry.getValue())
+                    // 'iterationIndex' is a variable seen in nested loops:
+                    //   -- available upstream: yes (due to nested loop)
+                    //   -- available at this inner loop's end node: yes (loop variable)
+                    //   -- relevant? no: it's a loop control and will confuse the result list
+                    && !m_nodeID.equals(varAtEndNode.getOwner())) {
                 push(cloneUnsetOwner(varAtEndNode));
+                resultList.add(varAtEndNode.getName());
             }
         }
+        return resultList;
     }
 
     /**

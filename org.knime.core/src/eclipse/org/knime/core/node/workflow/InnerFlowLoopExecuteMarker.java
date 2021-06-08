@@ -47,6 +47,10 @@
  */
 package org.knime.core.node.workflow;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+
 /**
  * Control object on a {@link FlowObjectStack} to indicate the actual
  * execution of a loop start node. Objects of this class are removed (stack
@@ -63,6 +67,33 @@ package org.knime.core.node.workflow;
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  */
 public final class InnerFlowLoopExecuteMarker extends FlowObject {
+
+    /** This field is "transient" and doesn't need to be saved as part of the workflow. Details see
+     * {@link #getPropagatedVarsNames()}. */
+    private List<String> m_propagatedVarsNames;
+
+    InnerFlowLoopExecuteMarker() {
+    }
+
+    /**
+     * @param propagatedVarsNames list of variables described in {@link #getPropagatedVarsNames()}.
+     */
+    void setPropagatedVarsNames(final List<String> propagatedVarsNames) {
+        m_propagatedVarsNames = propagatedVarsNames;
+    }
+
+    /**
+     * The names of variables that were passed back to a subsequent loop iteration when
+     * {@link LoopEndNode#shouldPropagateModifiedVariables() variables are propagated}. These variables need to be
+     * marked as "special" since in iteration 2++ they are 'owned' by the loop start node. However, variables attached
+     * to start nodes are not propagated to downstream nodes (following the loop end) as per
+     * {@link LoopEndNode#propagateModifiedVariables(org.knime.core.node.NodeModel)}.
+     *
+     * @return the propagatedVarsNames that list (non-null)
+     */
+    List<String> getPropagatedVarsNames() {
+        return Objects.requireNonNullElse(m_propagatedVarsNames, Collections.emptyList());
+    }
 
     // no functionality, only a marker object
     // @see FlowLoopContext for proper implementation
