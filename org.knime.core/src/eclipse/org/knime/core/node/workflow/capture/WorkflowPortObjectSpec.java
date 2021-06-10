@@ -468,7 +468,7 @@ public class WorkflowPortObjectSpec implements PortObjectSpec {
      */
     @Override
     public JComponent[] getViews() {
-        ModelContent model = new ModelContent("Workflow Fragment Metadata");
+        ModelContent model = new ModelContent("Workflow Segment Metadata");
         saveSpecMetadata(model);
         return new JComponent[]{new ModelContentOutPortView(model)};
     }
