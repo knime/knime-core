@@ -55,6 +55,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -68,6 +69,8 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.KNIMEConstants;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.NodeContainer;
@@ -82,16 +85,18 @@ import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.node.workflow.WorkflowSaveHelper;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.FileUtil.ZipFileFilter;
+import org.knime.core.util.LoadVersion;
 import org.knime.core.util.LockFailedException;
 import org.knime.core.util.VMFileLocker;
+import org.knime.core.util.Version;
 
 /**
  * Represents a sub-workflow by keeping it's own {@link WorkflowManager}-instance - similar to {@link SubNodeContainer}.
  * Unlike the {@link SubNodeContainer}, a workflow segment
  * <ul>
  * <li>is not part of the {@link NodeContainer} hierarchy</li>
- * <li>the input- and output ports a represented by {@link Port}-objects (instead of extra nodes within the same
- * workflow)</li>
+ * <li>the input- and output ports a represented by {@link Input}/{@link Output}-objects (instead of extra nodes within
+ * the same workflow)</li>
  * <li>it has metadata that is accessible without loading the contained {@link WorkflowManager}, such as name, input-
  * and output ports (id, index, type), ids of so called 'object reference reader nodes'</li>
  * <li>it maintains a list of node id suffixes of 'object reference reader nodes' (as metadata) that represents
@@ -176,8 +181,9 @@ public final class WorkflowSegment {
             try (ZipInputStream in = new ZipInputStream(new ByteArrayInputStream(m_wfmStream))) {
                 tmpDir = FileUtil.createTempDir("workflow_segment");
                 FileUtil.unzip(in, tmpDir, 1);
-                WorkflowLoadHelper loadHelper =
-                    new WorkflowLoadHelper(new WorkflowContext.Factory(tmpDir).createContext());
+                WorkflowLoadHelper loadHelper = createWorkflowLoadHelper(tmpDir, warning -> {
+                    NodeLogger.getLogger(WorkflowSegment.class).warn(warning);
+                });
                 WorkflowLoadResult loadResult;
                 loadResult =
                     WorkflowManager.EXTRACTED_WORKFLOW_ROOT.load(tmpDir, new ExecutionMonitor(), loadHelper, false);
@@ -469,4 +475,58 @@ public final class WorkflowSegment {
                 .build();
         }
     }
+
+    /**
+     * Creates a {@link WorkflowLoadHelper}-instance.
+     *
+     * @param wfLocation the workflow directory to load from
+     * @param loadWarning a callback in case of load warnings
+     * @return a new instance
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public static final WorkflowLoadHelper createWorkflowLoadHelper(final File wfLocation,
+        final Consumer<String> loadWarning) {
+        return new WorkflowLoadHelper(new WorkflowContext.Factory(wfLocation).createContext()) {
+            @Override
+            public UnknownKNIMEVersionLoadPolicy getUnknownKNIMEVersionLoadPolicy(
+                final LoadVersion workflowKNIMEVersion, final Version createdByKNIMEVersion,
+                final boolean isNightlyBuild) {
+                String warning = getWorkflowLoadWarning(createdByKNIMEVersion, isNightlyBuild);
+                if (warning != null) {
+                    loadWarning.accept(warning);
+                }
+                return UnknownKNIMEVersionLoadPolicy.Try;
+            }
+        };
+    }
+
+    private static final Version CURRENT_VERSION = new Version(KNIMEConstants.VERSION);
+
+    private static String getWorkflowLoadWarning(final org.knime.core.util.Version createdByKNIMEVersion,
+        final boolean isNightlyBuild) {
+        final boolean isFuture = createdByKNIMEVersion != null && !CURRENT_VERSION.isSameOrNewer(createdByKNIMEVersion);
+        StringBuilder message = null;
+        if (isNightlyBuild && !isFuture) {
+            message = new StringBuilder("The loaded workflow was created with a nightly build (");
+        } else if (isFuture) {
+            message = new StringBuilder("The loaded workflow was created by a newer release (");
+        } else if (createdByKNIMEVersion == null) {
+            message = new StringBuilder("The loaded workflow was created by an unknown version.");
+        }
+        if (message != null) {
+            if (createdByKNIMEVersion != null) {
+                message.append(createdByKNIMEVersion);
+                if (isNightlyBuild) {
+                    message.append("-nightly");
+                }
+                message.append(").");
+            }
+            message.append(" This may lead to an improperly loaded workflow "
+                + "(e.g. missing nodes or connections, or incorrect node configurations).");
+            return message.toString();
+        } else {
+            return null;
+        }
+    }
+
 }
