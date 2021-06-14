@@ -173,9 +173,30 @@ public final class WorkflowSegment {
      * This method (i.e. lazily loading the workflow) might become unnecessary in the future once the workflow manager
      * can be de-/serialized directly to/from a stream.
      *
+     * @throws IllegalStateException if the workflow couldn't be loaded at all
+     *
      * @return the workflow manager representing the segment
      */
     public WorkflowManager loadWorkflow() {
+        return loadWorkflow(null);
+    }
+
+    /**
+     * Loads the workflow representing the segment.
+     *
+     * Always call {@link #disposeWorkflow()} if the returned workflow manager is not needed anymore!
+     *
+     * This method (i.e. lazily loading the workflow) might become unnecessary in the future once the workflow manager
+     * can be de-/serialized directly to/from a stream.
+     *
+     * @param loadResultCallback will be called with the {@link WorkflowLoadResult}, e.g. to check for loading problems;
+     *            can be <code>null</code>
+     *
+     * @throws IllegalStateException if the workflow couldn't be loaded at all
+     *
+     * @return the workflow manager representing the segment
+     */
+    public WorkflowManager loadWorkflow(final Consumer<WorkflowLoadResult> loadResultCallback) {
         if (m_wfm == null) {
             File tmpDir = null;
             try (ZipInputStream in = new ZipInputStream(new ByteArrayInputStream(m_wfmStream))) {
@@ -184,9 +205,11 @@ public final class WorkflowSegment {
                 WorkflowLoadHelper loadHelper = createWorkflowLoadHelper(tmpDir, warning -> {
                     NodeLogger.getLogger(WorkflowSegment.class).warn(warning);
                 });
-                WorkflowLoadResult loadResult;
-                loadResult =
+                WorkflowLoadResult loadResult =
                     WorkflowManager.EXTRACTED_WORKFLOW_ROOT.load(tmpDir, new ExecutionMonitor(), loadHelper, false);
+                if (loadResultCallback != null) {
+                    loadResultCallback.accept(loadResult);
+                }
                 m_wfm = loadResult.getWorkflowManager();
             } catch (InvalidSettingsException | CanceledExecutionException | UnsupportedWorkflowVersionException
                     | LockFailedException | IOException ex) {
