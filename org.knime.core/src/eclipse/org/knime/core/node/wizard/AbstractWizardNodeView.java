@@ -329,7 +329,7 @@ public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNod
             return false;
         }
         String jsonString = retrieveCurrentValueFromView();
-        if (jsonString == null) {
+        if (jsonString == null || jsonString.equals("{}")) {
             // no view value present in view
             return false;
         }
@@ -338,7 +338,9 @@ public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNod
             viewValue.loadFromStream(new ByteArrayInputStream(jsonString.getBytes(Charset.forName("UTF-8"))));
             VAL currentViewValue = getModel().getViewValue();
             if (currentViewValue != null) {
-                return !currentViewValue.equals(viewValue);
+                return viewValue instanceof ClientValueComparator
+                    ? !((ClientValueComparator)viewValue).compareViewValues(currentViewValue)
+                    : !currentViewValue.equals(viewValue);
             }
         } catch (Exception e) {
             LOGGER.error("Could not create view value for comparison: " + e.getMessage(), e);
