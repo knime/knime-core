@@ -5122,25 +5122,55 @@ public final class WorkflowManager extends NodeContainer
      * method is called but it's not asserted (see also SRV-745).
      *
      * @param id The subnode id
-     * @param controller TODO
+     * @param controller some boolean predicates provided by the controller affect the method's behavior
      * @throws IllegalArgumentException If subnode does not exist
      * @throws IllegalStateException If downstream nodes are actively executing or already executed.
      */
     void resetSubnodeForViewUpdate(final NodeID id, final WebResourceController controller) {
         assert isLockedByCurrentThread();
         SubNodeContainer snc = getNodeContainer(id, SubNodeContainer.class, true);
+        checkSubnodeForViewUpdate(snc, controller);
+        if (controller.isResetDownstreamNodesWhenApplyingViewValue()) {
+            resetSuccessors(id);
+        }
+        invokeResetOnSingleNodeContainer(snc);
+    }
+
+    /**
+     * Called by the wizard execution prior setting new values into an (possibly executed) subnode. It will reset a
+     * subset of nodes within the subnode (i.e. the node denoted to 'nodeToReset' and all it's successors) but not
+     * propagate any new configuration to downstream nodes of the subnode. Usually the workflow (metanode) will be fully
+     * executed when this method is called but it's not asserted (see also SRV-745).
+     *
+     * @param subNodeId the subnode id
+     * @param controller some boolean predicates provided by the controller affect the method's behavior
+     * @param nodeToReset the id of the node to be reset (and its successors) within the subnode
+     * @throws IllegalArgumentException if the subnode doesn't exist
+     * @throws IllegalStateException if nodes downstream of the subnode are currently executing or executed
+     */
+    void resetSubnodeForViewUpdate(final NodeID subNodeId, final WebResourceController controller,
+        final NodeID nodeToReset) {
+        assert isLockedByCurrentThread();
+        SubNodeContainer snc = getNodeContainer(subNodeId, SubNodeContainer.class, true);
+        checkSubnodeForViewUpdate(snc, controller);
+        if (controller.isResetDownstreamNodesWhenApplyingViewValue()) {
+            resetSuccessors(subNodeId);
+        }
+        WorkflowManager sncWfm = snc.getWorkflowManager();
+        sncWfm.resetSuccessors(nodeToReset, -1, false);
+        sncWfm.invokeResetOnSingleNodeContainer((SingleNodeContainer)sncWfm.getNodeContainer(nodeToReset));
+    }
+
+    private void checkSubnodeForViewUpdate(final SubNodeContainer snc,
+        final WebResourceController controller) {
         controller.stateCheckWhenApplyingViewValues(snc);
-        for (ConnectionContainer cc : m_workflow.getConnectionsBySource(id)) {
+        for (ConnectionContainer cc : m_workflow.getConnectionsBySource(snc.getID())) {
             NodeID dest = cc.getDest();
             NodeContainer destNC = dest.equals(getID()) ? this : getNodeContainer(dest);
 
             // for wizard execution: downstream nodes must not be executed
             controller.stateCheckDownstreamNodesWhenApplyingViewValues(snc, destNC);
         }
-        if (controller.isResetDownstreamNodesWhenApplyingViewValue()) {
-            resetSuccessors(id);
-        }
-        invokeResetOnSingleNodeContainer(snc);
     }
 
     /**

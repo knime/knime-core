@@ -51,6 +51,7 @@ import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -664,25 +665,39 @@ public abstract class WebResourceController {
      * @param validate true, if validation is supposed to be done before applying the values, false otherwise
      * @param useAsDefault true, if the given value map is supposed to be applied as new node defaults (overwrite node
      *            settings), false otherwise (apply temporarily)
+     * @param nodeToReset a node in page (i.e., the subnode denoted by subnodeID) to be reset (including all it's
+     *            successors within the same page); if <code>null</code> all nodes within the subnode (i.e. page) are
+     *            being reset
      * @return empty map if validation succeeds, map of errors otherwise
      */
-    @SuppressWarnings({"rawtypes", "unchecked"})
+    @SuppressWarnings({"rawtypes"})
     protected Map<String, ValidationError> loadValuesIntoPageInternal(final Map<String, String> viewContentMap,
-        final NodeID subnodeID, final boolean validate, final boolean useAsDefault) {
+        final NodeID subnodeID, final boolean validate, final boolean useAsDefault, final NodeID nodeToReset) {
         if (subnodeID == null) {
             LOGGER.error("No node ID supplied for loading values into wizard page");
             return Collections.emptyMap();
         }
         WorkflowManager manager = m_manager;
         assert manager.isLockedByCurrentThread();
-        LOGGER.debugWithFormat("Loading view content into wizard nodes (%d)", viewContentMap.size());
 
         SubNodeContainer subNodeNC = manager.getNodeContainer(subnodeID, SubNodeContainer.class, true);
         Map<NodeID, WizardNode> wizardNodeSet = getWizardNodeSetForVerifiedID(subnodeID);
 
+        Map<String, String> filteredViewContentMap;
+        if (nodeToReset == null) {
+            filteredViewContentMap = viewContentMap;
+        } else {
+            Set<String> nodesToReset = subNodeNC.getWorkflowManager()
+                .getNodeContainers(Collections.singleton(nodeToReset), nc -> false, false, true).stream()
+                .map(nc -> NodeIDSuffix.create(m_manager.getID(), nc.getID()).toString())
+                .collect(HashSet::new, HashSet::add, HashSet::addAll);
+            filteredViewContentMap = filterViewValues(nodesToReset, viewContentMap);
+        }
+        LOGGER.debugWithFormat("Loading view content into wizard nodes (%d)", filteredViewContentMap.size());
+
         if (validate) {
             Map<String, ValidationError> validationResult =
-                validateViewValuesInternal(viewContentMap, subnodeID, wizardNodeSet);
+                validateViewValuesInternal(filteredViewContentMap, subnodeID, wizardNodeSet);
             if (!validationResult.isEmpty()) {
                 return validationResult;
             }
@@ -695,8 +710,24 @@ public abstract class WebResourceController {
                     + "consider to change component layout to have self-contained executable units",
                 subNodeNC.getNameWithID());
         }
-        manager.resetSubnodeForViewUpdate(subnodeID, this);
-        for (Map.Entry<String, String> entry : viewContentMap.entrySet()) {
+
+        if (nodeToReset == null) {
+            manager.resetSubnodeForViewUpdate(subnodeID, this);
+        } else {
+            manager.resetSubnodeForViewUpdate(subnodeID, this, nodeToReset);
+        }
+
+        loadViewValues(filteredViewContentMap, wizardNodeSet, manager, subNodeNC, useAsDefault);
+
+        manager.configureNodeAndSuccessors(subnodeID, true);
+        return Collections.emptyMap();
+    }
+
+    @SuppressWarnings("rawtypes")
+    private static void loadViewValues(final Map<String, String> filteredViewContentMap,
+        final Map<NodeID, WizardNode> wizardNodeSet, final WorkflowManager manager, final SubNodeContainer subNodeNC,
+        final boolean useAsDefault) {
+        for (Map.Entry<String, String> entry : filteredViewContentMap.entrySet()) {
             NodeID.NodeIDSuffix suffix = NodeID.NodeIDSuffix.fromString(entry.getKey());
             NodeID id = suffix.prependParent(manager.getID());
             WizardNode wizardNode = wizardNodeSet.get(id);
@@ -706,7 +737,8 @@ public abstract class WebResourceController {
                 continue;
             }
             try {
-                newViewValue.loadFromStream(new ByteArrayInputStream(entry.getValue().getBytes(Charset.forName("UTF-8"))));
+                newViewValue
+                    .loadFromStream(new ByteArrayInputStream(entry.getValue().getBytes(StandardCharsets.UTF_8)));
                 wizardNode.loadViewValue(newViewValue, useAsDefault);
                 if (useAsDefault) {
                     subNodeNC.getWorkflowManager().getNodeContainer(id, SingleNodeContainer.class, true)
@@ -716,8 +748,6 @@ public abstract class WebResourceController {
                 LOGGER.error("Failed to load view value into node \"" + id + "\" although validation succeeded", e);
             }
         }
-        manager.configureNodeAndSuccessors(subnodeID, true);
-        return Collections.emptyMap();
     }
 
     /** Before applying view values the subnode needs to possibly reset downstream nodes. For the wizard execution
@@ -875,23 +905,6 @@ public abstract class WebResourceController {
     }
 
     /**
-     * Utility method to find any Wizard View nodes which are downstream dependents of the provided {@link NodeID} in
-     * the same parent context/scope.
-     *
-     * @param nodeToReset the node container for which downstream wizard nodes should be found.
-     * @param parentID the parent {@link NodeID} for the search context.
-     * @return the set of {@link NodeID} strings for wizard nodes downstream of the provided node.
-     *
-     * @since 4.4
-     */
-    protected static Set<String> getDownstreamNodes(final NodeContainer nodeToReset, final NodeID parentID) {
-        return nodeToReset.getParent()
-            .getNodeContainers(Collections.singleton(nodeToReset.getID()), nc -> false, false, true).stream()
-            .map(nc -> NodeIDSuffix.create(parentID, nc.getID()).toString())
-            .collect(HashSet::new, HashSet::add, HashSet::addAll);
-    }
-
-    /**
      * Utility method to filter a view value map based on the provided inclusive set of {@link NodeID} strings.
      *
      * @param resetNodeIds the {@link NodeID} set to include in the value map.
@@ -900,7 +913,7 @@ public abstract class WebResourceController {
      *
      * @since 4.4
      */
-    protected static Map<String, String> filterViewValues(final Set<String> resetNodeIds,
+    private static Map<String, String> filterViewValues(final Set<String> resetNodeIds,
         final Map<String, String> viewValues) {
         return viewValues.entrySet().stream().filter(e -> resetNodeIds.contains(e.getKey()))
             .collect(Collectors.toMap(Entry::getKey, Entry::getValue));

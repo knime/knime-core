@@ -52,7 +52,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
@@ -328,20 +327,35 @@ public final class WizardExecutionController extends WebResourceController imple
     }
 
     /**
-     * Tries to load a map of view values into all appropriate views contained in current wizard page.
+     * Tries to load a map of view values into all appropriate views contained in current wizard page. It will reset the
+     * entire page (i.e. component) in order to load the view values.
      *
      * @param viewContentMap the values to be load, a map from node suffices to value
      * @throws IllegalStateException if there is no current wizard page or a single page re-execution is in progress
      * @return empty map if validation succeeds, map of errors otherwise
      */
     public Map<String, ValidationError> loadValuesIntoCurrentPage(final Map<String, String> viewContentMap) {
+        return loadValuesIntoCurrentPage(viewContentMap, null);
+    }
+
+    /**
+     * Tries to load a map of view values into all appropriate views contained in current wizard page.
+     *
+     * @param viewContentMap the values to be load, a map from node suffices to value
+     * @param nodeToReset a node in current page to be reset (including all it's successors within the same page) before
+     *            loading the values; if <code>null</code> all nodes within the page are being reset
+     * @throws IllegalStateException if there is no current wizard page or a single page re-execution is in progress
+     * @return empty map if validation succeeds, map of errors otherwise
+     */
+    public Map<String, ValidationError> loadValuesIntoCurrentPage(final Map<String, String> viewContentMap,
+        final NodeID nodeToReset) {
         WorkflowManager manager = m_manager;
         try (WorkflowLock lock = manager.lock()) {
             doBeforePageChange(true);
             NodeContext.pushContext(manager);
             try {
                 CheckUtils.checkState(hasCurrentWizardPageInternal(true), "No current wizard page");
-                return loadValuesIntoPageInternal(viewContentMap, m_waitingSubnodes.get(0), true, false);
+                return loadValuesIntoPageInternal(viewContentMap, m_waitingSubnodes.get(0), true, false, nodeToReset);
             } finally {
                 NodeContext.removeLastContext();
             }
@@ -507,10 +521,8 @@ public final class WizardExecutionController extends WebResourceController imple
             doBeforePageChange(true);
             WorkflowManager pageWfm =
                 ((SubNodeContainer)m_manager.getNodeContainer(pageID)).getWorkflowManager();
-            NodeContainer nodeToReset = pageWfm.getNodeContainer(nodeIDToReset.prependParent(pageWfm.getID()));
-            Set<String> nodesToRexecute = getDownstreamNodes(nodeToReset,  m_manager.getID());
-            Map<String, String> filteredViewValues = filterViewValues(nodesToRexecute, valueMap);
-            Map<String, ValidationError> validationResult = loadValuesIntoCurrentPage(filteredViewValues);
+            NodeID nodeToReset = nodeIDToReset.prependParent(pageWfm.getID());
+            Map<String, ValidationError> validationResult = loadValuesIntoCurrentPage(valueMap, nodeToReset);
             if (validationResult.isEmpty()) {
                 m_isInSinglePageExecution = true;
                 m_manager.executeUpToHere(pageID);
