@@ -49,9 +49,9 @@
 package org.knime.core.node.workflow;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 import org.knime.core.node.AbstractNodeView.ViewableModel;
@@ -138,22 +138,28 @@ public class CompositeViewController extends WebResourceController {
 
     /**
      * Tries to load a map of view values to all appropriate views contained in the given subnode.
+     *
      * @param viewContentMap the values to validate
      * @param validate true, if validation is supposed to be done before applying the values, false otherwise
-     * @param useAsDefault true, if the given value map is supposed to be applied as new node defaults (overwrite node settings), false otherwise (apply temporarily)
+     * @param useAsDefault true, if the given value map is supposed to be applied as new node defaults (overwrite node
+     *            settings), false otherwise (apply temporarily)
+     * @param nodeToReset a node in current page (i.e. component/composite view) to be reset (including all it's
+     *            successors within the same page) before loading the values; if <code>null</code> all nodes within the
+     *            page are being reset
      *
      * @throws IllegalStateException if the page is executing or if the associated page is not the 'current' page
      *             anymore (only if part of a workflow in wizard execution)
      *
      * @return an empty map if validation succeeds, map of errors otherwise
      */
-    public Map<String, ValidationError> loadValuesIntoPage(final Map<String, String> viewContentMap, final boolean validate, final boolean useAsDefault) {
+    public Map<String, ValidationError> loadValuesIntoPage(final Map<String, String> viewContentMap,
+        final boolean validate, final boolean useAsDefault, final NodeID nodeToReset) {
         WorkflowManager manager = m_manager;
         try (WorkflowLock lock = manager.lock()) {
             checkDiscard();
             NodeContext.pushContext(manager);
             try {
-                return loadValuesIntoPageInternal(viewContentMap, m_nodeID, validate, useAsDefault);
+                return loadValuesIntoPageInternal(viewContentMap, m_nodeID, validate, useAsDefault, nodeToReset);
             } finally {
                 NodeContext.removeLastContext();
             }
@@ -244,23 +250,24 @@ public class CompositeViewController extends WebResourceController {
     }
 
     /**
-     * Utility method to see which downstream nodes will be reset if the provided {@link NodeIDSuffix} is
-     * reset.
+     * Utility method to get the successor nodes of the node denoted by the provided {@link NodeIDSuffix} (including the
+     * 'start' node itself, too).
      *
-     * @param nodeToReset the {@link NodeIDSuffix} of the node which will be reset in the composite view.
-     * @return a list of downstream wizard view nodes which will be reset and re-executed based on the provided nodeID
-     *         to reset.
+     * @param nodeIdSuffix the {@link NodeIDSuffix} to get the successor nodes for
+     * @return a list of successor nodes represented by node id suffixes; including the 'start' node (i.e.g the
+     *         'nodeIdSuffix'-argument)
      *
      * @since 4.4
      */
-    public List<String> getDownstreamNodes(final NodeIDSuffix nodeToReset) {
+    public List<String> getSuccessorNodeIDSuffixes(final NodeIDSuffix nodeIdSuffix) {
         try (WorkflowLock lock = m_manager.lock()) {
             NodeID pageID = m_nodeID;
             SubNodeContainer snc = (SubNodeContainer)m_manager.getNodeContainer(pageID);
             WorkflowManager pageWfm = snc.getWorkflowManager();
-            NodeContainer resetNodeContainer = pageWfm.getNodeContainer(nodeToReset.prependParent(pageWfm.getID()));
-            Set<String> downstreamNodeIds = getDownstreamNodes(resetNodeContainer, m_manager.getID());
-            return new ArrayList<>(downstreamNodeIds);
+            NodeID nodeId = nodeIdSuffix.prependParent(pageWfm.getID());
+            return pageWfm.getNodeContainers(Collections.singleton(nodeId), nc -> false, false, true).stream()
+                .map(nc -> NodeIDSuffix.create(m_manager.getID(), nc.getID()).toString())
+                .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
         }
     }
 
@@ -276,10 +283,9 @@ public class CompositeViewController extends WebResourceController {
             SubNodeContainer snc = (SubNodeContainer)m_manager.getNodeContainer(pageID);
             try (WorkflowLock sncLock = snc.lock()) {
                 WorkflowManager pageWfm = snc.getWorkflowManager();
-                NodeContainer nodeToReset = pageWfm.getNodeContainer(nodeIDToReset.prependParent(pageWfm.getID()));
-                Set<String> downstreamNodeIds = getDownstreamNodes(nodeToReset, m_manager.getID());
-                Map<String, String> filteredViewValues = filterViewValues(downstreamNodeIds, valueMap);
-                Map<String, ValidationError> validationResult = loadValuesIntoPage(filteredViewValues, true, true);
+                NodeID nodeToReset = nodeIDToReset.prependParent(pageWfm.getID());
+                Map<String, ValidationError> validationResult =
+                    loadValuesIntoPage(valueMap, true, true, nodeToReset);
                 if (validationResult == null || validationResult.isEmpty()) {
                     m_manager.executeUpToHere(pageID);
                 }
