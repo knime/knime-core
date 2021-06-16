@@ -48,6 +48,8 @@
  */
 package org.knime.core.node.wizard;
 
+import org.knime.core.node.web.WebViewContent;
+
 /**
  * Interface which should be implemented by value representations which pass between the application and a user client
  * that require a more specific comparison mechanism than the default "equals" method. This is useful when comparing
@@ -55,9 +57,13 @@ package org.knime.core.node.wizard;
  * representations may add additional comparison logic or edge-case handling without polluting the "equals" prototype.
  *
  * @author ben.laney
+ * @param <V>
  * @since 4.4
+ *
+ * @noimplement This interface is not intended to be implemented by clients.
+ * @noreference This interface is not intended to be referenced by clients.
  */
-public interface ClientValueComparator {
+public interface WebViewContentComparator<V extends WebViewContent> {
 
     /**
      * A method which compares values provided by a wizard client with defaults or saved values. The functionality here
@@ -67,5 +73,5 @@ public interface ClientValueComparator {
      * @param other the comparison object.
      * @return if the values are effectively equal in the execution context.
      */
-    public boolean compareViewValues(final Object other);
+    public boolean compareViewValues(final V other);
 }
