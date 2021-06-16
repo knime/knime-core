@@ -338,8 +338,8 @@ public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNod
             viewValue.loadFromStream(new ByteArrayInputStream(jsonString.getBytes(Charset.forName("UTF-8"))));
             VAL currentViewValue = getModel().getViewValue();
             if (currentViewValue != null) {
-                return viewValue instanceof ClientValueComparator
-                    ? !((ClientValueComparator)viewValue).compareViewValues(currentViewValue)
+                return viewValue instanceof WebViewContentComparator
+                    ? !((WebViewContentComparator)viewValue).compareViewValues(currentViewValue)
                     : !currentViewValue.equals(viewValue);
             }
         } catch (Exception e) {
