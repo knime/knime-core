@@ -47,7 +47,6 @@
  */
 package org.knime.core.data.filestore.internal;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.UUID;
 
@@ -118,12 +117,6 @@ public class ROWriteFileStoreHandler extends EmptyFileStoreHandler implements IW
     /** {@inheritDoc} */
     @Override
     public UUID getStoreUUID() {
-        return null;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public File getBaseDir() {
         return null;
     }
 

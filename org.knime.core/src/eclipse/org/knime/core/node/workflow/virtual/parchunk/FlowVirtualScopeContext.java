@@ -52,12 +52,14 @@ import java.io.IOException;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.exec.dataexchange.PortObjectRepository;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.workflow.FlowScopeContext;
 import org.knime.core.node.workflow.NativeNodeContainer;
+import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowCaptureOperation;
 import org.knime.core.node.workflow.virtual.AbstractPortObjectRepositoryNodeModel;
 
@@ -100,7 +102,7 @@ import org.knime.core.node.workflow.virtual.AbstractPortObjectRepositoryNodeMode
  */
 public final class FlowVirtualScopeContext extends FlowScopeContext {
 
-    private NativeNodeContainer m_nc;
+    private NativeNodeContainer m_hostNode;
     private ExecutionContext m_exec;
 
     /**
@@ -111,28 +113,33 @@ public final class FlowVirtualScopeContext extends FlowScopeContext {
      * This method needs to be called right before the nodes of this virtual scope are executed.
      *
      * @param hostNode the node used for persistence of selected port objects and to provide a file store handler (its
-     *            node model needs to be of type {@link AbstractPortObjectRepositoryNodeModel})
+     *            node model needs to be of type {@link AbstractPortObjectRepositoryNodeModel} and
+     *            {@link VirtualNodeModel})
      * @param virtualInNode a node with a node model of type {@link VirtualParallelizedChunkPortObjectInNodeModel}, used
      *            to get the virtual scope from
      * @param exec the host node's execution context, mainly used to copy port objects (which are then made available
      *            via the {@link PortObjectRepository})
+     * @return the virtual scope context the node has been registered with
      */
-    public static void registerHostNodeForPortObjectPersistence(final NativeNodeContainer hostNode,
+    @SuppressWarnings("java:S4274")
+    public static FlowVirtualScopeContext registerHostNodeForPortObjectPersistence(final NativeNodeContainer hostNode,
         final NativeNodeContainer virtualInNode, final ExecutionContext exec) {
-        if (!(hostNode.getNodeModel() instanceof AbstractPortObjectRepositoryNodeModel)) {
-            throw new IllegalArgumentException(
-                "The host node model is not of type " + AbstractPortObjectRepositoryNodeModel.class.getSimpleName());
-        }
-        if (!(virtualInNode.getNodeModel() instanceof VirtualParallelizedChunkPortObjectInNodeModel)) {
-            throw new IllegalArgumentException("The virtual input node model is not of expected type "
-                + VirtualParallelizedChunkPortObjectInNodeModel.class.getSimpleName());
-        }
+        assert hostNode
+            .getNodeModel() instanceof AbstractPortObjectRepositoryNodeModel : "The host node model is not of type "
+                + AbstractPortObjectRepositoryNodeModel.class.getSimpleName();
+        assert hostNode.getNodeModel() instanceof VirtualNodeModel : "The host node model must be of type "
+            + VirtualNodeModel.class.getSimpleName();
+        assert virtualInNode
+            .getNodeModel() instanceof VirtualParallelizedChunkPortObjectInNodeModel : "The virtual input node model is"
+                + " not of expected type " + VirtualParallelizedChunkPortObjectInNodeModel.class.getSimpleName();
 
         FlowVirtualScopeContext virtualScope =
             virtualInNode.getOutgoingFlowObjectStack().peek(FlowVirtualScopeContext.class);
 
-        virtualScope.m_nc = hostNode;
+        virtualScope.m_hostNode = hostNode;
         virtualScope.m_exec = exec;
+
+        return virtualScope;
     }
 
     /**
@@ -151,12 +158,12 @@ public final class FlowVirtualScopeContext extends FlowScopeContext {
      */
     public UUID addPortObjectToRepositoryAndHostNode(final PortObject po)
         throws IOException, CanceledExecutionException {
-        if (m_nc == null) {
+        if (m_hostNode == null) {
             throw new IllegalStateException("No host node to forward the port objects to set");
         }
 
         UUID id = PortObjectRepository.addCopy(po, m_exec);
-        ((AbstractPortObjectRepositoryNodeModel)m_nc.getNodeModel()).addPortObject(id, PortObjectRepository.get(id).get()); // NOSONAR
+        ((AbstractPortObjectRepositoryNodeModel)m_hostNode.getNodeModel()).addPortObject(id, PortObjectRepository.get(id).get()); // NOSONAR
         return id;
     }
 
@@ -173,8 +180,16 @@ public final class FlowVirtualScopeContext extends FlowScopeContext {
      *
      * @return the node associated with this virtual scope or an empty optional if there is no node associated.
      */
-    public Optional<NativeNodeContainer> getHostNode() {
-        return Optional.ofNullable(m_nc);
+    public Optional<NativeNodeContainer> getHostNode_ToBeRemoved() {
+        return Optional.ofNullable(m_hostNode);
+    }
+
+    public Optional<IFileStoreHandler> getHostNodeFileStoreHandler() {
+        return Optional.ofNullable(m_hostNode).map(nc -> nc.getNode().getFileStoreHandler());
+    }
+
+    public Optional<NodeID> getHostNodeID() {
+        return Optional.ofNullable(m_hostNode).map(NativeNodeContainer::getID);
     }
 
 }

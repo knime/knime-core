@@ -58,7 +58,7 @@ import org.knime.core.util.FileUtil;
 
 /**
  * File store handler used for non-start nodes that are part of a loop body (not the loop end). They forward all calls
- * to the file store handler associated with the loop start.
+ * to the file store handler associated with the loop start (i.e. the file store handler of another node).
  *
  * Can also be used to create a file store handler that delegates to another {@link IWriteFileStoreHandler} - see
  * {@link #ReferenceWriteFileStoreHandler(WriteFileStoreHandler, NodeID)}.
@@ -66,13 +66,14 @@ import org.knime.core.util.FileUtil;
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  * @noreference This class is not intended to be referenced by clients.
  */
-public final class ReferenceWriteFileStoreHandler extends AbstractReferenceWriteFileStoreHandler {
+public final class ReferenceWriteFileStoreHandler extends DelegateWriteFileStoreHandler {
 
     private InternalDuplicateChecker m_duplicateChecker;
     private NodeID m_nodeId;
 
     /**
-     * @param reference */
+     * @param reference the file store handler to delegate to (must be the file store handler of another node!)
+     */
     public ReferenceWriteFileStoreHandler(final ILoopStartWriteFileStoreHandler reference) {
         super(reference);
         if (reference == null) {
@@ -81,7 +82,7 @@ public final class ReferenceWriteFileStoreHandler extends AbstractReferenceWrite
     }
 
     /**
-     * @param reference the file store handler to delegate to
+     * @param reference the file store handler to delegate to (must be the file store handler of another node!)
      * @param nodeId the node id of the node this file store handler belongs to
      */
     public ReferenceWriteFileStoreHandler(final IWriteFileStoreHandler reference, final NodeID nodeId) {

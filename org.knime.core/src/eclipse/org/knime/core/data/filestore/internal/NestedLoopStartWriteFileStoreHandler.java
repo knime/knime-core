@@ -47,7 +47,6 @@
  */
 package org.knime.core.data.filestore.internal;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.UUID;
@@ -102,12 +101,6 @@ public final class NestedLoopStartWriteFileStoreHandler implements ILoopStartWri
     @Override
     public UUID getStoreUUID() {
         return m_reference.getStoreUUID();
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public File getBaseDir() {
-        return null;
     }
 
     /** {@inheritDoc} */

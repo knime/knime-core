@@ -65,7 +65,7 @@ import org.knime.core.node.workflow.NativeNodeContainer;
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  * @noreference This class is not intended to be referenced by clients.
  */
-public class LoopStartWriteFileStoreHandler extends AbstractReferenceWriteFileStoreHandler
+public class LoopStartWriteFileStoreHandler extends DelegateWriteFileStoreHandler
     implements ILoopStartWriteFileStoreHandler {
 
     private static final int[] OUTER_LOOP_PATH = new int[] {};
@@ -104,7 +104,7 @@ public class LoopStartWriteFileStoreHandler extends AbstractReferenceWriteFileSt
     /**
      * Initializes a new loop start file store handler that references the provided one. I.e. in that case it is a
      * 'reference file store handler', {@link IWriteFileStoreHandler#isReference()} returns <code>true</code> and the
-     * actual file stores are created in the by the referenced file store handler.
+     * actual file stores are created in the referenced file store handler.
      *
      * @param startNode the {@link LoopStartNode}
      * @param fsh the file store handler to be referenced (and delegated the most calls to)

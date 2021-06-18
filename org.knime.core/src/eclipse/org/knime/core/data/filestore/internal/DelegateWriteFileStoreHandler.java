@@ -59,19 +59,22 @@ import org.knime.core.data.filestore.internal.FileStoreProxy.FlushCallback;
 import org.knime.core.node.ExecutionContext;
 
 /**
- * Implementation that wraps/references another {@link IWriteFileStoreHandler} and delegates all the calls to it.
+ * Implementation that wraps another {@link IWriteFileStoreHandler} and delegates all the calls to it.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  * @since 4.2
+ *
+ * @noreference This class is not intended to be referenced by clients.
+ * @noextend This class is not intended to be subclassed by clients.
  */
-abstract class AbstractReferenceWriteFileStoreHandler implements IWriteFileStoreHandler {
+public class DelegateWriteFileStoreHandler implements IWriteFileStoreHandler {
 
     private final IWriteFileStoreHandler m_delegate;
 
     /**
      * @param delegate the instance to delegate the calls to
      */
-    protected AbstractReferenceWriteFileStoreHandler(final IWriteFileStoreHandler delegate) {
+    protected DelegateWriteFileStoreHandler(final IWriteFileStoreHandler delegate) {
         m_delegate = delegate;
     }
 
@@ -145,11 +148,12 @@ abstract class AbstractReferenceWriteFileStoreHandler implements IWriteFileStore
 
     @Override
     public File getBaseDir() {
-        if (isReference()) {
-            return null;
-        } else {
-            return m_delegate.getBaseDir();
-        }
+        return m_delegate.getBaseDir();
+    }
+
+    @Override
+    public boolean isReference() {
+        return m_delegate.isReference();
     }
 
 }

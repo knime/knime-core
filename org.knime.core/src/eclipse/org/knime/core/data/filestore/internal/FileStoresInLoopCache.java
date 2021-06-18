@@ -75,6 +75,8 @@ import org.knime.core.util.MutableInteger;
 /**
  *
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
+ *
+ * @noreference This class is not intended to be referenced by clients.
  */
 final class FileStoresInLoopCache {
 
@@ -133,7 +135,7 @@ final class FileStoresInLoopCache {
     }
 
     void deletableUnusedFileStores(final FileStoresInLoopCache endNodeCacheWithKeysToPersist,
-            final ILoopStartWriteFileStoreHandler handler) throws CanceledExecutionException {
+            final IWriteFileStoreHandler handler) {
         MutableInteger nrFilesDeleted = new MutableInteger(0);
         MutableInteger nrFailedDeletes = new MutableInteger(0);
         CloseableRowIterator allKeysIterator = m_createdFileStoresTable.iterator();
@@ -221,7 +223,7 @@ final class FileStoresInLoopCache {
         }
     }
 
-    private void delete(final FileStoreKey key, final ILoopStartWriteFileStoreHandler handler,
+    private void delete(final FileStoreKey key, final IWriteFileStoreHandler handler,
             final MutableInteger nrFilesDeleted, final MutableInteger nrFilesFailedDelete) {
         FileStore fileStore = handler.getFileStore(key);
         File file = fileStore.getFile();

@@ -66,6 +66,7 @@ import org.knime.core.data.filestore.internal.LoopEndWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.LoopStartWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.NestedLoopStartWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.ReferenceWriteFileStoreHandler;
+import org.knime.core.data.filestore.internal.VirtualProxyWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.WriteFileStoreHandler;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.AbstractNodeView;
@@ -105,6 +106,7 @@ import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 import org.knime.core.node.workflow.execresult.NodeExecutionResult;
 import org.knime.core.node.workflow.virtual.parchunk.FlowVirtualScopeContext;
+import org.knime.core.node.workflow.virtual.parchunk.VirtualNodeModel;
 import org.w3c.dom.Element;
 
 /**
@@ -756,6 +758,9 @@ public class NativeNodeContainer extends SingleNodeContainer {
             + "loop start and not contained in loop), disposing old handler";*/
         }
         IWriteFileStoreHandler newFSHandler = new WriteFileStoreHandler(getNameWithID(), UUID.randomUUID());
+        if (m_node.isModelCompatibleTo(VirtualNodeModel.class)) {
+            newFSHandler = new VirtualProxyWriteFileStoreHandler(newFSHandler);
+        }
         return newFSHandler;
     }
 
@@ -867,15 +872,14 @@ public class NativeNodeContainer extends SingleNodeContainer {
     private IWriteFileStoreHandler initVirtualScopeFileStoreHandler() {
         FlowVirtualScopeContext virtualScope =
             getFlowScopeContextFromHierarchy(FlowVirtualScopeContext.class, getFlowObjectStack());
-        NativeNodeContainer hostNode = virtualScope != null ? virtualScope.getHostNode().orElse(null) : null;
-        if (hostNode != null) {
-            IFileStoreHandler fsh = hostNode.getNode().getFileStoreHandler();
+        if (virtualScope != null && virtualScope.getHostNodeID().isPresent()) { // TODO
+            IFileStoreHandler fsh = virtualScope.getHostNodeFileStoreHandler().get(); // NOSONAR always present at this point
             if (fsh instanceof IWriteFileStoreHandler) {
                 return initWriteFileStoreHandlerReference((IWriteFileStoreHandler)fsh);
             } else if (fsh == null) {
                 // can happen if the node associated with the virtual scope is reset
                 throw new IllegalStateException(
-                    "No file store handler given. Try to re-execute '" + hostNode.getNameWithID() + "'");
+                    "No file store handler given. Try to re-execute '" + virtualScope.getHostNodeID()+ "'");
             } else {
                 throw new IllegalStateException("No file store handler given. Most likely an implementation error");
             }

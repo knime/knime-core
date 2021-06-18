@@ -47,7 +47,6 @@
  */
 package org.knime.core.data.filestore.internal;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.UUID;
 
@@ -88,13 +87,6 @@ public final class LoopEndWriteFileStoreHandler implements IWriteFileStoreHandle
     @Override
     public UUID getStoreUUID() {
         return m_loopStartFSHandler.getStoreUUID();
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public File getBaseDir() {
-        // no own file stores
-        return null;
     }
 
     /** {@inheritDoc} */

@@ -106,13 +106,22 @@ public interface IWriteFileStoreHandler extends IFileStoreHandler {
      *         {@link #isReference()} is <code>true</code>) or there have been no file stores creates by the respective
      *         node
      */
-    File getBaseDir();
+    default File getBaseDir() {
+        if (isReference()) {
+            return null;
+        } else {
+            throw new IllegalStateException(
+                "IMPLEMENTATION ERROR: Implementing class must overwrite the 'getBaseDir'-method");
+        }
+    }
 
     /**
-     * Tells if this file store handler just references another one and doesn't create file stores itself. This file
-     * store, e.g., won't be persisted with the node neither will it be added to the {@link IDataRepository}.
+     * Tells if this file store handler just references another one (i.e. another file store handler of another node)
+     * and doesn't create file stores itself. This file store, e.g., won't be persisted with the node neither will it be
+     * added to the {@link IDataRepository}.
      *
-     * @return <code>true</code> if this file store handler just references another one, otherwise <code>false</code>
+     * @return <code>true</code> if this file store handler just references one of another node, otherwise
+     *         <code>false</code>
      */
     boolean isReference();
 }
