@@ -75,10 +75,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -86,6 +88,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -162,19 +165,30 @@ public final class FileUtil {
         final var executor = Executors.newSingleThreadScheduledExecutor(r -> new Thread(r, "KNIME-TempFileToucher"));
 
         executor.scheduleAtFixedRate(() -> {
-            final FileTime now = FileTime.from(ZonedDateTime.now().toInstant());
+        	LOGGER.debug("Updating the last modified date of created temp files to prevent deletion by the OS.");
+            final Set<Path> paths = new HashSet<>(TEMP_FILES.size());
 
             synchronized (TEMP_FILES) {
                 // clean TEMP_FILES map, i.e., remove stale entries
-                TEMP_FILES.entrySet().removeIf(e -> !e.getKey().exists());
+                TEMP_FILES.keySet().removeIf(Predicate.not(File::exists));
 
-                // attempt to touch all temp files
-                for (File f : TEMP_FILES.keySet()) {
-                    try {
-                        Files.setLastModifiedTime(f.toPath(), now);
+                // add all TEMP_FILES and their children to the paths set
+                for (final File f : TEMP_FILES.keySet()) {
+                    try (final Stream<Path> stream = Files.walk(f.toPath())) {
+                        stream.forEach(paths::add);
                     } catch (IOException ex) {
-                        LOGGER.debug("Error when attempting to update the last modified date of a temp file.", ex);
+                        LOGGER.debug("Error when attempting to walk over temp files.", ex);
                     }
+                }
+            }
+
+            // attempt to touch all paths in the paths set
+            final FileTime now = FileTime.from(ZonedDateTime.now().toInstant());
+            for (final Path p : paths) {
+                try {
+                    Files.setLastModifiedTime(p, now);
+                } catch (IOException ex) {
+                    LOGGER.debug("Error when attempting to update the last modified date of a temp file.", ex);
                 }
             }
         }, UPDATE_TEMP_FILES_FREQUENCY_HOURS, UPDATE_TEMP_FILES_FREQUENCY_HOURS, TimeUnit.HOURS);
