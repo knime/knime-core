@@ -461,7 +461,7 @@ public abstract class WebResourceController {
         findNestedViewNodes(subNC, resultMap, infoMap, sncMap, initialHiliteHandlerSet);
         NodeID.NodeIDSuffix pageID = NodeID.NodeIDSuffix.create(manager.getID(), subNC.getID());
         SubnodeContainerLayoutStringProvider layoutStringProvider = subNC.getSubnodeLayoutStringProvider();
-        if (layoutStringProvider.isEmptyLayout()) {
+        if (layoutStringProvider.isEmptyLayout() || layoutStringProvider.isPlaceholderLayout()) {
             try {
                 WorkflowManager subWfm = subNC.getWorkflowManager();
                 Map<NodeIDSuffix, ViewHideable> viewMap = new LinkedHashMap<NodeIDSuffix, ViewHideable>();
