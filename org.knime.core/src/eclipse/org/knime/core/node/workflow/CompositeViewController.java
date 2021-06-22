@@ -49,7 +49,6 @@
 package org.knime.core.node.workflow;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -261,40 +260,32 @@ public class CompositeViewController extends WebResourceController {
      * @since 4.4
      */
     public List<String> getSuccessorNodeIDSuffixes(final NodeIDSuffix nodeIdSuffix) {
-        try (WorkflowLock lock = m_manager.lock()) {
-            return getSuccessorNodeContainers(nodeIdSuffix).stream()
-                .map(nc -> NodeIDSuffix.create(m_manager.getID(), nc.getID()).toString())
-                .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
-        }
+        return getSuccessorNodeIDSuffixes(nodeIdSuffix, false);
     }
 
     /**
-     * Utility method to get the executed successor nodes of the node denoted by the provided {@link NodeIDSuffix}
-     * (including the 'start' node itself, too).
+     * Utility method to get the successor nodes of the node denoted by the provided {@link NodeIDSuffix} (including the
+     * 'start' node itself, too).
      *
-     * @param nodeIdSuffix the {@link NodeIDSuffix} to get the executed successor nodes for
-     * @return a list of executed successor nodes represented by node id suffixes; including the 'start' node (i.e.g the
-     *         'nodeIdSuffix'-argument)
+     * @param nodeIdSuffix the {@link NodeIDSuffix} to get the successor nodes for
+     * @param onlyReexecutedNodes if the list returned should include only nodes which were reset and no longer pending
+     *            re-execution (i.e. finished, failed, deactivated, etc.)
+     * @return a list of successor nodes represented by node id suffixes; including the 'start' node (i.e.g the
+     *         'nodeIdSuffix'-argument); filtered if indicated by the boolean parameter
      *
      * @since 4.4
      */
-    public List<String> getExecutedSuccessorNodeIDSuffixes(final NodeIDSuffix nodeIdSuffix) {
-        try (WorkflowLock lock = m_manager.lock()) {
-            return getSuccessorNodeContainers(nodeIdSuffix).stream()
-                .filter(nc -> !nc.getNodeContainerState().isWaitingToBeExecuted()
-                    && !nc.getNodeContainerState().isExecutionInProgress())
-                .map(nc -> NodeIDSuffix.create(m_manager.getID(), nc.getID()).toString())
-                .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
-        }
-    }
-
-    private Collection<NodeContainer> getSuccessorNodeContainers(final NodeIDSuffix nodeIdSuffix) {
+    public List<String> getSuccessorNodeIDSuffixes(final NodeIDSuffix nodeIdSuffix, final boolean onlyReexecutedNodes) {
         try (WorkflowLock lock = m_manager.lock()) {
             NodeID pageID = m_nodeID;
             SubNodeContainer snc = (SubNodeContainer)m_manager.getNodeContainer(pageID);
             WorkflowManager pageWfm = snc.getWorkflowManager();
             NodeID nodeId = nodeIdSuffix.prependParent(pageWfm.getID());
-            return pageWfm.getNodeContainers(Collections.singleton(nodeId), nc -> false, false, true);
+            return pageWfm.getNodeContainers(Collections.singleton(nodeId), nc -> false, false, true).stream()
+                    .filter(nc -> !onlyReexecutedNodes || (!nc.getNodeContainerState().isWaitingToBeExecuted()
+                        && !nc.getNodeContainerState().isExecutionInProgress()))
+                    .map(nc -> NodeIDSuffix.create(m_manager.getID(), nc.getID()).toString())
+                    .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
         }
     }
 
