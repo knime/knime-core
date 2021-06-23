@@ -303,7 +303,7 @@ public class CompositeViewController extends WebResourceController {
                 WorkflowManager pageWfm = snc.getWorkflowManager();
                 NodeID nodeToReset = nodeIDToReset.prependParent(pageWfm.getID());
                 Map<String, ValidationError> validationResult =
-                    loadValuesIntoPage(valueMap, true, true, nodeToReset);
+                    loadValuesIntoPage(valueMap, true, false, nodeToReset);
                 if (validationResult == null || validationResult.isEmpty()) {
                     m_manager.executeUpToHere(pageID);
                 }
