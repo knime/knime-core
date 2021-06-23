@@ -53,45 +53,37 @@ import static org.junit.Assert.assertThrows;
 import static org.knime.core.node.workflow.BugWEBP803_OnlyResetNodesToBeReexecuted.createNodeIDSuffix;
 import static org.knime.core.node.workflow.BugWEBP803_OnlyResetNodesToBeReexecuted.getWizardNodeViewValue;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.awaitility.Awaitility;
-import org.eclipse.core.runtime.Assert;
-import org.hamcrest.MatcherAssert;
-import org.hamcrest.Matchers;
 import org.junit.Test;
-import org.knime.core.node.web.WebViewContent;
-import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 
 /**
- * Test to make sure that only an expected subset of nodes are being re-executed
- * if {@link WebResourceController#reexecuteSinglePage(NodeIDSuffix, Map)} is
- * called.
+ * Tests the re-execution of a wizard page where
+ * {@link WebResourceController#reexecuteSinglePage(NodeIDSuffix, Map)} is
+ * called with a node id referencing a node within a nested component. Makes
+ * sure that only the nodes downstream of that specified node are reset and
+ * re-executed.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
-public class BugWEBP803_OnlyResetNodesToBeReexecuted extends WorkflowTestCase {
+public class BugAP16962_ReexecutionInNestedComponents extends WorkflowTestCase {
 
 	@Test
-	public void testGetSuccessorWizardNodesWithinPage() throws Exception {
+	public void testNestedGetSuccessorWizardNodesWithinPage() throws Exception {
 		loadAndSetWorkflow();
 		WorkflowManager wfm = getManager();
 		NodeID pageId = wfm.getID().createChild(9);
 		List<String> successors = WebResourceController
-				.getSuccessorWizardNodesWithinPage(wfm, pageId, pageId.createChild(0).createChild(2), null)
+				.getSuccessorWizardNodesWithinPage(wfm, pageId,
+						pageId.createChild(0).createChild(28).createChild(0).createChild(2), null)
 				.map(NodeIDSuffix::toString).collect(Collectors.toList());
-		assertThat("unexpected successors", successors, containsInAnyOrder("9:0:2", "9:0:26"));
-
-		assertThrows(IllegalArgumentException.class, () -> WebResourceController.getSuccessorWizardNodesWithinPage(wfm,
-				pageId, pageId.createChild(0).createChild(83483883), null));
-		assertThrows(IllegalArgumentException.class, () -> WebResourceController.getSuccessorWizardNodesWithinPage(wfm,
-				wfm.getID().createChild(34342), null, null));
+		assertThat("unexpected successors", successors,
+				containsInAnyOrder("9:0:28:0:2", "9:0:28:0:26", "9:0:28:0:33:1", "9:0:31"));
 	}
 
 	/**
@@ -110,7 +102,7 @@ public class BugWEBP803_OnlyResetNodesToBeReexecuted extends WorkflowTestCase {
 		waitForPage(page);
 		assertThat(wec.hasCurrentWizardPage(), is(true));
 
-		testReexecution(page, wec);
+		testNestedReexecution(page, wec);
 	}
 
 	/**
@@ -126,37 +118,43 @@ public class BugWEBP803_OnlyResetNodesToBeReexecuted extends WorkflowTestCase {
 
 		wfm.executeAllAndWaitUntilDone();
 
-		testReexecution(page, new CompositeViewController(wfm, page.getID()));
+		testNestedReexecution(page, new CompositeViewController(wfm, page.getID()));
 	}
 
-	private static void testReexecution(SubNodeContainer page, WebResourceController wrc) {
-		wrc.reexecuteSinglePage(createNodeIDSuffix(2), createWizardPageInput());
+	private static void testNestedReexecution(SubNodeContainer page, WebResourceController wrc) {
+		wrc.reexecuteSinglePage(createNodeIDSuffix(28, 0, 2), createWizardPageInput());
 		waitForPage(page);
-		wrc.reexecuteSinglePage(createNodeIDSuffix(2), createWizardPageInput());
+		wrc.reexecuteSinglePage(createNodeIDSuffix(28, 0, 2), createWizardPageInput());
 		waitForPage(page);
 
 		// get flow variables which contain the the number of executions for each widget
 		Map<String, FlowVariable> flowVars = page.getOutgoingFlowObjectStack().getAllAvailableFlowVariables();
 
-		// widgets not being re-executed
+		// widgets _not_ being re-executed in the nested component
 		assertThat(flowVars.get("Text Output Widget").getIntValue(), is(1));
 		assertThat(flowVars.get("String Widget").getIntValue(), is(1));
 
-		// widgets being re-executed
+		// widgets _not_ being re-executed on page top-level
+		assertThat(flowVars.get("Integer Widget").getIntValue(), is(1));
+
+		// widgets being re-executed in the nested component
 		assertThat(flowVars.get("Refresh Button Widget").getIntValue(), greaterThan(1));
 		assertThat(flowVars.get("Table View").getIntValue(), greaterThan(1));
+
+		// widgets being re-executed on page top-level
+		assertThat(flowVars.get("Double Widget").getIntValue(), greaterThan(1));
 
 		WorkflowManager parent = page.getParent();
 		SubNodeContainer successorPage = (SubNodeContainer) parent.getNodeContainer(parent.getID().createChild(11));
 		assertThat(successorPage.getInternalState(), is(InternalNodeContainerState.CONFIGURED));
 
-		String tableViewValue = getWizardNodeViewValue(parent, createNodeIDSuffix(9, 0, 26));
+		String tableViewValue = getWizardNodeViewValue(parent, createNodeIDSuffix(9, 0, 28, 0, 26));
 		assertThat("downstream widget view value expected change", tableViewValue,
 				containsString("\"filterString\":\"blub\""));
 
-		String stringViewValue = getWizardNodeViewValue(parent, createNodeIDSuffix(9, 0, 8));
-		assertThat("upstream widget view value expected to remain unchanged", stringViewValue,
-				containsString("\"string\":\"\""));
+		String integerViewValue = getWizardNodeViewValue(parent, createNodeIDSuffix(9, 0, 30));
+		assertThat("upstream widget view value expected to remain unchanged", integerViewValue,
+				containsString("\"integer\":0"));
 	}
 
 	private static void waitForPage(SubNodeContainer page) {
@@ -164,25 +162,10 @@ public class BugWEBP803_OnlyResetNodesToBeReexecuted extends WorkflowTestCase {
 				.until(() -> page.getNodeContainerState().isExecuted());
 	}
 
-	static NodeIDSuffix createNodeIDSuffix(int... ids) {
-		return new NodeIDSuffix(ids);
-	}
-
-	static String getWizardNodeViewValue(WorkflowManager wfm, NodeIDSuffix id) {
-		WebViewContent c = ((WizardNode) ((NativeNodeContainer) wfm.findNodeContainer(id.prependParent(wfm.getID())))
-				.getNode().getNodeModel()).getViewValue();
-		try {
-			return new String(((ByteArrayOutputStream) c.saveToStream()).toByteArray());
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
 	private static Map<String, String> createWizardPageInput() {
-		return Map.of("9:0:26",
+		return Map.of("9:0:28:0:26",
 				"{\"@class\":\"org.knime.js.base.node.viz.pagedTable.PagedTableViewValue\",\"publishSelection\":true,\"subscribeSelection\":true,\"publishFilter\":true,\"subscribeFilter\":true,\"pageSize\":0,\"currentPage\":0,\"hideUnselected\":false,\"selection\":null,\"selectAll\":false,\"selectAllIndeterminate\":false,\"filterString\":\"blub\",\"columnFilterStrings\":null,\"currentOrder\":[]}",
-				"9:0:8",
-				"{\"@class\":\"org.knime.js.base.node.base.input.string.StringNodeValue\",\"string\":\"foo\"}");
+				"9:0:30", "{\"@class\":\"org.knime.js.base.node.base.input.integer.IntegerNodeValue\",\"integer\":2}");
 	}
 
 }

@@ -5151,14 +5151,16 @@ public final class WorkflowManager extends NodeContainer
     void resetSubnodeForViewUpdate(final NodeID subNodeId, final WebResourceController controller,
         final NodeID nodeToReset) {
         assert isLockedByCurrentThread();
+        assert isProject();
         SubNodeContainer snc = getNodeContainer(subNodeId, SubNodeContainer.class, true);
         checkSubnodeForViewUpdate(snc, controller);
         if (controller.isResetDownstreamNodesWhenApplyingViewValue()) {
             resetSuccessors(subNodeId);
         }
         WorkflowManager sncWfm = snc.getWorkflowManager();
-        sncWfm.resetSuccessors(nodeToReset, -1, false);
-        sncWfm.invokeResetOnSingleNodeContainer((SingleNodeContainer)sncWfm.getNodeContainer(nodeToReset));
+        SingleNodeContainer nc = (SingleNodeContainer)sncWfm.findNodeContainer(nodeToReset);
+        nc.getParent().resetSuccessors(nc.getID(), -1, true);
+        nc.getParent().invokeResetOnSingleNodeContainer(nc);
     }
 
     private void checkSubnodeForViewUpdate(final SubNodeContainer snc,
@@ -6475,7 +6477,7 @@ public final class WorkflowManager extends NodeContainer
      * Configure the nodes in WorkflowManager, connected to a specific set of ports. If ports == null, configure all
      * nodes. Note that this routine does NOT configure any nodes connected in the parent WFM.
      *
-     * @param wfm the WorkflowManager
+     * @param m_manager the WorkflowManager
      * @param inportIndeces indeces of incoming ports (or null if not known)
      */
     private void configureNodesConnectedToPortInWFM(final Set<Integer> inportIndeces) {

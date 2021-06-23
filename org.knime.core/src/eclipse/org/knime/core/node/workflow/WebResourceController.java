@@ -63,7 +63,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionRegistry;
@@ -661,13 +663,13 @@ public abstract class WebResourceController {
      * Tries to load a map of view values to all appropriate views contained in a given subnode.
      *
      * @param viewContentMap the values to load
-     * @param subnodeID the id fo the subnode containing the appropriate view nodes
+     * @param subnodeID the id for the subnode (i.e. the page) containing the appropriate view nodes
      * @param validate true, if validation is supposed to be done before applying the values, false otherwise
      * @param useAsDefault true, if the given value map is supposed to be applied as new node defaults (overwrite node
      *            settings), false otherwise (apply temporarily)
      * @param nodeToReset a node in page (i.e., the subnode denoted by subnodeID) to be reset (including all it's
-     *            successors within the same page); if <code>null</code> all nodes within the subnode (i.e. page) are
-     *            being reset
+     *            successors within the same page or nested subnode); if <code>null</code> all nodes within the subnode
+     *            (i.e. the entire page) are being reset
      * @return empty map if validation succeeds, map of errors otherwise
      */
     @SuppressWarnings({"rawtypes"})
@@ -687,10 +689,8 @@ public abstract class WebResourceController {
         if (nodeToReset == null) {
             filteredViewContentMap = viewContentMap;
         } else {
-            Set<String> nodesToReset = subNodeNC.getWorkflowManager()
-                .getNodeContainers(Collections.singleton(nodeToReset), nc -> false, false, true).stream()
-                .map(nc -> NodeIDSuffix.create(m_manager.getID(), nc.getID()).toString())
-                .collect(HashSet::new, HashSet::add, HashSet::addAll);
+            Set<String> nodesToReset = getSuccessorWizardNodesWithinPage(manager, subnodeID, nodeToReset, null)
+                .map(NodeIDSuffix::toString).collect(Collectors.toCollection(HashSet::new));
             filteredViewContentMap = filterViewValues(nodesToReset, viewContentMap);
         }
         LOGGER.debugWithFormat("Loading view content into wizard nodes (%d)", filteredViewContentMap.size());
@@ -721,6 +721,82 @@ public abstract class WebResourceController {
 
         manager.configureNodeAndSuccessors(subnodeID, true);
         return Collections.emptyMap();
+    }
+
+    /**
+     * Utility method to get a special set of successor nodes of the node denoted by the provided {@link NodeID}. The
+     * start node id must denote a node contained in the page (i.e. the component denoted by pageId).
+     *
+     * The stream of successors
+     * <ul>
+     * <li>includes the 'start' node itself</li>
+     * <li>only contains nodes whose node model is of type {@link WizardNode}</li>
+     * <li>does <i>not</i> include successors beyond the page (i.e. the component denoted by pageId)</li>
+     * <li>includes successors across component and metanode 'borders' (but not beyond the page itself)</li>
+     * </ul>
+     *
+     * @param wfm the workflow project which contains the page denoted by pageId
+     * @param pageId the page (i.e. must be a component) at the top level of the workflow
+     * @param startNodeId the node to get the successor nodes for
+     * @param nodeFilter an additional optional node filter, can be <code>null</code>
+     * @return a stream of successor nodes represented by node id suffixes (relative to the page)
+     * @throws IllegalArgumentException if wfm is not project, if pageId doesn't denote a top-level component, or if
+     *             startNodeId doesn't denote a node contained in the page
+     *
+     * @since 4.4
+     */
+    public static Stream<NodeIDSuffix> getSuccessorWizardNodesWithinPage(final WorkflowManager wfm, final NodeID pageId,
+        final NodeID startNodeId, final Predicate<NodeContainer> nodeFilter) {
+        CheckUtils.checkArgument(wfm.getNodeContainer(pageId) instanceof SubNodeContainer,
+            "Provided pageId (%s) doesn't reference a top-level component", pageId);
+        CheckUtils.checkArgument(wfm.isProject(), "The passed workflow is not a project");
+        try (WorkflowLock lock = wfm.lock()) {
+            Stream<NodeContainer> res = getAllSuccessorNodesWithinPage(pageId, wfm.findNodeContainer(startNodeId))//
+                .filter(WebResourceController::isWizardNodeOrComponentOrMetanode)//
+                .flatMap(nc -> {
+                    if (nc instanceof NativeNodeContainer) {
+                        return Stream.of(nc);
+                    } else {
+                        return getAllWizardNodesFromMetanodeOrComponent(wfm, nc);
+                    }
+                });
+            if (nodeFilter != null) {
+                res = res.filter(nodeFilter);
+            }
+            return res.map(nc -> NodeIDSuffix.create(wfm.getID(), nc.getID()));
+        }
+    }
+
+    private static Stream<NodeContainer> getAllWizardNodesFromMetanodeOrComponent(final WorkflowManager wfm,
+        final NodeContainer nc) {
+        WorkflowManager ncWfm =
+            nc instanceof WorkflowManager ? (WorkflowManager)nc : ((SubNodeContainer)nc).getWorkflowManager();
+        return ncWfm.findNodes(WizardNode.class, NodeModelFilter.all(), true, true).keySet().stream()
+            .map(wfm::findNodeContainer);
+    }
+
+    private static boolean isWizardNodeOrComponentOrMetanode(final NodeContainer nc) {
+        return (nc instanceof NativeNodeContainer && ((NativeNodeContainer)nc).isModelCompatibleTo(WizardNode.class))
+            || nc instanceof WorkflowManager || nc instanceof SubNodeContainer;
+    }
+
+    private static Stream<NodeContainer> getAllSuccessorNodesWithinPage(final NodeID pageId,
+        final NodeContainer startNode) {
+        WorkflowManager wfm = startNode.getParent();
+        Stream<NodeContainer> res =
+            wfm.getNodeContainers(Collections.singleton(startNode.getID()), nc -> false, false, true).stream();
+
+        WorkflowManager startNodeParent = startNode.getParent();
+        NodeContainer startNodeLevelUp = startNodeParent.getDirectNCParent() instanceof SubNodeContainer
+            ? (SubNodeContainer)startNodeParent.getDirectNCParent() : startNodeParent;
+        if (!startNodeLevelUp.getID().equals(pageId)) {
+            // recurse into the level above (but only if it's not the page component itself)
+            Stream<NodeContainer> succ = getAllSuccessorNodesWithinPage(pageId, startNodeLevelUp);
+            // exclude start node
+            succ = succ.filter(nc -> !nc.getID().equals(startNodeLevelUp.getID()));
+            res = Stream.concat(res, succ);
+        }
+        return res;
     }
 
     @SuppressWarnings("rawtypes")
