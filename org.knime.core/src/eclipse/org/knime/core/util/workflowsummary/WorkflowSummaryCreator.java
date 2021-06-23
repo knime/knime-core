@@ -76,6 +76,7 @@ import java.util.stream.Stream;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.apache.commons.lang3.StringUtils;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnProperties;
@@ -171,6 +172,23 @@ public final class WorkflowSummaryCreator {
         return new WorkflowSummaryImpl(wfm, nodesToIgnore, includeExecutionInfo);
     }
 
+    /** For keys representing passwords, return \"********\", otherwise return value.
+     * Added as part of AP-16774. Logic is inspired by
+     * <code>org.eclipse.e4.core.internal.services.about.PrintedMap</code>, which checks if the key
+     * contains 'password' (ignoring case).
+     *
+     * @param key System properties key
+     * @param value The original value
+     * @return value or a ********
+     * @since 4.4
+     */
+    public static String getValueHidePasswords(final String key, final String value) {
+        if (StringUtils.containsIgnoreCase(key, "password")) {
+            return "********";
+        }
+        return value;
+    }
+
     private static class WorkflowSummaryImpl implements WorkflowSummary {
 
         private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern(DATE_TIME_FORMAT);
@@ -223,7 +241,9 @@ public final class WorkflowSummaryCreator {
             Properties sysProps = System.getProperties();
             Map<String, String> sysPropsMap = new HashMap<>();
             for (Entry<?, ?> entry : sysProps.entrySet()) {
-                sysPropsMap.put(entry.getKey().toString(), entry.getValue().toString());
+                String key = entry.getKey().toString();
+                String value = getValueHidePasswords(key, entry.getValue().toString());
+                sysPropsMap.put(key, value);
             }
             return new Environment() {
 
