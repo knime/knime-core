@@ -46,7 +46,6 @@
 package org.knime.core.node.workflow;
 
 import org.knime.core.node.util.CheckUtils;
-import org.knime.core.node.util.ConvenienceMethods;
 
 /** Pushed on top of the stack inside a try-catch construct. Stores reasons
  * for failures that are caught by the WorkflowManager to be reported by
@@ -132,31 +131,4 @@ public final class FlowTryCatchContext extends FlowScopeContext {
         return "Try-Catch Context";
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public int hashCode() {
-        if (m_errorCaught) {
-            return super.hashCode() + m_node.hashCode() + m_reason.hashCode() + m_stacktrace.hashCode();
-        }
-        return super.hashCode();
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public boolean equals(final Object obj) {
-        if (obj == null) {
-            return false;
-        }
-        if (obj == this) {
-            return true;
-        }
-        if (!obj.getClass().equals(getClass())) {
-            return false;
-        }
-        FlowTryCatchContext ftcc = (FlowTryCatchContext) obj;
-        return super.equals(obj)
-            && ConvenienceMethods.areEqual(ftcc.m_node, m_node)
-            && ConvenienceMethods.areEqual(ftcc.m_reason, m_reason)
-            && ConvenienceMethods.areEqual(ftcc.m_stacktrace, m_stacktrace);
-    }
 }
