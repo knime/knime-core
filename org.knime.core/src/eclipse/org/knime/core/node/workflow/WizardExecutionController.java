@@ -68,7 +68,6 @@ import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.web.ValidationError;
 import org.knime.core.node.wizard.WizardViewResponse;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
-import org.knime.core.node.workflow.WebResourceController.WizardPageContent.WizardPageNodeInfo;
 
 /**
  * A utility class received from the workflow manager that allows stepping back and forth in a wizard execution.
@@ -99,7 +98,7 @@ public final class WizardExecutionController extends WebResourceController imple
      */
     private final List<NodeID> m_waitingSubnodes;
 
-    private boolean m_isInSinglePageExecution = false;
+    private NodeID m_singlePageExecutionResetNodeID = null;
 
     private boolean m_hasExecutionStarted = false;
 
@@ -146,7 +145,7 @@ public final class WizardExecutionController extends WebResourceController imple
         assert m_manager.isLockedByCurrentThread();
         // as long as the current page is in 'single page execution', we just keep re-executing the current page and
         // leave the list of 'waitingSubnodes' untouched
-        if (!m_isInSinglePageExecution) {
+        if (!isInSinglePageExecution()) {
             if (m_waitingSubnodes.remove(source)) {
                 // trick to handle re-execution of SubNodes properly: when the node is already
                 // in the list it was just re-executed and we don't add it to the list of halted
@@ -286,7 +285,7 @@ public final class WizardExecutionController extends WebResourceController imple
         // if the currente page is in 'single page execution',
         // we allow the current wizard page to be partially executed or still executing
         // -> it takes precedence over the 'checkExecuted' parameter
-        if (!m_isInSinglePageExecution && checkExecuted && !areAllNodesExecuted(m_waitingSubnodes, m_manager)) {
+        if (!isInSinglePageExecution() && checkExecuted && !areAllNodesExecuted(m_waitingSubnodes, m_manager)) {
             return false;
         }
 
@@ -524,7 +523,7 @@ public final class WizardExecutionController extends WebResourceController imple
             NodeID nodeToReset = nodeIDToReset.prependParent(pageWfm.getID());
             Map<String, ValidationError> validationResult = loadValuesIntoCurrentPage(valueMap, nodeToReset);
             if (validationResult.isEmpty()) {
-                m_isInSinglePageExecution = true;
+                m_singlePageExecutionResetNodeID = nodeToReset;
                 m_manager.executeUpToHere(pageID);
             }
             return validationResult;
@@ -538,26 +537,27 @@ public final class WizardExecutionController extends WebResourceController imple
      * @return the execution state or and empty optional if the current page is not in single page execution
      */
     public Optional<NodeContainerState> getSinglePageExecutionState() {
-        if (!m_isInSinglePageExecution) {
+        if (!isInSinglePageExecution()) {
             return Optional.empty();
         } else {
             return Optional.of(m_manager.getNodeContainer(getCurrentWizardPageNodeID()).getNodeContainerState());
         }
     }
 
+    private boolean isInSinglePageExecution() {
+        return m_singlePageExecutionResetNodeID != null;
+    }
+
     /**
-     * Collects infos about the 'wizard' nodes contained in the current page (i.e. component). Nodes in nested pages are
-     * recursively included, too.
-     *
-     * @throws IllegalStateException if there is no current page
-     *
-     * @return a map from node-id (suffix) to the wizard page node info ({@link WizardPageNodeInfo})
+     * @return the id of the node which has been reset for single page re-execution; or an empty optional if not in
+     *         single page re-execution
      */
-    public Map<NodeIDSuffix, WizardPageNodeInfo> collectNestedWizardNodeInfos() {
-        Map<NodeIDSuffix, WizardPageNodeInfo> infoMap = new HashMap<>();
-        findNestedViewNodes((SubNodeContainer)m_manager.getNodeContainer(getCurrentWizardPageNodeID()), null, infoMap,
-            null, null);
-        return infoMap;
+    public Optional<NodeID> getSinglePageExecutionResetNodeID() {
+        if (isInSinglePageExecution()) {
+            return Optional.of(m_singlePageExecutionResetNodeID);
+        } else {
+            return Optional.empty();
+        }
     }
 
     private void stepBackInternal() {
@@ -620,12 +620,12 @@ public final class WizardExecutionController extends WebResourceController imple
 
     private void doBeforePageChange(final boolean throwExceptionIfSinglePageReexecutionInProgress) {
         checkDiscard();
-        if (m_isInSinglePageExecution) {
+        if (isInSinglePageExecution()) {
             if (throwExceptionIfSinglePageReexecutionInProgress
                 && getSinglePageExecutionState().map(NodeContainerState::isExecutionInProgress).orElse(false)) {
                 throw new IllegalStateException("Action not allowed. Single page re-execution is in progress.");
             }
-            m_isInSinglePageExecution = false;
+            m_singlePageExecutionResetNodeID = null;
         }
     }
 

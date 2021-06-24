@@ -84,14 +84,14 @@ public class BugWEBP803_OnlyResetNodesToBeReexecuted extends WorkflowTestCase {
 		WorkflowManager wfm = getManager();
 		NodeID pageId = wfm.getID().createChild(9);
 		List<String> successors = WebResourceController
-				.getSuccessorWizardNodesWithinPage(wfm, pageId, pageId.createChild(0).createChild(2), null)
-				.map(NodeIDSuffix::toString).collect(Collectors.toList());
+				.getSuccessorWizardNodesWithinPage(wfm, pageId, pageId.createChild(0).createChild(2))
+				.map(p -> p.getFirst().toString()).collect(Collectors.toList());
 		assertThat("unexpected successors", successors, containsInAnyOrder("9:0:2", "9:0:26"));
 
 		assertThrows(IllegalArgumentException.class, () -> WebResourceController.getSuccessorWizardNodesWithinPage(wfm,
-				pageId, pageId.createChild(0).createChild(83483883), null));
+				pageId, pageId.createChild(0).createChild(83483883)));
 		assertThrows(IllegalArgumentException.class, () -> WebResourceController.getSuccessorWizardNodesWithinPage(wfm,
-				wfm.getID().createChild(34342), null, null));
+				wfm.getID().createChild(34342), null));
 	}
 
 	/**
