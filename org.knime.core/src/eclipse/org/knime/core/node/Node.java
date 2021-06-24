@@ -532,6 +532,16 @@ public final class Node implements NodeModelWarningListener {
                     LOGGER.coding(error, e);
                 }
                 loadResult.addError(error, true);
+                if (Arrays.stream(m_outputs).allMatch(p -> p.object instanceof FlowVariablePortObject)) {
+                    // this is workaround to address AP-14672:
+                    // Executed workflows that get exported without data (option in export menu) will reset their
+                    // nodes during load as the output data is missing (see top if this method).
+                    // The Text Output Widget (and other nodes that have no output or only flow var outputs) will not
+                    // be reset magically remains in an executed state. However, it's internals are removed
+                    // (and a warning is logged).
+                    // It's expected that these nodes will also be reset, so this is done here:
+                    loader.setNeedsResetAfterLoad();
+                }
             } finally {
                 internDirRef.unlock();
             }

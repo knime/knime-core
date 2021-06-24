@@ -74,6 +74,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.DataAwareNodeDialogPane;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.FileNodePersistor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeAndBundleInformationPersistor;
@@ -984,9 +985,13 @@ public class NativeNodeContainer extends SingleNodeContainer {
         boolean isExecuted = nodePersistor.getMetaPersistor().getState().equals(InternalNodeContainerState.EXECUTED);
 
         if (nodePersistor instanceof FileNativeNodeContainerPersistor) {
-            FileNativeNodeContainerPersistor fileNativeNCPersitor = (FileNativeNodeContainerPersistor)nodePersistor;
+            FileNativeNodeContainerPersistor fileNativeNCPersistor = (FileNativeNodeContainerPersistor)nodePersistor;
             exec.setMessage("Loading settings into node instance");
-            m_node.load(fileNativeNCPersitor.getNodePersistor(), exec, loadResult);
+            FileNodePersistor innerNodePersistor = fileNativeNCPersistor.getNodePersistor();
+            m_node.load(innerNodePersistor, exec, loadResult);
+            if (innerNodePersistor.needsResetAfterLoad()) {
+                fileNativeNCPersistor.setNeedsResetAfterLoad();
+            }
             String status;
             switch (loadResult.getType()) {
                 case Ok:
@@ -1009,7 +1014,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
 
             if (m_node.isModelCompatibleTo(CredentialsNode.class)) {
                 CredentialsNode credNode = (CredentialsNode)m_node.getNodeModel();
-                credNode.doAfterLoadFromDisc(fileNativeNCPersitor.getLoadHelper(),
+                credNode.doAfterLoadFromDisc(fileNativeNCPersistor.getLoadHelper(),
                     getCredentialsProvider(), isExecuted, isInactive());
                 saveNodeSettingsToDefault();
             }
