@@ -83,7 +83,7 @@ public class BugAP11261_CredentialsDefaultHook extends WorkflowTestCase {
         init(); // don't populate system variables
         checkState(getManager(), InternalNodeContainerState.IDLE);
         checkStateOfMany(IDLE, m_credentialsValidate_1, m_credentialsValidate_6_4, m_credentialsValidate_8_4);
-        checkState(m_credentialsValidate_3, EXECUTED);
+        checkState(m_credentialsValidate_3, IDLE); // expected to fail during load (message below)
         NodeMessage msgOfNode3 = findNodeContainer(m_credentialsValidate_3).getNodeMessage();
         // should complain about wrong password
         assertThat("Node message type of executed credentials validate node after load",
