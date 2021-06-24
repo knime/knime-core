@@ -80,8 +80,8 @@ public class BugAP16962_ReexecutionInNestedComponents extends WorkflowTestCase {
 		NodeID pageId = wfm.getID().createChild(9);
 		List<String> successors = WebResourceController
 				.getSuccessorWizardNodesWithinPage(wfm, pageId,
-						pageId.createChild(0).createChild(28).createChild(0).createChild(2), null)
-				.map(NodeIDSuffix::toString).collect(Collectors.toList());
+						pageId.createChild(0).createChild(28).createChild(0).createChild(2))
+				.map(p -> p.getFirst().toString()).collect(Collectors.toList());
 		assertThat("unexpected successors", successors,
 				containsInAnyOrder("9:0:28:0:2", "9:0:28:0:26", "9:0:28:0:33:1", "9:0:31"));
 	}

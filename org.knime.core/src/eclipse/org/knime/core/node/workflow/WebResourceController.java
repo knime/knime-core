@@ -63,7 +63,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -98,6 +97,7 @@ import org.knime.core.node.wizard.util.LayoutUtil;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.WebResourceController.WizardPageContent.WizardPageNodeInfo;
 import org.knime.core.node.workflow.WorkflowManager.NodeModelFilter;
+import org.knime.core.util.Pair;
 
 /**
  * An abstract utility class received from the workflow manager that allows defining wizard execution or generating
@@ -522,7 +522,7 @@ public abstract class WebResourceController {
      * @param initialHiliteHandlerSet collected hilite handlers or <code>null</code> if it shouldn't be collected
      */
     @SuppressWarnings("rawtypes")
-    protected static void findNestedViewNodes(final SubNodeContainer subNC,
+    private static void findNestedViewNodes(final SubNodeContainer subNC,
         final Map<NodeIDSuffix, WizardNode> resultMap, final Map<NodeIDSuffix, WizardPageNodeInfo> infoMap,
         final Map<NodeIDSuffix, SubNodeContainer> sncMap, final Set<HiLiteHandler> initialHiliteHandlerSet) {
         WorkflowManager subWFM = subNC.getWorkflowManager();
@@ -689,8 +689,8 @@ public abstract class WebResourceController {
         if (nodeToReset == null) {
             filteredViewContentMap = viewContentMap;
         } else {
-            Set<String> nodesToReset = getSuccessorWizardNodesWithinPage(manager, subnodeID, nodeToReset, null)
-                .map(NodeIDSuffix::toString).collect(Collectors.toCollection(HashSet::new));
+            Set<String> nodesToReset = getSuccessorWizardNodesWithinPage(manager, subnodeID, nodeToReset)
+                .map(p -> p.getFirst().toString()).collect(Collectors.toCollection(HashSet::new));
             filteredViewContentMap = filterViewValues(nodesToReset, viewContentMap);
         }
         LOGGER.debugWithFormat("Loading view content into wizard nodes (%d)", filteredViewContentMap.size());
@@ -738,20 +738,20 @@ public abstract class WebResourceController {
      * @param wfm the workflow project which contains the page denoted by pageId
      * @param pageId the page (i.e. must be a component) at the top level of the workflow
      * @param startNodeId the node to get the successor nodes for
-     * @param nodeFilter an additional optional node filter, can be <code>null</code>
-     * @return a stream of successor nodes represented by node id suffixes (relative to the page)
+     * @return a stream of successor nodes represented by node id suffixes (relative to the page) and the node container
+     *         itself
      * @throws IllegalArgumentException if wfm is not project, if pageId doesn't denote a top-level component, or if
      *             startNodeId doesn't denote a node contained in the page
      *
      * @since 4.4
      */
-    public static Stream<NodeIDSuffix> getSuccessorWizardNodesWithinPage(final WorkflowManager wfm, final NodeID pageId,
-        final NodeID startNodeId, final Predicate<NodeContainer> nodeFilter) {
+    public static Stream<Pair<NodeIDSuffix, NodeContainer>> getSuccessorWizardNodesWithinPage(final WorkflowManager wfm,
+        final NodeID pageId, final NodeID startNodeId) {
         CheckUtils.checkArgument(wfm.getNodeContainer(pageId) instanceof SubNodeContainer,
             "Provided pageId (%s) doesn't reference a top-level component", pageId);
         CheckUtils.checkArgument(wfm.isProject(), "The passed workflow is not a project");
         try (WorkflowLock lock = wfm.lock()) {
-            Stream<NodeContainer> res = getAllSuccessorNodesWithinPage(pageId, wfm.findNodeContainer(startNodeId))//
+            return getAllSuccessorNodesWithinPage(pageId, wfm.findNodeContainer(startNodeId))//
                 .filter(WebResourceController::isWizardNodeOrComponentOrMetanode)//
                 .flatMap(nc -> {
                     if (nc instanceof NativeNodeContainer) {
@@ -759,11 +759,7 @@ public abstract class WebResourceController {
                     } else {
                         return getAllWizardNodesFromMetanodeOrComponent(wfm, nc);
                     }
-                });
-            if (nodeFilter != null) {
-                res = res.filter(nodeFilter);
-            }
-            return res.map(nc -> NodeIDSuffix.create(wfm.getID(), nc.getID()));
+                }).map(nc -> Pair.create(NodeIDSuffix.create(wfm.getID(), nc.getID()), nc));
         }
     }
 
