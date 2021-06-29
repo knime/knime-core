@@ -176,13 +176,13 @@ class HashIndex {
         HashingStrategy<DataCell[]> comparisonMode;
         switch(joinSpecification.getDataCellComparisonMode()) {
             case STRICT:
-                comparisonMode = hashStrict();
+                comparisonMode = new HashStrict();
                 break;
             case AS_STRING:
-                comparisonMode = hashString();
+                comparisonMode = new HashAsString();
                 break;
             case NUMERIC_AS_LONG:
-                comparisonMode = hashNumericAsLong();
+                comparisonMode = new HashNumericAsLong();
                 break;
             default:
                 throw new IllegalStateException("No implementation for the data cell comparison mode "
@@ -317,123 +317,109 @@ class HashIndex {
     }
 
     /**
-     * @return strategy that tests whether two rows match by comparing the content AND data types of the values in the
-     *         join columns, e.g., a value in an integer column will never match a value in a long column.
+     * Hash strategy that tests whether two rows match by comparing the content AND data types of the values in the join
+     * columns, e.g., a value in an integer column will never match a value in a long column.
      */
     @SuppressWarnings("serial")
-    static HashingStrategy<DataCell[]> hashStrict() {
-        return new HashingStrategy<DataCell[]>() {
+    private static class HashStrict implements HashingStrategy<DataCell[]> {
+        @Override
+        public int computeHashCode(final DataCell[] joinClauseSides) {
+            return Arrays.hashCode(joinClauseSides);
+        }
 
-            @Override
-            public int computeHashCode(final DataCell[] joinClauseSides) {
-                return Arrays.hashCode(joinClauseSides);
+        @Override
+        public boolean equals(final DataCell[] o1, final DataCell[] o2) {
+            for (int i = 0; i < o1.length; i++) {
+                if (o1[i].isMissing() || o2[i].isMissing()) {
+                    return false;
+                }
+                // compare the data cells considering their value and type
+                if (!o1[i].equals(o2[i])) {
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+
+    /**
+     * Hashing strategy that tests whether two rows match by comparing the string representations of the values in the
+     * join columns.
+     */
+    @SuppressWarnings("serial")
+    private static class HashAsString implements HashingStrategy<DataCell[]> {
+        @Override
+        public int computeHashCode(final DataCell[] joinClauseSides) {
+            if (joinClauseSides == null) {
+                return 0;
             }
 
-            @Override
-            public boolean equals(final DataCell[] o1, final DataCell[] o2) {
-                for (int i = 0; i < o1.length; i++) {
+            int result = 1;
+            for (Object element : joinClauseSides) {
+                result = 31 * result + (element == null ? 0 : element.toString().hashCode());
+            }
+            return result;
+        }
 
-                    if (o1[i].isMissing() || o2[i].isMissing()) {
+        @Override
+        public boolean equals(final DataCell[] o1, final DataCell[] o2) {
+            for (int i = 0; i < o1.length; i++) {
+                if (o1[i].isMissing() || o2[i].isMissing()) {
+                    return false;
+                }
+                // compare the data cells based on their string representations
+                if (!o1[i].toString().equals(o2[i].toString())) {
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+
+    /**
+     * Hashing strategy that tests whether two rows match by treating values of integer join columns as long values.
+     * Without this special strategy, their hash codes will differ and thus not match.
+     */
+    @SuppressWarnings("serial")
+    private static class HashNumericAsLong implements HashingStrategy<DataCell[]> {
+
+        @Override
+        public int computeHashCode(final DataCell[] joinClauseSides) {
+            if (joinClauseSides == null) {
+                return 0;
+            }
+
+            int result = 1;
+            for (DataCell element : joinClauseSides) {
+                if (element instanceof LongValue) {
+                    long value = ((LongValue)element).getLongValue();
+                    result = 31 * result + (int)(value ^ (value >>> 32));
+                } else {
+                    result = 31 * result + (element == null ? 0 : element.hashCode());
+                }
+            }
+            return result;
+        }
+
+        @Override
+        public boolean equals(final DataCell[] o1, final DataCell[] o2) {
+            for (int i = 0; i < o1.length; i++) {
+                if (o1[i].isMissing() || o2[i].isMissing()) {
+                    return false;
+                }
+                // compare the data cells using their long value if possible
+                if (o1[i] instanceof LongValue && o2[i] instanceof LongValue) {
+                    if (((LongValue)o1[i]).getLongValue() != ((LongValue)o2[i]).getLongValue()) {
                         return false;
                     }
-                    // compare the data cells
+                } else {
                     if (!o1[i].equals(o2[i])) {
                         return false;
                     }
                 }
-                return true;
             }
-        };
-    }
-
-    /**
-     * @return strategy that tests whether two rows match by comparing the string representations of the values in the
-     *         join columns.
-     */
-    @SuppressWarnings("serial")
-    static HashingStrategy<DataCell[]> hashString() {
-        return new HashingStrategy<DataCell[]>() {
-
-            @Override
-            public int computeHashCode(final DataCell[] joinClauseSides) {
-                if (joinClauseSides == null) {
-                    return 0;
-                }
-
-                int result = 1;
-
-                for (Object element : joinClauseSides) {
-                    result = 31 * result + (element == null ? 0 : element.toString().hashCode());
-                }
-                return result;
-            }
-
-            @Override
-            public boolean equals(final DataCell[] o1, final DataCell[] o2) {
-                for (int i = 0; i < o1.length; i++) {
-
-                    if (o1[i].isMissing() || o2[i].isMissing()) {
-                        return false;
-                    }
-                    // compare the data cells
-                    if (!o1[i].toString().equals(o2[i].toString())) {
-                        return false;
-                    }
-                }
-                return true;
-            }
-        };
-    }
-
-    /**
-     * @return strategy that tests whether two rows match by treating values of integer join columns as long values.
-     *         Without this special strategy, their hash codes will differ and thus not match.
-     */
-    @SuppressWarnings("serial")
-    static HashingStrategy<DataCell[]> hashNumericAsLong() {
-        return new HashingStrategy<DataCell[]>() {
-
-            @Override
-            public int computeHashCode(final DataCell[] joinClauseSides) {
-                if (joinClauseSides == null) {
-                    return 0;
-                }
-
-                int result = 1;
-
-                for (DataCell element : joinClauseSides) {
-
-                    if(element instanceof LongValue) {
-                        long value = ((LongValue) element).getLongValue();
-                        result = 31 * result + (int) (value ^ (value >>> 32));
-                    } else {
-                        result = 31 * result + (element == null ? 0 : element.hashCode());
-                    }
-                }
-                return result;
-            }
-
-            @Override
-            public boolean equals(final DataCell[] o1, final DataCell[] o2) {
-                for (int i = 0; i < o1.length; i++) {
-
-                    if (o1[i].isMissing() || o2[i].isMissing()) {
-                        return false;
-                    }
-                    // compare the data cells
-                    if (o1[i] instanceof LongValue && o2[i] instanceof LongValue) {
-                        if (((LongValue)o1[i]).getLongValue() != ((LongValue)o2[i]).getLongValue()) {
-                            return false;
-                        }
-                    } else {
-                        if (!o1[i].equals(o2[i])) {
-                            return false;
-                        }
-                    }
-                }
-                return true;
-            }
-        };
+            return true;
+        }
     }
 
 
