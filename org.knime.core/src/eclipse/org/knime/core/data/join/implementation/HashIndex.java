@@ -236,6 +236,8 @@ class HashIndex {
     }
 
     /**
+     * Retrieves the rows from this index that have the same values in the join columns.
+     * Offers each pair of probeRow and a matching row to the join container.
      * @param probeRow the row that provides the join column values for which we search join partners
      * @param probeRowOffset the offset of the probe row in its source table (for sorting)
      * @throws CanceledExecutionException if the user cancels the join, this exception is propagated
@@ -255,30 +257,35 @@ class HashIndex {
         } else {
             // these rows have the same values in the join columns as the probe row
             for (DataRow hashRow : matching) {
-
                 // could be quite a few rows that match
                 m_checkCanceled.checkCanceled();
-
-                // mark hash row as matched if keeping track
-                int internalOffset = m_hashrowInternalOffsets.get(hashRow);
-                if (m_trackMatchedHashRows) {
-                    m_matched.set(internalOffset);
-                }
-
-                // retrieve the offset of the hash row in the hash input table
-                long hashRowOrder = m_rowOffsets.get(internalOffset);
-
-                // even if we don't retain matches, we can't skip this since the join container may needs to cancel
-                // the unmatched status of a probe row
-                DataRow left = m_probeSettings.getSide().isLeft() ? probeRow : hashRow;
-                DataRow right = m_probeSettings.getSide().isLeft() ? hashRow : probeRow;
-
-                long leftOrder = m_probeSettings.getSide().isLeft() ? probeRowOffset : hashRowOrder;
-                long rightOrder = m_probeSettings.getSide().isLeft() ? hashRowOrder : probeRowOffset;
-
-                m_joinContainer.offerMatch(left, leftOrder, right, rightOrder);
+                processMatch(probeRow, probeRowOffset, hashRow);
             }
         }
+    }
+
+    /**
+     * @param probeRow a query row defining the values in the join columns to look up in this index
+     * @param probeRowOffset the position of the row in its containing table
+     * @param hashRow a row retrieved frmo this index with matching values in the join columns
+     */
+    private void processMatch(final DataRow probeRow, final long probeRowOffset, final DataRow hashRow) {
+        // mark hash row as matched if keeping track
+        int internalOffset = m_hashrowInternalOffsets.get(hashRow);
+        if (m_trackMatchedHashRows) {
+            m_matched.set(internalOffset);
+        }
+
+        DataRow left = m_probeSettings.getSide().isLeft() ? probeRow : hashRow;
+        DataRow right = m_probeSettings.getSide().isLeft() ? hashRow : probeRow;
+
+        // retrieve the offset of the hash row in the hash input table
+        long hashRowOrder = m_rowOffsets.get(internalOffset);
+
+        long leftOrder = m_probeSettings.getSide().isLeft() ? probeRowOffset : hashRowOrder;
+        long rightOrder = m_probeSettings.getSide().isLeft() ? hashRowOrder : probeRowOffset;
+
+        m_joinContainer.offerMatch(left, leftOrder, right, rightOrder);
     }
 
     /**
