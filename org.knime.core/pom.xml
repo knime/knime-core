@@ -1,8 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
-	xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<?xml version="1.0" encoding="UTF-8"?><project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
@@ -17,7 +13,7 @@
 	<packaging>${packaging.default}</packaging>
 
 	<properties>
-		<revision>4.4.0</revision>
+		<revision>4.5.0</revision>
 	</properties>
 
 	<build>
@@ -35,9 +31,9 @@
 						</goals>
 						<configuration>
 							<target>
-								<property name="compile_classpath" refid="maven.plugin.classpath" />
+								<property name="compile_classpath" refid="maven.plugin.classpath"/>
 								<ant antfile="${project.basedir}/build.xml">
-									<target name="build" />
+									<target name="build"/>
 								</ant>
 							</target>
 						</configuration>
