@@ -190,7 +190,18 @@ public abstract class SimpleStreamableFunctionNodeModel extends NodeModel implem
         createStreamableOperator(final PartitionInfo partitionInfo, final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
         DataTableSpec in = (DataTableSpec)inSpecs[m_streamableInPortIdx];
-        return createColumnRearranger(in).createStreamableFunction(m_streamableInPortIdx, m_streamableOutPortIdx);
+        // Node developers often forget to check the initialization of fields in #createColumnRearranger because it is
+        // not intuitive that it is called even if #configure throws an Exception (leaving the fields uninitialized).
+        // Since it is also cumbersome to check all fields for proper initialization we add a fallback here.
+        ColumnRearranger rearranger;
+        try {
+            rearranger = createColumnRearranger(in);
+        } catch(RuntimeException | InvalidSettingsException e) {
+            getLogger().debug("Could not create the column rearranger. Either this is an internal error or the node is "
+                + "not configured yet.");
+            throw new InvalidSettingsException("The node is not configured correctly.", e);
+        }
+        return rearranger.createStreamableFunction(m_streamableInPortIdx, m_streamableOutPortIdx);
     }
 
     /** {@inheritDoc} */
