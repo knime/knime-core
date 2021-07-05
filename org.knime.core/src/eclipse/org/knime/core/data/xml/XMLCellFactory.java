@@ -51,7 +51,6 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.stream.XMLStreamException;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellFactory.FromComplexString;
@@ -125,12 +124,11 @@ public class XMLCellFactory implements FromComplexString, FromInputStream {
      * @throws IOException if an io error occurs while reading the XML string
      * @throws SAXException if an error occurs while parsing
      * @throws ParserConfigurationException if the parser cannot be instantiated
-     * @throws XMLStreamException
      * @throws NullPointerException if argument is null
      */
     @DataCellFactoryMethod(name = "String")
     public static DataCell create(final String xml) throws IOException,
-            ParserConfigurationException, SAXException, XMLStreamException {
+            ParserConfigurationException, SAXException {
         if (xml == null) {
             throw new NullPointerException("XML must not be null");
         }
@@ -179,12 +177,11 @@ public class XMLCellFactory implements FromComplexString, FromInputStream {
      * @throws IOException if an io error occurs while reading the XML string
      * @throws SAXException if an error occurs while parsing
      * @throws ParserConfigurationException if the parser cannot be instantiated
-     * @throws XMLStreamException
      * @throws NullPointerException if argument is null
      */
     @DataCellFactoryMethod(name = "InputStream (XML)")
     public static DataCell create(final InputStream is) throws IOException,
-            ParserConfigurationException, SAXException, XMLStreamException {
+            ParserConfigurationException, SAXException {
         if (is == null) {
             throw new NullPointerException("InputStream must not be null");
         }
@@ -231,7 +228,7 @@ public class XMLCellFactory implements FromComplexString, FromInputStream {
     public DataCell createCell(final String input) {
         try {
             return create(input);
-        } catch (ParserConfigurationException | SAXException | XMLStreamException | IOException ex) {
+        } catch (ParserConfigurationException | SAXException | IOException ex) {
             throw new IllegalArgumentException(ex);
         }
     }
@@ -254,7 +251,7 @@ public class XMLCellFactory implements FromComplexString, FromInputStream {
     public DataCell createCell(final InputStream input) throws IOException {
         try {
             return create(input);
-        } catch (ParserConfigurationException | SAXException | XMLStreamException ex) {
+        } catch (ParserConfigurationException | SAXException ex) {
             throw new IllegalArgumentException(ex);
         }
     }
