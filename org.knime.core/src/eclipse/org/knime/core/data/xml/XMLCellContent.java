@@ -56,7 +56,6 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.stream.XMLStreamException;
 
 import org.knime.core.data.util.LockedSupplier;
 import org.knime.core.data.xml.io.XMLCellReaderFactory;
@@ -132,7 +131,7 @@ public class XMLCellContent implements XMLValue<Document> {
      * @throws SAXException if the XML document from the input stream cannot be parsed
      */
     XMLCellContent(final InputStream is) throws IOException,
-            ParserConfigurationException, SAXException, XMLStreamException {
+            ParserConfigurationException, SAXException {
         try {
             Document doc = parse(is);
             m_content = new SoftReference<Document>(doc);
