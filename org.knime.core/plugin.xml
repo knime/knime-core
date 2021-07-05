@@ -255,7 +255,7 @@
       <dataValue
             valueClass="org.knime.core.data.xml.XMLValue">
          <renderer
-               rendererFactoryClass="org.knime.core.data.xml.XMLValueRenderer$Factory"
+               rendererFactoryClass="org.knime.core.data.xml.XMLValueRenderer2$Factory"
                suggestAsDefault="true">
          </renderer>
       </dataValue>
