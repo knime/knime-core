@@ -56,14 +56,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Reader;
-import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.net.URLDecoder;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
@@ -1154,9 +1153,11 @@ public final class FileUtil {
             File dataFile = new File(path);
             if (!dataFile.exists()) {
                 try {
-                    dataFile = new File(URLDecoder.decode(path, "UTF-8"));
-                } catch (UnsupportedEncodingException ex) {
-                    // ignore it
+                    // can also construct a URI with just a path part if it is absolute
+                    String decodedPath = (new URI(path)).getPath();
+                    dataFile = new File(decodedPath);
+                } catch (URISyntaxException e) {
+                    // ignore
                 }
             }
             return dataFile;

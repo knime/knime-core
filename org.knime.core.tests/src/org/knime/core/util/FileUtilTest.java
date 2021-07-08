@@ -230,4 +230,28 @@ public class FileUtilTest {
         File resolvedFile = FileUtil.getFileFromURL(new URL("file://HOST/path"));
         assertThat("Resolved file does not have a correct UNC path", resolvedFile.getAbsolutePath(), is("\\\\HOST\\path"));
     }
+
+    /**
+     * Tests for {@link FileUtil#getFileFromURL(URL)}.
+     * @throws Exception
+     */
+    @Test
+    public void testGetFileFromURL() throws Exception {
+        URL url = new URL("file:/C:/tmp/with%20space");
+        assertThat("Unexpected path", FileUtil.getFileFromURL(url).toString(), is("C:\\tmp\\with space"));
+
+        url = new URL("file:/C:/tmp/with space");
+        assertThat("Unexpected path", FileUtil.getFileFromURL(url).toString(), is("C:\\tmp\\with space"));
+
+        // see AP-17103: Component links with `+` in name could not be updated because path was not decoded properly.
+        url = new URL("file:/C:/tmp/with+plus");
+        assertThat("Unexpected path", FileUtil.getFileFromURL(url).toString(), is("C:\\tmp\\with+plus"));
+
+        url = new URL("file:/C:/tmp/with%23hash");
+        assertThat("Unexpected path", FileUtil.getFileFromURL(url).toString(), is("C:\\tmp\\with#hash"));
+
+        url = new URL("file:/C:/tmp/with%25percent");
+        assertThat("Unexpected path", FileUtil.getFileFromURL(url).toString(), is("C:\\tmp\\with%percent"));
+
+    }
 }
