@@ -148,7 +148,7 @@ public final class BooleanListValueFactory implements ValueFactory<ListReadAcces
 
         @Override
         public boolean getBoolean(final int index) {
-            final BooleanReadValue v = m_reader.getReadAccess(index);
+            final BooleanReadValue v = m_reader.getAccess(index);
             return v.getBooleanValue();
         }
 

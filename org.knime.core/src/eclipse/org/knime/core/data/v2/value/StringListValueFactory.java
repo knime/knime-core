@@ -146,7 +146,7 @@ public final class StringListValueFactory implements ValueFactory<ListReadAccess
 
         @Override
         public String getString(final int index) {
-            final StringReadValue v = m_reader.getReadAccess(index);
+            final StringReadValue v = m_reader.getAccess(index);
             return v.getStringValue();
         }
 

@@ -147,7 +147,7 @@ public final class IntListValueFactory implements ValueFactory<ListReadAccess, L
 
         @Override
         public int getInt(final int index) {
-            final IntReadValue v = m_reader.getReadAccess(index);
+            final IntReadValue v = m_reader.getAccess(index);
             return v.getIntValue();
         }
 

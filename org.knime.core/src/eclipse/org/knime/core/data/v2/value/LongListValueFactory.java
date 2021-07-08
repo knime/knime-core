@@ -148,7 +148,7 @@ public final class LongListValueFactory implements ValueFactory<ListReadAccess, 
 
         @Override
         public long getLong(final int index) {
-            final IntReadValue v = m_reader.getReadAccess(index);
+            final IntReadValue v = m_reader.getAccess(index);
             return v.getIntValue();
         }
 

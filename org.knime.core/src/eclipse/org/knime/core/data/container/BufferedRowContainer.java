@@ -67,8 +67,8 @@ import org.knime.core.data.v2.ValueSchema;
 import org.knime.core.data.v2.WriteValue;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
-import org.knime.core.table.access.BufferedAccessSpecMapper;
-import org.knime.core.table.access.BufferedAccessSpecMapper.BufferedAccess;
+import org.knime.core.table.access.BufferedAccesses;
+import org.knime.core.table.access.BufferedAccesses.BufferedAccess;
 import org.knime.core.table.access.ReadAccess;
 import org.knime.core.table.access.WriteAccess;
 
@@ -151,7 +151,7 @@ final class BufferedRowContainer implements RowContainer, RowWriteCursor {
             m_writeValues = new WriteValue[factories.length];
 
             for (int i = 0; i < factories.length; i++) {
-                final BufferedAccess access = BufferedAccessSpecMapper.createBufferedAccess(factories[i].getSpec());
+                final BufferedAccess access = BufferedAccesses.createBufferedAccess(factories[i].getSpec());
                 @SuppressWarnings("unchecked")
                 final ValueFactory<ReadAccess, ?> readCast = (ValueFactory<ReadAccess, ?>)factories[i];
                 m_readValues[i] = new NullableReadValue(readCast, access);

@@ -111,14 +111,14 @@ public final class StringSparseListValueFactory implements ValueFactory<StructRe
 
     @Override
     public StringSparseListReadValue createReadValue(final StructReadAccess reader) {
-        return new DefaultStringSparseListReadValue(reader.getInnerReadAccessAt(0), reader.getInnerReadAccessAt(1),
-            reader.getInnerReadAccessAt(2), reader.getInnerReadAccessAt(3));
+        return new DefaultStringSparseListReadValue(reader.getAccess(0), reader.getAccess(1),
+            reader.getAccess(2), reader.getAccess(3));
     }
 
     @Override
     public StringSparseListWriteValue createWriteValue(final StructWriteAccess writer) {
-        return new DefaultStringSparseListWriteValue(writer.getWriteAccessAt(0), writer.getWriteAccessAt(1),
-            writer.getWriteAccessAt(2), writer.getWriteAccessAt(3));
+        return new DefaultStringSparseListWriteValue(writer.getWriteAccess(0), writer.getWriteAccess(1),
+            writer.getWriteAccess(2), writer.getWriteAccess(3));
     }
 
     /**

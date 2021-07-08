@@ -212,7 +212,7 @@ public final class ListValueFactory implements CollectionValueFactory<ListReadAc
             if (!isMissing(index)) {
                 if (index != m_lastIndex) {
                     m_lastIndex = index;
-                    m_value = m_inner.createReadValue(m_reader.getReadAccess(index));
+                    m_value = m_inner.createReadValue(m_reader.getAccess(index));
                 }
                 return m_value.getDataCell();
             } else {

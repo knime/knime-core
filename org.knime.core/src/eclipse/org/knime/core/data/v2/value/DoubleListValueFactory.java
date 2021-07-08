@@ -148,7 +148,7 @@ public final class DoubleListValueFactory implements ValueFactory<ListReadAccess
 
         @Override
         public double getDouble(final int index) {
-            final DoubleReadValue v = m_reader.getReadAccess(index);
+            final DoubleReadValue v = m_reader.getAccess(index);
             return v.getDoubleValue();
         }
 

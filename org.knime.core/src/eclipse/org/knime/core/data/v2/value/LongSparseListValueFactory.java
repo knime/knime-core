@@ -106,14 +106,14 @@ public final class LongSparseListValueFactory implements ValueFactory<StructRead
 
     @Override
     public LongSparseListReadValue createReadValue(final StructReadAccess reader) {
-        return new DefaultLongSparseListReadValue(reader.getInnerReadAccessAt(0), reader.getInnerReadAccessAt(1),
-            reader.getInnerReadAccessAt(2), reader.getInnerReadAccessAt(3));
+        return new DefaultLongSparseListReadValue(reader.getAccess(0), reader.getAccess(1),
+            reader.getAccess(2), reader.getAccess(3));
     }
 
     @Override
     public LongSparseListWriteValue createWriteValue(final StructWriteAccess writer) {
-        return new DefaultLongSparseListWriteValue(writer.getWriteAccessAt(0), writer.getWriteAccessAt(1),
-            writer.getWriteAccessAt(2), writer.getWriteAccessAt(3));
+        return new DefaultLongSparseListWriteValue(writer.getWriteAccess(0), writer.getWriteAccess(1),
+            writer.getWriteAccess(2), writer.getWriteAccess(3));
     }
 
     /**

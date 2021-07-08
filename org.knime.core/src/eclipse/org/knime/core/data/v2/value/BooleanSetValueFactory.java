@@ -155,9 +155,9 @@ public final class BooleanSetValueFactory implements ValueFactory<StructReadAcce
         private final BooleanReadAccess m_containsMissing;
 
         private DefaultBooleanSetReadValue(final StructReadAccess reader) {
-            m_containsTrue = reader.getInnerReadAccessAt(0);
-            m_containsFalse = reader.getInnerReadAccessAt(1);
-            m_containsMissing = reader.getInnerReadAccessAt(2);
+            m_containsTrue = reader.getAccess(0);
+            m_containsFalse = reader.getAccess(1);
+            m_containsMissing = reader.getAccess(2);
         }
 
         @Override
@@ -246,9 +246,9 @@ public final class BooleanSetValueFactory implements ValueFactory<StructReadAcce
         private final BooleanWriteAccess m_containsMissing;
 
         private DefaultBooleanSetWriteValue(final StructWriteAccess writer) {
-            m_containsTrue = writer.getWriteAccessAt(0);
-            m_containsFalse = writer.getWriteAccessAt(1);
-            m_containsMissing = writer.getWriteAccessAt(2);
+            m_containsTrue = writer.getWriteAccess(0);
+            m_containsFalse = writer.getWriteAccess(1);
+            m_containsMissing = writer.getWriteAccess(2);
         }
 
         @Override

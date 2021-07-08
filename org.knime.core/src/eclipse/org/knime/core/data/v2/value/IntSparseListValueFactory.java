@@ -103,14 +103,14 @@ public final class IntSparseListValueFactory implements ValueFactory<StructReadA
 
     @Override
     public IntSparseListReadValue createReadValue(final StructReadAccess reader) {
-        return new DefaultIntSparseListReadValue(reader.getInnerReadAccessAt(0), reader.getInnerReadAccessAt(1),
-            reader.getInnerReadAccessAt(2), reader.getInnerReadAccessAt(3));
+        return new DefaultIntSparseListReadValue(reader.getAccess(0), reader.getAccess(1),
+            reader.getAccess(2), reader.getAccess(3));
     }
 
     @Override
     public IntSparseListWriteValue createWriteValue(final StructWriteAccess writer) {
-        return new DefaultIntSparseListWriteValue(writer.getWriteAccessAt(0), writer.getWriteAccessAt(1),
-            writer.getWriteAccessAt(2), writer.getWriteAccessAt(3));
+        return new DefaultIntSparseListWriteValue(writer.getWriteAccess(0), writer.getWriteAccess(1),
+            writer.getWriteAccess(2), writer.getWriteAccess(3));
     }
 
     /**

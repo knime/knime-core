@@ -122,14 +122,14 @@ public final class SparseListValueFactory implements CollectionValueFactory<Stru
 
     @Override
     public SparseListReadValue createReadValue(final StructReadAccess reader) {
-        return new DefaultSparseListReadValue<>(reader.getInnerReadAccessAt(0), reader.getInnerReadAccessAt(1),
-            reader.getInnerReadAccessAt(2), reader.getInnerReadAccessAt(3), m_inner, m_listValueFactory);
+        return new DefaultSparseListReadValue<>(reader.getAccess(0), reader.getAccess(1),
+            reader.getAccess(2), reader.getAccess(3), m_inner, m_listValueFactory);
     }
 
     @Override
     public SparseListWriteValue createWriteValue(final StructWriteAccess writer) {
-        return new DefaultSparseListWriteValue<>(writer.getWriteAccessAt(0), writer.getWriteAccessAt(1),
-            writer.getWriteAccessAt(2), writer.getWriteAccessAt(3), m_inner, m_listValueFactory);
+        return new DefaultSparseListWriteValue<>(writer.getWriteAccess(0), writer.getWriteAccess(1),
+            writer.getWriteAccess(2), writer.getWriteAccess(3), m_inner, m_listValueFactory);
     }
 
     /**
