@@ -86,14 +86,19 @@ public final class DefaultModifiablePortsConfiguration extends DefaultPortsConfi
 
     @Override
     public ModifiablePortsConfiguration copy() {
-        return new DefaultModifiablePortsConfiguration(m_portGroups.entrySet().stream()//
+        final Map<String, PortGroupConfiguration> map = m_portGroups.entrySet().stream()//
             .collect(Collectors.toMap(//
                 e -> e.getKey(), //
                 e -> e.getValue().copy(), //
                 (u, v) -> {
                     throw new IllegalStateException(String.format("Duplicate key %s", u));
                 }, //
-                LinkedHashMap::new)));
+                LinkedHashMap::new));
+        map.values().stream()//
+            .filter(v -> v instanceof TypeBoundExtendablePortGroup)//
+            .map(v -> (TypeBoundExtendablePortGroup)v)//
+            .forEach(v -> v.setLookupTable(map));
+        return new DefaultModifiablePortsConfiguration(map);
     }
 
     @Override
@@ -130,7 +135,7 @@ public final class DefaultModifiablePortsConfiguration extends DefaultPortsConfi
                     throw new IllegalStateException(String.format("Duplicate key %s", u));
                 }, //
                 LinkedHashMap::new)//
-        );
+            );
     }
 
     @Override

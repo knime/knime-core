@@ -65,6 +65,7 @@ import org.knime.core.node.context.ports.impl.DefaultExchangeablePortGroup;
 import org.knime.core.node.context.ports.impl.DefaultExtendablePortGroup;
 import org.knime.core.node.context.ports.impl.DefaultFixedPortGroup;
 import org.knime.core.node.context.ports.impl.DefaultModifiablePortsConfiguration;
+import org.knime.core.node.context.ports.impl.TypeBoundExtendablePortGroup;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.util.CheckUtils;
@@ -135,6 +136,8 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
      * <li>Fixed port group, i.e., port groups that cannot be modified by the user
      * <li>Optional port group, i.e., a port group with [0,1] ports. Initially the optional port is not set
      * <li>Extendable port group, i.e., a port group with [0,n] fixed ports and [0,n] additional ports
+     * <li>Bound extendable port group, i.e., a port group with [0,n] fixed ports and [0,n] additional ports whose
+     * type is bound to that of another port group
      * <li>Exchangebale port group, i.e., a port group with exactly one port whose port type can be exchanged
      * </ol>
      * Note that for all but the fixed port group a set of different ports can be defined from which the user can
@@ -683,6 +686,162 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
                 "The optional ports have to contain at least one element");
             CheckUtils.checkArgument(defaultPort == null || ArrayUtils.contains(optionalPorts, defaultPort),
                 "The optional port types have to contain the default port type");
+        }
+
+        /**
+         * Adds a bound extendable input port group configuration.
+         *
+         * @param pGrpId the port group identifier
+         * @param pBndGrpId the name of the group this group should be bound to (the first encountered supported type
+         *            will be bound)
+         * @since 4.5
+         */
+        public void addBoundExtendableInputPortGroup(final String pGrpId, final String pBndGrpId) {
+            addBoundExtentendablePortWithDefault(pGrpId, pBndGrpId, 0, 0, true, false, Integer.MAX_VALUE);
+        }
+
+        /**
+         * Adds a bound extendable input port group configuration.
+         *
+         * @param pGrpId the port group identifier
+         * @param pBndGrpId the name of the group this group should be bound to (the first encountered supported type
+         *            will be bound)
+         * @param fixedPortNumber the number of fixed ports if there is a type
+         * @since 4.5
+         */
+        public void addBoundExtendableInputPortGroup(final String pGrpId, final String pBndGrpId,
+            final int fixedPortNumber) {
+            addBoundExtentendablePortWithDefault(pGrpId, pBndGrpId, fixedPortNumber, 0, true, false,
+                Integer.MAX_VALUE - fixedPortNumber);
+        }
+
+        /**
+         * Adds a bound extendable output port group configuration.
+         *
+         * @param pGrpId the port group identifier
+         * @param pBndGrpId the name of the group this group should be bound to (the first encountered supported type
+         *            will be bound)
+         * @param fixedPortNumber the number of fixed ports if there is a type
+         * @param defaultPortNumber the number of default ports, that is, the ports that are present if the node gets a
+         *            valid type for the first time, that can, unlike fixed ports removed by the user
+         * @since 4.5
+         */
+        public void addBoundExtendableInputPortGroupWithDefault(final String pGrpId, final String pBndGrpId,
+            final int fixedPortNumber, final int defaultPortNumber) {
+            addBoundExtentendablePortWithDefault(pGrpId, pBndGrpId, fixedPortNumber, defaultPortNumber, true, false,
+                Integer.MAX_VALUE - fixedPortNumber);
+        }
+
+        /**
+         * Adds a bound extendable output port group configuration.
+         *
+         * @param pGrpId the port group identifier
+         * @param pBndGrpId the name of the group this group should be bound to (the first encountered supported type
+         *            will be bound)
+         * @since 4.5
+         */
+        public void addBoundExtendableOutputPortGroup(final String pGrpId, final String pBndGrpId) {
+            addBoundExtentendablePortWithDefault(pGrpId, pBndGrpId, 0, 0, false, true, Integer.MAX_VALUE);
+        }
+
+        /**
+         * Adds a bound extendable output port group configuration.
+         *
+         * @param pGrpId the port group identifier
+         * @param pBndGrpId the name of the group this group should be bound to (the first encountered supported type
+         *            will be bound)
+         * @param fixedPortNumber the number of fixed ports if there is a type
+         * @since 4.5
+         */
+        public void addBoundExtendableOutputPortGroup(final String pGrpId, final String pBndGrpId,
+            final int fixedPortNumber) {
+            addBoundExtentendablePortWithDefault(pGrpId, pBndGrpId, fixedPortNumber, 0, false, true,
+                Integer.MAX_VALUE - fixedPortNumber);
+        }
+
+        /**
+         * Adds a bound extendable output port group configuration.
+         *
+         * @param pGrpId the port group identifier
+         * @param pBndGrpId the name of the group this group should be bound to (the first encountered supported type
+         *            will be bound)
+         * @param fixedPortNumber the number of fixed ports if there is a type
+         * @param defaultPortNumber the number of default ports, that is, the ports that are present if the node gets a
+         *            valid type for the first time, that can, unlike fixed ports removed by the user
+         * @since 4.5
+         */
+        public void addBoundExtendableOutputPortGroupWithDefault(final String pGrpId, final String pBndGrpId,
+            final int fixedPortNumber, final int defaultPortNumber) {
+            addBoundExtentendablePortWithDefault(pGrpId, pBndGrpId, fixedPortNumber, defaultPortNumber, false, true,
+                Integer.MAX_VALUE - fixedPortNumber);
+        }
+
+        /**
+         * Adds a bound extendable port group configuration.
+         *
+         * @param pGrpId the port group identifier
+         * @param pBndGrpId the name of the group this group should be bound to (the first encountered supported type
+         *            will be bound)
+         * @since 4.5
+         */
+        public void addBoundExtendablePortGroup(final String pGrpId, final String pBndGrpId) {
+            addBoundExtentendablePortWithDefault(pGrpId, pBndGrpId, 0, 0, true, true, Integer.MAX_VALUE);
+        }
+
+        /**
+         * Adds a bound extendable port group configuration.
+         *
+         * @param pGrpId the port group identifier
+         * @param pBndGrpId the name of the group this group should be bound to (the first encountered supported type
+         *            will be bound)
+         * @param fixedPortNumber the number of fixed ports if there is a type
+         * @since 4.5
+         */
+        public void addBoundExtendablePortGroup(final String pGrpId, final String pBndGrpId,
+            final int fixedPortNumber) {
+            addBoundExtentendablePortWithDefault(pGrpId, pBndGrpId, fixedPortNumber, 0, true, true,
+                Integer.MAX_VALUE - fixedPortNumber);
+        }
+
+        /**
+         * Adds a bound extendable port group configuration.
+         *
+         * @param pGrpId the port group identifier
+         * @param pBndGrpId the name of the group this group should be bound to (the first encountered supported type
+         *            will be bound)
+         * @param fixedPortNumber the number of fixed ports if there is a type
+         * @param defaultPortNumber the number of default ports, that is, the ports that are present if the node gets a
+         *            valid type for the first time, that can, unlike fixed ports removed by the user
+         * @since 4.5
+         */
+        public void addBoundExtendablePortGroupWithDefault(final String pGrpId, final String pBndGrpId,
+            final int fixedPortNumber, final int defaultPortNumber) {
+            addBoundExtentendablePortWithDefault(pGrpId, pBndGrpId, fixedPortNumber, defaultPortNumber, true, true,
+                Integer.MAX_VALUE - fixedPortNumber);
+        }
+
+        private void addBoundExtentendablePortWithDefault(final String pGrpId, final String pBndGrpId,
+            final int fixedPortNumber, final int defaultPortNumber, final boolean definesInputPorts,
+            final boolean definesOutputPorts, final int maxAdditionalPorts) {
+            validateBoundExtendablePortGroup(pGrpId, pBndGrpId, fixedPortNumber, defaultPortNumber, maxAdditionalPorts);
+            final var group = new TypeBoundExtendablePortGroup(pBndGrpId, m_portConfigs, fixedPortNumber,
+                defaultPortNumber, definesInputPorts, definesOutputPorts, maxAdditionalPorts);
+            m_portConfigs.put(pGrpId, group);
+
+        }
+
+        private void validateBoundExtendablePortGroup(final String pGrpId, final String pBndGrpId,
+            final int fixedPortNumber, final int defaultPortNumber, final int maxAdditionalPorts) {
+            validatePortGrpIdentifier(pGrpId);
+            CheckUtils.checkArgument(m_portConfigs.containsKey(pBndGrpId),
+                "A port group to bind with that given name does not exists");
+            CheckUtils.checkArgument(fixedPortNumber >= 0, "Number of fixed ports must be positive");
+            CheckUtils.checkArgument(defaultPortNumber >= 0, "Number of default ports must be positive");
+            CheckUtils.checkArgument(maxAdditionalPorts >= 0, "Maximum number of additional ports must be positive");
+            CheckUtils.checkArgument(maxAdditionalPorts + fixedPortNumber >= 0,
+                "Too many fixed and additional ports combined");
+            CheckUtils.checkArgument(defaultPortNumber <= maxAdditionalPorts,
+                "The number of default ports must be smaller than the number of maximum number of additional ports!");
         }
 
         /**

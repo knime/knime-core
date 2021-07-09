@@ -102,7 +102,7 @@ class DefaultPortsConfiguration implements PortsConfiguration {
 
     @Override
     public List<String> getPortGroupNames() {
-        return new ArrayList<String>(m_portGroups.keySet());
+        return new ArrayList<>(m_portGroups.keySet());
     }
 
     @Override
