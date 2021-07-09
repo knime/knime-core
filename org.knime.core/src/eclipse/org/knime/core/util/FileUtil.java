@@ -82,8 +82,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Stack;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
@@ -162,40 +160,47 @@ public final class FileUtil {
     private static final int UPDATE_TEMP_FILES_FREQUENCY_HOURS = 23;
 
     static {
-        final var executor = Executors.newSingleThreadScheduledExecutor(r -> new Thread(r, "KNIME-TempFileToucher"));
+        new Thread(() -> {
+            while (true) {
+                try {
+                    Thread.sleep(UPDATE_TEMP_FILES_FREQUENCY_HOURS * 60 * 60 * 1000);
+                } catch (InterruptedException ex) {
+                    // restore interrupted state
+                    Thread.currentThread().interrupt();
+                    LOGGER.debug("Interrupted while waiting to update the last modified date of created temp files.",
+                        ex);
+                    break;
+                }
+                LOGGER.debug("Updating the last modified date of created temp files to prevent deletion by the OS.");
+                final Set<Path> paths = new HashSet<>(TEMP_FILES.size());
 
-        executor.scheduleAtFixedRate(() -> {
-        	LOGGER.debug("Updating the last modified date of created temp files to prevent deletion by the OS.");
-            final Set<Path> paths = new HashSet<>(TEMP_FILES.size());
+                synchronized (TEMP_FILES) {
+                    // clean TEMP_FILES map, i.e., remove stale entries
+                    TEMP_FILES.keySet().removeIf(Predicate.not(File::exists));
 
-            synchronized (TEMP_FILES) {
-                // clean TEMP_FILES map, i.e., remove stale entries
-                TEMP_FILES.keySet().removeIf(Predicate.not(File::exists));
+                    // add all TEMP_FILES and their children to the paths set
+                    for (final File f : TEMP_FILES.keySet()) {
+                        try (final Stream<Path> stream = Files.walk(f.toPath())) {
+                            stream.forEach(paths::add);
+                        } catch (IOException ex) {
+                            LOGGER.debug("Error when attempting to walk over temp files.", ex);
+                        }
+                    }
+                }
 
-                // add all TEMP_FILES and their children to the paths set
-                for (final File f : TEMP_FILES.keySet()) {
-                    try (final Stream<Path> stream = Files.walk(f.toPath())) {
-                        stream.forEach(paths::add);
+                // attempt to touch all paths in the paths set
+                final FileTime now = FileTime.from(ZonedDateTime.now().toInstant());
+                for (final Path p : paths) {
+                    try {
+                        Files.setLastModifiedTime(p, now);
                     } catch (IOException ex) {
-                        LOGGER.debug("Error when attempting to walk over temp files.", ex);
+                        LOGGER.debug("Error when attempting to update the last modified date of a temp file.", ex);
                     }
                 }
             }
-
-            // attempt to touch all paths in the paths set
-            final FileTime now = FileTime.from(ZonedDateTime.now().toInstant());
-            for (final Path p : paths) {
-                try {
-                    Files.setLastModifiedTime(p, now);
-                } catch (IOException ex) {
-                    LOGGER.debug("Error when attempting to update the last modified date of a temp file.", ex);
-                }
-            }
-        }, UPDATE_TEMP_FILES_FREQUENCY_HOURS, UPDATE_TEMP_FILES_FREQUENCY_HOURS, TimeUnit.HOURS);
+        }, String.format("KNIME-TempFileToucher")).start();
 
         ShutdownHelper.getInstance().appendShutdownHook(() -> {
-        	executor.shutdown();
-
             synchronized (TEMP_FILES) {
                 LOGGER.info(String.format("Deleting %d temporary files.", TEMP_FILES.size()));
                 for (Entry<File, Boolean> e : TEMP_FILES.entrySet()) {
