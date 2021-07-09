@@ -152,6 +152,8 @@ public final class FileUtil {
     public static final Pattern ILLEGAL_FILENAME_CHARS_PATTERN =
         Pattern.compile("[\\p{Cntrl}" + ILLEGAL_FILENAME_CHARS.replace("\\", "\\\\") + "]+");
 
+    private static final AtomicLong TEMP_FILE_TOUCHER_THREAD_COUNT = new AtomicLong();
+
     /**
      * Some operating systems delete temp files that have not been touched for some days (e.g., 3 days by default on Mac
      * OS). This means that if you leave a workflow open for three days, its materialized data might be deleted while it
@@ -161,7 +163,8 @@ public final class FileUtil {
     private static final int UPDATE_TEMP_FILES_FREQUENCY_HOURS = 23;
 
     static {
-        final var executor = Executors.newSingleThreadScheduledExecutor(r -> new Thread(r, "KNIME-TempFileToucher"));
+        final var executor = Executors.newSingleThreadScheduledExecutor(
+            r -> new Thread(r, "KNIME-TempFileToucher-" + TEMP_FILE_TOUCHER_THREAD_COUNT.incrementAndGet()));
 
         executor.scheduleAtFixedRate(() -> {
         	LOGGER.debug("Updating the last modified date of created temp files to prevent deletion by the OS.");
@@ -176,23 +179,32 @@ public final class FileUtil {
                     try (final Stream<Path> stream = Files.walk(f.toPath())) {
                         stream.forEach(paths::add);
                     } catch (IOException ex) {
-                        LOGGER.debug("Error when attempting to walk over temp files.", ex);
+                        LOGGER.debug(String.format("Error when attempting to collect temp files (children of \"%s\").",
+                                f.getAbsolutePath()), ex);
                     }
                 }
             }
 
             // attempt to touch all paths in the paths set
             final FileTime now = FileTime.from(ZonedDateTime.now().toInstant());
+            long successCounter = 0;
+            long failCounter = 0;
             for (final Path p : paths) {
                 try {
                     Files.setLastModifiedTime(p, now);
+                    successCounter += 1;
                 } catch (IOException ex) {
-                    LOGGER.debug("Error when attempting to update the last modified date of a temp file.", ex);
+                    LOGGER.debug(String.format("Error when attempting to touch temp file \"%s\"", p), ex);
+                    failCounter += 1;
                 }
             }
+            LOGGER.debugWithFormat("Finished updating last modified dates of temporary files (%d succeeded, %d failed)",
+                successCounter, failCounter);
+
         }, UPDATE_TEMP_FILES_FREQUENCY_HOURS, UPDATE_TEMP_FILES_FREQUENCY_HOURS, TimeUnit.HOURS);
 
         ShutdownHelper.getInstance().appendShutdownHook(() -> {
+            LOGGER.debug("Shutting down service for keeping modified date of created temp files up to date.");
         	executor.shutdown();
 
             synchronized (TEMP_FILES) {
