@@ -1152,12 +1152,16 @@ public final class FileUtil {
             String path = getPathFromUrlWithFileProtocol(fileUrl);
             File dataFile = new File(path);
             if (!dataFile.exists()) {
+                // Assume path is given in encoded form and try to decode.
                 try {
-                    // can also construct a URI with just a path part if it is absolute
+                    // Constructor validates, getPath decodes encoded characters.
                     String decodedPath = (new URI(path)).getPath();
                     dataFile = new File(decodedPath);
-                } catch (URISyntaxException e) {
-                    // ignore
+                } catch (URISyntaxException e) {  // NOSONAR: Exception is handled.
+                    // Path is (assumed) encoded but could not be parsed. This means it is not
+                    // properly encoded (or otherwise of invalid structure), in which case all
+                    // we can do is go back to assuming it to be un-encoded (already decoded) and
+                    // return `dataFile` unchanged, i.e. pointing to the originally given path.
                 }
             }
             return dataFile;
