@@ -89,7 +89,7 @@ import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.util.Version;
 import org.knime.core.workflow.def.ComponentMetadataDef;
 import org.knime.core.workflow.def.ConfigDef;
-import org.knime.core.workflow.def.ConfigSubtreeDef;
+import org.knime.core.workflow.def.ConfigMapDef;
 import org.knime.core.workflow.def.ConfigValueBooleanArrayDef;
 import org.knime.core.workflow.def.NativeNodeDef;
 import org.knime.core.workflow.def.NodeAndBundleInfoDef;
@@ -103,7 +103,7 @@ import org.knime.core.workflow.def.TemplateInfoDef;
 import org.knime.core.workflow.def.impl.DefaultAnnotationDataDef;
 import org.knime.core.workflow.def.impl.DefaultBoundsDef;
 import org.knime.core.workflow.def.impl.DefaultComponentMetadataDef;
-import org.knime.core.workflow.def.impl.DefaultConfigSubtreeDef;
+import org.knime.core.workflow.def.impl.DefaultConfigMapDef;
 import org.knime.core.workflow.def.impl.DefaultConfigValueBooleanArrayDef;
 import org.knime.core.workflow.def.impl.DefaultConfigValueBooleanDef;
 import org.knime.core.workflow.def.impl.DefaultConfigValueByteArrayDef;
@@ -152,14 +152,14 @@ public class CoreToDefUtil {
      * @return the node settings in a representation that can be converted to various formats
      * @throws InvalidSettingsException
      */
-    public static ConfigSubtreeDef toConfigDef(final NodeSettingsRO settings) throws InvalidSettingsException {
+    public static ConfigMapDef toConfigMapDef(final NodeSettingsRO settings) throws InvalidSettingsException {
 
         if (settings == null) {
             return null;
         }
         // TODO don't cast
         ConfigBase config = (ConfigBase)settings;
-        return (ConfigSubtreeDef)toConfigDef(config, settings.getKey());
+        return (ConfigMapDef)toConfigDef(config, settings.getKey());
     }
 
     /**
@@ -190,7 +190,7 @@ public class CoreToDefUtil {
                     children.put(childKey, subTreeDef);
                 }
             }
-            return DefaultConfigSubtreeDef.builder().setKey(key).setChildren(children).build();
+            return DefaultConfigMapDef.builder().setKey(key).setChildren(children).build();
         } else {
             // recursion anchor
             return abstractConfigurationEntryToTypedLeaf(settings).orElseThrow(() -> new IllegalStateException(settings.getKey() + settings.toStringValue()));
