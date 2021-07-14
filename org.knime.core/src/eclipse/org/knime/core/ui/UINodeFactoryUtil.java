@@ -44,33 +44,73 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Jul 27, 2020 (carlwitt): created
+ *   Jul 13, 2021 (hornm): created
  */
-package org.knime.core.rpc;
+package org.knime.core.ui;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeModel;
+import org.knime.core.ui.internal.ViewPageFactoryImpl;
 
 /**
- * To be implemented by a node model's factory if the node model provides a node data service.
- * TODO fix doc
+ * TODO naming and location
  *
- * @author Martin Horn, KNIME GmbH, Konstanz, Germany
- * @author Carl Witt, KNIME AG, Zurich, Switzerland
- *
- * @param <T> The node model type that provides the node data service.
- *
- * @noreference This class is not intended to be referenced by clients.
- * @noextend This class is not intended to be subclassed by clients.
- *
- * @since 4.3
+ * @author hornm
  */
-public interface RpcServerFactory<T> {
+public final class UINodeFactoryUtil {
+
+    private static Map<String, Page> STATIC_PAGES_CACHE = new HashMap<>();
+
+    private UINodeFactoryUtil() {
+        //
+    }
 
     /**
-     * Used by the framework to register a node model's data service.
+     * TODO
      *
-     * @param target the object the rpc server is targeting, e.g. where to get the data from
-     * @return an rpc server provided by the node model that is then used to serve requests from remote node
-     *         dialogs/view.
+     * @param f
+     * @param nm
+     * @return
      */
-    public RpcServer createRpcServer(final T target);
+    public static Optional<Page> createNodeViewPage(final NodeFactory<NodeModel> f, final NodeModel nm) {
+        if (f instanceof UINodeFactory && ((UINodeFactory)f).hasNodeView()) {
+            UINodeFactory<NodeModel> uinf = (UINodeFactory<NodeModel>)f;
+            Optional<Page> staticPage = getStaticPageFromCache(f.getClass());
+            if (staticPage.isPresent()) {
+                return staticPage;
+            }
+            Page newPage = uinf.createNodeView(new ViewPageFactoryImpl(), nm);
+            if (!newPage.isDynamic()) {
+                STATIC_PAGES_CACHE.put(f.getClass().getName(), newPage);
+            }
+            return Optional.of(newPage);
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * TODO
+     *
+     * @param factoryClass
+     * @return
+     */
+    public static Optional<Page> getStaticPageFromCache(final String factoryClass) {
+        return Optional.ofNullable(STATIC_PAGES_CACHE.get(factoryClass));
+    }
+
+    /**
+     * TODO
+     *
+     * @param factoryClass
+     * @return
+     */
+    public static Optional<Page> getStaticPageFromCache(final Class<? extends NodeFactory> factoryClass) {
+        return getStaticPageFromCache(factoryClass.getName());
+    }
 
 }
