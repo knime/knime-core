@@ -61,7 +61,6 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.base.AbstractConfigEntry;
 import org.knime.core.node.config.base.ConfigEntries;
 import org.knime.core.node.port.PortObject;
@@ -84,7 +83,7 @@ import org.knime.core.workflow.def.AuthorInformationDef;
 import org.knime.core.workflow.def.BoundsDef;
 import org.knime.core.workflow.def.ComponentMetadataDef;
 import org.knime.core.workflow.def.ConfigDef;
-import org.knime.core.workflow.def.ConfigSubtreeDef;
+import org.knime.core.workflow.def.ConfigMapDef;
 import org.knime.core.workflow.def.ConfigValueArrayDef;
 import org.knime.core.workflow.def.ConfigValueBooleanArrayDef;
 import org.knime.core.workflow.def.ConfigValueBooleanDef;
@@ -222,10 +221,9 @@ public class DefToCoreUtil {
     /**
      * Create a node settings tree (comprising {@link AbstractConfigEntry}s) from a
      * {@link ConfigDef} tree.
-     * TODO change return to ConfigRO
      * @param def an entity containing the recursive node settings
      */
-    public static ConfigRO toNodeSettings(final ConfigSubtreeDef def) {
+    public static NodeSettings toNodeSettings(final ConfigMapDef def) {
         return toNodeSettings(def, def.getKey());
     }
 
@@ -242,10 +240,10 @@ public class DefToCoreUtil {
             // this is an array that needs to be coded in the legacy hacky format (NodeSettings with N+1 children,
             // 1 for array size, N for items
             return toNodeSettingsArray((ConfigValueArrayDef)def, key);
-        } else if (def instanceof ConfigSubtreeDef){  // this is a subtree, because it has a children map
+        } else if (def instanceof ConfigMapDef){  // this is a subtree, because it has a children map
             final NodeSettings settings = new NodeSettings(key);
 
-            ConfigSubtreeDef subtree = (ConfigSubtreeDef) def;
+            ConfigMapDef subtree = (ConfigMapDef) def;
             for (Map.Entry<String, ConfigDef> childEntry : subtree.getChildren().entrySet()) {
                 final ConfigDef child = childEntry.getValue();
                 // This recursion lookahead is useful because we want to do parentSettings.addBoolean(val) instead of
