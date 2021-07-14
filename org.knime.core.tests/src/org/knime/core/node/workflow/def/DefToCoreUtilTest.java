@@ -57,7 +57,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.workflow.def.ConfigDef;
-import org.knime.core.workflow.def.ConfigSubtreeDef;
+import org.knime.core.workflow.def.ConfigMapDef;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -122,8 +122,8 @@ public class DefToCoreUtilTest {
 
             // TODO doubles and floats seem to be written out in scientific notation, i.e., not lossless
 
-            ConfigDef def = CoreToDefUtil.toConfigDef(original);
-            NodeSettings restored = (NodeSettings)DefToCoreUtil.toNodeSettings((ConfigSubtreeDef)def);
+            ConfigMapDef def = CoreToDefUtil.toConfigMapDef(original);
+            NodeSettings restored = DefToCoreUtil.toNodeSettings(def);
 
             // conversion process does not change information
             assertTrue(original.hasIdenticalValue(restored));
@@ -144,20 +144,114 @@ public class DefToCoreUtilTest {
     public void testPersistJson() {
         try {
 
-            ConfigDef def = CoreToDefUtil.toConfigDef(original);
+            ConfigDef def = CoreToDefUtil.toConfigMapDef(original);
 
             ObjectMapper mapper = new ObjectMapper();
-
-            final String expected = "{\"key\":\"root\",\"children\":{\"colors\":{\"array\":[\"red\",\"green\",\"blue\"],\"itemType\":\"xstring\"},\"answerString\":{\"value\":\"42\",\"itemType\":\"xstring\"},\"A v ¬A\":{\"itemType\":\"xboolean\",\"value\":true},\"answerInt\":{\"value\":-2147483648,\"itemType\":\"xint\"},\"answerFloat\":{\"value\":1.4E-45,\"itemType\":\"xfloat\"},\"answerDouble\":{\"value\":4.9E-324,\"itemType\":\"xdouble\"},\"answerShort\":{\"value\":-32768,\"itemType\":\"xshort\"},\"answerByte\":{\"value\":-128,\"itemType\":\"xbyte\"},\"answerLong\":{\"value\":-9223372036854775808,\"itemType\":\"xlong\"},\"booleans\":{\"array\":[true,false,false,false,true,false],\"itemType\":\"xboolean\"},\"bytes\":{\"value\":\"Ynl0ZXM=\",\"itemType\":\"xbyte\"},\"chars\":{\"array\":[65,66,67],\"itemType\":\"xchar\"},\"doubles\":{\"array\":[4.9E-324,1.7976931348623157E308],\"itemType\":\"xdouble\"},\"floats\":{\"array\":[1.4E-45,3.4028235E38],\"itemType\":\"xfloat\"},\"ints\":{\"array\":[1,2,3,4,5,6,7,8,9],\"itemType\":\"xint\"},\"longs\":{\"array\":[-9223372036854775808,9223372036854775807],\"itemType\":\"xlong\"},\"shorts\":{\"array\":[-32768,32767],\"itemType\":\"xshort\"},\"org\":{\"key\":\"org\",\"children\":{\"knime\":{\"key\":\"knime\",\"children\":{\"loc\":{\"value\":9223372036854775807,\"itemType\":\"xlong\"},\"core\":{\"key\":\"core\",\"children\":{\"util\":{\"key\":\"util\",\"children\":{}},\"node\":{\"key\":\"node\",\"children\":{}}}}}}}}}}";
-
-            String prettyPrintedJson = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(def);
-            System.out.println(prettyPrintedJson);
-            System.out.println(mapper.writeValueAsString(def));
-
-            String actual = mapper.writeValueAsString(def);
+            // TODO is the order of the children deterministic? I think I had a test case failure once because
+            // 'children' was first and 'key' came after
+            final String expected = "{\n" //
+                + "  \"key\" : \"root\",\n" //
+                + "  \"children\" : {\n" //
+                + "    \"colors\" : {\n" //
+                + "      \"array\" : [ \"red\", \"green\", \"blue\" ],\n" //
+                + "      \"itemType\" : \"xstring\"\n" //
+                + "    },\n" //
+                + "    \"answerString\" : {\n" //
+                + "      \"value\" : \"42\",\n" //
+                + "      \"itemType\" : \"xstring\"\n" //
+                + "    },\n" //
+                + "    \"A v ¬A\" : {\n" //
+                + "      \"value\" : true,\n" //
+                + "      \"itemType\" : \"xboolean\"\n" //
+                + "    },\n" //
+                + "    \"answerInt\" : {\n" //
+                + "      \"value\" : -2147483648,\n" //
+                + "      \"itemType\" : \"xint\"\n" //
+                + "    },\n" //
+                + "    \"answerFloat\" : {\n" //
+                + "      \"value\" : 1.4E-45,\n" //
+                + "      \"itemType\" : \"xfloat\"\n" //
+                + "    },\n" //
+                + "    \"answerDouble\" : {\n" //
+                + "      \"value\" : 4.9E-324,\n" //
+                + "      \"itemType\" : \"xdouble\"\n" //
+                + "    },\n" //
+                + "    \"answerShort\" : {\n" //
+                + "      \"value\" : -32768,\n" //
+                + "      \"itemType\" : \"xshort\"\n" //
+                + "    },\n" //
+                + "    \"answerByte\" : {\n" //
+                + "      \"value\" : -128,\n" //
+                + "      \"itemType\" : \"xbyte\"\n" //
+                + "    },\n" //
+                + "    \"answerLong\" : {\n" //
+                + "      \"value\" : -9223372036854775808,\n" //
+                + "      \"itemType\" : \"xlong\"\n" //
+                + "    },\n" //
+                + "    \"booleans\" : {\n" //
+                + "      \"array\" : [ true, false, false, false, true, false ],\n" //
+                + "      \"itemType\" : \"xboolean\"\n" //
+                + "    },\n" //
+                + "    \"bytes\" : {\n" //
+                + "      \"value\" : \"Ynl0ZXM=\",\n" //
+                + "      \"itemType\" : \"xbyte\"\n" //
+                + "    },\n" //
+                + "    \"chars\" : {\n" //
+                + "      \"array\" : [ 65, 66, 67 ],\n" //
+                + "      \"itemType\" : \"xchar\"\n" //
+                + "    },\n" //
+                + "    \"doubles\" : {\n" //
+                + "      \"array\" : [ 4.9E-324, 1.7976931348623157E308 ],\n" //
+                + "      \"itemType\" : \"xdouble\"\n" //
+                + "    },\n" //
+                + "    \"floats\" : {\n" //
+                + "      \"array\" : [ 1.4E-45, 3.4028235E38 ],\n" //
+                + "      \"itemType\" : \"xfloat\"\n" //
+                + "    },\n" //
+                + "    \"ints\" : {\n" //
+                + "      \"array\" : [ 1, 2, 3, 4, 5, 6, 7, 8, 9 ],\n" //
+                + "      \"itemType\" : \"xint\"\n" //
+                + "    },\n" //
+                + "    \"longs\" : {\n" //
+                + "      \"array\" : [ -9223372036854775808, 9223372036854775807 ],\n" //
+                + "      \"itemType\" : \"xlong\"\n" //
+                + "    },\n" //
+                + "    \"shorts\" : {\n" //
+                + "      \"array\" : [ -32768, 32767 ],\n" //
+                + "      \"itemType\" : \"xshort\"\n" //
+                + "    },\n" //
+                + "    \"org\" : {\n" //
+                + "      \"key\" : \"org\",\n" //
+                + "      \"children\" : {\n" //
+                + "        \"knime\" : {\n" //
+                + "          \"key\" : \"knime\",\n" //
+                + "          \"children\" : {\n" //
+                + "            \"loc\" : {\n" //
+                + "              \"value\" : 9223372036854775807,\n" //
+                + "              \"itemType\" : \"xlong\"\n" //
+                + "            },\n" //
+                + "            \"core\" : {\n" //
+                + "              \"key\" : \"core\",\n" //
+                + "              \"children\" : {\n" //
+                + "                \"util\" : {\n" //
+                + "                  \"key\" : \"util\",\n" //
+                + "                  \"children\" : { }\n" //
+                + "                },\n" //
+                + "                \"node\" : {\n" //
+                + "                  \"key\" : \"node\",\n" //
+                + "                  \"children\" : { }\n" //
+                + "                }\n" //
+                + "              }\n" //
+                + "            }\n" //
+                + "          }\n" //
+                + "        }\n" //
+                + "      }\n" //
+                + "    }\n" //
+                + "  }\n" //
+                + "}"; //
+            String actual = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(def);
             assertEquals("JSON Serialization of NodeSettings (via ConfigDef) returns unexpected output.", expected,
                 actual);
-
         } catch (JsonProcessingException e) {
             fail(e.getMessage());
         } catch (InvalidSettingsException e) {
