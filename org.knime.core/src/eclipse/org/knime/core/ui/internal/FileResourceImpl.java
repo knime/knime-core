@@ -44,33 +44,54 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Jul 27, 2020 (carlwitt): created
+ *   Jul 13, 2021 (hornm): created
  */
-package org.knime.core.rpc;
+package org.knime.core.ui.internal;
+
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+import org.knime.core.ui.Resource;
 
 /**
- * To be implemented by a node model's factory if the node model provides a node data service.
- * TODO fix doc
  *
- * @author Martin Horn, KNIME GmbH, Konstanz, Germany
- * @author Carl Witt, KNIME AG, Zurich, Switzerland
- *
- * @param <T> The node model type that provides the node data service.
- *
- * @noreference This class is not intended to be referenced by clients.
- * @noextend This class is not intended to be subclassed by clients.
- *
- * @since 4.3
+ * @author hornm
  */
-public interface RpcServerFactory<T> {
+class FileResourceImpl implements Resource {
+
+    private Path m_absolutePath;
+
+    private Path m_relativePath;
+
+    boolean m_isDynamic;
+
+    FileResourceImpl(final Path absolutePath, final Path relativePath, final boolean isDynamic) {
+        m_absolutePath = absolutePath;
+        m_relativePath = relativePath;
+        m_isDynamic = isDynamic;
+    }
 
     /**
-     * Used by the framework to register a node model's data service.
-     *
-     * @param target the object the rpc server is targeting, e.g. where to get the data from
-     * @return an rpc server provided by the node model that is then used to serve requests from remote node
-     *         dialogs/view.
+     * {@inheritDoc}
      */
-    public RpcServer createRpcServer(final T target);
+    @Override
+    public Path getRelativePath() {
+        return m_relativePath;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void writeContent(final OutputStream out) {
+        try {
+            Files.copy(m_absolutePath, out);
+        } catch (IOException ex) {
+            // TODO
+            throw new RuntimeException(ex);
+        }
+    }
 
 }

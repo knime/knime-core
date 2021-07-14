@@ -44,33 +44,24 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Jul 27, 2020 (carlwitt): created
+ *   Jul 8, 2021 (hornm): created
  */
-package org.knime.core.rpc;
+package org.knime.core.ui;
+
+import org.knime.core.node.NodeModel;
 
 /**
- * To be implemented by a node model's factory if the node model provides a node data service.
- * TODO fix doc
  *
- * @author Martin Horn, KNIME GmbH, Konstanz, Germany
- * @author Carl Witt, KNIME AG, Zurich, Switzerland
- *
- * @param <T> The node model type that provides the node data service.
- *
- * @noreference This class is not intended to be referenced by clients.
- * @noextend This class is not intended to be subclassed by clients.
- *
- * @since 4.3
+ * @author hornm
  */
-public interface RpcServerFactory<T> {
+public interface UINodeFactory<T extends NodeModel> {
 
-    /**
-     * Used by the framework to register a node model's data service.
-     *
-     * @param target the object the rpc server is targeting, e.g. where to get the data from
-     * @return an rpc server provided by the node model that is then used to serve requests from remote node
-     *         dialogs/view.
-     */
-    public RpcServer createRpcServer(final T target);
+    boolean hasNodeDialog();
+
+    Page createNodeDialog(DialogPageFactory f);
+
+    boolean hasNodeView();
+
+    Page createNodeView(ViewPageFactory f, T nodeModel);
 
 }

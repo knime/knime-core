@@ -44,33 +44,66 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Jul 27, 2020 (carlwitt): created
+ *   Jul 9, 2021 (hornm): created
  */
-package org.knime.core.rpc;
+package org.knime.core.ui.internal;
+
+import java.io.OutputStream;
+import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.List;
+
+import org.knime.core.ui.FileResourceFactory;
+import org.knime.core.ui.Page;
+import org.knime.core.ui.Resource;
+import org.knime.core.ui.ResourceFactory;
+import org.knime.core.ui.ViewPageFactory;
 
 /**
- * To be implemented by a node model's factory if the node model provides a node data service.
- * TODO fix doc
+ * TODO remove from exported packages
  *
- * @author Martin Horn, KNIME GmbH, Konstanz, Germany
- * @author Carl Witt, KNIME AG, Zurich, Switzerland
- *
- * @param <T> The node model type that provides the node data service.
- *
- * @noreference This class is not intended to be referenced by clients.
- * @noextend This class is not intended to be subclassed by clients.
- *
- * @since 4.3
+ * @author hornm
  */
-public interface RpcServerFactory<T> {
+public class ViewPageFactoryImpl implements ViewPageFactory {
 
-    /**
-     * Used by the framework to register a node model's data service.
-     *
-     * @param target the object the rpc server is targeting, e.g. where to get the data from
-     * @return an rpc server provided by the node model that is then used to serve requests from remote node
-     *         dialogs/view.
-     */
-    public RpcServer createRpcServer(final T target);
+    @Override
+    public Page createPage(final Resource page, final Resource... context) {
+        return new Page() {
+
+            @Override
+            public void writeContent(final OutputStream out) {
+                page.writeContent(out);
+            }
+
+            @Override
+            public Path getRelativePath() {
+                return page.getRelativePath();
+            }
+
+            @Override
+            public List<Resource> getContext() {
+                return Arrays.asList(context);
+            }
+
+            @Override
+            public boolean isDynamic() {
+                if (page instanceof FileResourceImpl) {
+                    return ((FileResourceImpl)page).m_isDynamic;
+                } else {
+                    return true;
+                }
+            }
+        };
+    }
+
+    @Override
+    public FileResourceFactory createResourceFactory(final String baseDir, final Class<?> clazz) {
+        return new FileResourceFactoryImpl(baseDir, clazz);
+    }
+
+    @Override
+    public ResourceFactory createResourceFactory() {
+        return new ResourceFactoryImpl();
+    }
 
 }

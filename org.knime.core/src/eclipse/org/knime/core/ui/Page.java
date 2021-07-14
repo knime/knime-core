@@ -44,33 +44,28 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Jul 27, 2020 (carlwitt): created
+ *   Jul 8, 2021 (hornm): created
  */
-package org.knime.core.rpc;
+package org.knime.core.ui;
+
+import java.util.List;
 
 /**
- * To be implemented by a node model's factory if the node model provides a node data service.
- * TODO fix doc
  *
- * @author Martin Horn, KNIME GmbH, Konstanz, Germany
- * @author Carl Witt, KNIME AG, Zurich, Switzerland
- *
- * @param <T> The node model type that provides the node data service.
- *
- * @noreference This class is not intended to be referenced by clients.
- * @noextend This class is not intended to be subclassed by clients.
- *
- * @since 4.3
+ * @author hornm
  */
-public interface RpcServerFactory<T> {
+public interface Page extends Resource {
+
+    List<Resource> getContext();
 
     /**
-     * Used by the framework to register a node model's data service.
+     * Whether it's a dynamically rendered page (i.e. rendered as part of the backend logic) - that is the page content
+     * returned by a node changes between node instances.
      *
-     * @param target the object the rpc server is targeting, e.g. where to get the data from
-     * @return an rpc server provided by the node model that is then used to serve requests from remote node
-     *         dialogs/view.
+     * TODO respective life-cycle method required to newly initialize static pages
+     *
+     * @return
      */
-    public RpcServer createRpcServer(final T target);
+    boolean isDynamic();
 
 }

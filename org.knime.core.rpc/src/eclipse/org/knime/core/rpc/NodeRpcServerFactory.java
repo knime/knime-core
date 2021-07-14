@@ -53,11 +53,13 @@ import org.knime.core.node.NodeModel;
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  *
+ * @param <T> TODO
+ *
  * @noreference This class is not intended to be referenced by clients.
  * @noextend This class is not intended to be subclassed by clients.
  *
  * @since 4.3
  */
-public interface NodeRpcServerFactory extends RpcServerFactory<NodeModel> {
+public interface NodeRpcServerFactory<T extends NodeModel> extends RpcServerFactory<T> {
 
 }
