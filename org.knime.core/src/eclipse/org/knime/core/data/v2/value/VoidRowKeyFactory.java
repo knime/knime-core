@@ -57,6 +57,8 @@ import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.table.access.ReadAccess;
 import org.knime.core.table.access.WriteAccess;
 import org.knime.core.table.schema.VoidDataSpec;
+import org.knime.core.table.schema.traits.DataTraits;
+import org.knime.core.table.schema.traits.DefaultDataTraits;
 
 /**
  * {@link ValueFactory} for void types. Basically place holders inside a table. Could be used for e.g. empty columns.
@@ -84,6 +86,11 @@ public final class VoidRowKeyFactory implements RowKeyValueFactory<ReadAccess, W
     @Override
     public VoidDataSpec getSpec() {
         return VoidDataSpec.INSTANCE;
+    }
+
+    @Override
+    public DataTraits getTraits() {
+        return DefaultDataTraits.EMPTY;
     }
 
     private static final class VoidRowKeyReadValue implements RowKeyReadValue {

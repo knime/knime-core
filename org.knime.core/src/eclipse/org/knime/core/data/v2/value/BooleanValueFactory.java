@@ -65,6 +65,8 @@ import org.knime.core.data.v2.WriteValue;
 import org.knime.core.table.access.BooleanAccess.BooleanReadAccess;
 import org.knime.core.table.access.BooleanAccess.BooleanWriteAccess;
 import org.knime.core.table.schema.BooleanDataSpec;
+import org.knime.core.table.schema.traits.DataTraits;
+import org.knime.core.table.schema.traits.DefaultDataTraits;
 
 /**
  * {@link ValueFactory} implementation for {@link BooleanCell}.
@@ -92,6 +94,11 @@ public class BooleanValueFactory implements ValueFactory<BooleanReadAccess, Bool
     @Override
     public BooleanWriteValue createWriteValue(final BooleanWriteAccess writer) {
         return new DefaultBooleanWriteValue(writer);
+    }
+
+    @Override
+    public DataTraits getTraits() {
+        return DefaultDataTraits.EMPTY;
     }
 
     /**

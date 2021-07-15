@@ -57,6 +57,9 @@ import org.knime.core.data.v2.WriteValue;
 import org.knime.core.table.access.StringAccess.StringReadAccess;
 import org.knime.core.table.access.StringAccess.StringWriteAccess;
 import org.knime.core.table.schema.StringDataSpec;
+import org.knime.core.table.schema.traits.DataTrait.DictEncodingTrait;
+import org.knime.core.table.schema.traits.DataTraits;
+import org.knime.core.table.schema.traits.DefaultDataTraits;
 
 /**
  * {@link ValueFactory} implementation for {@link StringCell}.
@@ -88,6 +91,11 @@ public class StringValueFactory implements ValueFactory<StringReadAccess, String
     @Override
     public StringWriteValue createWriteValue(final StringWriteAccess writer) {
         return new DefaultStringWriteValue(writer);
+    }
+
+    @Override
+    public DataTraits getTraits() {
+        return new DefaultDataTraits(new DictEncodingTrait(true));
     }
 
     /**

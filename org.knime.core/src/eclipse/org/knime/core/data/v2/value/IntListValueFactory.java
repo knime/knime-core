@@ -68,6 +68,8 @@ import org.knime.core.table.access.ListAccess.ListReadAccess;
 import org.knime.core.table.access.ListAccess.ListWriteAccess;
 import org.knime.core.table.schema.IntDataSpec;
 import org.knime.core.table.schema.ListDataSpec;
+import org.knime.core.table.schema.traits.DataTraits;
+import org.knime.core.table.schema.traits.DefaultDataTraits;
 
 /**
  * {@link ValueFactory} implementation for {@link ListCell} with elements of type {@link IntCell}.
@@ -95,6 +97,11 @@ public final class IntListValueFactory implements ValueFactory<ListReadAccess, L
     @Override
     public IntListWriteValue createWriteValue(final ListWriteAccess writer) {
         return new DefaultIntListWriteValue(writer);
+    }
+
+    @Override
+    public DataTraits getTraits() {
+        return DefaultDataTraits.EMPTY;
     }
 
     /**

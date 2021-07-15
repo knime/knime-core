@@ -66,6 +66,8 @@ import org.knime.core.table.access.ListAccess.ListReadAccess;
 import org.knime.core.table.access.ListAccess.ListWriteAccess;
 import org.knime.core.table.schema.BooleanDataSpec;
 import org.knime.core.table.schema.ListDataSpec;
+import org.knime.core.table.schema.traits.DataTraits;
+import org.knime.core.table.schema.traits.DefaultDataTraits;
 
 import com.google.common.primitives.Booleans;
 
@@ -95,6 +97,11 @@ public final class BooleanListValueFactory implements ValueFactory<ListReadAcces
     @Override
     public BooleanListWriteValue createWriteValue(final ListWriteAccess writer) {
         return new DefaultBooleanListWriteValue(writer);
+    }
+
+    @Override
+    public DataTraits getTraits() {
+        return DefaultDataTraits.EMPTY;
     }
 
     /**
@@ -179,4 +186,5 @@ public final class BooleanListValueFactory implements ValueFactory<ListReadAcces
             this.<BooleanValue, BooleanWriteValue> setValue(values.length, (i, v) -> v.setBooleanValue(values[i]));
         }
     }
+
 }

@@ -58,6 +58,8 @@ import org.knime.core.data.v2.WriteValue;
 import org.knime.core.table.access.DoubleAccess.DoubleReadAccess;
 import org.knime.core.table.access.DoubleAccess.DoubleWriteAccess;
 import org.knime.core.table.schema.DoubleDataSpec;
+import org.knime.core.table.schema.traits.DataTraits;
+import org.knime.core.table.schema.traits.DefaultDataTraits;
 
 /**
  * {@link ValueFactory} implementation for {@link DoubleCell}.
@@ -85,6 +87,11 @@ public final class DoubleValueFactory implements ValueFactory<DoubleReadAccess, 
     @Override
     public DoubleWriteValue createWriteValue(final DoubleWriteAccess writer) {
         return new DefaultDoubleWriteValue(writer);
+    }
+
+    @Override
+    public DataTraits getTraits() {
+        return DefaultDataTraits.EMPTY;
     }
 
     /**

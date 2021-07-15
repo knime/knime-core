@@ -84,6 +84,8 @@ import org.knime.core.table.schema.DataSpec;
 import org.knime.core.table.schema.IntDataSpec;
 import org.knime.core.table.schema.ListDataSpec;
 import org.knime.core.table.schema.StructDataSpec;
+import org.knime.core.table.schema.traits.DataTraits;
+import org.knime.core.table.schema.traits.DefaultDataTraits;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
@@ -130,6 +132,11 @@ public final class SparseListValueFactory implements CollectionValueFactory<Stru
     public SparseListWriteValue createWriteValue(final StructWriteAccess writer) {
         return new DefaultSparseListWriteValue<>(writer.getWriteAccess(0), writer.getWriteAccess(1),
             writer.getWriteAccess(2), writer.getWriteAccess(3), m_inner, m_listValueFactory);
+    }
+
+    @Override
+    public DataTraits getTraits() {
+        return DefaultDataTraits.EMPTY;
     }
 
     /**
