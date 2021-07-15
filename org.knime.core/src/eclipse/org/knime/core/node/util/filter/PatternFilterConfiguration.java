@@ -61,6 +61,7 @@ import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
  * Configuration to the PatternFilterPanel.
  *
  * @author Patrick Winter, KNIME AG, Zurich, Switzerland
+ * @author Jannik Löscher, KNIME GmbH, Konstanz, Germany
  * @since 3.4
  * @noreference This class is not intended to be referenced by clients outside KNIME core.
  */
@@ -71,16 +72,16 @@ public class PatternFilterConfiguration implements Cloneable {
 
     /** Type of pattern filter. */
     enum PatternFilterType {
-        /** The pattern will be interpreted as a wildcard (with '*' and '?'). */
-        Wildcard,
-        /** The pattern will be interpreted as a regular expression. */
-        Regex;
+            /** The pattern will be interpreted as a wildcard (with '*' and '?'). */
+            Wildcard, // NOSONAR: better settings strings
+            /** The pattern will be interpreted as a regular expression. */
+            Regex; // NOSONAR: better settings strings
 
         /** Parse from string, fail if invalid. */
         static PatternFilterType parseType(final String type) throws InvalidSettingsException {
             try {
                 return valueOf(type);
-            } catch (Exception e) {
+            } catch (IllegalArgumentException | NullPointerException e) { // NOSONAR: these are user supplied and may be null
                 throw new InvalidSettingsException("Illegal pattern type: " + type, e);
             }
         }
@@ -89,7 +90,7 @@ public class PatternFilterConfiguration implements Cloneable {
         static PatternFilterType parseType(final String type, final PatternFilterType defaultValue) {
             try {
                 return valueOf(type);
-            } catch (Exception e) {
+            } catch (IllegalArgumentException | NullPointerException e) { // NOSONAR: these are user supplied and may be null
                 return defaultValue;
             }
         }
@@ -101,11 +102,15 @@ public class PatternFilterConfiguration implements Cloneable {
 
     private static final String CFG_CASESENSITIVE = "caseSensitive";
 
+    private static final String CFG_EXCLUDEMATCHING = "excludeMatching";
+
     private String m_pattern = "";
 
     private PatternFilterType m_type = PatternFilterType.Wildcard;
 
     private boolean m_caseSensitive = true;
+
+    private boolean m_excludeMatching = false;
 
     /**
      * Protected constructor.
@@ -113,7 +118,9 @@ public class PatternFilterConfiguration implements Cloneable {
     protected PatternFilterConfiguration() {
     }
 
-    /** Loads the configuration from the given settings object. Fails if not valid.
+    /**
+     * Loads the configuration from the given settings object. Fails if not valid.
+     *
      * @param settings Settings object containing the configuration.
      * @throws InvalidSettingsException If settings are invalid
      */
@@ -122,9 +129,11 @@ public class PatternFilterConfiguration implements Cloneable {
         if (m_pattern == null) {
             throw new InvalidSettingsException("Pattern must not be null");
         }
-        String typeS = settings.getString(CFG_TYPE);
+        final var typeS = settings.getString(CFG_TYPE);
         m_type = PatternFilterType.parseType(typeS);
         m_caseSensitive = settings.getBoolean(CFG_CASESENSITIVE);
+        // since 4.5.0
+        m_excludeMatching = settings.getBoolean(CFG_EXCLUDEMATCHING, false);
         try {
             compilePattern(m_pattern, m_type, m_caseSensitive);
         } catch (PatternSyntaxException e) {
@@ -132,7 +141,9 @@ public class PatternFilterConfiguration implements Cloneable {
         }
     }
 
-    /** Loads the configuration from the given settings object. Sets defaults if invalid.
+    /**
+     * Loads the configuration from the given settings object. Sets defaults if invalid.
+     *
      * @param settings Settings object containing the configuration.
      */
     protected void loadConfigurationInDialog(final NodeSettingsRO settings) {
@@ -140,18 +151,24 @@ public class PatternFilterConfiguration implements Cloneable {
         if (m_pattern == null) { // can also be deliberately null from the settings
             m_pattern = "";
         }
-        String typeS = settings.getString(CFG_TYPE, null);
+        final var typeS = settings.getString(CFG_TYPE, null);
         m_type = PatternFilterType.parseType(typeS, PatternFilterType.Wildcard);
         m_caseSensitive = settings.getBoolean(CFG_CASESENSITIVE, true);
+        // since 4.5.0
+        m_excludeMatching = settings.getBoolean(CFG_EXCLUDEMATCHING, false);
     }
 
-    /** Save the current configuration inside the given settings object.
+    /**
+     * Save the current configuration inside the given settings object.
+     *
      * @param settings Settings object the current configuration will be put into.
      */
     protected void saveConfiguration(final NodeSettingsWO settings) {
         settings.addString(CFG_PATTERN, m_pattern);
         settings.addString(CFG_TYPE, m_type.name());
         settings.addBoolean(CFG_CASESENSITIVE, m_caseSensitive);
+        // since 4.5.0
+        settings.addBoolean(CFG_EXCLUDEMATCHING, m_excludeMatching);
     }
 
     /**
@@ -161,17 +178,21 @@ public class PatternFilterConfiguration implements Cloneable {
      * @return FilterResult with the included and excluded names
      */
     public FilterResult applyTo(final String[] names) {
-        Pattern regex = compilePattern(m_pattern, m_type, m_caseSensitive);
-        List<String> incls = new ArrayList<String>();
-        List<String> excls = new ArrayList<String>();
+        final var regex = compilePattern(m_pattern, m_type, m_caseSensitive);
+        List<String> matched = new ArrayList<>();
+        List<String> notMatched = new ArrayList<>();
         for (String name : names) {
             if (regex.matcher(name).matches()) {
-                incls.add(name);
+                matched.add(name);
             } else {
-                excls.add(name);
+                notMatched.add(name);
             }
         }
-        return new FilterResult(incls, excls, new ArrayList<String>(), new ArrayList<String>());
+        if (!m_excludeMatching) {
+            return new FilterResult(matched, notMatched, new ArrayList<>(), new ArrayList<>());
+        } else {
+            return new FilterResult(notMatched, matched, new ArrayList<>(), new ArrayList<>());
+        }
     }
 
     /**
@@ -183,11 +204,11 @@ public class PatternFilterConfiguration implements Cloneable {
      * @return The regex pattern
      * @throws PatternSyntaxException If the pattern could not be compiled
      */
-    public static Pattern compilePattern(final String pattern, final PatternFilterType type,
-        final boolean caseSensitive) throws PatternSyntaxException {
+    public static Pattern compilePattern(final String pattern, final PatternFilterType type,// NOSONAR: keep because of backwards compatibility
+        final boolean caseSensitive) {
         Pattern regex;
-        String regexString = pattern;
-        if (type.equals(PatternFilterType.Wildcard)) {
+        var regexString = pattern;
+        if (type == PatternFilterType.Wildcard) {
             regexString = wildcardToRegex(pattern);
         }
         if (caseSensitive) {
@@ -227,7 +248,7 @@ public class PatternFilterConfiguration implements Cloneable {
     }
 
     /**
-     * @return the caseSensitive
+     * @return whether the pattern is case sensitive
      */
     boolean isCaseSensitive() {
         return m_caseSensitive;
@@ -240,60 +261,71 @@ public class PatternFilterConfiguration implements Cloneable {
         m_caseSensitive = caseSensitive;
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public int hashCode() {
-        // eclipse auto-generated
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + (m_caseSensitive ? 1231 : 1237);
-        result = prime * result + ((m_pattern == null) ? 0 : m_pattern.hashCode());
-        result = prime * result + ((m_type == null) ? 0 : m_type.hashCode());
-        return result;
+    /**
+     * @return whether matching names shall be excluded
+     * @since 4.5.0
+     */
+    boolean isExcludeMatching() {
+        return m_excludeMatching;
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public boolean equals(final Object obj) {
-        if (obj == this) {
-            return true;
-        }
-        if (!(obj instanceof PatternFilterConfiguration)) {
-            return false;
-        }
-        PatternFilterConfiguration o = (PatternFilterConfiguration)obj;
-        if (o.m_caseSensitive != m_caseSensitive) {
-            return false;
-        }
-        if (!Objects.equals(o.m_pattern, m_pattern)) {
-            return false;
-        }
-        if (!Objects.equals(o.m_type, m_type)) {
-            return false;
-        }
-        return true;
+    /**
+     * @param excludeMatching whether matching names shall be excluded
+     * @since 4.5.0
+     */
+    void setExcludeMatching(final boolean excludeMatching) {
+        m_excludeMatching = excludeMatching;
     }
+
 
     /** {@inheritDoc} */
     @Override
     public String toString() {
-        return String.format("(%s - %s): %s", m_type, (m_caseSensitive ? "" : "not ") + "case sensitive", m_pattern);
+        return String.format("(%s - %scase sensitive - %s matching): %s", m_type, m_caseSensitive ? "" : "not ",
+            m_excludeMatching ? "exclude" : "include", m_pattern);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return Objects.hash(m_caseSensitive, m_excludeMatching, m_pattern, m_type);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        PatternFilterConfiguration other = (PatternFilterConfiguration)obj;
+        return m_caseSensitive == other.m_caseSensitive && m_excludeMatching == other.m_excludeMatching
+            && Objects.equals(m_pattern, other.m_pattern) && m_type == other.m_type;
     }
 
     /** {@inheritDoc} */
     @Override
-    protected PatternFilterConfiguration clone() {
+    protected PatternFilterConfiguration clone() {// NOSONAR: other methods depend on this clone
         try {
             return (PatternFilterConfiguration)super.clone();
         } catch (CloneNotSupportedException e) {
-            throw new RuntimeException("Object not clonable although it implements java.lang.Clonable", e);
+            throw new RuntimeException("Object not clonable although it implements java.lang.Clonable", e); // NOSONAR: this shouldn't happen
         }
     }
 
-    private static String wildcardToRegex(final String wildcard) {
-        StringBuilder buf = new StringBuilder(wildcard.length() + 20);
-        for (int i = 0; i < wildcard.length(); i++) {
-            char c = wildcard.charAt(i);
+    private static String wildcardToRegex(final String wildcard) {// NOSONAR: most cases are simple fallthroughs
+        final var buf = new StringBuilder(wildcard.length() + 20);
+        for (var i = 0; i < wildcard.length(); i++) {
+            final var c = wildcard.charAt(i);
             switch (c) {
                 case '*':
                     buf.append(".*");

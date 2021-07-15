@@ -56,7 +56,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.regex.Pattern;
+import java.util.function.Predicate;
 import java.util.regex.PatternSyntaxException;
 
 import javax.swing.ButtonGroup;
@@ -67,13 +67,12 @@ import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
-import javax.swing.event.CaretEvent;
-import javax.swing.event.CaretListener;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.text.DefaultCaret;
 
 import org.eclipse.core.runtime.Platform;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.SharedIcons;
 import org.knime.core.node.util.filter.PatternFilterConfiguration.PatternFilterType;
 
@@ -82,16 +81,23 @@ import org.knime.core.node.util.filter.PatternFilterConfiguration.PatternFilterT
  *
  * @param <T> The type of object that this filter is filtering
  * @author Patrick Winter, KNIME AG, Zurich, Switzerland
+ * @author Jannik Löscher, KNIME GmbH, Konstanz, Germany
  * @since 3.4
  */
 @SuppressWarnings("serial")
 public class PatternFilterPanel<T> extends JPanel {
 
-    /** Border title for exclude list. */
-    private static final String NON_MATCH_LABEL = "Mismatch (Exclude)";
+    /** Border title for exclude list if mismatches should be excluded. */
+    private static final String EXCLUDE_NON_MATCH_LABEL = "Mismatch (Exclude)";
 
-    /** Border title for include list. */
-    private static final String MATCH_LABEL = "Match (Include)";
+    /** Border title for include list if matches should be included. */
+    private static final String INCLUDE_MATCH_LABEL = "Match (Include)";
+
+    /** Border title for exclude list if mismatches should be included. */
+    private static final String INCLUDE_NON_MATCH_LABEL = "Mismatch (Include)";
+
+    /** Border title for include list if matches should be excluded. */
+    private static final String EXCLUDE_MATCH_LABEL = "Match (Exclude)";
 
     private static final Dimension SMALL_LIST = new Dimension(150, 120);
 
@@ -105,9 +111,11 @@ public class PatternFilterPanel<T> extends JPanel {
 
     private JCheckBox m_caseSensitive;
 
+    private JCheckBox m_excludeMatching;
+
     private JLabel m_invalid;
 
-    private List<ChangeListener> m_listeners;
+    private List<ChangeListener> m_listeners; //NOSONAR: KNIME doesn't use Java's serialization
 
     private String m_patternValue;
 
@@ -115,13 +123,15 @@ public class PatternFilterPanel<T> extends JPanel {
 
     private boolean m_caseSensitiveValue;
 
+    private boolean m_excludeMatchingValue;
+
     private boolean m_additionalCheckBoxValue;
 
     private NameFilterPanel<T> m_parentFilter;
 
     private String[] m_names = new String[0];
 
-    private InputFilter<T> m_filter;
+    private InputFilter<T> m_filter; //NOSONAR: KNIME doesn't use Java's serialization
 
     private FilterIncludeExcludePreview<T> m_preview;
 
@@ -137,12 +147,12 @@ public class PatternFilterPanel<T> extends JPanel {
      * @param filter The filter that filters out Ts that are not available for selection
      */
     protected PatternFilterPanel(final NameFilterPanel<T> parentFilter, final InputFilter<T> filter) {
-        setLayout(new BorderLayout());
+        setLayout(new BorderLayout()); // NOSONAR: common in Swing
         m_parentFilter = parentFilter;
         m_filter = filter;
-        JPanel panel = new JPanel();
+        final var panel = new JPanel();
         panel.setLayout(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
+        final var gbc = new GridBagConstraints();
         // Pattern label
         gbc.gridx = 0;
         gbc.gridy = 0;
@@ -154,13 +164,13 @@ public class PatternFilterPanel<T> extends JPanel {
         m_pattern.setText("");
         m_patternValue = m_pattern.getText();
         gbc.gridx++;
-        gbc.gridwidth = 4;
+        gbc.gridwidth = 5;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1;
         gbc.insets = new Insets(4, 0, 0, 0);
         panel.add(m_pattern, gbc);
         // Wildcard RadioButton + image
-        ButtonGroup typeGroup = new ButtonGroup();
+        final var typeGroup = new ButtonGroup();
         m_wildcard = new JRadioButton("Wildcard", true);
         m_wildcard.setToolTipText("'?' matches any character, '*' matches a sequence of any characters");
         typeGroup.add(m_wildcard);
@@ -169,7 +179,7 @@ public class PatternFilterPanel<T> extends JPanel {
         gbc.gridy++;
         gbc.insets = new Insets(0, 0, 0, 0);
         panel.add(m_wildcard, gbc);
-        JLabel infoLabel = new JLabel("", SharedIcons.INFO_OUTLINE.get(), SwingConstants.LEFT);
+        final var infoLabel = new JLabel("", SharedIcons.INFO_OUTLINE.get(), SwingConstants.LEFT);
         infoLabel.setToolTipText("'?' matches any character, '*' matches a sequence of any characters");
         gbc.gridx++;
         gbc.insets = new Insets(4, 0, 8, 0);
@@ -184,13 +194,20 @@ public class PatternFilterPanel<T> extends JPanel {
         m_caseSensitive = new JCheckBox("Case Sensitive", true);
         gbc.gridx++;
         panel.add(m_caseSensitive, gbc);
+        // Exclude Matching CheckBox
+        m_excludeMatching = new JCheckBox("Exclude Matching", false);
+        gbc.gridx++;
+        panel.add(m_excludeMatching, gbc);
 
         m_typeValue = getSelectedFilterType();
 
         m_caseSensitiveValue = m_caseSensitive.isSelected();
-        m_additionalCheckbox = createAdditionalCheckbox();
+        m_excludeMatchingValue = m_excludeMatching.isSelected();
+        m_additionalCheckbox = createAdditionalCheckbox(); //NOSONAR: This is the intention in this case
         if (m_additionalCheckbox != null) {
             gbc.gridy++;
+            gbc.gridx--;
+            gbc.gridwidth = 2;
             panel.add(m_additionalCheckbox, gbc);
             m_additionalCheckbox.setSelected(false);
             m_additionalCheckBoxValue = m_additionalCheckbox.isSelected();
@@ -199,66 +216,46 @@ public class PatternFilterPanel<T> extends JPanel {
             // see AP-13012
             m_pattern.setCaret(new DefaultCaret());
         }
-        m_pattern.addCaretListener(new CaretListener() {
-            @Override
-            public void caretUpdate(final CaretEvent e) {
-                if (!m_patternValue.equals(m_pattern.getText())) {
-                    m_patternValue = m_pattern.getText();
-                    // async update - see bug 6073
-                    SwingUtilities.invokeLater(new Runnable() {
-                        @Override
-                        public void run() {
-                            final int caretPosition = m_pattern.getCaretPosition();
-                            fireFilteringChangedEvent();
-                            m_pattern.requestFocusInWindow();
-                            m_pattern.setCaretPosition(caretPosition);
-                        }
-                    });
-                }
+        m_pattern.addCaretListener(e -> {
+            if (!m_patternValue.equals(m_pattern.getText())) {
+                m_patternValue = m_pattern.getText();
+                // async update - see bug 6073
+                SwingUtilities.invokeLater(this::fireFilteringChangedEventWithCaret);
             }
         });
-        m_wildcard.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(final ChangeEvent e) {
-                refreshPatternFilterType();
+        m_wildcard.addChangeListener(e -> refreshPatternFilterType());
+        m_regex.addChangeListener(e -> refreshPatternFilterType());
+        m_caseSensitive.addChangeListener(e -> {
+            if (m_caseSensitiveValue != m_caseSensitive.isSelected()) {
+                m_caseSensitiveValue = m_caseSensitive.isSelected();
+                fireFilteringChangedEvent();
             }
         });
-        m_regex.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(final ChangeEvent e) {
-                refreshPatternFilterType();
-            }
-        });
-        m_caseSensitive.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(final ChangeEvent e) {
-                if (m_caseSensitiveValue != m_caseSensitive.isSelected()) {
-                    m_caseSensitiveValue = m_caseSensitive.isSelected();
-                    fireFilteringChangedEvent();
-                }
+        m_excludeMatching.addChangeListener(e -> {
+            if (m_excludeMatchingValue != m_excludeMatching.isSelected()) {
+                m_excludeMatchingValue = m_excludeMatching.isSelected();
+                updatePreviewLabels();
+                fireFilteringChangedEvent();
             }
         });
         if (m_additionalCheckbox != null) {
-            m_additionalCheckbox.addChangeListener(new ChangeListener() {
-                @Override
-                public void stateChanged(final ChangeEvent e) {
-                    if (m_additionalCheckBoxValue != m_additionalCheckbox.isSelected()) {
-                        m_additionalCheckBoxValue = m_additionalCheckbox.isSelected();
-                        fireFilteringChangedEvent();
-                    }
+            m_additionalCheckbox.addChangeListener(e -> {
+                if (m_additionalCheckBoxValue != m_additionalCheckbox.isSelected()) {
+                    m_additionalCheckBoxValue = m_additionalCheckbox.isSelected();
+                    fireFilteringChangedEvent();
                 }
             });
         }
         // Add preview twin list
-        m_preview =
-            new FilterIncludeExcludePreview<T>(MATCH_LABEL, NON_MATCH_LABEL, m_parentFilter.getListCellRenderer());
+        m_preview = new FilterIncludeExcludePreview<>(m_parentFilter.getListCellRenderer());
+        updatePreviewLabels();
         m_preview.setListSize(NORMAL_LIST);
         gbc.gridx = 0;
         gbc.gridy++;
         gbc.fill = GridBagConstraints.BOTH;
         gbc.weightx = 1;
         gbc.weighty = 1;
-        gbc.gridwidth = 5;
+        gbc.gridwidth = 6;
         gbc.insets = new Insets(0, 0, 0, 0);
         panel.add(m_preview, gbc);
         // Add invalid pattern label
@@ -271,9 +268,17 @@ public class PatternFilterPanel<T> extends JPanel {
         super.add(panel);
     }
 
+    private void fireFilteringChangedEventWithCaret() {
+        final int caretPosition = m_pattern.getCaretPosition();
+        fireFilteringChangedEvent();
+        m_pattern.requestFocusInWindow();
+        m_pattern.setCaretPosition(caretPosition);
+    }
+
     /**
-     * An additional Checkbox, e.g. for missing values. Possibly overwritten by subclasses.
-     * Default implementation returns null.
+     * An additional Checkbox, e.g. for missing values. Possibly overwritten by subclasses. Default implementation
+     * returns null.
+     *
      * @return null (here)
      */
     protected JCheckBox createAdditionalCheckbox() {
@@ -297,25 +302,29 @@ public class PatternFilterPanel<T> extends JPanel {
         m_regex.setEnabled(enabled);
         m_wildcard.setEnabled(enabled);
         m_caseSensitive.setEnabled(enabled);
+        m_excludeMatching.setEnabled(enabled);
         if (m_additionalCheckbox != null) {
             m_additionalCheckbox.setEnabled(enabled);
         }
         update();
     }
 
-    /** @param config to load from
-     * @param names the available names that will be shown in the selection preview */
+    /**
+     * @param config to load from
+     * @param names the available names that will be shown in the selection preview
+     */
     protected void loadConfiguration(final PatternFilterConfiguration config, final String[] names) {
         m_names = names;
         m_pattern.setText(config.getPattern());
-        if (config.getType().equals(PatternFilterType.Regex)) {
+        if (config.getType() == PatternFilterType.Regex) {
             m_regex.setSelected(true);
             refreshPatternFilterType();
-        } else if (config.getType().equals(PatternFilterType.Wildcard)) {
+        } else if (config.getType() == PatternFilterType.Wildcard) {
             m_wildcard.setSelected(true);
             refreshPatternFilterType();
         }
         m_caseSensitive.setSelected(config.isCaseSensitive());
+        m_excludeMatching.setSelected(config.isExcludeMatching());
         update();
     }
 
@@ -328,6 +337,7 @@ public class PatternFilterPanel<T> extends JPanel {
             config.setType(PatternFilterType.Wildcard);
         }
         config.setCaseSensitive(m_caseSensitive.isSelected());
+        config.setExcludeMatching(m_excludeMatching.isSelected());
     }
 
     /**
@@ -337,7 +347,7 @@ public class PatternFilterPanel<T> extends JPanel {
      */
     public void addChangeListener(final ChangeListener listener) {
         if (m_listeners == null) {
-            m_listeners = new ArrayList<ChangeListener>();
+            m_listeners = new ArrayList<>();
         }
         m_listeners.add(listener);
     }
@@ -349,7 +359,7 @@ public class PatternFilterPanel<T> extends JPanel {
      */
     public void removeChangeListener(final ChangeListener listener) {
         if (m_listeners != null) {
-            m_listeners.remove(listener);
+            m_listeners.remove(listener);//NOSONAR: only called once
         }
     }
 
@@ -360,6 +370,16 @@ public class PatternFilterPanel<T> extends JPanel {
                 listener.stateChanged(new ChangeEvent(this));
             }
         }
+    }
+
+    private void updatePreviewLabels() {
+        if (m_excludeMatchingValue) {
+            m_preview.setBorderTitles(EXCLUDE_MATCH_LABEL, INCLUDE_NON_MATCH_LABEL);
+        } else {
+            m_preview.setBorderTitles(EXCLUDE_NON_MATCH_LABEL, INCLUDE_MATCH_LABEL);
+        }
+        m_preview.revalidate();
+        m_preview.repaint();
     }
 
     private PatternFilterType getSelectedFilterType() {
@@ -376,47 +396,24 @@ public class PatternFilterPanel<T> extends JPanel {
      * Updates the preview lists and the error message.
      */
     void update() {
-        List<T> includes = new ArrayList<T>();
-        List<T> excludes = new ArrayList<T>();
-        boolean patternInvalid = false;
+        List<T> includes = new ArrayList<>();
+        List<T> excludes = new ArrayList<>();
+        var patternInvalid = false;
         try {
-            // Create regex, this will throw an exception if the current pattern is invalid
-            Pattern regex = PatternFilterConfiguration.compilePattern(m_patternValue, m_typeValue,
-                m_caseSensitiveValue);
-            // Fill lists
-            Set<T> hiddenNames = m_parentFilter.getHiddenNames();
-            for (String name : m_names) {
-                T t = m_parentFilter.getTforName(name);
-                // Skip Ts that are filtered out
-                if (m_filter != null) {
-                    if (!m_filter.include(t)) {
-                        continue;
-                    }
-                }
-                if (hiddenNames.contains(t)) {
-                    continue;
-                }
-                if (regex.matcher(name).matches()) {
-                    includes.add(t);
-                } else {
-                    excludes.add(t);
-                }
-            }
+            filterPattern(includes, excludes);
         } catch (PatternSyntaxException e) {
+            NodeLogger.getLogger(getClass()).debug(e);
             // Build HTML message for label, replacing newlines with line break '<br>' and spaces with non breaking
             // spaces '&nbsp;'
-            String htmlMessage =
-                "<html><div style=\"font-family: monospace\">"
-                    + e.getMessage().replace("\n", "<br>").replace(" ", "&nbsp;") + "</div></html>";
+            String htmlMessage = "<html><div style=\"font-family: monospace\">"
+                + e.getMessage().replace("\n", "<br>").replace(" ", "&nbsp;") + "</div></html>";
             m_invalid.setText(htmlMessage);
             patternInvalid = true;
             // Put all Ts into excludes (if not filtered out)
             for (String name : m_names) {
-                T t = m_parentFilter.getTforName(name);
-                if (m_filter != null) {
-                    if (!m_filter.include(t)) {
-                        continue;
-                    }
+                final var t = m_parentFilter.getTforName(name);
+                if (m_filter != null && !m_filter.include(t)) {
+                    continue;
                 }
                 excludes.add(t);
             }
@@ -431,6 +428,35 @@ public class PatternFilterPanel<T> extends JPanel {
             m_preview.setListSize(SMALL_LIST);
         } else {
             m_preview.setListSize(NORMAL_LIST);
+        }
+    }
+
+    /**
+     * Filters the saved names according to the glob or regex pattern and puts the result in the provided list
+     *
+     * @param includes list containing the names that should be included
+     * @param excludes list containing the names that should be excluded
+     */
+    private void filterPattern(final List<T> includes, final List<T> excludes) {
+        // Create regex, this will throw an exception if the current pattern is invalid
+        final var regex = PatternFilterConfiguration.compilePattern(m_patternValue, m_typeValue, m_caseSensitiveValue);
+        Predicate<String> include = regex.asMatchPredicate();
+        if (m_excludeMatchingValue) {
+            include = include.negate();
+        }
+        // Fill lists
+        Set<T> hiddenNames = m_parentFilter.getHiddenNames();
+        for (String name : m_names) {
+            final var t = m_parentFilter.getTforName(name);
+            // Skip Ts that are filtered out or hidden
+            if ((m_filter != null && !m_filter.include(t)) || hiddenNames.contains(t)) {
+                continue;
+            }
+            if (include.test(name)) {
+                includes.add(t);
+            } else {
+                excludes.add(t);
+            }
         }
     }
 
@@ -453,9 +479,10 @@ public class PatternFilterPanel<T> extends JPanel {
 
     /**
      * sets the text of the "Include Missing Value"-Checkbox
+     *
      * @param newText
      */
-    public void setAdditionalCheckboxText(final String newText){
+    public void setAdditionalCheckboxText(final String newText) {
         m_additionalCheckbox.setText(newText);
     }
 
