@@ -81,6 +81,8 @@ import org.knime.core.table.schema.IntDataSpec;
 import org.knime.core.table.schema.ListDataSpec;
 import org.knime.core.table.schema.LongDataSpec;
 import org.knime.core.table.schema.StructDataSpec;
+import org.knime.core.table.schema.traits.DataTraits;
+import org.knime.core.table.schema.traits.DefaultDataTraits;
 
 /**
  * {@link ValueFactory} implementation for {@link SparseListCell} with elements of type {@link LongCell}.
@@ -114,6 +116,11 @@ public final class LongSparseListValueFactory implements ValueFactory<StructRead
     public LongSparseListWriteValue createWriteValue(final StructWriteAccess writer) {
         return new DefaultLongSparseListWriteValue(writer.getWriteAccess(0), writer.getWriteAccess(1),
             writer.getWriteAccess(2), writer.getWriteAccess(3));
+    }
+
+    @Override
+    public DataTraits getTraits() {
+        return DefaultDataTraits.EMPTY;
     }
 
     /**

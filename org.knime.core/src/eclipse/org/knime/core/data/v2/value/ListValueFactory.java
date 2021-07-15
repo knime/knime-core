@@ -69,6 +69,8 @@ import org.knime.core.table.access.ListAccess.ListWriteAccess;
 import org.knime.core.table.access.ReadAccess;
 import org.knime.core.table.access.WriteAccess;
 import org.knime.core.table.schema.ListDataSpec;
+import org.knime.core.table.schema.traits.DataTraits;
+import org.knime.core.table.schema.traits.DefaultDataTraits;
 
 import com.google.common.collect.ImmutableList;
 
@@ -107,6 +109,11 @@ public final class ListValueFactory implements CollectionValueFactory<ListReadAc
     @Override
     public ListWriteValue createWriteValue(final ListWriteAccess writer) {
         return new DefaultListWriteValue(writer, m_inner);
+    }
+
+    @Override
+    public DataTraits getTraits() {
+        return DefaultDataTraits.EMPTY;
     }
 
     /**

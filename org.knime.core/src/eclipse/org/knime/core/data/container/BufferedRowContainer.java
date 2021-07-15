@@ -151,7 +151,7 @@ final class BufferedRowContainer implements RowContainer, RowWriteCursor {
             m_writeValues = new WriteValue[factories.length];
 
             for (int i = 0; i < factories.length; i++) {
-                final BufferedAccess access = BufferedAccesses.createBufferedAccess(factories[i].getSpec());
+                final BufferedAccess access = BufferedAccesses.createBufferedAccess(factories[i].getSpec(), factories[i].getTraits());
                 @SuppressWarnings("unchecked")
                 final ValueFactory<ReadAccess, ?> readCast = (ValueFactory<ReadAccess, ?>)factories[i];
                 m_readValues[i] = new NullableReadValue(readCast, access);

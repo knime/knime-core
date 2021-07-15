@@ -51,6 +51,7 @@ package org.knime.core.data.v2;
 import org.knime.core.table.access.ReadAccess;
 import org.knime.core.table.access.WriteAccess;
 import org.knime.core.table.schema.DataSpec;
+import org.knime.core.table.schema.traits.DataTraits;
 
 /**
  * Interface for implementations of {@link ValueFactory}s. Value factories can create logical {@link WriteValue
@@ -94,4 +95,10 @@ public interface ValueFactory<R extends ReadAccess, W extends WriteAccess> {
      */
     DataSpec getSpec();
 
+    /**
+     * Provides the {@link DataTraits}.
+     *
+     * @return the {@link DataTraits} describing additional info for the data storage
+     */
+    DataTraits getTraits();
 }

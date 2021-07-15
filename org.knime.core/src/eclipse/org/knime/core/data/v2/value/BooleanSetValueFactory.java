@@ -75,6 +75,8 @@ import org.knime.core.table.access.StructAccess.StructReadAccess;
 import org.knime.core.table.access.StructAccess.StructWriteAccess;
 import org.knime.core.table.schema.BooleanDataSpec;
 import org.knime.core.table.schema.StructDataSpec;
+import org.knime.core.table.schema.traits.DataTraits;
+import org.knime.core.table.schema.traits.DefaultDataTraits;
 
 import com.google.common.collect.ImmutableList;
 
@@ -104,6 +106,11 @@ public final class BooleanSetValueFactory implements ValueFactory<StructReadAcce
     @Override
     public BooleanSetWriteValue createWriteValue(final StructWriteAccess writer) {
         return new DefaultBooleanSetWriteValue(writer);
+    }
+
+    @Override
+    public DataTraits getTraits() {
+        return DefaultDataTraits.EMPTY;
     }
 
     /**
