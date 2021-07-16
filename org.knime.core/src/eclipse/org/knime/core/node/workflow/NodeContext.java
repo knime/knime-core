@@ -205,6 +205,10 @@ public final class NodeContext {
      * the workflow manager does not exist any more, i.e. its workflow has been closed. This is very likely an
      * implementation error because nobody should hold a node context for a closed workflow.
      *
+     * However, the result is also <code>null</code> it's the context for a workflow opened in the remote workflow
+     * editor. In that case, the {@link #getContextObjectForClass(Class)}-method must be used in order to access the
+     * desired context object.
+     *
      * @return the workflow manager associated with the current node or <code>null</code>
      */
     public WorkflowManager getWorkflowManager() {
