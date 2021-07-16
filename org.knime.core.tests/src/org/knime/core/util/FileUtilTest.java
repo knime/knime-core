@@ -237,21 +237,26 @@ public class FileUtilTest {
      */
     @Test
     public void testGetFileFromURL() throws Exception {
-        URL url = new URL("file:/C:/tmp/with%20space");
-        assertThat("Unexpected path", FileUtil.getFileFromURL(url).toString(), is("C:\\tmp\\with space"));
+        assumeThat(Platform.getOS(), is(Platform.OS_LINUX));
+        // The method under test is independent of the actual platform used. We constrain the platform here
+        // only because paths look different (e.g. drive letters on windows).
+        // We test on Linux because there tests are run most regularly.
 
-        url = new URL("file:/C:/tmp/with space");
-        assertThat("Unexpected path", FileUtil.getFileFromURL(url).toString(), is("C:\\tmp\\with space"));
+        URL url = new URL("file:///tmp/with%20space");
+        assertThat("Unexpected path", FileUtil.getFileFromURL(url).toString(), is("/tmp/with space"));
+
+        url = new URL("file:///tmp/with space");
+        assertThat("Unexpected path", FileUtil.getFileFromURL(url).toString(), is("/tmp/with space"));
 
         // see AP-17103: Component links with `+` in name could not be updated because path was not decoded properly.
-        url = new URL("file:/C:/tmp/with+plus");
-        assertThat("Unexpected path", FileUtil.getFileFromURL(url).toString(), is("C:\\tmp\\with+plus"));
+        url = new URL("file:///tmp/with+plus");
+        assertThat("Unexpected path", FileUtil.getFileFromURL(url).toString(), is("/tmp/with+plus"));
 
-        url = new URL("file:/C:/tmp/with%23hash");
-        assertThat("Unexpected path", FileUtil.getFileFromURL(url).toString(), is("C:\\tmp\\with#hash"));
+        url = new URL("file:///tmp/with%23hash");
+        assertThat("Unexpected path", FileUtil.getFileFromURL(url).toString(), is("/tmp/with#hash"));
 
-        url = new URL("file:/C:/tmp/with%25percent");
-        assertThat("Unexpected path", FileUtil.getFileFromURL(url).toString(), is("C:\\tmp\\with%percent"));
+        url = new URL("file:///tmp/with%25percent");
+        assertThat("Unexpected path", FileUtil.getFileFromURL(url).toString(), is("/tmp/with%percent"));
 
     }
 }
