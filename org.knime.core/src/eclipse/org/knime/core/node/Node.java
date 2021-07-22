@@ -79,6 +79,7 @@ import org.knime.core.data.filestore.FileStoreUtil;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.internal.ReferencedFile;
+import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.context.ModifiableNodeCreationConfiguration;
 import org.knime.core.node.context.NodeCreationConfiguration;
@@ -2577,6 +2578,18 @@ public final class Node implements NodeModelWarningListener {
      */
     public static void invokeEnsureOpen(final BufferedDataTable table) {
         table.ensureOpen();
+    }
+
+    /**
+     * Exposes {@code BufferedDataTable.getDelegate} as public method. This method has been added here in order to keep
+     * the scope of the original method to a minimum.
+     *
+     * @param table The table whose {@code getDelegate} method to invoke.
+     * @return The return value of {@code table.getDelegate()}, i.e. the table's underlying table.
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public static KnowsRowCountTable invokeGetDelegate(final BufferedDataTable table) {
+        return table.getDelegate();
     }
 
     /***
