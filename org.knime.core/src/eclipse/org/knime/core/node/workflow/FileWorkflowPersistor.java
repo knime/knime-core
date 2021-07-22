@@ -133,9 +133,6 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
     /** key used to store the editor specific settings (since 2.6). */
     private static final String CFG_EDITOR_INFO = "workflow_editor_settings";
 
-    /** Key for workflow template information. */
-    private static final String CFG_TEMPLATE_INFO = "workflow_template_information";
-
     /** Key for credentials. */
     private static final String CFG_CREDENTIALS = "workflow_credentials";
 
