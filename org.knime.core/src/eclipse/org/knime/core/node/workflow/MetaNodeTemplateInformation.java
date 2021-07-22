@@ -46,11 +46,14 @@
 package org.knime.core.node.workflow;
 
 import java.net.URI;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoField;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -70,8 +73,7 @@ import org.knime.core.util.LoadVersion;
  */
 public final class MetaNodeTemplateInformation implements Cloneable {
 
-    private static final SimpleDateFormat DATE_FORMAT =
-        new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss[ Z]");
 
     /** The template's role. */
     public enum Role {
@@ -120,7 +122,7 @@ public final class MetaNodeTemplateInformation implements Cloneable {
 
     private final Role m_role;
     private final TemplateType m_type;
-    private final Date m_timestamp;
+    private final OffsetDateTime m_timestamp;
     private final URI m_sourceURI;
 
     /** see {@link #getUpdateStatus()}. */
@@ -145,8 +147,9 @@ public final class MetaNodeTemplateInformation implements Cloneable {
      * @param incomingFlowVariables see {@link #getIncomingFlowVariables()}, <code>null</code> if not component project
      *            metadata
      */
-    private MetaNodeTemplateInformation(final Role role, final TemplateType type, final URI uri, final Date timestamp,
-        final NodeSettingsRO exampleInputDataInfo, final List<FlowVariable> incomingFlowVariables) {
+    private MetaNodeTemplateInformation(final Role role, final TemplateType type, final URI uri,
+        final OffsetDateTime timestamp, final NodeSettingsRO exampleInputDataInfo,
+        final List<FlowVariable> incomingFlowVariables) {
         if (role == null) {
             throw new NullPointerException("Role must not be null");
         }
@@ -179,7 +182,7 @@ public final class MetaNodeTemplateInformation implements Cloneable {
     }
 
     /** @return the timestamp date or null if this is not a link. */
-    public Date getTimestamp() {
+    public OffsetDateTime getTimestamp() {
         return m_timestamp;
     }
 
@@ -189,9 +192,7 @@ public final class MetaNodeTemplateInformation implements Cloneable {
         if (m_timestamp == null) {
             return null;
         }
-        synchronized (DATE_FORMAT) {
-            return DATE_FORMAT.format(m_timestamp);
-        }
+        return DATE_FORMAT.format(m_timestamp);
     }
 
     /** @return the sourceURI */
@@ -254,10 +255,8 @@ public final class MetaNodeTemplateInformation implements Cloneable {
             throw new NullPointerException("Can't create link to null URI");
         }
         switch (getRole()) {
-        case Template:
-            Date ts = getTimestamp();
-                assert ts != null : "Templates must not have null timestamp";
-                return new MetaNodeTemplateInformation(Role.Link, null, sourceURI, ts,
+            case Template:
+                return new MetaNodeTemplateInformation(Role.Link, null, sourceURI, m_timestamp,
                     includeExampleInputDataInfo ? m_exampleInputDataInfo : null,
                     includeExampleInputDataInfo ? m_incomingFlowVariables : null);
             default:
@@ -282,10 +281,8 @@ public final class MetaNodeTemplateInformation implements Cloneable {
         }
         switch (getRole()) {
         case Link:
-            Date ts = getTimestamp();
-            assert ts != null : "Templates must not have null timestamp";
             MetaNodeTemplateInformation newInfo
-                = new MetaNodeTemplateInformation(Role.Link, null, newSource, ts, null, null);
+                = new MetaNodeTemplateInformation(Role.Link, null, newSource, m_timestamp, null, null);
             newInfo.m_updateStatus = m_updateStatus;
             return newInfo;
         default:
@@ -407,7 +404,7 @@ public final class MetaNodeTemplateInformation implements Cloneable {
         if (other.m_timestamp == null) {
             throw new IllegalStateException("Argument not a template or link: " + this);
         }
-        return m_timestamp.after(other.m_timestamp);
+        return m_timestamp.isAfter(other.m_timestamp);
     }
 
     /** @param cl The non-null class (used to derive {@link TemplateType}).
@@ -416,7 +413,7 @@ public final class MetaNodeTemplateInformation implements Cloneable {
     public static MetaNodeTemplateInformation createNewTemplate(
         final Class<? extends NodeContainerTemplate> cl) {
         TemplateType type = TemplateType.get(cl);
-        return new MetaNodeTemplateInformation(Role.Template, type, null, new Date(), null, null);
+        return new MetaNodeTemplateInformation(Role.Template, type, null, OffsetDateTime.now(), null, null);
     }
 
     /**
@@ -429,7 +426,7 @@ public final class MetaNodeTemplateInformation implements Cloneable {
      */
     public static MetaNodeTemplateInformation createNewTemplate(final NodeSettingsRO exampleInputDataInfo,
         final List<FlowVariable> incomingFlowVariables) {
-        return new MetaNodeTemplateInformation(Role.Template, TemplateType.SubNode, null, new Date(),
+        return new MetaNodeTemplateInformation(Role.Template, TemplateType.SubNode, null, OffsetDateTime.now(),
             exampleInputDataInfo, incomingFlowVariables);
     }
 
@@ -465,7 +462,7 @@ public final class MetaNodeTemplateInformation implements Cloneable {
         NodeSettingsRO nestedSettings = settings.getNodeSettings(CFG_TEMPLATE_INFO);
         String roleS = nestedSettings.getString("role");
         Role role;
-        Date timestamp;
+        OffsetDateTime timestamp;
         URI sourceURI;
         TemplateType templateType;
         try {
@@ -516,21 +513,22 @@ public final class MetaNodeTemplateInformation implements Cloneable {
     /** @param settings
     /** @return
     /** @throws InvalidSettingsException */
-    private static Date readTimestamp(final NodeSettingsRO settings)
+    private static OffsetDateTime readTimestamp(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         String dateS = settings.getString("timestamp");
         if (dateS == null || dateS.length() == 0) {
             throw new InvalidSettingsException("Cannot not read reference date from emtpy string");
         }
-        Date date;
         try {
-            synchronized (DATE_FORMAT) {
-                date = DATE_FORMAT.parse(dateS);
+            var tempAccessor = DATE_FORMAT.parse(dateS);
+            if (tempAccessor.isSupported(ChronoField.OFFSET_SECONDS)) {
+                return OffsetDateTime.from(tempAccessor);
+            } else {
+                return LocalDateTime.from(tempAccessor).atOffset(ZoneOffset.UTC);
             }
-        } catch (ParseException pe) {
+        } catch (DateTimeParseException pe) {
             throw new InvalidSettingsException("Cannot parse reference date \"" + dateS + "\": " + pe.getMessage(), pe);
         }
-        return date;
     }
 
     /** Read type, only called for templates.

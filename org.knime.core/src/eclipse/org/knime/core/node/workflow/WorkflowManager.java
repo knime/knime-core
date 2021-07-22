@@ -69,8 +69,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.NoSuchAlgorithmException;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -174,6 +172,7 @@ import org.knime.core.node.workflow.NodeMessage.Type;
 import org.knime.core.node.workflow.NodePropertyChangedEvent.NodeProperty;
 import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
 import org.knime.core.node.workflow.Workflow.NodeAndInports;
+import org.knime.core.node.workflow.WorkflowManager.NodeModelFilter;
 import org.knime.core.node.workflow.WorkflowPersistor.ConnectionContainerTemplate;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
@@ -7304,11 +7303,9 @@ public final class WorkflowManager extends NodeContainer
             }
             File localDir = null;
             if (loadOnlyIfLocalOrOutdated) {
-                // TODO use proper time zone
-                ZonedDateTime ifModifiedSince =
-                    ZonedDateTime.ofInstant(linkInfo.getTimestamp().toInstant(), ZoneId.systemDefault());
                 localDir = ResolverUtil
-                    .resolveURItoLocalOrTempFileConditional(sourceURI, new NullProgressMonitor(), ifModifiedSince)
+                    .resolveURItoLocalOrTempFileConditional(sourceURI, new NullProgressMonitor(),
+                        linkInfo.getTimestamp().toZonedDateTime())
                     .orElse(null);
                 if (localDir == null) {
                     return null;
