@@ -82,6 +82,7 @@ import org.osgi.framework.Bundle;
  *
  * @author Bernd Wiswedel, University of Konstanz
  */
+@SuppressWarnings("java:S106") // System.err.print (no logger available yet)
 public final class KNIMEConstants {
     /** KNIME's major release number. */
     public static final int MAJOR;
@@ -554,7 +555,7 @@ public final class KNIMEConstants {
         try {
             assert false;
             flag = false;
-        } catch (AssertionError ae) {
+        } catch (AssertionError ae) { // NOSONAR
             flag = true;
         }
         ASSERTIONS_ENABLED = flag;
@@ -573,9 +574,9 @@ public final class KNIMEConstants {
             try {
                 knimeTempDir = Paths.get(System.getProperty("java.io.tmpdir"));
                 knimeTempDir = knimeTempDir.toRealPath();
-            } catch (IOException ex) {
-                System.err.println("Could not canonicalize temp directory '" + knimeTempDir.toAbsolutePath() + "': "
-                    + ex.getMessage());
+            } catch (IOException ex) { // NOSONAR
+                System.err.println("Could not canonicalize temp directory '"
+                        + knimeTempDir.toAbsolutePath() + "': " + ex.getMessage());
             }
         }
         ConfigurationAreaChecker.scheduleIntegrityCheck();
