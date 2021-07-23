@@ -407,6 +407,34 @@ public final class KNIMEConstants {
         return 1500;
     }
 
+    /**
+     * The multiplier used to derive the default thread count per number of {@linkplain Runtime#availableProcessors()
+     * available processors}. The thread count may be changed by the user in the KNIME preferences. This multiplier
+     * value ({@value #PROCESSOR_COUNT_TO_DEF_THREAD_COUNT_MULTIPLIER}) will set a default number of threads to ...:
+     *
+     * <pre>
+     * #processors | #def thread count
+     *      1      |     1
+     *      2      |     3
+     *      4      |     6
+     *      8      |    12
+     *    ...      |    ...
+     *     96      |    144
+     * </pre>
+     * @since 4.5
+     * @see #DEF_MAX_THREAD_COUNT
+     */
+    public static final float PROCESSOR_COUNT_TO_DEF_THREAD_COUNT_MULTIPLIER = 1.5f; // see also AP-17177
+
+    /**
+     * The default number of threads used by KNIME, derived from the system's {@linkplain Runtime#availableProcessors()
+     * available processors} and {@link #PROCESSOR_COUNT_TO_DEF_THREAD_COUNT_MULTIPLIER} unless specifically overwritten
+     * using the {@link #PROPERTY_MAX_THREAD_COUNT} system property.
+     *
+     * @since 4.5
+     */
+    public static final int DEF_MAX_THREAD_COUNT;
+
     /** KNIME home directory. */
     private static File knimeHomeDir;
 
@@ -502,7 +530,8 @@ public final class KNIMEConstants {
         File knimeHome = KNIMEPath.getKNIMEHomeDirPath();
         knimeHomeDir = knimeHome;
 
-        int maxThreads = Runtime.getRuntime().availableProcessors() + 2;
+        int maxThreads =
+            (int)(PROCESSOR_COUNT_TO_DEF_THREAD_COUNT_MULTIPLIER * Runtime.getRuntime().availableProcessors());
         String maxThreadsString =
             System.getProperty(PROPERTY_MAX_THREAD_COUNT);
         try {
@@ -519,6 +548,7 @@ public final class KNIMEConstants {
                     + "\"org.knime.core.maxThreads\" (\"" + maxThreadsString
                     + "\") as number: " + nfe.getMessage());
         }
+        DEF_MAX_THREAD_COUNT = maxThreads;
         GLOBAL_THREAD_POOL = new ThreadPool(maxThreads);
         boolean flag;
         try {
