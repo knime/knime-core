@@ -50,8 +50,6 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThrows;
-import static org.knime.core.node.workflow.BugWEBP803_OnlyResetNodesToBeReexecuted.createNodeIDSuffix;
-import static org.knime.core.node.workflow.BugWEBP803_OnlyResetNodesToBeReexecuted.getWizardNodeViewValue;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -61,9 +59,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.awaitility.Awaitility;
-import org.eclipse.core.runtime.Assert;
-import org.hamcrest.MatcherAssert;
-import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.knime.core.node.web.WebViewContent;
 import org.knime.core.node.wizard.WizardNode;
@@ -84,14 +79,14 @@ public class BugWEBP803_OnlyResetNodesToBeReexecuted extends WorkflowTestCase {
 		WorkflowManager wfm = getManager();
 		NodeID pageId = wfm.getID().createChild(9);
 		List<String> successors = WebResourceController
-				.getSuccessorWizardNodesWithinPage(wfm, pageId, pageId.createChild(0).createChild(2))
+				.getSuccessorWizardNodesWithinComponent(wfm, pageId, pageId.createChild(0).createChild(2))
 				.map(p -> p.getFirst().toString()).collect(Collectors.toList());
 		assertThat("unexpected successors", successors, containsInAnyOrder("9:0:2", "9:0:26"));
 
-		assertThrows(IllegalArgumentException.class, () -> WebResourceController.getSuccessorWizardNodesWithinPage(wfm,
-				pageId, pageId.createChild(0).createChild(83483883)));
-		assertThrows(IllegalArgumentException.class, () -> WebResourceController.getSuccessorWizardNodesWithinPage(wfm,
-				wfm.getID().createChild(34342), null));
+		assertThrows(IllegalArgumentException.class, () -> WebResourceController
+				.getSuccessorWizardNodesWithinComponent(wfm, pageId, pageId.createChild(0).createChild(83483883)));
+		assertThrows(IllegalArgumentException.class, () -> WebResourceController
+				.getSuccessorWizardNodesWithinComponent(wfm, wfm.getID().createChild(34342), null));
 	}
 
 	/**
@@ -130,9 +125,10 @@ public class BugWEBP803_OnlyResetNodesToBeReexecuted extends WorkflowTestCase {
 	}
 
 	private static void testReexecution(SubNodeContainer page, WebResourceController wrc) {
-		wrc.reexecuteSinglePage(createNodeIDSuffix(2), createWizardPageInput());
+		NodeID projectId = page.getProjectWFM().getID();
+		wrc.reexecuteSinglePage(createNodeID(projectId, 9, 0, 2), createWizardPageInput());
 		waitForPage(page);
-		wrc.reexecuteSinglePage(createNodeIDSuffix(2), createWizardPageInput());
+		wrc.reexecuteSinglePage(createNodeID(projectId, 9, 0, 2), createWizardPageInput());
 		waitForPage(page);
 
 		// get flow variables which contain the the number of executions for each widget
@@ -162,6 +158,10 @@ public class BugWEBP803_OnlyResetNodesToBeReexecuted extends WorkflowTestCase {
 	private static void waitForPage(SubNodeContainer page) {
 		Awaitility.await().atMost(5, TimeUnit.SECONDS).pollInterval(10, TimeUnit.MILLISECONDS)
 				.until(() -> page.getNodeContainerState().isExecuted());
+	}
+
+	static NodeID createNodeID(NodeID projectID, int... ids) {
+		return new NodeIDSuffix(ids).prependParent(projectID);
 	}
 
 	static NodeIDSuffix createNodeIDSuffix(int... ids) {
