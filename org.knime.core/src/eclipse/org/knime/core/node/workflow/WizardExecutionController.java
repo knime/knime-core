@@ -513,17 +513,14 @@ public final class WizardExecutionController extends WebResourceController imple
      * {@inheritDoc}
      */
     @Override
-    public Map<String, ValidationError> reexecuteSinglePage(final NodeIDSuffix nodeIDToReset,
+    public Map<String, ValidationError> reexecuteSinglePage(final NodeID nodeIDToReset,
         final Map<String, String> valueMap) {
         try (WorkflowLock lock = m_manager.lock()) {
             NodeID pageID = getCurrentWizardPageNodeID();
             doBeforePageChange(true);
-            WorkflowManager pageWfm =
-                ((SubNodeContainer)m_manager.getNodeContainer(pageID)).getWorkflowManager();
-            NodeID nodeToReset = nodeIDToReset.prependParent(pageWfm.getID());
-            Map<String, ValidationError> validationResult = loadValuesIntoCurrentPage(valueMap, nodeToReset);
+            Map<String, ValidationError> validationResult = loadValuesIntoCurrentPage(valueMap, nodeIDToReset);
             if (validationResult.isEmpty()) {
-                m_singlePageExecutionResetNodeID = nodeToReset;
+                m_singlePageExecutionResetNodeID = nodeIDToReset;
                 m_manager.executeUpToHere(pageID);
             }
             return validationResult;

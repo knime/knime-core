@@ -5145,13 +5145,13 @@ public final class WorkflowManager extends NodeContainer
      * @param subNodeId the subnode id
      * @param controller some boolean predicates provided by the controller affect the method's behavior
      * @param nodeToReset the id of the node to be reset (and its successors) within the subnode
-     * @throws IllegalArgumentException if the subnode doesn't exist
+     * @throws IllegalArgumentException if the subnode doesn't exist within this manager scope or if the {@link nodeID}
+     *             provided references a node which is not a {@link SubNodeContainer}
      * @throws IllegalStateException if nodes downstream of the subnode are currently executing or executed
      */
     void resetSubnodeForViewUpdate(final NodeID subNodeId, final WebResourceController controller,
         final NodeID nodeToReset) {
         assert isLockedByCurrentThread();
-        assert isProject();
         SubNodeContainer snc = getNodeContainer(subNodeId, SubNodeContainer.class, true);
         checkSubnodeForViewUpdate(snc, controller);
         if (controller.isResetDownstreamNodesWhenApplyingViewValue()) {
@@ -5163,8 +5163,7 @@ public final class WorkflowManager extends NodeContainer
         nc.getParent().invokeResetOnSingleNodeContainer(nc);
     }
 
-    private void checkSubnodeForViewUpdate(final SubNodeContainer snc,
-        final WebResourceController controller) {
+    private void checkSubnodeForViewUpdate(final SubNodeContainer snc, final WebResourceController controller) {
         controller.stateCheckWhenApplyingViewValues(snc);
         for (ConnectionContainer cc : m_workflow.getConnectionsBySource(snc.getID())) {
             NodeID dest = cc.getDest();

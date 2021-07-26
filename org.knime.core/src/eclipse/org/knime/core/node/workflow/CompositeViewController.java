@@ -251,16 +251,14 @@ public class CompositeViewController extends WebResourceController {
      * {@inheritDoc}
      */
     @Override
-    public Map<String, ValidationError> reexecuteSinglePage(final NodeIDSuffix nodeIDToReset,
+    public Map<String, ValidationError> reexecuteSinglePage(final NodeID nodeIDToReset,
         final Map<String, String> valueMap) {
         try (WorkflowLock lock = m_manager.lock()) {
             NodeID pageID = m_nodeID;
             SubNodeContainer snc = (SubNodeContainer)m_manager.getNodeContainer(pageID);
             try (WorkflowLock sncLock = snc.lock()) {
-                WorkflowManager pageWfm = snc.getWorkflowManager();
-                NodeID nodeToReset = nodeIDToReset.prependParent(pageWfm.getID());
                 Map<String, ValidationError> validationResult =
-                    loadValuesIntoPage(valueMap, true, false, nodeToReset);
+                    loadValuesIntoPage(valueMap, true, false, nodeIDToReset);
                 if (validationResult == null || validationResult.isEmpty()) {
                     m_manager.executeUpToHere(pageID);
                 }

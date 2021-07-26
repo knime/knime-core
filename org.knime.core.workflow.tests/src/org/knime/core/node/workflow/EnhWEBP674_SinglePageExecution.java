@@ -48,6 +48,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
+import static org.knime.core.node.workflow.BugWEBP803_OnlyResetNodesToBeReexecuted.createNodeID;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -64,7 +65,7 @@ import org.knime.core.node.workflow.WebResourceController.WizardPageContent;
 /**
  * Test for the (partial) single page re-execution of pages in a workflow which
  * is in wizard execution.
- * 
+ *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
 public class EnhWEBP674_SinglePageExecution extends WorkflowTestCase {
@@ -125,11 +126,13 @@ public class EnhWEBP674_SinglePageExecution extends WorkflowTestCase {
 	 */
 	@Test
 	public void testReexecuteSinglePageLoadValuesAndStepNextWhileReexcutionInProgress() {
-		WizardExecutionController wec = getManager().setAndGetWizardExecutionController();
+		WorkflowManager wfm = getManager();
+		WizardExecutionController wec = wfm.setAndGetWizardExecutionController();
+		NodeID projectId = wfm.getID();
 		reexecuteSinglePageAndKeepExecuting(wec);
 
 		IllegalStateException exception = assertThrows(IllegalStateException.class,
-				() -> wec.reexecuteSinglePage(createNodeIDSuffix(7), createWizardPageInput(0)));
+				() -> wec.reexecuteSinglePage(createNodeID(projectId, 7), createWizardPageInput(0)));
 		assertThat(exception.getMessage(), is("Action not allowed. Single page re-execution is in progress."));
 		exception = assertThrows(IllegalStateException.class,
 				() -> wec.loadValuesIntoCurrentPage(createWizardPageInput(0)));
@@ -145,6 +148,7 @@ public class EnhWEBP674_SinglePageExecution extends WorkflowTestCase {
 	public void testStepBackWhileInSinglePageReexecution() {
 		WorkflowManager wfm = getManager();
 		WizardExecutionController wec = wfm.setAndGetWizardExecutionController();
+		NodeID projectId = wfm.getID();
 
 		// step to second page
 		wec.loadValuesIntoCurrentPage(createWizardPageInput(0));
@@ -152,7 +156,7 @@ public class EnhWEBP674_SinglePageExecution extends WorkflowTestCase {
 		waitForPage(m_page2);
 
 		// re-execute second page
-		wec.reexecuteSinglePage(createNodeIDSuffix(6), Collections.emptyMap());
+		wec.reexecuteSinglePage(createNodeID(projectId, 6, 0, 6), Collections.emptyMap());
 		Awaitility.await().atMost(5, TimeUnit.SECONDS).pollInterval(100, TimeUnit.MILLISECONDS).until(() -> {
 			WizardPageContent pc = wec.getCurrentWizardPage();
 			return pc.getInfoMap().keySet().contains(createNodeIDSuffix(6, 0, 5));
@@ -168,7 +172,7 @@ public class EnhWEBP674_SinglePageExecution extends WorkflowTestCase {
 	}
 
 	private void reexecuteSinglePageAndKeepExecuting(WizardExecutionController wec) {
-		wec.reexecuteSinglePage(createNodeIDSuffix(7), createWizardPageInput(400000));
+		wec.reexecuteSinglePage(createNodeID(getManager().getID(), 7, 0, 7), createWizardPageInput(400000));
 		assertThat(wec.hasCurrentWizardPage(), is(true));
 		Awaitility.await().atMost(5, TimeUnit.SECONDS).pollInterval(100, TimeUnit.MILLISECONDS).untilAsserted(() -> {
 			WizardPageContent pc = wec.getCurrentWizardPage();
@@ -177,7 +181,8 @@ public class EnhWEBP674_SinglePageExecution extends WorkflowTestCase {
 	}
 
 	private void reexecuteSinglePageTillExecuted(WizardExecutionController wec) {
-		wec.reexecuteSinglePage(createNodeIDSuffix(7), createWizardPageInput(0));
+		wec.reexecuteSinglePage(createNodeID(getManager().getID(), 7, 0, 7),
+				createWizardPageInput(0));
 		waitForPage(m_page1);
 	}
 

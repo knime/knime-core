@@ -461,17 +461,16 @@ public abstract class WebResourceController {
         SubNodeContainer subNC = manager.getNodeContainer(subnodeID, SubNodeContainer.class, true);
         LinkedHashMap<NodeIDSuffix, SubNodeContainer> sncMap = new LinkedHashMap<NodeIDSuffix, SubNodeContainer>();
         findNestedViewNodes(subNC, resultMap, infoMap, sncMap, initialHiliteHandlerSet);
-        NodeID.NodeIDSuffix pageID = NodeID.NodeIDSuffix.create(manager.getID(), subNC.getID());
         SubnodeContainerLayoutStringProvider layoutStringProvider = subNC.getSubnodeLayoutStringProvider();
         if (layoutStringProvider.isEmptyLayout() || layoutStringProvider.isPlaceholderLayout()) {
             try {
                 WorkflowManager subWfm = subNC.getWorkflowManager();
                 Map<NodeIDSuffix, ViewHideable> viewMap = new LinkedHashMap<NodeIDSuffix, ViewHideable>();
                 subWfm.findNodes(WizardNode.class, NOT_HIDDEN_FILTER, false).entrySet().stream()
-                    .forEach(e -> viewMap.put(NodeID.NodeIDSuffix.create(manager.getID(), e.getKey()), e.getValue()));
+                    .forEach(e -> viewMap.put(toNodeIDSuffix(e.getKey()), e.getValue()));
                 Map<NodeID, SubNodeContainer> nestedSubs = getSubnodeContainers(subWfm);
                 nestedSubs.entrySet().stream().filter(e -> isWizardPage(e.getKey(), subWfm))
-                    .forEach(e -> viewMap.put(NodeID.NodeIDSuffix.create(manager.getID(), e.getKey()), e.getValue()));
+                    .forEach(e -> viewMap.put(toNodeIDSuffix(e.getKey()), e.getValue()));
                 layoutStringProvider.setLayoutString(LayoutUtil.createDefaultLayout(viewMap));
             } catch (IOException ex) {
                 LOGGER.error("Default page layout could not be created: " + ex.getMessage(), ex);
@@ -503,7 +502,7 @@ public abstract class WebResourceController {
         List<HiLiteTranslator> translatorList =
             knownTranslators.size() > 0 ? new ArrayList<HiLiteTranslator>(knownTranslators) : null;
         List<HiLiteManager> managerList = knownManagers.size() > 0 ? new ArrayList<HiLiteManager>(knownManagers) : null;
-        WizardPageContent page = new WizardPageContent(pageID, resultMap, layoutStringProvider.getLayoutString(),
+        WizardPageContent page = new WizardPageContent(subnodeID, resultMap, layoutStringProvider.getLayoutString(),
             translatorList, managerList);
         page.setInfoMap(infoMap);
         return page;
@@ -581,7 +580,7 @@ public abstract class WebResourceController {
         WorkflowManager subWFM = subNC.getWorkflowManager();
         return subWFM.findExecutedNodes(WizardNode.class, NOT_HIDDEN_FILTER).entrySet().stream()
             .filter(e -> !subWFM.getNodeContainer(e.getKey(), NativeNodeContainer.class, true).isInactive())
-            .collect(Collectors.toMap(e -> NodeID.NodeIDSuffix.create(manager.getID(), e.getKey()),
+            .collect(Collectors.toMap(e -> toNodeIDSuffix(e.getKey()),
                 e -> e.getValue().getViewValue()));
     }
 
@@ -689,7 +688,7 @@ public abstract class WebResourceController {
         if (nodeToReset == null) {
             filteredViewContentMap = viewContentMap;
         } else {
-            Set<String> nodesToReset = getSuccessorWizardNodesWithinPage(manager, subnodeID, nodeToReset)
+            Set<String> nodesToReset = getSuccessorWizardNodesWithinComponent(manager, subnodeID, nodeToReset)
                 .map(p -> p.getFirst().toString()).collect(Collectors.toCollection(HashSet::new));
             filteredViewContentMap = filterViewValues(nodesToReset, viewContentMap);
         }
@@ -725,33 +724,33 @@ public abstract class WebResourceController {
 
     /**
      * Utility method to get a special set of successor nodes of the node denoted by the provided {@link NodeID}. The
-     * start node id must denote a node contained in the page (i.e. the component denoted by pageId).
+     * start node id must denote a node contained in the component denoted by componentId.
      *
      * The stream of successors
      * <ul>
      * <li>includes the 'start' node itself</li>
      * <li>only contains nodes whose node model is of type {@link WizardNode}</li>
-     * <li>does <i>not</i> include successors beyond the page (i.e. the component denoted by pageId)</li>
-     * <li>includes successors across component and metanode 'borders' (but not beyond the page itself)</li>
+     * <li>does <i>not</i> include successors beyond the parent component (i.e. the component denoted by
+     * componentId)</li>
+     * <li>includes successors across component and metanode 'borders' (but not beyond the component page itself)</li>
      * </ul>
      *
-     * @param wfm the workflow project which contains the page denoted by pageId
-     * @param pageId the page (i.e. must be a component) at the top level of the workflow
+     * @param wfm parent manager of the component denoted by componentId
+     * @param componentId must be a component which represents the wizard page
      * @param startNodeId the node to get the successor nodes for
-     * @return a stream of successor nodes represented by node id suffixes (relative to the page) and the node container
-     *         itself
-     * @throws IllegalArgumentException if wfm is not project, if pageId doesn't denote a top-level component, or if
-     *             startNodeId doesn't denote a node contained in the page
+     * @return a stream of successor nodes represented by node id suffixes (relative to the project) and their node
+     *         containers
+     * @throws IllegalArgumentException if componentId doesn't denote a top-level component within the workflow manager
+     *             scope or if startNodeId doesn't denote a node contained in the page
      *
      * @since 4.4
      */
-    public static Stream<Pair<NodeIDSuffix, NodeContainer>> getSuccessorWizardNodesWithinPage(final WorkflowManager wfm,
-        final NodeID pageId, final NodeID startNodeId) {
-        CheckUtils.checkArgument(wfm.getNodeContainer(pageId) instanceof SubNodeContainer,
-            "Provided pageId (%s) doesn't reference a top-level component", pageId);
-        CheckUtils.checkArgument(wfm.isProject(), "The passed workflow is not a project");
+    public static Stream<Pair<NodeIDSuffix, NodeContainer>> getSuccessorWizardNodesWithinComponent(
+        final WorkflowManager wfm, final NodeID componentId, final NodeID startNodeId) {
+        CheckUtils.checkArgument(wfm.getNodeContainer(componentId) instanceof SubNodeContainer,
+            "Provided node id (%s) doesn't reference a component", componentId);
         try (WorkflowLock lock = wfm.lock()) {
-            return getAllSuccessorNodesWithinPage(pageId, wfm.findNodeContainer(startNodeId))//
+            return getAllSuccessorNodesWithinComponent(componentId, wfm.findNodeContainer(startNodeId))//
                 .filter(WebResourceController::isWizardNodeOrComponentOrMetanode)//
                 .flatMap(nc -> {
                     if (nc instanceof NativeNodeContainer) {
@@ -759,7 +758,7 @@ public abstract class WebResourceController {
                     } else {
                         return getAllWizardNodesFromMetanodeOrComponent(wfm, nc);
                     }
-                }).map(nc -> Pair.create(NodeIDSuffix.create(wfm.getID(), nc.getID()), nc));
+                }).map(nc -> Pair.create(NodeIDSuffix.create(wfm.getProjectWFM().getID(), nc.getID()), nc));
         }
     }
 
@@ -776,7 +775,7 @@ public abstract class WebResourceController {
             || nc instanceof WorkflowManager || nc instanceof SubNodeContainer;
     }
 
-    private static Stream<NodeContainer> getAllSuccessorNodesWithinPage(final NodeID pageId,
+    private static Stream<NodeContainer> getAllSuccessorNodesWithinComponent(final NodeID componentId,
         final NodeContainer startNode) {
         WorkflowManager wfm = startNode.getParent();
         Stream<NodeContainer> res =
@@ -785,9 +784,9 @@ public abstract class WebResourceController {
         WorkflowManager startNodeParent = startNode.getParent();
         NodeContainer startNodeLevelUp = startNodeParent.getDirectNCParent() instanceof SubNodeContainer
             ? (SubNodeContainer)startNodeParent.getDirectNCParent() : startNodeParent;
-        if (!startNodeLevelUp.getID().equals(pageId)) {
-            // recurse into the level above (but only if it's not the page component itself)
-            Stream<NodeContainer> succ = getAllSuccessorNodesWithinPage(pageId, startNodeLevelUp);
+        if (!startNodeLevelUp.getID().equals(componentId) && !componentId.equals(startNode.getID())) {
+            // recurse into the level above (but only if it's not the original component itself)
+            Stream<NodeContainer> succ = getAllSuccessorNodesWithinComponent(componentId, startNodeLevelUp);
             // exclude start node
             succ = succ.filter(nc -> !nc.getID().equals(startNodeLevelUp.getID()));
             res = Stream.concat(res, succ);
@@ -799,9 +798,10 @@ public abstract class WebResourceController {
     private static void loadViewValues(final Map<String, String> filteredViewContentMap,
         final Map<NodeID, WizardNode> wizardNodeSet, final WorkflowManager manager, final SubNodeContainer subNodeNC,
         final boolean useAsDefault) {
+        WorkflowManager projectWfm = subNodeNC.getProjectWFM();
         for (Map.Entry<String, String> entry : filteredViewContentMap.entrySet()) {
             NodeID.NodeIDSuffix suffix = NodeID.NodeIDSuffix.fromString(entry.getKey());
-            NodeID id = suffix.prependParent(manager.getID());
+            NodeID id = suffix.prependParent(manager.getProjectWFM().getID());
             WizardNode wizardNode = wizardNodeSet.get(id);
             WebViewContent newViewValue = wizardNode.createEmptyViewValue();
             if (newViewValue == null) {
@@ -813,8 +813,10 @@ public abstract class WebResourceController {
                     .loadFromStream(new ByteArrayInputStream(entry.getValue().getBytes(StandardCharsets.UTF_8)));
                 wizardNode.loadViewValue(newViewValue, useAsDefault);
                 if (useAsDefault) {
-                    subNodeNC.getWorkflowManager().getNodeContainer(id, SingleNodeContainer.class, true)
-                        .saveNodeSettingsToDefault();
+                    NodeContainer nc = projectWfm.findNodeContainer(id);
+                    CheckUtils.checkArgument(nc instanceof SingleNodeContainer, "Provided node id (%s) doesn't "
+                        + "reference a single node and therefore the updated value cannot be saved", id);
+                    ((SingleNodeContainer)nc).saveNodeSettingsToDefault();
                 }
             } catch (Exception e) {
                 LOGGER.error("Failed to load view value into node \"" + id + "\" although validation succeeded", e);
@@ -862,9 +864,10 @@ public abstract class WebResourceController {
         Map<String, ValidationError> resultMap = new LinkedHashMap<String, ValidationError>();
         for (Map.Entry<String, String> entry : viewValues.entrySet()) {
             NodeID.NodeIDSuffix suffix = NodeID.NodeIDSuffix.fromString(entry.getKey());
-            NodeID id = suffix.prependParent(manager.getID());
-            CheckUtils.checkState(id.hasPrefix(subnodeID), "The wizard page content for ID %s (suffix %s) "
-                + "does not belong to the current Component (ID %s)", id, entry.getKey(), subnodeID);
+            NodeID id = suffix.prependParent(manager.getProjectWFM().getID());
+            CheckUtils.checkState(id.hasPrefix(subnodeID),
+                "The wizard page content for ID %s (suffix %s) does not belong to the current Component (ID %s)",
+                id, entry.getKey(), subnodeID);
             WizardNode wizardNode = wizardNodeSet.get(id);
             CheckUtils.checkState(wizardNode != null,
                 "No wizard node with ID %s in Component, valid IDs are: " + "%s", id,
@@ -997,14 +1000,14 @@ public abstract class WebResourceController {
      * Provided values that refer to a node that hasn't been reset will be ignored. If the validation of the input
      * values fails, the page won't be re-executed and remains reset.
      *
-     * @param nodeIDToReset the {@link NodeID} of the upstream-most node in the page that shall be reset.
+     * @param nodeIDToReset the absolute {@link NodeID} of the upstream-most node in the page that shall be reset.
      * @param valueMap the values to load before re-execution, a map from {@link NodeIDSuffix} strings to parsed view
      *            values.
      * @return empty map if validation succeeds, map of errors otherwise
      *
      * @since 4.4
      */
-    public abstract Map<String, ValidationError> reexecuteSinglePage(final NodeIDSuffix nodeIDToReset,
+    public abstract Map<String, ValidationError> reexecuteSinglePage(final NodeID nodeIDToReset,
         final Map<String, String> valueMap);
 
     /**
@@ -1015,6 +1018,16 @@ public abstract class WebResourceController {
      */
     protected NodeID toNodeID(final int subnodeIDSuffix) {
         return new NodeID(m_manager.getID(), subnodeIDSuffix);
+    }
+
+    /**
+     * Composes a NodeIDSuffix from a subnode ID by removing the manager prefix.
+     *
+     * @param subnodeID the ID of a subnode of the manager associated with this controller.
+     * @return NodeIDSuffix the component relative suffix for the subnode.
+     */
+    private NodeIDSuffix toNodeIDSuffix(final NodeID subnodeID) {
+        return NodeIDSuffix.create(m_manager.getID(), subnodeID);
     }
 
     /**
@@ -1037,7 +1050,7 @@ public abstract class WebResourceController {
      */
     public static final class WizardPageContent {
 
-        private final NodeIDSuffix m_pageNodeID;
+        private final NodeID m_pageNodeID;
 
         @SuppressWarnings("rawtypes")
         private final Map<NodeIDSuffix, WizardNode> m_pageMap;
@@ -1059,7 +1072,7 @@ public abstract class WebResourceController {
          * @param layoutInfo
          */
         @SuppressWarnings("rawtypes")
-        WizardPageContent(final NodeIDSuffix pageNodeID, final Map<NodeIDSuffix, WizardNode> pageMap,
+        WizardPageContent(final NodeID pageNodeID, final Map<NodeIDSuffix, WizardNode> pageMap,
             final String layoutInfo, final List<HiLiteTranslator> hiLiteTranslators,
             final List<HiLiteManager> hiLiteManagers) {
             m_pageNodeID = pageNodeID;
@@ -1074,7 +1087,7 @@ public abstract class WebResourceController {
          * @return the pageNodeID
          * @since 3.3
          */
-        public NodeIDSuffix getPageNodeID() {
+        public NodeID getPageNodeID() {
             return m_pageNodeID;
         }
 

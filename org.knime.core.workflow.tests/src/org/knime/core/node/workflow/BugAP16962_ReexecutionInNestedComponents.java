@@ -49,7 +49,7 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThrows;
+import static org.knime.core.node.workflow.BugWEBP803_OnlyResetNodesToBeReexecuted.createNodeID;
 import static org.knime.core.node.workflow.BugWEBP803_OnlyResetNodesToBeReexecuted.createNodeIDSuffix;
 import static org.knime.core.node.workflow.BugWEBP803_OnlyResetNodesToBeReexecuted.getWizardNodeViewValue;
 
@@ -79,7 +79,7 @@ public class BugAP16962_ReexecutionInNestedComponents extends WorkflowTestCase {
 		WorkflowManager wfm = getManager();
 		NodeID pageId = wfm.getID().createChild(9);
 		List<String> successors = WebResourceController
-				.getSuccessorWizardNodesWithinPage(wfm, pageId,
+				.getSuccessorWizardNodesWithinComponent(wfm, pageId,
 						pageId.createChild(0).createChild(28).createChild(0).createChild(2))
 				.map(p -> p.getFirst().toString()).collect(Collectors.toList());
 		assertThat("unexpected successors", successors,
@@ -102,7 +102,7 @@ public class BugAP16962_ReexecutionInNestedComponents extends WorkflowTestCase {
 		waitForPage(page);
 		assertThat(wec.hasCurrentWizardPage(), is(true));
 
-		testNestedReexecution(page, wec);
+		testNestedReexecutionComponent9(wfm, wec);
 	}
 
 	/**
@@ -118,13 +118,55 @@ public class BugAP16962_ReexecutionInNestedComponents extends WorkflowTestCase {
 
 		wfm.executeAllAndWaitUntilDone();
 
-		testNestedReexecution(page, new CompositeViewController(wfm, page.getID()));
+		testNestedReexecutionComponent9(wfm, new CompositeViewController(wfm, page.getID()));
 	}
 
-	private static void testNestedReexecution(SubNodeContainer page, WebResourceController wrc) {
-		wrc.reexecuteSinglePage(createNodeIDSuffix(28, 0, 2), createWizardPageInput());
+	/**
+	 * Test for the {@link CompositeViewController#reexecuteSinglePage(NodeID, Map)}
+	 * if called on a component which is _not_ on the workflow root level.
+	 *
+	 * @throws Exception
+	 */
+	@Test
+	public void testCompositeViewReexecutionOfNestedComponent() throws Exception {
+		loadAndSetWorkflow();
+		WorkflowManager wfm = getManager();
+		wfm.executeAllAndWaitUntilDone();
+
+		SubNodeContainer page = (SubNodeContainer) wfm.findNodeContainer(createNodeID(wfm.getID(), 9, 0, 28));
+		CompositeViewController cvc = new CompositeViewController(page.getParent(), page.getID());
+		cvc.reexecuteSinglePage(createNodeID(wfm.getID(), 9, 0, 28, 0, 2), createWizardPageInput());
 		waitForPage(page);
-		wrc.reexecuteSinglePage(createNodeIDSuffix(28, 0, 2), createWizardPageInput());
+		cvc.reexecuteSinglePage(createNodeID(wfm.getID(), 9, 0, 28, 0, 2), createWizardPageInput());
+		waitForPage(page);
+
+		Map<String, FlowVariable> flowVars = page.getOutgoingFlowObjectStack().getAllAvailableFlowVariables();
+
+		// widgets _not_ being re-executed in the nested component
+		assertThat(flowVars.get("Text Output Widget").getIntValue(), is(1));
+		assertThat(flowVars.get("String Widget").getIntValue(), is(1));
+
+		// widgets being re-executed in the nested component
+		assertThat(flowVars.get("Refresh Button Widget").getIntValue(), greaterThan(1));
+		assertThat(flowVars.get("Table View").getIntValue(), greaterThan(1));
+
+		// make sure the successor node of the (partially) re-executed component is reset
+		assertThat("successor node of partially re-executed component expected to be reset",
+				wfm.findNodeContainer(createNodeID(wfm.getID(), 9, 0, 31)).getNodeContainerState().isConfigured(),
+				is(true));
+
+		String tableViewValue = getWizardNodeViewValue(wfm, createNodeIDSuffix(9, 0, 28, 0, 26));
+		assertThat("downstream widget view value expected change", tableViewValue,
+				containsString("\"filterString\":\"blub\""));
+	}
+
+	private static void testNestedReexecutionComponent9(WorkflowManager wfm, WebResourceController wrc) {
+		NodeID projectId = wfm.getID();
+		SubNodeContainer page = (SubNodeContainer) wfm.getNodeContainer(wfm.getID().createChild(9));
+
+		wrc.reexecuteSinglePage(createNodeID(projectId, 9, 0, 28, 0, 2), createWizardPageInput());
+		waitForPage(page);
+		wrc.reexecuteSinglePage(createNodeID(projectId, 9, 0, 28, 0, 2), createWizardPageInput());
 		waitForPage(page);
 
 		// get flow variables which contain the the number of executions for each widget
@@ -144,15 +186,14 @@ public class BugAP16962_ReexecutionInNestedComponents extends WorkflowTestCase {
 		// widgets being re-executed on page top-level
 		assertThat(flowVars.get("Double Widget").getIntValue(), greaterThan(1));
 
-		WorkflowManager parent = page.getParent();
-		SubNodeContainer successorPage = (SubNodeContainer) parent.getNodeContainer(parent.getID().createChild(11));
+		SubNodeContainer successorPage = (SubNodeContainer) wfm.getNodeContainer(wfm.getID().createChild(11));
 		assertThat(successorPage.getInternalState(), is(InternalNodeContainerState.CONFIGURED));
 
-		String tableViewValue = getWizardNodeViewValue(parent, createNodeIDSuffix(9, 0, 28, 0, 26));
+		String tableViewValue = getWizardNodeViewValue(wfm, createNodeIDSuffix(9, 0, 28, 0, 26));
 		assertThat("downstream widget view value expected change", tableViewValue,
 				containsString("\"filterString\":\"blub\""));
 
-		String integerViewValue = getWizardNodeViewValue(parent, createNodeIDSuffix(9, 0, 30));
+		String integerViewValue = getWizardNodeViewValue(wfm, createNodeIDSuffix(9, 0, 30));
 		assertThat("upstream widget view value expected to remain unchanged", integerViewValue,
 				containsString("\"integer\":0"));
 	}
