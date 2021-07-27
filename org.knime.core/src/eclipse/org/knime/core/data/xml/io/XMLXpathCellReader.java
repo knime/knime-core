@@ -99,6 +99,8 @@ public class XMLXpathCellReader implements XMLCellReader {
 
 	/**
 	 * Create a new instance.
+	 * WARNING: This could read external entities depending on
+	 * {@link KNIMEConstants#PROPERTY_XML_DISABLE_EXT_ENTITIES}
 	 *
 	 * @param is the xml source
 	 * @param xpathMatcher nodes of the input that match will be read, only
@@ -108,38 +110,59 @@ public class XMLXpathCellReader implements XMLCellReader {
 	public XMLXpathCellReader(final InputStream is,
 			final LimitedXPathMatcher xpathMatcher)
 			throws ParserConfigurationException, XMLStreamException {
-		this.m_in = is;
-
-		DocumentBuilderFactory domFactory = DocumentBuilderFactory
-				.newInstance();
-		domFactory.setNamespaceAware(true);
-		domFactory.setXIncludeAware(true);
-
-		m_builder = domFactory.newDocumentBuilder();
-
-		this.m_xpathMatcher = xpathMatcher;
-
-		m_docs = new LinkedList<Document>();
-		m_currNodes = new LinkedList<Node>();
-
-		m_reentrent = false;
-		m_base = new LinkedList<String>();
-		m_space = new LinkedList<String>();
-		m_lang = new LinkedList<String>();
-		initStreamParser();
+	    this(is,xpathMatcher,false);
 	}
 
-	/** Initialize the stream parser object. */
-	private void initStreamParser() throws XMLStreamException {
-		XMLInputFactory factory = XMLInputFactory.newInstance();
-		factory.setProperty(XMLInputFactory.IS_COALESCING, Boolean.TRUE);
-		factory.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, Boolean.TRUE);
-        if (Boolean.getBoolean(KNIMEConstants.PROPERTY_XML_DISABLE_EXT_ENTITIES)) { // see AP-6752
+	/**
+     * Create a new instance.
+     *
+     * @param is the xml source
+     * @param xpathMatcher nodes of the input that match will be read, only
+	 * @param disableExternalEntities disables external entities in XML
+     * @throws ParserConfigurationException
+     * @throws XMLStreamException
+	 * @since 4.5
+     */
+    public XMLXpathCellReader(final InputStream is,
+            final LimitedXPathMatcher xpathMatcher, final boolean disableExternalEntities)
+            throws ParserConfigurationException, XMLStreamException {
+        m_in = is;
+
+        DocumentBuilderFactory domFactory = DocumentBuilderFactory
+                .newInstance();
+        domFactory.setNamespaceAware(true);
+        domFactory.setXIncludeAware(true);
+
+        m_builder = domFactory.newDocumentBuilder();
+
+        m_xpathMatcher = xpathMatcher;
+
+        m_docs = new LinkedList<>();
+        m_currNodes = new LinkedList<>();
+
+        m_reentrent = false;
+        m_base = new LinkedList<>();
+        m_space = new LinkedList<>();
+        m_lang = new LinkedList<>();
+        initStreamParser(disableExternalEntities);
+    }
+
+    /** Initialize the stream parser object. */
+    private void initStreamParser(final boolean disableExternalEntities) throws XMLStreamException {
+        XMLInputFactory factory = XMLInputFactory.newInstance();
+        factory.setProperty(XMLInputFactory.IS_COALESCING, Boolean.TRUE);
+        if (!disableExternalEntities) {
+            factory.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, Boolean.TRUE);
+            if (Boolean.getBoolean(KNIMEConstants.PROPERTY_XML_DISABLE_EXT_ENTITIES)) { // see AP-6752
+                factory.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, Boolean.FALSE);
+            }
+        } else {
             factory.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, Boolean.FALSE);
+            factory.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+            factory.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
         }
-
-		m_parser = factory.createXMLStreamReader(m_in);
-	}
+        m_parser = factory.createXMLStreamReader(m_in);
+    }
 
 	private void pushNamespaceContext() {
 	    if (m_parser.getNamespaceCount() > 0) {

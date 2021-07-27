@@ -53,6 +53,8 @@ import java.io.Reader;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.stream.XMLStreamException;
 
+import org.knime.core.node.KNIMEConstants;
+
 /**
  * Factory class for {@link XMLCellReader}.
  *
@@ -96,6 +98,9 @@ public class XMLCellReaderFactory {
 	 * XPath. Every node is read in a single DataCell whereas namespaces,
 	 * xml:base, xml:space and xml:lang definitions are retained.
 	 *
+	 * WARNING: This could read external
+	 * XML entities depending on {@link KNIMEConstants#PROPERTY_XML_DISABLE_EXT_ENTITIES}
+	 *
 	 * @param is the xml document
 	 * @param xpathMatcher Only nodes that match are read
 	 * @return {@link XMLCellReader} to read nodes matching the given limited
@@ -109,4 +114,25 @@ public class XMLCellReaderFactory {
 			throws ParserConfigurationException, XMLStreamException {
 		return new XMLXpathCellReader(is, xpathMatcher);
 	}
+
+	/**
+     * Creates a {@link XMLCellReader} to read nodes matching the given limited
+     * XPath. Every node is read in a single DataCell whereas namespaces,
+     * xml:base, xml:space and xml:lang definitions are retained. This completely
+     * disables reading external entities in XML.
+     *
+     * @param is the xml document
+     * @param xpathMatcher Only nodes that match are read
+     * @return {@link XMLCellReader} to read nodes matching the given limited
+     * XPath. Every node is read in a single DataCell.
+     * @throws ParserConfigurationException when the factory object for
+     * DOMs could not be created.
+     * @throws XMLStreamException when parser could not be configured
+     * @since 4.5
+     */
+    public static XMLCellReader createXPathXMLCellReader2(final InputStream is,
+            final LimitedXPathMatcher xpathMatcher)
+            throws ParserConfigurationException, XMLStreamException {
+        return new XMLXpathCellReader(is, xpathMatcher,true);
+    }
 }
