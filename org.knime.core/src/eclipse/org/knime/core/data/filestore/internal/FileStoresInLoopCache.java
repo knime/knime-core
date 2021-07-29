@@ -48,7 +48,8 @@
 package org.knime.core.data.filestore.internal;
 
 import java.io.File;
-import java.util.Collections;
+import java.util.HashSet;
+import java.util.stream.Collectors;
 
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
@@ -61,20 +62,18 @@ import org.knime.core.data.def.DefaultTable;
 import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.filestore.FileStoreKey;
 import org.knime.core.data.filestore.FileStoreUtil;
-import org.knime.core.data.sort.BufferedDataTableSorter;
-import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.CheckUtils;
-import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.MutableInteger;
 
 /**
  *
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
+ * @author Carsten Haubold, KNIME GmbH, Konstanz, Germany
  */
 final class FileStoresInLoopCache {
 
@@ -86,16 +85,15 @@ final class FileStoresInLoopCache {
             new DataColumnSpecCreator(COL_NAME, FileStoreKeyDataCell.TYPE).createSpec());
 
     private final ExecutionContext m_exec;
-    private BufferedDataContainer m_createdFileStoresContainer;
+
     private BufferedDataTable m_createdFileStoresTable;
-    private FileStoreKey m_lastAddedKey;
-    private boolean m_keysWereAddedSorted = true;
+
+    private HashSet<FileStoreKey> m_fileStoreCache = new HashSet<>();
 
     /**
      *  */
     FileStoresInLoopCache(final ExecutionContext exec) {
         m_exec = exec;
-        m_createdFileStoresContainer = exec.createDataContainer(LOOP_FILE_STORE_SPEC);
     }
 
     void onIterationEnd(final FileStoresInLoopCache endNodeCacheWithKeysToPersist,
@@ -109,19 +107,8 @@ final class FileStoresInLoopCache {
     }
 
     synchronized void add(final FileStoreKey key) {
-        assert m_createdFileStoresContainer != null : "close was already called";
-        if (m_lastAddedKey != null) {
-            int c = m_lastAddedKey.compareTo(key);
-            if (c == 0) {
-                return; // already added (last), avoid duplicates where possible
-            } else if (c > 0) {
-                m_keysWereAddedSorted = false;
-            }
-        }
-        m_lastAddedKey = key;
-        m_createdFileStoresContainer.addRowToTable(new DefaultRow(
-                RowKey.createRowKey(m_createdFileStoresContainer.size()),
-                new FileStoreKeyDataCell(key)));
+        assert m_fileStoreCache != null : "close was already called";
+        m_fileStoreCache.add(key);
     }
 
     /**
@@ -179,30 +166,20 @@ final class FileStoresInLoopCache {
     /**
      * @throws CanceledExecutionException
      *  */
-    BufferedDataTable close() throws CanceledExecutionException {
-        m_createdFileStoresContainer.close();
-        BufferedDataTable table = m_createdFileStoresContainer.getTable();
-        m_createdFileStoresContainer = null;
-        if (m_keysWereAddedSorted) {
-            m_createdFileStoresTable = table;
-        } else {
-            BufferedDataTableSorter sorter = new BufferedDataTableSorter(table,
-                    Collections.singletonList(COL_NAME), new boolean[] {true});
-            BufferedDataTable sort = sorter.sort(m_exec.createSilentSubExecutionContext(0.0));
-            BufferedDataContainer unique = m_exec.createDataContainer(LOOP_FILE_STORE_SPEC);
-            FileStoreKey last = null;
-            for (DataRow r : sort) {
-                FileStoreKey key = getFileStoreKey(r);
-                if (!ConvenienceMethods.areEqual(last, key)) {
-                    unique.addRowToTable(r);
-                }
-                last = key;
-            }
-            unique.close();
-            m_exec.clearTable(table);
-            m_exec.clearTable(sort);
-            m_createdFileStoresTable = unique.getTable();
+    synchronized BufferedDataTable close() throws CanceledExecutionException {
+        final var container = m_exec.createDataContainer(LOOP_FILE_STORE_SPEC);
+        long rowKey = 0;
+        for (var key : m_fileStoreCache.stream().sorted().collect(Collectors.toList())) {
+            container.addRowToTable(new DefaultRow(
+                RowKey.createRowKey(rowKey),
+                new FileStoreKeyDataCell(key)));
+            rowKey++;
         }
+        container.close();
+        m_createdFileStoresTable = container.getTable();
+        m_fileStoreCache.clear();
+        m_fileStoreCache = null;
+
         return m_createdFileStoresTable;
     }
 
@@ -263,7 +240,7 @@ final class FileStoresInLoopCache {
             return "Closed - " + m_createdFileStoresTable.size() + " element(s):\n"
                     + DefaultTable.toString(m_createdFileStoresTable);
         } else {
-            return "Open - currently " + m_createdFileStoresContainer.size() + " element(s)";
+            return "Open - currently " + m_fileStoreCache.size() + " element(s)";
         }
     }
 
