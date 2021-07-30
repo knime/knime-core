@@ -53,9 +53,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.text.DateFormat;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -120,7 +120,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
     static final LoadVersion VERSION_LATEST = LoadVersion.V4010;
 
     /** Format used to save author/edit infos. */
-    static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
+    static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss Z");
 
     private static final String CFG_UIINFO_SUB_CONFIG = "ui_settings";
 
@@ -1510,9 +1510,9 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
      * @return The date.
      * @throws ParseException ...
      */
-    static Date parseDate(final String s) throws ParseException {
+    static OffsetDateTime parseDate(final String s) throws ParseException {
         synchronized (DATE_FORMAT) {
-            return DATE_FORMAT.parse(s);
+            return OffsetDateTime.parse(s, DATE_FORMAT);
         }
     }
 
@@ -1521,7 +1521,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
             final NodeSettingsRO sub = settings.getNodeSettings(CFG_AUTHOR_INFORMATION);
             final String author = sub.getString("authored-by");
             final String authorDateS = sub.getString("authored-when");
-            final Date authorDate;
+            final OffsetDateTime authorDate;
             if (authorDateS == null) {
                 authorDate = null;
             } else {
@@ -1534,7 +1534,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
             }
             final String editor = sub.getString("lastEdited-by");
             final String editDateS = sub.getString("lastEdited-when");
-            final Date editDate;
+            final OffsetDateTime editDate;
             if (editDateS == null) {
                 editDate = null;
             } else {
@@ -1848,7 +1848,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
      * @param date ... not null.
      * @return The string.
      */
-    static String formatDate(final Date date) {
+    static String formatDate(final OffsetDateTime date) {
         synchronized (DATE_FORMAT) {
             return DATE_FORMAT.format(date);
         }
