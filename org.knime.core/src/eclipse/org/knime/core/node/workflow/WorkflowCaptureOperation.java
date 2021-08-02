@@ -55,6 +55,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -138,8 +139,13 @@ public final class WorkflowCaptureOperation {
         WorkflowManager tempParent = null;
         try (WorkflowLock lock = m_wfm.lock()) {
             NodeID endNodeID = m_endNode.getID();
+
+            WorkflowCreationHelper workflowCreationHelper = new WorkflowCreationHelper();
+            Optional.ofNullable(NodeContext.getContext()).map(NodeContext::getWorkflowManager)
+                .map(WorkflowManager::getContext).ifPresent(workflowCreationHelper::setWorkflowContext);
+
             tempParent = WorkflowManager.EXTRACTED_WORKFLOW_ROOT
-                .createAndAddProject("Capture-" + endNodeID, new WorkflowCreationHelper());
+                .createAndAddProject("Capture-" + endNodeID, workflowCreationHelper);
 
             // "scope body" -- will copy those nodes later
             List<NodeContainer> nodesInScope = m_wfm.getWorkflow().getNodesInScope(m_endNode);

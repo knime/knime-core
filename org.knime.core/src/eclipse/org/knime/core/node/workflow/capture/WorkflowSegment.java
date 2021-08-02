@@ -74,6 +74,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.SubNodeContainer;
@@ -500,16 +501,37 @@ public final class WorkflowSegment {
     }
 
     /**
-     * Creates a {@link WorkflowLoadHelper}-instance.
+     * Creates a {@link WorkflowLoadHelper}-instance. The helper's workflow context will be set to the current workflow
+     * context if available.
      *
      * @param wfLocation the workflow directory to load from
      * @param loadWarning a callback in case of load warnings
      * @return a new instance
      * @noreference This method is not intended to be referenced by clients.
+     * @see WorkflowSegment#createWorkflowLoadHelper(boolean, File, Consumer)
      */
     public static final WorkflowLoadHelper createWorkflowLoadHelper(final File wfLocation,
         final Consumer<String> loadWarning) {
-        return new WorkflowLoadHelper(new WorkflowContext.Factory(wfLocation).createContext()) {
+        return createWorkflowLoadHelper(false, wfLocation, loadWarning);
+    }
+
+
+    /**
+     * Creates a {@link WorkflowLoadHelper}-instance. The helper's workflow context will be set to the current workflow
+     * context if available.
+     *
+     * @param isTemplate whether the helper to create should be a template loader
+     * @param wfLocation the workflow directory to load from
+     * @param loadWarning a callback in case of load warnings
+     * @return a new instance
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public static final WorkflowLoadHelper createWorkflowLoadHelper(final boolean isTemplate, final File wfLocation,
+        final Consumer<String> loadWarning) {
+        WorkflowContext wfctx = Optional.ofNullable(NodeContext.getContext()).map(NodeContext::getWorkflowManager)
+            .map(WorkflowManager::getContext).orElse(new WorkflowContext.Factory(wfLocation).createContext());
+
+        return new WorkflowLoadHelper(isTemplate, wfctx) {
             @Override
             public UnknownKNIMEVersionLoadPolicy getUnknownKNIMEVersionLoadPolicy(
                 final LoadVersion workflowKNIMEVersion, final Version createdByKNIMEVersion,
