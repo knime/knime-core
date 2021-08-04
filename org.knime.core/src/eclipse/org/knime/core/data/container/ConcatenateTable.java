@@ -94,15 +94,7 @@ public final class ConcatenateTable implements KnowsRowCountTable {
         m_rowKeyDuplicateSuffix = rowKeyDuplicateSuffix;
 
         // check whether all specs are the same
-        DataTableSpec firstSpec = tables[0].getDataTableSpec();
-        boolean allTableSpecsMatch = true;
-        for (int i = 1; i < tables.length; i++) {
-            if (!firstSpec.equalStructure(tables[i].getDataTableSpec())) {
-                allTableSpecsMatch = false;
-                break;
-            }
-        }
-        if (allTableSpecsMatch && rowKeyDuplicateSuffix == null) {
+        if (allTableSpecsMatch(tables) && rowKeyDuplicateSuffix == null) {
             //all table specs are equal AND no special duplicate policy required
             DataTableSpec[] specs = new DataTableSpec[tables.length];
             for (int i = 0; i < specs.length; i++) {
@@ -124,8 +116,19 @@ public final class ConcatenateTable implements KnowsRowCountTable {
         m_tables = tables;
     }
 
-    /** Internal use.
-     * {@inheritDoc} */
+    private static boolean allTableSpecsMatch(final BufferedDataTable[] tables) {
+        final var firstSpec = tables[0].getDataTableSpec();
+        for (int i = 1; i < tables.length; i++) {
+            if (!firstSpec.equalStructure(tables[i].getDataTableSpec())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Internal use. {@inheritDoc}
+     */
     @Override
     public void clear() {
         // left empty, it's up to the node to clear our underlying tables.
@@ -292,7 +295,7 @@ public final class ConcatenateTable implements KnowsRowCountTable {
         for (int i = 0; i < tables.length; i++) {
             rowCount += tables[i].size();
         }
-        if (duplicatesPreCheck && !rowKeyDuplicateSuffix.isPresent()) {
+        if (duplicatesPreCheck && rowKeyDuplicateSuffix.isEmpty()) {
             checkForDuplicates(mon, tables, rowCount);
         }
         return new ConcatenateTable(tables, rowKeyDuplicateSuffix.orElse(null), rowCount);

@@ -48,6 +48,7 @@ package org.knime.core.data.append;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
 
+import org.apache.commons.lang3.StringUtils;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -59,6 +60,7 @@ import org.knime.core.data.RowIterator;
 import org.knime.core.data.append.AppendedRowsIterator.PairSupplier;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.Pair;
 
 
@@ -160,14 +162,8 @@ public class AppendedRowsTable implements DataTable {
     public AppendedRowsTable(final DuplicatePolicy duplPolicy,
             final String suffix, final DataTable... tables) {
         m_spec = generateDataTableSpec(tables);
-        switch (duplPolicy) {
-        case AppendSuffix:
-            if (suffix == null || suffix.equals("")) {
-                throw new IllegalArgumentException(
-                "Suffix must not be an empty string.");
-            }
-            break;
-        default:
+        if (duplPolicy == DuplicatePolicy.AppendSuffix) {
+            CheckUtils.checkArgument(StringUtils.isNotEmpty(suffix), "Suffix must not be an empty string.");
         }
         m_duplPolicy = duplPolicy;
         m_suffix = suffix;
