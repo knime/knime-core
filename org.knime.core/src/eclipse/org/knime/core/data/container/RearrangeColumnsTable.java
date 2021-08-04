@@ -361,11 +361,7 @@ public final class RearrangeColumnsTable implements KnowsRowCountTable {
         final ExecutionMonitor subProgress, final ExecutionContext context) throws CanceledExecutionException {
         DataTableSpec originalSpec = rearranger.getOriginalSpec();
         Vector<SpecAndFactoryObject> includes = rearranger.getIncludes();
-        // names and types of the specs must match
-        if (!table.getDataTableSpec().equalStructure(originalSpec)) {
-            throw new IllegalArgumentException("The argument table's spec does not match the original "
-                + "spec passed in the constructor.");
-        }
+        ColumnRearrangerUtils.checkSpecCompatibility(rearranger, table.getDataTableSpec());
         int size = includes.size();
         ArrayList<DataColumnSpec> newColSpecsList = new ArrayList<DataColumnSpec>();
         // the reduced set of SpecAndFactoryObject that models newly
