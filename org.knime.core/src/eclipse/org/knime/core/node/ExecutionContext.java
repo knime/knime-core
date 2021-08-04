@@ -61,13 +61,10 @@ import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.TableBackend;
 import org.knime.core.data.container.ColumnRearranger;
-import org.knime.core.data.container.ConcatenateTable;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.data.container.DefaultLocalDataRepository;
 import org.knime.core.data.container.ILocalDataRepository;
-import org.knime.core.data.container.JoinedTable;
-import org.knime.core.data.container.RearrangeColumnsTable;
 import org.knime.core.data.container.TableSpecReplacerTable;
 import org.knime.core.data.container.VoidTable;
 import org.knime.core.data.container.WrappedTable;
@@ -77,6 +74,7 @@ import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.NotInWorkflowDataRepository;
 import org.knime.core.data.filestore.internal.ROWriteFileStoreHandler;
 import org.knime.core.data.v2.RowContainer;
+import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.KNIMEJob;
@@ -399,14 +397,18 @@ public class ExecutionContext extends ExecutionMonitor {
         final boolean initDomain, final int maxCellsInMemory, final boolean rowKeys) {
         boolean forceCopyOfBlobs = m_node.isModelCompatibleTo(LoopEndNode.class)
                 || m_node.isModelCompatibleTo(VirtualSubNodeOutputNodeModel.class);
-
-        // THIS IF CODE PATH NEEDS TO BE REMOVED AS SOON AS WE HAVE FEATURE PARITY for new backend!
-        TableBackend backend = WorkflowTableBackendSettings.getTableBackendForCurrentContext();
-        LOGGER.debugWithFormat("Using Table Backend \"%s\".", backend.getClass().getSimpleName());
+        final TableBackend backend = getTableBackend();
 
         return new BufferedDataContainer(spec, initDomain, m_node,
                 m_memoryPolicy, forceCopyOfBlobs, maxCellsInMemory, m_dataRepository,
                 m_localTableRepository, m_fileStoreHandler, rowKeys, backend);
+    }
+
+    private static TableBackend getTableBackend() {
+        // THIS IF CODE PATH NEEDS TO BE REMOVED AS SOON AS WE HAVE FEATURE PARITY for new backend!
+        TableBackend backend = WorkflowTableBackendSettings.getTableBackendForCurrentContext();
+        LOGGER.debugWithFormat("Using Table Backend \"%s\".", backend.getClass().getSimpleName());
+        return backend;
     }
 
     /**
@@ -427,9 +429,8 @@ public class ExecutionContext extends ExecutionMonitor {
             final BufferedDataTable in, final ColumnRearranger rearranger,
             final ExecutionMonitor subProgressMon)
             throws CanceledExecutionException {
-        RearrangeColumnsTable t = RearrangeColumnsTable.create(
-                rearranger, in, subProgressMon, this);
-        BufferedDataTable out = new BufferedDataTable(t, getDataRepository());
+        var t = getTableBackend().rearrange(subProgressMon, m_fileStoreHandler, rearranger, in, this);
+        var out = BufferedDataTable.wrapTableFromTableBackend(t, m_dataRepository);
         out.setOwnerRecursively(m_node);
         return out;
     }
@@ -518,8 +519,8 @@ public class ExecutionContext extends ExecutionMonitor {
     public BufferedDataTable createConcatenateTable(
             final ExecutionMonitor exec, final BufferedDataTable... tables)
         throws CanceledExecutionException {
-        ConcatenateTable t = ConcatenateTable.create(exec, tables);
-        BufferedDataTable out = new BufferedDataTable(t, getDataRepository());
+        final KnowsRowCountTable table = getTableBackend().concatenate(exec, m_fileStoreHandler, null, true, tables);
+        final var out = BufferedDataTable.wrapTableFromTableBackend(table, getDataRepository());
         out.setOwnerRecursively(m_node);
         return out;
     }
@@ -562,9 +563,8 @@ public class ExecutionContext extends ExecutionMonitor {
         final Optional<String> rowKeyDuplicateSuffix, final boolean duplicatesPreCheck,
         final BufferedDataTable... tables)
         throws CanceledExecutionException {
-        ConcatenateTable t =
-            ConcatenateTable.create(exec, rowKeyDuplicateSuffix, duplicatesPreCheck, tables);
-        BufferedDataTable out = new BufferedDataTable(t, getDataRepository());
+        final KnowsRowCountTable concatenated = getTableBackend().concatenate(exec, m_fileStoreHandler, rowKeyDuplicateSuffix.orElse(null), duplicatesPreCheck, tables);
+        var out = BufferedDataTable.wrapTableFromTableBackend(concatenated, m_dataRepository);
         out.setOwnerRecursively(m_node);
         return out;
     }
@@ -580,7 +580,7 @@ public class ExecutionContext extends ExecutionMonitor {
      * <code>IllegalArgumentException</code>.
      *
      * <p>
-     * This method will traverse both tables ones to ensure that the row keys
+     * This method will traverse both tables once to ensure that the row keys
      * are identical and are returned in the same order. It reports progress for
      * this sanity check to the <code>exec</code> argument.
      *
@@ -606,8 +606,8 @@ public class ExecutionContext extends ExecutionMonitor {
     public BufferedDataTable createJoinedTable(final BufferedDataTable left,
             final BufferedDataTable right, final ExecutionMonitor exec)
         throws CanceledExecutionException {
-        JoinedTable jt = JoinedTable.create(left, right, exec);
-        BufferedDataTable out = new BufferedDataTable(jt, getDataRepository());
+        KnowsRowCountTable jt = getTableBackend().append(exec, m_fileStoreHandler, left, right);
+        var out = BufferedDataTable.wrapTableFromTableBackend(jt, getDataRepository());
         out.setOwnerRecursively(m_node);
         return out;
     }

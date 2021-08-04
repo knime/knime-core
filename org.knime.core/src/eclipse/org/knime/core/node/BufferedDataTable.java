@@ -75,6 +75,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.IDataRepository;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.TableBackend;
 import org.knime.core.data.container.BlobSupportDataRow;
 import org.knime.core.data.container.BufferedContainerTable;
 import org.knime.core.data.container.CloseableRowIterator;
@@ -266,6 +267,23 @@ public final class BufferedDataTable implements DataTable, PortObject {
      */
     BufferedDataTable(final ExtensionTable table, final IDataRepository dataRepository) {
         this(table, dataRepository.generateNewID(), dataRepository);
+    }
+
+    /**
+     * Wraps the provided table into a BufferedDataTable.<br>
+     * This method is to be used when a table is created by one of the table transformations in {@link TableBackend}.
+     *
+     * @param table to wrap
+     * @param dataRepository the data repository (needed for blobs, file stores, and table ids)
+     * @return a BufferedDataTable that is backed by the provided table
+     */
+    static BufferedDataTable wrapTableFromTableBackend(final KnowsRowCountTable table,
+        final IDataRepository dataRepository) {
+        if (table instanceof RearrangeColumnsTable) {
+            return new BufferedDataTable((RearrangeColumnsTable)table, dataRepository);
+        } else {
+            return new BufferedDataTable(table, dataRepository.generateNewID(), dataRepository);
+        }
     }
 
     private BufferedDataTable(final KnowsRowCountTable table, final int id,
