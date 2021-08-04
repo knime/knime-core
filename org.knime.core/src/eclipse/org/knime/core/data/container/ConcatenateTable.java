@@ -323,9 +323,11 @@ public final class ConcatenateTable implements KnowsRowCountTable {
     private static void checkForDuplicates(final ExecutionMonitor mon, final BufferedDataTable[] tables,
         final long rowCount) throws CanceledExecutionException {
         DuplicateChecker check = new DuplicateChecker();
-        int r = 0;
+        long r = 0;
+        // we are only interested in the keys, so we don't need to read any columns
+        final var filter = TableFilter.materializeCols();
         for (int i = 0; i < tables.length; i++) {
-            for (DataRow row : tables[i]) {
+            for (DataRow row : tables[i].filter(filter)) {
                 RowKey key = row.getKey();
                 try {
                     check.addKey(key.toString());
@@ -333,8 +335,9 @@ public final class ConcatenateTable implements KnowsRowCountTable {
                     throw new IllegalArgumentException("Duplicate row key \"" + key + "\" in table with index " + i);
                 }
                 r++;
-                mon.setProgress(r / (double)rowCount,
-                    "Checking tables, row " + r + "/" + rowCount + " (\"" + row.getKey() + "\")");
+                final long currentRow = r;
+                mon.setProgress(currentRow / (double)rowCount,
+                    () -> "Checking tables, row " + currentRow + "/" + rowCount + " (\"" + row.getKey() + "\")");
             }
             mon.checkCanceled();
         }

@@ -287,9 +287,17 @@ public final class JoinedTable implements KnowsRowCountTable {
         // throws exception when duplicates encountered.
         DataTableSpec joinSpec = new DataTableSpec(
                 left.getDataTableSpec(), right.getDataTableSpec());
+        checkRowKeysMatch(left, right, prog, cnt);
+        return new JoinedTable(left, right, joinSpec);
+    }
+
+    private static void checkRowKeysMatch(final BufferedDataTable left, final BufferedDataTable right,
+        final ExecutionMonitor prog, final long cnt) throws CanceledExecutionException {
+        final TableFilter filter = TableFilter.materializeCols();
         // check if rows come in same order
-        try (CloseableRowIterator leftIt = left.iterator(); CloseableRowIterator rightIt = right.iterator()) {
-            int rowIndex = 0;
+        try (CloseableRowIterator leftIt = left.filter(filter).iterator();
+                CloseableRowIterator rightIt = right.filter(filter).iterator()) {
+            long rowIndex = 0;
             while (leftIt.hasNext()) {
                 RowKey leftKey = leftIt.next().getKey();
                 RowKey rightKey = rightIt.next().getKey();
@@ -299,10 +307,10 @@ public final class JoinedTable implements KnowsRowCountTable {
                             + " do not match: \"" + leftKey + "\" vs. \"" + rightKey + "\"");
                 }
                 prog.checkCanceled();
-                prog.setProgress(rowIndex / (double)cnt, "\"" + leftKey + "\" (" + rowIndex + "/" + cnt + ")");
+                final long finalRowIndex = rowIndex;
+                prog.setProgress(rowIndex / (double)cnt, () -> "\"" + leftKey + "\" (" + finalRowIndex + "/" + cnt + ")");
                 rowIndex++;
             }
-            return new JoinedTable(left, right, joinSpec);
         }
     }
 }
