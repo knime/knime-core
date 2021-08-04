@@ -48,6 +48,8 @@
  */
 package org.knime.core.data.container;
 
+import java.util.Optional;
+
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.IDataRepository;
 import org.knime.core.data.TableBackend;
@@ -57,7 +59,11 @@ import org.knime.core.data.v2.RowContainer;
 import org.knime.core.data.v2.RowKeyType;
 import org.knime.core.data.v2.ValueSchema;
 import org.knime.core.node.BufferedDataContainer;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
+import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.ExecutionMonitor;
 
 /**
  * Default implementation of {@link TableBackend} using {@link DataContainer} and {@link DataContainerDelegate}s.
@@ -120,6 +126,31 @@ public final class BufferedTableBackend implements TableBackend {
     @Override
     public int hashCode() {
         return getClass().hashCode();
+    }
+
+    @Override
+    public KnowsRowCountTable concatenate(final ExecutionMonitor exec, final IWriteFileStoreHandler filestoreHandler,
+        final String rowKeyDuplicateSuffix, final boolean duplicatesPreCheck, final BufferedDataTable... tables)
+        throws CanceledExecutionException {
+        if (duplicatesPreCheck && rowKeyDuplicateSuffix == null) {
+            return ConcatenateTable.create(exec, tables);
+        } else {
+            return ConcatenateTable.create(exec, Optional.ofNullable(rowKeyDuplicateSuffix), duplicatesPreCheck,
+                tables);
+        }
+    }
+
+    @Override
+    public KnowsRowCountTable append(final ExecutionMonitor exec, final IWriteFileStoreHandler filestoreHandler,
+        final BufferedDataTable left, final BufferedDataTable right) throws CanceledExecutionException {
+        return JoinedTable.create(left, right, exec);
+    }
+
+    @Override
+    public KnowsRowCountTable rearrange(final ExecutionMonitor progressMonitor,
+        final IWriteFileStoreHandler filestoreHandler, final ColumnRearranger columnRearranger,
+        final BufferedDataTable table, final ExecutionContext context) throws CanceledExecutionException {
+        return RearrangeColumnsTable.create(columnRearranger, table, progressMonitor, context);
     }
 
 }

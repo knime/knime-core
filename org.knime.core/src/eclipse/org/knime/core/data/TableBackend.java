@@ -45,13 +45,18 @@
  */
 package org.knime.core.data;
 
+import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.container.DataContainerDelegate;
 import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.data.container.ILocalDataRepository;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.v2.RowContainer;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
+import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.ExecutionMonitor;
 
 /**
  * TableBackends are used to read and write tables within KNIME AP nodes.
@@ -107,5 +112,47 @@ public interface TableBackend {
      * @return human-readble description of the TableBackend.
      */
     String getDescription();
+
+    /**
+     * Concatenates the provided tables.
+     *
+     * @param progressMonitor used to report progress
+     * @param filestoreHandler for dealing with filestores
+     * @param rowKeyDuplicateSuffix TODO
+     * @param duplicatesPreCheck TODO
+     * @param tables to concatenate
+     * @return the concatenated table
+     * @throws CanceledExecutionException if execution is canceled by the user
+     */
+    KnowsRowCountTable concatenate(ExecutionMonitor progressMonitor, IWriteFileStoreHandler filestoreHandler,
+        String rowKeyDuplicateSuffix, boolean duplicatesPreCheck, final BufferedDataTable... tables) throws CanceledExecutionException;
+
+    /**
+     * Appends the provided tables in the column dimension.
+     *
+     * @param progressMonitor used to report progress
+     * @param filestoreHandler for dealing with filestores
+     * @param left the left table
+     * @param right the right table
+     * @return the appended table
+     * @throws CanceledExecutionException if execution is canceled by the user
+     */
+    KnowsRowCountTable append(ExecutionMonitor progressMonitor, IWriteFileStoreHandler filestoreHandler,
+        final BufferedDataTable left, BufferedDataTable right) throws CanceledExecutionException;
+
+    /**
+     * Applies the provided ColumnRearranger on the provided table.
+     *
+     * @param progressMonitor for reporting progress
+     * @param filestoreHandler for dealing with filestores
+     * @param columnRearranger defines how to transform the table
+     * @param table to transform
+     * @param context for creating containers
+     * @return the rearranged table
+     * @throws CanceledExecutionException if execution is canceled by the user
+     */
+    KnowsRowCountTable rearrange(ExecutionMonitor progressMonitor,
+        IWriteFileStoreHandler filestoreHandler, final ColumnRearranger columnRearranger, BufferedDataTable table,
+        ExecutionContext context) throws CanceledExecutionException;
 
 }
