@@ -69,7 +69,6 @@ import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -160,9 +159,11 @@ public final class FileUtil {
      * is still open (see AP-13838). We therefore "touch" all temp files occasionally. The number of hours after which
      * temp files are touched is determined by this parameter.
      */
-    private static final int UPDATE_TEMP_FILES_FREQUENCY_HOURS = 23;
+    private static final int UPDATE_TEMP_FILES_FREQUENCY_HOURS;
 
     static {
+        int updateTempFilesSysPropValue = Integer.getInteger("knime.tempfile.update.interval.hours", 23);
+        UPDATE_TEMP_FILES_FREQUENCY_HOURS = Math.max(updateTempFilesSysPropValue, 1);
         final var executor = Executors.newSingleThreadScheduledExecutor(
             r -> new Thread(r, "KNIME-TempFileToucher-" + TEMP_FILE_TOUCHER_THREAD_COUNT.incrementAndGet()));
 
@@ -185,14 +186,22 @@ public final class FileUtil {
                 }
             }
 
+            final long nowMillis = System.currentTimeMillis();
             // attempt to touch all paths in the paths set
-            final FileTime now = FileTime.from(ZonedDateTime.now().toInstant());
+            final FileTime now = FileTime.fromMillis(nowMillis);
             long successCounter = 0;
             long failCounter = 0;
             for (final Path p : paths) {
                 try {
                     Files.setLastModifiedTime(p, now);
-                    successCounter += 1;
+                    if (nowMillis - Files.getLastModifiedTime(p).toMillis() > 1_000) { // address loss in precision
+                        LOGGER.debugWithFormat(
+                            "Unable to set last modified date for path %s, attempted to set %s but value remains %s",
+                            p.toString(), now.toString(), Files.getLastModifiedTime(p));
+                        failCounter += 1;
+                    } else {
+                        successCounter += 1;
+                    }
                 } catch (IOException ex) {
                     LOGGER.debug(String.format("Error when attempting to touch temp file \"%s\"", p), ex);
                     failCounter += 1;
