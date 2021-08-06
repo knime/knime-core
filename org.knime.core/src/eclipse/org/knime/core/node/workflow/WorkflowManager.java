@@ -4586,9 +4586,9 @@ public final class WorkflowManager extends NodeContainer
             return false;
         }
 
-        // first check if there is a node in execution
+        // first check if there is a node in execution or queued
         for (NodeContainer nc : m_workflow.getNodeValues()) {
-            if (nc.getInternalState().isExecutionInProgress()) {
+            if (nc.getInternalState().isExecutingOrQueued()) {
                 return false;
             }
         }

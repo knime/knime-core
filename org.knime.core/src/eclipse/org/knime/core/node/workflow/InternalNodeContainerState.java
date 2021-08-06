@@ -128,6 +128,38 @@ enum InternalNodeContainerState implements NodeContainerState {
         }
     }
 
+    /**
+     * @return <code>true</code> if node state is resetable, i.e. it's neither executing nor queued for execution (but
+     *         it can be marked for execution)
+     */
+    boolean isResetable() {
+        switch (this) {
+            case EXECUTED:
+            case EXECUTED_MARKEDFOREXEC:
+            case CONFIGURED_MARKEDFOREXEC:
+            case UNCONFIGURED_MARKEDFOREXEC:
+            case CONFIGURED:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    /**
+     * @return <code>true</code> if executing or queued for execution (but _not_ marked for execution)
+     */
+    boolean isExecutingOrQueued() {
+        switch (this) {
+            case EXECUTING:
+            case EXECUTINGREMOTELY:
+            case CONFIGURED_QUEUED:
+            case EXECUTED_QUEUED:
+                return true;
+            default:
+                return false;
+        }
+    }
+
     /** {@inheritDoc} */
     @Override
     public boolean isExecutingRemotely() {

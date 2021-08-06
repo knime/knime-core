@@ -417,16 +417,7 @@ public abstract class SingleNodeContainer extends NodeContainer {
         if (getNodeLocks().hasResetLock()) {
             return false;
         } else {
-            switch (getInternalState()) {
-                case EXECUTED:
-                case EXECUTED_MARKEDFOREXEC:
-                case CONFIGURED_MARKEDFOREXEC:
-                case UNCONFIGURED_MARKEDFOREXEC:
-                case CONFIGURED:
-                    return true;
-                default:
-                    return false;
-            }
+            return getInternalState().isResetable();
         }
     }
 
