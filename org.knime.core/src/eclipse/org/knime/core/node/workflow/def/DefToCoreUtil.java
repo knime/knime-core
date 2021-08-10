@@ -122,8 +122,8 @@ public class DefToCoreUtil {
         annoData.setBorderColor(def.getBorderColor());
         annoData.setBorderSize(def.getBorderSize());
         annoData.setDefaultFontSize(def.getDefFontSize());
-        annoData.setX(def.getXCoordinate());
-        annoData.setY(def.getYCoordinate());
+        annoData.setX(def.getCoordinateX());
+        annoData.setY(def.getCoordinateY());
         annoData.setWidth(def.getWidth());
         annoData.setHeight(def.getHeight());
         return annoData;

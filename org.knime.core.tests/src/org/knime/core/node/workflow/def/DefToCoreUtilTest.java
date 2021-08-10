@@ -147,107 +147,111 @@ public class DefToCoreUtilTest {
             ConfigDef def = CoreToDefUtil.toConfigMapDef(original);
 
             ObjectMapper mapper = new ObjectMapper();
-            // TODO is the order of the children deterministic? I think I had a test case failure once because
-            // 'children' was first and 'key' came after
-            final String expected = "{\n" //
-                + "  \"key\" : \"root\",\n" //
-                + "  \"children\" : {\n" //
-                + "    \"colors\" : {\n" //
-                + "      \"array\" : [ \"red\", \"green\", \"blue\" ],\n" //
-                + "      \"itemType\" : \"xstring\"\n" //
-                + "    },\n" //
-                + "    \"answerString\" : {\n" //
-                + "      \"value\" : \"42\",\n" //
-                + "      \"itemType\" : \"xstring\"\n" //
-                + "    },\n" //
-                + "    \"A v ¬A\" : {\n" //
-                + "      \"value\" : true,\n" //
-                + "      \"itemType\" : \"xboolean\"\n" //
-                + "    },\n" //
-                + "    \"answerInt\" : {\n" //
-                + "      \"value\" : -2147483648,\n" //
-                + "      \"itemType\" : \"xint\"\n" //
-                + "    },\n" //
-                + "    \"answerFloat\" : {\n" //
-                + "      \"value\" : 1.4E-45,\n" //
-                + "      \"itemType\" : \"xfloat\"\n" //
-                + "    },\n" //
-                + "    \"answerDouble\" : {\n" //
-                + "      \"value\" : 4.9E-324,\n" //
-                + "      \"itemType\" : \"xdouble\"\n" //
-                + "    },\n" //
-                + "    \"answerShort\" : {\n" //
-                + "      \"value\" : -32768,\n" //
-                + "      \"itemType\" : \"xshort\"\n" //
-                + "    },\n" //
-                + "    \"answerByte\" : {\n" //
-                + "      \"value\" : -128,\n" //
-                + "      \"itemType\" : \"xbyte\"\n" //
-                + "    },\n" //
-                + "    \"answerLong\" : {\n" //
-                + "      \"value\" : -9223372036854775808,\n" //
-                + "      \"itemType\" : \"xlong\"\n" //
-                + "    },\n" //
-                + "    \"booleans\" : {\n" //
-                + "      \"array\" : [ true, false, false, false, true, false ],\n" //
-                + "      \"itemType\" : \"xboolean\"\n" //
-                + "    },\n" //
-                + "    \"bytes\" : {\n" //
-                + "      \"value\" : \"Ynl0ZXM=\",\n" //
-                + "      \"itemType\" : \"xbyte\"\n" //
-                + "    },\n" //
-                + "    \"chars\" : {\n" //
-                + "      \"array\" : [ 65, 66, 67 ],\n" //
-                + "      \"itemType\" : \"xchar\"\n" //
-                + "    },\n" //
-                + "    \"doubles\" : {\n" //
-                + "      \"array\" : [ 4.9E-324, 1.7976931348623157E308 ],\n" //
-                + "      \"itemType\" : \"xdouble\"\n" //
-                + "    },\n" //
-                + "    \"floats\" : {\n" //
-                + "      \"array\" : [ 1.4E-45, 3.4028235E38 ],\n" //
-                + "      \"itemType\" : \"xfloat\"\n" //
-                + "    },\n" //
-                + "    \"ints\" : {\n" //
-                + "      \"array\" : [ 1, 2, 3, 4, 5, 6, 7, 8, 9 ],\n" //
-                + "      \"itemType\" : \"xint\"\n" //
-                + "    },\n" //
-                + "    \"longs\" : {\n" //
-                + "      \"array\" : [ -9223372036854775808, 9223372036854775807 ],\n" //
-                + "      \"itemType\" : \"xlong\"\n" //
-                + "    },\n" //
-                + "    \"shorts\" : {\n" //
-                + "      \"array\" : [ -32768, 32767 ],\n" //
-                + "      \"itemType\" : \"xshort\"\n" //
-                + "    },\n" //
-                + "    \"org\" : {\n" //
-                + "      \"key\" : \"org\",\n" //
-                + "      \"children\" : {\n" //
-                + "        \"knime\" : {\n" //
-                + "          \"key\" : \"knime\",\n" //
-                + "          \"children\" : {\n" //
-                + "            \"loc\" : {\n" //
-                + "              \"value\" : 9223372036854775807,\n" //
-                + "              \"itemType\" : \"xlong\"\n" //
-                + "            },\n" //
-                + "            \"core\" : {\n" //
-                + "              \"key\" : \"core\",\n" //
-                + "              \"children\" : {\n" //
-                + "                \"util\" : {\n" //
-                + "                  \"key\" : \"util\",\n" //
-                + "                  \"children\" : { }\n" //
-                + "                },\n" //
-                + "                \"node\" : {\n" //
-                + "                  \"key\" : \"node\",\n" //
-                + "                  \"children\" : { }\n" //
-                + "                }\n" //
-                + "              }\n" //
-                + "            }\n" //
-                + "          }\n" //
-                + "        }\n" //
-                + "      }\n" //
-                + "    }\n" //
-                + "  }\n" //
+            final String expected = "{\n"
+                + "  \"children\" : {\n"
+                + "    \"colors\" : {\n"
+                + "      \"array\" : [ \"red\", \"green\", \"blue\" ],\n"
+                + "      \"configType\" : \"ConfigValueStringArray\"\n"
+                + "    },\n"
+                + "    \"answerString\" : {\n"
+                + "      \"configType\" : \"ConfigValueString\",\n"
+                + "      \"value\" : \"42\"\n"
+                + "    },\n"
+                + "    \"A v ¬A\" : {\n"
+                + "      \"configType\" : \"ConfigValueBoolean\",\n"
+                + "      \"value\" : true\n"
+                + "    },\n"
+                + "    \"answerInt\" : {\n"
+                + "      \"configType\" : \"ConfigValueInt\",\n"
+                + "      \"value\" : -2147483648\n"
+                + "    },\n"
+                + "    \"answerFloat\" : {\n"
+                + "      \"configType\" : \"ConfigValueFloat\",\n"
+                + "      \"value\" : 1.4E-45\n"
+                + "    },\n"
+                + "    \"answerDouble\" : {\n"
+                + "      \"configType\" : \"ConfigValueDouble\",\n"
+                + "      \"value\" : 4.9E-324\n"
+                + "    },\n"
+                + "    \"answerShort\" : {\n"
+                + "      \"configType\" : \"ConfigValueShort\",\n"
+                + "      \"value\" : -32768\n"
+                + "    },\n"
+                + "    \"answerByte\" : {\n"
+                + "      \"configType\" : \"ConfigValueByte\",\n"
+                + "      \"value\" : -128\n"
+                + "    },\n"
+                + "    \"answerLong\" : {\n"
+                + "      \"configType\" : \"ConfigValueLong\",\n"
+                + "      \"value\" : -9223372036854775808\n"
+                + "    },\n"
+                + "    \"booleans\" : {\n"
+                + "      \"array\" : [ true, false, false, false, true, false ],\n"
+                + "      \"configType\" : \"ConfigValueBooleanArray\"\n"
+                + "    },\n"
+                + "    \"bytes\" : {\n"
+                + "      \"configType\" : \"ConfigValueByteArray\",\n"
+                + "      \"value\" : \"Ynl0ZXM=\"\n"
+                + "    },\n"
+                + "    \"chars\" : {\n"
+                + "      \"array\" : [ 65, 66, 67 ],\n"
+                + "      \"configType\" : \"ConfigValueCharArray\"\n"
+                + "    },\n"
+                + "    \"doubles\" : {\n"
+                + "      \"array\" : [ 4.9E-324, 1.7976931348623157E308 ],\n"
+                + "      \"configType\" : \"ConfigValueDoubleArray\"\n"
+                + "    },\n"
+                + "    \"floats\" : {\n"
+                + "      \"array\" : [ 1.4E-45, 3.4028235E38 ],\n"
+                + "      \"configType\" : \"ConfigValueFloatArray\"\n"
+                + "    },\n"
+                + "    \"ints\" : {\n"
+                + "      \"array\" : [ 1, 2, 3, 4, 5, 6, 7, 8, 9 ],\n"
+                + "      \"configType\" : \"ConfigValueIntArray\"\n"
+                + "    },\n"
+                + "    \"longs\" : {\n"
+                + "      \"array\" : [ -9223372036854775808, 9223372036854775807 ],\n"
+                + "      \"configType\" : \"ConfigValueLongArray\"\n"
+                + "    },\n"
+                + "    \"shorts\" : {\n"
+                + "      \"array\" : [ -32768, 32767 ],\n"
+                + "      \"configType\" : \"ConfigValueShortArray\"\n"
+                + "    },\n"
+                + "    \"org\" : {\n"
+                + "      \"children\" : {\n"
+                + "        \"knime\" : {\n"
+                + "          \"children\" : {\n"
+                + "            \"loc\" : {\n"
+                + "              \"configType\" : \"ConfigValueLong\",\n"
+                + "              \"value\" : 9223372036854775807\n"
+                + "            },\n"
+                + "            \"core\" : {\n"
+                + "              \"children\" : {\n"
+                + "                \"util\" : {\n"
+                + "                  \"children\" : { },\n"
+                + "                  \"configType\" : \"ConfigMap\",\n"
+                + "                  \"key\" : \"util\"\n"
+                + "                },\n"
+                + "                \"node\" : {\n"
+                + "                  \"children\" : { },\n"
+                + "                  \"configType\" : \"ConfigMap\",\n"
+                + "                  \"key\" : \"node\"\n"
+                + "                }\n"
+                + "              },\n"
+                + "              \"configType\" : \"ConfigMap\",\n"
+                + "              \"key\" : \"core\"\n"
+                + "            }\n"
+                + "          },\n"
+                + "          \"configType\" : \"ConfigMap\",\n"
+                + "          \"key\" : \"knime\"\n"
+                + "        }\n"
+                + "      },\n"
+                + "      \"configType\" : \"ConfigMap\",\n"
+                + "      \"key\" : \"org\"\n"
+                + "    }\n"
+                + "  },\n"
+                + "  \"configType\" : \"ConfigMap\",\n"
+                + "  \"key\" : \"root\"\n"
                 + "}"; //
             String actual = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(def);
             assertEquals("JSON Serialization of NodeSettings (via ConfigDef) returns unexpected output.", expected,

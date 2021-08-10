@@ -284,12 +284,12 @@ public class DefWorkflowManagerWrapper extends DefNodeContainerWrapper implement
             result.add(new AnnotationDataDef() {
 
                 @Override
-                public Integer getYCoordinate() {
+                public Integer getCoordinateX() {
                     return annotation.getY();
                 }
 
                 @Override
-                public Integer getXCoordinate() {
+                public Integer getCoordinateY() {
                     return annotation.getX();
                 }
 

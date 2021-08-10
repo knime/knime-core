@@ -72,7 +72,6 @@ import org.knime.core.node.config.base.ConfigBooleanEntry;
 import org.knime.core.node.config.base.ConfigByteEntry;
 import org.knime.core.node.config.base.ConfigCharEntry;
 import org.knime.core.node.config.base.ConfigDoubleEntry;
-import org.knime.core.node.config.base.ConfigEntries;
 import org.knime.core.node.config.base.ConfigFloatEntry;
 import org.knime.core.node.config.base.ConfigIntEntry;
 import org.knime.core.node.config.base.ConfigLongEntry;
@@ -157,6 +156,7 @@ public class CoreToDefUtil {
         if (settings == null) {
             return null;
         }
+
         // TODO don't cast
         ConfigBase config = (ConfigBase)settings;
         return (ConfigMapDef)toConfigDef(config, settings.getKey());
@@ -190,10 +190,14 @@ public class CoreToDefUtil {
                     children.put(childKey, subTreeDef);
                 }
             }
-            return DefaultConfigMapDef.builder().setKey(key).setChildren(children).build();
+            return DefaultConfigMapDef.builder()//
+                    .setConfigType("ConfigMap")//
+                    .setKey(key)//
+                    .setChildren(children).build();
         } else {
             // recursion anchor
-            return abstractConfigurationEntryToTypedLeaf(settings).orElseThrow(() -> new IllegalStateException(settings.getKey() + settings.toStringValue()));
+            return abstractConfigurationEntryToTypedLeaf(settings)//
+                    .orElseThrow(() -> new IllegalStateException(settings.getKey() + settings.toStringValue()));
         }
 
     }
@@ -203,77 +207,97 @@ public class CoreToDefUtil {
      * @return null if no sensible conversion could be made, otherwise an array representation of the matching type,
      *         like {@link ConfigValueBooleanArrayDef}.
      */
-    private static ConfigDef tryNodeSettingsAsArray(final ConfigBase innerNode, final String childKey) {
+    private static ConfigDef tryNodeSettingsAsArray(final ConfigBase innerNode, final String childKey) { // NOSONAR
+        // NOSONAR: recommended number of return statements is <= 5 but we just have to cover all the types.
 
-        {
-            boolean[] values = innerNode.getBooleanArray(childKey, null);
-            if (values != null) {
-                List<Boolean> asList =
-                    IntStream.range(0, values.length).mapToObj(idx -> values[idx]).collect(Collectors.toList());
-                return DefaultConfigValueBooleanArrayDef.builder().setArray(asList).setItemType(ConfigEntries.xboolean.name()).build();
-            }
+        boolean[] booleanValues = innerNode.getBooleanArray(childKey, null);
+        if (booleanValues != null) {
+            List<Boolean> asList = IntStream.range(0, booleanValues.length)//
+                .mapToObj(idx -> booleanValues[idx])//
+                .collect(Collectors.toList());
+            return DefaultConfigValueBooleanArrayDef.builder()//
+                .setConfigType("ConfigValueBooleanArray")//
+                .setArray(asList)//
+                .build();
         }
-        {
-            byte[] values = innerNode.getByteArray(childKey, null);
-            if (values != null) {
-                return DefaultConfigValueByteArrayDef.builder().setValue(values).setItemType(ConfigEntries.xbyte.name()).build();
-            }
+        byte[] byteValues = innerNode.getByteArray(childKey, null);
+        if (byteValues != null) {
+            return DefaultConfigValueByteArrayDef.builder()//
+                .setConfigType("ConfigValueByteArray")//
+                .setValue(byteValues)//
+                .build();
         }
-        {
-            char[] values = innerNode.getCharArray(childKey, null);
-            if (values != null) {
-                List<Integer> asList =
-                    IntStream.range(0, values.length).mapToObj(idx -> Integer.valueOf(values[idx])).collect(Collectors.toList());
-                return DefaultConfigValueCharArrayDef.builder().setArray(asList).setItemType(ConfigEntries.xchar.name()).build();
-            }
+        char[] charValues = innerNode.getCharArray(childKey, null);
+        if (charValues != null) {
+            List<Integer> asList = IntStream.range(0, charValues.length)
+                //
+                .mapToObj(idx -> Integer.valueOf(charValues[//
+                idx])).collect(Collectors.toList());
+            return DefaultConfigValueCharArrayDef.builder()//
+                .setConfigType("ConfigValueCharArray")//
+                .setArray(asList)//
+                .build();
         }
-        {
-            double[] values = innerNode.getDoubleArray(childKey, null);
-            if (values != null) {
-                List<Double> asList =
-                    IntStream.range(0, values.length).mapToObj(idx -> values[idx]).collect(Collectors.toList());
-                return DefaultConfigValueDoubleArrayDef.builder().setArray(asList).setItemType(ConfigEntries.xdouble.name()).build();
-            }
+        double[] doubleValues = innerNode.getDoubleArray(childKey, null);
+        if (doubleValues != null) {
+            List<Double> asList = IntStream.range(0, doubleValues.length)//
+                .mapToObj(idx -> doubleValues[idx])//
+                .collect(Collectors.toList());
+            return DefaultConfigValueDoubleArrayDef.builder()//
+                .setConfigType("ConfigValueDoubleArray")//
+                .setArray(asList)//
+                .build();
         }
-        {
-            float[] values = innerNode.getFloatArray(childKey, null);
-            if (values != null) {
-                List<Float> asList =
-                    IntStream.range(0, values.length).mapToObj(idx -> values[idx]).collect(Collectors.toList());
-                return DefaultConfigValueFloatArrayDef.builder().setArray(asList).setItemType(ConfigEntries.xfloat.name()).build();
-            }
+        float[] floatValues = innerNode.getFloatArray(childKey, null);
+        if (floatValues != null) {
+            List<Float> asList = IntStream.range(0, floatValues.length)//
+                .mapToObj(idx -> floatValues[idx])//
+                .collect(Collectors.toList());
+            return DefaultConfigValueFloatArrayDef.builder()//
+                .setConfigType("ConfigValueFloatArray")//
+                .setArray(asList)//
+                .build();
         }
-        {
-            int[] values = innerNode.getIntArray(childKey, null);
-            if (values != null) {
-                List<Integer> asList =
-                    IntStream.range(0, values.length).mapToObj(idx -> values[idx]).collect(Collectors.toList());
-                return DefaultConfigValueIntArrayDef.builder().setArray(asList).setItemType(ConfigEntries.xint.name()).build();
-            }
+        int[] intValues = innerNode.getIntArray(childKey, null);
+        if (intValues != null) {
+            List<Integer> asList = IntStream.range(0, intValues.length)//
+                .mapToObj(idx -> intValues[idx])//
+                .collect(Collectors.toList());
+            return DefaultConfigValueIntArrayDef.builder()//
+                .setConfigType("ConfigValueIntArray")//
+                .setArray(asList)//
+                .build();
         }
-        {
-            long[] values = innerNode.getLongArray(childKey, null);
-            if (values != null) {
-                List<Long> asList =
-                    IntStream.range(0, values.length).mapToObj(idx -> values[idx]).collect(Collectors.toList());
-                return DefaultConfigValueLongArrayDef.builder().setArray(asList).setItemType(ConfigEntries.xlong.name()).build();
-            }
+        long[] longValues = innerNode.getLongArray(childKey, null);
+        if (longValues != null) {
+            List<Long> asList = IntStream.range(0, longValues.length)//
+                .mapToObj(idx -> longValues[idx])//
+                .collect(Collectors.toList());
+            return DefaultConfigValueLongArrayDef.builder()//
+                .setConfigType("ConfigValueLongArray")//
+                .setArray(asList)//
+                .build();
         }
-        {
-            short[] values = innerNode.getShortArray(childKey, null);
-            if (values != null) {
-                List<Integer> asList =
-                    IntStream.range(0, values.length).mapToObj((idx -> Integer.valueOf(values[idx]))).collect(Collectors.toList());
-                return DefaultConfigValueShortArrayDef.builder().setArray(asList).setItemType(ConfigEntries.xshort.name()).build();
-            }
+        short[] shortValues = innerNode.getShortArray(childKey, null);
+        if (shortValues != null) {
+            List<Integer> asList = IntStream.range(0, shortValues.length)
+                //
+                .mapToObj((idx -> Integer.valueOf(shortValues[//
+                idx]))).collect(Collectors.toList());
+            return DefaultConfigValueShortArrayDef.builder()//
+                .setConfigType("ConfigValueShortArray")//
+                .setArray(asList)//
+                .build();
         }
-        {
-            String[] values = innerNode.getStringArray(childKey, (String[]) null);
-            if (values != null) {
-                List<String> asList =
-                    IntStream.range(0, values.length).mapToObj(idx -> values[idx]).collect(Collectors.toList());
-                return DefaultConfigValueStringArrayDef.builder().setArray(asList).setItemType(ConfigEntries.xstring.name()).build();
-            }
+        String[] stringValues = innerNode.getStringArray(childKey, (String[])null);
+        if (stringValues != null) {
+            List<String> asList = IntStream.range(0, stringValues.length)//
+                .mapToObj(idx -> stringValues[idx])//
+                .collect(Collectors.toList());
+            return DefaultConfigValueStringArrayDef.builder()//
+                .setConfigType("ConfigValueStringArray")//
+                .setArray(asList)//
+                .build();
         }
         return null;
     }
@@ -281,35 +305,56 @@ public class CoreToDefUtil {
     private static Optional<ConfigDef> abstractConfigurationEntryToTypedLeaf(final AbstractConfigEntry child) {
         // for children: check whether they are leafs by testing on all leaf types
         if (child instanceof ConfigBooleanEntry) {
-            return Optional.of(DefaultConfigValueBooleanDef.builder().setValue(((ConfigBooleanEntry)child).getBoolean())
-                .setItemType(ConfigEntries.xboolean.name()).build());
+            return Optional.of(DefaultConfigValueBooleanDef.builder()//
+            .setValue(((ConfigBooleanEntry)child).getBoolean())//
+            .setConfigType("ConfigValueBoolean")//
+            .build());
         } else if (child instanceof ConfigByteEntry) {
-            return Optional.of(DefaultConfigValueByteDef.builder().setValue((int)((ConfigByteEntry)child).getByte())
-                .setItemType(ConfigEntries.xbyte.name()).build());
+            return Optional.of(DefaultConfigValueByteDef.builder()//
+            .setValue((int)((ConfigByteEntry)child).getByte())//
+            .setConfigType("ConfigValueByte")//
+            .build());
         } else if (child instanceof ConfigCharEntry) {
-            return Optional.of(DefaultConfigValueCharDef.builder().setValue((int)((ConfigCharEntry)child).getChar())
-                .setItemType(ConfigEntries.xchar.name()).build());
+            return Optional.of(DefaultConfigValueCharDef.builder()//
+            .setValue((int)((ConfigCharEntry)child).getChar())//
+            .setConfigType("ConfigValueChar")//
+            .build());
         } else if (child instanceof ConfigDoubleEntry) {
-            return Optional.of(DefaultConfigValueDoubleDef.builder().setValue(((ConfigDoubleEntry)child).getDouble())
-                .setItemType(ConfigEntries.xdouble.name()).build());
+            return Optional.of(DefaultConfigValueDoubleDef.builder()//
+            .setValue(((ConfigDoubleEntry)child).getDouble())//
+            .setConfigType("ConfigValueDouble")//
+            .build());
         } else if (child instanceof ConfigFloatEntry) {
-            return Optional.of(DefaultConfigValueFloatDef.builder().setValue(((ConfigFloatEntry)child).getFloat())
-                .setItemType(ConfigEntries.xfloat.name()).build());
+            return Optional.of(DefaultConfigValueFloatDef.builder()//
+            .setValue(((ConfigFloatEntry)child).getFloat())//
+            .setConfigType("ConfigValueFloat")//
+            .build());
         } else if (child instanceof ConfigIntEntry) {
-            return Optional.of(DefaultConfigValueIntDef.builder().setValue(((ConfigIntEntry)child).getInt())
-                .setItemType(ConfigEntries.xint.name()).build());
+            return Optional.of(DefaultConfigValueIntDef.builder()//
+            .setValue(((ConfigIntEntry)child).getInt())//
+            .setConfigType("ConfigValueInt")//
+            .build());
         } else if (child instanceof ConfigLongEntry) {
-            return Optional.of(DefaultConfigValueLongDef.builder().setValue(((ConfigLongEntry)child).getLong())
-                .setItemType(ConfigEntries.xlong.name()).build());
+            return Optional.of(DefaultConfigValueLongDef.builder()//
+            .setValue(((ConfigLongEntry)child).getLong())//
+            .setConfigType("ConfigValueLong")//
+            .build());
         } /*else if (child instanceof ConfigPasswordEntry) {
             return Optional
-                .of(DefaultConfigValuePasswordDef.builder().setValue(((ConfigPasswordEntry)child).getPassword()).setItemType(ConfigEntries.xpassword.name()).build());
+                .of(DefaultConfigValuePasswordDef.builder()//
+            //
+            .setConfigType("ConfigValuePassword")//
+            .build());
           } */ else if (child instanceof ConfigShortEntry) {
-            return Optional.of(DefaultConfigValueShortDef.builder().setValue((int)((ConfigShortEntry)child).getShort())
-                .setItemType(ConfigEntries.xshort.name()).build());
+            return Optional.of(DefaultConfigValueShortDef.builder()//
+            .setValue((int)((ConfigShortEntry)child).getShort())//
+            .setConfigType("ConfigValueShort")//
+            .build());
         } else if (child instanceof ConfigStringEntry) {
-            return Optional.of(DefaultConfigValueStringDef.builder().setValue(((ConfigStringEntry)child).getString())
-                .setItemType(ConfigEntries.xstring.name()).build());
+            return Optional.of(DefaultConfigValueStringDef.builder()//
+            .setValue(((ConfigStringEntry)child).getString())//
+            .setConfigType("ConfigValueString")//
+            .build());
         }
         return Optional.empty();
     }
@@ -356,11 +401,12 @@ public class CoreToDefUtil {
             .setDefFontSize(na.getDefaultFontSize())//
             .setHeight(na.getHeight())//
             .setWidth(na.getWidth())//
-            .setXCoordinate(na.getX())//
-            .setYCoordinate(na.getY())//
+            .setCoordinateX(na.getX())//
+            .setCoordinateY(na.getY())//
             .setStyles(styles)//
             .build();
-        return DefaultNodeAnnotationDef.builder().setDefault(na.getData().isDefault()).setData(annoData).build();
+        return DefaultNodeAnnotationDef.builder()//
+            .setAnnotationDefault(na.getData().isDefault()).setData(annoData).build();
     }
 
     public static TemplateInfoDef toTemplateInfoDef(final MetaNodeTemplateInformation i) {

@@ -112,8 +112,8 @@ public class DefNodeContainerMetaPersistor implements NodeContainerMetaPersistor
     @Override
     public NodeAnnotationData getNodeAnnotationData() {
         NodeAnnotationDef annoDef = m_def.getNodeAnnotation();
-        NodeAnnotationData annoData = new NodeAnnotationData(annoDef.isDefault());
-        if (!annoDef.isDefault()) {
+        NodeAnnotationData annoData = new NodeAnnotationData(annoDef.isAnnotationDefault());
+        if (!annoDef.isAnnotationDefault()) {
             DefToCoreUtil.toAnnotationData(annoData, annoDef.getData());
             annoData.copyFrom(annoData, true);
         }
