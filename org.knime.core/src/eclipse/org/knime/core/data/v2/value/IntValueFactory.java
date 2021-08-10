@@ -63,8 +63,6 @@ import org.knime.core.data.v2.WriteValue;
 import org.knime.core.table.access.IntAccess.IntReadAccess;
 import org.knime.core.table.access.IntAccess.IntWriteAccess;
 import org.knime.core.table.schema.IntDataSpec;
-import org.knime.core.table.schema.traits.DataTraits;
-import org.knime.core.table.schema.traits.DefaultDataTraits;
 
 /**
  * {@link ValueFactory} implementation for {@link IntCell}.
@@ -92,11 +90,6 @@ public final class IntValueFactory implements ValueFactory<IntReadAccess, IntWri
     @Override
     public IntWriteValue createWriteValue(final IntWriteAccess access) {
         return new DefaultIntWriteValue(access);
-    }
-
-    @Override
-    public DataTraits getTraits() {
-        return DefaultDataTraits.EMPTY;
     }
 
     /**

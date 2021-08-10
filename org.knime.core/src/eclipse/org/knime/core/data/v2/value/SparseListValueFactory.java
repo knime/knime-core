@@ -86,6 +86,8 @@ import org.knime.core.table.schema.ListDataSpec;
 import org.knime.core.table.schema.StructDataSpec;
 import org.knime.core.table.schema.traits.DataTraits;
 import org.knime.core.table.schema.traits.DefaultDataTraits;
+import org.knime.core.table.schema.traits.DefaultListDataTraits;
+import org.knime.core.table.schema.traits.DefaultStructDataTraits;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
@@ -136,7 +138,9 @@ public final class SparseListValueFactory implements CollectionValueFactory<Stru
 
     @Override
     public DataTraits getTraits() {
-        return DefaultDataTraits.EMPTY;
+        return new DefaultStructDataTraits(m_inner.getTraits(), DefaultDataTraits.EMPTY,
+            new DefaultListDataTraits(DefaultDataTraits.EMPTY),
+            new DefaultListDataTraits(m_inner.getTraits()));
     }
 
     /**

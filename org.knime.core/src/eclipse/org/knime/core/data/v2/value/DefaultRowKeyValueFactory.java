@@ -55,8 +55,6 @@ import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.table.access.StringAccess.StringReadAccess;
 import org.knime.core.table.access.StringAccess.StringWriteAccess;
 import org.knime.core.table.schema.StringDataSpec;
-import org.knime.core.table.schema.traits.DataTraits;
-import org.knime.core.table.schema.traits.DefaultDataTraits;
 
 /**
  * {@link ValueFactory} implementation for custom {@link RowKeyValue} and {@link RowKeyWriteValue}. 'Custom' means, that
@@ -89,11 +87,6 @@ public final class DefaultRowKeyValueFactory implements RowKeyValueFactory<Strin
     @Override
     public RowKeyWriteValue createWriteValue(final StringWriteAccess writer) {
         return new DefaultRowKeyWriteValue(writer);
-    }
-
-    @Override
-    public DataTraits getTraits() {
-        return DefaultDataTraits.EMPTY;
     }
 
     /* Simple CustomRowKeyWriteValue */

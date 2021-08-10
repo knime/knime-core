@@ -71,6 +71,7 @@ import org.knime.core.table.schema.ListDataSpec;
 import org.knime.core.table.schema.LongDataSpec;
 import org.knime.core.table.schema.traits.DataTraits;
 import org.knime.core.table.schema.traits.DefaultDataTraits;
+import org.knime.core.table.schema.traits.DefaultListDataTraits;
 
 /**
  * {@link ValueFactory} implementation for {@link ListCell} with elements of type {@link LongCell}.
@@ -102,7 +103,7 @@ public final class LongListValueFactory implements ValueFactory<ListReadAccess, 
 
     @Override
     public DataTraits getTraits() {
-        return DefaultDataTraits.EMPTY;
+        return new DefaultListDataTraits(DefaultDataTraits.EMPTY);
     }
 
     /**

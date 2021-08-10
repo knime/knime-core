@@ -59,8 +59,6 @@ import org.knime.core.data.v2.WriteValue;
 import org.knime.core.table.access.LongAccess.LongReadAccess;
 import org.knime.core.table.access.LongAccess.LongWriteAccess;
 import org.knime.core.table.schema.LongDataSpec;
-import org.knime.core.table.schema.traits.DataTraits;
-import org.knime.core.table.schema.traits.DefaultDataTraits;
 
 /**
  * {@link ValueFactory} implementation for {@link LongCell}.
@@ -88,11 +86,6 @@ public final class LongValueFactory implements ValueFactory<LongReadAccess, Long
     @Override
     public LongWriteValue createWriteValue(final LongWriteAccess writer) {
         return new DefaultLongWriteValue(writer);
-    }
-
-    @Override
-    public DataTraits getTraits() {
-        return DefaultDataTraits.EMPTY;
     }
 
     /**

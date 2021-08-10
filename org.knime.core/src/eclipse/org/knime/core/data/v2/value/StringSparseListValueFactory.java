@@ -83,6 +83,8 @@ import org.knime.core.table.schema.StringDataSpec;
 import org.knime.core.table.schema.StructDataSpec;
 import org.knime.core.table.schema.traits.DataTraits;
 import org.knime.core.table.schema.traits.DefaultDataTraits;
+import org.knime.core.table.schema.traits.DefaultListDataTraits;
+import org.knime.core.table.schema.traits.DefaultStructDataTraits;
 
 import com.google.common.base.Objects;
 
@@ -125,7 +127,9 @@ public final class StringSparseListValueFactory implements ValueFactory<StructRe
 
     @Override
     public DataTraits getTraits() {
-        return DefaultDataTraits.EMPTY;
+        return new DefaultStructDataTraits(DefaultDataTraits.EMPTY, DefaultDataTraits.EMPTY,
+            new DefaultListDataTraits(DefaultDataTraits.EMPTY),
+            new DefaultListDataTraits(DefaultDataTraits.EMPTY));
     }
 
     /**

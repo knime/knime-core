@@ -77,6 +77,7 @@ import org.knime.core.table.schema.BooleanDataSpec;
 import org.knime.core.table.schema.StructDataSpec;
 import org.knime.core.table.schema.traits.DataTraits;
 import org.knime.core.table.schema.traits.DefaultDataTraits;
+import org.knime.core.table.schema.traits.DefaultStructDataTraits;
 
 import com.google.common.collect.ImmutableList;
 
@@ -110,7 +111,7 @@ public final class BooleanSetValueFactory implements ValueFactory<StructReadAcce
 
     @Override
     public DataTraits getTraits() {
-        return DefaultDataTraits.EMPTY;
+        return new DefaultStructDataTraits(DefaultDataTraits.EMPTY, DefaultDataTraits.EMPTY, DefaultDataTraits.EMPTY);
     }
 
     /**

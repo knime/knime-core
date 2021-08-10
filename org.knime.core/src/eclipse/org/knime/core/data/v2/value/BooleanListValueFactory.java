@@ -68,6 +68,7 @@ import org.knime.core.table.schema.BooleanDataSpec;
 import org.knime.core.table.schema.ListDataSpec;
 import org.knime.core.table.schema.traits.DataTraits;
 import org.knime.core.table.schema.traits.DefaultDataTraits;
+import org.knime.core.table.schema.traits.DefaultListDataTraits;
 
 import com.google.common.primitives.Booleans;
 
@@ -101,7 +102,7 @@ public final class BooleanListValueFactory implements ValueFactory<ListReadAcces
 
     @Override
     public DataTraits getTraits() {
-        return DefaultDataTraits.EMPTY;
+        return new DefaultListDataTraits(DefaultDataTraits.EMPTY);
     }
 
     /**

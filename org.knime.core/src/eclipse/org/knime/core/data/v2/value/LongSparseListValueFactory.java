@@ -83,6 +83,8 @@ import org.knime.core.table.schema.LongDataSpec;
 import org.knime.core.table.schema.StructDataSpec;
 import org.knime.core.table.schema.traits.DataTraits;
 import org.knime.core.table.schema.traits.DefaultDataTraits;
+import org.knime.core.table.schema.traits.DefaultListDataTraits;
+import org.knime.core.table.schema.traits.DefaultStructDataTraits;
 
 /**
  * {@link ValueFactory} implementation for {@link SparseListCell} with elements of type {@link LongCell}.
@@ -120,7 +122,9 @@ public final class LongSparseListValueFactory implements ValueFactory<StructRead
 
     @Override
     public DataTraits getTraits() {
-        return DefaultDataTraits.EMPTY;
+        return new DefaultStructDataTraits(DefaultDataTraits.EMPTY, DefaultDataTraits.EMPTY,
+            new DefaultListDataTraits(DefaultDataTraits.EMPTY),
+            new DefaultListDataTraits(DefaultDataTraits.EMPTY));
     }
 
     /**

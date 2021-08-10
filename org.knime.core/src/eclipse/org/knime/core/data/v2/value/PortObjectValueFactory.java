@@ -70,8 +70,6 @@ import org.knime.core.table.access.VarBinaryAccess.VarBinaryWriteAccess;
 import org.knime.core.table.schema.VarBinaryDataSpec;
 import org.knime.core.table.schema.VarBinaryDataSpec.ObjectDeserializer;
 import org.knime.core.table.schema.VarBinaryDataSpec.ObjectSerializer;
-import org.knime.core.table.schema.traits.DataTraits;
-import org.knime.core.table.schema.traits.DefaultDataTraits;
 
 /**
  * {@link ValueFactory} implementation for {@link PortObjectCell}.
@@ -100,11 +98,6 @@ public class PortObjectValueFactory
     @Override
     public VarBinaryDataSpec getSpec() {
         return VarBinaryDataSpec.INSTANCE;
-    }
-
-    @Override
-    public DataTraits getTraits() {
-        return DefaultDataTraits.EMPTY;
     }
 
     /**

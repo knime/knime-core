@@ -70,7 +70,7 @@ import org.knime.core.table.access.ReadAccess;
 import org.knime.core.table.access.WriteAccess;
 import org.knime.core.table.schema.ListDataSpec;
 import org.knime.core.table.schema.traits.DataTraits;
-import org.knime.core.table.schema.traits.DefaultDataTraits;
+import org.knime.core.table.schema.traits.DefaultListDataTraits;
 
 import com.google.common.collect.ImmutableList;
 
@@ -113,7 +113,7 @@ public final class ListValueFactory implements CollectionValueFactory<ListReadAc
 
     @Override
     public DataTraits getTraits() {
-        return DefaultDataTraits.EMPTY;
+        return new DefaultListDataTraits(m_inner.getTraits());
     }
 
     /**
