@@ -200,6 +200,7 @@ import org.knime.core.node.workflow.virtual.parchunk.VirtualParallelizedChunkPor
 import org.knime.core.quickform.AbstractQuickFormConfiguration;
 import org.knime.core.quickform.AbstractQuickFormValueInConfiguration;
 import org.knime.core.quickform.in.QuickFormInputNode;
+import org.knime.core.ui.Reexecutable;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.IEarlyStartup;
 import org.knime.core.util.LoadVersion;
@@ -2625,7 +2626,7 @@ public final class WorkflowManager extends NodeContainer
             }
             NativeNodeContainer snc = (NativeNodeContainer)nc;
             NodeModel nm = snc.getNodeModel();
-            if (!(nm instanceof InteractiveNode)) {
+            if (!(nm instanceof InteractiveNode) && !(nm instanceof Reexecutable)) {
                 throw new IllegalArgumentException("Can't reexecute non interactive nodes.");
             }
             if (!(EXECUTED.equals(snc.getInternalState()))) {
