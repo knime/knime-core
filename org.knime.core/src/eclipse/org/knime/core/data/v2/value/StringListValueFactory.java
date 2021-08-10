@@ -68,7 +68,6 @@ import org.knime.core.table.access.ListAccess.ListReadAccess;
 import org.knime.core.table.access.ListAccess.ListWriteAccess;
 import org.knime.core.table.schema.ListDataSpec;
 import org.knime.core.table.schema.StringDataSpec;
-import org.knime.core.table.schema.traits.DataTrait.DictEncodingTrait;
 import org.knime.core.table.schema.traits.DataTraits;
 import org.knime.core.table.schema.traits.DefaultDataTraits;
 import org.knime.core.table.schema.traits.DefaultListDataTraits;
@@ -103,7 +102,7 @@ public final class StringListValueFactory implements ValueFactory<ListReadAccess
 
     @Override
     public DataTraits getTraits() {
-        return new DefaultListDataTraits(new DefaultDataTraits(new DictEncodingTrait(true)));
+        return new DefaultListDataTraits(DefaultDataTraits.EMPTY);
     }
 
     /**
