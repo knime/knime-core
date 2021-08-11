@@ -312,15 +312,6 @@
          </serializer>
       </DataType>
       <DataType
-            cellClass="org.knime.core.data.def.StringCell"
-            factoryClass="org.knime.core.data.def.StringCell$StringCellFactory"
-            factoryValue="org.knime.core.data.v2.value.StringValueFactory">
-         <serializer
-               cellClass="org.knime.core.data.def.StringCell"
-               serializerClass="org.knime.core.data.def.StringCell$StringSerializer">
-         </serializer>
-      </DataType>
-      <DataType
             cellClass="org.knime.core.data.def.DoubleCell"
             factoryClass="org.knime.core.data.def.DoubleCell$DoubleCellFactory"
             factoryValue="org.knime.core.data.v2.value.DoubleValueFactory">
@@ -555,6 +546,15 @@
          <serializer
                cellClass="org.knime.core.data.probability.nominal.NominalDistributionCell"
                serializerClass="org.knime.core.data.probability.nominal.NominalDistributionCell$NominalDistributionSerializer">
+         </serializer>
+      </DataType>
+      <DataType
+            cellClass="org.knime.core.data.def.StringCell"
+            factoryClass="org.knime.core.data.def.StringCell$StringCellFactory"
+            factoryValue="org.knime.core.data.v2.value.DictEncodedStringValueFactory">
+         <serializer
+               cellClass="org.knime.core.data.def.StringCell"
+               serializerClass="org.knime.core.data.def.StringCell$StringSerializer">
          </serializer>
       </DataType>
    </extension>
