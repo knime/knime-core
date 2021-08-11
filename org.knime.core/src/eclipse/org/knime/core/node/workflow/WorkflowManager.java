@@ -8407,6 +8407,21 @@ public final class WorkflowManager extends NodeContainer
         result.setGUIMustReportDataLoadErrors(persistor.mustWarnOnDataLoadError());
     }
 
+    /**
+     * Initialize this using a persistor that provides information from a persisted/serialized version of a workflow.
+     *
+     * @param persistor provides necessary information to instantiate a workflow manager from some source, e.g., a
+     *            workflow described as a single JSON file
+     * @param exec to provide progress updated during the load process
+     * @param keepNodeMessages
+     * @return an object with information on errors and warnings.
+     */
+    public WorkflowLoadResult load(final WorkflowPersistor persistor, final ExecutionMonitor exec,
+        final boolean keepNodeMessages) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
     /** {@inheritDoc} */
     @Override
     WorkflowCopyContent loadContent(final NodeContainerPersistor nodePersistor,
