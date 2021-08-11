@@ -44,7 +44,13 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
 import org.junit.Test;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
+import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.workflow.def.WorkflowDef;
 import org.knime.core.workflow.def.impl.DefaultWorkflowDef;
 
@@ -53,20 +59,84 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 public class Enh11762_WorkflowRepresentation extends WorkflowTestCase {
 
+	/**
+	 * Serialize a workflow from the JVM into JSON by wrapping the
+	 * {@link WorkflowManager} to get a {@link WorkflowDef}-implementing version of
+	 * it that can then be used to initialize a jackson-serializable object of class
+	 * {@link DefaultWorkflowDef}.
+	 * 
+	 * @throws Exception
+	 */
 	@Test
-	public void test() throws Exception {
+	public void testToFile() throws Exception {
+		final ObjectMapper mapper = new ObjectMapper();
+		mapper.registerModule(new JavaTimeModule());
+		String json = workflowToString(mapper);
+
+		// restore POJO from String representation
+		mapper.readValue(json, WorkflowDef.class);
+	}
+
+	/**
+	 * Restore a workflow from its JSON representation to an executable workflow in
+	 * the JVM.
+	 * @throws Exception 
+	 */
+	@Test
+	public void testFromString() throws Exception {
+
+		// get JSON representation of example workflow
+		final ObjectMapper mapper = new ObjectMapper();
+		mapper.registerModule(new JavaTimeModule());
+		String json = workflowToString(mapper);
+
+		// convert String to POJO
+		WorkflowDef pojo = mapper.readValue(json, WorkflowDef.class);
+		
+		// create a workflow manager from the POJO using an appropriate persistor
+		ExecutionMonitor exec = new ExecutionMonitor();
+		DefWorkflowPersistor loader = new DefWorkflowPersistor(pojo);
+		WorkflowLoadResult loadResult = WorkflowManager.ROOT.load(loader, exec, true);
+        WorkflowManager restoredManager = loadResult.getWorkflowManager();
+
+        // check that the workflow manager is present and looking good
+		if (restoredManager == null) {
+			fail("Errors reading workflow: " + loadResult.getFilteredError("", LoadResultEntryType.Ok));
+			throw new Exception();
+		}
+		if (loadResult.getType() != LoadResultEntryType.Ok) {
+			fail("Errors reading workflow: " + loadResult.getFilteredError("", LoadResultEntryType.Warning));
+		}
+
+		// execute the restored workflow...
+		restoredManager.executeAllAndWaitUntilDone();
+		var resultFromRestored = restoredManager.createExecutionResult(exec);
+
+		// execute the original workflow...
+		WorkflowManager originalManager = getManager();
+		originalManager.executeAllAndWaitUntilDone();
+		var resultFromOriginal = originalManager.createExecutionResult(exec);
+
+		// TODO implement a deep comparison for the execution results
+		assertEquals(resultFromOriginal, resultFromRestored);
+	}
+
+	/**
+	 * Load the example workflow and generate a textual representation of it.
+	 * 
+	 * @param mapper Jackson mapper to use for POJO with Jackson annotations to JSON
+	 *               conversion
+	 * @return JSON representation of an example workflow.
+	 * @throws Exception
+	 */
+	private String workflowToString(ObjectMapper mapper) throws Exception {
 		loadAndSetWorkflow();
 		WorkflowManager wfm = getManager();
 		DefWorkflowManagerWrapper def = new DefWorkflowManagerWrapper(wfm);
 
-		DefaultWorkflowDef defaultDef = new DefaultWorkflowDef(def);
+		final DefaultWorkflowDef defaultDef = new DefaultWorkflowDef(def);
 
-		ObjectMapper mapper = new ObjectMapper();
-		mapper.registerModule(new JavaTimeModule());
-
-		String json = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(defaultDef);
-
-		mapper.readValue(json, WorkflowDef.class);
+		return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(defaultDef);
 	}
 
 }
