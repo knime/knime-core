@@ -50,6 +50,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 
@@ -65,6 +66,7 @@ import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.util.CoreConstants;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.Version;
+import org.knime.core.workflow.def.WorkflowProjectDef;
 
 /**
  * Callback class that is used during loading of a workflow to read
@@ -169,9 +171,20 @@ public class WorkflowLoadHelper {
     }
 
     /**
+     * @param pojo
+     */
+    public WorkflowLoadHelper(final WorkflowProjectDef pojo) {
+        this(false, // TODO determine if this is a template project
+            false, // TODO determine if this is a template project
+            // TODO create a proper workflow context
+            new WorkflowContext.Factory(Paths.get(KNIMEConstants.getKNIMETempDir()).toFile()).createContext());
+    }
+
+    /**
      * Pre-populates the {@link CoreConstants#CREDENTIALS_KNIME_SYSTEM_DEFAULT_ID system credentials} with user name and
-     * password in case it was set by a 3rd party via {@link CredentialsStore#setKNIMESystemDefault(String, String)}.
-     * It then calls {@link #loadCredentials(List)} and returns its result.
+     * password in case it was set by a 3rd party via {@link CredentialsStore#setKNIMESystemDefault(String, String)}. It
+     * then calls {@link #loadCredentials(List)} and returns its result.
+     *
      * @param credentials the list of credentials to load.
      * @return result of {@link #loadCredentials(List)} after pre-filling system defaults.
      * @since 4.0
@@ -276,6 +289,20 @@ public class WorkflowLoadHelper {
     FromFileNodeContainerPersistor createLoadPersistor(final File directory)
             throws IOException, UnsupportedWorkflowVersionException {
         return createTemplateLoadPersistor(directory, null);
+    }
+
+    /**
+     * TODO: there's a lot of stuff going on in {@link #createTemplateLoadPersistor(File, URI)}, e.g.,
+     * version parsing and version details string construction, determining dirty after load, nightly checking,
+     * handling problematic versions, MetaNodeTemplateInformation loading from workflow.knime, creating a workflow data repository,
+     * overwriting template information, renaming the workflow (persistor.setNameOverwrite)
+     * @param definition
+     * @return
+     */
+    WorkflowPersistor createLoadPersistor(final WorkflowProjectDef definition) {
+
+        return new DefWorkflowPersistor(definition);
+
     }
 
     /** Create persistor for a workflow or template.

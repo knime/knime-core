@@ -59,6 +59,7 @@ import java.util.stream.IntStream;
 
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.workflow.def.CoreToDefUtil;
+import org.knime.core.util.LoadVersion;
 import org.knime.core.workflow.def.AnnotationDataDef;
 import org.knime.core.workflow.def.AuthorInformationDef;
 import org.knime.core.workflow.def.ConnectionDef;
@@ -71,8 +72,10 @@ import org.knime.core.workflow.def.StyleDef;
 import org.knime.core.workflow.def.TemplateInfoDef;
 import org.knime.core.workflow.def.WorkflowCredentialsDef;
 import org.knime.core.workflow.def.WorkflowDef;
+import org.knime.core.workflow.def.WorkflowProjectDef;
 import org.knime.core.workflow.def.WorkflowUISettingsDef;
 import org.knime.core.workflow.def.impl.DefaultNodeRefDef;
+import org.knime.core.workflow.def.impl.DefaultWorkflowProjectDef;
 
 /**
  *
@@ -439,5 +442,19 @@ public class DefWorkflowManagerWrapper extends DefNodeContainerWrapper implement
     public NodeUIInfoDef getOutPortsBarUIInfo() {
         return CoreToDefUtil.toNodeUIInfoDef(m_wfm.getOutPortsBarUIInfo());
     }
+
+    /**
+     *
+     * Use new {@link FileWorkflowPersistor#parseVersion(String)} to restore a {@link LoadVersion} object from this
+     * String.
+     * @return
+     */
+    public WorkflowProjectDef asProjectDef() {
+        return DefaultWorkflowProjectDef.builder()//
+                .setLoadVersion(m_wfm.getLoadVersion().getVersionString())//
+                .setWorkflow(this)
+                .build();
+    }
+
 
 }

@@ -210,6 +210,7 @@ import org.knime.core.util.Pair;
 import org.knime.core.util.VMFileLocker;
 import org.knime.core.util.pathresolve.ResolverUtil;
 import org.knime.core.util.workflowalizer.AuthorInformation;
+import org.knime.core.workflow.def.WorkflowProjectDef;
 
 /**
  * Container holding nodes and connections of a (sub) workflow. In contrast to previous implementations, this class will
@@ -8304,6 +8305,26 @@ public final class WorkflowManager extends NodeContainer
     }
 
     /**
+     * Loads a workflow described as a POJO into this workflow instance.
+     *
+     * @param definition description of the workflow, nodes, connections, metadata
+     * @param exec For progress/cancellation (currently not supported)
+     * @param loadHelper callback to load credentials and such (if available) during load of the underlying
+     *            <code>SingleNodeContainer</code> (may be null).
+     * @param keepNodeMessages Whether to keep the messages that are associated with the nodes in the loaded workflow
+     *            (mostly false but true when remotely computed results are loaded).
+     * @return A workflow load result, which also contains the loaded workflow.
+     * @throws CanceledExecutionException If canceled.
+     */
+    public WorkflowLoadResult load(final WorkflowProjectDef definition, final ExecutionMonitor exec,
+        final WorkflowLoadHelper loadHelper, final boolean keepNodeMessages)
+        throws CanceledExecutionException {
+        WorkflowPersistor persistor = loadHelper.createLoadPersistor(definition);
+        exec.checkCanceled();
+        return load(persistor, exec, keepNodeMessages);
+    }
+
+    /**
      * Loads the content of the argument persistor into this node.
      *
      * @param persistor The persistor containing the node(s) to be loaded as children to this node.
@@ -8416,6 +8437,7 @@ public final class WorkflowManager extends NodeContainer
     }
 
     /**
+     * Def-based loading.
      * Initialize this using a persistor that provides information from a persisted/serialized version of a workflow.
      *
      * @param persistor provides necessary information to instantiate a workflow manager from some source, e.g., a
@@ -8423,11 +8445,73 @@ public final class WorkflowManager extends NodeContainer
      * @param exec to provide progress updated during the load process
      * @param keepNodeMessages
      * @return an object with information on errors and warnings.
+     * @throws CanceledExecutionException
      */
     public WorkflowLoadResult load(final WorkflowPersistor persistor, final ExecutionMonitor exec,
-        final boolean keepNodeMessages) {
-        // TODO Auto-generated method stub
-        return null;
+        final boolean keepNodeMessages) throws CanceledExecutionException {
+
+        CheckUtils.checkArgument(persistor.isProject(), "Pass a persistor for a WorkflowProjectDef");
+
+        // TODO seemed to be scoped by using the workflow's directory - not sure if a constant is fine
+        final WorkflowLoadResult result = new WorkflowLoadResult("WorkflowDef");
+
+        exec.setMessage(String.format("Loading workflow structure."));
+        exec.checkCanceled();
+        LoadVersion version = persistor.getLoadVersion();
+        LOGGER.debug(String.format("Loading workflow (version \"%s\" with loader class \"%s\")", version,
+            persistor.getClass().getSimpleName()));
+        m_loadVersion = persistor.getLoadVersion();
+
+        // data files are loaded using a repository of reference tables;
+        Map<Integer, BufferedDataTable> tblRep = new HashMap<Integer, BufferedDataTable>();
+
+        // TODO overwrite name? (e.g., FileWorkflowPersistor can have String m_nameOverwrite set to != null to replace
+        // the metadata in the workflow.knime or subworkflow settings
+
+        NodeContainerTemplate loadedInstance = null;
+
+        // TODO override values for insertion
+//        InsertWorkflowPersistor insertPersistor = new InsertWorkflowPersistor(new persistor);
+
+        NodeID[] newIDs = loadContent(persistor, tblRep, null, exec, result, keepNodeMessages).getNodeIDs();
+
+        CheckUtils.checkArgument(newIDs.length == 1,
+            "Loading workflow failed, couldn't identify child sub flow (typically a project)");
+
+        loadedInstance = (NodeContainerTemplate)getNodeContainer(newIDs[0]);
+        exec.setProgress(1.0);
+        result.setLoadedInstance(loadedInstance);
+        result.setGUIMustReportDataLoadErrors(persistor.mustWarnOnDataLoadError());
+
+        final WorkflowManager manager = result.getWorkflowManager();
+
+        // TODO fix data load problems (see load(final FileWorkflowPersistor persistor, final ExecutionMonitor exec,
+        // final boolean keepNodeMessages)
+
+        StringBuilder message = new StringBuilder("Loaded workflow");
+        switch (result.getType()) {
+            case Ok:
+                message.append(" with no errors");
+                break;
+            case Warning:
+                message.append(" with warnings");
+                break;
+            case DataLoadError:
+                message.append(" with errors during data load. ");
+//                if (fixDataLoadProblems) {
+//                    message.append("Problems were fixed and (silently) saved.");
+//                } else {
+//                    message.append("Problems were fixed but not saved!");
+//                }
+                break;
+            case Error:
+                message.append(" with errors");
+                break;
+            default:
+                message.append("with ").append(result.getType());
+        }
+        LOGGER.debug(message.toString());
+        return result;
     }
 
     /** {@inheritDoc} */
