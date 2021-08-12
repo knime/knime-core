@@ -63,6 +63,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.def.DefToCoreUtil;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.workflowalizer.AuthorInformation;
@@ -71,6 +72,7 @@ import org.knime.core.workflow.def.NativeNodeDef;
 import org.knime.core.workflow.def.NodeDef;
 import org.knime.core.workflow.def.NodeRefDef;
 import org.knime.core.workflow.def.WorkflowDef;
+import org.knime.core.workflow.def.WorkflowProjectDef;
 
 /**
  *
@@ -78,6 +80,7 @@ import org.knime.core.workflow.def.WorkflowDef;
  */
 public class DefWorkflowPersistor implements WorkflowPersistor {
 
+    private final WorkflowProjectDef m_projectDef;
     private final WorkflowDef m_def;
 
     private final NodeContainerMetaPersistor m_metaPersistor;
@@ -85,12 +88,36 @@ public class DefWorkflowPersistor implements WorkflowPersistor {
     private final Map<Integer, NodeContainerPersistor> m_nodeContainerLoaderMap;
 
     /**
-     * @param def
+     * Persistor for a project - like a workflow with additional metadata: load version, cipher, etc.
+     *
+     * @param projectDef can be null if the workflow is a sub workflow (e.g.,  metanode) instead of a project
+     * @param def description of the workflow project as a POJO
      */
-    public DefWorkflowPersistor(final WorkflowDef def) {
+    public DefWorkflowPersistor(final WorkflowProjectDef projectDef, final WorkflowDef def) {
+        CheckUtils.checkArgument(projectDef == null || projectDef.getWorkflow() == def,
+            "Can not construct a persistor for a workflow that does not belong to the given workflow project.");
+        m_projectDef = projectDef;
         m_def = def;
         m_metaPersistor = new DefNodeContainerMetaPersistor(def);
         m_nodeContainerLoaderMap = new HashMap<>();
+    }
+
+    /**
+     * Persistor for a project - like a workflow with additional metadata: load version, cipher, etc.
+     *
+     * @param projectDef
+     */
+    public DefWorkflowPersistor(final WorkflowProjectDef projectDef) {
+        this(projectDef, projectDef.getWorkflow());
+    }
+
+    /**
+     * Persistor for a workflow, i.e., not a project but a sub-workflow within a workflow.
+     *
+     * @param def
+     */
+    public DefWorkflowPersistor(final WorkflowDef def) {
+        this(null, def);
     }
 
     /**
