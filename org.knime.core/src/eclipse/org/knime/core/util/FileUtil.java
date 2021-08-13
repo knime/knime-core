@@ -68,7 +68,9 @@ import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributeView;
 import java.nio.file.attribute.FileTime;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -154,63 +156,19 @@ public final class FileUtil {
     private static final AtomicLong TEMP_FILE_TOUCHER_THREAD_COUNT = new AtomicLong();
 
     /**
-     * Some operating systems delete temp files that have not been touched for some days (e.g., 3 days by default on Mac
+     * Some operating systems delete temp files that have not been accessed for some days (eg., 3 days by default on Mac
      * OS). This means that if you leave a workflow open for three days, its materialized data might be deleted while it
      * is still open (see AP-13838). We therefore "touch" all temp files occasionally. The number of hours after which
      * temp files are touched is determined by this parameter.
      */
-    private static final int UPDATE_TEMP_FILES_FREQUENCY_HOURS;
+    private static final int UPDATE_TEMP_FILES_FREQUENCY_HOURS = 23;
 
     static {
-        int updateTempFilesSysPropValue = Integer.getInteger("knime.tempfile.update.interval.hours", 23);
-        UPDATE_TEMP_FILES_FREQUENCY_HOURS = Math.max(updateTempFilesSysPropValue, 1);
         final var executor = Executors.newSingleThreadScheduledExecutor(
             r -> new Thread(r, "KNIME-TempFileToucher-" + TEMP_FILE_TOUCHER_THREAD_COUNT.incrementAndGet()));
 
-        executor.scheduleAtFixedRate(() -> {
-        	LOGGER.debug("Updating the last modified date of created temp files to prevent deletion by the OS.");
-            final Set<Path> paths = new HashSet<>(TEMP_FILES.size());
-
-            synchronized (TEMP_FILES) {
-                // clean TEMP_FILES map, i.e., remove stale entries
-                TEMP_FILES.keySet().removeIf(Predicate.not(File::exists));
-
-                // add all TEMP_FILES and their children to the paths set
-                for (final File f : TEMP_FILES.keySet()) {
-                    try (final Stream<Path> stream = Files.walk(f.toPath())) {
-                        stream.forEach(paths::add);
-                    } catch (IOException ex) {
-                        LOGGER.debug(String.format("Error when attempting to collect temp files (children of \"%s\").",
-                                f.getAbsolutePath()), ex);
-                    }
-                }
-            }
-
-            final long nowMillis = System.currentTimeMillis();
-            // attempt to touch all paths in the paths set
-            final FileTime now = FileTime.fromMillis(nowMillis);
-            long successCounter = 0;
-            long failCounter = 0;
-            for (final Path p : paths) {
-                try {
-                    Files.setLastModifiedTime(p, now);
-                    if (nowMillis - Files.getLastModifiedTime(p).toMillis() > 1_000) { // address loss in precision
-                        LOGGER.debugWithFormat(
-                            "Unable to set last modified date for path %s, attempted to set %s but value remains %s",
-                            p.toString(), now.toString(), Files.getLastModifiedTime(p));
-                        failCounter += 1;
-                    } else {
-                        successCounter += 1;
-                    }
-                } catch (IOException ex) {
-                    LOGGER.debug(String.format("Error when attempting to touch temp file \"%s\"", p), ex);
-                    failCounter += 1;
-                }
-            }
-            LOGGER.debugWithFormat("Finished updating last modified dates of temporary files (%d succeeded, %d failed)",
-                successCounter, failCounter);
-
-        }, UPDATE_TEMP_FILES_FREQUENCY_HOURS, UPDATE_TEMP_FILES_FREQUENCY_HOURS, TimeUnit.HOURS);
+        executor.scheduleAtFixedRate(FileUtil::touchTempFiles,
+            UPDATE_TEMP_FILES_FREQUENCY_HOURS, UPDATE_TEMP_FILES_FREQUENCY_HOURS, TimeUnit.HOURS);
 
         ShutdownHelper.getInstance().appendShutdownHook(() -> {
             LOGGER.debug("Shutting down service for keeping modified date of created temp files up to date.");
@@ -256,6 +214,54 @@ public final class FileUtil {
     /** Don't let anybody instantiate this class. */
     private FileUtil() {
         // don't instantiate
+    }
+
+    /** Called on regular basis to update temp files according to {@link #UPDATE_TEMP_FILES_FREQUENCY_HOURS}. */
+    private static void touchTempFiles() {
+        LOGGER.debug("Updating the last access time of created temp files to prevent deletion by the OS.");
+        final Set<Path> paths = new HashSet<>(TEMP_FILES.size());
+
+        synchronized (TEMP_FILES) {
+            // clean TEMP_FILES map, i.e., remove stale entries
+            TEMP_FILES.keySet().removeIf(Predicate.not(File::exists));
+
+            // add all TEMP_FILES and their children to the paths set
+            for (final File f : TEMP_FILES.keySet()) {
+                try (final Stream<Path> stream = Files.walk(f.toPath())) {
+                    stream.forEach(paths::add);
+                } catch (IOException ex) {
+                    LOGGER.debug(String.format("Error when attempting to collect temp files (children of \"%s\").",
+                            f.getAbsolutePath()), ex);
+                }
+            }
+        }
+
+        // attempt to touch all paths in the paths set
+        final FileTime now = FileTime.from(ZonedDateTime.now().toInstant());
+        long successCounter = 0;
+        long failCounter = 0;
+        boolean warningLogged = false;
+        for (final Path p : paths) {
+            try {
+                BasicFileAttributeView attView = Files.getFileAttributeView(p, BasicFileAttributeView.class);
+                if (attView == null) {
+                    if (!warningLogged) { // NOSONAR -- 3 nested leves, still readable, eh
+                        LOGGER.warnWithFormat("Unable to set file attributes on temp file %s, "
+                            + "file system not supporting %s", p, BasicFileAttributeView.class.getName());
+                        warningLogged = true;
+                        failCounter += 1;
+                    }
+                } else {
+                    // Mac looks at the file's 'lastAccessTime' (not 'lastModifiedTime')
+                    attView.setTimes(null, now, null);
+                    successCounter += 1;
+                }
+            } catch (IOException ex) {
+                LOGGER.debug(String.format("Error when attempting to touch temp file \"%s\"", p), ex);
+            }
+        }
+        LOGGER.debugWithFormat("Finished updating 'lastAccessTime' attribute of temp files (%d succeeded, %d failed)",
+            successCounter, failCounter);
     }
 
     /**
