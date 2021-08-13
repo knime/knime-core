@@ -80,6 +80,10 @@ interface NodeContainerMetaPersistor {
 
     String getCustomDescription();
 
+    /**
+     * For instance, a special job manager for streamed node execution.
+     * @return null for the default node execution job manager
+     */
     NodeExecutionJobManager getExecutionJobManager();
 
     NodeSettingsRO getExecutionJobSettings();

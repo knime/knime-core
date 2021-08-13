@@ -51,12 +51,13 @@ package org.knime.core.node.workflow;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.workflow.def.CoreToDefUtil;
-import org.knime.core.workflow.def.ConfigMapDef;
 import org.knime.core.workflow.def.NodeAnnotationDef;
 import org.knime.core.workflow.def.NodeDef;
+import org.knime.core.workflow.def.NodeExecutionJobManagerSettingsDef;
 import org.knime.core.workflow.def.NodeLocksDef;
 import org.knime.core.workflow.def.NodeMessageDef;
 import org.knime.core.workflow.def.NodeUIInfoDef;
+import org.knime.core.workflow.def.impl.DefaultNodeExecutionJobManagerSettingsDef;
 
 /**
  *
@@ -127,22 +128,29 @@ public class DefNodeContainerWrapper implements NodeDef {
     }
 
     /**
-     * {@inheritDoc}
+     * @return a def if a job manager is present, null otherwise
      */
     @Override
-    public ConfigMapDef getNodeExecutionJobManagerSettings() {
-        NodeSettings ns = new NodeSettings("jobmanager");
-        NodeExecutionJobManager jobManager = m_nc.getJobManager();
+    public NodeExecutionJobManagerSettingsDef getNodeExecutionJobManagerSettings() {
+
+        final NodeExecutionJobManager jobManager = m_nc.getJobManager();
         if (jobManager == null) {
             return null;
         }
+
+        final NodeSettings ns = new NodeSettings("jobmanager");
         jobManager.save(ns);
+
         try {
-            return CoreToDefUtil.toConfigMapDef(ns);
+            return DefaultNodeExecutionJobManagerSettingsDef.builder()//
+                .setFactory(jobManager.getID())//
+                .setSettings(CoreToDefUtil.toConfigMapDef(ns))//
+                .build();
         } catch (InvalidSettingsException ex) {
-            // TODO
+            // TODO proper exception handling
             throw new RuntimeException(ex);
         }
+
     }
 
 }

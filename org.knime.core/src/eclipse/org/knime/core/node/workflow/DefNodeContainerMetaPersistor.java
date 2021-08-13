@@ -57,9 +57,12 @@ import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.def.DefToCoreUtil;
 import org.knime.core.workflow.def.NodeAnnotationDef;
 import org.knime.core.workflow.def.NodeDef;
+import org.knime.core.workflow.def.NodeExecutionJobManagerSettingsDef;
 import org.knime.core.workflow.def.NodeMessageDef;
 
 /**
+ * TODO Do we need caching like in the FileNodeContainerMetaPersistor, which has fields like m_jobManager,
+ * m_customDescription, etc.?
  *
  * @author hornm
  */
@@ -130,16 +133,21 @@ public class DefNodeContainerMetaPersistor implements NodeContainerMetaPersistor
 
     /**
      * {@inheritDoc}
+     * @throws InvalidSettingsException
      */
     @Override
     public NodeExecutionJobManager getExecutionJobManager() {
-        NodeSettingsRO settings = DefToCoreUtil.toNodeSettings(m_def.getNodeExecutionJobManagerSettings());
-        try {
-            return NodeExecutionJobManagerPool.load(settings);
-        } catch (InvalidSettingsException ex) {
-            // TODO
-            throw new RuntimeException(ex);
+
+        NodeExecutionJobManagerSettingsDef manager = m_def.getNodeExecutionJobManagerSettings();
+
+        // if no job manager settings are present, the default manager is used, indicated by null
+        if(manager == null) {
+            return null;
         }
+
+        NodeSettingsRO managerSettings = DefToCoreUtil.toNodeSettings(manager.getSettings());
+        return NodeExecutionJobManagerPool.load(manager.getFactory(), managerSettings);
+
     }
 
     /**
