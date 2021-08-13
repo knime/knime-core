@@ -373,7 +373,7 @@ public abstract class AdapterCell extends DataCell implements Cloneable, RWAdapt
         }
 
         private static DataCell unwrapIfNeeded(final BlobWrapperDataCell c) {
-            return isLegacyBackend() ? c.getCell() : c;
+            return isLegacyBackend() ? c : c.getCell();
         }
 
         private static boolean isLegacyBackend() {
