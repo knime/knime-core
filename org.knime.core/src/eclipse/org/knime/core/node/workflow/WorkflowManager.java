@@ -520,7 +520,7 @@ public final class WorkflowManager extends NodeContainer
     /**
      * Constructor - create new workflow from persistor.
      *
-     * @param directNCParent TODO
+     * @param directNCParent TODO javadoc
      * @param parent The parent of this workflow
      * @param id The ID of this workflow
      * @param persistor Persistor containing the content for this workflow
@@ -1024,7 +1024,7 @@ public final class WorkflowManager extends NodeContainer
 
     /**
      * Adds new empty metanode to this WFM.
-     * @param workflowDataRepository TODO
+     * @param workflowDataRepository TODO javadoc
      */
     private WorkflowManager createAndAddSubWorkflow(final PortType[] inPorts, final PortType[] outPorts,
         final String name, final boolean isNewProject, final WorkflowContext context,
@@ -8470,10 +8470,11 @@ public final class WorkflowManager extends NodeContainer
 
         NodeContainerTemplate loadedInstance = null;
 
-        // TODO override values for insertion
-//        InsertWorkflowPersistor insertPersistor = new InsertWorkflowPersistor(new persistor);
+        // copied from directory-based workflow loading: prepare for
+        // WorkflowManager#loadContent which requires that top level workflow has no connections
+        InsertWorkflowPersistor insertPersistor = new InsertWorkflowPersistor(persistor);
 
-        NodeID[] newIDs = loadContent(persistor, tblRep, null, exec, result, keepNodeMessages).getNodeIDs();
+        NodeID[] newIDs = loadContent(insertPersistor, tblRep, null, exec, result, keepNodeMessages).getNodeIDs();
 
         CheckUtils.checkArgument(newIDs.length == 1,
             "Loading workflow failed, couldn't identify child sub flow (typically a project)");
