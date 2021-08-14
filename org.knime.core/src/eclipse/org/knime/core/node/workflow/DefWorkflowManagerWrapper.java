@@ -447,7 +447,8 @@ public class DefWorkflowManagerWrapper extends DefNodeContainerWrapper implement
      *
      * Use new {@link FileWorkflowPersistor#parseVersion(String)} to restore a {@link LoadVersion} object from this
      * String.
-     * @return
+     *
+     * @return description of the workflow project represented by the wrapped workflow manager in POJO format
      */
     public WorkflowProjectDef asProjectDef() {
         return DefaultWorkflowProjectDef.builder()//
