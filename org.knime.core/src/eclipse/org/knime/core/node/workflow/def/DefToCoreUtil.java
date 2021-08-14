@@ -224,7 +224,8 @@ public class DefToCoreUtil {
      * @param def an entity containing the recursive node settings
      */
     public static NodeSettings toNodeSettings(final ConfigMapDef def) {
-        return toNodeSettings(def, def.getKey());
+        // TODO should def be allowed to be null here?
+        return def == null ? null : toNodeSettings(def, def.getKey());
     }
 
     /**
@@ -389,6 +390,13 @@ public class DefToCoreUtil {
     }
 
     public static NodeUIInformation toNodeUIInformation(final NodeUIInfoDef uiInfoDef) {
+
+        // TODO currently, both components and root workflows are represented as a WorkflowDef without
+        // NodeUIInfo (used to be in workflow.knime only for nodes).
+        if(uiInfoDef == null) {
+            return NodeUIInformation.builder().build();
+        }
+
         BoundsDef boundsDef = uiInfoDef.getBounds();
         return NodeUIInformation.builder()//
             .setHasAbsoluteCoordinates(uiInfoDef.hasAbsoluteCoordinates())//
