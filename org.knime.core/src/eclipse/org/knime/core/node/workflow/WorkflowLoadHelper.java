@@ -174,9 +174,9 @@ public class WorkflowLoadHelper {
      * @param pojo
      */
     public WorkflowLoadHelper(final WorkflowProjectDef pojo) {
-        this(false, // TODO determine if this is a template project
-            false, // TODO determine if this is a template project
-            // TODO create a proper workflow context
+        this(false, // FIXME determine if this is a template project
+            false, // FIXME determine if this is a template project
+            // FIXME create a proper workflow context
             new WorkflowContext.Factory(Paths.get(KNIMEConstants.getKNIMETempDir()).toFile()).createContext());
     }
 
@@ -292,14 +292,17 @@ public class WorkflowLoadHelper {
     }
 
     /**
-     * TODO: there's a lot of stuff going on in {@link #createTemplateLoadPersistor(File, URI)}, e.g.,
-     * version parsing and version details string construction, determining dirty after load, nightly checking,
-     * handling problematic versions, MetaNodeTemplateInformation loading from workflow.knime, creating a workflow data repository,
-     * overwriting template information, renaming the workflow (persistor.setNameOverwrite)
+     * see {@link #createTemplateLoadPersistor(File, URI)} as reference for the FIXMEs
      * @param definition
      * @return
      */
     WorkflowPersistor createLoadPersistor(final WorkflowProjectDef definition) {
+        // FIXME version checking and version details string construction, handling problematic versions
+        // FIXME determining dirty after load
+        // FIXME nightly checking
+        // FIXME MetaNodeTemplateInformation loading from workflow.knime
+        // FIXME possibly overwrite template information, renaming the workflow (persistor.setNameOverwrite)
+        // FIXME create a workflow data repository
 
         return new DefWorkflowPersistor(definition);
 

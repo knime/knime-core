@@ -138,9 +138,7 @@ public class DefToCoreUtil {
         } catch (Exception e) {
             // setDirtyAfterLoad(); // don't set dirty, missing node placeholder will be used instead
             throw new RuntimeException(e);
-            // TODO
-            // throw new NodeFactoryUnknownException(toNodeAndBundleInformationPersistor(def), additionalFactorySettings,
-            //     e);
+            // TODO throw new NodeFactoryUnknownException(toNodeAndBundleInformationPersistor(def), additionalFactorySettings, e);
         }
         try {
             nodeFactory.loadAdditionalFactorySettings(additionalFactorySettings);
@@ -149,8 +147,7 @@ public class DefToCoreUtil {
             // getLogger().error(error);
             // setDirtyAfterLoad(); // don't set dirty, missing node placeholder
             throw new RuntimeException(e);
-            // TODO
-            // throw new NodeFactoryUnknownException(error, nodeInfo, additionalFactorySettings, e);
+            // TODO throw new NodeFactoryUnknownException(error, nodeInfo, additionalFactorySettings, e);
         }
 
         NodeSettingsRO nodeCreationSettings = toNodeSettings(def.getNodeCreationConfig());
@@ -159,14 +156,14 @@ public class DefToCoreUtil {
             return new Node(nodeFactory,
                 FileNativeNodeContainerPersistor.loadCreationConfig(nodeCreationSettings, nodeFactory).orElse(null));
         } catch (InvalidSettingsException ex) {
-            // TODO
+            // TODO throw new RuntimeException(ex);
             throw new RuntimeException(ex);
         }
     }
 
     public static PortType toPortType(final String objectClassString) {
         if (objectClassString == null) {
-            // TODO
+            // TODO throw new RuntimeException("No port object class found to create PortType object");
             throw new RuntimeException(
                 "No port object class found to create PortType object");
         }

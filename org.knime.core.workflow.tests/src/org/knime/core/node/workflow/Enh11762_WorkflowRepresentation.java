@@ -107,7 +107,7 @@ public class Enh11762_WorkflowRepresentation extends WorkflowTestCase {
 		WorkflowLoadResult loadResult = WorkflowManager.ROOT.load(pojo, exec, loader, true);
         WorkflowManager restoredManager = loadResult.getWorkflowManager();
 
-        // TODO check that the workflow manager is present and looking good
+        //FIXME check that the workflow manager is present and looking good
 		if (restoredManager == null) {
 			fail("Errors reading workflow: " + loadResult.getFilteredError("", LoadResultEntryType.Ok));
 			throw new Exception();
@@ -116,7 +116,7 @@ public class Enh11762_WorkflowRepresentation extends WorkflowTestCase {
 //			fail("Errors reading workflow: " + loadResult.getFilteredError("", LoadResultEntryType.Warning));
 //		}
 
-		// TODO execute the restored workflow...
+		// FIXME execute the restored workflow
 //		restoredManager.executeAllAndWaitUntilDone();
 //		var resultFromRestored = restoredManager.createExecutionResult(exec);
 
@@ -125,7 +125,7 @@ public class Enh11762_WorkflowRepresentation extends WorkflowTestCase {
 		originalManager.executeAllAndWaitUntilDone();
 		var resultFromOriginal = originalManager.createExecutionResult(exec);
 
-		// TODO implement a deep comparison for the execution results
+		// FIXME implement a deep comparison for the execution results
 //		assertEquals(resultFromOriginal, resultFromRestored);
 	}
 
@@ -149,7 +149,7 @@ public class Enh11762_WorkflowRepresentation extends WorkflowTestCase {
 		// serialize into JSON
 		String pretty = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(projectDef);
 
-		// TODO remove
+		// FIXME remove debug output
 	    Path path = Paths.get(new File("src/test/resources").getAbsolutePath(), "Enh11762ExampleOutput.json");
 		Files.writeString(path, pretty, StandardOpenOption.WRITE);
 		
