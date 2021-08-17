@@ -79,8 +79,15 @@ public final class FilterModelNominal extends FilterModel {
         this(null, values);
     }
 
-    /** Load constructor. */
-    private FilterModelNominal(final UUID filterUUID, final Collection<DataCell> values) {
+    /**
+     * Used for loading filters or creating a new filter with an existing ID (when the value updates).
+     *
+     * @param filterUUID the optional UUID for an existing filter instance which should shared with the updated
+     *            instance. If empty, one will be created.
+     * @param values The values to be included (not null and null values not allowed).
+     * @since 4.4.1
+     */
+    FilterModelNominal(final UUID filterUUID, final Collection<DataCell> values) {
         super(filterUUID);
         CheckUtils.checkArgumentNotNull(values);
         m_values = Collections.unmodifiableList(new ArrayList<DataCell>(values));

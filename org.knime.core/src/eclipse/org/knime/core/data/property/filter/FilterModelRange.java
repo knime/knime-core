@@ -80,8 +80,18 @@ public final class FilterModelRange extends FilterModel {
         this(null, minimum, maximum, minimumInclusive, maximumInclusive);
     }
 
-    /** Load constructor. */
-    private FilterModelRange(final UUID filterUUID, final double minimum, final double maximum,
+    /**
+     * Used for loading filters or creating a new filter with an existing ID (when the value updates).
+     *
+     * @param filterUUID the optional UUID for an existing filter instance which should shared with the updated
+     *            instance. If empty, one will be created.
+     * @param minimum minimum value; negative infinity or NaN represent an unbounded minimum
+     * @param maximum maximum value; positive infinity or NaN represent an unbounded maximum
+     * @param minimumInclusive if minimum is inclusive or not (ignored for unbounded extreme)
+     * @param maximumInclusive if minimum is inclusive or not (ignored for unbounded extreme)
+     * @since 4.4.1
+     */
+    FilterModelRange(final UUID filterUUID, final double minimum, final double maximum,
         final boolean minimumInclusive, final boolean maximumInclusive) {
         super(filterUUID);
         m_minimum = Double.isNaN(minimum) || (minimum < 0.0 && Double.isInfinite(minimum))
