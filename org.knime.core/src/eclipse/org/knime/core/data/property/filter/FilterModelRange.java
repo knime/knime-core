@@ -83,7 +83,7 @@ public final class FilterModelRange extends FilterModel {
     /**
      * Used for loading filters or creating a new filter with an existing ID (when the value updates).
      *
-     * @param filterUUID the optional UUID for an existing filter instance which should shared with the updated
+     * @param filterUUID the optional UUID for an existing filter instance which should be shared with the updated
      *            instance. If empty, one will be created.
      * @param minimum minimum value; negative infinity or NaN represent an unbounded minimum
      * @param maximum maximum value; positive infinity or NaN represent an unbounded maximum
