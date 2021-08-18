@@ -73,8 +73,11 @@ public final class FilterModelNominal extends FilterModel {
 
     private final Collection<DataCell> m_values;
 
-    /** Defines filter based on a collection of included elements.
-     * @param values The values to be included (not null and null values not allowed). */
+    /**
+     * Defines filter based on a collection of included elements.
+     *
+     * @param values The values to be included (should not be null or contain null values).
+     */
     FilterModelNominal(final Collection<DataCell> values) {
         this(null, values);
     }
@@ -82,9 +85,9 @@ public final class FilterModelNominal extends FilterModel {
     /**
      * Used for loading filters or creating a new filter with an existing ID (when the value updates).
      *
-     * @param filterUUID the optional UUID for an existing filter instance which should shared with the updated
+     * @param filterUUID the optional UUID for an existing filter instance which should be shared with the updated
      *            instance. If empty, one will be created.
-     * @param values The values to be included (not null and null values not allowed).
+     * @param values The values to be included (should not be null or contain null values).
      * @since 4.4.1
      */
     FilterModelNominal(final UUID filterUUID, final Collection<DataCell> values) {

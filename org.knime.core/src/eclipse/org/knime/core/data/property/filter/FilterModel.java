@@ -92,7 +92,8 @@ public abstract class FilterModel {
      * the given cell is element of the set of nominal values. For a range filter it checks if the value is within
      * the specified range.
      * @param cell Non-null cell to check.
-     * @return Whether cell matches the filter. */
+     * @return Whether cell matches the filter.
+     */
     public abstract boolean isInFilter(final DataCell cell);
 
     @Override
