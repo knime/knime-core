@@ -77,11 +77,11 @@ public class NodeContainerExecutionResultUtil {
         final NodeContainerExecutionResult inactiveResult;
 
         if (result instanceof NativeNodeContainerExecutionResult) {
-            inactiveResult = new NativeNodeContainerExecutionResult((NativeNodeContainerExecutionResult)result);
+            inactiveResult = null; // TODO new NativeNodeContainerExecutionResult((NativeNodeContainerExecutionResult)result);
         } else if (result instanceof SubnodeContainerExecutionResult) {
-            inactiveResult = new SubnodeContainerExecutionResult((SubnodeContainerExecutionResult)result);
+            inactiveResult = null; // TODO new SubnodeContainerExecutionResult((SubnodeContainerExecutionResult)result);
         } else if (result instanceof WorkflowExecutionResult) {
-            inactiveResult = new WorkflowExecutionResult((WorkflowExecutionResult)result);
+            inactiveResult = null; // TODO new WorkflowExecutionResult((WorkflowExecutionResult)result);
         } else {
             throw new IllegalArgumentException(
                 "Unsupported execution result " + result.getClass().getName() + ". This is a bug.");
@@ -95,7 +95,7 @@ public class NodeContainerExecutionResultUtil {
     private static void setInactiveRecursively(final NodeContainerExecutionResult result) {
         if (result instanceof NativeNodeContainerExecutionResult) {
             final NativeNodeContainerExecutionResult nativeResult = (NativeNodeContainerExecutionResult)result;
-            nativeResult.getNodeExecutionResult().setInactive();
+            nativeResult.getNodeExecutionResult(); // TODO add .setInactive();
         } else if (result instanceof SubnodeContainerExecutionResult) {
             final SubnodeContainerExecutionResult subnodeResult = (SubnodeContainerExecutionResult)result;
             setInactiveRecursively(subnodeResult.getWorkflowExecutionResult());

@@ -73,8 +73,9 @@ import org.knime.core.workflow.def.SingleNodeDef;
 /**
  *
  * @author hornm
+ * @author Carl Witt, KNIME GmbH, Berlin, Germany
  */
-public abstract class DefSingleNodeContainerPersistor implements SingleNodeContainerPersistor {
+public abstract class DefSingleNodeLoader implements SingleNodeContainerPersistor {
 
     private SingleNodeDef m_def;
 
@@ -87,7 +88,7 @@ public abstract class DefSingleNodeContainerPersistor implements SingleNodeConta
     /**
      * @param def
      */
-    public DefSingleNodeContainerPersistor(final SingleNodeDef def, final WorkflowLoadHelper loadHelper) {
+    public DefSingleNodeLoader(final SingleNodeDef def, final WorkflowLoadHelper loadHelper) {
         m_def = def;
         m_metaPersistor = new DefNodeContainerMetaPersistor(m_def, loadHelper);
     }
@@ -185,7 +186,7 @@ public abstract class DefSingleNodeContainerPersistor implements SingleNodeConta
                 result.add(new RestoredFlowLoopContext());
                 //                int tailID = sub.getInt("tailID");
             } else if ("loopcontext_execute".equals(type)) {
-                result.add(new InnerFlowLoopContext());
+                result.add(null); // TODO new InnerFlowLoopContext());
             } else if ("loopcontext_inactive".equals(type)) {
                 FlowLoopContext flc = new FlowLoopContext();
                 flc.inactiveScope(true);

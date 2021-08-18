@@ -44,94 +44,127 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   May 20, 2021 (hornm): created
+ *   18 Aug 2021 (carlwitt): created
  */
 package org.knime.core.node.workflow;
 
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeSettings;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
 import org.knime.core.node.workflow.def.CoreToDefUtil;
 import org.knime.core.workflow.def.ConfigMapDef;
-import org.knime.core.workflow.def.NativeNodeDef;
-import org.knime.core.workflow.def.NodeAndBundleInfoDef;
+import org.knime.core.workflow.def.MetaNodeDef;
+import org.knime.core.workflow.def.NodeUIInfoDef;
+import org.knime.core.workflow.def.PortDef;
+import org.knime.core.workflow.def.TemplateInfoDef;
+import org.knime.core.workflow.def.WorkflowDef;
 
 /**
  *
- * @author hornm
+ * @author carlwitt
  */
-public class DefNativeNodeContainerWrapper extends DefSingleNodeContainerWrapper implements NativeNodeDef {
+public class DefMetanodeWrapper extends DefNodeContainerWrapper implements MetaNodeDef {
 
-    private final NativeNodeContainer m_nc;
-
-    /**
-     * @param nc
-     */
-    public DefNativeNodeContainerWrapper(final NativeNodeContainer nc) {
-        super(nc);
-        m_nc = nc;
-    }
+    private WorkflowManager m_wfm;
 
     @Override
-    public String getKind() {
-        return "NativeNode";
+    public String getNodeType() {
+        return "Metanode";
     }
 
     /**
-     * {@inheritDoc}
+     * @param wfm
      */
-    @Override
-    public NodeAndBundleInfoDef getNodeAndBundleInfo() {
-        return CoreToDefUtil.toNodeAndBundleInfoDef(m_nc.getNodeAndBundleInformation());
+    public DefMetanodeWrapper(final WorkflowManager wfm) {
+        super(wfm);
+        m_wfm = wfm;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public ConfigMapDef getFactorySettings() {
-        NodeSettings s = new NodeSettings("factory_settings");
-        m_nc.getNode().getFactory().saveAdditionalFactorySettings(s);
-        try {
-            return CoreToDefUtil.toConfigMapDef(s);
-        } catch (InvalidSettingsException ex) {
-            // TODO
-            throw new RuntimeException(ex);
-        }
+    public ConfigMapDef getModelSettings() {
+        // TODO do we need this?
+        return null;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public String getName() {
-        return m_nc.getName();
+    public ConfigMapDef getInternalNodeSubSettings() {
+        // TODO do we need this?
+        return null;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public String getFactory() {
-        return m_nc.getNode().getFactory().getClass().getName();
+    public List<PortDef> getInPorts() {
+        return IntStream.range(0, m_wfm.getNrInPorts()).mapToObj(m_wfm::getInPort).map(CoreToDefUtil::toPortDef)
+            .collect(Collectors.toList());
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public ConfigMapDef getNodeCreationConfig() {
-        NodeSettings creationConfig = m_nc.getNode().getCopyOfCreationConfig().map(c -> {
-            NodeSettings s = new NodeSettings("creation_config");
-            c.saveSettingsTo(s);
-            return s;
-        }).orElse(null);
-        try {
-            return CoreToDefUtil.toConfigMapDef(creationConfig);
-        } catch (InvalidSettingsException ex) {
-            // TODO
-            throw new RuntimeException(ex);
-        }
+    public List<PortDef> getOutPorts() {
+        return IntStream.range(0, m_wfm.getNrOutPorts()).mapToObj(m_wfm::getOutPort).map(CoreToDefUtil::toPortDef)
+            .collect(Collectors.toList());
+    }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeUIInfoDef getInPortsBarUIInfo() {
+        return CoreToDefUtil.toNodeUIInfoDef(m_wfm.getInPortsBarUIInfo());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeUIInfoDef getOutPortsBarUIInfo() {
+        return CoreToDefUtil.toNodeUIInfoDef(m_wfm.getOutPortsBarUIInfo());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ConfigMapDef getVariableSettings() {
+        // TODO do we need this?
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ConfigMapDef getFlowStack() {
+        // TODO do we need this?
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public WorkflowDef getWorkflow() {
+        return new DefWorkflowManagerWrapper(m_wfm);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public TemplateInfoDef getTemplateInfo() {
+        return CoreToDefUtil.toTemplateInfoDef(m_wfm.getTemplateInformation());
     }
 
 }

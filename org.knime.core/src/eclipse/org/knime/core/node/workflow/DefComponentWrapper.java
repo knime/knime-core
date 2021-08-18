@@ -48,81 +48,104 @@
  */
 package org.knime.core.node.workflow;
 
-import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
-import org.knime.core.node.workflow.def.DefToCoreUtil;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
+import org.knime.core.node.workflow.def.CoreToDefUtil;
 import org.knime.core.workflow.def.ComponentDef;
+import org.knime.core.workflow.def.ComponentMetadataDef;
+import org.knime.core.workflow.def.PortDef;
+import org.knime.core.workflow.def.TemplateInfoDef;
+import org.knime.core.workflow.def.WorkflowDef;
 
 /**
+ * Provides a {@link ComponentDef} view on a component node in a workflow.
  *
  * @author hornm
+ * @author Carl Witt, KNIME GmbH, Berlin, Germany
  */
-public class DefSubNodeContainerPersistor extends DefSingleNodeContainerPersistor implements SubNodeContainerPersistor {
+public class DefComponentWrapper extends DefSingleNodeContainerWrapper implements ComponentDef {
 
-    private ComponentDef m_def;
+    private final SubNodeContainer m_nc;
 
     /**
-     * @param def
+     * @param nc
      */
-    public DefSubNodeContainerPersistor(final ComponentDef def, final WorkflowLoadHelper loadHelper) {
-        super(def, loadHelper);
-        m_def = def;
+    public DefComponentWrapper(final SubNodeContainer nc) {
+        super(nc);
+        m_nc = nc;
+    }
+
+    @Override
+    public String getNodeType() {
+        return "Component";
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public WorkflowPersistor getWorkflowPersistor() {
-        // TODO Auto-generated method stub
-        return null;
+    public WorkflowDef getWorkflow() {
+        return new DefWorkflowManagerWrapper(m_nc.getWorkflowManager());
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public WorkflowPortTemplate[] getInPortTemplates() {
-        return m_def.getInPorts().stream().map(p -> {
-            WorkflowPortTemplate t = new WorkflowPortTemplate(p.getIndex(), DefToCoreUtil.toPortType(p.getType()));
-            t.setPortName(p.getName());
-            return t;
-        }).toArray(WorkflowPortTemplate[]::new);
+    public List<PortDef> getInPorts() {
+        return IntStream.range(0, m_nc.getNrInPorts()).mapToObj(m_nc::getInPort).map(CoreToDefUtil::toPortDef)
+            .collect(Collectors.toList());
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public WorkflowPortTemplate[] getOutPortTemplates() {
-        return m_def.getOutPorts().stream().map(p -> {
-            WorkflowPortTemplate t = new WorkflowPortTemplate(p.getIndex(), DefToCoreUtil.toPortType(p.getType()));
-            t.setPortName(p.getName());
-            return t;
-        }).toArray(WorkflowPortTemplate[]::new);
+    public List<PortDef> getOutPorts() {
+        return IntStream.range(0, m_nc.getNrOutPorts()).mapToObj(m_nc::getOutPort).map(CoreToDefUtil::toPortDef)
+                .collect(Collectors.toList());
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public int getVirtualInNodeIDSuffix() {
-        return m_def.getVirtualInNodeIDSuffix();
+    public Integer getVirtualInNodeIDSuffix() {
+        return m_nc.getVirtualInNodeID().getIndex();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public int getVirtualOutNodeIDSuffix() {
-        return m_def.getVirtualOutNodeIDSuffix();
+    public Integer getVirtualOutNodeIDSuffix() {
+        return m_nc.getVirtualOutNodeID().getIndex();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public boolean isHideInWizard() {
-        return m_def.isHideInWizard();
+    public String getLayoutJSON() {
+        return m_nc.getSubnodeLayoutStringProvider().getLayoutString();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getConfigurationLayoutJSON() {
+        return m_nc.getSubnodeConfigurationLayoutStringProvider().getConfigurationLayoutString();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Boolean isHideInWizard() {
+        return m_nc.isHideInWizard();
     }
 
     /**
@@ -130,47 +153,23 @@ public class DefSubNodeContainerPersistor extends DefSingleNodeContainerPersisto
      */
     @Override
     public String getCssStyles() {
-        return m_def.getCssStyles();
+        return m_nc.getCssStyles();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public SubnodeContainerLayoutStringProvider getSubnodeLayoutStringProvider() {
-        return new SubnodeContainerLayoutStringProvider(m_def.getLayoutJSON());
+    public ComponentMetadataDef getMetadata() {
+        return CoreToDefUtil.toComponentMetadataDef(m_nc.getMetadata());
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public SubnodeContainerConfigurationStringProvider getSubnodeConfigurationStringProvider() {
-        return new SubnodeContainerConfigurationStringProvider(m_def.getConfigurationLayoutJSON());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ComponentMetadata getMetadata() {
-        return DefToCoreUtil.toComponentMetadata(m_def.getMetadata());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public MetaNodeTemplateInformation getTemplateInformation() {
-        return DefToCoreUtil.toTemplateInfo(m_def.getTemplateInfo());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeContainer getNodeContainer(final WorkflowManager parent, final NodeID id) {
-        return new SubNodeContainer(parent, id, this);
+    public TemplateInfoDef getTemplateInfo() {
+        return CoreToDefUtil.toTemplateInfoDef(m_nc.getTemplateInformation());
     }
 
 }

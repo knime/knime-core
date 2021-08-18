@@ -48,102 +48,88 @@
  */
 package org.knime.core.node.workflow;
 
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
+import java.io.IOException;
 
-import org.knime.core.node.workflow.def.CoreToDefUtil;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
+import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
+import org.knime.core.node.workflow.def.DefToCoreUtil;
 import org.knime.core.workflow.def.ComponentDef;
-import org.knime.core.workflow.def.ComponentMetadataDef;
-import org.knime.core.workflow.def.PortDef;
-import org.knime.core.workflow.def.TemplateInfoDef;
-import org.knime.core.workflow.def.WorkflowDef;
 
 /**
+ * TODO {@link NodeLoader} is a start for getting rid of Persistor interfaces that mix data access and logic.
  *
  * @author hornm
+ * @author Carl Witt, KNIME GmbH, Berlin, Germany
  */
-public class DefSubNodeContainerWrapper extends DefSingleNodeContainerWrapper implements ComponentDef {
+public class DefComponentLoader extends DefSingleNodeLoader implements SubNodeContainerPersistor, NodeLoader {
 
-    private final SubNodeContainer m_nc;
+    private ComponentDef m_def;
 
     /**
-     * @param nc
+     * @param def
      */
-    public DefSubNodeContainerWrapper(final SubNodeContainer nc) {
-        super(nc);
-        m_nc = nc;
-    }
-
-    @Override
-    public String getKind() {
-        return "Component";
+    public DefComponentLoader(final ComponentDef def, final WorkflowLoadHelper loadHelper) {
+        super(def, loadHelper);
+        m_def = def;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public WorkflowDef getWorkflow() {
-        return new DefWorkflowManagerWrapper(m_nc.getWorkflowManager());
+    public WorkflowPersistor getWorkflowPersistor() {
+        // TODO Auto-generated method stub
+        return null;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public List<PortDef> getInPorts() {
-        return IntStream.range(0, m_nc.getNrInPorts()).mapToObj(m_nc::getInPort).map(CoreToDefUtil::toPortDef)
-            .collect(Collectors.toList());
+    public WorkflowPortTemplate[] getInPortTemplates() {
+        return m_def.getInPorts().stream().map(p -> {
+            WorkflowPortTemplate t = new WorkflowPortTemplate(p.getIndex(), DefToCoreUtil.toPortType(p.getType()));
+            t.setPortName(p.getName());
+            return t;
+        }).toArray(WorkflowPortTemplate[]::new);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public List<PortDef> getOutPorts() {
-        return IntStream.range(0, m_nc.getNrOutPorts()).mapToObj(m_nc::getOutPort).map(CoreToDefUtil::toPortDef)
-                .collect(Collectors.toList());
+    public WorkflowPortTemplate[] getOutPortTemplates() {
+        return m_def.getOutPorts().stream().map(p -> {
+            WorkflowPortTemplate t = new WorkflowPortTemplate(p.getIndex(), DefToCoreUtil.toPortType(p.getType()));
+            t.setPortName(p.getName());
+            return t;
+        }).toArray(WorkflowPortTemplate[]::new);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Integer getVirtualInNodeIDSuffix() {
-        return m_nc.getVirtualInNodeID().getIndex();
+    public int getVirtualInNodeIDSuffix() {
+        return m_def.getVirtualInNodeIDSuffix();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Integer getVirtualOutNodeIDSuffix() {
-        return m_nc.getVirtualOutNodeID().getIndex();
+    public int getVirtualOutNodeIDSuffix() {
+        return m_def.getVirtualOutNodeIDSuffix();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public String getLayoutJSON() {
-        return m_nc.getSubnodeLayoutStringProvider().getLayoutString();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getConfigurationLayoutJSON() {
-        return m_nc.getSubnodeConfigurationLayoutStringProvider().getConfigurationLayoutString();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Boolean isHideInWizard() {
-        return m_nc.isHideInWizard();
+    public boolean isHideInWizard() {
+        return m_def.isHideInWizard();
     }
 
     /**
@@ -151,23 +137,57 @@ public class DefSubNodeContainerWrapper extends DefSingleNodeContainerWrapper im
      */
     @Override
     public String getCssStyles() {
-        return m_nc.getCssStyles();
+        return m_def.getCssStyles();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public ComponentMetadataDef getMetadata() {
-        return CoreToDefUtil.toComponentMetadataDef(m_nc.getMetadata());
+    public SubnodeContainerLayoutStringProvider getSubnodeLayoutStringProvider() {
+        return new SubnodeContainerLayoutStringProvider(m_def.getLayoutJSON());
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public TemplateInfoDef getTemplateInfo() {
-        return CoreToDefUtil.toTemplateInfoDef(m_nc.getTemplateInformation());
+    public SubnodeContainerConfigurationStringProvider getSubnodeConfigurationStringProvider() {
+        return new SubnodeContainerConfigurationStringProvider(m_def.getConfigurationLayoutJSON());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ComponentMetadata getMetadata() {
+        return DefToCoreUtil.toComponentMetadata(m_def.getMetadata());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public MetaNodeTemplateInformation getTemplateInformation() {
+        return DefToCoreUtil.toTemplateInfo(m_def.getTemplateInfo());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeContainer getNodeContainer(final WorkflowManager parent, final NodeID id) {
+        return new SubNodeContainer(parent, id, this);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void preLoadNodeContainer(final WorkflowPersistor parentPersistor, final NodeSettingsRO parentSettings,
+        final LoadResult loadResult) throws InvalidSettingsException, IOException {
+        // TODO
+        throw new IllegalStateException("Not implemented");
     }
 
 }

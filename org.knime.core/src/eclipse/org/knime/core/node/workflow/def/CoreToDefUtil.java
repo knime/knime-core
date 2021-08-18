@@ -83,6 +83,7 @@ import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation;
 import org.knime.core.node.workflow.NodeAnnotation;
 import org.knime.core.node.workflow.NodeContainer.NodeLocks;
+import org.knime.core.node.workflow.NodeExecutionJobManager;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.NodePort;
 import org.knime.core.node.workflow.NodeUIInformation;
@@ -93,6 +94,7 @@ import org.knime.core.workflow.def.ConfigMapDef;
 import org.knime.core.workflow.def.ConfigValueBooleanArrayDef;
 import org.knime.core.workflow.def.ConnectionUISettingsDef;
 import org.knime.core.workflow.def.CoordinateDef;
+import org.knime.core.workflow.def.JobManagerDef;
 import org.knime.core.workflow.def.NativeNodeDef;
 import org.knime.core.workflow.def.NodeAndBundleInfoDef;
 import org.knime.core.workflow.def.NodeAnnotationDef;
@@ -126,6 +128,7 @@ import org.knime.core.workflow.def.impl.DefaultConfigValueStringArrayDef;
 import org.knime.core.workflow.def.impl.DefaultConfigValueStringDef;
 import org.knime.core.workflow.def.impl.DefaultConnectionUISettingsDef;
 import org.knime.core.workflow.def.impl.DefaultCoordinateDef;
+import org.knime.core.workflow.def.impl.DefaultJobManagerDef;
 import org.knime.core.workflow.def.impl.DefaultNodeAndBundleInfoDef;
 import org.knime.core.workflow.def.impl.DefaultNodeAnnotationDef;
 import org.knime.core.workflow.def.impl.DefaultNodeLocksDef;
@@ -484,5 +487,28 @@ public class CoreToDefUtil {
             .setOutPortNames(m.getOutPortNames().map(Arrays::asList).orElse(null))//
             .setOutPortDescriptions(m.getOutPortDescriptions().map(Arrays::asList).orElse(null))//
             .build();
+    }
+
+    /**
+     * @param jobManager
+     * @return
+     */
+    public static JobManagerDef toJobManager(final NodeExecutionJobManager jobManager) {
+        if (jobManager == null) {
+            return null;
+        }
+
+        final NodeSettings ns = new NodeSettings("jobmanager");
+        jobManager.save(ns);
+
+        try {
+            return DefaultJobManagerDef.builder()//
+                .setFactory(jobManager.getID())//
+                .setSettings(CoreToDefUtil.toConfigMapDef(ns))//
+                .build();
+        } catch (InvalidSettingsException ex) {
+            // TODO proper exception handling
+            throw new RuntimeException(ex);
+        }
     }
 }

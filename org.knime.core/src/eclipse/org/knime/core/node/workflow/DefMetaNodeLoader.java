@@ -44,85 +44,88 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   May 20, 2021 (hornm): created
+ *   18 Aug 2021 (carlwitt): created
  */
 package org.knime.core.node.workflow;
 
-import org.knime.core.node.workflow.def.CoreToDefUtil;
-import org.knime.core.workflow.def.JobManagerDef;
-import org.knime.core.workflow.def.NodeAnnotationDef;
-import org.knime.core.workflow.def.NodeDef;
-import org.knime.core.workflow.def.NodeLocksDef;
-import org.knime.core.workflow.def.NodeMessageDef;
-import org.knime.core.workflow.def.NodeUIInfoDef;
+import java.io.IOException;
+
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.workflow.def.DefToCoreUtil;
+import org.knime.core.workflow.def.MetaNodeDef;
 
 /**
  *
- * @author hornm
+ * The loader family of classes is supposed to replace the persistor classes, implementing the {@link NodeLoader}
+ * interfaces.
+ *
  * @author Carl Witt, KNIME GmbH, Berlin, Germany
  */
-public abstract class DefNodeContainerWrapper implements NodeDef {
+public class DefMetaNodeLoader extends DefWorkflowPersistor implements NodeLoader {
 
-    private NodeContainer m_nc;
+    private final MetaNodeDef m_def;
 
-    public DefNodeContainerWrapper(final NodeContainer nc) {
-        m_nc = nc;
+    /**
+     * @param def
+     * @param loadHelper
+     */
+    public DefMetaNodeLoader(final MetaNodeDef def, final WorkflowLoadHelper loadHelper) {
+        super(def.getWorkflow(), loadHelper);
+        m_def = def;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    //@Override
+    @Override
+    public WorkflowPortTemplate[] getInPortTemplates() {
+        return m_def.getInPorts().stream().map(p -> {
+            WorkflowPortTemplate t = new WorkflowPortTemplate(p.getIndex(), DefToCoreUtil.toPortType(p.getType()));
+            t.setPortName(p.getName());
+            return t;
+        }).toArray(WorkflowPortTemplate[]::new);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    //@Override
+    @Override
+    public WorkflowPortTemplate[] getOutPortTemplates() {
+        return m_def.getOutPorts().stream().map(p -> {
+            WorkflowPortTemplate t = new WorkflowPortTemplate(p.getIndex(), DefToCoreUtil.toPortType(p.getType()));
+            t.setPortName(p.getName());
+            return t;
+        }).toArray(WorkflowPortTemplate[]::new);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    //@Override
+    @Override
+    public NodeUIInformation getInPortsBarUIInfo() {
+        return DefToCoreUtil.toNodeUIInformation(m_def.getInPortsBarUIInfo());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    //@Override
+    @Override
+    public NodeUIInformation getOutPortsBarUIInfo() {
+        return DefToCoreUtil.toNodeUIInformation(m_def.getOutPortsBarUIInfo());
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public String getCustomDescription() {
-        return m_nc.getCustomDescription();
+    public void preLoadNodeContainer(final WorkflowPersistor parentPersistor, final NodeSettingsRO parentSettings,
+        final LoadResult loadResult) throws InvalidSettingsException, IOException {
+        // TODO
+        throw new IllegalStateException("Not implemented");
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeAnnotationDef getAnnotation() {
-        return CoreToDefUtil.toNodeAnnotationDef(m_nc.getNodeAnnotation());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeUIInfoDef getUiInfo() {
-        return CoreToDefUtil.toNodeUIInfoDef(m_nc.getUIInformation());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeLocksDef getLocks() {
-        return CoreToDefUtil.toNodeLocksDef(m_nc.getNodeLocks());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getState() {
-        return m_nc.getNodeContainerState().toString();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeMessageDef getMessage() {
-        return CoreToDefUtil.toNodeMessageDef(m_nc.getNodeMessage());
-    }
-
-    /**
-     * @return a def if a job manager is present, null otherwise
-     */
-    @Override
-    public JobManagerDef getJobManager() {
-        return CoreToDefUtil.toJobManager(m_nc.getJobManager());
-    }
-
 }

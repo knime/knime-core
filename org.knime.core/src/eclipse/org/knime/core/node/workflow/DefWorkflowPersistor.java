@@ -68,6 +68,7 @@ import org.knime.core.node.workflow.def.DefToCoreUtil;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.workflowalizer.AuthorInformation;
 import org.knime.core.workflow.def.ComponentDef;
+import org.knime.core.workflow.def.MetaNodeDef;
 import org.knime.core.workflow.def.NativeNodeDef;
 import org.knime.core.workflow.def.NodeDef;
 import org.knime.core.workflow.def.NodeRefDef;
@@ -83,9 +84,9 @@ public class DefWorkflowPersistor implements WorkflowPersistor {
     private final WorkflowProjectDef m_projectDef;
     private final WorkflowDef m_def;
 
-    private final NodeContainerMetaPersistor m_metaPersistor;
+//    private final NodeContainerMetaPersistor m_metaPersistor;
 
-    private final Map<Integer, NodeContainerPersistor> m_nodeContainerLoaderMap;
+    private final Map<Integer, NodeLoader> m_nodeContainerLoaderMap;
     private final WorkflowLoadHelper m_loadHelper;
 
     /**
@@ -99,7 +100,7 @@ public class DefWorkflowPersistor implements WorkflowPersistor {
             "Can not construct a persistor for a workflow that does not belong to the given workflow project.");
         m_projectDef = projectDef;
         m_def = def;
-        m_metaPersistor = new DefNodeContainerMetaPersistor(def, loadHelper);
+//        m_metaPersistor = new DefNodeContainerMetaPersistor(def, loadHelper);
         m_nodeContainerLoaderMap = new HashMap<>();
         m_loadHelper = loadHelper;
     }
@@ -185,7 +186,7 @@ public class DefWorkflowPersistor implements WorkflowPersistor {
      */
     @Override
     public String getName() {
-        return m_def.getName();
+        return m_def.getMetadata().getName();
     }
 
     /**
@@ -237,11 +238,8 @@ public class DefWorkflowPersistor implements WorkflowPersistor {
      */
     @Override
     public WorkflowPortTemplate[] getInPortTemplates() {
-        return m_def.getInPorts().stream().map(p -> {
-            WorkflowPortTemplate t = new WorkflowPortTemplate(p.getIndex(), DefToCoreUtil.toPortType(p.getType()));
-            t.setPortName(p.getName());
-            return t;
-        }).toArray(WorkflowPortTemplate[]::new);
+        // TODO I assume a workflow (not a metanode) doesn't need this
+        return new WorkflowPortTemplate[0];
     }
 
     /**
@@ -249,11 +247,8 @@ public class DefWorkflowPersistor implements WorkflowPersistor {
      */
     @Override
     public WorkflowPortTemplate[] getOutPortTemplates() {
-        return m_def.getOutPorts().stream().map(p -> {
-            WorkflowPortTemplate t = new WorkflowPortTemplate(p.getIndex(), DefToCoreUtil.toPortType(p.getType()));
-            t.setPortName(p.getName());
-            return t;
-        }).toArray(WorkflowPortTemplate[]::new);
+        // TODO I assume a workflow (not a metanode) doesn't need this
+        return new WorkflowPortTemplate[0];
     }
 
     /**
@@ -261,7 +256,8 @@ public class DefWorkflowPersistor implements WorkflowPersistor {
      */
     @Override
     public NodeUIInformation getInPortsBarUIInfo() {
-        return DefToCoreUtil.toNodeUIInformation(m_def.getInPortsBarUIInfo());
+        // TODO I assume a workflow (not a metanode) doesn't need this
+        return null;
     }
 
     /**
@@ -269,7 +265,8 @@ public class DefWorkflowPersistor implements WorkflowPersistor {
      */
     @Override
     public NodeUIInformation getOutPortsBarUIInfo() {
-        return DefToCoreUtil.toNodeUIInformation(m_def.getOutPortsBarUIInfo());
+        // TODO I assume a workflow (not a metanode) doesn't need this
+        return null;
     }
 
     /**
@@ -293,7 +290,8 @@ public class DefWorkflowPersistor implements WorkflowPersistor {
      */
     @Override
     public MetaNodeTemplateInformation getTemplateInformation() {
-        return DefToCoreUtil.toTemplateInfo(m_def.getTemplateInfo());
+        // TODO This should be metanode only
+        return null; //DefToCoreUtil.toTemplateInfo(m_def.getTemplateInfo());
     }
 
     /**
@@ -309,7 +307,8 @@ public class DefWorkflowPersistor implements WorkflowPersistor {
      */
     @Override
     public NodeContainerMetaPersistor getMetaPersistor() {
-        return m_metaPersistor;
+        //TODO this should be metanode only?
+        return null; //m_metaPersistor;
     }
 
     /**
@@ -355,19 +354,19 @@ public class DefWorkflowPersistor implements WorkflowPersistor {
         List<NodeRefDef> nodeRefs = m_def.getNodeRefs();
         for (NodeRefDef nodeRef : nodeRefs) {
             NodeDef node = m_def.getNodes().get(nodeRef.getReference());
-            NodeContainerPersistor persistor;
-            if (node instanceof WorkflowDef) {
-                persistor = new DefWorkflowPersistor((WorkflowDef)node, m_loadHelper);
+            NodeLoader loader;
+            if (node instanceof MetaNodeDef) {
+                loader = new DefMetaNodeLoader((MetaNodeDef)node, m_loadHelper);
             } else if(node instanceof NativeNodeDef) {
-               persistor = new DefNativeNodeContainerPersistor((NativeNodeDef)node, m_loadHelper) ;
+               loader = new DefNativeNodeLoader((NativeNodeDef)node, m_loadHelper) ;
             } else if(node instanceof ComponentDef) {
-               persistor = new DefSubNodeContainerPersistor((ComponentDef)node, m_loadHelper);
+               loader = new DefComponentLoader((ComponentDef)node, m_loadHelper);
             } else {
                 throw new IllegalStateException("Unknown node type " + node.getClass().getSimpleName());
             }
-            // TODO persistor.preLoadNodeContainer? Is called in FromFileNodeContainerPersistor
+//               persistor.preLoadNodeContainer(parent, getWizardExecutionControllerState(), loadResult);
 
-            m_nodeContainerLoaderMap.put(nodeRef.getId(), persistor);
+            m_nodeContainerLoaderMap.put(nodeRef.getId(), loader);
         }
 
         // TODO handle missing node ids
