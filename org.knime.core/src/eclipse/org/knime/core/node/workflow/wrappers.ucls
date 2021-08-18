@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<class-diagram version="1.2.4" icons="true" always-add-relationships="true" generalizations="true" realizations="true" 
+  associations="true" dependencies="true" nesting-relationships="true" router="FAN">  
+  <class id="1" language="java" name="org.knime.core.node.workflow.DefNodeContainerWrapper" project="org.knime.core" 
+    file="/org.knime.core/src/eclipse/org/knime/core/node/workflow/DefNodeContainerWrapper.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
+    <position height="222" width="204" x="580" y="37"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="false" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="false" package="false" protected="false" private="false" static="false"/>      
+      <operations public="true" package="false" protected="false" private="false" static="false"/>    
+    </display>  
+  </class>  
+  <class id="2" language="java" name="org.knime.core.node.workflow.DefComponentWrapper" project="org.knime.core" 
+    file="/org.knime.core/src/eclipse/org/knime/core/node/workflow/DefComponentWrapper.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
+    <position height="294" width="230" x="41" y="615"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="false" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="false" package="false" protected="false" private="false" static="false"/>      
+      <operations public="true" package="false" protected="false" private="false" static="false"/>    
+    </display>  
+  </class>  
+  <class id="3" language="java" name="org.knime.core.node.workflow.DefSingleNodeContainerWrapper" 
+    project="org.knime.core" 
+    file="/org.knime.core/src/eclipse/org/knime/core/node/workflow/DefSingleNodeContainerWrapper.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
+    <position height="150" width="246" x="292" y="299"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="false" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="false" package="false" protected="false" private="false" static="false"/>      
+      <operations public="true" package="false" protected="false" private="false" static="false"/>    
+    </display>  
+  </class>  
+  <class id="4" language="java" name="org.knime.core.node.workflow.DefWorkflowManagerWrapper" project="org.knime.core" 
+    file="/org.knime.core/src/eclipse/org/knime/core/node/workflow/DefWorkflowManagerWrapper.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
+    <position height="258" width="224" x="539" y="949"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="false" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="false" package="false" protected="false" private="false" static="false"/>      
+      <operations public="true" package="false" protected="false" private="false" static="false"/>    
+    </display>  
+  </class>  
+  <class id="5" language="java" name="org.knime.core.node.workflow.DefNativeNodeWrapper" project="org.knime.core" 
+    file="/org.knime.core/src/eclipse/org/knime/core/node/workflow/DefNativeNodeWrapper.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
+    <position height="186" width="246" x="311" y="615"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="false" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="false" package="false" protected="false" private="false" static="false"/>      
+      <operations public="true" package="false" protected="false" private="false" static="false"/>    
+    </display>  
+  </class>  
+  <class id="6" language="java" name="org.knime.core.node.workflow.DefMetanodeWrapper" project="org.knime.core" 
+    file="/org.knime.core/src/eclipse/org/knime/core/node/workflow/DefMetanodeWrapper.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
+    <position height="276" width="185" x="578" y="299"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="false" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="false" package="false" protected="false" private="false" static="false"/>      
+      <operations public="true" package="false" protected="false" private="false" static="false"/>    
+    </display>  
+  </class>  
+  <generalization id="7">    
+    <end type="SOURCE" refId="3"/>    
+    <end type="TARGET" refId="1"/>  
+  </generalization>  
+  <generalization id="8">    
+    <end type="SOURCE" refId="5"/>    
+    <end type="TARGET" refId="3"/>  
+  </generalization>  
+  <generalization id="9">    
+    <end type="SOURCE" refId="2"/>    
+    <end type="TARGET" refId="3"/>  
+  </generalization>  
+  <dependency id="10">    
+    <end type="SOURCE" refId="2"/>    
+    <end type="TARGET" refId="4"/>  
+  </dependency>  
+  <generalization id="11">    
+    <end type="SOURCE" refId="6"/>    
+    <end type="TARGET" refId="1"/>  
+  </generalization>  
+  <dependency id="12">    
+    <bendpoint x="587" y="615"/>    
+    <end type="SOURCE" refId="6"/>    
+    <end type="TARGET" refId="4"/>  
+  </dependency>  
+  <classifier-display autosize="true" stereotype="true" package="true" initial-value="false" signature="false" 
+    sort-features="false" accessors="true" visibility="true">    
+    <attributes public="false" package="false" protected="false" private="false" static="false"/>    
+    <operations public="true" package="false" protected="false" private="false" static="false"/>  
+  </classifier-display>  
+  <association-display labels="true" multiplicity="true"/>
+</class-diagram>
