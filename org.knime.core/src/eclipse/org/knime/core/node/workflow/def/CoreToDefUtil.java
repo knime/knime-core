@@ -79,6 +79,7 @@ import org.knime.core.node.config.base.ConfigShortEntry;
 import org.knime.core.node.config.base.ConfigStringEntry;
 import org.knime.core.node.workflow.ComponentMetadata;
 import org.knime.core.node.workflow.ComponentMetadata.ComponentNodeType;
+import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation;
 import org.knime.core.node.workflow.NodeAnnotation;
 import org.knime.core.node.workflow.NodeContainer.NodeLocks;
@@ -90,6 +91,8 @@ import org.knime.core.workflow.def.ComponentMetadataDef;
 import org.knime.core.workflow.def.ConfigDef;
 import org.knime.core.workflow.def.ConfigMapDef;
 import org.knime.core.workflow.def.ConfigValueBooleanArrayDef;
+import org.knime.core.workflow.def.ConnectionUISettingsDef;
+import org.knime.core.workflow.def.CoordinateDef;
 import org.knime.core.workflow.def.NativeNodeDef;
 import org.knime.core.workflow.def.NodeAndBundleInfoDef;
 import org.knime.core.workflow.def.NodeAnnotationDef;
@@ -121,6 +124,8 @@ import org.knime.core.workflow.def.impl.DefaultConfigValueShortArrayDef;
 import org.knime.core.workflow.def.impl.DefaultConfigValueShortDef;
 import org.knime.core.workflow.def.impl.DefaultConfigValueStringArrayDef;
 import org.knime.core.workflow.def.impl.DefaultConfigValueStringDef;
+import org.knime.core.workflow.def.impl.DefaultConnectionUISettingsDef;
+import org.knime.core.workflow.def.impl.DefaultCoordinateDef;
 import org.knime.core.workflow.def.impl.DefaultNodeAndBundleInfoDef;
 import org.knime.core.workflow.def.impl.DefaultNodeAnnotationDef;
 import org.knime.core.workflow.def.impl.DefaultNodeLocksDef;
@@ -160,6 +165,20 @@ public class CoreToDefUtil {
         // TODO don't cast
         ConfigBase config = (ConfigBase)settings;
         return (ConfigMapDef)toConfigDef(config, settings.getKey());
+    }
+
+    /**
+     *
+     * @param connectionUIInformation
+     * @return
+     */
+    public static ConnectionUISettingsDef
+        toConnectionUISettingsDef(final ConnectionUIInformation connectionUIInformation) {
+        List<CoordinateDef> bendPoints = Arrays.stream(connectionUIInformation.getAllBendpoints())//
+            .map(p -> createCoordinate(p[0], p[1]))//
+            .collect(Collectors.toList());
+        return DefaultConnectionUISettingsDef.builder()//
+            .setBendPoints(bendPoints).build();
     }
 
     /**
@@ -370,23 +389,37 @@ public class CoreToDefUtil {
     }
 
     public static NodeUIInfoDef toNodeUIInfoDef(final NodeUIInformation uiInfoDef) {
+
         if (uiInfoDef == null) {
             return null;
         }
+
         int[] bounds = uiInfoDef.getBounds();
-        DefaultBoundsDef boundsDef =
-            DefaultBoundsDef.builder().setX(bounds[0]).setY(bounds[1]).setWidth(bounds[2]).setHeight(bounds[3]).build();
-        return DefaultNodeUIInfoDef.builder().setBounds(boundsDef).setDropLocation(uiInfoDef.isDropLocation())
-            .setHasAbsoluteCoordinates(uiInfoDef.hasAbsoluteCoordinates()).setSnapToGrid(uiInfoDef.getSnapToGrid())
-            .setSymbolRelative(uiInfoDef.isSymbolRelative()).build();
+        DefaultBoundsDef boundsDef = DefaultBoundsDef.builder()//
+            .setLocation(createCoordinate(bounds[0], bounds[1]))//
+            .setWidth(bounds[2])//
+            .setHeight(bounds[3])//
+            .build();
+
+        return DefaultNodeUIInfoDef.builder()//
+            .setBounds(boundsDef)//
+            .setDropLocation(uiInfoDef.isDropLocation())//
+            .setHasAbsoluteCoordinates(uiInfoDef.hasAbsoluteCoordinates())//
+            .setSnapToGrid(uiInfoDef.getSnapToGrid())//
+            .setSymbolRelative(uiInfoDef.isSymbolRelative())//
+            .build();
     }
 
     public static NodeLocksDef toNodeLocksDef(final NodeLocks def) {
-        return DefaultNodeLocksDef.builder().setHasConfigureLock(def.hasConfigureLock())
-            .setHasDeleteLock(def.hasDeleteLock()).setHasResetLock(def.hasResetLock()).build();
+        return DefaultNodeLocksDef.builder()//
+            .setHasConfigureLock(def.hasConfigureLock())//
+            .setHasDeleteLock(def.hasDeleteLock())//
+            .setHasResetLock(def.hasResetLock())//
+            .build();
     }
 
     public static NodeAnnotationDef toNodeAnnotationDef(final NodeAnnotation na) {
+        // TODO I've seen this in the wfm wrapper too
         List<StyleDef> styles = Arrays.stream(na.getStyleRanges())
             .map(s -> DefaultStyleDef.builder().setFgcolor(s.getFgColor()).setFontname(s.getFontName())
                 .setFontsize(s.getFontSize()).setFontstyle(s.getFontStyle()).setLength(s.getLength())
@@ -401,20 +434,25 @@ public class CoreToDefUtil {
             .setDefFontSize(na.getDefaultFontSize())//
             .setHeight(na.getHeight())//
             .setWidth(na.getWidth())//
-            .setCoordinateX(na.getX())//
-            .setCoordinateY(na.getY())//
+            .setLocation(createCoordinate(na.getX(), na.getY()))//
             .setStyles(styles)//
             .build();
         return DefaultNodeAnnotationDef.builder()//
             .setAnnotationDefault(na.getData().isDefault()).setData(annoData).build();
     }
 
+    public static CoordinateDef createCoordinate(final int x, final int y) {
+        return DefaultCoordinateDef.builder().setX(x).setY(y).build();
+
+    }
+
     public static TemplateInfoDef toTemplateInfoDef(final MetaNodeTemplateInformation i) {
         // TODO flow variables and example data info
-        return DefaultTemplateInfoDef.builder().setRole(i.getRole().toString())
+        return DefaultTemplateInfoDef.builder()//
+            .setRole(i.getRole().toString())//
             .setTimestamp(i.getTimestamp() != null
-                ? OffsetDateTime.ofInstant(i.getTimestamp().toInstant(), ZoneId.systemDefault()) : null)
-            .setType(i.getNodeContainerTemplateType() != null ? i.getNodeContainerTemplateType().toString() : null)
+                ? OffsetDateTime.ofInstant(i.getTimestamp().toInstant(), ZoneId.systemDefault()) : null)//
+            .setType(i.getNodeContainerTemplateType() != null ? i.getNodeContainerTemplateType().toString() : null)//
             .build();
     }
 

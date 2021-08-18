@@ -87,9 +87,9 @@ public abstract class DefSingleNodeContainerPersistor implements SingleNodeConta
     /**
      * @param def
      */
-    public DefSingleNodeContainerPersistor(final SingleNodeDef def) {
+    public DefSingleNodeContainerPersistor(final SingleNodeDef def, final WorkflowLoadHelper loadHelper) {
         m_def = def;
-        m_metaPersistor = new DefNodeContainerMetaPersistor(m_def);
+        m_metaPersistor = new DefNodeContainerMetaPersistor(m_def, loadHelper);
     }
 
     /**

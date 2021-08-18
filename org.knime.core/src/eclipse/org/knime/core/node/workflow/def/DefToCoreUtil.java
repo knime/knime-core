@@ -122,8 +122,8 @@ public class DefToCoreUtil {
         annoData.setBorderColor(def.getBorderColor());
         annoData.setBorderSize(def.getBorderSize());
         annoData.setDefaultFontSize(def.getDefFontSize());
-        annoData.setX(def.getCoordinateX());
-        annoData.setY(def.getCoordinateY());
+        annoData.setX(def.getLocation().getX());
+        annoData.setY(def.getLocation().getY());
         annoData.setWidth(def.getWidth());
         annoData.setHeight(def.getHeight());
         return annoData;
@@ -189,8 +189,12 @@ public class DefToCoreUtil {
 
     public static MetaNodeTemplateInformation toTemplateInfo(final TemplateInfoDef def) {
         try {
-            return new MetaNodeTemplateInformation(Role.valueOf(def.getRole()), TemplateType.valueOf(def.getType()),
-                new URI(def.getUri()), java.util.Date.from(def.getTimestamp().toInstant()), null, null);
+            if (def.getRole().equals("None")) {
+                return new MetaNodeTemplateInformation(Role.None, null, null, null, null, null);
+            } else {
+                return new MetaNodeTemplateInformation(Role.valueOf(def.getRole()), TemplateType.valueOf(def.getType()),
+                    new URI(def.getUri()), java.util.Date.from(def.getTimestamp().toInstant()), null, null);
+            }
         } catch (URISyntaxException ex) {
             throw new RuntimeException(ex);
         }
@@ -399,7 +403,7 @@ public class DefToCoreUtil {
             .setHasAbsoluteCoordinates(uiInfoDef.hasAbsoluteCoordinates())//
             .setIsDropLocation(uiInfoDef.isDropLocation())//
             .setIsSymbolRelative(uiInfoDef.isSymbolRelative())//
-            .setNodeLocation(boundsDef.getX(), boundsDef.getY(), boundsDef.getWidth(), boundsDef.getHeight())//
+            .setNodeLocation(boundsDef.getLocation().getX(), boundsDef.getLocation().getY(), boundsDef.getWidth(), boundsDef.getHeight())//
             .setSnapToGrid(uiInfoDef.isSnapToGrid()).build();
     }
 

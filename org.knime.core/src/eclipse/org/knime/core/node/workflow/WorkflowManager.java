@@ -8463,7 +8463,7 @@ public final class WorkflowManager extends NodeContainer
         m_loadVersion = persistor.getLoadVersion();
 
         // data files are loaded using a repository of reference tables;
-        Map<Integer, BufferedDataTable> tblRep = new HashMap<Integer, BufferedDataTable>();
+        Map<Integer, BufferedDataTable> tblRep = new HashMap<>();
 
         // TODO overwrite name? (e.g., FileWorkflowPersistor can have String m_nameOverwrite set to != null to replace
         // the metadata in the workflow.knime or subworkflow settings
@@ -8522,14 +8522,13 @@ public final class WorkflowManager extends NodeContainer
         final LoadResult loadResult, final boolean preserveNodeMessage) throws CanceledExecutionException {
         exec.checkCanceled();
         if (!(nodePersistor instanceof WorkflowPersistor)) {
-            throw new IllegalStateException("Expected " + WorkflowPersistor.class.getSimpleName()
-                + " persistor object, got " + nodePersistor.getClass().getSimpleName());
+            throw new IllegalStateException(String.format("Expected %s persistor object, got %s of type %s",
+                WorkflowPersistor.class.getSimpleName(), nodePersistor, nodePersistor.getClass().getSimpleName()));
         }
         WorkflowPersistor persistor = (WorkflowPersistor)nodePersistor;
         assert this != ROOT || persistor.getConnectionSet().isEmpty() : "ROOT workflow has no connections: "
             + persistor.getConnectionSet();
-        LinkedHashMap<NodeID, NodeContainerPersistor> persistorMap =
-            new LinkedHashMap<NodeID, NodeContainerPersistor>();
+        LinkedHashMap<NodeID, NodeContainerPersistor> persistorMap = new LinkedHashMap<>();
         Map<Integer, ? extends NodeContainerPersistor> nodeLoaderMap = persistor.getNodeLoaderMap();
         exec.setMessage("annotations");
         List<WorkflowAnnotation> annos = persistor.getWorkflowAnnotations();

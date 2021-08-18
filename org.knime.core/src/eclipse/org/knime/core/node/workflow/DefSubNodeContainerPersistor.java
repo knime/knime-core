@@ -63,8 +63,8 @@ public class DefSubNodeContainerPersistor extends DefSingleNodeContainerPersisto
     /**
      * @param def
      */
-    public DefSubNodeContainerPersistor(final ComponentDef def) {
-        super(def);
+    public DefSubNodeContainerPersistor(final ComponentDef def, final WorkflowLoadHelper loadHelper) {
+        super(def, loadHelper);
         m_def = def;
     }
 

@@ -65,8 +65,8 @@ public class DefNativeNodeContainerPersistor extends DefSingleNodeContainerPersi
     /**
      * @param def
      */
-    public DefNativeNodeContainerPersistor(final NativeNodeDef def) {
-        super(def);
+    public DefNativeNodeContainerPersistor(final NativeNodeDef def, final WorkflowLoadHelper loadHelper) {
+        super(def, loadHelper);
         m_def = def;
     }
 
