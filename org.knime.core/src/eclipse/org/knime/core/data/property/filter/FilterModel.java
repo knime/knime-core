@@ -137,9 +137,11 @@ public abstract class FilterModel {
      * @param config To save to, not null. */
     abstract void saveSubclass(final ConfigWO config);
 
-    /** Create a new filter model for a numeric range.
-     * @param id the optional UUID for an existing filter instance which should shared with the updated
-     *  instance. If empty, one will be created.
+    /**
+     * Create a new filter model for a numeric range.
+     *
+     * @param id the optional UUID for an existing filter instance which should be shared with the updated instance. If
+     *            empty, one will be created.
      * @param minimum minimum value; negative infinity or NaN represent an unbounded minimum
      * @param maximum maximum value; positive infinity or NaN represent an unbounded maximum
      * @param minimumInclusive if minimum is inclusive or not (ignored for unbounded extreme)
@@ -164,29 +166,31 @@ public abstract class FilterModel {
      */
     public static FilterModelRange newRangeModel(final double minimum, final double maximum,
         final boolean minimumInclusive, final boolean maximumInclusive) {
-        FilterModelRange f = new FilterModelRange(minimum, maximum, minimumInclusive, maximumInclusive);
-        INTERNER_MAP.put(f.getFilterUUID(), f);
-        return f;
+        return newRangeModel(null, minimum, maximum, minimumInclusive, maximumInclusive);
     }
 
-    /** Create a new filter model for a set of nominal values.
-     * @param id the optional UUID for an existing filter instance which should shared with the updated
-     *  instance. If empty, one will be created.
+    /**
+     * Create a new filter model for a set of nominal values.
+     *
+     * @param id the optional UUID for an existing filter instance which should be shared with the updated instance. If
+     *            empty, one will be created.
      * @param values The values to be included (not null and null values not allowed).
-     * @return A new model representing the values. */
+     * @return A new model representing the values.
+     */
     public static FilterModelNominal newNominalModel(final UUID id, final Collection<DataCell> values) {
         FilterModelNominal f = new FilterModelNominal(id, values);
         INTERNER_MAP.put(f.getFilterUUID(), f);
         return f;
     }
 
-    /** Create a new filter model for a set of nominal values.
+    /**
+     * Create a new filter model for a set of nominal values.
+     *
      * @param values The values to be included (not null and null values not allowed).
-     * @return A new model representing the values. */
+     * @return A new model representing the values.
+     */
     public static FilterModelNominal newNominalModel(final Collection<DataCell> values) {
-        FilterModelNominal f = new FilterModelNominal(values);
-        INTERNER_MAP.put(f.getFilterUUID(), f);
-        return f;
+        return newNominalModel(null, values);
     }
 
     /**
