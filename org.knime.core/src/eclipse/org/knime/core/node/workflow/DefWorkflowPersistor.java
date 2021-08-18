@@ -86,6 +86,7 @@ public class DefWorkflowPersistor implements WorkflowPersistor {
     private final NodeContainerMetaPersistor m_metaPersistor;
 
     private final Map<Integer, NodeContainerPersistor> m_nodeContainerLoaderMap;
+    private final WorkflowLoadHelper m_loadHelper;
 
     /**
      * Persistor for a project - like a workflow with additional metadata: load version, cipher, etc.
@@ -93,13 +94,14 @@ public class DefWorkflowPersistor implements WorkflowPersistor {
      * @param projectDef can be null if the workflow is a sub workflow (e.g.,  metanode) instead of a project
      * @param def description of the workflow project as a POJO
      */
-    public DefWorkflowPersistor(final WorkflowProjectDef projectDef, final WorkflowDef def) {
+    public DefWorkflowPersistor(final WorkflowProjectDef projectDef, final WorkflowDef def, final WorkflowLoadHelper loadHelper) {
         CheckUtils.checkArgument(projectDef == null || projectDef.getWorkflow() == def,
             "Can not construct a persistor for a workflow that does not belong to the given workflow project.");
         m_projectDef = projectDef;
         m_def = def;
-        m_metaPersistor = new DefNodeContainerMetaPersistor(def);
+        m_metaPersistor = new DefNodeContainerMetaPersistor(def, loadHelper);
         m_nodeContainerLoaderMap = new HashMap<>();
+        m_loadHelper = loadHelper;
     }
 
     /**
@@ -107,8 +109,8 @@ public class DefWorkflowPersistor implements WorkflowPersistor {
      *
      * @param projectDef
      */
-    public DefWorkflowPersistor(final WorkflowProjectDef projectDef) {
-        this(projectDef, projectDef.getWorkflow());
+    public DefWorkflowPersistor(final WorkflowProjectDef projectDef, final WorkflowLoadHelper loadHelper) {
+        this(projectDef, projectDef.getWorkflow(), loadHelper);
     }
 
     /**
@@ -116,8 +118,8 @@ public class DefWorkflowPersistor implements WorkflowPersistor {
      *
      * @param def
      */
-    public DefWorkflowPersistor(final WorkflowDef def) {
-        this(null, def);
+    public DefWorkflowPersistor(final WorkflowDef def, final WorkflowLoadHelper loadHelper) {
+        this(null, def, loadHelper);
     }
 
     /**
@@ -138,6 +140,9 @@ public class DefWorkflowPersistor implements WorkflowPersistor {
     }
 
     /**
+     * Populated in
+     * {@link #loadNodeContainer(Map, ExecutionMonitor, org.knime.core.node.workflow.WorkflowPersistor.LoadResult)}.
+     *
      * {@inheritDoc}
      */
     @Override
@@ -296,7 +301,7 @@ public class DefWorkflowPersistor implements WorkflowPersistor {
      */
     @Override
     public AuthorInformation getAuthorInformation() {
-        return DefToCoreUtil.toAuthorInformation(m_def.getAuthorInformation());
+        return DefToCoreUtil.toAuthorInformation(m_def.getMetadata().getAuthorInformation());
     }
 
     /**
@@ -352,14 +357,16 @@ public class DefWorkflowPersistor implements WorkflowPersistor {
             NodeDef node = m_def.getNodes().get(nodeRef.getReference());
             NodeContainerPersistor persistor;
             if (node instanceof WorkflowDef) {
-                persistor = new DefWorkflowPersistor((WorkflowDef)node);
+                persistor = new DefWorkflowPersistor((WorkflowDef)node, m_loadHelper);
             } else if(node instanceof NativeNodeDef) {
-               persistor = new DefNativeNodeContainerPersistor((NativeNodeDef)node) ;
+               persistor = new DefNativeNodeContainerPersistor((NativeNodeDef)node, m_loadHelper) ;
             } else if(node instanceof ComponentDef) {
-               persistor = new DefSubNodeContainerPersistor((ComponentDef)node);
+               persistor = new DefSubNodeContainerPersistor((ComponentDef)node, m_loadHelper);
             } else {
                 throw new IllegalStateException("Unknown node type " + node.getClass().getSimpleName());
             }
+            // TODO persistor.preLoadNodeContainer? Is called in FromFileNodeContainerPersistor
+
             m_nodeContainerLoaderMap.put(nodeRef.getId(), persistor);
         }
 

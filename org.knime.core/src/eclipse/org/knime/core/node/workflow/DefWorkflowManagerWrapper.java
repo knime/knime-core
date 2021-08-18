@@ -54,6 +54,7 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -63,7 +64,6 @@ import org.knime.core.util.LoadVersion;
 import org.knime.core.workflow.def.AnnotationDataDef;
 import org.knime.core.workflow.def.AuthorInformationDef;
 import org.knime.core.workflow.def.ConnectionDef;
-import org.knime.core.workflow.def.ConnectionUISettingsDef;
 import org.knime.core.workflow.def.NodeDef;
 import org.knime.core.workflow.def.NodeRefDef;
 import org.knime.core.workflow.def.NodeUIInfoDef;
@@ -72,10 +72,17 @@ import org.knime.core.workflow.def.StyleDef;
 import org.knime.core.workflow.def.TemplateInfoDef;
 import org.knime.core.workflow.def.WorkflowCredentialsDef;
 import org.knime.core.workflow.def.WorkflowDef;
+import org.knime.core.workflow.def.WorkflowMetadataDef;
 import org.knime.core.workflow.def.WorkflowProjectDef;
 import org.knime.core.workflow.def.WorkflowUISettingsDef;
+import org.knime.core.workflow.def.impl.DefaultAnnotationDataDef;
+import org.knime.core.workflow.def.impl.DefaultAuthorInformationDef;
+import org.knime.core.workflow.def.impl.DefaultConnectionDef;
 import org.knime.core.workflow.def.impl.DefaultNodeRefDef;
+import org.knime.core.workflow.def.impl.DefaultStyleDef;
+import org.knime.core.workflow.def.impl.DefaultWorkflowMetadataDef;
 import org.knime.core.workflow.def.impl.DefaultWorkflowProjectDef;
+import org.knime.core.workflow.def.impl.DefaultWorkflowUISettingsDef;
 
 /**
  *
@@ -108,38 +115,17 @@ public class DefWorkflowManagerWrapper extends DefNodeContainerWrapper implement
         final var result = new ArrayList<ConnectionDef>();
         final var connections = m_wfm.getConnectionContainers();
         for (final var connection : connections) {
-            result.add(new ConnectionDef() {
+            final var uiInfo = Optional.ofNullable(connection.getUIInfo())//
+                 .map(CoreToDefUtil::toConnectionUISettingsDef)//
+                .orElse(null);
 
-                @Override
-                public ConnectionUISettingsDef getUiSettings() {
-                    ConnectionUIInformation uiInfo = connection.getUIInfo();
-                    if (uiInfo != null) {
-                        return () -> connection.getUIInfo().getAllBendpoints().length;
-                    } else {
-                        return null;
-                    }
-                }
-
-                @Override
-                public Integer getSourcePort() {
-                    return connection.getSourcePort();
-                }
-
-                @Override
-                public Integer getSourceID() {
-                    return connection.getSource().getIndex();
-                }
-
-                @Override
-                public Integer getDestPort() {
-                    return connection.getDestPort();
-                }
-
-                @Override
-                public Integer getDestID() {
-                    return connection.getDest().getIndex();
-                }
-            });
+            result.add(DefaultConnectionDef.builder()//
+                .setUiSettings(uiInfo)
+                .setSourcePort(connection.getSourcePort())//
+                .setSourceID(connection.getSource().getIndex())//
+                .setDestPort(connection.getDestPort())//
+                .setDestID(connection.getDest().getIndex())//
+                .build());
         }
         return result;
     }
@@ -150,95 +136,46 @@ public class DefWorkflowManagerWrapper extends DefNodeContainerWrapper implement
     @Override
     public WorkflowUISettingsDef getWorkflowEditorSettings() {
         final var wfEditorSettings = m_wfm.getEditorUIInformation();
-        return new WorkflowUISettingsDef() {
-
-            @Override
-            public Boolean isSnapToGrid() {
-                return wfEditorSettings.getSnapToGrid();
-            }
-
-            @Override
-            public Boolean isShowGrid() {
-                return wfEditorSettings.getShowGrid();
-            }
-
-            @Override
-            public Boolean isCurvedConnections() {
-                return wfEditorSettings.getHasCurvedConnections();
-            }
-
-            @Override
-            public BigDecimal getZoomLevel() {
-                return BigDecimal.valueOf(wfEditorSettings.getZoomLevel());
-            }
-
-            @Override
-            public Integer getGridY() {
-                return wfEditorSettings.getGridY();
-            }
-
-            @Override
-            public Integer getGridX() {
-                return wfEditorSettings.getGridX();
-            }
-
-            @Override
-            public Integer getConnectionWidth() {
-                return wfEditorSettings.getConnectionLineWidth();
-            }
-        };
+        return DefaultWorkflowUISettingsDef.builder()//
+            .setSnapToGrid(wfEditorSettings.getSnapToGrid())//
+            .setShowGrid(wfEditorSettings.getShowGrid())//
+            .setCurvedConnections(wfEditorSettings.getHasCurvedConnections())//
+            .setZoomLevel(BigDecimal.valueOf(wfEditorSettings.getZoomLevel()))//
+            .setGridX(wfEditorSettings.getGridX())//
+            .setGridY(wfEditorSettings.getGridY())//
+            .setConnectionWidth(wfEditorSettings.getConnectionLineWidth())//
+            .build();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public String getCreatedBy() {
-        return KNIMEConstants.VERSION;
+    public WorkflowMetadataDef getMetadata() {
+        return DefaultWorkflowMetadataDef.builder()//
+                .setCreatedByNightly(KNIMEConstants.isNightlyBuild())//
+                .setCreatedBy(KNIMEConstants.VERSION)//
+                .setAuthorInformation(getAuthorInformation())
+                .build();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Boolean isCreatedByNightly() {
-        return KNIMEConstants.isNightlyBuild();
-    }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public AuthorInformationDef getAuthorInformation() {
+    private AuthorInformationDef getAuthorInformation() {
         final var authorInfo = m_wfm.getAuthorInformation();
-        return new AuthorInformationDef() {
 
-            @Override
-            public OffsetDateTime getLastEditedWhen() {
-                return authorInfo.getLastEditDate()
-                    .map(d -> OffsetDateTime.ofInstant(d.toInstant(), ZoneId.systemDefault())).orElse(null);
-            }
+        final var authDate = Optional//
+            .ofNullable(authorInfo.getAuthoredDate())//
+            .map(d -> OffsetDateTime.ofInstant(d.toInstant(), ZoneId.systemDefault()))//
+            .orElse(null);
 
-            @Override
-            public String getLastEditedBy() {
-                return authorInfo.getLastEditor().orElse(null);
-            }
+        final var lastEditDate = authorInfo.getLastEditDate()//
+            .map(d -> OffsetDateTime.ofInstant(d.toInstant(), ZoneId.systemDefault()))//
+            .orElse(null);
 
-            @Override
-            public OffsetDateTime getAuthoredWhen() {
-                final var authDate = authorInfo.getAuthoredDate();
-                if (authDate == null) {
-                    return null;
-                } else {
-                    return OffsetDateTime.ofInstant(authDate.toInstant(), ZoneId.systemDefault());
-                }
-            }
+        return DefaultAuthorInformationDef.builder()//
+            .setLastEditedWhen(lastEditDate)//
+            .setAuthoredWhen(authDate)//
+            .setAuthoredBy(authorInfo.getAuthor())//
+            .setLastEditedBy(authorInfo.getLastEditor().orElse(null))//
+            .build();
 
-            @Override
-            public String getAuthoredBy() {
-                return authorInfo.getAuthor();
-            }
-        };
     }
 
     /**
@@ -284,103 +221,33 @@ public class DefWorkflowManagerWrapper extends DefNodeContainerWrapper implement
     public List<AnnotationDataDef> getAnnotations() {
         final var result = new ArrayList<AnnotationDataDef>();
         for (final var annotation : m_wfm.getWorkflowAnnotations()) {
-            result.add(new AnnotationDataDef() {
 
-                @Override
-                public Integer getCoordinateX() {
-                    return annotation.getY();
-                }
+            final var styles = new ArrayList<StyleDef>();
+            for (final var style : annotation.getStyleRanges()) {
+                styles.add(DefaultStyleDef.builder()//
+                    .setStart(style.getStart())//
+                    .setLength(style.getLength())//
+                    .setFontstyle(style.getFontStyle())//
+                    .setFontsize(style.getFontSize())//
+                    .setFontname(style.getFontName())//
+                    .setFgcolor(style.getFgColor())//
+                    .build());
+            }
 
-                @Override
-                public Integer getCoordinateY() {
-                    return annotation.getX();
-                }
+            AnnotationDataDef annotationData = DefaultAnnotationDataDef.builder()//
+                .setLocation(CoreToDefUtil.createCoordinate(annotation.getX(), annotation.getY()))//
+                .setWidth(annotation.getWidth())//
+                .setHeight(annotation.getHeight())//
+                .setDefFontSize(annotation.getDefaultFontSize())//
+                .setBorderSize(annotation.getBorderSize())//
+                .setBorderColor(annotation.getBorderColor())//
+                .setBgcolor(annotation.getBgColor())//
+                .setText(annotation.getText())//
+                .setStyles(styles)//
+                .setAnnotationVersion(annotation.getVersion())//
+                .setAlignment(annotation.getAlignment().toString()).build();
+            result.add(annotationData);
 
-                @Override
-                public Integer getWidth() {
-                    return annotation.getWidth();
-                }
-
-                @Override
-                public String getText() {
-                    return annotation.getText();
-                }
-
-                @Override
-                public List<StyleDef> getStyles() {
-                    final var result = new ArrayList<StyleDef>();
-                    for (final var style : annotation.getStyleRanges()) {
-                        result.add(new StyleDef() {
-
-                            @Override
-                            public Integer getStart() {
-                                return style.getStart();
-                            }
-
-                            @Override
-                            public Integer getLength() {
-                                return style.getLength();
-                            }
-
-                            @Override
-                            public Integer getFontstyle() {
-                                return style.getFontStyle();
-                            }
-
-                            @Override
-                            public Integer getFontsize() {
-                                return style.getFontSize();
-                            }
-
-                            @Override
-                            public String getFontname() {
-                                return style.getFontName();
-                            }
-
-                            @Override
-                            public Integer getFgcolor() {
-                                return style.getFgColor();
-                            }
-                        });
-                    }
-                    return result;
-                }
-
-                @Override
-                public Integer getHeight() {
-                    return annotation.getHeight();
-                }
-
-                @Override
-                public Integer getDefFontSize() {
-                    return annotation.getDefaultFontSize();
-                }
-
-                @Override
-                public Integer getBorderSize() {
-                    return annotation.getBorderSize();
-                }
-
-                @Override
-                public Integer getBorderColor() {
-                    return annotation.getBorderColor();
-                }
-
-                @Override
-                public Integer getBgcolor() {
-                    return annotation.getBgColor();
-                }
-
-                @Override
-                public Integer getAnnotationVersion() {
-                    return annotation.getVersion();
-                }
-
-                @Override
-                public String getAlignment() {
-                    return annotation.getAlignment().toString();
-                }
-            });
         }
         return result;
     }

@@ -304,7 +304,7 @@ public class WorkflowLoadHelper {
         // FIXME possibly overwrite template information, renaming the workflow (persistor.setNameOverwrite)
         // FIXME create a workflow data repository
 
-        return new DefWorkflowPersistor(definition);
+        return new DefWorkflowPersistor(definition, this);
 
     }
 

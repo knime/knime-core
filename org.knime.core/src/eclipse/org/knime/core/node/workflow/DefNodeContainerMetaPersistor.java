@@ -55,9 +55,9 @@ import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.NodeContainer.NodeLocks;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.def.DefToCoreUtil;
+import org.knime.core.workflow.def.JobManagerDef;
 import org.knime.core.workflow.def.NodeAnnotationDef;
 import org.knime.core.workflow.def.NodeDef;
-import org.knime.core.workflow.def.NodeExecutionJobManagerSettingsDef;
 import org.knime.core.workflow.def.NodeMessageDef;
 
 /**
@@ -69,9 +69,14 @@ import org.knime.core.workflow.def.NodeMessageDef;
 public class DefNodeContainerMetaPersistor implements NodeContainerMetaPersistor {
 
     private NodeDef m_def;
+    private final WorkflowLoadHelper m_loadHelper;
+    private int m_nodeIDSuffix;
+    private NodeSettingsRO m_executionJobSettings;
+    private boolean m_isDirtyAfterLoad;
 
-    public DefNodeContainerMetaPersistor(final NodeDef def) {
+    public DefNodeContainerMetaPersistor(final NodeDef def, final WorkflowLoadHelper loadHelper) {
         m_def = def;
+        m_loadHelper = loadHelper;
     }
 
     /**
@@ -79,8 +84,7 @@ public class DefNodeContainerMetaPersistor implements NodeContainerMetaPersistor
      */
     @Override
     public WorkflowLoadHelper getLoadHelper() {
-        // TODO Auto-generated method stub
-        return null;
+        return m_loadHelper;
     }
 
     /**
@@ -91,22 +95,16 @@ public class DefNodeContainerMetaPersistor implements NodeContainerMetaPersistor
         return null;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public int getNodeIDSuffix() {
-        // TODO Auto-generated method stub
-        return 0;
+        return m_nodeIDSuffix;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public void setNodeIDSuffix(final int nodeIDSuffix) {
-        // TODO Auto-generated method stub
-
+        m_nodeIDSuffix = nodeIDSuffix;
     }
 
     /**
@@ -138,7 +136,7 @@ public class DefNodeContainerMetaPersistor implements NodeContainerMetaPersistor
     @Override
     public NodeExecutionJobManager getExecutionJobManager() {
 
-        NodeExecutionJobManagerSettingsDef manager = m_def.getNodeExecutionJobManagerSettings();
+        JobManagerDef manager = m_def.getJobManager();
 
         // if no job manager settings are present, the default manager is used, indicated by null
         if(manager == null) {
@@ -155,8 +153,9 @@ public class DefNodeContainerMetaPersistor implements NodeContainerMetaPersistor
      */
     @Override
     public NodeSettingsRO getExecutionJobSettings() {
-        // TODO
-        return null;
+        // TODO initialize m_executionJobSettings
+        throw new IllegalStateException("Not implemented");
+//        return m_executionJobSettings;
     }
 
     /**
@@ -165,14 +164,6 @@ public class DefNodeContainerMetaPersistor implements NodeContainerMetaPersistor
     @Override
     public InternalNodeContainerState getState() {
         return InternalNodeContainerState.valueOf(m_def.getState());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeUIInformation getUIInfo() {
-        return DefToCoreUtil.toNodeUIInformation(m_def.getNodeUIInfo());
     }
 
     /**
@@ -192,22 +183,28 @@ public class DefNodeContainerMetaPersistor implements NodeContainerMetaPersistor
         return DefToCoreUtil.toNodeLocks(m_def.getNodeLocks());
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** Mark node as dirty. */
+    protected void setDirtyAfterLoad() {
+        m_isDirtyAfterLoad = true;
+    }
+    /** {@inheritDoc} */
     @Override
     public boolean isDirtyAfterLoad() {
-        // TODO Auto-generated method stub
-        return false;
+        return m_isDirtyAfterLoad;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
+    @Override
+    public NodeUIInformation getUIInfo() {
+        return DefToCoreUtil.toNodeUIInformation(m_def.getNodeUIInfo());
+    }
+
+    /** {@inheritDoc} */
     @Override
     public void setUIInfo(final NodeUIInformation uiInfo) {
-        // TODO Auto-generated method stub
-
+        // TODO is this obsolete? required by the interface anyways
+        //m_uiInfo = uiInfo;
+        throw new IllegalStateException("Not implemented");
     }
 
     /**
@@ -216,8 +213,9 @@ public class DefNodeContainerMetaPersistor implements NodeContainerMetaPersistor
     @Override
     public boolean load(final NodeSettingsRO settings, final NodeSettingsRO parentSettings,
         final LoadResult loadResult) {
-        // TODO Auto-generated method stub
-        return false;
+        // TODO where is setUIInfo usually called? Think this is obsolete because we should have everything in the def already
+        throw new IllegalStateException("Not implemented");
+//        return false;
     }
 
 }
