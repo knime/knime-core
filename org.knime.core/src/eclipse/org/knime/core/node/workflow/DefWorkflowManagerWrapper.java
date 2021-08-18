@@ -56,7 +56,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.workflow.def.CoreToDefUtil;
@@ -66,10 +65,7 @@ import org.knime.core.workflow.def.AuthorInformationDef;
 import org.knime.core.workflow.def.ConnectionDef;
 import org.knime.core.workflow.def.NodeDef;
 import org.knime.core.workflow.def.NodeRefDef;
-import org.knime.core.workflow.def.NodeUIInfoDef;
-import org.knime.core.workflow.def.PortDef;
 import org.knime.core.workflow.def.StyleDef;
-import org.knime.core.workflow.def.TemplateInfoDef;
 import org.knime.core.workflow.def.WorkflowCredentialsDef;
 import org.knime.core.workflow.def.WorkflowDef;
 import org.knime.core.workflow.def.WorkflowMetadataDef;
@@ -90,21 +86,15 @@ import org.knime.core.workflow.def.impl.DefaultWorkflowUISettingsDef;
  * @author hornm
  * @since 4.4
  */
-public class DefWorkflowManagerWrapper extends DefNodeContainerWrapper implements WorkflowDef {
+public class DefWorkflowManagerWrapper implements WorkflowDef {
 
-    private final WorkflowManager m_wfm;
+    protected final WorkflowManager m_wfm;
 
     /**
      * @param wfm the workflow manager to use as a base
      */
     public DefWorkflowManagerWrapper(final WorkflowManager wfm) {
-        super(wfm);
         this.m_wfm = wfm;
-    }
-
-    @Override
-    public String getKind() {
-        return "Workflow";
     }
 
     /**
@@ -150,6 +140,7 @@ public class DefWorkflowManagerWrapper extends DefNodeContainerWrapper implement
     @Override
     public WorkflowMetadataDef getMetadata() {
         return DefaultWorkflowMetadataDef.builder()//
+                .setName(m_wfm.getName())
                 .setCreatedByNightly(KNIMEConstants.isNightlyBuild())//
                 .setCreatedBy(KNIMEConstants.VERSION)//
                 .setAuthorInformation(getAuthorInformation())
@@ -175,7 +166,6 @@ public class DefWorkflowManagerWrapper extends DefNodeContainerWrapper implement
             .setAuthoredBy(authorInfo.getAuthor())//
             .setLastEditedBy(authorInfo.getLastEditor().orElse(null))//
             .build();
-
     }
 
     /**
@@ -193,11 +183,11 @@ public class DefWorkflowManagerWrapper extends DefNodeContainerWrapper implement
     public Map<String, NodeDef> getNodes() {
         return m_wfm.getNodeContainers().stream().collect(Collectors.toMap(nc -> nc.getID().toString(), nc -> {
             if (nc instanceof WorkflowManager) {
-                return new DefWorkflowManagerWrapper((WorkflowManager)nc);
+                return new DefMetanodeWrapper((WorkflowManager)nc);
             } else if (nc instanceof NativeNodeContainer) {
-                return new DefNativeNodeContainerWrapper((NativeNodeContainer)nc);
+                return new DefNativeNodeWrapper((NativeNodeContainer)nc);
             } else if (nc instanceof SubNodeContainer) {
-                return new DefSubNodeContainerWrapper((SubNodeContainer)nc);
+                return new DefComponentWrapper((SubNodeContainer)nc);
             } else {
                 throw new IllegalStateException();
             }
@@ -256,58 +246,8 @@ public class DefWorkflowManagerWrapper extends DefNodeContainerWrapper implement
      * {@inheritDoc}
      */
     @Override
-    public String getName() {
-        return m_wfm.getName();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Boolean isProject() {
         return m_wfm.isProject();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public TemplateInfoDef getTemplateInfo() {
-        return CoreToDefUtil.toTemplateInfoDef(m_wfm.getTemplateInformation());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public List<PortDef> getInPorts() {
-        return IntStream.range(0, m_wfm.getNrInPorts()).mapToObj(m_wfm::getInPort).map(CoreToDefUtil::toPortDef)
-            .collect(Collectors.toList());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public List<PortDef> getOutPorts() {
-        return IntStream.range(0, m_wfm.getNrOutPorts()).mapToObj(m_wfm::getOutPort).map(CoreToDefUtil::toPortDef)
-            .collect(Collectors.toList());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeUIInfoDef getInPortsBarUIInfo() {
-        return CoreToDefUtil.toNodeUIInfoDef(m_wfm.getInPortsBarUIInfo());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeUIInfoDef getOutPortsBarUIInfo() {
-        return CoreToDefUtil.toNodeUIInfoDef(m_wfm.getOutPortsBarUIInfo());
     }
 
     /**
@@ -322,6 +262,14 @@ public class DefWorkflowManagerWrapper extends DefNodeContainerWrapper implement
                 .setLoadVersion(m_wfm.getLoadVersion().getVersionString())//
                 .setWorkflow(this)
                 .build();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getState() {
+        return m_wfm.getNodeContainerState().toString();
     }
 
 

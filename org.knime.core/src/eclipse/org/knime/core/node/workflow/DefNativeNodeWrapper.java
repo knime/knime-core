@@ -48,81 +48,92 @@
  */
 package org.knime.core.node.workflow;
 
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettings;
 import org.knime.core.node.workflow.def.CoreToDefUtil;
-import org.knime.core.workflow.def.JobManagerDef;
-import org.knime.core.workflow.def.NodeAnnotationDef;
-import org.knime.core.workflow.def.NodeDef;
-import org.knime.core.workflow.def.NodeLocksDef;
-import org.knime.core.workflow.def.NodeMessageDef;
-import org.knime.core.workflow.def.NodeUIInfoDef;
+import org.knime.core.workflow.def.ConfigMapDef;
+import org.knime.core.workflow.def.NativeNodeDef;
+import org.knime.core.workflow.def.NodeAndBundleInfoDef;
 
 /**
+ * Provides a {@link NativeNodeDef} view on a native node (a node with a factory) in a workflow.
  *
  * @author hornm
  * @author Carl Witt, KNIME GmbH, Berlin, Germany
  */
-public abstract class DefNodeContainerWrapper implements NodeDef {
+public class DefNativeNodeWrapper extends DefSingleNodeContainerWrapper implements NativeNodeDef {
 
-    private NodeContainer m_nc;
+    private final NativeNodeContainer m_nc;
 
-    public DefNodeContainerWrapper(final NodeContainer nc) {
+    /**
+     * @param nc
+     */
+    public DefNativeNodeWrapper(final NativeNodeContainer nc) {
+        super(nc);
         m_nc = nc;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public String getCustomDescription() {
-        return m_nc.getCustomDescription();
+    public String getNodeType() {
+        return "NativeNode";
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeAnnotationDef getAnnotation() {
-        return CoreToDefUtil.toNodeAnnotationDef(m_nc.getNodeAnnotation());
+    public NodeAndBundleInfoDef getNodeAndBundleInfo() {
+        return CoreToDefUtil.toNodeAndBundleInfoDef(m_nc.getNodeAndBundleInformation());
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeUIInfoDef getUiInfo() {
-        return CoreToDefUtil.toNodeUIInfoDef(m_nc.getUIInformation());
+    public ConfigMapDef getFactorySettings() {
+        NodeSettings s = new NodeSettings("factory_settings");
+        m_nc.getNode().getFactory().saveAdditionalFactorySettings(s);
+        try {
+            return CoreToDefUtil.toConfigMapDef(s);
+        } catch (InvalidSettingsException ex) {
+            // TODO
+            throw new RuntimeException(ex);
+        }
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeLocksDef getLocks() {
-        return CoreToDefUtil.toNodeLocksDef(m_nc.getNodeLocks());
+    public String getName() {
+        return m_nc.getName();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public String getState() {
-        return m_nc.getNodeContainerState().toString();
+    public String getFactory() {
+        return m_nc.getNode().getFactory().getClass().getName();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeMessageDef getMessage() {
-        return CoreToDefUtil.toNodeMessageDef(m_nc.getNodeMessage());
-    }
+    public ConfigMapDef getNodeCreationConfig() {
+        NodeSettings creationConfig = m_nc.getNode().getCopyOfCreationConfig().map(c -> {
+            NodeSettings s = new NodeSettings("creation_config");
+            c.saveSettingsTo(s);
+            return s;
+        }).orElse(null);
+        try {
+            return CoreToDefUtil.toConfigMapDef(creationConfig);
+        } catch (InvalidSettingsException ex) {
+            // TODO
+            throw new RuntimeException(ex);
+        }
 
-    /**
-     * @return a def if a job manager is present, null otherwise
-     */
-    @Override
-    public JobManagerDef getJobManager() {
-        return CoreToDefUtil.toJobManager(m_nc.getJobManager());
     }
 
 }

@@ -112,7 +112,7 @@ public class DefNodeContainerMetaPersistor implements NodeContainerMetaPersistor
      */
     @Override
     public NodeAnnotationData getNodeAnnotationData() {
-        NodeAnnotationDef annoDef = m_def.getNodeAnnotation();
+        NodeAnnotationDef annoDef = m_def.getAnnotation();
         NodeAnnotationData annoData = new NodeAnnotationData(annoDef.isAnnotationDefault());
         if (!annoDef.isAnnotationDefault()) {
             DefToCoreUtil.toAnnotationData(annoData, annoDef.getData());
@@ -171,7 +171,7 @@ public class DefNodeContainerMetaPersistor implements NodeContainerMetaPersistor
      */
     @Override
     public NodeMessage getNodeMessage() {
-        NodeMessageDef messageDef = m_def.getNodeMessage();
+        NodeMessageDef messageDef = m_def.getMessage();
         return new NodeMessage(NodeMessage.Type.valueOf(messageDef.getType()), messageDef.getMessage());
     }
 
@@ -180,7 +180,7 @@ public class DefNodeContainerMetaPersistor implements NodeContainerMetaPersistor
      */
     @Override
     public NodeLocks getNodeLocks() {
-        return DefToCoreUtil.toNodeLocks(m_def.getNodeLocks());
+        return DefToCoreUtil.toNodeLocks(m_def.getLocks());
     }
 
     /** Mark node as dirty. */
@@ -196,7 +196,7 @@ public class DefNodeContainerMetaPersistor implements NodeContainerMetaPersistor
     /** {@inheritDoc} */
     @Override
     public NodeUIInformation getUIInfo() {
-        return DefToCoreUtil.toNodeUIInformation(m_def.getNodeUIInfo());
+        return DefToCoreUtil.toNodeUIInformation(m_def.getUiInfo());
     }
 
     /** {@inheritDoc} */

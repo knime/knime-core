@@ -8311,9 +8311,9 @@ public final class WorkflowManager extends NodeContainer
     public WorkflowLoadResult load(final WorkflowProjectDef definition, final ExecutionMonitor exec,
         final WorkflowLoadHelper loadHelper, final boolean keepNodeMessages)
         throws CanceledExecutionException {
-        WorkflowPersistor persistor = loadHelper.createLoadPersistor(definition);
+        WorkflowPersistor loader = loadHelper.createLoadPersistor(definition);
         exec.checkCanceled();
-        return load(persistor, exec, keepNodeMessages);
+        return load(loader, exec, keepNodeMessages);
     }
 
     /**

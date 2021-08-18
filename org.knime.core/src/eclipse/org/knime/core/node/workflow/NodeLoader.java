@@ -44,54 +44,22 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   May 20, 2021 (hornm): created
+ *   18 Aug 2021 (carlwitt): created
  */
 package org.knime.core.node.workflow;
 
-import org.knime.core.node.Node;
-import org.knime.core.node.NodeAndBundleInformationPersistor;
-import org.knime.core.node.workflow.def.DefToCoreUtil;
-import org.knime.core.workflow.def.NativeNodeDef;
+import java.io.IOException;
+
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 
 /**
  *
- * @author hornm
+ * @author carlwitt
  */
-public class DefNativeNodeContainerPersistor extends DefSingleNodeContainerPersistor
-    implements NativeNodeContainerPersistor {
-
-    private NativeNodeDef m_def;
-
-    /**
-     * @param def
-     */
-    public DefNativeNodeContainerPersistor(final NativeNodeDef def, final WorkflowLoadHelper loadHelper) {
-        super(def, loadHelper);
-        m_def = def;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Node getNode() {
-        return DefToCoreUtil.toNode(m_def);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeAndBundleInformationPersistor getNodeAndBundleInformation() {
-        return DefToCoreUtil.toNodeAndBundleInformationPersistor(m_def);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeContainer getNodeContainer(final WorkflowManager parent, final NodeID id) {
-        return new NativeNodeContainer(parent, id, this);
-    }
-
+public interface NodeLoader extends NodeContainerPersistor {
+    void preLoadNodeContainer(final WorkflowPersistor parentPersistor,
+        final NodeSettingsRO parentSettings, LoadResult loadResult)
+        throws InvalidSettingsException, IOException;
 }
