@@ -70,7 +70,7 @@ public class DefMetanodeWrapper extends DefNodeContainerWrapper implements MetaN
 
     @Override
     public String getNodeType() {
-        return "Metanode";
+        return "MetaNode";
     }
 
     /**
