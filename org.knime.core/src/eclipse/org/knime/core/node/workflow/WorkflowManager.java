@@ -1187,6 +1187,8 @@ public final class WorkflowManager extends NodeContainer
             if (!canAddConnection(source, sourcePort, dest, destPort, true, currentlyLoadingFlow)) {
                 throw new IllegalArgumentException("Cannot add connection!");
             }
+
+            // 1. remove possibly existing connection
             // check for existence of a connection to the destNode/Port
             Set<ConnectionContainer> scc = m_workflow.getConnectionsByDest(dest);
             ConnectionContainer removeCCfirst = null;
@@ -1198,6 +1200,8 @@ public final class WorkflowManager extends NodeContainer
             if (removeCCfirst != null) {
                 removeConnection(removeCCfirst);
             }
+
+            // 2. create new connection
             // cleaned up - now add new connection
             sourceNC = m_workflow.getNode(source);
             destNC = m_workflow.getNode(dest);
@@ -1218,10 +1222,13 @@ public final class WorkflowManager extends NodeContainer
                 isFlowVariablePortConnection =
                     sourceNC.getOutPort(sourcePort).getPortType().equals(FlowVariablePortObject.TYPE);
             }
-            // create new connection
             newConn =
                 new ConnectionContainer(source, sourcePort, dest, destPort, newConnType, isFlowVariablePortConnection);
+
+            // 3. add connection
             addConnection(newConn);
+
+            // 4. update connection's destination (parent workflow, metanode, or node)
             if (!currentlyLoadingFlow) { // user adds connection -> configure
                 if (newConn.getType().isLeavingWorkflow()) {
                     assert !m_workflow.containsNodeKey(dest);
@@ -8460,6 +8467,7 @@ public final class WorkflowManager extends NodeContainer
         // TODO overwrite name? (e.g., FileWorkflowPersistor can have String m_nameOverwrite set to != null to replace
         // the metadata in the workflow.knime or subworkflow settings
 
+        // What's this for?
         NodeContainerTemplate loadedInstance = null;
 
         // copied from directory-based workflow loading: prepare for
@@ -8521,22 +8529,33 @@ public final class WorkflowManager extends NodeContainer
         assert this != ROOT || persistor.getConnectionSet().isEmpty() : "ROOT workflow has no connections: "
             + persistor.getConnectionSet();
         LinkedHashMap<NodeID, NodeContainerPersistor> persistorMap = new LinkedHashMap<>();
+
+        // 1. Get node loader map
         Map<Integer, ? extends NodeContainerPersistor> nodeLoaderMap = persistor.getNodeLoaderMap();
+
         exec.setMessage("annotations");
         List<WorkflowAnnotation> annos = persistor.getWorkflowAnnotations();
         for (WorkflowAnnotation w : annos) {
             addWorkflowAnnotationInternal(w);
         }
         exec.setMessage("node & connection information");
+
+        // 2. Use node loader map to restore nodes and connections
         Map<Integer, NodeID> translationMap =
             loadNodesAndConnections(nodeLoaderMap, persistor.getConnectionSet(), loadResult);
+
+        // Why do we need nodeLoaderMap AND persistorMap? They seem so similar
         for (Map.Entry<Integer, NodeID> e : translationMap.entrySet()) {
             NodeID id = e.getValue();
             NodeContainerPersistor p = nodeLoaderMap.get(e.getKey());
             assert p != null : "Deficient translation map";
             persistorMap.put(id, p);
         }
+
+        // 3.
         persistor.postLoad(this, loadResult);
+
+
         try {
             postLoad(persistorMap, tblRep, persistor.mustWarnOnDataLoadError(), exec, loadResult, preserveNodeMessage);
         } catch (CanceledExecutionException cee) {
@@ -8590,6 +8609,8 @@ public final class WorkflowManager extends NodeContainer
         CheckUtils.checkArgumentNotNull(nodeIDsInPersistorSet,
             "NodeID list from persistor must not be null for workflow %s", getNameWithID());
         for (NodeID bfsID : m_workflow.createBreadthFirstSortedList(nodeIDsInPersistorSet, true).keySet()) {
+            // TODO VWR remove
+            System.err.println("Loading node " + bfsID);
             NodeContainer cont = getNodeContainer(bfsID);
             // initialize node container with CredentialsStore
             if (cont instanceof SingleNodeContainer) {
@@ -8812,6 +8833,7 @@ public final class WorkflowManager extends NodeContainer
         List<ReferencedFile> deletedFilesInAutoSaveDir = getAutoSaveDirectory() == null
             ? Collections.<ReferencedFile> emptyList() : getAutoSaveDirectory().getDeletedNodesFileLocations();
 
+        // 1. ADD NODES
         for (Map.Entry<Integer, ? extends NodeContainerPersistor> nodeEntry : loaderMap.entrySet()) {
             int suffix = nodeEntry.getKey();
             NodeID subId = new NodeID(getID(), suffix);
@@ -8840,6 +8862,7 @@ public final class WorkflowManager extends NodeContainer
             }
         }
 
+        // 2. ADD CONNECTIONS
         addConnectionsFromTemplates(connections, loadResult, translationMap, true);
         return translationMap;
     }
