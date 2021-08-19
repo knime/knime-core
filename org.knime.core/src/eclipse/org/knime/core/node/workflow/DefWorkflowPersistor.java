@@ -64,6 +64,7 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.workflow.NodeContainer.NodeLocks;
 import org.knime.core.node.workflow.def.DefToCoreUtil;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.workflowalizer.AuthorInformation;
@@ -84,10 +85,9 @@ public class DefWorkflowPersistor implements WorkflowPersistor {
     private final WorkflowProjectDef m_projectDef;
     private final WorkflowDef m_def;
 
-//    private final NodeContainerMetaPersistor m_metaPersistor;
-
     private final Map<Integer, NodeLoader> m_nodeContainerLoaderMap;
     private final WorkflowLoadHelper m_loadHelper;
+//    private DefNodeContainerMetaPersistor m_metaPersistor;
 
     /**
      * Persistor for a project - like a workflow with additional metadata: load version, cipher, etc.
@@ -307,8 +307,102 @@ public class DefWorkflowPersistor implements WorkflowPersistor {
      */
     @Override
     public NodeContainerMetaPersistor getMetaPersistor() {
-        //TODO this should be metanode only?
-        return null; //m_metaPersistor;
+        // TODO I wanted to get rid of the meta persistor because
+        // all information should be in the def
+        // also, workflow is not a node anymore and metapersistor is designed for nodes
+        return new NodeContainerMetaPersistor() {
+
+            @Override
+            public int getNodeIDSuffix() {
+                // needed in the wrapping InsertPersistor's getNodeLoaderMap
+                return 0;
+            }
+
+            @Override
+            public InternalNodeContainerState getState() {
+                // TODO do we need to serialize this?
+                // TODO is this the right default value?
+                return InternalNodeContainerState.IDLE;
+            }
+
+            @Override
+            public WorkflowLoadHelper getLoadHelper() {
+                // needed in NodeContainer#init (not sure though why to use the
+                return m_loadHelper;
+            }
+
+            @Override
+            public void setUIInfo(final NodeUIInformation uiInfo) {
+                // TODO Auto-generated method stub
+
+            }
+
+            @Override
+            public void setNodeIDSuffix(final int nodeIDSuffix) {
+                // TODO Auto-generated method stub
+
+            }
+
+            @Override
+            public boolean load(final NodeSettingsRO settings, final NodeSettingsRO parentSettings, final LoadResult loadResult) {
+                // TODO Auto-generated method stub
+                return false;
+            }
+
+            @Override
+            public boolean isDirtyAfterLoad() {
+                // TODO Auto-generated method stub
+                return false;
+            }
+
+            @Override
+            public NodeUIInformation getUIInfo() {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            @Override
+            public NodeMessage getNodeMessage() {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            @Override
+            public NodeLocks getNodeLocks() {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            @Override
+            public ReferencedFile getNodeContainerDirectory() {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            @Override
+            public NodeAnnotationData getNodeAnnotationData() {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            @Override
+            public NodeSettingsRO getExecutionJobSettings() {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            @Override
+            public NodeExecutionJobManager getExecutionJobManager() {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            @Override
+            public String getCustomDescription() {
+                // TODO Auto-generated method stub
+                return null;
+            }
+        };
     }
 
     /**
