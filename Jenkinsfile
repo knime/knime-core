@@ -27,7 +27,7 @@ try {
             repositories: ['knime-core', 'knime-json', 'knime-python', 'knime-filehandling',
                 'knime-datageneration', 'knime-jep', 'knime-js-base', 'knime-cloud', 'knime-database', 'knime-kerberos',
 		'knime-textprocessing', 'knime-virtual', 'knime-r', 'knime-streaming', 'knime-cluster',
-		'knime-buildworkflows', 'knime-ensembles', 'knime-distance']
+		'knime-buildworkflows', 'knime-ensembles', 'knime-distance', 'knime-chemistry']
         ]
     )
 
