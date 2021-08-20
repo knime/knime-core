@@ -54,10 +54,12 @@ import java.util.stream.IntStream;
 
 import org.knime.core.node.workflow.def.CoreToDefUtil;
 import org.knime.core.workflow.def.ComponentDef;
+import org.knime.core.workflow.def.ComponentDialogSettingsDef;
 import org.knime.core.workflow.def.ComponentMetadataDef;
 import org.knime.core.workflow.def.PortDef;
 import org.knime.core.workflow.def.TemplateInfoDef;
 import org.knime.core.workflow.def.WorkflowDef;
+import org.knime.core.workflow.def.impl.DefaultComponentDialogSettingsDef;
 
 /**
  * Provides a {@link ComponentDef} view on a component node in a workflow.
@@ -95,7 +97,9 @@ public class DefComponentWrapper extends DefSingleNodeContainerWrapper implement
      */
     @Override
     public List<PortDef> getInPorts() {
-        return IntStream.range(0, m_nc.getNrInPorts()).mapToObj(m_nc::getInPort).map(CoreToDefUtil::toPortDef)
+        return IntStream.range(0, m_nc.getNrInPorts())//
+            .mapToObj(m_nc::getInPort)//
+            .map(CoreToDefUtil::toPortDef)//
             .collect(Collectors.toList());
     }
 
@@ -104,8 +108,10 @@ public class DefComponentWrapper extends DefSingleNodeContainerWrapper implement
      */
     @Override
     public List<PortDef> getOutPorts() {
-        return IntStream.range(0, m_nc.getNrOutPorts()).mapToObj(m_nc::getOutPort).map(CoreToDefUtil::toPortDef)
-                .collect(Collectors.toList());
+        return IntStream.range(0, m_nc.getNrOutPorts())//
+            .mapToObj(m_nc::getOutPort)//
+            .map(CoreToDefUtil::toPortDef)//
+            .collect(Collectors.toList());
     }
 
     /**
@@ -128,32 +134,13 @@ public class DefComponentWrapper extends DefSingleNodeContainerWrapper implement
      * {@inheritDoc}
      */
     @Override
-    public String getLayoutJSON() {
-        return m_nc.getSubnodeLayoutStringProvider().getLayoutString();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getConfigurationLayoutJSON() {
-        return m_nc.getSubnodeConfigurationLayoutStringProvider().getConfigurationLayoutString();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Boolean isHideInWizard() {
-        return m_nc.isHideInWizard();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getCssStyles() {
-        return m_nc.getCssStyles();
+    public ComponentDialogSettingsDef getDialogSettings() {
+        return DefaultComponentDialogSettingsDef.builder()//
+                .setConfigurationLayoutJSON(m_nc.getSubnodeConfigurationLayoutStringProvider().getConfigurationLayoutString())//
+                .setLayoutJSON(m_nc.getSubnodeLayoutStringProvider().getLayoutString())//
+                .setHideInWizard(m_nc.isHideInWizard())//
+                .setCssStyles(m_nc.getCssStyles())//
+                .build();
     }
 
     /**

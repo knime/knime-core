@@ -60,6 +60,7 @@ import java.util.stream.Collectors;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.workflow.def.CoreToDefUtil;
 import org.knime.core.util.LoadVersion;
+import org.knime.core.util.workflowalizer.AuthorInformation;
 import org.knime.core.workflow.def.AnnotationDataDef;
 import org.knime.core.workflow.def.AuthorInformationDef;
 import org.knime.core.workflow.def.ConnectionDef;
@@ -140,16 +141,15 @@ public class DefWorkflowManagerWrapper implements WorkflowDef {
     @Override
     public WorkflowMetadataDef getMetadata() {
         return DefaultWorkflowMetadataDef.builder()//
-                .setName(m_wfm.getName())
+                .setName(m_wfm.getNameField())
                 .setCreatedByNightly(KNIMEConstants.isNightlyBuild())//
                 .setCreatedBy(KNIMEConstants.VERSION)//
-                .setAuthorInformation(getAuthorInformation())
+                .setAuthorInformation(getAuthorInformation(m_wfm.getAuthorInformation()))
                 .build();
     }
 
 
-    private AuthorInformationDef getAuthorInformation() {
-        final var authorInfo = m_wfm.getAuthorInformation();
+    private static AuthorInformationDef getAuthorInformation(final AuthorInformation authorInfo) {
 
         final var authDate = Optional//
             .ofNullable(authorInfo.getAuthoredDate())//
@@ -181,17 +181,20 @@ public class DefWorkflowManagerWrapper implements WorkflowDef {
      */
     @Override
     public Map<String, NodeDef> getNodes() {
-        return m_wfm.getNodeContainers().stream().collect(Collectors.toMap(nc -> nc.getID().toString(), nc -> {
-            if (nc instanceof WorkflowManager) {
-                return new DefMetanodeWrapper((WorkflowManager)nc);
-            } else if (nc instanceof NativeNodeContainer) {
-                return new DefNativeNodeWrapper((NativeNodeContainer)nc);
-            } else if (nc instanceof SubNodeContainer) {
-                return new DefComponentWrapper((SubNodeContainer)nc);
-            } else {
-                throw new IllegalStateException();
-            }
-        }));
+        return m_wfm.getNodeContainers().stream()//
+            .collect(Collectors.toMap(nc -> nc.getID().toString(), this::getNodeDef));
+    }
+
+    private NodeDef getNodeDef(final NodeContainer nc) {
+        if (nc instanceof WorkflowManager) {
+            return new DefMetanodeWrapper((WorkflowManager)nc);
+        } else if (nc instanceof NativeNodeContainer) {
+            return new DefNativeNodeWrapper((NativeNodeContainer)nc);
+        } else if (nc instanceof SubNodeContainer) {
+            return new DefComponentWrapper((SubNodeContainer)nc);
+        } else {
+            throw new IllegalStateException();
+        }
     }
 
     /**

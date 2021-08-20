@@ -50,9 +50,11 @@ package org.knime.core.node.workflow.def;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
@@ -107,6 +109,7 @@ import org.knime.core.workflow.def.ConfigValueStringDef;
 import org.knime.core.workflow.def.NativeNodeDef;
 import org.knime.core.workflow.def.NodeLocksDef;
 import org.knime.core.workflow.def.NodeUIInfoDef;
+import org.knime.core.workflow.def.PortTypeDef;
 import org.knime.core.workflow.def.TemplateInfoDef;
 import org.knime.core.workflow.def.WorkflowUISettingsDef;
 
@@ -161,14 +164,18 @@ public class DefToCoreUtil {
         }
     }
 
-    public static PortType toPortType(final String objectClassString) {
+    /**
+     * @param portType
+     * @return
+     */
+    public static PortType toPortType(final PortTypeDef portType) {
+        String objectClassString = portType.getPortObjectClass();
         if (objectClassString == null) {
-            // TODO throw new RuntimeException("No port object class found to create PortType object");
-            throw new RuntimeException(
-                "No port object class found to create PortType object");
+            // TODO VWR proper error handling or eliminate code paths that lead here
+            throw new RuntimeException("No port object class found to create PortType object");
         }
-        Class<? extends PortObject> obClass = PortTypeRegistry.getInstance().getObjectClass(objectClassString)
-            .orElseThrow(() -> new RuntimeException(
+        Class<? extends PortObject> obClass =
+            PortTypeRegistry.getInstance().getObjectClass(objectClassString).orElseThrow(() -> new RuntimeException(
                 "Unable to restore port type, " + "can't load class \"" + objectClassString + "\""));
         return PortTypeRegistry.getInstance().getPortType(obClass);
 
@@ -178,11 +185,15 @@ public class DefToCoreUtil {
         ComponentMetadataBuilder builder = ComponentMetadata.builder()//
             .description(def.getDescription())//
             .icon(def.getIcon());
-        for (int i = 0; i < def.getInPortNames().size(); i++) {
-            builder.addInPortNameAndDescription(def.getInPortNames().get(i), def.getInPortDescriptions().get(i));
+        if (def.getInPortNames() != null) {
+            for (int i = 0; i < def.getInPortNames().size(); i++) {
+                builder.addInPortNameAndDescription(def.getInPortNames().get(i), def.getInPortDescriptions().get(i));
+            }
         }
-        for (int i = 0; i < def.getOutPortNames().size(); i++) {
-            builder.addOutPortNameAndDescription(def.getOutPortNames().get(i), def.getOutPortDescriptions().get(i));
+        if (def.getOutPortNames() != null) {
+            for (int i = 0; i < def.getOutPortNames().size(); i++) {
+                builder.addOutPortNameAndDescription(def.getOutPortNames().get(i), def.getOutPortDescriptions().get(i));
+            }
         }
         return builder.build();
     }
@@ -215,13 +226,16 @@ public class DefToCoreUtil {
      * TODO entirely replace it
      */
     public static AuthorInformation toAuthorInformation(final AuthorInformationDef def) {
-        return new AuthorInformation(def.getAuthoredBy(), Date.from(def.getAuthoredWhen().toInstant()),
-            def.getLastEditedBy(), Date.from(def.getLastEditedWhen().toInstant()));
+        final var lastEdited =
+            Optional.ofNullable(def.getLastEditedWhen()).map(OffsetDateTime::toInstant).map(Date::from);
+        final var authored = Optional.ofNullable(def.getAuthoredWhen()).map(OffsetDateTime::toInstant).map(Date::from);
+        return new AuthorInformation(def.getAuthoredBy(), authored.orElse(null), def.getLastEditedBy(),
+            lastEdited.orElse(null));
     }
 
     /**
-     * Create a node settings tree (comprising {@link AbstractConfigEntry}s) from a
-     * {@link ConfigDef} tree.
+     * Create a node settings tree (comprising {@link AbstractConfigEntry}s) from a {@link ConfigDef} tree.
+     *
      * @param def an entity containing the recursive node settings
      */
     public static NodeSettings toNodeSettings(final ConfigMapDef def) {

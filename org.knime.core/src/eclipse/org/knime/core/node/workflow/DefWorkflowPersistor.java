@@ -50,6 +50,7 @@ package org.knime.core.node.workflow;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -62,7 +63,9 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeAndBundleInformationPersistor;
 import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.NodeContainer.NodeLocks;
 import org.knime.core.node.workflow.def.DefToCoreUtil;
@@ -80,7 +83,7 @@ import org.knime.core.workflow.def.WorkflowProjectDef;
  *
  * @author hornm
  */
-public class DefWorkflowPersistor implements WorkflowPersistor {
+public class DefWorkflowPersistor implements WorkflowPersistor, TemplateNodeContainerPersistor {
 
     private final WorkflowProjectDef m_projectDef;
     private final WorkflowDef m_def;
@@ -498,6 +501,72 @@ public class DefWorkflowPersistor implements WorkflowPersistor {
     @Override
     public void postLoad(final WorkflowManager wfm, final LoadResult loadResult) {
         //
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void preLoadNodeContainer(final WorkflowPersistor parentPersistor, final NodeSettingsRO parentSettings,
+        final LoadResult loadResult) throws InvalidSettingsException, IOException {
+        // TODO Auto-generated method stub
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void guessPortTypesFromConnectedNodes(final NodeAndBundleInformationPersistor nodeInfo,
+        final NodeSettingsRO additionalFactorySettings, final ArrayList<PersistorWithPortIndex> upstreamNodes,
+        final ArrayList<List<PersistorWithPortIndex>> downstreamNodes) {
+        // TODO Auto-generated method stub
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public PortType getDownstreamPortType(final int index) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public PortType getUpstreamPortType(final int index) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setDirtyAfterLoad() {
+        // TODO Auto-generated method stub
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setNameOverwrite(final String nameOverwrite) {
+        // TODO Auto-generated method stub
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setOverwriteTemplateInformation(final MetaNodeTemplateInformation templateInfo) {
+        // TODO Auto-generated method stub
+
     }
 
 }

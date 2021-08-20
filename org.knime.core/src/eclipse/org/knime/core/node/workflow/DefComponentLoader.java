@@ -69,6 +69,7 @@ public class DefComponentLoader extends DefSingleNodeLoader implements SubNodeCo
 
     /**
      * @param def
+     * @param loadHelper
      */
     public DefComponentLoader(final ComponentDef def, final WorkflowLoadHelper loadHelper) {
         super(def, loadHelper);
@@ -80,8 +81,7 @@ public class DefComponentLoader extends DefSingleNodeLoader implements SubNodeCo
      */
     @Override
     public WorkflowPersistor getWorkflowPersistor() {
-        // TODO Auto-generated method stub
-        return null;
+        return new DefWorkflowPersistor(m_def.getWorkflow(), m_loadHelper);
     }
 
     /**
@@ -90,7 +90,7 @@ public class DefComponentLoader extends DefSingleNodeLoader implements SubNodeCo
     @Override
     public WorkflowPortTemplate[] getInPortTemplates() {
         return m_def.getInPorts().stream().map(p -> {
-            WorkflowPortTemplate t = new WorkflowPortTemplate(p.getIndex(), DefToCoreUtil.toPortType(p.getType()));
+            WorkflowPortTemplate t = new WorkflowPortTemplate(p.getIndex(), DefToCoreUtil.toPortType(p.getPortType()));
             t.setPortName(p.getName());
             return t;
         }).toArray(WorkflowPortTemplate[]::new);
@@ -102,7 +102,7 @@ public class DefComponentLoader extends DefSingleNodeLoader implements SubNodeCo
     @Override
     public WorkflowPortTemplate[] getOutPortTemplates() {
         return m_def.getOutPorts().stream().map(p -> {
-            WorkflowPortTemplate t = new WorkflowPortTemplate(p.getIndex(), DefToCoreUtil.toPortType(p.getType()));
+            WorkflowPortTemplate t = new WorkflowPortTemplate(p.getIndex(), DefToCoreUtil.toPortType(p.getPortType()));
             t.setPortName(p.getName());
             return t;
         }).toArray(WorkflowPortTemplate[]::new);
@@ -129,7 +129,7 @@ public class DefComponentLoader extends DefSingleNodeLoader implements SubNodeCo
      */
     @Override
     public boolean isHideInWizard() {
-        return m_def.isHideInWizard();
+        return m_def.getDialogSettings().isHideInWizard();
     }
 
     /**
@@ -137,7 +137,7 @@ public class DefComponentLoader extends DefSingleNodeLoader implements SubNodeCo
      */
     @Override
     public String getCssStyles() {
-        return m_def.getCssStyles();
+        return m_def.getDialogSettings().getCssStyles();
     }
 
     /**
@@ -145,7 +145,7 @@ public class DefComponentLoader extends DefSingleNodeLoader implements SubNodeCo
      */
     @Override
     public SubnodeContainerLayoutStringProvider getSubnodeLayoutStringProvider() {
-        return new SubnodeContainerLayoutStringProvider(m_def.getLayoutJSON());
+        return new SubnodeContainerLayoutStringProvider(m_def.getDialogSettings().getLayoutJSON());
     }
 
     /**
@@ -153,7 +153,7 @@ public class DefComponentLoader extends DefSingleNodeLoader implements SubNodeCo
      */
     @Override
     public SubnodeContainerConfigurationStringProvider getSubnodeConfigurationStringProvider() {
-        return new SubnodeContainerConfigurationStringProvider(m_def.getConfigurationLayoutJSON());
+        return new SubnodeContainerConfigurationStringProvider(m_def.getDialogSettings().getConfigurationLayoutJSON());
     }
 
     /**

@@ -82,7 +82,7 @@ public class DefMetaNodeLoader extends DefWorkflowPersistor implements NodeLoade
     @Override
     public WorkflowPortTemplate[] getInPortTemplates() {
         return m_def.getInPorts().stream().map(p -> {
-            WorkflowPortTemplate t = new WorkflowPortTemplate(p.getIndex(), DefToCoreUtil.toPortType(p.getType()));
+            WorkflowPortTemplate t = new WorkflowPortTemplate(p.getIndex(), DefToCoreUtil.toPortType(p.getPortType()));
             t.setPortName(p.getName());
             return t;
         }).toArray(WorkflowPortTemplate[]::new);
@@ -95,7 +95,7 @@ public class DefMetaNodeLoader extends DefWorkflowPersistor implements NodeLoade
     @Override
     public WorkflowPortTemplate[] getOutPortTemplates() {
         return m_def.getOutPorts().stream().map(p -> {
-            WorkflowPortTemplate t = new WorkflowPortTemplate(p.getIndex(), DefToCoreUtil.toPortType(p.getType()));
+            WorkflowPortTemplate t = new WorkflowPortTemplate(p.getIndex(), DefToCoreUtil.toPortType(p.getPortType()));
             t.setPortName(p.getName());
             return t;
         }).toArray(WorkflowPortTemplate[]::new);

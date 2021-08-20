@@ -8328,7 +8328,7 @@ public final class WorkflowManager extends NodeContainer
         throws CanceledExecutionException {
         WorkflowPersistor loader = loadHelper.createLoadPersistor(definition);
         exec.checkCanceled();
-        return load(loader, exec, keepNodeMessages);
+        return loadDef(loader, exec, keepNodeMessages);
     }
 
     /**
@@ -8444,7 +8444,7 @@ public final class WorkflowManager extends NodeContainer
     }
 
     /**
-     * Def-based loading.
+     * Def-based loading version of #load.
      * Initialize this using a persistor that provides information from a persisted/serialized version of a workflow.
      *
      * @param persistor provides necessary information to instantiate a workflow manager from some source, e.g., a
@@ -8454,7 +8454,7 @@ public final class WorkflowManager extends NodeContainer
      * @return an object with information on errors and warnings.
      * @throws CanceledExecutionException
      */
-    public WorkflowLoadResult load(final WorkflowPersistor persistor, final ExecutionMonitor exec,
+    public WorkflowLoadResult loadDef(final WorkflowPersistor persistor, final ExecutionMonitor exec,
         final boolean keepNodeMessages) throws CanceledExecutionException {
 
         CheckUtils.checkArgument(persistor.isProject(), "Pass a persistor for a WorkflowProjectDef");
@@ -8560,11 +8560,14 @@ public final class WorkflowManager extends NodeContainer
             persistorMap.put(id, p);
         }
 
-        // 3.
+        System.err.println(persistorMap);
+
+        // 3. load more data into some nodes (sub node container to push itself into the virtual in/out)
+        // all nodes have been instantiated
         persistor.postLoad(this, loadResult);
 
-
         try {
+            // 4.
             postLoad(persistorMap, tblRep, persistor.mustWarnOnDataLoadError(), exec, loadResult, preserveNodeMessage);
         } catch (CanceledExecutionException cee) {
             for (NodeID insertedNodeID : translationMap.values()) {
