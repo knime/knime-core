@@ -48,7 +48,10 @@ try {
                 'knime-textprocessing',
                 'knime-virtual'
             ],
-            ius: [ 'com.knime.enterprise.client.filehandling' ]
+            ius: [ 
+                'com.knime.enterprise.client.filehandling',
+                'org.knime.chem.types'
+            ]
         ]
     )
 
