@@ -84,6 +84,212 @@ final class InsertWorkflowPersistor implements WorkflowPersistor {
         m_nodePersistor = nodePersistor;
     }
 
+    static class TemplateNodeContainerProxy implements TemplateNodeContainerPersistor, WorkflowPersistor {
+        private final WorkflowPersistor m_workflowPersistor;
+
+        /**
+         * @param persistor
+         */
+        public TemplateNodeContainerProxy(final WorkflowPersistor persistor) {
+            this.m_workflowPersistor = persistor;
+        }
+
+        @Override
+        public void preLoadNodeContainer(final WorkflowPersistor parentPersistor, final NodeSettingsRO parentSettings,
+            final LoadResult loadResult) throws InvalidSettingsException, IOException {
+            // TODO workflow persistor doesn't have this -> comes from
+            throw new IllegalStateException("not to be called");
+        }
+
+        @Override
+        public void guessPortTypesFromConnectedNodes(final NodeAndBundleInformationPersistor nodeInfo,
+            final NodeSettingsRO additionalFactorySettings, final ArrayList<PersistorWithPortIndex> upstreamNodes,
+            final ArrayList<List<PersistorWithPortIndex>> downstreamNodes) {
+            // TODO workflow persistor doesn't have this
+            throw new IllegalStateException("not to be called");
+        }
+
+        @Override
+        public boolean isProject() {
+            return m_workflowPersistor.isProject();
+        }
+
+        @Override
+        public WorkflowContext getWorkflowContext() {
+            return m_workflowPersistor.getWorkflowContext();
+        }
+
+        @Override
+        public Set<ConnectionContainerTemplate> getConnectionSet() {
+            return m_workflowPersistor.getConnectionSet();
+        }
+
+        @Override
+        public Set<ConnectionContainerTemplate> getAdditionalConnectionSet() {
+            return m_workflowPersistor.getAdditionalConnectionSet();
+        }
+
+        @Override
+        public WorkflowDataRepository getWorkflowDataRepository() {
+            return m_workflowPersistor.getWorkflowDataRepository();
+        }
+
+        @Override
+        public WorkflowPortTemplate[] getInPortTemplates() {
+            return m_workflowPersistor.getInPortTemplates();
+        }
+
+        @Override
+        public NodeUIInformation getInPortsBarUIInfo() {
+            return m_workflowPersistor.getInPortsBarUIInfo();
+        }
+
+        @Override
+        public LoadVersion getLoadVersion() {
+            return m_workflowPersistor.getLoadVersion();
+        }
+
+        @Override
+        public String getName() {
+            return m_workflowPersistor.getName();
+        }
+
+        @Override
+        public WorkflowCipher getWorkflowCipher() {
+            return m_workflowPersistor.getWorkflowCipher();
+        }
+
+        @Override
+        public MetaNodeTemplateInformation getTemplateInformation() {
+            return m_workflowPersistor.getTemplateInformation();
+        }
+
+        @Override
+        public AuthorInformation getAuthorInformation() {
+            return m_workflowPersistor.getAuthorInformation();
+        }
+
+        @Override
+        public List<FlowVariable> getWorkflowVariables() {
+            return m_workflowPersistor.getWorkflowVariables();
+        }
+
+        @Override
+        public List<Credentials> getCredentials() {
+            return m_workflowPersistor.getCredentials();
+        }
+
+        @Override
+        public List<WorkflowAnnotation> getWorkflowAnnotations() {
+            return m_workflowPersistor.getWorkflowAnnotations();
+        }
+
+        @Override
+        public NodeSettingsRO getWizardExecutionControllerState() {
+            return m_workflowPersistor.getWizardExecutionControllerState();
+        }
+
+        @Override
+        public List<ReferencedFile> getObsoleteNodeDirectories() {
+            return m_workflowPersistor.getObsoleteNodeDirectories();
+        }
+
+        @Override
+        public Map<Integer, NodeContainerPersistor> getNodeLoaderMap() {
+            // FIXME why do signatures differ?
+            return (Map<Integer, NodeContainerPersistor>)m_workflowPersistor.getNodeLoaderMap();
+        }
+
+        @Override
+        public void postLoad(final WorkflowManager wfm, final LoadResult loadResult) {
+            m_workflowPersistor.postLoad(wfm, loadResult);
+        }
+
+        @Override
+        public WorkflowPortTemplate[] getOutPortTemplates() {
+            return m_workflowPersistor.getOutPortTemplates();
+        }
+
+        @Override
+        public NodeUIInformation getOutPortsBarUIInfo() {
+            return m_workflowPersistor.getOutPortsBarUIInfo();
+        }
+
+        @Override
+        public EditorUIInformation getEditorUIInformation() {
+            return m_workflowPersistor.getEditorUIInformation();
+        }
+
+        @Override
+        public boolean mustWarnOnDataLoadError() {
+            return m_workflowPersistor.mustWarnOnDataLoadError();
+        }
+
+        @Override
+        public NodeContainerMetaPersistor getMetaPersistor() {
+            return m_workflowPersistor.getMetaPersistor();
+        }
+
+        @Override
+        public NodeContainer getNodeContainer(final WorkflowManager parent,
+                final NodeID id) {
+            return m_workflowPersistor.getNodeContainer(parent, id);
+        }
+
+        @Override
+        public boolean isDirtyAfterLoad() {
+            return m_workflowPersistor.isDirtyAfterLoad();
+        }
+
+        @Override
+        public boolean mustComplainIfStateDoesNotMatch() {
+            return m_workflowPersistor.mustComplainIfStateDoesNotMatch();
+        }
+
+        @Override
+        public void loadNodeContainer(final Map<Integer, BufferedDataTable> tblRep,
+                final ExecutionMonitor exec, final LoadResult loadResult) throws InvalidSettingsException, CanceledExecutionException, IOException {
+            m_workflowPersistor.loadNodeContainer(tblRep, exec, loadResult);
+        }
+
+        @Override
+        public boolean needsResetAfterLoad() {
+            return m_workflowPersistor.needsResetAfterLoad();
+        }
+
+        @Override
+        public InputStream decipherInput(final InputStream input) throws IOException {
+            return m_workflowPersistor.decipherInput(input);
+        }
+
+        @Override
+        public PortType getDownstreamPortType(final int index) {
+            throw new IllegalStateException("not to be called");
+        }
+
+        @Override
+        public PortType getUpstreamPortType(final int index) {
+            throw new IllegalStateException("not to be called");
+        }
+
+        @Override
+        public void setDirtyAfterLoad() {
+            throw new IllegalStateException("not to be called");
+
+        }
+
+        @Override
+        public void setNameOverwrite(final String nameOverwrite) {
+            throw new IllegalStateException("not to be called");
+
+        }
+
+        @Override
+        public void setOverwriteTemplateInformation(final MetaNodeTemplateInformation templateInfo) {
+            throw new IllegalStateException("not to be called");
+        }
+    }
+
     /**
      * TODO: this is a quick fix to reuse the current infrastructure for workflow loading, specifically
      * WorkflowManager#loadContent(NodeContainerPersistor, Map, FlowObjectStack, ExecutionMonitor,
@@ -97,184 +303,7 @@ final class InsertWorkflowPersistor implements WorkflowPersistor {
      * @param persistor
      */
     public InsertWorkflowPersistor(final WorkflowPersistor persistor) {
-
-        // XXX handling this via a dynamic proxy would be nice
-        this(new TemplateNodeContainerPersistor() {
-
-            @Override
-            public void preLoadNodeContainer(final WorkflowPersistor parentPersistor, final NodeSettingsRO parentSettings,
-                final LoadResult loadResult) throws InvalidSettingsException, IOException {
-                // TODO workflow persistor doesn't have this -> comes from
-                throw new IllegalStateException("not to be called");
-            }
-
-            @Override
-            public void guessPortTypesFromConnectedNodes(final NodeAndBundleInformationPersistor nodeInfo,
-                final NodeSettingsRO additionalFactorySettings, final ArrayList<PersistorWithPortIndex> upstreamNodes,
-                final ArrayList<List<PersistorWithPortIndex>> downstreamNodes) {
-                // TODO workflow persistor doesn't have this
-                throw new IllegalStateException("not to be called");
-            }
-
-            @Override
-            public boolean isProject() {
-                return persistor.isProject();
-            }
-
-            public WorkflowContext getWorkflowContext() {
-                return persistor.getWorkflowContext();
-            }
-
-            public Set<ConnectionContainerTemplate> getConnectionSet() {
-                return persistor.getConnectionSet();
-            }
-
-            public Set<ConnectionContainerTemplate> getAdditionalConnectionSet() {
-                return persistor.getAdditionalConnectionSet();
-            }
-
-            public WorkflowDataRepository getWorkflowDataRepository() {
-                return persistor.getWorkflowDataRepository();
-            }
-
-            public WorkflowPortTemplate[] getInPortTemplates() {
-                return persistor.getInPortTemplates();
-            }
-
-            public NodeUIInformation getInPortsBarUIInfo() {
-                return persistor.getInPortsBarUIInfo();
-            }
-
-            @Override
-            public LoadVersion getLoadVersion() {
-                return persistor.getLoadVersion();
-            }
-
-            public String getName() {
-                return persistor.getName();
-            }
-
-            public WorkflowCipher getWorkflowCipher() {
-                return persistor.getWorkflowCipher();
-            }
-
-            public MetaNodeTemplateInformation getTemplateInformation() {
-                return persistor.getTemplateInformation();
-            }
-
-            public AuthorInformation getAuthorInformation() {
-                return persistor.getAuthorInformation();
-            }
-
-            public List<FlowVariable> getWorkflowVariables() {
-                return persistor.getWorkflowVariables();
-            }
-
-            public List<Credentials> getCredentials() {
-                return persistor.getCredentials();
-            }
-
-            public List<WorkflowAnnotation> getWorkflowAnnotations() {
-                return persistor.getWorkflowAnnotations();
-            }
-
-            public NodeSettingsRO getWizardExecutionControllerState() {
-                return persistor.getWizardExecutionControllerState();
-            }
-
-            public List<ReferencedFile> getObsoleteNodeDirectories() {
-                return persistor.getObsoleteNodeDirectories();
-            }
-
-            public Map<Integer, NodeContainerPersistor> getNodeLoaderMap() {
-                // FIXME why do signatures differ?
-                return (Map<Integer, NodeContainerPersistor>)persistor.getNodeLoaderMap();
-            }
-
-            public void postLoad(final WorkflowManager wfm, final LoadResult loadResult) {
-                persistor.postLoad(wfm, loadResult);
-            }
-
-            public WorkflowPortTemplate[] getOutPortTemplates() {
-                return persistor.getOutPortTemplates();
-            }
-
-            public NodeUIInformation getOutPortsBarUIInfo() {
-                return persistor.getOutPortsBarUIInfo();
-            }
-
-            public EditorUIInformation getEditorUIInformation() {
-                return persistor.getEditorUIInformation();
-            }
-
-            @Override
-            public boolean mustWarnOnDataLoadError() {
-                return persistor.mustWarnOnDataLoadError();
-            }
-
-            @Override
-            public NodeContainerMetaPersistor getMetaPersistor() {
-                return persistor.getMetaPersistor();
-            }
-
-            @Override
-            public NodeContainer getNodeContainer(final WorkflowManager parent,
-                    final NodeID id) {
-                return persistor.getNodeContainer(parent, id);
-            }
-
-            @Override
-            public boolean isDirtyAfterLoad() {
-                return persistor.isDirtyAfterLoad();
-            }
-
-            @Override
-            public boolean mustComplainIfStateDoesNotMatch() {
-                return persistor.mustComplainIfStateDoesNotMatch();
-            }
-
-            @Override
-            public void loadNodeContainer(final Map<Integer, BufferedDataTable> tblRep,
-                    final ExecutionMonitor exec, final LoadResult loadResult) throws InvalidSettingsException, CanceledExecutionException, IOException {
-                persistor.loadNodeContainer(tblRep, exec, loadResult);
-            }
-
-            @Override
-            public boolean needsResetAfterLoad() {
-                return persistor.needsResetAfterLoad();
-            }
-
-            public InputStream decipherInput(final InputStream input) throws IOException {
-                return persistor.decipherInput(input);
-            }
-
-            @Override
-            public PortType getDownstreamPortType(final int index) {
-                throw new IllegalStateException("not to be called");
-            }
-
-            @Override
-            public PortType getUpstreamPortType(final int index) {
-                throw new IllegalStateException("not to be called");
-            }
-
-            @Override
-            public void setDirtyAfterLoad() {
-                throw new IllegalStateException("not to be called");
-
-            }
-
-            @Override
-            public void setNameOverwrite(final String nameOverwrite) {
-                throw new IllegalStateException("not to be called");
-
-            }
-
-            @Override
-            public void setOverwriteTemplateInformation(final MetaNodeTemplateInformation templateInfo) {
-                throw new IllegalStateException("not to be called");
-            }
-        });
+        this((TemplateNodeContainerPersistor)(new TemplateNodeContainerProxy(persistor)));
     }
 
     /** {@inheritDoc} */

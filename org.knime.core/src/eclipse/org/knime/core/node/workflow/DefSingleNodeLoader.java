@@ -85,12 +85,16 @@ public abstract class DefSingleNodeLoader implements SingleNodeContainerPersisto
 
     private DefNodeContainerMetaPersistor m_metaPersistor;
 
+    protected final WorkflowLoadHelper m_loadHelper;
+
     /**
      * @param def
+     * @param loadHelper
      */
     public DefSingleNodeLoader(final SingleNodeDef def, final WorkflowLoadHelper loadHelper) {
         m_def = def;
         m_metaPersistor = new DefNodeContainerMetaPersistor(m_def, loadHelper);
+        m_loadHelper = loadHelper;
     }
 
     /**

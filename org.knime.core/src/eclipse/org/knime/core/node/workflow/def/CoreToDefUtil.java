@@ -102,6 +102,7 @@ import org.knime.core.workflow.def.NodeLocksDef;
 import org.knime.core.workflow.def.NodeMessageDef;
 import org.knime.core.workflow.def.NodeUIInfoDef;
 import org.knime.core.workflow.def.PortDef;
+import org.knime.core.workflow.def.PortTypeDef;
 import org.knime.core.workflow.def.StyleDef;
 import org.knime.core.workflow.def.TemplateInfoDef;
 import org.knime.core.workflow.def.impl.DefaultAnnotationDataDef;
@@ -135,6 +136,7 @@ import org.knime.core.workflow.def.impl.DefaultNodeLocksDef;
 import org.knime.core.workflow.def.impl.DefaultNodeMessageDef;
 import org.knime.core.workflow.def.impl.DefaultNodeUIInfoDef;
 import org.knime.core.workflow.def.impl.DefaultPortDef;
+import org.knime.core.workflow.def.impl.DefaultPortTypeDef;
 import org.knime.core.workflow.def.impl.DefaultStyleDef;
 import org.knime.core.workflow.def.impl.DefaultTemplateInfoDef;
 
@@ -459,9 +461,25 @@ public class CoreToDefUtil {
             .build();
     }
 
+    /**
+     * @param p
+     * @return
+     */
     public static PortDef toPortDef(final NodePort p) {
-        return DefaultPortDef.builder().setIndex(p.getPortIndex()).setName(p.getPortName())
-            .setType(p.getPortType().toString()).build();
+        PortTypeDef portType = DefaultPortTypeDef.builder()//
+                .setColor(p.getPortType().getColor())//
+                .setHidden(p.getPortType().isHidden())//
+                .setName(p.getPortType().getName())//
+                .setOptional(p.getPortType().isOptional())//
+                .setPortObjectClass(p.getPortType().getPortObjectClass().getCanonicalName())//
+                .setPortObjectSpecClass(p.getPortType().getPortObjectSpecClass().getCanonicalName())//
+                .build();
+
+        return DefaultPortDef.builder()//
+            .setIndex(p.getPortIndex())//
+            .setName(p.getPortName())//
+            .setPortType(portType)//
+            .build();
     }
 
     public static NodeAndBundleInfoDef toNodeAndBundleInfoDef(final NodeAndBundleInformationPersistor p) {
