@@ -138,7 +138,7 @@ public class Enh11762_WorkflowRepresentation extends WorkflowTestCase {
 	 * @throws Exception
 	 */
 	private String workflowToString(ObjectMapper mapper) throws Exception {
-		loadAndSetWorkflow();
+		loadAndSetWorkflow(new File("src/test/resources/enh11762_WorkflowRepresentation"));
 		WorkflowManager wfm = getManager();
 
 		// wrap workflow manager to get a workflow project definition interface implementation
