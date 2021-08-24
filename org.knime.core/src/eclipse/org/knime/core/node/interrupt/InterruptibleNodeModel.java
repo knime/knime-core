@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   11.10.2005 (Fabian Dill): created
  */
@@ -68,7 +68,7 @@ import org.knime.core.node.NodeSettingsRO;
  * and resumed during execution. Therefore a derived class has to provide a
  * method which realizes one iteration of the algorithm that should be processed
  * interruptible.
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public abstract class InterruptibleNodeModel extends NodeModel {
@@ -115,7 +115,7 @@ public abstract class InterruptibleNodeModel extends NodeModel {
     /**
      * Constructs a NodeModel with the desired in- and out-ports, setting the
      * state to paused, that is waiting for an initial event to start executing.
-     * 
+     *
      * @param nrInPorts - the desired number of in-ports.
      * @param nrOutPorts - the desired number of out-ports.
      */
@@ -127,19 +127,19 @@ public abstract class InterruptibleNodeModel extends NodeModel {
 
     /**
      * Returns the number of processed iterations so far.
-     * 
+     *
      * @return - the number of processed iterations so far.
      */
     public int getNumberOfIterations() {
         return m_iterationCounter;
     }
-    
-        
+
+
     /**
      * Sets the delay, that is the number of iterations until the view is
      * refreshed. Setting the delay to n, every n-th iteration the view is
      * refreshed.
-     * 
+     *
      * @param delay - the number of iterations until the view is refreshed.
      */
     public void setDelay(final int delay) {
@@ -149,7 +149,7 @@ public abstract class InterruptibleNodeModel extends NodeModel {
     /**
      * Returns the current delay, that is the number of iterations until the
      * view is refreshed.
-     * 
+     *
      * @return - the current delay.
      */
     public int getDelay() {
@@ -158,7 +158,7 @@ public abstract class InterruptibleNodeModel extends NodeModel {
 
     /**
      * Indicates whether the execution of the algorithm is paused or not.
-     * 
+     *
      * @return - true, if the execution pauses, false otherwise.
      */
     public boolean isPaused() {
@@ -168,7 +168,7 @@ public abstract class InterruptibleNodeModel extends NodeModel {
     /**
      * Causes the execution to pause until either {@link #next(int)} or
      * {@link #run()} is called.
-     * 
+     *
      */
     public void pause() {
         synchronized (m_lock) {
@@ -183,7 +183,7 @@ public abstract class InterruptibleNodeModel extends NodeModel {
 
     /**
      * Indicates whether the state of the algorithm is finished or not.
-     * 
+     *
      * @return - true, if the algorithm is finished, false otherwise.
      */
     public boolean isFinished() {
@@ -203,7 +203,7 @@ public abstract class InterruptibleNodeModel extends NodeModel {
 
     /**
      * Causes the execution of the next (n) iteration(s).
-     * 
+     *
      * @param numberOfIterations number of iterations to perform
      */
     public void next(final int numberOfIterations) {
@@ -217,7 +217,7 @@ public abstract class InterruptibleNodeModel extends NodeModel {
 
     /**
      * Causes the node to run for an unlimited number of iterations.
-     * 
+     *
      */
     public void run() {
         synchronized (m_lock) {
@@ -231,7 +231,7 @@ public abstract class InterruptibleNodeModel extends NodeModel {
     /**
      * Provides access to the input data the node is passed to at the beginning
      * of the execute method.
-     * 
+     *
      * @param portNr - the referring inport number
      * @return - the DataTable that was connected to port portNr at the
      *         beginning of the execute method, null if no input data is
@@ -247,7 +247,7 @@ public abstract class InterruptibleNodeModel extends NodeModel {
     /**
      * Returns the input data that was connected to the node at the beginning of
      * the execute method as a whole.
-     * 
+     *
      * @return - the input data as a whole.
      */
     public BufferedDataTable[] getInputData() {
@@ -258,7 +258,7 @@ public abstract class InterruptibleNodeModel extends NodeModel {
      * Initialises the NodeModel, starts the execution, pauses it, resumes it
      * and finishes it. At the end the from the derived NodeModel provided
      * output data is set to the output.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -315,7 +315,7 @@ public abstract class InterruptibleNodeModel extends NodeModel {
     /**
      * Resets the status of the Node to paused and not finished so it can be
      * triggered to start again.
-     * 
+     *
      * @see org.knime.core.node.NodeModel#reset()
      */
     @Override
@@ -358,8 +358,9 @@ public abstract class InterruptibleNodeModel extends NodeModel {
         internalSettings.addInt(INTERN_CFG_ITERATION, m_iterationCounter);
         internalSettings.addBoolean(INTERN_CFG_FINIS, m_finished);
         File f = new File(nodeInternDir, FILE_NAME);
-        FileOutputStream fos = new FileOutputStream(f);
-        internalSettings.saveToXML(fos);
+        try (FileOutputStream fos = new FileOutputStream(f)) {
+            internalSettings.saveToXML(fos);
+        }
     }
 
 
@@ -372,7 +373,7 @@ public abstract class InterruptibleNodeModel extends NodeModel {
      * the interruptible algorithm call the finish()-method when it is met). In
      * any case implement in this method the content of the for- or
      * while-clause.
-     * 
+     *
      * @param exec the ExecutionContext to cancel the operation or show the
      *            progress.
      * @throws CanceledExecutionException if the operation is canceled by the
@@ -384,7 +385,7 @@ public abstract class InterruptibleNodeModel extends NodeModel {
     /**
      * Do here the initialisation of the model. This method is called before
      * starting the execute method.
-     * 
+     *
      * @param inData - the incoming DataTables at the moment the execute method
      *            starts.
      * @param exec to show the progress of the initialization or to cancel it.
@@ -402,13 +403,13 @@ public abstract class InterruptibleNodeModel extends NodeModel {
      * data should be available. Note that the returned DataTable[] is directly
      * returned from the execute method, so mind the restrictions on the
      * DataTable[] as for the execute method.
-     * 
+     *
      * @param exec The execution monitor to show the progress.
      * @return - an BufferedDataTable[] as should be returned from the
      *         NodeModel's execute method.
      * @throws CanceledExecutionException If writing output tables has been
      *             canceled.
-     * 
+     *
      */
     public abstract BufferedDataTable[] getOutput(final ExecutionContext exec)
             throws CanceledExecutionException;
