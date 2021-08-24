@@ -71,7 +71,7 @@ public class DefMetaNodeLoader extends DefWorkflowPersistor implements NodeLoade
      * @param loadHelper
      */
     public DefMetaNodeLoader(final MetaNodeDef def, final WorkflowLoadHelper loadHelper) {
-        super(def.getWorkflow(), loadHelper);
+        super(def, def.getWorkflow(), loadHelper);
         m_def = def;
     }
 

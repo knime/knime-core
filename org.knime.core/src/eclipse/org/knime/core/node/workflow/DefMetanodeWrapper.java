@@ -54,6 +54,7 @@ import java.util.stream.IntStream;
 
 import org.knime.core.node.workflow.def.CoreToDefUtil;
 import org.knime.core.workflow.def.ConfigMapDef;
+import org.knime.core.workflow.def.FlowObjectDef;
 import org.knime.core.workflow.def.MetaNodeDef;
 import org.knime.core.workflow.def.NodeUIInfoDef;
 import org.knime.core.workflow.def.PortDef;
@@ -146,7 +147,7 @@ public class DefMetanodeWrapper extends DefNodeContainerWrapper implements MetaN
      * {@inheritDoc}
      */
     @Override
-    public ConfigMapDef getFlowStack() {
+    public List<FlowObjectDef> getFlowStack() {
         // TODO do we need this?
         return null;
     }

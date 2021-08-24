@@ -68,6 +68,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.NodeContainer.NodeLocks;
+import org.knime.core.node.workflow.def.CoreToDefUtil;
 import org.knime.core.node.workflow.def.DefToCoreUtil;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.workflowalizer.AuthorInformation;
@@ -78,6 +79,9 @@ import org.knime.core.workflow.def.NodeDef;
 import org.knime.core.workflow.def.NodeRefDef;
 import org.knime.core.workflow.def.WorkflowDef;
 import org.knime.core.workflow.def.WorkflowProjectDef;
+import org.knime.core.workflow.def.impl.DefaultAnnotationDataDef;
+import org.knime.core.workflow.def.impl.DefaultMetaNodeDef;
+import org.knime.core.workflow.def.impl.DefaultNodeAnnotationDef;
 
 /**
  *
@@ -90,20 +94,25 @@ public class DefWorkflowPersistor implements WorkflowPersistor, TemplateNodeCont
 
     private final Map<Integer, NodeLoader> m_nodeContainerLoaderMap;
     private final WorkflowLoadHelper m_loadHelper;
-//    private DefNodeContainerMetaPersistor m_metaPersistor;
+    private NodeContainerMetaPersistor m_metaPersistor;
 
     /**
      * Persistor for a project - like a workflow with additional metadata: load version, cipher, etc.
      *
-     * @param projectDef can be null if the workflow is a sub workflow (e.g.,  metanode) instead of a project
+     * @param projectDef can be null if the workflow is a sub workflow (e.g., metanode) instead of a project
      * @param def description of the workflow project as a POJO
+     * @param referencingNodeDef non-null description of basic node properties. If this workflow is referenced by a
+     *            component or metanode, pass the description of that node. If the workflow is not referenced from a
+     *            node, e.g., referenced from a workflow project, use one of the other constructors.
      */
-    public DefWorkflowPersistor(final WorkflowProjectDef projectDef, final WorkflowDef def, final WorkflowLoadHelper loadHelper) {
-        CheckUtils.checkArgument(projectDef == null || projectDef.getWorkflow() == def,
+    public DefWorkflowPersistor(final WorkflowProjectDef projectDef, final WorkflowDef def,
+        final WorkflowLoadHelper loadHelper, final NodeDef referencingNodeDef) {
+        CheckUtils
+            .checkArgument(projectDef == null || projectDef.getWorkflow() == def,
             "Can not construct a persistor for a workflow that does not belong to the given workflow project.");
         m_projectDef = projectDef;
         m_def = def;
-//        m_metaPersistor = new DefNodeContainerMetaPersistor(def, loadHelper);
+        m_metaPersistor = new DefNodeContainerMetaPersistor(referencingNodeDef, loadHelper);
         m_nodeContainerLoaderMap = new HashMap<>();
         m_loadHelper = loadHelper;
     }
@@ -114,16 +123,40 @@ public class DefWorkflowPersistor implements WorkflowPersistor, TemplateNodeCont
      * @param projectDef
      */
     public DefWorkflowPersistor(final WorkflowProjectDef projectDef, final WorkflowLoadHelper loadHelper) {
-        this(projectDef, projectDef.getWorkflow(), loadHelper);
+        this(projectDef, projectDef.getWorkflow(), loadHelper, defaultRootNodeDef(projectDef));
+    }
+
+    /**
+     * To use the legacy load methods, we need node information for the root workflow (even if it's not a visible node)
+     * @param projectDef
+     * @return
+     */
+    private static NodeDef defaultRootNodeDef(final WorkflowProjectDef projectDef) {
+
+        DefaultNodeAnnotationDef annotation = DefaultNodeAnnotationDef.builder()//
+                .setAnnotationDefault(true)//
+                .setData(DefaultAnnotationDataDef.builder().build())
+                .build();
+
+
+        return DefaultMetaNodeDef.builder()//
+            .setState(InternalNodeContainerState.IDLE.toString())//
+            .setAnnotation(annotation)//
+            .setMessage(CoreToDefUtil.toNodeMessageDef(NodeMessage.NONE))//
+            .setLocks(CoreToDefUtil.toNodeLocksDef(new NodeLocks(false, false, false)))
+            // TODO do we need custom description?
+            .build();
     }
 
     /**
      * Persistor for a workflow, i.e., not a project but a sub-workflow within a workflow.
      *
-     * @param def
+     * @param containerDef description of the node that contains the sub workflow. Could be a meta node or a component.
+     * @param referencedWorkflowDef description of the subworkflow contained in the node.
+     * @param loadHelper root load helper that is passed down the tree of nested workflows
      */
-    public DefWorkflowPersistor(final WorkflowDef def, final WorkflowLoadHelper loadHelper) {
-        this(null, def, loadHelper);
+    public DefWorkflowPersistor(final NodeDef containerDef, final WorkflowDef referencedWorkflowDef, final WorkflowLoadHelper loadHelper) {
+        this(null, referencedWorkflowDef, loadHelper, containerDef);
     }
 
     /**
@@ -305,107 +338,100 @@ public class DefWorkflowPersistor implements WorkflowPersistor, TemplateNodeCont
         return DefToCoreUtil.toAuthorInformation(m_def.getMetadata().getAuthorInformation());
     }
 
+//    private NodeContainerMetaPersistor defaultMetaPersistor() {
+//         return new NodeContainerMetaPersistor() {
+//
+//            @Override
+//            public int getNodeIDSuffix() {
+//                // needed in the wrapping InsertPersistor's getNodeLoaderMap
+//                return 0;
+//            }
+//
+//            @Override
+//            public InternalNodeContainerState getState() {
+//                // TODO do we need to serialize this?
+//                // TODO is this the right default value?
+//                return InternalNodeContainerState.IDLE;
+//            }
+//
+//            @Override
+//            public NodeExecutionJobManager getExecutionJobManager() {
+//                // use the default node execution job manager
+//                // TODO can we have streaming here? if this is a streamed component, we should use its meta persistor instead!
+//                return null;
+//            }
+//
+//            @Override
+//            public WorkflowLoadHelper getLoadHelper() {
+//                // needed in NodeContainer#init (not sure though why to use the meta persistor to get it)
+//                return m_loadHelper;
+//            }
+//
+//            @Override
+//            public NodeSettingsRO getExecutionJobSettings() {
+//                // TODO
+//                return null;
+//            }
+//
+//            @Override
+//            public void setUIInfo(final NodeUIInformation uiInfo) {
+//                throw new IllegalStateException("Not implemented");
+//
+//            }
+//
+//            @Override
+//            public void setNodeIDSuffix(final int nodeIDSuffix) {
+//                throw new IllegalStateException("Not implemented");
+//            }
+//
+//            @Override
+//            public boolean load(final NodeSettingsRO settings, final NodeSettingsRO parentSettings, final LoadResult loadResult) {
+//                throw new IllegalStateException("Not implemented");
+//            }
+//
+//            @Override
+//            public boolean isDirtyAfterLoad() {
+//                throw new IllegalStateException("Not implemented");
+//            }
+//
+//            @Override
+//            public NodeUIInformation getUIInfo() {
+//                throw new IllegalStateException("Not implemented");
+//            }
+//
+//            @Override
+//            public NodeMessage getNodeMessage() {
+//                throw new IllegalStateException("Not implemented");
+//            }
+//
+//            @Override
+//            public NodeLocks getNodeLocks() {
+//                return new NodeLocks(false, false, false);
+//            }
+//
+//            @Override
+//            public ReferencedFile getNodeContainerDirectory() {
+//                throw new IllegalStateException("Not implemented");
+//            }
+//
+//            @Override
+//            public NodeAnnotationData getNodeAnnotationData() {
+//                throw new IllegalStateException("Not implemented");
+//            }
+//
+//            @Override
+//            public String getCustomDescription() {
+//                throw new IllegalStateException("Not implemented");
+//            }
+//        };
+//    }
+
     /**
      * {@inheritDoc}
      */
     @Override
     public NodeContainerMetaPersistor getMetaPersistor() {
-        // TODO I wanted to get rid of the meta persistor because
-        // all information should be in the def
-        // also, workflow is not a node anymore and metapersistor is designed for nodes
-        return new NodeContainerMetaPersistor() {
-
-            @Override
-            public int getNodeIDSuffix() {
-                // needed in the wrapping InsertPersistor's getNodeLoaderMap
-                return 0;
-            }
-
-            @Override
-            public InternalNodeContainerState getState() {
-                // TODO do we need to serialize this?
-                // TODO is this the right default value?
-                return InternalNodeContainerState.IDLE;
-            }
-
-            @Override
-            public WorkflowLoadHelper getLoadHelper() {
-                // needed in NodeContainer#init (not sure though why to use the
-                return m_loadHelper;
-            }
-
-            @Override
-            public void setUIInfo(final NodeUIInformation uiInfo) {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public void setNodeIDSuffix(final int nodeIDSuffix) {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public boolean load(final NodeSettingsRO settings, final NodeSettingsRO parentSettings, final LoadResult loadResult) {
-                // TODO Auto-generated method stub
-                return false;
-            }
-
-            @Override
-            public boolean isDirtyAfterLoad() {
-                // TODO Auto-generated method stub
-                return false;
-            }
-
-            @Override
-            public NodeUIInformation getUIInfo() {
-                // TODO Auto-generated method stub
-                return null;
-            }
-
-            @Override
-            public NodeMessage getNodeMessage() {
-                // TODO Auto-generated method stub
-                return null;
-            }
-
-            @Override
-            public NodeLocks getNodeLocks() {
-                // TODO Auto-generated method stub
-                return null;
-            }
-
-            @Override
-            public ReferencedFile getNodeContainerDirectory() {
-                // TODO Auto-generated method stub
-                return null;
-            }
-
-            @Override
-            public NodeAnnotationData getNodeAnnotationData() {
-                // TODO Auto-generated method stub
-                return null;
-            }
-
-            @Override
-            public NodeSettingsRO getExecutionJobSettings() {
-                // TODO Auto-generated method stub
-                return null;
-            }
-
-            @Override
-            public NodeExecutionJobManager getExecutionJobManager() {
-                // TODO Auto-generated method stub
-                return null;
-            }
-
-            @Override
-            public String getCustomDescription() {
-                // TODO Auto-generated method stub
-                return null;
-            }
-        };
+       return m_metaPersistor;
     }
 
     /**
@@ -509,7 +535,7 @@ public class DefWorkflowPersistor implements WorkflowPersistor, TemplateNodeCont
     @Override
     public void preLoadNodeContainer(final WorkflowPersistor parentPersistor, final NodeSettingsRO parentSettings,
         final LoadResult loadResult) throws InvalidSettingsException, IOException {
-        // TODO Auto-generated method stub
+        throw new IllegalStateException("Not implemented");
 
     }
 
@@ -520,7 +546,7 @@ public class DefWorkflowPersistor implements WorkflowPersistor, TemplateNodeCont
     public void guessPortTypesFromConnectedNodes(final NodeAndBundleInformationPersistor nodeInfo,
         final NodeSettingsRO additionalFactorySettings, final ArrayList<PersistorWithPortIndex> upstreamNodes,
         final ArrayList<List<PersistorWithPortIndex>> downstreamNodes) {
-        // TODO Auto-generated method stub
+        throw new IllegalStateException("Not implemented");
 
     }
 
@@ -529,8 +555,7 @@ public class DefWorkflowPersistor implements WorkflowPersistor, TemplateNodeCont
      */
     @Override
     public PortType getDownstreamPortType(final int index) {
-        // TODO Auto-generated method stub
-        return null;
+        throw new IllegalStateException("Not implemented");
     }
 
     /**
@@ -538,8 +563,7 @@ public class DefWorkflowPersistor implements WorkflowPersistor, TemplateNodeCont
      */
     @Override
     public PortType getUpstreamPortType(final int index) {
-        // TODO Auto-generated method stub
-        return null;
+        throw new IllegalStateException("Not implemented");
     }
 
     /**
@@ -547,8 +571,7 @@ public class DefWorkflowPersistor implements WorkflowPersistor, TemplateNodeCont
      */
     @Override
     public void setDirtyAfterLoad() {
-        // TODO Auto-generated method stub
-
+        throw new IllegalStateException("Not implemented");
     }
 
     /**
@@ -556,8 +579,7 @@ public class DefWorkflowPersistor implements WorkflowPersistor, TemplateNodeCont
      */
     @Override
     public void setNameOverwrite(final String nameOverwrite) {
-        // TODO Auto-generated method stub
-
+        throw new IllegalStateException("Not implemented");
     }
 
     /**
@@ -565,8 +587,7 @@ public class DefWorkflowPersistor implements WorkflowPersistor, TemplateNodeCont
      */
     @Override
     public void setOverwriteTemplateInformation(final MetaNodeTemplateInformation templateInfo) {
-        // TODO Auto-generated method stub
-
+        throw new IllegalStateException("Not implemented");
     }
 
 }

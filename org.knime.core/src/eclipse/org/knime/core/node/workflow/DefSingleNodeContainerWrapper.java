@@ -48,13 +48,21 @@
  */
 package org.knime.core.node.workflow;
 
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeSettings;
+import org.knime.core.node.workflow.FlowVariable.Scope;
 import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
 import org.knime.core.node.workflow.def.CoreToDefUtil;
 import org.knime.core.workflow.def.ConfigMapDef;
+import org.knime.core.workflow.def.FlowObjectDef;
 import org.knime.core.workflow.def.SingleNodeDef;
+import org.knime.core.workflow.def.impl.DefaultFlowContextDef;
+import org.knime.core.workflow.def.impl.DefaultFlowMarkerDef;
 
 /**
  *
@@ -121,16 +129,42 @@ public abstract class DefSingleNodeContainerWrapper extends DefNodeContainerWrap
      * {@inheritDoc}
      */
     @Override
-    public ConfigMapDef getFlowStack() {
-        // TODO move logic of this method somewhere else
-        NodeSettings stack = new NodeSettings("flow_stack");
-        FileSingleNodeContainerPersistor.saveFlowObjectStack(stack, m_nc);
-        try {
-            return CoreToDefUtil.toConfigMapDef(stack);
-        } catch (InvalidSettingsException ex) {
-            // TODO
-            throw new RuntimeException(ex);
+    public List<FlowObjectDef> getFlowStack() {
+
+        FlowObjectStack stack = m_nc.getOutgoingFlowObjectStack();
+
+        // make stack iterable
+        Iterable<FlowObject> myObjs = stack == null ? //
+                Collections.emptyList() : //
+                stack.getFlowObjectsOwnedBy(m_nc.getID(), /*exclude*/ Scope.Local);
+
+        List<FlowObjectDef> result = new LinkedList<>();
+
+        for (FlowObject s : myObjs) {
+            FlowObjectDef def;
+            // flow variable
+            if (s instanceof FlowVariable) {
+                def = CoreToDefUtil.toFlowVariableDef((FlowVariable)s);
+            // scope context
+            } else if (s instanceof FlowScopeContext) {
+                String scopeType = s.getClass().getSimpleName();
+                FlowScopeContext context = (FlowScopeContext)s;
+                def = DefaultFlowContextDef.builder()//
+                    .setContextType(scopeType)//
+                    .setActive(!context.isInactiveScope())//
+                    .build();
+                result.add(def);
+            // flow marker
+            } else if (s instanceof InnerFlowLoopExecuteMarker) {
+                def = DefaultFlowMarkerDef.builder().setClassName(s.getClass().getName()).build();
+            } else {
+                throw new IllegalArgumentException(
+                    String.format("No serialization implemented for flow objects of type %s (%s)", s.getClass(), s));
+            }
+            result.add(def);
         }
+
+        return result;
     }
 
 }

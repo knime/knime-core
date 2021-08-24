@@ -64,10 +64,14 @@ import org.knime.core.node.Node;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.config.base.ConfigPasswordEntry;
-import org.knime.core.node.workflow.FlowLoopContext.RestoredFlowLoopContext;
 import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
 import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
+import org.knime.core.node.workflow.def.DefToCoreUtil;
+import org.knime.core.workflow.def.FlowContextDef;
+import org.knime.core.workflow.def.FlowMarkerDef;
+import org.knime.core.workflow.def.FlowObjectDef;
+import org.knime.core.workflow.def.FlowVariableDef;
 import org.knime.core.workflow.def.SingleNodeDef;
 
 /**
@@ -165,7 +169,7 @@ public abstract class DefSingleNodeLoader implements SingleNodeContainerPersisto
         //            setNeedsResetAfterLoad();
         //        }
         try {
-            m_flowObjects = loadFlowObjects(toNodeSettings(m_def.getFlowStack()));
+            m_flowObjects = loadFlowObjects(m_def.getFlowStack());
         } catch (Exception e) {
             //            m_flowObjects = Collections.emptyList();
             String error = "Error loading flow variables: " + e.getMessage();
@@ -177,42 +181,27 @@ public abstract class DefSingleNodeLoader implements SingleNodeContainerPersisto
         exec.setProgress(1.0);
     }
 
-    private List<FlowObject> loadFlowObjects(final NodeSettingsRO flowStack) throws InvalidSettingsException {
-        // TODO duplicated code!!!
+    private static List<FlowObject> loadFlowObjects(final List<FlowObjectDef> list) throws InvalidSettingsException {
+        // placing this in CoreToDef would be nicer, but would require to make package-private class FlowObject public
         List<FlowObject> result = new ArrayList<>();
-        for (String key : flowStack.keySet()) {
-            NodeSettingsRO sub = flowStack.getNodeSettings(key);
-            String type = sub.getString("type");
-            if ("variable".equals(type)) {
-                FlowVariable v = FlowVariable.load(sub);
-                result.add(v);
-            } else if ("loopcontext".equals(type)) {
-                result.add(new RestoredFlowLoopContext());
-                //                int tailID = sub.getInt("tailID");
-            } else if ("loopcontext_execute".equals(type)) {
-                result.add(null); // TODO new InnerFlowLoopContext());
-            } else if ("loopcontext_inactive".equals(type)) {
-                FlowLoopContext flc = new FlowLoopContext();
-                flc.inactiveScope(true);
-                result.add(flc);
-            } else if ("flowcapturecontext".equals(type)) {
-                result.add(new FlowCaptureContext());
-            } else if ("flowcapturecontext_inactive".equals(type)) {
-                FlowScopeContext slc = new FlowCaptureContext();
-                slc.inactiveScope(true);
-                result.add(slc);
-            } else if ("scopecontext".equals(type)) {
-                result.add(new FlowScopeContext());
-            } else if ("scopecontext_inactive".equals(type)) {
-                FlowScopeContext slc = new FlowScopeContext();
-                slc.inactiveScope(true);
-                result.add(slc);
+        for (FlowObjectDef def : list) {
+            if (def instanceof FlowVariableDef) {
+                result.add(DefToCoreUtil.toFlowVariable((FlowVariableDef)def));
+            } else if (def instanceof FlowContextDef) {
+                result.add(DefToCoreUtil.toFlowContext(((FlowContextDef)def)));
+            } else if (def instanceof FlowMarkerDef) {
+                String className = ((FlowMarkerDef)def).getClassName();
+                String innerFlowLoop = InnerFlowLoopExecuteMarker.class.getName();
+                if (innerFlowLoop.equals(className)) {
+                    result.add(new InnerFlowLoopExecuteMarker());
+                }
             } else {
-                throw new InvalidSettingsException("Unknown flow object type: " + type);
+                throw new IllegalArgumentException("Can not load flow object type: " + def);
             }
         }
         return result;
     }
+
 
     private MemoryPolicy loadMemoryPolicySettings(final NodeSettingsRO internalNodeSubSettings)
         throws InvalidSettingsException {
