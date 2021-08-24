@@ -74,6 +74,11 @@ import org.knime.core.node.workflow.ComponentMetadata;
 import org.knime.core.node.workflow.ComponentMetadata.ComponentMetadataBuilder;
 import org.knime.core.node.workflow.EditorUIInformation;
 import org.knime.core.node.workflow.FileNativeNodeContainerPersistor;
+import org.knime.core.node.workflow.FlowCaptureContext;
+import org.knime.core.node.workflow.FlowLoopContext;
+import org.knime.core.node.workflow.FlowLoopContext.RestoredFlowLoopContext;
+import org.knime.core.node.workflow.FlowScopeContext;
+import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.TemplateType;
@@ -106,6 +111,8 @@ import org.knime.core.workflow.def.ConfigValueShortArrayDef;
 import org.knime.core.workflow.def.ConfigValueShortDef;
 import org.knime.core.workflow.def.ConfigValueStringArrayDef;
 import org.knime.core.workflow.def.ConfigValueStringDef;
+import org.knime.core.workflow.def.FlowContextDef;
+import org.knime.core.workflow.def.FlowVariableDef;
 import org.knime.core.workflow.def.NativeNodeDef;
 import org.knime.core.workflow.def.NodeLocksDef;
 import org.knime.core.workflow.def.NodeUIInfoDef;
@@ -425,4 +432,61 @@ public class DefToCoreUtil {
         return new NodeLocks(def.hasDeleteLock(), def.hasResetLock(), def.hasConfigureLock());
     }
 
+    /**
+     * TODO duplicated code
+     *
+     * @param flowContextDef
+     * @return
+     */
+    public static FlowScopeContext toFlowContext(final FlowContextDef def) {
+        if ("loopcontext".equals(def.getContextType())) {
+            return new RestoredFlowLoopContext();
+            //  TODO              int tailID = sub.getInt("tailID");
+        } else if ("loopcontext_execute".equals(def.getContextType())) {
+            return null; // TODO new InnerFlowLoopContext());
+        } else if ("loopcontext_inactive".equals(def.getContextType())) {
+            FlowLoopContext flc = new FlowLoopContext();
+            flc.inactiveScope(true);
+            return flc;
+        } else if ("flowcapturecontext".equals(def.getContextType())) {
+            return new FlowCaptureContext();
+        } else if ("flowcapturecontext_inactive".equals(def.getContextType())) {
+            FlowScopeContext slc = new FlowCaptureContext();
+            slc.inactiveScope(true);
+            return slc;
+        } else if ("scopecontext".equals(def.getContextType())) {
+            return new FlowScopeContext();
+        } else if ("scopecontext_inactive".equals(def.getContextType())) {
+            FlowScopeContext slc = new FlowScopeContext();
+            slc.inactiveScope(true);
+            return slc;
+        } else {
+            throw new IllegalArgumentException("Unknown flow object type: " + def.getContextType());
+        }
+
+    }
+
+    /**
+     * @param def
+     * @return
+     */
+    public static FlowVariable toFlowVariable(final FlowVariableDef def) {
+        // FlowVariable subtypes (e.g. VariableValue) and constructors (new FlowVariable(name, value, scope)
+        // are not visible, so we can't build a more explicit schema like this w/o changing visibility
+        //        final String identifier = def.getObjectClass();
+        //        VariableType<?>[] a = VariableTypeRegistry.getInstance().getAllTypes();
+        //
+        //        final VariableType<?> type = Arrays.stream(a)//
+        //            .filter(t -> identifier.equals(t.getIdentifier()))//
+        //            .findFirst()//
+        //            .orElseThrow(() -> new InvalidSettingsException(
+        //                String.format("No flow variable type for identifier/class '%s'", identifier)));
+        //        var value = type.loadValue(toNodeSettings(def.getValue()));
+        //        FlowVariable.lo
+        try {
+            return FlowVariable.load(toNodeSettings(def.getValue()));
+        } catch (InvalidSettingsException ex) {
+            throw new IllegalArgumentException("Can not load flow variable from " + def, ex);
+        }
+    }
 }

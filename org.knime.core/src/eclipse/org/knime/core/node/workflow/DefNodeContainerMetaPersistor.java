@@ -64,7 +64,10 @@ import org.knime.core.workflow.def.NodeMessageDef;
  * TODO Do we need caching like in the FileNodeContainerMetaPersistor, which has fields like m_jobManager,
  * m_customDescription, etc.?
  *
+ * TODO get rid of this
+ *
  * @author hornm
+ * @author Carl Witt, KNIME GmbH, Berlin, Germany
  */
 public class DefNodeContainerMetaPersistor implements NodeContainerMetaPersistor {
 
@@ -153,8 +156,11 @@ public class DefNodeContainerMetaPersistor implements NodeContainerMetaPersistor
      */
     @Override
     public NodeSettingsRO getExecutionJobSettings() {
-        // TODO initialize m_executionJobSettings
-        throw new IllegalStateException("Not implemented");
+        // TODO initialize m_executionJobSettings/return non-null if executing remotely
+        // e.g., in WorkflowManager#postLoad, we check this using
+        // boolean remoteExec = persistor.getMetaPersistor().getExecutionJobSettings() != null
+        // FileNodeContainerMetaPersistor#saveNodeExecutionJobReconnectInfo (look for CFG_JOB_CONFIG) doesn't seem to do much?
+        return null;
 //        return m_executionJobSettings;
     }
 

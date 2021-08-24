@@ -81,7 +81,7 @@ public class DefComponentLoader extends DefSingleNodeLoader implements SubNodeCo
      */
     @Override
     public WorkflowPersistor getWorkflowPersistor() {
-        return new DefWorkflowPersistor(m_def.getWorkflow(), m_loadHelper);
+        return new DefWorkflowPersistor(m_def, m_def.getWorkflow(), m_loadHelper);
     }
 
     /**

@@ -80,6 +80,7 @@ import org.knime.core.node.config.base.ConfigStringEntry;
 import org.knime.core.node.workflow.ComponentMetadata;
 import org.knime.core.node.workflow.ComponentMetadata.ComponentNodeType;
 import org.knime.core.node.workflow.ConnectionUIInformation;
+import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation;
 import org.knime.core.node.workflow.NodeAnnotation;
 import org.knime.core.node.workflow.NodeContainer.NodeLocks;
@@ -94,6 +95,7 @@ import org.knime.core.workflow.def.ConfigMapDef;
 import org.knime.core.workflow.def.ConfigValueBooleanArrayDef;
 import org.knime.core.workflow.def.ConnectionUISettingsDef;
 import org.knime.core.workflow.def.CoordinateDef;
+import org.knime.core.workflow.def.FlowObjectDef;
 import org.knime.core.workflow.def.JobManagerDef;
 import org.knime.core.workflow.def.NativeNodeDef;
 import org.knime.core.workflow.def.NodeAndBundleInfoDef;
@@ -129,6 +131,7 @@ import org.knime.core.workflow.def.impl.DefaultConfigValueStringArrayDef;
 import org.knime.core.workflow.def.impl.DefaultConfigValueStringDef;
 import org.knime.core.workflow.def.impl.DefaultConnectionUISettingsDef;
 import org.knime.core.workflow.def.impl.DefaultCoordinateDef;
+import org.knime.core.workflow.def.impl.DefaultFlowVariableDef;
 import org.knime.core.workflow.def.impl.DefaultJobManagerDef;
 import org.knime.core.workflow.def.impl.DefaultNodeAndBundleInfoDef;
 import org.knime.core.workflow.def.impl.DefaultNodeAnnotationDef;
@@ -527,6 +530,23 @@ public class CoreToDefUtil {
         } catch (InvalidSettingsException ex) {
             // TODO proper exception handling
             throw new RuntimeException(ex);
+        }
+    }
+
+    /**
+     * @param s
+     * @return
+     */
+    public static FlowObjectDef toFlowVariableDef(final FlowVariable variable) {
+        NodeSettings sub = new NodeSettings("FlowVariable");
+        variable.save(sub);
+        try {
+            return DefaultFlowVariableDef.builder()//
+                .setValue(toConfigMapDef(sub))//
+                .build();
+        } catch (InvalidSettingsException ex) {
+            throw new IllegalArgumentException(
+                "Can not convert flow variable " + variable + " to plain java description.");
         }
     }
 }
