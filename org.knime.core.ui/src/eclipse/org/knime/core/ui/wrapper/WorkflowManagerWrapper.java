@@ -112,7 +112,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      * @return a new wrapper or a already existing one
      */
     public static final WorkflowManagerWrapper wrap(final WorkflowManager wfm) {
-        return (WorkflowManagerWrapper)Wrapper.wrapOrGet(wfm, o -> new WorkflowManagerWrapper(o));
+        return (WorkflowManagerWrapper)Wrapper.wrapOrGet(wfm, WorkflowManagerWrapper::new);
     }
 
     @Override
@@ -222,12 +222,12 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
 
     @Override
     public Set<ConnectionContainerUI> getOutgoingConnectionsFor(final NodeID id, final int portIdx) {
-        return unwrap().getOutgoingConnectionsFor(id, portIdx).stream().map(cc -> ConnectionContainerWrapper.wrap(cc)).collect(Collectors.toSet());
+        return unwrap().getOutgoingConnectionsFor(id, portIdx).stream().map(ConnectionContainerWrapper::wrap).collect(Collectors.toSet());
     }
 
     @Override
     public Set<ConnectionContainerUI> getOutgoingConnectionsFor(final NodeID id) {
-        return unwrap().getOutgoingConnectionsFor(id).stream().map(cc -> ConnectionContainerWrapper.wrap(cc)).collect(Collectors.toSet());
+        return unwrap().getOutgoingConnectionsFor(id).stream().map(ConnectionContainerWrapper::wrap).collect(Collectors.toSet());
     }
 
     @Override
@@ -237,7 +237,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
 
     @Override
     public Set<ConnectionContainerUI> getIncomingConnectionsFor(final NodeID id) {
-        return unwrap().getIncomingConnectionsFor(id).stream().map(cc -> ConnectionContainerWrapper.wrap(cc)).collect(Collectors.toSet());
+        return unwrap().getIncomingConnectionsFor(id).stream().map(ConnectionContainerWrapper::wrap).collect(Collectors.toSet());
     }
 
     @Override

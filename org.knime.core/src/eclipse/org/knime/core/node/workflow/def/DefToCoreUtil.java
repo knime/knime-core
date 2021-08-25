@@ -72,6 +72,7 @@ import org.knime.core.node.workflow.AnnotationData;
 import org.knime.core.node.workflow.AnnotationData.TextAlignment;
 import org.knime.core.node.workflow.ComponentMetadata;
 import org.knime.core.node.workflow.ComponentMetadata.ComponentMetadataBuilder;
+import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.EditorUIInformation;
 import org.knime.core.node.workflow.FileNativeNodeContainerPersistor;
 import org.knime.core.node.workflow.FlowCaptureContext;
@@ -111,6 +112,7 @@ import org.knime.core.workflow.def.ConfigValueShortArrayDef;
 import org.knime.core.workflow.def.ConfigValueShortDef;
 import org.knime.core.workflow.def.ConfigValueStringArrayDef;
 import org.knime.core.workflow.def.ConfigValueStringDef;
+import org.knime.core.workflow.def.ConnectionUISettingsDef;
 import org.knime.core.workflow.def.FlowContextDef;
 import org.knime.core.workflow.def.FlowVariableDef;
 import org.knime.core.workflow.def.NativeNodeDef;
@@ -489,4 +491,20 @@ public class DefToCoreUtil {
             throw new IllegalArgumentException("Can not load flow variable from " + def, ex);
         }
     }
+
+    /**
+     * @param uiSettings
+     * @return connection settings that describe the bend points of the line that is used to represent it
+     */
+    public static ConnectionUIInformation toConnectionUIInformation(final ConnectionUISettingsDef uiSettings) {
+        var resultBuilder = ConnectionUIInformation.builder();
+        if (uiSettings != null && uiSettings.getBendPoints() != null) {
+            int[][] bendPoints = uiSettings.getBendPoints().stream()//
+                .map(coordinate -> new int[]{coordinate.getX(), coordinate.getY()})//
+                .toArray(int[][]::new);
+            resultBuilder.setBendpoints(bendPoints);
+        }
+        return resultBuilder.build();
+    }
+
 }
