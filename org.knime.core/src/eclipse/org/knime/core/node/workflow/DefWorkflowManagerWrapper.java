@@ -111,11 +111,12 @@ public class DefWorkflowManagerWrapper implements WorkflowDef {
                 .orElse(null);
 
             result.add(DefaultConnectionDef.builder()//
-                .setUiSettings(uiInfo)
                 .setSourcePort(connection.getSourcePort())//
                 .setSourceID(connection.getSource().getIndex())//
                 .setDestPort(connection.getDestPort())//
                 .setDestID(connection.getDest().getIndex())//
+                .setUiSettings(uiInfo)//
+                .setDeletable(connection.isDeletable())//
                 .build());
         }
         return result;
@@ -182,10 +183,10 @@ public class DefWorkflowManagerWrapper implements WorkflowDef {
     @Override
     public Map<String, NodeDef> getNodes() {
         return m_wfm.getNodeContainers().stream()//
-            .collect(Collectors.toMap(nc -> nc.getID().toString(), this::getNodeDef));
+            .collect(Collectors.toMap(nc -> Integer.toString(nc.getID().getIndex()), DefWorkflowManagerWrapper::getNodeDef));
     }
 
-    private NodeDef getNodeDef(final NodeContainer nc) {
+    private static NodeDef getNodeDef(final NodeContainer nc) {
         if (nc instanceof WorkflowManager) {
             return new DefMetanodeWrapper((WorkflowManager)nc);
         } else if (nc instanceof NativeNodeContainer) {

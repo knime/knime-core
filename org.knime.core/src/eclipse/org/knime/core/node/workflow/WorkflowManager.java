@@ -8560,14 +8560,12 @@ public final class WorkflowManager extends NodeContainer
             persistorMap.put(id, p);
         }
 
-        System.err.println(persistorMap);
-
         // 3. load more data into some nodes (sub node container to push itself into the virtual in/out)
         // all nodes have been instantiated
         persistor.postLoad(this, loadResult);
 
         try {
-            // 4.
+            // 4. connect (upstream ports, flow objects, hilite,...) and recursively load loaded contents
             postLoad(persistorMap, tblRep, persistor.mustWarnOnDataLoadError(), exec, loadResult, preserveNodeMessage);
         } catch (CanceledExecutionException cee) {
             for (NodeID insertedNodeID : translationMap.values()) {
@@ -8598,10 +8596,15 @@ public final class WorkflowManager extends NodeContainer
         if (autoSaveDirectory != null) {
             autoSaveDirectory.getDeletedNodesFileLocations().addAll(persistor.getObsoleteNodeDirectories());
         }
+
+        // gather node ids of loaded nodes, gather workflow annotations
         Collection<NodeID> resultColl = persistorMap.keySet();
         NodeID[] newIDs = resultColl.toArray(new NodeID[resultColl.size()]);
         WorkflowAnnotation[] newAnnotations = annos.toArray(new WorkflowAnnotation[annos.size()]);
+
+        // mostly empty, except, e.g., for undo delete node
         addConnectionsFromTemplates(persistor.getAdditionalConnectionSet(), loadResult, translationMap, false);
+
         WorkflowCopyContent.Builder result = WorkflowCopyContent.builder();
         result.setAnnotationIDs(getWorkflowAnnotationIDs(newAnnotations));
         result.setNodeIDs(newIDs);
@@ -8909,6 +8912,7 @@ public final class WorkflowManager extends NodeContainer
                 dest = translationMap.get(destSuffix);
                 source = translationMap.get(sourceSuffix);
             }
+            System.out.println(String.format("\tTrying to add connection from %s port %s to %s port %s", source, c.getSourcePort(),dest,c.getDestPort()));
             if (!canAddConnection(source, c.getSourcePort(), dest, c.getDestPort(), true, currentlyLoadingFlow)) {
                 String warn = "Unable to insert connection \"" + c + "\"";
                 LOGGER.warn(warn);

@@ -73,6 +73,7 @@ import org.knime.core.node.workflow.def.DefToCoreUtil;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.workflowalizer.AuthorInformation;
 import org.knime.core.workflow.def.ComponentDef;
+import org.knime.core.workflow.def.ConnectionDef;
 import org.knime.core.workflow.def.MetaNodeDef;
 import org.knime.core.workflow.def.NativeNodeDef;
 import org.knime.core.workflow.def.NodeDef;
@@ -101,6 +102,7 @@ public class DefWorkflowPersistor implements WorkflowPersistor, TemplateNodeCont
      *
      * @param projectDef can be null if the workflow is a sub workflow (e.g., metanode) instead of a project
      * @param def description of the workflow project as a POJO
+     * @param loadHelper provides additional information to the load process, e.g., credentials
      * @param referencingNodeDef non-null description of basic node properties. If this workflow is referenced by a
      *            component or metanode, pass the description of that node. If the workflow is not referenced from a
      *            node, e.g., referenced from a workflow project, use one of the other constructors.
@@ -192,17 +194,22 @@ public class DefWorkflowPersistor implements WorkflowPersistor, TemplateNodeCont
      */
     @Override
     public Set<ConnectionContainerTemplate> getConnectionSet() {
-        return m_def.getConnections().stream().map(def -> {
-            // TODO non-deletable connections?
-            // TODO add and store bendpoints
-            return new ConnectionContainerTemplate(def.getSourceID(), def.getSourceID(), def.getDestID(),
-                def.getDestID(), false, ConnectionUIInformation.builder().build());
-        }).collect(Collectors.toSet());
+        return m_def.getConnections().stream()//
+            .map(DefWorkflowPersistor::toConnectionContainerTemplate)//
+            .collect(Collectors.toSet());
     }
 
     /**
-     * {@inheritDoc}
+     * This should be moved to DefToCoreUtil, but the ConnectionContainerTemplate constructor isn't public
+     *
+     * @param def
+     * @return
      */
+    private static ConnectionContainerTemplate toConnectionContainerTemplate(final ConnectionDef def) {
+        return new ConnectionContainerTemplate(def.getSourceID(), def.getSourcePort(), def.getDestID(),
+            def.getDestPort(), def.isDeletable(), DefToCoreUtil.toConnectionUIInformation(def.getUiSettings()));
+    }
+
     @Override
     public Set<ConnectionContainerTemplate> getAdditionalConnectionSet() {
         return Collections.emptySet();
@@ -476,7 +483,7 @@ public class DefWorkflowPersistor implements WorkflowPersistor, TemplateNodeCont
 
         List<NodeRefDef> nodeRefs = m_def.getNodeRefs();
         for (NodeRefDef nodeRef : nodeRefs) {
-            NodeDef node = m_def.getNodes().get(nodeRef.getReference());
+            NodeDef node = m_def.getNodes().get(Integer.toString(nodeRef.getId()));
             NodeLoader loader;
             if (node instanceof MetaNodeDef) {
                 loader = new DefMetaNodeLoader((MetaNodeDef)node, m_loadHelper);
