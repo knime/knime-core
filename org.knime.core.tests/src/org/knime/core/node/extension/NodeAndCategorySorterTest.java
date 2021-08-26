@@ -58,10 +58,6 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
-import org.apache.log4j.AppenderSkeleton;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.spi.LoggingEvent;
 import org.junit.Test;
 import org.knime.core.node.extension.NodeAndCategorySorter.NodeOrCategory;
 
@@ -126,7 +122,7 @@ public class NodeAndCategorySorterTest {
         Node n3 = new Node("n3", "n1", "");
 
         String logMsg =
-            trackLastErrorLogMessage(() -> NodeAndCategorySorter.sortNodesAndCategories(asList(n1, n2, n3)));
+            trackCodingProblem(() -> NodeAndCategorySorter.sortNodesAndCategories(asList(n1, n2, n3)));
         assertThat("unexpected log message", logMsg, containsString("A cycle in after-relationships"));
     }
 
@@ -160,7 +156,7 @@ public class NodeAndCategorySorterTest {
         Cat c1 = new Cat("c1", "", "");
         Cat c2 = new Cat("c1", "", "");
 
-        String logMsg = trackLastErrorLogMessage(() -> NodeAndCategorySorter.sortNodesAndCategories(asList(c1, c2)));
+        String logMsg = trackCodingProblem(() -> NodeAndCategorySorter.sortNodesAndCategories(asList(c1, c2)));
         assertThat("unexpected log message", logMsg, containsString("Duplicate repository entry IDs detected"));
     }
 
@@ -237,35 +233,14 @@ public class NodeAndCategorySorterTest {
 
     }
 
-    private static String trackLastErrorLogMessage(final Runnable run) {
+    private static String trackCodingProblem(final Runnable run) {
         AtomicReference<String> logMsg = new AtomicReference<>();
-        AtomicReference<Level> level = new AtomicReference<>();
-        AppenderSkeleton logAppender = new AppenderSkeleton() {
-
-            @Override
-            public boolean requiresLayout() {
-                return false;
-            }
-
-            @Override
-            public void close() {
-                //
-            }
-
-            @Override
-            protected void append(final LoggingEvent e) {
-                logMsg.set(e.getMessage().toString());
-                level.set(e.getLevel());
-            }
-        };
-
-        Logger.getRootLogger().addAppender(logAppender);
+        NodeAndCategorySorter.setCodingProblemLogger(logMsg::set);
         try {
             run.run();
         } finally {
-            Logger.getRootLogger().removeAppender(logAppender);
+            NodeAndCategorySorter.setCodingProblemLogger(null);
         }
-        assertThat("unexpected log level", level.get(), is(Level.ERROR));
         return logMsg.get();
     }
 

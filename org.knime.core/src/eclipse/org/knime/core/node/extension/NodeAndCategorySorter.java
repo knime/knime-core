@@ -52,6 +52,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -87,7 +88,7 @@ public final class NodeAndCategorySorter<T extends NodeOrCategory<T>> {
 
     private static final String LAST_ID = "_last_";
 
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(NodeAndCategorySorter.class);
+    private static Consumer<String> codingProblemLogger = getCodingProblemLogger();
 
     // all KNIME plug-ins and the free Marvin extension
     private static final Pattern KNIME_PATTERN =
@@ -167,7 +168,7 @@ public final class NodeAndCategorySorter<T extends NodeOrCategory<T>> {
                 if (predecessor != null) {
                     predecessor.successors.add(item);
                 } else {
-                    LOGGER.coding("After-ID '" + afterId + "' of [" + item.repositoryObject
+                    codingProblemLogger.accept("After-ID '" + afterId + "' of [" + item.repositoryObject
                         + "] does not exist - in plug-in " + item.repositoryObject.getContributingPlugin());
                     last.successors.add(item);
                 }
@@ -197,7 +198,7 @@ public final class NodeAndCategorySorter<T extends NodeOrCategory<T>> {
             Item existing = idToItemMap.get(o.getID());
 
             if (existing != null) {
-                LOGGER.coding(
+                codingProblemLogger.accept(
                     "Duplicate repository entry IDs detected: [" + existing.repositoryObject + "] and [" + o + "].");
                 idToItemMap.put(o.getID() + "_" + System.identityHashCode(o), new Item(o));
             } else {
@@ -210,7 +211,7 @@ public final class NodeAndCategorySorter<T extends NodeOrCategory<T>> {
 
     private void sortItemSuccessors(final Item item, final List<T> result) {
         if (item.processed) {
-            LOGGER.coding("A cycle in after-relationships involving [" + item.repositoryObject
+            codingProblemLogger.accept("A cycle in after-relationships involving [" + item.repositoryObject
                 + "] was detected. Please check the relations.");
             return;
         }
@@ -349,6 +350,23 @@ public final class NodeAndCategorySorter<T extends NodeOrCategory<T>> {
             return m_ext.getAfterID();
         }
 
+    }
+
+    /**
+     * For testing purposes only! Replaces the logger used for coding problems.
+     *
+     * @param the coding-problems-logger
+     */
+    static void setCodingProblemLogger(final Consumer<String> logger) {
+        if (logger != null) {
+            codingProblemLogger = logger;
+        } else {
+            codingProblemLogger = getCodingProblemLogger();
+        }
+    }
+
+    private static Consumer<String> getCodingProblemLogger() {
+        return msg -> NodeLogger.getLogger(NodeAndCategorySorter.class).coding(msg);
     }
 
 }
