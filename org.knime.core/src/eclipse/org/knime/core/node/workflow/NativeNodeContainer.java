@@ -585,7 +585,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
     /** {@inheritDoc} */
     @Override
     void cleanOutPorts(final boolean isLoopRestart) {
-        m_node.cleanOutPorts(isLoopRestart);
+        m_node.cleanOutPorts(isLoopRestart, getParent().getWorkflowDataRepository());
         if (!isLoopRestart) {
             // this should have no affect as m_node.cleanOutPorts() will remove
             // all tables already

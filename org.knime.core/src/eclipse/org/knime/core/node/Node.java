@@ -1206,7 +1206,13 @@ public final class Node implements NodeModelWarningListener {
             Set<BufferedDataTable> disposableTables = collectTableAndReferences(previousInternalHeldTables);
             disposableTables.removeAll(collectTableAndReferences(m_internalHeldPortObjects));
             disposableTables.removeAll(collectTableAndReferences(newOutData));
+            // exec can be null e.g. when parallelizing a node via WorkflowManager#parallelizeLoop
+            // TODO reevaluate as part of AP-17439
+            var dataRepo = exec != null ? (WorkflowDataRepository) exec.getDataRepository() : null;
             for (BufferedDataTable t : disposableTables) {
+                if (dataRepo != null) {
+                    t.removeFromTableRepository(dataRepo, this);
+                }
                 t.clearSingle(this);
             }
         }
@@ -1610,49 +1616,49 @@ public final class Node implements NodeModelWarningListener {
 
     /** Sets output objects to null, disposes tables that are created by
      * this node.
-     * @deprecated Framework code should call {@link #cleanOutPorts(boolean)}
+     * @deprecated Framework code should call {@link #cleanOutPorts(boolean, WorkflowDataRepository)}
      * @noreference This method is not intended to be referenced by clients.
      */
     @Deprecated
     public void cleanOutPorts() {
-        cleanOutPorts(false);
+        cleanOutPorts(false, null);
     }
-
 
     /** Sets output objects to null.
      * @param isLoopRestart If true, does not clear tables that are part
      * of the internally held tables (loop start nodes implements the
      * {@link BufferedDataTableHolder} interface). This can only be true
      * between two loop iterations.
+     * @deprecated Framework code should call {@link #cleanOutPorts(boolean, WorkflowDataRepository)}
      * @noreference This method is not intended to be referenced by clients.
      */
+    @Deprecated
     public void cleanOutPorts(final boolean isLoopRestart) {
-        if (isLoopRestart) { // just as an assertion
-            FlowObjectStack inStack = getFlowObjectStack();
-            FlowLoopContext flc = inStack.peek(FlowLoopContext.class);
-            if (flc != null && flc.isInactiveScope()) {
-                LOGGER.coding("Encountered an inactive FlowLoopContext in a loop restart.");
-                // continue with historically "correct" solution:
-                flc = inStack.peekScopeContext(FlowLoopContext.class, false);
-            }
-            if (flc == null && !this.isModelCompatibleTo(LoopStartNode.class)) {
-                LOGGER.coding("Encountered a loop restart action but there is"
-                        + " no loop context on the flow object stack (node "
-                        + getName() + ")");
-            }
-        }
+    	cleanOutPorts(isLoopRestart, null);
+    }
+
+    /** Sets output objects to null.
+     * @param isLoopRestart If true, does not clear tables that are part
+     * of the internally held tables (loop start nodes implements the
+     * {@link BufferedDataTableHolder} interface). This can only be true
+     * between two loop iterations.
+     * @param dataRepository workflow table repository by which output and internal tables are held (can be null)
+     * @noreference This method is not intended to be referenced by clients.
+     * @since 4.5
+     */
+    public void cleanOutPorts(final boolean isLoopRestart, final WorkflowDataRepository dataRepository) {
+        assertCorrectContext(isLoopRestart);
         LOGGER.debug("clean output ports.");
-        Set<BufferedDataTable> disposableTables =
-            new LinkedHashSet<BufferedDataTable>();
-        for (int i = 0; i < m_outputs.length; i++) {
-            PortObject portObject = m_outputs[i].object;
+        Set<BufferedDataTable> disposableTables = new LinkedHashSet<>();
+        for (Output output : m_outputs) {
+            PortObject portObject = output.object;
             if (portObject instanceof BufferedDataTable) {
                 final BufferedDataTable table = (BufferedDataTable)portObject;
                 table.collectTableAndReferencesOwnedBy(this, disposableTables);
             }
-            m_outputs[i].spec = null;
-            m_outputs[i].object = null;
-            m_outputs[i].summary = null;
+            output.spec = null;
+            output.object = null;
+            output.summary = null;
         }
 
         if (m_internalHeldPortObjects != null) {
@@ -1670,14 +1676,40 @@ public final class Node implements NodeModelWarningListener {
                 m_internalHeldPortObjects = null;
             }
         }
-        for (BufferedDataTable disposable : disposableTables) {
-            disposable.clearSingle(this);
-        }
+        disposeTables(dataRepository, disposableTables);
         // clear temporary tables that have been created during execute
         for (ContainerTable t : m_localTempTables) {
             t.clear();
         }
         m_localTempTables.clear();
+    }
+
+    private void assertCorrectContext(final boolean isLoopRestart) {
+        if (isLoopRestart) { // just as an assertion
+            FlowObjectStack inStack = getFlowObjectStack();
+            FlowLoopContext flc = inStack.peek(FlowLoopContext.class);
+            if (flc != null && flc.isInactiveScope()) {
+                LOGGER.coding("Encountered an inactive FlowLoopContext in a loop restart.");
+                // continue with historically "correct" solution:
+                flc = inStack.peekScopeContext(FlowLoopContext.class, false);
+            }
+            if (flc == null && !this.isModelCompatibleTo(LoopStartNode.class)) {
+                LOGGER.coding("Encountered a loop restart action but there is"
+                        + " no loop context on the flow object stack (node "
+                        + getName() + ")");
+            }
+        }
+    }
+
+    private void disposeTables(final WorkflowDataRepository dataRepository, final Set<BufferedDataTable> disposableTables) {
+        for (BufferedDataTable disposable : disposableTables) {
+            // internal and output tables are both put into the dataRepository in #putOutputTablesIntoGlobalRepository
+            // therefore they must also both removed from the repository
+            if (dataRepository != null) {
+                disposable.removeFromTableRepository(dataRepository, this);
+            }
+            disposable.clearSingle(this);
+        }
     }
 
     private Set<BufferedDataTable> collectTableAndReferences(
@@ -1790,6 +1822,7 @@ public final class Node implements NodeModelWarningListener {
 
     /**
      * Deletes any temporary resources associated with this node.
+     * Any output and intermediate tables must already be removed from the WorkflowDataRepository.
      */
     public void cleanup() {
         m_model.unregisterAllViews();
@@ -1798,7 +1831,8 @@ public final class Node implements NodeModelWarningListener {
         } catch (Throwable t) {
             LOGGER.error(t.getClass().getSimpleName() + " during cleanup of node: " + t.getMessage(), t);
         }
-        cleanOutPorts(false);
+        // all callers
+        cleanOutPorts(false, null);
     }
 
     /**

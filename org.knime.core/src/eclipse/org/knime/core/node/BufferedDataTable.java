@@ -953,29 +953,6 @@ public final class BufferedDataTable implements DataTable, PortObject {
         }
     }
 
-    /** Clears any associated storage, for instance temp files. This call also
-     * clears all referenced tables (if they are owned by the same node).
-     * @param dataOwner The owner of the tables. If
-     * getOwner() != dataOwner, we return immediately.
-     */
-    synchronized void clear(final Node dataOwner) {
-        // only take responsibility for our data tables
-        if (dataOwner != getOwner()) {
-            return;
-        }
-        synchronized (m_isCleared) {
-            if (m_isCleared.booleanValue()) {
-                return;
-            }
-            BufferedDataTable[] references = m_delegate.getReferenceTables();
-            for (BufferedDataTable reference : references) {
-                reference.clear(dataOwner);
-            }
-            m_isCleared.setValue(true);
-            m_delegate.clear();
-        }
-    }
-
     /** Clears any associated storage, for instance temp files. This call does
      * not clear referenced tables owned by the same node.
      * @param dataOwner The owner of the tables. Used for assertion (table
