@@ -226,13 +226,6 @@ public abstract class NodeModel implements ViewableModel {
     /** Holds the input hilite handler for each input. */
     private final HiLiteHandler[] m_inHiLiteHdls;
 
-    /** Hilite adapter returned in
-     * {@link NodeModel#getInHiLiteHandler(int)} when the current in-port
-     * hilite handler is <code>null</code>, e.g. the node is not fully
-     * connected.
-     */
-    private static final HiLiteHandler HILITE_ADAPTER = new HiLiteHandler();
-
     /** Keeps a list of registered views. */
     private final CopyOnWriteArrayList<AbstractNodeView<?>> m_views;
 
@@ -951,8 +944,9 @@ public abstract class NodeModel implements ViewableModel {
      */
     public final HiLiteHandler getInHiLiteHandler(final int inIndex) {
         int correctIndex = getTrueHiliteHandlerPortIndex(inIndex);
+        // return new handler if current in-port hilite handler is null, e.g., if the node is not fully connected
         if (m_inHiLiteHdls[correctIndex] == null) {
-            return HILITE_ADAPTER;
+            m_inHiLiteHdls[correctIndex] = new HiLiteHandler();
         }
         return m_inHiLiteHdls[correctIndex];
     }
