@@ -156,7 +156,7 @@ public abstract class AbstractRpcClient implements RpcClient {
      * @return the node model's server if working local or an empty optional if working remotely.
      */
     @SuppressWarnings("unchecked")
-    private <N extends NodeModel> Optional<RpcServer> createRpcServer() {
+    private static <N extends NodeModel> Optional<RpcServer> createRpcServer() {
         NodeContainer nc = NodeContext.getContext().getNodeContainer();
         if (nc instanceof NativeNodeContainer) {
             N nodeModel = (N)((NativeNodeContainer)nc).getNodeModel();

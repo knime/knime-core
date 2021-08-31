@@ -46,20 +46,38 @@
  */
 package org.knime.core.rpc;
 
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortType;
+import org.knime.core.node.workflow.NodeOutPort;
 
 /**
- * To be implemented by a node model's {@link NodeFactory} if the node model provides a node data service.
+ * Provides generic access to data of a port via remote procedure calls.
+ *
+ * Implementations are currently provided by a temporary extension point. Will need to be provided by the
+ * {@link PortObject}-implementation itself (directly or indirectly).
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
- * @param <M> the node model type available to be accessed by the rpc server
  *
  * @noreference This class is not intended to be referenced by clients.
  * @noextend This class is not intended to be subclassed by clients.
  *
  * @since 4.3
  */
-public interface NodeRpcServerFactory<M extends NodeModel> extends RpcServerFactory<M> {
+public interface NodePortRpcServerFactory extends RpcServerFactory<NodeOutPort> {
+
+    /**
+     * Determines whether this rpc server factory is compatible with the respective port type.
+     *
+     * @param ptype the port type to check the compatibility for
+     * @return <code>true</code> if compatible otherwise <code>false</code>
+     */
+    boolean isCompatible(PortType ptype);
+
+    /**
+     * @return whether the created rpc server can and should be cached or not
+     */
+    default boolean isCachable() {
+        return true;
+    }
 
 }
