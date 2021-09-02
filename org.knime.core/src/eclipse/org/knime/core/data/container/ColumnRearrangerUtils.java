@@ -57,6 +57,7 @@ import org.knime.core.node.util.CheckUtils;
  *
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  * @noreference This class is not intended to be referenced by clients.
+ * @since 4.5
  */
 public final class ColumnRearrangerUtils {
 

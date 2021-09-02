@@ -100,6 +100,7 @@ public interface ValueFactory<R extends ReadAccess, W extends WriteAccess> {
      * Provides the {@link DataTraits}.
      *
      * @return the {@link DataTraits} describing additional info for the data storage
+     * @since 4.5
      */
     default DataTraits getTraits() {
         return DefaultDataTraits.EMPTY;

@@ -123,6 +123,7 @@ public interface TableBackend {
      * @param tables to concatenate
      * @return the concatenated table
      * @throws CanceledExecutionException if execution is canceled by the user
+     * @since 4.5
      */
     KnowsRowCountTable concatenate(ExecutionMonitor progressMonitor, IWriteFileStoreHandler filestoreHandler,
         String rowKeyDuplicateSuffix, boolean duplicatesPreCheck, final BufferedDataTable... tables) throws CanceledExecutionException;
@@ -136,6 +137,7 @@ public interface TableBackend {
      * @param right the right table
      * @return the appended table
      * @throws CanceledExecutionException if execution is canceled by the user
+     * @since 4.5
      */
     KnowsRowCountTable append(ExecutionMonitor progressMonitor, IWriteFileStoreHandler filestoreHandler,
         final BufferedDataTable left, BufferedDataTable right) throws CanceledExecutionException;
@@ -150,6 +152,7 @@ public interface TableBackend {
      * @param context for creating containers
      * @return the rearranged table
      * @throws CanceledExecutionException if execution is canceled by the user
+     * @since 4.5
      */
     KnowsRowCountTable rearrange(ExecutionMonitor progressMonitor,
         IWriteFileStoreHandler filestoreHandler, final ColumnRearranger columnRearranger, BufferedDataTable table,
