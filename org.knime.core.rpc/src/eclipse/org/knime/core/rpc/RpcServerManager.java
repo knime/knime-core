@@ -95,8 +95,8 @@ public final class RpcServerManager {
 
     // Synchronized 'identity' map with weak values (for brief explanation see port rpc server cache).
     // The map keys are identity hash codes of NodeContainers.
-    // (package scope for testing)
-    final Map<Integer, WeakReference<RpcServer>> m_nodeRpcServerCache = Collections.synchronizedMap(new HashMap<>());
+    private final Map<Integer, WeakReference<RpcServer>> m_nodeRpcServerCache =
+        Collections.synchronizedMap(new HashMap<>());
 
     // Synchronized 'identity' map with weak values, because:
     // * thread-safety
@@ -105,8 +105,8 @@ public final class RpcServerManager {
     //   referenced from a RpcServer-impl, buffers table data (TODO soft references would maybe be preferable but
     //   that would keep the PortObjects from being garbage collected when not needed anymore in case they indirectly
     //   referenced by the RpcServer)
-    // (package scope for testing)
-    final Map<Integer, WeakReference<RpcServer>> m_portRpcServerCache = Collections.synchronizedMap(new HashMap<>());
+    private final Map<Integer, WeakReference<RpcServer>> m_portRpcServerCache =
+        Collections.synchronizedMap(new HashMap<>());
 
     /**
      * Returns the singleton instance for this service.
@@ -246,6 +246,24 @@ public final class RpcServerManager {
                     + "but could not process extension %s: %s", cfe.getContributor().getName(), ex.getMessage()), ex);
         }
         return null;
+    }
+
+    /**
+     * For testing purposes only!
+     *
+     * @return the nodeRpcServerCache
+     */
+    public Map<Integer, WeakReference<RpcServer>> getNodeRpcServerCache() {
+        return m_nodeRpcServerCache;
+    }
+
+    /**
+     * For testing purposes only!
+     *
+     * @return the portRpcServerCache
+     */
+    public Map<Integer, WeakReference<RpcServer>> getPortRpcServerCache() {
+        return m_portRpcServerCache;
     }
 
 }
