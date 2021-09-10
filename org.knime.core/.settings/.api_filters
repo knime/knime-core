@@ -2321,22 +2321,22 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/data/TableBackend.java" type="org.knime.core.data.TableBackend">
-        <filter id="403804204">
+        <filter comment="Not public API" id="403804204">
             <message_arguments>
                 <message_argument value="org.knime.core.data.TableBackend"/>
-                <message_argument value="append(ExecutionMonitor, IWriteFileStoreHandler, BufferedDataTable, BufferedDataTable)"/>
+                <message_argument value="append(ExecutionMonitor, IWriteFileStoreHandler, IntSupplier, BufferedDataTable, BufferedDataTable)"/>
             </message_arguments>
         </filter>
-        <filter id="403804204">
+        <filter comment="Not public API" id="403804204">
             <message_arguments>
                 <message_argument value="org.knime.core.data.TableBackend"/>
-                <message_argument value="concatenate(ExecutionMonitor, IWriteFileStoreHandler, String, boolean, BufferedDataTable[])"/>
+                <message_argument value="concatenate(ExecutionMonitor, IWriteFileStoreHandler, IntSupplier, String, boolean, BufferedDataTable[])"/>
             </message_arguments>
         </filter>
-        <filter id="403804204">
+        <filter comment="Not public API" id="403804204">
             <message_arguments>
                 <message_argument value="org.knime.core.data.TableBackend"/>
-                <message_argument value="rearrange(ExecutionMonitor, IWriteFileStoreHandler, ColumnRearranger, BufferedDataTable, ExecutionContext)"/>
+                <message_argument value="rearrange(ExecutionMonitor, IWriteFileStoreHandler, IntSupplier, ColumnRearranger, BufferedDataTable, ExecutionContext)"/>
             </message_arguments>
         </filter>
     </resource>
