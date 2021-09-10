@@ -45,6 +45,8 @@
  */
 package org.knime.core.data;
 
+import java.util.function.IntSupplier;
+
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.container.DataContainerDelegate;
@@ -68,6 +70,7 @@ import org.knime.core.node.ExecutionMonitor;
  *
  * @noreference This interface is not intended to be referenced by clients.
  * @noextend This interface is not intended to be extended by clients.
+ * @noimplement This interface is not intended to be implemented by clients.
  *
  * @apiNote This interface can change with future releases of KNIME Analytics Platform.
  */
@@ -118,21 +121,25 @@ public interface TableBackend {
      *
      * @param progressMonitor used to report progress
      * @param filestoreHandler for dealing with filestores
-     * @param rowKeyDuplicateSuffix TODO
-     * @param duplicatesPreCheck TODO
+     * @param tableIdSupplier provides IDs for potentially created ContainerTables
+     * @param rowKeyDuplicateSuffix the suffix for duplicate row keys
+     * @param duplicatesPreCheck flag to check the row keys for duplicates (only takes effect if rowKeyDuplicateSuffix
+     *            is null)
      * @param tables to concatenate
      * @return the concatenated table
      * @throws CanceledExecutionException if execution is canceled by the user
      * @since 4.5
      */
     KnowsRowCountTable concatenate(ExecutionMonitor progressMonitor, IWriteFileStoreHandler filestoreHandler,
-        String rowKeyDuplicateSuffix, boolean duplicatesPreCheck, final BufferedDataTable... tables) throws CanceledExecutionException;
+        IntSupplier tableIdSupplier, String rowKeyDuplicateSuffix, boolean duplicatesPreCheck,
+        final BufferedDataTable... tables) throws CanceledExecutionException;
 
     /**
      * Appends the provided tables in the column dimension.
      *
      * @param progressMonitor used to report progress
      * @param filestoreHandler for dealing with filestores
+     * @param tableIdSupplier provides IDs for potentially created ContainerTables
      * @param left the left table
      * @param right the right table
      * @return the appended table
@@ -140,13 +147,15 @@ public interface TableBackend {
      * @since 4.5
      */
     KnowsRowCountTable append(ExecutionMonitor progressMonitor, IWriteFileStoreHandler filestoreHandler,
-        final BufferedDataTable left, BufferedDataTable right) throws CanceledExecutionException;
+        IntSupplier tableIdSupplier, final BufferedDataTable left, BufferedDataTable right)
+        throws CanceledExecutionException;
 
     /**
      * Applies the provided ColumnRearranger on the provided table.
      *
      * @param progressMonitor for reporting progress
      * @param filestoreHandler for dealing with filestores
+     * @param tableIdSupplier provides IDs for potentially created ContainerTables
      * @param columnRearranger defines how to transform the table
      * @param table to transform
      * @param context for creating containers
@@ -155,7 +164,7 @@ public interface TableBackend {
      * @since 4.5
      */
     KnowsRowCountTable rearrange(ExecutionMonitor progressMonitor,
-        IWriteFileStoreHandler filestoreHandler, final ColumnRearranger columnRearranger, BufferedDataTable table,
-        ExecutionContext context) throws CanceledExecutionException;
+        IWriteFileStoreHandler filestoreHandler, IntSupplier tableIdSupplier, final ColumnRearranger columnRearranger,
+        BufferedDataTable table, ExecutionContext context) throws CanceledExecutionException;
 
 }

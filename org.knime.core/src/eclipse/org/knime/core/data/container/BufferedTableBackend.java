@@ -49,6 +49,7 @@
 package org.knime.core.data.container;
 
 import java.util.Optional;
+import java.util.function.IntSupplier;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.IDataRepository;
@@ -72,7 +73,6 @@ import org.knime.core.node.ExecutionMonitor;
  * @since 4.3
  *
  * @noreference This interface is not intended to be referenced by clients.
- * @noextend This interface is not intended to be extended by clients.
  */
 public final class BufferedTableBackend implements TableBackend {
 
@@ -130,8 +130,8 @@ public final class BufferedTableBackend implements TableBackend {
 
     @Override
     public KnowsRowCountTable concatenate(final ExecutionMonitor exec, final IWriteFileStoreHandler filestoreHandler,
-        final String rowKeyDuplicateSuffix, final boolean duplicatesPreCheck, final BufferedDataTable... tables)
-        throws CanceledExecutionException {
+        final IntSupplier tableIdSupplier, final String rowKeyDuplicateSuffix, final boolean duplicatesPreCheck,
+        final BufferedDataTable... tables) throws CanceledExecutionException {
         if (duplicatesPreCheck && rowKeyDuplicateSuffix == null) {
             return ConcatenateTable.create(exec, tables);
         } else {
@@ -142,14 +142,16 @@ public final class BufferedTableBackend implements TableBackend {
 
     @Override
     public KnowsRowCountTable append(final ExecutionMonitor exec, final IWriteFileStoreHandler filestoreHandler,
-        final BufferedDataTable left, final BufferedDataTable right) throws CanceledExecutionException {
+        final IntSupplier tableIdSupplier, final BufferedDataTable left, final BufferedDataTable right)
+        throws CanceledExecutionException {
         return JoinedTable.create(left, right, exec);
     }
 
     @Override
     public KnowsRowCountTable rearrange(final ExecutionMonitor progressMonitor,
-        final IWriteFileStoreHandler filestoreHandler, final ColumnRearranger columnRearranger,
-        final BufferedDataTable table, final ExecutionContext context) throws CanceledExecutionException {
+        final IWriteFileStoreHandler filestoreHandler, final IntSupplier tableIdSupplier,
+        final ColumnRearranger columnRearranger, final BufferedDataTable table, final ExecutionContext context)
+        throws CanceledExecutionException {
         return RearrangeColumnsTable.create(columnRearranger, table, progressMonitor, context);
     }
 

@@ -429,7 +429,9 @@ public class ExecutionContext extends ExecutionMonitor {
             final BufferedDataTable in, final ColumnRearranger rearranger,
             final ExecutionMonitor subProgressMon)
             throws CanceledExecutionException {
-        var t = getTableBackend().rearrange(subProgressMon, m_fileStoreHandler, rearranger, in, this);
+        var t = getTableBackend().rearrange(subProgressMon, m_fileStoreHandler, m_dataRepository::generateNewID,
+            rearranger, in, this);
+        registerAsLocalTableIfContainerTable(t);
         var out = BufferedDataTable.wrapTableFromTableBackend(t, m_dataRepository);
         out.setOwnerRecursively(m_node);
         return out;
@@ -516,10 +518,11 @@ public class ExecutionContext extends ExecutionMonitor {
      * is empty.
      * @throws NullPointerException If any argument is <code>null</code>.
      */
-    public BufferedDataTable createConcatenateTable(
-            final ExecutionMonitor exec, final BufferedDataTable... tables)
+    public BufferedDataTable createConcatenateTable(final ExecutionMonitor exec, final BufferedDataTable... tables)
         throws CanceledExecutionException {
-        final KnowsRowCountTable table = getTableBackend().concatenate(exec, m_fileStoreHandler, null, true, tables);
+        final KnowsRowCountTable table = getTableBackend().concatenate(exec, m_fileStoreHandler,
+            m_dataRepository::generateNewID, null, true, tables);
+        registerAsLocalTableIfContainerTable(table);
         final var out = BufferedDataTable.wrapTableFromTableBackend(table, getDataRepository());
         out.setOwnerRecursively(m_node);
         return out;
@@ -561,9 +564,10 @@ public class ExecutionContext extends ExecutionMonitor {
      */
     public BufferedDataTable createConcatenateTable(final ExecutionMonitor exec,
         final Optional<String> rowKeyDuplicateSuffix, final boolean duplicatesPreCheck,
-        final BufferedDataTable... tables)
-        throws CanceledExecutionException {
-        final KnowsRowCountTable concatenated = getTableBackend().concatenate(exec, m_fileStoreHandler, rowKeyDuplicateSuffix.orElse(null), duplicatesPreCheck, tables);
+        final BufferedDataTable... tables) throws CanceledExecutionException {
+        final KnowsRowCountTable concatenated = getTableBackend().concatenate(exec, m_fileStoreHandler,
+            m_dataRepository::generateNewID, rowKeyDuplicateSuffix.orElse(null), duplicatesPreCheck, tables);
+        registerAsLocalTableIfContainerTable(concatenated);
         var out = BufferedDataTable.wrapTableFromTableBackend(concatenated, m_dataRepository);
         out.setOwnerRecursively(m_node);
         return out;
@@ -603,10 +607,11 @@ public class ExecutionContext extends ExecutionMonitor {
      *             or non-matching rows.
      * @see DataTableSpec#DataTableSpec(DataTableSpec, DataTableSpec)
      */
-    public BufferedDataTable createJoinedTable(final BufferedDataTable left,
-            final BufferedDataTable right, final ExecutionMonitor exec)
-        throws CanceledExecutionException {
-        KnowsRowCountTable jt = getTableBackend().append(exec, m_fileStoreHandler, left, right);
+    public BufferedDataTable createJoinedTable(final BufferedDataTable left, final BufferedDataTable right,
+        final ExecutionMonitor exec) throws CanceledExecutionException {
+        KnowsRowCountTable jt =
+            getTableBackend().append(exec, m_fileStoreHandler, m_dataRepository::generateNewID, left, right);
+        registerAsLocalTableIfContainerTable(jt);
         var out = BufferedDataTable.wrapTableFromTableBackend(jt, getDataRepository());
         out.setOwnerRecursively(m_node);
         return out;
@@ -655,7 +660,8 @@ public class ExecutionContext extends ExecutionMonitor {
         // reference blob cells that are created in a different table but
         // on the same node (other table not yet in global repository - and
         // maybe never will). The arg table is added to the local rep during
-        // DataContainer#close but it can remove itself during clear()...
+        // DataContainer#close (or by one of the methods delegating to the TableBackend)
+        // but it can remove itself during clear()...
         // that's why we do it here.
         m_localTableRepository.removeTable(id);
     }
@@ -781,6 +787,12 @@ public class ExecutionContext extends ExecutionMonitor {
     /** Called when node was canceled. */
     void onCancel() {
         m_localTableRepository.onCancel();
+    }
+
+    private void registerAsLocalTableIfContainerTable(final KnowsRowCountTable table) {
+        if (table instanceof ContainerTable) {
+            m_localTableRepository.addTable((ContainerTable)table);
+        }
     }
 
     /**
