@@ -67,11 +67,6 @@ import org.knime.core.table.access.VarBinaryAccess.VarBinaryWriteAccess;
 import org.knime.core.table.schema.DataSpec;
 import org.knime.core.table.schema.VarBinaryDataSpec;
 import org.knime.core.table.schema.VarBinaryDataSpec.ObjectDeserializer;
-import org.knime.core.table.schema.traits.DataTrait;
-import org.knime.core.table.schema.traits.DataTrait.DictEncodingTrait;
-import org.knime.core.table.schema.traits.DataTraits;
-import org.knime.core.table.schema.traits.DefaultDataTraits;
-import org.knime.core.table.schema.traits.DefaultListDataTraits;
 
 /**
  * {@link ValueFactory} to write and read arbitrary {@link DataCell}s. Needs special casing in corresponding
@@ -155,11 +150,6 @@ public final class DataCellValueFactory implements ValueFactory<VarBinaryReadAcc
     @Override
     public DataSpec getSpec() {
         return VarBinaryDataSpec.INSTANCE;
-    }
-
-    @Override
-    public DataTraits getTraits() {
-        return new DefaultListDataTraits(new DataTrait[0], new DefaultDataTraits(new DictEncodingTrait(true)));
     }
 
     private final static class DataCellInvocationHandler implements InvocationHandler {
