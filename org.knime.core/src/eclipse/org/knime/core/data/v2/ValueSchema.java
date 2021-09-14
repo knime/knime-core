@@ -90,6 +90,7 @@ import org.knime.core.data.v2.value.StringSparseListValueFactory;
 import org.knime.core.data.v2.value.VoidRowKeyFactory;
 import org.knime.core.data.v2.value.VoidValueFactory;
 import org.knime.core.data.v2.value.cell.DataCellValueFactory;
+import org.knime.core.data.v2.value.cell.DictEncodedDataCellValueFactory;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -105,6 +106,7 @@ import org.knime.core.node.NodeSettingsWO;
  * @noreference This class is not intended to be referenced by clients.
  */
 // TODO do we want to interface this?
+@SuppressWarnings("deprecation")
 public final class ValueSchema {
 
     private final DataTableSpec m_spec;
@@ -190,7 +192,7 @@ public final class ValueSchema {
                 factory = instantiateValueFactory(factoryClass.get());
             } else {
                 // Use the fallback which works for all cells
-                factory = new DataCellValueFactory(cellSerializerFactory, fileStoreHandler, type);
+                factory = new DictEncodedDataCellValueFactory(cellSerializerFactory, fileStoreHandler, type);
             }
         }
 

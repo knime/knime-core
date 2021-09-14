@@ -91,7 +91,7 @@ import org.knime.core.data.v2.value.StringListValueFactory;
 import org.knime.core.data.v2.value.StringSetValueFactory;
 import org.knime.core.data.v2.value.StringSparseListValueFactory;
 import org.knime.core.data.v2.value.VoidRowKeyFactory;
-import org.knime.core.data.v2.value.cell.DataCellValueFactory;
+import org.knime.core.data.v2.value.cell.DictEncodedDataCellValueFactory;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
@@ -112,7 +112,7 @@ public class ValueSchemaTest {
         for (final DataType type : dataTypes) {
             final Optional<Class<? extends ValueFactory<?, ?>>> optFactoryClass = registry.getValueFactoryFor(type);
             final Class<? extends ValueFactory<?, ?>> factoryClass =
-                optFactoryClass.isPresent() ? optFactoryClass.get() : DataCellValueFactory.class;
+                optFactoryClass.isPresent() ? optFactoryClass.get() : DictEncodedDataCellValueFactory.class;
             try {
                 testSchemaSaveLoadDataType(type, factoryClass);
             } catch (final Exception e) { // NOSONAR: We fail on every exception by adding our message.

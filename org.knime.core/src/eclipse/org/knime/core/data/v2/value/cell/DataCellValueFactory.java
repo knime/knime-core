@@ -77,8 +77,12 @@ import org.knime.core.table.schema.VarBinaryDataSpec.ObjectDeserializer;
  *
  * @noinstantiate This class is not intended to be instantiated by clients.
  * @noreference This class is not intended to be referenced by clients.
+ * @deprecated since 4.5, replaced by {@link DictEncodedDataCellValueFactory}. We still need the
+ *             {@link DataCellValueFactory} class to remain backward compatible, old workflows might load
+ *             {@link DataCell}s by specifying the {@link DataCellValueFactory} explicitly.
  */
-public final class DataCellValueFactory implements ValueFactory<VarBinaryReadAccess, VarBinaryWriteAccess> {
+@Deprecated
+public class DataCellValueFactory implements ValueFactory<VarBinaryReadAccess, VarBinaryWriteAccess> {
 
     private DataCellSerializerFactory m_factory;
 
