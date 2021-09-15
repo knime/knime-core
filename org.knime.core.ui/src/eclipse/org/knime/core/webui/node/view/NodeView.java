@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -42,58 +43,91 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on Apr 16, 2013 by Berthold
+ * History
+ *   Aug 23, 2021 (hornm): created
  */
-package org.knime.core.node.interactive;
+package org.knime.core.webui.node.view;
 
-import org.knime.core.node.web.ValidationError;
+import java.util.Optional;
 
+import org.knime.core.webui.data.ApplyDataService;
+import org.knime.core.webui.data.DataService;
+import org.knime.core.webui.data.InitialDataService;
+import org.knime.core.webui.page.Page;
 
-
-
-/** Interface for NodeModels that support interactive views and repeated
- * execution when the view has been modified by the user.
+/**
+ * Represents a view of a node.
  *
- * @author B. Wiswedel, Th. Gabriel, M. Berthold
- * @param <REP> The concrete class of the {@link ViewContent} acting as representation of the view.
- * @param <VAL> The concrete class of the {@link ViewContent} acting as value of the view.
- * @since 2.8
+ * @author Martin Horn, KNIME GmbH, Konstanz, Germany
+ *
+ * @since 4.5
  */
-public interface InteractiveNode<REP extends ViewContent, VAL extends ViewContent> extends ReExecutable<VAL> {
+public final class NodeView {
+
+    private final Page m_page;
+
+    private final DataService m_dataService;
+
+    private final InitialDataService m_initialDataService;
+
+    private final ApplyDataService m_applyDataService;
+
+    NodeView(final Page p, final InitialDataService initialDataService, final DataService dataService,
+        final ApplyDataService persistService) {
+        m_page = p;
+        m_dataService = dataService;
+        m_initialDataService = initialDataService;
+        m_applyDataService = persistService;
+    }
 
     /**
-     * Create content which can be used by the interactive view implementation.
-     * @return View representation implementation required for the interactive view.
-     * @since 2.10
+     * Returns the (html) page which represents the view UI.
+     *
+     * @return the page
      */
-    REP getViewRepresentation();
+    public Page getPage() {
+        return m_page;
+    }
 
     /**
-     * @return View value implementation required for the interactive view.
-     * @since 2.10
+     * @return optional service that provides data for initialization of the node view
      */
-    VAL getViewValue();
+    public Optional<InitialDataService> getInitialDataService() {
+        return Optional.ofNullable(m_initialDataService);
+    }
 
     /**
-     * @param viewContent The view content to load.
-     * @return error or null if OK.
-     * @since 2.10
+     * @return optional service generally providing data to the node view
      */
-    ValidationError validateViewValue(VAL viewContent);
+    public Optional<DataService> getDataService() {
+        return Optional.ofNullable(m_dataService);
+    }
 
     /**
-     * @param viewContent The view content to load.
-     * @param useAsDefault True if node settings are to be updated by view content.
-     * @since 2.10
+     * @return optional service to apply node view data
      */
-    void loadViewValue(VAL viewContent, boolean useAsDefault);
+    public Optional<ApplyDataService> getApplyDataService() {
+        return Optional.ofNullable(m_applyDataService);
+    }
 
     /**
-     * {@inheritDoc}
+     * Creates a node view instance from a {@link Page}
+     *
+     * @param p the page to create the node view from
+     * @return a new node view instance
      */
-    @Override
-    default void preReExecute(final VAL data, final boolean isNewDefault) {
-        loadViewValue(data, isNewDefault);
+    public static NodeView create(final Page p) {
+        return new NodeView(p, null, null, null);
+    }
+
+    /**
+     * Creates a new node view builder.
+     *
+     * @param p the page to initialize the builder with
+     * @return a new node view builder instance
+     */
+    public static NodeViewBuilder builder(final Page p) {
+        return new NodeViewBuilder(p);
     }
 
 }

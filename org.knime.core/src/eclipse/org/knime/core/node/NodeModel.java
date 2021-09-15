@@ -66,8 +66,8 @@ import org.knime.core.data.filestore.FileStorePortObject;
 import org.knime.core.data.filestore.FileStoreUtil;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.node.AbstractNodeView.ViewableModel;
-import org.knime.core.node.interactive.InteractiveNode;
 import org.knime.core.node.interactive.InteractiveView;
+import org.knime.core.node.interactive.ReExecutable;
 import org.knime.core.node.interactive.ViewContent;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
@@ -548,16 +548,16 @@ public abstract class NodeModel implements ViewableModel {
             if (!exEnv.reExecute()) {
                 outData = execute(data, exec);
             } else {
-                //FIXME: implement reexecution with loading view content and execute
-                if (this instanceof InteractiveNode) {
-                    InteractiveNode iThis = (InteractiveNode)this;
-                    ViewContent viewContent = exEnv.getPreExecuteViewContent();
-                    iThis.loadViewValue(viewContent, exEnv.getUseAsDefault());
+                if (this instanceof ReExecutable) {
+                    @SuppressWarnings("rawtypes")
+                    ReExecutable reExecutable = (ReExecutable)this; // NOSONAR
+                    Object preReexecData = exEnv.getPreReExecuteData();
+                    reExecutable.preReExecute(preReexecData, exEnv.getUseAsDefault());
                     outData = execute(data, exec);
                 } else if (this instanceof LoopStartNode) {
                     outData = execute(data, exec);
                 } else {
-                    m_logger.coding("Cannot re-execute non interactive node. Using normal execute instead.");
+                    m_logger.coding("Cannot re-execute non-reexecutable node. Using normal execute instead.");
                     outData = execute(data, exec);
                 }
             }

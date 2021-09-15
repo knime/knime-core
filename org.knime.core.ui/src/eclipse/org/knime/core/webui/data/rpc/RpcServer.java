@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -42,58 +43,57 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on Apr 16, 2013 by Berthold
+ * History
+ *   Jul 13, 2020 (hornm): created
  */
-package org.knime.core.node.interactive;
+package org.knime.core.webui.data.rpc;
 
-import org.knime.core.node.web.ValidationError;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
-
-
-
-/** Interface for NodeModels that support interactive views and repeated
- * execution when the view has been modified by the user.
+/**
+ * An {@link RpcServer} implementation is used to serve remote requests to one or more node data services.
  *
- * @author B. Wiswedel, Th. Gabriel, M. Berthold
- * @param <REP> The concrete class of the {@link ViewContent} acting as representation of the view.
- * @param <VAL> The concrete class of the {@link ViewContent} acting as value of the view.
- * @since 2.8
+ * @author Martin Horn, KNIME GmbH, Konstanz, Germany
+ * @author Carl Witt, KNIME AG, Zurich, Switzerland
+ *
+ * @noreference This class is not intended to be referenced by clients.
+ * @noextend This class is not intended to be subclassed by clients.
+ *
+ * @since 4.3
  */
-public interface InteractiveNode<REP extends ViewContent, VAL extends ViewContent> extends ReExecutable<VAL> {
+public interface RpcServer {
 
     /**
-     * Create content which can be used by the interactive view implementation.
-     * @return View representation implementation required for the interactive view.
-     * @since 2.10
+     * Returns the service implementation associated to the name <code>serviceInterface.getSimpleName()</code>
+     * @param <S> the node data service interface (i.e., the methods offered by the node model to the node dialog/view
+     *            to retrieve data)
+     * @param serviceInterface an interface the handler implements
+     * @return an implementation of the service interface
      */
-    REP getViewRepresentation();
-
-    /**
-     * @return View value implementation required for the interactive view.
-     * @since 2.10
-     */
-    VAL getViewValue();
-
-    /**
-     * @param viewContent The view content to load.
-     * @return error or null if OK.
-     * @since 2.10
-     */
-    ValidationError validateViewValue(VAL viewContent);
-
-    /**
-     * @param viewContent The view content to load.
-     * @param useAsDefault True if node settings are to be updated by view content.
-     * @since 2.10
-     */
-    void loadViewValue(VAL viewContent, boolean useAsDefault);
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    default void preReExecute(final VAL data, final boolean isNewDefault) {
-        loadViewValue(data, isNewDefault);
+    default <S> S getHandler(final Class<S> serviceInterface) {
+        return getHandler(serviceInterface.getSimpleName());
     }
+
+    /**
+     * See {@link #getHandler(Class)}.
+     *
+     * @param <S> the node data service interface (i.e., the methods offered by the node model to the node dialog/view
+     *            to retrieve data)
+     * @param serviceName the name of the interface that identifies the implementation of the node data service
+     *            interface to return
+     * @return a service implementation
+     */
+    <S> S getHandler(String serviceName);
+
+    /**
+     * Handles a single request.
+     *
+     * @param in contains the request
+     * @param out receives the response
+     * @throws IOException
+     */
+    void handleRequest(InputStream in, OutputStream out) throws IOException;
 
 }

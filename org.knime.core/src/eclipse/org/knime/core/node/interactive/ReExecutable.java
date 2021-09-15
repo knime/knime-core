@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -42,58 +43,29 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on Apr 16, 2013 by Berthold
+ * History
+ *   Sep 9, 2021 (hornm): created
  */
 package org.knime.core.node.interactive;
 
-import org.knime.core.node.web.ValidationError;
+import org.knime.core.node.NodeModel;
 
-
-
-
-/** Interface for NodeModels that support interactive views and repeated
- * execution when the view has been modified by the user.
+/**
+ * A node model that can be re-executed with new data.
  *
- * @author B. Wiswedel, Th. Gabriel, M. Berthold
- * @param <REP> The concrete class of the {@link ViewContent} acting as representation of the view.
- * @param <VAL> The concrete class of the {@link ViewContent} acting as value of the view.
- * @since 2.8
+ * @author Martin Horn, KNIME GmbH, Konstanz, Germany
+ * @param <D> the type of the data object to re-execute the node with
+ *
+ * @since 4.5
  */
-public interface InteractiveNode<REP extends ViewContent, VAL extends ViewContent> extends ReExecutable<VAL> {
+public interface ReExecutable<D> {
 
     /**
-     * Create content which can be used by the interactive view implementation.
-     * @return View representation implementation required for the interactive view.
-     * @since 2.10
+     * Called right before the {@link NodeModel}s execute-method is called for re-execution.
+     *
+     * @param data the new data to re-execute the node with
+     * @param isNewDefault if <code>true</code> the new data will be stored as new defaults
      */
-    REP getViewRepresentation();
-
-    /**
-     * @return View value implementation required for the interactive view.
-     * @since 2.10
-     */
-    VAL getViewValue();
-
-    /**
-     * @param viewContent The view content to load.
-     * @return error or null if OK.
-     * @since 2.10
-     */
-    ValidationError validateViewValue(VAL viewContent);
-
-    /**
-     * @param viewContent The view content to load.
-     * @param useAsDefault True if node settings are to be updated by view content.
-     * @since 2.10
-     */
-    void loadViewValue(VAL viewContent, boolean useAsDefault);
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    default void preReExecute(final VAL data, final boolean isNewDefault) {
-        loadViewValue(data, isNewDefault);
-    }
+    void preReExecute(D data, boolean isNewDefault);
 
 }

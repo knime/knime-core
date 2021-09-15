@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -42,58 +43,43 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on Apr 16, 2013 by Berthold
+ * History
+ *   Sep 8, 2021 (hornm): created
  */
-package org.knime.core.node.interactive;
+package org.knime.core.webui.data.json;
 
-import org.knime.core.node.web.ValidationError;
+import org.knime.core.webui.data.text.TextInitialDataService;
 
-
-
-
-/** Interface for NodeModels that support interactive views and repeated
- * execution when the view has been modified by the user.
+/**
+ * Implementation of the {@link TextInitialDataService} where the returned initial data is serialized into a JSON object
+ * string.
  *
- * @author B. Wiswedel, Th. Gabriel, M. Berthold
- * @param <REP> The concrete class of the {@link ViewContent} acting as representation of the view.
- * @param <VAL> The concrete class of the {@link ViewContent} acting as value of the view.
- * @since 2.8
+ * @author Martin Horn, KNIME GmbH, Konstanz, Germany
+ * @param <D> the type of the data object for initialization
+ *
+ * @since 4.5
  */
-public interface InteractiveNode<REP extends ViewContent, VAL extends ViewContent> extends ReExecutable<VAL> {
-
-    /**
-     * Create content which can be used by the interactive view implementation.
-     * @return View representation implementation required for the interactive view.
-     * @since 2.10
-     */
-    REP getViewRepresentation();
-
-    /**
-     * @return View value implementation required for the interactive view.
-     * @since 2.10
-     */
-    VAL getViewValue();
-
-    /**
-     * @param viewContent The view content to load.
-     * @return error or null if OK.
-     * @since 2.10
-     */
-    ValidationError validateViewValue(VAL viewContent);
-
-    /**
-     * @param viewContent The view content to load.
-     * @param useAsDefault True if node settings are to be updated by view content.
-     * @since 2.10
-     */
-    void loadViewValue(VAL viewContent, boolean useAsDefault);
+public interface JsonInitialDataService<D> extends TextInitialDataService {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    default void preReExecute(final VAL data, final boolean isNewDefault) {
-        loadViewValue(data, isNewDefault);
+    default String getInitialData() {
+        return toJson(getInitialDataObject());
     }
+
+    /**
+     * @return a object representing the initial data
+     */
+    D getInitialDataObject();
+
+    /**
+     * Turns the initial data object into a JSON-string.
+     *
+     * @param dataObject
+     * @return the json-serialized initial data object
+     */
+    String toJson(D dataObject);
 
 }

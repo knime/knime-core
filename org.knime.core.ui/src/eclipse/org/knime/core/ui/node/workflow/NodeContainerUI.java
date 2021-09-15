@@ -77,8 +77,8 @@ import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodeUIInformationListener;
 import org.knime.core.node.workflow.OutPortView;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.rpc.AbstractRpcClient;
 import org.knime.core.ui.UI;
+import org.knime.core.webui.data.rpc.AbstractRpcClient;
 
 /**
  * UI-interface that mirrors the {@link NodeContainer}.

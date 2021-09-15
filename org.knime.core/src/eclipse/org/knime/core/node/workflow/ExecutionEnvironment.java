@@ -61,14 +61,14 @@ public final class ExecutionEnvironment {
     public static final ExecutionEnvironment DEFAULT = new ExecutionEnvironment();
 
     private final boolean m_reExecute;
-    private final ViewContent m_viewContent;
+    private final Object m_preReExecData;
     private final boolean m_useAsNewDefault;
 
     /** Default constructor: no re-execution, don't preload ViewContent.
      */
     public ExecutionEnvironment() {
         m_reExecute = false;
-        m_viewContent = null;
+        m_preReExecData = null;
         m_useAsNewDefault = false;
     }
 
@@ -77,10 +77,24 @@ public final class ExecutionEnvironment {
      * @param reExecute flag indicating if nodes is to be re-executed.
      * @param preExecVC view content to be loaded into node before execution
      * @since 2.10
+     * @deprecated use the more generic {@link #ExecutionEnvironment(boolean, Object, boolean)} instead
      */
+    @Deprecated(since = "4.5")
     public ExecutionEnvironment(final boolean reExecute, final ViewContent preExecVC, final boolean useAsNewDefault) {
+        this(reExecute, (Object) preExecVC, useAsNewDefault);
+    }
+
+    /**
+     * Setup default environment with new parameters.
+     *
+     * @param reExecute flag indicating if node is to be re-executed
+     * @param preReExecData data to be provided to the node prior re-execution
+     * @param useAsNewDefault whether the provided data shall be used a new default
+     * @since 4.5
+     */
+    public ExecutionEnvironment(final boolean reExecute, final Object preReExecData, final boolean useAsNewDefault) {
         m_reExecute = reExecute;
-        m_viewContent = preExecVC;
+        m_preReExecData = preReExecData;
         m_useAsNewDefault = useAsNewDefault;
     }
 
@@ -93,9 +107,23 @@ public final class ExecutionEnvironment {
 
     /**
      * @return {@link ViewContent} to be loaded before (re)execution.
+     * @throws IllegalStateException if the pre-reexecution data is not of type {@link ViewContent}
+     * @deprecated use the more generic {@link #getPreReExecuteData()} instead
      */
+    @Deprecated(since = "4.5")
     public ViewContent getPreExecuteViewContent() {
-        return m_viewContent;
+        if (m_preReExecData instanceof ViewContent) {
+            return (ViewContent)m_preReExecData;
+        } else {
+            throw new IllegalStateException("Data provided for the node for re-execution is not of type ViewContent");
+        }
+    }
+
+    /**
+     * @return data that is provided to a node prior its re-execution
+     */
+    public Object getPreReExecuteData() {
+        return m_preReExecData;
     }
 
     /**

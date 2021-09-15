@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -42,58 +43,41 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on Apr 16, 2013 by Berthold
  */
-package org.knime.core.node.interactive;
+package org.knime.core.webui.data.rpc;
 
-import org.knime.core.node.web.ValidationError;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortType;
+import org.knime.core.node.workflow.NodeOutPort;
 
-
-
-
-/** Interface for NodeModels that support interactive views and repeated
- * execution when the view has been modified by the user.
+/**
+ * Provides generic access to data of a port via remote procedure calls.
  *
- * @author B. Wiswedel, Th. Gabriel, M. Berthold
- * @param <REP> The concrete class of the {@link ViewContent} acting as representation of the view.
- * @param <VAL> The concrete class of the {@link ViewContent} acting as value of the view.
- * @since 2.8
+ * Implementations are currently provided by a temporary extension point. Will need to be provided by the
+ * {@link PortObject}-implementation itself (directly or indirectly).
+ *
+ * @author Martin Horn, KNIME GmbH, Konstanz, Germany
+ *
+ * @noreference This class is not intended to be referenced by clients.
+ * @noextend This class is not intended to be subclassed by clients.
+ *
+ * @since 4.3
  */
-public interface InteractiveNode<REP extends ViewContent, VAL extends ViewContent> extends ReExecutable<VAL> {
+public interface NodePortRpcServerFactory extends RpcServerFactory<NodeOutPort> {
 
     /**
-     * Create content which can be used by the interactive view implementation.
-     * @return View representation implementation required for the interactive view.
-     * @since 2.10
+     * Determines whether this rpc server factory is compatible with the respective port type.
+     *
+     * @param ptype the port type to check the compatibility for
+     * @return <code>true</code> if compatible otherwise <code>false</code>
      */
-    REP getViewRepresentation();
+    boolean isCompatible(PortType ptype);
 
     /**
-     * @return View value implementation required for the interactive view.
-     * @since 2.10
+     * @return whether the created rpc server can and should be cached or not
      */
-    VAL getViewValue();
-
-    /**
-     * @param viewContent The view content to load.
-     * @return error or null if OK.
-     * @since 2.10
-     */
-    ValidationError validateViewValue(VAL viewContent);
-
-    /**
-     * @param viewContent The view content to load.
-     * @param useAsDefault True if node settings are to be updated by view content.
-     * @since 2.10
-     */
-    void loadViewValue(VAL viewContent, boolean useAsDefault);
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    default void preReExecute(final VAL data, final boolean isNewDefault) {
-        loadViewValue(data, isNewDefault);
+    default boolean isCachable() {
+        return true;
     }
 
 }

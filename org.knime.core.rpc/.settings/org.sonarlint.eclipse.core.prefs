@@ -1,6 +1,0 @@
-autoEnabled=true
-eclipse.preferences.version=1
-idePrefixKey=
-projectKey=org.knime\:knime-core
-serverId=sonar.knime.com
-sqPrefixKey=org.knime.core.rpc

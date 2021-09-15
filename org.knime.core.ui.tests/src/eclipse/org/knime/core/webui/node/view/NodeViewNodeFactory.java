@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -42,58 +43,83 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on Apr 16, 2013 by Berthold
+ * History
+ *   Sep 13, 2021 (hornm): created
  */
-package org.knime.core.node.interactive;
+package org.knime.core.webui.node.view;
 
-import org.knime.core.node.web.ValidationError;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 
+import java.util.function.Function;
 
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.workflow.NodeContext;
 
-
-/** Interface for NodeModels that support interactive views and repeated
- * execution when the view has been modified by the user.
+/**
+ * Dummy node factory for tests around the {@link NodeView}.
  *
- * @author B. Wiswedel, Th. Gabriel, M. Berthold
- * @param <REP> The concrete class of the {@link ViewContent} acting as representation of the view.
- * @param <VAL> The concrete class of the {@link ViewContent} acting as value of the view.
- * @since 2.8
+ * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
-public interface InteractiveNode<REP extends ViewContent, VAL extends ViewContent> extends ReExecutable<VAL> {
+public class NodeViewNodeFactory extends NodeFactory<NodeViewNodeModel> implements NodeViewFactory<NodeViewNodeModel> {
 
-    /**
-     * Create content which can be used by the interactive view implementation.
-     * @return View representation implementation required for the interactive view.
-     * @since 2.10
-     */
-    REP getViewRepresentation();
+    private Function<NodeViewNodeModel, NodeView> m_nodeViewCreator;
 
-    /**
-     * @return View value implementation required for the interactive view.
-     * @since 2.10
-     */
-    VAL getViewValue();
-
-    /**
-     * @param viewContent The view content to load.
-     * @return error or null if OK.
-     * @since 2.10
-     */
-    ValidationError validateViewValue(VAL viewContent);
-
-    /**
-     * @param viewContent The view content to load.
-     * @param useAsDefault True if node settings are to be updated by view content.
-     * @since 2.10
-     */
-    void loadViewValue(VAL viewContent, boolean useAsDefault);
+    NodeViewNodeFactory(final Function<NodeViewNodeModel, NodeView> nodeViewCreator) {
+        m_nodeViewCreator = nodeViewCreator;
+    }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    default void preReExecute(final VAL data, final boolean isNewDefault) {
-        loadViewValue(data, isNewDefault);
+    public NodeView createNodeView(final NodeViewNodeModel nodeModel) {
+        assertThat("A node context is expected to be given", NodeContext.getContext().getNodeContainer(),
+            is(notNullValue()));
+        return m_nodeViewCreator.apply(nodeModel);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeViewNodeModel createNodeModel() {
+        return new NodeViewNodeModel();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected int getNrNodeViews() {
+        return 0;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public org.knime.core.node.NodeView<NodeViewNodeModel> createNodeView(final int viewIndex,
+        final NodeViewNodeModel nodeModel) {
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean hasDialog() {
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected NodeDialogPane createNodeDialogPane() {
+        return null;
     }
 
 }

@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -42,58 +43,78 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on Apr 16, 2013 by Berthold
+ * History
+ *   Sep 7, 2021 (hornm): created
  */
-package org.knime.core.node.interactive;
+package org.knime.core.webui.node.view;
 
-import org.knime.core.node.web.ValidationError;
+import org.knime.core.node.workflow.NodeContext;
+import org.knime.core.webui.data.ApplyDataService;
+import org.knime.core.webui.data.DataService;
+import org.knime.core.webui.data.InitialDataService;
+import org.knime.core.webui.page.Page;
 
-
-
-
-/** Interface for NodeModels that support interactive views and repeated
- * execution when the view has been modified by the user.
+/**
+ * Builder to create {@link NodeView}-instances.
  *
- * @author B. Wiswedel, Th. Gabriel, M. Berthold
- * @param <REP> The concrete class of the {@link ViewContent} acting as representation of the view.
- * @param <VAL> The concrete class of the {@link ViewContent} acting as value of the view.
- * @since 2.8
+ * @author Martin Horn, KNIME GmbH, Konstanz, Germany
+ *
+ * @since 4.5
  */
-public interface InteractiveNode<REP extends ViewContent, VAL extends ViewContent> extends ReExecutable<VAL> {
+public final class NodeViewBuilder {
+
+    private final Page m_page;
+
+    private DataService m_dataService;
+
+    private InitialDataService m_initialDataService;
+
+    private ApplyDataService m_applyDataService;
+
+    NodeViewBuilder(final Page p) {
+        m_page = p;
+    }
 
     /**
-     * Create content which can be used by the interactive view implementation.
-     * @return View representation implementation required for the interactive view.
-     * @since 2.10
+     * See {@link NodeView#getDataService()}.
+     *
+     * @param dataService
+     * @return this builder instance
      */
-    REP getViewRepresentation();
+    public NodeViewBuilder dataService(final DataService dataService) {
+        m_dataService = dataService;
+        return this;
+    }
 
     /**
-     * @return View value implementation required for the interactive view.
-     * @since 2.10
+     * See {@link NodeView#getInitialDataService()}.
+     *
+     * @param initialDataService
+     * @return this builder instance
      */
-    VAL getViewValue();
+    public NodeViewBuilder initialDataService(final InitialDataService initialDataService) {
+        m_initialDataService = initialDataService;
+        return this;
+    }
 
     /**
-     * @param viewContent The view content to load.
-     * @return error or null if OK.
-     * @since 2.10
+     * See {@link NodeView#getApplyDataService()}.
+     *
+     * @param applyDataService
+     * @return this builder instance
      */
-    ValidationError validateViewValue(VAL viewContent);
+    public NodeViewBuilder applyDataService(final ApplyDataService applyDataService) {
+        m_applyDataService = applyDataService;
+        return this;
+    }
 
     /**
-     * @param viewContent The view content to load.
-     * @param useAsDefault True if node settings are to be updated by view content.
-     * @since 2.10
+     * Creates a new node view from the builder. Expects a {@link NodeContext} to be available.
+     *
+     * @return a new node view instance
      */
-    void loadViewValue(VAL viewContent, boolean useAsDefault);
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    default void preReExecute(final VAL data, final boolean isNewDefault) {
-        loadViewValue(data, isNewDefault);
+    public NodeView build() {
+        return new NodeView(m_page, m_initialDataService, m_dataService, m_applyDataService);
     }
 
 }

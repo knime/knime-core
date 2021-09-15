@@ -147,6 +147,7 @@ import org.knime.core.node.dialog.OutputNode;
 import org.knime.core.node.exec.ThreadNodeExecutionJobManager;
 import org.knime.core.node.interactive.InteractiveNode;
 import org.knime.core.node.interactive.InteractiveView;
+import org.knime.core.node.interactive.ReExecutable;
 import org.knime.core.node.interactive.ReexecutionCallback;
 import org.knime.core.node.interactive.ViewContent;
 import org.knime.core.node.port.MetaPortInfo;
@@ -2625,16 +2626,13 @@ public final class WorkflowManager extends NodeContainer
             }
             NativeNodeContainer snc = (NativeNodeContainer)nc;
             NodeModel nm = snc.getNodeModel();
-            if (!(nm instanceof InteractiveNode)) {
-                throw new IllegalArgumentException("Can't reexecute non interactive nodes.");
+            if (!(nm instanceof ReExecutable)) {
+                throw new IllegalArgumentException("Only reexecutable nodes can be reexecuted.");
             }
-            if (!(EXECUTED.equals(snc.getInternalState()))) {
+            if (EXECUTED != snc.getInternalState()) {
                 return false;
             }
-            if (!canResetNode(id)) {
-                return false;
-            }
-            return true;
+            return canResetNode(id);
         }
     }
 
@@ -2650,6 +2648,22 @@ public final class WorkflowManager extends NodeContainer
      */
     public void reExecuteNode(final NodeID id, final ViewContent vc, final boolean useAsNewDefault,
         final ReexecutionCallback rec) {
+        reExecuteNode(id, vc, useAsNewDefault);
+    }
+
+    /**
+     * Re-executes the given node. A node needs to fulfill the following conditions in order to be re-executed: the
+     * node's model need to be {@link ReExecutable}, the node must be in 'executed' state, it must be resetable and it
+     * must be a native node. Otherwise an exception will be thrown.
+     *
+     * @param id the id of the node to be re-executed
+     * @param data the data supplied to the node prior re-execution (via {@link ReExecutable#preReExecute(Object,
+     * boolean)})
+     * @param useAsNewDefault if <code>true</code> the supplied data is used a new default node settings
+     * @throws IllegalArgumentException if the specified node can't be re-executed because it doesn't fulfill the
+     *             required conditions
+     */
+    public void reExecuteNode(final NodeID id, final Object data, final boolean useAsNewDefault) {
         try (WorkflowLock lock = lock()) {
             if (!canReExecuteNode(id)) {
                 throw new IllegalArgumentException("Can't reexecute executing nodes.");
@@ -2657,8 +2671,8 @@ public final class WorkflowManager extends NodeContainer
             SingleNodeContainer snc = (SingleNodeContainer)getNodeContainer(id);
             resetSuccessors(id);
             configureNodeAndPortSuccessors(id, null, false, true, true);
-            snc.markForReExecution(new ExecutionEnvironment(true, vc, useAsNewDefault));
-            assert snc.getInternalState().equals(EXECUTED_MARKEDFOREXEC);
+            snc.markForReExecution(new ExecutionEnvironment(true, data, useAsNewDefault));
+            assert snc.getInternalState() == EXECUTED_MARKEDFOREXEC;
             queueIfQueuable(snc);
         }
     }

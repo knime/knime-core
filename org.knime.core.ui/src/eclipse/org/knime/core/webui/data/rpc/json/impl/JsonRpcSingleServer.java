@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -42,58 +43,71 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on Apr 16, 2013 by Berthold
+ * History
+ *   Jul 14, 2020 (carlwitt): created
  */
-package org.knime.core.node.interactive;
+package org.knime.core.webui.data.rpc.json.impl;
 
-import org.knime.core.node.web.ValidationError;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
+import org.knime.core.node.util.CheckUtils;
+import org.knime.core.webui.data.rpc.RpcSingleServer;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-
-/** Interface for NodeModels that support interactive views and repeated
- * execution when the view has been modified by the user.
+/**
+ * A convenience specialization of {@link JsonRpcServer} that supports only one service interface and thus spares the
+ * user from specifying the service interface name every time.
  *
- * @author B. Wiswedel, Th. Gabriel, M. Berthold
- * @param <REP> The concrete class of the {@link ViewContent} acting as representation of the view.
- * @param <VAL> The concrete class of the {@link ViewContent} acting as value of the view.
- * @since 2.8
+ * If this single json rpc server is used, only the method name is required to address the node data service in the
+ * JSON-RPC request from the client.
+ *
+ * @param <S> the node data service interface type; defines which methods are offered by the node model to retrieve
+ *            data. See also {@link JsonRpcClient} for requirements on this interface.
+ *
+ * @author Martin Horn, KNIME GmbH, Konstanz, Germany
+ * @author Carl Witt, KNIME AG, Zurich, Switzerland
+ *
+ * @noreference This class is not intended to be referenced by clients.
+ * @noextend This class is not intended to be subclassed by clients.
+ *
+ * @since 4.3
  */
-public interface InteractiveNode<REP extends ViewContent, VAL extends ViewContent> extends ReExecutable<VAL> {
+public class JsonRpcSingleServer<S> implements RpcSingleServer<S> {
 
     /**
-     * Create content which can be used by the interactive view implementation.
-     * @return View representation implementation required for the interactive view.
-     * @since 2.10
+     * Node data service implementor. Can be local (node model lives in the same JVM as client) or remote.
      */
-    REP getViewRepresentation();
+    private S m_handler;
+
+    private com.googlecode.jsonrpc4j.JsonRpcServer m_jsonRpcServer;
 
     /**
-     * @return View value implementation required for the interactive view.
-     * @since 2.10
+     * @param handler implementation of the node data service interface
      */
-    VAL getViewValue();
-
-    /**
-     * @param viewContent The view content to load.
-     * @return error or null if OK.
-     * @since 2.10
-     */
-    ValidationError validateViewValue(VAL viewContent);
-
-    /**
-     * @param viewContent The view content to load.
-     * @param useAsDefault True if node settings are to be updated by view content.
-     * @since 2.10
-     */
-    void loadViewValue(VAL viewContent, boolean useAsDefault);
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    default void preReExecute(final VAL data, final boolean isNewDefault) {
-        loadViewValue(data, isNewDefault);
+    public JsonRpcSingleServer(final S handler) {
+        this(handler, ObjectMapperUtil.getInstance().getObjectMapper());
     }
 
+    /**
+     * @param handler implementation of the node data service interface
+     * @param mapper allows customized serialization of java objects into JSON
+     */
+    public JsonRpcSingleServer(final S handler, final ObjectMapper mapper) {
+        CheckUtils.checkNotNull(mapper, "Object mapper passed to JSON-RPC server must not be null.");
+        m_handler = CheckUtils.checkNotNull(handler, "The node data service implementation must not be null.");
+        m_jsonRpcServer = new com.googlecode.jsonrpc4j.JsonRpcServer(mapper, handler);
+    }
+
+    @Override
+    public void handleRequest(final InputStream in, final OutputStream out) throws IOException {
+        m_jsonRpcServer.handleRequest(in, out);
+    }
+
+    @Override
+    public S getHandler() {
+        return m_handler;
+    }
 }

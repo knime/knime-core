@@ -44,32 +44,95 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Jul 28, 2020 (carlwitt): created
+ *   Jul 13, 2020 (hornm): created
  */
-package org.knime.core.ui.node.workflow.async;
+package org.knime.core.webui.data.rpc;
 
-import org.knime.core.node.workflow.NodeContext;
-import org.knime.core.ui.node.workflow.NodeContainerUI;
-import org.knime.core.webui.data.rpc.RpcTransport;
-import org.knime.core.webui.data.rpc.RpcTransportFactory;
+import java.lang.reflect.Method;
+import java.util.concurrent.Future;
+import java.util.function.Consumer;
+import java.util.function.Function;
+
+import org.knime.core.node.util.CheckUtils;
+import org.knime.core.webui.data.rpc.json.impl.JsonRpcSingleClient;
 
 /**
- * A mechanism to expose the {@link NodeContainerUI#doRpc(String)} to org.knime.core without adding a dependency
- * from org.knime.core to org.knime.core.ui.
+ * Base class for node data service client implementations that support only one service interface, such as
+ * {@link JsonRpcSingleClient}.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  *
+ * @since 4.3
+ *
  * @noreference This class is not intended to be referenced by clients.
  * @noextend This class is not intended to be subclassed by clients.
+ *
+ * @param <S> the node model's service interface that defines the methods that can be used by the dialog/view to obtain
+ *            data from it
  */
-public class NodeContainerRpcTransportFactory implements RpcTransportFactory {
+public abstract class AbstractRpcSingleClient<S> extends AbstractRpcClient implements RpcSingleClient<S> {
+
+    /**
+     * The data retrieval interface offered to the node dialog/view by the node model. This interface is defined and
+     * implemented by the node developer.
+     */
+    private final Class<S> m_serviceInterface;
+
+    /**
+     * @param serviceInterface the data retrieval interface offered to the node dialog/view by the node model. This
+     *            interface is defined and implemented by the node developer.
+     */
+    public AbstractRpcSingleClient(final Class<S> serviceInterface) {
+        m_serviceInterface = CheckUtils.checkNotNull(serviceInterface, "Service interface type must not be null.");
+    }
+
+    /**
+     * For testing only: Constructor to initialize an rpc client with custom transport.
+     *
+     * @param serviceInterface
+     * @param rpcTransport a custom rpc transport implementation for testing
+     */
+    protected AbstractRpcSingleClient(final Class<S> serviceInterface, final RpcTransport rpcTransport) {
+        super(rpcTransport);
+        m_serviceInterface = serviceInterface;
+    }
 
     @Override
-    public RpcTransport createRpcTransport() {
-        NodeContainerUI nodeContainerUI = NodeContext.getContext().getContextObjectForClass(NodeContainerUI.class)
-            .orElseThrow(IllegalStateException::new);
-        return nodeContainerUI::doRpc;
+    protected String convertCall(final String serviceName, final Method method, final Object[] args) {
+        return convertCall(method, args);
+    }
+
+    /**
+     * See {@link AbstractRpcClient#convertCall(String, Method, Object[])}.
+     * @param method
+     * @param args
+     * @return the call as string
+     */
+    protected abstract String convertCall(Method method, Object[] args);
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public <R> Future<R> callServiceWithRes(final Function<S, R> serviceEvaluator) {
+        return super.callServiceWithRes(m_serviceInterface, serviceEvaluator);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Future<Void> callService(final Consumer<S> serviceConsumer) {
+        return super.callService(m_serviceInterface, serviceConsumer);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public S getService() {
+        return super.getService(m_serviceInterface);
     }
 
 }
