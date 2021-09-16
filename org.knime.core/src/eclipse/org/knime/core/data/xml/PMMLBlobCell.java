@@ -131,6 +131,9 @@ public class PMMLBlobCell extends BlobDataCell
 
     private final PMMLCellContent m_content;
 
+    // cache the hash
+    private Integer m_hash = null;
+
     /**
      * Create a new instance.
      * @param content the content of this cell
@@ -181,7 +184,11 @@ public class PMMLBlobCell extends BlobDataCell
      */
     @Override
     public int hashCode() {
-        return m_content.hashCode();
+        if (null == m_hash) {
+            m_hash = m_content.hashCode();
+        }
+
+        return m_hash;
     }
 
     /**

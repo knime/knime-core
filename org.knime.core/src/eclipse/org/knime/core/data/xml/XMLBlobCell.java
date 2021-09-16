@@ -123,6 +123,9 @@ public class XMLBlobCell extends BlobDataCell implements XMLValue<Document>, Str
 
     private final XMLCellContent m_content;
 
+    // cache the hash
+    private Integer m_hash = null;
+
     /**
      * Create a new instance.
      * @param content the content of this cell
@@ -181,7 +184,11 @@ public class XMLBlobCell extends BlobDataCell implements XMLValue<Document>, Str
      */
     @Override
     public int hashCode() {
-        return m_content.hashCode();
+        if (null == m_hash) {
+            m_hash = m_content.hashCode();
+        }
+
+        return m_hash;
     }
 
     /**

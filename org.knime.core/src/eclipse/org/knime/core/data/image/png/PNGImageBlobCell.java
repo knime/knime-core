@@ -92,6 +92,9 @@ public class PNGImageBlobCell extends BlobDataCell implements PNGImageValue {
 
     private final PNGImageContent m_content;
 
+    // cache the hash
+    private Integer m_hash = null;
+
     /** Package scope method to create PNG image cell. Used from the
      * {@link PNGImageContent#toImageCell()} method.
      * @param content The content to wrap.
@@ -137,7 +140,11 @@ public class PNGImageBlobCell extends BlobDataCell implements PNGImageValue {
      */
     @Override
     public int hashCode() {
-        return m_content.hashCode();
+        if (null == m_hash) {
+            m_hash = m_content.hashCode();
+        }
+
+        return m_hash;
     }
     /**
      * {@inheritDoc}
