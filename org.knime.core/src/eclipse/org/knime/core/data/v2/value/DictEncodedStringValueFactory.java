@@ -71,6 +71,6 @@ public class DictEncodedStringValueFactory extends StringValueFactory {
 
     @Override
     public DataTraits getTraits() {
-        return new DefaultDataTraits(new DictEncodingTrait(true));
+        return new DefaultDataTraits(new DictEncodingTrait());
     }
 }

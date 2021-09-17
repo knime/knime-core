@@ -97,6 +97,6 @@ public final class DictEncodedDataCellValueFactory extends DataCellValueFactory 
 
     @Override
     public DataTraits getTraits() {
-        return new DefaultDataTraits(new DictEncodingTrait(true));
+        return new DefaultDataTraits(new DictEncodingTrait());
     }
 }
