@@ -90,6 +90,7 @@ public interface InteractiveNode<REP extends ViewContent, VAL extends ViewConten
 
     /**
      * {@inheritDoc}
+     * @since 4.5
      */
     @Override
     default void preReExecute(final VAL data, final boolean isNewDefault) {

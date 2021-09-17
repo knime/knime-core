@@ -2662,6 +2662,7 @@ public final class WorkflowManager extends NodeContainer
      * @param useAsNewDefault if <code>true</code> the supplied data is used a new default node settings
      * @throws IllegalArgumentException if the specified node can't be re-executed because it doesn't fulfill the
      *             required conditions
+     * @since 4.5
      */
     public void reExecuteNode(final NodeID id, final Object data, final boolean useAsNewDefault) {
         try (WorkflowLock lock = lock()) {

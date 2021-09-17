@@ -149,6 +149,7 @@ public abstract class FilterModel {
      * @param maximumInclusive if minimum is inclusive or not (ignored for unbounded extreme)
      * @return A new {@link FilterModelRange} representing the values.
      * @throws IllegalArgumentException If minimum is larger than maximum or both min and max are unbounded
+     * @since 4.5
      */
     public static FilterModelRange newRangeModel(final UUID id, final double minimum, final double maximum,
         final boolean minimumInclusive, final boolean maximumInclusive) {
@@ -177,6 +178,7 @@ public abstract class FilterModel {
      *            empty, one will be created.
      * @param values The values to be included (not null and null values not allowed).
      * @return A new model representing the values.
+     * @since 4.5
      */
     public static FilterModelNominal newNominalModel(final UUID id, final Collection<DataCell> values) {
         FilterModelNominal f = new FilterModelNominal(id, values);

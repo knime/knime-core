@@ -121,6 +121,7 @@ public final class ExecutionEnvironment {
 
     /**
      * @return data that is provided to a node prior its re-execution
+     * @since 4.5
      */
     public Object getPreReExecuteData() {
         return m_preReExecData;

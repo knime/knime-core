@@ -2377,6 +2377,15 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/wizard/WizardNode.java" type="org.knime.core.node.wizard.WizardNode">
+        <filter id="403984517">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.wizard.WizardNode"/>
+                <message_argument value="org.knime.core.node.interactive.ReExecutable"/>
+                <message_argument value="preReExecute(D, boolean)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/MetaNodeTemplateInformation.java" type="org.knime.core.node.workflow.MetaNodeTemplateInformation">
         <filter id="338792546">
             <message_arguments>
