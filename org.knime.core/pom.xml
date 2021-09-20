@@ -54,6 +54,10 @@
 					</dependency>
 				</dependencies>
 			</plugin>
+			<plugin>
+				<groupId>org.eclipse.tycho.extras</groupId>
+				<artifactId>tycho-dependency-tools-plugin</artifactId>
+			</plugin>
 		</plugins>
 	</build>
 </project>
