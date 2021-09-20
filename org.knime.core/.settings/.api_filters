@@ -2348,11 +2348,19 @@
             </message_arguments>
         </filter>
     </resource>
-    <resource path="src/eclipse/org/knime/core/node/extension/NodeFactoryExtension.java" type="org.knime.core.node.extension.NodeFactoryExtension">
-        <filter id="305365105">
+    <resource path="src/eclipse/org/knime/core/node/extension/NodeAndCategorySorter.java" type="org.knime.core.node.extension.NodeAndCategorySorter">
+        <filter id="1108344834">
             <message_arguments>
-                <message_argument value="org.knime.core.node.extension.NodeFactoryExtension"/>
-                <message_argument value="org.knime.core_4.5.0"/>
+                <message_argument value="2.9"/>
+                <message_argument value="4.5"/>
+                <message_argument value="org.knime.core.node.extension.NodeAndCategorySorter"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/extension/NodeFactoryExtension.java" type="org.knime.core.node.extension.NodeFactoryExtension">
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="getFactory()"/>
             </message_arguments>
         </filter>
     </resource>
@@ -2386,6 +2394,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/CompositeViewController.java" type="org.knime.core.node.workflow.CompositeViewController">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.CompositeViewController"/>
+                <message_argument value="reexecuteSinglePage(NodeID.NodeIDSuffix, Map&lt;String,String&gt;)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/MetaNodeTemplateInformation.java" type="org.knime.core.node.workflow.MetaNodeTemplateInformation">
         <filter id="338792546">
             <message_arguments>
@@ -2396,6 +2412,63 @@
         <filter id="1143996420">
             <message_arguments>
                 <message_argument value="getTimestamp()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/WebResourceController.java" type="org.knime.core.node.workflow.WebResourceController">
+        <filter id="336695337">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WebResourceController"/>
+                <message_argument value="reexecuteSinglePage(NodeID, Map&lt;String,String&gt;)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WebResourceController"/>
+                <message_argument value="getSuccessorWizardNodesWithinPage(WorkflowManager, NodeID, NodeID)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WebResourceController"/>
+                <message_argument value="reexecuteSinglePage(NodeID.NodeIDSuffix, Map&lt;String,String&gt;)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1141899266">
+            <message_arguments>
+                <message_argument value="4.4"/>
+                <message_argument value="4.5"/>
+                <message_argument value="getSuccessorWizardNodesWithinComponent(WorkflowManager, NodeID, NodeID)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1141899266">
+            <message_arguments>
+                <message_argument value="4.4"/>
+                <message_argument value="4.5"/>
+                <message_argument value="reexecuteSinglePage(NodeID, Map&lt;String,String&gt;)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/WebResourceController.java" type="org.knime.core.node.workflow.WebResourceController$WizardPageContent">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WebResourceController.WizardPageContent"/>
+                <message_argument value="getPageNodeID()"/>
+            </message_arguments>
+        </filter>
+        <filter id="1141899266">
+            <message_arguments>
+                <message_argument value="3.3"/>
+                <message_argument value="4.5"/>
+                <message_argument value="getPageNodeID()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/WizardExecutionController.java" type="org.knime.core.node.workflow.WizardExecutionController">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WizardExecutionController"/>
+                <message_argument value="reexecuteSinglePage(NodeID.NodeIDSuffix, Map&lt;String,String&gt;)"/>
             </message_arguments>
         </filter>
     </resource>
