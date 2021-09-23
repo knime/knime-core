@@ -46,6 +46,7 @@ package org.knime.core.node.property.hilite;
 
 import java.util.Arrays;
 import java.util.LinkedHashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -521,6 +522,56 @@ public class HiLiteHandler {
                 }
             };
             ViewUtils.runOrInvokeLaterInEDT(r);
+        }
+    }
+
+    /**
+     * Informs all registered hilite listener to replace all hilit rows with the specified row keys.
+     *
+     * @param ids a set of row keys to hilite
+     * @throws NullPointerException if the set of row keys to hilite is <code>null</code>
+     * @since 4.5
+     */
+    public synchronized void fireReplaceHiLiteEvent(final RowKey... ids) {
+        Objects.requireNonNull(ids, "Key array must not be null.");
+        fireReplaceHiLiteEvent(new KeyEvent(this, ids));
+
+    }
+
+    /**
+     * Informs all registered hilite listener to replace all hilit rows with the specified row keys.
+     *
+     * @param ids a set of row keys to hilite
+     * @throws NullPointerException if the set of row keys to hilite is <code>null</code>
+     * @since 4.5
+     */
+    public synchronized void fireReplaceHiLiteEvent(final Set<RowKey> ids) {
+        Objects.requireNonNull(ids, "Key set must not be null.");
+        fireReplaceHiLiteEvent(new KeyEvent(this, ids));
+    }
+
+    /**
+     * Informs all registered hilite listener to replace all hilit rows.
+     *
+     * @param event the event fired for hilite replacement
+     * @throws NullPointerException if the key event is <code>null</code>
+     * @since 4.5
+     */
+    public synchronized void fireReplaceHiLiteEvent(final KeyEvent event) {
+        Objects.requireNonNull(event, "KeyEvent must not be null");
+
+        final var keys = event.keys();
+        if (!m_hiLitKeys.equals(keys)) {
+            m_hiLitKeys = new LinkedHashSet<>(keys);
+            ViewUtils.runOrInvokeLaterInEDT(() -> {
+                for (final HiLiteListener l : m_listenerList) {
+                    try {
+                        l.replaceHiLite(event);
+                    } catch (final Throwable t) { // NOSONAR code copied from the other fireEvent methods
+                        LOGGER.coding("Exception while notifying listeners, reason: " + t.getMessage(), t);
+                    }
+                }
+            });
         }
     }
 

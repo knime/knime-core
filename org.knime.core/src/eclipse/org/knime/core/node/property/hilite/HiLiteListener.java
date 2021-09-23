@@ -47,8 +47,8 @@ package org.knime.core.node.property.hilite;
 import java.util.EventListener;
 
 
-/** 
- * The event listener interface has to be implemented by classes that are 
+/**
+ * The event listener interface has to be implemented by classes that are
  * interested in receiving hilite events.
  * <p>
  * The listener object created from that class can then register with the
@@ -56,28 +56,39 @@ import java.util.EventListener;
  * {@link HiLiteHandler#addHiLiteListener(HiLiteListener)}) or unregister
  * ({@link HiLiteHandler#removeHiLiteListener(HiLiteListener)}) if it
  * is no longer interested in hilite change events.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 public interface HiLiteListener extends EventListener {
-    /** 
-     * Invoked when some item(s) were hilit. 
-     * 
+    /**
+     * Invoked when some item(s) were hilit.
+     *
      * @param event contains a list of row keys that were hilit
      */
     void hiLite(final KeyEvent event);
 
-    /** 
+    /**
      * Invoked when some item(s) were unhilit.
-     * 
+     *
      * @param event contains a list of row keys that were unhilit
      */
     void unHiLite(final KeyEvent event);
-    
+
     /**
      * Invoked, when everything (all rows) are unhilit.
-     * 
+     *
      * @param event contains a list of row key that were unhilit
      */
     void unHiLiteAll(final KeyEvent event);
+
+    /**
+     * Invoked when everything (all rows) were unhilit and then some item(s) were hilit.
+     *
+     * @param event contains a list of row keys that were hilit
+     * @since 4.5
+     */
+    default void replaceHiLite(final KeyEvent event) {
+        unHiLiteAll(new KeyEvent(event.getSource()));
+        hiLite(event);
+    }
 }
