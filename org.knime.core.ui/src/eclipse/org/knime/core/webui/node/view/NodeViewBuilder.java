@@ -49,9 +49,9 @@
 package org.knime.core.webui.node.view;
 
 import org.knime.core.node.workflow.NodeContext;
-import org.knime.core.webui.data.ApplyDataService;
 import org.knime.core.webui.data.DataService;
 import org.knime.core.webui.data.InitialDataService;
+import org.knime.core.webui.data.ReExecuteDataService;
 import org.knime.core.webui.page.Page;
 
 /**
@@ -69,7 +69,7 @@ public final class NodeViewBuilder {
 
     private InitialDataService m_initialDataService;
 
-    private ApplyDataService m_applyDataService;
+    private ReExecuteDataService m_reExecuteDataService;
 
     NodeViewBuilder(final Page p) {
         m_page = p;
@@ -98,13 +98,13 @@ public final class NodeViewBuilder {
     }
 
     /**
-     * See {@link NodeView#getApplyDataService()}.
+     * See {@link NodeView#getReExecuteDataService()}.
      *
-     * @param applyDataService
+     * @param reExecuteDataService
      * @return this builder instance
      */
-    public NodeViewBuilder applyDataService(final ApplyDataService applyDataService) {
-        m_applyDataService = applyDataService;
+    public NodeViewBuilder reExecuteDataService(final ReExecuteDataService reExecuteDataService) {
+        m_reExecuteDataService = reExecuteDataService;
         return this;
     }
 
@@ -114,7 +114,7 @@ public final class NodeViewBuilder {
      * @return a new node view instance
      */
     public NodeView build() {
-        return new NodeView(m_page, m_initialDataService, m_dataService, m_applyDataService);
+        return new NodeView(m_page, m_initialDataService, m_dataService, m_reExecuteDataService);
     }
 
 }

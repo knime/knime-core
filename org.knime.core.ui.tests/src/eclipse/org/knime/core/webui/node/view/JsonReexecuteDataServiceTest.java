@@ -44,92 +44,45 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Sep 14, 2021 (hornm): created
+ *   Sep 15, 2021 (hornm): created
  */
 package org.knime.core.webui.node.view;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+
 import java.io.IOException;
 
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.interactive.ReExecutable;
-import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.NodeContext;
-import org.knime.core.node.workflow.NodeID;
+import org.awaitility.Awaitility;
+import org.junit.Test;
+import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.webui.data.json.JsonApplyDataService;
-import org.knime.core.webui.data.rpc.json.impl.ObjectMapperUtil;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.knime.core.webui.data.json.impl.JsonReExecuteDataServiceImpl;
+import org.knime.core.webui.page.Page;
 
 /**
- * Implementation of the {@link JsonApplyDataService} which re-executes the associated node in order to 'apply' the
- * data.
+ * Tests {@link JsonReExecuteDataServiceImpl}.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
- * @param <D> the type of the data object to apply
- * @param <T> the node model of the node to re-execute
- *
- * @since 4.5
  */
-public class JsonApplyAndReExecuteDataServiceImpl<D, T extends NodeModel & ReExecutable<D>>
-    implements JsonApplyDataService<D> {
+public class JsonReexecuteDataServiceTest {
 
-    private final T m_reExecutableNodeModel;
+    @SuppressWarnings("javadoc")
+    @Test
+    public void testJsonReexecuteDataService() throws IOException {
+        WorkflowManager wfm = NodeViewManagerTest.createEmptyWorkflow();
+        Page page = Page.builderFromString(() -> "content", "index.html").build();
+        NativeNodeContainer nnc = NodeViewManagerTest.createNodeWithNodeView(wfm,
+            m -> NodeView.builder(page)
+                .reExecuteDataService(new JsonReExecuteDataServiceImpl<String, NodeViewNodeModel>(m, String.class))
+                .build());
+        wfm.executeAllAndWaitUntilDone();
 
-    private final ObjectMapper m_mapper;
-
-    private final Class<D> m_dataType;
-
-    private final WorkflowManager m_wfm;
-
-    private final NodeID m_nodeId;
-
-    /**
-     * @param reExecutableNodeModel the model of the node to re-execute
-     * @param dataType the type of the data object to apply
-     */
-    public JsonApplyAndReExecuteDataServiceImpl(final T reExecutableNodeModel, final Class<D> dataType) {
-        this(reExecutableNodeModel, dataType, ObjectMapperUtil.getInstance().getObjectMapper());
+        NodeViewManager.getInstance().callTextReExecuteDataService(nnc, "data to apply");
+        NodeViewNodeModel model = (NodeViewNodeModel)nnc.getNodeModel();
+        Awaitility.await().untilAsserted(() -> {
+            assertThat(model.m_preReexecuteData, is("data to apply"));
+            assertThat(model.m_executeCount, is(2));
+        });
     }
-
-    /**
-     * @param reExecutableNodeModel the model of the node to re-execute
-     * @param dataType the type of the data object to apply
-     * @param mapper a custom object mapper for data deserialization
-     */
-    public JsonApplyAndReExecuteDataServiceImpl(final T reExecutableNodeModel, final Class<D> dataType,
-        final ObjectMapper mapper) {
-        m_reExecutableNodeModel = reExecutableNodeModel;
-        m_dataType = dataType;
-        m_mapper = mapper;
-        NodeContainer nc = NodeContext.getContext().getNodeContainer();
-        m_wfm = nc.getParent();
-        m_nodeId = nc.getID();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void applyData(final D data) {
-        m_wfm.reExecuteNode(m_nodeId, data, false);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    public D fromJson(final String data) throws IOException {
-        if (String.class.isAssignableFrom(m_dataType)) {
-            return (D)data;
-        }
-        try {
-            return m_mapper.readValue(data, m_dataType);
-        } catch (JsonProcessingException ex) {
-            throw new IOException(ex);
-        }
-    }
-
 }

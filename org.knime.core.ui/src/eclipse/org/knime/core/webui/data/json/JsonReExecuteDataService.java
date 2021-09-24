@@ -44,44 +44,36 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Sep 15, 2021 (hornm): created
+ *   Sep 24, 2021 (hornm): created
  */
-package org.knime.core.webui.node.view;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
+package org.knime.core.webui.data.json;
 
 import java.io.IOException;
 
-import org.awaitility.Awaitility;
-import org.junit.Test;
-import org.knime.core.node.workflow.NativeNodeContainer;
-import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.webui.page.Page;
+import org.knime.core.webui.data.text.TextReExecuteDataService;
 
 /**
- * Tests {@link JsonApplyAndReExecuteDataServiceImpl}.
+ * A {@link TextReExecuteDataService} where the data to re-execute the underlying node with is represented as a
+ * JSON-object.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
+ * @param <D> the type of the data object to re-execute the node with
+ *
+ * @since 4.5
  */
-public class JsonApplyAndReexecuteDataServiceTest {
+public interface JsonReExecuteDataService<D> extends TextReExecuteDataService, JsonApplyDataService<D> {
 
-    @SuppressWarnings("javadoc")
-    @Test
-    public void testJsonApplyAndReexecuteDataService() throws IOException {
-        WorkflowManager wfm = NodeViewManagerTest.createEmptyWorkflow();
-        Page page = Page.builderFromString(() -> "content", "index.html").build();
-        NativeNodeContainer nnc = NodeViewManagerTest.createNodeWithNodeView(wfm,
-            m -> NodeView.builder(page)
-                .applyDataService(new JsonApplyAndReExecuteDataServiceImpl<String, NodeViewNodeModel>(m, String.class))
-                .build());
-        wfm.executeAllAndWaitUntilDone();
-
-        NodeViewManager.getInstance().callTextApplyDataService(nnc, "data to apply");
-        NodeViewNodeModel model = (NodeViewNodeModel)nnc.getNodeModel();
-        Awaitility.await().untilAsserted(() -> {
-            assertThat(model.m_preReexecuteData, is("data to apply"));
-            assertThat(model.m_executeCount, is(2));
-        });
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    default void reExecute(final String data) throws IOException {
+        reExecute(fromJson(data));
     }
+
+    /**
+     * @param data the data to re-execute the node with
+     */
+    void reExecute(D data);
+
 }

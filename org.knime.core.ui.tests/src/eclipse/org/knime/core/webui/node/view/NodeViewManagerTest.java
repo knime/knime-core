@@ -75,9 +75,9 @@ import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeInputNodeFactory;
 import org.knime.core.util.FileUtil;
-import org.knime.core.webui.data.text.TextApplyDataService;
 import org.knime.core.webui.data.text.TextDataService;
 import org.knime.core.webui.data.text.TextInitialDataService;
+import org.knime.core.webui.data.text.TextReExecuteDataService;
 import org.knime.core.webui.page.Page;
 
 import com.google.common.io.Files;
@@ -116,7 +116,7 @@ public class NodeViewManagerTest {
     /**
      * Tests {@link NodeViewManager#callTextInitialDataService(org.knime.core.node.workflow.NodeContainer)},
      * {@link NodeViewManager#callTextDataService(org.knime.core.node.workflow.NodeContainer, String)} and
-     * {@link NodeViewManager#callTextApplyDataService(org.knime.core.node.workflow.NodeContainer, String)}
+     * {@link NodeViewManager#callTextReExecuteDataService(org.knime.core.node.workflow.NodeContainer, String)}
      *
      * @throws IOException
      */
@@ -138,11 +138,17 @@ public class NodeViewManagerTest {
             public String handleRequest(final String request) {
                 return "general data service";
             }
-        }).applyDataService(new TextApplyDataService() {
+        }).reExecuteDataService(new TextReExecuteDataService() {
 
             @Override
             public void applyData(final String data) throws IOException {
-                throw new IOException("apply data service");
+                throw new UnsupportedOperationException("should not be called in this test");
+            }
+
+            @Override
+            public void reExecute(final String data) throws IOException {
+                throw new IOException("re-execute data service");
+
             }
         }).build();
         NativeNodeContainer nc = createNodeWithNodeView(wfm, m -> nodeView);
@@ -151,8 +157,8 @@ public class NodeViewManagerTest {
         assertThat(nodeViewManager.callTextInitialDataService(nc), is("init service"));
         assertThat(nodeViewManager.callTextDataService(nc, ""), is("general data service"));
         String message =
-            assertThrows(IOException.class, () -> nodeViewManager.callTextApplyDataService(nc, "")).getMessage();
-        assertThat(message, is("apply data service"));
+            assertThrows(IOException.class, () -> nodeViewManager.callTextReExecuteDataService(nc, "")).getMessage();
+        assertThat(message, is("re-execute data service"));
 
         wfm.getParent().removeProject(wfm.getID());
     }

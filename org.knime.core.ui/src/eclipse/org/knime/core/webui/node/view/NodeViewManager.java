@@ -69,12 +69,12 @@ import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.FileUtil;
-import org.knime.core.webui.data.ApplyDataService;
 import org.knime.core.webui.data.DataService;
 import org.knime.core.webui.data.InitialDataService;
-import org.knime.core.webui.data.text.TextApplyDataService;
+import org.knime.core.webui.data.ReExecuteDataService;
 import org.knime.core.webui.data.text.TextDataService;
 import org.knime.core.webui.data.text.TextInitialDataService;
+import org.knime.core.webui.data.text.TextReExecuteDataService;
 import org.knime.core.webui.page.Page;
 import org.knime.core.webui.page.Resource;
 
@@ -189,7 +189,7 @@ public final class NodeViewManager {
     }
 
     /**
-     * Helper to call a {@link TextApplyDataService} for a node view.
+     * Helper to call a {@link TextReExecuteDataService} for a node view.
      *
      * @param nc the node providing the view to call the data service for
      * @param request the data service request representing the data to apply
@@ -197,10 +197,10 @@ public final class NodeViewManager {
      * @throws IllegalStateException if the provided node doesn't provide a node view or the node view does not provide
      *             a data service
      */
-    public void callTextApplyDataService(final NodeContainer nc, final String request) throws IOException {
-        ApplyDataService applyDataService = getNodeView(nc).getApplyDataService().orElse(null);
-        if (applyDataService instanceof TextApplyDataService) {
-            ((TextApplyDataService)applyDataService).applyData(request);
+    public void callTextReExecuteDataService(final NodeContainer nc, final String request) throws IOException {
+        ReExecuteDataService reExecuteDataService = getNodeView(nc).getReExecuteDataService().orElse(null);
+        if (reExecuteDataService instanceof TextReExecuteDataService) {
+            ((TextReExecuteDataService)reExecuteDataService).reExecute(request);
         } else {
             throw new IllegalStateException(
                 "The node view provided by node '" + nc.getNameWithID() + "' does not provide a 'data service'");

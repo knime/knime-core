@@ -44,90 +44,36 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Aug 23, 2021 (hornm): created
+ *   Sep 24, 2021 (hornm): created
  */
-package org.knime.core.webui.node.view;
+package org.knime.core.webui.data;
 
-import java.util.Optional;
-
-import org.knime.core.webui.data.DataService;
-import org.knime.core.webui.data.InitialDataService;
-import org.knime.core.webui.data.ReExecuteDataService;
-import org.knime.core.webui.page.Page;
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
- * Represents a view of a node.
+ * A {@link ApplyDataService} that re-executes the underlying node in order to apply new data.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  *
  * @since 4.5
  */
-public final class NodeView {
+public interface ReExecuteDataService extends ApplyDataService {
 
-    private final Page m_page;
-
-    private final DataService m_dataService;
-
-    private final InitialDataService m_initialDataService;
-
-    private final ReExecuteDataService m_reExecuteDataService;
-
-    NodeView(final Page p, final InitialDataService initialDataService, final DataService dataService,
-        final ReExecuteDataService reExecuteDataService) {
-        m_page = p;
-        m_dataService = dataService;
-        m_initialDataService = initialDataService;
-        m_reExecuteDataService = reExecuteDataService;
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    default void handleRequest(final InputStream in) throws IOException {
+        reExecute(in);
     }
 
     /**
-     * Returns the (html) page which represents the view UI.
+     * Re-executes the underlying node in order to apply new data.
      *
-     * @return the page
+     * @param in the data to execute the node with
+     * @throws IOException
      */
-    public Page getPage() {
-        return m_page;
-    }
-
-    /**
-     * @return optional service that provides data for initialization of the node view
-     */
-    public Optional<InitialDataService> getInitialDataService() {
-        return Optional.ofNullable(m_initialDataService);
-    }
-
-    /**
-     * @return optional service generally providing data to the node view
-     */
-    public Optional<DataService> getDataService() {
-        return Optional.ofNullable(m_dataService);
-    }
-
-    /**
-     * @return optional service to re-execute node with new data
-     */
-    public Optional<ReExecuteDataService> getReExecuteDataService() {
-        return Optional.ofNullable(m_reExecuteDataService);
-    }
-
-    /**
-     * Creates a node view instance from a {@link Page}
-     *
-     * @param p the page to create the node view from
-     * @return a new node view instance
-     */
-    public static NodeView create(final Page p) {
-        return new NodeView(p, null, null, null);
-    }
-
-    /**
-     * Creates a new node view builder.
-     *
-     * @param p the page to initialize the builder with
-     * @return a new node view builder instance
-     */
-    public static NodeViewBuilder builder(final Page p) {
-        return new NodeViewBuilder(p);
-    }
+    void reExecute(final InputStream in) throws IOException;
 
 }
