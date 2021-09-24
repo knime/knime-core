@@ -47,9 +47,8 @@ package org.knime.core.node.defaultnodesettings;
 import org.knime.core.node.InvalidSettingsException;
 
 /**
- * A settingsmodel for integer default components accepting double between a min
- * and max value.
- * 
+ * A settingsmodel for integer default components accepting double between a min and max value.
+ *
  * @author ohl, University of Konstanz
  */
 public class SettingsModelIntegerBounded extends SettingsModelInteger {
@@ -58,22 +57,23 @@ public class SettingsModelIntegerBounded extends SettingsModelInteger {
 
     private final int m_maxValue;
 
+    private final SettingsModelInteger settingsModelInteger =
+        new SettingsModelInteger(super.getConfigName(), super.getIntValue());
+
     /**
-     * Creates a new integer settings model with min and max value for the
-     * accepted int value.
-     * 
+     * Creates a new integer settings model with min and max value for the accepted int value.
+     *
      * @param configName id the value is stored with in config objects.
      * @param defaultValue the initial value.
      * @param minValue lower bounds of the acceptable values.
      * @param maxValue upper bounds of the acceptable values.
      */
-    public SettingsModelIntegerBounded(final String configName,
-            final int defaultValue, final int minValue, final int maxValue) {
+    public SettingsModelIntegerBounded(final String configName, final int defaultValue, final int minValue,
+        final int maxValue) {
         super(configName, defaultValue);
 
         if (minValue > maxValue) {
-            throw new IllegalArgumentException("Specified min value must be"
-                    + " smaller than the max value.");
+            throw new IllegalArgumentException("Specified min value must be" + " smaller than the max value.");
         }
 
         m_minValue = minValue;
@@ -83,8 +83,7 @@ public class SettingsModelIntegerBounded extends SettingsModelInteger {
         try {
             checkBounds(defaultValue);
         } catch (IllegalArgumentException iae) {
-            throw new IllegalArgumentException("InitialValue: "
-                    + iae.getMessage());
+            throw new IllegalArgumentException("InitialValue: " + iae.getMessage());
         }
     }
 
@@ -93,8 +92,7 @@ public class SettingsModelIntegerBounded extends SettingsModelInteger {
      */
     @Override
     protected SettingsModelIntegerBounded createClone() {
-        return new SettingsModelIntegerBounded(getConfigName(), getIntValue(),
-                m_minValue, m_maxValue);
+        return new SettingsModelIntegerBounded(getConfigName(), getIntValue(), m_minValue, m_maxValue);
     }
 
     /**
@@ -115,8 +113,7 @@ public class SettingsModelIntegerBounded extends SettingsModelInteger {
      * {@inheritDoc}
      */
     @Override
-    protected void validateValue(final int value)
-            throws InvalidSettingsException {
+    protected void validateValue(final int value) throws InvalidSettingsException {
         super.validateValue(value);
         try {
             checkBounds(value);
@@ -136,9 +133,8 @@ public class SettingsModelIntegerBounded extends SettingsModelInteger {
 
     private void checkBounds(final double val) {
         if ((val < m_minValue) || (m_maxValue < val)) {
-            throw new IllegalArgumentException("Value (=" + val
-                    + ") must be within the range [" + m_minValue + "..."
-                    + m_maxValue + "].");
+            throw new IllegalArgumentException(
+                "Value (=" + val + ") must be within the range [" + m_minValue + "..." + m_maxValue + "].");
         }
     }
 }
