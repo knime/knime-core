@@ -48,11 +48,13 @@
  */
 package org.knime.core.webui.page;
 
+import static java.lang.String.format;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThrows;
 
+import java.io.File;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -117,7 +119,8 @@ public class PageTest {
         Page page = Page.builder(BUNDLE_ID, "files", "page.html").addResourceDirectory("dir").build();
         List<String> context =
             page.getContext().stream().map(r -> r.getRelativePath().toString()).collect(Collectors.toList());
-        assertThat(context, Matchers.containsInAnyOrder("dir/subdir/res.html", "dir/res2.js", "dir/res1.html"));
-
+        assertThat(context, Matchers.containsInAnyOrder(format("dir%1$ssubdir%1$sres.html", File.separator),
+            format("dir%sres2.js", File.separator), format("dir%sres1.html", File.separator)));
     }
+
 }
