@@ -55,7 +55,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -66,9 +65,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.eclipse.core.runtime.IConfigurationElement;
-import org.eclipse.core.runtime.IExtensionRegistry;
-import org.eclipse.core.runtime.Platform;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
@@ -82,11 +78,7 @@ import org.knime.core.node.property.hilite.HiLiteManager;
 import org.knime.core.node.property.hilite.HiLiteTranslator;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.ConvenienceMethods;
-import org.knime.core.node.web.DefaultWebTemplate;
 import org.knime.core.node.web.ValidationError;
-import org.knime.core.node.web.WebResourceLocator;
-import org.knime.core.node.web.WebResourceLocator.WebResourceType;
-import org.knime.core.node.web.WebTemplate;
 import org.knime.core.node.web.WebViewContent;
 import org.knime.core.node.wizard.ViewHideable;
 import org.knime.core.node.wizard.WizardNode;
@@ -114,45 +106,6 @@ public abstract class WebResourceController {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(WebResourceController.class);
 
-    private static final String ID_WEB_RES = "org.knime.js.core.webResources";
-
-    private static final String ID_JS_COMP = "org.knime.js.core.javascriptComponents";
-
-    private static final String ID_IMPL_BUNDLE = "implementationBundleID";
-
-    private static final String ID_IMPORT_RES = "importResource";
-
-    private static final String ID_DEPENDENCY = "webDependency";
-
-    private static final String ATTR_JS_ID = "javascriptComponentID";
-
-    private static final String ATTR_NAMESPACE = "namespace";
-
-    private static final String ATTR_RES_BUNDLE_ID = "webResourceBundleID";
-
-    private static final String ATTR_PATH = "relativePath";
-
-    private static final String ATTR_TYPE = "type";
-
-    private static final String ATTR_INIT_METHOD_NAME = "init-method-name";
-
-    private static final String ATTR_VALIDATE_METHOD_NAME = "validate-method-name";
-
-    private static final String ATTR_GETCOMPONENTVALUE_METHOD_NAME = "getComponentValue-method-name";
-
-    private static final String ATTR_SETVALIDATIONERROR_METHOD_NAME = "setValidationError-method-name";
-
-    private static final String ID_WEB_RESOURCE = "webResource";
-
-    private static final String ATTR_RELATIVE_PATH_SOURCE = "relativePathSource";
-
-    private static final String ATTR_RELATIVE_PATH_TARGET = "relativePathTarget";
-
-    private static final String DEFAULT_DEPENDENCY = "knimeService_1.0";
-
-    private static final Set<WebResourceLocator> DEFAULT_RES =
-        getResourcesFromExtension(getConfigurationFromID(ID_WEB_RES, ATTR_RES_BUNDLE_ID, DEFAULT_DEPENDENCY));
-
     /** Filter passed to WFM serach methods to find only QF nodes that are to be displayed. */
     @SuppressWarnings("rawtypes")
     public static final NodeModelFilter<WizardNode> NOT_HIDDEN_FILTER = new NodeModelFilter<WizardNode>() {
@@ -164,177 +117,6 @@ public abstract class WebResourceController {
 
     /** Host WFM. */
     protected final WorkflowManager m_manager;
-
-    /**
-     * @param jsObjectID The JavaScript object ID used for locating the extension point.
-     * @return A template object, being used to assamble views.
-     */
-    public static WebTemplate getWebTemplateFromJSObjectID(final String jsObjectID) {
-        LinkedHashSet<WebResourceLocator> webResList = new LinkedHashSet<WebResourceLocator>();
-        IConfigurationElement jsComponentExtension = getConfigurationFromID(ID_JS_COMP, ATTR_JS_ID, jsObjectID);
-        if (jsComponentExtension == null) {
-            return getEmptyWebTemplate();
-        }
-        String bundleID = jsComponentExtension.getAttribute(ID_IMPL_BUNDLE);
-        IConfigurationElement implementationExtension =
-            getConfigurationFromID(ID_WEB_RES, ATTR_RES_BUNDLE_ID, bundleID);
-        if (implementationExtension == null) {
-            return getEmptyWebTemplate();
-        }
-        Set<WebResourceLocator> implementationRes = getResourcesFromExtension(implementationExtension);
-        webResList.addAll(DEFAULT_RES);
-        for (IConfigurationElement dependencyConf : jsComponentExtension.getChildren(ID_DEPENDENCY)) {
-            String dependencyID = dependencyConf.getAttribute(ATTR_RES_BUNDLE_ID);
-            IConfigurationElement dependencyExtension =
-                getConfigurationFromID(ID_WEB_RES, ATTR_RES_BUNDLE_ID, dependencyID);
-            if (dependencyExtension == null) {
-                LOGGER.error("Web ressource dependency could not be found: " + dependencyID
-                    + ". This is most likely an implementation error.");
-                continue;
-            }
-            Set<WebResourceLocator> dependencyRes = getResourcesFromExtension(dependencyExtension);
-            webResList.addAll(dependencyRes);
-        }
-        webResList.addAll(implementationRes);
-        String namespace = jsComponentExtension.getAttribute(ATTR_NAMESPACE);
-        String initMethodName = jsComponentExtension.getAttribute(ATTR_INIT_METHOD_NAME);
-        String validateMethodName = jsComponentExtension.getAttribute(ATTR_VALIDATE_METHOD_NAME);
-        String valueMethodName = jsComponentExtension.getAttribute(ATTR_GETCOMPONENTVALUE_METHOD_NAME);
-        String setValidationErrorMethodName = jsComponentExtension.getAttribute(ATTR_SETVALIDATIONERROR_METHOD_NAME);
-        return new DefaultWebTemplate(webResList.toArray(new WebResourceLocator[0]), namespace, initMethodName,
-            validateMethodName, valueMethodName, setValidationErrorMethodName);
-    }
-
-    /**
-     * @param bundleID the ID for the web bundle
-     * @return a template for non-views, all fields expected {@code webResources} will be empty
-     * @since 3.7
-     */
-    public static WebTemplate getWebTemplateFromBundleID(final String bundleID) {
-        LinkedHashSet<WebResourceLocator> webResList = new LinkedHashSet<WebResourceLocator>();
-        IConfigurationElement implementationExtension =
-            getConfigurationFromID(ID_WEB_RES, ATTR_RES_BUNDLE_ID, bundleID);
-        if (implementationExtension == null) {
-            return getEmptyWebTemplate();
-        }
-        Set<WebResourceLocator> implementationRes = getResourcesFromExtension(implementationExtension);
-        webResList.addAll(DEFAULT_RES);
-        webResList.addAll(implementationRes);
-        return new DefaultWebTemplate(webResList.toArray(new WebResourceLocator[0]), "", "", "", "", "");
-    }
-
-    private static WebTemplate getEmptyWebTemplate() {
-        return new DefaultWebTemplate(new WebResourceLocator[0], "", "", "", "", "");
-    }
-
-    private static IConfigurationElement getConfigurationFromID(final String extensionPointId,
-        final String configurationID, final String jsObjectID) {
-        if (jsObjectID != null) {
-            IExtensionRegistry registry = Platform.getExtensionRegistry();
-            IConfigurationElement[] configurationElements = registry.getConfigurationElementsFor(extensionPointId);
-            for (IConfigurationElement element : configurationElements) {
-                if (jsObjectID.equals(element.getAttribute(configurationID))) {
-                    return element;
-                }
-            }
-        }
-        return null;
-    }
-
-    private static Map<String, String> getWebResources(final IConfigurationElement resConfig) {
-        Map<String, String> resMap = new HashMap<String, String>();
-        for (IConfigurationElement resElement : resConfig.getChildren(ID_WEB_RESOURCE)) {
-            resMap.put(resElement.getAttribute(ATTR_RELATIVE_PATH_TARGET),
-                resElement.getAttribute(ATTR_RELATIVE_PATH_SOURCE));
-        }
-        return resMap;
-    }
-
-    private static Set<WebResourceLocator> getResourcesFromExtension(final IConfigurationElement resConfig) {
-        if (resConfig == null) {
-            return Collections.emptySet();
-        }
-        String pluginName = resConfig.getContributor().getName();
-        LinkedHashSet<WebResourceLocator> locators = new LinkedHashSet<WebResourceLocator>();
-        Map<String, String> resMap = getWebResources(resConfig);
-        Set<String> imports = new HashSet<String>();
-        // collect dependencies
-        for (IConfigurationElement depElement : resConfig.getChildren(ID_DEPENDENCY)) {
-            String dependencyID = depElement.getAttribute(ATTR_RES_BUNDLE_ID);
-            IConfigurationElement depConfig = getConfigurationFromID(ID_WEB_RES, ATTR_RES_BUNDLE_ID, dependencyID);
-            if (depConfig == null) {
-                LOGGER.error("Web ressource dependency could not be found: " + dependencyID
-                    + ". This is most likely an implementation error.");
-                continue;
-            }
-            locators.addAll(getResourcesFromExtension(depConfig));
-        }
-        // collect own import files
-        for (IConfigurationElement resElement : resConfig.getChildren(ID_IMPORT_RES)) {
-            String path = resElement.getAttribute(ATTR_PATH);
-            String type = resElement.getAttribute(ATTR_TYPE);
-            if (path != null && type != null) {
-                WebResourceType resType = WebResourceType.FILE;
-                if (type.equalsIgnoreCase("javascript")) {
-                    resType = WebResourceType.JAVASCRIPT;
-                } else if (type.equalsIgnoreCase("css")) {
-                    resType = WebResourceType.CSS;
-                }
-                String parent = path.substring(0, path.lastIndexOf('/') + 1);
-                String newParent = resMap.get(parent);
-                String sourcePath;
-                if (newParent != null) {
-                    sourcePath = path.replace(parent, newParent);
-                } else {
-                    sourcePath = path;
-                }
-                locators.add(new WebResourceLocator(pluginName, sourcePath, path, resType));
-                imports.add(sourcePath);
-            }
-        }
-
-        // Add additional ressources from directories
-        /* for (Entry<String, String> entry :resMap.entrySet()) {
-            String targetPath = entry.getKey();
-            String sourcePath = entry.getValue();
-            try {
-                URL url = new URL("platform:/plugin/" + pluginName);
-                File dir = new File(FileLocator.resolve(url).getFile());
-                File file = new File(dir, sourcePath);
-                if (file.exists()) {
-                    addLocators(pluginName, locators, imports, file, sourcePath, targetPath);
-                }
-            } catch (Exception e) {
-                LOGGER.warn("Could not resolve web resource " + sourcePath, e);
-            }
-        }*/
-        return locators;
-    }
-
-    /**
-     * Adds locators to all files contained in the given file.
-     *
-     * @param pluginName Plugin of the web resource
-     * @param locators The list of locators to add to
-     * @param imports Set of files that have already been added as import resource
-     * @param file The file that will be added (if it is a directory contained files will be added recursively)
-     * @param sourcePath The source path of the locator
-     * @param targetPath The target path of the locator
-     */
-    /*private static void addLocators(final String pluginName, final Set<WebResourceLocator> locators,
-        final Set<String> imports, final File file, final String sourcePath, final String targetPath) {
-        if (file.isDirectory()) {
-            for (File innerFile : file.listFiles()) {
-                String innerSource = (sourcePath + "/" + innerFile.getName()).replace("//", "/");
-                String innerTarget = (targetPath + "/" + innerFile.getName()).replace("//", "/");
-                addLocators(pluginName, locators, imports, innerFile, innerSource, innerTarget);
-            }
-        } else {
-            if (!imports.contains(sourcePath)) {
-                locators.add(new WebResourceLocator(pluginName, sourcePath, targetPath, WebResourceType.FILE));
-            }
-        }
-    }*/
 
     /**
      * Temporary workaround to check if the argument workflow contains sub nodes and hence can be used with the
@@ -1057,7 +839,6 @@ public abstract class WebResourceController {
 
         private Map<NodeIDSuffix, WizardPageContent> m_nestedContent;
 
-        @SuppressWarnings("rawtypes")
         private Map<NodeIDSuffix, WizardPageNodeInfo> m_infoMap;
 
         private final String m_layoutInfo;
