@@ -51,10 +51,11 @@ package org.knime.core.node.wizard.util;
 import java.io.IOException;
 import java.util.Map;
 
-import org.knime.core.node.wizard.ViewHideable;
 import org.knime.core.node.wizard.WizardNode;
+import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
+import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.SubnodeContainerLayoutStringProvider;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -73,7 +74,7 @@ public interface DefaultLayoutCreator {
      * @return a default layout structure as JSON string.
      * @throws IOException on creation error.
      */
-    public String createDefaultLayout(final Map<NodeIDSuffix, ViewHideable> viewNodes) throws IOException;
+    public String createDefaultLayout(final Map<NodeIDSuffix, SingleNodeContainer> viewNodes) throws IOException;
 
     /**
      * Expands nested layouts by inserting the appropriate sub-layouts in an original layout.
@@ -92,9 +93,8 @@ public interface DefaultLayoutCreator {
      * @param containerID the {@link NodeID} of the containing subnode container.
      * @since 4.2
      */
-    @SuppressWarnings("rawtypes")
     public void addUnreferencedViews(final SubnodeContainerLayoutStringProvider layoutStringProvider,
-        final Map<NodeIDSuffix, WizardNode> allNodes, final Map<NodeIDSuffix, SubNodeContainer> allNestedViews,
+        final Map<NodeIDSuffix, NativeNodeContainer> allNodes, final Map<NodeIDSuffix, SubNodeContainer> allNestedViews,
         final NodeID containerID);
 
     /**

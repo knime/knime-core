@@ -80,7 +80,6 @@ import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.web.ValidationError;
 import org.knime.core.node.web.WebViewContent;
-import org.knime.core.node.wizard.ViewHideable;
 import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.wizard.WizardViewRequest;
 import org.knime.core.node.wizard.WizardViewRequestHandler;
@@ -228,7 +227,6 @@ public abstract class WebResourceController {
      * @param subnodeID the node id for the subnode to retrieve the wizard page for
      * @return The wizard page for the given node id
      */
-    @SuppressWarnings("rawtypes")
     protected WizardPageContent getWizardPageInternal(final NodeID subnodeID) {
         if (subnodeID == null) {
             LOGGER.error("No node ID supplied for creating wizard page");
@@ -237,7 +235,7 @@ public abstract class WebResourceController {
         final WorkflowManager manager = m_manager;
         assert manager.isLockedByCurrentThread();
 
-        LinkedHashMap<NodeIDSuffix, WizardNode> resultMap = new LinkedHashMap<NodeIDSuffix, WizardNode>();
+        LinkedHashMap<NodeIDSuffix, NativeNodeContainer> resultMap = new LinkedHashMap<>();
         LinkedHashMap<NodeIDSuffix, WizardPageNodeInfo> infoMap = new LinkedHashMap<NodeIDSuffix, WizardPageNodeInfo>();
         Set<HiLiteHandler> initialHiliteHandlerSet = new HashSet<HiLiteHandler>();
         SubNodeContainer subNC = manager.getNodeContainer(subnodeID, SubNodeContainer.class, true);
@@ -247,8 +245,8 @@ public abstract class WebResourceController {
         if (layoutStringProvider.isEmptyLayout() || layoutStringProvider.isPlaceholderLayout()) {
             try {
                 WorkflowManager subWfm = subNC.getWorkflowManager();
-                Map<NodeIDSuffix, ViewHideable> viewMap = new LinkedHashMap<NodeIDSuffix, ViewHideable>();
-                subWfm.findNodes(WizardNode.class, NOT_HIDDEN_FILTER, false).entrySet().stream()
+                Map<NodeIDSuffix, SingleNodeContainer> viewMap = new LinkedHashMap<>();
+                collectWizardPageNodes(subWfm).entrySet().stream()
                     .forEach(e -> viewMap.put(toNodeIDSuffix(e.getKey()), e.getValue()));
                 Map<NodeID, SubNodeContainer> nestedSubs = getSubnodeContainers(subWfm);
                 nestedSubs.entrySet().stream().filter(e -> isWizardPage(e.getKey(), subWfm))
@@ -304,12 +302,12 @@ public abstract class WebResourceController {
      */
     @SuppressWarnings("rawtypes")
     private static void findNestedViewNodes(final SubNodeContainer subNC,
-        final Map<NodeIDSuffix, WizardNode> resultMap, final Map<NodeIDSuffix, WizardPageNodeInfo> infoMap,
+        final Map<NodeIDSuffix, NativeNodeContainer> resultMap, final Map<NodeIDSuffix, WizardPageNodeInfo> infoMap,
         final Map<NodeIDSuffix, SubNodeContainer> sncMap, final Set<HiLiteHandler> initialHiliteHandlerSet) {
         WorkflowManager subWFM = subNC.getWorkflowManager();
-        Map<NodeID, WizardNode> wizardNodeMap = subWFM.findNodes(WizardNode.class, NOT_HIDDEN_FILTER, false);
+        Map<NodeID, NativeNodeContainer> wizardNodeMap = collectWizardPageNodes(subWFM);
         WorkflowManager projectWFM = subNC.getProjectWFM();
-        for (Map.Entry<NodeID, WizardNode> entry : wizardNodeMap.entrySet()) {
+        for (Map.Entry<NodeID, NativeNodeContainer> entry : wizardNodeMap.entrySet()) {
             NodeContainer nc = subWFM.getNodeContainer(entry.getKey());
             if ((nc instanceof SingleNodeContainer) && ((SingleNodeContainer)nc).isInactive()) {
                 //skip nodes in inactive branches
@@ -331,7 +329,7 @@ public abstract class WebResourceController {
 
             if (initialHiliteHandlerSet != null) {
                 for (int i = 0; i < nc.getNrInPorts() - 1; i++) {
-                    HiLiteHandler hiLiteHandler = ((NodeModel)entry.getValue()).getInHiLiteHandler(i);
+                    HiLiteHandler hiLiteHandler = entry.getValue().getNodeModel().getInHiLiteHandler(i);
                     if (hiLiteHandler != null) {
                         initialHiliteHandlerSet.add(hiLiteHandler);
                     }
@@ -349,6 +347,19 @@ public abstract class WebResourceController {
                 findNestedViewNodes(snc, resultMap, infoMap, sncMap, initialHiliteHandlerSet);
             }
         }
+    }
+
+    /**
+     * Collects all the node from the given workflow that contribute to a wizard page.
+     *
+     * @param wfm the workflow to collect the nodes from
+     * @return map from node id to node
+     *
+     * @since 4.5
+     */
+    public static Map<NodeID, NativeNodeContainer> collectWizardPageNodes(final WorkflowManager wfm) {
+        return wfm.findNodes(WizardNode.class, NOT_HIDDEN_FILTER, false).keySet().stream()
+            .collect(Collectors.toMap(id -> id, id -> (NativeNodeContainer)wfm.getNodeContainer(id)));
     }
 
     protected Map<NodeIDSuffix, WebViewContent> getWizardPageViewValueMapInternal(final NodeID subnodeID) {
@@ -834,8 +845,7 @@ public abstract class WebResourceController {
 
         private final NodeID m_pageNodeID;
 
-        @SuppressWarnings("rawtypes")
-        private final Map<NodeIDSuffix, WizardNode> m_pageMap;
+        private final Map<NodeIDSuffix, NativeNodeContainer> m_pageMap;
 
         private Map<NodeIDSuffix, WizardPageContent> m_nestedContent;
 
@@ -852,8 +862,7 @@ public abstract class WebResourceController {
          * @param pageMap
          * @param layoutInfo
          */
-        @SuppressWarnings("rawtypes")
-        WizardPageContent(final NodeID pageNodeID, final Map<NodeIDSuffix, WizardNode> pageMap,
+        WizardPageContent(final NodeID pageNodeID, final Map<NodeIDSuffix, NativeNodeContainer> pageMap,
             final String layoutInfo, final List<HiLiteTranslator> hiLiteTranslators,
             final List<HiLiteManager> hiLiteManagers) {
             m_pageNodeID = pageNodeID;
@@ -875,8 +884,7 @@ public abstract class WebResourceController {
         /**
          * @return the pageMap
          */
-        @SuppressWarnings("rawtypes")
-        public Map<NodeIDSuffix, WizardNode> getPageMap() {
+        public Map<NodeIDSuffix, NativeNodeContainer> getPageMap() {
             return m_pageMap;
         }
 
