@@ -195,7 +195,7 @@ public abstract class WebResourceController {
         assert manager.isLockedByCurrentThread();
 
         SubNodeContainer subNodeNC = manager.getNodeContainer(subnodeID, SubNodeContainer.class, true);
-        Map<NodeID, WizardNode> wizardNodeSet = getWizardNodeSetForVerifiedID(subnodeID);
+        Map<NodeID, NativeNodeContainer> wizardNodeSet = getWizardNodeSetForVerifiedID(subnodeID);
 
         Map<String, String> filteredViewContentMap;
         if (nodeToReset == null) {
@@ -238,31 +238,37 @@ public abstract class WebResourceController {
 
     @SuppressWarnings("rawtypes")
     private static void loadViewValues(final Map<String, String> filteredViewContentMap,
-        final Map<NodeID, WizardNode> wizardNodeSet, final WorkflowManager manager, final SubNodeContainer subNodeNC,
+        final Map<NodeID, NativeNodeContainer> wizardNodeSet, final WorkflowManager manager, final SubNodeContainer subNodeNC,
         final boolean useAsDefault) {
-        WorkflowManager projectWfm = subNodeNC.getProjectWFM();
         for (Map.Entry<String, String> entry : filteredViewContentMap.entrySet()) {
             NodeID.NodeIDSuffix suffix = NodeID.NodeIDSuffix.fromString(entry.getKey());
             NodeID id = suffix.prependParent(manager.getProjectWFM().getID());
-            WizardNode wizardNode = wizardNodeSet.get(id);
-            WebViewContent newViewValue = wizardNode.createEmptyViewValue();
-            if (newViewValue == null) {
-                // node has no view value
-                continue;
+            NativeNodeContainer wizardNode = wizardNodeSet.get(id);
+            if (wizardNode.getNodeModel() instanceof WizardNode) {
+                loadViewValueForWizardNode(wizardNode, (WizardNode)wizardNode.getNodeModel(), entry.getValue(),
+                    useAsDefault);
+            } else {
+                throw new IllegalStateException();
             }
-            try {
-                newViewValue
-                    .loadFromStream(new ByteArrayInputStream(entry.getValue().getBytes(StandardCharsets.UTF_8)));
-                wizardNode.loadViewValue(newViewValue, useAsDefault);
-                if (useAsDefault) {
-                    NodeContainer nc = projectWfm.findNodeContainer(id);
-                    CheckUtils.checkArgument(nc instanceof SingleNodeContainer, "Provided node id (%s) doesn't "
-                        + "reference a single node and therefore the updated value cannot be saved", id);
-                    ((SingleNodeContainer)nc).saveNodeSettingsToDefault();
-                }
-            } catch (Exception e) {
-                LOGGER.error("Failed to load view value into node \"" + id + "\" although validation succeeded", e);
+        }
+    }
+
+    private static void loadViewValueForWizardNode(final NativeNodeContainer nnc, final WizardNode wizardNode,
+        final String viewValue, final boolean useAsDefault) {
+        WebViewContent newViewValue = wizardNode.createEmptyViewValue();
+        if (newViewValue == null) {
+            // node has no view value
+            return;
+        }
+        try {
+            newViewValue.loadFromStream(new ByteArrayInputStream(viewValue.getBytes(StandardCharsets.UTF_8)));
+            wizardNode.loadViewValue(newViewValue, useAsDefault);
+            if (useAsDefault) {
+                nnc.saveNodeSettingsToDefault();
             }
+        } catch (Exception e) {
+            LOGGER.error("Failed to load view value into node \"" + nnc.getID() + "\" although validation succeeded",
+                e);
         }
     }
 
@@ -295,38 +301,31 @@ public abstract class WebResourceController {
      * @throws IllegalStateException if there are no nodes with the provided id prefixes in the page or the provided
      *             wizard-node-set doesn't contain the required wizard nodes
      */
-    @SuppressWarnings({"rawtypes", "unchecked"})
+    @SuppressWarnings({"rawtypes"})
     protected Map<String, ValidationError> validateViewValuesInternal(final Map<String, String> viewValues,
-        final NodeID subnodeID, final Map<NodeID, WizardNode> wizardNodeSet) {
+        final NodeID subnodeID, final Map<NodeID, NativeNodeContainer> wizardNodeSet) {
         if (subnodeID == null) {
             throw new IllegalArgumentException("No node ID supplied for validating view values of wizard page");
         }
         WorkflowManager manager = m_manager;
         assert manager.isLockedByCurrentThread();
-        Map<String, ValidationError> resultMap = new LinkedHashMap<String, ValidationError>();
+        Map<String, ValidationError> resultMap = new LinkedHashMap<>();
         for (Map.Entry<String, String> entry : viewValues.entrySet()) {
             NodeID.NodeIDSuffix suffix = NodeID.NodeIDSuffix.fromString(entry.getKey());
             NodeID id = suffix.prependParent(manager.getProjectWFM().getID());
             CheckUtils.checkState(id.hasPrefix(subnodeID),
                 "The wizard page content for ID %s (suffix %s) does not belong to the current Component (ID %s)",
                 id, entry.getKey(), subnodeID);
-            WizardNode wizardNode = wizardNodeSet.get(id);
+            NativeNodeContainer wizardNode = wizardNodeSet.get(id);
             CheckUtils.checkState(wizardNode != null,
                 "No wizard node with ID %s in Component, valid IDs are: " + "%s", id,
                 ConvenienceMethods.getShortStringFrom(wizardNodeSet.entrySet(), 10));
-            @SuppressWarnings("null")
-            WebViewContent newViewValue = wizardNode.createEmptyViewValue();
-            if (newViewValue == null) {
-                // node has no view value
-                continue;
-            }
             ValidationError validationError = null;
-            try {
-                newViewValue.loadFromStream(new ByteArrayInputStream(entry.getValue().getBytes(Charset.forName("UTF-8"))));
-                validationError = wizardNode.validateViewValue(newViewValue);
-            } catch (Exception e) {
-                resultMap.put(entry.getKey(),
-                    new ValidationError("Could not deserialize JSON value: " + entry.getValue() + ": \n" + e.getMessage()));
+            if (wizardNode.getNodeModel() instanceof WizardNode) {
+                validationError =
+                    validateViewValueForWizardNode((WizardNode)wizardNode.getNodeModel(), entry.getValue());
+            } else {
+                throw new IllegalStateException();
             }
             if (validationError != null) {
                 resultMap.put(entry.getKey(), validationError);
@@ -338,14 +337,30 @@ public abstract class WebResourceController {
         return Collections.emptyMap();
     }
 
+    private static ValidationError validateViewValueForWizardNode(final WizardNode wizardNode, final String viewValue) {
+        WebViewContent newViewValue = wizardNode.createEmptyViewValue();
+        if (newViewValue == null) {
+            // node has no view value
+            return null;
+        }
+        ValidationError validationError = null;
+        try {
+            newViewValue.loadFromStream(new ByteArrayInputStream(viewValue.getBytes(StandardCharsets.UTF_8)));
+            validationError = wizardNode.validateViewValue(newViewValue);
+        } catch (Exception e) { // NOSONAR
+            validationError =
+                new ValidationError("Could not deserialize JSON value: " + viewValue + ": \n" + e.getMessage());
+        }
+        return validationError;
+    }
+
     /**
      * Queries a subnode and returns all appropriate view nodes contained within.
      *
      * @param subnodeID the subnode id, not null
      * @return a map of view nodes
      */
-    @SuppressWarnings("rawtypes")
-    protected Map<NodeID, WizardNode> getWizardNodeSetForVerifiedID(final NodeID subnodeID) {
+    protected Map<NodeID, NativeNodeContainer> getWizardNodeSetForVerifiedID(final NodeID subnodeID) {
         if (subnodeID == null) {
             LOGGER.error("No node ID supplied while trying to retrieve node set for wizard page");
             return null;
@@ -354,7 +369,7 @@ public abstract class WebResourceController {
         assert manager.isLockedByCurrentThread();
         SubNodeContainer subNodeNC = manager.getNodeContainer(subnodeID, SubNodeContainer.class, true);
         WorkflowManager subNodeWFM = subNodeNC.getWorkflowManager();
-        return subNodeWFM.findNodes(WizardNode.class, WizardPageUtil.NOT_HIDDEN_FILTER, false, true);
+        return WizardPageUtil.getWizardPageNodes(subNodeWFM, true);
     }
 
     /**
