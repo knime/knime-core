@@ -46,24 +46,18 @@
  */
 package org.knime.core.node.workflow;
 
-import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
@@ -73,9 +67,6 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.dialog.ExternalNodeData;
 import org.knime.core.node.dialog.InputNode;
 import org.knime.core.node.interactive.ViewRequestHandlingException;
-import org.knime.core.node.property.hilite.HiLiteHandler;
-import org.knime.core.node.property.hilite.HiLiteManager;
-import org.knime.core.node.property.hilite.HiLiteTranslator;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.web.ValidationError;
@@ -84,11 +75,8 @@ import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.wizard.WizardViewRequest;
 import org.knime.core.node.wizard.WizardViewRequestHandler;
 import org.knime.core.node.wizard.WizardViewResponse;
-import org.knime.core.node.wizard.util.LayoutUtil;
+import org.knime.core.node.wizard.page.WizardPageUtil;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
-import org.knime.core.node.workflow.WebResourceController.WizardPageContent.WizardPageNodeInfo;
-import org.knime.core.node.workflow.WorkflowManager.NodeModelFilter;
-import org.knime.core.util.Pair;
 
 /**
  * An abstract utility class received from the workflow manager that allows defining wizard execution or generating
@@ -104,15 +92,6 @@ import org.knime.core.util.Pair;
 public abstract class WebResourceController {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(WebResourceController.class);
-
-    /** Filter passed to WFM serach methods to find only QF nodes that are to be displayed. */
-    @SuppressWarnings("rawtypes")
-    public static final NodeModelFilter<WizardNode> NOT_HIDDEN_FILTER = new NodeModelFilter<WizardNode>() {
-        @Override
-        public boolean include(final WizardNode nodeModel) {
-            return !nodeModel.isHideInWizard();
-        }
-    };
 
     /** Host WFM. */
     protected final WorkflowManager m_manager;
@@ -153,213 +132,7 @@ public abstract class WebResourceController {
      * @since 3.4
      */
     protected boolean isSubnodeViewAvailable(final NodeID subnodeId) {
-        return isWizardPage(subnodeId, m_manager);
-    }
-
-    /**
-     * Checks whether a node (i.e. component) represents a wizard page.
-     *
-     * @param componentId the id of the node to check
-     * @param wfm the workflow manager that contains the node to check
-     * @return <code>true</code> if the node for the given id represents a wizard page, otherwise <code>false</code>
-     *
-     * @since 4.2
-     */
-    public static boolean isWizardPage(final NodeID componentId, final WorkflowManager wfm) {
-        // potentially null when queried from contained metanode
-        NodeContainer sourceNC = wfm.getWorkflow().getNode(componentId);
-        // only consider nodes that are...SubNodes and...
-        if (!(sourceNC instanceof SubNodeContainer)) {
-            return false;
-        }
-        SubNodeContainer subnodeSource = (SubNodeContainer)sourceNC;
-        // ...active and not hidden.
-        if (subnodeSource.isInactive() || subnodeSource.isHideInWizard()) {
-            return false;
-        }
-        // Now check if the active SubNode contains active QuickForm nodes:
-        WorkflowManager subNodeWFM = subnodeSource.getWorkflowManager();
-        @SuppressWarnings("rawtypes")
-        Map<NodeID, WizardNode> wizardNodeSet = subNodeWFM.findNodes(WizardNode.class, NOT_HIDDEN_FILTER, false);
-        boolean allInactive = true;
-        for (NodeID id : wizardNodeSet.keySet()) {
-            if (!subNodeWFM.getNodeContainer(id, NativeNodeContainer.class, true).isInactive()) {
-                allInactive = false;
-                break;
-            }
-        }
-        if (allInactive) {
-            // also consider nested SubNodes which might have views to display
-            Map<NodeID, SubNodeContainer> sncSet = getSubnodeContainers(subNodeWFM);
-            for (NodeID id : sncSet.keySet()) {
-                if (isWizardPage(id, subNodeWFM)) {
-                    allInactive = false;
-                    break;
-                }
-            }
-        }
-        return !allInactive;
-    }
-
-    /**
-     * Retrieves all directly contained {@link SubNodeContainer} inside a given {@link WorkflowManager}. Does not
-     * recursively look for nested subnodes.
-     * @param wfm The {@link WorkflowManager} of the parent container to look for contained subnodes.
-     * @return A map of {@link NodeID} to {@link SubNodeContainer}
-     * @since 3.7
-     */
-    //TODO: this method could also be on the WorkflowManager itself but the functionality is only needed here so far
-    public static Map<NodeID, SubNodeContainer> getSubnodeContainers(final WorkflowManager wfm) {
-        try (WorkflowLock lock = wfm.lock()) {
-            Map<NodeID, SubNodeContainer> result = new LinkedHashMap<NodeID, SubNodeContainer>();
-            for (NodeContainer nc : wfm.getNodeContainers()) {
-                if (nc instanceof SubNodeContainer) {
-                    result.put(nc.getID(), (SubNodeContainer)nc);
-                }
-            }
-            return result;
-        }
-    }
-
-    /**
-     * Crates the wizard page for a given node id. Throws exception if no wizard page available.
-     *
-     * @param subnodeID the node id for the subnode to retrieve the wizard page for
-     * @return The wizard page for the given node id
-     */
-    protected WizardPageContent getWizardPageInternal(final NodeID subnodeID) {
-        if (subnodeID == null) {
-            LOGGER.error("No node ID supplied for creating wizard page");
-            return null;
-        }
-        final WorkflowManager manager = m_manager;
-        assert manager.isLockedByCurrentThread();
-
-        LinkedHashMap<NodeIDSuffix, NativeNodeContainer> resultMap = new LinkedHashMap<>();
-        LinkedHashMap<NodeIDSuffix, WizardPageNodeInfo> infoMap = new LinkedHashMap<NodeIDSuffix, WizardPageNodeInfo>();
-        Set<HiLiteHandler> initialHiliteHandlerSet = new HashSet<HiLiteHandler>();
-        SubNodeContainer subNC = manager.getNodeContainer(subnodeID, SubNodeContainer.class, true);
-        LinkedHashMap<NodeIDSuffix, SubNodeContainer> sncMap = new LinkedHashMap<NodeIDSuffix, SubNodeContainer>();
-        findNestedViewNodes(subNC, resultMap, infoMap, sncMap, initialHiliteHandlerSet);
-        SubnodeContainerLayoutStringProvider layoutStringProvider = subNC.getSubnodeLayoutStringProvider();
-        if (layoutStringProvider.isEmptyLayout() || layoutStringProvider.isPlaceholderLayout()) {
-            try {
-                WorkflowManager subWfm = subNC.getWorkflowManager();
-                Map<NodeIDSuffix, SingleNodeContainer> viewMap = new LinkedHashMap<>();
-                collectWizardPageNodes(subWfm).entrySet().stream()
-                    .forEach(e -> viewMap.put(toNodeIDSuffix(e.getKey()), e.getValue()));
-                Map<NodeID, SubNodeContainer> nestedSubs = getSubnodeContainers(subWfm);
-                nestedSubs.entrySet().stream().filter(e -> isWizardPage(e.getKey(), subWfm))
-                    .forEach(e -> viewMap.put(toNodeIDSuffix(e.getKey()), e.getValue()));
-                layoutStringProvider.setLayoutString(LayoutUtil.createDefaultLayout(viewMap));
-            } catch (IOException ex) {
-                LOGGER.error("Default page layout could not be created: " + ex.getMessage(), ex);
-            }
-        }
-        try {
-            LayoutUtil.expandNestedLayout(layoutStringProvider, subNC.getWorkflowManager());
-        } catch (IOException ex) {
-            LOGGER.error("Nested layouts could not be expanded: " + ex.getMessage(), ex);
-        }
-        try {
-            NodeID containerID = NodeID
-                .fromString(NodeIDSuffix.create(m_manager.getID(), subNC.getWorkflowManager().getID()).toString());
-            LayoutUtil.addUnreferencedViews(layoutStringProvider, resultMap, sncMap, containerID);
-        } catch (IOException ex) {
-            LOGGER.error("Layout could not be amended by unreferenced views: " + ex.getMessage(), ex);
-        }
-        try {
-            LayoutUtil.updateLayout(layoutStringProvider);
-        } catch (Exception ex) {
-            LOGGER.error("Layout could not be updated: " + ex.getMessage(), ex);
-        }
-        Set<HiLiteHandler> knownHiLiteHandlers = new HashSet<HiLiteHandler>();
-        Set<HiLiteTranslator> knownTranslators = new HashSet<HiLiteTranslator>();
-        Set<HiLiteManager> knownManagers = new HashSet<HiLiteManager>();
-        for (HiLiteHandler initialHandler : initialHiliteHandlerSet) {
-            getHiLiteTranslators(initialHandler, knownHiLiteHandlers, knownTranslators, knownManagers);
-        }
-        List<HiLiteTranslator> translatorList =
-            knownTranslators.size() > 0 ? new ArrayList<HiLiteTranslator>(knownTranslators) : null;
-        List<HiLiteManager> managerList = knownManagers.size() > 0 ? new ArrayList<HiLiteManager>(knownManagers) : null;
-        WizardPageContent page = new WizardPageContent(subnodeID, resultMap, layoutStringProvider.getLayoutString(),
-            translatorList, managerList);
-        page.setInfoMap(infoMap);
-        return page;
-    }
-
-    /**
-     * Collects different kind of infos for the 'wizard' nodes contained in a page (i.e. component). Nodes in nested
-     * pages are recursively collected, too.
-     *
-     * @param subNC the page to collect the info for
-     * @param resultMap the container for the collected {@link WizardNode}s, or <code>null</code> if it shouldn't be
-     *            collected
-     * @param infoMap the container for the collected {@link WizardPageNodeInfo}s, or <code>null</code> if it shouldn't
-     *            be collected
-     * @param sncMap the map of nested pages, or <code>null</code> if shouldn't be collected
-     * @param initialHiliteHandlerSet collected hilite handlers or <code>null</code> if it shouldn't be collected
-     */
-    @SuppressWarnings("rawtypes")
-    private static void findNestedViewNodes(final SubNodeContainer subNC,
-        final Map<NodeIDSuffix, NativeNodeContainer> resultMap, final Map<NodeIDSuffix, WizardPageNodeInfo> infoMap,
-        final Map<NodeIDSuffix, SubNodeContainer> sncMap, final Set<HiLiteHandler> initialHiliteHandlerSet) {
-        WorkflowManager subWFM = subNC.getWorkflowManager();
-        Map<NodeID, NativeNodeContainer> wizardNodeMap = collectWizardPageNodes(subWFM);
-        WorkflowManager projectWFM = subNC.getProjectWFM();
-        for (Map.Entry<NodeID, NativeNodeContainer> entry : wizardNodeMap.entrySet()) {
-            NodeContainer nc = subWFM.getNodeContainer(entry.getKey());
-            if ((nc instanceof SingleNodeContainer) && ((SingleNodeContainer)nc).isInactive()) {
-                //skip nodes in inactive branches
-                continue;
-            }
-            NodeID.NodeIDSuffix idSuffix = NodeID.NodeIDSuffix.create(projectWFM.getID(), entry.getKey());
-            if (infoMap != null) {
-                WizardPageNodeInfo nodeInfo = new WizardPageNodeInfo();
-                nodeInfo.setNodeName(nc.getName());
-                nodeInfo.setNodeAnnotation(nc.getNodeAnnotation().toString());
-                nodeInfo.setNodeState(nc.getInternalState());
-                nodeInfo.setNodeMessage(nc.getNodeMessage());
-                infoMap.put(idSuffix, nodeInfo);
-            }
-            if (EXECUTED.equals(nc.getInternalState()) && resultMap != null) {
-                //regular viewable nodes need to be executed
-                resultMap.put(idSuffix, entry.getValue());
-            }
-
-            if (initialHiliteHandlerSet != null) {
-                for (int i = 0; i < nc.getNrInPorts() - 1; i++) {
-                    HiLiteHandler hiLiteHandler = entry.getValue().getNodeModel().getInHiLiteHandler(i);
-                    if (hiLiteHandler != null) {
-                        initialHiliteHandlerSet.add(hiLiteHandler);
-                    }
-                }
-            }
-        }
-        Map<NodeID, SubNodeContainer> subnodeContainers = getSubnodeContainers(subNC.getWorkflowManager());
-        for (Entry<NodeID, SubNodeContainer> entry : subnodeContainers.entrySet()) {
-            SubNodeContainer snc = entry.getValue();
-            if (isWizardPage(snc.getID(), subWFM)) {
-                NodeID.NodeIDSuffix idSuffix = NodeID.NodeIDSuffix.create(projectWFM.getID(), snc.getID());
-                if (sncMap != null) {
-                    sncMap.put(idSuffix, snc);
-                }
-                findNestedViewNodes(snc, resultMap, infoMap, sncMap, initialHiliteHandlerSet);
-            }
-        }
-    }
-
-    /**
-     * Collects all the node from the given workflow that contribute to a wizard page.
-     *
-     * @param wfm the workflow to collect the nodes from
-     * @return map from node id to node
-     *
-     * @since 4.5
-     */
-    public static Map<NodeID, NativeNodeContainer> collectWizardPageNodes(final WorkflowManager wfm) {
-        return wfm.findNodes(WizardNode.class, NOT_HIDDEN_FILTER, false).keySet().stream()
-            .collect(Collectors.toMap(id -> id, id -> (NativeNodeContainer)wfm.getNodeContainer(id)));
+        return WizardPageUtil.isWizardPage(m_manager, subnodeId);
     }
 
     protected Map<NodeIDSuffix, WebViewContent> getWizardPageViewValueMapInternal(final NodeID subnodeID) {
@@ -371,63 +144,10 @@ public abstract class WebResourceController {
         assert manager.isLockedByCurrentThread();
         SubNodeContainer subNC = manager.getNodeContainer(subnodeID, SubNodeContainer.class, true);
         WorkflowManager subWFM = subNC.getWorkflowManager();
-        return subWFM.findExecutedNodes(WizardNode.class, NOT_HIDDEN_FILTER).entrySet().stream()
+        // TODO
+        return subWFM.findExecutedNodes(WizardNode.class, WizardPageUtil.NOT_HIDDEN_FILTER).entrySet().stream()
             .filter(e -> !subWFM.getNodeContainer(e.getKey(), NativeNodeContainer.class, true).isInactive())
-            .collect(Collectors.toMap(e -> toNodeIDSuffix(e.getKey()),
-                e -> e.getValue().getViewValue()));
-    }
-
-    private void getHiLiteTranslators(final HiLiteHandler handler, final Set<HiLiteHandler> knownHiLiteHandlers,
-        final Set<HiLiteTranslator> knownTranslators, final Set<HiLiteManager> knownManagers) {
-        if (handler == null || !knownHiLiteHandlers.add(handler)) {
-            return;
-        }
-        String handlerId = handler.getHiliteHandlerID().toString();
-        LOGGER.debugWithFormat("Starting to iterate over hilite translators of handler %s", handlerId);
-        Set<HiLiteTranslator> translatorsToCheck = handler.getHiLiteTranslators();
-        Set<HiLiteTranslator> translatorsToFollow = new LinkedHashSet<>();
-        for (HiLiteTranslator translator : translatorsToCheck) {
-            if (translator != null && knownTranslators.add(translator)) {
-                translatorsToFollow.add(translator);
-            }
-        }
-        LOGGER.debugWithFormat("End iterating over hilite translators of handler %s (%d in total)", handlerId,
-            translatorsToFollow.size());
-        translatorsToFollow.forEach(
-            translator -> followHiLiteTranslator(translator, knownHiLiteHandlers, knownTranslators, knownManagers));
-
-        LOGGER.debugWithFormat("Starting to iterate over hilite managers of handler %s", handlerId);
-        Set<HiLiteManager> managersToCheck = handler.getHiLiteManagers();
-        Set<HiLiteManager> managersToFollow = new LinkedHashSet<>();
-        for (HiLiteManager manager : managersToCheck) {
-            if (manager != null && knownManagers.add(manager)) {
-                managersToFollow.add(manager);
-            }
-        }
-        LOGGER.debugWithFormat("End iterating over hilite managers of handler %s (%d in total)", handlerId,
-            managersToFollow.size());
-        managersToFollow
-            .forEach(manager -> followHiLiteManager(manager, knownHiLiteHandlers, knownTranslators, knownManagers));
-    }
-
-    private void followHiLiteTranslator(final HiLiteTranslator translator, final Set<HiLiteHandler> knownHiLiteHandlers,
-        final Set<HiLiteTranslator> knownTranslators, final Set<HiLiteManager> knownManagers) {
-        getHiLiteTranslators(translator.getFromHiLiteHandler(), knownHiLiteHandlers, knownTranslators, knownManagers);
-        if (translator.getToHiLiteHandlers() != null) {
-            for (HiLiteHandler toHiLiteHandler : translator.getToHiLiteHandlers()) {
-                getHiLiteTranslators(toHiLiteHandler, knownHiLiteHandlers, knownTranslators, knownManagers);
-            }
-        }
-    }
-
-    private void followHiLiteManager(final HiLiteManager manager, final Set<HiLiteHandler> knownHiLiteHandlers,
-        final Set<HiLiteTranslator> knownTranslators, final Set<HiLiteManager> knownManagers) {
-        getHiLiteTranslators(manager.getFromHiLiteHandler(), knownHiLiteHandlers, knownTranslators, knownManagers);
-        if (manager.getToHiLiteHandlers() != null) {
-            for (HiLiteHandler toHiLiteHandler : manager.getToHiLiteHandlers()) {
-                getHiLiteTranslators(toHiLiteHandler, knownHiLiteHandlers, knownTranslators, knownManagers);
-            }
-        }
+            .collect(Collectors.toMap(e -> toNodeIDSuffix(e.getKey()), e -> e.getValue().getViewValue()));
     }
 
     /**
@@ -481,8 +201,9 @@ public abstract class WebResourceController {
         if (nodeToReset == null) {
             filteredViewContentMap = viewContentMap;
         } else {
-            Set<String> nodesToReset = getSuccessorWizardNodesWithinComponent(manager, subnodeID, nodeToReset)
-                .map(p -> p.getFirst().toString()).collect(Collectors.toCollection(HashSet::new));
+            Set<String> nodesToReset =
+                WizardPageUtil.getSuccessorWizardPageNodesWithinComponent(manager, subnodeID, nodeToReset)
+                    .map(p -> p.getFirst().toString()).collect(Collectors.toCollection(HashSet::new));
             filteredViewContentMap = filterViewValues(nodesToReset, viewContentMap);
         }
         LOGGER.debugWithFormat("Loading view content into wizard nodes (%d)", filteredViewContentMap.size());
@@ -513,78 +234,6 @@ public abstract class WebResourceController {
 
         manager.configureNodeAndSuccessors(subnodeID, true);
         return Collections.emptyMap();
-    }
-
-    /**
-     * Utility method to get a special set of successor nodes of the node denoted by the provided {@link NodeID}. The
-     * start node id must denote a node contained in the component denoted by componentId.
-     *
-     * The stream of successors
-     * <ul>
-     * <li>includes the 'start' node itself</li>
-     * <li>only contains nodes whose node model is of type {@link WizardNode}</li>
-     * <li>does <i>not</i> include successors beyond the parent component (i.e. the component denoted by
-     * componentId)</li>
-     * <li>includes successors across component and metanode 'borders' (but not beyond the component page itself)</li>
-     * </ul>
-     *
-     * @param wfm parent manager of the component denoted by componentId
-     * @param componentId must be a component which represents the wizard page
-     * @param startNodeId the node to get the successor nodes for
-     * @return a stream of successor nodes represented by node id suffixes (relative to the project) and their node
-     *         containers
-     * @throws IllegalArgumentException if componentId doesn't denote a top-level component within the workflow manager
-     *             scope or if startNodeId doesn't denote a node contained in the page
-     *
-     * @since 4.4
-     */
-    public static Stream<Pair<NodeIDSuffix, NodeContainer>> getSuccessorWizardNodesWithinComponent(
-        final WorkflowManager wfm, final NodeID componentId, final NodeID startNodeId) {
-        CheckUtils.checkArgument(wfm.getNodeContainer(componentId) instanceof SubNodeContainer,
-            "Provided node id (%s) doesn't reference a component", componentId);
-        try (WorkflowLock lock = wfm.lock()) {
-            return getAllSuccessorNodesWithinComponent(componentId, wfm.findNodeContainer(startNodeId))//
-                .filter(WebResourceController::isWizardNodeOrComponentOrMetanode)//
-                .flatMap(nc -> {
-                    if (nc instanceof NativeNodeContainer) {
-                        return Stream.of(nc);
-                    } else {
-                        return getAllWizardNodesFromMetanodeOrComponent(wfm, nc);
-                    }
-                }).map(nc -> Pair.create(NodeIDSuffix.create(wfm.getProjectWFM().getID(), nc.getID()), nc));
-        }
-    }
-
-    private static Stream<NodeContainer> getAllWizardNodesFromMetanodeOrComponent(final WorkflowManager wfm,
-        final NodeContainer nc) {
-        WorkflowManager ncWfm =
-            nc instanceof WorkflowManager ? (WorkflowManager)nc : ((SubNodeContainer)nc).getWorkflowManager();
-        return ncWfm.findNodes(WizardNode.class, NodeModelFilter.all(), true, true).keySet().stream()
-            .map(wfm::findNodeContainer);
-    }
-
-    private static boolean isWizardNodeOrComponentOrMetanode(final NodeContainer nc) {
-        return (nc instanceof NativeNodeContainer && ((NativeNodeContainer)nc).isModelCompatibleTo(WizardNode.class))
-            || nc instanceof WorkflowManager || nc instanceof SubNodeContainer;
-    }
-
-    private static Stream<NodeContainer> getAllSuccessorNodesWithinComponent(final NodeID componentId,
-        final NodeContainer startNode) {
-        WorkflowManager wfm = startNode.getParent();
-        Stream<NodeContainer> res =
-            wfm.getNodeContainers(Collections.singleton(startNode.getID()), nc -> false, false, true).stream();
-
-        WorkflowManager startNodeParent = startNode.getParent();
-        NodeContainer startNodeLevelUp = startNodeParent.getDirectNCParent() instanceof SubNodeContainer
-            ? (SubNodeContainer)startNodeParent.getDirectNCParent() : startNodeParent;
-        if (!startNodeLevelUp.getID().equals(componentId) && !componentId.equals(startNode.getID())) {
-            // recurse into the level above (but only if it's not the original component itself)
-            Stream<NodeContainer> succ = getAllSuccessorNodesWithinComponent(componentId, startNodeLevelUp);
-            // exclude start node
-            succ = succ.filter(nc -> !nc.getID().equals(startNodeLevelUp.getID()));
-            res = Stream.concat(res, succ);
-        }
-        return res;
     }
 
     @SuppressWarnings("rawtypes")
@@ -705,7 +354,7 @@ public abstract class WebResourceController {
         assert manager.isLockedByCurrentThread();
         SubNodeContainer subNodeNC = manager.getNodeContainer(subnodeID, SubNodeContainer.class, true);
         WorkflowManager subNodeWFM = subNodeNC.getWorkflowManager();
-        return subNodeWFM.findNodes(WizardNode.class, NOT_HIDDEN_FILTER, false, true);
+        return subNodeWFM.findNodes(WizardNode.class, WizardPageUtil.NOT_HIDDEN_FILTER, false, true);
     }
 
     /**
@@ -835,185 +484,6 @@ public abstract class WebResourceController {
 
     /** Sets manager to null. Called when new wizard is created on top of workflow. */
     void discard() {
-    }
-
-    /**
-     * Result value of {@link WizardExecutionController#getCurrentWizardPage()} and
-     * {@link CompositeViewController#getWizardPage()}.
-     */
-    public static final class WizardPageContent {
-
-        private final NodeID m_pageNodeID;
-
-        private final Map<NodeIDSuffix, NativeNodeContainer> m_pageMap;
-
-        private Map<NodeIDSuffix, WizardPageContent> m_nestedContent;
-
-        private Map<NodeIDSuffix, WizardPageNodeInfo> m_infoMap;
-
-        private final String m_layoutInfo;
-
-        private final List<HiLiteTranslator> m_hiLiteTranslators;
-
-        private final List<HiLiteManager> m_hiliteManagers;
-
-        /**
-         * @param pageNodeID
-         * @param pageMap
-         * @param layoutInfo
-         */
-        WizardPageContent(final NodeID pageNodeID, final Map<NodeIDSuffix, NativeNodeContainer> pageMap,
-            final String layoutInfo, final List<HiLiteTranslator> hiLiteTranslators,
-            final List<HiLiteManager> hiLiteManagers) {
-            m_pageNodeID = pageNodeID;
-            m_pageMap = pageMap;
-            m_infoMap = new LinkedHashMap<NodeIDSuffix, WizardPageNodeInfo>();
-            m_layoutInfo = layoutInfo;
-            m_hiLiteTranslators = hiLiteTranslators;
-            m_hiliteManagers = hiLiteManagers;
-        }
-
-        /**
-         * @return the pageNodeID
-         * @since 3.3
-         */
-        public NodeID getPageNodeID() {
-            return m_pageNodeID;
-        }
-
-        /**
-         * @return the pageMap
-         */
-        public Map<NodeIDSuffix, NativeNodeContainer> getPageMap() {
-            return m_pageMap;
-        }
-
-        /**
-         * @return the nestedContent
-         * @since 3.7
-         */
-        public Map<NodeIDSuffix, WizardPageContent> getNestedContent() {
-            return m_nestedContent;
-        }
-
-        /**
-         * @param nestedContent the nestedContent to set
-         * @since 3.7
-         */
-        public void setNestedContent(final Map<NodeIDSuffix, WizardPageContent> nestedContent) {
-            m_nestedContent = nestedContent;
-        }
-
-        /**
-         * @return the layoutInfo
-         * @since 3.1
-         */
-        public String getLayoutInfo() {
-            return m_layoutInfo;
-        }
-
-        /**
-         * @return the hiLiteTranslators
-         * @since 3.4
-         */
-        public List<HiLiteTranslator> getHiLiteTranslators() {
-            return m_hiLiteTranslators;
-        }
-
-        /**
-         * @return the hiliteManagers
-         * @since 3.4
-         */
-        public List<HiLiteManager> getHiliteManagers() {
-            return m_hiliteManagers;
-        }
-
-        /**
-         * @param infoMap the infoMap to set
-         * @since 3.5
-         */
-        public void setInfoMap(final Map<NodeIDSuffix, WizardPageNodeInfo> infoMap) {
-            m_infoMap = infoMap;
-        }
-
-        /**
-         * @return the infoMap
-         * @since 3.5
-         */
-        public Map<NodeIDSuffix, WizardPageNodeInfo> getInfoMap() {
-            return m_infoMap;
-        }
-
-        /**
-         * Info object for individual nodes, containing e.g. node state
-         * and possible warn/error messages.
-         * @since 3.5
-         */
-        public static final class WizardPageNodeInfo {
-
-            private String m_nodeName;
-            private String m_nodeAnnotation;
-            private NodeContainerState m_nodeState;
-            private NodeMessage m_nodeMessage;
-
-            /**
-             * @return the nodeName
-             */
-            public String getNodeName() {
-                return m_nodeName;
-            }
-
-            /**
-             * @param nodeName the nodeName to set
-             */
-            public void setNodeName(final String nodeName) {
-                m_nodeName = nodeName;
-            }
-
-            /**
-             * @return the nodeAnnotation
-             */
-            public String getNodeAnnotation() {
-                return m_nodeAnnotation;
-            }
-
-            /**
-             * @param nodeAnnotation the nodeAnnotation to set
-             */
-            public void setNodeAnnotation(final String nodeAnnotation) {
-                m_nodeAnnotation = nodeAnnotation;
-            }
-
-            /**
-             * @return the nodeState
-             */
-            public NodeContainerState getNodeState() {
-                return m_nodeState;
-            }
-
-            /**
-             * @param nodeState the nodeState to set
-             */
-            public void setNodeState(final NodeContainerState nodeState) {
-                m_nodeState = nodeState;
-            }
-
-            /**
-             * @return the nodeMessage
-             */
-            public NodeMessage getNodeMessage() {
-                return m_nodeMessage;
-            }
-
-            /**
-             * @param nodeMessage the nodeMessage to set
-             */
-            public void setNodeMessage(final NodeMessage nodeMessage) {
-                m_nodeMessage = nodeMessage;
-            }
-
-        }
-
     }
 
 }

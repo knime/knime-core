@@ -67,6 +67,8 @@ import org.knime.core.node.interactive.ViewRequestHandlingException;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.web.ValidationError;
 import org.knime.core.node.wizard.WizardViewResponse;
+import org.knime.core.node.wizard.page.WizardPage;
+import org.knime.core.node.wizard.page.WizardPageUtil;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 
 /**
@@ -202,16 +204,16 @@ public final class WizardExecutionController extends WebResourceController imple
 
     /** Get the current wizard page. Throws exception if none is available (as per {@link #hasCurrentWizardPage()}.
      * @return The current wizard page.
-     * @since 3.4
+     * @since 4.5
      */
-    public WizardPageContent getCurrentWizardPage() {
+    public WizardPage getCurrentWizardPage() {
         WorkflowManager manager = m_manager;
         try (WorkflowLock lock = manager.lock()) {
             NodeContext.pushContext(manager);
             try {
                 CheckUtils.checkState(hasCurrentWizardPageInternal(true),
                     "No current wizard page");
-                return getWizardPageInternal(m_waitingSubnodes.get(0));
+                return WizardPageUtil.createWizardPage(manager, m_waitingSubnodes.get(0));
             } finally {
                 NodeContext.removeLastContext();
             }

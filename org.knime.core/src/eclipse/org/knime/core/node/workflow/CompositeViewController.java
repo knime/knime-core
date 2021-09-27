@@ -59,6 +59,8 @@ import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.web.ValidationError;
 import org.knime.core.node.web.WebViewContent;
 import org.knime.core.node.wizard.WizardViewResponse;
+import org.knime.core.node.wizard.page.WizardPage;
+import org.knime.core.node.wizard.page.WizardPageUtil;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 
 /**
@@ -66,7 +68,7 @@ import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
  * component).
  *
  * This class is really only dedicated to 'isolated' single pages of components. Single page (re-)execution of page that
- * are part of a wizard is done via {@link WizardExecutionController#reexecuteSinglePage(NodeIDSuffix, Map)}.
+ * are part of a wizard is done via {@link WizardExecutionController#reexecuteSinglePage(NodeID, Map)}.
  *
  * <p>
  * Do not use, no public API.
@@ -104,13 +106,15 @@ public class CompositeViewController extends WebResourceController {
     /**
      * Gets the wizard page for a given node id. Throws exception if no wizard page available.
      * @return The wizard page for the given node id
+     *
+     * @since 4.5
      */
-    public WizardPageContent getWizardPage() {
+    public WizardPage getWizardPage() {
         WorkflowManager manager = m_manager;
         try (WorkflowLock lock = manager.lock()) {
             NodeContext.pushContext(manager);
             try {
-                return getWizardPageInternal(m_nodeID);
+                return WizardPageUtil.createWizardPage(manager, m_nodeID);
             } finally {
                 NodeContext.removeLastContext();
             }

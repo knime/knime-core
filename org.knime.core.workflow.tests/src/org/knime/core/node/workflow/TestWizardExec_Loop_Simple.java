@@ -54,7 +54,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.port.inactive.InactiveBranchPortObject;
-import org.knime.core.node.workflow.WebResourceController.WizardPageContent;
+import org.knime.core.node.wizard.page.WizardPage;
 
 
 
@@ -109,7 +109,7 @@ public class TestWizardExec_Loop_Simple extends WorkflowTestCase {
         waitWhile(wfm, new WizardHold(wfm));
         assertTrue("should have steps", wizardController.hasCurrentWizardPage());
         checkState(m_subnodeQueryStringBool15, InternalNodeContainerState.EXECUTED);
-        WizardPageContent currentWizardPage = wizardController.getCurrentWizardPage(); // outside loop
+        WizardPage currentWizardPage = wizardController.getCurrentWizardPage(); // outside loop
         // TODO: load something real
         wizardController.loadValuesIntoCurrentPage(Collections.<String, String>emptyMap());
         // TODO check IDs

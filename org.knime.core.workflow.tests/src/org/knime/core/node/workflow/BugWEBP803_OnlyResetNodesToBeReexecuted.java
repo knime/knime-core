@@ -62,6 +62,7 @@ import org.awaitility.Awaitility;
 import org.junit.Test;
 import org.knime.core.node.web.WebViewContent;
 import org.knime.core.node.wizard.WizardNode;
+import org.knime.core.node.wizard.page.WizardPageUtil;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 
 /**
@@ -78,15 +79,15 @@ public class BugWEBP803_OnlyResetNodesToBeReexecuted extends WorkflowTestCase {
 		loadAndSetWorkflow();
 		WorkflowManager wfm = getManager();
 		NodeID pageId = wfm.getID().createChild(9);
-		List<String> successors = WebResourceController
-				.getSuccessorWizardNodesWithinComponent(wfm, pageId, pageId.createChild(0).createChild(2))
+		List<String> successors = WizardPageUtil
+				.getSuccessorWizardPageNodesWithinComponent(wfm, pageId, pageId.createChild(0).createChild(2))
 				.map(p -> p.getFirst().toString()).collect(Collectors.toList());
 		assertThat("unexpected successors", successors, containsInAnyOrder("9:0:2", "9:0:26"));
 
-		assertThrows(IllegalArgumentException.class, () -> WebResourceController
-				.getSuccessorWizardNodesWithinComponent(wfm, pageId, pageId.createChild(0).createChild(83483883)));
-		assertThrows(IllegalArgumentException.class, () -> WebResourceController
-				.getSuccessorWizardNodesWithinComponent(wfm, wfm.getID().createChild(34342), null));
+		assertThrows(IllegalArgumentException.class, () -> WizardPageUtil
+				.getSuccessorWizardPageNodesWithinComponent(wfm, pageId, pageId.createChild(0).createChild(83483883)));
+		assertThrows(IllegalArgumentException.class, () -> WizardPageUtil
+				.getSuccessorWizardPageNodesWithinComponent(wfm, wfm.getID().createChild(34342), null));
 	}
 
 	/**

@@ -59,9 +59,9 @@ import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import org.knime.core.node.web.ValidationError;
+import org.knime.core.node.wizard.page.WizardPage;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.TestWizardExec_Loop_Simple.WizardHold;
-import org.knime.core.node.workflow.WebResourceController.WizardPageContent;
 
 /**
  *
@@ -109,7 +109,7 @@ public class TestWizardExec_LoadValuesInSubnode extends WorkflowTestCase {
         waitWhile(wfm, new WizardHold(wfm));
         assertTrue("Should have steps", wizardController.hasCurrentWizardPage());
         checkState(m_colFilterInFilterSubnode, InternalNodeContainerState.EXECUTED);
-        WizardPageContent currentWizardPage = wizardController.getCurrentWizardPage();
+        WizardPage currentWizardPage = wizardController.getCurrentWizardPage();
         //don't load anything here, just execute to next subnode (all columns included)
         wizardController.stepNext();
         waitWhile(wfm, new WizardHold(wfm));

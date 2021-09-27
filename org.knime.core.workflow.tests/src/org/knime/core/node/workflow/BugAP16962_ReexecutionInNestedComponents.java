@@ -60,6 +60,7 @@ import java.util.stream.Collectors;
 
 import org.awaitility.Awaitility;
 import org.junit.Test;
+import org.knime.core.node.wizard.page.WizardPageUtil;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 
 /**
@@ -78,8 +79,8 @@ public class BugAP16962_ReexecutionInNestedComponents extends WorkflowTestCase {
 		loadAndSetWorkflow();
 		WorkflowManager wfm = getManager();
 		NodeID pageId = wfm.getID().createChild(9);
-		List<String> successors = WebResourceController
-				.getSuccessorWizardNodesWithinComponent(wfm, pageId,
+		List<String> successors = WizardPageUtil
+				.getSuccessorWizardPageNodesWithinComponent(wfm, pageId,
 						pageId.createChild(0).createChild(28).createChild(0).createChild(2))
 				.map(p -> p.getFirst().toString()).collect(Collectors.toList());
 		assertThat("unexpected successors", successors,

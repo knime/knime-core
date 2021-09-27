@@ -59,8 +59,8 @@ import org.awaitility.Awaitility;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.knime.core.node.wizard.page.WizardPage;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
-import org.knime.core.node.workflow.WebResourceController.WizardPageContent;
 
 /**
  * Test for the (partial) single page re-execution of pages in a workflow which
@@ -100,7 +100,7 @@ public class EnhWEBP674_SinglePageExecution extends WorkflowTestCase {
 		WizardExecutionController wec = getManager().setAndGetWizardExecutionController();
 		reexecuteSinglePageTillExecuted(wec);
 
-		WizardPageContent pageContent = wec.getCurrentWizardPage();
+		WizardPage pageContent = wec.getCurrentWizardPage();
 		assertThat(pageContent.getPageMap().size(), is(4));
 		assertThat(pageContent.getInfoMap().size(), is(4));
 		// make sure that sec and wec return the same wizard page
@@ -115,7 +115,7 @@ public class EnhWEBP674_SinglePageExecution extends WorkflowTestCase {
 	public void testReexecuteSinglePageAndGetPageWithStillExecutingNodes() {
 		WizardExecutionController wec = getManager().setAndGetWizardExecutionController();
 		reexecuteSinglePageAndKeepExecuting(wec);
-		WizardPageContent pageContent = wec.getCurrentWizardPage();
+		WizardPage pageContent = wec.getCurrentWizardPage();
 		assertThat(pageContent.getInfoMap().size(), is(4));
 		assertTrue(pageContent.getInfoMap().get(createNodeIDSuffix(7, 0, 3)).getNodeState().isWaitingToBeExecuted());
 	}
@@ -158,7 +158,7 @@ public class EnhWEBP674_SinglePageExecution extends WorkflowTestCase {
 		// re-execute second page
 		wec.reexecuteSinglePage(createNodeID(projectId, 6, 0, 6), Collections.emptyMap());
 		Awaitility.await().atMost(5, TimeUnit.SECONDS).pollInterval(100, TimeUnit.MILLISECONDS).until(() -> {
-			WizardPageContent pc = wec.getCurrentWizardPage();
+			WizardPage pc = wec.getCurrentWizardPage();
 			return pc.getInfoMap().keySet().contains(createNodeIDSuffix(6, 0, 5));
 		});
 
@@ -166,7 +166,7 @@ public class EnhWEBP674_SinglePageExecution extends WorkflowTestCase {
 		wfm.cancelExecution();
 		waitForSinglePageNotExecutingAnymore(wec);
 		wec.stepBack();
-		WizardPageContent pageContent = wec.getCurrentWizardPage();
+		WizardPage pageContent = wec.getCurrentWizardPage();
 		assertTrue(pageContent.getInfoMap().containsKey(createNodeIDSuffix(7, 0, 3)));
 		assertThat(pageContent.getPageMap().size(), is(4));
 	}
@@ -175,7 +175,7 @@ public class EnhWEBP674_SinglePageExecution extends WorkflowTestCase {
 		wec.reexecuteSinglePage(createNodeID(getManager().getID(), 7, 0, 7), createWizardPageInput(400000));
 		assertThat(wec.hasCurrentWizardPage(), is(true));
 		Awaitility.await().atMost(5, TimeUnit.SECONDS).pollInterval(100, TimeUnit.MILLISECONDS).untilAsserted(() -> {
-			WizardPageContent pc = wec.getCurrentWizardPage();
+			WizardPage pc = wec.getCurrentWizardPage();
 			assertThat(pc.getPageMap().size(), is(3));
 		});
 	}

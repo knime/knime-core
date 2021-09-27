@@ -57,7 +57,7 @@ import java.util.Collections;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.knime.core.node.workflow.WebResourceController.WizardPageContent;
+import org.knime.core.node.wizard.page.WizardPage;
 
 
 
@@ -110,7 +110,7 @@ public class Bug6713_newWizardContainingOldMetanode extends WorkflowTestCase {
         checkState(m_subnodeFirstPage_6, EXECUTED);
         checkState(m_subnodeSecondPage_7, CONFIGURED_MARKEDFOREXEC);
         checkState(m_javaEdit_3, CONFIGURED_MARKEDFOREXEC);
-        WizardPageContent currentWizardPage = wizardController.getCurrentWizardPage(); // outside loop
+        WizardPage currentWizardPage = wizardController.getCurrentWizardPage(); // outside loop
         // TODO: load something real
         wizardController.loadValuesIntoCurrentPage(Collections.<String, String>emptyMap());
         // TODO check IDs
