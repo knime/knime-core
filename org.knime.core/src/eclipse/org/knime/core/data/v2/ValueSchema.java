@@ -48,8 +48,6 @@
  */
 package org.knime.core.data.v2;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -94,6 +92,7 @@ import org.knime.core.data.v2.value.cell.DictEncodedDataCellValueFactory;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.util.CheckUtils;
 
 /**
  * A ValueSchema wraps a {@link DataTableSpec} by mapping each {@link DataColumnSpec} via it's {@link DataType} to a
@@ -168,6 +167,34 @@ public final class ValueSchema {
         return new ValueSchema(spec, factories, factoryMapping, cellSerializerFactory);
     }
 
+    /**
+     * Creates a new {@link ValueSchema} given the provided {@link DataTableSpec spec} and {@link ValueFactory
+     * factories}.
+     *
+     * @param spec the data table spec that the {@link ValueSchema} should wrap
+     * @param valueFactories one for the row key and one for each column in spec
+     * @param cellSerializerFactory used for any {@link DataCellValueFactory DataCellValueFactories} among the
+     *            valueFactories
+     * @return the value schema
+     * @since 4.5
+     */
+    public static final ValueSchema create(final DataTableSpec spec, final ValueFactory<?, ?>[] valueFactories,
+        final DataCellSerializerFactory cellSerializerFactory) {
+        CheckUtils.checkArgument(valueFactories.length == spec.getNumColumns() + 1,
+            "The number of value factories must be equal to the number of columns plus 1 (for the row key).");
+        CheckUtils.checkArgument(valueFactories[0] instanceof RowKeyValueFactory,
+            "The first value factory must be a RowKeyValueFactory.");
+        final Map<DataType, String> factoryMapping = new HashMap<>();
+        for (int i = 1; i < valueFactories.length; i++) {
+            var fac = valueFactories[i].getClass().getName();
+            var type = spec.getColumnSpec(i - 1).getType();
+            var oldFac = factoryMapping.put(type, fac);
+            CheckUtils.checkArgument(oldFac == null || fac.equals(oldFac),
+                "Conflicting ValueFactories '%s' and '%s' for data type '%s'.", oldFac, fac, type.toPrettyString());
+        }
+        return new ValueSchema(spec, valueFactories.clone(), factoryMapping, cellSerializerFactory);
+    }
+
     /** Find the factory for the given type (or DataCellValueFactory) and add it to the mapping */
     private static final ValueFactory<?, ?> findValueFactory(final DataType type,
         final Map<DataType, String> factoryMapping, final DataCellSerializerFactory cellSerializerFactory,
@@ -180,20 +207,15 @@ public final class ValueSchema {
         if (type == null) {
             factory = VoidValueFactory.INSTANCE;
         } else {
-            factory = getSpecificCollectionValueFactory(type).orElse(null);
+            factory = getSpecificCollectionValueFactory(type);
         }
 
         // Get the value factory from the extension point
         if (factory == null) {
-            final Optional<Class<? extends ValueFactory<?, ?>>> factoryClass =
-                DataTypeRegistry.getInstance().getValueFactoryFor(type);
-            if (factoryClass.isPresent()) {
-                // Use the registered value factory
-                factory = instantiateValueFactory(factoryClass.get());
-            } else {
-                // Use the fallback which works for all cells
-                factory = new DictEncodedDataCellValueFactory(cellSerializerFactory, fileStoreHandler, type);
-            }
+            // Use the registered value factory
+            factory = ValueFactoryUtils.createValueFactoryForType(type)//
+                    // Use the fallback which works for all cells
+                    .orElseGet(() -> new DictEncodedDataCellValueFactory(cellSerializerFactory, fileStoreHandler, type));
         }
 
         // Collection types need to be initialized
@@ -209,20 +231,21 @@ public final class ValueSchema {
         return factory;
     }
 
-    private static Optional<ValueFactory<?, ?>> getSpecificCollectionValueFactory(final DataType type) {
-        Optional<ValueFactory<?, ?>> factory;
+    private static ValueFactory<?, ?> getSpecificCollectionValueFactory(final DataType type) {
+        ValueFactory<?, ?> factory;
         factory = getSpecificSparseListValueFactory(type);
-        if (factory.isPresent()) {
+        if (factory != null) {
             return factory;
         }
         factory = getSpecificListValueFactory(type);
-        if (factory.isPresent()) {
+        if (factory != null) {
             return factory;
         }
+
         return getSpecificSetValueFactory(type);
     }
 
-    private static Optional<ValueFactory<?, ?>> getSpecificSparseListValueFactory(final DataType type) {
+    private static ValueFactory<?, ?> getSpecificSparseListValueFactory(final DataType type) {
         ValueFactory<?, ?> factory = null;
         if (DataType.getType(SparseListCell.class, DoubleCell.TYPE).equals(type)) {
             factory = DoubleSparseListValueFactory.INSTANCE;
@@ -235,10 +258,10 @@ public final class ValueSchema {
         } else if (DataType.getType(SparseListCell.class, BooleanCell.TYPE).equals(type)) {
             factory = BooleanSparseListValueFactory.INSTANCE;
         }
-        return Optional.ofNullable(factory);
+        return factory;
     }
 
-    private static Optional<ValueFactory<?, ?>> getSpecificListValueFactory(final DataType type) {
+    private static ValueFactory<?, ?> getSpecificListValueFactory(final DataType type) {
         ValueFactory<?, ?> factory = null;
         if (DataType.getType(ListCell.class, DoubleCell.TYPE).equals(type)) {
             factory = DoubleListValueFactory.INSTANCE;
@@ -251,10 +274,10 @@ public final class ValueSchema {
         } else if (DataType.getType(ListCell.class, BooleanCell.TYPE).equals(type)) {
             factory = BooleanListValueFactory.INSTANCE;
         }
-        return Optional.ofNullable(factory);
+        return factory;
     }
 
-    private static Optional<ValueFactory<?, ?>> getSpecificSetValueFactory(final DataType type) {
+    private static ValueFactory<?, ?> getSpecificSetValueFactory(final DataType type) {
         ValueFactory<?, ?> factory = null;
         if (DataType.getType(SetCell.class, DoubleCell.TYPE).equals(type)) {
             factory = DoubleSetValueFactory.INSTANCE;
@@ -267,23 +290,7 @@ public final class ValueSchema {
         } else if (DataType.getType(SetCell.class, BooleanCell.TYPE).equals(type)) {
             factory = BooleanSetValueFactory.INSTANCE;
         }
-        return Optional.ofNullable(factory);
-    }
-
-    private static ValueFactory<?, ?> instantiateValueFactory(final Class<?> valueFactoryClass) {
-        try {
-            final Constructor<?> constructor = valueFactoryClass.getConstructor();
-            return (ValueFactory<?, ?>)constructor.newInstance();
-        } catch (final IllegalAccessException | IllegalArgumentException | NoSuchMethodException ex) {
-            throw new IllegalStateException("The ValueFactory must have a public empty constructor.", ex);
-        } catch (final InvocationTargetException ex) {
-            throw new IllegalStateException("The ValueFactory constructor must not throw an exception.", ex);
-        } catch (final SecurityException ex) {
-            throw new IllegalStateException("Instantiating of the ValueFactory faile with an SecurityException.", ex);
-        } catch (final InstantiationException ex) {
-            // This cannot happen because we write the fully qualified class name of instantiated objects
-            throw new IllegalStateException("The ValueFactory must not be abstract.", ex);
-        }
+        return factory;
     }
 
     /**
@@ -291,20 +298,14 @@ public final class ValueSchema {
      * @return value factory to support this rowKeyConfig
      */
     private static RowKeyValueFactory<?, ?> getRowKeyFactory(final RowKeyType rowKeyType) {
-        final RowKeyValueFactory<?, ?> factory;
         switch (rowKeyType) {
             case CUSTOM:
-                factory = DefaultRowKeyValueFactory.INSTANCE;
-                break;
+                return DefaultRowKeyValueFactory.INSTANCE;
             case NOKEY:
-                factory = VoidRowKeyFactory.INSTANCE;
-                break;
+                return VoidRowKeyFactory.INSTANCE;
             default:
                 throw new IllegalArgumentException("Unknown RowKey configuration " + rowKeyType.name() + ".");
-
         }
-        final RowKeyValueFactory<?, ?> cast = factory;
-        return cast;
     }
 
     /**
@@ -423,7 +424,8 @@ public final class ValueSchema {
             } else {
                 type = valueFactoryClass.get();
             }
-            return ValueSchema.instantiateValueFactory(type);
+            return ValueFactoryUtils.instantiateValueFactory(type);
         }
+
     }
 }
