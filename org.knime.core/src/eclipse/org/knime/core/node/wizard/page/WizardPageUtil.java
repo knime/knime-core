@@ -133,9 +133,9 @@ public final class WizardPageUtil {
         }
         // Now check if the active SubNode contains active QuickForm nodes:
         WorkflowManager subNodeWFM = snc.getWorkflowManager();
-        Map<NodeID, NativeNodeContainer> wizardNodeSet = getWizardPageNodes(subNodeWFM);
+        List<NativeNodeContainer> wizardNodeSet = getWizardPageNodes(subNodeWFM);
         boolean allInactive = true;
-        for (NativeNodeContainer nc : wizardNodeSet.values()) {
+        for (NativeNodeContainer nc : wizardNodeSet) {
             if (!nc.isInactive()) {
                 allInactive = false;
                 break;
@@ -173,8 +173,8 @@ public final class WizardPageUtil {
             try {
                 WorkflowManager subWfm = subNC.getWorkflowManager();
                 Map<NodeIDSuffix, SingleNodeContainer> viewMap = new LinkedHashMap<>();
-                getWizardPageNodes(subWfm).entrySet().stream()
-                    .forEach(e -> viewMap.put(toNodeIDSuffix(manager, e.getKey()), e.getValue()));
+                getWizardPageNodes(subWfm).stream()
+                    .forEach(n -> viewMap.put(toNodeIDSuffix(manager, n.getID()), n));
                 Map<NodeID, SubNodeContainer> nestedSubs = getSubPageNodes(subWfm);
                 nestedSubs.entrySet().stream()
                     .forEach(e -> viewMap.put(toNodeIDSuffix(manager, e.getKey()), e.getValue()));
@@ -223,7 +223,7 @@ public final class WizardPageUtil {
      *
      * @since 4.5
      */
-    public static Map<NodeID, NativeNodeContainer> getWizardPageNodes(final WorkflowManager wfm) {
+    public static List<NativeNodeContainer> getWizardPageNodes(final WorkflowManager wfm) {
         return getWizardPageNodes(wfm, false);
     }
 
@@ -236,11 +236,11 @@ public final class WizardPageUtil {
      *
      * @since 4.5
      */
-    public static Map<NodeID, NativeNodeContainer> getWizardPageNodes(final WorkflowManager wfm,
+    public static List<NativeNodeContainer> getWizardPageNodes(final WorkflowManager wfm,
         final boolean recurseIntoComponents) {
-        return wfm.findNodes(WizardNode.class, NOT_HIDDEN_FILTER, false, recurseIntoComponents).keySet().stream()
-            .collect(Collectors.toMap(id -> id, id -> (NativeNodeContainer)(recurseIntoComponents
-                ? wfm.findNodeContainer(id) : wfm.getNodeContainer(id))));
+        return wfm.findNodes(WizardNode.class, NOT_HIDDEN_FILTER, false, recurseIntoComponents).keySet().stream().map(
+            id -> (NativeNodeContainer)(recurseIntoComponents ? wfm.findNodeContainer(id) : wfm.getNodeContainer(id)))
+            .collect(Collectors.toList());
     }
 
     /**
@@ -365,15 +365,14 @@ public final class WizardPageUtil {
         final Map<NodeIDSuffix, NativeNodeContainer> resultMap, final Map<NodeIDSuffix, WizardPageNodeInfo> infoMap,
         final Map<NodeIDSuffix, SubNodeContainer> sncMap, final Set<HiLiteHandler> initialHiliteHandlerSet) {
         WorkflowManager subWFM = subNC.getWorkflowManager();
-        Map<NodeID, NativeNodeContainer> wizardNodeMap = getWizardPageNodes(subWFM);
+        List<NativeNodeContainer> wizardNodes = getWizardPageNodes(subWFM);
         WorkflowManager projectWFM = subNC.getProjectWFM();
-        for (Map.Entry<NodeID, NativeNodeContainer> entry : wizardNodeMap.entrySet()) {
-            NodeContainer nc = subWFM.getNodeContainer(entry.getKey());
-            if ((nc instanceof SingleNodeContainer) && ((SingleNodeContainer)nc).isInactive()) {
+        for (NativeNodeContainer nc : wizardNodes) {
+            if (nc.isInactive()) {
                 //skip nodes in inactive branches
                 continue;
             }
-            NodeID.NodeIDSuffix idSuffix = NodeID.NodeIDSuffix.create(projectWFM.getID(), entry.getKey());
+            NodeID.NodeIDSuffix idSuffix = NodeID.NodeIDSuffix.create(projectWFM.getID(), nc.getID());
             if (infoMap != null) {
                 WizardPageNodeInfo nodeInfo = new WizardPageNodeInfo();
                 nodeInfo.setNodeName(nc.getName());
@@ -384,12 +383,12 @@ public final class WizardPageUtil {
             }
             if (nc.getNodeContainerState().isExecuted() && resultMap != null) {
                 //regular viewable nodes need to be executed
-                resultMap.put(idSuffix, entry.getValue());
+                resultMap.put(idSuffix, nc);
             }
 
             if (initialHiliteHandlerSet != null) {
                 for (int i = 0; i < nc.getNrInPorts() - 1; i++) {
-                    HiLiteHandler hiLiteHandler = entry.getValue().getNodeModel().getInHiLiteHandler(i);
+                    HiLiteHandler hiLiteHandler = nc.getNodeModel().getInHiLiteHandler(i);
                     if (hiLiteHandler != null) {
                         initialHiliteHandlerSet.add(hiLiteHandler);
                     }

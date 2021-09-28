@@ -141,10 +141,10 @@ public abstract class WebResourceController {
         assert manager.isLockedByCurrentThread();
         SubNodeContainer subNC = manager.getNodeContainer(subnodeID, SubNodeContainer.class, true);
         WorkflowManager subWFM = subNC.getWorkflowManager();
-        return WizardPageUtil.getWizardPageNodes(subWFM).entrySet().stream()//
-            .filter(e -> e.getValue().getNodeContainerState().isExecuted())//
-            .filter(e -> !e.getValue().isInactive())//
-            .collect(Collectors.toMap(e -> toNodeIDSuffix(e.getKey()), e -> getViewValue(e.getValue())));
+        return WizardPageUtil.getWizardPageNodes(subWFM).stream()//
+            .filter(n -> n.getNodeContainerState().isExecuted())//
+            .filter(n -> !n.isInactive())//
+            .collect(Collectors.toMap(n -> toNodeIDSuffix(n.getID()), WebResourceController::getViewValue));
     }
 
     @SuppressWarnings("rawtypes")
@@ -169,7 +169,6 @@ public abstract class WebResourceController {
      *            (i.e. the entire page) are being reset
      * @return empty map if validation succeeds, map of errors otherwise
      */
-    @SuppressWarnings({"rawtypes"})
     protected Map<String, ValidationError> loadValuesIntoPageInternal(final Map<String, String> viewContentMap,
         final NodeID subnodeID, final boolean validate, final boolean useAsDefault, final NodeID nodeToReset) {
         if (subnodeID == null) {
@@ -354,7 +353,8 @@ public abstract class WebResourceController {
         assert manager.isLockedByCurrentThread();
         SubNodeContainer subNodeNC = manager.getNodeContainer(subnodeID, SubNodeContainer.class, true);
         WorkflowManager subNodeWFM = subNodeNC.getWorkflowManager();
-        return WizardPageUtil.getWizardPageNodes(subNodeWFM, true);
+        return WizardPageUtil.getWizardPageNodes(subNodeWFM, true).stream()
+            .collect(Collectors.toMap(NativeNodeContainer::getID, n -> n));
     }
 
     /**
