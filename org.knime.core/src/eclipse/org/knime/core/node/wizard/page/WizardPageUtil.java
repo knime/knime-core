@@ -101,6 +101,8 @@ public final class WizardPageUtil {
         }
     };
 
+    private static final NodeModelFilter<WizardNode> NO_FILTER = new NodeModelFilter<>();
+
     /**
      * Checks whether a node (i.e. component) represents a wizard page.
      *
@@ -226,7 +228,7 @@ public final class WizardPageUtil {
     }
 
     /**
-     * Collects all the node from the given workflow that contribute to a wizard page.
+     * Collects all the nodes from the given workflow that contribute to a wizard page.
      *
      * @param wfm the workflow to collect the nodes from
      * @param recurseIntoComponents whether to recurse into contained components
@@ -237,6 +239,21 @@ public final class WizardPageUtil {
     public static Map<NodeID, NativeNodeContainer> getWizardPageNodes(final WorkflowManager wfm,
         final boolean recurseIntoComponents) {
         return wfm.findNodes(WizardNode.class, NOT_HIDDEN_FILTER, false, recurseIntoComponents).keySet().stream()
+            .collect(Collectors.toMap(id -> id, id -> (NativeNodeContainer)(recurseIntoComponents
+                ? wfm.findNodeContainer(id) : wfm.getNodeContainer(id))));
+    }
+
+    /**
+     * Collects all the nodes that (potentially) contribute to a wizard page, including the ones that are configured to
+     * be hidden.
+     *
+     * @param wfm the workflow to collect the nodes from
+     * @param recurseIntoComponents whether to recurse into contained components
+     * @return map from node id to node
+     */
+    public static Map<NodeID, NativeNodeContainer> getAllWizardPageNodes(final WorkflowManager wfm,
+        final boolean recurseIntoComponents) {
+        return wfm.findNodes(WizardNode.class, NO_FILTER, false, recurseIntoComponents).keySet().stream()
             .collect(Collectors.toMap(id -> id, id -> (NativeNodeContainer)wfm.getNodeContainer(id)));
     }
 
