@@ -61,11 +61,8 @@ import java.util.stream.Collectors;
 
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
-import org.knime.core.node.dialog.ExternalNodeData;
-import org.knime.core.node.dialog.InputNode;
 import org.knime.core.node.interactive.ViewRequestHandlingException;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.ConvenienceMethods;
@@ -148,27 +145,6 @@ public abstract class WebResourceController {
         return subWFM.findExecutedNodes(WizardNode.class, WizardPageUtil.NOT_HIDDEN_FILTER).entrySet().stream()
             .filter(e -> !subWFM.getNodeContainer(e.getKey(), NativeNodeContainer.class, true).isInactive())
             .collect(Collectors.toMap(e -> toNodeIDSuffix(e.getKey()), e -> e.getValue().getViewValue()));
-    }
-
-    /**
-     * Parameterizes {@link InputNode}s in the workflow (URL parameters).
-     *
-     * @param input non-null input
-     * @throws InvalidSettingsException if wfm chokes
-     * @see WorkflowManager#setInputNodes(Map)
-     * @since 3.2
-     */
-    public void setInputNodes(final Map<String, ExternalNodeData> input) throws InvalidSettingsException {
-        final WorkflowManager manager = m_manager;
-        try (WorkflowLock lock = manager.lock()) {
-            checkDiscard();
-            NodeContext.pushContext(manager);
-            try {
-                manager.setInputNodes(input);
-            } finally {
-                NodeContext.removeLastContext();
-            }
-        }
     }
 
     /**
@@ -495,10 +471,6 @@ public abstract class WebResourceController {
     protected void checkDiscard() {
         CheckUtils.checkArgument(m_manager != null, "%s has been disconnected from workflow",
             WebResourceController.class.getSimpleName());
-    }
-
-    /** Sets manager to null. Called when new wizard is created on top of workflow. */
-    void discard() {
     }
 
 }

@@ -2585,6 +2585,12 @@
                 <message_argument value="reexecuteSinglePage(NodeID.NodeIDSuffix, Map&lt;String,String&gt;)"/>
             </message_arguments>
         </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WebResourceController"/>
+                <message_argument value="setInputNodes(Map&lt;String,ExternalNodeData&gt;)"/>
+            </message_arguments>
+        </filter>
         <filter id="338886760">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.WebResourceController.WizardPageContent"/>

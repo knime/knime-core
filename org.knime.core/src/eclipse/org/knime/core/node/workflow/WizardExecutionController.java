@@ -579,11 +579,6 @@ public final class WizardExecutionController extends WebResourceController imple
         manager.resetAndConfigureNodeAndSuccessors(currentSNID, false);
     }
 
-    /** Sets manager to null. Called when new wizard is created on top of workflow. */
-    @Override
-    void discard() {
-    }
-
     void save(final NodeSettingsWO settings) {
         int[] promptedSubnodeIDs = ArrayUtils.toPrimitive(
             m_promptedSubnodeIDSuffixes.toArray(new Integer[m_promptedSubnodeIDSuffixes.size()]));

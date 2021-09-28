@@ -2730,13 +2730,7 @@ public final class WorkflowManager extends NodeContainer
      */
     @Deprecated
     public WizardExecutionController getWizardExecutionController() {
-        CheckUtils.checkState(isProject(), "Workflow '%s' is not a project", getNameWithID());
-        try (WorkflowLock lock = lock()) {
-            if (!(m_executionController instanceof WizardExecutionController)) {
-                m_executionController = new WizardExecutionController(this);
-            }
-            return (WizardExecutionController)m_executionController;
-        }
+        return setAndGetWizardExecutionController();
     }
 
     /**
