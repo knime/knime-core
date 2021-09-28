@@ -57,7 +57,6 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.interactive.ViewRequestHandlingException;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.web.ValidationError;
-import org.knime.core.node.web.WebViewContent;
 import org.knime.core.node.wizard.WizardViewResponse;
 import org.knime.core.node.wizard.page.WizardPage;
 import org.knime.core.node.wizard.page.WizardPageUtil;
@@ -125,7 +124,7 @@ public class CompositeViewController extends WebResourceController {
      * Retrieves all available view values from the available wizard nodes for the given node id.
      * @return a map from NodeID to view value for all appropriate wizard nodes.
      */
-    public Map<NodeIDSuffix, WebViewContent> getWizardPageViewValueMap() {
+    public Map<NodeIDSuffix, Object> getWizardPageViewValueMap() {
         WorkflowManager manager = m_manager;
         try (WorkflowLock lock = manager.lock()) {
             NodeContext.pushContext(manager);

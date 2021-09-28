@@ -10118,36 +10118,6 @@ public final class WorkflowManager extends NodeContainer
     }
 
     /**
-     * Find all nodes of a certain type that are already executed. See {@link #findNodes(Class, boolean)}
-     *
-     * @param <T> ...
-     * @param nodeModelClass ...
-     * @param filter non null refinement filter
-     * @return ...
-     * @since 2.7
-     * @noreference This method is not intended to be referenced by clients.
-     */
-    public <T> Map<NodeID, T> findExecutedNodes(final Class<T> nodeModelClass, final NodeModelFilter<T> filter) {
-        try (WorkflowLock lock = lock()) {
-            Map<NodeID, T> nodes = findNodes(nodeModelClass, /*recurse=*/false);
-            Iterator<Map.Entry<NodeID, T>> it = nodes.entrySet().iterator();
-            while (it.hasNext()) {
-                Entry<NodeID, T> next = it.next();
-                NodeID id = next.getKey();
-                SingleNodeContainer nc = (SingleNodeContainer)getNodeContainer(id);
-                if (!filter.include(next.getValue())) {
-                    it.remove();
-                } else if (!EXECUTED.equals(nc.getInternalState())) {
-                    it.remove();
-                } else if (nc.isInactive()) {
-                    it.remove();
-                }
-            }
-            return nodes;
-        }
-    }
-
-    /**
      * Find "next" workflowmanager which contains nodes of a certain type that are currently ready to be executed. See
      * {@link #findWaitingNodes(Class, NodeModelFilter)}
      *

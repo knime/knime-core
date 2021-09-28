@@ -132,7 +132,7 @@ public abstract class WebResourceController {
         return WizardPageUtil.isWizardPage(m_manager, subnodeId);
     }
 
-    protected Map<NodeIDSuffix, WebViewContent> getWizardPageViewValueMapInternal(final NodeID subnodeID) {
+    protected Map<NodeIDSuffix, Object> getWizardPageViewValueMapInternal(final NodeID subnodeID) {
         if (subnodeID == null) {
             LOGGER.error("No node ID supplied for creating wizard page");
             return null;
@@ -141,10 +141,19 @@ public abstract class WebResourceController {
         assert manager.isLockedByCurrentThread();
         SubNodeContainer subNC = manager.getNodeContainer(subnodeID, SubNodeContainer.class, true);
         WorkflowManager subWFM = subNC.getWorkflowManager();
-        // TODO
-        return subWFM.findExecutedNodes(WizardNode.class, WizardPageUtil.NOT_HIDDEN_FILTER).entrySet().stream()
-            .filter(e -> !subWFM.getNodeContainer(e.getKey(), NativeNodeContainer.class, true).isInactive())
-            .collect(Collectors.toMap(e -> toNodeIDSuffix(e.getKey()), e -> e.getValue().getViewValue()));
+        return WizardPageUtil.getWizardPageNodes(subWFM).entrySet().stream()//
+            .filter(e -> e.getValue().getNodeContainerState().isExecuted())//
+            .filter(e -> !e.getValue().isInactive())//
+            .collect(Collectors.toMap(e -> toNodeIDSuffix(e.getKey()), e -> getViewValue(e.getValue())));
+    }
+
+    @SuppressWarnings("rawtypes")
+    private static Object getViewValue(final NativeNodeContainer viewNode) {
+        if (viewNode.getNodeModel() instanceof WizardNode) {
+            return ((WizardNode)viewNode.getNodeModel()).getViewValue();
+        } else {
+            throw new IllegalStateException("Not a view node: " + viewNode.getNameWithID());
+        }
     }
 
     /**
