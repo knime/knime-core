@@ -2377,7 +2377,7 @@ public class Buffer implements KNIMEStreamConstants {
             dropBackIntoMemoryIterator();
         }
 
-        private void dropBackIntoMemoryIterator() {
+        private synchronized void dropBackIntoMemoryIterator() {
             if (m_backIntoMemoryIterator != null) {
                 m_backIntoMemoryIterator = null;
                 m_memoryAlertListener.unregister();
