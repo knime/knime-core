@@ -1,6 +1,5 @@
 /*
  * ------------------------------------------------------------------------
- *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -43,34 +42,89 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * History
- *   Aug 31, 2021 (hornm): created
  */
-package org.knime.core.webui.node.view;
+package org.knime.gateway.api.entity;
 
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.wizard.page.WizardPageContribution;
-import org.knime.core.node.workflow.NodeContext;
+import java.util.Objects;
+
+import org.knime.core.node.workflow.ConnectionID;
 
 /**
- * Implemented by {@link NodeFactory}s to register a node view.
- *
- * Pending API - needs to be integrated with {@link NodeFactory} eventually.
+ * Represents a connection id as used by gateway entities and services. Equivalent to the core's
+ * {@link org.knime.core.node.workflow.ConnectionID}.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
- * @param <T> the node model this node view will have access to
- *
- * @since 4.5
  */
-public interface NodeViewFactory<T extends NodeModel> extends WizardPageContribution {
+public final class ConnectionIDEnt {
+
+    private NodeIDEnt m_destNodeID;
+    private int m_destPortIdx;
 
     /**
-     * Creates a new node view instance. It is guaranteed that a {@link NodeContext} is available when the method is
-     * called.
-     *
-     * @param nodeModel the node model to create the view for
-     * @return a new node view instance
+     * @param destNodeID the destination node id of the connection
+     * @param destPortIdx the destination port index
      */
-    NodeView createNodeView(T nodeModel);
+    public ConnectionIDEnt(final NodeIDEnt destNodeID, final int destPortIdx) {
+        m_destNodeID = destNodeID;
+        m_destPortIdx = destPortIdx;
+    }
+
+    /**
+     * Creates a new connection id entity from a {@link ConnectionID}.
+     *
+     * @param connectionId
+     */
+    public ConnectionIDEnt(final ConnectionID connectionId) {
+        this(new NodeIDEnt(connectionId.getDestinationNode()), connectionId.getDestinationPort());
+    }
+
+    /**
+     * Deserialization constructor.
+     *
+     * @param s string representation as returned by {@link #toString()}
+     */
+    public ConnectionIDEnt(final String s) {
+        String[] split = s.split("_");
+        m_destNodeID = new NodeIDEnt(split[0]);
+        m_destPortIdx = Integer.parseInt(split[1]);
+    }
+
+    /**
+     * @return the destination node id entity
+     */
+    public NodeIDEnt getDestNodeIDEnt() {
+        return m_destNodeID;
+    }
+
+    /**
+     * @return the destination port index
+     */
+    public int getDestPortIdx() {
+        return m_destPortIdx;
+    }
+
+    @Override
+    public String toString() {
+        return m_destNodeID.toString() + "_" + m_destPortIdx;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(m_destNodeID.hashCode(), m_destNodeID);
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null) {
+            return false;
+        }
+        if (getClass() != o.getClass()) {
+            return false;
+        }
+        ConnectionIDEnt ent = (ConnectionIDEnt)o;
+        return Objects.equals(m_destNodeID, ent.m_destNodeID) && m_destPortIdx == ent.m_destPortIdx;
+    }
 }

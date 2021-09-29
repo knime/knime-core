@@ -44,33 +44,76 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Aug 31, 2021 (hornm): created
+ *   Sep 29, 2021 (hornm): created
  */
-package org.knime.core.webui.node.view;
+package org.knime.gateway.api.entity;
 
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.wizard.page.WizardPageContribution;
-import org.knime.core.node.workflow.NodeContext;
+import org.knime.core.node.workflow.NativeNodeContainer;
+import org.knime.core.node.workflow.NodeContainerState;
+import org.knime.core.node.workflow.NodeMessage;
+import org.knime.core.node.workflow.NodeMessage.Type;
 
 /**
- * Implemented by {@link NodeFactory}s to register a node view.
- *
- * Pending API - needs to be integrated with {@link NodeFactory} eventually.
+ * Represents some basic information on a node required to display node views in the UI (e.g. consumed by the 'page
+ * builder' frontend library).
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
- * @param <T> the node model this node view will have access to
- *
- * @since 4.5
  */
-public interface NodeViewFactory<T extends NodeModel> extends WizardPageContribution {
+@SuppressWarnings("javadoc")
+public class NodeInfoEnt {
+
+    private final String m_name;
+
+    private final String m_annotation;
+
+    private final String m_state;
+
+    private final String m_errorMessage;
+
+    private final String m_warningMessage;
 
     /**
-     * Creates a new node view instance. It is guaranteed that a {@link NodeContext} is available when the method is
-     * called.
-     *
-     * @param nodeModel the node model to create the view for
-     * @return a new node view instance
+     * @param nnc
      */
-    NodeView createNodeView(T nodeModel);
+    public NodeInfoEnt(final NativeNodeContainer nnc) {
+        m_name = nnc.getName();
+        m_annotation = nnc.getNodeAnnotation().toString();
+        NodeContainerState state = nnc.getNodeContainerState();
+        if (state.isIdle()) {
+            m_state = "idle";
+        } else if (state.isConfigured()) {
+            m_state = "configured";
+        } else if (state.isExecutionInProgress() || state.isExecutingRemotely()) {
+            m_state = "executing";
+        } else if (state.isExecuted()) {
+            m_state = "executed";
+        } else {
+            m_state = "undefined";
+        }
+        NodeMessage message = nnc.getNodeMessage();
+        Type messageType = message.getMessageType();
+        m_errorMessage = messageType == Type.ERROR ? message.getMessage() : null;
+        m_warningMessage = messageType == Type.WARNING ? message.getMessage() : null;
+    }
+
+    public String getNodeName() {
+        return m_name;
+    }
+
+    public String getNodeAnnotation() {
+        return m_annotation;
+    }
+
+    public String getNodeState() {
+        return m_state;
+    }
+
+    public String getNodeErrorMessage() {
+        return m_errorMessage;
+    }
+
+    public String getNodeWarnMessage() {
+        return m_warningMessage;
+    }
+
 }

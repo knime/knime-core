@@ -18,6 +18,8 @@ import org.knime.core.node.workflow.WizardExecutionController;
  * Result value of {@link WizardExecutionController#getCurrentWizardPage()} and
  * {@link CompositeViewController#getWizardPage()}.
  *
+ * @noreference This class is not intended to be referenced by clients.
+ *
  * @since 4.5
  */
 public final class WizardPage {

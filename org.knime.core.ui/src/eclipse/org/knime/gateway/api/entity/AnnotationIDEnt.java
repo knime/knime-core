@@ -1,6 +1,5 @@
 /*
  * ------------------------------------------------------------------------
- *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -43,34 +42,93 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * History
- *   Aug 31, 2021 (hornm): created
  */
-package org.knime.core.webui.node.view;
+package org.knime.gateway.api.entity;
 
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.wizard.page.WizardPageContribution;
-import org.knime.core.node.workflow.NodeContext;
+import java.util.Objects;
+
+import org.knime.core.node.workflow.WorkflowAnnotationID;
 
 /**
- * Implemented by {@link NodeFactory}s to register a node view.
- *
- * Pending API - needs to be integrated with {@link NodeFactory} eventually.
+ * Represents a (workflow) annotation id as used by gateway entities and services. Equivalent to the core's
+ * {@link org.knime.core.node.workflow.WorkflowAnnotationID}.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
- * @param <T> the node model this node view will have access to
- *
- * @since 4.5
  */
-public interface NodeViewFactory<T extends NodeModel> extends WizardPageContribution {
+public final class AnnotationIDEnt {
+
+    private NodeIDEnt m_nodeId;
+
+    private int m_index;
 
     /**
-     * Creates a new node view instance. It is guaranteed that a {@link NodeContext} is available when the method is
-     * called.
+     * Creates a new annotation id entity from a node id entity and an index.
      *
-     * @param nodeModel the node model to create the view for
-     * @return a new node view instance
+     * @param nodeId the node id of the workflow annotation is part of
+     * @param index
      */
-    NodeView createNodeView(T nodeModel);
+    public AnnotationIDEnt(final NodeIDEnt nodeId, final int index) {
+        m_nodeId = nodeId;
+        m_index = index;
+    }
+
+    /**
+     * Creates a new annotation id entity from a {@link WorkflowAnnotationID}.
+     *
+     * @param id
+     */
+    public AnnotationIDEnt(final WorkflowAnnotationID id) {
+        this(new NodeIDEnt(id.getNodeID()), id.getIndex());
+    }
+
+    /**
+     * Deserialization constructor.
+     *
+     * @param s string representation as returned by {@link #toString()}
+     */
+    public AnnotationIDEnt(final String s) {
+        String[] split = s.split("_");
+        m_nodeId = new NodeIDEnt(split[0]);
+        m_index = Integer.parseInt(split[1]);
+    }
+
+    @Override
+    public String toString() {
+        return m_nodeId.toString() + "_" + m_index;
+    }
+
+    /**
+     * @return the id of the node the workflow annotation is part of
+     */
+    public NodeIDEnt getNodeIDEnt() {
+        return m_nodeId;
+    }
+
+    /**
+     * @return its index in that workflow
+     */
+    public int getIndex() {
+        return m_index;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(m_nodeId.hashCode(), m_index);
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null) {
+            return false;
+        }
+        if (getClass() != o.getClass()) {
+            return false;
+        }
+        AnnotationIDEnt ent = (AnnotationIDEnt)o;
+        return Objects.equals(m_nodeId, ent.m_nodeId) && m_index == ent.m_index;
+    }
+
 }

@@ -44,33 +44,24 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Aug 31, 2021 (hornm): created
+ *   Sep 28, 2021 (hornm): created
  */
-package org.knime.core.webui.node.view;
+package org.knime.core.node.wizard.page;
 
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.wizard.page.WizardPageContribution;
-import org.knime.core.node.workflow.NodeContext;
 
 /**
- * Implemented by {@link NodeFactory}s to register a node view.
+ * Temporary interface to mark nodes (i.e. {@link NodeFactory}s) that contribute to a wizard page.
  *
- * Pending API - needs to be integrated with {@link NodeFactory} eventually.
+ * Pending API!
+ *
+ * @noreference This interface is not intended to be referenced by clients.
+ * @noimplement This interface is not intended to be implemented by clients.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
- * @param <T> the node model this node view will have access to
  *
  * @since 4.5
  */
-public interface NodeViewFactory<T extends NodeModel> extends WizardPageContribution {
+public interface WizardPageContribution {
 
-    /**
-     * Creates a new node view instance. It is guaranteed that a {@link NodeContext} is available when the method is
-     * called.
-     *
-     * @param nodeModel the node model to create the view for
-     * @return a new node view instance
-     */
-    NodeView createNodeView(T nodeModel);
 }

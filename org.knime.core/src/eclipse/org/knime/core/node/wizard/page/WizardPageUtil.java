@@ -58,14 +58,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteManager;
 import org.knime.core.node.property.hilite.HiLiteTranslator;
 import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.wizard.ViewHideable;
 import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.wizard.page.WizardPage.WizardPageNodeInfo;
 import org.knime.core.node.wizard.util.LayoutUtil;
@@ -86,22 +87,13 @@ import org.knime.core.util.Pair;
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  *
+ * @noreference This class is not intended to be referenced by clients.
+ *
  * @since 4.5
  */
 public final class WizardPageUtil {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(WizardPageUtil.class);
-
-    /** Filter passed to WFM serach methods to find only QF nodes that are to be displayed. */
-    @SuppressWarnings("rawtypes")
-    public static final NodeModelFilter<WizardNode> NOT_HIDDEN_FILTER = new NodeModelFilter<>() {
-        @Override
-        public boolean include(final WizardNode nodeModel) {
-            return !nodeModel.isHideInWizard();
-        }
-    };
-
-    private static final NodeModelFilter<WizardNode> NO_FILTER = new NodeModelFilter<>();
 
     /**
      * Checks whether a node (i.e. component) represents a wizard page.
@@ -238,10 +230,30 @@ public final class WizardPageUtil {
      */
     public static List<NativeNodeContainer> getWizardPageNodes(final WorkflowManager wfm,
         final boolean recurseIntoComponents) {
-        return wfm.findNodes(WizardNode.class, NOT_HIDDEN_FILTER, false, recurseIntoComponents).keySet().stream().map(
-            id -> (NativeNodeContainer)(recurseIntoComponents ? wfm.findNodeContainer(id) : wfm.getNodeContainer(id)))
-            .collect(Collectors.toList());
+        List<NativeNodeContainer> res = new ArrayList<>();
+        collectWizardPageNodes(wfm, recurseIntoComponents, false, res);
+        return res;
     }
+
+    private static void collectWizardPageNodes(final WorkflowManager wfm, final boolean recurseIntoComponents,
+        final boolean includeHiddenNodes, final List<NativeNodeContainer> res) {
+        for (NodeContainer nc : wfm.getNodeContainers()) {
+            if (nc instanceof NativeNodeContainer) {
+                NativeNodeContainer nnc = (NativeNodeContainer)nc;
+                NodeModel nm = nnc.getNodeModel();
+                if (!includeHiddenNodes && nm instanceof ViewHideable && ((ViewHideable)nm).isHideInWizard()) {
+                    continue;
+                }
+                if (nm instanceof WizardNode || nnc.getNode().getFactory() instanceof WizardPageContribution) {
+                    res.add(nnc);
+                }
+            } else if (recurseIntoComponents && nc instanceof SubNodeContainer) {
+                collectWizardPageNodes(((SubNodeContainer)nc).getWorkflowManager(), recurseIntoComponents,
+                    includeHiddenNodes, res);
+            }
+        }
+    }
+
 
     /**
      * Collects all the nodes that (potentially) contribute to a wizard page, including the ones that are configured to
@@ -251,10 +263,11 @@ public final class WizardPageUtil {
      * @param recurseIntoComponents whether to recurse into contained components
      * @return map from node id to node
      */
-    public static Map<NodeID, NativeNodeContainer> getAllWizardPageNodes(final WorkflowManager wfm,
+    public static List<NativeNodeContainer> getAllWizardPageNodes(final WorkflowManager wfm,
         final boolean recurseIntoComponents) {
-        return wfm.findNodes(WizardNode.class, NO_FILTER, false, recurseIntoComponents).keySet().stream()
-            .collect(Collectors.toMap(id -> id, id -> (NativeNodeContainer)wfm.getNodeContainer(id)));
+        List<NativeNodeContainer> res = new ArrayList<>();
+        collectWizardPageNodes(wfm, recurseIntoComponents, true, res);
+        return res;
     }
 
     /**
