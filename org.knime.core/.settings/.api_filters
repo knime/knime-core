@@ -2494,6 +2494,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/wizard/AbstractWizardNodeView.java" type="org.knime.core.node.wizard.AbstractWizardNodeView">
+        <filter id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.wizard.AbstractWizardNodeView"/>
+                <message_argument value="AbstractWizardNodeView(T)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/wizard/WizardNode.java" type="org.knime.core.node.wizard.WizardNode">
         <filter id="403984517">
             <message_arguments>

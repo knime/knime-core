@@ -83,6 +83,7 @@ import org.knime.core.node.interactive.ViewResponseMonitorUpdateEvent.ViewRespon
 import org.knime.core.node.web.ValidationError;
 import org.knime.core.node.web.WebViewContent;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -108,9 +109,11 @@ public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNod
 
     private final InteractiveViewDelegate<VAL> m_delegate;
 
-    private AtomicReference<VAL> m_lastRetrievedValue = new AtomicReference<VAL>();
+    private final AtomicReference<VAL> m_lastRetrievedValue = new AtomicReference<VAL>();
 
-    private Map<String, ViewResponseMonitor<? extends WizardViewResponse>> m_viewRequestMap;
+    private final Map<String, ViewResponseMonitor<? extends WizardViewResponse>> m_viewRequestMap;
+
+    private final SingleNodeContainer m_nodeContainer;
 
     /**
      * Label for discard option.
@@ -161,12 +164,13 @@ public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNod
 
     /**
      * @param nodeModel
-     * @since 3.4
+     * @since 4.5
      */
-    protected AbstractWizardNodeView(final T nodeModel) {
+    protected AbstractWizardNodeView(final SingleNodeContainer snc, final T nodeModel) {
         super(nodeModel, true);
         m_delegate = new InteractiveViewDelegate<VAL>();
         m_viewRequestMap = new HashMap<String, ViewResponseMonitor<? extends WizardViewResponse>>();
+        m_nodeContainer = snc;
     }
 
     @Override
@@ -209,6 +213,14 @@ public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNod
      */
     protected final WizardNode<REP, VAL> getModel() {
         return super.getViewableModel();
+    }
+
+    /**
+     * @return the node container hosting the node which provides the view
+     * @since 4.5
+     */
+    protected final SingleNodeContainer getNodeContainer() {
+        return m_nodeContainer;
     }
 
     /**
