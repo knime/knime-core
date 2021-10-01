@@ -48,10 +48,15 @@
  */
 package org.knime.core.webui.node.view;
 
+import java.io.IOException;
+
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.wizard.page.WizardPageContribution;
+import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContext;
+import org.knime.core.webui.data.ReExecuteDataService;
+import org.knime.core.webui.data.text.TextReExecuteDataService;
 
 /**
  * Implemented by {@link NodeFactory}s to register a node view.
@@ -73,4 +78,17 @@ public interface NodeViewFactory<T extends NodeModel> extends WizardPageContribu
      * @return a new node view instance
      */
     NodeView createNodeView(T nodeModel);
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    default void loadViewValue(final NativeNodeContainer nnc, final String value) throws IOException {
+        NodeView nodeView = NodeViewManager.getInstance().getNodeView(nnc);
+        ReExecuteDataService service = nodeView.getReExecuteDataService().orElse(null);
+        if (service instanceof TextReExecuteDataService) {
+            ((TextReExecuteDataService)service).applyData(value);
+        }
+
+    }
 }

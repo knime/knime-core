@@ -48,7 +48,10 @@
  */
 package org.knime.core.node.wizard.page;
 
+import java.io.IOException;
+
 import org.knime.core.node.NodeFactory;
+import org.knime.core.node.workflow.NativeNodeContainer;
 
 /**
  * Temporary interface to mark nodes (i.e. {@link NodeFactory}s) that contribute to a wizard page.
@@ -63,5 +66,14 @@ import org.knime.core.node.NodeFactory;
  * @since 4.5
  */
 public interface WizardPageContribution {
+
+    /**
+     * Loads (i.e. applies) values changed and provided by the UI in the node view (e.g. for persistence).
+     *
+     * @param nnc the node proving the node view to load the data into
+     * @param value the value to load
+     * @throws IOException if the loading failed
+     */
+    void loadViewValue(NativeNodeContainer nnc, String value) throws IOException;
 
 }

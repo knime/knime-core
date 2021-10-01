@@ -72,6 +72,7 @@ import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.wizard.WizardViewRequest;
 import org.knime.core.node.wizard.WizardViewRequestHandler;
 import org.knime.core.node.wizard.WizardViewResponse;
+import org.knime.core.node.wizard.page.WizardPageContribution;
 import org.knime.core.node.wizard.page.WizardPageUtil;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 
@@ -178,9 +179,6 @@ public abstract class WebResourceController {
         WorkflowManager manager = m_manager;
         assert manager.isLockedByCurrentThread();
 
-        SubNodeContainer subNodeNC = manager.getNodeContainer(subnodeID, SubNodeContainer.class, true);
-        Map<NodeID, NativeNodeContainer> wizardNodeSet = getWizardNodeSetForVerifiedID(subnodeID);
-
         Map<String, String> filteredViewContentMap;
         if (nodeToReset == null) {
             filteredViewContentMap = viewContentMap;
@@ -192,6 +190,7 @@ public abstract class WebResourceController {
         }
         LOGGER.debugWithFormat("Loading view content into wizard nodes (%d)", filteredViewContentMap.size());
 
+        Map<NodeID, NativeNodeContainer> wizardNodeSet = getWizardNodeSetForVerifiedID(subnodeID);
         if (validate) {
             Map<String, ValidationError> validationResult =
                 validateViewValuesInternal(filteredViewContentMap, subnodeID, wizardNodeSet);
@@ -201,6 +200,7 @@ public abstract class WebResourceController {
         }
 
         // validation succeeded, reset subnode and apply
+        SubNodeContainer subNodeNC = manager.getNodeContainer(subnodeID, SubNodeContainer.class, true);
         if (!subNodeNC.getInternalState().isExecuted()) { // this used to be an error but see SRV-745
             LOGGER.warnWithFormat(
                 "Component (%s) not fully executed on appyling new values -- "
@@ -214,7 +214,7 @@ public abstract class WebResourceController {
             manager.resetSubnodeForViewUpdate(subnodeID, this, nodeToReset);
         }
 
-        loadViewValues(filteredViewContentMap, wizardNodeSet, manager, subNodeNC, useAsDefault);
+        loadViewValues(filteredViewContentMap, wizardNodeSet, manager, useAsDefault);
 
         manager.configureNodeAndSuccessors(subnodeID, true);
         return Collections.emptyMap();
@@ -222,37 +222,42 @@ public abstract class WebResourceController {
 
     @SuppressWarnings("rawtypes")
     private static void loadViewValues(final Map<String, String> filteredViewContentMap,
-        final Map<NodeID, NativeNodeContainer> wizardNodeSet, final WorkflowManager manager, final SubNodeContainer subNodeNC,
+        final Map<NodeID, NativeNodeContainer> wizardNodeSet, final WorkflowManager manager,
         final boolean useAsDefault) {
         for (Map.Entry<String, String> entry : filteredViewContentMap.entrySet()) {
             NodeID.NodeIDSuffix suffix = NodeID.NodeIDSuffix.fromString(entry.getKey());
             NodeID id = suffix.prependParent(manager.getProjectWFM().getID());
             NativeNodeContainer wizardNode = wizardNodeSet.get(id);
-            if (wizardNode.getNodeModel() instanceof WizardNode) {
-                loadViewValueForWizardNode(wizardNode, (WizardNode)wizardNode.getNodeModel(), entry.getValue(),
-                    useAsDefault);
-            } else {
-                throw new IllegalStateException();
+            try {
+                if (wizardNode.getNodeModel() instanceof WizardNode) {
+                    loadViewValueForWizardNode(wizardNode, (WizardNode)wizardNode.getNodeModel(), entry.getValue(),
+                        useAsDefault);
+                } else if (wizardNode.getNode().getFactory() instanceof WizardPageContribution) {
+                    ((WizardPageContribution)wizardNode.getNode().getFactory()).loadViewValue(wizardNode,
+                        entry.getValue());
+                } else {
+                    throw new IllegalStateException("The node '" + wizardNode.getNameWithID()
+                        + "' doesn't contribute to a wizard page. View values can't be loaded.");
+                }
+            } catch (Exception e) {
+                LOGGER.error(
+                    "Failed to load view value into node \"" + wizardNode.getID() + "\" although validation succeeded",
+                    e);
             }
         }
     }
 
     private static void loadViewValueForWizardNode(final NativeNodeContainer nnc, final WizardNode wizardNode,
-        final String viewValue, final boolean useAsDefault) {
+        final String viewValue, final boolean useAsDefault) throws IOException {
         WebViewContent newViewValue = wizardNode.createEmptyViewValue();
         if (newViewValue == null) {
             // node has no view value
             return;
         }
-        try {
-            newViewValue.loadFromStream(new ByteArrayInputStream(viewValue.getBytes(StandardCharsets.UTF_8)));
-            wizardNode.loadViewValue(newViewValue, useAsDefault);
-            if (useAsDefault) {
-                nnc.saveNodeSettingsToDefault();
-            }
-        } catch (Exception e) {
-            LOGGER.error("Failed to load view value into node \"" + nnc.getID() + "\" although validation succeeded",
-                e);
+        newViewValue.loadFromStream(new ByteArrayInputStream(viewValue.getBytes(StandardCharsets.UTF_8)));
+        wizardNode.loadViewValue(newViewValue, useAsDefault);
+        if (useAsDefault) {
+            nnc.saveNodeSettingsToDefault();
         }
     }
 
