@@ -247,7 +247,7 @@ public final class WizardPageUtil {
                 if (!includeHiddenNodes && nm instanceof ViewHideable && ((ViewHideable)nm).isHideInWizard()) {
                     continue;
                 }
-                if (nm instanceof WizardNode || nnc.getNode().getFactory() instanceof WizardPageContribution) {
+                if(isWizardPageNode(nnc)) {
                     res.add(nnc);
                 }
             } else if (recurseIntoComponents && nc instanceof SubNodeContainer) {
@@ -257,6 +257,15 @@ public final class WizardPageUtil {
         }
     }
 
+    /**
+     * Determines whether a node contributes to a {@link WizardPage}.
+     *
+     * @param nnc the node to check
+     * @return <code>true</code> if the given node contributes to a wizard page
+     */
+    public static boolean isWizardPageNode(final NativeNodeContainer nnc) {
+        return nnc.getNodeModel() instanceof WizardNode || nnc.getNode().getFactory() instanceof WizardPageContribution;
+    }
 
     /**
      * Collects all the nodes that (potentially) contribute to a wizard page, including the ones that are configured to
