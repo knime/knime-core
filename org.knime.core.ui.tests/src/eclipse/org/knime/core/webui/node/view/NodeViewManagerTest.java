@@ -54,6 +54,8 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThrows;
 import static org.knime.core.webui.page.PageTest.BUNDLE_ID;
+import static org.knime.testing.util.WorkflowManagerUtil.createAndAddNode;
+import static org.knime.testing.util.WorkflowManagerUtil.createEmptyWorkflow;
 
 import java.io.File;
 import java.io.IOException;
@@ -65,20 +67,16 @@ import java.util.function.Function;
 
 import org.awaitility.Awaitility;
 import org.junit.Test;
-import org.knime.core.node.extension.NodeFactoryExtensionManager;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.NativeNodeContainer;
-import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowContext;
-import org.knime.core.node.workflow.WorkflowCreationHelper;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeInputNodeFactory;
-import org.knime.core.util.FileUtil;
 import org.knime.core.webui.data.text.TextDataService;
 import org.knime.core.webui.data.text.TextInitialDataService;
 import org.knime.core.webui.data.text.TextReExecuteDataService;
 import org.knime.core.webui.page.Page;
+import org.knime.testing.node.view.NodeViewNodeFactory;
+import org.knime.testing.node.view.NodeViewNodeModel;
 
 import com.google.common.io.Files;
 
@@ -218,7 +216,7 @@ public class NodeViewManagerTest {
     @Test
     public void testNodeWithoutNodeView() throws IOException {
         WorkflowManager wfm = createEmptyWorkflow();
-        NativeNodeContainer nc = createNodeWithoutNodeView(wfm);
+        NativeNodeContainer nc = createAndAddNode(wfm, new VirtualSubNodeInputNodeFactory(null, new PortType[0]));
         assertThat("node not expected to have a node view", NodeViewManager.hasNodeView(nc), is(false));
         assertThrows(IllegalArgumentException.class, () -> NodeViewManager.getInstance().getNodeView(nc));
 
@@ -234,43 +232,7 @@ public class NodeViewManagerTest {
      */
     public static NativeNodeContainer createNodeWithNodeView(final WorkflowManager wfm,
         final Function<NodeViewNodeModel, NodeView> nodeViewCreator) {
-        try {
-            NodeFactoryExtensionManager.getInstance();
-        } catch (IllegalStateException e) {
-            // HACK to make this test work in the build system where the org.knime.workbench.repository plugin
-            // is not present (causes an exception on the first call
-            // 'Invalid extension point: org.knime.workbench.repository.nodes')
-        }
-        NodeViewNodeFactory factory = new NodeViewNodeFactory(nodeViewCreator);
-        NodeID nodeId = wfm.createAndAddNode(factory);
-        return (NativeNodeContainer)wfm.getNodeContainer(nodeId);
-    }
-
-    private static NativeNodeContainer createNodeWithoutNodeView(final WorkflowManager wfm) {
-        VirtualSubNodeInputNodeFactory factory = new VirtualSubNodeInputNodeFactory(null, new PortType[0]);
-        factory.init();
-        NodeID nodeId = wfm.createAndAddNode(factory);
-        return (NativeNodeContainer)wfm.getNodeContainer(nodeId);
-    }
-
-    /**
-     * Helper to create an empty workflow.
-     *
-     * @return the new workflow manager without any nodes
-     * @throws IOException
-     */
-    public static WorkflowManager createEmptyWorkflow() throws IOException {
-        File dir = FileUtil.createTempDir("workflow");
-        File workflowFile = new File(dir, WorkflowPersistor.WORKFLOW_FILE);
-        if (workflowFile.createNewFile()) {
-            WorkflowCreationHelper creationHelper = new WorkflowCreationHelper();
-            WorkflowContext.Factory fac = new WorkflowContext.Factory(workflowFile.getParentFile());
-            creationHelper.setWorkflowContext(fac.createContext());
-
-            return WorkflowManager.ROOT.createAndAddProject("workflow", creationHelper);
-        } else {
-            throw new IllegalStateException("Creating empty workflow failed");
-        }
+        return createAndAddNode(wfm, new NodeViewNodeFactory(nodeViewCreator));
     }
 
 }

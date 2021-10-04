@@ -44,82 +44,76 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Sep 13, 2021 (hornm): created
+ *   Oct 4, 2021 (hornm): created
  */
-package org.knime.core.webui.node.view;
+package org.knime.testing.util;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
+import java.io.File;
+import java.io.IOException;
 
-import java.util.function.Function;
-
-import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.DynamicNodeFactory;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.workflow.NodeContext;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.extension.NodeFactoryExtensionManager;
+import org.knime.core.node.workflow.NativeNodeContainer;
+import org.knime.core.node.workflow.WorkflowContext;
+import org.knime.core.node.workflow.WorkflowCreationHelper;
+import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.workflow.WorkflowPersistor;
+import org.knime.core.util.FileUtil;
 
 /**
- * Dummy node factory for tests around the {@link NodeView}.
+ * Utilities for tests using functionality related to the {@link WorkflowManager}.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
-public class NodeViewNodeFactory extends NodeFactory<NodeViewNodeModel> implements NodeViewFactory<NodeViewNodeModel> {
+public final class WorkflowManagerUtil {
 
-    private Function<NodeViewNodeModel, NodeView> m_nodeViewCreator;
+    /**
+     * Helper to create an empty workflow.
+     *
+     * @return the new workflow manager without any nodes
+     * @throws IOException
+     */
+    public static WorkflowManager createEmptyWorkflow() throws IOException {
+        File dir = FileUtil.createTempDir("workflow");
+        File workflowFile = new File(dir, WorkflowPersistor.WORKFLOW_FILE);
+        if (workflowFile.createNewFile()) {
+            WorkflowCreationHelper creationHelper = new WorkflowCreationHelper();
+            WorkflowContext.Factory fac = new WorkflowContext.Factory(workflowFile.getParentFile());
+            creationHelper.setWorkflowContext(fac.createContext());
 
-    NodeViewNodeFactory(final Function<NodeViewNodeModel, NodeView> nodeViewCreator) {
-        m_nodeViewCreator = nodeViewCreator;
+            return WorkflowManager.ROOT.createAndAddProject("workflow", creationHelper);
+        } else {
+            throw new IllegalStateException("Creating empty workflow failed");
+        }
     }
 
     /**
-     * {@inheritDoc}
+     * Creates a new node using the the given {@link NodeFactory}-instance and adds it to the provided workflow.
+     *
+     * @param wfm the workflow to add the node to
+     * @param factory a factory instance
+     * @return the new {@link NativeNodeContainer} instance
      */
-    @Override
-    public NodeView createNodeView(final NodeViewNodeModel nodeModel) {
-        assertThat("A node context is expected to be given", NodeContext.getContext().getNodeContainer(),
-            is(notNullValue()));
-        return m_nodeViewCreator.apply(nodeModel);
+    public static NativeNodeContainer createAndAddNode(final WorkflowManager wfm,
+        final NodeFactory<? extends NodeModel> factory) {
+        try {
+            NodeFactoryExtensionManager.getInstance();
+        } catch (IllegalStateException e) { // NOSONAR
+            // HACK to make tests work in the build system where the org.knime.workbench.repository plugin
+            // is not present (causes an exception on the first call
+            // 'Invalid extension point: org.knime.workbench.repository.nodes')
+        }
+        if (factory instanceof DynamicNodeFactory) {
+            factory.init();
+        }
+        final var nodeId = wfm.createAndAddNode(factory);
+        return (NativeNodeContainer)wfm.getNodeContainer(nodeId);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeViewNodeModel createNodeModel() {
-        return new NodeViewNodeModel();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected int getNrNodeViews() {
-        return 0;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public org.knime.core.node.NodeView<NodeViewNodeModel> createNodeView(final int viewIndex,
-        final NodeViewNodeModel nodeModel) {
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected boolean hasDialog() {
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return null;
+    private WorkflowManagerUtil() {
+        // utility class
     }
 
 }

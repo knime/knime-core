@@ -46,12 +46,14 @@
  * History
  *   Sep 13, 2021 (hornm): created
  */
-package org.knime.core.webui.node.view;
+package org.knime.testing.node.view;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -61,6 +63,7 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.interactive.ReExecutable;
+import org.knime.core.webui.node.view.NodeView;
 
 /**
  * Dummy node model for tests around the {@link NodeView}.
@@ -69,20 +72,34 @@ import org.knime.core.node.interactive.ReExecutable;
  */
 public class NodeViewNodeModel extends NodeModel implements ReExecutable<String> {
 
+    private String m_preReexecuteData;
+
+    private int m_executeCount = 0;
+
     /**
      * Allows test to check the data set at {@link #preReExecute(String, boolean)}.
+     *
+     * @return the preReexecuteData
      */
-    String m_preReexecuteData;
+    public String getPreReexecuteData() {
+        return m_preReexecuteData;
+    }
 
     /**
      * Counts the number of times the {@link #execute(BufferedDataTable[], ExecutionContext)} method has been called.
+     *
+     * @return the executeCount
      */
-    int m_executeCount = 0;
+    public int getExecuteCount() {
+        return m_executeCount;
+    }
 
     /**
+     * @param numInputs
+     * @param numOutputs
      */
-    protected NodeViewNodeModel() {
-        super(0, 0);
+    protected NodeViewNodeModel(final int numInputs, final int numOutputs) {
+        super(numInputs, numInputs);
     }
 
     /**
@@ -90,7 +107,9 @@ public class NodeViewNodeModel extends NodeModel implements ReExecutable<String>
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
-        return null; // NOSONAR
+        DataTableSpec[] outSpecs = new DataTableSpec[getNrOutPorts()];
+        Arrays.fill(outSpecs, new DataTableSpec());
+        return outSpecs;
     }
 
     /**
@@ -108,7 +127,11 @@ public class NodeViewNodeModel extends NodeModel implements ReExecutable<String>
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData, final ExecutionContext exec)
         throws Exception {
         m_executeCount++;
-        return new BufferedDataTable[0];
+        BufferedDataTable[] outData = new BufferedDataTable[getNrOutPorts()];
+        BufferedDataContainer container = exec.createDataContainer(new DataTableSpec());
+        container.close();
+        Arrays.fill(outData, container.getTable());
+        return outData;
     }
 
     /**
@@ -160,5 +183,6 @@ public class NodeViewNodeModel extends NodeModel implements ReExecutable<String>
     protected void reset() {
         //
     }
+
 
 }

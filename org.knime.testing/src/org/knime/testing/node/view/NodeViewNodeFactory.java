@@ -44,58 +44,104 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Sep 15, 2021 (hornm): created
+ *   Sep 13, 2021 (hornm): created
  */
-package org.knime.core.webui.data.rpc.json;
+package org.knime.testing.node.view;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 
-import java.io.IOException;
+import java.util.function.Function;
 
-import org.junit.Test;
-import org.knime.core.node.workflow.NativeNodeContainer;
-import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.webui.data.rpc.json.impl.JsonRpcDataServiceImpl;
-import org.knime.core.webui.data.rpc.json.impl.JsonRpcSingleServer;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.webui.node.view.NodeView;
-import org.knime.core.webui.node.view.NodeViewManager;
-import org.knime.core.webui.node.view.NodeViewManagerTest;
+import org.knime.core.webui.node.view.NodeViewFactory;
 import org.knime.core.webui.page.Page;
-import org.knime.testing.util.WorkflowManagerUtil;
 
 /**
- * Test for {@link JsonRpcDataService}-implementations.
+ * Dummy node factory for tests around the {@link NodeView}.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
-public class JsonRpcDataServiceTest {
+public class NodeViewNodeFactory extends NodeFactory<NodeViewNodeModel> implements NodeViewFactory<NodeViewNodeModel> {
+
+    private final Function<NodeViewNodeModel, NodeView> m_nodeViewCreator;
+
+    private final int m_numInputs;
+
+    private final int m_numOutputs;
 
     /**
-     * Tests {@link JsonRpcDataServiceImpl} when used in a {@link NodeView}.
-     *
-     * @throws IOException
+     * @param nodeViewCreator
      */
-    @Test
-    public void testJsonRpcDataService() throws IOException {
-        WorkflowManager wfm = WorkflowManagerUtil.createEmptyWorkflow();
-        Page page = Page.builderFromString(() -> "content", "index.html").build();
-        NativeNodeContainer nnc = NodeViewManagerTest.createNodeWithNodeView(wfm, m -> NodeView.builder(page)
-            .dataService(new JsonRpcDataServiceImpl(new JsonRpcSingleServer<MyService>(new MyService()))).build());
-        wfm.executeAllAndWaitUntilDone();
-
-        String jsonRpcRequest = "{\"jsonrpc\":\"2.0\", \"id\":1, \"method\":\"myMethod\"}";
-        String response = NodeViewManager.getInstance().callTextDataService(nnc, jsonRpcRequest);
-        assertThat(response, is("{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":\"my service method result\"}\n"));
+    public NodeViewNodeFactory(final Function<NodeViewNodeModel, NodeView> nodeViewCreator) {
+        m_nodeViewCreator = nodeViewCreator;
+        m_numInputs = 0;
+        m_numOutputs = 0;
     }
 
-    @SuppressWarnings("javadoc")
-    public static class MyService {
+    /**
+     * @param numInputs
+     * @param numOutputs
+     */
+    public NodeViewNodeFactory(final int numInputs, final int numOutputs) {
+        m_numInputs = numInputs;
+        m_numOutputs = numOutputs;
+        m_nodeViewCreator = m -> NodeView.create(Page.builderFromString(() -> "blub", "index.html").build());
+    }
 
-        public String myMethod() {
-            return "my service method result"; // NOSONAR
-        }
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeView createNodeView(final NodeViewNodeModel nodeModel) {
+        assertThat("A node context is expected to be given", NodeContext.getContext().getNodeContainer(),
+            is(notNullValue()));
+        return m_nodeViewCreator.apply(nodeModel);
+    }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeViewNodeModel createNodeModel() {
+        return new NodeViewNodeModel(m_numInputs, m_numOutputs);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected int getNrNodeViews() {
+        return 0;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public org.knime.core.node.NodeView<NodeViewNodeModel> createNodeView(final int viewIndex,
+        final NodeViewNodeModel nodeModel) {
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean hasDialog() {
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected NodeDialogPane createNodeDialogPane() {
+        return null;
     }
 
 }
