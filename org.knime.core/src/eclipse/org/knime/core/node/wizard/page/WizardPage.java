@@ -28,8 +28,6 @@ public final class WizardPage {
 
     private final Map<NodeIDSuffix, NativeNodeContainer> m_pageMap;
 
-    private Map<NodeIDSuffix, WizardPage> m_nestedContent;
-
     private Map<NodeIDSuffix, WizardPageNodeInfo> m_infoMap;
 
     private final String m_layoutInfo;
@@ -67,22 +65,6 @@ public final class WizardPage {
      */
     public Map<NodeIDSuffix, NativeNodeContainer> getPageMap() {
         return m_pageMap;
-    }
-
-    /**
-     * @return the nestedContent
-     * @since 3.7
-     */
-    public Map<NodeIDSuffix, WizardPage> getNestedContent() {
-        return m_nestedContent;
-    }
-
-    /**
-     * @param nestedContent the nestedContent to set
-     * @since 3.7
-     */
-    public void setNestedContent(final Map<NodeIDSuffix, WizardPage> nestedContent) {
-        m_nestedContent = nestedContent;
     }
 
     /**
