@@ -143,9 +143,12 @@ public final class WizardPageUtil {
     /**
      * Creates the wizard page for a given node id. Throws exception if no wizard page available.
      *
+     * Note: the workflow manager must be locked!
+     *
      * @param manager the workflow that contains the component to create the wizard page for
      * @param subnodeID the node id for the subnode to create the wizard page for
      * @return The wizard page for the given node id
+     * @throws IllegalArgumentException if there is no component for the given id
      */
     public static WizardPage createWizardPage(final WorkflowManager manager, final NodeID subnodeID) {
         if (subnodeID == null) {
