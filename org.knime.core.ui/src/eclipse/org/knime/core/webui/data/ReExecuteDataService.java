@@ -64,7 +64,7 @@ public interface ReExecuteDataService extends ApplyDataService {
      * {@inheritDoc}
      */
     @Override
-    default void handleRequest(final InputStream in) throws IOException {
+    default void applyData(final InputStream in) throws IOException {
         reExecute(in);
     }
 

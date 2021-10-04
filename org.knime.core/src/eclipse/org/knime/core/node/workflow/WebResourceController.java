@@ -310,12 +310,19 @@ public abstract class WebResourceController {
                 "No wizard node with ID %s in Component, valid IDs are: " + "%s", id,
                 ConvenienceMethods.getShortStringFrom(wizardNodeSet.entrySet(), 10));
             ValidationError validationError = null;
-            if (wizardNode.getNodeModel() instanceof WizardNode) {
-                validationError =
-                    validateViewValueForWizardNode((WizardNode)wizardNode.getNodeModel(), entry.getValue());
-            } else {
-                throw new IllegalStateException();
+            try {
+                if (wizardNode.getNodeModel() instanceof WizardNode) {
+                    validationError =
+                        validateViewValueForWizardNode((WizardNode)wizardNode.getNodeModel(), entry.getValue());
+                } else if (wizardNode.getNode().getFactory() instanceof WizardPageContribution) {
+                    validationError = ((WizardPageContribution)wizardNode.getNode().getFactory())
+                        .validateViewValue(wizardNode, entry.getValue()).map(ValidationError::new).orElse(null);
+                }
+            } catch (Exception e) { // NOSONAR
+                validationError = new ValidationError("An unexpected error occurred while validating the view value: "
+                    + entry.getValue() + ": \n" + e.getMessage());
             }
+
             if (validationError != null) {
                 resultMap.put(entry.getKey(), validationError);
             }
@@ -326,20 +333,16 @@ public abstract class WebResourceController {
         return Collections.emptyMap();
     }
 
-    private static ValidationError validateViewValueForWizardNode(final WizardNode wizardNode, final String viewValue) {
+    private static ValidationError validateViewValueForWizardNode(final WizardNode wizardNode, final String viewValue)
+        throws IOException {
         WebViewContent newViewValue = wizardNode.createEmptyViewValue();
         if (newViewValue == null) {
             // node has no view value
             return null;
         }
         ValidationError validationError = null;
-        try {
-            newViewValue.loadFromStream(new ByteArrayInputStream(viewValue.getBytes(StandardCharsets.UTF_8)));
-            validationError = wizardNode.validateViewValue(newViewValue);
-        } catch (Exception e) { // NOSONAR
-            validationError =
-                new ValidationError("Could not deserialize JSON value: " + viewValue + ": \n" + e.getMessage());
-        }
+        newViewValue.loadFromStream(new ByteArrayInputStream(viewValue.getBytes(StandardCharsets.UTF_8)));
+        validationError = wizardNode.validateViewValue(newViewValue);
         return validationError;
     }
 

@@ -49,6 +49,8 @@
 package org.knime.core.webui.data.json.impl;
 
 import java.io.IOException;
+import java.util.Optional;
+import java.util.function.Function;
 
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.interactive.ReExecutable;
@@ -89,6 +91,8 @@ public class JsonReExecuteDataServiceImpl<D, T extends NodeModel & ReExecutable<
 
     private final NodeID m_nodeId;
 
+    private final Function<D, String> m_dataValidator;
+
     /**
      * @param reExecutableNodeModel the model of the node to re-execute
      * @param dataType the type of the data object to apply
@@ -104,12 +108,37 @@ public class JsonReExecuteDataServiceImpl<D, T extends NodeModel & ReExecutable<
      */
     public JsonReExecuteDataServiceImpl(final T reExecutableNodeModel, final Class<D> dataType,
         final ObjectMapper mapper) {
+        this(reExecutableNodeModel, dataType, mapper, null);
+    }
+
+    /**
+     * @param reExecutableNodeModel the model of the node to re-execute
+     * @param dataType the type of the data object to apply
+     * @param mapper a custom object mapper for data deserialization
+     * @param dataValidator checks the data for validity - if the function returns <code>null</code> the validation is
+     *            deemed successful
+     */
+    public JsonReExecuteDataServiceImpl(final T reExecutableNodeModel, final Class<D> dataType,
+        final ObjectMapper mapper, final Function<D, String> dataValidator) {
         m_reExecutableNodeModel = reExecutableNodeModel;
         m_dataType = dataType;
         m_mapper = mapper;
         NodeContainer nc = NodeContext.getContext().getNodeContainer();
         m_wfm = nc.getParent();
         m_nodeId = nc.getID();
+        m_dataValidator = dataValidator;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Optional<String> validateData(final D data) {
+        if (m_dataValidator != null) {
+            return Optional.ofNullable(m_dataValidator.apply(data));
+        } else {
+            return Optional.empty();
+        }
     }
 
     /**

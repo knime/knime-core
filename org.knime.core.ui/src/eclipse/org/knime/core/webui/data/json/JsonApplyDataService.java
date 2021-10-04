@@ -49,6 +49,7 @@
 package org.knime.core.webui.data.json;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import org.knime.core.webui.data.text.TextApplyDataService;
 
@@ -66,9 +67,23 @@ public interface JsonApplyDataService<D> extends TextApplyDataService {
      * {@inheritDoc}
      */
     @Override
+    default Optional<String> validateData(final String data) throws IOException {
+        return validateData(fromJson(data));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     default void applyData(final String data) throws IOException {
         applyData(fromJson(data));
     }
+
+    /**
+     * @param data the data object to validate
+     * @return an empty optional if data is valid, otherwise a validation error string
+     */
+    Optional<String> validateData(D data);
 
     /**
      * @param data the data object to apply

@@ -49,6 +49,7 @@
 package org.knime.core.webui.node.view;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;
@@ -83,12 +84,24 @@ public interface NodeViewFactory<T extends NodeModel> extends WizardPageContribu
      * {@inheritDoc}
      */
     @Override
+    default Optional<String> validateViewValue(final NativeNodeContainer nnc, final String value) throws IOException {
+        NodeView nodeView = NodeViewManager.getInstance().getNodeView(nnc);
+        ReExecuteDataService service = nodeView.getReExecuteDataService().orElse(null);
+        if (service instanceof TextReExecuteDataService) {
+            return ((TextReExecuteDataService)service).validateData(value);
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     default void loadViewValue(final NativeNodeContainer nnc, final String value) throws IOException {
         NodeView nodeView = NodeViewManager.getInstance().getNodeView(nnc);
         ReExecuteDataService service = nodeView.getReExecuteDataService().orElse(null);
         if (service instanceof TextReExecuteDataService) {
             ((TextReExecuteDataService)service).applyData(value);
         }
-
     }
 }

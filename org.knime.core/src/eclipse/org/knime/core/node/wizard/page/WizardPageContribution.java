@@ -49,6 +49,7 @@
 package org.knime.core.node.wizard.page;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.workflow.NativeNodeContainer;
@@ -66,6 +67,16 @@ import org.knime.core.node.workflow.NativeNodeContainer;
  * @since 4.5
  */
 public interface WizardPageContribution {
+
+    /**
+     * Validates the value changed and provided by the UI in the node view.
+     *
+     * @param nnc the node providing the node view to validate the data for
+     * @param value the value to validate
+     * @return an empty optional if the validation was successful, otherwise a validation error
+     * @throws IOException
+     */
+    Optional<String> validateViewValue(NativeNodeContainer nnc, String value) throws IOException;
 
     /**
      * Loads (i.e. applies) values changed and provided by the UI in the node view (e.g. for persistence).

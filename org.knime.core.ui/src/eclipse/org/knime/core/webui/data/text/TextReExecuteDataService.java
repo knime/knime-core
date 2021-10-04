@@ -67,7 +67,7 @@ public interface TextReExecuteDataService extends ReExecuteDataService, TextAppl
      * {@inheritDoc}
      */
     @Override
-    default void handleRequest(final InputStream in) throws IOException {
+    default void applyData(final InputStream in) throws IOException {
         reExecute(in);
     }
 

@@ -51,6 +51,7 @@ package org.knime.core.webui.data.text;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 
 import org.knime.core.webui.data.ApplyDataService;
 
@@ -67,9 +68,26 @@ public interface TextApplyDataService extends ApplyDataService {
      * {@inheritDoc}
      */
     @Override
-    default void handleRequest(final InputStream in) throws IOException {
+    default Optional<String> validateData(final InputStream in) throws IOException {
+        return validateData(new String(in.readAllBytes(), StandardCharsets.UTF_8));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    default void applyData(final InputStream in) throws IOException {
         applyData(new String(in.readAllBytes(), StandardCharsets.UTF_8));
     }
+
+    /**
+     * Validates the data, see {@link #validateData(InputStream)}.
+     *
+     * @param data
+     * @return an empty optional if successful, otherwise a validation error string
+     * @throws IOException
+     */
+    Optional<String> validateData(String data) throws IOException;
 
     /**
      * Applies data.

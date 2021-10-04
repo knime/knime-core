@@ -50,6 +50,7 @@ package org.knime.core.webui.data;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Optional;
 
 import org.knime.core.node.NodeModel;
 
@@ -64,11 +65,20 @@ import org.knime.core.node.NodeModel;
 public interface ApplyDataService {
 
     /**
+     * Checks whether the data in the input stream is valid.
+     *
+     * @param in the data to validate
+     * @return an empty optional if the validation was successful otherwise a validation error string
+     * @throws IOException if the data couldn't be read
+     */
+    Optional<String> validateData(InputStream in) throws IOException;
+
+    /**
      * Applies the data in the input stream
      *
      * @param in the data to apply
      * @throws IOException if applying the data failed
      */
-    void handleRequest(InputStream in) throws IOException;
+    void applyData(InputStream in) throws IOException;
 
 }

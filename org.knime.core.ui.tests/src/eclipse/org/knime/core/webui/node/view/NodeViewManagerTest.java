@@ -62,6 +62,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
@@ -137,6 +138,11 @@ public class NodeViewManagerTest {
                 return "general data service";
             }
         }).reExecuteDataService(new TextReExecuteDataService() {
+
+            @Override
+            public Optional<String> validateData(final String data) throws IOException {
+                throw new UnsupportedOperationException("should not be called in this test");
+            }
 
             @Override
             public void applyData(final String data) throws IOException {
