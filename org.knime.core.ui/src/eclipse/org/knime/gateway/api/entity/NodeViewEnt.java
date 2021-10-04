@@ -54,6 +54,7 @@ import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainerParent;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.webui.node.view.NodeView;
 import org.knime.core.webui.node.view.NodeViewManager;
 
 /**
@@ -101,8 +102,13 @@ public final class NodeViewEnt {
         }
 
         m_nodeId = new NodeIDEnt(nnc.getID(), isComponentProject).toString();
-        m_isComponent = NodeViewManager.getInstance().getNodeView(nnc).getPage().isComponent();
-        m_initialData = NodeViewManager.getInstance().callTextInitialDataService(nnc);
+        NodeView nodeView = NodeViewManager.getInstance().getNodeView(nnc);
+        m_isComponent = nodeView.getPage().isComponent();
+        if (nodeView.getInitialDataService().isPresent()) {
+            m_initialData = NodeViewManager.getInstance().callTextInitialDataService(nnc);
+        } else {
+            m_initialData = null;
+        }
         m_url = NodeViewManager.getInstance().writeNodeViewResourcesToDiscAndGetFileUrl(nnc);
 
         m_info = new NodeInfoEnt(nnc);
