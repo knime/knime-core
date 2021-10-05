@@ -217,21 +217,11 @@ public class WizardPageUtilTest {
             wizardPage = WizardPageUtil.createWizardPage(wfm, component);
         }
         assertThat(wizardPage.getPageNodeID(), is(component));
-        assertThat(wizardPage.getInfoMap().size(), is(2));
-        assertThat(wizardPage.getInfoMap().keySet(),
+        assertThat(wizardPage.getPageMap().size(), is(2));
+        assertThat(wizardPage.getPageMap().keySet(),
             containsInAnyOrder(NodeIDSuffix.fromString("4:0:2"), NodeIDSuffix.fromString("4:0:3:0:1")));
-        assertThat(wizardPage.getInfoMap().values().stream().map(i -> i.getNodeName()).collect(Collectors.toList()),
+        assertThat(wizardPage.getPageMap().values().stream().map(n -> n.getName()).collect(Collectors.toList()),
             containsInAnyOrder("NodeView", "NodeView"));
-        assertTrue(wizardPage.getPageMap().isEmpty());
-
-        wfm.executeAllAndWaitUntilDone();
-
-        try (WorkflowLock lock = wfm.lock()) {
-            wizardPage = WizardPageUtil.createWizardPage(wfm, component);
-            assertThat(wizardPage.getPageMap().size(), is(2));
-            assertThat(wizardPage.getPageMap().keySet(),
-                containsInAnyOrder(NodeIDSuffix.fromString("4:0:2"), NodeIDSuffix.fromString("4:0:3:0:1")));
-        }
     }
 
 }

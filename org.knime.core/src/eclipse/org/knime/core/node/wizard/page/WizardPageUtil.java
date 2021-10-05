@@ -68,7 +68,6 @@ import org.knime.core.node.property.hilite.HiLiteTranslator;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.wizard.ViewHideable;
 import org.knime.core.node.wizard.WizardNode;
-import org.knime.core.node.wizard.page.WizardPage.WizardPageNodeInfo;
 import org.knime.core.node.wizard.util.LayoutUtil;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
@@ -158,11 +157,10 @@ public final class WizardPageUtil {
         assert manager.isLockedByCurrentThread(); // NOSONAR
 
         LinkedHashMap<NodeIDSuffix, NativeNodeContainer> resultMap = new LinkedHashMap<>();
-        LinkedHashMap<NodeIDSuffix, WizardPageNodeInfo> infoMap = new LinkedHashMap<>();
         Set<HiLiteHandler> initialHiliteHandlerSet = new HashSet<>();
         SubNodeContainer subNC = manager.getNodeContainer(subnodeID, SubNodeContainer.class, true);
         LinkedHashMap<NodeIDSuffix, SubNodeContainer> sncMap = new LinkedHashMap<>();
-        findNestedViewNodes(subNC, resultMap, infoMap, sncMap, initialHiliteHandlerSet);
+        findNestedViewNodes(subNC, resultMap, sncMap, initialHiliteHandlerSet);
         SubnodeContainerLayoutStringProvider layoutStringProvider = subNC.getSubnodeLayoutStringProvider();
         if (layoutStringProvider.isEmptyLayout() || layoutStringProvider.isPlaceholderLayout()) {
             try {
@@ -204,10 +202,8 @@ public final class WizardPageUtil {
         List<HiLiteTranslator> translatorList =
             !knownTranslators.isEmpty() ? new ArrayList<>(knownTranslators) : null;
         List<HiLiteManager> managerList = !knownManagers.isEmpty() ? new ArrayList<>(knownManagers) : null;
-        WizardPage page = new WizardPage(subnodeID, resultMap, layoutStringProvider.getLayoutString(),
-            translatorList, managerList);
-        page.setInfoMap(infoMap);
-        return page;
+        return new WizardPage(subnodeID, resultMap, layoutStringProvider.getLayoutString(), translatorList,
+            managerList);
     }
 
     /**
@@ -379,16 +375,14 @@ public final class WizardPageUtil {
      * pages are recursively collected, too.
      *
      * @param subNC the page to collect the info for
-     * @param resultMap the container for the collected {@link WizardNode}s, or <code>null</code> if it shouldn't be
-     *            collected
      * @param infoMap the container for the collected {@link WizardPageNodeInfo}s, or <code>null</code> if it shouldn't
      *            be collected
      * @param sncMap the map of nested pages, or <code>null</code> if shouldn't be collected
      * @param initialHiliteHandlerSet collected hilite handlers or <code>null</code> if it shouldn't be collected
      */
     private static void findNestedViewNodes(final SubNodeContainer subNC,
-        final Map<NodeIDSuffix, NativeNodeContainer> resultMap, final Map<NodeIDSuffix, WizardPageNodeInfo> infoMap,
-        final Map<NodeIDSuffix, SubNodeContainer> sncMap, final Set<HiLiteHandler> initialHiliteHandlerSet) {
+        final Map<NodeIDSuffix, NativeNodeContainer> resultMap, final Map<NodeIDSuffix, SubNodeContainer> sncMap,
+        final Set<HiLiteHandler> initialHiliteHandlerSet) {
         WorkflowManager subWFM = subNC.getWorkflowManager();
         List<NativeNodeContainer> wizardNodes = getWizardPageNodes(subWFM);
         WorkflowManager projectWFM = subNC.getProjectWFM();
@@ -398,16 +392,7 @@ public final class WizardPageUtil {
                 continue;
             }
             NodeID.NodeIDSuffix idSuffix = NodeID.NodeIDSuffix.create(projectWFM.getID(), nc.getID());
-            if (infoMap != null) {
-                WizardPageNodeInfo nodeInfo = new WizardPageNodeInfo();
-                nodeInfo.setNodeName(nc.getName());
-                nodeInfo.setNodeAnnotation(nc.getNodeAnnotation().toString());
-                nodeInfo.setNodeState(nc.getNodeContainerState());
-                nodeInfo.setNodeMessage(nc.getNodeMessage());
-                infoMap.put(idSuffix, nodeInfo);
-            }
-            if (nc.getNodeContainerState().isExecuted() && resultMap != null) {
-                //regular viewable nodes need to be executed
+            if (resultMap != null) {
                 resultMap.put(idSuffix, nc);
             }
 
@@ -427,7 +412,7 @@ public final class WizardPageUtil {
             if (sncMap != null) {
                 sncMap.put(idSuffix, snc);
             }
-            findNestedViewNodes(snc, resultMap, infoMap, sncMap, initialHiliteHandlerSet);
+            findNestedViewNodes(snc, resultMap, sncMap, initialHiliteHandlerSet);
         }
     }
 

@@ -102,7 +102,6 @@ public class EnhWEBP674_SinglePageExecution extends WorkflowTestCase {
 
 		WizardPage pageContent = wec.getCurrentWizardPage();
 		assertThat(pageContent.getPageMap().size(), is(4));
-		assertThat(pageContent.getInfoMap().size(), is(4));
 		// make sure that sec and wec return the same wizard page
 		assertThat(wec.getCurrentWizardPage().getPageMap(), is(pageContent.getPageMap()));
 	}
@@ -116,8 +115,9 @@ public class EnhWEBP674_SinglePageExecution extends WorkflowTestCase {
 		WizardExecutionController wec = getManager().setAndGetWizardExecutionController();
 		reexecuteSinglePageAndKeepExecuting(wec);
 		WizardPage pageContent = wec.getCurrentWizardPage();
-		assertThat(pageContent.getInfoMap().size(), is(4));
-		assertTrue(pageContent.getInfoMap().get(createNodeIDSuffix(7, 0, 3)).getNodeState().isWaitingToBeExecuted());
+		assertThat(pageContent.getPageMap().size(), is(4));
+		assertTrue(pageContent.getPageMap().get(createNodeIDSuffix(7, 0, 3)).getNodeContainerState()
+				.isWaitingToBeExecuted());
 	}
 
 	/**
@@ -159,7 +159,7 @@ public class EnhWEBP674_SinglePageExecution extends WorkflowTestCase {
 		wec.reexecuteSinglePage(createNodeID(projectId, 6, 0, 6), Collections.emptyMap());
 		Awaitility.await().atMost(5, TimeUnit.SECONDS).pollInterval(100, TimeUnit.MILLISECONDS).until(() -> {
 			WizardPage pc = wec.getCurrentWizardPage();
-			return pc.getInfoMap().keySet().contains(createNodeIDSuffix(6, 0, 5));
+			return pc.getPageMap().keySet().contains(createNodeIDSuffix(6, 0, 5));
 		});
 
 		// step back and check page content
@@ -167,7 +167,7 @@ public class EnhWEBP674_SinglePageExecution extends WorkflowTestCase {
 		waitForSinglePageNotExecutingAnymore(wec);
 		wec.stepBack();
 		WizardPage pageContent = wec.getCurrentWizardPage();
-		assertTrue(pageContent.getInfoMap().containsKey(createNodeIDSuffix(7, 0, 3)));
+		assertTrue(pageContent.getPageMap().containsKey(createNodeIDSuffix(7, 0, 3)));
 		assertThat(pageContent.getPageMap().size(), is(4));
 	}
 
@@ -176,7 +176,7 @@ public class EnhWEBP674_SinglePageExecution extends WorkflowTestCase {
 		assertThat(wec.hasCurrentWizardPage(), is(true));
 		Awaitility.await().atMost(5, TimeUnit.SECONDS).pollInterval(100, TimeUnit.MILLISECONDS).untilAsserted(() -> {
 			WizardPage pc = wec.getCurrentWizardPage();
-			assertThat(pc.getPageMap().size(), is(3));
+			assertThat(pc.getPageMap().size(), is(4));
 		});
 	}
 

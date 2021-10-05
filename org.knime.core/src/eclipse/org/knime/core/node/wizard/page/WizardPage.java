@@ -1,6 +1,5 @@
 package org.knime.core.node.wizard.page;
 
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -8,10 +7,8 @@ import org.knime.core.node.property.hilite.HiLiteManager;
 import org.knime.core.node.property.hilite.HiLiteTranslator;
 import org.knime.core.node.workflow.CompositeViewController;
 import org.knime.core.node.workflow.NativeNodeContainer;
-import org.knime.core.node.workflow.NodeContainerState;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
-import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.WizardExecutionController;
 
 /**
@@ -27,8 +24,6 @@ public final class WizardPage {
     private final NodeID m_pageNodeID;
 
     private final Map<NodeIDSuffix, NativeNodeContainer> m_pageMap;
-
-    private Map<NodeIDSuffix, WizardPageNodeInfo> m_infoMap;
 
     private final String m_layoutInfo;
 
@@ -46,7 +41,6 @@ public final class WizardPage {
         final List<HiLiteManager> hiLiteManagers) {
         m_pageNodeID = pageNodeID;
         m_pageMap = pageMap;
-        m_infoMap = new LinkedHashMap<>();
         m_layoutInfo = layoutInfo;
         m_hiLiteTranslators = hiLiteTranslators;
         m_hiliteManagers = hiLiteManagers;
@@ -89,92 +83,6 @@ public final class WizardPage {
      */
     public List<HiLiteManager> getHiliteManagers() {
         return m_hiliteManagers;
-    }
-
-    /**
-     * @param infoMap the infoMap to set
-     * @since 3.5
-     */
-    public void setInfoMap(final Map<NodeIDSuffix, WizardPageNodeInfo> infoMap) {
-        m_infoMap = infoMap;
-    }
-
-    /**
-     * @return the infoMap
-     * @since 3.5
-     */
-    public Map<NodeIDSuffix, WizardPageNodeInfo> getInfoMap() {
-        return m_infoMap;
-    }
-
-    /**
-     * Info object for individual nodes, containing e.g. node state
-     * and possible warn/error messages.
-     * @since 3.5
-     */
-    public static final class WizardPageNodeInfo {
-
-        private String m_nodeName;
-        private String m_nodeAnnotation;
-        private NodeContainerState m_nodeState;
-        private NodeMessage m_nodeMessage;
-
-        /**
-         * @return the nodeName
-         */
-        public String getNodeName() {
-            return m_nodeName;
-        }
-
-        /**
-         * @param nodeName the nodeName to set
-         */
-        public void setNodeName(final String nodeName) {
-            m_nodeName = nodeName;
-        }
-
-        /**
-         * @return the nodeAnnotation
-         */
-        public String getNodeAnnotation() {
-            return m_nodeAnnotation;
-        }
-
-        /**
-         * @param nodeAnnotation the nodeAnnotation to set
-         */
-        public void setNodeAnnotation(final String nodeAnnotation) {
-            m_nodeAnnotation = nodeAnnotation;
-        }
-
-        /**
-         * @return the nodeState
-         */
-        public NodeContainerState getNodeState() {
-            return m_nodeState;
-        }
-
-        /**
-         * @param nodeState the nodeState to set
-         */
-        public void setNodeState(final NodeContainerState nodeState) {
-            m_nodeState = nodeState;
-        }
-
-        /**
-         * @return the nodeMessage
-         */
-        public NodeMessage getNodeMessage() {
-            return m_nodeMessage;
-        }
-
-        /**
-         * @param nodeMessage the nodeMessage to set
-         */
-        public void setNodeMessage(final NodeMessage nodeMessage) {
-            m_nodeMessage = nodeMessage;
-        }
-
     }
 
 }
