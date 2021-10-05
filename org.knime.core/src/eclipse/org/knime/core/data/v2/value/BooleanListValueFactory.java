@@ -56,12 +56,12 @@ import org.knime.core.data.def.BooleanCell;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
-import org.knime.core.data.v2.value.BooleanValueFactory.BooleanReadValue;
 import org.knime.core.data.v2.value.BooleanValueFactory.BooleanWriteValue;
 import org.knime.core.data.v2.value.ListValueFactory.DefaultListReadValue;
 import org.knime.core.data.v2.value.ListValueFactory.DefaultListWriteValue;
 import org.knime.core.data.v2.value.ListValueFactory.ListReadValue;
 import org.knime.core.data.v2.value.ListValueFactory.ListWriteValue;
+import org.knime.core.table.access.BooleanAccess.BooleanReadAccess;
 import org.knime.core.table.access.ListAccess.ListReadAccess;
 import org.knime.core.table.access.ListAccess.ListWriteAccess;
 import org.knime.core.table.schema.BooleanDataSpec;
@@ -156,7 +156,7 @@ public final class BooleanListValueFactory implements ValueFactory<ListReadAcces
 
         @Override
         public boolean getBoolean(final int index) {
-            final BooleanReadValue v = m_reader.getAccess(index);
+            final BooleanReadAccess v = m_reader.getAccess(index);
             return v.getBooleanValue();
         }
 

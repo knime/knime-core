@@ -58,12 +58,12 @@ import org.knime.core.data.def.IntCell;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
-import org.knime.core.data.v2.value.IntValueFactory.IntReadValue;
 import org.knime.core.data.v2.value.IntValueFactory.IntWriteValue;
 import org.knime.core.data.v2.value.ListValueFactory.DefaultListReadValue;
 import org.knime.core.data.v2.value.ListValueFactory.DefaultListWriteValue;
 import org.knime.core.data.v2.value.ListValueFactory.ListReadValue;
 import org.knime.core.data.v2.value.ListValueFactory.ListWriteValue;
+import org.knime.core.table.access.IntAccess.IntReadAccess;
 import org.knime.core.table.access.ListAccess.ListReadAccess;
 import org.knime.core.table.access.ListAccess.ListWriteAccess;
 import org.knime.core.table.schema.IntDataSpec;
@@ -155,7 +155,7 @@ public final class IntListValueFactory implements ValueFactory<ListReadAccess, L
 
         @Override
         public int getInt(final int index) {
-            final IntReadValue v = m_reader.getAccess(index);
+            final IntReadAccess v = m_reader.getAccess(index);
             return v.getIntValue();
         }
 

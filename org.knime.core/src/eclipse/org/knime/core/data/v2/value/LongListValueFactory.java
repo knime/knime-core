@@ -54,12 +54,10 @@ import java.util.PrimitiveIterator.OfLong;
 
 import org.knime.core.data.LongValue;
 import org.knime.core.data.collection.ListCell;
-import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.LongCell;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
-import org.knime.core.data.v2.value.IntValueFactory.IntReadValue;
 import org.knime.core.data.v2.value.ListValueFactory.DefaultListReadValue;
 import org.knime.core.data.v2.value.ListValueFactory.DefaultListWriteValue;
 import org.knime.core.data.v2.value.ListValueFactory.ListReadValue;
@@ -67,6 +65,7 @@ import org.knime.core.data.v2.value.ListValueFactory.ListWriteValue;
 import org.knime.core.data.v2.value.LongValueFactory.LongWriteValue;
 import org.knime.core.table.access.ListAccess.ListReadAccess;
 import org.knime.core.table.access.ListAccess.ListWriteAccess;
+import org.knime.core.table.access.LongAccess.LongReadAccess;
 import org.knime.core.table.schema.ListDataSpec;
 import org.knime.core.table.schema.LongDataSpec;
 import org.knime.core.table.schema.traits.DataTraits;
@@ -151,13 +150,13 @@ public final class LongListValueFactory implements ValueFactory<ListReadAccess, 
     private static final class DefaultLongListReadValue extends DefaultListReadValue implements LongListReadValue {
 
         private DefaultLongListReadValue(final ListReadAccess reader) {
-            super(reader, LongValueFactory.INSTANCE, IntCell.TYPE);
+            super(reader, LongValueFactory.INSTANCE, LongCell.TYPE);
         }
 
         @Override
         public long getLong(final int index) {
-            final IntReadValue v = m_reader.getAccess(index);
-            return v.getIntValue();
+            final LongReadAccess v = m_reader.getAccess(index);
+            return v.getLongValue();
         }
 
         @Override
