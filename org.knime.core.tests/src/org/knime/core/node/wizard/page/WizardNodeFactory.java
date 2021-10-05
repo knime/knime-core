@@ -51,15 +51,17 @@ package org.knime.core.node.wizard.page;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
+import org.knime.core.node.web.WebViewContent;
 import org.knime.core.node.wizard.WizardNode;
+import org.knime.core.node.wizard.WizardNodeFactoryExtension;
 
 /**
  * A node factory that represents a {@link WizardNode}.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
-public class WizardNodeFactory extends NodeFactory<WizardNodeModel> {
-
+public class WizardNodeFactory extends NodeFactory<WizardNodeModel>
+    implements WizardNodeFactoryExtension<WizardNodeModel, WebViewContent, WebViewContent> {
     /**
      * {@inheritDoc}
      */

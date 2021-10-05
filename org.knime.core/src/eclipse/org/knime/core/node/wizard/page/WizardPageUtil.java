@@ -60,6 +60,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.property.hilite.HiLiteHandler;
@@ -68,6 +69,7 @@ import org.knime.core.node.property.hilite.HiLiteTranslator;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.wizard.ViewHideable;
 import org.knime.core.node.wizard.WizardNode;
+import org.knime.core.node.wizard.WizardNodeFactoryExtension;
 import org.knime.core.node.wizard.util.LayoutUtil;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
@@ -260,7 +262,8 @@ public final class WizardPageUtil {
      * @return <code>true</code> if the given node contributes to a wizard page
      */
     public static boolean isWizardPageNode(final NativeNodeContainer nnc) {
-        return nnc.getNodeModel() instanceof WizardNode || nnc.getNode().getFactory() instanceof WizardPageContribution;
+        NodeFactory<NodeModel> factory = nnc.getNode().getFactory();
+        return factory instanceof WizardNodeFactoryExtension || factory instanceof WizardPageContribution;
     }
 
     /**
