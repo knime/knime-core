@@ -111,7 +111,7 @@ public class NodeViewEntTest {
         assertThat(ent.getWorkflowId(), is("root"));
         assertThat(ent.getNodeId(), is("root:2"));
         assertThat(ent.getUrl(), Matchers.endsWith("index.html"));
-        assertThat(ent.isComponent(), is(false));
+        assertThat(ent.isWebComponent(), is(false));
         assertThat(ent.getInitialData(), is("dummy initial data"));
         NodeInfoEnt info = ent.getNodeInfo();
         assertThat(info.getNodeName(), is("NodeView"));
@@ -127,7 +127,7 @@ public class NodeViewEntTest {
         };
         nnc = WorkflowManagerUtil.createAndAddNode(wfm, new NodeViewNodeFactory(nodeViewCreator));
         ent = new NodeViewEnt(nnc);
-        assertThat(ent.isComponent(), is(true));
+        assertThat(ent.isWebComponent(), is(true));
         assertThat(ent.getUrl(), Matchers.endsWith("component.js"));
         assertThat(ent.getInitialData(), is(nullValue()));
     }

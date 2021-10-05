@@ -67,7 +67,7 @@ public final class NodeViewEnt {
 
     private final String m_nodeId;
 
-    private final boolean m_isComponent;
+    private final boolean m_isWebComponent;
 
     private final String m_initialData;
 
@@ -103,7 +103,7 @@ public final class NodeViewEnt {
 
         m_nodeId = new NodeIDEnt(nnc.getID(), isComponentProject).toString();
         NodeView nodeView = NodeViewManager.getInstance().getNodeView(nnc);
-        m_isComponent = nodeView.getPage().isComponent();
+        m_isWebComponent = nodeView.getPage().isWebComponent();
         if (nodeView.getInitialDataService().isPresent()) {
             m_initialData = NodeViewManager.getInstance().callTextInitialDataService(nnc);
         } else {
@@ -134,8 +134,8 @@ public final class NodeViewEnt {
         return m_initialData;
     }
 
-    public boolean isComponent() {
-        return m_isComponent;
+    public boolean isWebComponent() {
+        return m_isWebComponent;
     }
 
     public NodeInfoEnt getNodeInfo() {

@@ -86,18 +86,18 @@ public class PageTest {
     }
 
     /**
-     * Tests {@link Page#isComponent()}.
+     * Tests {@link Page#isWebComponent()}.
      */
     @Test
     public void testIsComponent() {
         Page page = Page.builder(BUNDLE_ID, "files", "page.html").build();
-        assertThat(page.isComponent(), is(false));
+        assertThat(page.isWebComponent(), is(false));
 
         page = Page.builder(BUNDLE_ID, "files", "component.js").build();
-        assertThat(page.isComponent(), is(true));
+        assertThat(page.isWebComponent(), is(true));
 
         page = Page.builderFromString(() -> "content", "component.js").build();
-        assertThat(page.isComponent(), is(false));
+        assertThat(page.isWebComponent(), is(false));
 
     }
 

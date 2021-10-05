@@ -70,12 +70,12 @@ public final class Page implements Resource {
 
     private final List<Resource> m_context;
 
-    private final boolean m_isComponent;
+    private final boolean m_isWebComponent;
 
-    Page(final Resource pageResource, final List<Resource> context, final boolean isComponent) {
+    Page(final Resource pageResource, final List<Resource> context, final boolean isWebComponent) {
         m_pageResource = pageResource;
         m_context = context == null ? Collections.emptyList() : context;
-        m_isComponent = isComponent;
+        m_isWebComponent = isWebComponent;
     }
 
     /**
@@ -123,8 +123,8 @@ public final class Page implements Resource {
     /**
      * @return if <code>true</code> this page represents a vue-component instead of a html-page (<code>false</code>)
      */
-    public boolean isComponent() {
-        return m_isComponent;
+    public boolean isWebComponent() {
+        return m_isWebComponent;
     }
 
     /**
