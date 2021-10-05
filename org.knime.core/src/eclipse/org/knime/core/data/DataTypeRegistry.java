@@ -64,9 +64,32 @@ import org.eclipse.core.runtime.IExtension;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
+import org.knime.core.data.collection.ListCell;
+import org.knime.core.data.collection.SetCell;
+import org.knime.core.data.collection.SparseListCell;
+import org.knime.core.data.def.BooleanCell;
+import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.LongCell;
+import org.knime.core.data.def.StringCell;
 import org.knime.core.data.filestore.FileStoreFactory;
 import org.knime.core.data.v2.ValueFactory;
+import org.knime.core.data.v2.value.BooleanListValueFactory;
+import org.knime.core.data.v2.value.BooleanSetValueFactory;
+import org.knime.core.data.v2.value.BooleanSparseListValueFactory;
 import org.knime.core.data.v2.value.DefaultRowKeyValueFactory;
+import org.knime.core.data.v2.value.DoubleListValueFactory;
+import org.knime.core.data.v2.value.DoubleSetValueFactory;
+import org.knime.core.data.v2.value.DoubleSparseListValueFactory;
+import org.knime.core.data.v2.value.IntListValueFactory;
+import org.knime.core.data.v2.value.IntSetValueFactory;
+import org.knime.core.data.v2.value.IntSparseListValueFactory;
+import org.knime.core.data.v2.value.LongListValueFactory;
+import org.knime.core.data.v2.value.LongSetValueFactory;
+import org.knime.core.data.v2.value.LongSparseListValueFactory;
+import org.knime.core.data.v2.value.StringListValueFactory;
+import org.knime.core.data.v2.value.StringSetValueFactory;
+import org.knime.core.data.v2.value.StringSparseListValueFactory;
 import org.knime.core.data.v2.value.VoidRowKeyFactory;
 import org.knime.core.internal.SerializerMethodLoader;
 import org.knime.core.node.NodeLogger;
@@ -374,6 +397,71 @@ public final class DataTypeRegistry {
         }
     }
 
+    private static DataType getDataTypeForListValueFactory(final ValueFactory<?, ?> valueFactory) {
+        DataType type = null;
+        if (valueFactory == DoubleListValueFactory.INSTANCE) {
+            type = DataType.getType(ListCell.class, DoubleCell.TYPE);
+        } else if (valueFactory == IntListValueFactory.INSTANCE) {
+            type = DataType.getType(ListCell.class, IntCell.TYPE);
+        } else if (valueFactory == LongListValueFactory.INSTANCE) {
+            type = DataType.getType(ListCell.class, LongCell.TYPE);
+        } else if (valueFactory == StringListValueFactory.INSTANCE) {
+            type = DataType.getType(ListCell.class, StringCell.TYPE);
+        } else if (valueFactory == BooleanListValueFactory.INSTANCE) {
+            type = DataType.getType(ListCell.class, BooleanCell.TYPE);
+        }
+
+        return type;
+    }
+
+    private static DataType getDataTypeForSparseListValueFactory(final ValueFactory<?, ?> valueFactory) {
+        DataType type = null;
+        if (valueFactory == DoubleSparseListValueFactory.INSTANCE) {
+            type = DataType.getType(SparseListCell.class, DoubleCell.TYPE);
+        } else if (valueFactory == IntSparseListValueFactory.INSTANCE) {
+            type = DataType.getType(SparseListCell.class, IntCell.TYPE);
+        } else if (valueFactory == LongSparseListValueFactory.INSTANCE) {
+            type = DataType.getType(SparseListCell.class, LongCell.TYPE);
+        } else if (valueFactory == StringSparseListValueFactory.INSTANCE) {
+            type = DataType.getType(SparseListCell.class, StringCell.TYPE);
+        } else if (valueFactory == BooleanSparseListValueFactory.INSTANCE) {
+            type = DataType.getType(SparseListCell.class, BooleanCell.TYPE);
+        }
+
+        return type;
+    }
+
+    private static DataType getDataTypeForSetValueFactory(final ValueFactory<?, ?> valueFactory) {
+        DataType type = null;
+        if (valueFactory == DoubleSetValueFactory.INSTANCE) {
+            type = DataType.getType(SetCell.class, DoubleCell.TYPE);
+        } else if (valueFactory == IntSetValueFactory.INSTANCE) {
+            type = DataType.getType(SetCell.class, IntCell.TYPE);
+        } else if (valueFactory == LongSetValueFactory.INSTANCE) {
+            type = DataType.getType(SetCell.class, LongCell.TYPE);
+        } else if (valueFactory == StringSetValueFactory.INSTANCE) {
+            type = DataType.getType(SetCell.class, StringCell.TYPE);
+        } else if (valueFactory == BooleanSetValueFactory.INSTANCE) {
+            type = DataType.getType(SetCell.class, BooleanCell.TYPE);
+        }
+
+        return type;
+    }
+
+    private static DataType getDataTypeForCollectionValueFactory(final ValueFactory<?, ?> valueFactory) {
+        DataType type = getDataTypeForListValueFactory(valueFactory);
+        if (type != null) {
+            return type;
+        }
+
+        type = getDataTypeForSetValueFactory(valueFactory);
+        if (type != null) {
+            return type;
+        }
+
+        return getDataTypeForSparseListValueFactory(valueFactory);
+    }
+
     /**
      * Retrieves the {@link DataType} associated with a particular {@link ValueFactory} based on its class name.
      *
@@ -383,7 +471,11 @@ public final class DataTypeRegistry {
      */
     public DataType getDataTypeForValueFactory(final ValueFactory<?, ?> valueFactory) {
         ensureCellToValueFactoryMapInitialized();
-        // TODO collection cells?
+
+        final var collectionDataType = getDataTypeForCollectionValueFactory(valueFactory);
+        if (collectionDataType != null) {
+            return collectionDataType;
+        }
 
         final var cellClassName = m_valueFactoryToCellMap.get(valueFactory.getClass().getName());
         CheckUtils.checkArgument(cellClassName != null,
