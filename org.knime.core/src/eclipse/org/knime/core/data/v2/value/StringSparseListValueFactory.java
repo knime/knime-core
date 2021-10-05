@@ -231,7 +231,7 @@ public final class StringSparseListValueFactory implements ValueFactory<StructRe
 
             for (int i = 0; i < values.length; i++) {
                 final String v = values[i];
-                if (Objects.equal(v, defaultElement)) {
+                if (!Objects.equal(v, defaultElement)) {
                     storageIndices.add(i);
                     storageList.add(v);
                 }
