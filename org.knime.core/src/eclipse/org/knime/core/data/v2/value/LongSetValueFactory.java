@@ -144,7 +144,7 @@ public final class LongSetValueFactory implements ValueFactory<ListReadAccess, L
          *
          * @param values a collection of long values
          */
-        void setLongColletionValue(Collection<Long> values);
+        void setLongCollectionValue(Collection<Long> values);
     }
 
     private static final class DefaultLongSetReadValue extends DefaultSetReadValue<LongListReadValue>
@@ -185,7 +185,7 @@ public final class LongSetValueFactory implements ValueFactory<ListReadAccess, L
         }
 
         @Override
-        public void setLongColletionValue(final Collection<Long> values) {
+        public void setLongCollectionValue(final Collection<Long> values) {
             m_value.setValue(values.stream().mapToLong(Long::longValue).distinct().toArray());
         }
     }

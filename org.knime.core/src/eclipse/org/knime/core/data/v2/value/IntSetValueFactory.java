@@ -144,7 +144,7 @@ public final class IntSetValueFactory implements ValueFactory<ListReadAccess, Li
          *
          * @param values a collection of double values
          */
-        void setIntColletionValue(Collection<Integer> values);
+        void setIntCollectionValue(Collection<Integer> values);
     }
 
     private static final class DefaultIntSetReadValue extends DefaultSetReadValue<IntListReadValue>
@@ -185,7 +185,7 @@ public final class IntSetValueFactory implements ValueFactory<ListReadAccess, Li
         }
 
         @Override
-        public void setIntColletionValue(final Collection<Integer> values) {
+        public void setIntCollectionValue(final Collection<Integer> values) {
             m_value.setValue(values.stream().mapToInt(Integer::intValue).distinct().toArray());
         }
     }

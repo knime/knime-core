@@ -151,7 +151,7 @@ public final class BooleanSetValueFactory implements ValueFactory<StructReadAcce
          *
          * @param values a collection of boolean values
          */
-        void setBooleanColletionValue(Collection<Boolean> values);
+        void setBooleanCollectionValue(Collection<Boolean> values);
     }
 
     private static final class DefaultBooleanSetReadValue implements BooleanSetReadValue {
@@ -289,7 +289,7 @@ public final class BooleanSetValueFactory implements ValueFactory<StructReadAcce
         }
 
         @Override
-        public void setBooleanColletionValue(final Collection<Boolean> values) {
+        public void setBooleanCollectionValue(final Collection<Boolean> values) {
             boolean containsTrue = false;
             boolean containsFalse = false;
 

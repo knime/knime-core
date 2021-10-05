@@ -147,7 +147,7 @@ public final class StringSetValueFactory implements ValueFactory<ListReadAccess,
          *
          * @param values a collection of String values
          */
-        void setStringColletionValue(Collection<String> values);
+        void setStringCollectionValue(Collection<String> values);
 
     }
 
@@ -189,7 +189,7 @@ public final class StringSetValueFactory implements ValueFactory<ListReadAccess,
         }
 
         @Override
-        public void setStringColletionValue(final Collection<String> values) {
+        public void setStringCollectionValue(final Collection<String> values) {
             m_value.setValue(values.stream().distinct().toArray(String[]::new));
         }
     }

@@ -144,7 +144,7 @@ public final class DoubleSetValueFactory implements ValueFactory<ListReadAccess,
          *
          * @param values a collection of double values
          */
-        void setDoubleColletionValue(Collection<Double> values);
+        void setDoubleCollectionValue(Collection<Double> values);
     }
 
     private static final class DefaultDoubleSetReadValue extends DefaultSetReadValue<DoubleListReadValue>
@@ -185,7 +185,7 @@ public final class DoubleSetValueFactory implements ValueFactory<ListReadAccess,
         }
 
         @Override
-        public void setDoubleColletionValue(final Collection<Double> values) {
+        public void setDoubleCollectionValue(final Collection<Double> values) {
             m_value.setValue(values.stream().mapToDouble(Double::doubleValue).distinct().toArray());
         }
     }
