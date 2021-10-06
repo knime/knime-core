@@ -125,9 +125,9 @@ public final class WizardPageUtil {
             return false;
         }
         // Now check if the active SubNode contains active QuickForm nodes:
-        WorkflowManager subNodeWFM = snc.getWorkflowManager();
+        var subNodeWFM = snc.getWorkflowManager();
         List<NativeNodeContainer> wizardNodeSet = getWizardPageNodes(subNodeWFM);
-        boolean allInactive = true;
+        var allInactive = true;
         for (NativeNodeContainer nc : wizardNodeSet) {
             if (!nc.isInactive()) {
                 allInactive = false;
@@ -166,7 +166,7 @@ public final class WizardPageUtil {
         SubnodeContainerLayoutStringProvider layoutStringProvider = subNC.getSubnodeLayoutStringProvider();
         if (layoutStringProvider.isEmptyLayout() || layoutStringProvider.isPlaceholderLayout()) {
             try {
-                WorkflowManager subWfm = subNC.getWorkflowManager();
+                var subWfm = subNC.getWorkflowManager();
                 Map<NodeIDSuffix, SingleNodeContainer> viewMap = new LinkedHashMap<>();
                 getWizardPageNodes(subWfm).stream()
                     .forEach(n -> viewMap.put(toNodeIDSuffix(manager, n.getID()), n));
@@ -184,8 +184,8 @@ public final class WizardPageUtil {
             LOGGER.error("Nested layouts could not be expanded: " + ex.getMessage(), ex);
         }
         try {
-            NodeID containerID = NodeID
-                .fromString(NodeIDSuffix.create(manager.getID(), subNC.getWorkflowManager().getID()).toString());
+            var containerID =
+                NodeID.fromString(NodeIDSuffix.create(manager.getID(), subNC.getWorkflowManager().getID()).toString());
             LayoutUtil.addUnreferencedViews(layoutStringProvider, resultMap, sncMap, containerID);
         } catch (IOException ex) {
             LOGGER.error("Layout could not be amended by unreferenced views: " + ex.getMessage(), ex);
@@ -241,8 +241,9 @@ public final class WizardPageUtil {
         for (NodeContainer nc : wfm.getNodeContainers()) {
             if (nc instanceof NativeNodeContainer) {
                 NativeNodeContainer nnc = (NativeNodeContainer)nc;
-                NodeModel nm = nnc.getNodeModel();
-                if (!includeHiddenNodes && nm instanceof ViewHideable && ((ViewHideable)nm).isHideInWizard()) {
+                var nodeModel = nnc.getNodeModel();
+                if (!includeHiddenNodes && nodeModel instanceof ViewHideable
+                    && ((ViewHideable)nodeModel).isHideInWizard()) {
                     continue;
                 }
                 if(isWizardPageNode(nnc)) {
@@ -386,7 +387,7 @@ public final class WizardPageUtil {
     private static void findNestedViewNodes(final SubNodeContainer subNC,
         final Map<NodeIDSuffix, NativeNodeContainer> resultMap, final Map<NodeIDSuffix, SubNodeContainer> sncMap,
         final Set<HiLiteHandler> initialHiliteHandlerSet) {
-        WorkflowManager subWFM = subNC.getWorkflowManager();
+        var subWFM = subNC.getWorkflowManager();
         List<NativeNodeContainer> wizardNodes = getWizardPageNodes(subWFM);
         WorkflowManager projectWFM = subNC.getProjectWFM();
         for (NativeNodeContainer nc : wizardNodes) {
@@ -400,8 +401,8 @@ public final class WizardPageUtil {
             }
 
             if (initialHiliteHandlerSet != null) {
-                for (int i = 0; i < nc.getNrInPorts() - 1; i++) {
-                    HiLiteHandler hiLiteHandler = nc.getNodeModel().getInHiLiteHandler(i);
+                for (var i = 0; i < nc.getNrInPorts() - 1; i++) {
+                    var hiLiteHandler = nc.getNodeModel().getInHiLiteHandler(i);
                     if (hiLiteHandler != null) {
                         initialHiliteHandlerSet.add(hiLiteHandler);
                     }
@@ -428,7 +429,7 @@ public final class WizardPageUtil {
         if (handler == null || !knownHiLiteHandlers.add(handler)) {
             return;
         }
-        String handlerId = handler.getHiliteHandlerID().toString();
+        var handlerId = handler.getHiliteHandlerID().toString();
         LOGGER.debugWithFormat("Starting to iterate over hilite translators of handler %s", handlerId);
         Set<HiLiteTranslator> translatorsToCheck = handler.getHiLiteTranslators();
         Set<HiLiteTranslator> translatorsToFollow = new LinkedHashSet<>();
