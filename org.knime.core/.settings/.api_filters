@@ -2340,6 +2340,101 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/data/v2/value/BooleanSetValueFactory.java" type="org.knime.core.data.v2.value.BooleanSetValueFactory$BooleanSetWriteValue">
+        <filter comment="Fixed typo in method signature of not-yet public API (Fast Tables are not considered to be public API yet)" id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.BooleanSetValueFactory.BooleanSetWriteValue"/>
+                <message_argument value="setBooleanCollectionValue(Collection&lt;Boolean&gt;)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="Fixed typo in method signature of not-yet public API (Fast Tables are not considered to be public API yet)" id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.BooleanSetValueFactory.BooleanSetWriteValue"/>
+                <message_argument value="setBooleanColletionValue(Collection&lt;Boolean&gt;)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="Fixed typo in method signature of not-yet public API (Fast Tables are not considered to be public API yet)" id="1211105284">
+            <message_arguments>
+                <message_argument value="setBooleanCollectionValue(Collection&lt;Boolean&gt;)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/v2/value/DoubleSetValueFactory.java" type="org.knime.core.data.v2.value.DoubleSetValueFactory$DoubleSetWriteValue">
+        <filter comment="Fixed typo in method signature of not-yet public API (Fast Tables are not considered to be public API yet)" id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.DoubleSetValueFactory.DoubleSetWriteValue"/>
+                <message_argument value="setDoubleCollectionValue(Collection&lt;Double&gt;)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="Fixed typo in method signature of not-yet public API (Fast Tables are not considered to be public API yet)" id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.DoubleSetValueFactory.DoubleSetWriteValue"/>
+                <message_argument value="setDoubleColletionValue(Collection&lt;Double&gt;)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="Fixed typo in method signature of not-yet public API (Fast Tables are not considered to be public API yet)" id="1211105284">
+            <message_arguments>
+                <message_argument value="setDoubleCollectionValue(Collection&lt;Double&gt;)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/v2/value/IntSetValueFactory.java" type="org.knime.core.data.v2.value.IntSetValueFactory$IntSetWriteValue">
+        <filter comment="Fixed typo in method signature of not-yet public API (Fast Tables are not considered to be public API yet)" id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.IntSetValueFactory.IntSetWriteValue"/>
+                <message_argument value="setIntCollectionValue(Collection&lt;Integer&gt;)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="Fixed typo in method signature of not-yet public API (Fast Tables are not considered to be public API yet)" id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.IntSetValueFactory.IntSetWriteValue"/>
+                <message_argument value="setIntColletionValue(Collection&lt;Integer&gt;)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="Fixed typo in method signature of not-yet public API (Fast Tables are not considered to be public API yet)" id="1211105284">
+            <message_arguments>
+                <message_argument value="setIntCollectionValue(Collection&lt;Integer&gt;)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/v2/value/LongSetValueFactory.java" type="org.knime.core.data.v2.value.LongSetValueFactory$LongSetWriteValue">
+        <filter comment="Fixed typo in method signature of not-yet public API (Fast Tables are not considered to be public API yet)" id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.LongSetValueFactory.LongSetWriteValue"/>
+                <message_argument value="setLongCollectionValue(Collection&lt;Long&gt;)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="Fixed typo in method signature of not-yet public API (Fast Tables are not considered to be public API yet)" id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.LongSetValueFactory.LongSetWriteValue"/>
+                <message_argument value="setLongColletionValue(Collection&lt;Long&gt;)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="Fixed typo in method signature of not-yet public API (Fast Tables are not considered to be public API yet)" id="1211105284">
+            <message_arguments>
+                <message_argument value="setLongCollectionValue(Collection&lt;Long&gt;)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/v2/value/StringSetValueFactory.java" type="org.knime.core.data.v2.value.StringSetValueFactory$StringSetWriteValue">
+        <filter comment="Fixed typo in method signature of not-yet public API (Fast Tables are not considered to be public API yet)" id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.StringSetValueFactory.StringSetWriteValue"/>
+                <message_argument value="setStringCollectionValue(Collection&lt;String&gt;)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="Fixed typo in method signature of not-yet public API (Fast Tables are not considered to be public API yet)" id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.StringSetValueFactory.StringSetWriteValue"/>
+                <message_argument value="setStringColletionValue(Collection&lt;String&gt;)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="Fixed typo in method signature of not-yet public API (Fast Tables are not considered to be public API yet)" id="1211105284">
+            <message_arguments>
+                <message_argument value="setStringCollectionValue(Collection&lt;String&gt;)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/extension/InvalidNodeFactoryExtensionException.java" type="org.knime.core.node.extension.InvalidNodeFactoryExtensionException">
         <filter id="305365105">
             <message_arguments>
