@@ -87,4 +87,12 @@ public interface WizardPageContribution {
      */
     void loadViewValue(NativeNodeContainer nnc, String value) throws IOException;
 
+    /**
+     * Gets the initial data for a node view.
+     *
+     * @param nnc
+     * @return the initial node view data or an empty optional of no initial data is available
+     */
+    Optional<String> getInitialViewValue(NativeNodeContainer nnc);
+
 }

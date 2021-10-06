@@ -152,6 +152,8 @@ public abstract class WebResourceController {
     private static Object getViewValue(final NativeNodeContainer viewNode) {
         if (viewNode.getNodeModel() instanceof WizardNode) {
             return ((WizardNode)viewNode.getNodeModel()).getViewValue();
+        } else if (viewNode.getNode().getFactory() instanceof WizardPageContribution) {
+            return ((WizardPageContribution)viewNode.getNode().getFactory()).getInitialViewValue(viewNode).orElse("");
         } else {
             throw new IllegalStateException("Not a view node: " + viewNode.getNameWithID());
         }

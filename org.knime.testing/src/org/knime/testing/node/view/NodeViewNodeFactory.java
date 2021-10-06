@@ -52,11 +52,16 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 
+import java.io.IOException;
+import java.util.Optional;
 import java.util.function.Function;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.workflow.NodeContext;
+import org.knime.core.webui.data.ReExecuteDataService;
+import org.knime.core.webui.data.text.TextInitialDataService;
+import org.knime.core.webui.data.text.TextReExecuteDataService;
 import org.knime.core.webui.node.view.NodeView;
 import org.knime.core.webui.node.view.NodeViewFactory;
 import org.knime.core.webui.page.Page;
@@ -74,6 +79,15 @@ public class NodeViewNodeFactory extends NodeFactory<NodeViewNodeModel> implemen
 
     private final int m_numOutputs;
 
+    private String m_initialData = "the initial data";
+
+    /**
+     *
+     */
+    public NodeViewNodeFactory() {
+        this(0, 0);
+    }
+
     /**
      * @param nodeViewCreator
      */
@@ -90,7 +104,41 @@ public class NodeViewNodeFactory extends NodeFactory<NodeViewNodeModel> implemen
     public NodeViewNodeFactory(final int numInputs, final int numOutputs) {
         m_numInputs = numInputs;
         m_numOutputs = numOutputs;
-        m_nodeViewCreator = m -> NodeView.create(Page.builderFromString(() -> "blub", "index.html").build());
+        m_nodeViewCreator = m -> { // NOSONAR
+            return NodeView.builder(Page.builderFromString(() -> "blub", "index.html").build())//
+                .initialDataService(new TextInitialDataService() {
+                    @Override
+                    public String getInitialData() {
+                        return m_initialData;
+                    }
+                })//
+                .reExecuteDataService(createReExecuteDataService())//
+                .build();
+        };
+    }
+
+    private ReExecuteDataService createReExecuteDataService() {
+        return new TextReExecuteDataService() {
+
+            @Override
+            public Optional<String> validateData(final String data) throws IOException {
+                if (data.startsWith("ERROR")) {
+                    return Optional.of(data);
+                } else {
+                    return Optional.empty();
+                }
+            }
+
+            @Override
+            public void applyData(final String data) throws IOException {
+                m_initialData = data;
+            }
+
+            @Override
+            public void reExecute(final String data) throws IOException {
+                //
+            }
+        };
     }
 
     /**

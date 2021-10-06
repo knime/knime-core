@@ -39,6 +39,11 @@
             factory-class="org.knime.testing.node.executioncount.ExecutionCountNodeFactory"
             >
       </node>
+      <node
+            deprecated="false"
+            factory-class="org.knime.testing.node.view.NodeViewNodeFactory"
+            hidden="false">
+      </node>
    </extension>
    <extension
          point="org.knime.workbench.repository.categories">

@@ -56,7 +56,9 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.wizard.page.WizardPageContribution;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContext;
+import org.knime.core.webui.data.InitialDataService;
 import org.knime.core.webui.data.ReExecuteDataService;
+import org.knime.core.webui.data.text.TextInitialDataService;
 import org.knime.core.webui.data.text.TextReExecuteDataService;
 
 /**
@@ -103,5 +105,18 @@ public interface NodeViewFactory<T extends NodeModel> extends WizardPageContribu
         if (service instanceof TextReExecuteDataService) {
             ((TextReExecuteDataService)service).applyData(value);
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    default Optional<String> getInitialViewValue(final NativeNodeContainer nnc) {
+        NodeView nodeView = NodeViewManager.getInstance().getNodeView(nnc);
+        InitialDataService service = nodeView.getInitialDataService().orElse(null);
+        if (service instanceof TextInitialDataService) {
+            return Optional.of(((TextInitialDataService)service).getInitialData());
+        }
+        return Optional.empty();
     }
 }

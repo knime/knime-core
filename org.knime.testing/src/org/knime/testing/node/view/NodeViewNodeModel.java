@@ -99,7 +99,7 @@ public class NodeViewNodeModel extends NodeModel implements ReExecutable<String>
      * @param numOutputs
      */
     protected NodeViewNodeModel(final int numInputs, final int numOutputs) {
-        super(numInputs, numInputs);
+        super(numInputs, numOutputs);
     }
 
     /**
