@@ -69,6 +69,16 @@ import org.knime.core.util.FileUtil;
  */
 public final class WorkflowManagerUtil {
 
+    static {
+        try {
+            NodeFactoryExtensionManager.getInstance();
+        } catch (IllegalStateException e) { // NOSONAR
+            // HACK to make tests work in the build system where the org.knime.workbench.repository plugin
+            // is not present (causes an exception on the first call
+            // 'Invalid extension point: org.knime.workbench.repository.nodes')
+        }
+    }
+
     /**
      * Helper to create an empty workflow.
      *
@@ -76,11 +86,11 @@ public final class WorkflowManagerUtil {
      * @throws IOException
      */
     public static WorkflowManager createEmptyWorkflow() throws IOException {
-        File dir = FileUtil.createTempDir("workflow");
-        File workflowFile = new File(dir, WorkflowPersistor.WORKFLOW_FILE);
+        var dir = FileUtil.createTempDir("workflow");
+        var workflowFile = new File(dir, WorkflowPersistor.WORKFLOW_FILE);
         if (workflowFile.createNewFile()) {
-            WorkflowCreationHelper creationHelper = new WorkflowCreationHelper();
-            WorkflowContext.Factory fac = new WorkflowContext.Factory(workflowFile.getParentFile());
+            var creationHelper = new WorkflowCreationHelper();
+            var fac = new WorkflowContext.Factory(workflowFile.getParentFile());
             creationHelper.setWorkflowContext(fac.createContext());
 
             return WorkflowManager.ROOT.createAndAddProject("workflow", creationHelper);
@@ -98,13 +108,6 @@ public final class WorkflowManagerUtil {
      */
     public static NativeNodeContainer createAndAddNode(final WorkflowManager wfm,
         final NodeFactory<? extends NodeModel> factory) {
-        try {
-            NodeFactoryExtensionManager.getInstance();
-        } catch (IllegalStateException e) { // NOSONAR
-            // HACK to make tests work in the build system where the org.knime.workbench.repository plugin
-            // is not present (causes an exception on the first call
-            // 'Invalid extension point: org.knime.workbench.repository.nodes')
-        }
         if (factory instanceof DynamicNodeFactory) {
             factory.init();
         }
