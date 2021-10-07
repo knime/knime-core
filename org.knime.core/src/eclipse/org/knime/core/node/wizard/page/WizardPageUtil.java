@@ -311,7 +311,7 @@ public final class WizardPageUtil {
             "Provided node id (%s) doesn't reference a component", componentId);
         try (WorkflowLock lock = wfm.lock()) {
             return getAllSuccessorNodesWithinComponent(componentId, wfm.findNodeContainer(startNodeId))//
-                .filter(WizardPageUtil::isWizardNodeOrComponentOrMetanode)//
+                .filter(WizardPageUtil::isWizardPageNodeOrComponentOrMetanode)//
                 .flatMap(nc -> {
                     if (nc instanceof NativeNodeContainer) {
                         return Stream.of(nc);
@@ -330,8 +330,8 @@ public final class WizardPageUtil {
             .map(wfm::findNodeContainer);
     }
 
-    private static boolean isWizardNodeOrComponentOrMetanode(final NodeContainer nc) {
-        return (nc instanceof NativeNodeContainer && ((NativeNodeContainer)nc).isModelCompatibleTo(WizardNode.class))
+    private static boolean isWizardPageNodeOrComponentOrMetanode(final NodeContainer nc) {
+        return (nc instanceof NativeNodeContainer && isWizardPageNode((NativeNodeContainer)nc))
             || nc instanceof WorkflowManager || nc instanceof SubNodeContainer;
     }
 
