@@ -45,36 +45,42 @@
  */
 package org.knime.core.data.v2.value.cell;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInput;
-import java.io.IOException;
-
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataCellDataInput;
 import org.knime.core.data.IDataRepository;
-import org.knime.core.data.v2.DataCellSerializerFactory;
+import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
+import org.knime.core.table.access.StringAccess.StringWriteAccess;
+import org.knime.core.table.access.StructAccess.StructWriteAccess;
+import org.knime.core.table.access.VarBinaryAccess.VarBinaryWriteAccess;
+import org.knime.core.table.schema.VarBinaryDataSpec.ObjectSerializer;
 
 /**
- * {@link DataCellDataInput} implementation on {@link ByteArrayInputStream}.
+ * A dictionary encoded WriteValue for DataCells.
  *
- * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
  * @author Carsten Haubold, KNIME GmbH, Konstanz, Germany
- * @since 4.3
  */
-final class DataCellDataInputDelegator extends AbstractDataInputDelegator {
+final class DictEncodedDataCellWriteValue extends AbstractDataCellWriteValue {
 
-    private final DataCellSerializerFactory m_factory;
+    private final ObjectSerializer<DataCell> m_serializer;
 
-    DataCellDataInputDelegator(final DataCellSerializerFactory factory, //
-        final IDataRepository dataRepository, //
-        final DataInput input) {
+    private final StructWriteAccess m_access;
 
-        super(dataRepository, input);
-        m_factory = factory;
+    DictEncodedDataCellWriteValue(final StructWriteAccess access,
+        final IDataRepository repository, final IWriteFileStoreHandler fsHandler) {
+        super(repository, fsHandler);
+        m_access = access;
+        m_serializer = (output, cell) -> {
+            try (final DictEncodedDataCellDataOutputDelegator stream =
+                new DictEncodedDataCellDataOutputDelegator(fsHandler, output)) {
+                stream.writeDataCell(cell);
+            }
+        };
     }
 
     @Override
-    protected DataCell readDataCellImpl() throws IOException {
-        return m_factory.getSerializerByIdx(readByte()).getSerializer().deserialize(this);
+    protected void setValueImpl(final DataCell cell) {
+        final VarBinaryWriteAccess binaryBlobAccess = m_access.getWriteAccess(0);
+        final StringWriteAccess classNameAccess = m_access.getWriteAccess(1);
+        classNameAccess.setStringValue(cell.getClass().getName());
+        binaryBlobAccess.setObject(cell, m_serializer);
     }
 }

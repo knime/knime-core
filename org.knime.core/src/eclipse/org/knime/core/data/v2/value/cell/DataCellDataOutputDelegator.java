@@ -48,15 +48,10 @@ package org.knime.core.data.v2.value.cell;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.io.OutputStream;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataCellSerializer;
-import org.knime.core.data.filestore.FileStore;
-import org.knime.core.data.filestore.FileStoreCell;
-import org.knime.core.data.filestore.FileStoreKey;
-import org.knime.core.data.filestore.FileStoreUtil;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.v2.DataCellSerializerFactory;
 import org.knime.core.data.v2.DataCellSerializerFactory.DataCellSerializerInfo;
@@ -67,118 +62,21 @@ import org.knime.core.data.v2.DataCellSerializerFactory.DataCellSerializerInfo;
  * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
  * @since 4.3
  */
-final class DataCellDataOutputDelegator extends OutputStream implements DataCellDataOutput {
+final class DataCellDataOutputDelegator extends AbstractDataOutputDelegator {
 
     private final DataCellSerializerFactory m_factory;
 
-    private final IWriteFileStoreHandler m_fsHandler;
-
-    private final DataOutput m_delegate;
-
     DataCellDataOutputDelegator(final DataCellSerializerFactory factory, final IWriteFileStoreHandler fsHandler,
         final DataOutput output) {
-        m_delegate = output;
+        super(fsHandler, output);
         m_factory = factory;
-        m_fsHandler = fsHandler;
-    }
-
-    private void handleFileStoreCell(final FileStoreCell fsCell) throws IOException {
-        final FileStore[] fileStores = FileStoreUtil.getFileStores(fsCell);
-        final FileStoreKey[] fileStoreKeys = new FileStoreKey[fileStores.length];
-
-        // TODO In case we already did that in DataCellValueFactory WriteValue, can we avoid doing this again? Is it harmful?
-        for (int fileStoreIndex = 0; fileStoreIndex < fileStoreKeys.length; fileStoreIndex++) {
-            fileStoreKeys[fileStoreIndex] = m_fsHandler.translateToLocal(fileStores[fileStoreIndex], fsCell);
-        }
-
-        // In case we didn't flush yet.
-        FileStoreUtil.invokeFlush(fsCell);
-
-        writeInt(fileStoreKeys.length);
-        for (final FileStoreKey fsKey : fileStoreKeys) {
-            fsKey.save(this);
-        }
     }
 
     @Override
-    public void writeDataCell(final DataCell cell) throws IOException {
+    protected void writeDataCellImpl(final DataCell cell) throws IOException {
         final DataCellSerializerInfo info = m_factory.getSerializer(cell);
         final DataCellSerializer<DataCell> serializer = info.getSerializer();
         write(info.getInternalIndex());
         serializer.serialize(cell, this);
-
-        if (cell instanceof FileStoreCell) {
-            handleFileStoreCell((FileStoreCell)cell);
-        }
-    }
-
-    @Override
-    public void write(final int b) throws IOException {
-        m_delegate.write(b);
-    }
-
-    @Override
-    public void write(final byte[] b) throws IOException {
-        m_delegate.write(b);
-    }
-
-    @Override
-    public void write(final byte[] b, final int off, final int len) throws IOException {
-        m_delegate.write(b, off, len);
-    }
-
-    @Override
-    public void writeByte(final int v) throws IOException {
-        m_delegate.write(v);
-    }
-
-    @Override
-    public void writeBoolean(final boolean v) throws IOException {
-        m_delegate.writeBoolean(v);
-    }
-
-    @Override
-    public void writeShort(final int v) throws IOException {
-        m_delegate.writeShort(v);
-    }
-
-    @Override
-    public void writeChar(final int v) throws IOException {
-        m_delegate.writeChar(v);
-    }
-
-    @Override
-    public void writeInt(final int v) throws IOException {
-        m_delegate.writeInt(v);
-    }
-
-    @Override
-    public void writeLong(final long v) throws IOException {
-        m_delegate.writeLong(v);
-    }
-
-    @Override
-    public void writeFloat(final float v) throws IOException {
-        m_delegate.writeFloat(v);
-    }
-
-    @Override
-    public void writeDouble(final double v) throws IOException {
-        m_delegate.writeDouble(v);
-    }
-
-    @Override
-    public void writeBytes(final String s) throws IOException {
-        m_delegate.writeBytes(s);
-    }
-
-    @Override
-    public void writeChars(final String s) throws IOException {
-        m_delegate.writeChars(s);
-    }
-
-    @Override
-    public void writeUTF(final String s) throws IOException {
-        m_delegate.writeUTF(s);
     }
 }

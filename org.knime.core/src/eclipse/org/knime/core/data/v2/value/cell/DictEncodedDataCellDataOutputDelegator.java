@@ -45,36 +45,40 @@
  */
 package org.knime.core.data.v2.value.cell;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInput;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutput;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataCellDataInput;
-import org.knime.core.data.IDataRepository;
-import org.knime.core.data.v2.DataCellSerializerFactory;
+import org.knime.core.data.DataCellDataOutput;
+import org.knime.core.data.DataTypeRegistry;
+import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 
 /**
- * {@link DataCellDataInput} implementation on {@link ByteArrayInputStream}.
+ * {@link DataCellDataOutput} implementation on {@link ByteArrayOutputStream}.
  *
- * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
  * @author Carsten Haubold, KNIME GmbH, Konstanz, Germany
- * @since 4.3
  */
-final class DataCellDataInputDelegator extends AbstractDataInputDelegator {
+final class DictEncodedDataCellDataOutputDelegator extends AbstractDataOutputDelegator {
 
-    private final DataCellSerializerFactory m_factory;
-
-    DataCellDataInputDelegator(final DataCellSerializerFactory factory, //
-        final IDataRepository dataRepository, //
-        final DataInput input) {
-
-        super(dataRepository, input);
-        m_factory = factory;
+    DictEncodedDataCellDataOutputDelegator(final IWriteFileStoreHandler fsHandler,
+        final DataOutput output) {
+        super(fsHandler, output);
     }
 
     @Override
-    protected DataCell readDataCellImpl() throws IOException {
-        return m_factory.getSerializerByIdx(readByte()).getSerializer().deserialize(this);
+    protected void writeDataCellImpl(final DataCell cell) throws IOException {
+        final var optionalSerializer = DataTypeRegistry.getInstance().getSerializer(cell.getClass());
+
+        if (optionalSerializer.isEmpty()) {
+            // fall back to Java serialization
+            final var oos = new ObjectOutputStream(this);
+            oos.writeObject(cell);
+            oos.flush();
+        } else {
+            final var serializer = optionalSerializer.get();
+            serializer.serialize(cell, this);
+        }
     }
 }

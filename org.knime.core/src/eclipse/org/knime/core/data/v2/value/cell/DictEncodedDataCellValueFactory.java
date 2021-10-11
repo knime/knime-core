@@ -45,18 +45,35 @@
  */
 package org.knime.core.data.v2.value.cell;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.util.ArrayList;
+
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
+import org.knime.core.data.DataValue;
 import org.knime.core.data.IDataRepository;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
-import org.knime.core.data.v2.DataCellSerializerFactory;
+import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.RowCursor;
 import org.knime.core.data.v2.ValueFactory;
+import org.knime.core.data.v2.WriteValue;
+import org.knime.core.table.access.StringAccess.StringReadAccess;
+import org.knime.core.table.access.StructAccess.StructReadAccess;
+import org.knime.core.table.access.StructAccess.StructWriteAccess;
+import org.knime.core.table.access.VarBinaryAccess.VarBinaryReadAccess;
+import org.knime.core.table.schema.DataSpec;
+import org.knime.core.table.schema.StringDataSpec;
+import org.knime.core.table.schema.StructDataSpec;
+import org.knime.core.table.schema.VarBinaryDataSpec;
+import org.knime.core.table.schema.VarBinaryDataSpec.ObjectDeserializer;
 import org.knime.core.table.schema.traits.DataTrait.DictEncodingTrait;
+import org.knime.core.table.schema.traits.DataTrait.DictEncodingTrait.KeyType;
 import org.knime.core.table.schema.traits.DataTraits;
 import org.knime.core.table.schema.traits.DefaultDataTraits;
+import org.knime.core.table.schema.traits.DefaultStructDataTraits;
 
 /**
  * {@link ValueFactory} to write and read arbitrary {@link DataCell}s using dictionary encoding. Needs special casing in
@@ -64,6 +81,7 @@ import org.knime.core.table.schema.traits.DefaultDataTraits;
  *
  * Replaces {@link DataCellValueFactory} because dictionary encoding only adds very little overhead but brings a lot of
  * speedup in case e.g. BlobCells are repeated in the table.
+ * Furthermore, the DataCellSerializer class name is now stored alongside the data as dictionary encoded string.
  *
  * @author Carsten Haubold, KNIME GmbH, Konstanz, Germany
  * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
@@ -72,31 +90,119 @@ import org.knime.core.table.schema.traits.DefaultDataTraits;
  * @noinstantiate This class is not intended to be instantiated by clients.
  * @noreference This class is not intended to be referenced by clients.
  */
-@SuppressWarnings("deprecation")
-public final class DictEncodedDataCellValueFactory extends DataCellValueFactory {
+public final class DictEncodedDataCellValueFactory implements ValueFactory<StructReadAccess, StructWriteAccess> {
+
+    private IWriteFileStoreHandler m_fsHandler;
+
+    private IDataRepository m_dataRepository;
+
+    private DataType m_type;
 
     /**
-     * Empty framework constructor. Call {@link #initialize(DataCellSerializerFactory, IDataRepository, DataType)} after
+     * Empty framework constructor. Call {@link #initialize(IDataRepository, DataType)} after
      * using this constructor.
      */
     public DictEncodedDataCellValueFactory() {
-        super();
     }
 
     /**
      * Create a {@link DictEncodedDataCellValueFactory} for writing.
      *
-     * @param factory used to retrieve {@link DataCellSerializer}s
      * @param fileStoreHandler to deal with file stores.
      * @param type type associated with cells
      */
-    public DictEncodedDataCellValueFactory(final DataCellSerializerFactory factory,
-        final IWriteFileStoreHandler fileStoreHandler, final DataType type) {
-        super(factory, fileStoreHandler, type);
+    public DictEncodedDataCellValueFactory(final IWriteFileStoreHandler fileStoreHandler, final DataType type) {
+        m_type = type;
+        m_fsHandler = fileStoreHandler;
+        m_dataRepository = fileStoreHandler.getDataRepository();
+    }
+
+    /**
+     * Create a {@link DataCellValueFactory} for reading.
+     *
+     * @param repository to deal with (potentially) written file stores.
+     * @param type type associated with cells
+     */
+    public void initialize(final IDataRepository repository, final DataType type) {
+        m_type = type;
+        m_fsHandler = null;
+        m_dataRepository = repository;
+    }
+
+    @Override
+    public DataSpec getSpec() {
+        // we store the actual implementation class name next to the serialized binary data
+        // to be able to fetch the appropriate deserializer from the registry
+        return new StructDataSpec(VarBinaryDataSpec.INSTANCE, StringDataSpec.INSTANCE);
     }
 
     @Override
     public DataTraits getTraits() {
-        return new DefaultDataTraits(new DictEncodingTrait());
+        // store the binary data as well as the class names using dictionary encoding
+        return new DefaultStructDataTraits(//
+            new DefaultDataTraits(new DictEncodingTrait()), //
+            new DefaultDataTraits(new DictEncodingTrait(KeyType.BYTE_KEY)));
     }
+
+    @Override
+    public ReadValue createReadValue(final StructReadAccess access) {
+        final ArrayList<Class<? extends DataValue>> types = new ArrayList<>(m_type.getValueClasses());
+        types.add(ReadValue.class);
+        final Class<?>[] array = types.toArray(new Class<?>[types.size()]);
+
+        Class<? extends DataCell> cellClass = m_type.getCellClass();
+        final ClassLoader loader;
+        if (cellClass == null) {
+            loader = DataCell.class.getClassLoader();
+        } else {
+            loader = cellClass.getClassLoader();
+        }
+        return (ReadValue)Proxy.newProxyInstance(loader, array,
+            new DictEncodedDataCellInvocationHandler(access, m_dataRepository));
+    }
+
+    @Override
+    public WriteValue<? extends DataCell> createWriteValue(final StructWriteAccess access) {
+        return new DictEncodedDataCellWriteValue(access, m_dataRepository, m_fsHandler);
+    }
+
+    private static final class DictEncodedDataCellInvocationHandler implements InvocationHandler {
+
+        private final Method m_getDataCell;
+
+        private final StructReadAccess m_access;
+
+        private final IDataRepository m_dataRepository;
+
+        private DictEncodedDataCellInvocationHandler(final StructReadAccess access,
+            final IDataRepository dataRepository) {
+            m_access = access;
+            m_dataRepository = dataRepository;
+            try {
+                m_getDataCell = ReadValue.class.getMethod("getDataCell");
+            } catch (Exception ex) {//NOSONAR can't recover
+                throw new IllegalStateException("Fatal: Proxy can't be setup.", ex);
+            }
+        }
+
+        @Override
+        public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
+            final VarBinaryReadAccess binaryBlobAccess = m_access.getAccess(0);
+            final StringReadAccess classNameAccess = m_access.getAccess(1);
+            final var className = classNameAccess.getStringValue();
+            ObjectDeserializer<DataCell> deserializer = input -> {
+                try (var stream = new DictEncodedDataCellDataInputDelegator(m_dataRepository, input)) {
+                    return stream.readDataCell(className);
+                }
+            };
+
+            final DataCell cell = binaryBlobAccess.getObject(deserializer);
+            if (method.equals(m_getDataCell)) {
+                return cell;
+            } else {
+                return method.invoke(cell, args);
+            }
+        }
+    }
+
 }

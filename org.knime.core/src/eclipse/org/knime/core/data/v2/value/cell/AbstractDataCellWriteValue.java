@@ -45,36 +45,70 @@
  */
 package org.knime.core.data.v2.value.cell;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInput;
 import java.io.IOException;
 
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataCellDataInput;
 import org.knime.core.data.IDataRepository;
-import org.knime.core.data.v2.DataCellSerializerFactory;
+import org.knime.core.data.filestore.FileStore;
+import org.knime.core.data.filestore.FileStoreCell;
+import org.knime.core.data.filestore.FileStoreKey;
+import org.knime.core.data.filestore.FileStoreUtil;
+import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
+import org.knime.core.data.v2.WriteValue;
 
 /**
- * {@link DataCellDataInput} implementation on {@link ByteArrayInputStream}.
+ * Abstract implementation of a DataCell based WriteValue.
+ * Handles file store cells.
  *
- * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
  * @author Carsten Haubold, KNIME GmbH, Konstanz, Germany
- * @since 4.3
  */
-final class DataCellDataInputDelegator extends AbstractDataInputDelegator {
+abstract class AbstractDataCellWriteValue implements WriteValue<DataCell> {
+    private final IWriteFileStoreHandler m_fsHandler;
 
-    private final DataCellSerializerFactory m_factory;
+    private final IDataRepository m_dataRepository;
 
-    DataCellDataInputDelegator(final DataCellSerializerFactory factory, //
-        final IDataRepository dataRepository, //
-        final DataInput input) {
-
-        super(dataRepository, input);
-        m_factory = factory;
+    AbstractDataCellWriteValue(final IDataRepository repository, final IWriteFileStoreHandler fsHandler) {
+        m_fsHandler = fsHandler;
+        m_dataRepository = repository;
     }
 
     @Override
-    protected DataCell readDataCellImpl() throws IOException {
-        return m_factory.getSerializerByIdx(readByte()).getSerializer().deserialize(this);
+    public final void setValue(final DataCell cell) {
+        if (cell instanceof FileStoreCell) {
+            final FileStoreCell fsCell = (FileStoreCell)cell;
+
+            // handle loops
+            if (mustBeFlushedPriorSave(fsCell)) {
+                try {
+                    final FileStore[] fileStores = FileStoreUtil.getFileStores(fsCell);
+                    final FileStoreKey[] fileStoreKeys = new FileStoreKey[fileStores.length];
+
+                    for (int fileStoreIndex = 0; fileStoreIndex < fileStoreKeys.length; fileStoreIndex++) {
+                        fileStoreKeys[fileStoreIndex] =
+                            m_fsHandler.translateToLocal(fileStores[fileStoreIndex], fsCell);
+                    }
+
+                    // update file store keys without calling post-construct.
+                    FileStoreUtil.retrieveFileStoreHandlersFrom(fsCell, fileStoreKeys, m_dataRepository, false);
+                } catch (IOException ex) {
+                    throw new IllegalStateException(ex);
+                }
+            }
+        }
+        // NB: Missing Value checks is expected to happen before cell is actually written. See RowWriteAccess.
+        setValueImpl(cell);
+    }
+
+    protected abstract void setValueImpl(final DataCell cell);
+
+    // TODO why do we need to flush? problem with heap cache!
+    private boolean mustBeFlushedPriorSave(final FileStoreCell cell) {
+        final FileStore[] fileStores = FileStoreUtil.getFileStores(cell);
+        for (FileStore fs : fileStores) {
+            if (m_fsHandler.mustBeFlushedPriorSave(fs)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

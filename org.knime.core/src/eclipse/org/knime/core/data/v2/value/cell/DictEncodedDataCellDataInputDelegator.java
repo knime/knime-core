@@ -48,33 +48,67 @@ package org.knime.core.data.v2.value.cell;
 import java.io.ByteArrayInputStream;
 import java.io.DataInput;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.util.Optional;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellDataInput;
+import org.knime.core.data.DataCellSerializer;
+import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.IDataRepository;
-import org.knime.core.data.v2.DataCellSerializerFactory;
 
 /**
  * {@link DataCellDataInput} implementation on {@link ByteArrayInputStream}.
  *
- * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
  * @author Carsten Haubold, KNIME GmbH, Konstanz, Germany
- * @since 4.3
  */
-final class DataCellDataInputDelegator extends AbstractDataInputDelegator {
+final class DictEncodedDataCellDataInputDelegator extends AbstractDataInputDelegator {
 
-    private final DataCellSerializerFactory m_factory;
+    private static final DataTypeRegistry REGISTRY = DataTypeRegistry.getInstance();
 
-    DataCellDataInputDelegator(final DataCellSerializerFactory factory, //
-        final IDataRepository dataRepository, //
+    private String m_nextDataCellClassName;
+
+    DictEncodedDataCellDataInputDelegator(final IDataRepository dataRepository, //
         final DataInput input) {
-
         super(dataRepository, input);
-        m_factory = factory;
+    }
+
+    /**
+     * The {@link DictEncodedDataCellDataInputDelegator} can only read a {@link DataCell} if it knows the class name,
+     * which needs to be stored separately. Thus, the {@link DictEncodedDataCellDataInputDelegator#readDataCell(String)}
+     * overload should be used.
+     */
+    @SuppressWarnings("javadoc")
+    @Override
+    public DataCell readDataCell() throws IOException {
+        throw new UnsupportedOperationException(
+            "Reading the next data cell without specifying its class name is unsupported");
+    }
+
+    public DataCell readDataCell(final String dataCellClassName) throws IOException {
+        m_nextDataCellClassName = dataCellClassName;
+        return super.readDataCell();
     }
 
     @Override
     protected DataCell readDataCellImpl() throws IOException {
-        return m_factory.getSerializerByIdx(readByte()).getSerializer().deserialize(this);
+        Optional<DataCellSerializer<DataCell>> serializer = Optional.empty();
+        final var className = m_nextDataCellClassName;
+        final var cellClass = REGISTRY.getCellClass(className);
+        if (!cellClass.isEmpty()) {
+            serializer = REGISTRY.getSerializer(cellClass.get());
+        }
+
+        if (serializer.isEmpty()) {
+            // fall back to java serialization
+            try {
+                final ObjectInputStream ois = new ObjectInputStream(this);
+                return (DataCell)ois.readObject();
+            } catch (ClassNotFoundException e) {
+                throw new IOException(e);
+            }
+        }
+
+        return serializer.get().deserialize(this);
     }
 }

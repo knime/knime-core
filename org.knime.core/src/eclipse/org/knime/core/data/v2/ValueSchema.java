@@ -215,7 +215,7 @@ public final class ValueSchema {
             // Use the registered value factory
             factory = ValueFactoryUtils.createValueFactoryForType(type)//
                     // Use the fallback which works for all cells
-                    .orElseGet(() -> new DictEncodedDataCellValueFactory(cellSerializerFactory, fileStoreHandler, type));
+                    .orElseGet(() -> new DictEncodedDataCellValueFactory(fileStoreHandler, type));
         }
 
         // Collection types need to be initialized
