@@ -54,7 +54,7 @@ public final class ObjectMapperUtil {
     }
 
     private static ObjectMapper createObjectMapper() {
-        ObjectMapper mapper = new ObjectMapper();
+        var mapper = new ObjectMapper();
         configureObjectMapper(mapper);
         return mapper;
     }

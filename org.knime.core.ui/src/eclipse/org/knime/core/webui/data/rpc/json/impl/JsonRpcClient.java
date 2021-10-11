@@ -62,8 +62,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 
 /**
@@ -120,12 +118,12 @@ public class JsonRpcClient extends AbstractRpcClient {
 
     static String convertCall(final String serviceName, final Method method, final Object[] args,
         final ObjectMapper mapper, final long callId) {
-        ObjectNode request = mapper.createObjectNode();
+        var request = mapper.createObjectNode();
 
         // if a method has zero parameters, add an empty parameter array
-        ArrayNode parameters = request.arrayNode();
+        var parameters = request.arrayNode();
         if (null != args) {
-            for (int i = 0; i < args.length; i++) {
+            for (var i = 0; i < args.length; i++) {
                 parameters.addPOJO(args[i]);
             }
         }
@@ -168,7 +166,7 @@ public class JsonRpcClient extends AbstractRpcClient {
             if (outerTypeIsOptional) {
                 // this case exists because Jackson 2.11 seems to deserialize Optional incorrectly (always returns
                 // Optional.empty, even when providing a value, because it's using the BeanDeserializer?)
-                ParameterizedType parameterizedType = (ParameterizedType)valueType;
+                var parameterizedType = (ParameterizedType)valueType;
                 // the type that is wrapped by the optional
                 Class<?> innerType = (Class<?>)parameterizedType.getActualTypeArguments()[0];
                 // restore POJO from JSON tree

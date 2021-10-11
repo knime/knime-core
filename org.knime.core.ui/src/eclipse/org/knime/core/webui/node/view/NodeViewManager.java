@@ -49,7 +49,6 @@
 package org.knime.core.webui.node.view;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -73,9 +72,6 @@ import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.FileUtil;
-import org.knime.core.webui.data.DataService;
-import org.knime.core.webui.data.InitialDataService;
-import org.knime.core.webui.data.ReExecuteDataService;
 import org.knime.core.webui.data.text.TextDataService;
 import org.knime.core.webui.data.text.TextInitialDataService;
 import org.knime.core.webui.data.text.TextReExecuteDataService;
@@ -184,7 +180,7 @@ public final class NodeViewManager {
      *
      */
     public String callTextInitialDataService(final NodeContainer nc) {
-        InitialDataService initialDataService = getNodeView(nc).getInitialDataService().orElse(null);
+        var initialDataService = getNodeView(nc).getInitialDataService().orElse(null);
         if (initialDataService instanceof TextInitialDataService) {
             return ((TextInitialDataService)initialDataService).getInitialData();
         } else {
@@ -203,7 +199,7 @@ public final class NodeViewManager {
      *             a data service
      */
     public String callTextDataService(final NodeContainer nc, final String request) {
-        DataService dataService = getNodeView(nc).getDataService().orElse(null);
+        var dataService = getNodeView(nc).getDataService().orElse(null);
         if (dataService instanceof TextDataService) {
             return ((TextDataService)dataService).handleRequest(request);
         } else {
@@ -222,7 +218,7 @@ public final class NodeViewManager {
      *             a data service
      */
     public void callTextReExecuteDataService(final NodeContainer nc, final String request) throws IOException {
-        ReExecuteDataService reExecuteDataService = getNodeView(nc).getReExecuteDataService().orElse(null);
+        var reExecuteDataService = getNodeView(nc).getReExecuteDataService().orElse(null);
         if (reExecuteDataService instanceof TextReExecuteDataService) {
             ((TextReExecuteDataService)reExecuteDataService).reExecute(request);
         } else {
@@ -383,7 +379,7 @@ public final class NodeViewManager {
 
     private static void writeResource(final Resource r, final Path targetPath) throws IOException {
         Files.createDirectories(targetPath.getParent());
-        try (InputStream in = r.getInputStream()) {
+        try (var in = r.getInputStream()) {
             Files.copy(in, targetPath);
             LOGGER.debug("New page resource written: " + targetPath);
         }

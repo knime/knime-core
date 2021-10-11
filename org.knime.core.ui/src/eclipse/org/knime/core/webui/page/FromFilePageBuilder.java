@@ -51,7 +51,6 @@ package org.knime.core.webui.page;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -118,14 +117,14 @@ public final class FromFilePageBuilder extends PageBuilder {
      * @return this page builder instance
      */
     public FromFilePageBuilder addResourceDirectory(final String relativeDirPath) {
-        Path root = getAbsoluteBasePath(m_clazz, m_bundleID, m_basePath);
+        var root = getAbsoluteBasePath(m_clazz, m_bundleID, m_basePath);
         createResourcesFromDir(root, root.resolve(relativeDirPath), m_resources);
         return this;
     }
 
     private static FileResource createFileResource(final Class<?> clazz, final String bundleID, final String basePath,
         final String relativeFilePath) {
-        Path relFile = Paths.get(relativeFilePath);
+        var relFile = Paths.get(relativeFilePath);
         Path file = getAbsoluteBasePath(clazz, bundleID, basePath).resolve(relFile);
         return createResourceFromFile(relFile, file);
     }
@@ -142,7 +141,7 @@ public final class FromFilePageBuilder extends PageBuilder {
      * The bundle path + base path.
      */
     private static Path getAbsoluteBasePath(final Bundle bundle, final String baseDir) {
-        URL bundleUrl = bundle.getEntry(".");
+        var bundleUrl = bundle.getEntry(".");
         try {
             return Paths.get(FileLocator.toFileURL(bundleUrl).toURI()).resolve(baseDir).normalize();
         } catch (IOException | URISyntaxException ex) {

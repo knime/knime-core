@@ -145,8 +145,8 @@ public final class JsonRpcTestUtil {
 
         @Override
         public String sendAndReceive(final String rpc) {
-            try (ByteArrayInputStream request = new ByteArrayInputStream(rpc.getBytes(StandardCharsets.UTF_8));
-                    ByteArrayOutputStream response = new ByteArrayOutputStream()) {
+            try (var request = new ByteArrayInputStream(rpc.getBytes(StandardCharsets.UTF_8));
+                    var response = new ByteArrayOutputStream()) {
                 m_server.handleRequest(request, response);
                 return new String(response.toByteArray(), StandardCharsets.UTF_8.name());
             } catch (IOException ex) {

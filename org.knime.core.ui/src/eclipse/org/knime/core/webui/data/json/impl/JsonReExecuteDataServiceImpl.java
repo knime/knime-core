@@ -54,7 +54,6 @@ import java.util.function.Function;
 
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.interactive.ReExecutable;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -123,7 +122,7 @@ public class JsonReExecuteDataServiceImpl<D, T extends NodeModel & ReExecutable<
         m_reExecutableNodeModel = reExecutableNodeModel;
         m_dataType = dataType;
         m_mapper = mapper;
-        NodeContainer nc = NodeContext.getContext().getNodeContainer();
+        var nc = NodeContext.getContext().getNodeContainer();
         m_wfm = nc.getParent();
         m_nodeId = nc.getID();
         m_dataValidator = dataValidator;

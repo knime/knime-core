@@ -122,11 +122,11 @@ public class NodeViewManagerTest {
      */
     @Test
     public void testSimpleNodeViewNode() {
-        Page page = Page.builderFromString(() -> "test page content", "index.html").build();
+        var page = Page.builderFromString(() -> "test page content", "index.html").build();
         NativeNodeContainer nc = createNodeWithNodeView(m_wfm, m -> NodeView.create(page));
 
         assertThat("node expected to have a node view", NodeViewManager.hasNodeView(nc), is(true));
-        NodeView nodeView = NodeViewManager.getInstance().getNodeView(nc);
+        var nodeView = NodeViewManager.getInstance().getNodeView(nc);
         assertThat(nodeView.getPage() == page, is(true));
 
         IllegalStateException ex = assertThrows(IllegalStateException.class,
@@ -143,8 +143,8 @@ public class NodeViewManagerTest {
      */
     @Test
     public void testCallDataServices() {
-        Page page = Page.builderFromString(() -> "test page content", "index.html").build();
-        NodeView nodeView = NodeView.builder(page).initialDataService(new TextInitialDataService() {
+        var page = Page.builderFromString(() -> "test page content", "index.html").build();
+        var nodeView = NodeView.builder(page).initialDataService(new TextInitialDataService() {
 
             @Override
             public String getInitialData() {
@@ -176,7 +176,7 @@ public class NodeViewManagerTest {
         }).build();
         NativeNodeContainer nc = createNodeWithNodeView(m_wfm, m -> nodeView);
 
-        NodeViewManager nodeViewManager = NodeViewManager.getInstance();
+        var nodeViewManager = NodeViewManager.getInstance();
         assertThat(nodeViewManager.callTextInitialDataService(nc), is("init service"));
         assertThat(nodeViewManager.callTextDataService(nc, ""), is("general data service"));
         String message =
@@ -192,13 +192,13 @@ public class NodeViewManagerTest {
      */
     @Test
     public void testGetNodeViewPageUrl() throws URISyntaxException, IOException {
-        Page staticPage = Page.builder(BUNDLE_ID, "files", "page.html").addResourceFile("resource.html").build();
-        Page dynamicPage = Page.builderFromString(() -> "page content", "page.html")
+        var staticPage = Page.builder(BUNDLE_ID, "files", "page.html").addResourceFile("resource.html").build();
+        var dynamicPage = Page.builderFromString(() -> "page content", "page.html")
             .addResourceFromString(() -> "resource content", "resource.html").build();
         NativeNodeContainer nnc = createNodeWithNodeView(m_wfm, m -> NodeView.create(staticPage));
         NativeNodeContainer nnc2 = createNodeWithNodeView(m_wfm, m -> NodeView.create(staticPage));
         NativeNodeContainer nnc3 = createNodeWithNodeView(m_wfm, m -> NodeView.create(dynamicPage));
-        NodeViewManager nodeViewManager = NodeViewManager.getInstance();
+        var nodeViewManager = NodeViewManager.getInstance();
         String url = nodeViewManager.getNodeViewPageUrl(nnc).orElse("");
         String url2 = nodeViewManager.getNodeViewPageUrl(nnc2).orElse(null);
         String url3 = nodeViewManager.getNodeViewPageUrl(nnc3).orElse(null);
@@ -216,7 +216,7 @@ public class NodeViewManagerTest {
 
         // impose node state changes
         m_wfm.executeAllAndWaitUntilDone();
-        Page dynamicPage2 = Page.builderFromString(() -> "new page content", "page.html")
+        var dynamicPage2 = Page.builderFromString(() -> "new page content", "page.html")
             .addResourceFromString(() -> "resource content", "resource.html").build();
         nnc = createNodeWithNodeView(m_wfm, m -> NodeView.create(dynamicPage2));
         String url5 = nodeViewManager.getNodeViewPageUrl(nnc).orElse(null);
@@ -240,7 +240,7 @@ public class NodeViewManagerTest {
         var nodeViewManager = NodeViewManager.getInstance();
         assertThat(nodeViewManager.getNodeViewPagePath(nnc).isEmpty(), is(true));
 
-        runOnExecutor(() -> {
+        runOnExecutor(() -> { // NOSONAR
             String path = nodeViewManager.getNodeViewPagePath(nnc).orElse(null);
             assertThat(nodeViewManager.getPageCacheSize(), is(1));
             String path2 = nodeViewManager.getNodeViewPagePath(nnc2).orElse(null);

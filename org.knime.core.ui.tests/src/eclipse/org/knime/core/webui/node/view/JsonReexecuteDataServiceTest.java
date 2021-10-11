@@ -56,7 +56,6 @@ import java.io.IOException;
 import org.awaitility.Awaitility;
 import org.junit.Test;
 import org.knime.core.node.workflow.NativeNodeContainer;
-import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.webui.data.json.impl.JsonReExecuteDataServiceImpl;
 import org.knime.core.webui.page.Page;
 import org.knime.testing.node.view.NodeViewNodeModel;
@@ -72,8 +71,8 @@ public class JsonReexecuteDataServiceTest {
     @SuppressWarnings("javadoc")
     @Test
     public void testJsonReexecuteDataService() throws IOException {
-        WorkflowManager wfm = WorkflowManagerUtil.createEmptyWorkflow();
-        Page page = Page.builderFromString(() -> "content", "index.html").build();
+        var wfm = WorkflowManagerUtil.createEmptyWorkflow();
+        var page = Page.builderFromString(() -> "content", "index.html").build();
         NativeNodeContainer nnc = NodeViewManagerTest.createNodeWithNodeView(wfm,
             m -> NodeView.builder(page)
                 .reExecuteDataService(new JsonReExecuteDataServiceImpl<String, NodeViewNodeModel>(m, String.class))

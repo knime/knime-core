@@ -78,7 +78,7 @@ public class PageTest {
      */
     @Test
     public void testIsCompletelyStaticPage() {
-        Page page = Page.builder(BUNDLE_ID, "files", "page.html")
+        var page = Page.builder(BUNDLE_ID, "files", "page.html")
             .addResourceFromString(() -> "resource content", "resource.html").build();
         assertThat(page.isCompletelyStatic(), is(false));
         page = Page.builder(BUNDLE_ID, "files", "page.html").addResourceFile("resource.html").build();
@@ -90,7 +90,7 @@ public class PageTest {
      */
     @Test
     public void testIsComponent() {
-        Page page = Page.builder(BUNDLE_ID, "files", "page.html").build();
+        var page = Page.builder(BUNDLE_ID, "files", "page.html").build();
         assertThat(page.isWebComponent(), is(false));
 
         page = Page.builder(BUNDLE_ID, "files", "component.js").build();
@@ -116,7 +116,7 @@ public class PageTest {
      */
     @Test
     public void testCreateResourcesFromDir() {
-        Page page = Page.builder(BUNDLE_ID, "files", "page.html").addResourceDirectory("dir").build();
+        var page = Page.builder(BUNDLE_ID, "files", "page.html").addResourceDirectory("dir").build();
         List<String> context =
             page.getContext().values().stream().map(Resource::getRelativePath).collect(Collectors.toList());
         assertThat(context, Matchers.containsInAnyOrder(format("dir%1$ssubdir%1$sres.html", File.separator),

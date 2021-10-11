@@ -168,9 +168,8 @@ public final class RpcServerManager {
      * @throws IOException if the rpc server can't process the rpc request properly
      */
     public static String doRpc(final RpcServer rpcServer, final String remoteProcedureCall) throws IOException {
-        try (ByteArrayInputStream request =
-            new ByteArrayInputStream(remoteProcedureCall.getBytes(StandardCharsets.UTF_8));
-                ByteArrayOutputStream response = new ByteArrayOutputStream()) {
+        try (var request = new ByteArrayInputStream(remoteProcedureCall.getBytes(StandardCharsets.UTF_8));
+                var response = new ByteArrayOutputStream()) {
 
             rpcServer.handleRequest(request, response);
 
@@ -190,7 +189,7 @@ public final class RpcServerManager {
         NodePortRpcServerFactory factory =
             getRpcServerFactoryForPort(port.getPortType()).orElseThrow(() -> new IllegalStateException(
                 "The port of type '" + port.getPortType().getName() + "' does not provide a rpc server."));
-        PortObject portObject = port.getPortObject();
+        var portObject = port.getPortObject();
         if (portObject == null || !factory.isCachable()) {
             return factory.createRpcServer(port);
         } else {
