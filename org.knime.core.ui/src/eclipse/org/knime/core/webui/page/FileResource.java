@@ -72,8 +72,8 @@ class FileResource implements Resource {
     }
 
     @Override
-    public Path getRelativePath() {
-        return m_relativePath;
+    public String getRelativePath() {
+        return m_relativePath.toString().replace("\\", "/");
     }
 
     @Override

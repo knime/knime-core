@@ -50,7 +50,6 @@ package org.knime.core.webui.page;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Path;
 
 /**
  * Represents a web resource used in ui-extensions (such as node view, port view and node dialog).
@@ -64,7 +63,7 @@ public interface Resource {
     /**
      * @return the resource's relative path (including the resource name itself, too)
      */
-    Path getRelativePath();
+    String getRelativePath();
 
     /**
      * @return the actual resource content as {@link InputStream}

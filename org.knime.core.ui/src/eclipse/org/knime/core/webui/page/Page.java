@@ -52,10 +52,11 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 /**
  * A (html) page of an ui-extension, e.g. a node view, port view or node dialog.
@@ -68,22 +69,23 @@ public final class Page implements Resource {
 
     private final Resource m_pageResource;
 
-    private final List<Resource> m_context;
+    private final Map<String, Resource> m_context;
 
     private final boolean m_isWebComponent;
 
     Page(final Resource pageResource, final List<Resource> context, final boolean isWebComponent) {
         m_pageResource = pageResource;
-        m_context = context == null ? Collections.emptyList() : context;
+        m_context = context == null ? Collections.emptyMap()
+            : context.stream().collect(Collectors.toMap(Resource::getRelativePath, r -> r));
         m_isWebComponent = isWebComponent;
     }
 
     /**
      * Additional resources required by the page.
      *
-     * @return list of resources or an empty list if there a none - never <code>null</code>
+     * @return map from relative path to resources; or an empty map if there a none - never <code>null</code>
      */
-    public List<Resource> getContext() {
+    public Map<String, Resource> getContext() {
         return m_context;
     }
 
@@ -91,7 +93,7 @@ public final class Page implements Resource {
      * {@inheritDoc}
      */
     @Override
-    public Path getRelativePath() {
+    public String getRelativePath() {
         return m_pageResource.getRelativePath();
     }
 
@@ -117,7 +119,7 @@ public final class Page implements Resource {
      * @return <code>true</code> if the page itself and all the associated resources are static (i.e. invariable)
      */
     public boolean isCompletelyStatic() {
-        return isStatic() && getContext().stream().allMatch(Resource::isStatic);
+        return isStatic() && getContext().values().stream().allMatch(Resource::isStatic);
     }
 
     /**

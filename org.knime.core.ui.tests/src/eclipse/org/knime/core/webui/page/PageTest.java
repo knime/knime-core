@@ -118,7 +118,7 @@ public class PageTest {
     public void testCreateResourcesFromDir() {
         Page page = Page.builder(BUNDLE_ID, "files", "page.html").addResourceDirectory("dir").build();
         List<String> context =
-            page.getContext().stream().map(r -> r.getRelativePath().toString()).collect(Collectors.toList());
+            page.getContext().values().stream().map(Resource::getRelativePath).collect(Collectors.toList());
         assertThat(context, Matchers.containsInAnyOrder(format("dir%1$ssubdir%1$sres.html", File.separator),
             format("dir%sres2.js", File.separator), format("dir%sres1.html", File.separator)));
     }

@@ -52,8 +52,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
@@ -77,8 +75,8 @@ public class PageBuilder {
         m_pageResource = new Resource() {
 
             @Override
-            public Path getRelativePath() {
-                return Paths.get(relativePath);
+            public String getRelativePath() {
+                return relativePath;
             }
 
             @Override
@@ -112,8 +110,8 @@ public class PageBuilder {
         m_resources.add(new Resource() {
 
             @Override
-            public Path getRelativePath() {
-                return Paths.get(relativePath);
+            public String getRelativePath() {
+                return relativePath;
             }
 
             @Override

@@ -55,7 +55,6 @@ import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThrows;
 import static org.knime.core.webui.page.PageTest.BUNDLE_ID;
 import static org.knime.testing.util.WorkflowManagerUtil.createAndAddNode;
-import static org.knime.testing.util.WorkflowManagerUtil.createEmptyWorkflow;
 
 import java.io.File;
 import java.io.IOException;
@@ -67,6 +66,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 import org.awaitility.Awaitility;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.NativeNodeContainer;
@@ -78,6 +79,7 @@ import org.knime.core.webui.data.text.TextReExecuteDataService;
 import org.knime.core.webui.page.Page;
 import org.knime.testing.node.view.NodeViewNodeFactory;
 import org.knime.testing.node.view.NodeViewNodeModel;
+import org.knime.testing.util.WorkflowManagerUtil;
 
 import com.google.common.io.Files;
 
@@ -88,17 +90,40 @@ import com.google.common.io.Files;
  */
 public class NodeViewManagerTest {
 
+    private static final String JAVA_AWT_HEADLESS = "java.awt.headless";
+
+    private WorkflowManager m_wfm;
+
+    /**
+     * Clears the caches and files of the {@link NodeViewManager}.
+     */
+    @Before
+    @After
+    public void clearNodeViewManagerCachesAndFiles() {
+        NodeViewManager.getInstance().clearCachesAndFiles();
+    }
+
+    @SuppressWarnings("javadoc")
+    @Before
+    public void createEmptyWorkflow() throws IOException {
+        m_wfm = WorkflowManagerUtil.createEmptyWorkflow();
+    }
+
+    @SuppressWarnings("javadoc")
+    @After
+    public void disposeWorkflow() {
+        if (m_wfm.getParent().containsNodeContainer(m_wfm.getID())) {
+            m_wfm.getParent().removeProject(m_wfm.getID());
+        }
+    }
+
     /**
      * Tests multiple {@link NodeViewManager}-methods using a simple node view.
-     *
-     * @throws IOException
      */
     @Test
-    public void testSimpleNodeViewNode() throws IOException {
-        WorkflowManager wfm = createEmptyWorkflow();
-
+    public void testSimpleNodeViewNode() {
         Page page = Page.builderFromString(() -> "test page content", "index.html").build();
-        NativeNodeContainer nc = createNodeWithNodeView(wfm, m -> NodeView.create(page));
+        NativeNodeContainer nc = createNodeWithNodeView(m_wfm, m -> NodeView.create(page));
 
         assertThat("node expected to have a node view", NodeViewManager.hasNodeView(nc), is(true));
         NodeView nodeView = NodeViewManager.getInstance().getNodeView(nc);
@@ -109,21 +134,15 @@ public class NodeViewManagerTest {
         assertThat(ex.getMessage(), containsString("does not provide a 'initial data service'"));
         assertThat(nodeView.getPage().isCompletelyStatic(), is(false));
 
-        wfm.getParent().removeProject(wfm.getID());
     }
 
     /**
      * Tests {@link NodeViewManager#callTextInitialDataService(org.knime.core.node.workflow.NodeContainer)},
      * {@link NodeViewManager#callTextDataService(org.knime.core.node.workflow.NodeContainer, String)} and
      * {@link NodeViewManager#callTextReExecuteDataService(org.knime.core.node.workflow.NodeContainer, String)}
-     *
-     * @throws IOException
      */
     @Test
-    public void testCallDataServices() throws IOException {
-
-        WorkflowManager wfm = createEmptyWorkflow();
-
+    public void testCallDataServices() {
         Page page = Page.builderFromString(() -> "test page content", "index.html").build();
         NodeView nodeView = NodeView.builder(page).initialDataService(new TextInitialDataService() {
 
@@ -155,7 +174,7 @@ public class NodeViewManagerTest {
 
             }
         }).build();
-        NativeNodeContainer nc = createNodeWithNodeView(wfm, m -> nodeView);
+        NativeNodeContainer nc = createNodeWithNodeView(m_wfm, m -> nodeView);
 
         NodeViewManager nodeViewManager = NodeViewManager.getInstance();
         assertThat(nodeViewManager.callTextInitialDataService(nc), is("init service"));
@@ -163,30 +182,27 @@ public class NodeViewManagerTest {
         String message =
             assertThrows(IOException.class, () -> nodeViewManager.callTextReExecuteDataService(nc, "")).getMessage();
         assertThat(message, is("re-execute data service"));
-
-        wfm.getParent().removeProject(wfm.getID());
     }
 
     /**
-     * Tests {@link NodeViewManager#writeNodeViewResourcesToDiscAndGetFileUrl(NativeNodeContainer)}.
+     * Tests {@link NodeViewManager#getNodeViewPageUrl(NativeNodeContainer)}.
      *
-     * @throws IOException
      * @throws URISyntaxException
+     * @throws IOException
      */
     @Test
-    public void testWriteNodeViewResourceToDiscAndGetFileUrl() throws IOException, URISyntaxException {
+    public void testGetNodeViewPageUrl() throws URISyntaxException, IOException {
         Page staticPage = Page.builder(BUNDLE_ID, "files", "page.html").addResourceFile("resource.html").build();
         Page dynamicPage = Page.builderFromString(() -> "page content", "page.html")
             .addResourceFromString(() -> "resource content", "resource.html").build();
-        WorkflowManager wfm = createEmptyWorkflow();
-        NativeNodeContainer nnc = createNodeWithNodeView(wfm, m -> NodeView.create(staticPage));
-        NativeNodeContainer nnc2 = createNodeWithNodeView(wfm, m -> NodeView.create(staticPage));
-        NativeNodeContainer nnc3 = createNodeWithNodeView(wfm, m -> NodeView.create(dynamicPage));
+        NativeNodeContainer nnc = createNodeWithNodeView(m_wfm, m -> NodeView.create(staticPage));
+        NativeNodeContainer nnc2 = createNodeWithNodeView(m_wfm, m -> NodeView.create(staticPage));
+        NativeNodeContainer nnc3 = createNodeWithNodeView(m_wfm, m -> NodeView.create(dynamicPage));
         NodeViewManager nodeViewManager = NodeViewManager.getInstance();
-        String url = nodeViewManager.writeNodeViewResourcesToDiscAndGetFileUrl(nnc);
-        String url2 = nodeViewManager.writeNodeViewResourcesToDiscAndGetFileUrl(nnc2);
-        String url3 = nodeViewManager.writeNodeViewResourcesToDiscAndGetFileUrl(nnc3);
-        String url4 = nodeViewManager.writeNodeViewResourcesToDiscAndGetFileUrl(nnc3);
+        String url = nodeViewManager.getNodeViewPageUrl(nnc).orElse("");
+        String url2 = nodeViewManager.getNodeViewPageUrl(nnc2).orElse(null);
+        String url3 = nodeViewManager.getNodeViewPageUrl(nnc3).orElse(null);
+        String url4 = nodeViewManager.getNodeViewPageUrl(nnc3).orElse(null);
         assertThat("file url of static pages not expected to change", url, is(url2));
         assertThat("file url of dynamic pages expected to change between node instances", url, is(not(url3)));
         assertThat("file url of dynamic pages not expected for same node instance (without node state change)", url3,
@@ -199,34 +215,147 @@ public class NodeViewManagerTest {
         assertThat(pageContent, is("page content"));
 
         // impose node state changes
-        wfm.executeAllAndWaitUntilDone();
+        m_wfm.executeAllAndWaitUntilDone();
         Page dynamicPage2 = Page.builderFromString(() -> "new page content", "page.html")
             .addResourceFromString(() -> "resource content", "resource.html").build();
-        nnc = createNodeWithNodeView(wfm, m -> NodeView.create(dynamicPage2));
-        String url5 = nodeViewManager.writeNodeViewResourcesToDiscAndGetFileUrl(nnc);
+        nnc = createNodeWithNodeView(m_wfm, m -> NodeView.create(dynamicPage2));
+        String url5 = nodeViewManager.getNodeViewPageUrl(nnc).orElse(null);
         pageContent = Files.readLines(new File(new URI(url5)), StandardCharsets.UTF_8).get(0);
         assertThat(pageContent, is("new page content"));
 
-        wfm.getParent().removeProject(wfm.getID());
-        Awaitility.await().pollInterval(1, TimeUnit.SECONDS).atMost(5, TimeUnit.SECONDS).untilAsserted(
-            () -> assertThat("dynamic pages are expected to be removed after the workflow has been closed",
-                new File(new URI(url5)).exists(), is(false)));
+        runOnExecutor(() -> assertThat(nodeViewManager.getNodeViewPageUrl(nnc2).isEmpty(), is(true)));
+    }
+
+    /**
+     * Tests {@link NodeViewManager#getNodeViewPagePath(NativeNodeContainer)}.
+     */
+    @Test
+    public void testGetNodeViewPagePath() {
+        var staticPage = Page.builder(BUNDLE_ID, "files", "page.html").addResourceFile("resource.html").build();
+        var dynamicPage = Page.builderFromString(() -> "page content", "page.html")
+            .addResourceFromString(() -> "resource content", "resource.html").build();
+        var nnc = createNodeWithNodeView(m_wfm, m -> NodeView.create(staticPage));
+        var nnc2 = createNodeWithNodeView(m_wfm, m -> NodeView.create(dynamicPage));
+
+        var nodeViewManager = NodeViewManager.getInstance();
+        assertThat(nodeViewManager.getNodeViewPagePath(nnc).isEmpty(), is(true));
+
+        runOnExecutor(() -> {
+            String path = nodeViewManager.getNodeViewPagePath(nnc).orElse(null);
+            assertThat(nodeViewManager.getPageCacheSize(), is(1));
+            String path2 = nodeViewManager.getNodeViewPagePath(nnc2).orElse(null);
+            assertThat(nodeViewManager.getPageCacheSize(), is(2));
+            var resourcePrefix1 = nnc.getNode().getFactory().getClass().getName();
+            var resourcePrefix2 = nnc2.getID().toString().replace(":", "_");
+            assertThat(path, is(resourcePrefix1 + "/page.html"));
+            assertThat(path2, is(resourcePrefix2 + "/page.html"));
+
+            testGetNodeViewPageResource(resourcePrefix1, resourcePrefix2);
+        });
+
+        m_wfm.executeAllAndWaitUntilDone();
+        // make sure that dynamic pages are removed from the cache (e.g. after a node state change) but not the static pages
+        assertThat(nodeViewManager.getPageCacheSize(), is(1));
+    }
+
+    private static void testGetNodeViewPageResource(final String resourcePrefix1, final String resourcePrefix2) {
+        var nodeViewManager = NodeViewManager.getInstance();
+        assertThat(nodeViewManager.getNodeViewPageResource(resourcePrefix1 + "/page.html").isPresent(), is(true));
+        assertThat(nodeViewManager.getNodeViewPageResource(resourcePrefix1 + "/resource.html").isPresent(), is(true));
+        assertThat(nodeViewManager.getNodeViewPageResource(resourcePrefix2 + "/resource.html").isPresent(), is(true));
+        assertThat(nodeViewManager.getNodeViewPageResource("/test").isEmpty(), is(true));
+        assertThat(nodeViewManager.getNodeViewPageResource("test").isEmpty(), is(true));
+        assertThat(nodeViewManager.getNodeViewPageResource("test/test").isEmpty(), is(true));
     }
 
     /**
      * Tests {@link NodeViewManager#hasNodeView(org.knime.core.node.workflow.NodeContainer)} and
      * {@link NodeViewManager#getNodeView(org.knime.core.node.workflow.NodeContainer)} for a node without a node view.
-     *
-     * @throws IOException
      */
     @Test
-    public void testNodeWithoutNodeView() throws IOException {
-        WorkflowManager wfm = createEmptyWorkflow();
-        NativeNodeContainer nc = createAndAddNode(wfm, new VirtualSubNodeInputNodeFactory(null, new PortType[0]));
+    public void testNodeWithoutNodeView() {
+        NativeNodeContainer nc = createAndAddNode(m_wfm, new VirtualSubNodeInputNodeFactory(null, new PortType[0]));
         assertThat("node not expected to have a node view", NodeViewManager.hasNodeView(nc), is(false));
         assertThrows(IllegalArgumentException.class, () -> NodeViewManager.getInstance().getNodeView(nc));
+    }
 
-        wfm.getParent().removeProject(wfm.getID());
+    /**
+     * Makes sure that in case of a dynamic page the node view cache (but not! the page resource files) is cleaned up
+     * after a node state change, node removal and closing the workflow.
+     *
+     * @throws URISyntaxException
+     */
+    @Test
+    public void testNodeCleanUpDynamicPage() throws URISyntaxException {
+        var page = Page.builderFromString(() -> "test page content", "index.html").build();
+        var nc = createNodeWithNodeView(m_wfm, m -> NodeView.create(page));
+
+        var nodeViewManager = NodeViewManager.getInstance();
+
+        // node state change
+        String url = nodeViewManager.getNodeViewPageUrl(nc).orElse(null);
+        assertThat("node view file resource expected to be written", new File(new URI(url)).exists(), is(true));
+        assertThat(nodeViewManager.getNodeViewCacheSize(), is(1));
+        m_wfm.executeAllAndWaitUntilDone();
+        Awaitility.await().pollInterval(1, TimeUnit.SECONDS).atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
+            assertThat("dynamic pages are expected to be removed if the node state changed",
+                new File(new URI(url)).exists(), is(false));
+            assertThat(nodeViewManager.getNodeViewCacheSize(), is(0));
+        });
+
+        // remove node
+        String url2 = nodeViewManager.getNodeViewPageUrl(nc).orElse(null);
+        assertThat("node view file resource expected to be written", new File(new URI(url2)).exists(), is(true));
+        assertThat(nodeViewManager.getNodeViewCacheSize(), is(1));
+        m_wfm.removeNode(nc.getID());
+        Awaitility.await().pollInterval(1, TimeUnit.SECONDS).atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
+            assertThat("dynamic pages are expected to be removed if the respective node has been removed",
+                new File(new URI(url2)).exists(), is(false));
+            assertThat(nodeViewManager.getNodeViewCacheSize(), is(0));
+        });
+
+        // close workflow
+        String url3 = nodeViewManager.getNodeViewPageUrl(nc).orElse(null);
+        assertThat("node view file resource expected to be written", new File(new URI(url3)).exists(), is(true));
+        assertThat(nodeViewManager.getNodeViewCacheSize(), is(1));
+        m_wfm.getParent().removeProject(m_wfm.getID());
+        Awaitility.await().pollInterval(1, TimeUnit.SECONDS).atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
+            assertThat("dynamic pages are expected to be removed after the workflow has been closed",
+                new File(new URI(url3)).exists(), is(false));
+            assertThat(nodeViewManager.getNodeViewCacheSize(), is(0));
+        });
+    }
+
+
+    /**
+     * Makes sure that in case of a static page the node view cache and(!) the page resource files are cleaned up after
+     * a node state change, node removal and closing the workflow.
+     */
+    @Test
+    public void testNodeCleanUpStaticPage() {
+        var staticPage = Page.builder(BUNDLE_ID, "files", "page.html").build();
+        var nc = createNodeWithNodeView(m_wfm, m -> NodeView.create(staticPage));
+
+        // node state change
+        String url = NodeViewManager.getInstance().getNodeViewPageUrl(nc).orElse(null);
+        m_wfm.executeAllAndWaitUntilDone();
+        Awaitility.await().pollInterval(1, TimeUnit.SECONDS).atMost(5, TimeUnit.SECONDS)
+            .untilAsserted(() -> assertThat("static pages are expected to remain if the node state changed",
+                new File(new URI(url)).exists(), is(true)));
+
+        // remove node
+        String url2 = NodeViewManager.getInstance().getNodeViewPageUrl(nc).orElse(null);
+        m_wfm.removeNode(nc.getID());
+        Awaitility.await().pollInterval(1, TimeUnit.SECONDS).atMost(5, TimeUnit.SECONDS).untilAsserted(
+            () -> assertThat("static pages are expected to be remain if the respective node has been removed",
+                new File(new URI(url2)).exists(), is(true)));
+
+        // close workflow
+        String url3 = NodeViewManager.getInstance().getNodeViewPageUrl(nc).orElse(null);
+        m_wfm.getParent().removeProject(m_wfm.getID());
+        Awaitility.await().pollInterval(1, TimeUnit.SECONDS).atMost(5, TimeUnit.SECONDS)
+            .untilAsserted(() -> assertThat("static pages are expected to be remain after the workflow has been closed",
+                new File(new URI(url3)).exists(), is(true)));
     }
 
     /**
@@ -239,6 +368,20 @@ public class NodeViewManagerTest {
     public static NativeNodeContainer createNodeWithNodeView(final WorkflowManager wfm,
         final Function<NodeViewNodeModel, NodeView> nodeViewCreator) {
         return createAndAddNode(wfm, new NodeViewNodeFactory(nodeViewCreator));
+    }
+
+    /**
+     * Simulates to run stuff as if it was run on the executor (which usually means to run the AP headless).
+     *
+     * @param r
+     */
+    public static void runOnExecutor(final Runnable r) {
+        System.setProperty(JAVA_AWT_HEADLESS, "true");
+        try {
+            r.run();
+        } finally {
+            System.clearProperty(JAVA_AWT_HEADLESS);
+        }
     }
 
 }

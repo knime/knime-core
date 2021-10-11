@@ -86,5 +86,7 @@ public class JsonReexecuteDataServiceTest {
             assertThat(model.getPreReexecuteData(), is("data to apply"));
             assertThat(model.getExecuteCount(), is(2));
         });
+
+        wfm.getParent().removeProject(wfm.getID());
     }
 }

@@ -59,6 +59,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.NativeNodeContainer;
@@ -78,66 +80,67 @@ import org.knime.testing.util.WorkflowManagerUtil;
  */
 public class WizardPageUtilTest {
 
+    private WorkflowManager m_wfm;
+
+    @SuppressWarnings("javadoc")
+    @Before
+    public void createEmptyWorkflow() throws IOException {
+        m_wfm = WorkflowManagerUtil.createEmptyWorkflow();
+    }
+
     /**
      * Tests {@link WizardPageUtil#isWizardPage(WorkflowManager, NodeID)}.
-     *
-     * @throws IOException
      */
     @Test
-    public void testIsWizardPage() throws IOException {
-        WorkflowManager wfm = WorkflowManagerUtil.createEmptyWorkflow();
+    public void testIsWizardPage() {
 
         NodeID nonExistentNode = new NodeID(4).createChild(5);
-        assertFalse(WizardPageUtil.isWizardPage(wfm, nonExistentNode));
+        assertFalse(WizardPageUtil.isWizardPage(m_wfm, nonExistentNode));
 
-        NodeID metanode = wfm.createAndAddSubWorkflow(new PortType[0], new PortType[0], "metanode").getID();
-        assertFalse(WizardPageUtil.isWizardPage(wfm, metanode));
+        NodeID metanode = m_wfm.createAndAddSubWorkflow(new PortType[0], new PortType[0], "metanode").getID();
+        assertFalse(WizardPageUtil.isWizardPage(m_wfm, metanode));
 
-        wfm.convertMetaNodeToSubNode(metanode);
+        m_wfm.convertMetaNodeToSubNode(metanode);
         NodeID emptyComponent = metanode;
-        assertFalse(WizardPageUtil.isWizardPage(wfm, emptyComponent));
+        assertFalse(WizardPageUtil.isWizardPage(m_wfm, emptyComponent));
 
-        SubNodeContainer component = (SubNodeContainer)wfm.getNodeContainer(emptyComponent);
+        SubNodeContainer component = (SubNodeContainer)m_wfm.getNodeContainer(emptyComponent);
         WorkflowManagerUtil.createAndAddNode(component.getWorkflowManager(), new WizardNodeFactory());
         NodeID componentWithWizardNode = emptyComponent;
-        assertTrue(WizardPageUtil.isWizardPage(wfm, componentWithWizardNode));
+        assertTrue(WizardPageUtil.isWizardPage(m_wfm, componentWithWizardNode));
 
-        NodeID componentWithNodeViewNode = wfm.collapseIntoMetaNode(
-            new NodeID[]{WorkflowManagerUtil.createAndAddNode(wfm, new NodeViewNodeFactory(0, 0)).getID()},
+        NodeID componentWithNodeViewNode = m_wfm.collapseIntoMetaNode(
+            new NodeID[]{WorkflowManagerUtil.createAndAddNode(m_wfm, new NodeViewNodeFactory(0, 0)).getID()},
             new WorkflowAnnotation[0], "component").getCollapsedMetanodeID();
-        wfm.convertMetaNodeToSubNode(componentWithNodeViewNode);
-        assertTrue(WizardPageUtil.isWizardPage(wfm, componentWithNodeViewNode));
+        m_wfm.convertMetaNodeToSubNode(componentWithNodeViewNode);
+        assertTrue(WizardPageUtil.isWizardPage(m_wfm, componentWithNodeViewNode));
 
-        NodeID componentWithAComponentWithNodeView = wfm.collapseIntoMetaNode(new NodeID[]{componentWithNodeViewNode},
+        NodeID componentWithAComponentWithNodeView = m_wfm.collapseIntoMetaNode(new NodeID[]{componentWithNodeViewNode},
             new WorkflowAnnotation[0], "component of a component").getCollapsedMetanodeID();
-        wfm.convertMetaNodeToSubNode(componentWithAComponentWithNodeView);
-        assertTrue(WizardPageUtil.isWizardPage(wfm, componentWithAComponentWithNodeView));
+        m_wfm.convertMetaNodeToSubNode(componentWithAComponentWithNodeView);
+        assertTrue(WizardPageUtil.isWizardPage(m_wfm, componentWithAComponentWithNodeView));
     }
 
     /**
      * Tests {@link WizardPageUtil#getWizardPageNodes(WorkflowManager)} etc.
-     *
-     * @throws IOException
      */
     @Test
-    public void testGetWizardPageNodes() throws IOException {
-        WorkflowManager wfm = WorkflowManagerUtil.createEmptyWorkflow();
-
-        NodeID componentWithNodeViewNode = wfm.collapseIntoMetaNode(
-            new NodeID[]{WorkflowManagerUtil.createAndAddNode(wfm, new NodeViewNodeFactory(0, 0)).getID()},
+    public void testGetWizardPageNodes() {
+        NodeID componentWithNodeViewNode = m_wfm.collapseIntoMetaNode(
+            new NodeID[]{WorkflowManagerUtil.createAndAddNode(m_wfm, new NodeViewNodeFactory(0, 0)).getID()},
             new WorkflowAnnotation[0], "component").getCollapsedMetanodeID();
-        wfm.convertMetaNodeToSubNode(componentWithNodeViewNode);
+        m_wfm.convertMetaNodeToSubNode(componentWithNodeViewNode);
         WorkflowManager componentWfm =
-            ((SubNodeContainer)wfm.getNodeContainer(componentWithNodeViewNode)).getWorkflowManager();
+            ((SubNodeContainer)m_wfm.getNodeContainer(componentWithNodeViewNode)).getWorkflowManager();
         List<NativeNodeContainer> wizardPageNodes = WizardPageUtil.getWizardPageNodes(componentWfm);
         assertThat(wizardPageNodes.size(), is(1));
         assertThat(wizardPageNodes.get(0).getName(), is("NodeView"));
 
-        NodeID componentWithAComponentWithNodeView = wfm.collapseIntoMetaNode(new NodeID[]{componentWithNodeViewNode},
+        NodeID componentWithAComponentWithNodeView = m_wfm.collapseIntoMetaNode(new NodeID[]{componentWithNodeViewNode},
             new WorkflowAnnotation[0], "component of a component").getCollapsedMetanodeID();
-        wfm.convertMetaNodeToSubNode(componentWithAComponentWithNodeView);
+        m_wfm.convertMetaNodeToSubNode(componentWithAComponentWithNodeView);
         componentWfm =
-            ((SubNodeContainer)wfm.getNodeContainer(componentWithAComponentWithNodeView)).getWorkflowManager();
+            ((SubNodeContainer)m_wfm.getNodeContainer(componentWithAComponentWithNodeView)).getWorkflowManager();
         wizardPageNodes = WizardPageUtil.getWizardPageNodes(componentWfm);
         assertTrue(wizardPageNodes.isEmpty());
         wizardPageNodes = WizardPageUtil.getWizardPageNodes(componentWfm, false);
@@ -146,11 +149,11 @@ public class WizardPageUtilTest {
         assertThat(wizardPageNodes.size(), is(1));
         assertThat(wizardPageNodes.get(0).getName(), is("NodeView"));
 
-        NodeID componentWithNodeWizardNode = wfm.collapseIntoMetaNode(
-            new NodeID[]{WorkflowManagerUtil.createAndAddNode(wfm, new WizardNodeFactory()).getID()},
+        NodeID componentWithNodeWizardNode = m_wfm.collapseIntoMetaNode(
+            new NodeID[]{WorkflowManagerUtil.createAndAddNode(m_wfm, new WizardNodeFactory()).getID()},
             new WorkflowAnnotation[0], "component").getCollapsedMetanodeID();
-        wfm.convertMetaNodeToSubNode(componentWithNodeWizardNode);
-        componentWfm = ((SubNodeContainer)wfm.getNodeContainer(componentWithNodeWizardNode)).getWorkflowManager();
+        m_wfm.convertMetaNodeToSubNode(componentWithNodeWizardNode);
+        componentWfm = ((SubNodeContainer)m_wfm.getNodeContainer(componentWithNodeWizardNode)).getWorkflowManager();
         wizardPageNodes = WizardPageUtil.getWizardPageNodes(componentWfm);
         assertThat(wizardPageNodes.size(), is(1));
         assertThat(wizardPageNodes.get(0).getName(), is("Wizard"));
@@ -158,27 +161,22 @@ public class WizardPageUtilTest {
 
     /**
      * Tests {@link WizardPageUtil#getAllWizardPageNodes(WorkflowManager, boolean)}.
-     *
-     * @throws IOException
      */
     @Test
-    public void testGetAllWizardPageNodes() throws IOException {
+    public void testGetAllWizardPageNodes() {
+        NodeID n1 = WorkflowManagerUtil.createAndAddNode(m_wfm, new NodeViewNodeFactory(0, 0)).getID();
+        NodeID n2 = WorkflowManagerUtil.createAndAddNode(m_wfm, new WizardNodeFactory()).getID();
 
-        WorkflowManager wfm = WorkflowManagerUtil.createEmptyWorkflow();
-
-        NodeID n1 = WorkflowManagerUtil.createAndAddNode(wfm, new NodeViewNodeFactory(0, 0)).getID();
-        NodeID n2 = WorkflowManagerUtil.createAndAddNode(wfm, new WizardNodeFactory()).getID();
-
-        NodeID component = wfm.collapseIntoMetaNode(new NodeID[]{n1, n2}, new WorkflowAnnotation[0], "component")
+        NodeID component = m_wfm.collapseIntoMetaNode(new NodeID[]{n1, n2}, new WorkflowAnnotation[0], "component")
             .getCollapsedMetanodeID();
-        wfm.convertMetaNodeToSubNode(component);
-        WorkflowManager componentWfm = ((SubNodeContainer)wfm.getNodeContainer(component)).getWorkflowManager();
+        m_wfm.convertMetaNodeToSubNode(component);
+        WorkflowManager componentWfm = ((SubNodeContainer)m_wfm.getNodeContainer(component)).getWorkflowManager();
 
         List<NativeNodeContainer> wizardPageNodes = WizardPageUtil.getAllWizardPageNodes(componentWfm, false);
         assertThat(wizardPageNodes.size(), is(2));
 
         WizardNodeModel wnm =
-            (WizardNodeModel)((NativeNodeContainer)wfm.findNodeContainer(component.createChild(0).createChild(2)))
+            (WizardNodeModel)((NativeNodeContainer)m_wfm.findNodeContainer(component.createChild(0).createChild(2)))
                 .getNodeModel();
         wnm.setHideInWizard(true);
 
@@ -191,30 +189,26 @@ public class WizardPageUtilTest {
 
     /**
      * Tests {@link WizardPageUtil#createWizardPage(WorkflowManager, NodeID)}.
-     *
-     * @throws IOException
      */
     @Test
-    public void testCreateWizardPage() throws IOException {
-        WorkflowManager wfm = WorkflowManagerUtil.createEmptyWorkflow();
+    public void testCreateWizardPage() {
+        NodeID n1 = WorkflowManagerUtil.createAndAddNode(m_wfm, new NodeViewNodeFactory(0, 0)).getID();
+        NodeID n2 = WorkflowManagerUtil.createAndAddNode(m_wfm, new NodeViewNodeFactory(0, 0)).getID();
 
-        NodeID n1 = WorkflowManagerUtil.createAndAddNode(wfm, new NodeViewNodeFactory(0, 0)).getID();
-        NodeID n2 = WorkflowManagerUtil.createAndAddNode(wfm, new NodeViewNodeFactory(0, 0)).getID();
-
-        try (WorkflowLock lock = wfm.lock()) {
-            assertThrows(IllegalArgumentException.class, () -> WizardPageUtil.createWizardPage(wfm, n1));
+        try (WorkflowLock lock = m_wfm.lock()) {
+            assertThrows(IllegalArgumentException.class, () -> WizardPageUtil.createWizardPage(m_wfm, n1));
         }
 
         NodeID component =
-            wfm.collapseIntoMetaNode(new NodeID[]{n1}, new WorkflowAnnotation[0], "component").getCollapsedMetanodeID();
-        wfm.convertMetaNodeToSubNode(component);
-        component = wfm.collapseIntoMetaNode(new NodeID[]{component, n2}, new WorkflowAnnotation[0], "component")
+            m_wfm.collapseIntoMetaNode(new NodeID[]{n1}, new WorkflowAnnotation[0], "component").getCollapsedMetanodeID();
+        m_wfm.convertMetaNodeToSubNode(component);
+        component = m_wfm.collapseIntoMetaNode(new NodeID[]{component, n2}, new WorkflowAnnotation[0], "component")
             .getCollapsedMetanodeID();
-        wfm.convertMetaNodeToSubNode(component);
+        m_wfm.convertMetaNodeToSubNode(component);
 
         WizardPage wizardPage;
-        try (WorkflowLock lock = wfm.lock()) {
-            wizardPage = WizardPageUtil.createWizardPage(wfm, component);
+        try (WorkflowLock lock = m_wfm.lock()) {
+            wizardPage = WizardPageUtil.createWizardPage(m_wfm, component);
         }
         assertThat(wizardPage.getPageNodeID(), is(component));
         assertThat(wizardPage.getPageMap().size(), is(2));
@@ -222,6 +216,14 @@ public class WizardPageUtilTest {
             containsInAnyOrder(NodeIDSuffix.fromString("4:0:2"), NodeIDSuffix.fromString("4:0:3:0:1")));
         assertThat(wizardPage.getPageMap().values().stream().map(n -> n.getName()).collect(Collectors.toList()),
             containsInAnyOrder("NodeView", "NodeView"));
+
+        m_wfm.getParent().removeProject(m_wfm.getID());
+    }
+
+    @SuppressWarnings("javadoc")
+    @After
+    public void disposeWorkflow() {
+        m_wfm.getParent().removeProject(m_wfm.getID());
     }
 
 }

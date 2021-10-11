@@ -52,6 +52,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -63,6 +66,7 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContext;
+import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.WorkflowEvent;
@@ -77,8 +81,6 @@ import org.knime.core.webui.data.text.TextInitialDataService;
 import org.knime.core.webui.data.text.TextReExecuteDataService;
 import org.knime.core.webui.page.Page;
 import org.knime.core.webui.page.Resource;
-
-import com.google.common.collect.MapMaker;
 
 /**
  * Manages (web-ui) node view instances and provides associated functionality.
@@ -99,7 +101,11 @@ public final class NodeViewManager {
 
     private Path m_uiExtensionsPath;
 
-    private final Map<NodeContainer, NodeView> m_nodeViewCache = new MapMaker().weakKeys().weakValues().makeMap();
+    private final Map<NodeID, NodeView> m_nodeViewCache = new HashMap<>();
+
+    private final Map<NodeID, NodeCleanUpCallback> m_nodeCleanUpCallbacks = new HashMap<>();
+
+    private final Map<String, Page> m_pageCache = new HashMap<>();
 
     /**
      * Returns the singleton instance for this class.
@@ -133,21 +139,39 @@ public final class NodeViewManager {
      * @return a new node view instance
      * @throws IllegalArgumentException if the passed node container does not provide a node view
      */
-    @SuppressWarnings("unchecked")
     public NodeView getNodeView(final NodeContainer nc) {
         if (!hasNodeView(nc)) {
             throw new IllegalArgumentException("The node " + nc.getNameWithID() + " doesn't provide a node view");
         }
-        return m_nodeViewCache.computeIfAbsent(nc, k -> {
-            NativeNodeContainer nnc = (NativeNodeContainer)nc;
-            NodeViewFactory<NodeModel> fac = (NodeViewFactory<NodeModel>)nnc.getNode().getFactory();
-            NodeContext.pushContext(nc);
-            try {
-                return fac.createNodeView(nnc.getNodeModel());
-            } finally {
-                NodeContext.removeLastContext();
-            }
+        var nnc = (NativeNodeContainer)nc;
+        var nodeView = m_nodeViewCache.get(nnc.getID());
+        if (nodeView != null) {
+            return nodeView;
+        }
+        return createNodeView(nnc);
+    }
+
+    private NodeView createNodeView(final NativeNodeContainer nnc) {
+        @SuppressWarnings("unchecked")
+        NodeViewFactory<NodeModel> fac = (NodeViewFactory<NodeModel>)nnc.getNode().getFactory();
+        NodeContext.pushContext(nnc);
+        try {
+            var nodeView = fac.createNodeView(nnc.getNodeModel());
+            cacheNodeView(nnc, nodeView);
+            return nodeView;
+        } finally {
+            NodeContext.removeLastContext();
+        }
+    }
+
+    private void cacheNodeView(final NativeNodeContainer nnc, final NodeView nodeView) {
+        var nodeId = nnc.getID();
+        m_nodeViewCache.put(nodeId, nodeView);
+        var nodeCleanUpCallback = new NodeCleanUpCallback(nnc, () -> {
+            m_nodeViewCache.remove(nodeId);
+            m_nodeCleanUpCallbacks.remove(nodeId);
         });
+        m_nodeCleanUpCallbacks.put(nodeId, nodeCleanUpCallback);
     }
 
     /**
@@ -227,42 +251,134 @@ public final class NodeViewManager {
     }
 
     /**
+     * Provides the URL which serves the node view page.
+     * The full URL is usually only available if the AP is run as desktop application.
+     *
+     * @param nnc the node which provides the node view
+     * @return the page url if available, otherwise an empty optional
+     * @throws IllegalStateException if the node doesn't have a node view or the node view url couldn't be retrieved
+     */
+    public Optional<String> getNodeViewPageUrl(final NativeNodeContainer nnc) {
+        if (isRunAsDesktopApplication()) {
+            try {
+                return Optional.of(writeNodeViewResourcesToDiscAndGetFileUrl(nnc));
+            } catch (IOException ex) {
+                throw new IllegalStateException(
+                    "Page URL for the view of node '" + nnc.getNameWithID() + "' couldn't be created.", ex);
+            }
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Provides the relative path for a node view, if available. The relative path is usually only available if the AP
+     * is <b>not</b> run as a desktop application (but as an 'executor' as part of the server infrastructure).
+     *
+     * @param nnc the node which provides the node view
+     * @return the relative page path if available, otherwise an empty optional
+     */
+    public Optional<String> getNodeViewPagePath(final NativeNodeContainer nnc) {
+        if (!isRunAsDesktopApplication()) {
+            var page = getNodeView(nnc).getPage();
+            var isStaticPage = page.isCompletelyStatic();
+            var pageId = getPageId(nnc, isStaticPage);
+            cachePage(nnc.getID(), page, isStaticPage, pageId);
+            return Optional.of(pageId + "/" + page.getRelativePath());
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    private void cachePage(final NodeID nodeId, final Page page, final boolean isStaticPage, final String pageId) {
+        m_pageCache.put(pageId, page);
+        var nodeCleanUpCallback = m_nodeCleanUpCallbacks.get(nodeId);
+        if (nodeCleanUpCallback != null && !isStaticPage) {
+            nodeCleanUpCallback.onCleanUp(() -> m_pageCache.remove(pageId));
+        }
+    }
+
+    /**
+     * Gives access to page resources. NOTE: Only those resources are available that belong to a page whose path has
+     * been requested via {@link #getNodeViewPagePath(NativeNodeContainer)}.
+     *
+     * @param resourceId the id of the resource
+     * @return the resource or an empty optional if there is no resource for the given id available
+     */
+    public Optional<Resource> getNodeViewPageResource(final String resourceId) {
+        var split = resourceId.indexOf("/");
+        if (split <= 0) {
+            return Optional.empty();
+        }
+
+        var pageId = resourceId.substring(0, split);
+        var page = m_pageCache.get(pageId);
+        if (page == null) {
+            return Optional.empty();
+        }
+
+        var relPath = resourceId.substring(split + 1, resourceId.length());
+        if (page.getRelativePath().equals(relPath)) {
+            return Optional.of(page);
+        } else {
+            return Optional.ofNullable(page.getContext().get(relPath));
+        }
+    }
+
+    private static boolean isRunAsDesktopApplication() {
+        return !"true".equals(System.getProperty("java.awt.headless"));
+    }
+
+    /**
      * Writes a page (and associated resources) into a temporary directory. Static pages are only written if the
      * respective files don't exist yet (the files are identified by the {@link NodeFactory}-class). A page is regarded
      * static, if the page itself and all associated resources are static.
      *
-     * @param nnc the node container to write the view resources for; used, e.g., to register a state change listener to
-     *            remove out-dated files
+     * @param nnc the node container to write the view resources for
      *
      * @return the file url to the page
      * @throws IOException if writing the files failed
      * @throws IllegalStateException if the node doesn't have a node view
      */
-    public String writeNodeViewResourcesToDiscAndGetFileUrl(final NativeNodeContainer nnc) throws IOException {
-        Page page = getNodeView(nnc).getPage();
-        Path rootPath;
-        if (page.isCompletelyStatic()) {
-            rootPath = createOrGetUIExtensionsPath()
-                .resolve(Integer.toString(nnc.getNode().getFactory().getClass().getName().hashCode()));
-        } else {
-            String dynamicPageId = Integer.toString(nnc.getID().toString().hashCode());
-            rootPath = createOrGetUIExtensionsPath().resolve(dynamicPageId);
+    private String writeNodeViewResourcesToDiscAndGetFileUrl(final NativeNodeContainer nnc) throws IOException {
+        var page = getNodeView(nnc).getPage();
+        var isCompletelyStatic = page.isCompletelyStatic();
+        var pageId = getPageId(nnc, isCompletelyStatic);
+        var rootPath = createOrGetUIExtensionsPath().resolve(pageId);
 
-            // this makes sure that the dynamic page resource files are deleted on node state change
-            // and when the entire workflow project is closed
-            ListenerToDeleteResources listener = new ListenerToDeleteResources(rootPath, nnc);
-            WorkflowManager.ROOT.addListener(listener);
-            nnc.addNodeStateChangeListener(listener);
-        }
-
-        Path pagePath = rootPath.resolve(page.getRelativePath());
+        var pagePath = rootPath.resolve(page.getRelativePath());
         if (!Files.exists(pagePath)) {
             writeResource(page, pagePath);
-            for (Resource r : page.getContext()) {
+            for (Resource r : page.getContext().values()) {
                 writeResource(r, rootPath.resolve(r.getRelativePath()));
+            }
+            var nodeCleanUpCallback = m_nodeCleanUpCallbacks.get(nnc.getID());
+            if (nodeCleanUpCallback != null && !isCompletelyStatic) {
+                nodeCleanUpCallback.onCleanUp(() -> deleteResources(rootPath));
             }
         }
         return pagePath.toUri().toString();
+    }
+
+    /*
+     * Determines the page id. The page id must be a valid file name!
+     */
+    private static String getPageId(final NativeNodeContainer nnc, final boolean isStaticPage) {
+        if (isStaticPage) {
+            return nnc.getNode().getFactory().getClass().getName();
+        } else {
+            return nnc.getID().toString().replace(":", "_");
+        }
+    }
+
+    private static void deleteResources(final Path rootPath) {
+        if (Files.exists(rootPath)) {
+            try {
+                FileUtils.deleteDirectory(rootPath.toFile());
+            } catch (IOException | IllegalArgumentException e) {
+                LOGGER.error("Directory " + rootPath + " could not be deleted", e);
+            }
+        }
     }
 
     private static void writeResource(final Resource r, final Path targetPath) throws IOException {
@@ -280,42 +396,88 @@ public final class NodeViewManager {
         return m_uiExtensionsPath;
     }
 
-    private static class ListenerToDeleteResources implements WorkflowListener, NodeStateChangeListener {
+    /**
+     * For testing purposes only.
+     */
+    void clearCachesAndFiles() {
+        m_nodeViewCache.clear();
+        m_nodeCleanUpCallbacks.clear();
+        m_pageCache.clear();
+        if (m_uiExtensionsPath != null && Files.exists(m_uiExtensionsPath)) {
+            FileUtils.deleteQuietly(m_uiExtensionsPath.toFile());
+            m_uiExtensionsPath = null;
+        }
+    }
 
-        private final Path m_path;
+    /**
+     * For testing purposes only.
+     *
+     * @return
+     */
+    int getNodeViewCacheSize() {
+        return m_nodeViewCache.size();
+    }
 
-        private final NativeNodeContainer m_nnc;
+    /**
+     * For testing purposes only.
+     *
+     * @return
+     */
+    int getPageCacheSize() {
+        return m_pageCache.size();
+    }
 
-        ListenerToDeleteResources(final Path path, final NativeNodeContainer nnc) {
-            m_path = path;
+    /*
+     * Helper to clean-up after a node removal, node state change or workflow disposal.
+     * Once a clean-up has been triggered, all the registered listeners (on the node and the workflow) are removed which
+     * renders the NodeCleanUpCallback-instance useless afterwards.
+     */
+    private static class NodeCleanUpCallback implements WorkflowListener, NodeStateChangeListener {
+
+        private final List<Runnable> m_onCleanUp = new ArrayList<>();
+
+        private NativeNodeContainer m_nnc;
+
+        NodeCleanUpCallback(final NativeNodeContainer nnc, final Runnable onCleanUp) {
+            WorkflowManager.ROOT.addListener(NodeCleanUpCallback.this);
+            nnc.addNodeStateChangeListener(NodeCleanUpCallback.this);
+            nnc.getParent().addListener(NodeCleanUpCallback.this);
             m_nnc = nnc;
+            m_onCleanUp.add(onCleanUp);
+        }
+
+        void onCleanUp(final Runnable r) {
+            m_onCleanUp.add(r);
         }
 
         @Override
         public void workflowChanged(final WorkflowEvent e) {
-            if (e.getType() == WorkflowEvent.Type.NODE_REMOVED && e.getOldValue() instanceof WorkflowManager
-                && ((WorkflowManager)e.getOldValue()).getID().getIndex() == m_nnc.getParent().getProjectWFM().getID()
-                    .getIndex()) {
-                deleteResources(m_path);
-                WorkflowManager.ROOT.removeListener(ListenerToDeleteResources.this);
+            if (e.getType() == WorkflowEvent.Type.NODE_REMOVED) {
+                if (e.getOldValue() instanceof WorkflowManager && ((WorkflowManager)e.getOldValue()).getID()
+                    .getIndex() == m_nnc.getParent().getProjectWFM().getID().getIndex()) {
+                    // workflow has been closed
+                    cleanUp();
+                }
+                if (e.getOldValue() instanceof NativeNodeContainer
+                    && ((NativeNodeContainer)e.getOldValue()).getID().equals(m_nnc.getID())) {
+                    // node removed
+                    cleanUp();
+                }
             }
         }
 
         @Override
         public void stateChanged(final NodeStateEvent state) {
-            deleteResources(m_path);
-            m_nnc.removeNodeStateChangeListener(ListenerToDeleteResources.this);
+            cleanUp();
         }
 
-        private static void deleteResources(final Path rootPath) {
-            if (Files.exists(rootPath)) {
-                try {
-                    FileUtils.deleteDirectory(rootPath.toFile());
-                } catch (IOException | IllegalArgumentException e) {
-                    LOGGER.error("Directory " + rootPath + " could not be deleted", e);
-                }
-            }
+        private void cleanUp() {
+            WorkflowManager.ROOT.removeListener(NodeCleanUpCallback.this);
+            m_nnc.removeNodeStateChangeListener(NodeCleanUpCallback.this);
+            m_nnc.getParent().removeListener(NodeCleanUpCallback.this);
+            m_onCleanUp.forEach(Runnable::run);
+            m_nnc = null;
+            m_onCleanUp.clear();
         }
-
     }
 }

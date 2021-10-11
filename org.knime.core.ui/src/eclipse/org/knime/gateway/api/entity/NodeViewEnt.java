@@ -48,13 +48,10 @@
  */
 package org.knime.gateway.api.entity;
 
-import java.io.IOException;
-
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainerParent;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.webui.node.view.NodeView;
 import org.knime.core.webui.node.view.NodeViewManager;
 
 /**
@@ -77,12 +74,14 @@ public final class NodeViewEnt {
 
     private final String m_url;
 
+    private final String m_path;
+
     private final NodeInfoEnt m_info;
 
     /**
      * @param nnc
      */
-    public NodeViewEnt(final NativeNodeContainer nnc) throws IOException {
+    public NodeViewEnt(final NativeNodeContainer nnc) {
         if (!NodeViewManager.hasNodeView(nnc)) {
             throw new IllegalArgumentException("The node '" + nnc.getNameWithID() + "' does not provide a view");
         }
@@ -101,15 +100,18 @@ public final class NodeViewEnt {
             m_workflowId = new NodeIDEnt(wfm.getID(), isComponentProject).toString();
         }
 
+        var nodeViewManager = NodeViewManager.getInstance();
         m_nodeId = new NodeIDEnt(nnc.getID(), isComponentProject).toString();
-        NodeView nodeView = NodeViewManager.getInstance().getNodeView(nnc);
+        var nodeView = nodeViewManager.getNodeView(nnc);
         m_isWebComponent = nodeView.getPage().isWebComponent();
         if (nodeView.getInitialDataService().isPresent()) {
-            m_initialData = NodeViewManager.getInstance().callTextInitialDataService(nnc);
+            m_initialData = nodeViewManager.callTextInitialDataService(nnc);
         } else {
             m_initialData = null;
         }
-        m_url = NodeViewManager.getInstance().writeNodeViewResourcesToDiscAndGetFileUrl(nnc);
+
+        m_url = nodeViewManager.getNodeViewPageUrl(nnc).orElse(null);
+        m_path = nodeViewManager.getNodeViewPagePath(nnc).orElse(null);
 
         m_info = new NodeInfoEnt(nnc);
     }
@@ -126,8 +128,12 @@ public final class NodeViewEnt {
         return m_nodeId;
     }
 
-    public String getUrl() {
+    public String getResourceUrl() {
         return m_url;
+    }
+
+    public String getResourcePath() {
+        return m_path;
     }
 
     public String getInitialData() {
