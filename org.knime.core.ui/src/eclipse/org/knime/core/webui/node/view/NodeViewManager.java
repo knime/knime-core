@@ -97,11 +97,11 @@ public final class NodeViewManager {
 
     private Path m_uiExtensionsPath;
 
-    private final Map<NodeID, NodeView> m_nodeViewCache = new HashMap<>();
+    private final Map<NodeID, NodeView> m_nodeViewMap = new HashMap<>();
 
     private final Map<NodeID, NodeCleanUpCallback> m_nodeCleanUpCallbacks = new HashMap<>();
 
-    private final Map<String, Page> m_pageCache = new HashMap<>();
+    private final Map<String, Page> m_pageMap = new HashMap<>();
 
     /**
      * Returns the singleton instance for this class.
@@ -140,31 +140,31 @@ public final class NodeViewManager {
             throw new IllegalArgumentException("The node " + nc.getNameWithID() + " doesn't provide a node view");
         }
         var nnc = (NativeNodeContainer)nc;
-        var nodeView = m_nodeViewCache.get(nnc.getID());
+        var nodeView = m_nodeViewMap.get(nnc.getID());
         if (nodeView != null) {
             return nodeView;
         }
-        return createNodeView(nnc);
+        return createAndRegisterNodeView(nnc);
     }
 
-    private NodeView createNodeView(final NativeNodeContainer nnc) {
+    private NodeView createAndRegisterNodeView(final NativeNodeContainer nnc) {
         @SuppressWarnings("unchecked")
         NodeViewFactory<NodeModel> fac = (NodeViewFactory<NodeModel>)nnc.getNode().getFactory();
         NodeContext.pushContext(nnc);
         try {
             var nodeView = fac.createNodeView(nnc.getNodeModel());
-            cacheNodeView(nnc, nodeView);
+            registerNodeView(nnc, nodeView);
             return nodeView;
         } finally {
             NodeContext.removeLastContext();
         }
     }
 
-    private void cacheNodeView(final NativeNodeContainer nnc, final NodeView nodeView) {
+    private void registerNodeView(final NativeNodeContainer nnc, final NodeView nodeView) {
         var nodeId = nnc.getID();
-        m_nodeViewCache.put(nodeId, nodeView);
+        m_nodeViewMap.put(nodeId, nodeView);
         var nodeCleanUpCallback = new NodeCleanUpCallback(nnc, () -> {
-            m_nodeViewCache.remove(nodeId);
+            m_nodeViewMap.remove(nodeId);
             m_nodeCleanUpCallbacks.remove(nodeId);
         });
         m_nodeCleanUpCallbacks.put(nodeId, nodeCleanUpCallback);
@@ -279,18 +279,18 @@ public final class NodeViewManager {
             var page = getNodeView(nnc).getPage();
             var isStaticPage = page.isCompletelyStatic();
             var pageId = getPageId(nnc, isStaticPage);
-            cachePage(nnc.getID(), page, isStaticPage, pageId);
+            registerPage(nnc.getID(), page, pageId);
             return Optional.of(pageId + "/" + page.getRelativePath());
         } else {
             return Optional.empty();
         }
     }
 
-    private void cachePage(final NodeID nodeId, final Page page, final boolean isStaticPage, final String pageId) {
-        m_pageCache.put(pageId, page);
+    private void registerPage(final NodeID nodeId, final Page page, final String pageId) {
+        m_pageMap.put(pageId, page);
         var nodeCleanUpCallback = m_nodeCleanUpCallbacks.get(nodeId);
-        if (nodeCleanUpCallback != null && !isStaticPage) {
-            nodeCleanUpCallback.onCleanUp(() -> m_pageCache.remove(pageId));
+        if (nodeCleanUpCallback != null) {
+            nodeCleanUpCallback.onCleanUp(() -> m_pageMap.remove(pageId));
         }
     }
 
@@ -308,7 +308,7 @@ public final class NodeViewManager {
         }
 
         var pageId = resourceId.substring(0, split);
-        var page = m_pageCache.get(pageId);
+        var page = m_pageMap.get(pageId);
         if (page == null) {
             return Optional.empty();
         }
@@ -396,9 +396,9 @@ public final class NodeViewManager {
      * For testing purposes only.
      */
     void clearCachesAndFiles() {
-        m_nodeViewCache.clear();
+        m_nodeViewMap.clear();
         m_nodeCleanUpCallbacks.clear();
-        m_pageCache.clear();
+        m_pageMap.clear();
         if (m_uiExtensionsPath != null && Files.exists(m_uiExtensionsPath)) {
             FileUtils.deleteQuietly(m_uiExtensionsPath.toFile());
             m_uiExtensionsPath = null;
@@ -410,8 +410,8 @@ public final class NodeViewManager {
      *
      * @return
      */
-    int getNodeViewCacheSize() {
-        return m_nodeViewCache.size();
+    int getNodeViewMapSize() {
+        return m_nodeViewMap.size();
     }
 
     /**
@@ -419,8 +419,8 @@ public final class NodeViewManager {
      *
      * @return
      */
-    int getPageCacheSize() {
-        return m_pageCache.size();
+    int getPageMapSize() {
+        return m_pageMap.size();
     }
 
     /*

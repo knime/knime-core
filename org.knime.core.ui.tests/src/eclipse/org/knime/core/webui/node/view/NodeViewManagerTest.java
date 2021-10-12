@@ -112,9 +112,7 @@ public class NodeViewManagerTest {
     @SuppressWarnings("javadoc")
     @After
     public void disposeWorkflow() {
-        if (m_wfm.getParent().containsNodeContainer(m_wfm.getID())) {
-            m_wfm.getParent().removeProject(m_wfm.getID());
-        }
+        WorkflowManagerUtil.disposeWorkflow(m_wfm);
     }
 
     /**
@@ -242,9 +240,9 @@ public class NodeViewManagerTest {
 
         runOnExecutor(() -> { // NOSONAR
             String path = nodeViewManager.getNodeViewPagePath(nnc).orElse(null);
-            assertThat(nodeViewManager.getPageCacheSize(), is(1));
+            assertThat(nodeViewManager.getPageMapSize(), is(1));
             String path2 = nodeViewManager.getNodeViewPagePath(nnc2).orElse(null);
-            assertThat(nodeViewManager.getPageCacheSize(), is(2));
+            assertThat(nodeViewManager.getPageMapSize(), is(2));
             var resourcePrefix1 = nnc.getNode().getFactory().getClass().getName();
             var resourcePrefix2 = nnc2.getID().toString().replace(":", "_");
             assertThat(path, is(resourcePrefix1 + "/page.html"));
@@ -254,8 +252,8 @@ public class NodeViewManagerTest {
         });
 
         m_wfm.executeAllAndWaitUntilDone();
-        // make sure that dynamic pages are removed from the cache (e.g. after a node state change) but not the static pages
-        assertThat(nodeViewManager.getPageCacheSize(), is(1));
+        // make sure that the pages are removed from the cache (e.g. after a node state change)
+        assertThat(nodeViewManager.getPageMapSize(), is(0));
     }
 
     private static void testGetNodeViewPageResource(final String resourcePrefix1, final String resourcePrefix2) {
@@ -295,34 +293,34 @@ public class NodeViewManagerTest {
         // node state change
         String url = nodeViewManager.getNodeViewPageUrl(nc).orElse(null);
         assertThat("node view file resource expected to be written", new File(new URI(url)).exists(), is(true));
-        assertThat(nodeViewManager.getNodeViewCacheSize(), is(1));
+        assertThat(nodeViewManager.getNodeViewMapSize(), is(1));
         m_wfm.executeAllAndWaitUntilDone();
         Awaitility.await().pollInterval(1, TimeUnit.SECONDS).atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
             assertThat("dynamic pages are expected to be removed if the node state changed",
                 new File(new URI(url)).exists(), is(false));
-            assertThat(nodeViewManager.getNodeViewCacheSize(), is(0));
+            assertThat(nodeViewManager.getNodeViewMapSize(), is(0));
         });
 
         // remove node
         String url2 = nodeViewManager.getNodeViewPageUrl(nc).orElse(null);
         assertThat("node view file resource expected to be written", new File(new URI(url2)).exists(), is(true));
-        assertThat(nodeViewManager.getNodeViewCacheSize(), is(1));
+        assertThat(nodeViewManager.getNodeViewMapSize(), is(1));
         m_wfm.removeNode(nc.getID());
         Awaitility.await().pollInterval(1, TimeUnit.SECONDS).atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
             assertThat("dynamic pages are expected to be removed if the respective node has been removed",
                 new File(new URI(url2)).exists(), is(false));
-            assertThat(nodeViewManager.getNodeViewCacheSize(), is(0));
+            assertThat(nodeViewManager.getNodeViewMapSize(), is(0));
         });
 
         // close workflow
         String url3 = nodeViewManager.getNodeViewPageUrl(nc).orElse(null);
         assertThat("node view file resource expected to be written", new File(new URI(url3)).exists(), is(true));
-        assertThat(nodeViewManager.getNodeViewCacheSize(), is(1));
+        assertThat(nodeViewManager.getNodeViewMapSize(), is(1));
         m_wfm.getParent().removeProject(m_wfm.getID());
         Awaitility.await().pollInterval(1, TimeUnit.SECONDS).atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
             assertThat("dynamic pages are expected to be removed after the workflow has been closed",
                 new File(new URI(url3)).exists(), is(false));
-            assertThat(nodeViewManager.getNodeViewCacheSize(), is(0));
+            assertThat(nodeViewManager.getNodeViewMapSize(), is(0));
         });
     }
 

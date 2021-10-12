@@ -60,6 +60,7 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.webui.data.ReExecuteDataService;
+import org.knime.core.webui.data.text.TextDataService;
 import org.knime.core.webui.data.text.TextInitialDataService;
 import org.knime.core.webui.data.text.TextReExecuteDataService;
 import org.knime.core.webui.node.view.NodeView;
@@ -114,6 +115,12 @@ public class NodeViewNodeFactory extends NodeFactory<NodeViewNodeModel> implemen
                         return m_initialData;
                     }
                 })//
+                .dataService(new TextDataService() {
+                    @Override
+                    public String handleRequest(final String request) {
+                        return "ECHO " + request;
+                    }
+                })//
                 .reExecuteDataService(createReExecuteDataService())//
                 .build();
         };
@@ -138,7 +145,7 @@ public class NodeViewNodeFactory extends NodeFactory<NodeViewNodeModel> implemen
 
             @Override
             public void reExecute(final String data) throws IOException {
-                //
+                m_initialData = data;
             }
         };
     }

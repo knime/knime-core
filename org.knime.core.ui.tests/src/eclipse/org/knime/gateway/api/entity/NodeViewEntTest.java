@@ -111,8 +111,8 @@ public class NodeViewEntTest {
         assertThat(ent.getProjectId(), startsWith("workflow"));
         assertThat(ent.getWorkflowId(), is("root"));
         assertThat(ent.getNodeId(), is("root:2"));
-        assertThat(ent.getResourceUrl(), endsWith("index.html"));
-        assertThat(ent.getResourcePath(), is(nullValue()));
+        assertThat(ent.getUrl(), endsWith("index.html"));
+        assertThat(ent.getPath(), is(nullValue()));
         assertThat(ent.isWebComponent(), is(false));
         assertThat(ent.getInitialData(), is("dummy initial data"));
         NodeInfoEnt info = ent.getNodeInfo();
@@ -130,19 +130,19 @@ public class NodeViewEntTest {
         nnc = WorkflowManagerUtil.createAndAddNode(wfm, new NodeViewNodeFactory(nodeViewCreator));
         ent = new NodeViewEnt(nnc);
         assertThat(ent.isWebComponent(), is(true));
-        assertThat(ent.getResourceUrl(), Matchers.endsWith("component.js"));
-        assertThat(ent.getResourcePath(), is(nullValue()));
+        assertThat(ent.getUrl(), Matchers.endsWith("component.js"));
+        assertThat(ent.getPath(), is(nullValue()));
         assertThat(ent.getInitialData(), is(nullValue()));
 
         // test to create a node view entity while running headless (e.g. on the executor)
         NativeNodeContainer nnc2 = nnc;
         runOnExecutor(() -> {
             var ent2 = new NodeViewEnt(nnc2);
-            assertThat(ent2.getResourcePath(), endsWith("component.js"));
-            assertThat(ent2.getResourceUrl(), is(nullValue()));
+            assertThat(ent2.getPath(), endsWith("component.js"));
+            assertThat(ent2.getUrl(), is(nullValue()));
         });
 
-        wfm.getParent().removeProject(wfm.getID());
+        WorkflowManagerUtil.disposeWorkflow(wfm);
     }
 
 }

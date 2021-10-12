@@ -128,11 +128,11 @@ public final class NodeViewEnt {
         return m_nodeId;
     }
 
-    public String getResourceUrl() {
+    public String getUrl() {
         return m_url;
     }
 
-    public String getResourcePath() {
+    public String getPath() {
         return m_path;
     }
 

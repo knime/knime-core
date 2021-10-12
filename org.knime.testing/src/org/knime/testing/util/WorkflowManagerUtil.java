@@ -100,6 +100,18 @@ public final class WorkflowManagerUtil {
     }
 
     /**
+     * Disposes the given workflow project.
+     *
+     * @param wfm
+     */
+    public static void disposeWorkflow(final WorkflowManager wfm) {
+        var id = wfm.getID();
+        if (WorkflowManager.ROOT.containsNodeContainer(id)) {
+            WorkflowManager.ROOT.removeProject(id);
+        }
+    }
+
+    /**
      * Creates a new node using the the given {@link NodeFactory}-instance and adds it to the provided workflow.
      *
      * @param wfm the workflow to add the node to

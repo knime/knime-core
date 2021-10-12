@@ -88,7 +88,7 @@ public class JsonRpcDataServiceTest {
         String response = NodeViewManager.getInstance().callTextDataService(nnc, jsonRpcRequest);
         assertThat(response, is("{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":\"my service method result\"}\n"));
 
-        wfm.getParent().removeProject(wfm.getID());
+        WorkflowManagerUtil.disposeWorkflow(wfm);
     }
 
     @SuppressWarnings("javadoc")

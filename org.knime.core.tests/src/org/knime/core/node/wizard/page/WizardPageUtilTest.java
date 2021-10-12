@@ -216,14 +216,12 @@ public class WizardPageUtilTest {
             containsInAnyOrder(NodeIDSuffix.fromString("4:0:2"), NodeIDSuffix.fromString("4:0:3:0:1")));
         assertThat(wizardPage.getPageMap().values().stream().map(n -> n.getName()).collect(Collectors.toList()),
             containsInAnyOrder("NodeView", "NodeView"));
-
-        m_wfm.getParent().removeProject(m_wfm.getID());
     }
 
     @SuppressWarnings("javadoc")
     @After
     public void disposeWorkflow() {
-        m_wfm.getParent().removeProject(m_wfm.getID());
+        WorkflowManagerUtil.disposeWorkflow(m_wfm);
     }
 
 }

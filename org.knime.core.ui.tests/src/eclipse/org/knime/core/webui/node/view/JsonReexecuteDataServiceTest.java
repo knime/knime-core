@@ -86,6 +86,6 @@ public class JsonReexecuteDataServiceTest {
             assertThat(model.getExecuteCount(), is(2));
         });
 
-        wfm.getParent().removeProject(wfm.getID());
+        WorkflowManagerUtil.disposeWorkflow(wfm);
     }
 }
