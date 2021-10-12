@@ -200,6 +200,7 @@ import org.knime.core.node.workflow.virtual.parchunk.VirtualParallelizedChunkPor
 import org.knime.core.quickform.AbstractQuickFormConfiguration;
 import org.knime.core.quickform.AbstractQuickFormValueInConfiguration;
 import org.knime.core.quickform.in.QuickFormInputNode;
+import org.knime.core.util.CheckedExceptionBiConsumer;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.IEarlyStartup;
 import org.knime.core.util.LoadVersion;
@@ -10181,8 +10182,16 @@ public final class WorkflowManager extends NodeContainer
      * @since 2.12
      */
     public void setInputNodes(final Map<String, ExternalNodeData> input) throws InvalidSettingsException {
-        setExternalParameterValues(input, InputNode.class, i -> i.getInputData().getID(),
-            (n, v) -> n.validateInputData(v), (n, v) -> n.setInputData(v), true, true);
+        final CheckedExceptionBiConsumer<InputNode, ExternalNodeData, InvalidSettingsException> validateParamValue =
+            (n, v) -> {
+                if (n.isInputDataRequired() && v == null) {
+                    throw new InvalidSettingsException(
+                        "An input for parameter '" + n.getInputData().getID() + "' is required.");
+                }
+                n.validateInputData(v);
+            };
+        setExternalParameterValues(input, InputNode.class, i -> i.getInputData().getID(), validateParamValue,
+            (n, v) -> n.setInputData(v), true, true);
     }
 
     /**
@@ -10295,7 +10304,8 @@ public final class WorkflowManager extends NodeContainer
      */
     @SuppressWarnings("unchecked")
     private <T, V> void setExternalParameterValues(final Map<String, V> input, final Class<T> nodeModelClass,
-        final Function<T, String> getParamName, final BiConsumer<T, V> validateParamValue,
+        final Function<T, String> getParamName,
+        final CheckedExceptionBiConsumer<T, V, InvalidSettingsException> validateParamValue,
         final BiConsumer<T, V> setParamValue, final boolean recurseIntoMetaNodes, final boolean recurseIntoSubnodes)
         throws InvalidSettingsException {
         try (WorkflowLock lock = lock()) {

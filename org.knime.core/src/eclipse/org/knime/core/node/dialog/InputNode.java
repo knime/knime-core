@@ -67,9 +67,12 @@ public interface InputNode {
     ExternalNodeData getInputData();
 
     /**
-     * Validates the input for the node. Implementation should only check if the data is applicable but not load it
-     * into the node. If the data is not applicable, an {@link InvalidSettingsException} must be thrown and callers
-     * should avoid calling {@link #setInputData(ExternalNodeData)}.
+     * Validates the input for the node. Implementation should only check if the data is applicable but not load it into
+     * the node. If the data is not applicable, an {@link InvalidSettingsException} must be thrown and callers should
+     * avoid calling {@link #setInputData(ExternalNodeData)}. <br />
+     * This method may only be called with a {@code null} value if {@link #isInputDataRequired()} returns {@code false}.
+     * In that case, input data that is {@code null} should be treated as valid, see
+     * {@link #setInputData(ExternalNodeData)}.
      *
      * @param inputData an external node data object
      * @throws InvalidSettingsException if the data is invalid
@@ -80,12 +83,31 @@ public interface InputNode {
      * Sets the input for the node. Implementations must make sure that the nodes internal configuration is updated
      * accordingly so that the next execution uses the provided input data. If the data is not applicable (which should
      * not happen if {@link #validateInputData(ExternalNodeData)} has been called before) then an
-     * {@link InvalidSettingsException} should be thrown.
+     * {@link InvalidSettingsException} should be thrown. <br />
+     * This method may only be called with a {@code null} value if {@link #isInputDataRequired()} returns {@code false}.
+     * In the case of input data being {@code null}, the node should clear any previous set data so that the next
+     * execution does not use external input data.
      *
      * @param inputData an external node data object
      * @throws InvalidSettingsException if the data is invalid
      */
     void setInputData(ExternalNodeData inputData) throws InvalidSettingsException;
+
+    /**
+     * Allows nodes to specify if they require external input data. If returned {@code false}, the node does not require
+     * input data and {@link #validateInputData(ExternalNodeData)} and {@link #setInputData(ExternalNodeData)} can be
+     * called with {@code null} values. If returned {@code true}, the node requires input data and
+     * {@link #validateInputData(ExternalNodeData)} and {@link #setInputData(ExternalNodeData)} must not be called with
+     * {@code null} values.<br />
+     * This came into existence as part of AP-17400. This default implementation returns {@code true} in order to
+     * guarantee backward compatibility.
+     *
+     * @return {@code true} here but potentially overwritten by nodes
+     * @since 4.5
+     */
+    default boolean isInputDataRequired() {
+        return true;
+    }
 
     /**
      * Allows nodes to veto the use of fully qualified parameter names. That is, if returned <code>false</code> then the
