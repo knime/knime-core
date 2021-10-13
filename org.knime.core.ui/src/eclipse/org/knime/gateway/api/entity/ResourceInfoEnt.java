@@ -44,75 +44,66 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Sep 29, 2021 (hornm): created
+ *   Oct 13, 2021 (hornm): created
  */
 package org.knime.gateway.api.entity;
 
-import org.knime.core.node.workflow.NativeNodeContainer;
-import org.knime.core.node.workflow.NodeContainerState;
-import org.knime.core.node.workflow.NodeMessage.Type;
+import org.knime.core.webui.page.Page;
 
 /**
- * Represents some basic information on a node required to display node views in the UI (e.g. consumed by the 'page
- * builder' frontend library).
+ * Information around the web resource (e.g. html or javascript document) representing a node view.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
-@SuppressWarnings("javadoc")
-public final class NodeInfoEnt {
+public final class ResourceInfoEnt {
 
-    private final String m_name;
+    private final String m_url;
 
-    private final String m_annotation;
+    private final String m_path;
 
-    private final String m_state;
+    private final String m_type;
 
-    private final String m_errorMessage;
+    private final String m_id;
 
-    private final String m_warningMessage;
+    ResourceInfoEnt(final String id, final String url, final String path, final Page page) {
+        m_url = url;
+        m_path = path;
+        m_type = page.getType().toString();
+        m_id = id;
+    }
 
     /**
-     * @param nnc
+     * A globally unique resource id.
+     *
+     * @return the id
      */
-    NodeInfoEnt(final NativeNodeContainer nnc) {
-        m_name = nnc.getName();
-        m_annotation = nnc.getNodeAnnotation().toString();
-        NodeContainerState state = nnc.getNodeContainerState();
-        if (state.isIdle()) {
-            m_state = "idle";
-        } else if (state.isConfigured()) {
-            m_state = "configured";
-        } else if (state.isExecutionInProgress() || state.isExecutingRemotely()) {
-            m_state = "executing";
-        } else if (state.isExecuted()) {
-            m_state = "executed";
-        } else {
-            m_state = "undefined";
-        }
-        var message = nnc.getNodeMessage();
-        var messageType = message.getMessageType();
-        m_errorMessage = messageType == Type.ERROR ? message.getMessage() : null;
-        m_warningMessage = messageType == Type.WARNING ? message.getMessage() : null;
+    public String getId() {
+        return m_id;
     }
 
-    public String getNodeName() {
-        return m_name;
+    /**
+     * The relative path to the resource.
+     *
+     * @return the relative path or <code>null</code> if {@link #getUrl()} is given
+     */
+    public String getPath() {
+        return m_path;
     }
 
-    public String getNodeAnnotation() {
-        return m_annotation;
+    /**
+     * The resource url.
+     *
+     * @return the url or <code>null</code> if {@link #getPath()} is given
+     */
+    public String getUrl() {
+        return m_url;
     }
 
-    public String getNodeState() {
-        return m_state;
-    }
-
-    public String getNodeErrorMessage() {
-        return m_errorMessage;
-    }
-
-    public String getNodeWarnMessage() {
-        return m_warningMessage;
+    /**
+     * @return the resource type
+     */
+    public String getType() {
+        return m_type;
     }
 
 }

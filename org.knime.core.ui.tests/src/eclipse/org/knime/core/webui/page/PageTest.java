@@ -60,6 +60,7 @@ import java.util.stream.Collectors;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
+import org.knime.core.webui.page.Resource.Type;
 
 /**
  * Tests {@link Page}.
@@ -86,19 +87,18 @@ public class PageTest {
     }
 
     /**
-     * Tests {@link Page#isWebComponent()}.
+     * Tests {@link Page#getType()}.
      */
     @Test
     public void testIsComponent() {
         var page = Page.builder(BUNDLE_ID, "files", "page.html").build();
-        assertThat(page.isWebComponent(), is(false));
+        assertThat(page.getType(), is(Type.HTML));
 
-        page = Page.builder(BUNDLE_ID, "files", "component.js").build();
-        assertThat(page.isWebComponent(), is(true));
+        page = Page.builder(BUNDLE_ID, "files", "component.umd.min.js").build();
+        assertThat(page.getType(), is(Type.VUE_COMPONENT_LIB));
 
-        page = Page.builderFromString(() -> "content", "component.js").build();
-        assertThat(page.isWebComponent(), is(false));
-
+        var page2 = Page.builderFromString(() -> "content", "component.blub").build();
+        assertThrows(IllegalArgumentException.class, page2::getType);
     }
 
     /**
@@ -120,7 +120,7 @@ public class PageTest {
         List<String> context =
             page.getContext().values().stream().map(Resource::getRelativePath).collect(Collectors.toList());
         assertThat(context, Matchers.containsInAnyOrder(format("dir%1$ssubdir%1$sres.html", File.separator),
-            format("dir%sres2.js", File.separator), format("dir%sres1.html", File.separator)));
+            format("dir%sres2.umd.min.js", File.separator), format("dir%sres1.html", File.separator)));
     }
 
 }

@@ -89,6 +89,11 @@ public class PageBuilder {
                 return false;
             }
 
+            @Override
+            public Type getType() {
+                return Type.determineType(relativePath);
+            }
+
         };
     }
 
@@ -124,6 +129,11 @@ public class PageBuilder {
                 return false;
             }
 
+            @Override
+            public Type getType() {
+                return Type.determineType(relativePath);
+            }
+
         });
         return this;
     }
@@ -144,7 +154,7 @@ public class PageBuilder {
      * @return a new page instance
      */
     public Page build() {
-        return new Page(m_pageResource, m_resources, false);
+        return new Page(m_pageResource, m_resources);
     }
 
 }

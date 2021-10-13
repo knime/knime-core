@@ -71,13 +71,11 @@ public final class Page implements Resource {
 
     private final Map<String, Resource> m_context;
 
-    private final boolean m_isWebComponent;
 
-    Page(final Resource pageResource, final List<Resource> context, final boolean isWebComponent) {
+    Page(final Resource pageResource, final List<Resource> context) {
         m_pageResource = pageResource;
         m_context = context == null ? Collections.emptyMap()
             : context.stream().collect(Collectors.toMap(Resource::getRelativePath, r -> r));
-        m_isWebComponent = isWebComponent;
     }
 
     /**
@@ -123,10 +121,11 @@ public final class Page implements Resource {
     }
 
     /**
-     * @return if <code>true</code> this page represents a vue-component instead of a html-page (<code>false</code>)
+     * {@inheritDoc}
      */
-    public boolean isWebComponent() {
-        return m_isWebComponent;
+    @Override
+    public Type getType() {
+        return m_pageResource.getType();
     }
 
     /**

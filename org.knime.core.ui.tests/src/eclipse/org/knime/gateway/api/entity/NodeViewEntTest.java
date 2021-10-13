@@ -53,12 +53,12 @@ import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.startsWith;
+import static org.knime.core.webui.node.view.NodeViewManager.getPageId;
 import static org.knime.core.webui.node.view.NodeViewManagerTest.runOnExecutor;
 
 import java.io.IOException;
 import java.util.function.Function;
 
-import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Test;
 import org.knime.core.node.port.PortType;
@@ -69,6 +69,7 @@ import org.knime.core.webui.data.text.TextInitialDataService;
 import org.knime.core.webui.node.view.NodeView;
 import org.knime.core.webui.page.Page;
 import org.knime.core.webui.page.PageTest;
+import org.knime.core.webui.page.Resource;
 import org.knime.testing.node.view.NodeViewNodeFactory;
 import org.knime.testing.node.view.NodeViewNodeModel;
 import org.knime.testing.util.WorkflowManagerUtil;
@@ -111,35 +112,38 @@ public class NodeViewEntTest {
         assertThat(ent.getProjectId(), startsWith("workflow"));
         assertThat(ent.getWorkflowId(), is("root"));
         assertThat(ent.getNodeId(), is("root:2"));
-        assertThat(ent.getUrl(), endsWith("index.html"));
-        assertThat(ent.getPath(), is(nullValue()));
-        assertThat(ent.isWebComponent(), is(false));
         assertThat(ent.getInitialData(), is("dummy initial data"));
-        NodeInfoEnt info = ent.getNodeInfo();
-        assertThat(info.getNodeName(), is("NodeView"));
-        assertThat(info.getNodeAnnotation(), is("node annotation"));
-        assertThat(info.getNodeState(), is("configured"));
-        assertThat(info.getNodeWarnMessage(), is("node message"));
-        assertThat(info.getNodeErrorMessage(), is(nullValue()));
+        var resourceInfo = ent.getResourceInfo();
+        assertThat(resourceInfo.getUrl(), endsWith("index.html"));
+        assertThat(resourceInfo.getPath(), is(nullValue()));
+        assertThat(resourceInfo.getType(), is(Resource.Type.HTML.toString()));
+        assertThat(resourceInfo.getId(), is(getPageId(nnc, false)));
+        var nodeInfo = ent.getNodeInfo();
+        assertThat(nodeInfo.getNodeName(), is("NodeView"));
+        assertThat(nodeInfo.getNodeAnnotation(), is("node annotation"));
+        assertThat(nodeInfo.getNodeState(), is("configured"));
+        assertThat(nodeInfo.getNodeWarnMessage(), is("node message"));
+        assertThat(nodeInfo.getNodeErrorMessage(), is(nullValue()));
 
         // a node view as a 'component' without initial data
         nodeViewCreator = m -> {
-            Page p = Page.builder(PageTest.BUNDLE_ID, "files", "component.js").build();
+            Page p = Page.builder(PageTest.BUNDLE_ID, "files", "component.umd.min.js").build();
             return NodeView.create(p);
         };
         nnc = WorkflowManagerUtil.createAndAddNode(wfm, new NodeViewNodeFactory(nodeViewCreator));
         ent = new NodeViewEnt(nnc);
-        assertThat(ent.isWebComponent(), is(true));
-        assertThat(ent.getUrl(), Matchers.endsWith("component.js"));
-        assertThat(ent.getPath(), is(nullValue()));
+        resourceInfo = ent.getResourceInfo();
         assertThat(ent.getInitialData(), is(nullValue()));
+        assertThat(resourceInfo.getType(), is(Resource.Type.VUE_COMPONENT_LIB.toString()));
+        assertThat(resourceInfo.getUrl(), endsWith("component.umd.min.js"));
+        assertThat(resourceInfo.getPath(), is(nullValue()));
 
         // test to create a node view entity while running headless (e.g. on the executor)
         NativeNodeContainer nnc2 = nnc;
         runOnExecutor(() -> {
             var ent2 = new NodeViewEnt(nnc2);
-            assertThat(ent2.getPath(), endsWith("component.js"));
-            assertThat(ent2.getUrl(), is(nullValue()));
+            assertThat(ent2.getResourceInfo().getPath(), endsWith("component.umd.min.js"));
+            assertThat(ent2.getResourceInfo().getUrl(), is(nullValue()));
         });
 
         WorkflowManagerUtil.disposeWorkflow(wfm);

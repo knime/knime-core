@@ -356,10 +356,15 @@ public final class NodeViewManager {
         return pagePath.toUri().toString();
     }
 
-    /*
-     * Determines the page id. The page id must be a valid file name!
+    /**
+     * Determines the page id. The page id is a valid file name!
+     *
+     * @param nnc the node providing the node view page
+     * @param isStaticPage whether it's a static page
+     * @return the page id
      */
-    private static String getPageId(final NativeNodeContainer nnc, final boolean isStaticPage) {
+    @SuppressWarnings("java:S2301")
+    public static String getPageId(final NativeNodeContainer nnc, final boolean isStaticPage) {
         if (isStaticPage) {
             return nnc.getNode().getFactory().getClass().getName();
         } else {

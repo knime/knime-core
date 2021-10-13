@@ -86,4 +86,9 @@ class FileResource implements Resource {
         return true;
     }
 
+    @Override
+    public Type getType() {
+        return Type.determineType(m_relativePath.toString());
+    }
+
 }

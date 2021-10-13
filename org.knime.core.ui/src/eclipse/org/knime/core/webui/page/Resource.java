@@ -61,6 +61,23 @@ import java.io.InputStream;
 public interface Resource {
 
     /**
+     * The resource type.
+     */
+    enum Type {
+            HTML, VUE_COMPONENT_LIB;
+
+        static Type determineType(final String path) {
+            if (path.endsWith(".umd.min.js")) {
+                return VUE_COMPONENT_LIB;
+            } else if (path.endsWith(".html")) {
+                return HTML;
+            } else {
+                throw new IllegalArgumentException("Can't determine resource type for path " + path);
+            }
+        }
+    }
+
+    /**
      * @return the resource's relative path (including the resource name itself, too)
      */
     String getRelativePath();
@@ -76,5 +93,10 @@ public interface Resource {
      *         <code>false</code>
      */
     boolean isStatic();
+
+    /**
+     * @return the type of the resource
+     */
+    Type getType();
 
 }

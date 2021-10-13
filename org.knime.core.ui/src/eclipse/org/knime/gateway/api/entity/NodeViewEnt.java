@@ -64,19 +64,15 @@ public final class NodeViewEnt {
 
     private final String m_nodeId;
 
-    private final boolean m_isWebComponent;
-
     private final String m_initialData;
 
     private final String m_workflowId;
 
     private final String m_projectId;
 
-    private final String m_url;
-
-    private final String m_path;
-
     private final NodeInfoEnt m_info;
+
+    private final ResourceInfoEnt m_resourceInfo;
 
     /**
      * @param nnc
@@ -103,15 +99,17 @@ public final class NodeViewEnt {
         var nodeViewManager = NodeViewManager.getInstance();
         m_nodeId = new NodeIDEnt(nnc.getID(), isComponentProject).toString();
         var nodeView = nodeViewManager.getNodeView(nnc);
-        m_isWebComponent = nodeView.getPage().isWebComponent();
         if (nodeView.getInitialDataService().isPresent()) {
             m_initialData = nodeViewManager.callTextInitialDataService(nnc);
         } else {
             m_initialData = null;
         }
 
-        m_url = nodeViewManager.getNodeViewPageUrl(nnc).orElse(null);
-        m_path = nodeViewManager.getNodeViewPagePath(nnc).orElse(null);
+        var url = nodeViewManager.getNodeViewPageUrl(nnc).orElse(null);
+        var path = nodeViewManager.getNodeViewPagePath(nnc).orElse(null);
+        var page = nodeView.getPage();
+        var id = NodeViewManager.getPageId(nnc, page.isStatic());
+        m_resourceInfo = new ResourceInfoEnt(id, url, path, page);
 
         m_info = new NodeInfoEnt(nnc);
     }
@@ -128,20 +126,12 @@ public final class NodeViewEnt {
         return m_nodeId;
     }
 
-    public String getUrl() {
-        return m_url;
-    }
-
-    public String getPath() {
-        return m_path;
+    public ResourceInfoEnt getResourceInfo() {
+        return m_resourceInfo;
     }
 
     public String getInitialData() {
         return m_initialData;
-    }
-
-    public boolean isWebComponent() {
-        return m_isWebComponent;
     }
 
     public NodeInfoEnt getNodeInfo() {
