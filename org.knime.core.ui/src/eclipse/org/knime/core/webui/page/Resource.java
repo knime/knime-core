@@ -67,7 +67,7 @@ public interface Resource {
             HTML, VUE_COMPONENT_LIB;
 
         static Type determineType(final String path) {
-            if (path.endsWith(".umd.min.js")) {
+            if (path.endsWith(".js")) {
                 return VUE_COMPONENT_LIB;
             } else if (path.endsWith(".html")) {
                 return HTML;
