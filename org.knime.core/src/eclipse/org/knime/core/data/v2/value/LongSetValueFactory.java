@@ -50,22 +50,19 @@ package org.knime.core.data.v2.value;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.PrimitiveIterator;
 import java.util.PrimitiveIterator.OfLong;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.knime.core.data.collection.SetCell;
 import org.knime.core.data.def.LongCell;
-import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
-import org.knime.core.data.v2.WriteValue;
-import org.knime.core.data.v2.value.LongListValueFactory.LongListReadValue;
-import org.knime.core.data.v2.value.LongListValueFactory.LongListWriteValue;
 import org.knime.core.data.v2.value.SetValueFactory.DefaultSetReadValue;
 import org.knime.core.data.v2.value.SetValueFactory.DefaultSetWriteValue;
-import org.knime.core.data.v2.value.SetValueFactory.SetReadValue;
-import org.knime.core.data.v2.value.SetValueFactory.SetWriteValue;
+import org.knime.core.data.v2.value.ValueInterfaces.LongListReadValue;
+import org.knime.core.data.v2.value.ValueInterfaces.LongListWriteValue;
+import org.knime.core.data.v2.value.ValueInterfaces.LongSetReadValue;
+import org.knime.core.data.v2.value.ValueInterfaces.LongSetWriteValue;
 import org.knime.core.table.access.ListAccess.ListReadAccess;
 import org.knime.core.table.access.ListAccess.ListWriteAccess;
 import org.knime.core.table.schema.ListDataSpec;
@@ -107,45 +104,6 @@ public final class LongSetValueFactory implements ValueFactory<ListReadAccess, L
         return new DefaultListDataTraits(DefaultDataTraits.EMPTY);
     }
 
-    /**
-     * {@link ReadValue} equivalent to {@link SetCell} with {@link LongCell} elements.
-     *
-     * @since 4.3
-     */
-    public interface LongSetReadValue extends SetReadValue {
-
-        /**
-         * @param value a long value
-         * @return true if the set contains the value
-         */
-        boolean contains(long value);
-
-        /**
-         * @return a {@link Set} containing the {@link Long} values
-         */
-        Set<Long> getLongSet();
-
-        /**
-         * @return an iterator of the long set
-         * @throws IllegalStateException if the set contains a missing value
-         */
-        PrimitiveIterator.OfLong longIterator();
-    }
-
-    /**
-     * {@link WriteValue} equivalent to {@link SetCell} with {@link LongCell} elements.
-     *
-     * @since 4.3
-     */
-    public interface LongSetWriteValue extends SetWriteValue {
-
-        /**
-         * Set the value.
-         *
-         * @param values a collection of long values
-         */
-        void setLongCollectionValue(Collection<Long> values);
-    }
 
     private static final class DefaultLongSetReadValue extends DefaultSetReadValue<LongListReadValue>
         implements LongSetReadValue {
@@ -158,7 +116,7 @@ public final class LongSetValueFactory implements ValueFactory<ListReadAccess, L
         public boolean contains(final long value) {
             // TODO(benjamin) we can save the values sorted and do binary search
             final long[] values = m_value.getLongArray();
-            for (int i = 0; i < values.length; i++) {
+            for (int i = 0; i < values.length; i++) { // NOSONAR
                 if (value == values[i]) {
                     return true;
                 }

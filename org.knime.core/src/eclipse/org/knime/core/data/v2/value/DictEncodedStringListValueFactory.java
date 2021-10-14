@@ -44,35 +44,21 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 7, 2020 (dietzc): created
+ *   20 Oct 2021 (Steffen Fissler, KNIME GmbH, Konstanz, Germany): created
  */
 package org.knime.core.data.v2.value;
 
-import org.knime.core.data.def.StringCell;
-import org.knime.core.data.v2.ValueFactory;
-import org.knime.core.table.schema.traits.DataTrait.DictEncodingTrait;
-import org.knime.core.table.schema.traits.DataTraits;
-import org.knime.core.table.schema.traits.DefaultDataTraits;
-
 /**
- * {@link ValueFactory} implementation for {@link StringCell} that uses dictionary encoding.
  *
- * @author Carsten Haubold, KNIME GmbH, Konstanz, Germany
+ * @author Steffen Fissler, KNIME GmbH, Konstanz, Germany
  * @since 4.5
  *
  * @noreference This class is not intended to be referenced by clients.
  */
-@SuppressWarnings("deprecation")
-public class DictEncodedStringValueFactory extends StringValueFactory {
+public class DictEncodedStringListValueFactory extends StringListValueFactory {
 
-    /**
-     * Stateless instance of StringValueFactory.
-     */
+    /** A stateless instance of {@link DictEncodedStringListValueFactory} */
     @SuppressWarnings("hiding")
-    public static final DictEncodedStringValueFactory INSTANCE = new DictEncodedStringValueFactory();
+    public static final DictEncodedStringListValueFactory INSTANCE = new DictEncodedStringListValueFactory();
 
-    @Override
-    public DataTraits getTraits() {
-        return new DefaultDataTraits(new DictEncodingTrait());
-    }
 }

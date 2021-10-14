@@ -49,21 +49,17 @@
 package org.knime.core.data.v2.value;
 
 import java.util.Arrays;
-import java.util.PrimitiveIterator;
 import java.util.PrimitiveIterator.OfDouble;
 
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.collection.ListCell;
 import org.knime.core.data.def.DoubleCell;
-import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
-import org.knime.core.data.v2.WriteValue;
-import org.knime.core.data.v2.value.DoubleValueFactory.DoubleWriteValue;
 import org.knime.core.data.v2.value.ListValueFactory.DefaultListReadValue;
 import org.knime.core.data.v2.value.ListValueFactory.DefaultListWriteValue;
-import org.knime.core.data.v2.value.ListValueFactory.ListReadValue;
-import org.knime.core.data.v2.value.ListValueFactory.ListWriteValue;
-import org.knime.core.data.vector.doublevector.DoubleVectorValue;
+import org.knime.core.data.v2.value.ValueInterfaces.DoubleListReadValue;
+import org.knime.core.data.v2.value.ValueInterfaces.DoubleListWriteValue;
+import org.knime.core.data.v2.value.ValueInterfaces.DoubleWriteValue;
 import org.knime.core.table.access.DoubleAccess.DoubleReadAccess;
 import org.knime.core.table.access.ListAccess.ListReadAccess;
 import org.knime.core.table.access.ListAccess.ListWriteAccess;
@@ -106,47 +102,6 @@ public final class DoubleListValueFactory implements ValueFactory<ListReadAccess
         return new DefaultListDataTraits(DefaultDataTraits.EMPTY);
     }
 
-    /**
-     * {@link ReadValue} equivalent to {@link ListCell} with {@link DoubleCell} elements.
-     *
-     * @since 4.3
-     */
-    public static interface DoubleListReadValue extends ListReadValue, DoubleVectorValue {
-
-        /**
-         * @param index the index in the list
-         * @return the double value at the index
-         * @throws IllegalStateException if the value at this index is missing
-         */
-        double getDouble(int index);
-
-        /**
-         * @return the list as a double array
-         * @throws IllegalStateException if the value at one index is missing
-         */
-        double[] getDoubleArray();
-
-        /**
-         * @return an iterator over the double list
-         * @throws IllegalStateException if the value at one index is missing
-         */
-        PrimitiveIterator.OfDouble doubleIterator();
-    }
-
-    /**
-     * {@link WriteValue} equivalent to {@link ListCell} with {@link DoubleCell} elements.
-     *
-     * @since 4.3
-     */
-    public static interface DoubleListWriteValue extends ListWriteValue {
-
-        /**
-         * Set the value.
-         *
-         * @param values a array of double values
-         */
-        void setValue(double[] values);
-    }
 
     private static final class DefaultDoubleListReadValue extends DefaultListReadValue implements DoubleListReadValue {
 
@@ -162,8 +117,8 @@ public final class DoubleListValueFactory implements ValueFactory<ListReadAccess
 
         @Override
         public double[] getDoubleArray() {
-            final double[] result = new double[size()];
-            for (int i = 0; i < result.length; i++) {
+            final var result = new double[size()];
+            for (int i = 0; i < result.length; i++) { // NOSONAR
                 result[i] = getDouble(i);
             }
             return result;

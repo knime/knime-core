@@ -2354,6 +2354,58 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/data/v2/value/BooleanListValueFactory.java" type="org.knime.core.data.v2.value.BooleanListValueFactory">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.BooleanListValueFactory"/>
+                <message_argument value="createReadValue(ListAccess.ListReadAccess)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.BooleanListValueFactory"/>
+                <message_argument value="createWriteValue(ListAccess.ListWriteAccess)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.BooleanListValueFactory.BooleanListReadValue"/>
+                <message_argument value="org.knime.core_4.5.0"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.BooleanListValueFactory.BooleanListWriteValue"/>
+                <message_argument value="org.knime.core_4.5.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/v2/value/BooleanSetValueFactory.java" type="org.knime.core.data.v2.value.BooleanSetValueFactory">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.BooleanSetValueFactory"/>
+                <message_argument value="createReadValue(StructAccess.StructReadAccess)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.BooleanSetValueFactory"/>
+                <message_argument value="createWriteValue(StructAccess.StructWriteAccess)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.BooleanSetValueFactory.BooleanSetReadValue"/>
+                <message_argument value="org.knime.core_4.5.0"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.BooleanSetValueFactory.BooleanSetWriteValue"/>
+                <message_argument value="org.knime.core_4.5.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/data/v2/value/BooleanSetValueFactory.java" type="org.knime.core.data.v2.value.BooleanSetValueFactory$BooleanSetWriteValue">
         <filter comment="Fixed typo in method signature of not-yet public API (Fast Tables are not considered to be public API yet)" id="403804204">
             <message_arguments>
@@ -2370,6 +2422,110 @@
         <filter comment="Fixed typo in method signature of not-yet public API (Fast Tables are not considered to be public API yet)" id="1211105284">
             <message_arguments>
                 <message_argument value="setBooleanCollectionValue(Collection&lt;Boolean&gt;)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/v2/value/BooleanSparseListValueFactory.java" type="org.knime.core.data.v2.value.BooleanSparseListValueFactory">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.BooleanSparseListValueFactory"/>
+                <message_argument value="createReadValue(StructAccess.StructReadAccess)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.BooleanSparseListValueFactory"/>
+                <message_argument value="createWriteValue(StructAccess.StructWriteAccess)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.BooleanSparseListValueFactory.BooleanSparseListReadValue"/>
+                <message_argument value="org.knime.core_4.5.0"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.BooleanSparseListValueFactory.BooleanSparseListWriteValue"/>
+                <message_argument value="org.knime.core_4.5.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/v2/value/BooleanValueFactory.java" type="org.knime.core.data.v2.value.BooleanValueFactory">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.BooleanValueFactory"/>
+                <message_argument value="createReadValue(BooleanAccess.BooleanReadAccess)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.BooleanValueFactory"/>
+                <message_argument value="createWriteValue(BooleanAccess.BooleanWriteAccess)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.BooleanValueFactory.BooleanReadValue"/>
+                <message_argument value="org.knime.core_4.5.0"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.BooleanValueFactory.BooleanWriteValue"/>
+                <message_argument value="org.knime.core_4.5.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/v2/value/DoubleListValueFactory.java" type="org.knime.core.data.v2.value.DoubleListValueFactory">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.DoubleListValueFactory"/>
+                <message_argument value="createReadValue(ListAccess.ListReadAccess)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.DoubleListValueFactory"/>
+                <message_argument value="createWriteValue(ListAccess.ListWriteAccess)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.DoubleListValueFactory.DoubleListReadValue"/>
+                <message_argument value="org.knime.core_4.5.0"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.DoubleListValueFactory.DoubleListWriteValue"/>
+                <message_argument value="org.knime.core_4.5.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/v2/value/DoubleSetValueFactory.java" type="org.knime.core.data.v2.value.DoubleSetValueFactory">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.DoubleSetValueFactory"/>
+                <message_argument value="createReadValue(ListAccess.ListReadAccess)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.DoubleSetValueFactory"/>
+                <message_argument value="createWriteValue(ListAccess.ListWriteAccess)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.DoubleSetValueFactory.DoubleSetReadValue"/>
+                <message_argument value="org.knime.core_4.5.0"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.DoubleSetValueFactory.DoubleSetWriteValue"/>
+                <message_argument value="org.knime.core_4.5.0"/>
             </message_arguments>
         </filter>
     </resource>
@@ -2392,6 +2548,110 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/data/v2/value/DoubleSparseListValueFactory.java" type="org.knime.core.data.v2.value.DoubleSparseListValueFactory">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.DoubleSparseListValueFactory"/>
+                <message_argument value="createReadValue(StructAccess.StructReadAccess)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.DoubleSparseListValueFactory"/>
+                <message_argument value="createWriteValue(StructAccess.StructWriteAccess)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.DoubleSparseListValueFactory.DoubleSparseListReadValue"/>
+                <message_argument value="org.knime.core_4.5.0"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.DoubleSparseListValueFactory.DoubleSparseListWriteValue"/>
+                <message_argument value="org.knime.core_4.5.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/v2/value/DoubleValueFactory.java" type="org.knime.core.data.v2.value.DoubleValueFactory">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.DoubleValueFactory"/>
+                <message_argument value="createReadValue(DoubleAccess.DoubleReadAccess)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.DoubleValueFactory"/>
+                <message_argument value="createWriteValue(DoubleAccess.DoubleWriteAccess)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.DoubleValueFactory.DoubleReadValue"/>
+                <message_argument value="org.knime.core_4.5.0"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.DoubleValueFactory.DoubleWriteValue"/>
+                <message_argument value="org.knime.core_4.5.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/v2/value/IntListValueFactory.java" type="org.knime.core.data.v2.value.IntListValueFactory">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.IntListValueFactory"/>
+                <message_argument value="createReadValue(ListAccess.ListReadAccess)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.IntListValueFactory"/>
+                <message_argument value="createWriteValue(ListAccess.ListWriteAccess)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.IntListValueFactory.IntListReadValue"/>
+                <message_argument value="org.knime.core_4.5.0"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.IntListValueFactory.IntListWriteValue"/>
+                <message_argument value="org.knime.core_4.5.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/v2/value/IntSetValueFactory.java" type="org.knime.core.data.v2.value.IntSetValueFactory">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.IntSetValueFactory"/>
+                <message_argument value="createReadValue(ListAccess.ListReadAccess)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.IntSetValueFactory"/>
+                <message_argument value="createWriteValue(ListAccess.ListWriteAccess)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.IntSetValueFactory.IntSetReadValue"/>
+                <message_argument value="org.knime.core_4.5.0"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.IntSetValueFactory.IntSetWriteValue"/>
+                <message_argument value="org.knime.core_4.5.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/data/v2/value/IntSetValueFactory.java" type="org.knime.core.data.v2.value.IntSetValueFactory$IntSetWriteValue">
         <filter comment="Fixed typo in method signature of not-yet public API (Fast Tables are not considered to be public API yet)" id="403804204">
             <message_arguments>
@@ -2408,6 +2668,136 @@
         <filter comment="Fixed typo in method signature of not-yet public API (Fast Tables are not considered to be public API yet)" id="1211105284">
             <message_arguments>
                 <message_argument value="setIntCollectionValue(Collection&lt;Integer&gt;)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/v2/value/IntSparseListValueFactory.java" type="org.knime.core.data.v2.value.IntSparseListValueFactory">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.IntSparseListValueFactory"/>
+                <message_argument value="createReadValue(StructAccess.StructReadAccess)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.IntSparseListValueFactory"/>
+                <message_argument value="createWriteValue(StructAccess.StructWriteAccess)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.IntSparseListValueFactory.IntSparseListReadValue"/>
+                <message_argument value="org.knime.core_4.5.0"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.IntSparseListValueFactory.IntSparseListWriteValue"/>
+                <message_argument value="org.knime.core_4.5.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/v2/value/IntValueFactory.java" type="org.knime.core.data.v2.value.IntValueFactory">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.IntValueFactory"/>
+                <message_argument value="createReadValue(IntAccess.IntReadAccess)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.IntValueFactory"/>
+                <message_argument value="createWriteValue(IntAccess.IntWriteAccess)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.IntValueFactory.IntReadValue"/>
+                <message_argument value="org.knime.core_4.5.0"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.IntValueFactory.IntWriteValue"/>
+                <message_argument value="org.knime.core_4.5.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/v2/value/ListValueFactory.java" type="org.knime.core.data.v2.value.ListValueFactory">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.ListValueFactory"/>
+                <message_argument value="createReadValue(ListAccess.ListReadAccess)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.ListValueFactory"/>
+                <message_argument value="createWriteValue(ListAccess.ListWriteAccess)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.ListValueFactory.ListReadValue"/>
+                <message_argument value="org.knime.core_4.5.0"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.ListValueFactory.ListWriteValue"/>
+                <message_argument value="org.knime.core_4.5.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/v2/value/LongListValueFactory.java" type="org.knime.core.data.v2.value.LongListValueFactory">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.LongListValueFactory"/>
+                <message_argument value="createReadValue(ListAccess.ListReadAccess)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.LongListValueFactory"/>
+                <message_argument value="createWriteValue(ListAccess.ListWriteAccess)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.LongListValueFactory.LongListReadValue"/>
+                <message_argument value="org.knime.core_4.5.0"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.LongListValueFactory.LongListWriteValue"/>
+                <message_argument value="org.knime.core_4.5.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/v2/value/LongSetValueFactory.java" type="org.knime.core.data.v2.value.LongSetValueFactory">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.LongSetValueFactory"/>
+                <message_argument value="createReadValue(ListAccess.ListReadAccess)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.LongSetValueFactory"/>
+                <message_argument value="createWriteValue(ListAccess.ListWriteAccess)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.LongSetValueFactory.LongSetReadValue"/>
+                <message_argument value="org.knime.core_4.5.0"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.LongSetValueFactory.LongSetWriteValue"/>
+                <message_argument value="org.knime.core_4.5.0"/>
             </message_arguments>
         </filter>
     </resource>
@@ -2430,6 +2820,176 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/data/v2/value/LongSparseListValueFactory.java" type="org.knime.core.data.v2.value.LongSparseListValueFactory">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.LongSparseListValueFactory"/>
+                <message_argument value="createReadValue(StructAccess.StructReadAccess)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.LongSparseListValueFactory"/>
+                <message_argument value="createWriteValue(StructAccess.StructWriteAccess)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.LongSparseListValueFactory.LongSparseListReadValue"/>
+                <message_argument value="org.knime.core_4.5.0"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.LongSparseListValueFactory.LongSparseListWriteValue"/>
+                <message_argument value="org.knime.core_4.5.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/v2/value/LongValueFactory.java" type="org.knime.core.data.v2.value.LongValueFactory">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.LongValueFactory"/>
+                <message_argument value="createReadValue(LongAccess.LongReadAccess)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.LongValueFactory"/>
+                <message_argument value="createWriteValue(LongAccess.LongWriteAccess)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.LongValueFactory.LongReadValue"/>
+                <message_argument value="org.knime.core_4.5.0"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.LongValueFactory.LongWriteValue"/>
+                <message_argument value="org.knime.core_4.5.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/v2/value/PortObjectValueFactory.java" type="org.knime.core.data.v2.value.PortObjectValueFactory">
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.PortObjectValueFactory.PortObjectReadValue"/>
+                <message_argument value="org.knime.core_4.5.0"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.PortObjectValueFactory.PortObjectWriteValue"/>
+                <message_argument value="org.knime.core_4.5.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/v2/value/SetValueFactory.java" type="org.knime.core.data.v2.value.SetValueFactory">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.SetValueFactory"/>
+                <message_argument value="createReadValue(ListAccess.ListReadAccess)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.SetValueFactory"/>
+                <message_argument value="createWriteValue(ListAccess.ListWriteAccess)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.SetValueFactory.SetReadValue"/>
+                <message_argument value="org.knime.core_4.5.0"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.SetValueFactory.SetWriteValue"/>
+                <message_argument value="org.knime.core_4.5.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/v2/value/SparseListValueFactory.java" type="org.knime.core.data.v2.value.SparseListValueFactory">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.SparseListValueFactory"/>
+                <message_argument value="createReadValue(StructAccess.StructReadAccess)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.SparseListValueFactory"/>
+                <message_argument value="createWriteValue(StructAccess.StructWriteAccess)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.SparseListValueFactory.SparseListReadValue"/>
+                <message_argument value="org.knime.core_4.5.0"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.SparseListValueFactory.SparseListWriteValue"/>
+                <message_argument value="org.knime.core_4.5.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/v2/value/StringListValueFactory.java" type="org.knime.core.data.v2.value.StringListValueFactory">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.StringListValueFactory"/>
+                <message_argument value="createReadValue(ListAccess.ListReadAccess)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.StringListValueFactory"/>
+                <message_argument value="createWriteValue(ListAccess.ListWriteAccess)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.StringListValueFactory.StringListReadValue"/>
+                <message_argument value="org.knime.core_4.5.0"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.StringListValueFactory.StringListWriteValue"/>
+                <message_argument value="org.knime.core_4.5.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/v2/value/StringSetValueFactory.java" type="org.knime.core.data.v2.value.StringSetValueFactory">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.StringSetValueFactory"/>
+                <message_argument value="createReadValue(ListAccess.ListReadAccess)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.StringSetValueFactory"/>
+                <message_argument value="createWriteValue(ListAccess.ListWriteAccess)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.StringSetValueFactory.StringSetReadValue"/>
+                <message_argument value="org.knime.core_4.5.0"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.StringSetValueFactory.StringSetWriteValue"/>
+                <message_argument value="org.knime.core_4.5.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/data/v2/value/StringSetValueFactory.java" type="org.knime.core.data.v2.value.StringSetValueFactory$StringSetWriteValue">
         <filter comment="Fixed typo in method signature of not-yet public API (Fast Tables are not considered to be public API yet)" id="403804204">
             <message_arguments>
@@ -2446,6 +3006,58 @@
         <filter comment="Fixed typo in method signature of not-yet public API (Fast Tables are not considered to be public API yet)" id="1211105284">
             <message_arguments>
                 <message_argument value="setStringCollectionValue(Collection&lt;String&gt;)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/v2/value/StringSparseListValueFactory.java" type="org.knime.core.data.v2.value.StringSparseListValueFactory">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.StringSparseListValueFactory"/>
+                <message_argument value="createReadValue(StructAccess.StructReadAccess)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.StringSparseListValueFactory"/>
+                <message_argument value="createWriteValue(StructAccess.StructWriteAccess)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.StringSparseListValueFactory.StringSparseListReadValue"/>
+                <message_argument value="org.knime.core_4.5.0"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.StringSparseListValueFactory.StringSparseListWriteValue"/>
+                <message_argument value="org.knime.core_4.5.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/v2/value/StringValueFactory.java" type="org.knime.core.data.v2.value.StringValueFactory">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.StringValueFactory"/>
+                <message_argument value="createReadValue(StringAccess.StringReadAccess)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.StringValueFactory"/>
+                <message_argument value="createWriteValue(StringAccess.StringWriteAccess)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.StringValueFactory.StringReadValue"/>
+                <message_argument value="org.knime.core_4.5.0"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.value.StringValueFactory.StringWriteValue"/>
+                <message_argument value="org.knime.core_4.5.0"/>
             </message_arguments>
         </filter>
     </resource>

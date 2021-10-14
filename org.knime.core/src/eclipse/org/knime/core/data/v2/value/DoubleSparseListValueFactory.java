@@ -56,18 +56,16 @@ import java.util.PrimitiveIterator.OfDouble;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.collection.SparseListCell;
 import org.knime.core.data.def.DoubleCell;
-import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
-import org.knime.core.data.v2.WriteValue;
-import org.knime.core.data.v2.value.DoubleListValueFactory.DoubleListReadValue;
-import org.knime.core.data.v2.value.DoubleListValueFactory.DoubleListWriteValue;
-import org.knime.core.data.v2.value.DoubleValueFactory.DoubleReadValue;
-import org.knime.core.data.v2.value.DoubleValueFactory.DoubleWriteValue;
 import org.knime.core.data.v2.value.SparseListValueFactory.AbstractSparseIterator;
 import org.knime.core.data.v2.value.SparseListValueFactory.DefaultSparseListReadValue;
 import org.knime.core.data.v2.value.SparseListValueFactory.DefaultSparseListWriteValue;
-import org.knime.core.data.v2.value.SparseListValueFactory.SparseListReadValue;
-import org.knime.core.data.v2.value.SparseListValueFactory.SparseListWriteValue;
+import org.knime.core.data.v2.value.ValueInterfaces.DoubleListReadValue;
+import org.knime.core.data.v2.value.ValueInterfaces.DoubleListWriteValue;
+import org.knime.core.data.v2.value.ValueInterfaces.DoubleReadValue;
+import org.knime.core.data.v2.value.ValueInterfaces.DoubleSparseListReadValue;
+import org.knime.core.data.v2.value.ValueInterfaces.DoubleSparseListWriteValue;
+import org.knime.core.data.v2.value.ValueInterfaces.DoubleWriteValue;
 import org.knime.core.table.access.DoubleAccess.DoubleReadAccess;
 import org.knime.core.table.access.DoubleAccess.DoubleWriteAccess;
 import org.knime.core.table.access.IntAccess.IntReadAccess;
@@ -103,8 +101,8 @@ public final class DoubleSparseListValueFactory implements ValueFactory<StructRe
     public DataSpec getSpec() {
         final DoubleDataSpec defaultDataSpec = DoubleDataSpec.INSTANCE;
         final IntDataSpec sizeDataSpec = IntDataSpec.INSTANCE;
-        final ListDataSpec indicesDataSpec = new ListDataSpec(IntDataSpec.INSTANCE);
-        final ListDataSpec listDataSpec = new ListDataSpec(DoubleDataSpec.INSTANCE);
+        final var indicesDataSpec = new ListDataSpec(IntDataSpec.INSTANCE);
+        final var listDataSpec = new ListDataSpec(DoubleDataSpec.INSTANCE);
         return new StructDataSpec(defaultDataSpec, sizeDataSpec, indicesDataSpec, listDataSpec);
     }
 
@@ -127,27 +125,6 @@ public final class DoubleSparseListValueFactory implements ValueFactory<StructRe
             new DefaultListDataTraits(DefaultDataTraits.EMPTY));
     }
 
-    /**
-     * {@link ReadValue} equivalent to {@link SparseListCell} with {@link DoubleCell} elements.
-     *
-     * @since 4.3
-     */
-    public static interface DoubleSparseListReadValue extends SparseListReadValue, DoubleListReadValue {
-    }
-
-    /**
-     * {@link WriteValue} equivalent to {@link SparseListCell} with {@link DoubleCell} elements.
-     *
-     * @since 4.3
-     */
-    public static interface DoubleSparseListWriteValue extends SparseListWriteValue {
-
-        /**
-         * @param values the values to set
-         * @param defaultElement the default element which should not be saved multiple times
-         */
-        void setValue(double[] values, double defaultElement);
-    }
 
     private static final class DefaultDoubleSparseListReadValue
         extends DefaultSparseListReadValue<DoubleReadValue, DoubleListReadValue, DoubleReadAccess>
@@ -175,9 +152,9 @@ public final class DoubleSparseListValueFactory implements ValueFactory<StructRe
 
         @Override
         public double[] getDoubleArray() {
-            final double[] values = new double[size()];
+            final var values = new double[size()];
             final OfDouble iterator = doubleIterator();
-            for (int i = 0; i < values.length; i++) {
+            for (int i = 0; i < values.length; i++) { // NOSONAR
                 values[i] = iterator.nextDouble();
             }
             return values;
@@ -233,8 +210,8 @@ public final class DoubleSparseListValueFactory implements ValueFactory<StructRe
             final List<Integer> storageIndices = new ArrayList<>();
             final List<Double> storageList = new ArrayList<>();
 
-            final long defaultElementBits = Double.doubleToLongBits(defaultElement);
-            for (int i = 0; i < values.length; i++) {
+            final var defaultElementBits = Double.doubleToLongBits(defaultElement);
+            for (int i = 0; i < values.length; i++) { // NOSONAR
                 final double v = values[i];
                 if (Double.doubleToLongBits(v) != defaultElementBits) {
                     storageIndices.add(i);

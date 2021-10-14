@@ -50,22 +50,19 @@ package org.knime.core.data.v2.value;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.PrimitiveIterator;
 import java.util.PrimitiveIterator.OfDouble;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.knime.core.data.collection.SetCell;
 import org.knime.core.data.def.DoubleCell;
-import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
-import org.knime.core.data.v2.WriteValue;
-import org.knime.core.data.v2.value.DoubleListValueFactory.DoubleListReadValue;
-import org.knime.core.data.v2.value.DoubleListValueFactory.DoubleListWriteValue;
 import org.knime.core.data.v2.value.SetValueFactory.DefaultSetReadValue;
 import org.knime.core.data.v2.value.SetValueFactory.DefaultSetWriteValue;
-import org.knime.core.data.v2.value.SetValueFactory.SetReadValue;
-import org.knime.core.data.v2.value.SetValueFactory.SetWriteValue;
+import org.knime.core.data.v2.value.ValueInterfaces.DoubleListReadValue;
+import org.knime.core.data.v2.value.ValueInterfaces.DoubleListWriteValue;
+import org.knime.core.data.v2.value.ValueInterfaces.DoubleSetReadValue;
+import org.knime.core.data.v2.value.ValueInterfaces.DoubleSetWriteValue;
 import org.knime.core.table.access.ListAccess.ListReadAccess;
 import org.knime.core.table.access.ListAccess.ListWriteAccess;
 import org.knime.core.table.schema.DoubleDataSpec;
@@ -107,46 +104,6 @@ public final class DoubleSetValueFactory implements ValueFactory<ListReadAccess,
         return new DefaultListDataTraits(DefaultDataTraits.EMPTY);
     }
 
-    /**
-     * {@link ReadValue} equivalent to {@link SetCell} with {@link DoubleCell} elements.
-     *
-     * @since 4.3
-     */
-    public interface DoubleSetReadValue extends SetReadValue {
-
-        /**
-         * @param value a double value
-         * @return true if the set contains the value
-         */
-        boolean contains(double value);
-
-        /**
-         * @return a {@link Set} containing the {@link Double} values
-         */
-        Set<Double> getDoubleSet();
-
-        /**
-         * @return an iterator of the double set
-         * @throws IllegalStateException if the set contains a missing value
-         */
-        PrimitiveIterator.OfDouble doubleIterator();
-    }
-
-    /**
-     * {@link WriteValue} equivalent to {@link SetCell} with {@link DoubleCell} elements.
-     *
-     * @since 4.3
-     */
-    public interface DoubleSetWriteValue extends SetWriteValue {
-
-        /**
-         * Set the value.
-         *
-         * @param values a collection of double values
-         */
-        void setDoubleCollectionValue(Collection<Double> values);
-    }
-
     private static final class DefaultDoubleSetReadValue extends DefaultSetReadValue<DoubleListReadValue>
         implements DoubleSetReadValue {
 
@@ -158,7 +115,7 @@ public final class DoubleSetValueFactory implements ValueFactory<ListReadAccess,
         public boolean contains(final double value) {
             // TODO(benjamin) we can save the values sorted and do binary search
             final double[] values = m_value.getDoubleArray();
-            for (int i = 0; i < values.length; i++) {
+            for (int i = 0; i < values.length; i++) { // NOSONAR
                 if (Double.doubleToLongBits(value) == Double.doubleToLongBits(values[i])) {
                     return true;
                 }

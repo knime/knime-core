@@ -49,20 +49,17 @@
 package org.knime.core.data.v2.value;
 
 import java.util.Arrays;
-import java.util.PrimitiveIterator;
 import java.util.PrimitiveIterator.OfLong;
 
 import org.knime.core.data.LongValue;
 import org.knime.core.data.collection.ListCell;
 import org.knime.core.data.def.LongCell;
-import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
-import org.knime.core.data.v2.WriteValue;
 import org.knime.core.data.v2.value.ListValueFactory.DefaultListReadValue;
 import org.knime.core.data.v2.value.ListValueFactory.DefaultListWriteValue;
-import org.knime.core.data.v2.value.ListValueFactory.ListReadValue;
-import org.knime.core.data.v2.value.ListValueFactory.ListWriteValue;
-import org.knime.core.data.v2.value.LongValueFactory.LongWriteValue;
+import org.knime.core.data.v2.value.ValueInterfaces.LongListReadValue;
+import org.knime.core.data.v2.value.ValueInterfaces.LongListWriteValue;
+import org.knime.core.data.v2.value.ValueInterfaces.LongWriteValue;
 import org.knime.core.table.access.ListAccess.ListReadAccess;
 import org.knime.core.table.access.ListAccess.ListWriteAccess;
 import org.knime.core.table.access.LongAccess.LongReadAccess;
@@ -105,48 +102,6 @@ public final class LongListValueFactory implements ValueFactory<ListReadAccess, 
         return new DefaultListDataTraits(DefaultDataTraits.EMPTY);
     }
 
-    /**
-     * {@link ReadValue} equivalent to {@link ListCell} with {@link LongCell} elements.
-     *
-     * @since 4.3
-     */
-    public static interface LongListReadValue extends ListReadValue {
-
-        /**
-         * @param index the index in the list
-         * @return the long value at the index
-         * @throws IllegalStateException if the value at this index is missing
-         */
-        long getLong(int index);
-
-        /**
-         * @return the list as a long array
-         * @throws IllegalStateException if the value at one index is missing
-         */
-        long[] getLongArray();
-
-        /**
-         * @return an iterator over the long list
-         * @throws IllegalStateException if the value at one index is missing
-         */
-        PrimitiveIterator.OfLong longIterator();
-    }
-
-    /**
-     * {@link WriteValue} equivalent to {@link ListCell} with {@link LongCell} elements.
-     *
-     * @since 4.3
-     */
-    public static interface LongListWriteValue extends ListWriteValue {
-
-        /**
-         * Set the value.
-         *
-         * @param values a array of int values
-         */
-        void setValue(long[] values);
-    }
-
     private static final class DefaultLongListReadValue extends DefaultListReadValue implements LongListReadValue {
 
         private DefaultLongListReadValue(final ListReadAccess reader) {
@@ -161,8 +116,8 @@ public final class LongListValueFactory implements ValueFactory<ListReadAccess, 
 
         @Override
         public long[] getLongArray() {
-            final long[] result = new long[size()];
-            for (int i = 0; i < result.length; i++) {
+            final var result = new long[size()];
+            for (int i = 0; i < result.length; i++) { // NOSONAR
                 result[i] = getLong(i);
             }
             return result;

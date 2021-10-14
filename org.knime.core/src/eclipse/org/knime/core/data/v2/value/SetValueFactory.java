@@ -60,11 +60,11 @@ import org.knime.core.data.collection.CollectionCellFactory;
 import org.knime.core.data.collection.SetCell;
 import org.knime.core.data.collection.SetDataValue;
 import org.knime.core.data.v2.CollectionValueFactory;
-import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
-import org.knime.core.data.v2.WriteValue;
-import org.knime.core.data.v2.value.ListValueFactory.ListReadValue;
-import org.knime.core.data.v2.value.ListValueFactory.ListWriteValue;
+import org.knime.core.data.v2.value.ValueInterfaces.ListReadValue;
+import org.knime.core.data.v2.value.ValueInterfaces.ListWriteValue;
+import org.knime.core.data.v2.value.ValueInterfaces.SetReadValue;
+import org.knime.core.data.v2.value.ValueInterfaces.SetWriteValue;
 import org.knime.core.table.access.ListAccess.ListReadAccess;
 import org.knime.core.table.access.ListAccess.ListWriteAccess;
 import org.knime.core.table.access.WriteAccess;
@@ -114,27 +114,6 @@ public final class SetValueFactory implements CollectionValueFactory<ListReadAcc
     }
 
     /**
-     * {@link ReadValue} equivalent to {@link SetCell}.
-     *
-     * @since 4.3
-     */
-    public interface SetReadValue extends ReadValue, SetDataValue {
-    }
-
-    /**
-     * {@link WriteValue} equivalent to {@link SetCell}.
-     *
-     * @since 4.3
-     */
-    public interface SetWriteValue extends WriteValue<SetDataValue> {
-
-        /**
-         * @param values the values to set
-         */
-        void setValue(Collection<DataValue> values);
-    }
-
-    /**
      * Default implementation of {@link SetReadValue}. Set elements are of the type {@link DataCell}. Extend this class
      * to add access methods that do not wrap the elements in {@link DataCell}.
      *
@@ -154,7 +133,7 @@ public final class SetValueFactory implements CollectionValueFactory<ListReadAcc
          */
         DefaultSetReadValue(final ListReadAccess reader, final ValueFactory<ListReadAccess, ?> listValueFactory) {
             @SuppressWarnings("unchecked")
-            final L value = (L)listValueFactory.createReadValue(reader);
+            final L value = (L)listValueFactory.createReadValue(reader); // NOSONAR
             m_value = value;
         }
 
@@ -218,7 +197,7 @@ public final class SetValueFactory implements CollectionValueFactory<ListReadAcc
          */
         DefaultSetWriteValue(final ListWriteAccess writer, final ValueFactory<?, ListWriteAccess> listValueFactory) {
             @SuppressWarnings("unchecked")
-            final L value = (L)listValueFactory.createWriteValue(writer);
+            final L value = (L)listValueFactory.createWriteValue(writer); // NOSONAR
             m_value = value;
         }
 

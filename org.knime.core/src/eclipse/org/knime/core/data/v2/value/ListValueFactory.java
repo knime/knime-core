@@ -64,6 +64,8 @@ import org.knime.core.data.v2.CollectionValueFactory;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
+import org.knime.core.data.v2.value.ValueInterfaces.ListReadValue;
+import org.knime.core.data.v2.value.ValueInterfaces.ListWriteValue;
 import org.knime.core.table.access.ListAccess.ListReadAccess;
 import org.knime.core.table.access.ListAccess.ListWriteAccess;
 import org.knime.core.table.access.ReadAccess;
@@ -114,33 +116,6 @@ public final class ListValueFactory implements CollectionValueFactory<ListReadAc
     @Override
     public DataTraits getTraits() {
         return new DefaultListDataTraits(m_inner.getTraits());
-    }
-
-    /**
-     * {@link ReadValue} equivalent to {@link ListCell}.
-     *
-     * @since 4.3
-     */
-    public static interface ListReadValue extends ReadValue, ListDataValue {
-
-        /**
-         * @param index the index in the list
-         * @return if the value at this index is missing
-         */
-        boolean isMissing(int index);
-    }
-
-    /**
-     * {@link WriteValue} equivalent to {@link ListCell}.
-     *
-     * @since 4.3
-     */
-    public static interface ListWriteValue extends WriteValue<ListDataValue> {
-
-        /**
-         * @param values the values to set
-         */
-        void setValue(List<DataValue> values);
     }
 
     /**
@@ -292,7 +267,7 @@ public final class ListValueFactory implements CollectionValueFactory<ListReadAc
         protected <D extends DataValue, W extends WriteValue<D>> void setValue(final int size,
             final BiConsumer<Integer, W> setter) {
             m_writer.create(size);
-            for (int i = 0; i < size; i++) {
+            for (int i = 0; i < size; i++) { // NOSONAR
                 @SuppressWarnings("unchecked")
                 W value = (W)m_inner.createWriteValue(m_writer.getWriteAccess(i));
                 setter.accept(i, value);

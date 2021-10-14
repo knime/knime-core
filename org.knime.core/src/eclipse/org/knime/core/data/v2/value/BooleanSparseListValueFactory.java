@@ -57,18 +57,16 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.knime.core.data.BooleanValue;
 import org.knime.core.data.collection.SparseListCell;
 import org.knime.core.data.def.BooleanCell;
-import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
-import org.knime.core.data.v2.WriteValue;
-import org.knime.core.data.v2.value.BooleanListValueFactory.BooleanListReadValue;
-import org.knime.core.data.v2.value.BooleanListValueFactory.BooleanListWriteValue;
-import org.knime.core.data.v2.value.BooleanValueFactory.BooleanReadValue;
-import org.knime.core.data.v2.value.BooleanValueFactory.BooleanWriteValue;
 import org.knime.core.data.v2.value.SparseListValueFactory.AbstractSparseIterator;
 import org.knime.core.data.v2.value.SparseListValueFactory.DefaultSparseListReadValue;
 import org.knime.core.data.v2.value.SparseListValueFactory.DefaultSparseListWriteValue;
-import org.knime.core.data.v2.value.SparseListValueFactory.SparseListReadValue;
-import org.knime.core.data.v2.value.SparseListValueFactory.SparseListWriteValue;
+import org.knime.core.data.v2.value.ValueInterfaces.BooleanListReadValue;
+import org.knime.core.data.v2.value.ValueInterfaces.BooleanListWriteValue;
+import org.knime.core.data.v2.value.ValueInterfaces.BooleanReadValue;
+import org.knime.core.data.v2.value.ValueInterfaces.BooleanSparseListReadValue;
+import org.knime.core.data.v2.value.ValueInterfaces.BooleanSparseListWriteValue;
+import org.knime.core.data.v2.value.ValueInterfaces.BooleanWriteValue;
 import org.knime.core.table.access.BooleanAccess.BooleanReadAccess;
 import org.knime.core.table.access.BooleanAccess.BooleanWriteAccess;
 import org.knime.core.table.access.IntAccess.IntReadAccess;
@@ -104,8 +102,8 @@ public final class BooleanSparseListValueFactory implements ValueFactory<StructR
     public DataSpec getSpec() {
         final BooleanDataSpec defaultDataSpec = BooleanDataSpec.INSTANCE;
         final IntDataSpec sizeDataSpec = IntDataSpec.INSTANCE;
-        final ListDataSpec indicesDataSpec = new ListDataSpec(IntDataSpec.INSTANCE);
-        final ListDataSpec listDataSpec = new ListDataSpec(BooleanDataSpec.INSTANCE);
+        final var indicesDataSpec = new ListDataSpec(IntDataSpec.INSTANCE);
+        final var listDataSpec = new ListDataSpec(BooleanDataSpec.INSTANCE);
         return new StructDataSpec(defaultDataSpec, sizeDataSpec, indicesDataSpec, listDataSpec);
     }
 
@@ -128,27 +126,6 @@ public final class BooleanSparseListValueFactory implements ValueFactory<StructR
             new DefaultListDataTraits(DefaultDataTraits.EMPTY));
     }
 
-    /**
-     * {@link ReadValue} equivalent to {@link SparseListCell} with {@link BooleanCell} elements.
-     *
-     * @since 4.3
-     */
-    public static interface BooleanSparseListReadValue extends SparseListReadValue, BooleanListReadValue {
-    }
-
-    /**
-     * {@link WriteValue} equivalent to {@link SparseListCell} with {@link BooleanCell} elements.
-     *
-     * @since 4.3
-     */
-    public static interface BooleanSparseListWriteValue extends SparseListWriteValue {
-
-        /**
-         * @param values the values to set
-         * @param defaultElement the default element which should not be saved multiple times
-         */
-        void setValue(boolean[] values, boolean defaultElement);
-    }
 
     private static final class DefaultBooleanSparseListReadValue
         extends DefaultSparseListReadValue<BooleanReadValue, BooleanListReadValue, BooleanReadAccess>
@@ -176,9 +153,9 @@ public final class BooleanSparseListValueFactory implements ValueFactory<StructR
 
         @Override
         public boolean[] getBooleanArray() {
-            final boolean[] values = new boolean[size()];
+            final var values = new boolean[size()];
             final Iterator<Boolean> iterator = booleanIterator();
-            for (int i = 0; i < values.length; i++) {
+            for (int i = 0; i < values.length; i++) { // NOSONAR
                 values[i] = iterator.next();
             }
             return values;
@@ -186,11 +163,11 @@ public final class BooleanSparseListValueFactory implements ValueFactory<StructR
 
         @Override
         public Iterator<Boolean> booleanIterator() {
-            final boolean defaultElement = m_defaultValue.getBooleanValue();
+            final var defaultElement = m_defaultValue.getBooleanValue();
             return new AbstractSparseIterator<Boolean>(size(), m_storageIndices.size(), m_storageIndices::getInt) {
 
                 @Override
-                public Boolean next() {
+                public Boolean next() { // NOSONAR: The common 'NoSuchElementException' will not be thrown, as we have another default behavior: returning a default element
                     final OptionalInt storageIndex = nextStorageIndex();
                     if (storageIndex.isPresent()) {
                         return getBooleanFromStorage(storageIndex.getAsInt());
@@ -217,7 +194,7 @@ public final class BooleanSparseListValueFactory implements ValueFactory<StructR
             final List<Integer> storageIndices = new ArrayList<>();
             final List<Boolean> storageList = new ArrayList<>();
 
-            for (int i = 0; i < values.length; i++) {
+            for (int i = 0; i < values.length; i++) { // NOSONAR
                 final boolean v = values[i];
                 if (v != defaultElement) {
                     storageIndices.add(i);

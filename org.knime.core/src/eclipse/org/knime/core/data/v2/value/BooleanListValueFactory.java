@@ -53,14 +53,12 @@ import java.util.Iterator;
 import org.knime.core.data.BooleanValue;
 import org.knime.core.data.collection.ListCell;
 import org.knime.core.data.def.BooleanCell;
-import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
-import org.knime.core.data.v2.WriteValue;
-import org.knime.core.data.v2.value.BooleanValueFactory.BooleanWriteValue;
 import org.knime.core.data.v2.value.ListValueFactory.DefaultListReadValue;
 import org.knime.core.data.v2.value.ListValueFactory.DefaultListWriteValue;
-import org.knime.core.data.v2.value.ListValueFactory.ListReadValue;
-import org.knime.core.data.v2.value.ListValueFactory.ListWriteValue;
+import org.knime.core.data.v2.value.ValueInterfaces.BooleanListReadValue;
+import org.knime.core.data.v2.value.ValueInterfaces.BooleanListWriteValue;
+import org.knime.core.data.v2.value.ValueInterfaces.BooleanWriteValue;
 import org.knime.core.table.access.BooleanAccess.BooleanReadAccess;
 import org.knime.core.table.access.ListAccess.ListReadAccess;
 import org.knime.core.table.access.ListAccess.ListWriteAccess;
@@ -105,47 +103,6 @@ public final class BooleanListValueFactory implements ValueFactory<ListReadAcces
         return new DefaultListDataTraits(DefaultDataTraits.EMPTY);
     }
 
-    /**
-     * {@link ReadValue} equivalent to {@link ListCell} with {@link BooleanCell} elements.
-     *
-     * @since 4.3
-     */
-    public static interface BooleanListReadValue extends ListReadValue {
-
-        /**
-         * @param index the index in the list
-         * @return the boolean value at the index
-         * @throws IllegalStateException if the value at this index is missing
-         */
-        boolean getBoolean(int index);
-
-        /**
-         * @return the list as a boolean array
-         * @throws IllegalStateException if the value at one index is missing
-         */
-        boolean[] getBooleanArray();
-
-        /**
-         * @return an iterator over the boolean list
-         * @throws IllegalStateException if the value at one index is missing
-         */
-        Iterator<Boolean> booleanIterator();
-    }
-
-    /**
-     * {@link WriteValue} equivalent to {@link ListCell} with {@link BooleanCell} elements.
-     *
-     * @since 4.3
-     */
-    public static interface BooleanListWriteValue extends ListWriteValue {
-
-        /**
-         * Set the value.
-         *
-         * @param values a array of boolean values
-         */
-        void setValue(boolean[] values);
-    }
 
     private static final class DefaultBooleanListReadValue extends DefaultListReadValue
         implements BooleanListReadValue {
@@ -162,8 +119,8 @@ public final class BooleanListValueFactory implements ValueFactory<ListReadAcces
 
         @Override
         public boolean[] getBooleanArray() {
-            final boolean[] result = new boolean[size()];
-            for (int i = 0; i < result.length; i++) {
+            final var result = new boolean[size()];
+            for (int i = 0; i < result.length; i++) { // NOSONAR
                 result[i] = getBoolean(i);
             }
             return result;

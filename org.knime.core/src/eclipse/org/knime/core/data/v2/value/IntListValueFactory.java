@@ -49,20 +49,17 @@
 package org.knime.core.data.v2.value;
 
 import java.util.Arrays;
-import java.util.PrimitiveIterator;
 import java.util.PrimitiveIterator.OfInt;
 
 import org.knime.core.data.IntValue;
 import org.knime.core.data.collection.ListCell;
 import org.knime.core.data.def.IntCell;
-import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
-import org.knime.core.data.v2.WriteValue;
-import org.knime.core.data.v2.value.IntValueFactory.IntWriteValue;
 import org.knime.core.data.v2.value.ListValueFactory.DefaultListReadValue;
 import org.knime.core.data.v2.value.ListValueFactory.DefaultListWriteValue;
-import org.knime.core.data.v2.value.ListValueFactory.ListReadValue;
-import org.knime.core.data.v2.value.ListValueFactory.ListWriteValue;
+import org.knime.core.data.v2.value.ValueInterfaces.IntListReadValue;
+import org.knime.core.data.v2.value.ValueInterfaces.IntListWriteValue;
+import org.knime.core.data.v2.value.ValueInterfaces.IntWriteValue;
 import org.knime.core.table.access.IntAccess.IntReadAccess;
 import org.knime.core.table.access.ListAccess.ListReadAccess;
 import org.knime.core.table.access.ListAccess.ListWriteAccess;
@@ -105,48 +102,6 @@ public final class IntListValueFactory implements ValueFactory<ListReadAccess, L
         return new DefaultListDataTraits(DefaultDataTraits.EMPTY);
     }
 
-    /**
-     * {@link ReadValue} equivalent to {@link ListCell} with {@link IntCell} elements.
-     *
-     * @since 4.3
-     */
-    public static interface IntListReadValue extends ListReadValue {
-
-        /**
-         * @param index the index in the list
-         * @return the integer value at the index
-         * @throws IllegalStateException if the value at this index is missing
-         */
-        int getInt(int index);
-
-        /**
-         * @return the list as a integer array
-         * @throws IllegalStateException if the value at one index is missing
-         */
-        int[] getIntArray();
-
-        /**
-         * @return an iterator over the integer list
-         * @throws IllegalStateException if the value at one index is missing
-         */
-        PrimitiveIterator.OfInt intIterator();
-    }
-
-    /**
-     * {@link WriteValue} equivalent to {@link ListCell} with {@link IntCell} elements.
-     *
-     * @since 4.3
-     */
-    public static interface IntListWriteValue extends ListWriteValue {
-
-        /**
-         * Set the value.
-         *
-         * @param values a array of int values
-         */
-        void setValue(int[] values);
-    }
-
     private static final class DefaultIntListReadValue extends DefaultListReadValue implements IntListReadValue {
 
         private DefaultIntListReadValue(final ListReadAccess reader) {
@@ -161,8 +116,8 @@ public final class IntListValueFactory implements ValueFactory<ListReadAccess, L
 
         @Override
         public int[] getIntArray() {
-            final int[] result = new int[size()];
-            for (int i = 0; i < result.length; i++) {
+            final var result = new int[size()];
+            for (int i = 0; i < result.length; i++) { // NOSONAR
                 result[i] = getInt(i);
             }
             return result;

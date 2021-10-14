@@ -45,17 +45,12 @@
  */
 package org.knime.core.data.v2.value;
 
-import org.knime.core.data.BoundedValue;
-import org.knime.core.data.ComplexNumberValue;
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DoubleValue;
-import org.knime.core.data.FuzzyIntervalValue;
-import org.knime.core.data.FuzzyNumberValue;
 import org.knime.core.data.LongValue;
 import org.knime.core.data.def.LongCell;
-import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
-import org.knime.core.data.v2.WriteValue;
+import org.knime.core.data.v2.value.ValueInterfaces.LongReadValue;
+import org.knime.core.data.v2.value.ValueInterfaces.LongWriteValue;
 import org.knime.core.table.access.LongAccess.LongReadAccess;
 import org.knime.core.table.access.LongAccess.LongWriteAccess;
 import org.knime.core.table.schema.LongDataSpec;
@@ -88,35 +83,6 @@ public final class LongValueFactory implements ValueFactory<LongReadAccess, Long
         return new DefaultLongWriteValue(writer);
     }
 
-    /**
-     * {@link ReadValue} equivalent to {@link LongCell}.
-     *
-     * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
-     * @since 4.3
-     */
-    public interface LongReadValue extends //
-        LongValue, //
-        DoubleValue, //
-        BoundedValue, //
-        ReadValue, //
-        ComplexNumberValue, //
-        FuzzyNumberValue, //
-        FuzzyIntervalValue {
-    }
-
-    /**
-     * {@link WriteValue} equivalent to {@link LongCell}.
-     *
-     * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
-     * @since 4.3
-     */
-    public interface LongWriteValue extends WriteValue<LongValue> {
-
-        /**
-         * @param value the long value to set
-         */
-        void setLongValue(long value);
-    }
 
     private static final class DefaultLongReadValue extends AbstractValue<LongReadAccess> implements LongReadValue {
 

@@ -54,15 +54,12 @@ import java.util.Iterator;
 import org.knime.core.data.StringValue;
 import org.knime.core.data.collection.ListCell;
 import org.knime.core.data.def.StringCell;
-import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
-import org.knime.core.data.v2.WriteValue;
 import org.knime.core.data.v2.value.ListValueFactory.DefaultListReadValue;
 import org.knime.core.data.v2.value.ListValueFactory.DefaultListWriteValue;
-import org.knime.core.data.v2.value.ListValueFactory.ListReadValue;
-import org.knime.core.data.v2.value.ListValueFactory.ListWriteValue;
-import org.knime.core.data.v2.value.StringValueFactory.StringWriteValue;
-import org.knime.core.data.vector.stringvector.StringVectorValue;
+import org.knime.core.data.v2.value.ValueInterfaces.StringListReadValue;
+import org.knime.core.data.v2.value.ValueInterfaces.StringListWriteValue;
+import org.knime.core.data.v2.value.ValueInterfaces.StringWriteValue;
 import org.knime.core.table.access.ListAccess.ListReadAccess;
 import org.knime.core.table.access.ListAccess.ListWriteAccess;
 import org.knime.core.table.access.StringAccess.StringReadAccess;
@@ -80,7 +77,7 @@ import org.knime.core.table.schema.traits.DefaultListDataTraits;
  *
  * @noreference This class is not intended to be referenced by clients.
  */
-public final class StringListValueFactory implements ValueFactory<ListReadAccess, ListWriteAccess> {
+public class StringListValueFactory implements ValueFactory<ListReadAccess, ListWriteAccess> {
 
     /** A stateless instance of {@link StringListValueFactory} */
     public static final StringListValueFactory INSTANCE = new StringListValueFactory();
@@ -105,49 +102,10 @@ public final class StringListValueFactory implements ValueFactory<ListReadAccess
         return new DefaultListDataTraits(DefaultDataTraits.EMPTY);
     }
 
-    /**
-     * {@link ReadValue} equivalent to {@link ListCell} with {@link StringCell} elements.
-     *
-     * @since 4.3
-     */
-    public static interface StringListReadValue extends ListReadValue, StringVectorValue {
-
-        /**
-         * @param index at which to obtain the returned String
-         * @return the String at <b>index</b>
-         */
-        String getString(int index);
-
-        /**
-         *
-         * @return the content of the list as array
-         */
-        String[] getStringArray();
-
-        /**
-         * @return an {@link Iterator} over the Strings in the list
-         */
-        Iterator<String> stringIterator();
-
-    }
-
-    /**
-     * {@link WriteValue} equivalent to {@link ListCell} with {@link StringCell} elements.
-     *
-     * @since 4.3
-     */
-    public static interface StringListWriteValue extends ListWriteValue {
-
-        /**
-         * @param values to set
-         */
-        void setValue(String[] values);
-
-    }
-
     private static final class DefaultStringListReadValue extends DefaultListReadValue
         implements StringListReadValue {
 
+        @SuppressWarnings("deprecation")
         private DefaultStringListReadValue(final ListReadAccess reader) {
             super(reader, StringValueFactory.INSTANCE, StringCell.TYPE);
         }
@@ -170,8 +128,8 @@ public final class StringListValueFactory implements ValueFactory<ListReadAccess
 
         @Override
         public String[] getStringArray() {
-            final String[] result = new String[size()];
-            for (int i = 0; i < result.length; i++) {
+            final var result = new String[size()];
+            for (int i = 0; i < result.length; i++) { // NOSONAR
                 result[i] = getString(i);
             }
             return result;
@@ -187,6 +145,7 @@ public final class StringListValueFactory implements ValueFactory<ListReadAccess
     private static final class DefaultStringListWriteValue extends DefaultListWriteValue
         implements StringListWriteValue {
 
+        @SuppressWarnings("deprecation")
         private DefaultStringListWriteValue(final ListWriteAccess writer) {
             super(writer, StringValueFactory.INSTANCE);
         }

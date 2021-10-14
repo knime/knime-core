@@ -56,15 +56,13 @@ import java.util.stream.Collectors;
 
 import org.knime.core.data.collection.SetCell;
 import org.knime.core.data.def.StringCell;
-import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
-import org.knime.core.data.v2.WriteValue;
 import org.knime.core.data.v2.value.SetValueFactory.DefaultSetReadValue;
 import org.knime.core.data.v2.value.SetValueFactory.DefaultSetWriteValue;
-import org.knime.core.data.v2.value.SetValueFactory.SetReadValue;
-import org.knime.core.data.v2.value.SetValueFactory.SetWriteValue;
-import org.knime.core.data.v2.value.StringListValueFactory.StringListReadValue;
-import org.knime.core.data.v2.value.StringListValueFactory.StringListWriteValue;
+import org.knime.core.data.v2.value.ValueInterfaces.StringListReadValue;
+import org.knime.core.data.v2.value.ValueInterfaces.StringListWriteValue;
+import org.knime.core.data.v2.value.ValueInterfaces.StringSetReadValue;
+import org.knime.core.data.v2.value.ValueInterfaces.StringSetWriteValue;
 import org.knime.core.table.access.ListAccess.ListReadAccess;
 import org.knime.core.table.access.ListAccess.ListWriteAccess;
 import org.knime.core.table.schema.DataSpec;
@@ -84,7 +82,7 @@ import com.google.common.base.Objects;
  *
  * @noreference This class is not intended to be referenced by clients.
  */
-public final class StringSetValueFactory implements ValueFactory<ListReadAccess, ListWriteAccess> {
+public class StringSetValueFactory implements ValueFactory<ListReadAccess, ListWriteAccess> {
 
     /** A stateless instance of {@link StringSetValueFactory} */
     public static final StringSetValueFactory INSTANCE = new StringSetValueFactory();
@@ -109,48 +107,6 @@ public final class StringSetValueFactory implements ValueFactory<ListReadAccess,
         return new DefaultListDataTraits(DefaultDataTraits.EMPTY);
     }
 
-    /**
-     * {@link ReadValue} equivalent to {@link SetCell} with elements of type T.
-     *
-     * @since 4.3
-     */
-    public interface StringSetReadValue extends SetReadValue {
-
-        /**
-         * @param value an object value
-         * @return true if the set contains the value
-         */
-        boolean contains(String value);
-
-        /**
-         * @return a {@link Set} containing the object values
-         */
-        Set<String> getStringSet();
-
-        /**
-         * @return an iterator of the object set
-         * @throws IllegalStateException if the set contains a missing value
-         */
-        Iterator<String> stringIterator();
-
-    }
-
-    /**
-     * {@link WriteValue} equivalent to {@link SetCell} with elements of type T.
-     *
-     * @since 4.3
-     */
-    public interface StringSetWriteValue extends SetWriteValue {
-
-        /**
-         * Set the value.
-         *
-         * @param values a collection of String values
-         */
-        void setStringCollectionValue(Collection<String> values);
-
-    }
-
     private static final class DefaultStringSetReadValue extends DefaultSetReadValue<StringListReadValue>
         implements StringSetReadValue {
 
@@ -161,7 +117,7 @@ public final class StringSetValueFactory implements ValueFactory<ListReadAccess,
         @Override
         public boolean contains(final String value) {
             final String[] values = m_value.getStringArray();
-            for (int i = 0; i < values.length; i++) {
+            for (int i = 0; i < values.length; i++) { // NOSONAR
                 if (Objects.equal(value, values[i])) {
                     return true;
                 }

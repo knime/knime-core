@@ -61,6 +61,8 @@ import org.knime.core.data.model.PortObjectValue;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
+import org.knime.core.data.v2.value.ValueInterfaces.PortObjectReadValue;
+import org.knime.core.data.v2.value.ValueInterfaces.PortObjectWriteValue;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.port.PortObject;
@@ -100,26 +102,6 @@ public class PortObjectValueFactory
         return VarBinaryDataSpec.INSTANCE;
     }
 
-    /**
-     * {@link ReadValue} equivalent to {@link PortObjectCell}.
-     *
-     * @since 4.3
-     */
-    public interface PortObjectReadValue extends ReadValue, PortObjectValue {
-    }
-
-    /**
-     * {@link WriteValue} equivalent to {@link PortObjectCell}.
-     *
-     * @since 4.3
-     */
-    public interface PortObjectWriteValue extends WriteValue<PortObjectValue> {
-
-        /**
-         * @param portObject the {@link PortObject} to set
-         */
-        void setPortObject(PortObject portObject);
-    }
 
     /** An {@link InputStream} wrapping a {@link DataInput}. */
     private static final class DataInputWrappingInputStream extends InputStream {
@@ -180,7 +162,7 @@ public class PortObjectValueFactory
         private DefaultPortObjectReadValue(final VarBinaryReadAccess access) {
             m_access = access;
             m_deserializer = input -> {
-                try (final DataInputWrappingInputStream stream = new DataInputWrappingInputStream(input)) {
+                try (final var stream = new DataInputWrappingInputStream(input)) {
                   return PortUtil.readObjectFromStream(stream, null);
               } catch (final CanceledExecutionException e) {
                   // This cannot happen because the execution context is null
@@ -210,7 +192,7 @@ public class PortObjectValueFactory
         private DefaultPortObjectWriteValue(final VarBinaryWriteAccess access) {
             m_access = access;
             m_serializer = (output, object) -> {
-                try (final DataOutputWrappingOutputStream stream = new DataOutputWrappingOutputStream(output)) {
+                try (final var stream = new DataOutputWrappingOutputStream(output)) {
                   PortUtil.writeObjectToStream(object, stream, new ExecutionMonitor());
               } catch (final CanceledExecutionException e) {
                   // This cannot happen because the execution monitor won't be canceld

@@ -45,16 +45,12 @@
  */
 package org.knime.core.data.v2.value;
 
-import org.knime.core.data.BoundedValue;
-import org.knime.core.data.ComplexNumberValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DoubleValue;
-import org.knime.core.data.FuzzyIntervalValue;
-import org.knime.core.data.FuzzyNumberValue;
 import org.knime.core.data.def.DoubleCell;
-import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
-import org.knime.core.data.v2.WriteValue;
+import org.knime.core.data.v2.value.ValueInterfaces.DoubleReadValue;
+import org.knime.core.data.v2.value.ValueInterfaces.DoubleWriteValue;
 import org.knime.core.table.access.DoubleAccess.DoubleReadAccess;
 import org.knime.core.table.access.DoubleAccess.DoubleWriteAccess;
 import org.knime.core.table.schema.DoubleDataSpec;
@@ -87,34 +83,6 @@ public final class DoubleValueFactory implements ValueFactory<DoubleReadAccess, 
         return new DefaultDoubleWriteValue(writer);
     }
 
-    /**
-     * {@link ReadValue} equivalent to {@link DoubleCell}.
-     *
-     * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
-     * @since 4.3
-     */
-    public interface DoubleReadValue extends //
-        DoubleValue, //
-        BoundedValue, //
-        ReadValue, //
-        ComplexNumberValue, //
-        FuzzyNumberValue, //
-        FuzzyIntervalValue {
-    }
-
-    /**
-     * {@link WriteValue} equivalent to {@link DoubleCell}.
-     *
-     * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
-     * @since 4.3
-     */
-    public interface DoubleWriteValue extends WriteValue<DoubleValue> {
-
-        /**
-         * @param value the double to set
-         */
-        void setDoubleValue(double value);
-    }
 
     private static final class DefaultDoubleReadValue extends AbstractValue<DoubleReadAccess>
         implements DoubleReadValue {

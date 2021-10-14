@@ -50,22 +50,19 @@ package org.knime.core.data.v2.value;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.PrimitiveIterator;
 import java.util.PrimitiveIterator.OfInt;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.knime.core.data.collection.SetCell;
 import org.knime.core.data.def.IntCell;
-import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
-import org.knime.core.data.v2.WriteValue;
-import org.knime.core.data.v2.value.IntListValueFactory.IntListReadValue;
-import org.knime.core.data.v2.value.IntListValueFactory.IntListWriteValue;
 import org.knime.core.data.v2.value.SetValueFactory.DefaultSetReadValue;
 import org.knime.core.data.v2.value.SetValueFactory.DefaultSetWriteValue;
-import org.knime.core.data.v2.value.SetValueFactory.SetReadValue;
-import org.knime.core.data.v2.value.SetValueFactory.SetWriteValue;
+import org.knime.core.data.v2.value.ValueInterfaces.IntListReadValue;
+import org.knime.core.data.v2.value.ValueInterfaces.IntListWriteValue;
+import org.knime.core.data.v2.value.ValueInterfaces.IntSetReadValue;
+import org.knime.core.data.v2.value.ValueInterfaces.IntSetWriteValue;
 import org.knime.core.table.access.ListAccess.ListReadAccess;
 import org.knime.core.table.access.ListAccess.ListWriteAccess;
 import org.knime.core.table.schema.IntDataSpec;
@@ -107,45 +104,6 @@ public final class IntSetValueFactory implements ValueFactory<ListReadAccess, Li
         return new DefaultListDataTraits(DefaultDataTraits.EMPTY);
     }
 
-    /**
-     * {@link ReadValue} equivalent to {@link SetCell} with {@link IntCell} elements.
-     *
-     * @since 4.3
-     */
-    public interface IntSetReadValue extends SetReadValue {
-
-        /**
-         * @param value a double value
-         * @return true if the set contains the value
-         */
-        boolean contains(int value);
-
-        /**
-         * @return a {@link Set} containing the {@link Integer} values
-         */
-        Set<Integer> getIntSet();
-
-        /**
-         * @return an iterator of the double set
-         * @throws IllegalStateException if the set contains a missing value
-         */
-        PrimitiveIterator.OfInt intIterator();
-    }
-
-    /**
-     * {@link WriteValue} equivalent to {@link SetCell} with {@link IntCell} elements.
-     *
-     * @since 4.3
-     */
-    public interface IntSetWriteValue extends SetWriteValue {
-
-        /**
-         * Set the value.
-         *
-         * @param values a collection of double values
-         */
-        void setIntCollectionValue(Collection<Integer> values);
-    }
 
     private static final class DefaultIntSetReadValue extends DefaultSetReadValue<IntListReadValue>
         implements IntSetReadValue {
@@ -158,7 +116,7 @@ public final class IntSetValueFactory implements ValueFactory<ListReadAccess, Li
         public boolean contains(final int value) {
             // TODO(benjamin) we can save the values sorted and do binary search
             final int[] values = m_value.getIntArray();
-            for (int i = 0; i < values.length; i++) {
+            for (int i = 0; i < values.length; i++) { // NOSONAR
                 if (value == values[i]) {
                     return true;
                 }

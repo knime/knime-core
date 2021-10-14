@@ -90,7 +90,7 @@ public final class DefaultRowKeyValueFactory implements RowKeyValueFactory<Strin
     }
 
     /* Simple CustomRowKeyWriteValue */
-    private final class DefaultRowKeyWriteValue implements RowKeyWriteValue {
+    private static final class DefaultRowKeyWriteValue implements RowKeyWriteValue {
 
         private final StringWriteAccess m_access;
 
@@ -116,7 +116,7 @@ public final class DefaultRowKeyValueFactory implements RowKeyValueFactory<Strin
     }
 
     /* Simple CustomRowKeyReadValue */
-    private final class DefaultRowKeyReadValue implements RowKeyReadValue {
+    private static final class DefaultRowKeyReadValue implements RowKeyReadValue {
 
         private final StringReadAccess m_access;
 

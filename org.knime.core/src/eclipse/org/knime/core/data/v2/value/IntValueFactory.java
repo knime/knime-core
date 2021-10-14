@@ -48,18 +48,12 @@
  */
 package org.knime.core.data.v2.value;
 
-import org.knime.core.data.BoundedValue;
-import org.knime.core.data.ComplexNumberValue;
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DoubleValue;
-import org.knime.core.data.FuzzyIntervalValue;
-import org.knime.core.data.FuzzyNumberValue;
 import org.knime.core.data.IntValue;
-import org.knime.core.data.LongValue;
 import org.knime.core.data.def.IntCell;
-import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
-import org.knime.core.data.v2.WriteValue;
+import org.knime.core.data.v2.value.ValueInterfaces.IntReadValue;
+import org.knime.core.data.v2.value.ValueInterfaces.IntWriteValue;
 import org.knime.core.table.access.IntAccess.IntReadAccess;
 import org.knime.core.table.access.IntAccess.IntWriteAccess;
 import org.knime.core.table.schema.IntDataSpec;
@@ -92,36 +86,6 @@ public final class IntValueFactory implements ValueFactory<IntReadAccess, IntWri
         return new DefaultIntWriteValue(access);
     }
 
-    /**
-     * {@link ReadValue} equivalent to {@link IntCell}.
-     *
-     * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
-     * @since 4.3
-     */
-    public interface IntReadValue extends //
-        ReadValue, //
-        IntValue, //
-        DoubleValue, //
-        ComplexNumberValue, //
-        FuzzyNumberValue, //
-        FuzzyIntervalValue, //
-        BoundedValue, //
-        LongValue {
-    }
-
-    /**
-     * {@link WriteValue} equivalent to {@link IntCell}.
-     *
-     * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
-     * @since 4.3
-     */
-    public interface IntWriteValue extends WriteValue<IntValue> {
-
-        /**
-         * @param value the int value to set
-         */
-        void setIntValue(int value);
-    }
 
     private static final class DefaultIntReadValue extends AbstractValue<IntReadAccess> implements IntReadValue {
 

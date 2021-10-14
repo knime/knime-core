@@ -48,12 +48,11 @@
  */
 package org.knime.core.data.v2.value;
 
-import org.knime.core.data.NominalValue;
 import org.knime.core.data.StringValue;
 import org.knime.core.data.def.StringCell;
-import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
-import org.knime.core.data.v2.WriteValue;
+import org.knime.core.data.v2.value.ValueInterfaces.StringReadValue;
+import org.knime.core.data.v2.value.ValueInterfaces.StringWriteValue;
 import org.knime.core.table.access.StringAccess.StringReadAccess;
 import org.knime.core.table.access.StringAccess.StringWriteAccess;
 import org.knime.core.table.schema.StringDataSpec;
@@ -68,8 +67,8 @@ import org.knime.core.table.schema.StringDataSpec;
  *
  * @noreference This class is not intended to be referenced by clients.
  */
-@Deprecated
-public class StringValueFactory implements ValueFactory<StringReadAccess, StringWriteAccess> {
+@Deprecated(since="4.5")
+public class StringValueFactory implements ValueFactory<StringReadAccess, StringWriteAccess> { // NOSONAR: cannot be removed
 
     /**
      * Stateless instance of StringValueFactory.
@@ -93,30 +92,6 @@ public class StringValueFactory implements ValueFactory<StringReadAccess, String
         return new DefaultStringWriteValue(writer);
     }
 
-    /**
-     * {@link ReadValue} equivalent to {@link StringCell}.
-     *
-     * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
-     * @since 4.3
-     */
-    public interface StringReadValue extends //
-        StringValue, //
-        NominalValue, //
-        ReadValue {
-    }
-
-    /**
-     * {@link WriteValue} equivalent to {@link StringCell}.
-     *
-     * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
-     * @since 4.3
-     */
-    public interface StringWriteValue extends WriteValue<StringValue> {
-        /**
-         * @param value the string value to set
-         */
-        void setStringValue(String value);
-    }
 
     private static final class DefaultStringWriteValue implements StringWriteValue {
         private final StringWriteAccess m_access;

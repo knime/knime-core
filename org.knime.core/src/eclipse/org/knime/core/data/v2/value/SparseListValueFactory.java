@@ -68,10 +68,12 @@ import org.knime.core.data.v2.CollectionValueFactory;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
-import org.knime.core.data.v2.value.IntListValueFactory.IntListReadValue;
-import org.knime.core.data.v2.value.IntListValueFactory.IntListWriteValue;
-import org.knime.core.data.v2.value.ListValueFactory.ListReadValue;
-import org.knime.core.data.v2.value.ListValueFactory.ListWriteValue;
+import org.knime.core.data.v2.value.ValueInterfaces.IntListReadValue;
+import org.knime.core.data.v2.value.ValueInterfaces.IntListWriteValue;
+import org.knime.core.data.v2.value.ValueInterfaces.ListReadValue;
+import org.knime.core.data.v2.value.ValueInterfaces.ListWriteValue;
+import org.knime.core.data.v2.value.ValueInterfaces.SparseListReadValue;
+import org.knime.core.data.v2.value.ValueInterfaces.SparseListWriteValue;
 import org.knime.core.table.access.IntAccess.IntReadAccess;
 import org.knime.core.table.access.IntAccess.IntWriteAccess;
 import org.knime.core.table.access.ListAccess.ListReadAccess;
@@ -80,7 +82,6 @@ import org.knime.core.table.access.ReadAccess;
 import org.knime.core.table.access.StructAccess.StructReadAccess;
 import org.knime.core.table.access.StructAccess.StructWriteAccess;
 import org.knime.core.table.access.WriteAccess;
-import org.knime.core.table.schema.DataSpec;
 import org.knime.core.table.schema.IntDataSpec;
 import org.knime.core.table.schema.ListDataSpec;
 import org.knime.core.table.schema.StructDataSpec;
@@ -117,10 +118,10 @@ public final class SparseListValueFactory implements CollectionValueFactory<Stru
 
     @Override
     public StructDataSpec getSpec() {
-        final DataSpec defaultDataSpec = m_inner.getSpec();
-        final IntDataSpec sizeDataSpec = IntDataSpec.INSTANCE;
-        final ListDataSpec indicesDataSpec = new ListDataSpec(IntDataSpec.INSTANCE);
-        final ListDataSpec listDataSpec = new ListDataSpec(m_inner.getSpec());
+        final var defaultDataSpec = m_inner.getSpec();
+        final var sizeDataSpec = IntDataSpec.INSTANCE;
+        final var indicesDataSpec = new ListDataSpec(IntDataSpec.INSTANCE);
+        final var listDataSpec = new ListDataSpec(m_inner.getSpec());
         return new StructDataSpec(defaultDataSpec, sizeDataSpec, indicesDataSpec, listDataSpec);
     }
 
@@ -143,33 +144,6 @@ public final class SparseListValueFactory implements CollectionValueFactory<Stru
             new DefaultListDataTraits(m_inner.getTraits()));
     }
 
-    /**
-     * {@link ReadValue} equivalent to {@link SparseListCell}.
-     *
-     * @since 4.3
-     */
-    public interface SparseListReadValue extends ReadValue, SparseListDataValue {
-
-        /**
-         * @param index the index in the list
-         * @return if the value at this index is missing
-         */
-        boolean isMissing(int index);
-    }
-
-    /**
-     * {@link WriteValue} equivalent to {@link SparseListCell}.
-     *
-     * @since 4.3
-     */
-    public interface SparseListWriteValue extends WriteValue<SparseListDataValue> {
-
-        /**
-         * @param values the values to set
-         * @param defaultElement the default element which should not be saved multiple times
-         */
-        void setValue(List<DataValue> values, DataValue defaultElement);
-    }
 
     /**
      * Default implementation of {@link SparseListReadValue}. List elements are of the type {@link DataCell}. Extend
@@ -213,14 +187,14 @@ public final class SparseListValueFactory implements CollectionValueFactory<Stru
 
             m_defaultAccess = defaultAccess;
             @SuppressWarnings("unchecked")
-            final E defaultValue = (E)valueFactory.createReadValue(defaultAccess);
+            final E defaultValue = (E)valueFactory.createReadValue(defaultAccess); // NOSONAR
             m_defaultValue = defaultValue;
             m_sizeValue = sizeAccess;
 
             m_storageIndices = IntListValueFactory.INSTANCE.createReadValue(indicesAccess);
 
             @SuppressWarnings("unchecked")
-            final L storageList = (L)listValueFactory.createReadValue(listAccess);
+            final L storageList = (L)listValueFactory.createReadValue(listAccess); // NOSONAR
             m_storageList = storageList;
         }
 
@@ -230,12 +204,12 @@ public final class SparseListValueFactory implements CollectionValueFactory<Stru
          */
         protected OptionalInt storageIndexForIndex(final int index) {
             // NB: We find the index using binary search
-            int left = 0;
+            int left = 0; // NOSONAR
             int right = m_storageIndices.size() - 1;
 
             while (left < right) {
                 final int storageIndex = (left + right) / 2;
-                final int currentIndex = m_storageIndices.getInt(storageIndex);
+                final int currentIndex = m_storageIndices.getInt(storageIndex); // NOSONAR
                 if (currentIndex < index) {
                     left = storageIndex + 1;
                 } else if (currentIndex > index) {
@@ -287,7 +261,7 @@ public final class SparseListValueFactory implements CollectionValueFactory<Stru
             return new AbstractSparseIterator<DataCell>(size(), m_storageIndices.size(), m_storageIndices::getInt) {
 
                 @Override
-                public DataCell next() {
+                public DataCell next() { // NOSONAR: The common 'NoSuchElementException' will not be thrown, as we have another default behavior: returning a default element
                     final OptionalInt storageIndex = nextStorageIndex();
                     if (storageIndex.isPresent()) {
                         return m_storageList.get(storageIndex.getAsInt());
@@ -381,7 +355,7 @@ public final class SparseListValueFactory implements CollectionValueFactory<Stru
             final List<Integer> storageIndices = new ArrayList<>();
             final List<DataValue> storageList = new ArrayList<>();
 
-            for (int i = 0; i < size; i++) {
+            for (int i = 0; i < size; i++) { // NOSONAR
                 final DataValue v = values.get(i);
                 if (!Objects.equal(defaultElement, v)) {
                     storageIndices.add(i);

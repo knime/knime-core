@@ -48,7 +48,7 @@ package org.knime.core.data.v2;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.def.DoubleCell;
-import org.knime.core.data.v2.value.DoubleValueFactory.DoubleWriteValue;
+import org.knime.core.data.v2.value.ValueInterfaces.DoubleWriteValue;
 
 /**
  * Important Note for developers: We assume a 1-to-1 association from a {@link DataCell} to a {@link WriteValue}, for

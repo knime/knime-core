@@ -64,11 +64,9 @@ import org.knime.core.data.collection.CollectionCellFactory;
 import org.knime.core.data.collection.SetCell;
 import org.knime.core.data.collection.SetDataValue;
 import org.knime.core.data.def.BooleanCell;
-import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
-import org.knime.core.data.v2.WriteValue;
-import org.knime.core.data.v2.value.SetValueFactory.SetReadValue;
-import org.knime.core.data.v2.value.SetValueFactory.SetWriteValue;
+import org.knime.core.data.v2.value.ValueInterfaces.BooleanSetReadValue;
+import org.knime.core.data.v2.value.ValueInterfaces.BooleanSetWriteValue;
 import org.knime.core.table.access.BooleanAccess.BooleanReadAccess;
 import org.knime.core.table.access.BooleanAccess.BooleanWriteAccess;
 import org.knime.core.table.access.StructAccess.StructReadAccess;
@@ -114,45 +112,6 @@ public final class BooleanSetValueFactory implements ValueFactory<StructReadAcce
         return new DefaultStructDataTraits(DefaultDataTraits.EMPTY, DefaultDataTraits.EMPTY, DefaultDataTraits.EMPTY);
     }
 
-    /**
-     * {@link ReadValue} equivalent to {@link SetCell} with {@link BooleanCell} elements.
-     *
-     * @since 4.3
-     */
-    public interface BooleanSetReadValue extends SetReadValue {
-
-        /**
-         * @param value a boolean value
-         * @return true if the set contains the value
-         */
-        boolean contains(boolean value);
-
-        /**
-         * @return a {@link Set} containing the {@link Boolean} values
-         */
-        Set<Boolean> getBooleanSet();
-
-        /**
-         * @return an iterator of the boolean set
-         * @throws IllegalStateException if the set contains a missing value
-         */
-        Iterator<Boolean> booleanIterator();
-    }
-
-    /**
-     * {@link WriteValue} equivalent to {@link SetCell} with {@link BooleanCell} elements.
-     *
-     * @since 4.3
-     */
-    public interface BooleanSetWriteValue extends SetWriteValue {
-
-        /**
-         * Set the value.
-         *
-         * @param values a collection of boolean values
-         */
-        void setBooleanCollectionValue(Collection<Boolean> values);
-    }
 
     private static final class DefaultBooleanSetReadValue implements BooleanSetReadValue {
 
@@ -261,9 +220,9 @@ public final class BooleanSetValueFactory implements ValueFactory<StructReadAcce
 
         @Override
         public void setValue(final Collection<DataValue> values) {
-            boolean containsTrue = false;
-            boolean containsFalse = false;
-            boolean containsMissing = false;
+            var containsTrue = false;
+            var containsFalse = false;
+            var containsMissing = false;
 
             for (final DataValue v : values) {
                 if (v instanceof MissingValue) {
@@ -290,8 +249,8 @@ public final class BooleanSetValueFactory implements ValueFactory<StructReadAcce
 
         @Override
         public void setBooleanCollectionValue(final Collection<Boolean> values) {
-            boolean containsTrue = false;
-            boolean containsFalse = false;
+            var containsTrue = false;
+            var containsFalse = false;
 
             for (final Boolean v : values) {
                 if (v.booleanValue()) {

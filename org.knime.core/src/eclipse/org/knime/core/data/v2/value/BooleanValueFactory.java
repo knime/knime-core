@@ -49,19 +49,11 @@
 package org.knime.core.data.v2.value;
 
 import org.knime.core.data.BooleanValue;
-import org.knime.core.data.BoundedValue;
-import org.knime.core.data.ComplexNumberValue;
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DoubleValue;
-import org.knime.core.data.FuzzyIntervalValue;
-import org.knime.core.data.FuzzyNumberValue;
-import org.knime.core.data.IntValue;
-import org.knime.core.data.LongValue;
-import org.knime.core.data.NominalValue;
 import org.knime.core.data.def.BooleanCell;
-import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
-import org.knime.core.data.v2.WriteValue;
+import org.knime.core.data.v2.value.ValueInterfaces.BooleanReadValue;
+import org.knime.core.data.v2.value.ValueInterfaces.BooleanWriteValue;
 import org.knime.core.table.access.BooleanAccess.BooleanReadAccess;
 import org.knime.core.table.access.BooleanAccess.BooleanWriteAccess;
 import org.knime.core.table.schema.BooleanDataSpec;
@@ -92,39 +84,6 @@ public class BooleanValueFactory implements ValueFactory<BooleanReadAccess, Bool
     @Override
     public BooleanWriteValue createWriteValue(final BooleanWriteAccess writer) {
         return new DefaultBooleanWriteValue(writer);
-    }
-
-    /**
-     * {@link ReadValue} equivalent to {@link BooleanCell}.
-     *
-     * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
-     * @since 4.3
-     */
-    public static interface BooleanReadValue extends //
-        BooleanValue, //
-        DoubleValue, //
-        BoundedValue, //
-        LongValue, //
-        IntValue, //
-        NominalValue, //
-        ComplexNumberValue, //
-        FuzzyNumberValue, //
-        FuzzyIntervalValue, //
-        ReadValue {
-    }
-
-    /**
-     * {@link WriteValue} equivalent to {@link BooleanCell}.
-     *
-     * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
-     * @since 4.3
-     */
-    public static interface BooleanWriteValue extends WriteValue<BooleanValue> {
-
-        /**
-         * @param value the boolean to set.
-         */
-        void setBooleanValue(boolean value);
     }
 
     private static final class DefaultBooleanReadValue extends AbstractValue<BooleanReadAccess>

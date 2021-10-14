@@ -56,18 +56,16 @@ import java.util.PrimitiveIterator.OfLong;
 import org.knime.core.data.LongValue;
 import org.knime.core.data.collection.SparseListCell;
 import org.knime.core.data.def.LongCell;
-import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
-import org.knime.core.data.v2.WriteValue;
-import org.knime.core.data.v2.value.LongListValueFactory.LongListReadValue;
-import org.knime.core.data.v2.value.LongListValueFactory.LongListWriteValue;
-import org.knime.core.data.v2.value.LongValueFactory.LongReadValue;
-import org.knime.core.data.v2.value.LongValueFactory.LongWriteValue;
 import org.knime.core.data.v2.value.SparseListValueFactory.AbstractSparseIterator;
 import org.knime.core.data.v2.value.SparseListValueFactory.DefaultSparseListReadValue;
 import org.knime.core.data.v2.value.SparseListValueFactory.DefaultSparseListWriteValue;
-import org.knime.core.data.v2.value.SparseListValueFactory.SparseListReadValue;
-import org.knime.core.data.v2.value.SparseListValueFactory.SparseListWriteValue;
+import org.knime.core.data.v2.value.ValueInterfaces.LongListReadValue;
+import org.knime.core.data.v2.value.ValueInterfaces.LongListWriteValue;
+import org.knime.core.data.v2.value.ValueInterfaces.LongReadValue;
+import org.knime.core.data.v2.value.ValueInterfaces.LongSparseListReadValue;
+import org.knime.core.data.v2.value.ValueInterfaces.LongSparseListWriteValue;
+import org.knime.core.data.v2.value.ValueInterfaces.LongWriteValue;
 import org.knime.core.table.access.IntAccess.IntReadAccess;
 import org.knime.core.table.access.IntAccess.IntWriteAccess;
 import org.knime.core.table.access.ListAccess.ListReadAccess;
@@ -103,8 +101,8 @@ public final class LongSparseListValueFactory implements ValueFactory<StructRead
     public DataSpec getSpec() {
         final LongDataSpec defaultDataSpec = LongDataSpec.INSTANCE;
         final IntDataSpec sizeDataSpec = IntDataSpec.INSTANCE;
-        final ListDataSpec indicesDataSpec = new ListDataSpec(IntDataSpec.INSTANCE);
-        final ListDataSpec listDataSpec = new ListDataSpec(LongDataSpec.INSTANCE);
+        final var indicesDataSpec = new ListDataSpec(IntDataSpec.INSTANCE);
+        final var listDataSpec = new ListDataSpec(LongDataSpec.INSTANCE);
         return new StructDataSpec(defaultDataSpec, sizeDataSpec, indicesDataSpec, listDataSpec);
     }
 
@@ -127,27 +125,6 @@ public final class LongSparseListValueFactory implements ValueFactory<StructRead
             new DefaultListDataTraits(DefaultDataTraits.EMPTY));
     }
 
-    /**
-     * {@link ReadValue} equivalent to {@link SparseListCell} with {@link LongCell} elements.
-     *
-     * @since 4.3
-     */
-    public static interface LongSparseListReadValue extends SparseListReadValue, LongListReadValue {
-    }
-
-    /**
-     * {@link WriteValue} equivalent to {@link SparseListCell} with {@link LongCell} elements.
-     *
-     * @since 4.3
-     */
-    public static interface LongSparseListWriteValue extends SparseListWriteValue {
-
-        /**
-         * @param values the values to set
-         * @param defaultElement the default element which should not be saved multiple times
-         */
-        void setValue(long[] values, long defaultElement);
-    }
 
     private static final class DefaultLongSparseListReadValue
         extends DefaultSparseListReadValue<LongReadValue, LongListReadValue, LongReadAccess>
@@ -175,9 +152,9 @@ public final class LongSparseListValueFactory implements ValueFactory<StructRead
 
         @Override
         public long[] getLongArray() {
-            final long[] values = new long[size()];
+            final var values = new long[size()];
             final OfLong iterator = longIterator();
-            for (int i = 0; i < values.length; i++) {
+            for (int i = 0; i < values.length; i++) { // NOSONAR
                 values[i] = iterator.nextLong();
             }
             return values;
@@ -223,7 +200,7 @@ public final class LongSparseListValueFactory implements ValueFactory<StructRead
             final List<Integer> storageIndices = new ArrayList<>();
             final List<Long> storageList = new ArrayList<>();
 
-            for (int i = 0; i < values.length; i++) {
+            for (int i = 0; i < values.length; i++) { // NOSONAR
                 final long v = values[i];
                 if (v != defaultElement) {
                     storageIndices.add(i);
