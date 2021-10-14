@@ -233,7 +233,7 @@ public final class NodeViewManager {
      * @param nodeFactoryClass the node factory class to get the node view debug url for
      * @return a debug url or an empty optional of none is set
      */
-    public static Optional<String>
+    private static Optional<String>
         getNodeViewDebugUrl(@SuppressWarnings("rawtypes") final Class<? extends NodeFactory> nodeFactoryClass) {
         String pattern = System.getProperty(NODE_VIEW_DEBUG_PATTERN_PROP);
         String url = System.getProperty(NODE_VIEW_DEBUG_URL_PROP);
@@ -256,6 +256,10 @@ public final class NodeViewManager {
      */
     public Optional<String> getNodeViewPageUrl(final NativeNodeContainer nnc) {
         if (isRunAsDesktopApplication()) {
+            var debugUrl = getNodeViewDebugUrl(nnc.getNode().getFactory().getClass());
+            if (debugUrl.isPresent()) {
+                return debugUrl;
+            }
             try {
                 return Optional.of(writeNodeViewResourcesToDiscAndGetFileUrl(nnc));
             } catch (IOException ex) {
