@@ -48,7 +48,21 @@
  */
 package org.knime.core.webui.node.dialog;
 
+import java.io.IOException;
+import java.util.Optional;
+
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettings;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContext;
+import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.webui.data.DataService;
+import org.knime.core.webui.data.text.TextApplyDataService;
+import org.knime.core.webui.data.text.TextInitialDataService;
+import org.knime.core.webui.node.dialog.settings.NodeSettingsService;
+import org.knime.core.webui.node.dialog.settings.TextNodeSettingsService;
 import org.knime.core.webui.page.Page;
 
 /**
@@ -62,8 +76,34 @@ public class NodeDialogBuilder {
 
     private final Page m_page;
 
+    private DataService m_dataService;
+
+    private NodeSettingsService m_nodeSettingsService;
+
     NodeDialogBuilder(final Page p) {
         m_page = p;
+    }
+
+    /**
+     * See {@link NodeDialog#getDataService()}.
+     *
+     * @param dataService
+     * @return this builder instance
+     */
+    public NodeDialogBuilder dataService(final DataService dataService) {
+        m_dataService = dataService;
+        return this;
+    }
+
+    /**
+     * Sets a {@link NodeSettingsService}.
+     *
+     * @param nodeSettingsService
+     * @return this builder instance
+     */
+    public NodeDialogBuilder nodeSettingsService(final NodeSettingsService nodeSettingsService) {
+        m_nodeSettingsService = nodeSettingsService;
+        return this;
     }
 
     /**
@@ -72,6 +112,62 @@ public class NodeDialogBuilder {
      * @return a new node view instance
      */
     public NodeDialog build() {
-        return new NodeDialog(m_page);
+        if (m_nodeSettingsService instanceof TextNodeSettingsService) {
+            return createNodeDialogWithSettings((TextNodeSettingsService)m_nodeSettingsService);
+        }
+        return new NodeDialog(m_page, null, m_dataService, null);
     }
+
+    private NodeDialog createNodeDialogWithSettings(final TextNodeSettingsService textSettingsService) {
+        var nc = NodeContext.getContext().getNodeContainer();
+        var wfm = nc.getParent();
+
+        var nodeID = nc.getID();
+        var initialDataService = createTextInitialDataService(textSettingsService, (NativeNodeContainer)nc);
+        var applyDataService = createTextApplyDataService(textSettingsService, nodeID, wfm);
+        return new NodeDialog(m_page, initialDataService, m_dataService, applyDataService);
+    }
+
+    private static TextInitialDataService createTextInitialDataService(
+        final TextNodeSettingsService textSettingsService, final NativeNodeContainer nnc) {
+        return new TextInitialDataService() {
+
+            @Override
+            public String getInitialData() {
+                var settings = new NodeSettings("node_settings");
+                nnc.getNode().saveModelSettingsTo(settings);
+                return textSettingsService.readSettings(settings);
+            }
+        };
+    }
+
+    private static TextApplyDataService createTextApplyDataService(final TextNodeSettingsService textSettingsService,
+        final NodeID nodeID, final WorkflowManager wfm) {
+        return new TextApplyDataService() {
+
+            @Override
+            public Optional<String> validateData(final String data) throws IOException {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public void applyData(final String data) throws IOException {
+                var settings = new NodeSettings("node_settings");
+                try {
+                    wfm.saveNodeSettings(nodeID, settings);
+                    NodeSettingsWO modelSettings;
+                    if (settings.containsKey("model")) {
+                        modelSettings = settings.getNodeSettings("model");
+                    } else {
+                        modelSettings = settings.addNodeSettings("model");
+                    }
+                    textSettingsService.writeSettings(data, modelSettings);
+                    wfm.loadNodeSettings(nodeID, settings);
+                } catch (InvalidSettingsException ex) {
+                    throw new IOException("Invalid node settings", ex);
+                }
+            }
+        };
+    }
+
 }

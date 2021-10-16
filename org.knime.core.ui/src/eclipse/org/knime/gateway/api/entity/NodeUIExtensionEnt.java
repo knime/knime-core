@@ -52,6 +52,9 @@ import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainerParent;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.webui.data.DataServiceProvider;
+import org.knime.core.webui.node.dialog.NodeDialogManager;
+import org.knime.core.webui.node.view.NodeViewManager;
 
 /**
  * Super classes for node-ui-extension entities, e.g., node view and node dialog.
@@ -60,16 +63,29 @@ import org.knime.core.node.workflow.WorkflowManager;
  */
 public abstract class NodeUIExtensionEnt {
 
+    /**
+     * The type of the node extension.
+     */
+    @SuppressWarnings("javadoc")
+    protected enum ExtensionType {
+            VIEW, DIALOG;
+    }
+
     private final String m_nodeId;
 
     private final String m_workflowId;
 
     private final String m_projectId;
 
+    private final String m_extensionType;
+
+    private final String m_initialData;
+
     /**
      * @param nnc the node to create the entity for
+     * @param extensionType
      */
-    protected NodeUIExtensionEnt(final NativeNodeContainer nnc) {
+    protected NodeUIExtensionEnt(final NativeNodeContainer nnc, final ExtensionType extensionType) {
         WorkflowManager wfm = nnc.getParent();
         WorkflowManager projectWfm = wfm.getProjectWFM();
 
@@ -84,6 +100,16 @@ public abstract class NodeUIExtensionEnt {
             m_workflowId = new NodeIDEnt(wfm.getID(), isComponentProject).toString();
         }
         m_nodeId = new NodeIDEnt(nnc.getID(), isComponentProject).toString();
+
+        DataServiceProvider dataServiceProvider = extensionType == ExtensionType.VIEW
+            ? NodeViewManager.getInstance().getNodeView(nnc) : NodeDialogManager.getInstance().getNodeDialog(nnc);
+        if (dataServiceProvider != null && dataServiceProvider.getInitialDataService().isPresent()) {
+            m_initialData = dataServiceProvider.callTextInitialDataService();
+        } else {
+            m_initialData = null;
+        }
+
+        m_extensionType = extensionType.toString().toLowerCase();
     }
 
     /**
@@ -115,6 +141,15 @@ public abstract class NodeUIExtensionEnt {
     /**
      * @return initial data
      */
-    public abstract String getInitialData();
+    public String getInitialData() {
+        return m_initialData;
+    }
+
+    /**
+     * @return the type of the node ui extension
+     */
+    public String getExtensionType() {
+        return m_extensionType;
+    }
 
 }

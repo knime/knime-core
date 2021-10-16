@@ -44,78 +44,76 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Aug 31, 2021 (hornm): created
+ *   Oct 16, 2021 (hornm): created
  */
-package org.knime.core.webui.node.view;
+package org.knime.core.webui.node.dialog.settings;
 
 import java.io.IOException;
-import java.util.Optional;
 
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.wizard.page.WizardPageContribution;
-import org.knime.core.node.workflow.NativeNodeContainer;
-import org.knime.core.node.workflow.NodeContext;
-import org.knime.core.webui.data.InitialDataService;
-import org.knime.core.webui.data.text.TextInitialDataService;
-import org.knime.core.webui.data.text.TextReExecuteDataService;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettings;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
 
 /**
- * Implemented by {@link NodeFactory}s to register a node view.
- *
- * Pending API - needs to be integrated with {@link NodeFactory} eventually.
+ * A {@link NodeSettingsService} which transfers a json-string to and from a {@link NodeSettings}-object.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
- * @param <T> the node model this node view will have access to
- *
- * @since 4.5
+ * @param <S> the type of object representing the node settings
  */
-public interface NodeViewFactory<T extends NodeModel> extends WizardPageContribution {
+public interface JsonNodeSettingsService<S> extends TextNodeSettingsService {
 
     /**
-     * Creates a new node view instance. It is guaranteed that a {@link NodeContext} is available when the method is
-     * called.
+     * {@inheritDoc}
+     */
+    @Override
+    default void writeSettings(final String s, final NodeSettingsWO settings) throws InvalidSettingsException {
+        try {
+            writeSettingsObject(fromJson(s), settings);
+        } catch (IOException ex) {
+            throw new InvalidSettingsException("Node settings couldn't be deserialized", ex);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    default String readSettings(final NodeSettingsRO settings) {
+        return toJson(readSettingsObject(settings));
+    }
+
+    /**
+     * Writes the settings object into a {@link NodeSettingsWO}-object.
      *
-     * @param nodeModel the node model to create the view for
-     * @return a new node view instance
+     * @param s the settings object to write
+     * @param settings
      */
-    NodeView createNodeView(T nodeModel);
+    void writeSettingsObject(S s, NodeSettingsWO settings);
 
     /**
-     * {@inheritDoc}
+     * Reads the settings object from {@link NodeSettingsRO}-object.
+     *
+     * @param settings
+     * @return the read settings object
      */
-    @Override
-    default Optional<String> validateViewValue(final NativeNodeContainer nnc, final String value) throws IOException {
-        var nodeView = NodeViewManager.getInstance().getNodeView(nnc);
-        var service = nodeView.getApplyDataService().orElse(null);
-        if (service instanceof TextReExecuteDataService) {
-            return ((TextReExecuteDataService)service).validateData(value);
-        }
-        return Optional.empty();
-    }
+    S readSettingsObject(NodeSettingsRO settings);
 
     /**
-     * {@inheritDoc}
+     * Deserializes the settings object from a JSON-string.
+     *
+     * @param settings a JSON-string
+     * @return the deserialized settings object
+     * @throws IOException if the deserialization failed
      */
-    @Override
-    default void loadViewValue(final NativeNodeContainer nnc, final String value) throws IOException {
-        var nodeView = NodeViewManager.getInstance().getNodeView(nnc);
-        var service = nodeView.getApplyDataService().orElse(null);
-        if (service instanceof TextReExecuteDataService) {
-            ((TextReExecuteDataService)service).applyData(value);
-        }
-    }
+    S fromJson(String settings) throws IOException;
 
     /**
-     * {@inheritDoc}
+     * Turns the settings object into a JSON-string.
+     *
+     * @param settings object
+     * @return the json-serialized settings object
      */
-    @Override
-    default Optional<String> getInitialViewValue(final NativeNodeContainer nnc) {
-        var nodeView = NodeViewManager.getInstance().getNodeView(nnc);
-        InitialDataService service = nodeView.getInitialDataService().orElse(null);
-        if (service instanceof TextInitialDataService) {
-            return Optional.of(((TextInitialDataService)service).getInitialData());
-        }
-        return Optional.empty();
-    }
+    String toJson(S settings);
+
 }

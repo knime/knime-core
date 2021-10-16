@@ -48,6 +48,10 @@
  */
 package org.knime.core.webui.node.dialog;
 
+import org.knime.core.webui.data.ApplyDataService;
+import org.knime.core.webui.data.DataService;
+import org.knime.core.webui.data.DataServiceProvider;
+import org.knime.core.webui.data.InitialDataService;
 import org.knime.core.webui.page.Page;
 
 /**
@@ -57,11 +61,13 @@ import org.knime.core.webui.page.Page;
  *
  * @since 4.5
  */
-public class NodeDialog {
+public class NodeDialog extends DataServiceProvider {
 
     private final Page m_page;
 
-    NodeDialog(final Page p) {
+    NodeDialog(final Page p, final InitialDataService initialDataService, final DataService dataService,
+        final ApplyDataService applyDataService) {
+        super(initialDataService, dataService, applyDataService);
         m_page = p;
     }
 

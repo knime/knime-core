@@ -44,78 +44,40 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Aug 31, 2021 (hornm): created
+ *   Oct 16, 2021 (hornm): created
  */
-package org.knime.core.webui.node.view;
+package org.knime.core.webui.node.dialog.settings;
 
-import java.io.IOException;
-import java.util.Optional;
+import java.io.InputStream;
+import java.io.OutputStream;
 
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.wizard.page.WizardPageContribution;
-import org.knime.core.node.workflow.NativeNodeContainer;
-import org.knime.core.node.workflow.NodeContext;
-import org.knime.core.webui.data.InitialDataService;
-import org.knime.core.webui.data.text.TextInitialDataService;
-import org.knime.core.webui.data.text.TextReExecuteDataService;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettings;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
 
 /**
- * Implemented by {@link NodeFactory}s to register a node view.
- *
- * Pending API - needs to be integrated with {@link NodeFactory} eventually.
+ * Service to transfer node settings from and to a {@link NodeSettings}-object.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
- * @param <T> the node model this node view will have access to
- *
- * @since 4.5
  */
-public interface NodeViewFactory<T extends NodeModel> extends WizardPageContribution {
+public interface NodeSettingsService {
 
     /**
-     * Creates a new node view instance. It is guaranteed that a {@link NodeContext} is available when the method is
-     * called.
+     * Writes the node settings from a stream into a {@link NodeSettingsWO}-object.
      *
-     * @param nodeModel the node model to create the view for
-     * @return a new node view instance
+     * @param in
+     * @param settings
+     * @throws InvalidSettingsException
      */
-    NodeView createNodeView(T nodeModel);
+    void writeSettings(final InputStream in, NodeSettingsWO settings) throws InvalidSettingsException;
 
     /**
-     * {@inheritDoc}
+     * Reads node settings from a stream into a {@link NodeSettingsRO}-object.
+     *
+     * @param settings
+     * @param out
      */
-    @Override
-    default Optional<String> validateViewValue(final NativeNodeContainer nnc, final String value) throws IOException {
-        var nodeView = NodeViewManager.getInstance().getNodeView(nnc);
-        var service = nodeView.getApplyDataService().orElse(null);
-        if (service instanceof TextReExecuteDataService) {
-            return ((TextReExecuteDataService)service).validateData(value);
-        }
-        return Optional.empty();
-    }
+    void readSettings(NodeSettingsRO settings, final OutputStream out);
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    default void loadViewValue(final NativeNodeContainer nnc, final String value) throws IOException {
-        var nodeView = NodeViewManager.getInstance().getNodeView(nnc);
-        var service = nodeView.getApplyDataService().orElse(null);
-        if (service instanceof TextReExecuteDataService) {
-            ((TextReExecuteDataService)service).applyData(value);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    default Optional<String> getInitialViewValue(final NativeNodeContainer nnc) {
-        var nodeView = NodeViewManager.getInstance().getNodeView(nnc);
-        InitialDataService service = nodeView.getInitialDataService().orElse(null);
-        if (service instanceof TextInitialDataService) {
-            return Optional.of(((TextInitialDataService)service).getInitialData());
-        }
-        return Optional.empty();
-    }
 }

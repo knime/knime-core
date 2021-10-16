@@ -71,9 +71,6 @@ import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.webui.data.text.TextDataService;
-import org.knime.core.webui.data.text.TextInitialDataService;
-import org.knime.core.webui.data.text.TextReExecuteDataService;
 import org.knime.core.webui.page.Page;
 import org.knime.core.webui.page.PageUtil;
 import org.knime.core.webui.page.Resource;
@@ -166,63 +163,6 @@ public final class NodeViewManager {
             m_nodeCleanUpCallbacks.remove(nodeId);
         });
         m_nodeCleanUpCallbacks.put(nodeId, nodeCleanUpCallback);
-    }
-
-    /**
-     * Helper to call a {@link TextInitialDataService} for a node view.
-     *
-     * @param nc the node providing the view to call the data service for
-     * @return the initial data
-     * @throws IllegalStateException if the provided node doesn't provide a node view or the node view does not provide
-     *             an inital data service
-     *
-     */
-    public String callTextInitialDataService(final NodeContainer nc) {
-        var initialDataService = getNodeView(nc).getInitialDataService().orElse(null);
-        if (initialDataService instanceof TextInitialDataService) {
-            return ((TextInitialDataService)initialDataService).getInitialData();
-        } else {
-            throw new IllegalStateException("The node view provided by node '" + nc.getNameWithID()
-                + "' does not provide a 'initial data service'");
-        }
-    }
-
-    /**
-     * Helper to call a {@link TextDataService} for a node view.
-     *
-     * @param nc the node providing the view to call the data service for
-     * @param request the data service request
-     * @return the data service response
-     * @throws IllegalStateException if the provided node doesn't provide a node view or the node view does not provide
-     *             a data service
-     */
-    public String callTextDataService(final NodeContainer nc, final String request) {
-        var dataService = getNodeView(nc).getDataService().orElse(null);
-        if (dataService instanceof TextDataService) {
-            return ((TextDataService)dataService).handleRequest(request);
-        } else {
-            throw new IllegalStateException(
-                "The node view provided by node '" + nc.getNameWithID() + "' does not provide a 'data service'");
-        }
-    }
-
-    /**
-     * Helper to call a {@link TextReExecuteDataService} for a node view.
-     *
-     * @param nc the node providing the view to call the data service for
-     * @param request the data service request representing the data to apply
-     * @throws IOException if applying the data failed
-     * @throws IllegalStateException if the provided node doesn't provide a node view or the node view does not provide
-     *             a data service
-     */
-    public void callTextReExecuteDataService(final NodeContainer nc, final String request) throws IOException {
-        var reExecuteDataService = getNodeView(nc).getReExecuteDataService().orElse(null);
-        if (reExecuteDataService instanceof TextReExecuteDataService) {
-            ((TextReExecuteDataService)reExecuteDataService).reExecute(request);
-        } else {
-            throw new IllegalStateException(
-                "The node view provided by node '" + nc.getNameWithID() + "' does not provide a 'data service'");
-        }
     }
 
     /**

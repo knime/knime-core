@@ -65,15 +65,11 @@ public class NodeDialogEnt extends NodeUIExtensionEnt {
      * @param nnc
      */
     public NodeDialogEnt(final NativeNodeContainer nnc) {
-        super(nnc);
-        if (!NodeDialogManager.hasNodeDialog(nnc)) {
-            throw new IllegalArgumentException("The node '" + nnc.getNameWithID() + "' does not provide a dialog");
-        }
+        super(nnc, ExtensionType.DIALOG);
 
         var nodeDialogManager = NodeDialogManager.getInstance();
-        var nodeDialog = nodeDialogManager.getNodeDialog(nnc);
         var url = nodeDialogManager.getNodeDialogPageUrl(nnc);
-        var page = nodeDialog.getPage();
+        var page = nodeDialogManager.getNodeDialog(nnc).getPage();
         var id = PageUtil.getPageId(nnc, page.isStatic(), true);
         m_resourceInfo = new ResourceInfoEnt(id, url, null, page);
     }
@@ -81,11 +77,6 @@ public class NodeDialogEnt extends NodeUIExtensionEnt {
     @Override
     public ResourceInfoEnt getResourceInfo() {
         return m_resourceInfo;
-    }
-
-    @Override
-    public String getInitialData() {
-        return null;
     }
 
 }

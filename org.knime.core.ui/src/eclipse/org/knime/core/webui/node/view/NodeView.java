@@ -50,7 +50,9 @@ package org.knime.core.webui.node.view;
 
 import java.util.Optional;
 
+import org.knime.core.webui.data.ApplyDataService;
 import org.knime.core.webui.data.DataService;
+import org.knime.core.webui.data.DataServiceProvider;
 import org.knime.core.webui.data.InitialDataService;
 import org.knime.core.webui.data.ReExecuteDataService;
 import org.knime.core.webui.page.Page;
@@ -62,22 +64,14 @@ import org.knime.core.webui.page.Page;
  *
  * @since 4.5
  */
-public final class NodeView {
+public final class NodeView extends DataServiceProvider {
 
     private final Page m_page;
 
-    private final DataService m_dataService;
-
-    private final InitialDataService m_initialDataService;
-
-    private final ReExecuteDataService m_reExecuteDataService;
-
     NodeView(final Page p, final InitialDataService initialDataService, final DataService dataService,
         final ReExecuteDataService reExecuteDataService) {
+        super(initialDataService, dataService, reExecuteDataService);
         m_page = p;
-        m_dataService = dataService;
-        m_initialDataService = initialDataService;
-        m_reExecuteDataService = reExecuteDataService;
     }
 
     /**
@@ -87,27 +81,6 @@ public final class NodeView {
      */
     public Page getPage() {
         return m_page;
-    }
-
-    /**
-     * @return optional service that provides data for initialization of the node view
-     */
-    public Optional<InitialDataService> getInitialDataService() {
-        return Optional.ofNullable(m_initialDataService);
-    }
-
-    /**
-     * @return optional service generally providing data to the node view
-     */
-    public Optional<DataService> getDataService() {
-        return Optional.ofNullable(m_dataService);
-    }
-
-    /**
-     * @return optional service to re-execute node with new data
-     */
-    public Optional<ReExecuteDataService> getReExecuteDataService() {
-        return Optional.ofNullable(m_reExecuteDataService);
     }
 
     /**

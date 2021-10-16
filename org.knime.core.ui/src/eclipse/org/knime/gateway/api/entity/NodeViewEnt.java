@@ -57,10 +57,7 @@ import org.knime.core.webui.page.PageUtil;
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
-@SuppressWarnings("javadoc")
 public final class NodeViewEnt extends NodeUIExtensionEnt {
-
-    private final String m_initialData;
 
     private final NodeInfoEnt m_info;
 
@@ -70,28 +67,20 @@ public final class NodeViewEnt extends NodeUIExtensionEnt {
      * @param nnc
      */
     public NodeViewEnt(final NativeNodeContainer nnc) {
-        super(nnc);
-        if (!NodeViewManager.hasNodeView(nnc)) {
-            throw new IllegalArgumentException("The node '" + nnc.getNameWithID() + "' does not provide a view");
-        }
+        super(nnc, ExtensionType.VIEW);
 
         var nodeViewManager = NodeViewManager.getInstance();
-        var nodeView = nodeViewManager.getNodeView(nnc);
-        if (nodeView.getInitialDataService().isPresent()) {
-            m_initialData = nodeViewManager.callTextInitialDataService(nnc);
-        } else {
-            m_initialData = null;
-        }
-
         var url = nodeViewManager.getNodeViewPageUrl(nnc).orElse(null);
         var path = nodeViewManager.getNodeViewPagePath(nnc).orElse(null);
-        var page = nodeView.getPage();
+        var page = nodeViewManager.getNodeView(nnc).getPage();
         var id = PageUtil.getPageId(nnc, page.isStatic(), false);
         m_resourceInfo = new ResourceInfoEnt(id, url, path, page);
-
         m_info = new NodeInfoEnt(nnc);
     }
 
+    /**
+     * @return additional info for the node providing the view
+     */
     public NodeInfoEnt getNodeInfo() {
         return m_info;
     }
@@ -99,11 +88,6 @@ public final class NodeViewEnt extends NodeUIExtensionEnt {
     @Override
     public ResourceInfoEnt getResourceInfo() {
         return m_resourceInfo;
-    }
-
-    @Override
-    public String getInitialData() {
-        return m_initialData;
     }
 
 }

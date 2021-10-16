@@ -44,78 +44,68 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Aug 31, 2021 (hornm): created
+ *   Oct 16, 2021 (hornm): created
  */
-package org.knime.core.webui.node.view;
+package org.knime.core.webui.node.dialog.settings;
 
 import java.io.IOException;
-import java.util.Optional;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.wizard.page.WizardPageContribution;
-import org.knime.core.node.workflow.NativeNodeContainer;
-import org.knime.core.node.workflow.NodeContext;
-import org.knime.core.webui.data.InitialDataService;
-import org.knime.core.webui.data.text.TextInitialDataService;
-import org.knime.core.webui.data.text.TextReExecuteDataService;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettings;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
 
 /**
- * Implemented by {@link NodeFactory}s to register a node view.
- *
- * Pending API - needs to be integrated with {@link NodeFactory} eventually.
+ * A {@link NodeSettingsService} which transfers {@link NodeSettings} to and from a string.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
- * @param <T> the node model this node view will have access to
- *
- * @since 4.5
  */
-public interface NodeViewFactory<T extends NodeModel> extends WizardPageContribution {
+public interface TextNodeSettingsService extends NodeSettingsService {
 
     /**
-     * Creates a new node view instance. It is guaranteed that a {@link NodeContext} is available when the method is
-     * called.
+     * {@inheritDoc}
+     */
+    @Override
+    default void writeSettings(final InputStream in, final NodeSettingsWO settings) throws InvalidSettingsException {
+        try {
+            writeSettings(new String(in.readAllBytes(), StandardCharsets.UTF_8), settings);
+        } catch (IOException ex) {
+            // TODO
+            throw new RuntimeException(ex);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    default void readSettings(final NodeSettingsRO settings, final OutputStream out) {
+        try {
+            out.write(readSettings(settings).getBytes(StandardCharsets.UTF_8));
+        } catch (IOException ex) {
+            // TODO
+            throw new RuntimeException(ex);
+        }
+    }
+
+    /**
+     * Transfers the node settings from a string into a {@link NodeSettingsWO}-object.
      *
-     * @param nodeModel the node model to create the view for
-     * @return a new node view instance
+     * @param s the string representation of the settings
+     * @param settings the settings object to write into
+     * @throws InvalidSettingsException
      */
-    NodeView createNodeView(T nodeModel);
+    void writeSettings(String s, NodeSettingsWO settings) throws InvalidSettingsException;
 
     /**
-     * {@inheritDoc}
+     * Converts a {@link NodeSettingsRO}-object into a string representing the settings.
+     *
+     * @param settings the settings to read from
+     * @return the string-representation of the setting
      */
-    @Override
-    default Optional<String> validateViewValue(final NativeNodeContainer nnc, final String value) throws IOException {
-        var nodeView = NodeViewManager.getInstance().getNodeView(nnc);
-        var service = nodeView.getApplyDataService().orElse(null);
-        if (service instanceof TextReExecuteDataService) {
-            return ((TextReExecuteDataService)service).validateData(value);
-        }
-        return Optional.empty();
-    }
+    String readSettings(NodeSettingsRO settings);
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    default void loadViewValue(final NativeNodeContainer nnc, final String value) throws IOException {
-        var nodeView = NodeViewManager.getInstance().getNodeView(nnc);
-        var service = nodeView.getApplyDataService().orElse(null);
-        if (service instanceof TextReExecuteDataService) {
-            ((TextReExecuteDataService)service).applyData(value);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    default Optional<String> getInitialViewValue(final NativeNodeContainer nnc) {
-        var nodeView = NodeViewManager.getInstance().getNodeView(nnc);
-        InitialDataService service = nodeView.getInitialDataService().orElse(null);
-        if (service instanceof TextInitialDataService) {
-            return Optional.of(((TextInitialDataService)service).getInitialData());
-        }
-        return Optional.empty();
-    }
 }
