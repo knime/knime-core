@@ -44,66 +44,77 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Sep 28, 2021 (hornm): created
+ *   Oct 15, 2021 (hornm): created
  */
 package org.knime.gateway.api.entity;
 
 import org.knime.core.node.workflow.NativeNodeContainer;
-import org.knime.core.webui.node.view.NodeViewManager;
-import org.knime.core.webui.page.PageUtil;
+import org.knime.core.node.workflow.NodeContainerParent;
+import org.knime.core.node.workflow.SubNodeContainer;
+import org.knime.core.node.workflow.WorkflowManager;
 
 /**
- * Node view entity containing the info required by the UI (i.e. frontend) to be able display a node view.
+ * Super classes for node-ui-extension entities, e.g., node view and node dialog.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
-@SuppressWarnings("javadoc")
-public final class NodeViewEnt extends NodeUIExtensionEnt {
+public abstract class NodeUIExtensionEnt {
 
-    private final String m_initialData;
+    private final String m_nodeId;
 
-    private final NodeInfoEnt m_info;
+    private final String m_workflowId;
 
-    private final ResourceInfoEnt m_resourceInfo;
+    private final String m_projectId;
 
     /**
-     * @param nnc
+     * @param nnc the node to create the entity for
      */
-    public NodeViewEnt(final NativeNodeContainer nnc) {
-        super(nnc);
-        if (!NodeViewManager.hasNodeView(nnc)) {
-            throw new IllegalArgumentException("The node '" + nnc.getNameWithID() + "' does not provide a view");
-        }
+    protected NodeUIExtensionEnt(final NativeNodeContainer nnc) {
+        WorkflowManager wfm = nnc.getParent();
+        WorkflowManager projectWfm = wfm.getProjectWFM();
 
-        var nodeViewManager = NodeViewManager.getInstance();
-        var nodeView = nodeViewManager.getNodeView(nnc);
-        if (nodeView.getInitialDataService().isPresent()) {
-            m_initialData = nodeViewManager.callTextInitialDataService(nnc);
+        m_projectId = projectWfm.getNameWithID();
+
+        NodeContainerParent ncParent = wfm.getDirectNCParent();
+        boolean isComponentProject = projectWfm.isComponentProjectWFM();
+        if (ncParent instanceof SubNodeContainer) {
+            // it's a component's workflow
+            m_workflowId = new NodeIDEnt(((SubNodeContainer)ncParent).getID(), isComponentProject).toString();
         } else {
-            m_initialData = null;
+            m_workflowId = new NodeIDEnt(wfm.getID(), isComponentProject).toString();
         }
-
-        var url = nodeViewManager.getNodeViewPageUrl(nnc).orElse(null);
-        var path = nodeViewManager.getNodeViewPagePath(nnc).orElse(null);
-        var page = nodeView.getPage();
-        var id = PageUtil.getPageId(nnc, page.isStatic(), false);
-        m_resourceInfo = new ResourceInfoEnt(id, url, path, page);
-
-        m_info = new NodeInfoEnt(nnc);
+        m_nodeId = new NodeIDEnt(nnc.getID(), isComponentProject).toString();
     }
 
-    public NodeInfoEnt getNodeInfo() {
-        return m_info;
+    /**
+     * @return the workflow project id
+     */
+    public final String getProjectId() {
+        return m_projectId;
     }
 
-    @Override
-    public ResourceInfoEnt getResourceInfo() {
-        return m_resourceInfo;
+    /**
+     * @return the id of the (sub-)workflow
+     */
+    public final String getWorkflowId() {
+        return m_workflowId;
     }
 
-    @Override
-    public String getInitialData() {
-        return m_initialData;
+    /**
+     * @return the id of the node
+     */
+    public final String getNodeId() {
+        return m_nodeId;
     }
+
+    /**
+     * @return see {@link ResourceInfoEnt}
+     */
+    public abstract ResourceInfoEnt getResourceInfo();
+
+    /**
+     * @return initial data
+     */
+    public abstract String getInitialData();
 
 }

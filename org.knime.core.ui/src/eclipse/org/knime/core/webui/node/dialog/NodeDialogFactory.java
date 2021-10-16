@@ -44,66 +44,29 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Sep 28, 2021 (hornm): created
+ *   Oct 15, 2021 (hornm): created
  */
-package org.knime.gateway.api.entity;
+package org.knime.core.webui.node.dialog;
 
-import org.knime.core.node.workflow.NativeNodeContainer;
-import org.knime.core.webui.node.view.NodeViewManager;
-import org.knime.core.webui.page.PageUtil;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.workflow.NodeContext;
 
 /**
- * Node view entity containing the info required by the UI (i.e. frontend) to be able display a node view.
+ * Implemented by {@link NodeFactory}s to register a node dialog.
+ *
+ * Pending API - needs to be integrated with {@link NodeFactory} eventually.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
+ *
+ * @since 4.5
  */
-@SuppressWarnings("javadoc")
-public final class NodeViewEnt extends NodeUIExtensionEnt {
-
-    private final String m_initialData;
-
-    private final NodeInfoEnt m_info;
-
-    private final ResourceInfoEnt m_resourceInfo;
+public interface NodeDialogFactory {
 
     /**
-     * @param nnc
+     * Creates a new node dialog instance. It is guaranteed that a {@link NodeContext} is available when the method is
+     * called.
+     *
+     * @return a new node dialog instance
      */
-    public NodeViewEnt(final NativeNodeContainer nnc) {
-        super(nnc);
-        if (!NodeViewManager.hasNodeView(nnc)) {
-            throw new IllegalArgumentException("The node '" + nnc.getNameWithID() + "' does not provide a view");
-        }
-
-        var nodeViewManager = NodeViewManager.getInstance();
-        var nodeView = nodeViewManager.getNodeView(nnc);
-        if (nodeView.getInitialDataService().isPresent()) {
-            m_initialData = nodeViewManager.callTextInitialDataService(nnc);
-        } else {
-            m_initialData = null;
-        }
-
-        var url = nodeViewManager.getNodeViewPageUrl(nnc).orElse(null);
-        var path = nodeViewManager.getNodeViewPagePath(nnc).orElse(null);
-        var page = nodeView.getPage();
-        var id = PageUtil.getPageId(nnc, page.isStatic(), false);
-        m_resourceInfo = new ResourceInfoEnt(id, url, path, page);
-
-        m_info = new NodeInfoEnt(nnc);
-    }
-
-    public NodeInfoEnt getNodeInfo() {
-        return m_info;
-    }
-
-    @Override
-    public ResourceInfoEnt getResourceInfo() {
-        return m_resourceInfo;
-    }
-
-    @Override
-    public String getInitialData() {
-        return m_initialData;
-    }
-
+    NodeDialog createNodeDialog();
 }

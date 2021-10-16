@@ -71,11 +71,11 @@ import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.util.FileUtil;
 import org.knime.core.webui.data.text.TextDataService;
 import org.knime.core.webui.data.text.TextInitialDataService;
 import org.knime.core.webui.data.text.TextReExecuteDataService;
 import org.knime.core.webui.page.Page;
+import org.knime.core.webui.page.PageUtil;
 import org.knime.core.webui.page.Resource;
 
 /**
@@ -94,8 +94,6 @@ public final class NodeViewManager {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(NodeViewManager.class);
 
     private static NodeViewManager instance;
-
-    private Path m_uiExtensionsPath;
 
     private final Map<NodeID, NodeView> m_nodeViewMap = new HashMap<>();
 
@@ -261,7 +259,15 @@ public final class NodeViewManager {
                 return debugUrl;
             }
             try {
-                return Optional.of(writeNodeViewResourcesToDiscAndGetFileUrl(nnc));
+                var page = getNodeView(nnc).getPage();
+                var url =
+                    PageUtil.writePageResourcesToDiscAndGetFileUrl(nnc, page, false, pageRootPath -> {
+                        var nodeCleanUpCallback = m_nodeCleanUpCallbacks.get(nnc.getID());
+                        if (nodeCleanUpCallback != null && !page.isCompletelyStatic()) {
+                            nodeCleanUpCallback.onCleanUp(() -> deleteResources(pageRootPath));
+                        }
+                    });
+                return Optional.of(url);
             } catch (IOException ex) {
                 throw new IllegalStateException(
                     "Page URL for the view of node '" + nnc.getNameWithID() + "' couldn't be created.", ex);
@@ -282,7 +288,7 @@ public final class NodeViewManager {
         if (!isRunAsDesktopApplication()) {
             var page = getNodeView(nnc).getPage();
             var isStaticPage = page.isCompletelyStatic();
-            var pageId = getPageId(nnc, isStaticPage);
+            var pageId = PageUtil.getPageId(nnc, isStaticPage, false);
             registerPage(nnc.getID(), page, pageId);
             return Optional.of(pageId + "/" + page.getRelativePath());
         } else {
@@ -329,53 +335,6 @@ public final class NodeViewManager {
         return !"true".equals(System.getProperty("java.awt.headless"));
     }
 
-    /**
-     * Writes a page (and associated resources) into a temporary directory. Static pages are only written if the
-     * respective files don't exist yet (the files are identified by the {@link NodeFactory}-class). A page is regarded
-     * static, if the page itself and all associated resources are static.
-     *
-     * @param nnc the node container to write the view resources for
-     *
-     * @return the file url to the page
-     * @throws IOException if writing the files failed
-     * @throws IllegalStateException if the node doesn't have a node view
-     */
-    private String writeNodeViewResourcesToDiscAndGetFileUrl(final NativeNodeContainer nnc) throws IOException {
-        var page = getNodeView(nnc).getPage();
-        var isCompletelyStatic = page.isCompletelyStatic();
-        var pageId = getPageId(nnc, isCompletelyStatic);
-        var rootPath = createOrGetUIExtensionsPath().resolve(pageId);
-
-        var pagePath = rootPath.resolve(page.getRelativePath());
-        if (!Files.exists(pagePath)) {
-            writeResource(page, pagePath);
-            for (Resource r : page.getContext().values()) {
-                writeResource(r, rootPath.resolve(r.getRelativePath()));
-            }
-            var nodeCleanUpCallback = m_nodeCleanUpCallbacks.get(nnc.getID());
-            if (nodeCleanUpCallback != null && !isCompletelyStatic) {
-                nodeCleanUpCallback.onCleanUp(() -> deleteResources(rootPath));
-            }
-        }
-        return pagePath.toUri().toString();
-    }
-
-    /**
-     * Determines the page id. The page id is a valid file name!
-     *
-     * @param nnc the node providing the node view page
-     * @param isStaticPage whether it's a static page
-     * @return the page id
-     */
-    @SuppressWarnings("java:S2301")
-    public static String getPageId(final NativeNodeContainer nnc, final boolean isStaticPage) {
-        if (isStaticPage) {
-            return nnc.getNode().getFactory().getClass().getName();
-        } else {
-            return nnc.getID().toString().replace(":", "_");
-        }
-    }
-
     private static void deleteResources(final Path rootPath) {
         if (Files.exists(rootPath)) {
             try {
@@ -386,21 +345,6 @@ public final class NodeViewManager {
         }
     }
 
-    private static void writeResource(final Resource r, final Path targetPath) throws IOException {
-        Files.createDirectories(targetPath.getParent());
-        try (var in = r.getInputStream()) {
-            Files.copy(in, targetPath);
-            LOGGER.debug("New page resource written: " + targetPath);
-        }
-    }
-
-    private Path createOrGetUIExtensionsPath() throws IOException {
-        if (m_uiExtensionsPath == null) {
-            m_uiExtensionsPath = FileUtil.createTempDir("ui_extensions_").toPath();
-        }
-        return m_uiExtensionsPath;
-    }
-
     /**
      * For testing purposes only.
      */
@@ -408,10 +352,7 @@ public final class NodeViewManager {
         m_nodeViewMap.clear();
         m_nodeCleanUpCallbacks.clear();
         m_pageMap.clear();
-        if (m_uiExtensionsPath != null && Files.exists(m_uiExtensionsPath)) {
-            FileUtils.deleteQuietly(m_uiExtensionsPath.toFile());
-            m_uiExtensionsPath = null;
-        }
+        PageUtil.clearUIExtensionFiles();
     }
 
     /**

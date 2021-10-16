@@ -31,7 +31,7 @@
  *
  *  Additional permission relating to nodes for KNIME that extend the Node
  *  Extension (and in particular that are based on subclasses of NodeModel,
- *  NodeDialog, and NodeView) and that only interoperate with KNIME through
+ *  NodeDialog, and NodeDialog) and that only interoperate with KNIME through
  *  standard APIs ("Nodes"):
  *  Nodes are deemed to be separate and independent programs and to not be
  *  covered works.  Notwithstanding anything to the contrary in the
@@ -44,66 +44,34 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Sep 28, 2021 (hornm): created
+ *   Oct 15, 2021 (hornm): created
  */
-package org.knime.gateway.api.entity;
+package org.knime.core.webui.node.dialog;
 
-import org.knime.core.node.workflow.NativeNodeContainer;
-import org.knime.core.webui.node.view.NodeViewManager;
-import org.knime.core.webui.page.PageUtil;
+import org.knime.core.node.workflow.NodeContext;
+import org.knime.core.webui.page.Page;
 
 /**
- * Node view entity containing the info required by the UI (i.e. frontend) to be able display a node view.
+ * Builder to create {@link NodeDialog}-instances.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
+ *
+ * @since 4.5
  */
-@SuppressWarnings("javadoc")
-public final class NodeViewEnt extends NodeUIExtensionEnt {
+public class NodeDialogBuilder {
 
-    private final String m_initialData;
+    private final Page m_page;
 
-    private final NodeInfoEnt m_info;
-
-    private final ResourceInfoEnt m_resourceInfo;
+    NodeDialogBuilder(final Page p) {
+        m_page = p;
+    }
 
     /**
-     * @param nnc
+     * Creates a new node view from the builder. Expects a {@link NodeContext} to be available.
+     *
+     * @return a new node view instance
      */
-    public NodeViewEnt(final NativeNodeContainer nnc) {
-        super(nnc);
-        if (!NodeViewManager.hasNodeView(nnc)) {
-            throw new IllegalArgumentException("The node '" + nnc.getNameWithID() + "' does not provide a view");
-        }
-
-        var nodeViewManager = NodeViewManager.getInstance();
-        var nodeView = nodeViewManager.getNodeView(nnc);
-        if (nodeView.getInitialDataService().isPresent()) {
-            m_initialData = nodeViewManager.callTextInitialDataService(nnc);
-        } else {
-            m_initialData = null;
-        }
-
-        var url = nodeViewManager.getNodeViewPageUrl(nnc).orElse(null);
-        var path = nodeViewManager.getNodeViewPagePath(nnc).orElse(null);
-        var page = nodeView.getPage();
-        var id = PageUtil.getPageId(nnc, page.isStatic(), false);
-        m_resourceInfo = new ResourceInfoEnt(id, url, path, page);
-
-        m_info = new NodeInfoEnt(nnc);
+    public NodeDialog build() {
+        return new NodeDialog(m_page);
     }
-
-    public NodeInfoEnt getNodeInfo() {
-        return m_info;
-    }
-
-    @Override
-    public ResourceInfoEnt getResourceInfo() {
-        return m_resourceInfo;
-    }
-
-    @Override
-    public String getInitialData() {
-        return m_initialData;
-    }
-
 }

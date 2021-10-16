@@ -31,7 +31,7 @@
  *
  *  Additional permission relating to nodes for KNIME that extend the Node
  *  Extension (and in particular that are based on subclasses of NodeModel,
- *  NodeDialog, and NodeView) and that only interoperate with KNIME through
+ *  NodeDialog, and NodeDialog) and that only interoperate with KNIME through
  *  standard APIs ("Nodes"):
  *  Nodes are deemed to be separate and independent programs and to not be
  *  covered works.  Notwithstanding anything to the contrary in the
@@ -44,56 +44,38 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Sep 28, 2021 (hornm): created
+ *   Oct 15, 2021 (hornm): created
  */
 package org.knime.gateway.api.entity;
 
 import org.knime.core.node.workflow.NativeNodeContainer;
-import org.knime.core.webui.node.view.NodeViewManager;
+import org.knime.core.webui.node.dialog.NodeDialogManager;
 import org.knime.core.webui.page.PageUtil;
 
 /**
- * Node view entity containing the info required by the UI (i.e. frontend) to be able display a node view.
+ * Node dialog entity containing the info required by the UI (i.e. frontend) to be able to display a node dialog.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
-@SuppressWarnings("javadoc")
-public final class NodeViewEnt extends NodeUIExtensionEnt {
-
-    private final String m_initialData;
-
-    private final NodeInfoEnt m_info;
+public class NodeDialogEnt extends NodeUIExtensionEnt {
 
     private final ResourceInfoEnt m_resourceInfo;
 
     /**
      * @param nnc
      */
-    public NodeViewEnt(final NativeNodeContainer nnc) {
+    public NodeDialogEnt(final NativeNodeContainer nnc) {
         super(nnc);
-        if (!NodeViewManager.hasNodeView(nnc)) {
-            throw new IllegalArgumentException("The node '" + nnc.getNameWithID() + "' does not provide a view");
+        if (!NodeDialogManager.hasNodeDialog(nnc)) {
+            throw new IllegalArgumentException("The node '" + nnc.getNameWithID() + "' does not provide a dialog");
         }
 
-        var nodeViewManager = NodeViewManager.getInstance();
-        var nodeView = nodeViewManager.getNodeView(nnc);
-        if (nodeView.getInitialDataService().isPresent()) {
-            m_initialData = nodeViewManager.callTextInitialDataService(nnc);
-        } else {
-            m_initialData = null;
-        }
-
-        var url = nodeViewManager.getNodeViewPageUrl(nnc).orElse(null);
-        var path = nodeViewManager.getNodeViewPagePath(nnc).orElse(null);
-        var page = nodeView.getPage();
-        var id = PageUtil.getPageId(nnc, page.isStatic(), false);
-        m_resourceInfo = new ResourceInfoEnt(id, url, path, page);
-
-        m_info = new NodeInfoEnt(nnc);
-    }
-
-    public NodeInfoEnt getNodeInfo() {
-        return m_info;
+        var nodeDialogManager = NodeDialogManager.getInstance();
+        var nodeDialog = nodeDialogManager.getNodeDialog(nnc);
+        var url = nodeDialogManager.getNodeDialogPageUrl(nnc);
+        var page = nodeDialog.getPage();
+        var id = PageUtil.getPageId(nnc, page.isStatic(), true);
+        m_resourceInfo = new ResourceInfoEnt(id, url, null, page);
     }
 
     @Override
@@ -103,7 +85,7 @@ public final class NodeViewEnt extends NodeUIExtensionEnt {
 
     @Override
     public String getInitialData() {
-        return m_initialData;
+        return null;
     }
 
 }

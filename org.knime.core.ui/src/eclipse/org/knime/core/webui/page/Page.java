@@ -71,6 +71,7 @@ public final class Page implements Resource {
 
     private final Map<String, Resource> m_context;
 
+    private Boolean m_isCompletelyStatic;
 
     Page(final Resource pageResource, final List<Resource> context) {
         m_pageResource = pageResource;
@@ -117,7 +118,10 @@ public final class Page implements Resource {
      * @return <code>true</code> if the page itself and all the associated resources are static (i.e. invariable)
      */
     public boolean isCompletelyStatic() {
-        return isStatic() && getContext().values().stream().allMatch(Resource::isStatic);
+        if (m_isCompletelyStatic == null) {
+            m_isCompletelyStatic = isStatic() && getContext().values().stream().allMatch(Resource::isStatic);
+        }
+        return m_isCompletelyStatic;
     }
 
     /**

@@ -53,7 +53,6 @@ import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.startsWith;
-import static org.knime.core.webui.node.view.NodeViewManager.getPageId;
 import static org.knime.core.webui.node.view.NodeViewManagerTest.runOnExecutor;
 
 import java.io.IOException;
@@ -69,6 +68,7 @@ import org.knime.core.webui.data.text.TextInitialDataService;
 import org.knime.core.webui.node.view.NodeView;
 import org.knime.core.webui.page.Page;
 import org.knime.core.webui.page.PageTest;
+import org.knime.core.webui.page.PageUtil;
 import org.knime.core.webui.page.Resource;
 import org.knime.testing.node.view.NodeViewNodeFactory;
 import org.knime.testing.node.view.NodeViewNodeModel;
@@ -117,7 +117,7 @@ public class NodeViewEntTest {
         assertThat(resourceInfo.getUrl(), endsWith("index.html"));
         assertThat(resourceInfo.getPath(), is(nullValue()));
         assertThat(resourceInfo.getType(), is(Resource.Type.HTML.toString()));
-        assertThat(resourceInfo.getId(), is(getPageId(nnc, false)));
+        assertThat(resourceInfo.getId(), is(PageUtil.getPageId(nnc, false, false)));
         var nodeInfo = ent.getNodeInfo();
         assertThat(nodeInfo.getNodeName(), is("NodeView"));
         assertThat(nodeInfo.getNodeAnnotation(), is("node annotation"));
