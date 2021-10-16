@@ -61,7 +61,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
@@ -73,9 +72,6 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeInputNodeFactory;
-import org.knime.core.webui.data.text.TextDataService;
-import org.knime.core.webui.data.text.TextInitialDataService;
-import org.knime.core.webui.data.text.TextReExecuteDataService;
 import org.knime.core.webui.page.Page;
 import org.knime.testing.node.view.NodeViewNodeFactory;
 import org.knime.testing.node.view.NodeViewNodeModel;
@@ -128,58 +124,10 @@ public class NodeViewManagerTest {
         assertThat(nodeView.getPage() == page, is(true));
 
         IllegalStateException ex = assertThrows(IllegalStateException.class,
-            () -> NodeViewManager.getInstance().callTextInitialDataService(nc));
-        assertThat(ex.getMessage(), containsString("does not provide a 'initial data service'"));
+            () -> NodeViewManager.getInstance().getNodeView(nc).callTextInitialDataService());
+        assertThat(ex.getMessage(), containsString("No text initial data service available"));
         assertThat(nodeView.getPage().isCompletelyStatic(), is(false));
 
-    }
-
-    /**
-     * Tests {@link NodeViewManager#callTextInitialDataService(org.knime.core.node.workflow.NodeContainer)},
-     * {@link NodeViewManager#callTextDataService(org.knime.core.node.workflow.NodeContainer, String)} and
-     * {@link NodeViewManager#callTextReExecuteDataService(org.knime.core.node.workflow.NodeContainer, String)}
-     */
-    @Test
-    public void testCallDataServices() {
-        var page = Page.builderFromString(() -> "test page content", "index.html").build();
-        var nodeView = NodeView.builder(page).initialDataService(new TextInitialDataService() {
-
-            @Override
-            public String getInitialData() {
-                return "init service";
-            }
-        }).dataService(new TextDataService() {
-
-            @Override
-            public String handleRequest(final String request) {
-                return "general data service";
-            }
-        }).reExecuteDataService(new TextReExecuteDataService() {
-
-            @Override
-            public Optional<String> validateData(final String data) throws IOException {
-                throw new UnsupportedOperationException("should not be called in this test");
-            }
-
-            @Override
-            public void applyData(final String data) throws IOException {
-                throw new UnsupportedOperationException("should not be called in this test");
-            }
-
-            @Override
-            public void reExecute(final String data) throws IOException {
-                throw new IOException("re-execute data service");
-
-            }
-        }).build();
-        NativeNodeContainer nc = createNodeWithNodeView(m_wfm, m -> nodeView);
-
-        var nodeViewManager = NodeViewManager.getInstance();
-        assertThat(nodeViewManager.callTextInitialDataService(nc), is("init service"));
-        assertThat(nodeViewManager.callTextDataService(nc, ""), is("general data service"));
-        String message =
-            assertThrows(IOException.class, () -> nodeViewManager.callTextReExecuteDataService(nc, "")).getMessage();
-        assertThat(message, is("re-execute data service"));
     }
 
     /**

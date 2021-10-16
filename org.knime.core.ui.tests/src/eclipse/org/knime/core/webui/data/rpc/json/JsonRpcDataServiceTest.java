@@ -55,7 +55,6 @@ import java.io.IOException;
 
 import org.junit.Test;
 import org.knime.core.node.workflow.NativeNodeContainer;
-import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.webui.data.rpc.json.impl.JsonRpcDataServiceImpl;
 import org.knime.core.webui.data.rpc.json.impl.JsonRpcSingleServer;
 import org.knime.core.webui.node.view.NodeView;
@@ -78,14 +77,14 @@ public class JsonRpcDataServiceTest {
      */
     @Test
     public void testJsonRpcDataService() throws IOException {
-        WorkflowManager wfm = WorkflowManagerUtil.createEmptyWorkflow();
-        Page page = Page.builderFromString(() -> "content", "index.html").build();
+        var wfm = WorkflowManagerUtil.createEmptyWorkflow();
+        var page = Page.builderFromString(() -> "content", "index.html").build();
         NativeNodeContainer nnc = NodeViewManagerTest.createNodeWithNodeView(wfm, m -> NodeView.builder(page)
             .dataService(new JsonRpcDataServiceImpl(new JsonRpcSingleServer<MyService>(new MyService()))).build());
         wfm.executeAllAndWaitUntilDone();
 
-        String jsonRpcRequest = "{\"jsonrpc\":\"2.0\", \"id\":1, \"method\":\"myMethod\"}";
-        String response = NodeViewManager.getInstance().callTextDataService(nnc, jsonRpcRequest);
+        var jsonRpcRequest = "{\"jsonrpc\":\"2.0\", \"id\":1, \"method\":\"myMethod\"}";
+        String response = NodeViewManager.getInstance().getNodeView(nnc).callTextDataService(jsonRpcRequest);
         assertThat(response, is("{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":\"my service method result\"}\n"));
 
         WorkflowManagerUtil.disposeWorkflow(wfm);
