@@ -162,4 +162,12 @@ public final class NodeDialogManager {
         return Optional.empty();
     }
 
+    /**
+     * For testing purposes only.
+     */
+    void clearCachesAndFiles() {
+       m_nodeDialogMap.clear();
+       PageUtil.clearUIExtensionFiles();
+    }
+
 }
