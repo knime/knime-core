@@ -80,8 +80,9 @@ public class NodeDialogBuilder {
 
     private NodeSettingsService m_nodeSettingsService;
 
-    NodeDialogBuilder(final Page p) {
+    NodeDialogBuilder(final Page p, final NodeSettingsService nodeSettingsService) {
         m_page = p;
+        m_nodeSettingsService = nodeSettingsService;
     }
 
     /**
@@ -92,17 +93,6 @@ public class NodeDialogBuilder {
      */
     public NodeDialogBuilder dataService(final DataService dataService) {
         m_dataService = dataService;
-        return this;
-    }
-
-    /**
-     * Sets a {@link NodeSettingsService}.
-     *
-     * @param nodeSettingsService
-     * @return this builder instance
-     */
-    public NodeDialogBuilder nodeSettingsService(final NodeSettingsService nodeSettingsService) {
-        m_nodeSettingsService = nodeSettingsService;
         return this;
     }
 
@@ -134,16 +124,21 @@ public class NodeDialogBuilder {
 
             @Override
             public String getInitialData() {
-                var settings = new NodeSettings("node_settings");
-                nnc.getNode().saveModelSettingsTo(settings);
-                return textSettingsService.readSettings(settings);
+                NodeContext.pushContext(nnc);
+                try {
+                    var settings = new NodeSettings("node_settings");
+                    nnc.getNode().saveModelSettingsTo(settings);
+                    return textSettingsService.readSettings(settings);
+                } finally {
+                    NodeContext.removeLastContext();
+                }
             }
         };
     }
 
     private static TextApplyDataService createTextApplyDataService(final TextNodeSettingsService textSettingsService,
         final NodeID nodeID, final WorkflowManager wfm) {
-        return new TextApplyDataService() {
+        return new TextApplyDataService() { // NOSONAR
 
             @Override
             public Optional<String> validateData(final String data) throws IOException {

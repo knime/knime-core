@@ -99,7 +99,7 @@ public class NodeDialogTest {
     @Test
     public void testCallDataServices() throws IOException, InvalidSettingsException {
         var page = Page.builderFromString(() -> "test page content", "index.html").build();
-        var nodeDialogBuilder = NodeDialog.builder(page).nodeSettingsService(new TextNodeSettingsService() {
+        var nodeDialogBuilder = NodeDialog.builder(page, new TextNodeSettingsService() {
 
             @Override
             public void writeSettings(final String s, final NodeSettingsWO settings) throws InvalidSettingsException {
@@ -122,7 +122,7 @@ public class NodeDialogTest {
             }
         });
 
-        NativeNodeContainer nc = NodeDialogManagerTest.createNodeWithNodeDialog(m_wfm, () -> nodeDialogBuilder.build());
+        NativeNodeContainer nc = NodeDialogManagerTest.createNodeWithNodeDialog(m_wfm, nodeDialogBuilder::build);
 
         var newNodeDialog = NodeDialogManager.getInstance().getNodeDialog(nc);
         assertThat(newNodeDialog.callTextInitialDataService(), is("the node settings"));

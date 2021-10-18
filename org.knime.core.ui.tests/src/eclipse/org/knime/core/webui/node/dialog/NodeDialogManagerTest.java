@@ -49,7 +49,6 @@
 package org.knime.core.webui.node.dialog;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThrows;
@@ -66,10 +65,14 @@ import java.util.function.Supplier;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeInputNodeFactory;
+import org.knime.core.webui.node.dialog.settings.TextNodeSettingsService;
 import org.knime.core.webui.page.Page;
 import org.knime.testing.node.dialog.NodeDialogNodeFactory;
 import org.knime.testing.util.WorkflowManagerUtil;
@@ -112,15 +115,14 @@ public class NodeDialogManagerTest {
     @Test
     public void testSimpleNodeDialogNode() {
         var page = Page.builderFromString(() -> "test page content", "index.html").build();
-        NativeNodeContainer nc = createNodeWithNodeDialog(m_wfm, () -> NodeDialog.builder(page).build());
+        NativeNodeContainer nc =
+            createNodeWithNodeDialog(m_wfm, () -> NodeDialog.builder(page, new TestNodeSettingsService()).build());
 
         assertThat("node expected to have a node dialog", NodeDialogManager.hasNodeDialog(nc), is(true));
         var nodeDialog = NodeDialogManager.getInstance().getNodeDialog(nc);
         assertThat(nodeDialog.getPage() == page, is(true));
 
-        IllegalStateException ex = assertThrows(IllegalStateException.class,
-            () -> NodeDialogManager.getInstance().getNodeDialog(nc).callTextInitialDataService());
-        assertThat(ex.getMessage(), containsString("No text initial data service available"));
+        assertThat(NodeDialogManager.getInstance().getNodeDialog(nc).callTextInitialDataService(), is("test settings"));
         assertThat(nodeDialog.getPage().isCompletelyStatic(), is(false));
     }
 
@@ -135,9 +137,10 @@ public class NodeDialogManagerTest {
         var staticPage = Page.builder(BUNDLE_ID, "files", "page.html").addResourceFile("resource.html").build();
         var dynamicPage = Page.builderFromString(() -> "page content", "page.html")
             .addResourceFromString(() -> "resource content", "resource.html").build();
-        NativeNodeContainer nnc = createNodeWithNodeDialog(m_wfm, () -> NodeDialog.builder(staticPage).build());
-        NativeNodeContainer nnc2 = createNodeWithNodeDialog(m_wfm, () -> NodeDialog.builder(staticPage).build());
-        NativeNodeContainer nnc3 = createNodeWithNodeDialog(m_wfm, () -> NodeDialog.builder(dynamicPage).build());
+        var testNSS = new TestNodeSettingsService();
+        NativeNodeContainer nnc = createNodeWithNodeDialog(m_wfm, () -> NodeDialog.builder(staticPage, testNSS).build());
+        NativeNodeContainer nnc2 = createNodeWithNodeDialog(m_wfm, () -> NodeDialog.builder(staticPage, testNSS).build());
+        NativeNodeContainer nnc3 = createNodeWithNodeDialog(m_wfm, () -> NodeDialog.builder(dynamicPage, testNSS).build());
         var nodeDialogManager = NodeDialogManager.getInstance();
         String url = nodeDialogManager.getNodeDialogPageUrl(nnc);
         String url2 = nodeDialogManager.getNodeDialogPageUrl(nnc2);
@@ -158,7 +161,7 @@ public class NodeDialogManagerTest {
         m_wfm.executeAllAndWaitUntilDone();
         var dynamicPage2 = Page.builderFromString(() -> "new page content", "page.html")
             .addResourceFromString(() -> "resource content", "resource.html").build();
-        nnc = createNodeWithNodeDialog(m_wfm, () -> NodeDialog.builder(dynamicPage2).build());
+        nnc = createNodeWithNodeDialog(m_wfm, () -> NodeDialog.builder(dynamicPage2, testNSS).build());
         String url5 = nodeDialogManager.getNodeDialogPageUrl(nnc);
         pageContent = Files.readLines(new File(new URI(url5)), StandardCharsets.UTF_8).get(0);
         assertThat(pageContent, is("new page content"));
@@ -186,6 +189,26 @@ public class NodeDialogManagerTest {
     public static NativeNodeContainer createNodeWithNodeDialog(final WorkflowManager wfm,
         final Supplier<NodeDialog> nodeDialogCreator) {
         return createAndAddNode(wfm, new NodeDialogNodeFactory(nodeDialogCreator));
+    }
+
+    private static class TestNodeSettingsService implements TextNodeSettingsService {
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void writeSettings(final String s, final NodeSettingsWO settings) throws InvalidSettingsException {
+            //
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String readSettings(final NodeSettingsRO settings) {
+            return "test settings";
+        }
+
     }
 
 }

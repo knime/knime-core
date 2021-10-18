@@ -73,8 +73,7 @@ public interface TextNodeSettingsService extends NodeSettingsService {
         try {
             writeSettings(new String(in.readAllBytes(), StandardCharsets.UTF_8), settings);
         } catch (IOException ex) {
-            // TODO
-            throw new RuntimeException(ex);
+            throw new InvalidSettingsException(ex);
         }
     }
 
@@ -86,8 +85,8 @@ public interface TextNodeSettingsService extends NodeSettingsService {
         try {
             out.write(readSettings(settings).getBytes(StandardCharsets.UTF_8));
         } catch (IOException ex) {
-            // TODO
-            throw new RuntimeException(ex);
+            // should never happen
+            throw new IllegalStateException("Problem reading the node settings", ex);
         }
     }
 

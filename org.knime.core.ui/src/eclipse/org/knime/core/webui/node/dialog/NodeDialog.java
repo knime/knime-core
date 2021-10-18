@@ -52,6 +52,7 @@ import org.knime.core.webui.data.ApplyDataService;
 import org.knime.core.webui.data.DataService;
 import org.knime.core.webui.data.DataServiceProvider;
 import org.knime.core.webui.data.InitialDataService;
+import org.knime.core.webui.node.dialog.settings.NodeSettingsService;
 import org.knime.core.webui.page.Page;
 
 /**
@@ -84,10 +85,22 @@ public class NodeDialog extends DataServiceProvider {
      * Creates a new node dialog builder.
      *
      * @param p the page to initialize the builder with
+     * @param nodeSettingsService service to read and write node settings
      * @return a new node dialog builder instance
      */
-    public static NodeDialogBuilder builder(final Page p) {
-        return new NodeDialogBuilder(p);
+    public static NodeDialogBuilder builder(final Page p, final NodeSettingsService nodeSettingsService) {
+        return new NodeDialogBuilder(p, nodeSettingsService);
+    }
+
+    /**
+     * Creates a new node dialog.
+     *
+     * @param p the page to initialize the builder with
+     * @param nodeSettingsService service to read and write node settings
+     * @return a new node dialog builder instance
+     */
+    public static NodeDialog create(final Page p, final NodeSettingsService nodeSettingsService) {
+        return new NodeDialogBuilder(p, nodeSettingsService).build();
     }
 
 }

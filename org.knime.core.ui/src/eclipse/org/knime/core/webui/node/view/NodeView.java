@@ -48,9 +48,6 @@
  */
 package org.knime.core.webui.node.view;
 
-import java.util.Optional;
-
-import org.knime.core.webui.data.ApplyDataService;
 import org.knime.core.webui.data.DataService;
 import org.knime.core.webui.data.DataServiceProvider;
 import org.knime.core.webui.data.InitialDataService;
