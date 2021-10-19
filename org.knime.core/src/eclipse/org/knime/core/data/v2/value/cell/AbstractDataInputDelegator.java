@@ -70,9 +70,7 @@ abstract class AbstractDataInputDelegator extends InputStream implements DataCel
 
     private final DataInput m_delegate;
 
-    AbstractDataInputDelegator(
-        final IDataRepository dataRepository, //
-        final DataInput input) {
+    AbstractDataInputDelegator(final IDataRepository dataRepository, final DataInput input) {
 
         m_dataRepository = dataRepository;
         m_delegate = input;

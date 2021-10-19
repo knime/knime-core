@@ -56,14 +56,13 @@ import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 
 /**
- * {@link DataCellDataOutput} implementation on {@link ByteArrayOutputStream}.
+ * Dictionary encoded {@link DataCellDataOutput} implementation on {@link ByteArrayOutputStream}
  *
  * @author Carsten Haubold, KNIME GmbH, Konstanz, Germany
+ * @since 4.5
  */
 final class DictEncodedDataCellDataOutputDelegator extends AbstractDataOutputDelegator {
-
-    DictEncodedDataCellDataOutputDelegator(final IWriteFileStoreHandler fsHandler,
-        final DataOutput output) {
+    DictEncodedDataCellDataOutputDelegator(final IWriteFileStoreHandler fsHandler, final DataOutput output) {
         super(fsHandler, output);
     }
 

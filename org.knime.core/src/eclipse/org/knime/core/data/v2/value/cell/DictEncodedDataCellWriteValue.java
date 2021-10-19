@@ -60,27 +60,26 @@ import org.knime.core.table.schema.VarBinaryDataSpec.ObjectSerializer;
  */
 final class DictEncodedDataCellWriteValue extends AbstractDataCellWriteValue {
 
-    private final ObjectSerializer<DataCell> m_serializer;
-
     private final StructWriteAccess m_access;
 
-    DictEncodedDataCellWriteValue(final StructWriteAccess access,
-        final IDataRepository repository, final IWriteFileStoreHandler fsHandler) {
+    DictEncodedDataCellWriteValue(final StructWriteAccess access, final IDataRepository repository,
+        final IWriteFileStoreHandler fsHandler) {
         super(repository, fsHandler);
         m_access = access;
-        m_serializer = (output, cell) -> {
-            try (final DictEncodedDataCellDataOutputDelegator stream =
-                new DictEncodedDataCellDataOutputDelegator(fsHandler, output)) {
-                stream.writeDataCell(cell);
-            }
-        };
     }
 
     @Override
     protected void setValueImpl(final DataCell cell) {
+        final ObjectSerializer<DataCell> serializer = (output, c) -> {
+            try (final DictEncodedDataCellDataOutputDelegator stream =
+                new DictEncodedDataCellDataOutputDelegator(m_fsHandler, output)) {
+                stream.writeDataCell(cell);
+            }
+        };
+
         final VarBinaryWriteAccess binaryBlobAccess = m_access.getWriteAccess(0);
         final StringWriteAccess classNameAccess = m_access.getWriteAccess(1);
-        classNameAccess.setStringValue(cell.getClass().getName());
-        binaryBlobAccess.setObject(cell, m_serializer);
+        binaryBlobAccess.setObject(cell, serializer);
+        classNameAccess.setStringValue(DictEncodedDataCellDataInputDelegator.getSerializedCellNames(cell));
     }
 }

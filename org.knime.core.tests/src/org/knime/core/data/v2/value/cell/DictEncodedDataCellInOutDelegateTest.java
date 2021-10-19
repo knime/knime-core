@@ -60,6 +60,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.stream.XMLStreamException;
 
 import org.junit.Test;
+import org.knime.core.data.AdapterCellTest.MyAdapterCell;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
@@ -67,6 +68,7 @@ import org.knime.core.data.IDataRepository;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.v2.ValueSchemaTest;
 import org.knime.core.data.xml.XMLCellFactory;
+import org.knime.core.data.xml.XMLValue;
 import org.xml.sax.SAXException;
 
 /**
@@ -138,18 +140,19 @@ public class DictEncodedDataCellInOutDelegateTest {
         final IWriteFileStoreHandler fileStoreHandler = new ValueSchemaTest.DummyWriteFileStoreHandler();
         final var baseBuffer = new ByteArrayOutputStream();
         final var outStream = new DataOutputStream(baseBuffer);
-        try(final var out = new DictEncodedDataCellDataOutputDelegator(fileStoreHandler, outStream)) {
+        try (final var out = new DictEncodedDataCellDataOutputDelegator(fileStoreHandler, outStream)) {
             out.writeDataCell(cell);
 
             final var inStream = new DataInputStream(new ByteArrayInputStream(baseBuffer.toByteArray()));
-            try (final var in = new DictEncodedDataCellDataInputDelegator(dataRepository, inStream)) {
-                final var readCell = in.readDataCell(cell.getClass().getName());
+            try (final var in = new DictEncodedDataCellDataInputDelegator(dataRepository, inStream,
+                DictEncodedDataCellDataInputDelegator.getSerializedCellNames(cell))) {
+                final var readCell = in.readDataCell();
                 assertEquals(cell, readCell);
             }
         }
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test(expected = IllegalStateException.class)
     public void testReadDataCellWithoutClassNameThrowsException()
         throws IOException, ParserConfigurationException, SAXException, XMLStreamException {
         final var xmlString = "<dummyXML>Test</dummyXML>";
@@ -158,12 +161,39 @@ public class DictEncodedDataCellInOutDelegateTest {
         final IWriteFileStoreHandler fileStoreHandler = new ValueSchemaTest.DummyWriteFileStoreHandler();
         final var baseBuffer = new ByteArrayOutputStream();
         final var outStream = new DataOutputStream(baseBuffer);
-        try(final var out = new DictEncodedDataCellDataOutputDelegator(fileStoreHandler, outStream)) {
+        try (final var out = new DictEncodedDataCellDataOutputDelegator(fileStoreHandler, outStream)) {
             out.writeDataCell(cell);
 
             final var inStream = new DataInputStream(new ByteArrayInputStream(baseBuffer.toByteArray()));
-            try (final var in = new DictEncodedDataCellDataInputDelegator(dataRepository, inStream)) {
-                in.readDataCell(); // throws because it should not be used!
+            try (final var in = new DictEncodedDataCellDataInputDelegator(dataRepository, inStream, "")) {
+                in.readDataCell(); // throws because no cell class name was specified in constructor
+            }
+        }
+    }
+
+    @Test
+    public void testReadAdapterCell()
+        throws IOException, ParserConfigurationException, SAXException, XMLStreamException {
+        // This calls readDataCell twice, once for the AdapterCell and once for the contained cell.
+        final var xmlString = "<dummyXML>Test</dummyXML>";
+        final var innerCell = XMLCellFactory.create(xmlString);
+        @SuppressWarnings("unchecked")
+        final var cell = new MyAdapterCell(innerCell, XMLValue.class);
+        final IDataRepository dataRepository = null;
+        final IWriteFileStoreHandler fileStoreHandler = new ValueSchemaTest.DummyWriteFileStoreHandler();
+        final var baseBuffer = new ByteArrayOutputStream();
+        final var outStream = new DataOutputStream(baseBuffer);
+        try (final var out = new DictEncodedDataCellDataOutputDelegator(fileStoreHandler, outStream)) {
+            out.writeDataCell(cell);
+            final var classNames = DictEncodedDataCellDataInputDelegator.getSerializedCellNames(cell).split(";");
+            assertEquals(2, classNames.length);
+            assertEquals(cell.getClass().getName(), classNames[0]);
+            assertEquals(innerCell.getClass().getName(), classNames[1]);
+
+            final var inStream = new DataInputStream(new ByteArrayInputStream(baseBuffer.toByteArray()));
+            try (final var in = new DictEncodedDataCellDataInputDelegator(dataRepository, inStream,
+                DictEncodedDataCellDataInputDelegator.getSerializedCellNames(cell))) {
+                in.readDataCell();
             }
         }
     }

@@ -63,7 +63,7 @@ import org.knime.core.data.v2.WriteValue;
  * @author Carsten Haubold, KNIME GmbH, Konstanz, Germany
  */
 abstract class AbstractDataCellWriteValue implements WriteValue<DataCell> {
-    private final IWriteFileStoreHandler m_fsHandler;
+    protected final IWriteFileStoreHandler m_fsHandler;
 
     private final IDataRepository m_dataRepository;
 

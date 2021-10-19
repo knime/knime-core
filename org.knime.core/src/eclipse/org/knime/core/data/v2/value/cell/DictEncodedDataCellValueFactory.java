@@ -99,8 +99,7 @@ public final class DictEncodedDataCellValueFactory implements ValueFactory<Struc
     private DataType m_type;
 
     /**
-     * Empty framework constructor. Call {@link #initialize(IDataRepository, DataType)} after
-     * using this constructor.
+     * Empty framework constructor. Call {@link #initialize(IDataRepository, DataType)} after using this constructor.
      */
     public DictEncodedDataCellValueFactory() {
     }
@@ -189,10 +188,11 @@ public final class DictEncodedDataCellValueFactory implements ValueFactory<Struc
         public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
             final VarBinaryReadAccess binaryBlobAccess = m_access.getAccess(0);
             final StringReadAccess classNameAccess = m_access.getAccess(1);
-            final var className = classNameAccess.getStringValue();
+            final var classNames = classNameAccess.getStringValue();
             ObjectDeserializer<DataCell> deserializer = input -> {
-                try (var stream = new DictEncodedDataCellDataInputDelegator(m_dataRepository, input)) {
-                    return stream.readDataCell(className);
+                try (DictEncodedDataCellDataInputDelegator stream =
+                    new DictEncodedDataCellDataInputDelegator(m_dataRepository, input, classNames)) {
+                    return stream.readDataCell();
                 }
             };
 

@@ -45,55 +45,62 @@
  */
 package org.knime.core.data.v2.value.cell;
 
-import java.io.ByteArrayInputStream;
 import java.io.DataInput;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellDataInput;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.IDataRepository;
+import org.knime.core.data.collection.CellCollection;
 
 /**
- * {@link DataCellDataInput} implementation on {@link ByteArrayInputStream}.
+ * Dictionary encoded {@link DataCellDataInput} implementation that needs to know the list of class names that will be
+ * deserialized in subsequent calls to {@link DataCellDataInput#readDataCell()}.
  *
  * @author Carsten Haubold, KNIME GmbH, Konstanz, Germany
+ * @since 4.5
  */
 final class DictEncodedDataCellDataInputDelegator extends AbstractDataInputDelegator {
 
     private static final DataTypeRegistry REGISTRY = DataTypeRegistry.getInstance();
 
-    private String m_nextDataCellClassName;
-
-    DictEncodedDataCellDataInputDelegator(final IDataRepository dataRepository, //
-        final DataInput input) {
-        super(dataRepository, input);
-    }
+    private List<String> m_classNames;
 
     /**
-     * The {@link DictEncodedDataCellDataInputDelegator} can only read a {@link DataCell} if it knows the class name,
-     * which needs to be stored separately. Thus, the {@link DictEncodedDataCellDataInputDelegator#readDataCell(String)}
-     * overload should be used.
+     * Construct a {@link DictEncodedDataCellDataInputDelegator} based on a {@link DataInput}.
+     *
+     * @param dataRepository The data repository
+     * @param input The delegate {@link DataInput}
+     * @param classNames Semicolon-separated list of class names of {@link DataCell}s that are contained in the
+     *            {@link DataInput}. Can be generated using
+     *            {@link DictEncodedDataCellDataInputDelegator#getSerializedCellNames(DataCell)}.
      */
-    @SuppressWarnings("javadoc")
-    @Override
-    public DataCell readDataCell() throws IOException {
-        throw new UnsupportedOperationException(
-            "Reading the next data cell without specifying its class name is unsupported");
-    }
-
-    public DataCell readDataCell(final String dataCellClassName) throws IOException {
-        m_nextDataCellClassName = dataCellClassName;
-        return super.readDataCell();
+    DictEncodedDataCellDataInputDelegator(final IDataRepository dataRepository, final DataInput input,
+        final String classNames) {
+        super(dataRepository, input);
+        m_classNames = Arrays.stream(classNames.split(";")).collect(Collectors.toList());
     }
 
     @Override
     protected DataCell readDataCellImpl() throws IOException {
         Optional<DataCellSerializer<DataCell>> serializer = Optional.empty();
-        final var className = m_nextDataCellClassName;
+
+        if (m_classNames.isEmpty()) {
+            throw new IllegalStateException("No more DataCell type information available for this stream");
+        }
+
+        final var className = m_classNames.remove(0);
+        if (className.isEmpty()) {
+            throw new IllegalStateException("Cannot read DataCell with empty type information");
+        }
+
         final var cellClass = REGISTRY.getCellClass(className);
         if (!cellClass.isEmpty()) {
             serializer = REGISTRY.getSerializer(cellClass.get());
@@ -110,5 +117,20 @@ final class DictEncodedDataCellDataInputDelegator extends AbstractDataInputDeleg
         }
 
         return serializer.get().deserialize(this);
+    }
+
+    /**
+     * @param cell The data cell to serialize
+     * @return A string describing the data cell and all the cells that it possibly contains (if it is a
+     *         {@link CellCollection}), as needed to construct a {@link DictEncodedDataCellDataInputDelegator}.
+     */
+    @SuppressWarnings("javadoc")
+    public static String getSerializedCellNames(final DataCell cell) {
+        final var cellNamesBuilder = new StringBuilder(cell.getClass().getName());
+        if (cell instanceof CellCollection) {
+            ((CellCollection)cell).forEach(c -> cellNamesBuilder.append(";" + c.getClass().getName()));
+        }
+
+        return cellNamesBuilder.toString();
     }
 }
