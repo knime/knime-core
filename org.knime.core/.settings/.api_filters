@@ -2349,16 +2349,43 @@
                 <message_argument value="append(ExecutionMonitor, IWriteFileStoreHandler, IntSupplier, BufferedDataTable, BufferedDataTable)"/>
             </message_arguments>
         </filter>
-        <filter comment="Not public API" id="403804204">
+        <filter id="403804204">
             <message_arguments>
                 <message_argument value="org.knime.core.data.TableBackend"/>
-                <message_argument value="concatenate(ExecutionMonitor, IWriteFileStoreHandler, IntSupplier, String, boolean, BufferedDataTable[])"/>
+                <message_argument value="append(ExecutionMonitor, IntSupplier, BufferedDataTable, BufferedDataTable)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="Non-public API" id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.TableBackend"/>
+                <message_argument value="concatenate(ExecutionMonitor, IntSupplier, String, boolean, BufferedDataTable[])"/>
             </message_arguments>
         </filter>
         <filter comment="Not public API" id="403804204">
             <message_arguments>
                 <message_argument value="org.knime.core.data.TableBackend"/>
                 <message_argument value="rearrange(ExecutionMonitor, IWriteFileStoreHandler, IntSupplier, ColumnRearranger, BufferedDataTable, ExecutionContext)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="Non-public API" id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.TableBackend"/>
+                <message_argument value="rearrange(ExecutionMonitor, IntSupplier, ColumnRearranger, BufferedDataTable, ExecutionContext)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/container/BufferedTableBackend.java" type="org.knime.core.data.container.BufferedTableBackend">
+        <filter comment="Baseline acting up" id="1143996420">
+            <message_arguments>
+                <message_argument value="rearrange(ExecutionMonitor, IntSupplier, ColumnRearranger, BufferedDataTable, ExecutionContext)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/v2/CollectionValueFactory.java" type="org.knime.core.data.v2.CollectionValueFactory">
+        <filter comment="Not public API (yet)" id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.CollectionValueFactory"/>
+                <message_argument value="getElementValueFactory()"/>
             </message_arguments>
         </filter>
     </resource>

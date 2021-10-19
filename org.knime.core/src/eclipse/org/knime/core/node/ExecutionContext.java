@@ -429,8 +429,7 @@ public class ExecutionContext extends ExecutionMonitor {
             final BufferedDataTable in, final ColumnRearranger rearranger,
             final ExecutionMonitor subProgressMon)
             throws CanceledExecutionException {
-        var t = getTableBackend().rearrange(subProgressMon, m_fileStoreHandler, m_dataRepository::generateNewID,
-            rearranger, in, this);
+        var t = getTableBackend().rearrange(subProgressMon, m_dataRepository::generateNewID, rearranger, in, this);
         registerAsLocalTableIfContainerTable(t);
         var out = BufferedDataTable.wrapTableFromTableBackend(t, m_dataRepository);
         out.setOwnerRecursively(m_node);
@@ -520,8 +519,8 @@ public class ExecutionContext extends ExecutionMonitor {
      */
     public BufferedDataTable createConcatenateTable(final ExecutionMonitor exec, final BufferedDataTable... tables)
         throws CanceledExecutionException {
-        final KnowsRowCountTable table = getTableBackend().concatenate(exec, m_fileStoreHandler,
-            m_dataRepository::generateNewID, null, true, tables);
+        final KnowsRowCountTable table =
+            getTableBackend().concatenate(exec, m_dataRepository::generateNewID, null, true, tables);
         registerAsLocalTableIfContainerTable(table);
         final var out = BufferedDataTable.wrapTableFromTableBackend(table, getDataRepository());
         out.setOwnerRecursively(m_node);
@@ -565,8 +564,8 @@ public class ExecutionContext extends ExecutionMonitor {
     public BufferedDataTable createConcatenateTable(final ExecutionMonitor exec,
         final Optional<String> rowKeyDuplicateSuffix, final boolean duplicatesPreCheck,
         final BufferedDataTable... tables) throws CanceledExecutionException {
-        final KnowsRowCountTable concatenated = getTableBackend().concatenate(exec, m_fileStoreHandler,
-            m_dataRepository::generateNewID, rowKeyDuplicateSuffix.orElse(null), duplicatesPreCheck, tables);
+        final KnowsRowCountTable concatenated = getTableBackend().concatenate(exec, m_dataRepository::generateNewID,
+            rowKeyDuplicateSuffix.orElse(null), duplicatesPreCheck, tables);
         registerAsLocalTableIfContainerTable(concatenated);
         var out = BufferedDataTable.wrapTableFromTableBackend(concatenated, m_dataRepository);
         out.setOwnerRecursively(m_node);
@@ -609,8 +608,7 @@ public class ExecutionContext extends ExecutionMonitor {
      */
     public BufferedDataTable createJoinedTable(final BufferedDataTable left, final BufferedDataTable right,
         final ExecutionMonitor exec) throws CanceledExecutionException {
-        KnowsRowCountTable jt =
-            getTableBackend().append(exec, m_fileStoreHandler, m_dataRepository::generateNewID, left, right);
+        KnowsRowCountTable jt = getTableBackend().append(exec, m_dataRepository::generateNewID, left, right);
         registerAsLocalTableIfContainerTable(jt);
         var out = BufferedDataTable.wrapTableFromTableBackend(jt, getDataRepository());
         out.setOwnerRecursively(m_node);

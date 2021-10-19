@@ -120,7 +120,6 @@ public interface TableBackend {
      * Concatenates the provided tables.
      *
      * @param progressMonitor used to report progress
-     * @param filestoreHandler for dealing with filestores
      * @param tableIdSupplier provides IDs for potentially created ContainerTables
      * @param rowKeyDuplicateSuffix the suffix for duplicate row keys
      * @param duplicatesPreCheck flag to check the row keys for duplicates (only takes effect if rowKeyDuplicateSuffix
@@ -130,15 +129,14 @@ public interface TableBackend {
      * @throws CanceledExecutionException if execution is canceled by the user
      * @since 4.5
      */
-    KnowsRowCountTable concatenate(ExecutionMonitor progressMonitor, IWriteFileStoreHandler filestoreHandler,
-        IntSupplier tableIdSupplier, String rowKeyDuplicateSuffix, boolean duplicatesPreCheck,
-        final BufferedDataTable... tables) throws CanceledExecutionException;
+    KnowsRowCountTable concatenate(ExecutionMonitor progressMonitor, IntSupplier tableIdSupplier,
+        String rowKeyDuplicateSuffix, boolean duplicatesPreCheck, final BufferedDataTable... tables)
+        throws CanceledExecutionException;
 
     /**
      * Appends the provided tables in the column dimension.
      *
      * @param progressMonitor used to report progress
-     * @param filestoreHandler for dealing with filestores
      * @param tableIdSupplier provides IDs for potentially created ContainerTables
      * @param left the left table
      * @param right the right table
@@ -146,15 +144,13 @@ public interface TableBackend {
      * @throws CanceledExecutionException if execution is canceled by the user
      * @since 4.5
      */
-    KnowsRowCountTable append(ExecutionMonitor progressMonitor, IWriteFileStoreHandler filestoreHandler,
-        IntSupplier tableIdSupplier, final BufferedDataTable left, BufferedDataTable right)
-        throws CanceledExecutionException;
+    KnowsRowCountTable append(ExecutionMonitor progressMonitor, IntSupplier tableIdSupplier,
+        final BufferedDataTable left, BufferedDataTable right) throws CanceledExecutionException;
 
     /**
      * Applies the provided ColumnRearranger on the provided table.
      *
      * @param progressMonitor for reporting progress
-     * @param filestoreHandler for dealing with filestores
      * @param tableIdSupplier provides IDs for potentially created ContainerTables
      * @param columnRearranger defines how to transform the table
      * @param table to transform
@@ -163,8 +159,8 @@ public interface TableBackend {
      * @throws CanceledExecutionException if execution is canceled by the user
      * @since 4.5
      */
-    KnowsRowCountTable rearrange(ExecutionMonitor progressMonitor,
-        IWriteFileStoreHandler filestoreHandler, IntSupplier tableIdSupplier, final ColumnRearranger columnRearranger,
-        BufferedDataTable table, ExecutionContext context) throws CanceledExecutionException;
+    KnowsRowCountTable rearrange(ExecutionMonitor progressMonitor, IntSupplier tableIdSupplier,
+        final ColumnRearranger columnRearranger, BufferedDataTable table, ExecutionContext context)
+        throws CanceledExecutionException;
 
 }
