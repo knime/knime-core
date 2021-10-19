@@ -50,44 +50,61 @@ package org.knime.core.data.v2;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 
+import org.apache.commons.lang3.ArrayUtils;
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataTypeRegistry;
+import org.knime.core.data.IDataRepository;
+import org.knime.core.data.collection.ListCell;
+import org.knime.core.data.collection.SetCell;
+import org.knime.core.data.collection.SparseListCell;
+import org.knime.core.data.def.BooleanCell;
+import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.LongCell;
+import org.knime.core.data.def.StringCell;
+import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.v2.value.BooleanListValueFactory;
-import org.knime.core.data.v2.value.BooleanValueFactory;
-import org.knime.core.data.v2.value.DictEncodedStringValueFactory;
+import org.knime.core.data.v2.value.BooleanSetValueFactory;
+import org.knime.core.data.v2.value.BooleanSparseListValueFactory;
+import org.knime.core.data.v2.value.DefaultRowKeyValueFactory;
 import org.knime.core.data.v2.value.DoubleListValueFactory;
-import org.knime.core.data.v2.value.DoubleValueFactory;
+import org.knime.core.data.v2.value.DoubleSetValueFactory;
+import org.knime.core.data.v2.value.DoubleSparseListValueFactory;
 import org.knime.core.data.v2.value.IntListValueFactory;
-import org.knime.core.data.v2.value.IntValueFactory;
-import org.knime.core.data.v2.value.ListValueFactory;
+import org.knime.core.data.v2.value.IntSetValueFactory;
+import org.knime.core.data.v2.value.IntSparseListValueFactory;
 import org.knime.core.data.v2.value.LongListValueFactory;
-import org.knime.core.data.v2.value.LongValueFactory;
+import org.knime.core.data.v2.value.LongSetValueFactory;
+import org.knime.core.data.v2.value.LongSparseListValueFactory;
 import org.knime.core.data.v2.value.StringListValueFactory;
-import org.knime.core.table.schema.BooleanDataSpec;
-import org.knime.core.table.schema.ByteDataSpec;
+import org.knime.core.data.v2.value.StringSetValueFactory;
+import org.knime.core.data.v2.value.StringSparseListValueFactory;
+import org.knime.core.data.v2.value.VoidRowKeyFactory;
+import org.knime.core.data.v2.value.VoidValueFactory;
+import org.knime.core.data.v2.value.cell.DataCellValueFactory;
+import org.knime.core.data.v2.value.cell.DictEncodedDataCellValueFactory;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.table.schema.DataSpec;
-import org.knime.core.table.schema.DoubleDataSpec;
-import org.knime.core.table.schema.DurationDataSpec;
-import org.knime.core.table.schema.FloatDataSpec;
-import org.knime.core.table.schema.IntDataSpec;
-import org.knime.core.table.schema.ListDataSpec;
-import org.knime.core.table.schema.LocalDateDataSpec;
-import org.knime.core.table.schema.LocalDateTimeDataSpec;
-import org.knime.core.table.schema.LocalTimeDataSpec;
-import org.knime.core.table.schema.LongDataSpec;
-import org.knime.core.table.schema.PeriodDataSpec;
-import org.knime.core.table.schema.StringDataSpec;
-import org.knime.core.table.schema.StructDataSpec;
-import org.knime.core.table.schema.VarBinaryDataSpec;
-import org.knime.core.table.schema.VoidDataSpec;
-import org.knime.core.table.schema.ZonedDateTimeDataSpec;
+import org.knime.core.table.schema.traits.DataTraitUtils;
+import org.knime.core.table.schema.traits.DataTraits;
+import org.knime.core.table.schema.traits.DefaultListDataTraits;
+import org.knime.core.table.schema.traits.DefaultStructDataTraits;
+import org.knime.core.table.schema.traits.ListDataTraits;
+import org.knime.core.table.schema.traits.LogicalTypeTrait;
+import org.knime.core.table.schema.traits.StructDataTraits;
+
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 
 /**
- * Utility class for dealing with {@link ValueFactory ValueFactories}.
- * Provides means to create ValueFactories from their class name as well as default ValueFactories
- * for certain {@link DataSpec DataSpecs}.
+ * Utility class for dealing with {@link ValueFactory ValueFactories}. Provides means to create ValueFactories from
+ * their class name as well as default ValueFactories for certain {@link DataSpec DataSpecs}.
  *
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  * @since 4.5
@@ -95,21 +112,329 @@ import org.knime.core.table.schema.ZonedDateTimeDataSpec;
  */
 public final class ValueFactoryUtils {
 
+    private static final SingletonFactoryProvider SPECIFIC_COLLECTION_FACTORY_PROVIDER =
+        SingletonFactoryProvider.builder()//
+            // sets
+            .with(getSetType(DoubleCell.TYPE), DoubleSetValueFactory.INSTANCE)//
+            .with(getSetType(IntCell.TYPE), IntSetValueFactory.INSTANCE)//
+            .with(getSetType(LongCell.TYPE), LongSetValueFactory.INSTANCE)//
+            .with(getSetType(StringCell.TYPE), StringSetValueFactory.INSTANCE)//
+            .with(getSetType(BooleanCell.TYPE), BooleanSetValueFactory.INSTANCE)//
+            // lists
+            .with(getListType(DoubleCell.TYPE), DoubleListValueFactory.INSTANCE)//
+            .with(getListType(IntCell.TYPE), IntListValueFactory.INSTANCE)//
+            .with(getListType(LongCell.TYPE), LongListValueFactory.INSTANCE)//
+            .with(getListType(StringCell.TYPE), StringListValueFactory.INSTANCE)//
+            .with(getListType(BooleanCell.TYPE), BooleanListValueFactory.INSTANCE)//
+            // sparse lists
+            .with(getSparseListType(DoubleCell.TYPE), DoubleSparseListValueFactory.INSTANCE)//
+            .with(getSparseListType(IntCell.TYPE), IntSparseListValueFactory.INSTANCE)//
+            .with(getSparseListType(LongCell.TYPE), LongSparseListValueFactory.INSTANCE)//
+            .with(getSparseListType(StringCell.TYPE), StringSparseListValueFactory.INSTANCE)//
+            .with(getSparseListType(BooleanCell.TYPE), BooleanSparseListValueFactory.INSTANCE)//
+            .build();
+
+    /**
+     * Creates a {@link ValueFactory} from the logical type stored in a ColumnarSchema.
+     *
+     * @param traits must contain the {@link LogicalTypeTrait}
+     * @param dataRepository for resolving file stores
+     * @return the ValueFactory
+     */
+    public static ValueFactory<?, ?> loadValueFactory(final DataTraits traits, //NOSONAR
+        final IDataRepository dataRepository) {
+        final var valueFactoryName = extractValueFactoryName(traits);
+        if (VoidValueFactory.class.getName().equals(valueFactoryName)) {
+            return VoidValueFactory.INSTANCE;
+        } else if (isDataCellValueFactoryLogicalType(valueFactoryName)) {
+            return getDataCellValueFactoryFromLogicalTypeString(valueFactoryName, dataRepository);
+        } else if (SPECIFIC_COLLECTION_FACTORY_PROVIDER.hasFactoryFor(valueFactoryName)) {
+            return SPECIFIC_COLLECTION_FACTORY_PROVIDER.getFactoryFor(valueFactoryName);
+        } else {
+            return getValueFactoryFromExtensionPoint(traits, dataRepository, valueFactoryName);
+        }
+    }
+
+    private static ValueFactory<?, ?> getValueFactoryFromExtensionPoint(final DataTraits traits,
+        final IDataRepository dataRepository, final String valueFactoryName) {
+        var valueFactory = getValueFactoryFromExtensionPoint(valueFactoryName)
+            .orElseThrow(() -> new IllegalArgumentException(String.format(
+                "Unknown ValueFactory class '%s' encountered. Are you missing an extension?.", valueFactoryName)));
+        if (valueFactory instanceof CollectionValueFactory) {
+            CheckUtils.checkArgument(traits instanceof ListDataTraits,
+                "The DataTraits for CollectionValueFactory must be ListDataTraits but was '%s'", traits.getClass());
+            var elementTraits = ((ListDataTraits)traits).getInner();
+            var elementValueFactory = loadValueFactory(elementTraits, dataRepository);
+            var elementType = getDataTypeForValueFactory(elementValueFactory);
+            ((CollectionValueFactory<?, ?>)valueFactory).initialize(elementValueFactory, elementType);
+        }
+        return valueFactory;
+    }
+
+    private static boolean isDataCellValueFactoryLogicalType(final String logicalType) {
+        return logicalType.contains(";");
+    }
+
+    @SuppressWarnings("unchecked")
+    private static ValueFactory<?, ?> getDataCellValueFactoryFromLogicalTypeString(final String logicalType,
+        final IDataRepository dataRepo) {
+        var split = logicalType.split(";");
+        CheckUtils.checkArgument(split.length == 2, "Expected two parts after splitting at ';' but had %s for '%s'.",
+            split.length, logicalType);
+        Class<? extends DataCell> cellClass;
+        try {
+            cellClass = (Class<? extends DataCell>)Class.forName(split[1]);
+        } catch (ClassNotFoundException ex) {
+            throw new IllegalArgumentException("Can't find cell class with name " + split[1], ex);
+        }
+        var cellType = DataType.getType(cellClass);
+        var valueFactory = new DictEncodedDataCellValueFactory();
+        valueFactory.initialize(dataRepo, cellType);
+        return valueFactory;
+    }
+
+    /**
+     * Gets the ValueFactory corresponding to the provided type.
+     *
+     * @param type of the column the ValueFactory is needed for
+     * @param fileStoreHandler for writing file stores
+     * @return the ValueFactory corresponding to type
+     */
+    public static ValueFactory<?, ?> getValueFactory(final DataType type, //NOSONAR
+        final IWriteFileStoreHandler fileStoreHandler) {
+        return getValueFactory(type, t -> new DictEncodedDataCellValueFactory(fileStoreHandler, type));
+    }
+
+    /**
+     * Finds the ValueFactory for the provided DataType. The fallback function is used for all types where no
+     * specialized value factory is available. Clients should not call this method, use
+     * {@link #getValueFactory(DataType, IWriteFileStoreHandler)} instead.
+     *
+     * @param type for which a factory is needed
+     * @param fallbackFactoryProvider provides a catch all ValueFactory for all types where no specific factory exists
+     * @return the {@link ValueFactory} for the provided type
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public static ValueFactory<?, ?> getValueFactory(final DataType type, //NOSONAR
+        final Function<DataType, ValueFactory<?, ?>> fallbackFactoryProvider) {
+        ValueFactory<?, ?> factory = null;
+
+        // Handle special cases
+        // Use special value factories for list/sets of primitive types
+        if (type == null) {
+            factory = VoidValueFactory.INSTANCE;
+        }
+        if (SPECIFIC_COLLECTION_FACTORY_PROVIDER.hasFactoryFor(type)) {
+            return SPECIFIC_COLLECTION_FACTORY_PROVIDER.getFactoryFor(type);
+        }
+
+        // Get the value factory from the extension point
+        if (factory == null) {
+            // Use the registered value factory
+            factory = ValueFactoryUtils.getValueFactoryFromExtensionPoint(type)//
+                // Use the fallback which works for all cells
+                .orElseGet(() -> fallbackFactoryProvider.apply(type));
+        }
+
+        // Collection types need to be initialized
+        if (factory instanceof CollectionValueFactory) {
+            @SuppressWarnings("null")
+            final DataType elementType = type.getCollectionElementType();
+            final ValueFactory<?, ?> elementFactory = getValueFactory(elementType, fallbackFactoryProvider);
+            ((CollectionValueFactory<?, ?>)factory).initialize(elementFactory, elementType);
+        }
+        return factory;
+    }
+
+    /**
+     * Extracts the traits from the provided factory and adds the LogicalTypeTrait to it.
+     *
+     * @param factory for which to get the traits
+     * @return the traits of factory (including the LogicalTypeTrait)
+     */
+    public static DataTraits getTraits(final ValueFactory<?, ?> factory) {
+        if (isDataCellValueFactory(factory)) {
+            return getDataCellValueFactoryTraits(factory);
+        } else if (factory instanceof CollectionValueFactory) {
+            return getCollectionDataTraits((CollectionValueFactory<?, ?>)factory);
+        } else {
+            return DataTraitUtils.withTrait(factory.getTraits(), new LogicalTypeTrait(factory.getClass().getName()));
+        }
+    }
+
+    private static DataTraits getCollectionDataTraits(final CollectionValueFactory<?, ?> valueFactory) {
+        var traitsWithoutType = valueFactory.getTraits();
+        if (DataTraitUtils.isStruct(traitsWithoutType)) {
+            return createStructCollectionDataTraits(valueFactory, (StructDataTraits)traitsWithoutType);
+        } else if (DataTraitUtils.isList(traitsWithoutType)) {
+            return createListCollectionDataTraits(valueFactory, (ListDataTraits)traitsWithoutType);
+        } else {
+            throw new IllegalArgumentException("Implementation error! "
+                + "The provided CollectionValueFactory does not provide traits for its element ValueFactory.");
+        }
+    }
+
+    private static DataTraits createStructCollectionDataTraits(final CollectionValueFactory<?, ?> valueFactory,
+        final StructDataTraits traitsWithoutType) {
+        var updatedInnerTraits =
+            getTraitsForInnerStructTraits(traitsWithoutType, valueFactory.getElementValueFactory());
+        return new DefaultStructDataTraits(
+            ArrayUtils.add(traitsWithoutType.getTraits(), new LogicalTypeTrait(valueFactory.getClass().getName())),
+            updatedInnerTraits);
+    }
+
+    private static DataTraits[] getTraitsForInnerStructTraits(final StructDataTraits traitsWithoutType,
+        final ValueFactory<?, ?> elementValueFactory) {
+        var elementTraitsWithoutType = elementValueFactory.getTraits();
+        var updatedInnerTraits = new DataTraits[traitsWithoutType.size()];
+        var elementTraitsEncountered = false;
+        for (int i = 0; i < updatedInnerTraits.length; i++) {//NOSONAR
+            var innerTraits = traitsWithoutType.getDataTraits(i);
+            if (elementTraitsWithoutType.equals(innerTraits)) {
+                updatedInnerTraits[i] = getTraits(elementValueFactory);
+                elementTraitsEncountered = true;
+            } else {
+                updatedInnerTraits[i] = innerTraits;
+            }
+        }
+        CheckUtils.checkArgument(elementTraitsEncountered,
+            "Implementation error! None of the inner traits correspond to the element value factory.");
+        return updatedInnerTraits;
+    }
+
+    private static DataTraits createListCollectionDataTraits(final CollectionValueFactory<?, ?> valueFactory,
+        final ListDataTraits traitsWithoutType) {
+        var elementValueFactory = valueFactory.getElementValueFactory();
+        CheckUtils.checkArgument(elementValueFactory.getTraits().equals(traitsWithoutType.getInner()),
+            "Implementation error! The inner traits of a CollectionValueFactory with ListDataTraits must "
+                + "hold the traits of the element ValueFactory.");
+        var dataTraitsWithType = ArrayUtils.add(traitsWithoutType.getTraits(), createLogicalTypeTrait(valueFactory));
+        return new DefaultListDataTraits(dataTraitsWithType, getTraits(elementValueFactory));
+    }
+
+    private static LogicalTypeTrait createLogicalTypeTrait(final ValueFactory<?, ?> valueFactory) {
+        return new LogicalTypeTrait(valueFactory.getClass().getName());
+    }
+
+    @SuppressWarnings("deprecation")
+    private static boolean isDataCellValueFactory(final ValueFactory<?, ?> factory) {
+        return factory instanceof DataCellValueFactory || factory instanceof DictEncodedDataCellValueFactory;
+    }
+
+    private static DataTraits getDataCellValueFactoryTraits(final ValueFactory<?, ?> factory) {
+        var dataType = getDataTypeForValueFactory(factory);
+        var encoded = factory.getClass().getName() + ";" + dataType.getCellClass().getName();
+        var logicalTypeTrait = new LogicalTypeTrait(encoded);
+        return DataTraitUtils.withTrait(factory.getTraits(), logicalTypeTrait);
+    }
+
+    private static DataType getSetType(final DataType elementType) {
+        return DataType.getType(SetCell.class, elementType);
+    }
+
+    private static DataType getListType(final DataType elementType) {
+        return DataType.getType(ListCell.class, elementType);
+    }
+
+    private static DataType getSparseListType(final DataType elementType) {
+        return DataType.getType(SparseListCell.class, elementType);
+    }
+
+    /**
+     * Creates the {@link RowKeyValueFactory} corresponding to the provided traits
+     *
+     * @param traits must contain the {@link LogicalTypeTrait}
+     * @return a RowKeyValueFactory
+     */
+    public static RowKeyValueFactory<?, ?> loadRowKeyValueFactory(final DataTraits traits) {//NOSONAR
+        var name = extractValueFactoryName(traits);
+        return (RowKeyValueFactory<?, ?>)getValueFactoryFromExtensionPoint(name)//
+            .orElseThrow(() -> new IllegalArgumentException(
+                String.format("Failed to create a RowKeyValueFactory with class name '%s'.", name)));
+    }
+
+    /**
+     * Gets the {@link RowKeyValueFactory} corresponding to the provided {@link RowKeyType}.
+     *
+     * @param rowKeyType the type of row key
+     * @return a {@link RowKeyValueFactory}
+     */
+    public static RowKeyValueFactory<?, ?> getRowKeyValueFactory(final RowKeyType rowKeyType) {//NOSONAR
+        switch (rowKeyType) {
+            case CUSTOM:
+                return DefaultRowKeyValueFactory.INSTANCE;
+            case NOKEY:
+                return VoidRowKeyFactory.INSTANCE;
+            default:
+                throw new IllegalArgumentException("Unknown RowKey configuration " + rowKeyType.name() + ".");
+        }
+    }
+
+    /**
+     * Retrieves the DataType corresponding to the provided {@link ValueFactory}.
+     *
+     * @param factory to retrieve the DataType for
+     * @return the {@link DataType} for the provided factory
+     */
+    @SuppressWarnings("deprecation")
+    public static DataType getDataTypeForValueFactory(final ValueFactory<?, ?> factory) {
+        if (SPECIFIC_COLLECTION_FACTORY_PROVIDER.hasTypeFor(factory)) {
+            return SPECIFIC_COLLECTION_FACTORY_PROVIDER.getTypeFor(factory);
+        } else if (factory instanceof DictEncodedDataCellValueFactory) {
+            return ((DictEncodedDataCellValueFactory)factory).getType();
+        } else if (factory instanceof DataCellValueFactory) {
+            return ((DataCellValueFactory)factory).getType();
+        } else if (factory instanceof VoidValueFactory) {
+            throw new IllegalArgumentException("No data type available for VoidValueFactory.");
+        } else {
+            return getDataTypeFromExtensionPoint(factory);
+        }
+    }
+
+    private static DataType getDataTypeFromExtensionPoint(final ValueFactory<?, ?> factory) {
+        var cellClass = DataTypeRegistry.getInstance().getCellClassForValueFactory(factory);
+        if (factory instanceof CollectionValueFactory) {
+            var elementType =
+                getDataTypeForValueFactory(((CollectionValueFactory<?, ?>)factory).getElementValueFactory());
+            return DataType.getType(cellClass, elementType);
+        } else {
+            return DataType.getType(cellClass);
+        }
+    }
+
+    private static String extractValueFactoryName(final DataTraits traits) {
+        return DataTraits.getTrait(traits, LogicalTypeTrait.class)//
+            .map(LogicalTypeTrait::getLogicalType)//
+            .orElseThrow(() -> new IllegalArgumentException("No logical type trait present."));
+    }
+
     /**
      * @param className name of the {@link ValueFactory} class (as returned by {@link Class#getName()})
      * @return the value factory if a value factory with the provided name is known
      */
-    public static Optional<ValueFactory<?, ?>> createValueFactoryForClassName(final String className) {//NOSONAR
+    private static Optional<ValueFactory<?, ?>> getValueFactoryFromExtensionPoint(final String className) {//NOSONAR
         return DataTypeRegistry.getInstance().getValueFactoryClass(className)//
-                .map(ValueFactoryUtils::instantiateValueFactory);
+            .map(ValueFactoryUtils::instantiateValueFactory);
     }
 
-    static Optional<ValueFactory<?, ?>> createValueFactoryForType(final DataType type) {
+    /**
+     * Creates the {@link ValueFactory} for the provided type if there is one registered with it.
+     *
+     * @param type for which to get the corresponding {@link ValueFactory}
+     * @return {@link ValueFactory} corresponding to {@link DataType type} if there is one
+     */
+    private static Optional<ValueFactory<?, ?>> getValueFactoryFromExtensionPoint(final DataType type) {
         return DataTypeRegistry.getInstance().getValueFactoryFor(type)//
-                .map(ValueFactoryUtils::instantiateValueFactory);
+            .map(ValueFactoryUtils::instantiateValueFactory);
     }
 
-    static ValueFactory<?, ?> instantiateValueFactory(final Class<?> valueFactoryClass) { //NOSONAR
+    /**
+     * Instantiates a {@link ValueFactory} from its class.
+     *
+     * @param valueFactoryClass class of the ValueFactory
+     * @return the newly created {@link ValueFactory}
+     */
+    public static ValueFactory<?, ?> instantiateValueFactory(final Class<?> valueFactoryClass) { //NOSONAR
         try {
             final Constructor<?> constructor = valueFactoryClass.getConstructor();
             return (ValueFactory<?, ?>)constructor.newInstance();
@@ -126,139 +451,106 @@ public final class ValueFactoryUtils {
     }
 
     /**
-     * Provides the default {@link ValueFactory} for a {@link DataSpec} if such a default exists (in org.knime.core).
+     * Checks whether the provided ValueFactories are equal.
      *
-     * @param dataSpec for which the default {@link ValueFactory} is needed
-     * @return an {@link Optional} containing the default {@link ValueFactory} for {@link DataSpec dataSpec} or
-     *         {@link Optional#empty()}
+     * @param factory to check (can be null)
+     * @param other to check (can be null)
+     * @return true if the two are equal, false other wise
      */
-    public static Optional<ValueFactory<?, ?>> getDefaultValueFactory(final DataSpec dataSpec) {
-        // TODO what about dataspecs where a default ValueFactory exists but doesn't live in core e.g. date & time?
-        return dataSpec.accept(DefaultValueFactoryMapper.INSTANCE);
+    @SuppressWarnings("null") // if both are null then the first if returns, if one is null the second returns
+    public static boolean areEqual(final ValueFactory<?, ?> factory, final ValueFactory<?, ?> other) {
+        if (factory == other) {
+            return true;
+        } else if (factory == null ^ other == null) {
+            return false;
+        }
+
+        if (factory.getClass().equals(other.getClass())) {
+            return areEqualOfSameClass(factory, other);
+        } else {
+            return false;
+        }
     }
 
-    private enum DefaultValueFactoryMapper implements DataSpec.Mapper<Optional<ValueFactory<?, ?>>> {
-        INSTANCE;
-
-        @Override
-        public Optional<ValueFactory<?, ?>> visit(final BooleanDataSpec spec) {
-            return Optional.of(new BooleanValueFactory());
+    @SuppressWarnings("deprecation")
+    private static boolean areEqualOfSameClass(final ValueFactory<?, ?> factory, final ValueFactory<?, ?> other) {
+        if (factory instanceof DictEncodedDataCellValueFactory) {
+            return ((DictEncodedDataCellValueFactory)factory).getType()
+                .equals(((DictEncodedDataCellValueFactory)other).getType());
+        } else if (factory instanceof DataCellValueFactory) {
+            return ((DataCellValueFactory)factory).getType().equals(((DataCellValueFactory)other).getType());
+        } else if (factory instanceof CollectionValueFactory) {
+            return areEqual(((CollectionValueFactory<?, ?>)factory).getElementValueFactory(),
+                ((CollectionValueFactory<?, ?>)other).getElementValueFactory());
+        } else {
+            // all other ValueFactories are stateless by contract
+            return true;
         }
-
-        @Override
-        public Optional<ValueFactory<?, ?>> visit(final ByteDataSpec spec) {
-            return Optional.empty();
-        }
-
-        @Override
-        public Optional<ValueFactory<?, ?>> visit(final DoubleDataSpec spec) {
-            return Optional.of(new DoubleValueFactory());
-        }
-
-        @Override
-        public Optional<ValueFactory<?, ?>> visit(final DurationDataSpec spec) {
-            return Optional.empty();
-        }
-
-        @Override
-        public Optional<ValueFactory<?, ?>> visit(final FloatDataSpec spec) {
-            return Optional.empty();
-        }
-
-        @Override
-        public Optional<ValueFactory<?, ?>> visit(final IntDataSpec spec) {
-            return Optional.of(new IntValueFactory());
-        }
-
-        @Override
-        public Optional<ValueFactory<?, ?>> visit(final LocalDateDataSpec spec) {
-            return Optional.empty();
-        }
-
-        @Override
-        public Optional<ValueFactory<?, ?>> visit(final LocalDateTimeDataSpec spec) {
-            return Optional.empty();
-        }
-
-        @Override
-        public Optional<ValueFactory<?, ?>> visit(final LocalTimeDataSpec spec) {
-            return Optional.empty();
-        }
-
-        @Override
-        public Optional<ValueFactory<?, ?>> visit(final LongDataSpec spec) {
-            return Optional.of(new LongValueFactory());
-        }
-
-        @Override
-        public Optional<ValueFactory<?, ?>> visit(final PeriodDataSpec spec) {
-            return Optional.empty();
-        }
-
-        @Override
-        public Optional<ValueFactory<?, ?>> visit(final VarBinaryDataSpec spec) {
-            return Optional.empty();
-        }
-
-        @Override
-        public Optional<ValueFactory<?, ?>> visit(final VoidDataSpec spec) {
-            return Optional.empty();
-        }
-
-        @Override
-        public Optional<ValueFactory<?, ?>> visit(final StructDataSpec spec) {
-            return Optional.empty();
-        }
-
-        @Override
-        public Optional<ValueFactory<?, ?>> visit(final ListDataSpec listDataSpec) {
-            var inner = listDataSpec.getInner();
-            var specificList = getSpecificValueFactory(inner);
-            if (specificList != null) {
-                return Optional.of(specificList);
-            } else {
-                return inner.accept(this).map(DefaultValueFactoryMapper::createListValueFactory);
-            }
-        }
-
-        private static ListValueFactory createListValueFactory(final ValueFactory<?, ?> innerFactory) {
-            var listValueFactory = new ListValueFactory();
-            var elementType =
-                DataTypeRegistry.getInstance().getDataTypeForValueFactory(innerFactory);
-            listValueFactory.initialize(innerFactory, elementType);
-            return listValueFactory;
-        }
-
-        private static ValueFactory<?, ?> getSpecificValueFactory(final DataSpec inner) {// NOSONAR
-            if (inner == DataSpec.doubleSpec()) {
-                return DoubleListValueFactory.INSTANCE;
-            } else if (inner == DataSpec.intSpec()) {
-                return IntListValueFactory.INSTANCE;
-            } else if (inner == DataSpec.longSpec()) {
-                return LongListValueFactory.INSTANCE;
-            } else if (inner == DataSpec.stringSpec()) {
-                return StringListValueFactory.INSTANCE;
-            } else if (inner == DataSpec.booleanSpec()) {
-                return BooleanListValueFactory.INSTANCE;
-            } else {
-                return null;
-            }
-        }
-
-        @Override
-        public Optional<ValueFactory<?, ?>> visit(final ZonedDateTimeDataSpec spec) {
-            return Optional.empty();
-        }
-
-        @Override
-        public Optional<ValueFactory<?, ?>> visit(final StringDataSpec spec) {
-            return Optional.of(new DictEncodedStringValueFactory());
-        }
-
     }
 
     private ValueFactoryUtils() {
         // static utility class
+    }
+
+    private static final class SingletonFactoryProvider {
+
+        private final Map<String, ValueFactory<?, ?>> m_factoriesByName;
+
+        private final BiMap<DataType, ValueFactory<?, ?>> m_typeFactoryMap;
+
+        private SingletonFactoryProvider(final Builder builder) {
+            m_factoriesByName = new HashMap<>(builder.m_factoriesByName);
+            m_typeFactoryMap = HashBiMap.create(builder.m_typeFactoryMap);
+        }
+
+        boolean hasFactoryFor(final String className) {
+            return m_factoriesByName.containsKey(className);
+        }
+
+        boolean hasFactoryFor(final DataType type) {
+            return m_typeFactoryMap.containsKey(type);
+        }
+
+        boolean hasTypeFor(final ValueFactory<?, ?> factory) {
+            return m_typeFactoryMap.containsValue(factory);
+        }
+
+        ValueFactory<?, ?> getFactoryFor(final String className) { //NOSONAR
+            return m_factoriesByName.get(className);
+        }
+
+        ValueFactory<?, ?> getFactoryFor(final DataType type) {//NOSONAR
+            return m_typeFactoryMap.get(type);
+        }
+
+        DataType getTypeFor(final ValueFactory<?, ?> factory) {
+            return m_typeFactoryMap.inverse().get(factory);
+        }
+
+        private static Builder builder() {
+            return new Builder();
+        }
+
+        private static final class Builder {
+            private final Map<String, ValueFactory<?, ?>> m_factoriesByName = new HashMap<>();
+
+            private final Map<DataType, ValueFactory<?, ?>> m_typeFactoryMap = new HashMap<>();
+
+            private Builder() {
+
+            }
+
+            Builder with(final DataType type, final ValueFactory<?, ?> factory) {
+                m_factoriesByName.put(factory.getClass().getName(), factory);
+                m_typeFactoryMap.put(type, factory);
+                return this;
+            }
+
+            SingletonFactoryProvider build() {
+                return new SingletonFactoryProvider(this);
+            }
+        }
+
     }
 
 }
