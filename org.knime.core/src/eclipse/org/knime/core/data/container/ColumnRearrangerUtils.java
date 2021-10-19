@@ -105,6 +105,23 @@ public final class ColumnRearrangerUtils {
             .toArray();
     }
 
+    /**
+     * Extracts a boolean array from the provided rearranger that indicates whether a column is from the original table
+     * or from the append table.
+     *
+     * @param rearranger to extract the information from
+     * @return array indicating whether columns are from the original table or the append table
+     */
+    public static boolean[] extractIsFromOriginal(final ColumnRearranger rearranger) {
+        final var fromOriginal = new boolean[rearranger.getColumnCount()];
+        int idx = 0;
+        for (var s : rearranger.getIncludes()) {
+            fromOriginal[idx] = s.isNewColumn();
+            idx++;
+        }
+        return fromOriginal;
+    }
+
     private ColumnRearrangerUtils() {
 
     }
