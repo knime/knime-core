@@ -58,7 +58,8 @@ import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.NotInWorkflowWriteFileStoreHandler;
 import org.knime.core.data.v2.RowContainer;
 import org.knime.core.data.v2.RowKeyType;
-import org.knime.core.data.v2.ValueSchema;
+import org.knime.core.data.v2.schema.ValueSchema;
+import org.knime.core.data.v2.schema.ValueSchemaUtils;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
@@ -89,7 +90,7 @@ public final class BufferedTableBackend implements TableBackend {
         final DataContainerSettings settings, final IDataRepository repository, final IWriteFileStoreHandler handler) {
         final BufferedDataContainer container =
             context.createDataContainer(spec, settings.getInitializeDomain(), settings.getMaxCellsInMemory());
-        final ValueSchema schema = ValueSchema.create(spec, RowKeyType.CUSTOM, handler);
+        final ValueSchema schema = ValueSchemaUtils.create(spec, RowKeyType.CUSTOM, handler);
         return new BufferedRowContainer(container, schema);
     }
 

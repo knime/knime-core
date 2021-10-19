@@ -75,6 +75,8 @@ import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.filestore.FileStoreKey;
 import org.knime.core.data.filestore.internal.FileStoreProxy.FlushCallback;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
+import org.knime.core.data.v2.schema.ValueSchema;
+import org.knime.core.data.v2.schema.ValueSchemaUtils;
 import org.knime.core.data.v2.value.BooleanListValueFactory;
 import org.knime.core.data.v2.value.BooleanSetValueFactory;
 import org.knime.core.data.v2.value.BooleanSparseListValueFactory;
@@ -95,9 +97,13 @@ import org.knime.core.data.v2.value.cell.DictEncodedDataCellValueFactory;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
+import org.knime.core.table.schema.DefaultColumnarSchema;
+import org.knime.core.table.schema.traits.DataTraitUtils;
+import org.knime.core.table.schema.traits.DataTraits;
+import org.knime.core.table.schema.traits.LogicalTypeTrait;
 
 /**
- * Tests for the {@link ValueSchema} and the {@link ValueFactory}s used by it.
+ * Tests for the {@link DefaultValueSchema} and the {@link ValueFactory}s used by it.
  *
  * @author Benjamin Wilhelm, KNIME GmbH, Konstanz, Germany
  */
@@ -236,20 +242,31 @@ public class ValueSchemaTest {
         final IWriteFileStoreHandler fileStoreHandler = new DummyWriteFileStoreHandler();
 
         // Create the schema and check
-        final ValueSchema schema = ValueSchema.create(tableSpec, RowKeyType.NOKEY, fileStoreHandler);
-        assertEquals(2, schema.getValueFactories().length);
-        assertEquals(VoidRowKeyFactory.class, schema.getValueFactories()[0].getClass());
-        assertEquals(factoryClass, schema.getValueFactories()[1].getClass());
+        final ValueSchema schema = ValueSchemaUtils.create(tableSpec, RowKeyType.NOKEY, fileStoreHandler);
+        assertEquals(2, schema.numFactories());
+        var rowKeyFactory = schema.getValueFactory(0);
+        assertEquals(VoidRowKeyFactory.class, rowKeyFactory.getClass());
+        var dataFactory = schema.getValueFactory(1);
+        assertEquals(factoryClass, dataFactory.getClass());
 
         // Save to some note settings
         final NodeSettings settings = new NodeSettings("valueSchema");
-        ValueSchema.Serializer.save(schema, settings);
+        ValueSchemaUtils.save(schema, settings);
 
+        var columnarSchema = DefaultColumnarSchema.builder()//
+                .addColumn(rowKeyFactory.getSpec(), generateTraits(rowKeyFactory))//
+                .addColumn(dataFactory.getSpec(), generateTraits(dataFactory))//
+                .build();
         // Load back and check
-        final ValueSchema loadedSchema = ValueSchema.Serializer.load(tableSpec, dataRepository, settings);
-        assertEquals(VoidRowKeyFactory.class, schema.getValueFactories()[0].getClass());
-        assertEquals(2, loadedSchema.getValueFactories().length);
-        assertEquals(factoryClass, loadedSchema.getValueFactories()[1].getClass());
+        final ValueSchema loadedSchema = ValueSchemaUtils.load(columnarSchema, tableSpec, dataRepository, settings);
+        assertEquals(VoidRowKeyFactory.class, rowKeyFactory.getClass());
+        assertEquals(2, loadedSchema.numFactories());
+        assertEquals(factoryClass, loadedSchema.getValueFactory(1).getClass());
+    }
+
+    private static DataTraits generateTraits(final ValueFactory<?, ?> valueFactory) {
+        return DataTraitUtils.withTrait(valueFactory.getTraits(),
+            new LogicalTypeTrait(valueFactory.getClass().getName()));
     }
 
     public static final class DummyWriteFileStoreHandler implements IWriteFileStoreHandler {

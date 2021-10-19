@@ -8,6 +8,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.data.v2.ValueSchema">
+        <filter comment="ValueSchema was not public API" id="305324134">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.ValueSchema"/>
+                <message_argument value="org.knime.core_4.5.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.web.DefaultWebTemplate">
         <filter id="305324134">
             <message_arguments>

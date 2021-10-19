@@ -46,7 +46,7 @@
  * History
  *   Sep 27, 2020 (dietzc): created
  */
-package org.knime.core.data.v2;
+package org.knime.core.data.v2.schema;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -60,39 +60,20 @@ import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.IDataRepository;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.TableBackend;
-import org.knime.core.data.collection.ListCell;
-import org.knime.core.data.collection.SetCell;
-import org.knime.core.data.collection.SparseListCell;
-import org.knime.core.data.def.BooleanCell;
-import org.knime.core.data.def.DoubleCell;
-import org.knime.core.data.def.IntCell;
-import org.knime.core.data.def.LongCell;
-import org.knime.core.data.def.StringCell;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
-import org.knime.core.data.v2.value.BooleanListValueFactory;
-import org.knime.core.data.v2.value.BooleanSetValueFactory;
-import org.knime.core.data.v2.value.BooleanSparseListValueFactory;
-import org.knime.core.data.v2.value.DefaultRowKeyValueFactory;
-import org.knime.core.data.v2.value.DoubleListValueFactory;
-import org.knime.core.data.v2.value.DoubleSetValueFactory;
-import org.knime.core.data.v2.value.DoubleSparseListValueFactory;
-import org.knime.core.data.v2.value.IntListValueFactory;
-import org.knime.core.data.v2.value.IntSetValueFactory;
-import org.knime.core.data.v2.value.IntSparseListValueFactory;
-import org.knime.core.data.v2.value.LongListValueFactory;
-import org.knime.core.data.v2.value.LongSetValueFactory;
-import org.knime.core.data.v2.value.LongSparseListValueFactory;
-import org.knime.core.data.v2.value.StringListValueFactory;
-import org.knime.core.data.v2.value.StringSetValueFactory;
-import org.knime.core.data.v2.value.StringSparseListValueFactory;
-import org.knime.core.data.v2.value.VoidRowKeyFactory;
-import org.knime.core.data.v2.value.VoidValueFactory;
+import org.knime.core.data.v2.CollectionValueFactory;
+import org.knime.core.data.v2.DataCellSerializerFactory;
+import org.knime.core.data.v2.RowKeyType;
+import org.knime.core.data.v2.RowKeyValueFactory;
+import org.knime.core.data.v2.ValueFactory;
+import org.knime.core.data.v2.ValueFactoryUtils;
 import org.knime.core.data.v2.value.cell.DataCellValueFactory;
-import org.knime.core.data.v2.value.cell.DictEncodedDataCellValueFactory;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.CheckUtils;
+import org.knime.core.table.access.ReadAccess;
+import org.knime.core.table.access.WriteAccess;
 
 /**
  * A ValueSchema wraps a {@link DataTableSpec} by mapping each {@link DataColumnSpec} via it's {@link DataType} to a
@@ -104,9 +85,9 @@ import org.knime.core.node.util.CheckUtils;
  *
  * @noreference This class is not intended to be referenced by clients.
  */
-// TODO do we want to interface this?
+// TODO do we want to interface this? Yup
 @SuppressWarnings("deprecation")
-public final class ValueSchema {
+final class LegacyValueSchema implements ValueSchema {
 
     private final DataTableSpec m_spec;
 
@@ -116,7 +97,7 @@ public final class ValueSchema {
 
     private final DataCellSerializerFactory m_factory;
 
-    ValueSchema(final DataTableSpec spec, //
+    LegacyValueSchema(final DataTableSpec spec, //
         final ValueFactory<?, ?>[] colFactories, //
         final Map<DataType, String> factoryMapping, //
         final DataCellSerializerFactory factory) {
@@ -126,59 +107,53 @@ public final class ValueSchema {
         m_factory = factory;
     }
 
+    DataCellSerializerFactory getSerializerFactory() {
+        return m_factory;
+    }
+
     /**
-     * @return the underlying {@link DataTableSpec}.
+     * {@inheritDoc}
      */
+    @Override
     public final DataTableSpec getSourceSpec() {
         return m_spec;
     }
 
     /**
-     * Get all value factories of the ValueSchema. The value factory at index 0 is a {@link RowKeyValueFactory}, all
-     * other factories are derived from the source {@link DataTableSpec}. This also means that the length of the
-     * returned array equals to {@link DataTableSpec#getNumColumns()} + 1;
+     * Creates a new LegacyValueSchema based up-on the provided {@link DataTableSpec}.
      *
-     * @return the value factories of this value schema.
-     */
-    public final ValueFactory<?, ?>[] getValueFactories() {
-        return m_factories;
-    }
-
-    /**
-     * Creates a new {@link ValueSchema} based up-on the provided {@link DataTableSpec}.
-     *
-     * @param spec the data table spec to derive the {@link ValueSchema} from.
+     * @param spec the data table spec to derive the LegacyValueSchema from.
      * @param rowKeyType type of the {@link RowKey}
      * @param fileStoreHandler file-store handler
      * @return the value schema.
      */
-    public static final ValueSchema create(final DataTableSpec spec, final RowKeyType rowKeyType,
+    public static final LegacyValueSchema create(final DataTableSpec spec, final RowKeyType rowKeyType,
         final IWriteFileStoreHandler fileStoreHandler) {
 
-        final DataCellSerializerFactory cellSerializerFactory = new DataCellSerializerFactory();
+        final var cellSerializerFactory = new DataCellSerializerFactory();
         final Map<DataType, String> factoryMapping = new HashMap<>();
-        final ValueFactory<?, ?>[] factories = new ValueFactory[spec.getNumColumns() + 1];
-        factories[0] = getRowKeyFactory(rowKeyType);
+        final var factories = new ValueFactory[spec.getNumColumns() + 1];
+        factories[0] = ValueFactoryUtils.getRowKeyValueFactory(rowKeyType);
 
         for (int i = 1; i < factories.length; i++) {
             final DataType type = spec.getColumnSpec(i - 1).getType();
             factories[i] = findValueFactory(type, factoryMapping, cellSerializerFactory, fileStoreHandler);
         }
-        return new ValueSchema(spec, factories, factoryMapping, cellSerializerFactory);
+        return new LegacyValueSchema(spec, factories, factoryMapping, cellSerializerFactory);
     }
 
     /**
-     * Creates a new {@link ValueSchema} given the provided {@link DataTableSpec spec} and {@link ValueFactory
+     * Creates a new LegacyValueSchema given the provided {@link DataTableSpec spec} and {@link ValueFactory
      * factories}.
      *
-     * @param spec the data table spec that the {@link ValueSchema} should wrap
+     * @param spec the data table spec that the LegacyValueSchema should wrap
      * @param valueFactories one for the row key and one for each column in spec
      * @param cellSerializerFactory used for any {@link DataCellValueFactory DataCellValueFactories} among the
      *            valueFactories
      * @return the value schema
      * @since 4.5
      */
-    public static final ValueSchema create(final DataTableSpec spec, final ValueFactory<?, ?>[] valueFactories,
+    public static final LegacyValueSchema create(final DataTableSpec spec, final ValueFactory<?, ?>[] valueFactories,
         final DataCellSerializerFactory cellSerializerFactory) {
         CheckUtils.checkArgument(valueFactories.length == spec.getNumColumns() + 1,
             "The number of value factories must be equal to the number of columns plus 1 (for the row key).");
@@ -192,124 +167,21 @@ public final class ValueSchema {
             CheckUtils.checkArgument(oldFac == null || fac.equals(oldFac),
                 "Conflicting ValueFactories '%s' and '%s' for data type '%s'.", oldFac, fac, type.toPrettyString());
         }
-        return new ValueSchema(spec, valueFactories.clone(), factoryMapping, cellSerializerFactory);
+        return new LegacyValueSchema(spec, valueFactories.clone(), factoryMapping, cellSerializerFactory);
     }
 
     /** Find the factory for the given type (or DataCellValueFactory) and add it to the mapping */
     private static final ValueFactory<?, ?> findValueFactory(final DataType type,
         final Map<DataType, String> factoryMapping, final DataCellSerializerFactory cellSerializerFactory,
         final IWriteFileStoreHandler fileStoreHandler) {
-
-        ValueFactory<?, ?> factory = null;
-
-        // Handle special cases
-        // Use special value factories for list/sets of primitive types
-        if (type == null) {
-            factory = VoidValueFactory.INSTANCE;
-        } else {
-            factory = getSpecificCollectionValueFactory(type);
-        }
-
-        // Get the value factory from the extension point
-        if (factory == null) {
-            // Use the registered value factory
-            factory = ValueFactoryUtils.createValueFactoryForType(type)//
-                    // Use the fallback which works for all cells
-                    .orElseGet(() -> new DictEncodedDataCellValueFactory(fileStoreHandler, type));
-        }
-
-        // Collection types need to be initialized
-        if (factory instanceof CollectionValueFactory) {
-            assert type != null; // type cannot be null because VoidValueFactory is not instanceof CollectionValueFactory
-            @SuppressWarnings("null")
-            final DataType elementType = type.getCollectionElementType();
-            final ValueFactory<?, ?> elementFactory =
-                findValueFactory(elementType, factoryMapping, cellSerializerFactory, fileStoreHandler);
-            ((CollectionValueFactory<?, ?>)factory).initialize(elementFactory, elementType);
-        }
+        var factory = ValueFactoryUtils.getValueFactory(type,
+            t -> new DataCellValueFactory(cellSerializerFactory, fileStoreHandler, t));
         factoryMapping.put(type, factory.getClass().getName());
         return factory;
     }
 
-    private static ValueFactory<?, ?> getSpecificCollectionValueFactory(final DataType type) {
-        ValueFactory<?, ?> factory;
-        factory = getSpecificSparseListValueFactory(type);
-        if (factory != null) {
-            return factory;
-        }
-        factory = getSpecificListValueFactory(type);
-        if (factory != null) {
-            return factory;
-        }
-
-        return getSpecificSetValueFactory(type);
-    }
-
-    private static ValueFactory<?, ?> getSpecificSparseListValueFactory(final DataType type) {
-        ValueFactory<?, ?> factory = null;
-        if (DataType.getType(SparseListCell.class, DoubleCell.TYPE).equals(type)) {
-            factory = DoubleSparseListValueFactory.INSTANCE;
-        } else if (DataType.getType(SparseListCell.class, IntCell.TYPE).equals(type)) {
-            factory = IntSparseListValueFactory.INSTANCE;
-        } else if (DataType.getType(SparseListCell.class, LongCell.TYPE).equals(type)) {
-            factory = LongSparseListValueFactory.INSTANCE;
-        } else if (DataType.getType(SparseListCell.class, StringCell.TYPE).equals(type)) {
-            factory = StringSparseListValueFactory.INSTANCE;
-        } else if (DataType.getType(SparseListCell.class, BooleanCell.TYPE).equals(type)) {
-            factory = BooleanSparseListValueFactory.INSTANCE;
-        }
-        return factory;
-    }
-
-    private static ValueFactory<?, ?> getSpecificListValueFactory(final DataType type) {
-        ValueFactory<?, ?> factory = null;
-        if (DataType.getType(ListCell.class, DoubleCell.TYPE).equals(type)) {
-            factory = DoubleListValueFactory.INSTANCE;
-        } else if (DataType.getType(ListCell.class, IntCell.TYPE).equals(type)) {
-            factory = IntListValueFactory.INSTANCE;
-        } else if (DataType.getType(ListCell.class, LongCell.TYPE).equals(type)) {
-            factory = LongListValueFactory.INSTANCE;
-        } else if (DataType.getType(ListCell.class, StringCell.TYPE).equals(type)) {
-            factory = StringListValueFactory.INSTANCE;
-        } else if (DataType.getType(ListCell.class, BooleanCell.TYPE).equals(type)) {
-            factory = BooleanListValueFactory.INSTANCE;
-        }
-        return factory;
-    }
-
-    private static ValueFactory<?, ?> getSpecificSetValueFactory(final DataType type) {
-        ValueFactory<?, ?> factory = null;
-        if (DataType.getType(SetCell.class, DoubleCell.TYPE).equals(type)) {
-            factory = DoubleSetValueFactory.INSTANCE;
-        } else if (DataType.getType(SetCell.class, IntCell.TYPE).equals(type)) {
-            factory = IntSetValueFactory.INSTANCE;
-        } else if (DataType.getType(SetCell.class, LongCell.TYPE).equals(type)) {
-            factory = LongSetValueFactory.INSTANCE;
-        } else if (DataType.getType(SetCell.class, StringCell.TYPE).equals(type)) {
-            factory = StringSetValueFactory.INSTANCE;
-        } else if (DataType.getType(SetCell.class, BooleanCell.TYPE).equals(type)) {
-            factory = BooleanSetValueFactory.INSTANCE;
-        }
-        return factory;
-    }
-
     /**
-     * @param rowKeyType
-     * @return value factory to support this rowKeyConfig
-     */
-    private static RowKeyValueFactory<?, ?> getRowKeyFactory(final RowKeyType rowKeyType) {
-        switch (rowKeyType) {
-            case CUSTOM:
-                return DefaultRowKeyValueFactory.INSTANCE;
-            case NOKEY:
-                return VoidRowKeyFactory.INSTANCE;
-            default:
-                throw new IllegalArgumentException("Unknown RowKey configuration " + rowKeyType.name() + ".");
-        }
-    }
-
-    /**
-     * Serializer to save/load {@link ValueSchema}.
+     * Serializer to save/load LegacyValueSchema.
      *
      * @author Christian Dietz, KNIME GmbH, Konstanz, Germany.
      * @since 4.3
@@ -331,7 +203,7 @@ public final class ValueSchema {
          * @param schema the ValueSchema to save.
          * @param settings the settings to save the ValueSchema to.
          */
-        public static final void save(final ValueSchema schema, final NodeSettingsWO settings) {
+        public static final void save(final LegacyValueSchema schema, final NodeSettingsWO settings) {
 
             // save row key config
             settings.addString(CFG_ROW_KEY_CONFIG, schema.m_factories[0].getClass().getName());
@@ -354,14 +226,12 @@ public final class ValueSchema {
          * @param source the source {@link DataTableSpec}.
          * @param dataRepository the data repository to restore file store cells.
          * @param settings to save the value schema to.
-         * @return the loaded {@link ValueSchema}.
+         * @return the loaded LegacyValueSchema.
          *
          * @throws InvalidSettingsException
          */
-        public static final ValueSchema load(final DataTableSpec source, final IDataRepository dataRepository,
+        public static final LegacyValueSchema load(final DataTableSpec source, final IDataRepository dataRepository,
             final NodeSettingsRO settings) throws InvalidSettingsException {
-
-            // Load the row key config
 
             // Load the factory mapping
             final DataType[] factoryMappingKeys = settings.getDataTypeArray(CFG_KEY_FACTORY_MAPPING_KEYS);
@@ -383,7 +253,7 @@ public final class ValueSchema {
                 factories[i] = getValueFactory(type, factoryMapping, cellSerializerFactory, dataRepository);
             }
 
-            return new ValueSchema(source, factories, factoryMapping, cellSerializerFactory);
+            return new LegacyValueSchema(source, factories, factoryMapping, cellSerializerFactory);
         }
 
         private static ValueFactory<?, ?> getValueFactory(final DataType type,
@@ -404,6 +274,7 @@ public final class ValueSchema {
             return factory;
         }
 
+        // TODO if this can also be covered by ValueFactoryUtils
         private static ValueFactory<?, ?> instantiateValueFactory(final String className) {
             final Optional<Class<? extends ValueFactory<?, ?>>> valueFactoryClass =
                 DataTypeRegistry.getInstance().getValueFactoryClass(className);
@@ -427,5 +298,16 @@ public final class ValueSchema {
             return ValueFactoryUtils.instantiateValueFactory(type);
         }
 
+    }
+
+    @Override
+    public int numFactories() {
+        return m_factories.length;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <R extends ReadAccess, W extends WriteAccess> ValueFactory<R, W> getValueFactory(final int index) {
+        return (ValueFactory<R, W>)m_factories[index];
     }
 }

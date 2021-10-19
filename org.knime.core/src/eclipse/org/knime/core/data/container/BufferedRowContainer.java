@@ -63,14 +63,13 @@ import org.knime.core.data.v2.RowRead;
 import org.knime.core.data.v2.RowWrite;
 import org.knime.core.data.v2.RowWriteCursor;
 import org.knime.core.data.v2.ValueFactory;
-import org.knime.core.data.v2.ValueSchema;
 import org.knime.core.data.v2.WriteValue;
+import org.knime.core.data.v2.schema.ValueSchema;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.table.access.BufferedAccesses;
 import org.knime.core.table.access.BufferedAccesses.BufferedAccess;
 import org.knime.core.table.access.ReadAccess;
-import org.knime.core.table.access.WriteAccess;
 
 /**
  * Legacy implementation for CustomKeyRowContainer using {@link DataContainer}s as storage backend.
@@ -144,20 +143,16 @@ final class BufferedRowContainer implements RowContainer, RowWriteCursor {
 
         private BufferedRowWrite(final BufferedDataContainer delegate, final ValueSchema schema) {
             m_delegate = delegate;
-            final ValueFactory<?, ?>[] factories = schema.getValueFactories();
+            int numFactories = schema.numFactories();
+            m_cells = new DataCell[numFactories - 1];
+            m_readValues = new NullableReadValue[numFactories];
+            m_writeValues = new WriteValue[numFactories];
 
-            m_cells = new DataCell[factories.length - 1];
-            m_readValues = new NullableReadValue[factories.length];
-            m_writeValues = new WriteValue[factories.length];
-
-            for (int i = 0; i < factories.length; i++) {
-                final BufferedAccess access = BufferedAccesses.createBufferedAccess(factories[i].getSpec());
-                @SuppressWarnings("unchecked")
-                final ValueFactory<ReadAccess, ?> readCast = (ValueFactory<ReadAccess, ?>)factories[i];
-                m_readValues[i] = new NullableReadValue(readCast, access);
-                @SuppressWarnings("unchecked")
-                final ValueFactory<?, WriteAccess> writeCast = (ValueFactory<?, WriteAccess>)factories[i];
-                m_writeValues[i] = writeCast.createWriteValue(access);
+            for (int i = 0; i < numFactories; i++) {//NOSONAR
+                var valueFactory = schema.getValueFactory(i);
+                final var access = BufferedAccesses.createBufferedAccess(valueFactory.getSpec());
+                m_readValues[i] = new NullableReadValue(valueFactory, access);
+                m_writeValues[i] = valueFactory.createWriteValue(access);
             }
 
             m_rowKeyReadValue = (RowKeyReadValue)m_readValues[0].getDelegate();
