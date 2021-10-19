@@ -113,6 +113,11 @@ public final class SetValueFactory implements CollectionValueFactory<ListReadAcc
         return m_listValueFactory.getTraits();
     }
 
+    @Override
+    public ValueFactory<?, ?> getElementValueFactory() {
+        return m_listValueFactory.getElementValueFactory();
+    }
+
     /**
      * Default implementation of {@link SetReadValue}. Set elements are of the type {@link DataCell}. Extend this class
      * to add access methods that do not wrap the elements in {@link DataCell}.

@@ -144,7 +144,6 @@ public final class SparseListValueFactory implements CollectionValueFactory<Stru
             new DefaultListDataTraits(m_inner.getTraits()));
     }
 
-
     /**
      * Default implementation of {@link SparseListReadValue}. List elements are of the type {@link DataCell}. Extend
      * this class to add access methods that do not wrap the elements in {@link DataCell}.

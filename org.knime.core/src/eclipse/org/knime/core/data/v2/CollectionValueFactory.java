@@ -74,4 +74,12 @@ public interface CollectionValueFactory<R extends ReadAccess, W extends WriteAcc
      * @param elementType the {@link DataType} of the elements
      */
     void initialize(ValueFactory<?, ?> elementValueFactory, DataType elementType);
+
+    /**
+     * Retrieves the element value factory.
+     *
+     * @return the element value factory
+     * @since 4.5
+     */
+    ValueFactory<?, ?> getElementValueFactory();//NOSONAR
 }

@@ -118,6 +118,11 @@ public final class ListValueFactory implements CollectionValueFactory<ListReadAc
         return new DefaultListDataTraits(m_inner.getTraits());
     }
 
+    @Override
+    public ValueFactory<?, ?> getElementValueFactory() {
+        return m_inner;
+    }
+
     /**
      * Default implementation of {@link ListReadValue}. List elements are of the type {@link DataCell}. Extend this
      * class to add access methods that do not wrap the elements in {@link DataCell}.
@@ -132,10 +137,6 @@ public final class ListValueFactory implements CollectionValueFactory<ListReadAc
         private final ValueFactory<?, ?> m_inner;
 
         private final DataType m_elementType;
-
-        private int m_lastIndex = -1;
-
-        private ReadValue m_value;
 
         /**
          * Create a default {@link ListReadValue}.
@@ -192,11 +193,7 @@ public final class ListValueFactory implements CollectionValueFactory<ListReadAc
         @Override
         public DataCell get(final int index) {
             if (!isMissing(index)) {
-                if (index != m_lastIndex) {
-                    m_lastIndex = index;
-                    m_value = m_inner.createReadValue(m_reader.getAccess(index));
-                }
-                return m_value.getDataCell();
+                return m_inner.createReadValue(m_reader.getAccess(index)).getDataCell();
             } else {
                 return DataType.getMissingCell();
             }
@@ -274,4 +271,5 @@ public final class ListValueFactory implements CollectionValueFactory<ListReadAc
             }
         }
     }
+
 }
