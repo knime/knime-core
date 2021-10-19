@@ -128,6 +128,13 @@ public final class DictEncodedDataCellValueFactory implements ValueFactory<Struc
         m_dataRepository = repository;
     }
 
+    /**
+     * @return the type corresponding to this ValueFactory
+     */
+    public DataType getType() {
+        return m_type;
+    }
+
     @Override
     public DataSpec getSpec() {
         // we store the actual implementation class name next to the serialized binary data

@@ -129,6 +129,13 @@ public class DataCellValueFactory implements ValueFactory<VarBinaryReadAccess, V
         m_dataRepository = repository;
     }
 
+    /**
+     * @return the type corresponding to this factory
+     */
+    public DataType getType() {
+        return m_type;
+    }
+
     @Override
     public ReadValue createReadValue(final VarBinaryReadAccess access) {
         final ArrayList<Class<? extends DataValue>> types = new ArrayList<>(m_type.getValueClasses());
