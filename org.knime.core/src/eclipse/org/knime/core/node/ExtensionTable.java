@@ -58,6 +58,7 @@ import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.WrappedTable;
 import org.knime.core.data.container.filter.FilterDelegateRowIterator;
 import org.knime.core.data.container.filter.TableFilter;
+import org.knime.core.data.v2.schema.ValueSchemaLoadContext;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 
@@ -80,7 +81,7 @@ public abstract class ExtensionTable implements ContainerTable {
     /**
      * Various parameters needed for loading an extension table.
      */
-    public static final class LoadContext {
+    public static final class LoadContext implements ValueSchemaLoadContext {
         private final ReferencedFile m_dataFileRef;
 
         private final DataTableSpec m_tableSpec;
@@ -117,6 +118,7 @@ public abstract class ExtensionTable implements ContainerTable {
         /**
          * @return the data table spec for this table
          */
+        @Override
         public DataTableSpec getTableSpec() {
             return m_tableSpec;
         }
@@ -124,6 +126,7 @@ public abstract class ExtensionTable implements ContainerTable {
         /**
          * @return the settings object, will contain additional meta-data.
          */
+        @Override
         public NodeSettingsRO getSettings() {
             return m_settings;
         }
@@ -149,6 +152,7 @@ public abstract class ExtensionTable implements ContainerTable {
          * @return the data repository
          * @since 4.3
          */
+        @Override
         public IDataRepository getDataRepository() {
             return m_repository;
         }

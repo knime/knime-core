@@ -49,6 +49,8 @@
 package org.knime.core.data.v2;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
@@ -76,6 +78,7 @@ import org.knime.core.data.filestore.FileStoreKey;
 import org.knime.core.data.filestore.internal.FileStoreProxy.FlushCallback;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.v2.schema.ValueSchema;
+import org.knime.core.data.v2.schema.ValueSchemaLoadContext;
 import org.knime.core.data.v2.schema.ValueSchemaUtils;
 import org.knime.core.data.v2.value.BooleanListValueFactory;
 import org.knime.core.data.v2.value.BooleanSetValueFactory;
@@ -257,8 +260,12 @@ public class ValueSchemaTest {
                 .addColumn(rowKeyFactory.getSpec(), generateTraits(rowKeyFactory))//
                 .addColumn(dataFactory.getSpec(), generateTraits(dataFactory))//
                 .build();
+        var loadContext = mock(ValueSchemaLoadContext.class);
+        when(loadContext.getTableSpec()).thenReturn(tableSpec);
+        when(loadContext.getDataRepository()).thenReturn(dataRepository);
+        when(loadContext.getSettings()).thenReturn(settings);
         // Load back and check
-        final ValueSchema loadedSchema = ValueSchemaUtils.load(columnarSchema, tableSpec, dataRepository, settings);
+        final ValueSchema loadedSchema = ValueSchemaUtils.load(columnarSchema, loadContext);
         assertEquals(VoidRowKeyFactory.class, rowKeyFactory.getClass());
         assertEquals(2, loadedSchema.numFactories());
         assertEquals(factoryClass, loadedSchema.getValueFactory(1).getClass());

@@ -51,14 +51,12 @@ package org.knime.core.data.v2.schema;
 import java.util.stream.IntStream;
 
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.IDataRepository;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.v2.RowKeyType;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.ValueFactoryUtils;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.table.schema.ColumnarSchema;
@@ -125,19 +123,19 @@ public final class ValueSchemaUtils {
      * Loads a ValueSchema from the given settings.
      *
      * @param schema underlying schema
-     * @param source the source {@link DataTableSpec}.
-     * @param dataRepository the data repository to restore file store cells.
-     * @param settings to save the value schema to.
+     * @param loadContext in which the schema is loaded
      * @return the loaded {@link ValueSchema}.
      *
-     * @throws InvalidSettingsException
+     * @throws InvalidSettingsException if the settings in loadContext are invalid
      */
-    public static final ValueSchema load(final ColumnarSchema schema, final DataTableSpec source,
-        final IDataRepository dataRepository, final NodeSettingsRO settings) throws InvalidSettingsException {
+    public static final ValueSchema load(final ColumnarSchema schema, final ValueSchemaLoadContext loadContext)
+        throws InvalidSettingsException {
+        var source = loadContext.getTableSpec();
+        var dataRepository = loadContext.getDataRepository();
         if (hasTypeTraits(schema)) {
-            return create(source, schema, dataRepository);
+            return create(schema, loadContext);
         } else {
-            return LegacyValueSchema.Serializer.load(source, dataRepository, settings);
+            return LegacyValueSchema.Serializer.load(source, dataRepository, loadContext.getSettings());
         }
     }
 
@@ -155,15 +153,16 @@ public final class ValueSchemaUtils {
      * @param dataRepository used for resolving filestore cells
      * @return a new ValueSchema with the provided {@link DataTableSpec} as source
      */
-    public static ValueSchema create(final DataTableSpec source, final ColumnarSchema schema,
-        final IDataRepository dataRepository) {
+    private static ValueSchema create(final ColumnarSchema schema, final ValueSchemaLoadContext loadContext) {
+        var source = loadContext.getTableSpec();
+        var dataRepository = loadContext.getDataRepository();
         int numDataColumns = source.getNumColumns();
         CheckUtils.checkArgument(numDataColumns + 1 == schema.numColumns(),
             "Expected %s columns in the schema but encountered %s.", numDataColumns + 1, schema.numColumns());
         final var factories = IntStream.range(0, schema.numColumns())//
-                .mapToObj(schema::getTraits)//
-                .map(t -> ValueFactoryUtils.loadValueFactory(t, dataRepository))//
-                .toArray(ValueFactory<?, ?>[]::new);
+            .mapToObj(schema::getTraits)//
+            .map(t -> ValueFactoryUtils.loadValueFactory(t, dataRepository))//
+            .toArray(ValueFactory<?, ?>[]::new);
         return new DefaultValueSchema(source, factories);
     }
 
@@ -173,7 +172,7 @@ public final class ValueSchemaUtils {
      * @param schema to check
      * @return true if the schema was created before KNIME AP 4.5.0
      */
-    public static boolean createdBefore45(final ValueSchema schema) {
+    public static boolean storesDataCellSerializersSeparately(final ValueSchema schema) {
         return schema instanceof LegacyValueSchema;
     }
 
