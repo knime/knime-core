@@ -85,9 +85,8 @@ import org.knime.core.table.access.WriteAccess;
  *
  * @noreference This class is not intended to be referenced by clients.
  */
-// TODO do we want to interface this? Yup
 @SuppressWarnings("deprecation")
-final class LegacyValueSchema implements ValueSchema {
+final class SerializerFactoryValueSchema implements ValueSchema {
 
     private final DataTableSpec m_spec;
 
@@ -97,7 +96,7 @@ final class LegacyValueSchema implements ValueSchema {
 
     private final DataCellSerializerFactory m_factory;
 
-    LegacyValueSchema(final DataTableSpec spec, //
+    SerializerFactoryValueSchema(final DataTableSpec spec, //
         final ValueFactory<?, ?>[] colFactories, //
         final Map<DataType, String> factoryMapping, //
         final DataCellSerializerFactory factory) {
@@ -127,7 +126,7 @@ final class LegacyValueSchema implements ValueSchema {
      * @param fileStoreHandler file-store handler
      * @return the value schema.
      */
-    public static final LegacyValueSchema create(final DataTableSpec spec, final RowKeyType rowKeyType,
+    public static final SerializerFactoryValueSchema create(final DataTableSpec spec, final RowKeyType rowKeyType,
         final IWriteFileStoreHandler fileStoreHandler) {
 
         final var cellSerializerFactory = new DataCellSerializerFactory();
@@ -139,7 +138,7 @@ final class LegacyValueSchema implements ValueSchema {
             final DataType type = spec.getColumnSpec(i - 1).getType();
             factories[i] = findValueFactory(type, factoryMapping, cellSerializerFactory, fileStoreHandler);
         }
-        return new LegacyValueSchema(spec, factories, factoryMapping, cellSerializerFactory);
+        return new SerializerFactoryValueSchema(spec, factories, factoryMapping, cellSerializerFactory);
     }
 
     /**
@@ -153,7 +152,7 @@ final class LegacyValueSchema implements ValueSchema {
      * @return the value schema
      * @since 4.5
      */
-    public static final LegacyValueSchema create(final DataTableSpec spec, final ValueFactory<?, ?>[] valueFactories,
+    public static final SerializerFactoryValueSchema create(final DataTableSpec spec, final ValueFactory<?, ?>[] valueFactories,
         final DataCellSerializerFactory cellSerializerFactory) {
         CheckUtils.checkArgument(valueFactories.length == spec.getNumColumns() + 1,
             "The number of value factories must be equal to the number of columns plus 1 (for the row key).");
@@ -167,7 +166,7 @@ final class LegacyValueSchema implements ValueSchema {
             CheckUtils.checkArgument(oldFac == null || fac.equals(oldFac),
                 "Conflicting ValueFactories '%s' and '%s' for data type '%s'.", oldFac, fac, type.toPrettyString());
         }
-        return new LegacyValueSchema(spec, valueFactories.clone(), factoryMapping, cellSerializerFactory);
+        return new SerializerFactoryValueSchema(spec, valueFactories.clone(), factoryMapping, cellSerializerFactory);
     }
 
     /** Find the factory for the given type (or DataCellValueFactory) and add it to the mapping */
@@ -203,7 +202,7 @@ final class LegacyValueSchema implements ValueSchema {
          * @param schema the ValueSchema to save.
          * @param settings the settings to save the ValueSchema to.
          */
-        public static final void save(final LegacyValueSchema schema, final NodeSettingsWO settings) {
+        public static final void save(final SerializerFactoryValueSchema schema, final NodeSettingsWO settings) {
 
             // save row key config
             settings.addString(CFG_ROW_KEY_CONFIG, schema.m_factories[0].getClass().getName());
@@ -230,7 +229,7 @@ final class LegacyValueSchema implements ValueSchema {
          *
          * @throws InvalidSettingsException
          */
-        public static final LegacyValueSchema load(final DataTableSpec source, final IDataRepository dataRepository,
+        public static final SerializerFactoryValueSchema load(final DataTableSpec source, final IDataRepository dataRepository,
             final NodeSettingsRO settings) throws InvalidSettingsException {
 
             // Load the factory mapping
@@ -253,7 +252,7 @@ final class LegacyValueSchema implements ValueSchema {
                 factories[i] = getValueFactory(type, factoryMapping, cellSerializerFactory, dataRepository);
             }
 
-            return new LegacyValueSchema(source, factories, factoryMapping, cellSerializerFactory);
+            return new SerializerFactoryValueSchema(source, factories, factoryMapping, cellSerializerFactory);
         }
 
         private static ValueFactory<?, ?> getValueFactory(final DataType type,

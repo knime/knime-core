@@ -110,8 +110,8 @@ public final class ValueSchemaUtils {
      * @param settings the settings to save the ValueSchema to.
      */
     public static final void save(final ValueSchema schema, final NodeSettingsWO settings) {
-        if (schema instanceof LegacyValueSchema) {
-            LegacyValueSchema.Serializer.save((LegacyValueSchema)schema, settings);
+        if (schema instanceof SerializerFactoryValueSchema) {
+            SerializerFactoryValueSchema.Serializer.save((SerializerFactoryValueSchema)schema, settings);
         } else if (schema instanceof DefaultValueSchema) {
             // nothing to save
         } else {
@@ -135,7 +135,7 @@ public final class ValueSchemaUtils {
         if (hasTypeTraits(schema)) {
             return create(schema, loadContext);
         } else {
-            return LegacyValueSchema.Serializer.load(source, dataRepository, loadContext.getSettings());
+            return SerializerFactoryValueSchema.Serializer.load(source, dataRepository, loadContext.getSettings());
         }
     }
 
@@ -173,7 +173,7 @@ public final class ValueSchemaUtils {
      * @return true if the schema was created before KNIME AP 4.5.0
      */
     public static boolean storesDataCellSerializersSeparately(final ValueSchema schema) {
-        return schema instanceof LegacyValueSchema;
+        return schema instanceof SerializerFactoryValueSchema;
     }
 
     private ValueSchemaUtils() {
