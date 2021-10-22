@@ -263,7 +263,6 @@ final class SerializerFactoryValueSchema implements ValueSchema {
 
             // Initialize
             if (factory instanceof CollectionValueFactory) {
-                // TODO should we check that there is an element type?
                 final DataType elementType = type.getCollectionElementType();
                 ((CollectionValueFactory<?, ?>)factory).initialize(
                     getValueFactory(elementType, factoryMapping, cellSerializerFactory, dataRepository), elementType);
@@ -273,8 +272,12 @@ final class SerializerFactoryValueSchema implements ValueSchema {
             return factory;
         }
 
-        // TODO if this can also be covered by ValueFactoryUtils
         private static ValueFactory<?, ?> instantiateValueFactory(final String className) {
+            var specificCollectionValueFactory =
+                ValueFactoryUtils.getSpecificCollectionValueFactory(className);
+            if (specificCollectionValueFactory.isPresent()) {
+                return specificCollectionValueFactory.get();
+            }
             final Optional<Class<? extends ValueFactory<?, ?>>> valueFactoryClass =
                 DataTypeRegistry.getInstance().getValueFactoryClass(className);
 

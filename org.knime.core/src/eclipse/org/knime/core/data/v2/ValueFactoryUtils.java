@@ -135,6 +135,16 @@ public final class ValueFactoryUtils {
             .build();
 
     /**
+     * Loads a specific collection {@link ValueFactory} from className if className refers to a specific collection ValueFactory.
+     *
+     * @param className name of a value factory
+     * @return an instance of the class corresponding to className or an empty optional
+     */
+    public static Optional<ValueFactory<?, ?>> getSpecificCollectionValueFactory(final String className) {
+        return Optional.ofNullable(SPECIFIC_COLLECTION_FACTORY_PROVIDER.getFactoryFor(className));
+    }
+
+    /**
      * Creates a {@link ValueFactory} from the logical type stored in a ColumnarSchema.
      *
      * @param traits must contain the {@link LogicalTypeTrait}
