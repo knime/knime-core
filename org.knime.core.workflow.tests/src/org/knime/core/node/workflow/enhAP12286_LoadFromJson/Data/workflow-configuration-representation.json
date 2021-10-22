@@ -27,7 +27,8 @@
         ],
         "type": "Twinlist",
         "limitNumberVisOptions": false,
-        "numberVisOptions": 10
+        "numberVisOptions": 10,
+        "triggerReExecution": false
     },
     "list-box-input-8": {
         "@class": "org.knime.js.base.node.configuration.input.listbox.ListBoxDialogNodeRepresentation",
@@ -143,7 +144,8 @@
         ],
         "type": "Dropdown",
         "limitNumberVisOptions": false,
-        "numberVisOptions": 10
+        "numberVisOptions": 10,
+        "triggerReExecution": false
     },
     "file-chooser-input-9": {
         "@class": "org.knime.js.base.node.configuration.input.filechooser.FileChooserDialogNodeRepresentation",
