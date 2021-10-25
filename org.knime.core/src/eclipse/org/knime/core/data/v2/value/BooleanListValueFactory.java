@@ -113,7 +113,8 @@ public final class BooleanListValueFactory implements ValueFactory<ListReadAcces
 
         @Override
         public boolean getBoolean(final int index) {
-            final BooleanReadAccess v = m_reader.getAccess(index);
+            final BooleanReadAccess v = m_reader.getAccess();
+            m_reader.setIndex(index);
             return v.getBooleanValue();
         }
 
@@ -132,7 +133,7 @@ public final class BooleanListValueFactory implements ValueFactory<ListReadAcces
         }
     }
 
-    private static final class DefaultBooleanListWriteValue extends DefaultListWriteValue
+    private static final class DefaultBooleanListWriteValue extends DefaultListWriteValue<BooleanValue, BooleanWriteValue>
         implements BooleanListWriteValue {
 
         private DefaultBooleanListWriteValue(final ListWriteAccess writer) {
@@ -141,7 +142,7 @@ public final class BooleanListValueFactory implements ValueFactory<ListReadAcces
 
         @Override
         public void setValue(final boolean[] values) {
-            this.<BooleanValue, BooleanWriteValue> setValue(values.length, (i, v) -> v.setBooleanValue(values[i]));
+            setValue(values.length, i -> m_elementWriteValue.setBooleanValue(values[i]));
         }
     }
 

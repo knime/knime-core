@@ -111,7 +111,8 @@ public final class DoubleListValueFactory implements ValueFactory<ListReadAccess
 
         @Override
         public double getDouble(final int index) {
-            final DoubleReadAccess v = m_reader.getAccess(index);
+            final DoubleReadAccess v = m_reader.getAccess();
+            m_reader.setIndex(index);
             return v.getDoubleValue();
         }
 
@@ -140,7 +141,7 @@ public final class DoubleListValueFactory implements ValueFactory<ListReadAccess
         }
     }
 
-    private static final class DefaultDoubleListWriteValue extends DefaultListWriteValue
+    private static final class DefaultDoubleListWriteValue extends DefaultListWriteValue<DoubleValue, DoubleWriteValue>
         implements DoubleListWriteValue {
 
         private DefaultDoubleListWriteValue(final ListWriteAccess writer) {
@@ -149,7 +150,7 @@ public final class DoubleListValueFactory implements ValueFactory<ListReadAccess
 
         @Override
         public void setValue(final double[] values) {
-            this.<DoubleValue, DoubleWriteValue> setValue(values.length, (i, v) -> v.setDoubleValue(values[i]));
+            setValue(values.length, i -> m_elementWriteValue.setDoubleValue(values[i]));
         }
     }
 }

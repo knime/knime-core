@@ -110,7 +110,8 @@ public final class IntListValueFactory implements ValueFactory<ListReadAccess, L
 
         @Override
         public int getInt(final int index) {
-            final IntReadAccess v = m_reader.getAccess(index);
+            final IntReadAccess v = m_reader.getAccess();
+            m_reader.setIndex(index);
             return v.getIntValue();
         }
 
@@ -129,7 +130,8 @@ public final class IntListValueFactory implements ValueFactory<ListReadAccess, L
         }
     }
 
-    private static final class DefaultIntListWriteValue extends DefaultListWriteValue implements IntListWriteValue {
+    private static final class DefaultIntListWriteValue extends DefaultListWriteValue<IntValue, IntWriteValue>
+        implements IntListWriteValue {
 
         private DefaultIntListWriteValue(final ListWriteAccess writer) {
             super(writer, IntValueFactory.INSTANCE);
@@ -137,7 +139,7 @@ public final class IntListValueFactory implements ValueFactory<ListReadAccess, L
 
         @Override
         public void setValue(final int[] values) {
-            this.<IntValue, IntWriteValue> setValue(values.length, (i, v) -> v.setIntValue(values[i]));
+            setValue(values.length, i -> m_elementWriteValue.setIntValue(values[i]));
         }
     }
 }

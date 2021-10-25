@@ -52,6 +52,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.function.BiConsumer;
+import java.util.function.IntConsumer;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
@@ -110,7 +111,7 @@ public final class ListValueFactory implements CollectionValueFactory<ListReadAc
 
     @Override
     public ListWriteValue createWriteValue(final ListWriteAccess writer) {
-        return new DefaultListWriteValue(writer, m_inner);
+        return new DefaultListWriteValue<>(writer, m_inner);
     }
 
     @Override
@@ -134,9 +135,9 @@ public final class ListValueFactory implements CollectionValueFactory<ListReadAc
         /** The access to the list. */
         protected final ListReadAccess m_reader;
 
-        private final ValueFactory<?, ?> m_inner;
-
         private final DataType m_elementType;
+
+        private final ReadValue m_elementValue;
 
         /**
          * Create a default {@link ListReadValue}.
@@ -147,8 +148,8 @@ public final class ListValueFactory implements CollectionValueFactory<ListReadAc
         DefaultListReadValue(final ListReadAccess reader, final ValueFactory<?, ?> inner,
             final DataType elementType) {
             m_reader = reader;
-            m_inner = inner;
             m_elementType = elementType;
+            m_elementValue = inner.createReadValue(reader.getAccess());
         }
 
         @Override
@@ -193,7 +194,7 @@ public final class ListValueFactory implements CollectionValueFactory<ListReadAc
         @Override
         public DataCell get(final int index) {
             if (!isMissing(index)) {
-                return m_inner.createReadValue(m_reader.getAccess(index)).getDataCell();
+                return m_elementValue.getDataCell();
             } else {
                 return DataType.getMissingCell();
             }
@@ -216,38 +217,41 @@ public final class ListValueFactory implements CollectionValueFactory<ListReadAc
      *
      * @since 4.3
      */
-    static class DefaultListWriteValue implements ListWriteValue {
+    static class DefaultListWriteValue<D extends DataValue, W extends WriteValue<D>> implements ListWriteValue {
 
         private final ListWriteAccess m_writer;
 
-        private final ValueFactory<?, ?> m_inner;
+        protected final W m_elementWriteValue;
 
         /**
          * Create a default {@link ListWriteValue}.
          *
          * @param writer {@link ListWriteAccess} to access the values
          */
+        @SuppressWarnings("unchecked")
         DefaultListWriteValue(final ListWriteAccess writer, final ValueFactory<?, ?> inner) {
             m_writer = writer;
-            m_inner = inner;
+            m_elementWriteValue = (W)inner.createWriteValue(writer.getWriteAccess());
         }
 
+        @SuppressWarnings("unchecked")
         @Override
         public void setValue(final ListDataValue value) {
-            setValue(value.size(), (i, v) -> {
+            setValue(value.size(), i -> {
                 final DataCell cell = value.get(i);
                 if (!cell.isMissing()) {
-                    v.setValue(cell);
+                    m_elementWriteValue.setValue((D)cell);
                 }
             });
         }
 
+        @SuppressWarnings("unchecked")
         @Override
         public void setValue(final List<DataValue> values) {
-            setValue(values.size(), (i, v) -> {
+            setValue(values.size(), i -> {
                 final DataValue value = values.get(i);
                 if (!(value instanceof MissingValue)) {
-                    v.setValue(value);
+                    m_elementWriteValue.setValue((D)value);
                 }
             });
         }
@@ -255,19 +259,16 @@ public final class ListValueFactory implements CollectionValueFactory<ListReadAc
         /**
          * Set the list value by accessing the value directly in the setter.
          *
-         * @param <D> the type of the {@link DataValue} written by the {@link WriteValue} of type W
-         * @param <W> the type of the {@link WriteValue}
          * @param size the size of the list
          * @param setter a {@link BiConsumer} which gets the index of the value and the {@link WriteValue} of type W and
          *            is supposed to set W to the expected value.
          */
-        protected <D extends DataValue, W extends WriteValue<D>> void setValue(final int size,
-            final BiConsumer<Integer, W> setter) {
+        protected void setValue(final int size,
+            final IntConsumer setter) {
             m_writer.create(size);
-            for (int i = 0; i < size; i++) { // NOSONAR
-                @SuppressWarnings("unchecked")
-                W value = (W)m_inner.createWriteValue(m_writer.getWriteAccess(i));
-                setter.accept(i, value);
+            for (int i = 0; i < size; i++) {//NOSONAR
+                m_writer.setWriteIndex(i);
+                setter.accept(i);
             }
         }
     }

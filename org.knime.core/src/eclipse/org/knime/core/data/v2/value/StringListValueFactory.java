@@ -107,14 +107,14 @@ public class StringListValueFactory implements ValueFactory<ListReadAccess, List
     private static final class DefaultStringListReadValue extends DefaultListReadValue
         implements StringListReadValue {
 
-        @SuppressWarnings("deprecation")
         private DefaultStringListReadValue(final ListReadAccess reader) {
             super(reader, StringValueFactory.INSTANCE, StringCell.TYPE);
         }
 
         @Override
         public String getString(final int index) {
-            final StringReadAccess v = m_reader.getAccess(index);
+            final StringReadAccess v = m_reader.getAccess();
+            m_reader.setIndex(index);
             return v.getStringValue();
         }
 
@@ -144,7 +144,7 @@ public class StringListValueFactory implements ValueFactory<ListReadAccess, List
 
     }
 
-    private static final class DefaultStringListWriteValue extends DefaultListWriteValue
+    private static final class DefaultStringListWriteValue extends DefaultListWriteValue<StringValue, StringWriteValue>
         implements StringListWriteValue {
 
         @SuppressWarnings("deprecation")
@@ -154,7 +154,7 @@ public class StringListValueFactory implements ValueFactory<ListReadAccess, List
 
         @Override
         public void setValue(final String[] values) {
-            this.<StringValue, StringWriteValue> setValue(values.length, (i, v) -> v.setStringValue(values[i]));
+            setValue(values.length, i -> m_elementWriteValue.setStringValue(values[i]));
         }
     }
 }

@@ -110,7 +110,8 @@ public final class LongListValueFactory implements ValueFactory<ListReadAccess, 
 
         @Override
         public long getLong(final int index) {
-            final LongReadAccess v = m_reader.getAccess(index);
+            final LongReadAccess v = m_reader.getAccess();
+            m_reader.setIndex(index);
             return v.getLongValue();
         }
 
@@ -129,7 +130,8 @@ public final class LongListValueFactory implements ValueFactory<ListReadAccess, 
         }
     }
 
-    private static final class DefaultLongListWriteValue extends DefaultListWriteValue implements LongListWriteValue {
+    private static final class DefaultLongListWriteValue extends DefaultListWriteValue<LongValue, LongWriteValue>
+        implements LongListWriteValue {
 
         private DefaultLongListWriteValue(final ListWriteAccess writer) {
             super(writer, LongValueFactory.INSTANCE);
@@ -137,7 +139,7 @@ public final class LongListValueFactory implements ValueFactory<ListReadAccess, 
 
         @Override
         public void setValue(final long[] values) {
-            this.<LongValue, LongWriteValue> setValue(values.length, (i, v) -> v.setLongValue(values[i]));
+            setValue(values.length, i -> m_elementWriteValue.setLongValue(values[i]));
         }
     }
 }
