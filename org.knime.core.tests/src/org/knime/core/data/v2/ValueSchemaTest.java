@@ -101,9 +101,6 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.table.schema.DefaultColumnarSchema;
-import org.knime.core.table.schema.traits.DataTraitUtils;
-import org.knime.core.table.schema.traits.DataTraits;
-import org.knime.core.table.schema.traits.LogicalTypeTrait;
 
 /**
  * Tests for the {@link DefaultValueSchema} and the {@link ValueFactory}s used by it.
@@ -257,8 +254,8 @@ public class ValueSchemaTest {
         ValueSchemaUtils.save(schema, settings);
 
         var columnarSchema = DefaultColumnarSchema.builder()//
-                .addColumn(rowKeyFactory.getSpec(), generateTraits(rowKeyFactory))//
-                .addColumn(dataFactory.getSpec(), generateTraits(dataFactory))//
+                .addColumn(rowKeyFactory.getSpec(), ValueFactoryUtils.getTraits(rowKeyFactory))//
+                .addColumn(dataFactory.getSpec(), ValueFactoryUtils.getTraits(dataFactory))//
                 .build();
         var loadContext = mock(ValueSchemaLoadContext.class);
         when(loadContext.getTableSpec()).thenReturn(tableSpec);
@@ -269,11 +266,6 @@ public class ValueSchemaTest {
         assertEquals(VoidRowKeyFactory.class, rowKeyFactory.getClass());
         assertEquals(2, loadedSchema.numFactories());
         assertEquals(factoryClass, loadedSchema.getValueFactory(1).getClass());
-    }
-
-    private static DataTraits generateTraits(final ValueFactory<?, ?> valueFactory) {
-        return DataTraitUtils.withTrait(valueFactory.getTraits(),
-            new LogicalTypeTrait(valueFactory.getClass().getName()));
     }
 
     public static final class DummyWriteFileStoreHandler implements IWriteFileStoreHandler {
