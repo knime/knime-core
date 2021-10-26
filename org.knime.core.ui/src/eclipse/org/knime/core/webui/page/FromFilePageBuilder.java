@@ -50,6 +50,7 @@ package org.knime.core.webui.page;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
@@ -139,7 +140,10 @@ public final class FromFilePageBuilder extends PageBuilder {
     private static Path getAbsoluteBasePath(final Bundle bundle, final String baseDir) {
         var bundleUrl = bundle.getEntry(".");
         try {
-            return Paths.get(FileLocator.toFileURL(bundleUrl).toURI()).resolve(baseDir).normalize();
+            // must not use url.toURI() -- FileLocator leaves spaces in the URL (see eclipse bug 145096)
+            // -- taken from TableauHyperActivator.java line 158
+            var url = FileLocator.toFileURL(bundleUrl);
+            return  Paths.get(new URI(url.getProtocol(), url.getFile(), null)).resolve(baseDir).normalize();
         } catch (IOException | URISyntaxException ex) {
             throw new IllegalStateException("Failed to resolve the directory " + baseDir, ex);
         }
