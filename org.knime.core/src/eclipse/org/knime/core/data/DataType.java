@@ -671,6 +671,20 @@ public final class DataType {
         }
     }
 
+    /**
+     * Creates a new non-native type. This method is not meant to be called by clients.
+     *
+     * @param valueClasses the compatible value classes
+     * @param collectionElementType collection element type (can be null)
+     * @param adapterClasses the adapter value classes
+     * @return a new non-native data type
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public static DataType createNonNativeType(final List<Class<? extends DataValue>> valueClasses,
+        final DataType collectionElementType, final List<Class<? extends DataValue>> adapterClasses) {
+        return new DataType(new ArrayList<>(valueClasses), collectionElementType, new ArrayList<>(adapterClasses));
+    }
+
     /** Cell class defines a native type. */
     private final Class<? extends DataCell> m_cellClass;
 
@@ -1078,6 +1092,17 @@ public final class DataType {
      */
     public List<Class<? extends DataValue>> getValueClasses() {
         return Collections.unmodifiableList(m_valueClasses);
+    }
+
+    /**
+     * Returns a copy of the registered adapter value classes for this {@code DataType}.
+     * The returned {@code List} is non-modifiable, subsequent changes to the list will fail with an exception.
+     *
+     * @return a non-modifiable list of adapter value classes
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public List<Class<? extends DataValue>> getAdapterValueClasses() {
+        return Collections.unmodifiableList(m_adapterValueList);
     }
 
     /**

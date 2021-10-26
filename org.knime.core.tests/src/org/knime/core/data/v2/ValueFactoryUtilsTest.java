@@ -53,8 +53,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.Optional;
-
 import org.junit.jupiter.api.Test;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
@@ -80,14 +78,16 @@ import org.knime.core.data.xml.XMLCell;
 import org.knime.core.table.access.IntAccess.IntReadAccess;
 import org.knime.core.table.access.IntAccess.IntWriteAccess;
 import org.knime.core.table.schema.DataSpec;
-import org.knime.core.table.schema.traits.DataTrait;
 import org.knime.core.table.schema.traits.DataTrait.DictEncodingTrait;
 import org.knime.core.table.schema.traits.DataTraits;
 import org.knime.core.table.schema.traits.DefaultDataTraits;
-import org.knime.core.table.schema.traits.DefaultListDataTraits;
 import org.knime.core.table.schema.traits.ListDataTraits;
 import org.knime.core.table.schema.traits.LogicalTypeTrait;
 import org.knime.core.table.schema.traits.StructDataTraits;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Contains unit tests for {@link ValueFactoryUtils}.
@@ -160,7 +160,17 @@ final class ValueFactoryUtilsTest {
         var traits = ValueFactoryUtils.getTraits(valueFactory);
         assertTrue(traits.hasTrait(LogicalTypeTrait.class));
         assertTrue(traits.hasTrait(DictEncodingTrait.class));
-        assertEquals(valueFactory.getClass().getName(), traits.get(LogicalTypeTrait.class).getLogicalType());
+        var logicalTypeJson = extractLogicalTypeJson(traits);
+        assertEquals(valueFactory.getClass().getName(), logicalTypeJson.get("value_factory_class").asText());
+    }
+
+    private static JsonNode extractLogicalTypeJson(final DataTraits traits) {
+        var logicalTypeString = traits.get(LogicalTypeTrait.class).getLogicalType();
+        try {
+            return new ObjectMapper().readTree(logicalTypeString);
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     @Test
@@ -169,8 +179,12 @@ final class ValueFactoryUtilsTest {
         var traits = ValueFactoryUtils.getTraits(valueFactory);
         assertTrue(traits.hasTrait(LogicalTypeTrait.class));
         assertThat(traits).isInstanceOf(StructDataTraits.class);
-        assertThat(traits.get(LogicalTypeTrait.class).getLogicalType())//
-            .isEqualTo(DictEncodedDataCellValueFactory.class.getName() + ";" + XMLCell.TYPE.getCellClass().getName());
+        var logicalTypeJson = extractLogicalTypeJson(traits);
+        assertThat(logicalTypeJson.get("value_factory_class").asText())//
+            .isEqualTo(DictEncodedDataCellValueFactory.class.getName());
+        var dataTypeJson = logicalTypeJson.get("data_type");
+        assertThat(dataTypeJson.get("cell_class").asText())//
+            .isEqualTo(XMLCell.TYPE.getCellClass().getName());
         var structTraits = (StructDataTraits)traits;
         assertTrue(structTraits.getDataTraits(0).hasTrait(DictEncodingTrait.class));
         assertTrue(structTraits.getDataTraits(1).hasTrait(DictEncodingTrait.class));
@@ -181,14 +195,13 @@ final class ValueFactoryUtilsTest {
         var valueFactory = new ListValueFactory();
         valueFactory.initialize(new IntValueFactory(), IntCell.TYPE);
         assertThat(ValueFactoryUtils.getTraits(valueFactory))//
-        .isInstanceOf(ListDataTraits.class)//
-        .matches(this::hasLogicalTypeTrait)//
-        .matches(this::isListTypeTrait)
-        .extracting(ListDataTraits.class::cast)//
-        .extracting(ListDataTraits::getInner)//
-        .matches(this::hasLogicalTypeTrait)//
-        .extracting(t -> t.get(LogicalTypeTrait.class).getLogicalType())//
-        .isEqualTo(IntValueFactory.class.getName());
+            .isInstanceOf(ListDataTraits.class)//
+            .matches(this::hasLogicalTypeTrait)//
+            .matches(this::isListTypeTrait).extracting(ListDataTraits.class::cast)//
+            .extracting(ListDataTraits::getInner)//
+            .matches(this::hasLogicalTypeTrait)//
+            .extracting(ValueFactoryUtilsTest::extractValueFactoryClassName)//
+            .isEqualTo(IntValueFactory.class.getName());
 
         // collection of data cell value factories
         var listOfDataCells = createListValueFactory(createDataCellValueFactory(), XMLCell.TYPE);
@@ -198,11 +211,11 @@ final class ValueFactoryUtilsTest {
             .matches(this::isListTypeTrait)//
             .extracting(ListDataTraits.class::cast)//
             .extracting(ListDataTraits::getInner)//
-            .extracting(t -> DataTraits.getTrait(t, LogicalTypeTrait.class))//
-            .matches(Optional::isPresent)//
-            .extracting(Optional::get)//
-            .extracting(LogicalTypeTrait::getLogicalType)//
-            .isEqualTo(DictEncodedDataCellValueFactory.class.getName() + ";" + XMLCell.class.getName());
+            .extracting(ValueFactoryUtilsTest::extractLogicalTypeJson)//
+            .matches(j -> j.get("value_factory_class").asText().equals(DictEncodedDataCellValueFactory.class.getName()))
+            .extracting(j -> j.get("data_type"))//
+            .extracting(j -> j.get("cell_class").asText())//
+            .isEqualTo(XMLCell.class.getName());
 
         // nested collection
         var nestedCollection = createListValueFactory(createListValueFactory(IntValueFactory.INSTANCE, IntCell.TYPE),
@@ -218,30 +231,35 @@ final class ValueFactoryUtilsTest {
             .extracting(ListDataTraits.class::cast)//
             .extracting(ListDataTraits::getInner)//
             .matches(this::hasLogicalTypeTrait)//
-            .extracting(this::extractLogicalTypeTrait)//
+            .extracting(ValueFactoryUtilsTest::extractValueFactoryClassName)//
             .isEqualTo(IntValueFactory.class.getName());
 
         // SparseListValueFactory (uses StructDataTraits)
         var sparseList = new SparseListValueFactory();
         sparseList.initialize(IntValueFactory.INSTANCE, IntCell.TYPE);
         assertThat(ValueFactoryUtils.getTraits(sparseList))//
-        .isInstanceOf(StructDataTraits.class)//
-        .extracting(StructDataTraits.class::cast)//
-        .matches(this::hasLogicalTypeTrait)//
-        .matches(t -> t.get(LogicalTypeTrait.class).getLogicalType().equals(SparseListValueFactory.class.getName()))//
-        .extracting(t -> t.getDataTraits(0))//
-        .matches(this::hasLogicalTypeTrait)//
-        .extracting(t -> t.get(LogicalTypeTrait.class).getLogicalType())
-        .isEqualTo(IntValueFactory.class.getName());
+            .isInstanceOf(StructDataTraits.class)//
+            .extracting(StructDataTraits.class::cast)//
+            .matches(this::hasLogicalTypeTrait)//
+            .matches(t -> extractValueFactoryClassName(t).equals(SparseListValueFactory.class.getName()))//
+            .extracting(t -> t.getDataTraits(0))//
+            .matches(this::hasLogicalTypeTrait)//
+            .extracting(ValueFactoryUtilsTest::extractValueFactoryClassName)//
+            .isEqualTo(IntValueFactory.class.getName());
 
     }
+
 
     private String extractLogicalTypeTrait(final DataTraits traits) {
         return traits.get(LogicalTypeTrait.class).getLogicalType();
     }
 
     private boolean isListTypeTrait(final DataTraits traits) {
-        return traits.get(LogicalTypeTrait.class).getLogicalType().equals(ListValueFactory.class.getName());
+        return extractValueFactoryClassName(traits).equals(ListValueFactory.class.getName());
+    }
+
+    private static String extractValueFactoryClassName(final DataTraits traits) {
+        return extractLogicalTypeJson(traits).get("value_factory_class").asText();
     }
 
     private boolean hasLogicalTypeTrait(final DataTraits traits) {
@@ -290,7 +308,7 @@ final class ValueFactoryUtilsTest {
 
     @Test
     void testGetRowKeyValueFactoryFromTraits() {
-        var traits = new DefaultDataTraits(new LogicalTypeTrait(DefaultRowKeyValueFactory.class.getName()));
+        var traits = ValueFactoryUtils.getTraits(DefaultRowKeyValueFactory.INSTANCE);
         assertThat(ValueFactoryUtils.loadRowKeyValueFactory(traits))//
             .isInstanceOf(DefaultRowKeyValueFactory.class);
     }
@@ -335,23 +353,24 @@ final class ValueFactoryUtilsTest {
             () -> ValueFactoryUtils.loadValueFactory(DefaultDataTraits.EMPTY, dataRepo));
 
         // void
-        var voidTrait = createSimpleTypeTraits(VoidValueFactory.class);
+        var voidTrait = ValueFactoryUtils.getTraits(VoidValueFactory.INSTANCE);
         assertThat(ValueFactoryUtils.loadValueFactory(voidTrait, dataRepo)).isEqualTo(VoidValueFactory.INSTANCE);
 
         // ordinary
-        DataTraits traits = createSimpleTypeTraits(IntValueFactory.class);
+        DataTraits traits = ValueFactoryUtils.getTraits(IntValueFactory.INSTANCE);
         assertThat(ValueFactoryUtils.loadValueFactory(traits, dataRepo))//
             .isInstanceOf(IntValueFactory.class);
 
         // specific collection
-        traits = new DefaultListDataTraits(new DataTrait[]{new LogicalTypeTrait(IntListValueFactory.class.getName())},
-            DefaultDataTraits.EMPTY);
+        traits = ValueFactoryUtils.getTraits(IntListValueFactory.INSTANCE);
         assertThat(ValueFactoryUtils.loadValueFactory(traits, dataRepo))//
             .isEqualTo(IntListValueFactory.INSTANCE);
 
         // nested collection
-        traits =
-            new DefaultListDataTraits(new DataTrait[]{new LogicalTypeTrait(ListValueFactory.class.getName())}, traits);
+        var nestedListValueFactory = new ListValueFactory();
+        nestedListValueFactory.initialize(IntListValueFactory.INSTANCE,
+            DataType.getType(ListCell.class, DataType.getType(ListCell.class, IntCell.TYPE)));
+        traits = ValueFactoryUtils.getTraits(nestedListValueFactory);
         assertThat(ValueFactoryUtils.loadValueFactory(traits, dataRepo))//
             .isInstanceOf(ListValueFactory.class)//
             .extracting(ListValueFactory.class::cast)//
@@ -359,29 +378,21 @@ final class ValueFactoryUtilsTest {
             .isEqualTo(IntListValueFactory.INSTANCE);
 
         // data cell value factory
-        traits = createSimpleTypeTraits(
-            DictEncodedDataCellValueFactory.class.getName() + ";" + XMLCell.TYPE.getCellClass().getName());
+        var dictEncodedDataCellValueFactory = createDataCellValueFactory();
+        traits = ValueFactoryUtils.getTraits(dictEncodedDataCellValueFactory);
         assertThat(ValueFactoryUtils.loadValueFactory(traits, dataRepo))//
             .isInstanceOf(DictEncodedDataCellValueFactory.class)//
             .extracting(DictEncodedDataCellValueFactory.class::cast)//
             .extracting(DictEncodedDataCellValueFactory::getType)//
             .isEqualTo(XMLCell.TYPE);
 
-        // data cell value factory with no cell type
-        final var noCellType = createSimpleTypeTraits(DictEncodedDataCellValueFactory.class.getName() + ";");
-        assertThrows(IllegalArgumentException.class, () -> ValueFactoryUtils.loadValueFactory(noCellType, dataRepo));
-
-        final var bogusCellType = createSimpleTypeTraits(DictEncodedDataCellValueFactory.class.getName() + ";bogus");
-        assertThrows(IllegalArgumentException.class, () -> ValueFactoryUtils.loadValueFactory(bogusCellType, dataRepo));
-
         // try to load an unregistered value factory
         final var finalTraits = createSimpleTypeTraits(DummyDataValueFactory.class.getName());
         assertThrows(IllegalArgumentException.class, () -> ValueFactoryUtils.loadValueFactory(finalTraits, dataRepo));
-
     }
 
     @Test
-    void testInstantiatValueFactory() {
+    void testInstantiateValueFactory() {
         // exception in constructor
         assertThrows(IllegalStateException.class,
             () -> ValueFactoryUtils.instantiateValueFactory(ThrowingConstructorValueFactory.class));

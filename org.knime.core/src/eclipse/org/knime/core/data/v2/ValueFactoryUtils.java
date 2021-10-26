@@ -48,17 +48,21 @@
  */
 package org.knime.core.data.v2;
 
+import static java.util.stream.Collectors.toList;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.stream.IntStream;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataTypeRegistry;
+import org.knime.core.data.DataValue;
 import org.knime.core.data.IDataRepository;
 import org.knime.core.data.collection.ListCell;
 import org.knime.core.data.collection.SetCell;
@@ -99,6 +103,12 @@ import org.knime.core.table.schema.traits.ListDataTraits;
 import org.knime.core.table.schema.traits.LogicalTypeTrait;
 import org.knime.core.table.schema.traits.StructDataTraits;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 
@@ -111,6 +121,20 @@ import com.google.common.collect.HashBiMap;
  * @noreference This class is not intended to be referenced by clients.
  */
 public final class ValueFactoryUtils {
+
+    private static final String CFG_VALUE_FACTORY_CLASS = "value_factory_class";
+
+    private static final String CFG_DATA_TYPE = "data_type";
+
+    private static final String CFG_VALUE_CLASSES = "value_classes";
+
+    private static final String CFG_ADAPTER_CLASSES = "adapter_classes";
+
+    private static final String CFG_CELL_CLASS = "cell_class";
+
+    private static final String CFG_COLLECTION_ELEMENT_TYPE = "collection_element_type";
+
+    private static final DataTypeRegistry REGISTRY = DataTypeRegistry.getInstance();
 
     private static final SingletonFactoryProvider SPECIFIC_COLLECTION_FACTORY_PROVIDER =
         SingletonFactoryProvider.builder()//
@@ -153,11 +177,13 @@ public final class ValueFactoryUtils {
      */
     public static ValueFactory<?, ?> loadValueFactory(final DataTraits traits, //NOSONAR
         final IDataRepository dataRepository) {
-        final var valueFactoryName = extractValueFactoryName(traits);
+        final JsonNode json = extractLogicalTypeJson(traits);
+        final String valueFactoryName = json.get(CFG_VALUE_FACTORY_CLASS).asText();
+
         if (VoidValueFactory.class.getName().equals(valueFactoryName)) {
             return VoidValueFactory.INSTANCE;
-        } else if (isDataCellValueFactoryLogicalType(valueFactoryName)) {
-            return getDataCellValueFactoryFromLogicalTypeString(valueFactoryName, dataRepository);
+        } else if (json.has(CFG_DATA_TYPE)) {
+            return getDataCellValueFactoryFromLogicalTypeString(json, dataRepository);
         } else if (SPECIFIC_COLLECTION_FACTORY_PROVIDER.hasFactoryFor(valueFactoryName)) {
             return SPECIFIC_COLLECTION_FACTORY_PROVIDER.getFactoryFor(valueFactoryName);
         } else {
@@ -181,25 +207,11 @@ public final class ValueFactoryUtils {
         return valueFactory;
     }
 
-    private static boolean isDataCellValueFactoryLogicalType(final String logicalType) {
-        return logicalType.contains(";");
-    }
-
-    @SuppressWarnings("unchecked")
-    private static ValueFactory<?, ?> getDataCellValueFactoryFromLogicalTypeString(final String logicalType,
+    private static ValueFactory<?, ?> getDataCellValueFactoryFromLogicalTypeString(final JsonNode json,
         final IDataRepository dataRepo) {
-        var split = logicalType.split(";");
-        CheckUtils.checkArgument(split.length == 2, "Expected two parts after splitting at ';' but had %s for '%s'.",
-            split.length, logicalType);
-        Class<? extends DataCell> cellClass;
-        try {
-            cellClass = (Class<? extends DataCell>)Class.forName(split[1]);
-        } catch (ClassNotFoundException ex) {
-            throw new IllegalArgumentException("Can't find cell class with name " + split[1], ex);
-        }
-        var cellType = DataType.getType(cellClass);
+        var dataType = loadDataTypeFromJson((ObjectNode)json.get(CFG_DATA_TYPE));
         var valueFactory = new DictEncodedDataCellValueFactory();
-        valueFactory.initialize(dataRepo, cellType);
+        valueFactory.initialize(dataRepo, dataType);
         return valueFactory;
     }
 
@@ -263,13 +275,21 @@ public final class ValueFactoryUtils {
      * @return the traits of factory (including the LogicalTypeTrait)
      */
     public static DataTraits getTraits(final ValueFactory<?, ?> factory) {
-        if (isDataCellValueFactory(factory)) {
-            return getDataCellValueFactoryTraits(factory);
-        } else if (factory instanceof CollectionValueFactory) {
+        if (factory instanceof CollectionValueFactory) {
             return getCollectionDataTraits((CollectionValueFactory<?, ?>)factory);
         } else {
-            return DataTraitUtils.withTrait(factory.getTraits(), new LogicalTypeTrait(factory.getClass().getName()));
+            var logicalTypeTrait = getLogicalTypeTrait(factory);
+            return DataTraitUtils.withTrait(factory.getTraits(), logicalTypeTrait);
         }
+    }
+
+    private static LogicalTypeTrait getLogicalTypeTrait(final ValueFactory<?, ?> factory) {
+        var json = JsonNodeFactory.instance.objectNode();
+        json.put(CFG_VALUE_FACTORY_CLASS, factory.getClass().getName());
+        if (isDataCellValueFactory(factory)) {
+            saveDataTypeToJson(getDataTypeForValueFactory(factory), json.putObject(CFG_DATA_TYPE));
+        }
+        return new LogicalTypeTrait(json.toString());
     }
 
     private static DataTraits getCollectionDataTraits(final CollectionValueFactory<?, ?> valueFactory) {
@@ -289,7 +309,7 @@ public final class ValueFactoryUtils {
         var updatedInnerTraits =
             getTraitsForInnerStructTraits(traitsWithoutType, valueFactory.getElementValueFactory());
         return new DefaultStructDataTraits(
-            ArrayUtils.add(traitsWithoutType.getTraits(), new LogicalTypeTrait(valueFactory.getClass().getName())),
+            ArrayUtils.add(traitsWithoutType.getTraits(), getLogicalTypeTrait(valueFactory)),
             updatedInnerTraits);
     }
 
@@ -318,24 +338,74 @@ public final class ValueFactoryUtils {
         CheckUtils.checkArgument(elementValueFactory.getTraits().equals(traitsWithoutType.getInner()),
             "Implementation error! The inner traits of a CollectionValueFactory with ListDataTraits must "
                 + "hold the traits of the element ValueFactory.");
-        var dataTraitsWithType = ArrayUtils.add(traitsWithoutType.getTraits(), createLogicalTypeTrait(valueFactory));
+        var dataTraitsWithType = ArrayUtils.add(traitsWithoutType.getTraits(), getLogicalTypeTrait(valueFactory));
         return new DefaultListDataTraits(dataTraitsWithType, getTraits(elementValueFactory));
     }
 
-    private static LogicalTypeTrait createLogicalTypeTrait(final ValueFactory<?, ?> valueFactory) {
-        return new LogicalTypeTrait(valueFactory.getClass().getName());
-    }
 
     @SuppressWarnings("deprecation")
     private static boolean isDataCellValueFactory(final ValueFactory<?, ?> factory) {
         return factory instanceof DataCellValueFactory || factory instanceof DictEncodedDataCellValueFactory;
     }
 
-    private static DataTraits getDataCellValueFactoryTraits(final ValueFactory<?, ?> factory) {
-        var dataType = getDataTypeForValueFactory(factory);
-        var encoded = factory.getClass().getName() + ";" + dataType.getCellClass().getName();
-        var logicalTypeTrait = new LogicalTypeTrait(encoded);
-        return DataTraitUtils.withTrait(factory.getTraits(), logicalTypeTrait);
+    private static void saveDataTypeToJson(final DataType dataType, final ObjectNode config) {
+        if (dataType.isCollectionType()) {
+            var elementTypeJson = config.putObject(CFG_COLLECTION_ELEMENT_TYPE);
+            saveDataTypeToJson(dataType.getCollectionElementType(), elementTypeJson);
+        }
+
+        var cellClass = dataType.getCellClass();
+        if (cellClass == null) {
+            addClassNameArray(CFG_VALUE_CLASSES, dataType.getValueClasses(), config);
+        } else {
+            config.put(CFG_CELL_CLASS, cellClass.getName());
+        }
+        var adapterValues = dataType.getAdapterValueClasses();
+        if (!adapterValues.isEmpty()) {
+            addClassNameArray(CFG_ADAPTER_CLASSES, adapterValues, config);
+        }
+    }
+
+    private static DataType loadDataTypeFromJson(final ObjectNode config) {
+        var elementTypeNode = config.get(CFG_COLLECTION_ELEMENT_TYPE);
+        DataType elementType = elementTypeNode != null ? loadDataTypeFromJson((ObjectNode)elementTypeNode) : null;
+        var cellClassNode = config.get(CFG_CELL_CLASS);
+        JsonNode adapterClassNames = config.get(CFG_ADAPTER_CLASSES);
+        List<Class<? extends DataValue>> adapterClasses =
+            adapterClassNames != null ? jsonNodeToClassList(adapterClassNames) : List.of();
+        if (cellClassNode != null) {
+            var cellClassName = cellClassNode.asText();
+            var cellClass = REGISTRY.getCellClass(cellClassName).orElseThrow(() -> new IllegalStateException(
+                String.format("DataCell implementation '%s' not found.", cellClassName)));
+            return DataType.getType(cellClass, elementType, adapterClasses);
+        } else {
+            var valueClasses = jsonNodeToClassList(config.get(CFG_VALUE_CLASSES));
+            return DataType.createNonNativeType(valueClasses, elementType, adapterClasses);
+        }
+    }
+
+    private static List<Class<? extends DataValue>> jsonNodeToClassList(final JsonNode arrayNode) {
+        CheckUtils.checkArgument(arrayNode.isArray(), "The provided node '%s' is not an array node.", arrayNode);
+        ArrayNode array = (ArrayNode)arrayNode;
+        return IntStream.range(0, array.size())//
+        .mapToObj(array::get)//
+        .map(JsonNode::asText)//
+        .map(ValueFactoryUtils::getValueClass)//
+        .collect(toList());
+    }
+
+    private static Class<? extends DataValue> getValueClass(final String valueClassName) {
+        return REGISTRY.getValueClass(valueClassName)//
+            .orElseThrow(
+                () -> new IllegalStateException(String.format("Data Value extension '%s' not found.", valueClassName)));
+    }
+
+    private static <T> void addClassNameArray(final String key, final List<Class<? extends T>> adapterValues,
+        final ObjectNode config) {
+        final var array = config.putArray(key);
+        adapterValues.stream()//
+            .map(Class::getName)//
+            .forEach(array::add);
     }
 
     private static DataType getSetType(final DataType elementType) {
@@ -357,7 +427,7 @@ public final class ValueFactoryUtils {
      * @return a RowKeyValueFactory
      */
     public static RowKeyValueFactory<?, ?> loadRowKeyValueFactory(final DataTraits traits) {//NOSONAR
-        var name = extractValueFactoryName(traits);
+        var name = extractLogicalTypeJson(traits).get(CFG_VALUE_FACTORY_CLASS).asText();
         return (RowKeyValueFactory<?, ?>)getValueFactoryFromExtensionPoint(name)//
             .orElseThrow(() -> new IllegalArgumentException(
                 String.format("Failed to create a RowKeyValueFactory with class name '%s'.", name)));
@@ -402,7 +472,7 @@ public final class ValueFactoryUtils {
     }
 
     private static DataType getDataTypeFromExtensionPoint(final ValueFactory<?, ?> factory) {
-        var cellClass = DataTypeRegistry.getInstance().getCellClassForValueFactory(factory);
+        var cellClass = REGISTRY.getCellClassForValueFactory(factory);
         if (factory instanceof CollectionValueFactory) {
             var elementType =
                 getDataTypeForValueFactory(((CollectionValueFactory<?, ?>)factory).getElementValueFactory());
@@ -412,10 +482,15 @@ public final class ValueFactoryUtils {
         }
     }
 
-    private static String extractValueFactoryName(final DataTraits traits) {
-        return DataTraits.getTrait(traits, LogicalTypeTrait.class)//
+    private static JsonNode extractLogicalTypeJson(final DataTraits traits) {
+        var jsonString = DataTraits.getTrait(traits, LogicalTypeTrait.class)//
             .map(LogicalTypeTrait::getLogicalType)//
             .orElseThrow(() -> new IllegalArgumentException("No logical type trait present."));
+        try {
+            return new ObjectMapper().readTree(jsonString);
+        } catch (JsonProcessingException ex) {
+            throw new IllegalArgumentException("Failed to read logical type JSON.", ex);
+        }
     }
 
     /**
@@ -423,7 +498,7 @@ public final class ValueFactoryUtils {
      * @return the value factory if a value factory with the provided name is known
      */
     private static Optional<ValueFactory<?, ?>> getValueFactoryFromExtensionPoint(final String className) {//NOSONAR
-        return DataTypeRegistry.getInstance().getValueFactoryClass(className)//
+        return REGISTRY.getValueFactoryClass(className)//
             .map(ValueFactoryUtils::instantiateValueFactory);
     }
 
@@ -434,7 +509,7 @@ public final class ValueFactoryUtils {
      * @return {@link ValueFactory} corresponding to {@link DataType type} if there is one
      */
     private static Optional<ValueFactory<?, ?>> getValueFactoryFromExtensionPoint(final DataType type) {
-        return DataTypeRegistry.getInstance().getValueFactoryFor(type)//
+        return REGISTRY.getValueFactoryFor(type)//
             .map(ValueFactoryUtils::instantiateValueFactory);
     }
 
