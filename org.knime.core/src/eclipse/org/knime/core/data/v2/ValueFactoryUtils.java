@@ -164,7 +164,7 @@ public final class ValueFactoryUtils {
      * @param className name of a value factory
      * @return an instance of the class corresponding to className or an empty optional
      */
-    public static Optional<ValueFactory<?, ?>> getSpecificCollectionValueFactory(final String className) {
+    public static Optional<ValueFactory<?, ?>> getSpecificCollectionValueFactory(final String className) {//NOSONAR
         return Optional.ofNullable(SPECIFIC_COLLECTION_FACTORY_PROVIDER.getFactoryFor(className));
     }
 
