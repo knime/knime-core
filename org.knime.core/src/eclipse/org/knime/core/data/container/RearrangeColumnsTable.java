@@ -280,6 +280,17 @@ public final class RearrangeColumnsTable implements KnowsRowCountTable {
         return m_spec;
     }
 
+    /**
+     * Indicates whether the column at the provided index is from the reference table or newly created.
+     *
+     * @param columnIndex index of the column to check
+     * @return true if the column at the provided index comes from the reference table
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public boolean isFromReferenceTable(final int columnIndex) {
+        return m_isFromRefTable[columnIndex];
+    }
+
     @SuppressWarnings("resource")
     @Override
     public RowCursor cursor() {
