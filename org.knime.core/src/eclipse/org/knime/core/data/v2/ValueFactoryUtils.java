@@ -349,7 +349,7 @@ public final class ValueFactoryUtils {
     }
 
     private static void saveDataTypeToJson(final DataType dataType, final ObjectNode config) {
-        if (dataType.isCollectionType()) {
+        if (!dataType.isMissingValueType() && dataType.isCollectionType()) {
             var elementTypeJson = config.putObject(CFG_COLLECTION_ELEMENT_TYPE);
             saveDataTypeToJson(dataType.getCollectionElementType(), elementTypeJson);
         }

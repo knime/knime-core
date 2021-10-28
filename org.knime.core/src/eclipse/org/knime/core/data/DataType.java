@@ -874,8 +874,11 @@ public final class DataType {
         m_hashCode = computeHashCode();
     }
 
-    /** @true if value classes list contains {@link MissingValue} class. */
-    private boolean isMissingValueType() {
+    /**
+     * @return @true if value classes list contains {@link MissingValue} class
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public boolean isMissingValueType() {
         return m_valueClasses.contains(MissingValue.class);
     }
 
