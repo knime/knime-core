@@ -80,14 +80,11 @@ public final class FromFilePageBuilder extends PageBuilder {
 
     private final String m_basePath;
 
-    private final boolean m_isComponent;
-
     FromFilePageBuilder(final Class<?> clazz, final String basePath, final String relativeFilePath) {
         super(createFileResource(clazz, null, basePath, relativeFilePath));
         m_clazz = clazz;
         m_bundleID = null;
         m_basePath = basePath;
-        m_isComponent = relativeFilePath.endsWith(".js");
     }
 
     FromFilePageBuilder(final String bundleID, final String basePath, final String relativeFilePath) {
@@ -95,7 +92,6 @@ public final class FromFilePageBuilder extends PageBuilder {
         m_clazz = null;
         m_bundleID = bundleID;
         m_basePath = basePath;
-        m_isComponent = relativeFilePath.endsWith(".js");
     }
 
     /**
