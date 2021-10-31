@@ -61,6 +61,7 @@ import java.util.Stack;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
@@ -366,15 +367,23 @@ public abstract class WorkflowTestCase {
     }
 
     protected static int countFilesInDirectory(final File directory) {
-        int count = 0;
-        for (File child : directory.listFiles()) {
-            if (child.isDirectory()) {
-                count += countFilesInDirectory(child);
-            } else {
-                count += 1;
-            }
-        }
-        return count;
+    	return countFilesInDirectory(directory, null);
+    }
+    
+    /** Recursively counts files in a dir adhering to the given predicte (may be null) */
+    protected static int countFilesInDirectory(final File directory, final Predicate<File> matcherPredicate) {
+    	Predicate<File> predicate = matcherPredicate != null ? matcherPredicate : f -> true;
+    	int count = 0;
+    	for (File child : directory.listFiles()) {
+    		if (child.isDirectory()) {
+    			count += countFilesInDirectory(child, predicate);
+    		} else {
+    			if (predicate.test(child)) {
+    				count += 1;
+    			}
+    		}
+    	}
+    	return count;
     }
 
     protected static Collection<SingleNodeContainer> iterateSNCs(final WorkflowManager wfm, final boolean recurse) {
