@@ -1594,7 +1594,7 @@ public final class FileUtil {
                 .getContext(), "No workflow context available, which is required for resolving knime-URLs");
 
             if (isRelativeKnimeURL(url) && workflowContext.getRemoteRepositoryAddress().isPresent()
-                && workflowContext.getServerAuthToken().isPresent()) {
+                && workflowContext.getServerAuthenticator().isPresent()) {
                 BundleContext ctx = FrameworkUtil.getBundle(IRemoteFileUtilsService.class).getBundleContext();
                 ServiceReference<IRemoteFileUtilsService> ref =
                     ctx.getServiceReference(IRemoteFileUtilsService.class);

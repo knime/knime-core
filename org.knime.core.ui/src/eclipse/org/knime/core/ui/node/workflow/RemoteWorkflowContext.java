@@ -50,6 +50,8 @@ import java.net.URI;
 
 import org.knime.core.node.workflow.WorkflowContext;
 import org.knime.core.util.Version;
+import org.knime.core.util.auth.Authenticator;
+import org.knime.core.util.auth.SimpleTokenAuthenticator;
 
 /**
  * This class holds information about the context in which a remote workflow (e.g. a workflow on a KNIME server)
@@ -77,6 +79,8 @@ public final class RemoteWorkflowContext implements WorkflowContextUI {
 
     private Version m_serverVersion;
 
+    private Authenticator m_authenticator;
+
     /**
      * Creates a new context for purely remote workflows (i.e. workflows running on a server).
      *
@@ -87,12 +91,33 @@ public final class RemoteWorkflowContext implements WorkflowContextUI {
      * @param mountpointURI the uri of the workflow inside the mount point
      * @param clientVersion the version of the client talking to the 'workflow' server
      * @param serverVersion the version of the server hosting the remote workflow
+     * @deprecated use {@link #RemoteWorkflowContext(URI, String, Authenticator, String, URI, Version, Version)} instead
      */
+    @Deprecated(since = "4.5.0")
     public RemoteWorkflowContext(final URI repositoryAddress, final String relativePath, final String authToken,
+        final String mountId, final URI mountpointURI, final Version clientVersion, final Version serverVersion) {
+        this(repositoryAddress, relativePath, new SimpleTokenAuthenticator(authToken), mountId, mountpointURI,
+            clientVersion, serverVersion);
+        m_authToken = authToken;
+    }
+
+    /**
+     * Creates a new context for purely remote workflows (i.e. workflows running on a server).
+     *
+     * @param repositoryAddress the base address of the server repository (the REST endpoint)
+     * @param relativePath the path of the workflow relative to the repository root
+     * @param authenticator the authenticator
+     * @param mountId the (default) mount id of the server
+     * @param mountpointURI the uri of the workflow inside the mount point
+     * @param clientVersion the version of the client talking to the 'workflow' server
+     * @param serverVersion the version of the server hosting the remote workflow
+     * @since 4.5.0
+     */
+    public RemoteWorkflowContext(final URI repositoryAddress, final String relativePath, final Authenticator authenticator,
         final String mountId, final URI mountpointURI, final Version clientVersion, final Version serverVersion) {
         m_repositoryAddress = repositoryAddress;
         m_relativePath = relativePath;
-        m_authToken = authToken;
+        m_authenticator = authenticator;
         m_mountId = mountId;
         m_mountpointURI = mountpointURI;
         m_clientVersion = clientVersion;
@@ -122,9 +147,21 @@ public final class RemoteWorkflowContext implements WorkflowContextUI {
      *
      *
      * @return an authentication token
+     * @deprecated use {@link #getServerAuthenticator()} instead
      */
+    @Deprecated(since = "4.5.0")
     public String getServerAuthToken() {
         return m_authToken;
+    }
+
+    /**
+     * Returns the server authenticator.
+     *
+     * @return the authenticator
+     * @since 4.5.0
+     */
+    public Authenticator getServerAuthenticator() {
+        return m_authenticator;
     }
 
     /**
