@@ -242,7 +242,7 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
                 while (nexts[i] != null || its[i].hasNext()) {
                     FlowObject o = nexts[i] != null ? nexts[i] : its[i].next();
                     nexts[i] = null;
-                    if (o instanceof FlowScopeContext || o instanceof InnerFlowLoopExecuteMarker) {
+                    if (o instanceof FlowScopeContext) {
                         // make sure scope contexts belong to same scopes
                         // (can be different objects, though - see bug #3208)
                         if (commonFlowO != null && !commonFlowO.equals(o)) {
