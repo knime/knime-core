@@ -60,7 +60,6 @@ import java.util.stream.Stream;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
-import org.eclipse.core.runtime.IExtension;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
@@ -81,9 +80,19 @@ import org.knime.core.util.EclipseUtil;
  */
 public final class DataTypeRegistry {
 
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(DataTypeRegistry.class);
+
     private static final String CELL_CLASS = "cellClass";
 
-    private static final String VALUE_FACTORY = "factoryValue";
+    private static final String FACTORY_CLASS = "factoryClass";
+
+    private static final String DEPRECATED_VALUE_FACTORY_ATTR = "factoryValue";
+
+    private static final String DEPRECATED = "deprecated";
+
+    private static final String VALUE_FACTORY_ELEMENT = "ValueFactory";
+
+    private static final String VALUE_FACTORY_CLASS = "valueFactoryClass";
 
     static final String EXT_POINT_ID = "org.knime.core.DataType";
 
@@ -93,6 +102,7 @@ public final class DataTypeRegistry {
         new ConcurrentHashMap<>();
 
     private final Map<String, Class<? extends DataCell>> m_cellClassMap = new ConcurrentHashMap<>();
+
     private final Map<String, Class<? extends DataValue>> m_valueClassMap = new ConcurrentHashMap<>();
 
     private Collection<DataType> m_allDataTypes;
@@ -118,8 +128,7 @@ public final class DataTypeRegistry {
 
     private DataTypeRegistry() {
         getExtensionStream()//
-            .flatMap(ext -> Stream.of(ext.getConfigurationElements()))//
-            .filter(e -> (e.getAttribute("factoryClass") != null))//
+            .filter(e -> (e.getAttribute(FACTORY_CLASS) != null))//
             .forEach(e -> m_factories.put(e.getAttribute(CELL_CLASS), e));
 
         m_cellClassMap.put(DataCell.class.getName(), DataCell.class);
@@ -154,13 +163,13 @@ public final class DataTypeRegistry {
             return Optional.empty();
         } else {
             try {
-                DataCellFactory fac = (DataCellFactory)configElement.createExecutableExtension("factoryClass");
+                DataCellFactory fac = (DataCellFactory)configElement.createExecutableExtension(FACTORY_CLASS);
 
                 if (EclipseUtil.isRunFromSDK()) {
                     if (!fac.getDataType().getCellClass().getName().equals(className)) {
-                        NodeLogger.getLogger(getClass()).coding("Data cell factory '"
-                                + configElement.getAttribute("factoryClass") + "' for cell implementation '"
-                                + className + "' doesn't match with the data type '"
+                        NodeLogger.getLogger(getClass())
+                            .coding("Data cell factory '" + configElement.getAttribute(FACTORY_CLASS)
+                                + "' for cell implementation '" + className + "' doesn't match with the data type '"
                                 + fac.getDataType() + "'. Please fix your implementation.");
                     }
                 }
@@ -197,11 +206,11 @@ public final class DataTypeRegistry {
 
         for (IConfigurationElement configElement : m_factories.values()) {
             try {
-                DataCellFactory fac = (DataCellFactory)configElement.createExecutableExtension("factoryClass");
+                DataCellFactory fac = (DataCellFactory)configElement.createExecutableExtension(FACTORY_CLASS);
                 types.add(fac.getDataType());
             } catch (CoreException e) {
                 NodeLogger.getLogger(getClass())
-                    .error("Could not create data cell factory '" + configElement.getAttribute("factoryClass")
+                    .error("Could not create data cell factory '" + configElement.getAttribute(FACTORY_CLASS)
                         + "' for '" + configElement.getAttribute(CELL_CLASS) + "' from plug-in '"
                         + configElement.getNamespaceIdentifier() + "': " + e.getMessage(), e);
             }
@@ -213,8 +222,7 @@ public final class DataTypeRegistry {
 
     /**
      * Returns the {@link DataCell} class for the given class name. This method looks through all registered
-     * {@link DataCell} implementations. If no data cell implementation is found, an empty optional is returned.
-     * <br>
+     * {@link DataCell} implementations. If no data cell implementation is found, an empty optional is returned. <br>
      * This method should only be used by {@link DataType} for creating data types that were saved to disc.
      *
      * @param className a class name
@@ -230,7 +238,6 @@ public final class DataTypeRegistry {
         if (className.startsWith("de.unikn.knime.")) {
             return getCellClass(className.replace("de.unikn.knime.", "org.knime."));
         }
-
 
         Optional<DataCellSerializer<DataCell>> o = scanExtensionPointForSerializer(className);
         if (o.isPresent()) {
@@ -301,7 +308,9 @@ public final class DataTypeRegistry {
         // check old static method
         // TODO remove with next major release
         try {
-            DataCellSerializer<? extends DataCell> serializer = SerializerMethodLoader.getSerializer(cellClass, DataCellSerializer.class, "getCellSerializer", false);
+            @SuppressWarnings({"deprecation", "unchecked"})
+            DataCellSerializer<? extends DataCell> serializer =
+                SerializerMethodLoader.getSerializer(cellClass, DataCellSerializer.class, "getCellSerializer", false);
             ser = (DataCellSerializer<DataCell>)serializer;
             NodeLogger.getLogger(getClass())
                 .coding("No serializer for cell class '" + cellClass + "' registered at " + "extension point '"
@@ -313,8 +322,10 @@ public final class DataTypeRegistry {
             return Optional.of(ser);
         } catch (NoSuchMethodException nsme) {
             NodeLogger.getLogger(getClass())
-                .coding("Class \"" + cellClass.getSimpleName() + "\" does not have a custom DataCellSerializer, "
-                    + "using standard (but slow) Java serialization. Consider implementing a DataCellSerialzer.", nsme);
+                .coding(
+                    "Class \"" + cellClass.getSimpleName() + "\" does not have a custom DataCellSerializer, "
+                        + "using standard (but slow) Java serialization. Consider implementing a DataCellSerialzer.",
+                    nsme);
             return Optional.empty();
         }
     }
@@ -329,7 +340,7 @@ public final class DataTypeRegistry {
      * @since 4.3
      * @noreference This method is not intended to be referenced by clients.
      */
-    public Optional<Class<? extends ValueFactory<?, ?>>> getValueFactoryClass(final String valueFactoryClass) {
+    public Optional<Class<? extends ValueFactory<?, ?>>> getValueFactoryClass(final String valueFactoryClass) {//NOSONAR
         final Class<? extends ValueFactory<?, ?>> value = m_valueFactoryClassMap.get(valueFactoryClass);
         if (value != null) {
             return Optional.of(value);
@@ -348,7 +359,7 @@ public final class DataTypeRegistry {
      * @since 4.3
      * @noreference This method is not intended to be referenced by clients.
      */
-    public Optional<Class<? extends ValueFactory<?, ?>>> getValueFactoryFor(final DataType type) {
+    public Optional<Class<? extends ValueFactory<?, ?>>> getValueFactoryFor(final DataType type) {//NOSONAR
         final Class<? extends DataCell> cellClass = type.getCellClass();
         // No fixed cell class -> There is no according ValueFactory
         if (cellClass == null) {
@@ -396,11 +407,10 @@ public final class DataTypeRegistry {
     private <T extends DataCell> Optional<DataCellSerializer<T>>
         scanExtensionPointForSerializer(final String cellClassName) {
         // not found => scan extension point
-        Optional<IConfigurationElement> o =
-            getExtensionStream().flatMap(ext -> Stream.of(ext.getConfigurationElements()))
-                .flatMap(cfe -> Stream.of(cfe.getChildren("serializer")))
-                .filter(cfe -> cfe.getAttribute(CELL_CLASS).equals(cellClassName))
-                .findFirst();
+        Optional<IConfigurationElement> o = getExtensionStream()//
+            .flatMap(cfe -> Stream.of(cfe.getChildren("serializer")))//
+            .filter(cfe -> cfe.getAttribute(CELL_CLASS).equals(cellClassName))//
+            .findFirst();
         if (o.isPresent()) {
             IConfigurationElement configElement = o.get();
             return createSerializer(configElement);
@@ -416,18 +426,17 @@ public final class DataTypeRegistry {
         return point;
     }
 
-    private static Stream<IExtension> getExtensionStream() {
-        return Stream.of(getExtensionPoint().getExtensions());
+    private static Stream<IConfigurationElement> getExtensionStream() {
+        return Stream.of(getExtensionPoint().getExtensions())//
+            .flatMap(ext -> Stream.of(ext.getConfigurationElements()));
     }
 
     private void scanExtensionPointForAllSerializers() {
         getExtensionStream()//
-            .flatMap(ext -> Stream.of(ext.getConfigurationElements()))//
             .flatMap(cfe -> Stream.of(cfe.getChildren("serializer")))//
             .filter(cfe -> !m_cellClassMap.containsKey(cfe.getAttribute(CELL_CLASS)))//
             .forEach(this::createSerializer);
     }
-
 
     private <T extends DataCell> Optional<DataCellSerializer<T>>
         createSerializer(final IConfigurationElement configElement) {
@@ -477,11 +486,58 @@ public final class DataTypeRegistry {
     private synchronized void initCellToValueFactoryMap() {
         if (!m_cellToValueFactoryInitialized) {
             getExtensionStream() //
-                .flatMap(ext -> Stream.of(ext.getConfigurationElements())) //
-                .filter(e -> (e.getAttribute(VALUE_FACTORY) != null)) //
-                .forEach(e -> linkCellAndValueFactory(e.getAttribute(CELL_CLASS), e.getAttribute(VALUE_FACTORY)));
+                .forEach(this::collectValueFactories);
+
             m_cellToValueFactoryInitialized = true;
         }
+    }
+
+    private void collectValueFactories(final IConfigurationElement dataTypeExtension) {
+        collectValueFactoriesFromDeprecatedAttribute(dataTypeExtension);
+        collectValueFactoryElements(dataTypeExtension);
+    }
+
+    private void collectValueFactoriesFromDeprecatedAttribute(final IConfigurationElement dataTypeExtension) {
+        final var cellClass = dataTypeExtension.getAttribute(CELL_CLASS);
+        var deprecatedValueFactoryAttribute = dataTypeExtension.getAttribute(DEPRECATED_VALUE_FACTORY_ATTR);
+        if (deprecatedValueFactoryAttribute != null) {
+            LOGGER.debugWithFormat(
+                "The data type extension for '%s' uses the deprecated %s attribute and will "
+                    + "be overwritten if there are any undeprecated ValueFactory child elements.",
+                cellClass, DEPRECATED_VALUE_FACTORY_ATTR);
+            linkCellAndValueFactory(cellClass, deprecatedValueFactoryAttribute);
+        }
+    }
+
+    private void collectValueFactoryElements(final IConfigurationElement dataTypeExtension) {
+        final var cellClass = dataTypeExtension.getAttribute(CELL_CLASS);
+        var valueFactoryChildren = dataTypeExtension.getChildren(VALUE_FACTORY_ELEMENT);
+        if (valueFactoryChildren.length > 0) {
+            int numUnDeprecated = 0;//NOSONAR int is more informative than var
+            for (IConfigurationElement valueFactoryElement : valueFactoryChildren) {
+                final var valueFactoryClass = valueFactoryElement.getAttribute(VALUE_FACTORY_CLASS);
+                m_valueFactoryToCellMap.put(valueFactoryClass, cellClass);
+                if (isNotDeprecated(valueFactoryElement) && numUnDeprecated == 0) {
+                    m_cellToValueFactoryMap.put(cellClass, valueFactoryClass);
+                    numUnDeprecated++;
+                }
+            }
+            if (numUnDeprecated == 0) {
+                LOGGER.codingWithFormat("All ValueFactories for the DataType with cell class '%s' were deprecated.",
+                    cellClass);
+            } else if (numUnDeprecated > 1) {
+                LOGGER.codingWithFormat(
+                    "More than one ValueFactory for the DataType with cell class '%s' was not marked as deprecated. "
+                        + "Only the first one is used as ValueFactory for this DataType.",
+                    cellClass);
+            }
+        }
+    }
+
+    private static boolean isNotDeprecated(final IConfigurationElement element) {
+        var deprecated = element.getAttribute(DEPRECATED);
+        // null is allowed because the deprecation flag is optional and defaults to "false"
+        return deprecated == null || deprecated.equalsIgnoreCase("false");
     }
 
     private void linkCellAndValueFactory(final String cellClass, final String valueFactoryClass) {
@@ -494,34 +550,50 @@ public final class DataTypeRegistry {
      * ValueFactory class.
      */
     private void updateValueFactoryClassMap(final String valueFactoryClassName) {
-        final IExtensionRegistry registry = Platform.getExtensionRegistry();
-        final IExtensionPoint point = registry.getExtensionPoint(EXT_POINT_ID);
-
-        Stream.of(point.getExtensions()) //
-            .flatMap(ext -> Stream.of(ext.getConfigurationElements())) //
-            .filter(e -> (e.getAttribute(VALUE_FACTORY) != null)) // ValueFactory defined
+        getExtensionStream()//
             .filter(e -> m_cellClassMap.containsKey(e.getAttribute(CELL_CLASS)) // Extension already loaded
-                || valueFactoryClassName.equals(e.getAttribute(VALUE_FACTORY))) // Explicitly asked for this value factory
+                || containsValueFactory(e, valueFactoryClassName)) // Explicitly asked for this value factory
             .forEach(this::addValueFactoryClassMapping);
     }
 
-    /** Put the value factory defined in the given configuration element into {@link #m_valueFactoryClassMap}. */
-    private void addValueFactoryClassMapping(final IConfigurationElement e) {
-        final String valueFactoryClassName = e.getAttribute(VALUE_FACTORY);
+    private static boolean containsValueFactory(final IConfigurationElement dataTypeExtension,
+        final String valueFactoryClassName) {
+        var deprecatedValueFactoryAttribute = dataTypeExtension.getAttribute(DEPRECATED_VALUE_FACTORY_ATTR);
+        if (valueFactoryClassName.equals(deprecatedValueFactoryAttribute)) {
+            return true;
+        } else {
+            return Stream.of(dataTypeExtension.getChildren(VALUE_FACTORY_ELEMENT))//
+                .map(e -> e.getAttribute(VALUE_FACTORY_CLASS))//
+                .anyMatch(valueFactoryClassName::equals);
+        }
+    }
 
+    /** Put the value factory defined in the given configuration element into {@link #m_valueFactoryClassMap}. */
+    private void addValueFactoryClassMapping(final IConfigurationElement dataTypeExtension) {
+        final String valueFactoryClassName = dataTypeExtension.getAttribute(DEPRECATED_VALUE_FACTORY_ATTR);
+        if (valueFactoryClassName != null) {
+            addValueFactoryClassMapping(dataTypeExtension, DEPRECATED_VALUE_FACTORY_ATTR);
+        } else {
+            Stream.of(dataTypeExtension.getChildren(VALUE_FACTORY_ELEMENT))//
+                .forEach(e -> addValueFactoryClassMapping(e, VALUE_FACTORY_CLASS));
+        }
+    }
+
+    private void addValueFactoryClassMapping(final IConfigurationElement e, final String classNameKey) {
+        final var valueFactoryClassName = e.getAttribute(classNameKey);
         try {
             // Create an instance
-            final ValueFactory<?, ?> f = (ValueFactory<?, ?>)e.createExecutableExtension(VALUE_FACTORY);
+            final ValueFactory<?, ?> f = (ValueFactory<?, ?>)e.createExecutableExtension(classNameKey);
             @SuppressWarnings("unchecked")
             // Get the class
             final Class<? extends ValueFactory<?, ?>> valueFactoryClass =
-                (Class<? extends ValueFactory<?, ?>>)f.getClass();
+            (Class<? extends ValueFactory<?, ?>>)f.getClass();
             // Put the class into the map
             m_valueFactoryClassMap.put(valueFactoryClassName, valueFactoryClass);
         } catch (final CoreException ex) {
-            NodeLogger.getLogger(DataTypeRegistry.class) //
-                .coding("The value factory class '" + valueFactoryClassName + "' registered at extension point '"
+            LOGGER.coding("The value factory class '" + valueFactoryClassName + "' registered at extension point '"
                     + EXT_POINT_ID + "' could not be created. Ignoring extension.", ex);
         }
     }
+
 }

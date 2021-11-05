@@ -17,62 +17,14 @@
          </appInfo>
       </annotation>
       <complexType>
-         <sequence minOccurs="1" maxOccurs="unbounded">
-            <element ref="DataType"/>
+         <sequence>
+            <element ref="DataType" minOccurs="1" maxOccurs="unbounded"/>
          </sequence>
          <attribute name="point" type="string" use="required">
             <annotation>
                <documentation>
                   
                </documentation>
-            </annotation>
-         </attribute>
-      </complexType>
-   </element>
-
-   <element name="DataType">
-      <annotation>
-         <documentation>
-            A DataType is a common concept in KNIME. This extension adds meta information to data types, e.g. factories for creating cells of the type or serializer implementations for storing cell in data tables.
-         </documentation>
-      </annotation>
-      <complexType>
-         <sequence>
-            <element ref="serializer" minOccurs="1" maxOccurs="unbounded"/>
-         </sequence>
-         <attribute name="cellClass" type="string" use="required">
-            <annotation>
-               <documentation>
-                  The &quot;simple&quot; DataCell implementation class, e.g. IntCell, SmilesCell, or SdfCell. This is only used as an identifier but should be the same as the simple cell implementation. BlobCell or FileStoreCell variants of simple cells need not be registered separately. Instead several serializers for the concrete implementations must be registered and the factory should create instances of the specific implementation.
-               </documentation>
-               <appInfo>
-                  <meta.attribute kind="java" basedOn="org.knime.core.data.DataCell:"/>
-               </appInfo>
-            </annotation>
-         </attribute>
-         <attribute name="factoryClass" type="string">
-            <annotation>
-               <documentation>
-                  A factory for creating concrete DataCell objects. New instances of factories are created every time someone requests a factory. Nevertheless they should be thread-safe.
-You can use the same factory class for normal cells and blob cells.
-If you want to support creating cells from different sources you can implement several DataCellFactory interfaces in your implementation. See the Javadoc of org.knime.core.data.DataCellFactory.
-A DataCellFactory is optional, however generic input nodes won&apos;t be able to create cells of this type.
-               </documentation>
-               <appInfo>
-                  <meta.attribute kind="java" basedOn=":org.knime.core.data.DataCellFactory"/>
-               </appInfo>
-            </annotation>
-         </attribute>
-         <attribute name="factoryValue" type="string">
-            <annotation>
-               <documentation>
-                  An implementation providing efficient read and write into a low-level (columnar) table backend. This attribute was added as part of KNIME v4.3. This value factory provides means to circumvent to avoid costly DataCell generation when writing and reading KNIME tables. The implementation is only used when the workflow is configured to use a non-default Columnar Table Backend.
-
-Type definition may choose to not provide this implementation in which case a fallback implementation using object creation (DataCell) is used.
-               </documentation>
-               <appInfo>
-                  <meta.attribute kind="java" basedOn=":org.knime.core.data.schema.ValueFactory"/>
-               </appInfo>
             </annotation>
          </attribute>
       </complexType>
@@ -102,6 +54,89 @@ Type definition may choose to not provide this implementation in which case a fa
                </documentation>
                <appInfo>
                   <meta.attribute kind="java" basedOn=":org.knime.core.data.DataCellSerializer"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="ValueFactory">
+      <annotation>
+         <documentation>
+            An implementation providing efficient read and write into a low-level (columnar) table backend. This attribute was added as part of KNIME v4.3. This value factory provides means to avoid costly DataCell generation when writing and reading KNIME tables. The implementation is only used when the workflow is configured to use a non-default Columnar Table Backend.
+
+Type definition may choose to not provide this implementation in which case a fallback implementation using object creation (DataCell) is used.
+Note that at any point in exactly one ValueFactory must not be deprecated, otherwise an error will be logged and the first undeprecated ValueFactory is used for the DataType when writing new data.
+         </documentation>
+      </annotation>
+      <complexType>
+         <attribute name="valueFactoryClass" type="string" use="required">
+            <annotation>
+               <documentation>
+                  The class that implements the ValueFactory.
+               </documentation>
+               <appInfo>
+                  <meta.attribute kind="java" basedOn=":org.knime.core.data.v2.ValueFactory"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+         <attribute name="deprecated" type="boolean">
+            <annotation>
+               <documentation>
+                  Indicates whether the ValueFactory is deprecated i.e. should no longer be used for writing new data.
+               </documentation>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="DataType">
+      <annotation>
+         <documentation>
+            A DataType is a common concept in KNIME. This extension adds meta information to data types, e.g. factories for creating cells of the type or serializer implementations for storing cell in data tables.
+         </documentation>
+      </annotation>
+      <complexType>
+         <sequence>
+            <choice minOccurs="1" maxOccurs="unbounded">
+               <element ref="serializer"/>
+               <element ref="ValueFactory"/>
+            </choice>
+         </sequence>
+         <attribute name="cellClass" type="string" use="required">
+            <annotation>
+               <documentation>
+                  The &quot;simple&quot; DataCell implementation class, e.g. IntCell, SmilesCell, or SdfCell. This is only used as an identifier but should be the same as the simple cell implementation. BlobCell or FileStoreCell variants of simple cells need not be registered separately. Instead several serializers for the concrete implementations must be registered and the factory should create instances of the specific implementation.
+               </documentation>
+               <appInfo>
+                  <meta.attribute kind="java" basedOn="org.knime.core.data.DataCell:"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+         <attribute name="factoryClass" type="string">
+            <annotation>
+               <documentation>
+                  A factory for creating concrete DataCell objects. New instances of factories are created every time someone requests a factory. Nevertheless they should be thread-safe.
+You can use the same factory class for normal cells and blob cells.
+If you want to support creating cells from different sources you can implement several DataCellFactory interfaces in your implementation. See the Javadoc of org.knime.core.data.DataCellFactory.
+A DataCellFactory is optional, however generic input nodes won&apos;t be able to create cells of this type.
+               </documentation>
+               <appInfo>
+                  <meta.attribute kind="java" basedOn=":org.knime.core.data.DataCellFactory"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+         <attribute name="factoryValue" type="string">
+            <annotation>
+               <documentation>
+                  An implementation providing efficient read and write into a low-level (columnar) table backend. This attribute was added as part of KNIME v4.3. This value factory provides means to avoid costly DataCell generation when writing and reading KNIME tables. The implementation is only used when the workflow is configured to use a non-default Columnar Table Backend.
+
+Type definition may choose to not provide this implementation in which case a fallback implementation using object creation (DataCell) is used.
+
+NOTE: This attribute has been depreacted as part of KNIME v4.5 in favor of ValueFactory child elements. Further use of this attribute will result in a log warning and the ValueFactory defined by this attribute will be overwritten by the first undeprecated ValueFactory element in this DataType extension.
+               </documentation>
+               <appInfo>
+                  <meta.attribute kind="java" basedOn=":org.knime.core.data.schema.ValueFactory" deprecated="true"/>
                </appInfo>
             </annotation>
          </attribute>
