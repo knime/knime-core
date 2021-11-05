@@ -68,4 +68,8 @@ public interface ReExecutable<D> {
      */
     void preReExecute(D data, boolean isNewDefault);
 
+    default boolean canTriggerReExecution() {
+        return false;
+    }
+
 }
