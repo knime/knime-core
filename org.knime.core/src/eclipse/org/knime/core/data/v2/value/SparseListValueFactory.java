@@ -100,7 +100,9 @@ import com.google.common.collect.ImmutableList;
  * @since 4.3
  *
  * @noreference This class is not intended to be referenced by clients.
+ * @deprecated
  */
+@Deprecated
 public final class SparseListValueFactory implements CollectionValueFactory<StructReadAccess, StructWriteAccess> {
 
     private ValueFactory<ReadAccess, WriteAccess> m_inner;

@@ -48,17 +48,34 @@
  */
 package org.knime.core.data.v2.value;
 
+import org.knime.core.table.schema.traits.DataTrait.DictEncodingTrait;
+import org.knime.core.table.schema.traits.DataTraits;
+import org.knime.core.table.schema.traits.DefaultDataTraits;
+import org.knime.core.table.schema.traits.DefaultListDataTraits;
+import org.knime.core.table.schema.traits.DefaultStructDataTraits;
+
 /**
  *
  * @author Steffen Fissler, KNIME GmbH, Konstanz, Germany
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  * @since 4.5
- *
  * @noreference This class is not intended to be referenced by clients.
+ * @noinstantiate This class is not intended to be instantiated by clients.
  */
-public class DictEncodedStringSparseListValueFactory extends StringSparseListValueFactory {
+@SuppressWarnings("deprecation")
+public final class DictEncodedStringSparseListValueFactory extends StringSparseListValueFactory {
 
     /** A stateless instance of {@link DictEncodedStringSparseListValueFactory} */
     @SuppressWarnings("hiding")
     public static final DictEncodedStringSparseListValueFactory INSTANCE = new DictEncodedStringSparseListValueFactory();
+
+    @Override
+    public DataTraits getTraits() {
+        var stringTraits = new DefaultDataTraits(new DictEncodingTrait());
+        var sizeTraits = DefaultDataTraits.EMPTY;
+        var indicesTraits = new DefaultListDataTraits(DefaultDataTraits.EMPTY);
+        var valuesTraits = new DefaultListDataTraits(stringTraits);
+        return new DefaultStructDataTraits(stringTraits, sizeTraits, indicesTraits, valuesTraits);
+    }
 
 }

@@ -48,16 +48,28 @@
  */
 package org.knime.core.data.v2.value;
 
+import org.knime.core.table.schema.traits.DataTrait.DictEncodingTrait;
+import org.knime.core.table.schema.traits.DataTraits;
+import org.knime.core.table.schema.traits.DefaultDataTraits;
+import org.knime.core.table.schema.traits.DefaultListDataTraits;
+
 /**
  *
  * @author Steffen Fissler, KNIME GmbH, Konstanz, Germany
  * @since 4.5
  *
  * @noreference This class is not intended to be referenced by clients.
+ * @noinstantiate This class is not intended to be instantiated by clients.
  */
+@SuppressWarnings("deprecation")
 public class DictEncodedStringSetValueFactory extends StringSetValueFactory {
 
     /** A stateless instance of {@link DictEncodedStringSetValueFactory} */
     @SuppressWarnings("hiding")
     public static final DictEncodedStringSetValueFactory INSTANCE = new DictEncodedStringSetValueFactory();
+
+    @Override
+    public DataTraits getTraits() {
+        return new DefaultListDataTraits(new DefaultDataTraits(new DictEncodingTrait()));
+    }
 }
