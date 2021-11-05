@@ -21,6 +21,7 @@
    <extension-point id="FlowVariableType" name="FlowVariableType" schema="schema/FlowVariableType.exsd"/>
    <extension-point id="ImageContentFactory" name="Contributes custom image content to an image port object (NO public API)" schema="schema/ImageContentFactory.exsd"/>
    <extension-point id="RpcTransportFactory" name="RpcTransportFactory" schema="schema/RpcTransportFactory.exsd"/>
+   <extension-point id="ValueFactory" name="ValueFactory" schema="schema/ValueFactory.exsd"/>
    <extension
          point="org.knime.core.NodeExecutionJobManagerFactory">
       <NodeExecutionJobManagerFactory
@@ -304,21 +305,27 @@
          point="org.knime.core.DataType">
       <DataType
             cellClass="org.knime.core.data.def.IntCell"
-            factoryClass="org.knime.core.data.def.IntCell$IntCellFactory"
-            factoryValue="org.knime.core.data.v2.value.IntValueFactory">
+            factoryClass="org.knime.core.data.def.IntCell$IntCellFactory">
          <serializer
                cellClass="org.knime.core.data.def.IntCell"
                serializerClass="org.knime.core.data.def.IntCell$IntCellSerializer">
          </serializer>
+         <ValueFactory
+               deprecated="false"
+               valueFactoryClass="org.knime.core.data.v2.value.IntValueFactory">
+         </ValueFactory>
       </DataType>
       <DataType
             cellClass="org.knime.core.data.def.DoubleCell"
-            factoryClass="org.knime.core.data.def.DoubleCell$DoubleCellFactory"
-            factoryValue="org.knime.core.data.v2.value.DoubleValueFactory">
+            factoryClass="org.knime.core.data.def.DoubleCell$DoubleCellFactory">
          <serializer
                cellClass="org.knime.core.data.def.DoubleCell"
                serializerClass="org.knime.core.data.def.DoubleCell$DoubleSerializer">
          </serializer>
+         <ValueFactory
+               deprecated="false"
+               valueFactoryClass="org.knime.core.data.v2.value.DoubleValueFactory">
+         </ValueFactory>
       </DataType>
       <DataType
             cellClass="org.knime.core.data.vector.doublevector.DenseDoubleVectorCell"
@@ -345,12 +352,15 @@
       </DataType>
       <DataType
             cellClass="org.knime.core.data.def.BooleanCell"
-            factoryClass="org.knime.core.data.def.BooleanCell$BooleanCellFactory"
-            factoryValue="org.knime.core.data.v2.value.BooleanValueFactory">
+            factoryClass="org.knime.core.data.def.BooleanCell$BooleanCellFactory">
          <serializer
                cellClass="org.knime.core.data.def.BooleanCell"
                serializerClass="org.knime.core.data.def.BooleanCell$BooleanSerializer">
          </serializer>
+         <ValueFactory
+               deprecated="false"
+               valueFactoryClass="org.knime.core.data.v2.value.BooleanValueFactory">
+         </ValueFactory>
       </DataType>
       <DataType
             cellClass="org.knime.core.data.def.ComplexNumberCell">
@@ -368,12 +378,15 @@
       </DataType>
       <DataType
             cellClass="org.knime.core.data.def.LongCell"
-            factoryClass="org.knime.core.data.def.LongCell$LongCellFactory"
-            factoryValue="org.knime.core.data.v2.value.LongValueFactory">
+            factoryClass="org.knime.core.data.def.LongCell$LongCellFactory">
          <serializer
                cellClass="org.knime.core.data.def.LongCell"
                serializerClass="org.knime.core.data.def.LongCell$LongSerializer">
          </serializer>
+         <ValueFactory
+               deprecated="false"
+               valueFactoryClass="org.knime.core.data.v2.value.LongValueFactory">
+         </ValueFactory>
       </DataType>
       <DataType
             cellClass="org.knime.core.data.def.IntervalCell">
@@ -491,36 +504,48 @@
          </serializer>
       </DataType>
       <DataType
-            cellClass="org.knime.core.data.collection.ListCell"
-            factoryValue="org.knime.core.data.v2.value.ListValueFactory">
+            cellClass="org.knime.core.data.collection.ListCell">
          <serializer
                cellClass="org.knime.core.data.collection.ListCell"
                serializerClass="org.knime.core.data.collection.ListCell$ListCellSerializer">
          </serializer>
+         <ValueFactory
+               deprecated="false"
+               valueFactoryClass="org.knime.core.data.v2.value.ListValueFactory">
+         </ValueFactory>
       </DataType>
       <DataType
-            cellClass="org.knime.core.data.collection.SparseListCell"
-            factoryValue="org.knime.core.data.v2.value.SparseListValueFactory">
+            cellClass="org.knime.core.data.collection.SparseListCell">
          <serializer
                cellClass="org.knime.core.data.collection.SparseListCell"
                serializerClass="org.knime.core.data.collection.SparseListCell$SparseListCellSerializer">
          </serializer>
+         <ValueFactory
+               deprecated="false"
+               valueFactoryClass="org.knime.core.data.v2.value.SparseListValueFactory">
+         </ValueFactory>
       </DataType>
       <DataType
-            cellClass="org.knime.core.data.collection.SetCell"
-            factoryValue="org.knime.core.data.v2.value.SetValueFactory">
+            cellClass="org.knime.core.data.collection.SetCell">
          <serializer
                cellClass="org.knime.core.data.collection.SetCell"
                serializerClass="org.knime.core.data.collection.SetCell$SetCellSerializer">
          </serializer>
+         <ValueFactory
+               deprecated="false"
+               valueFactoryClass="org.knime.core.data.v2.value.SetValueFactory">
+         </ValueFactory>
       </DataType>
       <DataType
-            cellClass="org.knime.core.data.model.PortObjectCell"
-            factoryValue="org.knime.core.data.v2.value.PortObjectValueFactory">
+            cellClass="org.knime.core.data.model.PortObjectCell">
          <serializer
                cellClass="org.knime.core.data.model.PortObjectCell"
                serializerClass="org.knime.core.data.model.PortObjectCell$PortObjectCellSerializer">
          </serializer>
+         <ValueFactory
+               deprecated="false"
+               valueFactoryClass="org.knime.core.data.v2.value.PortObjectValueFactory">
+         </ValueFactory>
       </DataType>
       <DataType
             cellClass="org.knime.core.data.def.TimestampCell">
@@ -550,12 +575,19 @@
       </DataType>
       <DataType
             cellClass="org.knime.core.data.def.StringCell"
-            factoryClass="org.knime.core.data.def.StringCell$StringCellFactory"
-            factoryValue="org.knime.core.data.v2.value.DictEncodedStringValueFactory">
+            factoryClass="org.knime.core.data.def.StringCell$StringCellFactory">
          <serializer
                cellClass="org.knime.core.data.def.StringCell"
                serializerClass="org.knime.core.data.def.StringCell$StringSerializer">
          </serializer>
+         <ValueFactory
+               deprecated="true"
+               valueFactoryClass="org.knime.core.data.v2.value.StringValueFactory">
+         </ValueFactory>
+         <ValueFactory
+               deprecated="false"
+               valueFactoryClass="org.knime.core.data.v2.value.DictEncodedStringValueFactory">
+         </ValueFactory>
       </DataType>
    </extension>
    <extension
