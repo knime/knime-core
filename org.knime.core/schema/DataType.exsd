@@ -129,11 +129,11 @@ A DataCellFactory is optional, however generic input nodes won&apos;t be able to
          <attribute name="factoryValue" type="string">
             <annotation>
                <documentation>
-                  An implementation providing efficient read and write into a low-level (columnar) table backend. This attribute was added as part of KNIME v4.3. This value factory provides means to avoid costly DataCell generation when writing and reading KNIME tables. The implementation is only used when the workflow is configured to use a non-default Columnar Table Backend.
+                  NOTE: This attribute has been deprecated as part of KNIME v4.5 in favor of ValueFactory child elements. Further use of this attribute will result in a log warning and the ValueFactory defined by this attribute will be overwritten by the first undeprecated ValueFactory element in this DataType extension.
+
+An implementation providing efficient read and write into a low-level (columnar) table backend. This attribute was added as part of KNIME v4.3. This value factory provides means to avoid costly DataCell generation when writing and reading KNIME tables. The implementation is only used when the workflow is configured to use a non-default Columnar Table Backend.
 
 Type definition may choose to not provide this implementation in which case a fallback implementation using object creation (DataCell) is used.
-
-NOTE: This attribute has been depreacted as part of KNIME v4.5 in favor of ValueFactory child elements. Further use of this attribute will result in a log warning and the ValueFactory defined by this attribute will be overwritten by the first undeprecated ValueFactory element in this DataType extension.
                </documentation>
                <appInfo>
                   <meta.attribute kind="java" basedOn=":org.knime.core.data.schema.ValueFactory" deprecated="true"/>

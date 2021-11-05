@@ -77,6 +77,9 @@ import org.knime.core.data.v2.value.BooleanListValueFactory;
 import org.knime.core.data.v2.value.BooleanSetValueFactory;
 import org.knime.core.data.v2.value.BooleanSparseListValueFactory;
 import org.knime.core.data.v2.value.DefaultRowKeyValueFactory;
+import org.knime.core.data.v2.value.DictEncodedStringListValueFactory;
+import org.knime.core.data.v2.value.DictEncodedStringSetValueFactory;
+import org.knime.core.data.v2.value.DictEncodedStringSparseListValueFactory;
 import org.knime.core.data.v2.value.DoubleListValueFactory;
 import org.knime.core.data.v2.value.DoubleSetValueFactory;
 import org.knime.core.data.v2.value.DoubleSparseListValueFactory;
@@ -109,8 +112,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
 
 /**
  * Utility class for dealing with {@link ValueFactory ValueFactories}. Provides means to create ValueFactories from
@@ -142,19 +143,22 @@ public final class ValueFactoryUtils {
             .with(getSetType(DoubleCell.TYPE), DoubleSetValueFactory.INSTANCE)//
             .with(getSetType(IntCell.TYPE), IntSetValueFactory.INSTANCE)//
             .with(getSetType(LongCell.TYPE), LongSetValueFactory.INSTANCE)//
-            .with(getSetType(StringCell.TYPE), StringSetValueFactory.INSTANCE)//
+            .with(getSetType(StringCell.TYPE), StringSetValueFactory.INSTANCE, true)//
+            .with(getSetType(StringCell.TYPE), DictEncodedStringSetValueFactory.INSTANCE)//
             .with(getSetType(BooleanCell.TYPE), BooleanSetValueFactory.INSTANCE)//
             // lists
             .with(getListType(DoubleCell.TYPE), DoubleListValueFactory.INSTANCE)//
             .with(getListType(IntCell.TYPE), IntListValueFactory.INSTANCE)//
             .with(getListType(LongCell.TYPE), LongListValueFactory.INSTANCE)//
-            .with(getListType(StringCell.TYPE), StringListValueFactory.INSTANCE)//
+            .with(getListType(StringCell.TYPE), StringListValueFactory.INSTANCE, true)//
+            .with(getListType(StringCell.TYPE), DictEncodedStringListValueFactory.INSTANCE)//
             .with(getListType(BooleanCell.TYPE), BooleanListValueFactory.INSTANCE)//
             // sparse lists
             .with(getSparseListType(DoubleCell.TYPE), DoubleSparseListValueFactory.INSTANCE)//
             .with(getSparseListType(IntCell.TYPE), IntSparseListValueFactory.INSTANCE)//
             .with(getSparseListType(LongCell.TYPE), LongSparseListValueFactory.INSTANCE)//
-            .with(getSparseListType(StringCell.TYPE), StringSparseListValueFactory.INSTANCE)//
+            .with(getSparseListType(StringCell.TYPE), StringSparseListValueFactory.INSTANCE, true)//
+            .with(getSparseListType(StringCell.TYPE), DictEncodedStringSparseListValueFactory.INSTANCE)//
             .with(getSparseListType(BooleanCell.TYPE), BooleanSparseListValueFactory.INSTANCE)//
             .build();
 
@@ -581,11 +585,14 @@ public final class ValueFactoryUtils {
 
         private final Map<String, ValueFactory<?, ?>> m_factoriesByName;
 
-        private final BiMap<DataType, ValueFactory<?, ?>> m_typeFactoryMap;
+        private final Map<DataType, ValueFactory<?, ?>> m_factoriesByType;
+
+        private final Map<String, DataType> m_typesByFactoryName;
 
         private SingletonFactoryProvider(final Builder builder) {
             m_factoriesByName = new HashMap<>(builder.m_factoriesByName);
-            m_typeFactoryMap = HashBiMap.create(builder.m_typeFactoryMap);
+            m_factoriesByType = new HashMap<>(builder.m_factoriesByType);
+            m_typesByFactoryName = new HashMap<>(builder.m_typesByFactoryName);
         }
 
         boolean hasFactoryFor(final String className) {
@@ -593,11 +600,11 @@ public final class ValueFactoryUtils {
         }
 
         boolean hasFactoryFor(final DataType type) {
-            return m_typeFactoryMap.containsKey(type);
+            return m_factoriesByType.containsKey(type);
         }
 
         boolean hasTypeFor(final ValueFactory<?, ?> factory) {
-            return m_typeFactoryMap.containsValue(factory);
+            return m_typesByFactoryName.containsKey(factory.getClass().getName());
         }
 
         ValueFactory<?, ?> getFactoryFor(final String className) { //NOSONAR
@@ -605,11 +612,11 @@ public final class ValueFactoryUtils {
         }
 
         ValueFactory<?, ?> getFactoryFor(final DataType type) {//NOSONAR
-            return m_typeFactoryMap.get(type);
+            return m_factoriesByType.get(type);
         }
 
         DataType getTypeFor(final ValueFactory<?, ?> factory) {
-            return m_typeFactoryMap.inverse().get(factory);
+            return m_typesByFactoryName.get(factory.getClass().getName());
         }
 
         private static Builder builder() {
@@ -619,15 +626,25 @@ public final class ValueFactoryUtils {
         private static final class Builder {
             private final Map<String, ValueFactory<?, ?>> m_factoriesByName = new HashMap<>();
 
-            private final Map<DataType, ValueFactory<?, ?>> m_typeFactoryMap = new HashMap<>();
+            private final Map<DataType, ValueFactory<?, ?>> m_factoriesByType = new HashMap<>();
+
+            private final Map<String, DataType> m_typesByFactoryName = new HashMap<>();
 
             private Builder() {
 
             }
 
             Builder with(final DataType type, final ValueFactory<?, ?> factory) {
-                m_factoriesByName.put(factory.getClass().getName(), factory);
-                m_typeFactoryMap.put(type, factory);
+                return with(type, factory, false);
+            }
+
+            Builder with(final DataType type, final ValueFactory<?, ?> factory, final boolean deprecated) {
+                final var factoryName = factory.getClass().getName();
+                m_factoriesByName.put(factoryName, factory);
+                m_typesByFactoryName.put(factoryName, type);
+                if (!deprecated) {
+                    m_factoriesByType.put(type, factory);
+                }
                 return this;
             }
 
