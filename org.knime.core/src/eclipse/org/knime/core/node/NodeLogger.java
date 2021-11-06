@@ -537,7 +537,7 @@ public final class NodeLogger {
         }
         l.info("# max mem=" + Runtime.getRuntime().maxMemory() / (1024 * 1024) + "MB");
         l.info("# application=" + OSGIHelper.getApplicationName());
-        l.info("# ID=" + KNIMEConstants.getKNIMEInstanceID());
+        l.info("# KNID=" + KNIMEConstants.getKNID());
         l.info("#########################################################################################");
     }
 
