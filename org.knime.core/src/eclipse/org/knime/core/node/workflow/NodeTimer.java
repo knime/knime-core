@@ -497,13 +497,13 @@ public final class NodeTimer {
                 }
 
                 byte[] bytes = bos.toByteArray();
-                String knimeID = URLEncoder.encode(KNIMEConstants.getKNIMEInstanceID(), "UTF-8");
+                String knid = URLEncoder.encode(KNIMEConstants.getKNID(), "UTF-8");
                 HttpClient requestClient = new HttpClient();
                 requestClient.getParams().setAuthenticationPreemptive(true);
                 org.apache.commons.httpclient.Credentials usageCredentials =
                     new UsernamePasswordCredentials("knime-usage-user", "knime");
                 requestClient.getState().setCredentials(AuthScope.ANY, usageCredentials);
-                String uri = SERVER_ADDRESS + "/usage/v1/" + knimeID;
+                String uri = SERVER_ADDRESS + "/usage/v1/" + knid;
                 method = new PostMethod(uri);
                 RequestEntity entity = new ByteArrayRequestEntity(bytes);
                 method.setRequestEntity(entity);
