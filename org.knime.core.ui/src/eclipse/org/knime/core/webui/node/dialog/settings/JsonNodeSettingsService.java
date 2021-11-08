@@ -48,72 +48,13 @@
  */
 package org.knime.core.webui.node.dialog.settings;
 
-import java.io.IOException;
-
-import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
 
 /**
  * A {@link NodeSettingsService} which transfers a json-string to and from a {@link NodeSettings}-object.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
- * @param <S> the type of object representing the node settings
  */
-public interface JsonNodeSettingsService<S> extends TextNodeSettingsService {
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    default void writeSettings(final String s, final NodeSettingsWO settings) throws InvalidSettingsException {
-        try {
-            writeSettingsObject(fromJson(s), settings);
-        } catch (IOException ex) {
-            throw new InvalidSettingsException("Node settings couldn't be deserialized", ex);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    default String readSettings(final NodeSettingsRO settings) {
-        return toJson(readSettingsObject(settings));
-    }
-
-    /**
-     * Writes the settings object into a {@link NodeSettingsWO}-object.
-     *
-     * @param s the settings object to write
-     * @param settings
-     */
-    void writeSettingsObject(S s, NodeSettingsWO settings);
-
-    /**
-     * Reads the settings object from {@link NodeSettingsRO}-object.
-     *
-     * @param settings
-     * @return the read settings object
-     */
-    S readSettingsObject(NodeSettingsRO settings);
-
-    /**
-     * Deserializes the settings object from a JSON-string.
-     *
-     * @param settings a JSON-string
-     * @return the deserialized settings object
-     * @throws IOException if the deserialization failed
-     */
-    S fromJson(String settings) throws IOException;
-
-    /**
-     * Turns the settings object into a JSON-string.
-     *
-     * @param settings object
-     * @return the json-serialized settings object
-     */
-    String toJson(S settings);
+public interface JsonNodeSettingsService extends TextNodeSettingsService {
 
 }
