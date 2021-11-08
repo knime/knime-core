@@ -57,6 +57,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.port.PortObjectSpec;
 
 /**
  * A {@link NodeSettingsService} which transfers {@link NodeSettings} to and from a string.
@@ -81,9 +82,9 @@ public interface TextNodeSettingsService extends NodeSettingsService {
      * {@inheritDoc}
      */
     @Override
-    default void readSettings(final NodeSettingsRO settings, final OutputStream out) {
+    default void readSettings(final NodeSettingsRO settings, final PortObjectSpec[] specs, final OutputStream out) {
         try {
-            out.write(readSettings(settings).getBytes(StandardCharsets.UTF_8));
+            out.write(readSettings(settings, specs).getBytes(StandardCharsets.UTF_8));
         } catch (IOException ex) {
             // should never happen
             throw new IllegalStateException("Problem reading the node settings", ex);
@@ -103,8 +104,9 @@ public interface TextNodeSettingsService extends NodeSettingsService {
      * Converts a {@link NodeSettingsRO}-object into a string representing the settings.
      *
      * @param settings the settings to read from
+     * @param specs the specs for configuring the settings
      * @return the string-representation of the setting
      */
-    String readSettings(NodeSettingsRO settings);
+    String readSettings(NodeSettingsRO settings, PortObjectSpec[] specs);
 
 }

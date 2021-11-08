@@ -55,6 +55,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.port.PortObjectSpec;
 
 /**
  * Service to transfer node settings from and to a {@link NodeSettings}-object.
@@ -76,8 +77,9 @@ public interface NodeSettingsService {
      * Reads node settings from a stream into a {@link NodeSettingsRO}-object.
      *
      * @param settings
+     * @param specs the specs for configuring the settings
      * @param out
      */
-    void readSettings(NodeSettingsRO settings, final OutputStream out);
+    void readSettings(NodeSettingsRO settings, PortObjectSpec[] specs,  final OutputStream out);
 
 }

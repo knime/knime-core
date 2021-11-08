@@ -68,6 +68,7 @@ import org.junit.Test;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -205,7 +206,7 @@ public class NodeDialogManagerTest {
          * {@inheritDoc}
          */
         @Override
-        public String readSettings(final NodeSettingsRO settings) {
+        public String readSettings(final NodeSettingsRO settings, final PortObjectSpec[] specs) {
             return "test settings";
         }
 

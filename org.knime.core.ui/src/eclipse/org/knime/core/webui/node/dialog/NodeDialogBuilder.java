@@ -54,6 +54,7 @@ import java.util.Optional;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.NodeID;
@@ -124,11 +125,18 @@ public class NodeDialogBuilder {
 
             @Override
             public String getInitialData() {
+                final var specs = new PortObjectSpec[nnc.getNrInPorts()];
+                final var wfm = nnc.getParent();
+                for (var cc : wfm.getIncomingConnectionsFor(nnc.getID())) {
+                    specs[cc.getDestPort()] =
+                        wfm.getNodeContainer(cc.getSource()).getOutPort(cc.getSourcePort()).getPortObjectSpec();
+                }
+
                 NodeContext.pushContext(nnc);
                 try {
                     var settings = new NodeSettings("node_settings");
                     nnc.getNode().saveModelSettingsTo(settings);
-                    return textSettingsService.readSettings(settings);
+                    return textSettingsService.readSettings(settings, specs);
                 } finally {
                     NodeContext.removeLastContext();
                 }
