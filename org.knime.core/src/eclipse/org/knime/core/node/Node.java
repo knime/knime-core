@@ -71,6 +71,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataTableSpecCreator;
+import org.knime.core.data.IDataRepository;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainerException;
@@ -2590,6 +2591,19 @@ public final class Node implements NodeModelWarningListener {
      */
     public static KnowsRowCountTable invokeGetDelegate(final BufferedDataTable table) {
         return table.getDelegate();
+    }
+
+    /**
+     * Exposes {@code ExecutionContext.getDataRepository} as public method. This method has been added here in order to
+     * keep the scope of the original method to a minimum.
+     *
+     * @param exec The execution context whose {@code getDataRepository} method to invoke.
+     * @return The return value of {@code exec.getDataRepository()}, i.e. the data repository used by the execution
+     *         context
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public static IDataRepository invokeGetDataRepository(final ExecutionContext exec) {
+        return exec.getDataRepository();
     }
 
     /***
