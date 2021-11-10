@@ -2342,6 +2342,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/data/DataTypeRegistry.java" type="org.knime.core.data.DataTypeRegistry">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.DataTypeRegistry"/>
+                <message_argument value="getDataTypeForValueFactory(ValueFactory&lt;?,?&gt;)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/data/TableBackend.java" type="org.knime.core.data.TableBackend">
         <filter comment="Not public API" id="403804204">
             <message_arguments>
@@ -2373,11 +2381,48 @@
                 <message_argument value="rearrange(ExecutionMonitor, IntSupplier, ColumnRearranger, BufferedDataTable, ExecutionContext)"/>
             </message_arguments>
         </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.TableBackend"/>
+                <message_argument value="append(ExecutionMonitor, IWriteFileStoreHandler, IntSupplier, BufferedDataTable, BufferedDataTable)"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.TableBackend"/>
+                <message_argument value="concatenate(ExecutionMonitor, IWriteFileStoreHandler, IntSupplier, String, boolean, BufferedDataTable[])"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.TableBackend"/>
+                <message_argument value="rearrange(ExecutionMonitor, IWriteFileStoreHandler, IntSupplier, ColumnRearranger, BufferedDataTable, ExecutionContext)"/>
+            </message_arguments>
+        </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/data/container/BufferedTableBackend.java" type="org.knime.core.data.container.BufferedTableBackend">
-        <filter comment="Baseline acting up" id="1143996420">
+        <filter id="338792546">
             <message_arguments>
-                <message_argument value="rearrange(ExecutionMonitor, IntSupplier, ColumnRearranger, BufferedDataTable, ExecutionContext)"/>
+                <message_argument value="org.knime.core.data.container.BufferedTableBackend"/>
+                <message_argument value="append(ExecutionMonitor, IWriteFileStoreHandler, IntSupplier, BufferedDataTable, BufferedDataTable)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.BufferedTableBackend"/>
+                <message_argument value="concatenate(ExecutionMonitor, IWriteFileStoreHandler, IntSupplier, String, boolean, BufferedDataTable[])"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.BufferedTableBackend"/>
+                <message_argument value="rearrange(ExecutionMonitor, IWriteFileStoreHandler, IntSupplier, ColumnRearranger, BufferedDataTable, ExecutionContext)"/>
+            </message_arguments>
+        </filter>
+        <filter id="576725006">
+            <message_arguments>
+                <message_argument value="TableBackend"/>
+                <message_argument value="BufferedTableBackend"/>
             </message_arguments>
         </filter>
     </resource>
@@ -2386,6 +2431,20 @@
             <message_arguments>
                 <message_argument value="org.knime.core.data.v2.CollectionValueFactory"/>
                 <message_argument value="getElementValueFactory()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/v2/ValueFactoryUtils.java" type="org.knime.core.data.v2.ValueFactoryUtils">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.ValueFactoryUtils"/>
+                <message_argument value="createValueFactoryForClassName(String)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.ValueFactoryUtils"/>
+                <message_argument value="getDefaultValueFactory(DataSpec)"/>
             </message_arguments>
         </filter>
     </resource>
