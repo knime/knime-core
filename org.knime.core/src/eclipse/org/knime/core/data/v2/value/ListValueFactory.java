@@ -193,6 +193,7 @@ public final class ListValueFactory implements CollectionValueFactory<ListReadAc
 
         @Override
         public DataCell get(final int index) {
+            m_reader.setIndex(index);
             if (!isMissing(index)) {
                 return m_elementValue.getDataCell();
             } else {
