@@ -49,6 +49,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.json.Json;
 import javax.json.JsonArray;
@@ -58,7 +59,6 @@ import javax.json.JsonObjectBuilder;
 import javax.json.JsonString;
 import javax.json.JsonValue;
 import javax.json.JsonValue.ValueType;
-import javax.json.JsonWriter;
 import javax.json.JsonWriterFactory;
 import javax.json.stream.JsonGenerator;
 
@@ -66,6 +66,8 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.dialog.ExternalNodeData;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowSaveHook;
+
+import com.google.common.net.MediaType;
 
 /**
  * Application and singleton class that allows to create OpenAPI fragments that describes the in- and output of
@@ -90,6 +92,20 @@ public class OpenAPIDefinitionGenerator extends WorkflowSaveHook {
     public static final String INPUT_PARAMETERS_FILE = "openapi-input-parameters.json";
 
     /**
+     * Name of the file that contains the input resource definition: {@value}.
+     *
+     * @since 4.5
+     */
+    public static final String INPUT_RESOURCES_FILE = "openapi-input-resources.json";
+
+    /**
+     * Name of the file that contains the output resource definition: {@value}.
+     *
+     * @since 4.5
+     */
+    public static final String OUTPUT_RESOURCES_FILE = "openapi-output-resources.json";
+
+    /**
      * Name of the file that contains the output parameter definition: {@value}.
      */
     public static final String OUTPUT_PARAMETERS_FILE = "openapi-output-parameters.json";
@@ -106,7 +122,8 @@ public class OpenAPIDefinitionGenerator extends WorkflowSaveHook {
 
     /**
      * Analyzes the given workflow and generates an OpenAPI fragment for the workflow's input parameters. The returned
-     * object is the schema description of all input parameters. Example:
+     * object is the schema description of all input parameters.<br/>
+     * Example:
      *
      * <pre>
      * {
@@ -149,6 +166,122 @@ public class OpenAPIDefinitionGenerator extends WorkflowSaveHook {
      */
     public JsonObject createInputParametersDescription(final WorkflowManager wfm) {
         return createParametersDescription(wfm.getInputNodes());
+    }
+
+    /**
+     * Creates the content for input resources that can be used to describe POST requests for multipart/form-data.
+     * Example:
+     *
+     * <pre>
+     * {
+     *   "schema" : {
+     *     "type" : "object",
+     *     "properties" : {
+     *       "upload-input" : {
+     *         "type" : "string",
+     *         "format" : "binary"
+     *       }
+     *     }
+     *   },
+     *   "encoding": {
+     *     "upload-input" : {
+     *       "contentType" : "image/png"
+     *     }
+     *   }
+     * }
+     * </pre>
+     *
+     * See https://swagger.io/docs/specification/describing-request-body/multipart-requests/ for mor information.
+     *
+     * @param wfm the workflow manager
+     * @return a JSON object
+     * @since 4.5
+     */
+    public JsonObject createInputResourceContent(final WorkflowManager wfm) {
+        final var nodeData =
+            wfm.getInputNodes().entrySet().stream().filter(entry -> entry.getValue().getResource() != null)
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+        return createResourceContent(nodeData);
+    }
+
+    /**
+     * Creates the content for input resources that can be used to define output resources of the job using a special
+     * extention (see https://swagger.io/docs/specification/openapi-extensions/).<br/>
+     * Example:
+     *
+     * <pre>
+     * {
+     *   "schema" : {
+     *     "type" : "object",
+     *     "properties" : {
+     *       "upload-input" : {
+     *         "type" : "string",
+     *         "format" : "binary"
+     *       }
+     *     }
+     *   },
+     *   "encoding": {
+     *     "upload-input" : {
+     *       "contentType" : "image/png"
+     *     }
+     *   }
+     * }
+     * </pre>
+     *
+     * See https://swagger.io/docs/specification/describing-request-body/multipart-requests/ for mor information.
+     *
+     * @param wfm the workflow manager
+     * @return a JSON object
+     * @since 4.5
+     */
+    public JsonObject createOutputResourceContent(final WorkflowManager wfm) {
+        final var nodeData =
+            wfm.getExternalOutputs().entrySet().stream().filter(entry -> entry.getValue().getResource() != null)
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+        return createResourceContent(nodeData);
+    }
+
+    private static JsonObject createResourceContent(final Map<String, ExternalNodeData> nodeData) {
+        final var root = Json.createObjectBuilder();
+
+        if (!nodeData.isEmpty()) {
+            final var schema = Json.createObjectBuilder();
+            final var properties = Json.createObjectBuilder();
+            final var encoding = Json.createObjectBuilder();
+
+            // This is static since application form data accepts binary streams.
+            final var schemaObject = Json.createObjectBuilder()//
+                .add("type", "string")//
+                .add("format", "binary")//
+                .build();
+
+            for (final var e : nodeData.entrySet()) {
+                properties.add(e.getKey(), schemaObject);
+
+                final var dataEncoding = Json.createObjectBuilder()//
+                    .add("contentType", e.getValue().getContentType().orElse(MediaType.OCTET_STREAM.toString()))//
+                    .build();
+
+                encoding.add(e.getKey(), dataEncoding);
+            }
+
+            schema.add("type", "object").add("properties", properties.build());
+            root.add("schema", schema.build());
+            root.add("encoding", encoding.build());
+        }
+
+        return root.build();
+    }
+
+    /**
+     * @param value
+     * @return
+     */
+    private JsonObjectBuilder translateToMultipartSchema(final ExternalNodeData value) {
+        // TODO Auto-generated method stub
+        return null;
     }
 
     /**
@@ -264,8 +397,8 @@ public class OpenAPIDefinitionGenerator extends WorkflowSaveHook {
 
         if (!api.isEmpty()) {
             LOGGER.debug("Writing OpenAPI definition for input parameters of " + workflow.getName());
-            try (JsonWriter out = m_writerFactory
-                .createWriter(new FileOutputStream(new File(artifactsFolder, INPUT_PARAMETERS_FILE)))) {
+            try (final var os = new FileOutputStream(new File(artifactsFolder, INPUT_PARAMETERS_FILE));
+                    final var out = m_writerFactory.createWriter(os)) {
                 out.write(api);
             }
         }
@@ -274,9 +407,27 @@ public class OpenAPIDefinitionGenerator extends WorkflowSaveHook {
 
         if (!outApi.isEmpty()) {
             LOGGER.debug("Writing OpenAPI definition for output parameters of " + workflow.getName());
-            try (JsonWriter out = m_writerFactory
-                .createWriter(new FileOutputStream(new File(artifactsFolder, OUTPUT_PARAMETERS_FILE)))) {
+            try (final var os = new FileOutputStream(new File(artifactsFolder, OUTPUT_PARAMETERS_FILE));
+                    final var out = m_writerFactory.createWriter(os)) {
                 out.write(outApi);
+            }
+        }
+
+        final var inputResources = createInputResourceContent(workflow);
+        if (!inputResources.isEmpty()) {
+            LOGGER.debug("Writing OpenAPI definition for input resources of " + workflow.getName());
+            try (final var os = new FileOutputStream(new File(artifactsFolder, INPUT_RESOURCES_FILE));
+                    final var writer = m_writerFactory.createWriter(os)) {
+                writer.write(inputResources);
+            }
+        }
+
+        final var outputResources = createOutputResourceContent(workflow);
+        if (!outputResources.isEmpty()) {
+            LOGGER.debug("Writing OpenAPI definition for output resources of " + workflow.getName());
+            try (final var os = new FileOutputStream(new File(artifactsFolder, OUTPUT_RESOURCES_FILE));
+                    final var writer = m_writerFactory.createWriter(os)) {
+                writer.write(outputResources);
             }
         }
     }

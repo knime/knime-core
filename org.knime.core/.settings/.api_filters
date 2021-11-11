@@ -3386,4 +3386,18 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/openapi/OpenAPIDefinitionGenerator.java" type="org.knime.core.openapi.OpenAPIDefinitionGenerator">
+        <filter id="336658481">
+            <message_arguments>
+                <message_argument value="org.knime.core.openapi.OpenAPIDefinitionGenerator"/>
+                <message_argument value="INPUT_RESOURCES_FILE"/>
+            </message_arguments>
+        </filter>
+        <filter id="336658481">
+            <message_arguments>
+                <message_argument value="org.knime.core.openapi.OpenAPIDefinitionGenerator"/>
+                <message_argument value="OUTPUT_RESOURCES_FILE"/>
+            </message_arguments>
+        </filter>
+    </resource>
 </component>
