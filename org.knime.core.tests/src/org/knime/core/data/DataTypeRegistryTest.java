@@ -48,13 +48,6 @@
  */
 package org.knime.core.data;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
-import org.junit.Test;
-import org.knime.core.data.def.StringCell;
-import org.knime.core.data.v2.value.DictEncodedStringValueFactory;
-import org.knime.core.data.v2.value.StringValueFactory;
-
 /**
  *
  * @author Carsten Haubold, KNIME GmbH, Konstanz, Germany
@@ -63,16 +56,17 @@ import org.knime.core.data.v2.value.StringValueFactory;
 public class DataTypeRegistryTest {
     private static DataTypeRegistry REG = DataTypeRegistry.getInstance();
 
-    /**
-     * Check that the deprecated StringValueFactory is no longer the ValueFactory associated with StringCell.TYPE but is
-     * still known to the Registry.
-     */
-    @Test
-    public void testStringValueFactoryDeprecation() {
-        assertEquals(DictEncodedStringValueFactory.class, REG.getValueFactoryFor(StringCell.TYPE).get());
-        assertEquals(StringValueFactory.class, REG.getValueFactoryClass(StringValueFactory.class.getName()).get());
-        assertEquals(StringCell.class, REG.getCellClassForValueFactory(new StringValueFactory()));
-        assertEquals(StringCell.class, REG.getCellClassForValueFactory(new DictEncodedStringValueFactory()));
-    }
+    // TODO: use some other deprecated type like zoneddatetime?
+//    /**
+//     * Check that the deprecated StringValueFactory is no longer the ValueFactory associated with StringCell.TYPE but is
+//     * still known to the Registry.
+//     */
+//    @Test
+//    public void testStringValueFactoryDeprecation() {
+//        assertEquals(DictEncodedStringValueFactory.class, REG.getValueFactoryFor(StringCell.TYPE).get());
+//        assertEquals(StringValueFactory.class, REG.getValueFactoryClass(StringValueFactory.class.getName()).get());
+//        assertEquals(StringCell.class, REG.getCellClassForValueFactory(new StringValueFactory()));
+//        assertEquals(StringCell.class, REG.getCellClassForValueFactory(new DictEncodedStringValueFactory()));
+//    }
 
 }
