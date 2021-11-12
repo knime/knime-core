@@ -93,9 +93,7 @@ import com.google.common.base.Objects;
  * @since 4.3
  *
  * @noreference This class is not intended to be referenced by clients.
- * @deprecated in 4.5 in favor of {@link DictEncodedStringSparseListValueFactory}
  */
-@Deprecated
 public class StringSparseListValueFactory implements ValueFactory<StructReadAccess, StructWriteAccess> {
 
     /** A stateless instance of {@link StringSparseListValueFactory} */
@@ -134,7 +132,6 @@ public class StringSparseListValueFactory implements ValueFactory<StructReadAcce
         extends DefaultSparseListReadValue<StringReadValue, StringListReadValue, StringReadAccess>
         implements StringSparseListReadValue {
 
-        @SuppressWarnings("deprecation")
         private DefaultStringSparseListReadValue(final StringReadAccess defaultAccess, final IntReadAccess sizeAccess,
             final ListReadAccess indicesAccess, final ListReadAccess listAccess) {
             super(defaultAccess, sizeAccess, indicesAccess, listAccess, StringValueFactory.INSTANCE,

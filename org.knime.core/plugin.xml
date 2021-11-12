@@ -581,12 +581,8 @@
                serializerClass="org.knime.core.data.def.StringCell$StringSerializer">
          </serializer>
          <ValueFactory
-               deprecated="true"
-               valueFactoryClass="org.knime.core.data.v2.value.StringValueFactory">
-         </ValueFactory>
-         <ValueFactory
                deprecated="false"
-               valueFactoryClass="org.knime.core.data.v2.value.DictEncodedStringValueFactory">
+               valueFactoryClass="org.knime.core.data.v2.value.StringValueFactory">
          </ValueFactory>
       </DataType>
    </extension>

@@ -70,7 +70,6 @@ import org.knime.core.table.schema.StructDataSpec;
 import org.knime.core.table.schema.VarBinaryDataSpec;
 import org.knime.core.table.schema.VarBinaryDataSpec.ObjectDeserializer;
 import org.knime.core.table.schema.traits.DataTrait.DictEncodingTrait;
-import org.knime.core.table.schema.traits.DataTrait.DictEncodingTrait.KeyType;
 import org.knime.core.table.schema.traits.DataTraits;
 import org.knime.core.table.schema.traits.DefaultDataTraits;
 import org.knime.core.table.schema.traits.DefaultStructDataTraits;
@@ -147,7 +146,7 @@ public final class DictEncodedDataCellValueFactory implements ValueFactory<Struc
         // store the binary data as well as the class names using dictionary encoding
         return new DefaultStructDataTraits(//
             new DefaultDataTraits(new DictEncodingTrait()), //
-            new DefaultDataTraits(new DictEncodingTrait(KeyType.BYTE_KEY)));
+            new DefaultDataTraits());
     }
 
     @Override

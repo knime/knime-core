@@ -81,9 +81,7 @@ import com.google.common.base.Objects;
  * @since 4.3
  *
  * @noreference This class is not intended to be referenced by clients.
- * @deprecated in 4.5 in favor of {@link DictEncodedStringSetValueFactory}
  */
-@Deprecated
 public class StringSetValueFactory implements ValueFactory<ListReadAccess, ListWriteAccess> {
 
     /** A stateless instance of {@link StringSetValueFactory} */

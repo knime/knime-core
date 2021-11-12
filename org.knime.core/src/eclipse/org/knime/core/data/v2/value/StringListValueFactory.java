@@ -76,9 +76,7 @@ import org.knime.core.table.schema.traits.DefaultListDataTraits;
  * @since 4.3
  *
  * @noreference This class is not intended to be referenced by clients.
- * @deprecated in 4.5 in favor of {@link DictEncodedStringListValueFactory}
  */
-@Deprecated
 public class StringListValueFactory implements ValueFactory<ListReadAccess, ListWriteAccess> {
 
     /** A stateless instance of {@link StringListValueFactory} */
@@ -147,7 +145,6 @@ public class StringListValueFactory implements ValueFactory<ListReadAccess, List
     private static final class DefaultStringListWriteValue extends DefaultListWriteValue<StringValue, StringWriteValue>
         implements StringListWriteValue {
 
-        @SuppressWarnings("deprecation")
         private DefaultStringListWriteValue(final ListWriteAccess writer) {
             super(writer, StringValueFactory.INSTANCE);
         }
