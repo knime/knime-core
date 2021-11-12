@@ -3200,6 +3200,15 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/interactive/InteractiveNode.java" type="org.knime.core.node.interactive.InteractiveNode">
+        <filter id="403984517">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.InteractiveNode"/>
+                <message_argument value="org.knime.core.node.interactive.ReExecutable"/>
+                <message_argument value="canTriggerReExecution()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/wizard/AbstractWizardNodeView.java" type="org.knime.core.node.wizard.AbstractWizardNodeView">
         <filter id="338722907">
             <message_arguments>

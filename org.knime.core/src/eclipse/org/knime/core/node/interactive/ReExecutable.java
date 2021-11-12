@@ -68,6 +68,10 @@ public interface ReExecutable<D> {
      */
     void preReExecute(D data, boolean isNewDefault);
 
+    /**
+     * @return <code>true</code> if the derived node is able to trigger a re-execution itself (usually within a
+     *         composite view or a webportal page)
+     */
     default boolean canTriggerReExecution() {
         return false;
     }
