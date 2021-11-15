@@ -56,6 +56,9 @@ import java.io.IOException;
 import java.util.Optional;
 import java.util.function.Function;
 
+import org.apache.xmlbeans.XmlException;
+import org.knime.core.node.NoDescriptionProxy;
+import org.knime.core.node.NodeDescription;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.workflow.NodeContext;
@@ -66,6 +69,7 @@ import org.knime.core.webui.data.text.TextReExecuteDataService;
 import org.knime.core.webui.node.view.NodeView;
 import org.knime.core.webui.node.view.NodeViewFactory;
 import org.knime.core.webui.page.Page;
+import org.xml.sax.SAXException;
 
 /**
  * Dummy node factory for tests around the {@link NodeView}.
@@ -199,6 +203,14 @@ public class NodeViewNodeFactory extends NodeFactory<NodeViewNodeModel> implemen
     @Override
     protected NodeDialogPane createNodeDialogPane() {
         return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected NodeDescription createNodeDescription() throws SAXException, IOException, XmlException {
+        return new NoDescriptionProxy(getClass());
     }
 
 }
