@@ -3253,6 +3253,20 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/NodeTimer.java" type="org.knime.core.node.workflow.NodeTimer$GlobalNodeStats">
+        <filter comment="These methods should be only used internally and were replaced by new once" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.NodeTimer.GlobalNodeStats"/>
+                <message_argument value="incRemoteWorkflowOpening()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="These methods should be only used internally and were replaced by new once" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.NodeTimer.GlobalNodeStats"/>
+                <message_argument value="incWorkflowOpening()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/WebResourceController.java" type="org.knime.core.node.workflow.WebResourceController">
         <filter id="336695337">
             <message_arguments>

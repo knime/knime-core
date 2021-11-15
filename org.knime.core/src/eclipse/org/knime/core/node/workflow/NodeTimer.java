@@ -88,6 +88,9 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataTableSpecCreator;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.TableBackend;
+import org.knime.core.data.TableBackendRegistry;
+import org.knime.core.data.container.BufferedTableBackend;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.LongCell;
@@ -139,6 +142,18 @@ public final class NodeTimer {
      */
     public static final class GlobalNodeStats {
 
+        /**
+         * The type of workflow.
+         * @author Tobias Koetter, KNIME GmbH, Konstanz, Germany
+         * @since 4.5
+         */
+        public enum WorkflowType {
+            /**Local workflow opened with the eclipse based editor.*/
+            LOCAL,
+            /**Remote workflow opened with the eclipse based editor but not via job view.*/
+            REMOTE;
+        }
+
         private static final String N_A = "n/a";
         private static final String NODE_NAME_SEP = "#";
 
@@ -159,6 +174,9 @@ public final class NodeTimer {
         private long m_currentInstanceLaunchTime = System.currentTimeMillis();
         private int m_workflowsOpened = 0;
         private int m_remoteWorkflowsOpened = 0;
+        //Reported since version 4.5
+        private int m_columnarStorageWorkflowsOpened = 0;
+
         private int m_workflowsImported = 0;
         private int m_workflowsExported = 0;
         private int m_launches = 0;
@@ -235,22 +253,48 @@ public final class NodeTimer {
             }
         }
 
-        /** Called when a workflow is opened.
-         * @since 3.2 */
-        public void incWorkflowOpening() {
+        /**
+         * Called whenever a workflow is opened independent of its source e.g. local repository, server repository
+         * or KNIME Hub. This includes also workflows opened via the remote job view. The type is
+         * used to distinguish between workflows opened from a local or remote repository.
+         *
+         *
+         * @param wfm the optional {@link WorkflowManager}. Can be <code>null</code>.
+         * @param type the type of workflow e.g. local or remote
+         * @since 4.5
+         */
+        public void incWorkflowOpening(final WorkflowManager wfm, final WorkflowType type) {
             if (DISABLE_GLOBAL_TIMER) {
                 return;
             }
             m_workflowsOpened++;
+
+            if (GlobalNodeStats.WorkflowType.REMOTE == type) {
+                m_remoteWorkflowsOpened++;
+            }
+
+            if (usesColumnarStorageBackend(wfm)) {
+                m_columnarStorageWorkflowsOpened++;
+            }
         }
 
-        /** Called when a remote workflow is opened.
-         * @since 3.2 */
-        public void incRemoteWorkflowOpening() {
-            if (DISABLE_GLOBAL_TIMER) {
-                return;
+        /**
+         * Checks if the workflow manager is available and if so checks if the columnar storage {@link TableBackend}
+         * is used.
+         *
+         * @param wfm the optional {@link WorkflowManager}
+         * @return <code>true</code> if the columnar storage backend is used otherwise <code>false</code>
+         */
+        private static boolean usesColumnarStorageBackend(final WorkflowManager wfm) {
+            if (wfm != null) {
+                final TableBackend tableBackend =
+                    wfm.getTableBackendSettings().map(WorkflowTableBackendSettings::getTableBackend)
+                        .orElse(TableBackendRegistry.getInstance().getDefaultBackendForNewWorkflows());
+                //if it is not the BufferedTableBackend it can only be the FastTableBackend
+                return !(tableBackend instanceof BufferedTableBackend);
             }
-            m_remoteWorkflowsOpened++;
+            //workflow manager is not present in remote job view
+            return false;
         }
 
         /**
@@ -408,6 +452,7 @@ public final class NodeTimer {
             job.add("uptime", getAvgUpTime());
             job.add("workflowsOpened", m_workflowsOpened);
             job.add("remoteWorkflowsOpened", m_remoteWorkflowsOpened);
+            job.add("columnarStorageWorkflowsOpened", m_columnarStorageWorkflowsOpened);
             job.add("workflowsImported", m_workflowsImported);
             job.add("workflowsExported", m_workflowsExported);
             job.add("launches", getNrLaunches());
@@ -670,6 +715,9 @@ public final class NodeTimer {
                             break;
                         case "remoteWorkflowsOpened":
                             m_remoteWorkflowsOpened = jo.getInt(key);
+                            break;
+                        case "columnarStorageWorkflowsOpened":
+                            m_columnarStorageWorkflowsOpened = jo.getInt(key);
                             break;
                         case "workflowsImported":
                             m_workflowsImported = jo.getInt(key);
