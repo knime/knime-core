@@ -194,8 +194,16 @@ public final class PortTypeRegistry {
      * @return a port type, never <code>null</code>
      */
     public synchronized PortType getPortType(final Class<? extends PortObject> portClass, final boolean isOptional) {
-        Map<Class<? extends PortObject>, PortType> map = isOptional ? m_allOptionalPortTypes : m_allPortTypes;
 
+        var mappedPortClass = PortTypeClassMapperRegistry.getInstance()//
+                .map(portClass)//
+                .orElse(portClass);
+
+        return getPortTypeInternal(mappedPortClass, isOptional);
+    }
+
+    private PortType getPortTypeInternal(final Class<? extends PortObject> portClass, final boolean isOptional) {
+        Map<Class<? extends PortObject>, PortType> map = isOptional ? m_allOptionalPortTypes : m_allPortTypes;
         PortType pt = map.get(portClass);
         if (pt == null) {
             IExtensionRegistry registry = Platform.getExtensionRegistry();
