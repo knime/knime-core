@@ -54,9 +54,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -332,7 +332,7 @@ public final class Node implements NodeModelWarningListener {
             m_outputs[i].summary = null;
             m_outputs[i].hiliteHdl = m_model.getOutHiLiteHandler(i - 1);
         }
-        m_localTempTables = new HashSet<ContainerTable>();
+        m_localTempTables = new LinkedHashSet<>();
         setForceSynchronousIO(false); // may set to true if this is a loop end
     }
 
@@ -1679,8 +1679,12 @@ public final class Node implements NodeModelWarningListener {
             }
         }
         disposeTables(dataRepository, disposableTables);
-        // clear temporary tables that have been created during execute
-        for (ContainerTable t : m_localTempTables) {
+        // clear temporary tables in the reverse order of how they were created during execute
+        // (otherwise memory leaks may occur if tables were not properly closed by execute AP-17723)
+        final List<ContainerTable> tempTables = new ArrayList<>(m_localTempTables);
+        for (int i = tempTables.size() - 1; i >= 0; i--) {
+            @SuppressWarnings("resource") // we are clearing it
+            var t = tempTables.get(i);
             t.clear();
         }
         m_localTempTables.clear();

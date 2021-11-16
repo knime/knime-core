@@ -49,6 +49,7 @@
 package org.knime.core.data.container;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -69,7 +70,7 @@ public class DefaultLocalDataRepository implements ILocalDataRepository {
      * Create an empty local repository
      */
     public DefaultLocalDataRepository() {
-        this(new HashMap<>());
+        this(new LinkedHashMap<>());
     }
 
     /**

@@ -51,7 +51,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -610,7 +610,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
         m_node.putOutputTablesIntoGlobalRepository(dataRepository);
         Map<Integer, ContainerTable> localRep =
                 Node.getLocalTableRepositoryFromContext(c);
-        Set<ContainerTable> localTables = new HashSet<ContainerTable>();
+        Set<ContainerTable> localTables = new LinkedHashSet<>();
         for (Map.Entry<Integer, ContainerTable> t : localRep.entrySet()) {
             Optional<ContainerTable> fromGlob = dataRepository.getTable(t.getKey());
             if (fromGlob.isPresent()) {
