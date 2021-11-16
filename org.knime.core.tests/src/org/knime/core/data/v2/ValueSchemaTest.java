@@ -83,9 +83,6 @@ import org.knime.core.data.v2.schema.ValueSchemaUtils;
 import org.knime.core.data.v2.value.BooleanListValueFactory;
 import org.knime.core.data.v2.value.BooleanSetValueFactory;
 import org.knime.core.data.v2.value.BooleanSparseListValueFactory;
-import org.knime.core.data.v2.value.DictEncodedStringListValueFactory;
-import org.knime.core.data.v2.value.DictEncodedStringSetValueFactory;
-import org.knime.core.data.v2.value.DictEncodedStringSparseListValueFactory;
 import org.knime.core.data.v2.value.DoubleListValueFactory;
 import org.knime.core.data.v2.value.DoubleSetValueFactory;
 import org.knime.core.data.v2.value.DoubleSparseListValueFactory;
@@ -95,6 +92,9 @@ import org.knime.core.data.v2.value.IntSparseListValueFactory;
 import org.knime.core.data.v2.value.LongListValueFactory;
 import org.knime.core.data.v2.value.LongSetValueFactory;
 import org.knime.core.data.v2.value.LongSparseListValueFactory;
+import org.knime.core.data.v2.value.StringListValueFactory;
+import org.knime.core.data.v2.value.StringSetValueFactory;
+import org.knime.core.data.v2.value.StringSparseListValueFactory;
 import org.knime.core.data.v2.value.VoidRowKeyFactory;
 import org.knime.core.data.v2.value.cell.DictEncodedDataCellValueFactory;
 import org.knime.core.node.ExecutionContext;
@@ -198,21 +198,21 @@ public class ValueSchemaTest {
     @Test
     public void testSchemaSaveLoadStringList() throws InvalidSettingsException {
         testSchemaSaveLoadDataType(DataType.getType(ListCell.class, StringCell.TYPE),
-            DictEncodedStringListValueFactory.class);
+            StringListValueFactory.class);
     }
 
     /** Test saving and loading a schema with a String set */
     @Test
     public void testSchemaSaveLoadStringSet() throws InvalidSettingsException {
         testSchemaSaveLoadDataType(DataType.getType(SetCell.class, StringCell.TYPE),
-            DictEncodedStringSetValueFactory.class);
+            StringSetValueFactory.class);
     }
 
     /** Test saving and loading a schema with a sparse String list */
     @Test
     public void testSchemaSaveLoadStringSparseList() throws InvalidSettingsException {
         testSchemaSaveLoadDataType(DataType.getType(SparseListCell.class, StringCell.TYPE),
-            DictEncodedStringSparseListValueFactory.class);
+            StringSparseListValueFactory.class);
     }
 
     // Boolean
