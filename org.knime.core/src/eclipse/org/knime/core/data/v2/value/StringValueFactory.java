@@ -62,12 +62,9 @@ import org.knime.core.table.schema.StringDataSpec;
  *
  * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
  * @since 4.3
- * @deprecated Replaced by {@link DictEncodedStringValueFactory}. Cannot be removed because it will be used to read old
- *             string data.
  *
  * @noreference This class is not intended to be referenced by clients.
  */
-@Deprecated(since="4.5")
 public class StringValueFactory implements ValueFactory<StringReadAccess, StringWriteAccess> { // NOSONAR: cannot be removed
 
     /**

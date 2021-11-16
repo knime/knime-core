@@ -77,9 +77,6 @@ import org.knime.core.data.v2.value.BooleanListValueFactory;
 import org.knime.core.data.v2.value.BooleanSetValueFactory;
 import org.knime.core.data.v2.value.BooleanSparseListValueFactory;
 import org.knime.core.data.v2.value.DefaultRowKeyValueFactory;
-import org.knime.core.data.v2.value.DictEncodedStringListValueFactory;
-import org.knime.core.data.v2.value.DictEncodedStringSetValueFactory;
-import org.knime.core.data.v2.value.DictEncodedStringSparseListValueFactory;
 import org.knime.core.data.v2.value.DoubleListValueFactory;
 import org.knime.core.data.v2.value.DoubleSetValueFactory;
 import org.knime.core.data.v2.value.DoubleSparseListValueFactory;
@@ -143,22 +140,19 @@ public final class ValueFactoryUtils {
             .with(getSetType(DoubleCell.TYPE), DoubleSetValueFactory.INSTANCE)//
             .with(getSetType(IntCell.TYPE), IntSetValueFactory.INSTANCE)//
             .with(getSetType(LongCell.TYPE), LongSetValueFactory.INSTANCE)//
-            .with(getSetType(StringCell.TYPE), StringSetValueFactory.INSTANCE, true)//
-            .with(getSetType(StringCell.TYPE), DictEncodedStringSetValueFactory.INSTANCE)//
+            .with(getSetType(StringCell.TYPE), StringSetValueFactory.INSTANCE)//
             .with(getSetType(BooleanCell.TYPE), BooleanSetValueFactory.INSTANCE)//
             // lists
             .with(getListType(DoubleCell.TYPE), DoubleListValueFactory.INSTANCE)//
             .with(getListType(IntCell.TYPE), IntListValueFactory.INSTANCE)//
             .with(getListType(LongCell.TYPE), LongListValueFactory.INSTANCE)//
-            .with(getListType(StringCell.TYPE), StringListValueFactory.INSTANCE, true)//
-            .with(getListType(StringCell.TYPE), DictEncodedStringListValueFactory.INSTANCE)//
+            .with(getListType(StringCell.TYPE), StringListValueFactory.INSTANCE)//
             .with(getListType(BooleanCell.TYPE), BooleanListValueFactory.INSTANCE)//
             // sparse lists
             .with(getSparseListType(DoubleCell.TYPE), DoubleSparseListValueFactory.INSTANCE)//
             .with(getSparseListType(IntCell.TYPE), IntSparseListValueFactory.INSTANCE)//
             .with(getSparseListType(LongCell.TYPE), LongSparseListValueFactory.INSTANCE)//
-            .with(getSparseListType(StringCell.TYPE), StringSparseListValueFactory.INSTANCE, true)//
-            .with(getSparseListType(StringCell.TYPE), DictEncodedStringSparseListValueFactory.INSTANCE)//
+            .with(getSparseListType(StringCell.TYPE), StringSparseListValueFactory.INSTANCE)//
             .with(getSparseListType(BooleanCell.TYPE), BooleanSparseListValueFactory.INSTANCE)//
             .build();
 
