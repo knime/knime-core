@@ -64,12 +64,12 @@ import org.knime.core.data.filestore.internal.NotInWorkflowDataRepository;
 import org.knime.core.data.filestore.internal.NotInWorkflowWriteFileStoreHandler;
 import org.knime.core.data.image.png.PNGImageCellFactory;
 import org.knime.core.data.v2.value.DefaultRowKeyValueFactory;
-import org.knime.core.data.v2.value.DictEncodedStringValueFactory;
 import org.knime.core.data.v2.value.DoubleValueFactory;
 import org.knime.core.data.v2.value.IntListValueFactory;
 import org.knime.core.data.v2.value.IntValueFactory;
 import org.knime.core.data.v2.value.ListValueFactory;
 import org.knime.core.data.v2.value.SparseListValueFactory;
+import org.knime.core.data.v2.value.StringValueFactory;
 import org.knime.core.data.v2.value.VoidRowKeyFactory;
 import org.knime.core.data.v2.value.VoidValueFactory;
 import org.knime.core.data.v2.value.cell.DataCellValueFactory;
@@ -156,10 +156,9 @@ final class ValueFactoryUtilsTest {
 
     @Test
     void testGetTraitsOnOrdinaryValueFactory() {
-        var valueFactory = new DictEncodedStringValueFactory();
+        var valueFactory = new StringValueFactory();
         var traits = ValueFactoryUtils.getTraits(valueFactory);
         assertTrue(traits.hasTrait(LogicalTypeTrait.class));
-        assertTrue(traits.hasTrait(DictEncodingTrait.class));
         var logicalTypeJson = extractLogicalTypeJson(traits);
         assertEquals(valueFactory.getClass().getName(), logicalTypeJson.get("value_factory_class").asText());
     }
