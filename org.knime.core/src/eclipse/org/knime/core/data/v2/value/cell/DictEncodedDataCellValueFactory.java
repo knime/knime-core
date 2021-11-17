@@ -147,7 +147,7 @@ public final class DictEncodedDataCellValueFactory implements ValueFactory<Struc
         // store the binary data as well as the class names using dictionary encoding
         return new DefaultStructDataTraits(//
             new DefaultDataTraits(new DictEncodingTrait()), //
-            new DefaultDataTraits(new DictEncodingTrait(KeyType.BYTE_KEY)));
+            new DefaultDataTraits(new DictEncodingTrait(KeyType.INT_KEY)));
     }
 
     @Override
