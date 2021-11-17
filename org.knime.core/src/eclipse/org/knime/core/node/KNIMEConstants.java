@@ -90,8 +90,6 @@ import org.osgi.framework.Bundle;
 @SuppressWarnings("java:S106") // System.err.print (no logger available yet)
 public final class KNIMEConstants {
 
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(KNIMEConstants.class);
-
     /** Name of the KNIME directory in the user home.*/
     private static final String KNIME_DIRECTORY_NAME = ".knime";
     /** Name of the KNIME ID file in the user home.*/
@@ -778,7 +776,8 @@ public final class KNIMEConstants {
                     targetPath = userDirPath.resolve(KNIME_DIRECTORY_NAME + "_" + createUniqeID());
                 }
                 Files.move(knimeDirPath, targetPath);
-                LOGGER.info(String.format("Moved existing %s file to %s", KNIME_DIRECTORY_NAME, targetPath));
+                NodeLogger.getLogger(KNIMEConstants.class).info(
+                    String.format("Moved existing %s file to %s", KNIME_DIRECTORY_NAME, targetPath));
             }
 
             //create the directory...
