@@ -154,7 +154,7 @@ public class DataCellValueFactory implements ValueFactory<VarBinaryReadAccess, V
     }
 
     @Override
-    public WriteValue<? extends DataCell> createWriteValue(final VarBinaryWriteAccess access) {
+    public WriteValue<? extends DataValue> createWriteValue(final VarBinaryWriteAccess access) {
         return new DefaultDataCellWriteValue(access, m_factory, m_dataRepository, m_fsHandler);
     }
 

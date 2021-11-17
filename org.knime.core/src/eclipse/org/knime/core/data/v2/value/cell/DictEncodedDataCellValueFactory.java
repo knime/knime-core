@@ -168,7 +168,7 @@ public final class DictEncodedDataCellValueFactory implements ValueFactory<Struc
     }
 
     @Override
-    public WriteValue<? extends DataCell> createWriteValue(final StructWriteAccess access) {
+    public WriteValue<DataValue> createWriteValue(final StructWriteAccess access) {
         return new DictEncodedDataCellWriteValue(access, m_dataRepository, m_fsHandler);
     }
 

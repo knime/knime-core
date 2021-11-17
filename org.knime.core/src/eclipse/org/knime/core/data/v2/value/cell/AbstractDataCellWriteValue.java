@@ -48,12 +48,14 @@ package org.knime.core.data.v2.value.cell;
 import java.io.IOException;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataValue;
 import org.knime.core.data.IDataRepository;
 import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.filestore.FileStoreCell;
 import org.knime.core.data.filestore.FileStoreKey;
 import org.knime.core.data.filestore.FileStoreUtil;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
+import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.WriteValue;
 
 /**
@@ -62,7 +64,7 @@ import org.knime.core.data.v2.WriteValue;
  *
  * @author Carsten Haubold, KNIME GmbH, Konstanz, Germany
  */
-abstract class AbstractDataCellWriteValue implements WriteValue<DataCell> {
+abstract class AbstractDataCellWriteValue implements WriteValue<DataValue> {
     protected final IWriteFileStoreHandler m_fsHandler;
 
     private final IDataRepository m_dataRepository;
@@ -73,7 +75,13 @@ abstract class AbstractDataCellWriteValue implements WriteValue<DataCell> {
     }
 
     @Override
-    public final void setValue(final DataCell cell) {
+    public final void setValue(final DataValue value) {
+        final DataCell cell;
+        if (value instanceof ReadValue) {
+            cell = ((ReadValue)value).getDataCell();
+        } else {
+            cell = (DataCell)value;
+        }
         if (cell instanceof FileStoreCell) {
             final FileStoreCell fsCell = (FileStoreCell)cell;
 
