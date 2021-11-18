@@ -42,8 +42,10 @@ try {
                 'knime-js-base',
                 'knime-json',
                 'knime-kerberos',
+                'knime-productivity-oss',
                 'knime-python',
                 'knime-r',
+                'knime-reporting',
                 'knime-streaming',
                 'knime-textprocessing',
                 'knime-virtual'
