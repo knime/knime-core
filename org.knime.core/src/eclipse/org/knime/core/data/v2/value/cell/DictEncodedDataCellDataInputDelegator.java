@@ -59,6 +59,7 @@ import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.IDataRepository;
 import org.knime.core.data.collection.CellCollection;
+import org.knime.core.table.io.ReadableDataInput;
 
 /**
  * Dictionary encoded {@link DataCellDataInput} implementation that needs to know the list of class names that will be
@@ -82,7 +83,7 @@ final class DictEncodedDataCellDataInputDelegator extends AbstractDataInputDeleg
      *            {@link DataInput}. Can be generated using
      *            {@link DictEncodedDataCellDataInputDelegator#getSerializedCellNames(DataCell)}.
      */
-    DictEncodedDataCellDataInputDelegator(final IDataRepository dataRepository, final DataInput input,
+    DictEncodedDataCellDataInputDelegator(final IDataRepository dataRepository, final ReadableDataInput input,
         final String classNames) {
         super(dataRepository, input);
         m_classNames = Arrays.stream(classNames.split(";")).collect(Collectors.toList());

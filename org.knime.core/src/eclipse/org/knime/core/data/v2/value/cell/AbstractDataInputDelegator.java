@@ -46,7 +46,6 @@
 package org.knime.core.data.v2.value.cell;
 
 import java.io.ByteArrayInputStream;
-import java.io.DataInput;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -57,6 +56,7 @@ import org.knime.core.data.IDataRepository;
 import org.knime.core.data.filestore.FileStoreCell;
 import org.knime.core.data.filestore.FileStoreKey;
 import org.knime.core.data.filestore.FileStoreUtil;
+import org.knime.core.table.io.ReadableDataInput;
 
 /**
  * Abstract {@link DataCellDataInput} implementation on {@link ByteArrayInputStream}.
@@ -68,9 +68,9 @@ abstract class AbstractDataInputDelegator extends InputStream implements DataCel
 
     private final IDataRepository m_dataRepository;
 
-    private final DataInput m_delegate;
+    private final ReadableDataInput m_delegate;
 
-    AbstractDataInputDelegator(final IDataRepository dataRepository, final DataInput input) {
+    AbstractDataInputDelegator(final IDataRepository dataRepository, final ReadableDataInput input) {
 
         m_dataRepository = dataRepository;
         m_delegate = input;
@@ -187,12 +187,7 @@ abstract class AbstractDataInputDelegator extends InputStream implements DataCel
 
     @Override
     public final int read(final byte[] b, final int off, final int len) throws IOException {
-        try {
-            m_delegate.readFully(b, off, len);
-            return len;
-        } catch (EOFException e) { // NOSONAR
-            return -1;
-        }
+        return m_delegate.read(b, off, len);
     }
 
 }

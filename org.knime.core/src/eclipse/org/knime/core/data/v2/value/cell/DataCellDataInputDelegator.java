@@ -46,13 +46,13 @@
 package org.knime.core.data.v2.value.cell;
 
 import java.io.ByteArrayInputStream;
-import java.io.DataInput;
 import java.io.IOException;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellDataInput;
 import org.knime.core.data.IDataRepository;
 import org.knime.core.data.v2.DataCellSerializerFactory;
+import org.knime.core.table.io.ReadableDataInput;
 
 /**
  * {@link DataCellDataInput} implementation on {@link ByteArrayInputStream}.
@@ -67,7 +67,7 @@ final class DataCellDataInputDelegator extends AbstractDataInputDelegator {
 
     DataCellDataInputDelegator(final DataCellSerializerFactory factory, //
         final IDataRepository dataRepository, //
-        final DataInput input) {
+        final ReadableDataInput input) {
 
         super(dataRepository, input);
         m_factory = factory;

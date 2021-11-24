@@ -52,7 +52,6 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
@@ -69,6 +68,7 @@ import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.v2.ValueSchemaTest;
 import org.knime.core.data.xml.XMLCellFactory;
 import org.knime.core.data.xml.XMLValue;
+import org.knime.core.table.io.ReadableDataInputStream;
 import org.xml.sax.SAXException;
 
 /**
@@ -143,7 +143,7 @@ public class DictEncodedDataCellInOutDelegateTest {
         try (final var out = new DictEncodedDataCellDataOutputDelegator(fileStoreHandler, outStream)) {
             out.writeDataCell(cell);
 
-            final var inStream = new DataInputStream(new ByteArrayInputStream(baseBuffer.toByteArray()));
+            final var inStream = new ReadableDataInputStream(new ByteArrayInputStream(baseBuffer.toByteArray()));
             try (final var in = new DictEncodedDataCellDataInputDelegator(dataRepository, inStream,
                 DictEncodedDataCellDataInputDelegator.getSerializedCellNames(cell))) {
                 final var readCell = in.readDataCell();
@@ -164,7 +164,7 @@ public class DictEncodedDataCellInOutDelegateTest {
         try (final var out = new DictEncodedDataCellDataOutputDelegator(fileStoreHandler, outStream)) {
             out.writeDataCell(cell);
 
-            final var inStream = new DataInputStream(new ByteArrayInputStream(baseBuffer.toByteArray()));
+            final var inStream = new ReadableDataInputStream(new ByteArrayInputStream(baseBuffer.toByteArray()));
             try (final var in = new DictEncodedDataCellDataInputDelegator(dataRepository, inStream, "")) {
                 in.readDataCell(); // throws because no cell class name was specified in constructor
             }
@@ -190,7 +190,7 @@ public class DictEncodedDataCellInOutDelegateTest {
             assertEquals(cell.getClass().getName(), classNames[0]);
             assertEquals(innerCell.getClass().getName(), classNames[1]);
 
-            final var inStream = new DataInputStream(new ByteArrayInputStream(baseBuffer.toByteArray()));
+            final var inStream = new ReadableDataInputStream(new ByteArrayInputStream(baseBuffer.toByteArray()));
             try (final var in = new DictEncodedDataCellDataInputDelegator(dataRepository, inStream,
                 DictEncodedDataCellDataInputDelegator.getSerializedCellNames(cell))) {
                 in.readDataCell();
