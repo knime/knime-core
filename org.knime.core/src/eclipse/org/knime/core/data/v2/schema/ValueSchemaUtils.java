@@ -48,6 +48,7 @@
  */
 package org.knime.core.data.v2.schema;
 
+import java.util.Arrays;
 import java.util.stream.IntStream;
 
 import org.knime.core.data.DataTableSpec;
@@ -56,13 +57,10 @@ import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.v2.RowKeyType;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.ValueFactoryUtils;
-import org.knime.core.data.v2.value.VoidRowKeyFactory;
-import org.knime.core.data.v2.value.VoidValueFactory;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.table.schema.ColumnarSchema;
-import org.knime.core.table.schema.DataSpec;
 import org.knime.core.table.schema.traits.LogicalTypeTrait;
 
 /**
@@ -86,7 +84,7 @@ public final class ValueSchemaUtils {
         final IWriteFileStoreHandler fileStoreHandler) {
         final var factories = new ValueFactory<?, ?>[spec.getNumColumns() + 1];
         factories[0] = ValueFactoryUtils.getRowKeyValueFactory(rowKeyType);
-        for (int i = 1; i < factories.length; i++) {
+        for (int i = 1; i < factories.length; i++) {//NOSONAR
             var type = spec.getColumnSpec(i - 1).getType();
             factories[i] = ValueFactoryUtils.getValueFactory(type, fileStoreHandler);
         }
@@ -144,7 +142,6 @@ public final class ValueSchemaUtils {
 
     private static boolean hasTypeTraits(final ColumnarSchema schema) {
         return IntStream.range(0, schema.numColumns())//
-            .filter(i -> schema.getSpec(i) != DataSpec.voidSpec())// Void columns may not have a LogicalType
             .mapToObj(schema::getTraits)//
             .allMatch(t -> t.hasTrait(LogicalTypeTrait.class));
     }
@@ -164,13 +161,7 @@ public final class ValueSchemaUtils {
         CheckUtils.checkArgument(numDataColumns + 1 == schema.numColumns(),
             "Expected %s columns in the schema but encountered %s.", numDataColumns + 1, schema.numColumns());
         final var factories = new ValueFactory<?, ?>[schema.numColumns()];
-        for (int i = 0; i < factories.length; i++) {
-            if (schema.getSpec(i) == DataSpec.voidSpec()) {
-                factories[i] = i == 0 ? VoidRowKeyFactory.INSTANCE : VoidValueFactory.INSTANCE;
-            } else {
-                factories[i] = ValueFactoryUtils.loadValueFactory(schema.getTraits(i), dataRepository);
-            }
-        }
+        Arrays.setAll(factories, i -> ValueFactoryUtils.loadValueFactory(schema.getTraits(i), dataRepository));
         return new DefaultValueSchema(source, factories);
     }
 
