@@ -76,4 +76,12 @@ public interface NativeNodeContainerUI extends SingleNodeContainerUI, UI {
      */
     Optional<ModifiableNodeCreationConfiguration> getCopyOfCreationConfig();
 
+    /**
+     * If the node can configure its ports via the context menu ('...') as per
+     * {@link org.knime.core.node.ConfigurableNodeFactory#isPortConfigurableViaMenu()}.
+     *
+     * @return false for "standard nodes", otherwise the property of the configurable nodes.
+     */
+    boolean isPortConfigurableViaMenu();
+
 }

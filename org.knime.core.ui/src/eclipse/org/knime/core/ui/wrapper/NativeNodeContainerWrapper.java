@@ -48,6 +48,7 @@ package org.knime.core.ui.wrapper;
 
 import java.util.Optional;
 
+import org.knime.core.node.ConfigurableNodeFactory;
 import org.knime.core.node.context.ModifiableNodeCreationConfiguration;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.ui.node.workflow.NativeNodeContainerUI;
@@ -92,4 +93,11 @@ public final class NativeNodeContainerWrapper extends SingleNodeContainerWrapper
     public Optional<ModifiableNodeCreationConfiguration> getCopyOfCreationConfig() {
         return unwrap().getNode().getCopyOfCreationConfig();
     }
+
+    @Override
+    public boolean isPortConfigurableViaMenu() {
+        var f = unwrap().getNode().getFactory();
+        return f instanceof ConfigurableNodeFactory && ((ConfigurableNodeFactory<?>)f).isPortConfigurableViaMenu();
+    }
+
 }

@@ -113,6 +113,18 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
     }
 
     /**
+     * Can the port configuration be controlled via the context menu on the node icon itself. This is true for most of
+     * the nodes that implement this interface. It's false for nodes that derive their port configuration via the
+     * workflows that they process (integrated deployment / workflow executor).
+     *
+     * @return <code>true</code> (overwritten in sub-classes)
+     * @since 4.5
+     */
+    public boolean isPortConfigurableViaMenu() {
+        return true;
+    }
+
+    /**
      * Returns an instance of {@code PortConfigurationBuilder} if the node supports configurable input, output or input
      * and output ports.
      *
