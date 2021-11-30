@@ -3400,4 +3400,72 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/xmlbeans/org/knime/node/v41/DynPort.java" type="org.knime.node.v41.DynPort">
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.node.v41.DynPort"/>
+                <message_argument value="getConfigurableViaMenu()"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.node.v41.DynPort"/>
+                <message_argument value="isSetConfigurableViaMenu()"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.node.v41.DynPort"/>
+                <message_argument value="setConfigurableViaMenu(boolean)"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.node.v41.DynPort"/>
+                <message_argument value="unsetConfigurableViaMenu()"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.node.v41.DynPort"/>
+                <message_argument value="xgetConfigurableViaMenu()"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.node.v41.DynPort"/>
+                <message_argument value="xsetConfigurableViaMenu(XmlBoolean)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1211105284">
+            <message_arguments>
+                <message_argument value="getConfigurableViaMenu()"/>
+            </message_arguments>
+        </filter>
+        <filter id="1211105284">
+            <message_arguments>
+                <message_argument value="isSetConfigurableViaMenu()"/>
+            </message_arguments>
+        </filter>
+        <filter id="1211105284">
+            <message_arguments>
+                <message_argument value="setConfigurableViaMenu(boolean)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1211105284">
+            <message_arguments>
+                <message_argument value="unsetConfigurableViaMenu()"/>
+            </message_arguments>
+        </filter>
+        <filter id="1211105284">
+            <message_arguments>
+                <message_argument value="xgetConfigurableViaMenu()"/>
+            </message_arguments>
+        </filter>
+        <filter id="1211105284">
+            <message_arguments>
+                <message_argument value="xsetConfigurableViaMenu(XmlBoolean)"/>
+            </message_arguments>
+        </filter>
+    </resource>
 </component>
