@@ -53,9 +53,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.text.ParseException;
+import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -120,7 +122,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
     static final LoadVersion VERSION_LATEST = LoadVersion.V4010;
 
     /** Format used to save author/edit infos. */
-    static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("uuuu-MM-dd HH:mm:ss Z");
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("uuuu-MM-dd HH:mm:ss Z");
 
     private static final String CFG_UIINFO_SUB_CONFIG = "ui_settings";
 
@@ -581,7 +583,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
         }
 
         try {
-            m_authorInformation = loadAuthorInformation(m_workflowSett);
+            m_authorInformation = loadAuthorInformation(m_workflowSett, loadResult);
         } catch (InvalidSettingsException e) {
             String error = "Unable to load workflow author information: " + e.getMessage();
             getLogger().debug(error, e);
@@ -1508,41 +1510,44 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
     /** Synchronized call to DATE_FORMAT.parse(String).
      * @param s To parse, not null.
      * @return The date.
-     * @throws ParseException ...
+     * @throws DateTimeParseException if the text cannot be parsed
      */
-    static OffsetDateTime parseDate(final String s) throws ParseException {
+    private static OffsetDateTime parseDate(final String s) {
         synchronized (DATE_FORMAT) {
             return OffsetDateTime.parse(s, DATE_FORMAT);
         }
     }
 
-    AuthorInformation loadAuthorInformation(final NodeSettingsRO settings) throws InvalidSettingsException {
+    private AuthorInformation loadAuthorInformation(final NodeSettingsRO settings, final LoadResult loadResult)
+        throws InvalidSettingsException {
         if (getLoadVersion().ordinal() >= LoadVersion.V280.ordinal() && settings.containsKey(CFG_AUTHOR_INFORMATION)) {
             final NodeSettingsRO sub = settings.getNodeSettings(CFG_AUTHOR_INFORMATION);
             final String author = sub.getString("authored-by");
             final String authorDateS = sub.getString("authored-when");
-            final OffsetDateTime authorDate;
+            OffsetDateTime authorDate;
             if (authorDateS == null) {
                 authorDate = null;
             } else {
                 try {
                     authorDate = parseDate(authorDateS);
-                } catch (ParseException e) {
-                    throw new InvalidSettingsException("Can't parse authored-when \"" + authorDateS
-                        + "\": " + e.getMessage(), e);
+                } catch (DateTimeParseException e) {
+                    authorDate = OffsetDateTime.ofInstant(Instant.EPOCH, ZoneOffset.UTC);
+                    loadResult.addWarning(String.format("Can't parse authored-when-date \"%s\". Replaced with \"%s\".",
+                        authorDateS, authorDate.toString()));
                 }
             }
             final String editor = sub.getString("lastEdited-by");
             final String editDateS = sub.getString("lastEdited-when");
-            final OffsetDateTime editDate;
+            OffsetDateTime editDate;
             if (editDateS == null) {
                 editDate = null;
             } else {
                 try {
                     editDate = parseDate(editDateS);
-                } catch (ParseException e) {
-                    throw new InvalidSettingsException("Can't parse lastEdit-when \"" + editDateS
-                        + "\": " + e.getMessage(), e);
+                } catch (DateTimeParseException e) {
+                    editDate = OffsetDateTime.ofInstant(Instant.EPOCH, ZoneOffset.UTC);
+                    loadResult.addWarning(String.format("Can't parse lastEdit-when-date \"%s\". Replaced with \"%s\".",
+                        editDateS, editDate.toString()));
                 }
             }
             return new AuthorInformation(author, authorDate, editor, editDate);
