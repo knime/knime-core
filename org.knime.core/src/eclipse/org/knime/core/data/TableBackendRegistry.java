@@ -82,16 +82,18 @@ public final class TableBackendRegistry {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(TableBackendRegistry.class);
 
-    /** Denotes the class name of the backend that is used for newly created workflows. By default it's the standard
-     * buffered data table backend ({@link BufferedTableBackend}) but can be changed to a columnar table backend
-     * (value is <code>org.knime.core.data.columnar.ColumnarTableBackend</code>).
+    /**
+     * Denotes the class name of the backend that is used for newly created workflows. By default it's the standard
+     * buffered data table backend ({@link BufferedTableBackend}) but can be changed to a columnar table backend (value
+     * is <code>org.knime.core.data.columnar.ColumnarTableBackend</code>).
      */
     public static final String PROPERTY_TABLE_BACKEND_IMPLEMENTATION = "knime.tablebackend";
 
-    /** If {@link #PROPERTY_TABLE_BACKEND_IMPLEMENTATION} is set, force this backend implementation also onto nodes
-     * that exist in old workflows that were executed with a different. It's highly recommended to not set this
-     * property as this can lead to workflows having tables stored in different backend implementations. It should only
-     * be used in test set-ups.
+    /**
+     * If {@link #PROPERTY_TABLE_BACKEND_IMPLEMENTATION} is set, force this backend implementation also onto nodes that
+     * exist in old workflows that were executed with a different. It's highly recommended to not set this property as
+     * this can lead to workflows having tables stored in different backend implementations. It should only be used in
+     * test set-ups.
      *
      * <p>
      * Value is <code>true</code> or <code>false</code> (default).
@@ -264,8 +266,9 @@ public final class TableBackendRegistry {
     }
 
     /**
-     * @return the backend that was used prior KNIME 4.3, that is before it could be set on a workflow level. Used
-     * as default when workflows are loaded that don't have the corresponding option set. ({@link BufferedTableBackend}.
+     * @return the backend that was used prior KNIME 4.3, that is before it could be set on a workflow level. Used as
+     *         default when workflows are loaded that don't have the corresponding option set.
+     *         ({@link BufferedTableBackend}.
      */
     public final TableBackend getPre43TableBackend() {
         final String defaultBackendName = BufferedTableBackend.class.getName();
@@ -280,7 +283,7 @@ public final class TableBackendRegistry {
 
     /**
      * @return <code>true</code> if the default table format is forced onto workflows that are created &lt;4.3 (no table
-     * backend selected). This should only be true in test set-ups.
+     *         backend selected). This should only be true in test set-ups.
      * @see #PROPERTY_TABLE_BACKEND_IMPLEMENTATION_FORCE
      */
     public boolean isForceDefaultBackendOnOldWorkflows() {
