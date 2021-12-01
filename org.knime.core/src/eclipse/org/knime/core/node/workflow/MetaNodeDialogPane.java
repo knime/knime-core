@@ -64,6 +64,7 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 
 import org.knime.core.data.TableBackend;
 import org.knime.core.data.TableBackendRegistry;
@@ -369,8 +370,12 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
         private void onNewBackendSelected() {
             m_descriptionPanel.removeAll();
             TableBackend selectedItem = (TableBackend)m_tableBackendCombo.getSelectedItem();
-            JLabel jLabel = new JLabel(selectedItem.getDescription());
-            m_descriptionPanel.add(ViewUtils.getInFlowLayout(jLabel));
+            JTextArea textArea = new JTextArea(selectedItem.getDescription());
+            textArea.setEditable(false);
+            final JLabel dummyLabel = new JLabel();
+            textArea.setFont(dummyLabel.getFont());
+            textArea.setBackground(dummyLabel.getBackground());
+            m_descriptionPanel.add(ViewUtils.getInFlowLayout(textArea));
             m_descriptionPanel.invalidate();
             m_descriptionPanel.validate();
             m_descriptionPanel.repaint();
