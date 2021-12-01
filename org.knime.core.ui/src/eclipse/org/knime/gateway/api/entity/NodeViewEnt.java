@@ -48,9 +48,15 @@
  */
 package org.knime.gateway.api.entity;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.knime.core.data.RowKey;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.webui.node.view.NodeViewManager;
 import org.knime.core.webui.page.PageUtil;
+import org.knime.gateway.impl.service.util.HiLiteListenerRegistry;
 
 /**
  * Node view entity containing the info required by the UI (i.e. frontend) to be able display a node view.
@@ -63,10 +69,13 @@ public final class NodeViewEnt extends NodeUIExtensionEnt {
 
     private final ResourceInfoEnt m_resourceInfo;
 
+    private List<String> m_initialSelection;
+
     /**
      * @param nnc
+     * @param hllr
      */
-    public NodeViewEnt(final NativeNodeContainer nnc) {
+    public NodeViewEnt(final NativeNodeContainer nnc, final HiLiteListenerRegistry hllr) {
         super(nnc, ExtensionType.VIEW);
 
         var nodeViewManager = NodeViewManager.getInstance();
@@ -76,6 +85,12 @@ public final class NodeViewEnt extends NodeUIExtensionEnt {
         var id = PageUtil.getPageId(nnc, page.isStatic(), false);
         m_resourceInfo = new ResourceInfoEnt(id, url, path, page);
         m_info = new NodeInfoEnt(nnc);
+        if (hllr != null) {
+            m_initialSelection =
+                hllr.getHiliteStateAndActivateListener(nnc).stream().map(RowKey::toString).collect(Collectors.toList());
+        } else {
+            m_initialSelection = Collections.emptyList();
+        }
     }
 
     /**
@@ -88,6 +103,13 @@ public final class NodeViewEnt extends NodeUIExtensionEnt {
     @Override
     public ResourceInfoEnt getResourceInfo() {
         return m_resourceInfo;
+    }
+
+    /**
+     * @return the initially hilit (row) keys (aka selection)
+     */
+    public List<String> getInitialSelection() {
+        return m_initialSelection;
     }
 
 }

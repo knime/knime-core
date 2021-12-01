@@ -5,5 +5,7 @@
  * The majority of entities is only required by the gateway API itself. However, there is a very small subset of
  * entities which are also used somewhere else (usually backport some functionality into the 'classic' AP, such as node
  * views).
+ *
+ * To be moved into the respective gateway-plugin as soon as it's part of the default build.
  */
 package org.knime.gateway.api.entity;

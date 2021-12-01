@@ -70,6 +70,7 @@ import org.knime.core.webui.page.Page;
 import org.knime.core.webui.page.PageTest;
 import org.knime.core.webui.page.PageUtil;
 import org.knime.core.webui.page.Resource;
+import org.knime.gateway.impl.service.util.HiLiteListenerRegistry;
 import org.knime.testing.node.view.NodeViewNodeFactory;
 import org.knime.testing.node.view.NodeViewNodeModel;
 import org.knime.testing.util.WorkflowManagerUtil;
@@ -82,7 +83,7 @@ import org.knime.testing.util.WorkflowManagerUtil;
 public class NodeViewEntTest {
 
     /**
-     * Tests {@link NodeViewEnt#NodeViewEnt(NativeNodeContainer)}.
+     * Tests {@link NodeViewEnt#NodeViewEnt(NativeNodeContainer, HiLiteListenerRegistry)}.
      *
      * @throws IOException
      */
@@ -92,7 +93,7 @@ public class NodeViewEntTest {
 
         NativeNodeContainer nncWithoutNodeView =
             WorkflowManagerUtil.createAndAddNode(wfm, new VirtualSubNodeInputNodeFactory(null, new PortType[0]));
-        Assert.assertThrows(IllegalArgumentException.class, () -> new NodeViewEnt(nncWithoutNodeView));
+        Assert.assertThrows(IllegalArgumentException.class, () -> new NodeViewEnt(nncWithoutNodeView, null));
 
         Function<NodeViewNodeModel, NodeView> nodeViewCreator = m -> {
             Page p = Page.builderFromString(() -> "blub", "index.html").build();
@@ -108,11 +109,12 @@ public class NodeViewEntTest {
         nnc.setNodeMessage(NodeMessage.newWarning("node message"));
         nnc.getNodeAnnotation().getData().setText("node annotation");
 
-        var ent = new NodeViewEnt(nnc);
+        var ent = new NodeViewEnt(nnc, null);
         assertThat(ent.getProjectId(), startsWith("workflow"));
         assertThat(ent.getWorkflowId(), is("root"));
         assertThat(ent.getNodeId(), is("root:2"));
         assertThat(ent.getInitialData(), is("dummy initial data"));
+        assertThat(ent.getInitialSelection().size(), is(0));
         var resourceInfo = ent.getResourceInfo();
         assertThat(resourceInfo.getUrl(), endsWith("index.html"));
         assertThat(resourceInfo.getPath(), is(nullValue()));
@@ -131,7 +133,7 @@ public class NodeViewEntTest {
             return NodeView.create(p);
         };
         nnc = WorkflowManagerUtil.createAndAddNode(wfm, new NodeViewNodeFactory(nodeViewCreator));
-        ent = new NodeViewEnt(nnc);
+        ent = new NodeViewEnt(nnc, null);
         resourceInfo = ent.getResourceInfo();
         assertThat(ent.getInitialData(), is(nullValue()));
         assertThat(resourceInfo.getType(), is(Resource.Type.VUE_COMPONENT_LIB.toString()));
@@ -141,7 +143,7 @@ public class NodeViewEntTest {
         // test to create a node view entity while running headless (e.g. on the executor)
         NativeNodeContainer nnc2 = nnc;
         runOnExecutor(() -> {
-            var ent2 = new NodeViewEnt(nnc2);
+            var ent2 = new NodeViewEnt(nnc2, null);
             assertThat(ent2.getResourceInfo().getPath(), endsWith("component.umd.min.js"));
             assertThat(ent2.getResourceInfo().getUrl(), is(nullValue()));
         });
