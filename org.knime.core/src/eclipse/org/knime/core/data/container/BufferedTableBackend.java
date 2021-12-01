@@ -101,11 +101,9 @@ public final class BufferedTableBackend implements TableBackend {
 
     @Override
     public String getDescription() {
-        return new StringBuilder("<html><body>") //
-            .append("<p>Default table backend, which supports all possible data types. <br />") //
-            .append("<br /><br /><br /><br /><br /><br />") //
-            .append("</body></html>") //
-            .toString();
+        // NB: HACK: The final line breaks prevent the backend selection panel from showing
+        // scroll bars if the backend is changed from default to columnar
+        return "Default table backend, which supports all possible data types.    \n\n\n\n";
     }
 
     private static IWriteFileStoreHandler initFileStoreHandler(final IWriteFileStoreHandler fileStoreHandler,
