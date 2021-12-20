@@ -84,9 +84,9 @@ import org.knime.core.webui.page.Resource;
  */
 public final class NodeViewManager {
 
-    private static final String NODE_VIEW_DEBUG_PATTERN_PROP = "org.knime.ui.debug.node.view.url.factory-class";
+    private static final String NODE_VIEW_DEBUG_PATTERN_PROP = "org.knime.ui.dev.node.view.url.factory-class";
 
-    private static final String NODE_VIEW_DEBUG_URL_PROP = "org.knime.ui.debug.node.view.url";
+    private static final String NODE_VIEW_DEBUG_URL_PROP = "org.knime.ui.dev.node.view.url";
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(NodeViewManager.class);
 
