@@ -70,9 +70,9 @@ import org.knime.core.webui.page.PageUtil;
  */
 public final class NodeDialogManager {
 
-    private static final String NODE_DIALOG_DEBUG_PATTERN_PROP = "org.knime.ui.debug.node.dialog.url.factory-class";
+    private static final String NODE_DIALOG_DEBUG_PATTERN_PROP = "org.knime.ui.dev.node.dialog.url.factory-class";
 
-    private static final String NODE_DIALOG_DEBUG_URL_PROP = "org.knime.ui.debug.node.dialog.url";
+    private static final String NODE_DIALOG_DEBUG_URL_PROP = "org.knime.ui.dev.node.dialog.url";
 
     private static NodeDialogManager instance;
 

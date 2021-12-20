@@ -128,7 +128,7 @@ public final class PageUtil {
     }
 
     /**
-     * For testing purposes only.
+     * Deletes all ui-extension files from the tmp-directory.
      */
     public static void clearUIExtensionFiles() {
         if (uiExtensionsPath != null && Files.exists(uiExtensionsPath)) {
