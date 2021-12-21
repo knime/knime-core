@@ -248,7 +248,6 @@ final class ValueFactoryUtilsTest {
 
     }
 
-
     private String extractLogicalTypeTrait(final DataTraits traits) {
         return traits.get(LogicalTypeTrait.class).getLogicalType();
     }
@@ -268,8 +267,8 @@ final class ValueFactoryUtilsTest {
     @Test
     void testGetDataTypeForValueFactory() throws Exception {
         // void
-        assertThrows(IllegalArgumentException.class,
-            () -> ValueFactoryUtils.getDataTypeForValueFactory(VoidValueFactory.INSTANCE));
+        assertThat(ValueFactoryUtils.getDataTypeForValueFactory(VoidValueFactory.INSTANCE))
+            .isEqualTo(DataType.getType(DataCell.class));
 
         // ordinary
         assertThat(ValueFactoryUtils.getDataTypeForValueFactory(IntValueFactory.INSTANCE)).isEqualTo(IntCell.TYPE);
