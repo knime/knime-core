@@ -60,6 +60,7 @@ import java.util.function.Function;
 import java.util.stream.IntStream;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.DataValue;
@@ -463,7 +464,7 @@ public final class ValueFactoryUtils {
         } else if (factory instanceof DataCellValueFactory) {
             return ((DataCellValueFactory)factory).getType();
         } else if (factory instanceof VoidValueFactory) {
-            throw new IllegalArgumentException("No data type available for VoidValueFactory.");
+            return DataType.getType(DataCell.class);
         } else {
             return getDataTypeFromExtensionPoint(factory);
         }
