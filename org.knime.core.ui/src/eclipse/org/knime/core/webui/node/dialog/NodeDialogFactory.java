@@ -69,4 +69,5 @@ public interface NodeDialogFactory {
      * @return a new node dialog instance
      */
     NodeDialog createNodeDialog();
+
 }

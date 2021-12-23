@@ -44,42 +44,41 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 16, 2021 (hornm): created
+ *   Jan 5, 2022 (hornm): created
  */
-package org.knime.core.webui.node.dialog.settings;
+package org.knime.core.webui.node.dialog;
 
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.util.Map;
 
-import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObjectSpec;
 
 /**
- * Service to transfer node settings from and to a {@link NodeSettings}-object.
+ * Translates text-based settings (strings) used on the frontend-side from and to the backend-side settings
+ * representation (i.e. {@link NodeSettings}).
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
+ * @author Marc Bux, KNIME GmbH, Berlin, Germany
  */
-public interface NodeSettingsService {
+public interface TextSettingsMapper {
 
     /**
-     * Writes the node settings from a stream into a {@link NodeSettingsWO}-object.
+     * Translates text-based settings to {@link NodeSettingsWO}-instances of certain {@link SettingsType}.
      *
-     * @param in
-     * @param settings
-     * @throws InvalidSettingsException
+     * @param textSettings the text-based settings object
+     * @param settings the settings instances to write into
      */
-    void writeSettings(final InputStream in, NodeSettingsWO settings) throws InvalidSettingsException;
+    void toSettings(final String textSettings, Map<SettingsType, NodeSettingsWO> settings);
 
     /**
-     * Reads node settings from a stream into a {@link NodeSettingsRO}-object.
+     * Infers a single text-based settings representation from possibly multiple {@link NodeSettingsRO}-instances (one
+     * per {@link SettingsType}).
      *
-     * @param settings
+     * @param settings the settings to read from
      * @param specs the specs for configuring the settings
-     * @param out
+     * @return a new text-based settings representation
      */
-    void readSettings(NodeSettingsRO settings, PortObjectSpec[] specs,  final OutputStream out);
-
+    String fromSettings(Map<SettingsType, NodeSettingsRO> settings, PortObjectSpec[] specs);
 }

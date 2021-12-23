@@ -79,6 +79,8 @@ public interface NodeViewFactory<T extends NodeModel> extends WizardPageContribu
      * @param nodeModel the node model to create the view for
      * @return a new node view instance
      */
+    // TODO node view instances should only be created once per node instance?
+    // ... and, e.g., call 'getPage' repeatedly on node state change (in case of dynamic pages only)
     NodeView createNodeView(T nodeModel);
 
     /**

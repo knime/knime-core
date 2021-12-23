@@ -68,6 +68,7 @@ import org.knime.core.data.RowKey;
 import org.knime.core.node.property.hilite.HiLiteListener;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.webui.node.view.NodeView;
+import org.knime.core.webui.node.view.NodeViewTest;
 import org.knime.core.webui.page.Page;
 import org.knime.gateway.api.entity.NodeViewEnt;
 import org.knime.testing.node.view.NodeViewNodeFactory;
@@ -90,7 +91,7 @@ public class HiLiteListenerRegistryTest {
         var wfm = WorkflowManagerUtil.createEmptyWorkflow();
 
         Function<NodeViewNodeModel, NodeView> nodeViewCreator =
-            m -> NodeView.create(Page.builderFromString(() -> "blub", "index.html").build());
+            m -> NodeViewTest.createNodeView(Page.builderFromString(() -> "blub", "index.html").build());
         NativeNodeContainer nnc = WorkflowManagerUtil.createAndAddNode(wfm, new NodeViewNodeFactory(nodeViewCreator));
         var hiLiteHandler = nnc.getNodeModel().getInHiLiteHandler(0);
         hiLiteHandler.fireHiLiteEvent(new RowKey("k1"), new RowKey("k2"));

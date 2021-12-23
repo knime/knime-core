@@ -73,10 +73,8 @@ public class JsonReexecuteDataServiceTest {
     public void testJsonReexecuteDataService() throws IOException {
         var wfm = WorkflowManagerUtil.createEmptyWorkflow();
         var page = Page.builderFromString(() -> "content", "index.html").build();
-        NativeNodeContainer nnc = NodeViewManagerTest.createNodeWithNodeView(wfm,
-            m -> NodeView.builder(page)
-                .reExecuteDataService(new JsonReExecuteDataServiceImpl<String, NodeViewNodeModel>(m, String.class))
-                .build());
+        NativeNodeContainer nnc =
+            NodeViewManagerTest.createNodeWithNodeView(wfm, m -> NodeViewTest.createNodeView(page, m));
         wfm.executeAllAndWaitUntilDone();
 
         NodeViewManager.getInstance().getNodeView(nnc).callTextAppyDataService("data to apply");
@@ -88,4 +86,5 @@ public class JsonReexecuteDataServiceTest {
 
         WorkflowManagerUtil.disposeWorkflow(wfm);
     }
+
 }

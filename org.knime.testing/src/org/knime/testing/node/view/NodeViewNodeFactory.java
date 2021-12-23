@@ -57,11 +57,16 @@ import java.util.Optional;
 import java.util.function.Function;
 
 import org.apache.xmlbeans.XmlException;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NoDescriptionProxy;
 import org.knime.core.node.NodeDescription;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.workflow.NodeContext;
+import org.knime.core.webui.data.ApplyDataService;
+import org.knime.core.webui.data.DataService;
+import org.knime.core.webui.data.InitialDataService;
 import org.knime.core.webui.data.ReExecuteDataService;
 import org.knime.core.webui.data.text.TextDataService;
 import org.knime.core.webui.data.text.TextInitialDataService;
@@ -110,23 +115,18 @@ public class NodeViewNodeFactory extends NodeFactory<NodeViewNodeModel> implemen
         m_numInputs = numInputs;
         m_numOutputs = numOutputs;
         m_nodeViewCreator = m -> { // NOSONAR
-            return NodeView
-                .builder(Page.builderFromString(() -> "foo", "index.html")
-                    .addResourceFromString(() -> "bar", "resource.html").build())//
-                .initialDataService(new TextInitialDataService() {
+            return createNodeView(Page.builderFromString(() -> "foo", "index.html")
+                .addResourceFromString(() -> "bar", "resource.html").build(), new TextInitialDataService() {
                     @Override
                     public String getInitialData() {
                         return m_initialData;
                     }
-                })//
-                .dataService(new TextDataService() {
+                }, new TextDataService() {
                     @Override
                     public String handleRequest(final String request) {
                         return "ECHO " + request;
                     }
-                })//
-                .reExecuteDataService(createReExecuteDataService())//
-                .build();
+                }, createReExecuteDataService());
         };
     }
 
@@ -212,5 +212,48 @@ public class NodeViewNodeFactory extends NodeFactory<NodeViewNodeModel> implemen
     protected NodeDescription createNodeDescription() throws SAXException, IOException, XmlException {
         return new NoDescriptionProxy(getClass());
     }
+
+    @SuppressWarnings("javadoc")
+    public static NodeView createNodeView(final Page page, final InitialDataService initDataService, final DataService dataService,
+        final ApplyDataService applyDataService) {
+        return new NodeView() { // NOSONAR
+
+            @Override
+            public Optional<InitialDataService> getInitialDataService() {
+                return Optional.ofNullable(initDataService);
+            }
+
+            @Override
+            public Optional<DataService> getDataService() {
+                return Optional.ofNullable(dataService);
+            }
+
+            @Override
+            public Optional<ApplyDataService> getApplyDataService() {
+                return Optional.ofNullable(applyDataService);
+            }
+
+            @Override
+            public void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+                //
+            }
+
+            @Override
+            public void modelChanged() {
+                //
+            }
+
+            @Override
+            public void loadValidatedSettingsFrom(final NodeSettingsRO settings) {
+                //
+            }
+
+            @Override
+            public Page getPage() {
+                return page;
+            }
+        };
+    }
+
 
 }

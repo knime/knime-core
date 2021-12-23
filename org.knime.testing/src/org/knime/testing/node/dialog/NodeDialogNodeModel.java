@@ -141,7 +141,9 @@ public class NodeDialogNodeModel extends NodeModel {
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-        //
+        if (settings.containsKey("ERROR")) {
+            throw new InvalidSettingsException("validation expected to fail");
+        }
     }
 
     /**

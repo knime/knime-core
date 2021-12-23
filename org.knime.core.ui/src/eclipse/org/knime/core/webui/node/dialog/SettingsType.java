@@ -44,69 +44,30 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 16, 2021 (hornm): created
+ *   Jan 5, 2022 (hornm): created
  */
-package org.knime.core.webui.node.dialog.settings;
+package org.knime.core.webui.node.dialog;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
-
-import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.webui.node.view.NodeView;
 
 /**
- * A {@link NodeSettingsService} which transfers {@link NodeSettings} to and from a string.
+ * A settings type (usually associated with {@link NodeSettings} instances) denotes whether certain settings are going
+ * to be loaded into a {@link NodeModel} or a {@link NodeView}.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
-public interface TextNodeSettingsService extends NodeSettingsService {
+public enum SettingsType {
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    default void writeSettings(final InputStream in, final NodeSettingsWO settings) throws InvalidSettingsException {
-        try {
-            writeSettings(new String(in.readAllBytes(), StandardCharsets.UTF_8), settings);
-        } catch (IOException ex) {
-            throw new InvalidSettingsException(ex);
-        }
-    }
+        /**
+         * Type for settings that belong to the {@link NodeModel}.
+         */
+        MODEL,
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    default void readSettings(final NodeSettingsRO settings, final PortObjectSpec[] specs, final OutputStream out) {
-        try {
-            out.write(readSettings(settings, specs).getBytes(StandardCharsets.UTF_8));
-        } catch (IOException ex) {
-            // should never happen
-            throw new IllegalStateException("Problem reading the node settings", ex);
-        }
-    }
-
-    /**
-     * Transfers the node settings from a string into a {@link NodeSettingsWO}-object.
-     *
-     * @param s the string representation of the settings
-     * @param settings the settings object to write into
-     * @throws InvalidSettingsException
-     */
-    void writeSettings(String s, NodeSettingsWO settings) throws InvalidSettingsException;
-
-    /**
-     * Converts a {@link NodeSettingsRO}-object into a string representing the settings.
-     *
-     * @param settings the settings to read from
-     * @param specs the specs for configuring the settings
-     * @return the string-representation of the setting
-     */
-    String readSettings(NodeSettingsRO settings, PortObjectSpec[] specs);
+        /**
+         * Type for settings that belong to a {@link NodeView}.
+         */
+        VIEW;
 
 }

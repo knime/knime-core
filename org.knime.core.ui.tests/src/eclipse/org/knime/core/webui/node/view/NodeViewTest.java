@@ -58,12 +58,19 @@ import java.util.Optional;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.webui.data.ApplyDataService;
+import org.knime.core.webui.data.DataService;
+import org.knime.core.webui.data.InitialDataService;
+import org.knime.core.webui.data.json.impl.JsonReExecuteDataServiceImpl;
 import org.knime.core.webui.data.text.TextDataService;
 import org.knime.core.webui.data.text.TextInitialDataService;
 import org.knime.core.webui.data.text.TextReExecuteDataService;
 import org.knime.core.webui.page.Page;
+import org.knime.testing.node.view.NodeViewNodeModel;
 import org.knime.testing.util.WorkflowManagerUtil;
 
 /**
@@ -94,19 +101,19 @@ public class NodeViewTest {
     @Test
     public void testCallDataServices() {
         var page = Page.builderFromString(() -> "test page content", "index.html").build();
-        var nodeView = NodeView.builder(page).initialDataService(new TextInitialDataService() {
+        var nodeView = createNodeView(page, new TextInitialDataService() {
 
             @Override
             public String getInitialData() {
                 return "init service";
             }
-        }).dataService(new TextDataService() {
+        }, new TextDataService() {
 
             @Override
             public String handleRequest(final String request) {
                 return "general data service";
             }
-        }).reExecuteDataService(new TextReExecuteDataService() {
+        }, new TextReExecuteDataService() {
 
             @Override
             public Optional<String> validateData(final String data) throws IOException {
@@ -123,14 +130,65 @@ public class NodeViewTest {
                 throw new IOException("re-execute data service");
 
             }
-        }).build();
+        });
         NativeNodeContainer nc = NodeViewManagerTest.createNodeWithNodeView(m_wfm, m -> nodeView);
 
         var newNodeView = NodeViewManager.getInstance().getNodeView(nc);
         assertThat(newNodeView.callTextInitialDataService(), is("init service"));
         assertThat(newNodeView.callTextDataService(""), is("general data service"));
-        String message = assertThrows(IOException.class, () -> newNodeView.callTextAppyDataService("")).getMessage();
+        String message = assertThrows(IOException.class, () -> newNodeView.callTextAppyDataService("ERROR,test")).getMessage();
         assertThat(message, is("re-execute data service"));
+    }
+
+    static NodeView createNodeView(final Page page, final NodeViewNodeModel m) {
+        return createNodeView(page, null, null, new JsonReExecuteDataServiceImpl<String, NodeViewNodeModel>(m, String.class));
+    }
+
+    @SuppressWarnings("javadoc")
+    public static NodeView createNodeView(final Page page) {
+        return createNodeView(page, null, null, null);
+    }
+
+    @SuppressWarnings("javadoc")
+    public static NodeView createNodeView(final Page page, final InitialDataService initDataService, final DataService dataService,
+        final ApplyDataService applyDataService) {
+        return new NodeView() { // NOSONAR
+
+            @Override
+            public Optional<InitialDataService> getInitialDataService() {
+                return Optional.ofNullable(initDataService);
+            }
+
+            @Override
+            public Optional<DataService> getDataService() {
+                return Optional.ofNullable(dataService);
+            }
+
+            @Override
+            public Optional<ApplyDataService> getApplyDataService() {
+                return Optional.ofNullable(applyDataService);
+            }
+
+            @Override
+            public void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+                //
+            }
+
+            @Override
+            public void modelChanged() {
+                //
+            }
+
+            @Override
+            public void loadValidatedSettingsFrom(final NodeSettingsRO settings) {
+                //
+            }
+
+            @Override
+            public Page getPage() {
+                return page;
+            }
+        };
     }
 
 }

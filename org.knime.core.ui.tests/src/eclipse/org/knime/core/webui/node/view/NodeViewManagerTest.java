@@ -53,6 +53,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThrows;
+import static org.knime.core.webui.node.view.NodeViewTest.createNodeView;
 import static org.knime.core.webui.page.PageTest.BUNDLE_ID;
 import static org.knime.testing.util.WorkflowManagerUtil.createAndAddNode;
 
@@ -117,7 +118,7 @@ public class NodeViewManagerTest {
     @Test
     public void testSimpleNodeViewNode() {
         var page = Page.builderFromString(() -> "test page content", "index.html").build();
-        NativeNodeContainer nc = createNodeWithNodeView(m_wfm, m -> NodeView.create(page));
+        NativeNodeContainer nc = createNodeWithNodeView(m_wfm, m -> createNodeView(page));
 
         assertThat("node expected to have a node view", NodeViewManager.hasNodeView(nc), is(true));
         var nodeView = NodeViewManager.getInstance().getNodeView(nc);
@@ -141,9 +142,9 @@ public class NodeViewManagerTest {
         var staticPage = Page.builder(BUNDLE_ID, "files", "page.html").addResourceFile("resource.html").build();
         var dynamicPage = Page.builderFromString(() -> "page content", "page.html")
             .addResourceFromString(() -> "resource content", "resource.html").build();
-        NativeNodeContainer nnc = createNodeWithNodeView(m_wfm, m -> NodeView.create(staticPage));
-        NativeNodeContainer nnc2 = createNodeWithNodeView(m_wfm, m -> NodeView.create(staticPage));
-        NativeNodeContainer nnc3 = createNodeWithNodeView(m_wfm, m -> NodeView.create(dynamicPage));
+        NativeNodeContainer nnc = createNodeWithNodeView(m_wfm, m -> createNodeView(staticPage));
+        NativeNodeContainer nnc2 = createNodeWithNodeView(m_wfm, m -> createNodeView(staticPage));
+        NativeNodeContainer nnc3 = createNodeWithNodeView(m_wfm, m -> createNodeView(dynamicPage));
         var nodeViewManager = NodeViewManager.getInstance();
         String url = nodeViewManager.getNodeViewPageUrl(nnc).orElse("");
         String url2 = nodeViewManager.getNodeViewPageUrl(nnc2).orElse(null);
@@ -164,7 +165,7 @@ public class NodeViewManagerTest {
         m_wfm.executeAllAndWaitUntilDone();
         var dynamicPage2 = Page.builderFromString(() -> "new page content", "page.html")
             .addResourceFromString(() -> "resource content", "resource.html").build();
-        nnc = createNodeWithNodeView(m_wfm, m -> NodeView.create(dynamicPage2));
+        nnc = createNodeWithNodeView(m_wfm, m -> createNodeView(dynamicPage2));
         String url5 = nodeViewManager.getNodeViewPageUrl(nnc).orElse(null);
         pageContent = Files.readLines(new File(new URI(url5)), StandardCharsets.UTF_8).get(0);
         assertThat(pageContent, is("new page content"));
@@ -180,8 +181,8 @@ public class NodeViewManagerTest {
         var staticPage = Page.builder(BUNDLE_ID, "files", "page.html").addResourceFile("resource.html").build();
         var dynamicPage = Page.builderFromString(() -> "page content", "page.html")
             .addResourceFromString(() -> "resource content", "resource.html").build();
-        var nnc = createNodeWithNodeView(m_wfm, m -> NodeView.create(staticPage));
-        var nnc2 = createNodeWithNodeView(m_wfm, m -> NodeView.create(dynamicPage));
+        var nnc = createNodeWithNodeView(m_wfm, m -> createNodeView(staticPage));
+        var nnc2 = createNodeWithNodeView(m_wfm, m -> createNodeView(dynamicPage));
 
         var nodeViewManager = NodeViewManager.getInstance();
         assertThat(nodeViewManager.getNodeViewPagePath(nnc).isEmpty(), is(true));
@@ -234,7 +235,7 @@ public class NodeViewManagerTest {
     @Test
     public void testNodeCleanUpDynamicPage() throws URISyntaxException {
         var page = Page.builderFromString(() -> "test page content", "index.html").build();
-        var nc = createNodeWithNodeView(m_wfm, m -> NodeView.create(page));
+        var nc = createNodeWithNodeView(m_wfm, m -> createNodeView(page));
 
         var nodeViewManager = NodeViewManager.getInstance();
 
@@ -280,7 +281,7 @@ public class NodeViewManagerTest {
     @Test
     public void testNodeCleanUpStaticPage() {
         var staticPage = Page.builder(BUNDLE_ID, "files", "page.html").build();
-        var nc = createNodeWithNodeView(m_wfm, m -> NodeView.create(staticPage));
+        var nc = createNodeWithNodeView(m_wfm, m -> createNodeView(staticPage));
 
         // node state change
         String url = NodeViewManager.getInstance().getNodeViewPageUrl(nc).orElse(null);

@@ -149,6 +149,11 @@ public final class NodeViewManager {
         try {
             var nodeView = fac.createNodeView(nnc.getNodeModel());
             registerNodeView(nnc, nodeView);
+
+            // TODO load node view settings
+            // var viewSettings = nnc.getSingleNodeContainerSettings().getViewSettings();
+            // nodeView.loadValidatedSettingsFrom(viewSettings);
+
             return nodeView;
         } finally {
             NodeContext.removeLastContext();

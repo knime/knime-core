@@ -178,6 +178,8 @@ public final class Page implements Resource {
      * @param relativePath the relative path of the page (including the page resource name itself)
      * @return a new {@link PageBuilder}-instance
      */
+    // TODO instead of 'builderFromString' we could overload the 'builder'-method by
+    // introducing extra 'StringSupplier' and 'InputStreamSupplier' functional interfaces?
     public static PageBuilder builderFromString(final Supplier<String> content, final String relativePath) {
         return builder(() -> new ByteArrayInputStream(content.get().getBytes(StandardCharsets.UTF_8)), relativePath);
     }

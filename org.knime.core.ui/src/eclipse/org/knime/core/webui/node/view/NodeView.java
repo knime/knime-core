@@ -48,10 +48,9 @@
  */
 package org.knime.core.webui.node.view;
 
-import org.knime.core.webui.data.DataService;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.webui.data.DataServiceProvider;
-import org.knime.core.webui.data.InitialDataService;
-import org.knime.core.webui.data.ReExecuteDataService;
 import org.knime.core.webui.page.Page;
 
 /**
@@ -61,43 +60,33 @@ import org.knime.core.webui.page.Page;
  *
  * @since 4.5
  */
-public final class NodeView extends DataServiceProvider {
-
-    private final Page m_page;
-
-    NodeView(final Page p, final InitialDataService initialDataService, final DataService dataService,
-        final ReExecuteDataService reExecuteDataService) {
-        super(initialDataService, dataService, reExecuteDataService);
-        m_page = p;
-    }
+public interface NodeView extends DataServiceProvider {
 
     /**
      * Returns the (html) page which represents the view UI.
      *
      * @return the page
      */
-    public Page getPage() {
-        return m_page;
-    }
+    Page getPage();
 
     /**
-     * Creates a node view instance from a {@link Page}
-     *
-     * @param p the page to create the node view from
-     * @return a new node view instance
+     * TODO - node model state changed
      */
-    public static NodeView create(final Page p) {
-        return new NodeView(p, null, null, null);
-    }
+    void modelChanged();
 
     /**
-     * Creates a new node view builder.
+     * Validates the given settings before loading it via {@link #loadValidatedSettingsFrom(NodeSettingsRO)}.
      *
-     * @param p the page to initialize the builder with
-     * @return a new node view builder instance
+     * @param settings settings to validate
+     * @throws InvalidSettingsException if the validation failed
      */
-    public static NodeViewBuilder builder(final Page p) {
-        return new NodeViewBuilder(p);
-    }
+    void validateSettings(NodeSettingsRO settings) throws InvalidSettingsException;
+
+    /**
+     * Loads validated settings.
+     *
+     * @param settings settings to load
+     */
+    void loadValidatedSettingsFrom(NodeSettingsRO settings);
 
 }

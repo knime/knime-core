@@ -66,6 +66,7 @@ import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeInputNodeFactory;
 import org.knime.core.webui.data.text.TextInitialDataService;
 import org.knime.core.webui.node.view.NodeView;
+import org.knime.core.webui.node.view.NodeViewTest;
 import org.knime.core.webui.page.Page;
 import org.knime.core.webui.page.PageTest;
 import org.knime.core.webui.page.PageUtil;
@@ -97,13 +98,13 @@ public class NodeViewEntTest {
 
         Function<NodeViewNodeModel, NodeView> nodeViewCreator = m -> {
             Page p = Page.builderFromString(() -> "blub", "index.html").build();
-            return NodeView.builder(p).initialDataService(new TextInitialDataService() {
+            return NodeViewTest.createNodeView(p, new TextInitialDataService() {
 
                 @Override
                 public String getInitialData() {
                     return "dummy initial data";
                 }
-            }).build();
+            }, null, null);
         };
         NativeNodeContainer nnc = WorkflowManagerUtil.createAndAddNode(wfm, new NodeViewNodeFactory(nodeViewCreator));
         nnc.setNodeMessage(NodeMessage.newWarning("node message"));
@@ -130,7 +131,7 @@ public class NodeViewEntTest {
         // a node view as a 'component' without initial data
         nodeViewCreator = m -> {
             Page p = Page.builder(PageTest.BUNDLE_ID, "files", "component.umd.min.js").build();
-            return NodeView.create(p);
+            return NodeViewTest.createNodeView(p);
         };
         nnc = WorkflowManagerUtil.createAndAddNode(wfm, new NodeViewNodeFactory(nodeViewCreator));
         ent = new NodeViewEnt(nnc, null);

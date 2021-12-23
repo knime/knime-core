@@ -60,6 +60,7 @@ import org.knime.core.webui.data.rpc.json.impl.JsonRpcSingleServer;
 import org.knime.core.webui.node.view.NodeView;
 import org.knime.core.webui.node.view.NodeViewManager;
 import org.knime.core.webui.node.view.NodeViewManagerTest;
+import org.knime.core.webui.node.view.NodeViewTest;
 import org.knime.core.webui.page.Page;
 import org.knime.testing.util.WorkflowManagerUtil;
 
@@ -79,8 +80,8 @@ public class JsonRpcDataServiceTest {
     public void testJsonRpcDataService() throws IOException {
         var wfm = WorkflowManagerUtil.createEmptyWorkflow();
         var page = Page.builderFromString(() -> "content", "index.html").build();
-        NativeNodeContainer nnc = NodeViewManagerTest.createNodeWithNodeView(wfm, m -> NodeView.builder(page)
-            .dataService(new JsonRpcDataServiceImpl(new JsonRpcSingleServer<MyService>(new MyService()))).build());
+        NativeNodeContainer nnc = NodeViewManagerTest.createNodeWithNodeView(wfm, m -> NodeViewTest.createNodeView(page,
+            null, new JsonRpcDataServiceImpl(new JsonRpcSingleServer<MyService>(new MyService())), null));
         wfm.executeAllAndWaitUntilDone();
 
         var jsonRpcRequest = "{\"jsonrpc\":\"2.0\", \"id\":1, \"method\":\"myMethod\"}";

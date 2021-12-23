@@ -53,6 +53,9 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThrows;
 
 import java.io.IOException;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Supplier;
 
 import org.junit.After;
 import org.junit.Before;
@@ -63,8 +66,8 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.webui.data.DataService;
 import org.knime.core.webui.data.text.TextDataService;
-import org.knime.core.webui.node.dialog.settings.TextNodeSettingsService;
 import org.knime.core.webui.page.Page;
 import org.knime.testing.node.dialog.NodeDialogNodeModel;
 import org.knime.testing.util.WorkflowManagerUtil;
@@ -100,22 +103,20 @@ public class NodeDialogTest {
     @Test
     public void testCallDataServices() throws IOException, InvalidSettingsException {
         var page = Page.builderFromString(() -> "test page content", "index.html").build();
-        var nodeDialogBuilder = NodeDialog.builder(page, new TextNodeSettingsService() {
+        Supplier<NodeDialog> nodeDialogSupplier = () -> createNodeDialog(page, new TextSettingsMapper() { // NOSONAR
 
             @Override
-            public void writeSettings(final String s, final NodeSettingsWO settings) throws InvalidSettingsException {
-                if (s.startsWith("ERROR")) {
-                    throw new InvalidSettingsException(s);
-                } else {
-                    settings.addString("key", s);
-                }
+            public void toSettings(final String s, final Map<SettingsType, NodeSettingsWO> settings) {
+                var split = s.split(",");
+                settings.get(SettingsType.MODEL).addString(split[0], split[1]);
+                // TODO test VIEW settings type, too
             }
 
             @Override
-            public String readSettings(final NodeSettingsRO settings, final PortObjectSpec[] specs) {
+            public String fromSettings(final Map<SettingsType, NodeSettingsRO> settings, final PortObjectSpec[] specs) {
                 return "the node settings";
             }
-        }).dataService(new TextDataService() {
+        }, new TextDataService() {
 
             @Override
             public String handleRequest(final String request) {
@@ -123,17 +124,57 @@ public class NodeDialogTest {
             }
         });
 
-        NativeNodeContainer nc = NodeDialogManagerTest.createNodeWithNodeDialog(m_wfm, nodeDialogBuilder::build);
+        NativeNodeContainer nc = NodeDialogManagerTest.createNodeWithNodeDialog(m_wfm, nodeDialogSupplier);
 
         var newNodeDialog = NodeDialogManager.getInstance().getNodeDialog(nc);
         assertThat(newNodeDialog.callTextInitialDataService(), is("the node settings"));
         assertThat(newNodeDialog.callTextDataService(""), is("general data service"));
-        newNodeDialog.callTextAppyDataService("node settings value");
+        newNodeDialog.callTextAppyDataService("key,node settings value");
         var loadNodeSettings = ((NodeDialogNodeModel)nc.getNode().getNodeModel()).getLoadNodeSettings();
         assertThat(loadNodeSettings.getString("key"), is("node settings value"));
         String message =
-            assertThrows(IOException.class, () -> newNodeDialog.callTextAppyDataService("ERROR invalid")).getMessage();
+            assertThrows(IOException.class, () -> newNodeDialog.callTextAppyDataService("ERROR,invalid")).getMessage();
         assertThat(message, is("Invalid node settings"));
+    }
+
+    /**
+     * Helper to create a {@link NodeDialog}.
+     *
+     * @param page the page to create the node dialg with
+     *
+     * @return a new dialog instance
+     */
+    public static NodeDialog createNodeDialog(final Page page) {
+        var settingsMapper = new TextSettingsMapper() {
+
+            @Override
+            public void toSettings(final String textSettings, final Map<SettingsType, NodeSettingsWO> settings) {
+                //
+            }
+
+            @Override
+            public String fromSettings(final Map<SettingsType, NodeSettingsRO> settings, final PortObjectSpec[] specs) {
+                return "test settings";
+            }
+
+        };
+        return createNodeDialog(page, settingsMapper, null);
+    }
+
+    private static NodeDialog createNodeDialog(final Page page, final TextSettingsMapper settingsMapper, final DataService dataService) {
+        return new NodeDialog(settingsMapper, SettingsType.MODEL) {
+
+            @Override
+            public Optional<DataService> getDataService() {
+                return Optional.ofNullable(dataService);
+            }
+
+            @Override
+            public Page getPage() {
+                return page;
+            }
+
+        };
     }
 
 }

@@ -61,46 +61,22 @@ import org.knime.core.webui.data.text.TextReExecuteDataService;
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
-public class DataServiceProvider {
-
-    private final DataService m_dataService;
-
-    private final InitialDataService m_initialDataService;
-
-    private final ApplyDataService m_applyDataService;
-
-    /**
-     * @param initialDataService
-     * @param dataService
-     * @param applyDataService
-     */
-    protected DataServiceProvider(final InitialDataService initialDataService, final DataService dataService,
-        final ApplyDataService applyDataService) {
-        m_dataService = dataService;
-        m_initialDataService = initialDataService;
-        m_applyDataService = applyDataService;
-    }
+public interface DataServiceProvider {
 
     /**
      * @return optional service that provides data for initialization of the node view
      */
-    public Optional<InitialDataService> getInitialDataService() {
-        return Optional.ofNullable(m_initialDataService);
-    }
+    Optional<InitialDataService> getInitialDataService();
 
     /**
      * @return optional service generally providing data to the node view
      */
-    public Optional<DataService> getDataService() {
-        return Optional.ofNullable(m_dataService);
-    }
+    Optional<DataService> getDataService();
 
     /**
      * @return optional service to apply new data
      */
-    public Optional<ApplyDataService> getApplyDataService() {
-        return Optional.ofNullable(m_applyDataService);
-    }
+    Optional<ApplyDataService> getApplyDataService();
 
     /**
      * Helper to call the {@link TextInitialDataService}.
@@ -108,9 +84,10 @@ public class DataServiceProvider {
      * @return the initial data
      * @throws IllegalStateException if there is not initial data service available
      */
-    public String callTextInitialDataService() {
-        if (m_initialDataService instanceof TextInitialDataService) {
-            return ((TextInitialDataService)m_initialDataService).getInitialData();
+    default String callTextInitialDataService() {
+        var service = getInitialDataService().filter(TextInitialDataService.class::isInstance).orElse(null);
+        if (service != null) {
+            return ((TextInitialDataService)service).getInitialData();
         } else {
             throw new IllegalStateException("No text initial data service available");
         }
@@ -123,9 +100,10 @@ public class DataServiceProvider {
      * @return the data service response
      * @throws IllegalStateException if there is no text data service
      */
-    public String callTextDataService(final String request) {
-        if (m_dataService instanceof TextDataService) {
-            return ((TextDataService)m_dataService).handleRequest(request);
+    default String callTextDataService(final String request) {
+        var service = getDataService().filter(TextDataService.class::isInstance).orElse(null);
+        if (service != null) {
+            return ((TextDataService)service).handleRequest(request);
         } else {
             throw new IllegalStateException("No text data service available");
         }
@@ -138,11 +116,12 @@ public class DataServiceProvider {
      * @throws IOException if applying the data failed
      * @throws IllegalStateException if there is no text apply data service
      */
-    public void callTextAppyDataService(final String request) throws IOException {
-        if (m_applyDataService instanceof TextReExecuteDataService) {
-            ((TextReExecuteDataService)m_applyDataService).reExecute(request);
-        } else if (m_applyDataService instanceof TextApplyDataService) {
-            ((TextApplyDataService)m_applyDataService).applyData(request);
+    default void callTextAppyDataService(final String request) throws IOException {
+        var service = getApplyDataService().orElse(null);
+        if (service instanceof TextReExecuteDataService) {
+            ((TextReExecuteDataService)service).reExecute(request);
+        } else if (service instanceof TextApplyDataService) {
+            ((TextApplyDataService)service).applyData(request);
         } else {
             throw new IllegalStateException("No text apply data service available");
         }
