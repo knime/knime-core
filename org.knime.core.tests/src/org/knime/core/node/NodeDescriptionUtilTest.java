@@ -17,4 +17,11 @@ public class NodeDescriptionUtilTest {
         assertThat(NodeDescriptionUtil.stripXmlFragment("<fragText</frag"), is(""));
         assertThat(NodeDescriptionUtil.stripXmlFragment("frag>Text/frag>"), is(""));
     }
+
+    @Test
+    public void testNormalizeWhitespace() {
+        Assert.assertEquals("text text",
+            NodeDescriptionUtil.normalizeWhitespace("    \t  \n   \r\n  text   text    \n   "));
+    }
+
 }
