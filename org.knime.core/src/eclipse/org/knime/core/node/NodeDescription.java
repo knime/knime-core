@@ -46,11 +46,18 @@
  */
 package org.knime.core.node;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.apache.commons.lang3.concurrent.ConcurrentException;
 import org.apache.commons.lang3.concurrent.LazyInitializer;
 import org.apache.xmlbeans.XmlObject;
+import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.Nullable;
+import org.knime.core.internal.NodeDescriptionUtil;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.context.ports.ModifiablePortsConfiguration;
 import org.w3c.dom.Element;
@@ -60,20 +67,26 @@ import org.w3c.dom.Element;
  * meta information is read from the XML files which accompany every node factory. But also other means of providing
  * node descriptions are possible.
  *
+ * Version 4.5 introduces getters for specific parts of the node description. These are assumed to return an empty
+ * {@link Optional} (or an empty {@link List}) if the part is not present or not supported in the concrete node
+ * description schema. Returned strings may contain HTML markup tags, these are assumed to come without namespace
+ * prefixes or xmlns attributes.
+ *
  * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
+ * @author Benjamin Moser, KNIME GmbH, Konstanz, Germany
  * @since 2.8
  */
 public abstract class NodeDescription {
 
     /** Creating the DocumentBuilderFactory, hence a lazy initializer, see AP-8171. */
     private static final LazyInitializer<DocumentBuilderFactory> DOCUMENT_BUILDER_FACTORY_INITIALIZER =
-            new LazyInitializer<DocumentBuilderFactory>() {
+        new LazyInitializer<DocumentBuilderFactory>() {
 
-        @Override
-        protected DocumentBuilderFactory initialize() {
-            return initializeDocumentBuilderFactory();
-        }
-    };
+            @Override
+            protected DocumentBuilderFactory initialize() {
+                return initializeDocumentBuilderFactory();
+            }
+        };
 
     private boolean m_deprecated;
 
@@ -113,12 +126,72 @@ public abstract class NodeDescription {
     public abstract String getInteractiveViewName();
 
     /**
+     * @return the description of the interactive view. May contain HTML markup.
+     * @since 4.6
+     */
+    public Optional<String> getInteractiveViewDescription() {
+        return Optional.empty();
+    }
+
+    /**
      * Returns the name of this node.
      *
      * @return the node's name or <code>null</code> if no name is known
      * @see NodeFactory#getNodeName()
      */
     public abstract String getNodeName();
+
+    /**
+     * @return the introduction text of the full node description. May contain HTML markup.
+     * @since 4.6
+     */
+    public Optional<String> getIntro() {
+        return Optional.empty();
+    }
+
+    /**
+     * Should return empty list if no groups present.
+     *
+     * @return a list of dialog option groups
+     * @since 4.6
+     */
+    public List<DialogOptionGroup> getDialogOptionGroups() {
+        return Collections.emptyList();
+    }
+
+    /**
+     * Should return empty list if no links present.
+     *
+     * @return a list of links
+     * @since 4.6
+     */
+    public List<DescriptionLink> getLinks() {
+        return Collections.emptyList();
+    }
+
+    /**
+     * @return the short description of the node
+     * @since 4.6
+     */
+    public Optional<String> getShortDescription() {
+        return Optional.empty();
+    }
+
+    /**
+     * @return the dynamic input port group descriptions.
+     * @since 4.6
+     */
+    public List<DynamicPortGroupDescription> getDynamicInPortGroups() {
+        return Collections.emptyList();
+    }
+
+    /**
+     * @return the dynamic output port group descriptions.
+     * @since 4.6
+     */
+    public List<DynamicPortGroupDescription> getDynamicOutPortGroups() {
+        return Collections.emptyList();
+    }
 
     /**
      * Returns a description for an output port.
@@ -171,8 +244,7 @@ public abstract class NodeDescription {
     public abstract String getViewName(final int index);
 
     /**
-     * The XML description can be used with the
-     * <code>NodeFactoryHTMLCreator</code> in order to get a converted HTML
+     * The XML description can be used with the <code>NodeFactoryHTMLCreator</code> in order to get a converted HTML
      * description of it, which fits the overall KNIME HTML style.
      *
      * @return XML description of this node
@@ -188,20 +260,7 @@ public abstract class NodeDescription {
      */
     protected static String stripXmlFragment(final XmlObject xmlObject) {
         String contents = xmlObject.xmlText();
-        int first = 0;
-        while ((first < contents.length()) && (contents.charAt(first) != '>')) {
-            first++;
-        }
-        int last = contents.length() - 1;
-        while ((last >= 0) && (contents.charAt(last) != '<')) {
-            last--;
-        }
-
-        if (last <= first) {
-            return "";
-        } else {
-            return contents.substring(first + 1, last);
-        }
+        return NodeDescriptionUtil.stripXmlFragment(contents);
     }
 
     /**
@@ -236,7 +295,9 @@ public abstract class NodeDescription {
         return this;
     }
 
-    /** Get a singleton instance of a {@link DocumentBuilderFactory}, initialized lazy.
+    /**
+     * Get a singleton instance of a {@link DocumentBuilderFactory}, initialized lazily.
+     *
      * @return That singleton instance.
      * @noreference This method is not intended to be referenced by clients.
      */
@@ -256,4 +317,191 @@ public abstract class NodeDescription {
         return fac;
     }
 
+    /**
+     * Record to hold name and description of a node dialog option.
+     *
+     * @since 4.6
+     */
+    public static final class DialogOption {
+        @NonNull
+        private final String m_name;
+
+        @NonNull
+        private final String m_description;
+
+        private final boolean m_optional;
+
+        /**
+         * @param name The name of the dialog option.
+         * @param description The description of the dialog option.
+         */
+        public DialogOption(@NonNull final String name, @NonNull final String description, final boolean isOptional) {
+            m_name = name;
+            m_description = description;
+            m_optional = isOptional;
+        }
+
+        /**
+         * @return The name of the dialog option. Assumed to be a simple string.
+         */
+        public String getName() {
+            return m_name;
+        }
+
+        /**
+         * @return The description of the dialog option. May contain markup tags that resemble HTML formatting.
+         */
+        public String getDescription() {
+            return m_description;
+        }
+
+        /**
+         * @return Whether the dialog option is marked as optional
+         */
+        public boolean isOptional() {
+            return m_optional;
+        }
+
+    }
+
+    /**
+     * Record to represent a dialog option group. Name and description may be null. In this case, this record is thought
+     * to represent a set of ungrouped dialog options.
+     *
+     * @since 4.6
+     */
+    public static final class DialogOptionGroup {
+        @Nullable
+        private final String m_name;
+
+        @Nullable
+        private final String m_description;
+
+        @NonNull
+        private final List<DialogOption> m_options;
+
+        /**
+         * @param name the name of the option group
+         * @param description an optional description of the option group. Can be given as null.
+         * @param options a list of options belonging to the group being created.
+         */
+        public DialogOptionGroup(@Nullable final String name, @Nullable final String description,
+            @NonNull final List<DialogOption> options) {
+            m_name = name;
+            m_description = description;
+            m_options = options;
+        }
+
+        /**
+         * @return the name of this option group.
+         */
+        public String getName() {
+            return m_name;
+        }
+
+        /**
+         * @return an Optional containing the description of this option group if available, else an empty optional.
+         */
+        public Optional<String> getDescription() {
+            return Optional.ofNullable(m_description);
+        }
+
+        /**
+         * @return the options belonging to this option group.
+         */
+        public List<DialogOption> getOptions() {
+            return m_options;
+        }
+
+    }
+
+    /**
+     * Record to represent a link in the node description. Note that these are not links in freeform text but from an
+     * explicit list of links defined in some description schemas.
+     *
+     * @since 4.6
+     */
+    public static final class DescriptionLink {
+        @NonNull
+        private final String m_target;
+
+        @NonNull
+        private final String m_text;
+
+        /**
+         * @param href the link target
+         * @param text the link text
+         */
+        public DescriptionLink(@NonNull final String href, @NonNull final String text) {
+            this.m_target = href;
+            this.m_text = text;
+        }
+
+        /**
+         * @return the link target. Assumed to resemble an URL.
+         */
+        public String getTarget() {
+            return m_target;
+        }
+
+        /**
+         * @return the link text.
+         */
+        public String getText() {
+            return m_text;
+        }
+
+    }
+
+    /**
+     * Record to represent a dynamic port group. Does not hold information on possible port types since this has to be
+     * inferred from the {@link Node}.
+     *
+     * @since 4.6
+     */
+    public static final class DynamicPortGroupDescription {
+
+        @NonNull
+        private final String m_groupName;
+
+        @NonNull
+        private final String m_groupIdentifier;
+
+        @NonNull
+        private final String m_groupDescription;
+
+        /**
+         * @param groupName The name of the dynamic port group
+         * @param groupIdentifier The identifier of the dynamic port group
+         * @param groupDescription The description of the dynamic port group
+         */
+        public DynamicPortGroupDescription(@NonNull final String groupName, @NonNull final String groupIdentifier,
+            @NonNull final String groupDescription) {
+            m_groupName = groupName;
+            m_groupIdentifier = groupIdentifier;
+            m_groupDescription = groupDescription;
+        }
+
+        /**
+         * @return The name of the dynamic port group
+         */
+        public String getGroupName() {
+            return m_groupName;
+        }
+
+        /**
+         * @return The description of the dynamic port group
+         */
+        public String getGroupDescription() {
+            return m_groupDescription;
+        }
+
+        /**
+         * @return The identifier of the dynamic port group
+         */
+        public String getGroupIdentifier() {
+            return m_groupIdentifier;
+        }
+
+    }
 }

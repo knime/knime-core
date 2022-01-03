@@ -98,8 +98,7 @@ public abstract class DynamicNodeFactory<T extends NodeModel> extends NodeFactor
      *
      * In case of dynamic nodes the procedure is roughly as follows:
      * <ol>
-     * <li>Create a KnimeNodeDocument in the desired version (preferably the latest, e.g.
-     * {@link org.knime.node.v28.KnimeNodeDocument})</li>
+     * <li>Create a KnimeNodeDocument in the desired version (preferably the latest)
      * <li>Populate the document</li>
      * <li>Use one of the node description proxies (e.g. {@link NodeDescription28Proxy}) in order to return the
      * {@link NodeDescription}</li>

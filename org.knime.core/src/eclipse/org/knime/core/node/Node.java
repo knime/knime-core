@@ -1334,6 +1334,16 @@ public final class Node implements NodeModelWarningListener {
         return model.getOutgoingFlowObjectStack();
     }
 
+    /**
+     * Obtain the node description via the node factory.
+     * @return the node description
+     * 
+     * @since 4.6
+     */
+    public NodeDescription invokeGetNodeDescription() {
+        return m_factory.getNodeDescription();
+    }
+
     /** Called after execute in order to put the computed result into the
      * outports. It will do a sequence of sanity checks whether the argument
      * is valid (non-null, correct type, etc.)

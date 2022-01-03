@@ -48,6 +48,9 @@
  */
 package org.knime.core.node;
 
+import java.util.List;
+import java.util.Optional;
+
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.util.CheckUtils;
 import org.w3c.dom.Element;
@@ -102,6 +105,41 @@ public class DelegateNodeDescription extends NodeDescription {
     @Override
     public String getNodeName() {
         return m_delegate.getNodeName();
+    }
+
+    @Override
+    public Optional<String> getIntro() {
+        return m_delegate.getIntro();
+    }
+
+    @Override
+    public List<DialogOptionGroup> getDialogOptionGroups() {
+        return m_delegate.getDialogOptionGroups();
+    }
+
+    @Override
+    public List<DescriptionLink> getLinks() {
+        return m_delegate.getLinks();
+    }
+
+    @Override
+    public Optional<String> getShortDescription() {
+        return m_delegate.getShortDescription();
+    }
+
+    @Override
+    public Optional<String> getInteractiveViewDescription() {
+        return m_delegate.getInteractiveViewDescription();
+    }
+
+    @Override
+    public List<DynamicPortGroupDescription> getDynamicInPortGroups() {
+        return m_delegate.getDynamicInPortGroups();
+    }
+
+    @Override
+    public List<DynamicPortGroupDescription> getDynamicOutPortGroups() {
+        return m_delegate.getDynamicOutPortGroups();
     }
 
     /** {@inheritDoc} */

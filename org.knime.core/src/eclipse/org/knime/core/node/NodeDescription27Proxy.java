@@ -50,15 +50,21 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
 
 import org.apache.xmlbeans.XmlError;
 import org.apache.xmlbeans.XmlException;
 import org.apache.xmlbeans.XmlOptions;
+import org.knime.core.internal.NodeDescriptionUtil;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.node2012.InPortDocument.InPort;
+import org.knime.node2012.IntroDocument;
 import org.knime.node2012.KnimeNodeDocument;
 import org.knime.node2012.KnimeNodeDocument.KnimeNode.Deprecated;
+import org.knime.node2012.OptionDocument;
 import org.knime.node2012.OutPortDocument.OutPort;
+import org.knime.node2012.TabDocument;
 import org.knime.node2012.ViewDocument.View;
 import org.knime.node2012.ViewsDocument.Views;
 import org.w3c.dom.Document;
@@ -71,6 +77,7 @@ import org.w3c.dom.Element;
  * against the XML schema and reports errors via the logger.
  *
  * <p>No API!
+ * 
  * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  */
 public final class NodeDescription27Proxy extends NodeDescription {
@@ -83,7 +90,6 @@ public final class NodeDescription27Proxy extends NodeDescription {
         namespaceMap.put("", KnimeNodeDocument.type.getContentModel().getName().getNamespaceURI());
         OPTIONS.setLoadSubstituteNamespaces(namespaceMap);
     }
-
 
     private final KnimeNodeDocument m_document;
 
@@ -179,7 +185,7 @@ public final class NodeDescription27Proxy extends NodeDescription {
 
         for (InPort inPort : m_document.getKnimeNode().getPorts().getInPortList()) {
             if (inPort.getIndex() == index) {
-                return stripXmlFragment(inPort);
+                return NodeDescriptionUtil.getPrettyXmlText(inPort);
             }
         }
         return null;
@@ -235,7 +241,7 @@ public final class NodeDescription27Proxy extends NodeDescription {
 
         for (OutPort outPort : m_document.getKnimeNode().getPorts().getOutPortList()) {
             if (outPort.getIndex() == index) {
-                return stripXmlFragment(outPort);
+                return NodeDescriptionUtil.getPrettyXmlText(outPort);
             }
         }
         return null;
@@ -291,7 +297,7 @@ public final class NodeDescription27Proxy extends NodeDescription {
         }
         for (View view : m_document.getKnimeNode().getViews().getViewList()) {
             if (view.getIndex() == index) {
-                return stripXmlFragment(view);
+                return NodeDescriptionUtil.getPrettyXmlText(view);
             }
         }
         return null;
@@ -329,4 +335,38 @@ public final class NodeDescription27Proxy extends NodeDescription {
     public Element getXMLDescription() {
         return (Element)m_document.getKnimeNode().getDomNode();
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Optional<String> getIntro() {
+        IntroDocument.Intro introFrag = m_document.getKnimeNode().getFullDescription().getIntro();
+        return Optional.ofNullable(NodeDescriptionUtil.getPrettyXmlText(introFrag));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<DialogOptionGroup> getDialogOptionGroups() {
+        Function<OptionDocument.Option, Boolean> optionalGetter = o -> Boolean.valueOf(o.getOptional().toString());
+        return NodeDescriptionUtil.extractDialogOptionGroups(
+                m_document.getKnimeNode().getFullDescription().getOptionList(),
+                m_document.getKnimeNode().getFullDescription().getTabList(),
+                TabDocument.Tab::getName, e -> null, TabDocument.Tab::getOptionList,
+                OptionDocument.Option::getName,
+                optionalGetter
+        );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Optional<String> getShortDescription() {
+        return Optional
+            .ofNullable(NodeDescriptionUtil.normalizeWhitespace(m_document.getKnimeNode().getShortDescription()));
+    }
+
 }

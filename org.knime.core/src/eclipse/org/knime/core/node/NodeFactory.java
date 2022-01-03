@@ -267,7 +267,7 @@ public abstract class NodeFactory<T extends NodeModel> {
     }
 
     /**
-     * Returns the original node description.
+     * Returns the original node description. May be {@code null} if the node factory is not initialised.
      *
      * @return the original node description
      */

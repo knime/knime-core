@@ -57,6 +57,7 @@ import org.apache.xmlbeans.XmlException;
 import org.apache.xmlbeans.XmlObject;
 import org.apache.xmlbeans.impl.values.NamespaceManager;
 import org.apache.xmlbeans.impl.values.XmlObjectBase;
+import org.junit.Assert;
 import org.junit.Test;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.testfactories.v13.DTD_v13;
@@ -75,6 +76,8 @@ import org.knime.core.node.testfactories.v28.XSD_v28_deprecated;
 import org.knime.core.node.testfactories.v28.XSD_v28_invalid;
 import org.knime.core.node.testfactories.v28.XSD_v28_noInteractiveView;
 import org.knime.core.node.testfactories.v28.XSD_v28_unsupportedNamespace;
+import org.knime.core.node.testfactories.v41.XSD_v41;
+import org.knime.core.node.testfactories.v41.XSD_v41_ungrouped;
 
 /**
  * Testcases for the new node description implementation of 2.8.
@@ -131,6 +134,69 @@ public class NodeDescriptionTest {
                          false);
         testDeprecatedNodeName(XSD_v28_deprecated.class);
         testInvalidDescription(XSD_v28_invalid.class, NodeDescription28Proxy.class);
+    }
+
+    /**
+     * Test case of ungrouped options.
+     *
+     * @see NodeDescriptionTest#testVersion41XSD_groupedOptions()
+     */
+    @Test
+    public void testVersion41XSD_ungroupedOptions() throws Exception {
+        NodeDescriptionParser parser = new NodeDescriptionParser();
+        NodeDescription description = parser.parseDescription(XSD_v41_ungrouped.class);
+
+        Assert.assertNull(description.getDialogOptionGroups().get(0).getName());
+        Assert.assertFalse(description.getDialogOptionGroups().get(0).getDescription().isPresent());
+        Assert.assertFalse(description.getDialogOptionGroups().isEmpty());
+        Assert.assertFalse(description.getDialogOptionGroups().get(0).getOptions().isEmpty());
+    }
+
+    /**
+     * Test new getters on {@link NodeDescription} introduced with 4.5. Test with a node description file containing
+     * ungrouped options (no tabs).
+     */
+    @Test
+    public void testVersion41XSD_groupedOptions() throws Exception {
+        NodeDescriptionParser parser = new NodeDescriptionParser();
+        NodeDescription description = parser.parseDescription(XSD_v41.class);
+
+        // exemplary test for markup/whitespace
+        Assert.assertEquals("Unexpected intro text", description.getIntro().orElseThrow(), "My <b>own</b> intro");
+
+        // grouped options
+        Assert.assertEquals("Unexpected group name", description.getDialogOptionGroups().get(1).getName(), "group two");
+        Assert.assertEquals("Unexpected group description",
+            // test is allowed to fail if optional empty
+            description.getDialogOptionGroups().get(0).getDescription().get(), // NOSONAR
+            "group one description");
+        Assert.assertFalse("No group description expected",
+            description.getDialogOptionGroups().get(1).getDescription().isPresent());
+        Assert.assertEquals("Unexpected option name in group",
+            description.getDialogOptionGroups().get(1).getOptions().get(1).getName(), "group two option two");
+
+        // optional options
+        // explicitly set to true
+        Assert.assertTrue(description.getDialogOptionGroups().get(1).getOptions().get(0).isOptional());
+        // explicitly set to false
+        Assert.assertFalse(description.getDialogOptionGroups().get(1).getOptions().get(1).isOptional());
+        // not specified, use default value from schema
+        Assert.assertFalse(description.getDialogOptionGroups().get(1).getOptions().get(2).isOptional());
+
+        // Links
+        Assert.assertEquals("Unexpected link target", description.getLinks().get(0).getTarget(),
+            "http://www.knime.com/about");
+        Assert.assertEquals("Unexpected link description", description.getLinks().get(0).getText(), "textcontent");
+
+        // interactive view name & description
+        Assert.assertEquals("Unexpected interactive view name", description.getInteractiveViewName(),
+            "interactive view name");
+        Assert.assertEquals("Unexpected interactive view description",
+            description.getInteractiveViewDescription().get(), "interactive view description");
+
+        // dynamic port group descriptions
+        Assert.assertEquals("Unexpected dynamic port group description",
+            description.getDynamicInPortGroups().get(1).getGroupDescription(), "dyn in port two description");
     }
 
     /**

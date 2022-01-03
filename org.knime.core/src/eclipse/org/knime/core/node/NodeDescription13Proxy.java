@@ -47,19 +47,25 @@
 package org.knime.core.node;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.apache.xmlbeans.XmlError;
 import org.apache.xmlbeans.XmlException;
 import org.apache.xmlbeans.XmlOptions;
+import org.knime.core.internal.NodeDescriptionUtil;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.node.v13.DataInDocument.DataIn;
 import org.knime.node.v13.DataOutDocument.DataOut;
+import org.knime.node.v13.IntroDocument;
 import org.knime.node.v13.KnimeNodeDocument;
 import org.knime.node.v13.ModelInDocument.ModelIn;
 import org.knime.node.v13.ModelOutDocument.ModelOut;
+import org.knime.node.v13.OptionDocument;
 import org.knime.node.v13.PredParamInDocument.PredParamIn;
 import org.knime.node.v13.PredParamOutDocument.PredParamOut;
 import org.knime.node.v13.ViewDocument.View;
@@ -150,18 +156,18 @@ final class NodeDescription13Proxy extends NodeDescription {
         for (DataIn inPort : m_document.getKnimeNode().getPorts().getDataInList()) {
             maxDataIndex = Math.max(maxDataIndex, inPort.getIndex().intValue());
             if (inPort.getIndex().intValue() == index) {
-                return stripXmlFragment(inPort);
+                return NodeDescriptionUtil.getPrettyXmlText(inPort);
             }
         }
         maxDataIndex++;
         for (PredParamIn inPort : m_document.getKnimeNode().getPorts().getPredParamInList()) {
             if (inPort.getIndex().intValue() == index - maxDataIndex) {
-                return stripXmlFragment(inPort);
+                return NodeDescriptionUtil.getPrettyXmlText(inPort);
             }
         }
         for (ModelIn inPort : m_document.getKnimeNode().getPorts().getModelInList()) {
             if (inPort.getIndex().intValue() == index - maxDataIndex) {
-                return stripXmlFragment(inPort);
+                return NodeDescriptionUtil.getPrettyXmlText(inPort);
             }
         }
         return null;
@@ -234,18 +240,18 @@ final class NodeDescription13Proxy extends NodeDescription {
             maxDataIndex = Math.max(maxDataIndex, outPort.getIndex().intValue());
 
             if (outPort.getIndex().intValue() == index) {
-                return stripXmlFragment(outPort);
+                return NodeDescriptionUtil.getPrettyXmlText(outPort);
             }
         }
         maxDataIndex++;
         for (PredParamOut outPort : m_document.getKnimeNode().getPorts().getPredParamOutList()) {
             if (outPort.getIndex().intValue() == index - maxDataIndex) {
-                return stripXmlFragment(outPort);
+                return NodeDescriptionUtil.getPrettyXmlText(outPort);
             }
         }
         for (ModelOut outPort : m_document.getKnimeNode().getPorts().getModelOutList()) {
             if (outPort.getIndex().intValue() == index - maxDataIndex) {
-                return stripXmlFragment(outPort);
+                return NodeDescriptionUtil.getPrettyXmlText(outPort);
             }
         }
         return null;
@@ -318,7 +324,7 @@ final class NodeDescription13Proxy extends NodeDescription {
 
         for (View view : m_document.getKnimeNode().getViews().getViewList()) {
             if (view.getIndex().intValue() == index) {
-                return stripXmlFragment(view);
+                return NodeDescriptionUtil.getPrettyXmlText(view);
             }
         }
         return null;
@@ -356,5 +362,34 @@ final class NodeDescription13Proxy extends NodeDescription {
     @Override
     public Element getXMLDescription() {
         return (Element)m_document.getKnimeNode().getDomNode();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Optional<String> getIntro() {
+        IntroDocument.Intro introFrag = m_document.getKnimeNode().getFullDescription().getIntro();
+        return Optional.ofNullable(NodeDescriptionUtil.getPrettyXmlText(introFrag));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Optional<String> getShortDescription() {
+        return Optional
+            .ofNullable(NodeDescriptionUtil.normalizeWhitespace(m_document.getKnimeNode().getShortDescription()));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<DialogOptionGroup> getDialogOptionGroups() {
+        return NodeDescriptionUtil.extractUngroupedOptions(
+                m_document.getKnimeNode().getFullDescription().getOptionList(),
+                OptionDocument.Option::getName, e -> false
+        ).stream().collect(Collectors.toList());
     }
 }
