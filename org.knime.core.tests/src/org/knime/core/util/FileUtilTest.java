@@ -236,11 +236,8 @@ public class FileUtilTest {
      * @throws Exception
      */
     @Test
-    public void testGetFileFromURL() throws Exception {
+    public void testGetFileFromURLUnix() throws Exception {
         assumeThat(Platform.getOS(), is(Platform.OS_LINUX));
-        // The method under test is independent of the actual platform used. We constrain the platform here
-        // only because paths look different (e.g. drive letters on windows).
-        // We test on Linux because there tests are run most regularly.
 
         URL url = new URL("file:///tmp/with%20space");
         assertThat("Unexpected path", FileUtil.getFileFromURL(url).toString(), is("/tmp/with space"));
@@ -257,6 +254,65 @@ public class FileUtilTest {
 
         url = new URL("file:///tmp/with%25percent");
         assertThat("Unexpected path", FileUtil.getFileFromURL(url).toString(), is("/tmp/with%percent"));
+
+    }
+
+
+
+    /**
+     * Tests for {@link FileUtil#getFileFromURL(URL)}.
+     * @throws Exception
+     */
+    @Test
+    public void testGetFileFromURLWindows() throws Exception {
+        assumeThat(Platform.getOS(), is(Platform.OS_WIN32));
+
+        URL percentEncoded = new URL("file:/C:/tmp/with%20space");
+        assertThat("Unexpected URL", FileUtil.getFileFromURL(percentEncoded).toString(), is("C:\\tmp\\with space"));
+
+        URL withSpace = new URL("file:/C:/tmp/with space");
+        assertThat("Unexpected URL", FileUtil.getFileFromURL(withSpace).toString(), is("C:\\tmp\\with space"));
+
+        URL withPlus = new URL("file:/C:/tmp/with+plus");
+        assertThat("Unexpected URL", FileUtil.getFileFromURL(withPlus).toString(), is("C:\\tmp\\with+plus"));
+
+        URL withHash = new URL("file:/C:/tmp/with%23hash");
+        assertThat("Unexpected URL", FileUtil.getFileFromURL(withHash).toString(), is("C:\\tmp\\with#hash"));
+
+        URL withPercent = new URL("file:/C:/tmp/with%25percent");
+        assertThat("Unexpected URL", FileUtil.getFileFromURL(withPercent).toString(), is("C:\\tmp\\with%percent"));
+
+        URL uncUrlForwardSlashes = new URL("file://HOST/foo/bar");
+        assertThat("Unexpected URL", FileUtil.getFileFromURL(uncUrlForwardSlashes).toString(), is("\\\\HOST\\foo\\bar"));
+
+        URL authorityWithUserInfoAndHost = new URL("file:\\\\user@host.com:1234\\foo\\bar");
+        assertThat("Unexpected URL", FileUtil.getFileFromURL(authorityWithUserInfoAndHost).toString(), is("\\\\user@host.com:1234\\foo\\bar"));
+
+        URL regNameWithSpace = new URL("file:\\\\HOST%20NAME\\foo\\bar");
+        assertThat("Unexpected URL", FileUtil.getFileFromURL(regNameWithSpace).toString(), is("\\\\HOST NAME\\foo\\bar"));
+
+        URL uncUrlDecodeHostname = new URL("file://HOST%20NAME/foo/bar");
+        assertThat("Unexpected URL", FileUtil.getFileFromURL(uncUrlDecodeHostname).toString(), is("\\\\HOST NAME\\foo\\bar"));
+
+        URL uncUrlDecodeHostnameBackslashes = new URL("file:\\\\HOST%20NAME\\foo%20baz\\bar");
+        assertThat("Unexpected URL", FileUtil.getFileFromURL(uncUrlDecodeHostnameBackslashes).toString(), is("\\\\HOST NAME\\foo baz\\bar"));
+
+        URL uncUrlBackwardSlashes = new URL("file:\\\\HOST\\foo\\bar");
+        assertThat("Unexpected URL", FileUtil.getFileFromURL(uncUrlBackwardSlashes).toString(), is("\\\\HOST\\foo\\bar"));
+
+        URL uncUrlPercentSpace = new URL("file:\\\\HOST\\foo\\bar%20baz");
+        assertThat("Unexpected URL", FileUtil.getFileFromURL(uncUrlPercentSpace).toString(), is("\\\\HOST\\foo\\bar baz"));
+
+        URL uncUrlSpace = new URL("file:\\\\HOST\\foo\\bar baz");
+        assertThat("Unexpected URL", FileUtil.getFileFromURL(uncUrlSpace).toString(), is("\\\\HOST\\foo\\bar baz"));
+
+        URL uncUrlPlus = new URL("file:\\\\HOST\\foo\\bar+baz");
+        assertThat("Unexpected URL", FileUtil.getFileFromURL(uncUrlPlus).toString(), is("\\\\HOST\\foo\\bar+baz"));
+
+        URL uncUrlHash = new URL("file:\\\\HOST\\foo\\bar%23baz");
+        assertThat("Unexpected URL", FileUtil.getFileFromURL(uncUrlHash).toString(), is("\\\\HOST\\foo\\bar#baz"));
+
+
 
     }
 }

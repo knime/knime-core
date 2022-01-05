@@ -1175,14 +1175,21 @@ public final class FileUtil {
      *             fails
      */
     public static File getFileFromURL(final URL fileUrl) {
+        final String uncPrefix = "//";
         if (fileUrl.getProtocol().equalsIgnoreCase("file")) {
-            String path = getPathFromUrlWithFileProtocol(fileUrl);
+            // Throughout this if-branch, we assume that if there are query or fragment parts (cf. RFC3986 sec. 3), they can be dropped.
+            // Note that the authority part potentially, but not necessarily, contains a host part (cf. RFC3986 sec. 3.2).
+            // Obtain String suitable as input for File to check for existence
+            String path = looksLikeUNC(fileUrl) ? uncPrefix + fileUrl.getAuthority() + fileUrl.getPath() : fileUrl.getPath();
             File dataFile = new File(path);
-            if (!dataFile.exists()) {
-                // Assume path is given in encoded form and try to decode.
+            if (!dataFile.exists()) {   // Assume path is given in encoded form and try to decode.
                 try {
-                    // Constructor validates, getPath decodes encoded characters.
-                    String decodedPath = (new URI(path)).getPath();
+                    URI fileURI = fileUrl.toURI();
+                    // Getters on URI perform decoding.
+                    // In UNC strings, the "host-name" (as per UNC spec) can be a "reg-name" (as per RFC3986 sec. 3.2.2)
+                    // and thus be percent-encoded, i.e. we need to decode.
+                    // See https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-dtyp/62e862f4-2a51-452e-8eeb-dc4ff5ee33cc
+                    String decodedPath = looksLikeUNC(fileUrl) ? uncPrefix + fileURI.getAuthority() + fileURI.getPath() : fileURI.getPath();
                     dataFile = new File(decodedPath);
                 } catch (URISyntaxException e) {  // NOSONAR: Exception is handled.
                     // Path is (assumed) encoded but could not be parsed. This means it is not
@@ -1201,22 +1208,6 @@ public final class FileUtil {
         } else {
             throw new IllegalArgumentException("Not a file or knime URL: '" + fileUrl + "'");
         }
-    }
-
-    /**
-     * Resolves the path of a URL with file: protocol.
-     *
-     * If the input URL looks like it is a UNC URL the returned path resolves to a UNC path with syntax
-     * \\&lthost&gt\&ltpath&gt.
-     *
-     * If the input URL points to a locally stored file only its path is returned.
-     *
-     * @param fileUrl input URL
-     * @return path of the input URL
-     */
-    private static String getPathFromUrlWithFileProtocol(final URL fileUrl) {
-        String uncProtocol = "\\\\";
-        return looksLikeUNC(fileUrl) ? uncProtocol + fileUrl.getHost() + fileUrl.getPath() : fileUrl.getPath();
     }
 
     /**
@@ -1262,7 +1253,7 @@ public final class FileUtil {
         // this looks like an UNC path, a real file URL does not have a host
         // Java does not handle UNC URLs correctly, see bug #5864
         return Platform.OS_WIN32.equals(Platform.getOS()) && "file".equalsIgnoreCase(url.getProtocol())
-            && !StringUtils.isEmpty(url.getHost());
+            && !StringUtils.isEmpty(url.getAuthority());
     }
 
 
