@@ -218,7 +218,6 @@ public final class JoinSpecification {
     /**
      * Contains the offsets of the columns in the left and right table to include if join columns are merged. Is null if
      * {@link #isMergeJoinColumns()} is false.
-     * TODO enummap
      */
     private final int[][] m_mergeIncludes = new int[2][];
 
@@ -350,37 +349,17 @@ public final class JoinSpecification {
             } else {
                 if (includedDirectly || m_includedViaMerge.test(name)) {
                     List<String> rightNames = columnJoinPartners(InputTable.LEFT, name).collect(Collectors.toList());
-                    if (rightNames.contains(name)) {
-                        // if one of the join partner columns has the same name, use that name
-                        takenNames.add(colSpec.getName());
-                        leftOutputColumns.add(colSpec);
-                    } else {
-                        // otherwise output a new column with name "Col1=Col2" instead of this column
-                        String newName = name;
-                        // can be empty if join partners are special join columns
-                        if(! rightNames.isEmpty()) {
-                            newName = name.concat("=").concat(String.join("=", rightNames));
-                        }
-                        DataColumnSpecCreator newSpec = new DataColumnSpecCreator(colSpec);
-                        newSpec.setName(newName);
-                        newSpec.removeAllHandlers();
-                        DataColumnSpec disambiguatedColumn =
-                            columnDisambiguate(newSpec.createSpec(), takenNames::contains);
-                        takenNames.add(disambiguatedColumn.getName());
-                        leftOutputColumns.add(disambiguatedColumn);
-                    }
+                    addLeftColumn(leftOutputColumns, colSpec, takenNames, rightNames);
                 }
             }
         }
 
         final List<DataColumnSpec> rightOutputColumns = new ArrayList<>();
 
-        //
         for (int name : m_mergeIncludes[InputTable.RIGHT.ordinal()]) {
             DataColumnSpec columnSpec = getSettings(InputTable.RIGHT).getTableSpec().getColumnSpec(name);
             // in case the included column name clashes with a
-            DataColumnSpec disambiguatedColumnSpec =
-                columnDisambiguate(columnSpec, takenNames::contains);
+            DataColumnSpec disambiguatedColumnSpec = columnDisambiguate(columnSpec, takenNames::contains);
             takenNames.add(disambiguatedColumnSpec.getName());
             rightOutputColumns.add(disambiguatedColumnSpec);
         }
@@ -389,6 +368,35 @@ public final class JoinSpecification {
         return new DataTableSpec(
             Stream.concat(leftOutputColumns.stream(), rightOutputColumns.stream()).toArray(DataColumnSpec[]::new));
 
+    }
+
+    /**
+     * @param leftOutputColumns column specs to construct, updated in this method
+     * @param leftSpecToAdd column spec to add to the left table spec
+     * @param takenNames column names no longer available, updated in this method
+     * @param rightNames the column names of the right table
+     */
+    private void addLeftColumn(final List<DataColumnSpec> leftOutputColumns, final DataColumnSpec leftSpecToAdd,
+        final Set<String> takenNames, final List<String> rightNames) {
+        var name = leftSpecToAdd.getName();
+        if (rightNames.contains(name)) {
+            // if one of the join partner columns has the same name, use that name
+            takenNames.add(name);
+            leftOutputColumns.add(leftSpecToAdd);
+        } else {
+            // otherwise output a new column with name "Col1=Col2" instead of this column
+            String newName = name;
+            // can be empty if join partners are special join columns
+            if (!rightNames.isEmpty()) {
+                newName = name.concat("=").concat(String.join("=", rightNames));
+            }
+            var newSpec = new DataColumnSpecCreator(leftSpecToAdd);
+            newSpec.setName(newName);
+            newSpec.removeAllHandlers();
+            DataColumnSpec disambiguatedColumn = columnDisambiguate(newSpec.createSpec(), takenNames::contains);
+            takenNames.add(disambiguatedColumn.getName());
+            leftOutputColumns.add(disambiguatedColumn);
+        }
     }
 
     /**
@@ -468,7 +476,7 @@ public final class JoinSpecification {
             return columnSpec;
         }
 
-        DataColumnSpecCreator a = new DataColumnSpecCreator(columnSpec);
+        var a = new DataColumnSpecCreator(columnSpec);
         a.setName(columnDisambiguate(name, isAmbiguous, disambiguator));
         a.removeAllHandlers();
         return a.createSpec();
@@ -535,10 +543,10 @@ public final class JoinSpecification {
 
         // this has as many columns as the left input table contributes to the merged match spec.
         int[] leftMergeSpecPart = m_mergeIncludes[InputTable.LEFT.ordinal()];
-        int[][] result = new int[leftMergeSpecPart.length][];
+        var result = new int[leftMergeSpecPart.length][];
         DataTableSpec rightOriginal = getSettings(InputTable.RIGHT).getTableSpec();
 
-        for (int i = 0; i < leftMergeSpecPart.length; i++) {
+        for (var i = 0; i < leftMergeSpecPart.length; i++) {
             // the i-th column in the merge spec references the j-th column in the original table
             int originalColumnIndex = leftMergeSpecPart[i];
             // use j to get the original column name in the left table
@@ -607,7 +615,7 @@ public final class JoinSpecification {
      * If a disjunctive join is performed, the values of merged columns can differ. Thus, this method performs an
      * additional consensus step when merging in the values of some right columns into a left column. E.g., L1 = R1 OR
      * L1 = R2 with merge join columns yields a single column L1=R1=R2 whose contents are determined by
-     * {@link #consensus(DataCell, DataRow, int[]).
+     * {@link #consensus(DataCell, DataRow, int[])}.
      *
      * @param left non-null row from the left input table
      * @param right non-null row from the right input table
@@ -615,34 +623,35 @@ public final class JoinSpecification {
      * @return the output row for the inner join results
      * @see Builder#mergeJoinColumns(boolean)
      */
+    @SuppressWarnings("javadoc")
     public DataRow rowJoin(final DataRow left, final DataRow right) {
 
         final int[] leftIncludes = getMatchTableIncludeIndices(InputTable.LEFT);
         final int[] rightIncludes = getMatchTableIncludeIndices(InputTable.RIGHT);
 
-        final DataCell[] dataCells = new DataCell[leftIncludes.length + rightIncludes.length];
+        final var dataCells = new DataCell[leftIncludes.length + rightIncludes.length];
 
-        int cell = 0;
+        var cell = 0;
 
         if (isConjunctive()) {
             // just use the left table's values for merged join columns, the right tables values are the same
-            for (int i = 0; i < leftIncludes.length; i++) {
+            for (var i = 0; i < leftIncludes.length; i++) {
                 dataCells[cell] = left.getCell(leftIncludes[i]);
                 cell++;
             }
-            for (int i = 0; i < rightIncludes.length; i++) {
+            for (var i = 0; i < rightIncludes.length; i++) {
                 dataCells[cell] = right.getCell(rightIncludes[i]);
                 cell++;
             }
         } else {
             final int[][] mergeLocations = getColumnLeftMergedLocations();
             // use the left table's values for merged join columns, the right tables values are equal
-            for (int i = 0; i < leftIncludes.length; i++) {
+            for (var i = 0; i < leftIncludes.length; i++) {
                 DataCell leftCell = left.getCell(leftIncludes[i]);
                 dataCells[cell] = isMergeJoinColumns() ? consensus(leftCell, right, mergeLocations[i]) : leftCell;
                 cell++;
             }
-            for (int i = 0; i < rightIncludes.length; i++) {
+            for (var i = 0; i < rightIncludes.length; i++) {
                 dataCells[cell] = right.getCell(rightIncludes[i]);
                 cell++;
             }
@@ -662,7 +671,7 @@ public final class JoinSpecification {
 
         // compare the content of all cells merged into the left table's column.
         // if they agree, use the common value, otherwise return a missing value
-        for (int i = 0; i < mergeLocations.length; i++) {
+        for (var i = 0; i < mergeLocations.length; i++) {
             if(!consensus.equals(right.getCell(mergeLocations[i]))) {
                 return DataType.getMissingCell();
             }
@@ -686,7 +695,7 @@ public final class JoinSpecification {
         DataCell consensus = lookupColumns.length == 0 ? DataType.getMissingCell() : null;
 
         // in case this column joins on one or more other columns, check whether they all agree to use that value
-        for (int i = 0; i < lookupColumns.length; i++) {
+        for (var i = 0; i < lookupColumns.length; i++) {
             // if any of the lookup values is missing, deliver a missing value
             if (lookupColumns[i] == -1) {
                 return DataType.getMissingCell();
@@ -719,11 +728,11 @@ public final class JoinSpecification {
      */
     public DataRow rowProjectOuter(final InputTable side, final DataRow unmatchedRow) {
         int[] includes = getSettings(side).getIncludeColumns();
-        final DataCell[] dataCells = new DataCell[includes.length];
+        final var dataCells = new DataCell[includes.length];
 
-        int cell = 0;
+        var cell = 0;
 
-        for (int i = 0; i < includes.length; i++) {
+        for (var i = 0; i < includes.length; i++) {
             dataCells[cell] = unmatchedRow.getCell(includes[i]);
             cell++;
         }
@@ -912,7 +921,7 @@ public final class JoinSpecification {
         private JoinSpecification buildTrusted() {
             try {
                 return build();
-            } catch (InvalidSettingsException ex) {
+            } catch (InvalidSettingsException ex) { // NOSONAR
                 assert false;
                 return null;
             }
@@ -1022,34 +1031,34 @@ public final class JoinSpecification {
         int[] leftCells = getMatchTableIncludeIndices(InputTable.LEFT);
         int[] rightCells = getMatchTableIncludeIndices(InputTable.RIGHT);
 
-        final DataCell[] dataCells = new DataCell[leftCells.length + rightCells.length];
-        int cell = 0;
+        final var dataCells = new DataCell[leftCells.length + rightCells.length];
+        var cell = 0;
 
         if (isMergeJoinColumns()) {
 
             int[][] lookupColumns = getColumnLeftMergedLocations();
 
             // put values from merged columns into left table
-            for (int i = 0; i < leftCells.length; i++) {
+            for (var i = 0; i < leftCells.length; i++) {
                 // use missing value if this column doesn't merge any columns from the right table
                 dataCells[cell] = consensus(rightUnmatched, lookupColumns[i]);
                 cell++;
             }
             // skip the merged join columns
-            for (int i = 0; i < rightCells.length; i++) {
+            for (var i = 0; i < rightCells.length; i++) {
                 dataCells[cell] = rightUnmatched.getCell(rightCells[i]);
                 cell++;
             }
 
         } else {
             // just fill all left table columns with missing values
-            for (int i = 0; i < leftCells.length; i++) {
+            for (var i = 0; i < leftCells.length; i++) {
                 dataCells[cell] = DataType.getMissingCell();
                 cell++;
             }
 
             // and append everything that has survived projection to right outer format
-            for (int i = 0; i < rightCells.length; i++) {
+            for (var i = 0; i < rightCells.length; i++) {
                 dataCells[cell] = rightUnmatched.getCell(rightCells[i]);
                 cell++;
             }
@@ -1072,14 +1081,14 @@ public final class JoinSpecification {
         // this skips merged join columns if merge join columns is on
         int[] rightCells = getMatchTableIncludeIndices(InputTable.RIGHT);
 
-        final DataCell[] dataCells = new DataCell[leftCells.length + rightCells.length];
-        int cell = 0;
+        final var dataCells = new DataCell[leftCells.length + rightCells.length];
+        var cell = 0;
 
-        for (int i = 0; i < leftCells.length; i++) {
+        for (var i = 0; i < leftCells.length; i++) {
             dataCells[cell] = leftUnmatched.getCell(leftCells[i]);
             cell++;
         }
-        for (int i = 0; i < rightCells.length; i++) {
+        for (var i = 0; i < rightCells.length; i++) {
             dataCells[cell] = DataType.getMissingCell();
             cell++;
         }
@@ -1122,11 +1131,10 @@ public final class JoinSpecification {
                 if (right == null) {
                     return new RowKey(left.getKey().getString().concat(m_leftUnmatchedSuffix));
                 }
-                String leftKey = left.getKey().getString();
-                String rightKey = right.getKey().getString();
+                var leftKey = left.getKey().getString();
+                var rightKey = right.getKey().getString();
                 return new RowKey(leftKey.concat(separator).concat(rightKey));
             }
         };
     }
-
 }

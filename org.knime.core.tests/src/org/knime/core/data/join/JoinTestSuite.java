@@ -55,13 +55,9 @@ import org.knime.core.data.join.implementation.BlockHashJoinTest;
 import org.knime.core.data.join.results.JoinContainerTest;
 
 /**
- *
- * @author carlwitt
+ * @author Carl Witt, KNIME AG, Zurich, Switzerland
  */
 @RunWith(Suite.class)
-@SuiteClasses({ JoinSpecificationTest.class,
-        BlockHashJoinTest.class,
-        JoinContainerTest.class})
+@SuiteClasses({JoinSpecificationTest.class, BlockHashJoinTest.class, JoinContainerTest.class})
 public class JoinTestSuite {
-
 }

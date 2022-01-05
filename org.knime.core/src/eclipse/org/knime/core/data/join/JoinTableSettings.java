@@ -50,6 +50,7 @@ package org.knime.core.data.join;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -65,8 +66,6 @@ import org.knime.core.data.join.implementation.OrderedRow;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.InvalidSettingsException;
-
-import com.google.common.collect.ImmutableList;
 
 /**
  * Bundle included columns, join columns, etc. for a given input table. Two {@link JoinTableSettings} can be combined
@@ -181,6 +180,32 @@ public class JoinTableSettings {
             return String.format("JoinClause (%s) %s", isColumn() ? "String" : "SpecialJoinColumn", toColumnName());
         }
 
+        @Override
+        public int hashCode() {
+            final var prime = 31;
+            var result = 1;
+            result = prime * result + ((m_columnName == null) ? 0 : m_columnName.hashCode());
+            result = prime * result + ((m_specialColumn == null) ? 0 : m_specialColumn.hashCode());
+            return result;
+        }
+
+        @Override
+        public boolean equals(final Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            JoinColumn other = (JoinColumn)obj;
+
+            return Objects.equals(m_specialColumn, other.m_specialColumn)
+                || Objects.equals(m_columnName, other.m_columnName);
+        }
+
     }
 
     /**
@@ -233,12 +258,13 @@ public class JoinTableSettings {
     final boolean m_retainUnmatched;
 
     /**
+     * Unmodifiable.
      * Contains either the left-hand sides or the right-hand sides of the join equality clauses, depending on
      * {@link #getSide()}. A side of a clause can be either a {@link SpecialJoinColumn} or a {@link String} denoting a
      * column name in {@link #getTableSpec()}. The contents do not have to be unique, as for instance a column name may
      * appear in multiple join clauses.
      */
-    private final ImmutableList<JoinColumn> m_joinClauses;
+    private final List<JoinColumn> m_joinClauses;
 
     /**
      * Column offsets containing the values for the join clauses, might include negative values for
@@ -247,16 +273,18 @@ public class JoinTableSettings {
     private final int[] m_joinClauseColumns;
 
     /**
+     * Unmodifiable.
      * @see #getJoinColumnNames()
      */
-    private final ImmutableList<String> m_joinColumnNames;
+    private final List<String> m_joinColumnNames;
 
     /**
+     * Unmodifiable.
      * Names of the columns to include from this table in the result table. The contents are unique, as each column is
      * either included or not. This doesn't have to cover join columns. The result table may also include columns from
      * the other input table.
      */
-    private final ImmutableList<String> m_includeColumnNames;
+    private final List<String> m_includeColumnNames;
 
     /** Column offsets of the included columns in the original table. */
     final int[] m_includeColumns;
@@ -299,13 +327,13 @@ public class JoinTableSettings {
         m_side = side;
         m_retainUnmatched = retainUnmatched;
 
-        m_joinClauses = ImmutableList.copyOf(joinColumns);
+        m_joinClauses = List.of(joinColumns);
 
-        m_includeColumnNames = ImmutableList.copyOf(includeColumns);
+        m_includeColumnNames = List.of(includeColumns);
         validate(m_includeColumnNames, "include", spec);
 
         // join and include columns
-        m_joinColumnNames = ImmutableList.copyOf(
+        m_joinColumnNames = List.of(
             m_joinClauses.stream().filter(JoinColumn::isColumn).map(JoinColumn::toColumnName).toArray(String[]::new));
 
         // make sure join column names are present in the data table specification
@@ -429,7 +457,7 @@ public class JoinTableSettings {
     JoinTableSettings condensed(final boolean storeRowOffsets) {
 
         // keep only materialized columns
-        final ColumnRearranger materializedColFilter = new ColumnRearranger(getTableSpec());
+        final var materializedColFilter = new ColumnRearranger(getTableSpec());
         materializedColFilter.keepOnly(getMaterializeColumnIndices());
         final DataTableSpec materializedColumns = materializedColFilter.createSpec();
 
@@ -464,7 +492,7 @@ public class JoinTableSettings {
             throw new InvalidSettingsException(
                 "Cannot reduce join input table settings to join clause " + clause + ", it does not exist.");
         }
-        JoinColumn[] joinColumn = new JoinColumn[]{getJoinClauses().get(clause)};
+        var joinColumn = new JoinColumn[]{getJoinClauses().get(clause)};
         String[] includeColumns = getIncludeColumnNames().toArray(String[]::new);
         return new JoinTableSettings(isRetainUnmatched(), joinColumn, includeColumns, getSide(), getTableSpec());
     }
@@ -546,8 +574,8 @@ public class JoinTableSettings {
      */
     public DataCell[] get(final DataRow row) {
         int[] joinClauseColumns = getJoinClauseColumns();
-        DataCell[] cells = new DataCell[joinClauseColumns.length];
-        for (int i = 0; i < cells.length; i++) {
+        var cells = new DataCell[joinClauseColumns.length];
+        for (var i = 0; i < cells.length; i++) {
             cells[i] = joinClauseColumns[i] == SpecialJoinColumn.ROW_KEY.getColumnIndexIndicator()
                 ? new StringCell(row.getKey().getString()) : row.getCell(joinClauseColumns[i]);
             if (cells[i].isMissing()) {

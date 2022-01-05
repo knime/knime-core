@@ -164,7 +164,7 @@ class BlockHashJoin extends JoinImplementation {
 
         // this may be a partial index (if memory runs low) and thus may be replaced with an index covering the next
         // rows of the hash input
-        HashIndex index = newHashIndex.get();
+        HashIndex index = newHashIndex.get(); // NOSONAR
 
         getProgress().setMessage("Indexing smaller table.");
 
@@ -216,7 +216,7 @@ class BlockHashJoin extends JoinImplementation {
 
         getProgress().setMessage("Single pass over larger table.");
 
-        CancelChecker checkCanceled = CancelChecker.checkCanceledPeriodicallyWithProgress(m_exec, 100, probe.size());
+        var checkCanceled = CancelChecker.checkCanceledPeriodicallyWithProgress(m_exec, 100, probe.size());
         JoinResult.enumerateWithResources(probe, partialIndex::joinSingleRow, checkCanceled);
 
         partialIndex.forUnmatchedHashRows(unmatchedHashRows);
