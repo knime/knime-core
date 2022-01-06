@@ -141,9 +141,13 @@ public abstract class NodeDialog implements DataServiceProvider {
                     settings.put(SettingsType.MODEL, modelSettings);
                 }
                 if (m_settingsTypes.contains(SettingsType.VIEW)) {
-                    // TODO
-                    // var viewSettings = m_nnc.getSingleNodeContainerSettings().getViewSettings();
-                    // settings.put(SettingsType.VIEW, viewSettings);
+                    NodeSettings viewSettings;
+                    try {
+                        viewSettings = m_nnc.getNodeSettings().getNodeSettings(CFG_VIEW);
+                    } catch (InvalidSettingsException ex) { // NOSONAR
+                        viewSettings = new NodeSettings(CFG_VIEW);
+                    }
+                    settings.put(SettingsType.VIEW, viewSettings);
                 }
                 return m_settingsMapper.fromSettings(settings, specs);
             } finally {
@@ -178,13 +182,15 @@ public abstract class NodeDialog implements DataServiceProvider {
                 }
 
                 m_settingsMapper.toSettings(data, settingsMap);
-                wfm.loadNodeSettings(nodeID, settings);
 
                 if (viewSettings != null) {
                     var nodeView = NodeViewManager.getInstance().getNodeView(m_nnc);
                     nodeView.validateSettings(viewSettings);
                     nodeView.loadValidatedSettingsFrom(viewSettings);
                 }
+
+                wfm.loadNodeSettings(nodeID, settings);
+
             } catch (InvalidSettingsException ex) {
                 throw new IOException("Invalid node settings", ex);
             }

@@ -53,6 +53,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 import static org.knime.core.webui.node.view.NodeViewTest.createNodeView;
 import static org.knime.core.webui.page.PageTest.BUNDLE_ID;
 import static org.knime.testing.util.WorkflowManagerUtil.createAndAddNode;
@@ -62,17 +63,25 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
 import org.awaitility.Awaitility;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettings;
+import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeInputNodeFactory;
+import org.knime.core.webui.data.ApplyDataService;
+import org.knime.core.webui.data.DataService;
+import org.knime.core.webui.data.InitialDataService;
 import org.knime.core.webui.page.Page;
 import org.knime.testing.node.view.NodeViewNodeFactory;
 import org.knime.testing.node.view.NodeViewNodeModel;
@@ -128,7 +137,63 @@ public class NodeViewManagerTest {
             () -> NodeViewManager.getInstance().getNodeView(nc).callTextInitialDataService());
         assertThat(ex.getMessage(), containsString("No text initial data service available"));
         assertThat(nodeView.getPage().isCompletelyStatic(), is(false));
+    }
 
+    /**
+     * Makes sure that view settings are loaded from the node into the node view when created for the first time.
+     *
+     * @throws InvalidSettingsException
+     */
+    @Test
+    public void testLoadViewSettingsOnViewCreation() throws InvalidSettingsException {
+        var page = Page.builder(() -> "test page content", "index.html").build();
+        AtomicReference<NodeSettingsRO> loadedNodeSettings = new AtomicReference<>();
+        NativeNodeContainer nc = createNodeWithNodeView(m_wfm, m -> new NodeView() { // NOSONAR
+
+            @Override
+            public Optional<InitialDataService> getInitialDataService() {
+                return Optional.empty();
+            }
+
+            @Override
+            public Optional<DataService> getDataService() {
+                return Optional.empty();
+            }
+
+            @Override
+            public Optional<ApplyDataService> getApplyDataService() {
+                return Optional.empty();
+            }
+
+            @Override
+            public Page getPage() {
+                return page;
+            }
+
+            @Override
+            public void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+                //
+            }
+
+            @Override
+            public void loadValidatedSettingsFrom(final NodeSettingsRO settings) {
+                loadedNodeSettings.set(settings);
+            }
+
+        });
+
+        // prepare view settings
+        var settings = new NodeSettings("node_settings");
+        m_wfm.saveNodeSettings(nc.getID(), settings);
+        var viewSettings = new NodeSettings("view");
+        viewSettings.addString("view setting key", "view setting value");
+        settings.addNodeSettings(viewSettings);
+        settings.addNodeSettings(new NodeSettings("model"));
+        m_wfm.loadNodeSettings(nc.getID(), settings);
+
+        // test
+        NodeViewManager.getInstance().getNodeView(nc);
+        assertTrue(loadedNodeSettings.get().containsKey("view setting key"));
     }
 
     /**
@@ -200,9 +265,10 @@ public class NodeViewManagerTest {
             testGetNodeViewPageResource(resourcePrefix1, resourcePrefix2);
         });
 
-        m_wfm.executeAllAndWaitUntilDone();
-        // make sure that the pages are removed from the cache (e.g. after a node state change)
-        assertThat(nodeViewManager.getPageMapSize(), is(0));
+        m_wfm.removeNode(nnc.getID());
+        // make sure that the pages are removed from the cache after the node has been deleted)
+        Awaitility.await().pollInterval(1, TimeUnit.SECONDS).atMost(5, TimeUnit.SECONDS)
+            .untilAsserted(() -> assertThat(nodeViewManager.getPageMapSize(), is(1)));
     }
 
     private static void testGetNodeViewPageResource(final String resourcePrefix1, final String resourcePrefix2) {
@@ -245,9 +311,9 @@ public class NodeViewManagerTest {
         assertThat(nodeViewManager.getNodeViewMapSize(), is(1));
         m_wfm.executeAllAndWaitUntilDone();
         Awaitility.await().pollInterval(1, TimeUnit.SECONDS).atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
-            assertThat("dynamic pages are expected to be removed if the node state changed",
-                new File(new URI(url)).exists(), is(false));
-            assertThat(nodeViewManager.getNodeViewMapSize(), is(0));
+            assertThat("dynamic pages are expected to be remain if the node state changed",
+                new File(new URI(url)).exists(), is(true));
+            assertThat(nodeViewManager.getNodeViewMapSize(), is(1));
         });
 
         // remove node

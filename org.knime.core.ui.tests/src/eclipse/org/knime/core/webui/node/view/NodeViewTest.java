@@ -175,11 +175,6 @@ public class NodeViewTest {
             }
 
             @Override
-            public void modelChanged() {
-                //
-            }
-
-            @Override
             public void loadValidatedSettingsFrom(final NodeSettingsRO settings) {
                 //
             }

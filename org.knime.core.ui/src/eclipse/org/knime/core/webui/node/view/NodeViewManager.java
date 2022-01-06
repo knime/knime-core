@@ -56,9 +56,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.WeakHashMap;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
@@ -66,8 +68,6 @@ import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.NodeStateChangeListener;
-import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -84,6 +84,8 @@ import org.knime.core.webui.page.Resource;
  */
 public final class NodeViewManager {
 
+    private static final String CFG_VIEW = "view";
+
     private static final String NODE_VIEW_DEBUG_PATTERN_PROP = "org.knime.ui.dev.node.view.url.factory-class";
 
     private static final String NODE_VIEW_DEBUG_URL_PROP = "org.knime.ui.dev.node.view.url";
@@ -92,7 +94,7 @@ public final class NodeViewManager {
 
     private static NodeViewManager instance;
 
-    private final Map<NodeID, NodeView> m_nodeViewMap = new HashMap<>();
+    private final Map<NodeContainer, NodeView> m_nodeViewMap = new WeakHashMap<>();
 
     private final Map<NodeID, NodeCleanUpCallback> m_nodeCleanUpCallbacks = new HashMap<>();
 
@@ -135,7 +137,7 @@ public final class NodeViewManager {
             throw new IllegalArgumentException("The node " + nc.getNameWithID() + " doesn't provide a node view");
         }
         var nnc = (NativeNodeContainer)nc;
-        var nodeView = m_nodeViewMap.get(nnc.getID());
+        var nodeView = m_nodeViewMap.get(nnc);
         if (nodeView != null) {
             return nodeView;
         }
@@ -150,9 +152,15 @@ public final class NodeViewManager {
             var nodeView = fac.createNodeView(nnc.getNodeModel());
             registerNodeView(nnc, nodeView);
 
-            // TODO load node view settings
-            // var viewSettings = nnc.getSingleNodeContainerSettings().getViewSettings();
-            // nodeView.loadValidatedSettingsFrom(viewSettings);
+            var nodeSettings = nnc.getNodeSettings();
+            if (nodeSettings.containsKey(CFG_VIEW)) {
+                try {
+                    var viewSettings = nodeSettings.getNodeSettings(CFG_VIEW);
+                    nodeView.loadValidatedSettingsFrom(viewSettings);
+                } catch (InvalidSettingsException ex) { // NOSONAR
+                    //
+                }
+            }
 
             return nodeView;
         } finally {
@@ -162,9 +170,10 @@ public final class NodeViewManager {
 
     private void registerNodeView(final NativeNodeContainer nnc, final NodeView nodeView) {
         var nodeId = nnc.getID();
-        m_nodeViewMap.put(nodeId, nodeView);
+        m_nodeViewMap.put(nnc, nodeView);
+
         var nodeCleanUpCallback = new NodeCleanUpCallback(nnc, () -> {
-            m_nodeViewMap.remove(nodeId);
+            m_nodeViewMap.remove(nnc);
             m_nodeCleanUpCallbacks.remove(nodeId);
         });
         m_nodeCleanUpCallbacks.put(nodeId, nodeCleanUpCallback);
@@ -319,11 +328,11 @@ public final class NodeViewManager {
     }
 
     /*
-     * Helper to clean-up after a node removal, node state change or workflow disposal.
+     * Helper to clean-up after a node removal or workflow disposal.
      * Once a clean-up has been triggered, all the registered listeners (on the node and the workflow) are removed which
      * renders the NodeCleanUpCallback-instance useless afterwards.
      */
-    private static class NodeCleanUpCallback implements WorkflowListener, NodeStateChangeListener {
+    private static class NodeCleanUpCallback implements WorkflowListener {
 
         private final List<Runnable> m_onCleanUp = new ArrayList<>();
 
@@ -331,7 +340,6 @@ public final class NodeViewManager {
 
         NodeCleanUpCallback(final NativeNodeContainer nnc, final Runnable onCleanUp) {
             WorkflowManager.ROOT.addListener(NodeCleanUpCallback.this);
-            nnc.addNodeStateChangeListener(NodeCleanUpCallback.this);
             nnc.getParent().addListener(NodeCleanUpCallback.this);
             m_nnc = nnc;
             m_onCleanUp.add(onCleanUp);
@@ -357,14 +365,8 @@ public final class NodeViewManager {
             }
         }
 
-        @Override
-        public void stateChanged(final NodeStateEvent state) {
-            cleanUp();
-        }
-
         private void cleanUp() {
             WorkflowManager.ROOT.removeListener(NodeCleanUpCallback.this);
-            m_nnc.removeNodeStateChangeListener(NodeCleanUpCallback.this);
             m_nnc.getParent().removeListener(NodeCleanUpCallback.this);
             m_onCleanUp.forEach(Runnable::run);
             m_nnc = null;

@@ -49,16 +49,15 @@
 package org.knime.core.webui.node.dialog;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.WeakHashMap;
 import java.util.regex.Pattern;
 
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContext;
-import org.knime.core.node.workflow.NodeID;
 import org.knime.core.webui.page.PageUtil;
 
 /**
@@ -76,7 +75,7 @@ public final class NodeDialogManager {
 
     private static NodeDialogManager instance;
 
-    private final Map<NodeID, NodeDialog> m_nodeDialogMap = new HashMap<>();
+    private final Map<NodeContainer, NodeDialog> m_nodeDialogMap = new WeakHashMap<>();
 
     /**
      * Returns the singleton instance for this class.
@@ -114,7 +113,7 @@ public final class NodeDialogManager {
         if (!hasNodeDialog(nc)) {
             throw new IllegalArgumentException("The node " + nc.getNameWithID() + " doesn't provide a node dialog");
         }
-        return m_nodeDialogMap.computeIfAbsent(nc.getID(), id -> createNodeDialog(nc));
+        return m_nodeDialogMap.computeIfAbsent(nc, id -> createNodeDialog(nc));
     }
 
     private static NodeDialog createNodeDialog(final NodeContainer nc) {

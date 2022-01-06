@@ -70,11 +70,6 @@ public interface NodeView extends DataServiceProvider {
     Page getPage();
 
     /**
-     * TODO - node model state changed
-     */
-    void modelChanged();
-
-    /**
      * Validates the given settings before loading it via {@link #loadValidatedSettingsFrom(NodeSettingsRO)}.
      *
      * @param settings settings to validate

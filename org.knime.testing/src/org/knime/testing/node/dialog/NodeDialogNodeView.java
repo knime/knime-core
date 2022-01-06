@@ -44,78 +44,66 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Aug 31, 2021 (hornm): created
+ *   Jan 6, 2022 (hornm): created
  */
-package org.knime.core.webui.node.view;
+package org.knime.testing.node.dialog;
 
-import java.io.IOException;
 import java.util.Optional;
 
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.wizard.page.WizardPageContribution;
-import org.knime.core.node.workflow.NativeNodeContainer;
-import org.knime.core.node.workflow.NodeContext;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.webui.data.ApplyDataService;
+import org.knime.core.webui.data.DataService;
 import org.knime.core.webui.data.InitialDataService;
-import org.knime.core.webui.data.text.TextInitialDataService;
-import org.knime.core.webui.data.text.TextReExecuteDataService;
+import org.knime.core.webui.node.view.NodeView;
+import org.knime.core.webui.page.Page;
 
 /**
- * Implemented by {@link NodeFactory}s to register a node view.
- *
- * Pending API - needs to be integrated with {@link NodeFactory} eventually.
+ * A node view to test that dialog settings are properly loaded here and saved with the node.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
- * @param <T> the node model this node view will have access to
- *
- * @since 4.5
  */
-public interface NodeViewFactory<T extends NodeModel> extends WizardPageContribution {
+public class NodeDialogNodeView implements NodeView {
+
+    private NodeSettingsRO m_loadNodeSettings;
 
     /**
-     * Creates a new node view instance. It is guaranteed that a {@link NodeContext} is available when the method is
-     * called.
+     * Allows to check the latest load node settings via {@link #loadValidatedSettingsFrom(NodeSettingsRO)}.
      *
-     * @param nodeModel the node model to create the view for
-     * @return a new node view instance
+     * @return the node settings or <code>null</code> if not load, yet
      */
-    NodeView createNodeView(T nodeModel);
+    public NodeSettingsRO getLoadNodeSettings() {
+        return m_loadNodeSettings;
+    }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    default Optional<String> validateViewValue(final NativeNodeContainer nnc, final String value) throws IOException {
-        var nodeView = NodeViewManager.getInstance().getNodeView(nnc);
-        var service = nodeView.getApplyDataService().orElse(null);
-        if (service instanceof TextReExecuteDataService) {
-            return ((TextReExecuteDataService)service).validateData(value);
-        }
+    public Optional<InitialDataService> getInitialDataService() {
         return Optional.empty();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    default void loadViewValue(final NativeNodeContainer nnc, final String value) throws IOException {
-        var nodeView = NodeViewManager.getInstance().getNodeView(nnc);
-        var service = nodeView.getApplyDataService().orElse(null);
-        if (service instanceof TextReExecuteDataService) {
-            ((TextReExecuteDataService)service).applyData(value);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    default Optional<String> getInitialViewValue(final NativeNodeContainer nnc) {
-        var nodeView = NodeViewManager.getInstance().getNodeView(nnc);
-        InitialDataService service = nodeView.getInitialDataService().orElse(null);
-        if (service instanceof TextInitialDataService) {
-            return Optional.of(((TextInitialDataService)service).getInitialData());
-        }
+    public Optional<DataService> getDataService() {
         return Optional.empty();
     }
+
+    @Override
+    public Optional<ApplyDataService> getApplyDataService() {
+        return Optional.empty();
+    }
+
+    @Override
+    public Page getPage() {
+        return null;
+    }
+
+    @Override
+    public void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+        //
+    }
+
+    @Override
+    public void loadValidatedSettingsFrom(final NodeSettingsRO settings) {
+        m_loadNodeSettings = settings;
+    }
+
 }

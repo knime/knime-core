@@ -111,6 +111,8 @@ public abstract class SingleNodeContainer extends NodeContainer {
      * settings are not available in the derived node model. */
     static final String CFG_VARIABLES = "variables";
 
+    private static final String CFG_VIEW = "view";
+
     /** Name of the sub-directory containing node-local files. These files
      * manually copied by the user and the node will automatically list those
      * files as node-local flow variables in its configuration dialog.
@@ -1101,6 +1103,7 @@ public abstract class SingleNodeContainer extends NodeContainer {
         private MemoryPolicy m_memoryPolicy = MemoryPolicy.CacheSmallInMemory;
         private NodeSettingsRO m_modelSettings;
         private NodeSettingsRO m_variablesSettings;
+        private NodeSettingsRO m_viewSettings;
 
         /**
          * Creates a settings object with default values.
@@ -1136,6 +1139,7 @@ public abstract class SingleNodeContainer extends NodeContainer {
                 m_variablesSettings = null;
             }
             m_modelSettings = settings.getNodeSettings(CFG_MODEL);
+            m_viewSettings = settings.containsKey(CFG_VIEW) ? settings.getNodeSettings(CFG_VIEW) : null;
         }
 
         /**
@@ -1154,7 +1158,10 @@ public abstract class SingleNodeContainer extends NodeContainer {
                 NodeSettingsWO variables = settings.addNodeSettings(CFG_VARIABLES);
                 m_variablesSettings.copyTo(variables);
             }
-
+            if (m_viewSettings != null) {
+                NodeSettingsWO view = settings.addNodeSettings(CFG_VIEW);
+                m_viewSettings.copyTo(view);
+            }
         }
 
         /**

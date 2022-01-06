@@ -60,13 +60,15 @@ import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.webui.node.dialog.NodeDialog;
 import org.knime.core.webui.node.dialog.NodeDialogFactory;
 import org.knime.core.webui.node.view.NodeView;
+import org.knime.core.webui.node.view.NodeViewFactory;
 
 /**
- * Dummy node factory for tests around the {@link NodeView}.
+ * Dummy node factory for tests around the {@link NodeDialog}.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
-public class NodeDialogNodeFactory extends NodeFactory<NodeDialogNodeModel> implements NodeDialogFactory {
+public class NodeDialogNodeFactory extends NodeFactory<NodeDialogNodeModel>
+    implements NodeDialogFactory, NodeViewFactory<NodeDialogNodeModel> {
 
     private final Supplier<NodeDialog> m_nodeDialogCreator;
 
@@ -85,6 +87,14 @@ public class NodeDialogNodeFactory extends NodeFactory<NodeDialogNodeModel> impl
         assertThat("A node context is expected to be given", NodeContext.getContext().getNodeContainer(),
             is(notNullValue()));
         return m_nodeDialogCreator.get();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeView createNodeView(final NodeDialogNodeModel nodeModel) {
+        return new NodeDialogNodeView();
     }
 
     /**

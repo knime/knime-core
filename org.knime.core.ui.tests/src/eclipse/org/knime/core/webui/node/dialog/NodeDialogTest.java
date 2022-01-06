@@ -68,8 +68,10 @@ import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.webui.data.DataService;
 import org.knime.core.webui.data.text.TextDataService;
+import org.knime.core.webui.node.view.NodeViewManager;
 import org.knime.core.webui.page.Page;
 import org.knime.testing.node.dialog.NodeDialogNodeModel;
+import org.knime.testing.node.dialog.NodeDialogNodeView;
 import org.knime.testing.util.WorkflowManagerUtil;
 
 /**
@@ -109,11 +111,12 @@ public class NodeDialogTest {
             public void toSettings(final String s, final Map<SettingsType, NodeSettingsWO> settings) {
                 var split = s.split(",");
                 settings.get(SettingsType.MODEL).addString(split[0], split[1]);
-                // TODO test VIEW settings type, too
+                settings.get(SettingsType.VIEW).addString(split[0], split[1]);
             }
 
             @Override
             public String fromSettings(final Map<SettingsType, NodeSettingsRO> settings, final PortObjectSpec[] specs) {
+                assertThat(settings.size(), is(2));
                 return "the node settings";
             }
         }, new TextDataService() {
@@ -130,8 +133,12 @@ public class NodeDialogTest {
         assertThat(newNodeDialog.callTextInitialDataService(), is("the node settings"));
         assertThat(newNodeDialog.callTextDataService(""), is("general data service"));
         newNodeDialog.callTextAppyDataService("key,node settings value");
-        var loadNodeSettings = ((NodeDialogNodeModel)nc.getNode().getNodeModel()).getLoadNodeSettings();
-        assertThat(loadNodeSettings.getString("key"), is("node settings value"));
+        var modelSettings = ((NodeDialogNodeModel)nc.getNode().getNodeModel()).getLoadNodeSettings();
+        assertThat(modelSettings.getString("key"), is("node settings value"));
+        assertThat(nc.getNodeSettings().getNodeSettings("model").getString("key"), is("node settings value"));
+        var viewSettings = ((NodeDialogNodeView)NodeViewManager.getInstance().getNodeView(nc)).getLoadNodeSettings();
+        assertThat(viewSettings.getString("key"), is("node settings value"));
+        assertThat(nc.getNodeSettings().getNodeSettings("view").getString("key"), is("node settings value"));
         String message =
             assertThrows(IOException.class, () -> newNodeDialog.callTextAppyDataService("ERROR,invalid")).getMessage();
         assertThat(message, is("Invalid node settings"));
@@ -162,7 +169,7 @@ public class NodeDialogTest {
     }
 
     private static NodeDialog createNodeDialog(final Page page, final TextSettingsMapper settingsMapper, final DataService dataService) {
-        return new NodeDialog(settingsMapper, SettingsType.MODEL) {
+        return new NodeDialog(settingsMapper, SettingsType.MODEL, SettingsType.VIEW) {
 
             @Override
             public Optional<DataService> getDataService() {
