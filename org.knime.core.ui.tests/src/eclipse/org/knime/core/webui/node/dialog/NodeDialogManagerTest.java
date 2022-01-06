@@ -111,7 +111,7 @@ public class NodeDialogManagerTest {
      */
     @Test
     public void testSimpleNodeDialogNode() {
-        var page = Page.builderFromString(() -> "test page content", "index.html").build();
+        var page = Page.builder(() -> "test page content", "index.html").build();
         NativeNodeContainer nc = createNodeWithNodeDialog(m_wfm, () -> createNodeDialog(page));
 
         assertThat("node expected to have a node dialog", NodeDialogManager.hasNodeDialog(nc), is(true));
@@ -131,7 +131,7 @@ public class NodeDialogManagerTest {
     @Test
     public void testGetNodeDialogPageUrl() throws URISyntaxException, IOException {
         var staticPage = Page.builder(BUNDLE_ID, "files", "page.html").addResourceFile("resource.html").build();
-        var dynamicPage = Page.builderFromString(() -> "page content", "page.html")
+        var dynamicPage = Page.builder(() -> "page content", "page.html")
             .addResourceFromString(() -> "resource content", "resource.html").build();
         NativeNodeContainer nnc = createNodeWithNodeDialog(m_wfm, () -> createNodeDialog(staticPage));
         NativeNodeContainer nnc2 = createNodeWithNodeDialog(m_wfm, () -> createNodeDialog(staticPage));
@@ -154,7 +154,7 @@ public class NodeDialogManagerTest {
 
         // impose node state changes
         m_wfm.executeAllAndWaitUntilDone();
-        var dynamicPage2 = Page.builderFromString(() -> "new page content", "page.html")
+        var dynamicPage2 = Page.builder(() -> "new page content", "page.html")
             .addResourceFromString(() -> "resource content", "resource.html").build();
         nnc = createNodeWithNodeDialog(m_wfm, () -> createNodeDialog(dynamicPage2));
         String url5 = nodeDialogManager.getNodeDialogPageUrl(nnc);

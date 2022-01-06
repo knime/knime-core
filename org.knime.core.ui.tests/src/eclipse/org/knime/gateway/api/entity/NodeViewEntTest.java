@@ -97,7 +97,7 @@ public class NodeViewEntTest {
         Assert.assertThrows(IllegalArgumentException.class, () -> new NodeViewEnt(nncWithoutNodeView, null));
 
         Function<NodeViewNodeModel, NodeView> nodeViewCreator = m -> {
-            Page p = Page.builderFromString(() -> "blub", "index.html").build();
+            Page p = Page.builder(() -> "blub", "index.html").build();
             return NodeViewTest.createNodeView(p, new TextInitialDataService() {
 
                 @Override

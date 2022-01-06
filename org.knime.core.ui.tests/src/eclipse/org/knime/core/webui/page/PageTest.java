@@ -95,7 +95,7 @@ public class PageTest {
         page = Page.builder(BUNDLE_ID, "files", "component.umd.min.js").build();
         assertThat(page.getType(), is(Type.VUE_COMPONENT_LIB));
 
-        var page2 = Page.builderFromString(() -> "content", "component.blub").build();
+        var page2 = Page.builder(() -> "content", "component.blub").build();
         assertThrows(IllegalArgumentException.class, page2::getType);
     }
 

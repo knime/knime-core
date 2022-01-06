@@ -115,7 +115,7 @@ public class NodeViewNodeFactory extends NodeFactory<NodeViewNodeModel> implemen
         m_numInputs = numInputs;
         m_numOutputs = numOutputs;
         m_nodeViewCreator = m -> { // NOSONAR
-            return createNodeView(Page.builderFromString(() -> "foo", "index.html")
+            return createNodeView(Page.builder(() -> "foo", "index.html")
                 .addResourceFromString(() -> "bar", "resource.html").build(), new TextInitialDataService() {
                     @Override
                     public String getInitialData() {

@@ -166,7 +166,7 @@ public final class Page implements Resource {
      * @param relativePath the relative path of the page (including the page resource name itself)
      * @return a new {@link PageBuilder}-instance
      */
-    public static PageBuilder builder(final Supplier<InputStream> content, final String relativePath) {
+    public static PageBuilder builder(final InputStreamSupplier content, final String relativePath) {
         return new PageBuilder(content, relativePath);
     }
 
@@ -178,10 +178,24 @@ public final class Page implements Resource {
      * @param relativePath the relative path of the page (including the page resource name itself)
      * @return a new {@link PageBuilder}-instance
      */
-    // TODO instead of 'builderFromString' we could overload the 'builder'-method by
-    // introducing extra 'StringSupplier' and 'InputStreamSupplier' functional interfaces?
-    public static PageBuilder builderFromString(final Supplier<String> content, final String relativePath) {
+    public static PageBuilder builder(final StringSupplier content, final String relativePath) {
         return builder(() -> new ByteArrayInputStream(content.get().getBytes(StandardCharsets.UTF_8)), relativePath);
+    }
+
+    /**
+     * {@link Supplier} of a {@link String}.
+     */
+    @FunctionalInterface
+    public interface StringSupplier extends Supplier<String> {
+        //
+    }
+
+    /**
+     * {@link Supplier} of a {@link InputStream}.
+     */
+    @FunctionalInterface
+    public interface InputStreamSupplier extends Supplier<InputStream> {
+        //
     }
 
 }

@@ -100,7 +100,7 @@ public class NodeViewTest {
      */
     @Test
     public void testCallDataServices() {
-        var page = Page.builderFromString(() -> "test page content", "index.html").build();
+        var page = Page.builder(() -> "test page content", "index.html").build();
         var nodeView = createNodeView(page, new TextInitialDataService() {
 
             @Override

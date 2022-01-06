@@ -117,7 +117,7 @@ public class NodeViewManagerTest {
      */
     @Test
     public void testSimpleNodeViewNode() {
-        var page = Page.builderFromString(() -> "test page content", "index.html").build();
+        var page = Page.builder(() -> "test page content", "index.html").build();
         NativeNodeContainer nc = createNodeWithNodeView(m_wfm, m -> createNodeView(page));
 
         assertThat("node expected to have a node view", NodeViewManager.hasNodeView(nc), is(true));
@@ -140,7 +140,7 @@ public class NodeViewManagerTest {
     @Test
     public void testGetNodeViewPageUrl() throws URISyntaxException, IOException {
         var staticPage = Page.builder(BUNDLE_ID, "files", "page.html").addResourceFile("resource.html").build();
-        var dynamicPage = Page.builderFromString(() -> "page content", "page.html")
+        var dynamicPage = Page.builder(() -> "page content", "page.html")
             .addResourceFromString(() -> "resource content", "resource.html").build();
         NativeNodeContainer nnc = createNodeWithNodeView(m_wfm, m -> createNodeView(staticPage));
         NativeNodeContainer nnc2 = createNodeWithNodeView(m_wfm, m -> createNodeView(staticPage));
@@ -163,7 +163,7 @@ public class NodeViewManagerTest {
 
         // impose node state changes
         m_wfm.executeAllAndWaitUntilDone();
-        var dynamicPage2 = Page.builderFromString(() -> "new page content", "page.html")
+        var dynamicPage2 = Page.builder(() -> "new page content", "page.html")
             .addResourceFromString(() -> "resource content", "resource.html").build();
         nnc = createNodeWithNodeView(m_wfm, m -> createNodeView(dynamicPage2));
         String url5 = nodeViewManager.getNodeViewPageUrl(nnc).orElse(null);
@@ -179,7 +179,7 @@ public class NodeViewManagerTest {
     @Test
     public void testGetNodeViewPagePath() {
         var staticPage = Page.builder(BUNDLE_ID, "files", "page.html").addResourceFile("resource.html").build();
-        var dynamicPage = Page.builderFromString(() -> "page content", "page.html")
+        var dynamicPage = Page.builder(() -> "page content", "page.html")
             .addResourceFromString(() -> "resource content", "resource.html").build();
         var nnc = createNodeWithNodeView(m_wfm, m -> createNodeView(staticPage));
         var nnc2 = createNodeWithNodeView(m_wfm, m -> createNodeView(dynamicPage));
@@ -234,7 +234,7 @@ public class NodeViewManagerTest {
      */
     @Test
     public void testNodeCleanUpDynamicPage() throws URISyntaxException {
-        var page = Page.builderFromString(() -> "test page content", "index.html").build();
+        var page = Page.builder(() -> "test page content", "index.html").build();
         var nc = createNodeWithNodeView(m_wfm, m -> createNodeView(page));
 
         var nodeViewManager = NodeViewManager.getInstance();

@@ -72,7 +72,7 @@ public class JsonReexecuteDataServiceTest {
     @Test
     public void testJsonReexecuteDataService() throws IOException {
         var wfm = WorkflowManagerUtil.createEmptyWorkflow();
-        var page = Page.builderFromString(() -> "content", "index.html").build();
+        var page = Page.builder(() -> "content", "index.html").build();
         NativeNodeContainer nnc =
             NodeViewManagerTest.createNodeWithNodeView(wfm, m -> NodeViewTest.createNodeView(page, m));
         wfm.executeAllAndWaitUntilDone();

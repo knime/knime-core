@@ -91,7 +91,7 @@ public class HiLiteListenerRegistryTest {
         var wfm = WorkflowManagerUtil.createEmptyWorkflow();
 
         Function<NodeViewNodeModel, NodeView> nodeViewCreator =
-            m -> NodeViewTest.createNodeView(Page.builderFromString(() -> "blub", "index.html").build());
+            m -> NodeViewTest.createNodeView(Page.builder(() -> "blub", "index.html").build());
         NativeNodeContainer nnc = WorkflowManagerUtil.createAndAddNode(wfm, new NodeViewNodeFactory(nodeViewCreator));
         var hiLiteHandler = nnc.getNodeModel().getInHiLiteHandler(0);
         hiLiteHandler.fireHiLiteEvent(new RowKey("k1"), new RowKey("k2"));

@@ -102,7 +102,7 @@ public class NodeDialogTest {
      */
     @Test
     public void testCallDataServices() throws IOException, InvalidSettingsException {
-        var page = Page.builderFromString(() -> "test page content", "index.html").build();
+        var page = Page.builder(() -> "test page content", "index.html").build();
         Supplier<NodeDialog> nodeDialogSupplier = () -> createNodeDialog(page, new TextSettingsMapper() { // NOSONAR
 
             @Override
