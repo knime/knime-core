@@ -56,23 +56,17 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObjectSpec;
 
 /**
- * Translates text-based settings (strings) used on the frontend-side from and to the backend-side settings
- * representation (i.e. {@link NodeSettings}).
+ * Translates text-based settings (strings) used on the frontend-side from (initial-data) and to (apply-data) the
+ * backend-side settings representation (i.e. {@link NodeSettings}).
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  * @author Marc Bux, KNIME GmbH, Berlin, Germany
  */
-public interface TextSettingsMapper {
+public interface TextSettingsDataService {
 
     /**
-     * Translates text-based settings to {@link NodeSettingsWO}-instances of certain {@link SettingsType}.
+     * Called when a dialog is initialized.
      *
-     * @param textSettings the text-based settings object
-     * @param settings the settings instances to write into
-     */
-    void toSettings(final String textSettings, Map<SettingsType, NodeSettingsWO> settings);
-
-    /**
      * Infers a single text-based settings representation from possibly multiple {@link NodeSettingsRO}-instances (one
      * per {@link SettingsType}).
      *
@@ -80,5 +74,15 @@ public interface TextSettingsMapper {
      * @param specs the specs for configuring the settings
      * @return a new text-based settings representation
      */
-    String fromSettings(Map<SettingsType, NodeSettingsRO> settings, PortObjectSpec[] specs);
+    String getInitialData(Map<SettingsType, NodeSettingsRO> settings, PortObjectSpec[] specs);
+
+    /**
+     * Called when dialog settings are applied.
+     *
+     * Translates text-based settings to {@link NodeSettingsWO}-instances of certain {@link SettingsType}.
+     *
+     * @param textSettings the text-based settings object
+     * @param settings the settings instances to write into
+     */
+    void applyData(final String textSettings, Map<SettingsType, NodeSettingsWO> settings);
 }

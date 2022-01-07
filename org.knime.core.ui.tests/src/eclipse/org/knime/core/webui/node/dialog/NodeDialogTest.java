@@ -105,17 +105,17 @@ public class NodeDialogTest {
     @Test
     public void testCallDataServices() throws IOException, InvalidSettingsException {
         var page = Page.builder(() -> "test page content", "index.html").build();
-        Supplier<NodeDialog> nodeDialogSupplier = () -> createNodeDialog(page, new TextSettingsMapper() { // NOSONAR
+        Supplier<NodeDialog> nodeDialogSupplier = () -> createNodeDialog(page, new TextSettingsDataService() { // NOSONAR
 
             @Override
-            public void toSettings(final String s, final Map<SettingsType, NodeSettingsWO> settings) {
+            public void applyData(final String s, final Map<SettingsType, NodeSettingsWO> settings) {
                 var split = s.split(",");
                 settings.get(SettingsType.MODEL).addString(split[0], split[1]);
                 settings.get(SettingsType.VIEW).addString(split[0], split[1]);
             }
 
             @Override
-            public String fromSettings(final Map<SettingsType, NodeSettingsRO> settings, final PortObjectSpec[] specs) {
+            public String getInitialData(final Map<SettingsType, NodeSettingsRO> settings, final PortObjectSpec[] specs) {
                 assertThat(settings.size(), is(2));
                 return "the node settings";
             }
@@ -152,15 +152,15 @@ public class NodeDialogTest {
      * @return a new dialog instance
      */
     public static NodeDialog createNodeDialog(final Page page) {
-        var settingsMapper = new TextSettingsMapper() {
+        var settingsMapper = new TextSettingsDataService() {
 
             @Override
-            public void toSettings(final String textSettings, final Map<SettingsType, NodeSettingsWO> settings) {
+            public void applyData(final String textSettings, final Map<SettingsType, NodeSettingsWO> settings) {
                 //
             }
 
             @Override
-            public String fromSettings(final Map<SettingsType, NodeSettingsRO> settings, final PortObjectSpec[] specs) {
+            public String getInitialData(final Map<SettingsType, NodeSettingsRO> settings, final PortObjectSpec[] specs) {
                 return "test settings";
             }
 
@@ -168,12 +168,18 @@ public class NodeDialogTest {
         return createNodeDialog(page, settingsMapper, null);
     }
 
-    private static NodeDialog createNodeDialog(final Page page, final TextSettingsMapper settingsMapper, final DataService dataService) {
-        return new NodeDialog(settingsMapper, SettingsType.MODEL, SettingsType.VIEW) {
+    private static NodeDialog createNodeDialog(final Page page, final TextSettingsDataService settingsDataService,
+        final DataService dataService) {
+        return new NodeDialog(SettingsType.MODEL, SettingsType.VIEW) {
 
             @Override
             public Optional<DataService> getDataService() {
                 return Optional.ofNullable(dataService);
+            }
+
+            @Override
+            protected TextSettingsDataService getSettingsDataService() {
+                return settingsDataService;
             }
 
             @Override

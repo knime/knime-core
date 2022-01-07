@@ -85,8 +85,6 @@ public abstract class NodeDialog implements DataServiceProvider {
 
     private final NativeNodeContainer m_nnc;
 
-    private final TextSettingsMapper m_settingsMapper;
-
     private final Set<SettingsType> m_settingsTypes;
 
     /**
@@ -94,13 +92,11 @@ public abstract class NodeDialog implements DataServiceProvider {
      *
      * NOTE: when called a {@link NodeContext} needs to be available
      *
-     * @param settingsMapper
-     * @param settingsTypes the list of {@link SettingsType}s the settings mapper is able to deal with; must not be
+     * @param settingsTypes the list of {@link SettingsType}s the {@link TextSettingsDataService} is able to deal with; must not be
      *            empty
      */
-    protected NodeDialog(final TextSettingsMapper settingsMapper, final SettingsType... settingsTypes) {
+    protected NodeDialog(final SettingsType... settingsTypes) {
         CheckUtils.checkState(settingsTypes.length > 0, "At least one settings type must be provided");
-        m_settingsMapper = settingsMapper;
         m_settingsTypes = Set.of(settingsTypes);
         m_nnc = (NativeNodeContainer)NodeContext.getContext().getNodeContainer();
     }
@@ -149,7 +145,7 @@ public abstract class NodeDialog implements DataServiceProvider {
                     }
                     settings.put(SettingsType.VIEW, viewSettings);
                 }
-                return m_settingsMapper.fromSettings(settings, specs);
+                return getSettingsDataService().getInitialData(settings, specs);
             } finally {
                 NodeContext.removeLastContext();
             }
@@ -181,7 +177,7 @@ public abstract class NodeDialog implements DataServiceProvider {
                     settingsMap.put(SettingsType.VIEW, viewSettings);
                 }
 
-                m_settingsMapper.toSettings(data, settingsMap);
+                getSettingsDataService().applyData(data, settingsMap);
 
                 if (viewSettings != null) {
                     var nodeView = NodeViewManager.getInstance().getNodeView(m_nnc);
@@ -216,5 +212,10 @@ public abstract class NodeDialog implements DataServiceProvider {
             return m_settingsTypes.contains(SettingsType.VIEW);
         }
     }
+
+    /**
+     * @return a {@link TextSettingsDataService}-instance
+     */
+    protected abstract TextSettingsDataService getSettingsDataService();
 
 }
