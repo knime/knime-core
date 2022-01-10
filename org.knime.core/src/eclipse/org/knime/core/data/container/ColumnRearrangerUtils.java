@@ -48,6 +48,10 @@
  */
 package org.knime.core.data.container;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ColumnRearranger.SpecAndFactoryObject;
 import org.knime.core.node.util.CheckUtils;
@@ -86,6 +90,56 @@ public final class ColumnRearrangerUtils {
     public static boolean addsNoNewColumns(final ColumnRearranger rearranger) {
         return rearranger.getIncludes().stream()//
             .noneMatch(SpecAndFactoryObject::isNewColumn);
+    }
+
+    public static List<RearrangedColumn> extractRearrangedColumns(final ColumnRearranger rearranger) {
+        int i = 0;
+        var rearrangedColumns = new ArrayList<RearrangedColumn>();
+        for (var specAndFac : rearranger.getIncludes()) {
+            rearrangedColumns.add(new RearrangedColumn(specAndFac, i));
+            i++;
+        }
+        return rearrangedColumns;
+    }
+
+    /**
+     *
+     * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
+     */
+    public static final class RearrangedColumn {
+        private final SpecAndFactoryObject m_specAndFactory;
+        private final int m_globalIndex;
+
+        private RearrangedColumn(final SpecAndFactoryObject specAndFactory, final int globalIndex) {
+            m_specAndFactory = specAndFactory;
+            m_globalIndex = globalIndex;
+        }
+
+        public CellFactory getCellFactory() {
+            return m_specAndFactory.getFactory();
+        }
+
+        public int getIndexInFactory() {
+            return m_specAndFactory.getColumnInFactory();
+        }
+
+        public boolean isNewColumn() {
+            return m_specAndFactory.isNewColumn();
+        }
+
+        public int getOriginalIndex() {
+            return m_specAndFactory.getOriginalIndex();
+        }
+
+        // TODO obsolete?
+        public int getGlobalIndex() {
+            return m_globalIndex;
+        }
+
+        public DataColumnSpec getColumnSpec() {
+            return m_specAndFactory.getColSpec();
+        }
+
     }
 
     /**
