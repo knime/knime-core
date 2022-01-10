@@ -73,6 +73,8 @@ import org.knime.core.node.property.hilite.HiLiteListener;
 import org.knime.core.node.property.hilite.KeyEvent;
 import org.knime.core.node.tableview.TableSortOrder.TableSortKey;
 import org.knime.core.node.util.ViewUtils;
+import org.knime.core.node.workflow.NodeContext;
+import org.knime.core.util.ThreadUtils;
 
 
 /**
@@ -257,6 +259,8 @@ public class TableContentModel extends AbstractTableModel
      * sorted table). */
     private DataTable m_originalUnsortedTable;
 
+    private final NodeContext m_nodeContext = NodeContext.getContext();
+
     /**
      * Creates a new TableContentModel with empty content. Call
      * {@link #setDataTable(DataTable)} to set a valid data table. No
@@ -310,12 +314,7 @@ public class TableContentModel extends AbstractTableModel
         // TODO: setDataIntern should be in own thread, but is now in
         // EventDispatchThread (even invokeAndWait). This causes OutportView to
         // freeze while data is loading (since it is loaded in EDT)
-        ViewUtils.invokeAndWaitInEDT(new Runnable() {
-           @Override
-           public void run() {
-               setDataTableIntern(data, data, null);
-           }
-        });
+        ViewUtils.invokeAndWaitInEDT(ThreadUtils.runnableWithContext(() -> setDataTableIntern(data, data, null)));
     }
 
     /**
@@ -424,7 +423,7 @@ public class TableContentModel extends AbstractTableModel
             m_hilitSet = new BitSet(cacheSize);
             clearCache();  // will instantiate a new iterator.
             // will also set m_isRowCountOfInterestFinal etc. accordingly
-            cacheNextRow();
+            cacheNextRowWithContext();
         }
         if (structureChanged) {
             // notify listeners
@@ -501,7 +500,7 @@ public class TableContentModel extends AbstractTableModel
                 m_isRowCountOfInterestFinal = false;
                 m_rowCountOfInterest = 0;
                 clearCache();
-                cacheNextRow();
+                cacheNextRowWithContext();
                 fireTableDataChanged();
             } else {
                 final int cacheSize = getCacheSize();
@@ -621,10 +620,10 @@ public class TableContentModel extends AbstractTableModel
         if (nextOrder == null) {
             setDataTableOnSort(m_originalUnsortedTable, nextOrder);
         } else {
-            TableSorterWorker sortWorker = new TableSorterWorker(
-                m_originalUnsortedTable, nextOrder, parComponent, this);
-            sortWorker.executeAndShowProgress();
+            TableSorterWorker sortWorker = ThreadUtils.getWithContext(m_nodeContext, () -> new TableSorterWorker(
+                m_originalUnsortedTable, nextOrder, parComponent, this));
             m_tableSorterWorker = sortWorker;
+            m_tableSorterWorker.executeAndShowProgress();
         }
     }
 
@@ -702,7 +701,7 @@ public class TableContentModel extends AbstractTableModel
         // assume that there are rows, may change in cacheNextRow() below
         clearCache();  // will instantiate a new iterator.
         // will also set m_isRowCountOfInterestFinal etc. accordingly
-        cacheNextRow();
+        cacheNextRowWithContext();
         fireTableDataChanged();
     }
 
@@ -1030,7 +1029,7 @@ public class TableContentModel extends AbstractTableModel
                     // try to read further and send rows-inserted events)
                     getRow(oldRowCount - 1);
                 }
-            } else if (cacheNextRow()) {
+            } else if (cacheNextRowWithContext()) {
                 // row count was zero, notify listeners of first row
                 fireTableRowsInserted(oldRowCount, getRowCount() - 1);
             }
@@ -1102,7 +1101,7 @@ public class TableContentModel extends AbstractTableModel
         boolean mayHaveNext;
         do {
             // changes also m_rowCountOfInterestInIterator
-            mayHaveNext = cacheNextRow();
+            mayHaveNext = cacheNextRowWithContext();
         } while ((m_rowCountOfInterestInIterator - 1) != (row + m_chunkSize)
                 && mayHaveNext);
         // is it the first time that we see the last row? (fire event)
@@ -1125,6 +1124,11 @@ public class TableContentModel extends AbstractTableModel
      * @return <code>true</code> if that was successful, <code>false</code>
      *         if the iterator went to the end.
      */
+    private boolean cacheNextRowWithContext() {
+        // the context is needed for proper handling of blobs in AdapterCell (see AdapterCell#wrapIfNeeded(DataCell))
+        return ThreadUtils.getAsBooleanWithContext(m_nodeContext, this::cacheNextRow);
+    }
+
     private boolean cacheNextRow() {
         assert (hasData());
         DataRow currentRow;
@@ -1142,8 +1146,7 @@ public class TableContentModel extends AbstractTableModel
             if (!m_isMaxRowCountFinal) {
                 m_maxRowCount = Math.max(m_maxRowCount, m_rowCountInIterator);
             }
-            isHiLit = m_hiLiteHdl != null
-                ? m_hiLiteHdl.isHiLit(currentRow.getKey()) : false;
+            isHiLit = m_hiLiteHdl != null ? m_hiLiteHdl.isHiLit(currentRow.getKey()) : false;
             // ignore row if we filter for hilit rows and this one is not hilit
         } while (!m_tableFilter.matches(isHiLit));
         // index of row in cache
@@ -1155,7 +1158,7 @@ public class TableContentModel extends AbstractTableModel
             m_rowCountOfInterest = Math.max(m_rowCountOfInterest, m_rowCountOfInterestInIterator);
         }
         return true;
-    } // cacheNextRow()
+    }
 
     /** Get new iterator, only to be called when data is set. Gets an
      * {@link BufferedDataTable#iteratorFailProve() fail prove iterator} if
@@ -1329,7 +1332,7 @@ public class TableContentModel extends AbstractTableModel
                     getRow(oldRowCount - 1); // move it to the last known
                 }
                 // are there new rows now?
-                if (oldRowCount == getRowCount() && cacheNextRow()) {
+                if (oldRowCount == getRowCount() && cacheNextRowWithContext()) {
                     fireTableRowsInserted(oldRowCount, oldRowCount);
                 }
             }
