@@ -2586,6 +2586,19 @@ public final class Node {
     }
 
     /**
+     * Exposes {@code ExecutionContext.getFileStoreHandler()} as public method.
+     * This method has been added here in order to keep the scope of the original method to a minimum.
+     *
+     * @param exec ExecutionContext to extract the IWriteFileStoreHandler from
+     * @return the IWriteFileStoreHandler of the ExecutionContext
+     * @since 5.1
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public static IWriteFileStoreHandler invokeGetFileStoreHandler(final ExecutionContext exec) {
+        return exec.getFileStoreHandler();
+    }
+
+    /**
      * Exposes {@code ExecutionContext.getDataRepository} as public method. This method has been added here in order to
      * keep the scope of the original method to a minimum.
      *
