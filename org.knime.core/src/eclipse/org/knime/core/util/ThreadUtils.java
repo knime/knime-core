@@ -64,6 +64,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.BooleanSupplier;
+import java.util.function.Supplier;
 
 import org.apache.log4j.MDC;
 import org.knime.core.node.NodeLogger;
@@ -609,5 +611,49 @@ public final class ThreadUtils {
             }
         }
         buf.append('\n');
+    }
+
+    /**
+     * If context is not null, this method pushes the NodeContext, calls {@link Supplier#get()} and removes the context again. Otherwise just invokes {@link Supplier#get()}.
+     *
+     * @param <T> type of object returned by supplier
+     * @param context of the node (can be null)
+     * @param supplier supplying the return value (must not be null)
+     * @return the value returned by {@code supplier.get()}
+     * @since 4.5
+     */
+    public static <T> T getWithContext(final NodeContext context, final Supplier<T> supplier) {
+        if (context != null) {
+            NodeContext.pushContext(context);
+            try {
+                return supplier.get();
+            } finally {
+                NodeContext.removeLastContext();
+            }
+        } else {
+            return supplier.get();
+        }
+    }
+
+    /**
+     * If context is not null, this method pushes the NodeContext, calls {@link BooleanSupplier#getAsBoolean()} and
+     * removes the context again. Otherwise just invokes {@link BooleanSupplier#getAsBoolean()}.
+     *
+     * @param context of the node (can be null)
+     * @param supplier supplying the return value (must not be null)
+     * @return the value returned by {@code supplier.getAsBoolean()}
+     * @since 4.5
+     */
+    public static boolean getAsBooleanWithContext(final NodeContext context, final BooleanSupplier supplier) {//NOSONAR
+        if (context != null) {
+            NodeContext.pushContext(context);
+            try {
+                return supplier.getAsBoolean();
+            } finally {
+                NodeContext.removeLastContext();
+            }
+        } else {
+            return supplier.getAsBoolean();
+        }
     }
 }
