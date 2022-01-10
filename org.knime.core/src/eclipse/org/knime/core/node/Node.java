@@ -2580,6 +2580,10 @@ public final class Node {
         return table.getDelegate();
     }
 
+    public static IWriteFileStoreHandler invokeGetFileStoreHandler(final ExecutionContext exec) {
+        return exec.getFileStoreHandler();
+    }
+
     /**
      * Exposes {@code ExecutionContext.getDataRepository} as public method. This method has been added here in order to
      * keep the scope of the original method to a minimum.
