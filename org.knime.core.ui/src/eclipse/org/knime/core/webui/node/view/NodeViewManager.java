@@ -71,6 +71,7 @@ import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.webui.node.dialog.SettingsType;
 import org.knime.core.webui.page.Page;
 import org.knime.core.webui.page.PageUtil;
 import org.knime.core.webui.page.Resource;
@@ -83,8 +84,6 @@ import org.knime.core.webui.page.Resource;
  * @since 4.5
  */
 public final class NodeViewManager {
-
-    private static final String CFG_VIEW = "view";
 
     private static final String NODE_VIEW_DEBUG_PATTERN_PROP = "org.knime.ui.dev.node.view.url.factory-class";
 
@@ -153,9 +152,9 @@ public final class NodeViewManager {
             registerNodeView(nnc, nodeView);
 
             var nodeSettings = nnc.getNodeSettings();
-            if (nodeSettings.containsKey(CFG_VIEW)) {
+            if (nodeSettings.containsKey(SettingsType.VIEW.getConfigKey())) {
                 try {
-                    var viewSettings = nodeSettings.getNodeSettings(CFG_VIEW);
+                    var viewSettings = nodeSettings.getNodeSettings(SettingsType.VIEW.getConfigKey());
                     nodeView.loadValidatedSettingsFrom(viewSettings);
                 } catch (InvalidSettingsException ex) { // NOSONAR
                     //

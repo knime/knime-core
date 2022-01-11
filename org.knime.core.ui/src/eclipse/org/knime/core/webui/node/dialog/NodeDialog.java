@@ -79,10 +79,6 @@ import org.knime.core.webui.page.Page;
  */
 public abstract class NodeDialog implements DataServiceProvider {
 
-    private static final String CFG_MODEL = "model";
-
-    private static final String CFG_VIEW = "view";
-
     private final NativeNodeContainer m_nnc;
 
     private final Set<SettingsType> m_settingsTypes;
@@ -139,9 +135,9 @@ public abstract class NodeDialog implements DataServiceProvider {
                 if (m_settingsTypes.contains(SettingsType.VIEW)) {
                     NodeSettings viewSettings;
                     try {
-                        viewSettings = m_nnc.getNodeSettings().getNodeSettings(CFG_VIEW);
+                        viewSettings = m_nnc.getNodeSettings().getNodeSettings(SettingsType.VIEW.getConfigKey());
                     } catch (InvalidSettingsException ex) { // NOSONAR
-                        viewSettings = new NodeSettings(CFG_VIEW);
+                        viewSettings = new NodeSettings(SettingsType.VIEW.getConfigKey());
                     }
                     settings.put(SettingsType.VIEW, viewSettings);
                 }
@@ -169,11 +165,11 @@ public abstract class NodeDialog implements DataServiceProvider {
                 NodeSettings viewSettings = null;
                 if (hasModelSettings()) {
                     NodeSettings modelSettings;
-                    modelSettings = getOrCreateSubSettings(settings, CFG_MODEL);
+                    modelSettings = getOrCreateSubSettings(settings, SettingsType.MODEL.getConfigKey());
                     settingsMap.put(SettingsType.MODEL, modelSettings);
                 }
                 if (hasViewSettings()) {
-                    viewSettings = getOrCreateSubSettings(settings, CFG_VIEW);
+                    viewSettings = getOrCreateSubSettings(settings, SettingsType.VIEW.getConfigKey());
                     settingsMap.put(SettingsType.VIEW, viewSettings);
                 }
 

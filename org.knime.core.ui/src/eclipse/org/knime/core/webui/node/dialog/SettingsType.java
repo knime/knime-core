@@ -63,11 +63,24 @@ public enum SettingsType {
         /**
          * Type for settings that belong to the {@link NodeModel}.
          */
-        MODEL,
+        MODEL("model"),
 
         /**
          * Type for settings that belong to a {@link NodeView}.
          */
-        VIEW;
+        VIEW("view");
+
+    private final String m_configKey;
+
+    private SettingsType(final String configKey) {
+        m_configKey = configKey;
+    }
+
+    /**
+     * @return the config key used to store the settings with the node
+     */
+    public String getConfigKey() {
+        return m_configKey;
+    }
 
 }
