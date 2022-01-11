@@ -105,12 +105,12 @@ public abstract class NodeDialog implements DataServiceProvider {
     public abstract Page getPage();
 
     @Override
-    public final Optional<InitialDataService> getInitialDataService() {
+    public final Optional<InitialDataService> createInitialDataService() {
         return Optional.of(new TextInitialDataServiceImpl());
     }
 
     @Override
-    public final Optional<ApplyDataService> getApplyDataService() {
+    public final Optional<ApplyDataService> createApplyDataService() {
         return Optional.of(new TextApplyDataServiceImpl());
     }
 

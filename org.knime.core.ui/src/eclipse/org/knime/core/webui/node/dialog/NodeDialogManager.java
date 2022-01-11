@@ -58,6 +58,8 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContext;
+import org.knime.core.webui.data.DataServiceProvider;
+import org.knime.core.webui.node.DataServiceManager;
 import org.knime.core.webui.page.PageUtil;
 
 /**
@@ -67,7 +69,7 @@ import org.knime.core.webui.page.PageUtil;
  *
  * @since 4.5
  */
-public final class NodeDialogManager {
+public final class NodeDialogManager extends DataServiceManager {
 
     private static final String NODE_DIALOG_DEBUG_PATTERN_PROP = "org.knime.ui.dev.node.dialog.url.factory-class";
 
@@ -167,6 +169,14 @@ public final class NodeDialogManager {
     void clearCachesAndFiles() {
        m_nodeDialogMap.clear();
        PageUtil.clearUIExtensionFiles();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected DataServiceProvider getDataServiceProvider(final NodeContainer nc) {
+        return getNodeDialog(nc);
     }
 
 }

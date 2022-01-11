@@ -48,16 +48,10 @@
  */
 package org.knime.core.webui.data;
 
-import java.io.IOException;
 import java.util.Optional;
 
-import org.knime.core.webui.data.text.TextApplyDataService;
-import org.knime.core.webui.data.text.TextDataService;
-import org.knime.core.webui.data.text.TextInitialDataService;
-import org.knime.core.webui.data.text.TextReExecuteDataService;
-
 /**
- * Provides different types of data services.
+ * Provides different types of data services. Data service instances are only created once per node instance.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
@@ -66,65 +60,16 @@ public interface DataServiceProvider {
     /**
      * @return optional service that provides data for initialization of the node view
      */
-    Optional<InitialDataService> getInitialDataService();
+    Optional<InitialDataService> createInitialDataService();
 
     /**
      * @return optional service generally providing data to the node view
      */
-    Optional<DataService> getDataService();
+    Optional<DataService> createDataService();
 
     /**
      * @return optional service to apply new data
      */
-    Optional<ApplyDataService> getApplyDataService();
-
-    /**
-     * Helper to call the {@link TextInitialDataService}.
-     *
-     * @return the initial data
-     * @throws IllegalStateException if there is not initial data service available
-     */
-    default String callTextInitialDataService() {
-        var service = getInitialDataService().filter(TextInitialDataService.class::isInstance).orElse(null);
-        if (service != null) {
-            return ((TextInitialDataService)service).getInitialData();
-        } else {
-            throw new IllegalStateException("No text initial data service available");
-        }
-    }
-
-    /**
-     * Helper to call the {@link TextDataService}.
-     *
-     * @param request the data service request
-     * @return the data service response
-     * @throws IllegalStateException if there is no text data service
-     */
-    default String callTextDataService(final String request) {
-        var service = getDataService().filter(TextDataService.class::isInstance).orElse(null);
-        if (service != null) {
-            return ((TextDataService)service).handleRequest(request);
-        } else {
-            throw new IllegalStateException("No text data service available");
-        }
-    }
-
-    /**
-     * Helper to call the {@link TextApplyDataService}.
-     *
-     * @param request the data service request representing the data to apply
-     * @throws IOException if applying the data failed
-     * @throws IllegalStateException if there is no text apply data service
-     */
-    default void callTextAppyDataService(final String request) throws IOException {
-        var service = getApplyDataService().orElse(null);
-        if (service instanceof TextReExecuteDataService) {
-            ((TextReExecuteDataService)service).reExecute(request);
-        } else if (service instanceof TextApplyDataService) {
-            ((TextApplyDataService)service).applyData(request);
-        } else {
-            throw new IllegalStateException("No text apply data service available");
-        }
-    }
+    Optional<ApplyDataService> createApplyDataService();
 
 }

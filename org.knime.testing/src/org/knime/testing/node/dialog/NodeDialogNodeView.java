@@ -77,17 +77,17 @@ public class NodeDialogNodeView implements NodeView {
     }
 
     @Override
-    public Optional<InitialDataService> getInitialDataService() {
+    public Optional<InitialDataService> createInitialDataService() {
         return Optional.empty();
     }
 
     @Override
-    public Optional<DataService> getDataService() {
+    public Optional<DataService> createDataService() {
         return Optional.empty();
     }
 
     @Override
-    public Optional<ApplyDataService> getApplyDataService() {
+    public Optional<ApplyDataService> createApplyDataService() {
         return Optional.empty();
     }
 

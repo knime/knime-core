@@ -85,7 +85,7 @@ public class JsonRpcDataServiceTest {
         wfm.executeAllAndWaitUntilDone();
 
         var jsonRpcRequest = "{\"jsonrpc\":\"2.0\", \"id\":1, \"method\":\"myMethod\"}";
-        String response = NodeViewManager.getInstance().getNodeView(nnc).callTextDataService(jsonRpcRequest);
+        String response = NodeViewManager.getInstance().callTextDataService(nnc, jsonRpcRequest);
         assertThat(response, is("{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":\"my service method result\"}\n"));
 
         WorkflowManagerUtil.disposeWorkflow(wfm);

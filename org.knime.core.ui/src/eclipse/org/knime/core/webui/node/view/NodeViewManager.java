@@ -71,6 +71,8 @@ import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.webui.data.DataServiceProvider;
+import org.knime.core.webui.node.DataServiceManager;
 import org.knime.core.webui.node.dialog.SettingsType;
 import org.knime.core.webui.page.Page;
 import org.knime.core.webui.page.PageUtil;
@@ -83,7 +85,7 @@ import org.knime.core.webui.page.Resource;
  *
  * @since 4.5
  */
-public final class NodeViewManager {
+public final class NodeViewManager extends DataServiceManager {
 
     private static final String NODE_VIEW_DEBUG_PATTERN_PROP = "org.knime.ui.dev.node.view.url.factory-class";
 
@@ -371,5 +373,13 @@ public final class NodeViewManager {
             m_nnc = null;
             m_onCleanUp.clear();
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected DataServiceProvider getDataServiceProvider(final NodeContainer nc) {
+        return getNodeView(nc);
     }
 }

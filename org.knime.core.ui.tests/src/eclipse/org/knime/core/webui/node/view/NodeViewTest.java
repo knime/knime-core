@@ -48,27 +48,18 @@
  */
 package org.knime.core.webui.node.view;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThrows;
-
 import java.io.IOException;
 import java.util.Optional;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Test;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.webui.data.ApplyDataService;
 import org.knime.core.webui.data.DataService;
 import org.knime.core.webui.data.InitialDataService;
 import org.knime.core.webui.data.json.impl.JsonReExecuteDataServiceImpl;
-import org.knime.core.webui.data.text.TextDataService;
-import org.knime.core.webui.data.text.TextInitialDataService;
-import org.knime.core.webui.data.text.TextReExecuteDataService;
 import org.knime.core.webui.page.Page;
 import org.knime.testing.node.view.NodeViewNodeModel;
 import org.knime.testing.util.WorkflowManagerUtil;
@@ -94,52 +85,6 @@ public class NodeViewTest {
         WorkflowManagerUtil.disposeWorkflow(m_wfm);
     }
 
-    /**
-     * Tests {@link NodeView#callTextInitialDataService()}, {@link NodeView#callTextDataService(String)} and
-     * {@link NodeView#callTextAppyDataService(String)}
-     */
-    @Test
-    public void testCallDataServices() {
-        var page = Page.builder(() -> "test page content", "index.html").build();
-        var nodeView = createNodeView(page, new TextInitialDataService() {
-
-            @Override
-            public String getInitialData() {
-                return "init service";
-            }
-        }, new TextDataService() {
-
-            @Override
-            public String handleRequest(final String request) {
-                return "general data service";
-            }
-        }, new TextReExecuteDataService() {
-
-            @Override
-            public Optional<String> validateData(final String data) throws IOException {
-                throw new UnsupportedOperationException("should not be called in this test");
-            }
-
-            @Override
-            public void applyData(final String data) throws IOException {
-                throw new UnsupportedOperationException("should not be called in this test");
-            }
-
-            @Override
-            public void reExecute(final String data) throws IOException {
-                throw new IOException("re-execute data service");
-
-            }
-        });
-        NativeNodeContainer nc = NodeViewManagerTest.createNodeWithNodeView(m_wfm, m -> nodeView);
-
-        var newNodeView = NodeViewManager.getInstance().getNodeView(nc);
-        assertThat(newNodeView.callTextInitialDataService(), is("init service"));
-        assertThat(newNodeView.callTextDataService(""), is("general data service"));
-        String message = assertThrows(IOException.class, () -> newNodeView.callTextAppyDataService("ERROR,test")).getMessage();
-        assertThat(message, is("re-execute data service"));
-    }
-
     static NodeView createNodeView(final Page page, final NodeViewNodeModel m) {
         return createNodeView(page, null, null, new JsonReExecuteDataServiceImpl<String, NodeViewNodeModel>(m, String.class));
     }
@@ -155,17 +100,17 @@ public class NodeViewTest {
         return new NodeView() { // NOSONAR
 
             @Override
-            public Optional<InitialDataService> getInitialDataService() {
+            public Optional<InitialDataService> createInitialDataService() {
                 return Optional.ofNullable(initDataService);
             }
 
             @Override
-            public Optional<DataService> getDataService() {
+            public Optional<DataService> createDataService() {
                 return Optional.ofNullable(dataService);
             }
 
             @Override
-            public Optional<ApplyDataService> getApplyDataService() {
+            public Optional<ApplyDataService> createApplyDataService() {
                 return Optional.ofNullable(applyDataService);
             }
 

@@ -219,17 +219,17 @@ public class NodeViewNodeFactory extends NodeFactory<NodeViewNodeModel> implemen
         return new NodeView() { // NOSONAR
 
             @Override
-            public Optional<InitialDataService> getInitialDataService() {
+            public Optional<InitialDataService> createInitialDataService() {
                 return Optional.ofNullable(initDataService);
             }
 
             @Override
-            public Optional<DataService> getDataService() {
+            public Optional<DataService> createDataService() {
                 return Optional.ofNullable(dataService);
             }
 
             @Override
-            public Optional<ApplyDataService> getApplyDataService() {
+            public Optional<ApplyDataService> createApplyDataService() {
                 return Optional.ofNullable(applyDataService);
             }
 

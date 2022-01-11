@@ -77,11 +77,15 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.NativeNodeContainer;
+import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeInputNodeFactory;
 import org.knime.core.webui.data.ApplyDataService;
 import org.knime.core.webui.data.DataService;
 import org.knime.core.webui.data.InitialDataService;
+import org.knime.core.webui.data.text.TextDataService;
+import org.knime.core.webui.data.text.TextInitialDataService;
+import org.knime.core.webui.data.text.TextReExecuteDataService;
 import org.knime.core.webui.page.Page;
 import org.knime.testing.node.view.NodeViewNodeFactory;
 import org.knime.testing.node.view.NodeViewNodeModel;
@@ -134,7 +138,7 @@ public class NodeViewManagerTest {
         assertThat(nodeView.getPage() == page, is(true));
 
         IllegalStateException ex = assertThrows(IllegalStateException.class,
-            () -> NodeViewManager.getInstance().getNodeView(nc).callTextInitialDataService());
+            () -> NodeViewManager.getInstance().callTextInitialDataService(nc));
         assertThat(ex.getMessage(), containsString("No text initial data service available"));
         assertThat(nodeView.getPage().isCompletelyStatic(), is(false));
     }
@@ -151,17 +155,17 @@ public class NodeViewManagerTest {
         NativeNodeContainer nc = createNodeWithNodeView(m_wfm, m -> new NodeView() { // NOSONAR
 
             @Override
-            public Optional<InitialDataService> getInitialDataService() {
+            public Optional<InitialDataService> createInitialDataService() {
                 return Optional.empty();
             }
 
             @Override
-            public Optional<DataService> getDataService() {
+            public Optional<DataService> createDataService() {
                 return Optional.empty();
             }
 
             @Override
-            public Optional<ApplyDataService> getApplyDataService() {
+            public Optional<ApplyDataService> createApplyDataService() {
                 return Optional.empty();
             }
 
@@ -369,6 +373,55 @@ public class NodeViewManagerTest {
         Awaitility.await().pollInterval(1, TimeUnit.SECONDS).atMost(5, TimeUnit.SECONDS)
             .untilAsserted(() -> assertThat("static pages are expected to be remain after the workflow has been closed",
                 new File(new URI(url3)).exists(), is(true)));
+    }
+
+    /**
+     * Tests {@link NodeViewManager#callTextInitialDataService(NodeContainer)},
+     * {@link NodeViewManager#callTextDataService(NodeContainer, String)} and
+     * {@link NodeViewManager#callTextAppyDataService(NodeContainer, String)}
+     */
+    @Test
+    public void testCallDataServices() {
+        var page = Page.builder(() -> "test page content", "index.html").build();
+        var nodeView = createNodeView(page, new TextInitialDataService() {
+
+            @Override
+            public String getInitialData() {
+                return "init service";
+            }
+        }, new TextDataService() {
+
+            @Override
+            public String handleRequest(final String request) {
+                return "general data service";
+            }
+        }, new TextReExecuteDataService() {
+
+            @Override
+            public Optional<String> validateData(final String data) throws IOException {
+                throw new UnsupportedOperationException("should not be called in this test");
+            }
+
+            @Override
+            public void applyData(final String data) throws IOException {
+                throw new UnsupportedOperationException("should not be called in this test");
+            }
+
+            @Override
+            public void reExecute(final String data) throws IOException {
+                throw new IOException("re-execute data service");
+
+            }
+        });
+        NativeNodeContainer nc = NodeViewManagerTest.createNodeWithNodeView(m_wfm, m -> nodeView);
+
+        var nodeViewManager = NodeViewManager.getInstance();
+        assertThat(nodeViewManager.callTextInitialDataService(nc), is("init service"));
+        assertThat(nodeViewManager.callTextDataService(nc, ""), is("general data service"));
+        String message =
+            assertThrows(IOException.class, () -> nodeViewManager.callTextAppyDataService(nc, "ERROR,test"))
+                .getMessage();
+        assertThat(message, is("re-execute data service"));
     }
 
     /**

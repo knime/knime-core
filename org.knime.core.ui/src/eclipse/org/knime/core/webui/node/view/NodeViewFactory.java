@@ -56,7 +56,6 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.wizard.page.WizardPageContribution;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContext;
-import org.knime.core.webui.data.InitialDataService;
 import org.knime.core.webui.data.text.TextInitialDataService;
 import org.knime.core.webui.data.text.TextReExecuteDataService;
 
@@ -86,10 +85,9 @@ public interface NodeViewFactory<T extends NodeModel> extends WizardPageContribu
      */
     @Override
     default Optional<String> validateViewValue(final NativeNodeContainer nnc, final String value) throws IOException {
-        var nodeView = NodeViewManager.getInstance().getNodeView(nnc);
-        var service = nodeView.getApplyDataService().orElse(null);
-        if (service instanceof TextReExecuteDataService) {
-            return ((TextReExecuteDataService)service).validateData(value);
+        var ds = NodeViewManager.getInstance().getDataServiceOfType(nnc, TextReExecuteDataService.class);
+        if (ds.isPresent()) {
+            return ds.get().validateData(value);
         }
         return Optional.empty();
     }
@@ -99,10 +97,9 @@ public interface NodeViewFactory<T extends NodeModel> extends WizardPageContribu
      */
     @Override
     default void loadViewValue(final NativeNodeContainer nnc, final String value) throws IOException {
-        var nodeView = NodeViewManager.getInstance().getNodeView(nnc);
-        var service = nodeView.getApplyDataService().orElse(null);
-        if (service instanceof TextReExecuteDataService) {
-            ((TextReExecuteDataService)service).applyData(value);
+        var ds = NodeViewManager.getInstance().getDataServiceOfType(nnc, TextReExecuteDataService.class);
+        if (ds.isPresent()) {
+            ds.get().applyData(value);
         }
     }
 
@@ -111,11 +108,7 @@ public interface NodeViewFactory<T extends NodeModel> extends WizardPageContribu
      */
     @Override
     default Optional<String> getInitialViewValue(final NativeNodeContainer nnc) {
-        var nodeView = NodeViewManager.getInstance().getNodeView(nnc);
-        InitialDataService service = nodeView.getInitialDataService().orElse(null);
-        if (service instanceof TextInitialDataService) {
-            return Optional.of(((TextInitialDataService)service).getInitialData());
-        }
-        return Optional.empty();
+        return NodeViewManager.getInstance().getDataServiceOfType(nnc, TextInitialDataService.class)
+            .map(TextInitialDataService::getInitialData);
     }
 }

@@ -48,30 +48,18 @@
  */
 package org.knime.core.webui.node.dialog;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThrows;
-
 import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Supplier;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Test;
-import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.webui.data.DataService;
-import org.knime.core.webui.data.text.TextDataService;
-import org.knime.core.webui.node.view.NodeViewManager;
 import org.knime.core.webui.page.Page;
-import org.knime.testing.node.dialog.NodeDialogNodeModel;
-import org.knime.testing.node.dialog.NodeDialogNodeView;
 import org.knime.testing.util.WorkflowManagerUtil;
 
 /**
@@ -93,55 +81,6 @@ public class NodeDialogTest {
     @After
     public void disposeWorkflow() {
         WorkflowManagerUtil.disposeWorkflow(m_wfm);
-    }
-
-    /**
-     * Tests {@link NodeDialog#callTextInitialDataService()}, {@link NodeDialog#callTextDataService(String)} and
-     * {@link NodeDialog#callTextAppyDataService(String)}
-     *
-     * @throws IOException
-     * @throws InvalidSettingsException
-     */
-    @Test
-    public void testCallDataServices() throws IOException, InvalidSettingsException {
-        var page = Page.builder(() -> "test page content", "index.html").build();
-        Supplier<NodeDialog> nodeDialogSupplier = () -> createNodeDialog(page, new TextSettingsDataService() { // NOSONAR
-
-            @Override
-            public void applyData(final String s, final Map<SettingsType, NodeSettingsWO> settings) {
-                var split = s.split(",");
-                settings.get(SettingsType.MODEL).addString(split[0], split[1]);
-                settings.get(SettingsType.VIEW).addString(split[0], split[1]);
-            }
-
-            @Override
-            public String getInitialData(final Map<SettingsType, NodeSettingsRO> settings, final PortObjectSpec[] specs) {
-                assertThat(settings.size(), is(2));
-                return "the node settings";
-            }
-        }, new TextDataService() {
-
-            @Override
-            public String handleRequest(final String request) {
-                return "general data service";
-            }
-        });
-
-        NativeNodeContainer nc = NodeDialogManagerTest.createNodeWithNodeDialog(m_wfm, nodeDialogSupplier);
-
-        var newNodeDialog = NodeDialogManager.getInstance().getNodeDialog(nc);
-        assertThat(newNodeDialog.callTextInitialDataService(), is("the node settings"));
-        assertThat(newNodeDialog.callTextDataService(""), is("general data service"));
-        newNodeDialog.callTextAppyDataService("key,node settings value");
-        var modelSettings = ((NodeDialogNodeModel)nc.getNode().getNodeModel()).getLoadNodeSettings();
-        assertThat(modelSettings.getString("key"), is("node settings value"));
-        assertThat(nc.getNodeSettings().getNodeSettings("model").getString("key"), is("node settings value"));
-        var viewSettings = ((NodeDialogNodeView)NodeViewManager.getInstance().getNodeView(nc)).getLoadNodeSettings();
-        assertThat(viewSettings.getString("key"), is("node settings value"));
-        assertThat(nc.getNodeSettings().getNodeSettings("view").getString("key"), is("node settings value"));
-        String message =
-            assertThrows(IOException.class, () -> newNodeDialog.callTextAppyDataService("ERROR,invalid")).getMessage();
-        assertThat(message, is("Invalid node settings"));
     }
 
     /**
@@ -168,12 +107,12 @@ public class NodeDialogTest {
         return createNodeDialog(page, settingsMapper, null);
     }
 
-    private static NodeDialog createNodeDialog(final Page page, final TextSettingsDataService settingsDataService,
+    static NodeDialog createNodeDialog(final Page page, final TextSettingsDataService settingsDataService,
         final DataService dataService) {
         return new NodeDialog(SettingsType.MODEL, SettingsType.VIEW) {
 
             @Override
-            public Optional<DataService> getDataService() {
+            public Optional<DataService> createDataService() {
                 return Optional.ofNullable(dataService);
             }
 
