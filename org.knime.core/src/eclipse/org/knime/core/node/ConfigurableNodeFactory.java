@@ -121,7 +121,7 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
      * @since 4.5
      */
     public boolean isPortConfigurableViaMenu() {
-        return true;
+        return createPortsConfigBuilder().isPresent();
     }
 
     /**
