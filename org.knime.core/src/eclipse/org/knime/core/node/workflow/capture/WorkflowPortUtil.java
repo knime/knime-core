@@ -46,7 +46,7 @@
  * History
  *   Jan 5, 2022 (hornm): created
  */
-package org.knime.core.node.port;
+package org.knime.core.node.workflow.capture;
 
 import java.io.File;
 import java.io.IOException;
@@ -61,30 +61,27 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.exec.dataexchange.PortObjectIDSettings;
 import org.knime.core.node.exec.dataexchange.in.PortObjectInNodeModel;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortUtil;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
-import org.knime.core.node.workflow.UnsupportedWorkflowVersionException;
-import org.knime.core.node.workflow.WorkflowLoadHelper;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
-import org.knime.core.node.workflow.capture.WorkflowPortObject;
-import org.knime.core.node.workflow.capture.WorkflowPortObjectSpec;
-import org.knime.core.node.workflow.capture.WorkflowSegment;
 import org.knime.core.util.FileUtil;
-import org.knime.core.util.LockFailedException;
 
 /**
- * @since 4.6
+ * Pending implementation!
+ *
  * @author Dionysios Stolis, KNIME GmbH, Berlin, Germany
+ *
+ * @noreference This class is not intended to be referenced by clients.
  */
 public final class WorkflowPortUtil {
 
@@ -94,73 +91,13 @@ public final class WorkflowPortUtil {
 
     /**
      * @param po
-     * @param tmpDir
      * @param workflowName
      * @param exec
-     * @param archive
      * @return
      * @throws Exception
      */
-    public static File writeWorkflowPortObjectToFile(final WorkflowPortObject po, final File tmpDir,
-        final String workflowName, final ExecutionMonitor exec, final boolean archive) throws Exception{
-        final var tmpWorkflowDir = new File(tmpDir, workflowName);
-        tmpWorkflowDir.mkdir();
-        final var tmpDataDir = new File(tmpWorkflowDir, "data");
-        tmpDataDir.mkdir();
-
-        var segment = po.getSpec().getWorkflowSegment();
-
-        final WorkflowManager wfm = loadWorkflow(segment, m -> {});
-        wfm.setName(workflowName);
-        try {
-            writeReferenceReaderNodeData(segment, wfm, tmpDataDir, exec);
-            wfm.save(tmpWorkflowDir, exec.createSubProgress(.34), false);
-        } finally {
-            segment.disposeWorkflow();
-        }
-
-        // zip temporary directory if applicable
-        if (!archive) {
-            return tmpWorkflowDir;
-        }
-        final var localSource = new File(tmpDir, String.format("%s.knwf", workflowName));
-        FileUtil.zipDir(localSource, tmpWorkflowDir, 9);
-        return localSource;
-    }
-//
-//    /**
-//     * @param po
-//     * @param file
-//     * @param execMon
-//     * @param archive
-//     * @throws Exception
-//     */
-//    public static void writeWorkflowToFile(final WorkflowPortObject po, final File file, final ExecutionMonitor execMon,
-//        final boolean archive) throws Exception {
-//        var segment = po.getSpec().getWorkflowSegment();
-//        final var tmpWorkflowDir = FileUtil.createTempDir("workflow-port");
-//        tmpWorkflowDir.mkdir();
-//        final var tmpDataDir = new File(tmpWorkflowDir, "data");
-//        tmpDataDir.mkdir();
-//        final WorkflowManager wfm = loadWorkflow(segment, m -> {});
-//        writeReferenceReaderNodeData(segment, wfm, tmpDataDir, execMon);
-//        wfm.save(tmpWorkflowDir, execMon.createSubProgress(.34), archive);
-//        FileUtil.zipDir(file, tmpWorkflowDir, 9);
-//    }
-
-    /**
-     * @param po
-     * @param file
-     * @param tmpDir
-     * @param workflowName
-     * @param exec
-     * @param archive
-     * @param preWriteTransformation
-     * @return
-     * @throws Exception
-     */
-    public static File writeWorkflowPortObject(final WorkflowPortObject po,
-        final String workflowName, final ExecutionMonitor exec, final boolean archive) throws Exception {
+    public static File writeWorkflowPortObject(final WorkflowPortObject po, final String workflowName,
+        final ExecutionMonitor exec) throws Exception {
 
         var segment = po.getSpec().getWorkflowSegment();
         var poCopy = po.transformAndCopy((wfm, dir) -> {
@@ -188,7 +125,7 @@ public final class WorkflowPortUtil {
      * @throws URISyntaxException
      * @throws InvalidSettingsException
      */
-    public static void writeReferenceReaderNodeData(final WorkflowSegment segment, final WorkflowManager wfm,
+    private static void writeReferenceReaderNodeData(final WorkflowSegment segment, final WorkflowManager wfm,
         final File tmpDataDir, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException, URISyntaxException, InvalidSettingsException {
         // reconfigure reference reader nodes and store their data in temp directory
@@ -260,7 +197,7 @@ public final class WorkflowPortUtil {
      * @return a warning message if there are warnings, or else <code>null</code>
      * @throws IllegalStateException thrown if there are loading errors
      */
-    public static String checkLoadResult(final WorkflowLoadResult lr) {
+    private static String checkLoadResult(final WorkflowLoadResult lr) {
         switch (lr.getType()) {
             case Warning:
                 return "Problem(s) while loading the workflow:\n" + lr;
@@ -275,40 +212,6 @@ public final class WorkflowPortUtil {
     }
 
     /**
-     * @param wfFile
-     * @param exec
-     * @param warningConsumer
-     * @return
-     * @throws IOException
-     * @throws InvalidSettingsException
-     * @throws CanceledExecutionException
-     * @throws UnsupportedWorkflowVersionException
-     * @throws LockFailedException
-     */
-    public static WorkflowManager readWorkflow(final File wfFile, final ExecutionContext exec,
-        final Consumer<String> warningConsumer) throws IOException, InvalidSettingsException, CanceledExecutionException,
-        UnsupportedWorkflowVersionException, LockFailedException {
-
-        final WorkflowLoadHelper loadHelper = WorkflowSegment.createWorkflowLoadHelper(wfFile, warningConsumer);
-        final WorkflowLoadResult loadResult =
-            WorkflowManager.EXTRACTED_WORKFLOW_ROOT.load(wfFile, exec, loadHelper, false);
-
-        final WorkflowManager m = loadResult.getWorkflowManager();
-        if (m == null) {
-            throw new IOException(
-                "Errors reading workflow: " + loadResult.getFilteredError("", LoadResultEntryType.Ok));
-        } else {
-            try {
-                warningConsumer.accept(checkLoadResult(loadResult));
-            } catch (IllegalStateException e) {
-                WorkflowManager.EXTRACTED_WORKFLOW_ROOT.removeNode(m.getID());
-                throw e;
-            }
-        }
-        return loadResult.getWorkflowManager();
-    }
-
-    /**
      * Helper method to load the workflow from a {@link WorkflowSegment}.
      *
      * @param ws the segment to load the workflow from
@@ -317,7 +220,7 @@ public final class WorkflowPortUtil {
      *
      * @throws IllegalStateException if there were loading errors
      */
-    public static WorkflowManager loadWorkflow(final WorkflowSegment ws, final Consumer<String> warningConsumer) {
+    private static WorkflowManager loadWorkflow(final WorkflowSegment ws, final Consumer<String> warningConsumer) {
         AtomicReference<IllegalStateException> exception = new AtomicReference<>();
         var wfm = ws.loadWorkflow(lr -> { // NOSONAR
             try {

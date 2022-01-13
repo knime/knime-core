@@ -245,14 +245,18 @@ public class WorkflowPortObject extends AbstractPortObject {
      * @param wfmConsumer
      * @return
      * @throws IOException
-     * @since 4.6
      * TODO New name pack, and unpack in the receiver side
      */
-    public WorkflowPortObject transformAndCopy(final BiConsumer<WorkflowManager, File> wfmConsumer) throws IOException {
+    WorkflowPortObject transformAndCopy(final BiConsumer<WorkflowManager, File> wfmConsumer) throws IOException {
         var segment = m_spec.getWorkflowSegment();
         var wfmCopy = segment.loadNewWorkflowInstance(null);
         wfmConsumer.accept(wfmCopy.getFirst(), wfmCopy.getSecond());
-        byte[] wfmStream = WorkflowSegment.wfmToStream(wfmCopy.getFirst(), wfmCopy.getSecond());
+        byte[] wfmStream;
+        try {
+            wfmStream = WorkflowSegment.wfmToStream(wfmCopy.getFirst(), wfmCopy.getSecond());
+        } finally {
+            WorkflowManager.EXTRACTED_WORKFLOW_ROOT.removeNode(wfmCopy.getFirst().getID());
+        }
         var copySegment = new WorkflowSegment(wfmStream, segment.getName(), segment.getConnectedInputs(), segment.getConnectedOutputs(), segment.getPortObjectReferenceReaderNodes());
         var poSpecCopy = new WorkflowPortObjectSpec(copySegment, wfmCopy.getFirst().getName(), m_spec.getInputIDs(), m_spec.getOutputIDs());
         return new WorkflowPortObject(poSpecCopy, m_inputData);

@@ -151,7 +151,6 @@ public final class WorkflowSegment {
      * @param inputs
      * @param outputs
      * @param portObjectReferenceReaderNodes
-     * @since 4.6
      */
     WorkflowSegment(final byte[] wfmStream, final String workflowName, final List<Input> inputs, final List<Output> outputs,
         final Set<NodeIDSuffix> portObjectReferenceReaderNodes) {
