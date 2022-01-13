@@ -48,6 +48,7 @@
  */
 package org.knime.core.node.workflow.capture;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -56,6 +57,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.zip.ZipEntry;
 
 import javax.swing.JComponent;
@@ -77,6 +79,7 @@ import org.knime.core.node.port.PortObjectZipOutputStream;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.workflow.BufferedDataTableView;
+import org.knime.core.node.workflow.WorkflowManager;
 
 /**
  * The worfklow port object.
@@ -236,6 +239,23 @@ public class WorkflowPortObject extends AbstractPortObject {
         } else {
             return new JComponent[0];
         }
+    }
+
+     /**
+     * @param wfmConsumer
+     * @return
+     * @throws IOException
+     * @since 4.6
+     * TODO New name pack, and unpack in the receiver side
+     */
+    public WorkflowPortObject transformAndCopy(final BiConsumer<WorkflowManager, File> wfmConsumer) throws IOException {
+        var segment = m_spec.getWorkflowSegment();
+        var wfmCopy = segment.loadNewWorkflowInstance(null);
+        wfmConsumer.accept(wfmCopy.getFirst(), wfmCopy.getSecond());
+        byte[] wfmStream = WorkflowSegment.wfmToStream(wfmCopy.getFirst(), wfmCopy.getSecond());
+        var copySegment = new WorkflowSegment(wfmStream, segment.getName(), segment.getConnectedInputs(), segment.getConnectedOutputs(), segment.getPortObjectReferenceReaderNodes());
+        var poSpecCopy = new WorkflowPortObjectSpec(copySegment, wfmCopy.getFirst().getName(), m_spec.getInputIDs(), m_spec.getOutputIDs());
+        return new WorkflowPortObject(poSpecCopy, m_inputData);
     }
 
 }
