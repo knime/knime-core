@@ -72,6 +72,11 @@ public abstract class SingleCellFactory extends AbstractCellFactory {
         super(newColSpec);
     }
 
+    public SingleCellFactory(final DataColumnSpec newColSpec, final int ... requiredColumns) {
+        super(requiredColumns, newColSpec);
+    }
+
+
     /** Create new cell factory that provides one column given by newColSpec.
      * @param processConcurrently If to process the rows concurrently (must
      * only be true if there are no interdependency between the rows).
@@ -83,6 +88,11 @@ public abstract class SingleCellFactory extends AbstractCellFactory {
             final DataColumnSpec newColSpec) {
         super(processConcurrently, newColSpec);
     }
+
+    public SingleCellFactory(final boolean processConcurrently,
+        final DataColumnSpec newColSpec, final int ... requiredColumns) {
+    super(processConcurrently, requiredColumns, newColSpec);
+}
 
     /** Create new cell factory that provides one column given by newColSpec.
      * @param processConcurrently If to process the rows concurrently (must
