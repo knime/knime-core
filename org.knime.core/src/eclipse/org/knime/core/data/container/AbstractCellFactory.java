@@ -48,6 +48,7 @@
 package org.knime.core.data.container;
 
 import java.util.Arrays;
+import java.util.Optional;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.RowKey;
@@ -83,6 +84,8 @@ public abstract class AbstractCellFactory implements CellFactory {
      * it will be called by the default implementation of the (new) setProgress method. */
     private final boolean m_isSetProgressWithIntOverridden;
 
+    private final int[] m_requiredColumns;
+
     private FileStoreFactory m_factory;
 
     /** Creates instance, which will produce content for the columns as
@@ -90,13 +93,18 @@ public abstract class AbstractCellFactory implements CellFactory {
      * (no parallel processing of input).
      * @param colSpecs The specs of the columns being created.
      */
-    public AbstractCellFactory(final DataColumnSpec... colSpecs) {
+    public AbstractCellFactory(final int[] requiredColumns, final DataColumnSpec... colSpecs) {
         if (colSpecs == null || Arrays.asList(colSpecs).contains(null)) {
             throw new NullPointerException("Argument must not be null or "
                     + "contain null elements");
         }
         m_colSpecs = colSpecs;
+        m_requiredColumns = requiredColumns != null ? requiredColumns.clone() : null;
         m_isSetProgressWithIntOverridden = isSetProgressWithIntOverridden();
+    }
+
+    public AbstractCellFactory(final DataColumnSpec... colSpecs) {
+        this(null, colSpecs);
     }
 
     /** Called by the framework to set the file store factory prior execution.
@@ -124,9 +132,15 @@ public abstract class AbstractCellFactory implements CellFactory {
      * @see #setParallelProcessing(boolean)
      */
     public AbstractCellFactory(final boolean processConcurrently,
+        final int[] requiredColumns,
             final DataColumnSpec... colSpecs) {
-        this(colSpecs);
+        this(requiredColumns, colSpecs);
         setParallelProcessing(processConcurrently);
+    }
+
+    public AbstractCellFactory(final boolean processConcurrently,
+            final DataColumnSpec... colSpecs) {
+        this (processConcurrently, null, colSpecs);
     }
 
     /** Creates instance, which will produce content for the columns as
@@ -240,6 +254,11 @@ public abstract class AbstractCellFactory implements CellFactory {
     @Override
     public DataColumnSpec[] getColumnSpecs() {
         return m_colSpecs;
+    }
+
+    @Override
+    public Optional<int[]> getRequiredColumns() {
+        return Optional.ofNullable(m_requiredColumns);
     }
 
     /** Called after all rows have been processed (either successfully or failed).
