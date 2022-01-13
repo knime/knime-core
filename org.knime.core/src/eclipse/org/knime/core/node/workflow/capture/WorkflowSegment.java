@@ -88,6 +88,7 @@ import org.knime.core.util.FileUtil;
 import org.knime.core.util.FileUtil.ZipFileFilter;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.LockFailedException;
+import org.knime.core.util.Pair;
 import org.knime.core.util.VMFileLocker;
 import org.knime.core.util.Version;
 
@@ -139,6 +140,23 @@ public final class WorkflowSegment {
         checkThatThereAreNoExecutingOrExecutedNodes(wfm);
         m_wfm = wfm;
         m_name = wfm.getName();
+        m_inputs = CheckUtils.checkArgumentNotNull(inputs);
+        m_outputs = CheckUtils.checkArgumentNotNull(outputs);
+        m_portObjectReferenceReaderNodes = CheckUtils.checkArgumentNotNull(portObjectReferenceReaderNodes);
+    }
+
+    /**
+     * @param wfmStream
+     * @param workflowName
+     * @param inputs
+     * @param outputs
+     * @param portObjectReferenceReaderNodes
+     * @since 4.6
+     */
+    WorkflowSegment(final byte[] wfmStream, final String workflowName, final List<Input> inputs, final List<Output> outputs,
+        final Set<NodeIDSuffix> portObjectReferenceReaderNodes) {
+        m_wfmStream = wfmStream;
+        m_name = workflowName;
         m_inputs = CheckUtils.checkArgumentNotNull(inputs);
         m_outputs = CheckUtils.checkArgumentNotNull(outputs);
         m_portObjectReferenceReaderNodes = CheckUtils.checkArgumentNotNull(portObjectReferenceReaderNodes);
@@ -199,26 +217,31 @@ public final class WorkflowSegment {
      */
     public WorkflowManager loadWorkflow(final Consumer<WorkflowLoadResult> loadResultCallback) {
         if (m_wfm == null) {
-            File tmpDir = null;
-            try (ZipInputStream in = new ZipInputStream(new ByteArrayInputStream(m_wfmStream))) {
-                tmpDir = FileUtil.createTempDir("workflow_segment");
-                FileUtil.unzip(in, tmpDir, 1);
-                WorkflowLoadHelper loadHelper = createWorkflowLoadHelper(tmpDir, warning -> {
-                    NodeLogger.getLogger(WorkflowSegment.class).warn(warning);
-                });
-                WorkflowLoadResult loadResult =
-                    WorkflowManager.EXTRACTED_WORKFLOW_ROOT.load(tmpDir, new ExecutionMonitor(), loadHelper, false);
-                if (loadResultCallback != null) {
-                    loadResultCallback.accept(loadResult);
-                }
-                m_wfm = loadResult.getWorkflowManager();
-            } catch (InvalidSettingsException | CanceledExecutionException | UnsupportedWorkflowVersionException
-                    | LockFailedException | IOException ex) {
-                // should never happen
-                throw new IllegalStateException("Failed loading workflow port object", ex);
-            }
+            m_wfm = loadNewWorkflowInstance(loadResultCallback).getFirst();
         }
         return m_wfm;
+    }
+
+    // TODO different name here
+    Pair<WorkflowManager, File> loadNewWorkflowInstance(final Consumer<WorkflowLoadResult> loadResultCallback) {
+        File tmpDir = null;
+        try (ZipInputStream in = new ZipInputStream(new ByteArrayInputStream(m_wfmStream))) {
+            tmpDir = FileUtil.createTempDir("workflow_segment");
+            FileUtil.unzip(in, tmpDir, 1);
+            WorkflowLoadHelper loadHelper = createWorkflowLoadHelper(tmpDir, warning -> {
+                NodeLogger.getLogger(WorkflowSegment.class).warn(warning);
+            });
+            WorkflowLoadResult loadResult =
+                WorkflowManager.EXTRACTED_WORKFLOW_ROOT.load(tmpDir, new ExecutionMonitor(), loadHelper, false);
+            if (loadResultCallback != null) {
+                loadResultCallback.accept(loadResult);
+            }
+            return Pair.create(loadResult.getWorkflowManager(), tmpDir);
+        } catch (InvalidSettingsException | CanceledExecutionException | UnsupportedWorkflowVersionException
+                | LockFailedException | IOException ex) {
+            // should never happen
+            throw new IllegalStateException("Failed loading workflow port object", ex);
+        }
     }
 
     /**
@@ -251,9 +274,13 @@ public final class WorkflowSegment {
     }
 
     private static byte[] wfmToStream(final WorkflowManager wfm) throws IOException {
-        File tmpDir = FileUtil.createTempDir("workflow_segment");
-        try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ZipOutputStream out = new ZipOutputStream(bos);) {
-            WorkflowSaveHelper saveHelper = new WorkflowSaveHelper(false, false);
+        var tmpDir = FileUtil.createTempDir("workflow_segment");
+        return wfmToStream(wfm, tmpDir);
+    }
+
+    static byte[] wfmToStream(final WorkflowManager wfm, final File tmpDir) throws IOException {
+        try (var bos = new ByteArrayOutputStream(); ZipOutputStream out = new ZipOutputStream(bos);) {
+            var saveHelper = new WorkflowSaveHelper(false, false);
             wfm.save(tmpDir, saveHelper, new ExecutionMonitor());
             FileUtil.zipDir(out, Collections.singleton(tmpDir), new ZipFileFilter() {
                 @Override
