@@ -45,6 +45,8 @@
  */
 package org.knime.core.data.container;
 
+import java.util.Optional;
+
 import org.apache.commons.lang3.NotImplementedException;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -118,6 +120,22 @@ public interface CellFactory {
      */
     default boolean hasState() {
         return true;
+    }
+
+    /**
+     * Returns the indices of the columns needed by the {@link #getCells(DataRow)} method. If all columns are needed or
+     * it isn't known which columns are needed, then {@link Optional#empty()} can be returned (this is also the
+     * default).
+     *
+     * It is highly recommended to overwrite this method because it allows the backend to only load the required columns
+     * which can lead to dramatic performance increases for wide tables.
+     *
+     * @return the indices of the columns needed by the CellFactory or {@link Optional#empty()} if all columns are
+     *         needed.
+     * @since 4.6
+     */
+    default Optional<int[]> getRequiredColumns() {
+        return Optional.empty();
     }
 
     /**
