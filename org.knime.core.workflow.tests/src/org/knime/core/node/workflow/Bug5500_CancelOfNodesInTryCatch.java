@@ -46,6 +46,8 @@ package org.knime.core.node.workflow;
 
 import static org.junit.Assert.assertEquals;
 
+import org.awaitility.Awaitility;
+import org.awaitility.Duration;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -74,31 +76,41 @@ public class Bug5500_CancelOfNodesInTryCatch extends WorkflowTestCase {
 
     @Test
     public void testExecuteThenCancel() throws Exception {
-        checkStateOfMany(InternalNodeContainerState.CONFIGURED, m_tryEnd_7, m_tryStart_8, m_javaSnippet_10,
-            m_failBranch_BigDataGenerator_12);
-        getManager().executeUpToHere(m_tryEnd_7);
-        final NodeContainer javaSnippetNC = getManager().getNodeContainer(m_javaSnippet_10);
-        waitWhile(javaSnippetNC, new Hold() {
-            @Override
-            protected boolean shouldHold() {
-                // skip pre-execute etc.
-                return javaSnippetNC.getInternalState().isExecutionInProgress()
-                        && !javaSnippetNC.getInternalState().equals(InternalNodeContainerState.EXECUTING);
-            }
-        });
-        getManager().cancelExecution(javaSnippetNC);
-        waitWhile(javaSnippetNC, new Hold() { // wait for cancel to propagate
-            @Override
-            protected boolean shouldHold() {
-                return javaSnippetNC.getNodeContainerState().isExecutionInProgress();
-            }
-        });
-        checkState(m_tryEnd_7, InternalNodeContainerState.CONFIGURED);
-        checkState(m_failBranch_BigDataGenerator_12, InternalNodeContainerState.CONFIGURED);
-        checkState(m_javaSnippet_10, InternalNodeContainerState.CONFIGURED);
-        NodeMessage nodeMessage = javaSnippetNC.getNodeMessage();
-        assertEquals(NodeMessage.Type.WARNING, nodeMessage.getMessageType());
-        assertEquals("Execution canceled", nodeMessage.getMessage());
+		// check that workflow is correctly loaded
+		checkStateOfMany(InternalNodeContainerState.CONFIGURED, m_tryEnd_7, m_tryStart_8, m_javaSnippet_10,
+				m_failBranch_BigDataGenerator_12);
+
+		// start execution of entire workflow
+		getManager().executeUpToHere(m_tryEnd_7);
+
+    	// get the snippet node between try catch (I think the try-catch context doesn't matter) 
+    	final NodeContainer javaSnippetNC = getManager().getNodeContainer(m_javaSnippet_10);
+
+		// wait until the node is in state EXECUTING (N.B. isExecutionInProgress() already returns true for states 
+    	// CONFIGURED_QUEUE and PREEXECUTE).
+		// AP-17588: When using WorkflowTestCase#waitWhile and canceling immediately after starting the execution,
+    	// the execution may not take place at all, even though the state has transitioned. In this case, 
+    	// JavaSnippetNodeModel#execute will not be executed. With Awaitility it works fine.
+		Awaitility.await().until(() -> {
+			NodeContainerState state = javaSnippetNC.getNodeContainerState();
+			return state.isExecutionInProgress() && state == InternalNodeContainerState.EXECUTING;
+		});
+
+		// cancel the snippet node (only works because the executed snippet checks for thread interrupted exception)
+		getManager().cancelExecution(javaSnippetNC);
+		Awaitility.await().atMost(Duration.ONE_MINUTE).until(() -> //
+			!javaSnippetNC.getNodeContainerState().isExecutionInProgress());
+
+		checkState(m_tryEnd_7, InternalNodeContainerState.CONFIGURED);
+		checkState(m_failBranch_BigDataGenerator_12, InternalNodeContainerState.CONFIGURED);
+		checkState(m_javaSnippet_10, InternalNodeContainerState.CONFIGURED);
+		NodeMessage nodeMessage = javaSnippetNC.getNodeMessage();
+		// AP-17588: Seems to have failed because one cannot cancel a non-executing
+		// node.
+		// JavaSnippetNodeModel#execute had never been executed and node message would
+		// still be "RESET"
+		assertEquals(NodeMessage.Type.WARNING, nodeMessage.getMessageType());
+		assertEquals("Execution canceled", nodeMessage.getMessage());
     }
 
 }
