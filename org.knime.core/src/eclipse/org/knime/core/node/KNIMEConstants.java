@@ -72,6 +72,7 @@ import javax.swing.SwingUtilities;
 
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.Platform;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.container.DataContainerSettings;
@@ -120,6 +121,11 @@ public final class KNIMEConstants {
      * Java property name to specify the default max thread count variable (can be set via preference page).
      */
     public static final String PROPERTY_MAX_THREAD_COUNT = "org.knime.core.maxThreads";
+
+    /**
+     * Environment variable to specify the default max thread count variable (can be set via preference page).
+     */
+    public static final String ENV_MAX_THREAD_COUNT = "KNIME_CORE_MAX_THREADS";
 
     /**
      * Java property name to specify the default temp directory for KNIME temp files (such as data files). This can be
@@ -543,8 +549,9 @@ public final class KNIMEConstants {
 
         int maxThreads =
             (int)(PROCESSOR_COUNT_TO_DEF_THREAD_COUNT_MULTIPLIER * Runtime.getRuntime().availableProcessors());
+        var useEnv = !StringUtils.isEmpty(System.getenv(ENV_MAX_THREAD_COUNT));
         String maxThreadsString =
-            System.getProperty(PROPERTY_MAX_THREAD_COUNT);
+            useEnv ? System.getenv(ENV_MAX_THREAD_COUNT) : System.getProperty(PROPERTY_MAX_THREAD_COUNT);
         try {
             if (maxThreadsString != null && maxThreadsString.length() > 0) {
                 int val = Integer.parseInt(maxThreadsString);
@@ -555,9 +562,9 @@ public final class KNIMEConstants {
             }
         } catch (NumberFormatException nfe) {
             // no NodeLogger available yet!
-            System.err.println("Unable to parse system property "
-                    + "\"org.knime.core.maxThreads\" (\"" + maxThreadsString
-                    + "\") as number: " + nfe.getMessage());
+            System.err.println(String.format("Unable to parse %s \"%s\" (\"%s\") as number: %s",
+                useEnv ? "environment variable" : "system property",
+                useEnv ? ENV_MAX_THREAD_COUNT : PROPERTY_MAX_THREAD_COUNT, maxThreadsString, nfe.getMessage()));
         }
         DEF_MAX_THREAD_COUNT = maxThreads;
         GLOBAL_THREAD_POOL = new ThreadPool(maxThreads);
