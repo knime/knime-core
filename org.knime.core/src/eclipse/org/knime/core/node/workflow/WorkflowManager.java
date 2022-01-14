@@ -9101,6 +9101,18 @@ public final class WorkflowManager extends NodeContainer
         m_dataRepository.ensureOpenAfterLoad();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    void unsetDirty() {
+        boolean wasDirty = isDirty();
+        super.unsetDirty();
+        if (wasDirty) { // send event only if not already clean
+            notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.WORKFLOW_CLEAN, getID(), null, null));
+        }
+    }
+
     /** {@inheritDoc} */
     @Override
     public void setDirty() {

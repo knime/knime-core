@@ -62,30 +62,32 @@ import java.util.Date;
  */
 public class WorkflowEvent {
 
-
     /**
      * Enumeration of all workflow events that are interesting for the GUI.
      *
      * @author Fabian Dill, University of Konstanz
      */
     public enum Type {
-        /** Event: connection added to workflow. */
-     CONNECTION_ADDED,
-     /** Event: connection removed from workflow. */
-     CONNECTION_REMOVED,
-     /** Event: node added to workflow. */
-     NODE_ADDED,
-     /** Event: node removed from workflow. */
-     NODE_REMOVED,
-     /** Event: node setting of a node in the workflow changed
-     * @since 4.1*/
-     NODE_SETTINGS_CHANGED,
-     /** Event: annotation added to workflow. */
-     ANNOTATION_ADDED,
-     /** Event: annotation removed from workflow. */
-     ANNOTATION_REMOVED,
-     /** Event: workflow is marked as dirty. */
-     WORKFLOW_DIRTY,
+            /** Connection added to workflow. */
+            CONNECTION_ADDED,
+            /** Connection removed from workflow. */
+            CONNECTION_REMOVED,
+            /** Node added to workflow. */
+            NODE_ADDED,
+            /** Node removed from workflow. */
+            NODE_REMOVED,
+            /** Node setting of a node in the workflow changed
+             * @since 4.1 */
+            NODE_SETTINGS_CHANGED,
+            /** Annotation added to workflow. */
+            ANNOTATION_ADDED,
+            /** Annotation removed from workflow. */
+            ANNOTATION_REMOVED,
+            /** Workflow is marked as dirty. */
+            WORKFLOW_DIRTY,
+            /** Workflow is marked as clean (not dirty)
+             * @since 4.6 */
+            WORKFLOW_CLEAN
     }
 
     private final NodeID m_id;
