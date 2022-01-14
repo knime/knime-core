@@ -1175,27 +1175,26 @@ public final class FileUtil {
      *             fails
      */
     public static File getFileFromURL(final URL fileUrl) {
-        final String uncPrefix = "//";
+        // UNC allows // and \\ as prefix, // won't clash with path slashes and avoid mixing of / and \ problems
+        final var uncPrefix = "//";
         if (fileUrl.getProtocol().equalsIgnoreCase("file")) {
             // Throughout this if-branch, we assume that if there are query or fragment parts (cf. RFC3986 sec. 3), they can be dropped.
             // Note that the authority part potentially, but not necessarily, contains a host part (cf. RFC3986 sec. 3.2).
             // Obtain String suitable as input for File to check for existence
-            String path = looksLikeUNC(fileUrl) ? uncPrefix + fileUrl.getAuthority() + fileUrl.getPath() : fileUrl.getPath();
-            File dataFile = new File(path);
-            if (!dataFile.exists()) {   // Assume path is given in encoded form and try to decode.
+            String path =
+                looksLikeUNC(fileUrl) ? uncPrefix + fileUrl.getAuthority() + fileUrl.getPath() : fileUrl.getPath();
+
+            var dataFile = new File(path);
+
+            if (!dataFile.exists()) {
                 try {
-                    URI fileURI = fileUrl.toURI();
-                    // Getters on URI perform decoding.
-                    // In UNC strings, the "host-name" (as per UNC spec) can be a "reg-name" (as per RFC3986 sec. 3.2.2)
-                    // and thus be percent-encoded, i.e. we need to decode.
-                    // See https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-dtyp/62e862f4-2a51-452e-8eeb-dc4ff5ee33cc
-                    String decodedPath = looksLikeUNC(fileUrl) ? uncPrefix + fileURI.getAuthority() + fileURI.getPath() : fileURI.getPath();
-                    dataFile = new File(decodedPath);
-                } catch (URISyntaxException e) {  // NOSONAR: Exception is handled.
+                    return new File(decodePath(fileUrl));
+                } catch (IllegalArgumentException e) {
                     // Path is (assumed) encoded but could not be parsed. This means it is not
                     // properly encoded (or otherwise of invalid structure), in which case all
                     // we can do is go back to assuming it to be un-encoded (already decoded) and
                     // return `dataFile` unchanged, i.e. pointing to the originally given path.
+                    LOGGER.warn("Returning non-existing file " + dataFile, e);
                 }
             }
             return dataFile;
@@ -1208,6 +1207,43 @@ public final class FileUtil {
         } else {
             throw new IllegalArgumentException("Not a file or knime URL: '" + fileUrl + "'");
         }
+    }
+
+    /**
+     * Tries to decode (e.g., undo percent-encoding of white spaces) the path given in the URL.
+     * @param fileUrl Assume path to a file
+     * @throws URISyntaxException if the URL can not be converted to an URI
+     * @return A string that can be used to create a file object {@link File#File(String path)}
+     */
+    private static String decodePath(final URL fileUrl) throws IllegalArgumentException {
+        // Getters on URI perform decoding.
+        // In UNC strings, the "host-name" (as per UNC spec) can be a "reg-name" (as per RFC3986 sec. 3.2.2)
+        // and thus be percent-encoded, i.e. we need to decode.
+        // See https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-dtyp/62e862f4-2a51-452e-8eeb-dc4ff5ee33cc
+        URI fileURI;
+        try {
+            fileURI = fileUrl.toURI();
+        } catch (URISyntaxException ex) {
+            throw new IllegalArgumentException("Cannot perform path decoding for " + fileUrl, ex);
+        }
+
+        String decodedPath;
+        if (looksLikeUNC(fileUrl)) {
+            // UNC allows // and \\ as prefix, // won't clash with path slashes (can't mix forward and backward slashes)
+            final var uncPrefix = "//";
+            decodedPath = uncPrefix + fileURI.getAuthority() + fileURI.getPath();
+        } else {
+            // AP-18190 using URI for decoding is fine, but it will return null on some inputs, e.g.,
+            // new URI("file:missing").getPath() ==> null
+            // new URL("file:missing").getPath() ==> "missing"
+            decodedPath = fileURI.getPath() != null ? fileURI.getPath() : fileUrl.getPath();
+        }
+        if (decodedPath == null) {
+            throw new IllegalArgumentException(
+                "Cannot create data file because couldn't extract path from file URL: " + fileUrl);
+        }
+        return decodedPath;
+
     }
 
     /**
