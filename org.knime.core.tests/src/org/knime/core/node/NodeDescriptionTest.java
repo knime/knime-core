@@ -146,7 +146,7 @@ public class NodeDescriptionTest {
         NodeDescriptionParser parser = new NodeDescriptionParser();
         NodeDescription description = parser.parseDescription(XSD_v41_ungrouped.class);
 
-        Assert.assertNull(description.getDialogOptionGroups().get(0).getName());
+        Assert.assertFalse(description.getDialogOptionGroups().get(0).getName().isPresent());
         Assert.assertFalse(description.getDialogOptionGroups().get(0).getDescription().isPresent());
         Assert.assertFalse(description.getDialogOptionGroups().isEmpty());
         Assert.assertFalse(description.getDialogOptionGroups().get(0).getOptions().isEmpty());
@@ -165,7 +165,7 @@ public class NodeDescriptionTest {
         Assert.assertEquals("Unexpected intro text", description.getIntro().orElseThrow(), "My <b>own</b> intro");
 
         // grouped options
-        Assert.assertEquals("Unexpected group name", description.getDialogOptionGroups().get(1).getName(), "group two");
+        Assert.assertEquals("Unexpected group name", description.getDialogOptionGroups().get(1).getName().orElseThrow(), "group two");
         Assert.assertEquals("Unexpected group description",
             // test is allowed to fail if optional empty
             description.getDialogOptionGroups().get(0).getDescription().get(), // NOSONAR
