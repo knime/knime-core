@@ -88,6 +88,18 @@ public interface CellFactory {
     DataColumnSpec[] getColumnSpecs();
 
     /**
+     * Indicates whether calls to {@link #getCells(DataRow)} change the state of an instance.
+     * E.g. an index is incremented or a Map updated.<br>
+     * Defaults to true.
+     *
+     * @return whether a call to {@link #getCells(DataRow)} can change the state of this instance
+     * @since 4.6
+     */
+    default boolean hasState() {
+        return true;
+    }
+
+    /**
      * This method is called when a row has been processed. It allows the implementor to set progress in the execution
      * monitor and also some meaningful progress message.
      * <p>
