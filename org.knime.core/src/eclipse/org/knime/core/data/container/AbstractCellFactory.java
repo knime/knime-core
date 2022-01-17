@@ -172,6 +172,11 @@ public abstract class AbstractCellFactory implements CellFactory {
         return getMaxParallelWorkers() > 0 && getMaxQueueSize() > 0;
     }
 
+    @Override
+    public boolean hasState() {
+        return !isParallelProcessing();
+    }
+
     /** Enables or disables parallel processing of the rows. The two relevant
      * parameters for the number of parallel workers and maximum work queue
      * need to be specified.
