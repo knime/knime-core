@@ -127,6 +127,10 @@ public final class ColumnRearrangerUtils {
             return m_specAndFactory.isNewColumn();
         }
 
+        public boolean isConvertedColumn() {
+            return m_specAndFactory.isConvertedColumn();
+        }
+
         public int getOriginalIndex() {
             return m_specAndFactory.getOriginalIndex();
         }
