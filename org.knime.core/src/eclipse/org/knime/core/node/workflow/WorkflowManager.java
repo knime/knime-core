@@ -5388,6 +5388,41 @@ public final class WorkflowManager extends NodeContainer
     }
 
     /**
+     * Given a loop end node ("tail" node), determine the set of nodes in its loop body and check whether any of these
+     * is currently executing.
+     *
+     * @param tailNodeContainer Assumed to be a loop end node.
+     * @return {@code true} iff there is at least one node in the loop body that is currently executing. If no loop body
+     *   can be determined, {@code false} is returned.
+     * @see Workflow#findAllNodesConnectedToLoopBody(NodeID, NodeID)
+     * @see InternalNodeContainerState#isExecutionInProgress()
+     * @since 4.6
+     */
+    public boolean hasExecutingLoopBody(final NativeNodeContainer tailNodeContainer) {
+        if (!tailNodeContainer.isModelCompatibleTo(LoopEndNode.class)) {
+            throw new IllegalArgumentException("Given tail node must be a loop end node.");
+        }
+        // The flow loop context is available via the loop end node (cf Node#getLoopContext) only after the first
+        //   loop iteration has been finished (see NodeModel#continueLoop).
+        FlowLoopContext loopContext = tailNodeContainer.getFlowObjectStack().peek(FlowLoopContext.class);
+        if (loopContext == null) {
+            // e.g. tail node is not connected to a loop start node (not in a loop context).
+            return false;
+        }
+        NodeID headNode = loopContext.getHeadNode();
+        NodeID tailNode = tailNodeContainer.getID();
+        try {
+            return m_workflow.findAllNodesConnectedToLoopBody(headNode, tailNode).stream()
+                    .map(NodeAndInports::getID)
+                    .map(this::getNodeContainer)
+                    .map(NodeContainer::getInternalState)
+                    .anyMatch(InternalNodeContainerState::isExecutionInProgress);
+        } catch (IllegalLoopException e) {
+            return false;
+        }
+    }
+
+    /**
      * Returns true if all required input data is available to the node. Unconnected optional inputs are OK.
      *
      * <p>
