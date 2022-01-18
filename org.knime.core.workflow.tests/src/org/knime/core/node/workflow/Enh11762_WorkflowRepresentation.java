@@ -151,7 +151,7 @@ public class Enh11762_WorkflowRepresentation extends WorkflowTestCase {
 
 		// FIXME remove debug output
 	    Path path = Paths.get(new File("src/test/resources").getAbsolutePath(), "Enh11762ExampleOutput.json");
-		Files.writeString(path, pretty, StandardOpenOption.WRITE);
+		Files.writeString(path, pretty, StandardOpenOption.CREATE, StandardOpenOption.WRITE);
 		
 		return pretty;
 	}
