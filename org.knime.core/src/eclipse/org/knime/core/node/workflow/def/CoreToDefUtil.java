@@ -251,7 +251,7 @@ public class CoreToDefUtil {
         if (byteValues != null) {
             return DefaultConfigValueByteArrayDef.builder()//
                 .setConfigType("ConfigValueByteArray")//
-                .setValue(byteValues)//
+                .setArray(byteValues)//
                 .build();
         }
         char[] charValues = innerNode.getCharArray(childKey, null);

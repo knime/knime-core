@@ -48,14 +48,11 @@
  */
 package org.knime.core.node.workflow.def;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.time.OffsetDateTime;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeAndBundleInformationPersistor;
@@ -81,8 +78,6 @@ import org.knime.core.node.workflow.FlowLoopContext.RestoredFlowLoopContext;
 import org.knime.core.node.workflow.FlowScopeContext;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation;
-import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
-import org.knime.core.node.workflow.MetaNodeTemplateInformation.TemplateType;
 import org.knime.core.node.workflow.NodeContainer.NodeLocks;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.util.workflowalizer.AuthorInformation;
@@ -208,16 +203,16 @@ public class DefToCoreUtil {
     }
 
     public static MetaNodeTemplateInformation toTemplateInfo(final TemplateInfoDef def) {
-        try {
             if (def.getRole().equals("None")) {
-                return new MetaNodeTemplateInformation(Role.None, null, null, null, null, null);
+                // TODO
+                throw new NotImplementedException("Metanode template information = None not implemented yet.");
             } else {
-                return new MetaNodeTemplateInformation(Role.valueOf(def.getRole()), TemplateType.valueOf(def.getType()),
-                    new URI(def.getUri()), java.util.Date.from(def.getTimestamp().toInstant()), null, null);
+                // TODO
+                throw new NotImplementedException("Metanode template information import implemented yet.");
+//                Role.valueOf(def.getRole()), TemplateType.valueOf(def.getType()),
+//                new URI(def.getUri()), java.util.Date.from(def.getTimestamp().toInstant()), null, null
+//                return MetaNodeTemplateInformation.creat);
             }
-        } catch (URISyntaxException ex) {
-            throw new RuntimeException(ex);
-        }
     }
 
     public static EditorUIInformation toEditorUIInformation(final WorkflowUISettingsDef def) {
@@ -236,8 +231,8 @@ public class DefToCoreUtil {
      */
     public static AuthorInformation toAuthorInformation(final AuthorInformationDef def) {
         final var lastEdited =
-            Optional.ofNullable(def.getLastEditedWhen()).map(OffsetDateTime::toInstant).map(Date::from);
-        final var authored = Optional.ofNullable(def.getAuthoredWhen()).map(OffsetDateTime::toInstant).map(Date::from);
+            Optional.ofNullable(def.getLastEditedWhen());
+        final var authored = Optional.ofNullable(def.getAuthoredWhen());
         return new AuthorInformation(def.getAuthoredBy(), authored.orElse(null), def.getLastEditedBy(),
             lastEdited.orElse(null));
     }
@@ -301,7 +296,7 @@ public class DefToCoreUtil {
             }
             temp.addBooleanArray(arrayKey, array);
         } else if (def instanceof ConfigValueByteArrayDef) {
-            temp.addByteArray(arrayKey, ((ConfigValueByteArrayDef)def).getValue());
+            temp.addByteArray(arrayKey, ((ConfigValueByteArrayDef)def).getArray());
         } else if (def instanceof ConfigValueCharArrayDef) {
             List<Integer> values = ((ConfigValueCharArrayDef)def).getArray();
             char[] array = new char[values.size()];
