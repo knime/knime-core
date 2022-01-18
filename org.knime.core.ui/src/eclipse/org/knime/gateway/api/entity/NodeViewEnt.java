@@ -50,13 +50,12 @@ package org.knime.gateway.api.entity;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
-import org.knime.core.data.RowKey;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.webui.node.view.NodeViewManager;
 import org.knime.core.webui.page.PageUtil;
-import org.knime.gateway.impl.service.util.HiLiteListenerRegistry;
+import org.knime.gateway.impl.service.events.SelectionEventSource;
+import org.knime.gateway.impl.service.events.SelectionEventSource.SelectionEventMode;
 
 /**
  * Node view entity containing the info required by the UI (i.e. frontend) to be able display a node view.
@@ -72,10 +71,11 @@ public final class NodeViewEnt extends NodeUIExtensionEnt {
     private List<String> m_initialSelection;
 
     /**
-     * @param nnc
-     * @param hllr
+     * @param nnc the node to create the node view entity for
+     * @param selectionEventSource used to retrieve the initial selection and synchronously register the associated node
+     *            with the 'event source'
      */
-    public NodeViewEnt(final NativeNodeContainer nnc, final HiLiteListenerRegistry hllr) {
+    public NodeViewEnt(final NativeNodeContainer nnc, final SelectionEventSource selectionEventSource) {
         super(nnc, ExtensionType.VIEW);
 
         var nodeViewManager = NodeViewManager.getInstance();
@@ -85,12 +85,28 @@ public final class NodeViewEnt extends NodeUIExtensionEnt {
         var id = PageUtil.getPageId(nnc, page.isStatic(), false);
         m_resourceInfo = new ResourceInfoEnt(id, url, path, page);
         m_info = new NodeInfoEnt(nnc);
-        if (hllr != null) {
-            m_initialSelection =
-                hllr.getHiliteStateAndActivateListener(nnc).stream().map(RowKey::toString).collect(Collectors.toList());
+        if (selectionEventSource != null) {
+            var selectionEvent = selectionEventSource.addEventListenerAndGetInitialEvent(nnc).orElse(null);
+            if (selectionEvent != null) {
+                assert selectionEvent.getMode() == SelectionEventMode.ADD
+                    || selectionEvent.getMode() == SelectionEventMode.REPLACE;
+                m_initialSelection = selectionEvent.getKeys();
+            } else {
+                m_initialSelection = Collections.emptyList();
+            }
         } else {
             m_initialSelection = Collections.emptyList();
         }
+    }
+
+    /**
+     * Creates a new instances without a initial selection and without the underlying node being registered with the
+     * selection event source.
+     *
+     * @param nnc the node to create the node view entity for
+     */
+    public NodeViewEnt(final NativeNodeContainer nnc) {
+        this(nnc, null);
     }
 
     /**

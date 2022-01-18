@@ -48,18 +48,29 @@
  */
 package org.knime.gateway.api.entity;
 
+import static org.awaitility.Awaitility.await;
+import static org.awaitility.Duration.FIVE_SECONDS;
+import static org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.startsWith;
 import static org.knime.core.webui.node.view.NodeViewManagerTest.runOnExecutor;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.knime.core.data.RowKey;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeMessage;
@@ -71,7 +82,10 @@ import org.knime.core.webui.page.Page;
 import org.knime.core.webui.page.PageTest;
 import org.knime.core.webui.page.PageUtil;
 import org.knime.core.webui.page.Resource;
-import org.knime.gateway.impl.service.util.HiLiteListenerRegistry;
+import org.knime.gateway.impl.service.events.SelectionEvent;
+import org.knime.gateway.impl.service.events.SelectionEventSource;
+import org.knime.gateway.impl.service.events.SelectionEventSource.SelectionEventMode;
+import org.knime.gateway.impl.service.events.SelectionEventSourceTest;
 import org.knime.testing.node.view.NodeViewNodeFactory;
 import org.knime.testing.node.view.NodeViewNodeModel;
 import org.knime.testing.util.WorkflowManagerUtil;
@@ -84,7 +98,7 @@ import org.knime.testing.util.WorkflowManagerUtil;
 public class NodeViewEntTest {
 
     /**
-     * Tests {@link NodeViewEnt#NodeViewEnt(NativeNodeContainer, HiLiteListenerRegistry)}.
+     * Tests {@link NodeViewEnt#NodeViewEnt(NativeNodeContainer)}.
      *
      * @throws IOException
      */
@@ -94,7 +108,7 @@ public class NodeViewEntTest {
 
         NativeNodeContainer nncWithoutNodeView =
             WorkflowManagerUtil.createAndAddNode(wfm, new VirtualSubNodeInputNodeFactory(null, new PortType[0]));
-        Assert.assertThrows(IllegalArgumentException.class, () -> new NodeViewEnt(nncWithoutNodeView, null));
+        Assert.assertThrows(IllegalArgumentException.class, () -> new NodeViewEnt(nncWithoutNodeView));
 
         Function<NodeViewNodeModel, NodeView> nodeViewCreator = m -> {
             Page p = Page.builder(() -> "blub", "index.html").build();
@@ -151,5 +165,37 @@ public class NodeViewEntTest {
 
         WorkflowManagerUtil.disposeWorkflow(wfm);
     }
+
+    /**
+     * Tests the {@link SelectionEventSource} in conjunction with {@link NodeViewEnt}.
+     *
+     * @throws IOException
+     */
+    @Test
+    public void testNodeViewEntWithSelectionEventSource() throws IOException {
+        var wfm = WorkflowManagerUtil.createEmptyWorkflow();
+
+        Function<NodeViewNodeModel, NodeView> nodeViewCreator =
+            m -> NodeViewTest.createNodeView(Page.builder(() -> "blub", "index.html").build());
+        NativeNodeContainer nnc = WorkflowManagerUtil.createAndAddNode(wfm, new NodeViewNodeFactory(nodeViewCreator));
+
+        var hiLiteHandler = nnc.getNodeModel().getInHiLiteHandler(0);
+        hiLiteHandler.fireHiLiteEvent(new RowKey("k1"), new RowKey("k2"));
+
+        @SuppressWarnings("unchecked")
+        final BiConsumer<String, SelectionEvent> consumerMock = mock(BiConsumer.class);
+        var selectionEventSource = SelectionEventSourceTest.createSelectionEventSource(consumerMock);
+        var nodeViewEnt = new NodeViewEnt(nnc, selectionEventSource);
+
+        assertThat(nodeViewEnt.getInitialSelection(), is(List.of("k1", "k2")));
+
+        hiLiteHandler.fireHiLiteEvent(new RowKey("k3"));
+        await().pollDelay(ONE_HUNDRED_MILLISECONDS).timeout(FIVE_SECONDS)
+            .untilAsserted(() -> verify(consumerMock, times(1)).accept(eq("Selection"),
+                argThat(se -> se.getKeys().equals(List.of("k3")) && se.getMode() == SelectionEventMode.ADD)));
+
+        WorkflowManagerUtil.disposeWorkflow(wfm);
+    }
+
 
 }
