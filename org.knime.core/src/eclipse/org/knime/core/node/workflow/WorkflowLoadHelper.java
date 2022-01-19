@@ -285,6 +285,7 @@ public class WorkflowLoadHelper {
      * @return The persistor
      * @throws IOException If an IO error occured
      * @throws UnsupportedWorkflowVersionException If the workflow is of an unsupported version
+     * TODO move shouldn't be in load helper - loading from legacy workflow format specific
      */
     FromFileNodeContainerPersistor createLoadPersistor(final File directory)
             throws IOException, UnsupportedWorkflowVersionException {

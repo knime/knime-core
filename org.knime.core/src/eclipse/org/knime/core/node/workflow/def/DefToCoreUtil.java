@@ -173,7 +173,7 @@ public class DefToCoreUtil {
      * @return
      */
     public static PortType toPortType(final PortTypeDef portType) {
-        String objectClassString = portType.getPortObjectClass();
+        var objectClassString = portType.getPortObjectClass();
         if (objectClassString == null) {
             // TODO VWR proper error handling or eliminate code paths that lead here
             throw new RuntimeException("No port object class found to create PortType object");
@@ -190,12 +190,12 @@ public class DefToCoreUtil {
             .description(def.getDescription())//
             .icon(def.getIcon());
         if (def.getInPortNames() != null) {
-            for (int i = 0; i < def.getInPortNames().size(); i++) {
+            for (var i = 0; i < def.getInPortNames().size(); i++) {
                 builder.addInPortNameAndDescription(def.getInPortNames().get(i), def.getInPortDescriptions().get(i));
             }
         }
         if (def.getOutPortNames() != null) {
-            for (int i = 0; i < def.getOutPortNames().size(); i++) {
+            for (var i = 0; i < def.getOutPortNames().size(); i++) {
                 builder.addOutPortNameAndDescription(def.getOutPortNames().get(i), def.getOutPortDescriptions().get(i));
             }
         }

@@ -8259,6 +8259,8 @@ public final class WorkflowManager extends NodeContainer
      * @return The persistor
      * @throws IOException If an IO error occured
      * @throws UnsupportedWorkflowVersionException If the workflow is of an unsupported version
+     *
+     * TODO move shouldn't be in WFM - loading from legacy workflow format specific
      */
     public static FileWorkflowPersistor createLoadPersistor(final File directory, final WorkflowLoadHelper loadHelper)
         throws IOException, UnsupportedWorkflowVersionException {
@@ -8281,6 +8283,9 @@ public final class WorkflowManager extends NodeContainer
      * @throws CanceledExecutionException If canceled.
      * @throws UnsupportedWorkflowVersionException If the version of the workflow is unknown (future version)
      * @throws LockFailedException if the flow can't be locked for opening
+     *
+     * TODO move shouldn't be in WFM - loading from legacy workflow format specific
+     *
      */
     public WorkflowLoadResult load(final File directory, final ExecutionMonitor exec,
         final WorkflowLoadHelper loadHelper, final boolean keepNodeMessages) throws IOException,
@@ -8312,26 +8317,6 @@ public final class WorkflowManager extends NodeContainer
     }
 
     /**
-     * Loads a workflow described as a POJO into this workflow instance.
-     *
-     * @param definition description of the workflow, nodes, connections, metadata
-     * @param exec For progress/cancellation (currently not supported)
-     * @param loadHelper callback to load credentials and such (if available) during load of the underlying
-     *            <code>SingleNodeContainer</code> (may be null).
-     * @param keepNodeMessages Whether to keep the messages that are associated with the nodes in the loaded workflow
-     *            (mostly false but true when remotely computed results are loaded).
-     * @return A workflow load result, which also contains the loaded workflow.
-     * @throws CanceledExecutionException If canceled.
-     */
-    public WorkflowLoadResult load(final WorkflowProjectDef definition, final ExecutionMonitor exec,
-        final WorkflowLoadHelper loadHelper, final boolean keepNodeMessages)
-        throws CanceledExecutionException {
-        WorkflowPersistor loader = loadHelper.createLoadPersistor(definition);
-        exec.checkCanceled();
-        return loadDef(loader, exec, keepNodeMessages);
-    }
-
-    /**
      * Loads the content of the argument persistor into this node.
      *
      * @param persistor The persistor containing the node(s) to be loaded as children to this node.
@@ -8347,10 +8332,28 @@ public final class WorkflowManager extends NodeContainer
     public WorkflowLoadResult load(final FileWorkflowPersistor persistor, final ExecutionMonitor exec,
         final boolean keepNodeMessages)
         throws IOException, InvalidSettingsException, CanceledExecutionException, UnsupportedWorkflowVersionException {
+
+        /**
+         * Legacy format load specific.
+         * New format hopefully won't need any paths on the file system - workflow description should be self-contained
+         */
         final ReferencedFile refDirectory = persistor.getMetaPersistor().getNodeContainerDirectory();
         final File directory = refDirectory.getFile();
+
+        /**
+         * Directory is only passed as an identifier (passed to MetaNodeUpdateResult#message)
+         */
         final WorkflowLoadResult result = new WorkflowLoadResult(directory.getName());
+
+        /**
+         * Keep node messages could go into persistor/load helper?
+         * Result could go maybe also go into persistor?
+         */
         load(persistor, result, exec, keepNodeMessages);
+
+        /**
+         *
+         */
         final WorkflowManager manager = result.getWorkflowManager();
         if (!directory.canWrite()) {
             result.addWarning("Workflow directory \"" + directory.getName()
@@ -8413,15 +8416,38 @@ public final class WorkflowManager extends NodeContainer
     public void load(final TemplateNodeContainerPersistor persistor, final MetaNodeLinkUpdateResult result,
         final ExecutionMonitor exec, final boolean keepNodeMessages)
         throws IOException, InvalidSettingsException, CanceledExecutionException, UnsupportedWorkflowVersionException {
+
+        /**
+         * Legacy workflow format specific
+         */
         final ReferencedFile refDirectory = persistor.getMetaPersistor().getNodeContainerDirectory();
+
+
         exec.setMessage("Loading workflow structure from \"" + refDirectory + "\"");
         exec.checkCanceled();
+
+        /**
+         * Data provider
+         */
         LoadVersion version = persistor.getLoadVersion();
+
+        /**
+         * Logging
+         */
         LOGGER.debug("Loading workflow from \"" + refDirectory + "\" (version \"" + version + "\" with loader class \""
             + persistor.getClass().getSimpleName() + "\")");
-        // data files are loaded using a repository of reference tables;
-        Map<Integer, BufferedDataTable> tblRep = new HashMap<Integer, BufferedDataTable>();
+
+        /**
+         * Workflow manager
+         */
+        // data files are loaded using a repository of reference tables
+        Map<Integer, BufferedDataTable> tblRep = new HashMap<>();
+
+        /**
+         * Conversion
+         */
         persistor.preLoadNodeContainer(null, null, result);
+
         NodeContainerTemplate loadedInstance = null;
         boolean isIsolatedProject = persistor.isProject();
         InsertWorkflowPersistor insertPersistor = new InsertWorkflowPersistor(persistor);
@@ -8441,86 +8467,6 @@ public final class WorkflowManager extends NodeContainer
         exec.setProgress(1.0);
         result.setLoadedInstance(loadedInstance);
         result.setGUIMustReportDataLoadErrors(persistor.mustWarnOnDataLoadError());
-    }
-
-    /**
-     * Def-based loading version of #load.
-     * Initialize this using a persistor that provides information from a persisted/serialized version of a workflow.
-     *
-     * @param persistor provides necessary information to instantiate a workflow manager from some source, e.g., a
-     *            workflow described as a single JSON file
-     * @param exec to provide progress updated during the load process
-     * @param keepNodeMessages
-     * @return an object with information on errors and warnings.
-     * @throws CanceledExecutionException
-     */
-    public WorkflowLoadResult loadDef(final WorkflowPersistor persistor, final ExecutionMonitor exec,
-        final boolean keepNodeMessages) throws CanceledExecutionException {
-
-        CheckUtils.checkArgument(persistor.isProject(), "Pass a persistor for a WorkflowProjectDef");
-
-        // TODO seemed to be scoped by using the workflow's directory - not sure if a constant is fine
-        final WorkflowLoadResult result = new WorkflowLoadResult("WorkflowDef");
-
-        exec.setMessage(String.format("Loading workflow structure."));
-        exec.checkCanceled();
-        LoadVersion version = persistor.getLoadVersion();
-        LOGGER.debug(String.format("Loading workflow (version \"%s\" with loader class \"%s\")", version,
-            persistor.getClass().getSimpleName()));
-        m_loadVersion = persistor.getLoadVersion();
-
-        // data files are loaded using a repository of reference tables;
-        Map<Integer, BufferedDataTable> tblRep = new HashMap<>();
-
-        // TODO overwrite name? (e.g., FileWorkflowPersistor can have String m_nameOverwrite set to != null to replace
-        // the metadata in the workflow.knime or subworkflow settings
-
-        // What's this for?
-        NodeContainerTemplate loadedInstance = null;
-
-        // copied from directory-based workflow loading: prepare for
-        // WorkflowManager#loadContent which requires that top level workflow has no connections
-        InsertWorkflowPersistor insertPersistor = new InsertWorkflowPersistor(persistor);
-
-        NodeID[] newIDs = loadContent(insertPersistor, tblRep, null, exec, result, keepNodeMessages).getNodeIDs();
-
-        CheckUtils.checkArgument(newIDs.length == 1,
-            "Loading workflow failed, couldn't identify child sub flow (typically a project)");
-
-        loadedInstance = (NodeContainerTemplate)getNodeContainer(newIDs[0]);
-        exec.setProgress(1.0);
-        result.setLoadedInstance(loadedInstance);
-        result.setGUIMustReportDataLoadErrors(persistor.mustWarnOnDataLoadError());
-
-        final WorkflowManager manager = result.getWorkflowManager();
-
-        // TODO fix data load problems (see load(final FileWorkflowPersistor persistor, final ExecutionMonitor exec,
-        // final boolean keepNodeMessages)
-
-        StringBuilder message = new StringBuilder("Loaded workflow");
-        switch (result.getType()) {
-            case Ok:
-                message.append(" with no errors");
-                break;
-            case Warning:
-                message.append(" with warnings");
-                break;
-            case DataLoadError:
-                message.append(" with errors during data load. ");
-//                if (fixDataLoadProblems) {
-//                    message.append("Problems were fixed and (silently) saved.");
-//                } else {
-//                    message.append("Problems were fixed but not saved!");
-//                }
-                break;
-            case Error:
-                message.append(" with errors");
-                break;
-            default:
-                message.append("with ").append(result.getType());
-        }
-        LOGGER.debug(message.toString());
-        return result;
     }
 
     /** {@inheritDoc} */
@@ -10673,5 +10619,110 @@ public final class WorkflowManager extends NodeContainer
     public void notifyTemplateConnectionChangedListener() {
         notifyNodePropertyChangedListener(NodeProperty.TemplateConnection);
     }
+
+    // FOR NOW - persistor-free
+
+    /**
+     * Loads a workflow described as a POJO into this workflow instance.
+     *
+     * @param definition description of the workflow, nodes, connections, metadata
+     * @param exec For progress/cancellation (currently not supported)
+     * @param loadHelper callback to load credentials and such (if available) during load of the underlying
+     *            <code>SingleNodeContainer</code> (may be null).
+     * @param keepNodeMessages Whether to keep the messages that are associated with the nodes in the loaded workflow
+     *            (mostly false but true when remotely computed results are loaded).
+     * @return A workflow load result, which also contains the loaded workflow.
+     * @throws CanceledExecutionException If canceled.
+     */
+    public WorkflowLoadResult load(final WorkflowProjectDef definition, final ExecutionMonitor exec,
+        final WorkflowLoadHelper loadHelper, final boolean keepNodeMessages)
+        throws CanceledExecutionException {
+        WorkflowPersistor loader = loadHelper.createLoadPersistor(definition);
+        exec.checkCanceled();
+        return loadDef(loader, exec, keepNodeMessages);
+    }
+
+    /**
+     * Def-based loading version of #load.
+     * Initialize this using a persistor that provides information from a persisted/serialized version of a workflow.
+     *
+     * @param persistor provides necessary information to instantiate a workflow manager from some source, e.g., a
+     *            workflow described as a single JSON file
+     * @param exec to provide progress updated during the load process
+     * @param keepNodeMessages
+     * @return an object with information on errors and warnings.
+     * @throws CanceledExecutionException
+     */
+    public WorkflowLoadResult loadDef(final WorkflowPersistor persistor, final ExecutionMonitor exec,
+        final boolean keepNodeMessages) throws CanceledExecutionException {
+
+        CheckUtils.checkArgument(persistor.isProject(), "Pass a persistor for a WorkflowProjectDef");
+
+        // TODO seemed to be scoped by using the workflow's directory - not sure if a constant is fine
+        final WorkflowLoadResult result = new WorkflowLoadResult("WorkflowDef");
+
+        exec.setMessage(String.format("Loading workflow structure."));
+        exec.checkCanceled();
+        LoadVersion version = persistor.getLoadVersion();
+        LOGGER.debug(String.format("Loading workflow (version \"%s\" with loader class \"%s\")", version,
+            persistor.getClass().getSimpleName()));
+        m_loadVersion = persistor.getLoadVersion();
+
+        // data files are loaded using a repository of reference tables;
+        Map<Integer, BufferedDataTable> tblRep = new HashMap<>();
+
+        // TODO overwrite name? (e.g., FileWorkflowPersistor can have String m_nameOverwrite set to != null to replace
+        // the metadata in the workflow.knime or subworkflow settings
+
+        // What's this for?
+        NodeContainerTemplate loadedInstance = null;
+
+        // copied from directory-based workflow loading: prepare for
+        // WorkflowManager#loadContent which requires that top level workflow has no connections
+        InsertWorkflowPersistor insertPersistor = new InsertWorkflowPersistor(persistor);
+
+        NodeID[] newIDs = loadContent(insertPersistor, tblRep, null, exec, result, keepNodeMessages).getNodeIDs();
+
+        CheckUtils.checkArgument(newIDs.length == 1,
+            "Loading workflow failed, couldn't identify child sub flow (typically a project)");
+
+        loadedInstance = (NodeContainerTemplate)getNodeContainer(newIDs[0]);
+        exec.setProgress(1.0);
+        result.setLoadedInstance(loadedInstance);
+        result.setGUIMustReportDataLoadErrors(persistor.mustWarnOnDataLoadError());
+
+        final WorkflowManager manager = result.getWorkflowManager();
+
+        // TODO fix data load problems (see load(final FileWorkflowPersistor persistor, final ExecutionMonitor exec,
+        // final boolean keepNodeMessages)
+
+        StringBuilder message = new StringBuilder("Loaded workflow");
+        switch (result.getType()) {
+            case Ok:
+                message.append(" with no errors");
+                break;
+            case Warning:
+                message.append(" with warnings");
+                break;
+            case DataLoadError:
+                message.append(" with errors during data load. ");
+//                if (fixDataLoadProblems) {
+//                    message.append("Problems were fixed and (silently) saved.");
+//                } else {
+//                    message.append("Problems were fixed but not saved!");
+//                }
+                break;
+            case Error:
+                message.append(" with errors");
+                break;
+            default:
+                message.append("with ").append(result.getType());
+        }
+        LOGGER.debug(message.toString());
+        return result;
+    }
+
+    // utility functions - move later
+
 
 }

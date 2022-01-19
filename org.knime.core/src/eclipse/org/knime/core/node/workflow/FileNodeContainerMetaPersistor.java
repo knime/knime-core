@@ -232,6 +232,9 @@ class FileNodeContainerMetaPersistor implements NodeContainerMetaPersistor {
         load(final NodeSettingsRO settings, final NodeSettingsRO parentSettings, final LoadResult loadResult) {
         boolean isResetRequired = false;
 
+        /**
+         * TODO extract try(load)-catch pattern
+         */
         try {
             m_nodeAnnotationData = loadNodeAnnotationData(settings, parentSettings);
         } catch (InvalidSettingsException e) {
@@ -259,7 +262,12 @@ class FileNodeContainerMetaPersistor implements NodeContainerMetaPersistor {
             isResetRequired = true;
             setDirtyAfterLoad();
         }
+
+        /**
+         * Handling absent job manager
+         */
         boolean hasJobManagerLoadFailed = m_jobManager == null;
+
         try {
             if (!hasJobManagerLoadFailed) {
                 m_executionJobSettings = loadNodeExecutionJobSettings(settings);
@@ -272,6 +280,7 @@ class FileNodeContainerMetaPersistor implements NodeContainerMetaPersistor {
             isResetRequired = true;
             hasJobManagerLoadFailed = true;
         }
+
         try {
             if (!hasJobManagerLoadFailed) {
                 ReferencedFile jobManagerInternalsDirectory =
@@ -285,9 +294,13 @@ class FileNodeContainerMetaPersistor implements NodeContainerMetaPersistor {
             loadResult.addError(error);
             getLogger().debug(error, e);
             setDirtyAfterLoad();
-            hasJobManagerLoadFailed = true;
+            // JobManager Load Failed
         }
+
         try {
+            /**
+             * TODO move should go to execution result not metadata
+             */
             m_state = loadState(settings, parentSettings);
             switch (m_state) {
                 case EXECUTED:

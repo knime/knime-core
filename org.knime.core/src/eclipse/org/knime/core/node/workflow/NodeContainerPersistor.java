@@ -60,7 +60,10 @@ import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
  */
 public interface NodeContainerPersistor {
 
-    /** Instantiates the node container but does not call API methods on it. This is done later
+    /**
+     * TODO move to WFM
+     *
+     * Instantiates the node container but does not call API methods on it. This is done later
      * when {@link #loadNodeContainer(Map, ExecutionMonitor, LoadResult)} is called.
      * @param parent The parent workflow of the node.
      * @param id The id of the node
