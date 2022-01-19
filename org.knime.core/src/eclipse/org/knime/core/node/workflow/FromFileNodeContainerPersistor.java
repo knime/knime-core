@@ -62,6 +62,15 @@ import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
  */
 interface FromFileNodeContainerPersistor extends NodeContainerPersistor {
 
+    /**
+     * Usually called from loadNodeContainer
+     *
+     * @param parentPersistor null for workflows, non-null for metanodes (and components?)
+     * @param parentSettings
+     * @param loadResult
+     * @throws InvalidSettingsException
+     * @throws IOException
+     */
     void preLoadNodeContainer(final WorkflowPersistor parentPersistor,
                               final NodeSettingsRO parentSettings, LoadResult loadResult)
                               throws InvalidSettingsException, IOException;

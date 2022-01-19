@@ -225,23 +225,21 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
     @Override
     public void preLoadNodeContainer(final WorkflowPersistor parentPersistor, final NodeSettingsRO parentSettings,
         final LoadResult result) throws InvalidSettingsException, IOException {
+
         super.preLoadNodeContainer(parentPersistor, parentSettings, result);
+
         NodeSettingsRO nodeSettings = getNodeSettings(); // assigned by super
+
         m_workflowPersistor = createWorkflowPersistor(getMetaPersistor().getNodeSettingsFile(), getWorkflowDataRepository());
+
         if (m_nameOverwrite != null) {
             m_workflowPersistor.setNameOverwrite(m_nameOverwrite);
             m_nameOverwrite = null;
         }
-        try {
-            int i = nodeSettings.getInt("virtual-in-ID");
-            CheckUtils.checkSetting(i >= 0, "Node ID < 0: %d", i);
-            m_virtualInNodeIDSuffix = i;
-        } catch (InvalidSettingsException e) {
-            String error = "Can't load virtual input node ID: " + e.getMessage();
-            result.addError(error);
-            getLogger().error(error, e);
-            setDirtyAfterLoad();
-        }
+
+        /**
+         * Virtual component input node
+         */
         try {
             int i = nodeSettings.getInt("virtual-in-ID");
             CheckUtils.checkSetting(i >= 0, "Node ID < 0: %d", i);
@@ -253,6 +251,26 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
             setDirtyAfterLoad();
         }
 
+        /**
+         * TODO remove?!
+         * Letter by letter equivalent to the above
+         */
+        try {
+            int i = nodeSettings.getInt("virtual-in-ID");
+            CheckUtils.checkSetting(i >= 0, "Node ID < 0: %d", i);
+            m_virtualInNodeIDSuffix = i;
+        } catch (InvalidSettingsException e) {
+            String error = "Can't load virtual input node ID: " + e.getMessage();
+            result.addError(error);
+            getLogger().error(error, e);
+            setDirtyAfterLoad();
+        }
+
+        /**
+         * Input port template
+         * Data provider
+         * Conversion
+         */
         Set<String> inportSetKeys = Collections.emptySet();
         NodeSettingsRO inportsSettings = null;
         try {
@@ -272,6 +290,11 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
             setDirtyAfterLoad();
             m_inPortTemplates = new WorkflowPortTemplate[0];
         }
+
+        /**
+         * Port type loading
+         * Data provider
+         */
         for (String key : inportSetKeys) {
             try {
                 @SuppressWarnings("null")
@@ -287,6 +310,10 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
             }
         }
 
+        /**
+         * Component metadata
+         * Data provider
+         */
         try {
             m_componentMetadata = ComponentMetadata.load(nodeSettings, getLoadVersion());
         } catch (InvalidSettingsException e) {
@@ -297,6 +324,9 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
             m_componentMetadata = ComponentMetadata.NONE;
         }
 
+        /**
+         * Template information
+         */
         try {
             if (m_templateInformation != null) {
                 // template information was set after construction (this node is a link created from a template)
@@ -313,6 +343,9 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
             m_templateInformation = MetaNodeTemplateInformation.NONE;
         }
 
+        /**
+         * Virtual component out node
+         */
         try {
             int i = nodeSettings.getInt("virtual-out-ID");
             CheckUtils.checkSetting(i >= 0, "Node ID < 0: %d", i);
@@ -324,6 +357,9 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
             setDirtyAfterLoad();
         }
 
+        /**
+         * Like above, same as for virtual input node
+         */
         Set<String> outportSetKeys = Collections.emptySet();
         NodeSettingsRO outportsSettings = null;
         try {
@@ -357,13 +393,23 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
             }
         }
 
+        /**
+         * Conversion
+         * Data Provider
+         */
         // added in 3.1, updated with 4.2
         m_subnodeLayoutStringProvider = new SubnodeContainerLayoutStringProvider(nodeSettings.getString("layoutJSON", ""));
 
+        /**
+         * Data Provider
+         */
         // added in 3.7, load with default values
         m_customCSS = nodeSettings.getString("customCSS", "");
         m_hideInWizard = nodeSettings.getBoolean("hideInWizard", false);
 
+        /**
+         * TODO what the hell?
+         */
         m_workflowPersistor.preLoadNodeContainer(parentPersistor, parentSettings, result);
 
         // added in 4.3

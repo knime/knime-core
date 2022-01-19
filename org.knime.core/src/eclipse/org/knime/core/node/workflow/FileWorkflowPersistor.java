@@ -511,25 +511,53 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
     @Override
     public void preLoadNodeContainer(final WorkflowPersistor parentPersistor, final NodeSettingsRO parentSettings,
         final LoadResult loadResult) throws InvalidSettingsException, IOException {
+
         m_parentPersistor = parentPersistor;
+
+        /**
+         * Data Provider
+         *
+         * extract information from workflow.knime file
+         */
         final ReferencedFile knimeFile = getWorkflowKNIMEFile();
+
+        /**
+         * Error handling
+         */
         if (knimeFile == null || !knimeFile.getFile().isFile()) {
             setDirtyAfterLoad();
             String error = "Can't read workflow file \"" + knimeFile + "\"";
             throw new IOException(error);
         }
+
         // workflow.knime (or template.knime)
         File nodeFile = knimeFile.getFile();
         ReferencedFile parentRef = knimeFile.getParent();
+
+        /**
+         * Error handling
+         */
         if (parentRef == null) {
             setDirtyAfterLoad();
             throw new IOException("Parent directory of file \"" + knimeFile + "\" is not represented by "
                 + ReferencedFile.class.getSimpleName() + " object");
         }
+
+        /**
+         * Data Provider
+         */
         m_mustWarnOnDataLoadError = loadIfMustWarnOnDataLoadError(parentRef.getFile());
+
+        /**
+         * Data Loading
+         */
         NodeSettingsRO subWFSettings;
         try {
             InputStream in = new FileInputStream(nodeFile);
+            /**
+             * Security
+             * TODO should be different persistors for component, metanode, workflow
+             */
             if (m_parentPersistor != null) { // real metanode, not a project
                 // the workflow.knime (or template.knime) file is not encrypted
                 // with this metanode's cipher but possibly with a parent
@@ -544,6 +572,9 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
         }
         m_workflowSett = subWFSettings;
 
+        /**
+         * Manipulation
+         */
         try {
             if (m_nameOverwrite != null) {
                 m_name = m_nameOverwrite;
@@ -559,6 +590,12 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
         }
 
         try {
+            /**
+             * Data loading
+             * Conversion
+             * Version management
+             * Security
+             */
             m_workflowCipher = loadWorkflowCipher(getLoadVersion(), m_workflowSett);
         } catch (InvalidSettingsException e) {
             String error = "Unable to load workflow cipher: " + e.getMessage();
@@ -571,9 +608,18 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
         try {
             if (m_templateInformation != null) {
                 // template information was set after construction (this node is a link created from a template)
+                /**
+                 * Sanity checking
+                 */
                 assert m_templateInformation.getRole() == Role.Link;
             } else {
+                /**
+                 * Data Loading
+                 */
                 m_templateInformation = MetaNodeTemplateInformation.load(m_workflowSett, getLoadVersion());
+                /**
+                 * Sanity checking: fail if not set
+                 */
                 CheckUtils.checkSettingNotNull(m_templateInformation, "No template information");
             }
         } catch (InvalidSettingsException e) {
@@ -660,7 +706,14 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
             setDirtyAfterLoad();
             loadResult.addError(error);
         }
+
+        /**
+         * Data loading
+         * Detect errors and signal them
+         */
         boolean isResetRequired = m_metaPersistor.load(subWFSettings, metaFlowParentSettings, loadResult);
+        // TODO idea: if reset required use a different implementation of the template step
+
         if (isResetRequired) {
             setNeedsResetAfterLoad();
         }
@@ -803,6 +856,9 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
             }
         }
 
+        /**
+         * Input ports bar user interface information
+         */
         NodeSettingsRO outPorts = null;
         m_inPortsBarUIInfo = inPortsBarUIInfo;
         NodeUIInformation outPortsBarUIInfo = null;
@@ -821,6 +877,10 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
             getLogger().debug(error, e);
             loadResult.addError(error);
         }
+
+        /**
+         * Output ports bar user interface information
+         */
         if (uiInfoClassName != null) {
             try {
                 if (!getLoadVersion().isOlderThan(LoadVersion.V200)) {
@@ -968,7 +1028,12 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
             }
             try {
                 LoadResult childResult = new LoadResult(nodeType.toString() + " with ID suffix " + nodeIDSuffix);
+
+                /**
+                 * Recurse
+                 */
                 persistor.preLoadNodeContainer(this, nodeSetting, childResult);
+
                 loadResult.addChildError(childResult);
             } catch (Throwable e) {
                 String error =

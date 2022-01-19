@@ -155,10 +155,18 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
     @Override
     public void preLoadNodeContainer(final WorkflowPersistor parentPersistor,
         final NodeSettingsRO parentSettings, final LoadResult result) throws InvalidSettingsException, IOException {
+
         super.preLoadNodeContainer(parentPersistor, parentSettings, result);
+
         m_parentPersistor = parentPersistor;
+
         NodeSettingsRO settings = getNodeSettings();
+
         String error;
+
+        /**
+         * loadNodeFactoryInfo
+         */
         NodeAndBundleInformationPersistor nodeInfo;
         try {
             nodeInfo = loadNodeFactoryInfo(parentSettings, settings);
@@ -166,6 +174,10 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
             setDirtyAfterLoad();
             throw e;
         }
+
+        /**
+         * loadAdditionalFactorySettings
+         */
         NodeSettingsRO additionalFactorySettings;
         try {
             additionalFactorySettings = loadAdditionalFactorySettings(settings);
@@ -174,6 +186,10 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
             setDirtyAfterLoad();
             throw new InvalidSettingsException(error, e);
         }
+
+        /**
+         * loadNodeFactory
+         */
         NodeFactory<NodeModel> nodeFactory;
         try {
             nodeFactory = loadNodeFactory(nodeInfo.getFactoryClassNotNull());
@@ -182,6 +198,9 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
             throw new NodeFactoryUnknownException(nodeInfo, additionalFactorySettings, e);
         }
 
+        /**
+         * loadAdditionalFactorySettings
+         */
         try {
             if (additionalFactorySettings != null) {
                 nodeFactory.loadAdditionalFactorySettings(additionalFactorySettings);
@@ -194,6 +213,10 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
             throw new NodeFactoryUnknownException(error, nodeInfo, additionalFactorySettings, e);
         }
         m_nodeAndBundleInformation = nodeInfo;
+
+        /**
+         * Conversion
+         */
         m_node = new Node(nodeFactory, loadCreationConfig(settings, nodeFactory).orElse(null));
     }
 
