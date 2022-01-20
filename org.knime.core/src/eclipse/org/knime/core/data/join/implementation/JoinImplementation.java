@@ -47,19 +47,6 @@
  */
 package org.knime.core.data.join.implementation;
 
-import java.lang.management.ManagementFactory;
-import java.util.LinkedList;
-import java.util.List;
-
-import javax.management.InstanceAlreadyExistsException;
-import javax.management.InstanceNotFoundException;
-import javax.management.MBeanRegistrationException;
-import javax.management.MBeanServer;
-import javax.management.MalformedObjectNameException;
-import javax.management.NotCompliantMBeanException;
-import javax.management.ObjectName;
-
-import org.apache.log4j.Logger;
 import org.knime.core.data.join.JoinSpecification;
 import org.knime.core.data.join.JoinSpecification.InputTable;
 import org.knime.core.data.join.JoinSpecification.OutputRowOrder;
@@ -118,7 +105,6 @@ public abstract class JoinImplementation {
         m_right = settings.getSettings(InputTable.RIGHT).getTable()
             .orElseThrow(() -> new IllegalStateException("No right input table provided."));
         m_progress = new JoinProgressMonitor();
-        m_progress.register();
     }
 
     /**
@@ -285,7 +271,10 @@ public abstract class JoinImplementation {
         return m_exec;
     }
 
-    class JoinProgressMonitor implements JoinProgressMonitorMXBean {
+    /**
+     * Allows interaction with a join implementation at runtime, for unit testing and for inspection via external tools.
+     */
+    class JoinProgressMonitor {
 
         private final NodeProgressMonitor m_monitor;
 
@@ -330,21 +319,6 @@ public abstract class JoinImplementation {
         JoinProgressMonitor() {
             m_monitor = m_exec.getProgressMonitor();
             m_canceled = CancelChecker.checkCanceledPeriodically(m_exec);
-        }
-
-        /**
-         * Add this monitoring object to the global registry of management objects.
-         */
-        void register() {
-            final var server = ManagementFactory.getPlatformMBeanServer();
-            try {
-                final var name = new ObjectName("org.knime.base.node.preproc.joiner3.jmx:type=HybridHashJoin");
-                server.unregisterMBean(name);
-                server.registerMBean(this, name);
-            } catch (InstanceAlreadyExistsException | MBeanRegistrationException | NotCompliantMBeanException
-                    | InstanceNotFoundException | MalformedObjectNameException e) {
-                Logger.getLogger(JoinProgressMonitor.class).warn(e);
-            }
         }
 
         /**
@@ -408,84 +382,15 @@ public abstract class JoinImplementation {
         void incProbeRowsProcessedInMemory() { m_probeRowsProcessedInMemory++; }
         void incProbeRowsProcessedFromDisk() { m_probeRowsProcessedFromDisk++; }
 
-        @Override public int getNumBuckets() { return m_numBuckets; }
-        @Override public int getNumPartitionsOnDisk() { return m_numHashPartitionsOnDisk; }
+        public int getNumBuckets() { return m_numBuckets; }
+        public int getNumPartitionsOnDisk() { return m_numHashPartitionsOnDisk; }
 
-        @Override public long getProbeRowsProcessedInMemory() { return m_probeRowsProcessedInMemory; }
+        public long getProbeRowsProcessedInMemory() { return m_probeRowsProcessedInMemory; }
         /** The number of times a probe row was processed and the hash input counterpart was on disk */
-        @Override public long getProbeRowsProcessedFromDisk() { return m_probeRowsProcessedFromDisk; }
+        public long getProbeRowsProcessedFromDisk() { return m_probeRowsProcessedFromDisk; }
 
-        @Override public void setDesiredPartitionsOnDisk(final int n) { m_desiredPartitionsOnDisk = n; }
-        @Override public void setAssumeMemoryLow(final boolean assume) { m_assumeMemoryLow = assume; }
-    }
-
-    /**
-     * Allows filling the heap to test low memory situations.
-     * @author Carl Witt, KNIME AG, Zurich, Switzerland
-     */
-    /*public*/ static class FillMemoryForTesting implements FillMemoryForTestingMXBean {
-
-        static {
-            MBeanServer server = ManagementFactory.getPlatformMBeanServer();
-            try {
-                ObjectName name = new ObjectName("org.knime.base.node.preproc.joiner3.jmx:type=MemoryFiller");
-                server.unregisterMBean(name);
-                server.registerMBean(new FillMemoryForTesting(), name);
-            } catch (InstanceNotFoundException | MBeanRegistrationException | MalformedObjectNameException
-                    | InstanceAlreadyExistsException | NotCompliantMBeanException e) {
-                Logger.getLogger(FillMemoryForTesting.class).warn(e);
-            }
-        }
-
-        List<double[]> m_memoryConsumer = new LinkedList<>();
-
-        @Override
-        public void fillHeap(final float targetPercentage) {
-            while (MemoryAlertSystem.getUsage() < targetPercentage) {
-                // allocate 50 MB
-                m_memoryConsumer.add(new double[6_250_000]);
-            }
-        }
-
-        @Override
-        public void releaseTestAllocations() {
-            m_memoryConsumer.clear();
-        }
-    }
-
-    /*public*/ static interface FillMemoryForTestingMXBean{
-        void fillHeap(float targetPercentage);
-        void releaseTestAllocations();
-    }
-
-    /**
-     * Allows interaction with a join implementation at runtime, for unit testing and for inspection via external tools.
-     *
-     * @since 4.6
-     * @noreference This interface is not intended to be referenced by clients.
-     */
-    public interface JoinProgressMonitorMXBean {
-        /** @return the number of partition pairs that have been flushed to disk. */
-        int getNumPartitionsOnDisk();
-
-        /**
-         * @param n set a goal for the number of partition pairs that are handled via disk. As long as
-         *            {@link #getNumPartitionsOnDisk()} is smaller that that, the monitor will report low memory
-         *            condition.
-         */
-        void setDesiredPartitionsOnDisk(int n);
-
-        /** @return number of rows from the probe table that have been joined with an in-memory hash index */
-        long getProbeRowsProcessedInMemory();
-
-        /** @return number of rows from the probe table that have been joined by reading their partition from disk */
-        long getProbeRowsProcessedFromDisk();
-
-        /** @return the number of disk backed partitions. */
-        int getNumBuckets();
-
-        /** @param assume whether the algorithm shall proceed as if the system was running out of memory */
-        void setAssumeMemoryLow(boolean assume);
+        public void setDesiredPartitionsOnDisk(final int n) { m_desiredPartitionsOnDisk = n; }
+        public void setAssumeMemoryLow(final boolean assume) { m_assumeMemoryLow = assume; }
     }
 
 }
