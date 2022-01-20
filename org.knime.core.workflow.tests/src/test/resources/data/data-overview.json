@@ -1,0 +1,7 @@
+{
+    # to make sure we can only load a result into a matching workflow, detect duplicates
+    'workflow-hash': '#023fj0fj23'
+    'execution-state': {
+        'node1': 'executed'
+    }
+}

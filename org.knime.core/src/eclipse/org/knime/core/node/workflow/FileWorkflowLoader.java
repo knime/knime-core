@@ -70,6 +70,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.Stack;
 import java.util.TreeMap;
+import java.util.function.Consumer;
 
 import org.knime.core.data.TableBackend;
 import org.knime.core.internal.ReferencedFile;
@@ -78,7 +79,6 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
-import org.knime.core.node.Node;
 import org.knime.core.node.NodeAndBundleInformationPersistor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
@@ -89,23 +89,25 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.node.workflow.WorkflowTableBackendSettings.TableBackendUnknownException;
+import org.knime.core.node.workflow.def.CoreToDefUtil;
 import org.knime.core.node.workflow.execresult.WorkflowExecutionResult;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.LockFailedException;
 import org.knime.core.util.workflowalizer.AuthorInformation;
+import org.knime.core.workflow.def.ConnectionDef;
+import org.knime.core.workflow.def.impl.DefaultConnectionDef;
 
 /**
  * Recursively walks through the legacy directory structure, generating the workflow defs.
+ *
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  */
 public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContainerPersistor {
 
-    /** KNIME Node type: native, meta or sub node.*/
+    /** KNIME Node type: native, meta or sub node. */
     private enum NodeType {
-        NativeNode("node"),
-        MetaNode("metanode"),
-        SubNode("wrapped node");
+            NativeNode("node"), MetaNode("metanode"), SubNode("wrapped node");
 
         private final String m_shortName;
 
@@ -113,6 +115,7 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
         private NodeType(final String shortName) {
             m_shortName = shortName;
         }
+
         /** {@inheritDoc} */
         @Override
         public String toString() {
@@ -155,8 +158,11 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
 
     private static final String CFG_EDITOR_CONNECTION_WIDTH = "workflow.editor.connectionWidth";
 
-    /** The key under which the bounds to store the {@link ConnectionUIInformation} are registered. *
-     * @since 3.5*/
+    /**
+     * The key under which the bounds to store the {@link ConnectionUIInformation} are registered. *
+     *
+     * @since 3.5
+     */
     public static final String KEY_BENDPOINTS = "extrainfo.conn.bendpoints";
 
     /** The key under which the bounds are registered. * */
@@ -173,6 +179,11 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
 
     private final TreeMap<Integer, FromFileNodeContainerPersistor> m_nodeContainerLoaderMap;
 
+    /**
+     * used to check for duplicate connection information in
+     * {@link #loadNodeContainer(Map, ExecutionMonitor, org.knime.core.node.workflow.WorkflowPersistor.LoadResult)}
+     * {@link #getConnectionSet()}
+     */
     private final HashSet<ConnectionContainerTemplate> m_connectionSet;
 
     private final FileNodeContainerMetaPersistor m_metaPersistor;
@@ -183,10 +194,13 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
 
     private WorkflowPortTemplate[] m_outPortTemplates;
 
+    // TODO contained in MetaNodeDef
     private NodeUIInformation m_inPortsBarUIInfo;
 
+    // TODO contained in MetaNodeDef
     private NodeUIInformation m_outPortsBarUIInfo;
 
+    // TODO contained in WorkflowDef
     private EditorUIInformation m_editorUIInfo;
 
     /**
@@ -242,13 +256,13 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
 
     /**
      * Create persistor for load.
+     *
      * @param dotKNIMEFile Associated workflow.knime or template.knime file
      * @param loadHelper The load helper as required by meta persistor.
      * @param version of loading workflow.
      */
-    FileWorkflowLoader(final WorkflowDataRepository workflowDataRepository,
-        final ReferencedFile dotKNIMEFile, final WorkflowLoadHelper loadHelper,
-        final LoadVersion version, final boolean isProject) {
+    FileWorkflowLoader(final WorkflowDataRepository workflowDataRepository, final ReferencedFile dotKNIMEFile,
+        final WorkflowLoadHelper loadHelper, final LoadVersion version, final boolean isProject) {
         assert version != null;
         m_workflowDataRepository = workflowDataRepository;
         m_versionString = version;
@@ -364,8 +378,11 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
         return m_templateInformation;
     }
 
-    /** {@inheritDoc}
-     * @since 2.8*/
+    /**
+     * {@inheritDoc}
+     *
+     * @since 2.8
+     */
     @Override
     public AuthorInformation getAuthorInformation() {
         return m_authorInformation;
@@ -403,7 +420,9 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
         return m_tableBackendSettings;
     }
 
-    /** {@inheritDoc}
+    /**
+     * {@inheritDoc}
+     *
      * @since 2.8
      */
     @Override
@@ -441,15 +460,21 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
         return m_outPortTemplates;
     }
 
-    /** {@inheritDoc}
-     * @since 3.5*/
+    /**
+     * {@inheritDoc}
+     *
+     * @since 3.5
+     */
     @Override
     public NodeUIInformation getInPortsBarUIInfo() {
         return m_inPortsBarUIInfo;
     }
 
-    /** {@inheritDoc}
-     * @since 3.5*/
+    /**
+     * {@inheritDoc}
+     *
+     * @since 3.5
+     */
     @Override
     public NodeUIInformation getOutPortsBarUIInfo() {
         return m_outPortsBarUIInfo;
@@ -506,23 +531,47 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
         m_isDirtyAfterLoad = true;
     }
 
-    /** {@inheritDoc} */
+    @FunctionalInterface
+    private interface LoaderCode<T> {
+        T load() throws InvalidSettingsException;
+    }
+
+    private <T> void tryLoadWithDefault(final String attributeName, final T fallback, final LoaderCode<T> r,
+        final Consumer<T> setter, final LoadResult loadResult) {
+        try {
+            setter.accept(r.load());
+        } catch (InvalidSettingsException e) {
+            var error = String.format("Unable to load %s: %s", attributeName, e.getMessage());
+            getLogger().debug(error, e);
+            setDirtyAfterLoad();
+            loadResult.addError(error);
+            setter.accept(fallback);
+        }
+    }
+
+    /**
+     * @param workflowCipher the workflowCipher to set
+     */
+    void setWorkflowCipher(final WorkflowCipher workflowCipher) {
+        m_workflowCipher = workflowCipher;
+    }
+
+    /**
+     * TODO this covers way too much (workflows and metanodes (and components?)) sharing is ok, but the metanode
+     * specific part needs to go to somewhere else
+     *
+     * reduced from 400 to around 170 lines.
+     *
+     * {@inheritDoc}
+     */
     @Override
     public void preLoadNodeContainer(final WorkflowPersistor parentPersistor, final NodeSettingsRO parentSettings,
         final LoadResult loadResult) throws InvalidSettingsException, IOException {
 
         m_parentPersistor = parentPersistor;
 
-        /**
-         * Data Provider
-         *
-         * extract information from workflow.knime file
-         */
         final ReferencedFile knimeFile = getWorkflowKNIMEFile();
 
-        /**
-         * Error handling
-         */
         if (knimeFile == null || !knimeFile.getFile().isFile()) {
             setDirtyAfterLoad();
             String error = "Can't read workflow file \"" + knimeFile + "\"";
@@ -533,9 +582,6 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
         File nodeFile = knimeFile.getFile();
         ReferencedFile parentRef = knimeFile.getParent();
 
-        /**
-         * Error handling
-         */
         if (parentRef == null) {
             setDirtyAfterLoad();
             throw new IOException("Parent directory of file \"" + knimeFile + "\" is not represented by "
@@ -547,15 +593,11 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
          */
         m_mustWarnOnDataLoadError = loadIfMustWarnOnDataLoadError(parentRef.getFile());
 
-        /**
-         * Data Loading
-         */
         NodeSettingsRO subWFSettings;
         try {
             InputStream in = new FileInputStream(nodeFile);
             /**
-             * Security
-             * TODO should be different persistors for component, metanode, workflow
+             * Security TODO should be different persistors for component, metanode, workflow
              */
             if (m_parentPersistor != null) { // real metanode, not a project
                 // the workflow.knime (or template.knime) file is not encrypted
@@ -571,103 +613,52 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
         }
         m_workflowSett = subWFSettings;
 
-        /**
-         * Manipulation
-         */
-        try {
+        tryLoadWithDefault("workflow name", null, () -> {
+            String name;
             if (m_nameOverwrite != null) {
-                m_name = m_nameOverwrite;
+                name = m_nameOverwrite;
             } else {
-                m_name = loadWorkflowName(m_workflowSett);
+                name = loadWorkflowName(m_workflowSett);
             }
-        } catch (InvalidSettingsException e) {
-            String error = "Unable to load workflow name: " + e.getMessage();
-            getLogger().debug(error, e);
-            setDirtyAfterLoad();
-            loadResult.addError(error);
-            m_name = null;
-        }
+            return name;
+        }, this::setName, loadResult);
 
-        try {
-            /**
-             * Data loading
-             * Conversion
-             * Version management
-             * Security
-             */
-            m_workflowCipher = loadWorkflowCipher(getLoadVersion(), m_workflowSett);
-        } catch (InvalidSettingsException e) {
-            String error = "Unable to load workflow cipher: " + e.getMessage();
-            getLogger().debug(error, e);
-            setDirtyAfterLoad();
-            loadResult.addError(error);
-            m_workflowCipher = WorkflowCipher.NULL_CIPHER;
-        }
+        tryLoadWithDefault("workflow cipher", WorkflowCipher.NULL_CIPHER,
+            () -> loadWorkflowCipher(getLoadVersion(), m_workflowSett), this::setWorkflowCipher, loadResult);
 
-        try {
+        tryLoadWithDefault("template information", MetaNodeTemplateInformation.NONE, () -> {
             if (m_templateInformation != null) {
                 // template information was set after construction (this node is a link created from a template)
-                /**
-                 * Sanity checking
-                 */
                 assert m_templateInformation.getRole() == Role.Link;
             } else {
-                /**
-                 * Data Loading
-                 */
-                m_templateInformation = MetaNodeTemplateInformation.load(m_workflowSett, getLoadVersion());
-                /**
-                 * Sanity checking: fail if not set
-                 */
+                var templateInformation = MetaNodeTemplateInformation.load(m_workflowSett, getLoadVersion());
                 CheckUtils.checkSettingNotNull(m_templateInformation, "No template information");
+                return templateInformation;
             }
-        } catch (InvalidSettingsException e) {
-            String error = "Unable to load workflow template information: " + e.getMessage();
-            getLogger().debug(error, e);
-            setDirtyAfterLoad();
-            loadResult.addError(error);
-            m_templateInformation = MetaNodeTemplateInformation.NONE;
-        }
+            return m_templateInformation; // don't change (set again with identical value)
+        }, this::setTemplateInformation, loadResult);
 
-        try {
-            m_authorInformation = loadAuthorInformation(m_workflowSett, loadResult);
-        } catch (InvalidSettingsException e) {
-            String error = "Unable to load workflow author information: " + e.getMessage();
-            getLogger().debug(error, e);
-            setDirtyAfterLoad();
-            loadResult.addError(error);
-            m_authorInformation = AuthorInformation.UNKNOWN;
-        }
-        try {
-            m_workflowVariables = loadWorkflowVariables(m_workflowSett);
-        } catch (InvalidSettingsException e) {
-            String error = "Unable to load workflow variables: " + e.getMessage();
-            getLogger().debug(error, e);
-            setDirtyAfterLoad();
-            loadResult.addError(error);
-            m_workflowVariables = Collections.emptyList();
-        }
+        tryLoadWithDefault("workflow author information", AuthorInformation.UNKNOWN,
+            () -> loadAuthorInformation(m_workflowSett, loadResult), this::setAuthorInformation, loadResult);
 
-        try {
-            m_credentials = loadCredentials(m_workflowSett);
+        tryLoadWithDefault("workflow variables", Collections.emptyList(), () -> loadWorkflowVariables(m_workflowSett),
+            this::setWorkflowVariables, loadResult);
+
+        tryLoadWithDefault("credentials", Collections.emptyList(), () -> {
+            List<Credentials> credentials = loadCredentials(m_workflowSett);
             // request to initialize credentials - if available
-            if (m_credentials != null && !m_credentials.isEmpty()) {
-                m_credentials = getLoadHelper().loadCredentialsPrefilled(m_credentials);
+            if (credentials != null && !credentials.isEmpty()) {
+                credentials = getLoadHelper().loadCredentialsPrefilled(credentials);
             }
-        } catch (InvalidSettingsException e) {
-            String error = "Unable to load credentials: " + e.getMessage();
-            getLogger().debug(error, e);
-            setDirtyAfterLoad();
-            loadResult.addError(error);
-            m_credentials = Collections.emptyList();
-        }
+            return credentials;
+        }, this::setCredentials, loadResult);
 
         try {
             m_tableBackendSettings = loadTableBackendSettings(m_workflowSett);
         } catch (InvalidSettingsException e) {
             String error = "Unable to table backend: " + e.getMessage();
             getLogger().debug(error, e);
-            setNeedsResetAfterLoad();
+            setNeedsResetAfterLoad(); // setNeedsResetAfterLoad isn't covered by tryLoad()
             setDirtyAfterLoad();
             loadResult.addError(error, true);
             if (e instanceof TableBackendUnknownException) { // NOSONAR
@@ -676,25 +667,11 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
             m_tableBackendSettings = isProject() ? new WorkflowTableBackendSettings() : null;
         }
 
-        try {
-            m_workflowAnnotations = loadWorkflowAnnotations(m_workflowSett);
-        } catch (InvalidSettingsException e) {
-            String error = "Unable to load workflow annotations: " + e.getMessage();
-            getLogger().debug(error, e);
-            setDirtyAfterLoad();
-            loadResult.addError(error);
-            m_workflowAnnotations = Collections.emptyList();
-        }
+        tryLoadWithDefault("workflow annotations", Collections.emptyList(),
+            () -> loadWorkflowAnnotations(m_workflowSett), this::setWorkflowAnnotations, loadResult);
 
-        try {
-            m_wizardState = loadWizardState(m_workflowSett);
-        } catch (InvalidSettingsException e) {
-            String error = "Unable to load wizard state: " + e.getMessage();
-            getLogger().debug(error, e);
-            setDirtyAfterLoad();
-            loadResult.addError(error);
-            m_wizardState = null;
-        }
+        tryLoadWithDefault("wizard state", null, () -> loadWizardState(m_workflowSett), this::setWizardState,
+            loadResult);
 
         NodeSettingsRO metaFlowParentSettings = new NodeSettings("fake_parent_settings");
         try {
@@ -707,11 +684,9 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
         }
 
         /**
-         * Data loading
-         * Detect errors and signal them
+         * Data loading Detect errors and signal them
          */
         boolean isResetRequired = m_metaPersistor.load(subWFSettings, metaFlowParentSettings, loadResult);
-        // TODO idea: if reset required use a different implementation of the template step
 
         if (isResetRequired) {
             setNeedsResetAfterLoad();
@@ -720,6 +695,99 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
             setDirtyAfterLoad();
         }
 
+        int inPortCount = readInports(loadResult);
+
+        int outPortCount = readOutports(loadResult);
+
+        boolean hasPorts = inPortCount > 0 || outPortCount > 0;
+        if (hasPorts && m_isProject) {
+            throw new InvalidSettingsException(
+                String.format("Workflow \"%s\"" + " is not a project as it has ports (%d in, %d out)",
+                    nodeFile.getAbsoluteFile(), inPortCount, outPortCount));
+        }
+
+        tryLoadWithDefault("inport bar's UI information", null, () -> {
+            if (!getLoadVersion().isOlderThan(LoadVersion.V200)) {
+                return loadNodeUIInformation(loadInPortsSetting(m_workflowSett));
+            }
+            return null;
+        }, this::setInPortsBarUIInfo, loadResult);
+
+        tryLoadWithDefault("output bar's UI information", null, () -> {
+            if (!getLoadVersion().isOlderThan(LoadVersion.V200)) {
+                return loadNodeUIInformation(loadOutPortsSetting(m_workflowSett));
+            }
+            return null;
+        }, this::setOutPortsBarUIInfo, loadResult);
+
+        tryLoadWithDefault("editor UI information", null, () -> loadEditorUIInformation(m_workflowSett),
+            this::setEditorUIInfo, loadResult);
+    }
+
+    /**
+     * @param loadResult
+     * @return the number of outports
+     */
+    private int readOutports(final LoadResult loadResult) {
+        NodeSettingsRO outPortsEnum = EMPTY_SETTINGS;
+        try {
+            NodeSettingsRO outPorts = loadOutPortsSetting(m_workflowSett);
+            if (outPorts != null) {
+                outPortsEnum = loadOutPortsSettingsEnum(outPorts);
+            }
+        } catch (InvalidSettingsException e) {
+            String error = "Can't load workflow out ports, config not found: " + e.getMessage();
+            getLogger().debug(error, e);
+            setDirtyAfterLoad();
+            loadResult.addError(error);
+        }
+        int outPortCount = outPortsEnum.keySet().size();
+        m_outPortTemplates = new WorkflowPortTemplate[outPortCount];
+        for (String key : outPortsEnum.keySet()) {
+            WorkflowPortTemplate p;
+            try {
+                NodeSettingsRO sub = outPortsEnum.getNodeSettings(key);
+                p = loadOutPortTemplate(sub);
+            } catch (InvalidSettingsException e) {
+                String error =
+                    "Can't load workflow outport (internal ID \"" + key + "\", skipping it: " + e.getMessage();
+                getLogger().debug(error, e);
+                setDirtyAfterLoad();
+                loadResult.addError(error);
+                setNeedsResetAfterLoad();
+                continue;
+            }
+            int index = p.getPortIndex();
+            if (index < 0 || index >= outPortCount) {
+                setDirtyAfterLoad();
+                loadResult.addError("Invalid inport index " + index);
+                setNeedsResetAfterLoad();
+                continue;
+            }
+            if (m_outPortTemplates[index] != null) {
+                setDirtyAfterLoad();
+                loadResult.addError("Duplicate outport definition for index: " + index);
+            }
+            m_outPortTemplates[index] = p;
+        }
+        for (int i = 0; i < m_outPortTemplates.length; i++) {
+            if (m_outPortTemplates[i] == null) {
+                setDirtyAfterLoad();
+                loadResult.addError("Assigning fallback port type for " + "missing output port " + i);
+                m_outPortTemplates[i] = new WorkflowPortTemplate(i, FALLBACK_PORTTYPE);
+            }
+        }
+        return outPortCount;
+    }
+
+    /**
+     * TODO untangle data loading from dirty setting TODO looks just like
+     * {@link #readOutports(org.knime.core.node.workflow.WorkflowPersistor.LoadResult)}, maybe unify
+     *
+     * @param loadResult
+     * @return the number of inports
+     */
+    private int readInports(final LoadResult loadResult) {
         /* read in and outports */
         NodeSettingsRO inPortsEnum = EMPTY_SETTINGS;
         try {
@@ -770,140 +838,7 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
                 m_inPortTemplates[i] = new WorkflowPortTemplate(i, FALLBACK_PORTTYPE);
             }
         }
-
-        NodeSettingsRO outPortsEnum = EMPTY_SETTINGS;
-        try {
-            NodeSettingsRO outPorts = loadOutPortsSetting(m_workflowSett);
-            if (outPorts != null) {
-                outPortsEnum = loadOutPortsSettingsEnum(outPorts);
-            }
-        } catch (InvalidSettingsException e) {
-            String error = "Can't load workflow out ports, config not found: " + e.getMessage();
-            getLogger().debug(error, e);
-            setDirtyAfterLoad();
-            loadResult.addError(error);
-        }
-        int outPortCount = outPortsEnum.keySet().size();
-        m_outPortTemplates = new WorkflowPortTemplate[outPortCount];
-        for (String key : outPortsEnum.keySet()) {
-            WorkflowPortTemplate p;
-            try {
-                NodeSettingsRO sub = outPortsEnum.getNodeSettings(key);
-                p = loadOutPortTemplate(sub);
-            } catch (InvalidSettingsException e) {
-                String error =
-                    "Can't load workflow outport (internal ID \"" + key + "\", skipping it: " + e.getMessage();
-                getLogger().debug(error, e);
-                setDirtyAfterLoad();
-                loadResult.addError(error);
-                setNeedsResetAfterLoad();
-                continue;
-            }
-            int index = p.getPortIndex();
-            if (index < 0 || index >= outPortCount) {
-                setDirtyAfterLoad();
-                loadResult.addError("Invalid inport index " + index);
-                setNeedsResetAfterLoad();
-                continue;
-            }
-            if (m_outPortTemplates[index] != null) {
-                setDirtyAfterLoad();
-                loadResult.addError("Duplicate outport definition for index: " + index);
-            }
-            m_outPortTemplates[index] = p;
-        }
-        for (int i = 0; i < m_outPortTemplates.length; i++) {
-            if (m_outPortTemplates[i] == null) {
-                setDirtyAfterLoad();
-                loadResult.addError("Assigning fallback port type for " + "missing output port " + i);
-                m_outPortTemplates[i] = new WorkflowPortTemplate(i, FALLBACK_PORTTYPE);
-            }
-        }
-
-        boolean hasPorts = inPortCount > 0 || outPortCount > 0;
-        if (hasPorts && m_isProject) {
-            throw new InvalidSettingsException(String.format("Workflow \"%s\""
-                + " is not a project as it has ports (%d in, %d out)", nodeFile.getAbsoluteFile(), inPortCount,
-                outPortCount));
-        }
-
-        NodeSettingsRO inPorts = EMPTY_SETTINGS;
-        NodeUIInformation inPortsBarUIInfo = null;
-        String uiInfoClassName = null;
-        try {
-            inPorts = loadInPortsSetting(m_workflowSett);
-            if (inPorts != null) {
-                uiInfoClassName = loadInPortsBarUIInfoClassName(inPorts);
-            }
-        } catch (InvalidSettingsException e) {
-            String error = "Unable to load class name for inport bar's " + "UI information: " + e.getMessage();
-            getLogger().debug(error, e);
-            setDirtyAfterLoad();
-            loadResult.addError(error);
-        }
-        if (uiInfoClassName != null) {
-            try {
-                if (!getLoadVersion().isOlderThan(LoadVersion.V200)) {
-                    inPortsBarUIInfo = loadNodeUIInformation(inPorts);
-                }
-            } catch (InvalidSettingsException e) {
-                String error = "Unable to load inport bar's UI information: " + e.getMessage();
-                getLogger().debug(error, e);
-                setDirtyAfterLoad();
-                loadResult.addError(error);
-                inPortsBarUIInfo = null;
-            }
-        }
-
-        /**
-         * Input ports bar user interface information
-         */
-        NodeSettingsRO outPorts = null;
-        m_inPortsBarUIInfo = inPortsBarUIInfo;
-        NodeUIInformation outPortsBarUIInfo = null;
-        uiInfoClassName = null;
-        try {
-            //TODO probably not necessary anymore to store the ui information class name (it's node ui information anyway)
-            outPorts = loadOutPortsSetting(m_workflowSett);
-            if (outPorts != null) {
-                uiInfoClassName = loadOutPortsBarUIInfoClassName(outPorts);
-            }
-        } catch (InvalidSettingsException e) {
-            String error =
-                "Unable to load class name for outport bar's UI information" + ", no UI information available: "
-                    + e.getMessage();
-            setDirtyAfterLoad();
-            getLogger().debug(error, e);
-            loadResult.addError(error);
-        }
-
-        /**
-         * Output ports bar user interface information
-         */
-        if (uiInfoClassName != null) {
-            try {
-                if (!getLoadVersion().isOlderThan(LoadVersion.V200)) {
-                    outPortsBarUIInfo = loadNodeUIInformation(outPorts);
-                }
-            } catch (InvalidSettingsException e) {
-                String error = "Unable to load outport bar's UI information: " + e.getMessage();
-                getLogger().debug(error, e);
-                setDirtyAfterLoad();
-                loadResult.addError(error);
-                outPortsBarUIInfo = null;
-            }
-        }
-        m_outPortsBarUIInfo = outPortsBarUIInfo;
-
-        try {
-            m_editorUIInfo = loadEditorUIInformation(m_workflowSett);
-        } catch (InvalidSettingsException e) {
-            String error = "Unable to load editor UI information: " + e.getMessage();
-            getLogger().debug(error, e);
-            setDirtyAfterLoad();
-            loadResult.addError(error);
-            m_editorUIInfo = null;
-        }
+        return inPortCount;
     }
 
     /** {@inheritDoc} */
@@ -957,9 +892,8 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
                 nodeIDSuffix = loadNodeIDSuffix(nodeSetting);
             } catch (InvalidSettingsException e) {
                 nodeIDSuffix = getRandomNodeID();
-                String error =
-                    "Unable to load node ID (internal id \"" + nodeKey + "\"), trying random number " + nodeIDSuffix
-                        + "instead: " + e.getMessage();
+                String error = "Unable to load node ID (internal id \"" + nodeKey + "\"), trying random number "
+                    + nodeIDSuffix + "instead: " + e.getMessage();
                 getLogger().debug(error, e);
                 setDirtyAfterLoad();
                 loadResult.addError(error);
@@ -968,9 +902,8 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
             try {
                 nodeType = loadNodeType(nodeSetting);
             } catch (InvalidSettingsException e) {
-                String error =
-                    "Can't retrieve node type for contained node with id suffix " + nodeIDSuffix
-                        + ", attempting to read ordinary (native) node: " + e.getMessage();
+                String error = "Can't retrieve node type for contained node with id suffix " + nodeIDSuffix
+                    + ", attempting to read ordinary (native) node: " + e.getMessage();
                 getLogger().debug(error, e);
                 setDirtyAfterLoad();
                 loadResult.addError(error);
@@ -981,9 +914,8 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
             try {
                 uiInfoClassName = loadUIInfoClassName(nodeSetting);
             } catch (InvalidSettingsException e) {
-                String error =
-                    "Unable to load UI information class name " + "to node with ID suffix " + nodeIDSuffix
-                        + ", no UI information available: " + e.getMessage();
+                String error = "Unable to load UI information class name " + "to node with ID suffix " + nodeIDSuffix
+                    + ", no UI information available: " + e.getMessage();
                 getLogger().debug(error, e);
                 setDirtyAfterLoad();
                 loadResult.addError(error);
@@ -1017,11 +949,14 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
             FromFileNodeContainerPersistor persistor;
             switch (nodeType) {
                 case MetaNode:
-                    persistor = createWorkflowPersistorLoad(nodeFile); break;
+                    persistor = createWorkflowPersistorLoad(nodeFile);
+                    break;
                 case NativeNode:
-                    persistor = createNativeNodeContainerPersistorLoad(nodeFile); break;
+                    persistor = createNativeNodeContainerPersistorLoad(nodeFile);
+                    break;
                 case SubNode:
-                    persistor = createSubNodeContainerPersistorLoad(nodeFile); break;
+                    persistor = createSubNodeContainerPersistorLoad(nodeFile);
+                    break;
                 default:
                     throw new IllegalStateException("Unknown node type: " + nodeType);
             }
@@ -1035,9 +970,8 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
 
                 loadResult.addChildError(childResult);
             } catch (Throwable e) {
-                String error =
-                    "Unable to load node with ID suffix " + nodeIDSuffix + " into workflow, skipping it: "
-                        + e.getMessage();
+                String error = "Unable to load node with ID suffix " + nodeIDSuffix + " into workflow, skipping it: "
+                    + e.getMessage();
                 String loadErrorString;
                 if (e instanceof NodeFactoryUnknownException) {
                     loadErrorString = e.getMessage();
@@ -1095,7 +1029,7 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
         }
         for (String connectionKey : connections.keySet()) {
             exec.checkCanceled();
-            ConnectionContainerTemplate c;
+            ConnectionDef c;
             try {
                 c = loadConnection(connections.getNodeSettings(connectionKey));
             } catch (InvalidSettingsException e) {
@@ -1105,7 +1039,7 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
                 loadResult.addError(error);
                 continue;
             }
-            int sourceIDSuffix = c.getSourceSuffix();
+            int sourceIDSuffix = c.getSourceID();
             NodeContainerPersistor sourceNodePersistor = m_nodeContainerLoaderMap.get(sourceIDSuffix);
             if (sourceNodePersistor == null && sourceIDSuffix != -1) {
                 setDirtyAfterLoad();
@@ -1114,9 +1048,10 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
                 }
                 continue;
             }
-            fixSourcePortIfNecessary(sourceNodePersistor, c);
+            // TODO rewrite to accept def
+            //            FileWorkflowPersistor.fixSourcePortIfNecessary(sourceNodePersistor, c, getLoadVersion());
 
-            int destIDSuffix = c.getDestSuffix();
+            int destIDSuffix = c.getDestID();
             NodeContainerPersistor destNodePersistor = m_nodeContainerLoaderMap.get(destIDSuffix);
             if (destNodePersistor == null && destIDSuffix != -1) {
                 setDirtyAfterLoad();
@@ -1125,7 +1060,8 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
                 }
                 continue;
             }
-            fixDestPortIfNecessary(destNodePersistor, c);
+            // TODO rewrite to accept def
+            //            FileWorkflowPersistor.fixDestPortIfNecessary(destNodePersistor, c, getLoadVersion());
 
             if (!m_connectionSet.add(c)) {
                 setDirtyAfterLoad();
@@ -1181,100 +1117,25 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
         exec.setProgress(1.0);
     }
 
-    private NodeUIInformation loadNodeUIInformation(final NodeSettingsRO nodeSetting) throws InvalidSettingsException {
+    // TODO return def
+    private NodeUIInformation loadNodeUIInformation(final NodeSettingsRO portSettings) throws InvalidSettingsException {
+
         // in previous releases, the settings were directly written to the
         // top-most node settings object; since 2.0 they are put into a
         // separate sub-settings object
-        NodeSettingsRO subSettings = getLoadVersion().isOlderThan(LoadVersion.V200) ? nodeSetting
-            : nodeSetting.getNodeSettings(CFG_UIINFO_SUB_CONFIG);
+        NodeSettingsRO subSettings = getLoadVersion().isOlderThan(LoadVersion.V200) ? portSettings
+            : portSettings.getNodeSettings(CFG_UIINFO_SUB_CONFIG);
         final int loadOrdinal = getLoadVersion().ordinal();
         int[] bounds = subSettings.getIntArray(KEY_BOUNDS);
         boolean symbolRelative = loadOrdinal >= LoadVersion.V230.ordinal();
-        NodeUIInformation nodeUIInfo = NodeUIInformation.builder()
-            .setNodeLocation(bounds[0], bounds[1], bounds[2], bounds[3])
+        return NodeUIInformation.builder().setNodeLocation(bounds[0], bounds[1], bounds[2], bounds[3])
             .setIsSymbolRelative(symbolRelative).build();
-        return nodeUIInfo;
     }
 
     /** Fills the list with null so that list.get(index) doesn't throw an exception. */
     private static void ensureArrayListIndexValid(final ArrayList<?> list, final int index) {
         for (int i = list.size(); i <= index; i++) {
             list.add(null);
-        }
-    }
-
-    /**
-     * Fixes source port index if necessary. Fixes the mandatory flow variable port object.
-     *
-     * @param sourcePersistor The persistor of the source node.
-     * @param c The connection template to be fixed.
-     */
-    void fixSourcePortIfNecessary(final NodeContainerPersistor sourcePersistor, final ConnectionContainerTemplate c) {
-        // v2.1 and before did not have flow variable ports (index 0)
-        if (getLoadVersion().isOlderThan(LoadVersion.V220)) {
-            if (sourcePersistor instanceof FileSingleNodeContainerPersistor) {
-                // correct port index only for ordinary nodes (no new flow
-                // variable ports on metanodes)
-                int index = c.getSourcePort();
-                c.setSourcePort(index + 1);
-            }
-        }
-    }
-
-    /**
-     * Fixes destination port index if necessary. For v1.x flows, e.g., the indices of model and data ports were
-     * swapped. Subclasses will overwrite this method (e.g. to enable loading flows, which did not have the mandatory
-     * flow variable port object).
-     *
-     * @param destPersistor The persistor of the destination node.
-     * @param c The connection template to be fixed.
-     */
-    void fixDestPortIfNecessary(final NodeContainerPersistor destPersistor, final ConnectionContainerTemplate c) {
-        if (getLoadVersion().isOlderThan(LoadVersion.V220)) {
-            if (destPersistor instanceof FileNativeNodeContainerPersistor) {
-                FileNativeNodeContainerPersistor pers = (FileNativeNodeContainerPersistor)destPersistor;
-                /* workflows saved with 1.x.x have misleading port indices for
-                 * incoming ports. Data ports precede the model ports (in their
-                 * index), although the GUI and the true ordering is the other
-                 * way around. */
-                // only test if the node is not missing (missing node placeholder)
-                if (pers.getNode() != null && pers.shouldFixModelPortOrder()) {
-                    Node node = pers.getNode();
-                    int modelPortCount = 0;
-                    // first port is flow variable input port
-                    for (int i = 1; i < node.getNrInPorts(); i++) {
-                        PortType portType = node.getInputType(i);
-                        if (!portType.getPortObjectClass().isAssignableFrom(BufferedDataTable.class)
-                        // with v2.4 we added model ports to the
-                        // PMML learner nodes that don't count as model
-                        // ports in legacy workflows (not connected anyway)
-                            && !portType.isOptional()) {
-                            modelPortCount += 1;
-                        }
-                    }
-                    if (modelPortCount == node.getNrInPorts()) {
-                        return;
-                    }
-                    int destPort = c.getDestPort();
-                    if (destPort < modelPortCount) { // c represent data connection
-                        c.setDestPort(destPort + modelPortCount);
-                    } else { // c represents model connection
-                        c.setDestPort(destPort - modelPortCount);
-                    }
-                }
-                // correct port index only for ordinary nodes (no new flow
-                // variable ports on metanodes)
-                int index = c.getDestPort();
-                c.setDestPort(index + 1);
-            }
-        } else if (getLoadVersion().isOlderThan(LoadVersion.V220)) {
-            // v2.1 and before did not have flow variable ports (index 0)
-            if (destPersistor instanceof FileSingleNodeContainerPersistor) {
-                // correct port index only for ordinary nodes (no new flow
-                // variable ports on metanodes)
-                int index = c.getDestPort();
-                c.setDestPort(index + 1);
-            }
         }
     }
 
@@ -1360,37 +1221,9 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
         // in previous releases, the settings were directly written to the
         // top-most node settings object; since 2.0 they are put into a
         // separate sub-settings object
-        NodeSettingsRO subSettings = getLoadVersion().isOlderThan(LoadVersion.V200)
-                ? settings : settings.getNodeSettings(CFG_UIINFO_SUB_CONFIG);
+        NodeSettingsRO subSettings =
+            getLoadVersion().isOlderThan(LoadVersion.V200) ? settings : settings.getNodeSettings(CFG_UIINFO_SUB_CONFIG);
         uiInfo.load(subSettings, getLoadVersion());
-    }
-
-    /**
-     * Sub class hook o read port bar info.
-     *
-     * @param settings Ignored.
-     * @return null
-     * @throws InvalidSettingsException Not actually thrown here.
-     */
-    String loadInPortsBarUIInfoClassName(final NodeSettingsRO settings) throws InvalidSettingsException {
-        if (getLoadVersion().isOlderThan(LoadVersion.V200)) {
-            return null;
-        }
-        return loadUIInfoClassName(settings);
-    }
-
-    /**
-     * Sub-class hook to load port bar info.
-     *
-     * @param settings Ignored.
-     * @return null
-     * @throws InvalidSettingsException Not actually thrown
-     */
-    String loadOutPortsBarUIInfoClassName(final NodeSettingsRO settings) throws InvalidSettingsException {
-        if (!getLoadVersion().isOlderThan(LoadVersion.V200)) {
-            return loadUIInfoClassName(settings);
-        }
-        return null;
     }
 
     /**
@@ -1475,7 +1308,7 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
         return set.getNodeSettings(KEY_CONNECTIONS);
     }
 
-    ConnectionContainerTemplate loadConnection(final NodeSettingsRO settings) throws InvalidSettingsException {
+    ConnectionDef loadConnection(final NodeSettingsRO settings) throws InvalidSettingsException {
         int sourceID = settings.getInt("sourceID");
         int destID = loadConnectionDestID(settings);
         int sourcePort = loadConnectionSourcePort(settings);
@@ -1517,7 +1350,14 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
                 "Exception while loading connection UI " + "information between nodes " + sourceID + " and " + destID,
                 t);
         }
-        return new ConnectionContainerTemplate(sourceID, sourcePort, destID, destPort, isDeletable, connUIInfo);
+        return DefaultConnectionDef.builder()//
+            .setSourceID(sourceID)//
+            .setSourcePort(sourcePort)//
+            .setDestID(destID)//
+            .setDestPort(destPort)//
+            .setDeletable(isDeletable)//
+            .setUiSettings(CoreToDefUtil.toConnectionUISettingsDef(connUIInfo))// TODO maybe inline
+            .build();
     }
 
     int loadConnectionDestID(final NodeSettingsRO settings) throws InvalidSettingsException {
@@ -1573,7 +1413,9 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
         return WorkflowCipher.load(loadVersion, cipherSettings);
     }
 
-    /** Synchronized call to DATE_FORMAT.parse(String).
+    /**
+     * Synchronized call to DATE_FORMAT.parse(String).
+     *
      * @param s To parse, not null.
      * @return The date.
      * @throws DateTimeParseException if the text cannot be parsed
@@ -1677,7 +1519,7 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
      * Loads table backend settings (only for workflow projects). Might throw {@link TableBackendUnknownException}.
      */
     WorkflowTableBackendSettings loadTableBackendSettings(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+        throws InvalidSettingsException {
         if (!isProject()) {
             return null;
         } else {
@@ -1713,9 +1555,11 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
         }
     }
 
-    /** @return the wizard state saved in the file or null (often null).
+    /**
+     * @return the wizard state saved in the file or null (often null).
      * @param settings ...
-     * @throws InvalidSettingsException ... */
+     * @throws InvalidSettingsException ...
+     */
     NodeSettingsRO loadWizardState(final NodeSettingsRO settings) throws InvalidSettingsException {
         return settings.containsKey("wizard") ? settings.getNodeSettings("wizard") : null;
     }
@@ -1825,6 +1669,7 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
 
     /**
      * check whether there is a "loaded with no data" file.
+     *
      * @param workflowDir ...
      * @return true for old workflows (&lt;2.0) or if there is a {@value WorkflowPersistor#SAVED_WITH_DATA_FILE} file.
      */
@@ -1834,7 +1679,6 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
         }
         return new File(workflowDir, SAVED_WITH_DATA_FILE).isFile();
     }
-
 
     /** {@inheritDoc} */
     @Override
@@ -1853,11 +1697,11 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
 
     FileWorkflowLoader createWorkflowPersistorLoad(final ReferencedFile wfmFile) {
         if (getLoadVersion().isOlderThan(LoadVersion.V200)) {
-            return new ObsoleteMetaNodeFileWorkflowPersistor(getWorkflowDataRepository(),
-                wfmFile, getLoadHelper(), getLoadVersion());
+            return new ObsoleteMetaNodeFileWorkflowPersistor(getWorkflowDataRepository(), wfmFile, getLoadHelper(),
+                getLoadVersion());
         } else {
-            return new FileWorkflowLoader(getWorkflowDataRepository(), wfmFile,
-                getLoadHelper(), getLoadVersion(), false);
+            return new FileWorkflowLoader(getWorkflowDataRepository(), wfmFile, getLoadHelper(), getLoadVersion(),
+                false);
         }
     }
 
@@ -1912,14 +1756,17 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
         return null;
     }
 
-    /** @return version that is saved
-     * @since 3.7*/
+    /**
+     * @return version that is saved
+     * @since 3.7
+     */
     protected static LoadVersion getSaveVersion() {
         return VERSION_LATEST;
     }
 
-
-    /** Synchronized call to DATE_FORMAT.format(Date).
+    /**
+     * Synchronized call to DATE_FORMAT.format(Date).
+     *
      * @param date ... not null.
      * @return The string.
      */
@@ -1944,7 +1791,7 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
 
     public static String save(final WorkflowManager wm, final ReferencedFile rawWorkflowDirRef,
         final ExecutionMonitor execMon, final WorkflowSaveHelper saveHelper)
-                throws IOException, CanceledExecutionException, LockFailedException {
+        throws IOException, CanceledExecutionException, LockFailedException {
         final String name = wm.getDirectNCParent().getCipherFileName(WORKFLOW_FILE);
         NodeSettings preFilledSettings = new NodeSettings(name);
         saveHeader(preFilledSettings);
@@ -1956,7 +1803,7 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
 
     public static String saveAsTemplate(final WorkflowManager wm, final ReferencedFile rawWorkflowDirRef,
         final ExecutionMonitor execMon, final WorkflowSaveHelper saveHelper)
-                throws IOException, CanceledExecutionException, LockFailedException {
+        throws IOException, CanceledExecutionException, LockFailedException {
         MetaNodeTemplateInformation tI = wm.getTemplateInformation();
         if (!Role.Template.equals(tI.getRole())) {
             throw new IllegalStateException("Cannot save workflow as template (role " + tI.getRole() + ")");
@@ -1971,9 +1818,9 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
 
     /**
      * @param wm The WFM to save.
-     * @param preFilledSettings The settings eventually written to workflow.knime (or workflow.knime.encrypted).
-     * For workflows it contains the version number, cipher, template infos etc. The name of the setting defines the
-     * output file name (so it's important!)
+     * @param preFilledSettings The settings eventually written to workflow.knime (or workflow.knime.encrypted). For
+     *            workflows it contains the version number, cipher, template infos etc. The name of the setting defines
+     *            the output file name (so it's important!)
      * @param rawWorkflowDirRef To save to.
      * @param execMon ...
      * @param saveHelper ...
@@ -1983,13 +1830,13 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
      */
     private static void saveContent(final WorkflowManager wm, final NodeSettings preFilledSettings,
         final ReferencedFile rawWorkflowDirRef, final ExecutionMonitor execMon, final WorkflowSaveHelper saveHelper)
-                throws IOException, CanceledExecutionException, LockFailedException {
+        throws IOException, CanceledExecutionException, LockFailedException {
         ReferencedFile workflowDirRef = rawWorkflowDirRef;
         Role r = wm.getTemplateInformation().getRole();
         final String fName = preFilledSettings.getKey();
         if (!workflowDirRef.fileLockRootForVM()) {
-            throw new LockFailedException("Can't write workflow to \"" + workflowDirRef
-                + "\" because the directory can't be locked");
+            throw new LockFailedException(
+                "Can't write workflow to \"" + workflowDirRef + "\" because the directory can't be locked");
         }
         try {
             final ReferencedFile nodeContainerDirectory = wm.getNodeContainerDirectory();
@@ -2093,7 +1940,7 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
                 o.write("Do not delete this file!");
                 o.newLine();
                 o.write("This file serves to indicate that the workflow was written as part of the usual save "
-                        + "routine (not exported).");
+                    + "routine (not exported).");
                 o.newLine();
                 o.newLine();
                 o.write("Workflow was last saved by user ");
@@ -2127,7 +1974,9 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
         settings.addString(WorkflowLoadHelper.CFG_VERSION, getSaveVersion().getVersionString());
     }
 
-    /** Saves the status of the wizard if set so in the save-helper.
+    /**
+     * Saves the status of the wizard if set so in the save-helper.
+     *
      * @param wm ...
      * @param preFilledSettings ...
      * @param saveHelper ...
@@ -2164,7 +2013,7 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
         }
     }
 
-    /** @since 3.7*/
+    /** @since 3.7 */
     protected static void saveAuthorInformation(final AuthorInformation aI, final NodeSettingsWO settings) {
         if (aI != null) {
             final NodeSettingsWO sub = settings.addNodeSettings(CFG_AUTHOR_INFORMATION);
@@ -2218,7 +2067,9 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
         }
     }
 
-    /** Save the {@link TableBackend} set on workflow projects.
+    /**
+     * Save the {@link TableBackend} set on workflow projects.
+     *
      * @since 4.3
      */
     protected static void saveTableBackend(final WorkflowManager wfm, final NodeSettingsWO settings) {
@@ -2259,6 +2110,18 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
         return settings.addNodeSettings(KEY_CONNECTIONS);
     }
 
+    /**
+     * Saves recursively to a directory
+     *
+     * @param settings
+     * @param workflowDirRef
+     * @param container
+     * @param exec
+     * @param saveHelper
+     * @throws CanceledExecutionException
+     * @throws IOException
+     * @throws LockFailedException
+     */
     protected static void saveNodeContainer(final NodeSettingsWO settings, final ReferencedFile workflowDirRef,
         final NodeContainer container, final ExecutionMonitor exec, final WorkflowSaveHelper saveHelper)
         throws CanceledExecutionException, IOException, LockFailedException {
@@ -2272,9 +2135,8 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
         // name of sub-directory container node/sub-workflow settings
         // all chars which are not letter or number are replaced by '_'
         final String containerName = container.getName();
-        String nodeDirID =
-            FileUtil.getValidFileName(containerName, container instanceof WorkflowManager
-                || container instanceof SubNodeContainer ? 12 : -1);
+        String nodeDirID = FileUtil.getValidFileName(containerName,
+            container instanceof WorkflowManager || container instanceof SubNodeContainer ? 12 : -1);
         nodeDirID = nodeDirID.concat(" (#" + idSuffix + ")");
 
         // try to re-use previous node dir (might be different from calculated
@@ -2289,8 +2151,8 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
         if (container instanceof WorkflowManager) {
             fileName = FileWorkflowLoader.save((WorkflowManager)container, nodeDirectoryRef, exec, saveHelper);
         } else {
-            fileName =  FileSingleNodeContainerPersistor.save(
-                (SingleNodeContainer)container, nodeDirectoryRef, exec, saveHelper);
+            fileName = FileSingleNodeContainerPersistor.save((SingleNodeContainer)container, nodeDirectoryRef, exec,
+                saveHelper);
         }
         saveFileLocation(settings, nodeDirID + "/" + fileName);
         saveNodeType(settings, container);
@@ -2447,5 +2309,88 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
         }
     }
 
+    /**
+     * @return the editorUIInfo
+     */
+    EditorUIInformation getEditorUIInfo() {
+        return m_editorUIInfo;
+    }
+
+    /**
+     * @param editorUIInfo the editorUIInfo to set
+     */
+    void setEditorUIInfo(final EditorUIInformation editorUIInfo) {
+        m_editorUIInfo = editorUIInfo;
+    }
+
+    /**
+     * @param credentials the credentials to set
+     */
+    void setCredentials(final List<Credentials> credentials) {
+        m_credentials = credentials;
+    }
+
+    /**
+     * @return the wizardState
+     */
+    NodeSettingsRO getWizardState() {
+        return m_wizardState;
+    }
+
+    /**
+     * @param wizardState the wizardState to set
+     */
+    void setWizardState(final NodeSettingsRO wizardState) {
+        m_wizardState = wizardState;
+    }
+
+    /**
+     * @param workflowAnnotations the workflowAnnotations to set
+     */
+    void setWorkflowAnnotations(final List<WorkflowAnnotation> workflowAnnotations) {
+        m_workflowAnnotations = workflowAnnotations;
+    }
+
+    /**
+     * @param authorInformation the authorInformation to set
+     */
+    void setAuthorInformation(final AuthorInformation authorInformation) {
+        m_authorInformation = authorInformation;
+    }
+
+    /**
+     * @param workflowVariables the workflowVariables to set
+     */
+    void setWorkflowVariables(final List<FlowVariable> workflowVariables) {
+        m_workflowVariables = workflowVariables;
+    }
+
+    /**
+     * @param name the name to set
+     */
+    void setName(final String name) {
+        m_name = name;
+    }
+
+    /**
+     * @param templateInformation the templateInformation to set
+     */
+    void setTemplateInformation(final MetaNodeTemplateInformation templateInformation) {
+        m_templateInformation = templateInformation;
+    }
+
+    /**
+     * @param inPortsBarUIInfo the inPortsBarUIInfo to set
+     */
+    void setInPortsBarUIInfo(final NodeUIInformation inPortsBarUIInfo) {
+        m_inPortsBarUIInfo = inPortsBarUIInfo;
+    }
+
+    /**
+     * @param outPortsBarUIInfo the outPortsBarUIInfo to set
+     */
+    void setOutPortsBarUIInfo(final NodeUIInformation outPortsBarUIInfo) {
+        m_outPortsBarUIInfo = outPortsBarUIInfo;
+    }
 
 }
