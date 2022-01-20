@@ -228,7 +228,9 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
      * @param loadResult TODO*/
     void postLoad(WorkflowManager wfm, LoadResult loadResult);
 
-    /** Helper class representing a connection. */
+    /** Helper class representing a connection.
+     * TODO remove - this is mostly a def and partly an error handler {@link #fixPostionOffsetIfPresent(Optional)}
+     */
     static class ConnectionContainerTemplate {
         private int m_sourceSuffix;
         private int m_sourcePort;

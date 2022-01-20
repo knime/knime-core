@@ -1115,7 +1115,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
                 }
                 continue;
             }
-            fixSourcePortIfNecessary(sourceNodePersistor, c);
+            fixSourcePortIfNecessary(sourceNodePersistor, c, getLoadVersion());
 
             int destIDSuffix = c.getDestSuffix();
             NodeContainerPersistor destNodePersistor = m_nodeContainerLoaderMap.get(destIDSuffix);
@@ -1126,7 +1126,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
                 }
                 continue;
             }
-            fixDestPortIfNecessary(destNodePersistor, c);
+            fixDestPortIfNecessary(destNodePersistor, c, getLoadVersion());
 
             if (!m_connectionSet.add(c)) {
                 setDirtyAfterLoad();
@@ -1207,18 +1207,21 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
     /**
      * Fixes source port index if necessary. Fixes the mandatory flow variable port object.
      *
+     * TODO move somewhere else
+     *
      * @param sourcePersistor The persistor of the source node.
      * @param c The connection template to be fixed.
+     * @param loadVersion TODO
+     *
      */
-    void fixSourcePortIfNecessary(final NodeContainerPersistor sourcePersistor, final ConnectionContainerTemplate c) {
+    static void fixSourcePortIfNecessary(final NodeContainerPersistor sourcePersistor,
+        final ConnectionContainerTemplate c, final LoadVersion loadVersion) {
         // v2.1 and before did not have flow variable ports (index 0)
-        if (getLoadVersion().isOlderThan(LoadVersion.V220)) {
-            if (sourcePersistor instanceof FileSingleNodeContainerPersistor) {
-                // correct port index only for ordinary nodes (no new flow
-                // variable ports on metanodes)
-                int index = c.getSourcePort();
-                c.setSourcePort(index + 1);
-            }
+        if (loadVersion.isOlderThan(LoadVersion.V220) && sourcePersistor instanceof FileSingleNodeContainerPersistor) {
+            // correct port index only for ordinary nodes (no new flow
+            // variable ports on metanodes)
+            int index = c.getSourcePort();
+            c.setSourcePort(index + 1);
         }
     }
 
@@ -1227,11 +1230,15 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
      * swapped. Subclasses will overwrite this method (e.g. to enable loading flows, which did not have the mandatory
      * flow variable port object).
      *
+     * TODO move somewhere else
+     *
      * @param destPersistor The persistor of the destination node.
      * @param c The connection template to be fixed.
+     * @param loadVersion TODO
      */
-    void fixDestPortIfNecessary(final NodeContainerPersistor destPersistor, final ConnectionContainerTemplate c) {
-        if (getLoadVersion().isOlderThan(LoadVersion.V220)) {
+    static void fixDestPortIfNecessary(final NodeContainerPersistor destPersistor, final ConnectionContainerTemplate c,
+        final LoadVersion loadVersion) {
+        if (loadVersion.isOlderThan(LoadVersion.V220)) {
             if (destPersistor instanceof FileNativeNodeContainerPersistor) {
                 FileNativeNodeContainerPersistor pers = (FileNativeNodeContainerPersistor)destPersistor;
                 /* workflows saved with 1.x.x have misleading port indices for
@@ -1268,7 +1275,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
                 int index = c.getDestPort();
                 c.setDestPort(index + 1);
             }
-        } else if (getLoadVersion().isOlderThan(LoadVersion.V220)) {
+        } else if (loadVersion.isOlderThan(LoadVersion.V220)) {
             // v2.1 and before did not have flow variable ports (index 0)
             if (destPersistor instanceof FileSingleNodeContainerPersistor) {
                 // correct port index only for ordinary nodes (no new flow
