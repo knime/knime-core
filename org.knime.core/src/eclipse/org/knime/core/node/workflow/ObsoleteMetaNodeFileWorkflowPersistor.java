@@ -169,7 +169,7 @@ public class ObsoleteMetaNodeFileWorkflowPersistor extends
         // config file as passed from parent wfm is "settings.xml"
         ReferencedFile settingsXML = super.getWorkflowKNIMEFile();
         return new ReferencedFile(settingsXML.getParent(),
-                WorkflowPersistor.WORKFLOW_FILE);
+                FileWorkflowLoader.WORKFLOW_FILE);
     }
 
     /** {@inheritDoc} */

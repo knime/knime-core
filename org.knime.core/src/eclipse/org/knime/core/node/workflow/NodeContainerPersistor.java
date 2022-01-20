@@ -54,13 +54,15 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 
 /**
- *
+ * TODO move the
  * @author Bernd Wiswedel, University of Konstanz
  * @noextend This interface is not intended to be extended by clients.
  */
 public interface NodeContainerPersistor {
 
     /**
+     * TODO move needs reset and is dirty to load result
+     *
      * TODO move to WFM
      *
      * Instantiates the node container but does not call API methods on it. This is done later
