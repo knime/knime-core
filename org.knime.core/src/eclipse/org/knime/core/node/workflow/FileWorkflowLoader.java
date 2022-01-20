@@ -87,7 +87,12 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.workflow.FromFileNodeContainerPersistor.PersistorWithPortIndex;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
+import org.knime.core.node.workflow.WorkflowPersistor.ConnectionContainerTemplate;
+import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
+import org.knime.core.node.workflow.WorkflowPersistor.NodeFactoryUnknownException;
+import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
 import org.knime.core.node.workflow.WorkflowTableBackendSettings.TableBackendUnknownException;
 import org.knime.core.node.workflow.def.CoreToDefUtil;
 import org.knime.core.node.workflow.execresult.WorkflowExecutionResult;
@@ -96,14 +101,53 @@ import org.knime.core.util.LoadVersion;
 import org.knime.core.util.LockFailedException;
 import org.knime.core.util.workflowalizer.AuthorInformation;
 import org.knime.core.workflow.def.ConnectionDef;
+import org.knime.core.workflow.def.WorkflowMetadataDef;
+import org.knime.core.workflow.def.WorkflowProjectDef;
 import org.knime.core.workflow.def.impl.DefaultConnectionDef;
 
 /**
  * Recursively walks through the legacy directory structure, generating the workflow defs.
  *
+ * TODO remove this comment
+ * Used to implement {@link WorkflowPersistor} and {@link TemplateNodeContainerPersistor}
+ *
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  */
-public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContainerPersistor {
+public class FileWorkflowLoader {
+
+    /** Key for nodes. */
+    public static final String KEY_NODES = "nodes";
+
+    /** Key for connections. */
+    public static final String KEY_CONNECTIONS = "connections";
+
+    public static final String KEY_UI_INFORMATION = "extraInfoClassName";
+
+    /** Key for this node's internal ID. */
+    static final String KEY_ID = "id";
+
+    /** Identifier for KNIME workflows when saved to disc. */
+    public static final String WORKFLOW_FILE = "workflow.knime";
+
+    /** Identifier for KNIME meta mode templates when saved to disc. */
+    public static final String TEMPLATE_FILE = "template.knime";
+
+    /** Identifier for KNIME workflows SVG export when saved to disc.
+     * @since 2.8 */
+    public static final String SVG_WORKFLOW_FILE = "workflow.svg";
+
+    /** Identifier for KNIME templates SVG export when saved to disc.
+     * @since 2.8 */
+    public static final String SVG_TEMPLATE_FILE = "template.svg";
+
+    /** File used to signal that workflow was saved in usual manner. It will
+     * always be present in the workflow directory unless the workflow is
+     * exported with the "exclude data" flag being set. */
+    public static final String SAVED_WITH_DATA_FILE = ".savedWithData";
+
+    /** Constant for the meta info file name. */
+    public static final String METAINFO_FILE = "workflowset.meta";
+
 
     /** KNIME Node type: native, meta or sub node. */
     private enum NodeType {
@@ -208,8 +252,14 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
      */
     private WorkflowPersistor m_parentPersistor;
 
+    private static @interface Def {
+        Class<?> value() default Void.class;
+    }
+
+    @Def(WorkflowMetadataDef.class)
     private String m_name;
 
+    @Def(WorkflowProjectDef.class)
     private WorkflowCipher m_workflowCipher;
 
     private MetaNodeTemplateInformation m_templateInformation;
@@ -228,10 +278,6 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
     private List<WorkflowAnnotation> m_workflowAnnotations;
 
     private NodeSettingsRO m_wizardState;
-
-    private boolean m_needsResetAfterLoad;
-
-    private boolean m_isDirtyAfterLoad;
 
     private boolean m_mustWarnOnDataLoadError;
 
@@ -274,8 +320,10 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
         m_isComponentProject = loadHelper.isTemplateProject();
     }
 
-    /** {@inheritDoc} */
-    @Override
+    /**
+     * Set only once in constructor. Originally from both {@link WorkflowPersistor} and
+     * {@link TemplateNodeContainerPersistor}
+     */
     public final LoadVersion getLoadVersion() {
         return m_versionString;
     }
@@ -302,98 +350,84 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
         return meta.getNodeSettingsFile();
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public Set<ConnectionContainerTemplate> getConnectionSet() {
-        return m_connectionSet;
-    }
+//    /** {@inheritDoc} */
+//    @Override
+//    public Set<ConnectionContainerTemplate> getConnectionSet() {
+//        return m_connectionSet;
+//    }
+//
+//    /** {@inheritDoc} */
+//    @Override
+//    public Set<ConnectionContainerTemplate> getAdditionalConnectionSet() {
+//        return Collections.emptySet();
+//    }
+//
+//    /** {@inheritDoc} */
+//    @Override
+//    public Map<Integer, ? extends NodeContainerPersistor> getNodeLoaderMap() {
+//        return m_nodeContainerLoaderMap;
+//    }
 
-    /** {@inheritDoc} */
-    @Override
-    public Set<ConnectionContainerTemplate> getAdditionalConnectionSet() {
-        return Collections.emptySet();
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public Map<Integer, ? extends NodeContainerPersistor> getNodeLoaderMap() {
-        return m_nodeContainerLoaderMap;
-    }
-
-    /** {@inheritDoc} */
-    @Override
+    /** Originally from {@link TemplateNodeContainerPersistor} */
     public boolean mustWarnOnDataLoadError() {
         return m_mustWarnOnDataLoadError;
     }
 
-    /** {@inheritDoc} */
-    @Override
+    /** Originally from {@link TemplateNodeContainerPersistor} */
     public FileNodeContainerMetaPersistor getMetaPersistor() {
         return m_metaPersistor;
     }
 
     /**
-     * {@inheritDoc}
-     *
+     * Originally from {@link WorkflowPersistor}
      * @since 2.6
      */
-    @Override
     public WorkflowDataRepository getWorkflowDataRepository() {
         return m_workflowDataRepository;
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public NodeContainer getNodeContainer(final WorkflowManager parent, final NodeID id) {
-        return parent.createSubWorkflow(this, id);
-    }
+//    /** {@inheritDoc} */
+//    @Override
+//    public String getName() {
+//        return m_name;
+//    }
+//
+//    /** {@inheritDoc} */
+//    @Override
+//    public WorkflowCipher getWorkflowCipher() {
+//        return m_workflowCipher;
+//    }
 
-    /** {@inheritDoc} */
-    @Override
-    public String getName() {
-        return m_name;
-    }
+//    /** Originally from {@link TemplateNodeContainerPersistor} */
+//    public void setOverwriteTemplateInformation(final MetaNodeTemplateInformation templateInfo) {
+//        m_templateInformation = templateInfo;
+//    }
+//
+//    /** Originally from {@link TemplateNodeContainerPersistor} */
+//    public void setNameOverwrite(final String nameOverwrite) {
+//        m_nameOverwrite = nameOverwrite;
+//    }
 
-    /** {@inheritDoc} */
-    @Override
-    public WorkflowCipher getWorkflowCipher() {
-        return m_workflowCipher;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public void setOverwriteTemplateInformation(final MetaNodeTemplateInformation templateInfo) {
-        m_templateInformation = templateInfo;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public void setNameOverwrite(final String nameOverwrite) {
-        m_nameOverwrite = nameOverwrite;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public MetaNodeTemplateInformation getTemplateInformation() {
-        return m_templateInformation;
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @since 2.8
-     */
-    @Override
-    public AuthorInformation getAuthorInformation() {
-        return m_authorInformation;
-    }
+//    /** {@inheritDoc} */
+//    @Override
+//    public MetaNodeTemplateInformation getTemplateInformation() {
+//        return m_templateInformation;
+//    }
+//
+//    /**
+//     * {@inheritDoc}
+//     *
+//     * @since 2.8
+//     */
+//    @Override
+//    public AuthorInformation getAuthorInformation() {
+//        return m_authorInformation;
+//    }
 
     /**
-     * {@inheritDoc}
-     *
+     * Originally from {@link WorkflowPersistor}
      * @throws IOException
      */
-    @Override
     public InputStream decipherInput(final InputStream input) throws IOException {
         InputStream myInput = m_workflowCipher.decipherInput(input);
         if (m_parentPersistor != null) {
@@ -403,132 +437,102 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
         return myInput;
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public List<FlowVariable> getWorkflowVariables() {
-        return m_workflowVariables;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public List<Credentials> getCredentials() {
-        return m_credentials;
-    }
-
-    @Override
-    public WorkflowTableBackendSettings getWorkflowTableBackendSettings() {
-        return m_tableBackendSettings;
-    }
+//    /** {@inheritDoc} */
+//    @Override
+//    public List<FlowVariable> getWorkflowVariables() {
+//        return m_workflowVariables;
+//    }
+//
+//    /** {@inheritDoc} */
+//    @Override
+//    public List<Credentials> getCredentials() {
+//        return m_credentials;
+//    }
+//
+//    @Override
+//    public WorkflowTableBackendSettings getWorkflowTableBackendSettings() {
+//        return m_tableBackendSettings;
+//    }
 
     /**
-     * {@inheritDoc}
-     *
+     * Originally from {@link WorkflowPersistor}
      * @since 2.8
      */
-    @Override
     public WorkflowContext getWorkflowContext() {
         return isProject() || m_isComponentProject ? getMetaPersistor().getLoadHelper().getWorkflowContext() : null;
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public List<WorkflowAnnotation> getWorkflowAnnotations() {
-        return m_workflowAnnotations;
-    }
+//    /** {@inheritDoc} */
+//    @Override
+//    public List<WorkflowAnnotation> getWorkflowAnnotations() {
+//        return m_workflowAnnotations;
+//    }
+//
+//    /** {@inheritDoc} */
+//    @Override
+//    public NodeSettingsRO getWizardExecutionControllerState() {
+//        return m_wizardState;
+//    }
+//
+//    /** {@inheritDoc} */
+//    @Override
+//    public List<ReferencedFile> getObsoleteNodeDirectories() {
+//        return m_obsoleteNodeDirectories;
+//    }
+//
+//    /** {@inheritDoc} */
+//    @Override
+//    public WorkflowPortTemplate[] getInPortTemplates() {
+//        return m_inPortTemplates;
+//    }
+//
+//    /** {@inheritDoc} */
+//    @Override
+//    public WorkflowPortTemplate[] getOutPortTemplates() {
+//        return m_outPortTemplates;
+//    }
+//
+//    /**
+//     * {@inheritDoc}
+//     *
+//     * @since 3.5
+//     */
+//    @Override
+//    public NodeUIInformation getInPortsBarUIInfo() {
+//        return m_inPortsBarUIInfo;
+//    }
 
-    /** {@inheritDoc} */
-    @Override
-    public NodeSettingsRO getWizardExecutionControllerState() {
-        return m_wizardState;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public List<ReferencedFile> getObsoleteNodeDirectories() {
-        return m_obsoleteNodeDirectories;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public WorkflowPortTemplate[] getInPortTemplates() {
-        return m_inPortTemplates;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public WorkflowPortTemplate[] getOutPortTemplates() {
-        return m_outPortTemplates;
-    }
+//    /**
+//     * {@inheritDoc}
+//     *
+//     * @since 3.5
+//     */
+//    @Override
+//    public NodeUIInformation getOutPortsBarUIInfo() {
+//        return m_outPortsBarUIInfo;
+//    }
+//
+//    /**
+//     * {@inheritDoc}
+//     *
+//     * @since 2.6
+//     */
+//    @Override
+//    public EditorUIInformation getEditorUIInformation() {
+//        return m_editorUIInfo;
+//    }
 
     /**
-     * {@inheritDoc}
-     *
-     * @since 3.5
-     */
-    @Override
-    public NodeUIInformation getInPortsBarUIInfo() {
-        return m_inPortsBarUIInfo;
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @since 3.5
-     */
-    @Override
-    public NodeUIInformation getOutPortsBarUIInfo() {
-        return m_outPortsBarUIInfo;
-    }
-
-    /**
-     * {@inheritDoc}
-     *
      * @since 2.6
      */
-    @Override
-    public EditorUIInformation getEditorUIInformation() {
-        return m_editorUIInfo;
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @since 2.6
-     */
-    @Override
+    /** Originally from {@link TemplateNodeContainerPersistor} */
     public boolean isProject() {
         return m_isProject;
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public boolean needsResetAfterLoad() {
-        return m_needsResetAfterLoad;
-    }
-
-    /**
-     * Indicate that this node should better be reset after load. (Due to loading problems).
-     */
-    public void setNeedsResetAfterLoad() {
-        m_needsResetAfterLoad = true;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public boolean isDirtyAfterLoad() {
-        return m_isDirtyAfterLoad;
-    }
-
-    /** {@inheritDoc} */
-    @Override
+    /** Originally from {@link TemplateNodeContainerPersistor} */
     public boolean mustComplainIfStateDoesNotMatch() {
         return !getLoadVersion().isOlderThan(LoadVersion.V200);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public void setDirtyAfterLoad() {
-        m_isDirtyAfterLoad = true;
     }
 
     @FunctionalInterface
@@ -543,7 +547,7 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
         } catch (InvalidSettingsException e) {
             var error = String.format("Unable to load %s: %s", attributeName, e.getMessage());
             getLogger().debug(error, e);
-            setDirtyAfterLoad();
+            loadResult.setDirtyAfterLoad();
             loadResult.addError(error);
             setter.accept(fallback);
         }
@@ -556,15 +560,15 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
         m_workflowCipher = workflowCipher;
     }
 
+
     /**
      * TODO this covers way too much (workflows and metanodes (and components?)) sharing is ok, but the metanode
      * specific part needs to go to somewhere else
      *
      * reduced from 400 to around 170 lines.
      *
-     * {@inheritDoc}
      */
-    @Override
+    /** Originally from {@link TemplateNodeContainerPersistor} */
     public void preLoadNodeContainer(final WorkflowPersistor parentPersistor, final NodeSettingsRO parentSettings,
         final LoadResult loadResult) throws InvalidSettingsException, IOException {
 
@@ -573,7 +577,7 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
         final ReferencedFile knimeFile = getWorkflowKNIMEFile();
 
         if (knimeFile == null || !knimeFile.getFile().isFile()) {
-            setDirtyAfterLoad();
+            loadResult.setDirtyAfterLoad();
             String error = "Can't read workflow file \"" + knimeFile + "\"";
             throw new IOException(error);
         }
@@ -583,7 +587,7 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
         ReferencedFile parentRef = knimeFile.getParent();
 
         if (parentRef == null) {
-            setDirtyAfterLoad();
+            loadResult.setDirtyAfterLoad();
             throw new IOException("Parent directory of file \"" + knimeFile + "\" is not represented by "
                 + ReferencedFile.class.getSimpleName() + " object");
         }
@@ -608,7 +612,7 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
             in = new BufferedInputStream(in);
             subWFSettings = NodeSettings.loadFromXML(in);
         } catch (IOException ioe) {
-            setDirtyAfterLoad();
+            loadResult.setDirtyAfterLoad();
             throw ioe;
         }
         m_workflowSett = subWFSettings;
@@ -658,8 +662,8 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
         } catch (InvalidSettingsException e) {
             String error = "Unable to table backend: " + e.getMessage();
             getLogger().debug(error, e);
-            setNeedsResetAfterLoad(); // setNeedsResetAfterLoad isn't covered by tryLoad()
-            setDirtyAfterLoad();
+            loadResult.setDirtyAfterLoad();
+            loadResult.setResetRequiredAfterLoad();
             loadResult.addError(error, true);
             if (e instanceof TableBackendUnknownException) { // NOSONAR
                 loadResult.addMissingTableFormat(((TableBackendUnknownException)e).getFormatInfo());
@@ -679,7 +683,7 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
         } catch (IOException e1) {
             String error = "Errors reading settings file: " + e1.getMessage();
             getLogger().warn(error, e1);
-            setDirtyAfterLoad();
+            loadResult.setDirtyAfterLoad();
             loadResult.addError(error);
         }
 
@@ -689,10 +693,10 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
         boolean isResetRequired = m_metaPersistor.load(subWFSettings, metaFlowParentSettings, loadResult);
 
         if (isResetRequired) {
-            setNeedsResetAfterLoad();
+            loadResult.setResetRequiredAfterLoad();
         }
         if (m_metaPersistor.isDirtyAfterLoad()) {
-            setDirtyAfterLoad();
+            loadResult.setDirtyAfterLoad();
         }
 
         int inPortCount = readInports(loadResult);
@@ -738,7 +742,7 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
         } catch (InvalidSettingsException e) {
             String error = "Can't load workflow out ports, config not found: " + e.getMessage();
             getLogger().debug(error, e);
-            setDirtyAfterLoad();
+            loadResult.setDirtyAfterLoad();
             loadResult.addError(error);
         }
         int outPortCount = outPortsEnum.keySet().size();
@@ -752,27 +756,27 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
                 String error =
                     "Can't load workflow outport (internal ID \"" + key + "\", skipping it: " + e.getMessage();
                 getLogger().debug(error, e);
-                setDirtyAfterLoad();
+                loadResult.setDirtyAfterLoad();
                 loadResult.addError(error);
-                setNeedsResetAfterLoad();
+                loadResult.setResetRequiredAfterLoad();
                 continue;
             }
             int index = p.getPortIndex();
             if (index < 0 || index >= outPortCount) {
-                setDirtyAfterLoad();
+                loadResult.setDirtyAfterLoad();
                 loadResult.addError("Invalid inport index " + index);
-                setNeedsResetAfterLoad();
+                loadResult.setResetRequiredAfterLoad();
                 continue;
             }
             if (m_outPortTemplates[index] != null) {
-                setDirtyAfterLoad();
+                loadResult.setDirtyAfterLoad();
                 loadResult.addError("Duplicate outport definition for index: " + index);
             }
             m_outPortTemplates[index] = p;
         }
         for (int i = 0; i < m_outPortTemplates.length; i++) {
             if (m_outPortTemplates[i] == null) {
-                setDirtyAfterLoad();
+                loadResult.setDirtyAfterLoad();
                 loadResult.addError("Assigning fallback port type for " + "missing output port " + i);
                 m_outPortTemplates[i] = new WorkflowPortTemplate(i, FALLBACK_PORTTYPE);
             }
@@ -798,9 +802,9 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
         } catch (InvalidSettingsException e) {
             String error = "Can't load workflow ports, config not found";
             getLogger().debug(error, e);
-            setDirtyAfterLoad();
+            loadResult.setDirtyAfterLoad();
             loadResult.addError(error);
-            setNeedsResetAfterLoad();
+            loadResult.setResetRequiredAfterLoad();
         }
         int inPortCount = inPortsEnum.keySet().size();
         m_inPortTemplates = new WorkflowPortTemplate[inPortCount];
@@ -813,27 +817,27 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
                 String error =
                     "Can't load workflow inport (internal ID \"" + key + "\", skipping it: " + e.getMessage();
                 getLogger().debug(error, e);
-                setDirtyAfterLoad();
+                loadResult.setDirtyAfterLoad();
                 loadResult.addError(error);
-                setNeedsResetAfterLoad();
+                loadResult.setResetRequiredAfterLoad();
                 continue;
             }
             int index = p.getPortIndex();
             if (index < 0 || index >= inPortCount) {
-                setDirtyAfterLoad();
+                loadResult.setDirtyAfterLoad();
                 loadResult.addError("Invalid inport index " + index);
-                setNeedsResetAfterLoad();
+                loadResult.setResetRequiredAfterLoad();
                 continue;
             }
             if (m_inPortTemplates[index] != null) {
-                setDirtyAfterLoad();
+                loadResult.setDirtyAfterLoad();
                 loadResult.addError("Duplicate inport definition for index: " + index);
             }
             m_inPortTemplates[index] = p;
         }
         for (int i = 0; i < m_inPortTemplates.length; i++) {
             if (m_inPortTemplates[i] == null) {
-                setDirtyAfterLoad();
+                loadResult.setDirtyAfterLoad();
                 loadResult.addError("Assigning fallback port type for " + "missing input port " + i);
                 m_inPortTemplates[i] = new WorkflowPortTemplate(i, FALLBACK_PORTTYPE);
             }
@@ -841,13 +845,12 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
         return inPortCount;
     }
 
-    /** {@inheritDoc} */
-    @Override
+    /** Originally from {@link TemplateNodeContainerPersistor} */
     public void loadNodeContainer(final Map<Integer, BufferedDataTable> tblRep, final ExecutionMonitor exec,
         final LoadResult loadResult) throws CanceledExecutionException, IOException {
         ReferencedFile workflowKNIMEFile = getWorkflowKNIMEFile();
         if (workflowKNIMEFile == null || m_workflowSett == null) {
-            setDirtyAfterLoad();
+            loadResult.setDirtyAfterLoad();
             throw new IllegalStateException("The method preLoadNodeContainer has either not been called or failed");
         }
         /* read nodes */
@@ -858,8 +861,8 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
             String error = "Can't load nodes in workflow, config not found: " + e.getMessage();
             getLogger().debug(error, e);
             loadResult.addError(error);
-            setDirtyAfterLoad();
-            setNeedsResetAfterLoad();
+            loadResult.setDirtyAfterLoad();
+            loadResult.setResetRequiredAfterLoad();
             // stop loading here
             return;
         }
@@ -880,7 +883,7 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
                 String error =
                     "Unable to load settings for node with internal " + "id \"" + nodeKey + "\": " + e.getMessage();
                 getLogger().debug(error, e);
-                setDirtyAfterLoad();
+                loadResult.setDirtyAfterLoad();
                 loadResult.addError(error);
                 continue;
             }
@@ -895,7 +898,7 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
                 String error = "Unable to load node ID (internal id \"" + nodeKey + "\"), trying random number "
                     + nodeIDSuffix + "instead: " + e.getMessage();
                 getLogger().debug(error, e);
-                setDirtyAfterLoad();
+                loadResult.setDirtyAfterLoad();
                 loadResult.addError(error);
             }
             NodeType nodeType;
@@ -905,7 +908,7 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
                 String error = "Can't retrieve node type for contained node with id suffix " + nodeIDSuffix
                     + ", attempting to read ordinary (native) node: " + e.getMessage();
                 getLogger().debug(error, e);
-                setDirtyAfterLoad();
+                loadResult.setDirtyAfterLoad();
                 loadResult.addError(error);
                 nodeType = NodeType.NativeNode;
             }
@@ -917,7 +920,7 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
                 String error = "Unable to load UI information class name " + "to node with ID suffix " + nodeIDSuffix
                     + ", no UI information available: " + e.getMessage();
                 getLogger().debug(error, e);
-                setDirtyAfterLoad();
+                loadResult.setDirtyAfterLoad();
                 loadResult.addError(error);
                 uiInfoClassName = null;
             }
@@ -929,7 +932,7 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
                     String error = "Unable to load UI information to " + "node with ID suffix " + nodeIDSuffix
                         + ", no UI information available: " + e.getMessage();
                     getLogger().debug(error, e);
-                    setDirtyAfterLoad();
+                    loadResult.setDirtyAfterLoad();
                     loadResult.addError(error);
                 }
             }
@@ -941,7 +944,7 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
                 String error =
                     "Unable to load settings for node " + "with ID suffix " + nodeIDSuffix + ": " + e.getMessage();
                 getLogger().debug(error, e);
-                setDirtyAfterLoad();
+                loadResult.setDirtyAfterLoad();
                 loadResult.addError(error);
                 failingNodeIDSet.add(nodeIDSuffix);
                 continue;
@@ -989,7 +992,7 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
                     missingNodeIDMap.put(nodeIDSuffix, (NodeFactoryUnknownException)e);
                     // don't set dirty
                 } else {
-                    setDirtyAfterLoad();
+                    loadResult.setDirtyAfterLoad();
                     failingNodeIDSet.add(nodeIDSuffix);
                     // node directory is the parent of the settings.xml
                     m_obsoleteNodeDirectories.add(nodeFile.getParent());
@@ -999,7 +1002,7 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
             NodeContainerMetaPersistor meta = persistor.getMetaPersistor();
             if (m_nodeContainerLoaderMap.containsKey(nodeIDSuffix)) {
                 int randomID = getRandomNodeID();
-                setDirtyAfterLoad();
+                loadResult.setDirtyAfterLoad();
                 loadResult.addError("Duplicate id encountered in workflow: " + nodeIDSuffix
                     + ", uniquifying to random id " + randomID + ", this possibly screws the connections");
                 nodeIDSuffix = randomID;
@@ -1007,7 +1010,7 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
             meta.setNodeIDSuffix(nodeIDSuffix);
             meta.setUIInfo(nodeUIInfo);
             if (persistor.isDirtyAfterLoad()) {
-                setDirtyAfterLoad();
+                loadResult.setDirtyAfterLoad();
             }
             m_nodeContainerLoaderMap.put(nodeIDSuffix, persistor);
         }
@@ -1023,7 +1026,7 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
         } catch (InvalidSettingsException e) {
             String error = "Can't load workflow connections, config not found: " + e.getMessage();
             getLogger().debug(error, e);
-            setDirtyAfterLoad();
+            loadResult.setDirtyAfterLoad();
             loadResult.addError(error);
             connections = EMPTY_SETTINGS;
         }
@@ -1035,14 +1038,14 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
             } catch (InvalidSettingsException e) {
                 String error = "Can't load connection with internal ID \"" + connectionKey + "\": " + e.getMessage();
                 getLogger().debug(error, e);
-                setDirtyAfterLoad();
+                loadResult.setDirtyAfterLoad();
                 loadResult.addError(error);
                 continue;
             }
             int sourceIDSuffix = c.getSourceID();
             NodeContainerPersistor sourceNodePersistor = m_nodeContainerLoaderMap.get(sourceIDSuffix);
             if (sourceNodePersistor == null && sourceIDSuffix != -1) {
-                setDirtyAfterLoad();
+                loadResult.setDirtyAfterLoad();
                 if (!failingNodeIDSet.contains(sourceIDSuffix)) {
                     loadResult.addError("Unable to load node connection " + c + ", source node does not exist");
                 }
@@ -1054,7 +1057,7 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
             int destIDSuffix = c.getDestID();
             NodeContainerPersistor destNodePersistor = m_nodeContainerLoaderMap.get(destIDSuffix);
             if (destNodePersistor == null && destIDSuffix != -1) {
-                setDirtyAfterLoad();
+                loadResult.setDirtyAfterLoad();
                 if (!failingNodeIDSet.contains(destIDSuffix)) {
                     loadResult.addError("Unable to load node connection " + c + ", destination node does not exist");
                 }
@@ -1064,7 +1067,7 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
             //            FileWorkflowPersistor.fixDestPortIfNecessary(destNodePersistor, c, getLoadVersion());
 
             if (!m_connectionSet.add(c)) {
-                setDirtyAfterLoad();
+                loadResult.setDirtyAfterLoad();
                 loadResult.addError("Duplicate connection information: " + c);
             }
         }
@@ -1680,10 +1683,6 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
         return new File(workflowDir, SAVED_WITH_DATA_FILE).isFile();
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public void postLoad(final WorkflowManager wfm, final LoadResult loadResult) {
-    }
 
     FileSingleNodeContainerPersistor createNativeNodeContainerPersistorLoad(final ReferencedFile nodeFile) {
         return new FileNativeNodeContainerPersistor(nodeFile, getLoadHelper(), getLoadVersion(),
@@ -1719,11 +1718,9 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
     }
 
     /**
-     * {@inheritDoc}
-     *
      * @since 2.7
      */
-    @Override
+    /** Originally from {@link TemplateNodeContainerPersistor} */
     public void guessPortTypesFromConnectedNodes(final NodeAndBundleInformationPersistor nodeInfo,
         final NodeSettingsRO additionalFactorySettings, final ArrayList<PersistorWithPortIndex> upstreamNodes,
         final ArrayList<List<PersistorWithPortIndex>> downstreamNodes) {
@@ -1731,11 +1728,9 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
     }
 
     /**
-     * {@inheritDoc}
-     *
      * @since 2.7
      */
-    @Override
+    /** Originally from {@link TemplateNodeContainerPersistor} */
     public PortType getDownstreamPortType(final int index) {
         if (m_outPortTemplates != null && index < m_outPortTemplates.length) {
             return m_outPortTemplates[index].getPortType();
@@ -1744,11 +1739,9 @@ public class FileWorkflowLoader implements WorkflowPersistor, TemplateNodeContai
     }
 
     /**
-     * {@inheritDoc}
-     *
      * @since 2.7
      */
-    @Override
+    /** Originally from {@link TemplateNodeContainerPersistor} */
     public PortType getUpstreamPortType(final int index) {
         if (m_inPortTemplates != null && index < m_inPortTemplates.length) {
             return m_inPortTemplates[index].getPortType();
