@@ -51,15 +51,10 @@ import java.lang.management.ManagementFactory;
 import java.util.LinkedList;
 import java.util.List;
 
-import javax.management.InstanceAlreadyExistsException;
 import javax.management.InstanceNotFoundException;
-import javax.management.MBeanRegistrationException;
 import javax.management.MBeanServer;
-import javax.management.MalformedObjectNameException;
-import javax.management.NotCompliantMBeanException;
 import javax.management.ObjectName;
 
-import org.apache.log4j.Logger;
 import org.knime.core.data.join.JoinSpecification;
 import org.knime.core.data.join.JoinSpecification.InputTable;
 import org.knime.core.data.join.JoinSpecification.OutputRowOrder;
@@ -118,7 +113,6 @@ public abstract class JoinImplementation {
         m_right = settings.getSettings(InputTable.RIGHT).getTable()
             .orElseThrow(() -> new IllegalStateException("No right input table provided."));
         m_progress = new JoinProgressMonitor();
-        m_progress.register();
     }
 
     /**
@@ -193,7 +187,7 @@ public abstract class JoinImplementation {
         // N from the method javadoc
         final int clauses = m_joinSpecification.getNumJoinClauses();
 
-        for (var clause = 0; clause < clauses; clause++) {
+        for (int clause = 0; clause < clauses; clause++) {
 
             // join only on one column pair in each iteration
             JoinSpecification intermediateJoinSpec = JoinSpecification.Builder
@@ -285,7 +279,7 @@ public abstract class JoinImplementation {
         return m_exec;
     }
 
-    class JoinProgressMonitor implements JoinProgressMonitorMXBean {
+    class JoinProgressMonitor implements HybridHashJoinMXBean{
 
         private final NodeProgressMonitor m_monitor;
 
@@ -328,29 +322,23 @@ public abstract class JoinImplementation {
         double m_hashBucketSizeCoV;
 
         JoinProgressMonitor() {
+
             m_monitor = m_exec.getProgressMonitor();
             m_canceled = CancelChecker.checkCanceledPeriodically(m_exec);
-        }
 
-        /**
-         * Add this monitoring object to the global registry of management objects.
-         */
-        void register() {
-            final var server = ManagementFactory.getPlatformMBeanServer();
+            MBeanServer server = ManagementFactory.getPlatformMBeanServer();
             try {
-                final var name = new ObjectName("org.knime.base.node.preproc.joiner3.jmx:type=HybridHashJoin");
-                server.unregisterMBean(name);
+                ObjectName name = new ObjectName("org.knime.base.node.preproc.joiner3.jmx:type=HybridHashJoin");
+                try {
+                    server.unregisterMBean(name);
+                } catch (InstanceNotFoundException e) {
+                }
                 server.registerMBean(this, name);
-            } catch (InstanceAlreadyExistsException | MBeanRegistrationException | NotCompliantMBeanException
-                    | InstanceNotFoundException | MalformedObjectNameException e) {
-                Logger.getLogger(JoinProgressMonitor.class).warn(e);
-            }
+            } catch (Exception e) { System.err.println(e.getMessage()); }
         }
 
         /**
-         * Polling the state of the memory system is an expensive operation that should be performed only every now and
-         * then.
-         *
+         * Polling the state of the memory system is an expensive operation that should be performed only every now and then.
          * @param checkBackInMs ignore queries after this one for the next x milliseconds
          * @return whether heap space is running out
          */
@@ -379,8 +367,12 @@ public abstract class JoinImplementation {
             return m_canceled;
         }
 
-        boolean isCanceled() throws CanceledExecutionException {
-            m_canceled.checkCanceled();
+        boolean isCanceled() {
+            try {
+                m_canceled.checkCanceled();
+            } catch (CanceledExecutionException ex) {
+                return true;
+            }
             return false;
         }
 
@@ -403,6 +395,28 @@ public abstract class JoinImplementation {
             m_numHashPartitionsOnDisk = n;
         }
 
+//        /**
+//         * Compute bucket size statistics to see how well the hash function distributes groups to buckets.
+//         *
+//         * @param probeBuckets the number of rows in the probe table partitions on disk
+//         * @param hashBucketsOnDisk the number of rows in the hash input table partitions on disk
+//         */
+//        public void setBucketSizes(final DiskBucket[] probeBuckets, final DiskBucket[] hashBucketsOnDisk) {
+//
+//            m_probeBucketSizes = Arrays.stream(probeBuckets)
+//                .mapToLong(b -> b.m_workingTable.getTable().map(BufferedDataTable::size).orElse(0L)).toArray();
+//            //                DescriptiveStatistics stats =
+//            //                    new DescriptiveStatistics(Arrays.stream(probeBucketSizes).mapToDouble(l -> l).toArray());
+//            //                probeBucketSizeAverage = stats.getMean();
+//            //                probeBucketSizeCoV = stats.getStandardDeviation() / stats.getMean();
+//            m_hashBucketSizes = Arrays.stream(hashBucketsOnDisk).filter(Objects::nonNull)
+//                .mapToLong(b -> b.m_workingTable.getTable().map(BufferedDataTable::size).orElse(0L)).toArray();
+//            //                DescriptiveStatistics stats =
+//            //                    new DescriptiveStatistics(Arrays.stream(hashBucketSizes).mapToDouble(l -> l).toArray());
+//            //                hashBucketSizeAverage = stats.getMean();
+//            //                hashBucketSizeCoV = stats.getStandardDeviation() / stats.getMean();
+//        }
+
         void setMessage(final String message) { m_monitor.setMessage(message); }
 
         void incProbeRowsProcessedInMemory() { m_probeRowsProcessedInMemory++; }
@@ -410,6 +424,13 @@ public abstract class JoinImplementation {
 
         @Override public int getNumBuckets() { return m_numBuckets; }
         @Override public int getNumPartitionsOnDisk() { return m_numHashPartitionsOnDisk; }
+        @Override public long[] getProbeBucketSizes() { return m_probeBucketSizes; }
+        @Override public long[] getHashBucketSizes() { return m_hashBucketSizes; }
+        @Override public double getAverageProbeBucketSize() { return m_probeBucketSizeAverage; }
+        @Override public double getAverageHashBucketSize() { return m_hashBucketSizeAverage; }
+        @Override public double getProbeBucketSizeCoV() { return m_probeBucketSizeCoV; }
+        @Override public double getHashBucketSizeCoV() { return m_hashBucketSizeCoV; }
+
 
         @Override public long getProbeRowsProcessedInMemory() { return m_probeRowsProcessedInMemory; }
         /** The number of times a probe row was processed and the hash input counterpart was on disk */
@@ -417,6 +438,7 @@ public abstract class JoinImplementation {
 
         @Override public void setDesiredPartitionsOnDisk(final int n) { m_desiredPartitionsOnDisk = n; }
         @Override public void setAssumeMemoryLow(final boolean assume) { m_assumeMemoryLow = assume; }
+
     }
 
     /**
@@ -429,27 +451,29 @@ public abstract class JoinImplementation {
             MBeanServer server = ManagementFactory.getPlatformMBeanServer();
             try {
                 ObjectName name = new ObjectName("org.knime.base.node.preproc.joiner3.jmx:type=MemoryFiller");
-                server.unregisterMBean(name);
+                try {
+                    server.unregisterMBean(name);
+                } catch (InstanceNotFoundException e) {
+                }
                 server.registerMBean(new FillMemoryForTesting(), name);
-            } catch (InstanceNotFoundException | MBeanRegistrationException | MalformedObjectNameException
-                    | InstanceAlreadyExistsException | NotCompliantMBeanException e) {
-                Logger.getLogger(FillMemoryForTesting.class).warn(e);
+            } catch (Exception e) {
+                System.err.println(e.getMessage());
             }
         }
 
-        List<double[]> m_memoryConsumer = new LinkedList<>();
+        List<double[]> memoryConsumer = new LinkedList<>();
 
         @Override
         public void fillHeap(final float targetPercentage) {
             while (MemoryAlertSystem.getUsage() < targetPercentage) {
                 // allocate 50 MB
-                m_memoryConsumer.add(new double[6_250_000]);
+                memoryConsumer.add(new double[6_250_000]);
             }
         }
 
         @Override
         public void releaseTestAllocations() {
-            m_memoryConsumer.clear();
+            memoryConsumer.clear();
         }
     }
 
@@ -458,13 +482,7 @@ public abstract class JoinImplementation {
         void releaseTestAllocations();
     }
 
-    /**
-     * Allows interaction with a join implementation at runtime, for unit testing and for inspection via external tools.
-     *
-     * @since 4.6
-     * @noreference This interface is not intended to be referenced by clients.
-     */
-    public interface JoinProgressMonitorMXBean {
+    /*public*/ interface HybridHashJoinMXBean {
         /** @return the number of partition pairs that have been flushed to disk. */
         int getNumPartitionsOnDisk();
 
@@ -474,17 +492,20 @@ public abstract class JoinImplementation {
          *            condition.
          */
         void setDesiredPartitionsOnDisk(int n);
-
         /** @return number of rows from the probe table that have been joined with an in-memory hash index */
         long getProbeRowsProcessedInMemory();
-
         /** @return number of rows from the probe table that have been joined by reading their partition from disk */
         long getProbeRowsProcessedFromDisk();
-
-        /** @return the number of disk backed partitions. */
+        /** @return {@link DiskBackedHashPartitions#m_numPartitions} */
         int getNumBuckets();
-
-        /** @param assume whether the algorithm shall proceed as if the system was running out of memory */
+        /** @return the number of rows in the probe table partitions on disk */
+        long[] getProbeBucketSizes();
+        /** @return the number of rows in the hash input table partitions on disk */
+        long[] getHashBucketSizes();
+        double getAverageProbeBucketSize();
+        double getAverageHashBucketSize();
+        double getProbeBucketSizeCoV();
+        double getHashBucketSizeCoV();
         void setAssumeMemoryLow(boolean assume);
     }
 
