@@ -147,22 +147,24 @@ public class SelectionEventSource extends EventSource<NativeNodeContainer, Selec
      *
      * @param nc the node to use the hilite handler for
      * @param selectionEventMode the selection event mode
+     * @param async if {@code true}, it will return immediately; if {@code false} it will return once the selection has
+     *            been processed completely (i.e. once all associated nodes have received the selection change, too).
      * @param rowKeys the keys to be (un-)selected
      */
     public static void processSelectionEvent(final NativeNodeContainer nc, final SelectionEventMode selectionEventMode,
-        final List<String> rowKeys) {
+        final boolean async, final List<String> rowKeys) {
         final var keyEvent = new KeyEvent(nc.getID(), rowKeys.stream().map(RowKey::new).toArray(RowKey[]::new));
         // TODO see UIEXT-51
         var hiLiteHandler = nc.getNodeModel().getInHiLiteHandler(0);
         switch (selectionEventMode) {
             case ADD:
-                hiLiteHandler.fireHiLiteEvent(keyEvent);
+                hiLiteHandler.fireHiLiteEvent(keyEvent, async);
                 break;
             case REMOVE:
-                hiLiteHandler.fireUnHiLiteEvent(keyEvent);
+                hiLiteHandler.fireUnHiLiteEvent(keyEvent, async);
                 break;
             case REPLACE:
-                hiLiteHandler.fireReplaceHiLiteEvent(keyEvent);
+                hiLiteHandler.fireReplaceHiLiteEvent(keyEvent, async);
                 break;
             default:
         }

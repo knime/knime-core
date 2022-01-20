@@ -353,6 +353,18 @@ public class HiLiteHandler {
      * @param event Contains all rows keys to hilite.
      */
     public synchronized void fireHiLiteEvent(final KeyEvent event) {
+        fireHiLiteEvent(event, true);
+    }
+
+    /**
+     * Informs all registered hilite listener to hilite the row keys contained in the key event.
+     *
+     * @param event Contains all rows keys to hilite.
+     * @param async if {@code false} this method will only return until all registered {@link HiLiteListener
+     *            HiLiteListeners} have been called; f {@code true} calling the listeners will be carried out
+     *            asynchronously
+     */
+    public synchronized void fireHiLiteEvent(final KeyEvent event, final boolean async) {
         if (event == null) {
             throw new NullPointerException("KeyEvent must not be null");
         }
@@ -409,7 +421,11 @@ public class HiLiteHandler {
                     }
                 }
             };
-            ViewUtils.runOrInvokeLaterInEDT(r);
+            if (async) {
+                ViewUtils.runOrInvokeLaterInEDT(r);
+            } else {
+                r.run();
+            }
         }
     }
 
@@ -432,6 +448,18 @@ public class HiLiteHandler {
      * @param event Contains all rows keys to unhilite.
      */
     public synchronized void fireUnHiLiteEvent(final KeyEvent event) {
+        fireUnHiLiteEvent(event, true);
+    }
+
+    /**
+     * Informs all registered hilite listener to unhilite the row keys contained in the key event.
+     *
+     * @param event Contains all rows keys to unhilite.
+     * @param async if {@code false} this method will only return until all registered {@link HiLiteListener
+     *            HiLiteListeners} have been called; f {@code true} calling the listeners will be carried out
+     *            asynchronously
+     */
+    public synchronized void fireUnHiLiteEvent(final KeyEvent event, final boolean async) {
         if (event == null) {
             throw new NullPointerException("KeyEvent must not be null");
         }
@@ -479,7 +507,11 @@ public class HiLiteHandler {
                     }
                 }
             };
-            ViewUtils.runOrInvokeLaterInEDT(r);
+            if (async) {
+                ViewUtils.runOrInvokeLaterInEDT(r);
+            } else {
+                r.run();
+            }
         }
     }
 
@@ -558,12 +590,26 @@ public class HiLiteHandler {
      * @since 4.5
      */
     public synchronized void fireReplaceHiLiteEvent(final KeyEvent event) {
+        fireReplaceHiLiteEvent(event, true);
+    }
+
+    /**
+     * Informs all registered hilite listener to replace all hilit rows.
+     *
+     * @param event the event fired for hilite replacement
+     * @param async if {@code false} this method will only return until all registered {@link HiLiteListener
+     *            HiLiteListeners} have been called; f {@code true} calling the listeners will be carried out
+     *            asynchronously
+     * @throws NullPointerException if the key event is <code>null</code>
+     * @since 4.5
+     */
+    public synchronized void fireReplaceHiLiteEvent(final KeyEvent event, final boolean async) {
         Objects.requireNonNull(event, "KeyEvent must not be null");
 
         final var keys = event.keys();
         if (!m_hiLitKeys.equals(keys)) {
             m_hiLitKeys = new LinkedHashSet<>(keys);
-            ViewUtils.runOrInvokeLaterInEDT(() -> {
+            Runnable r = () -> {
                 for (final HiLiteListener l : m_listenerList) {
                     try {
                         l.replaceHiLite(event);
@@ -571,7 +617,12 @@ public class HiLiteHandler {
                         LOGGER.coding("Exception while notifying listeners, reason: " + t.getMessage(), t);
                     }
                 }
-            });
+            };
+            if (async) {
+                ViewUtils.runOrInvokeLaterInEDT(r);
+            } else {
+                r.run();
+            }
         }
     }
 
