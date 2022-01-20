@@ -450,11 +450,18 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
         }
 
         private final LoadResultEntryType m_type;
+
         private final String m_message;
+
         private final LoadResultEntryCause m_cause;
 
-        public LoadResultEntry(
-                final LoadResultEntryType type, final String message) {
+        /** See {@link #isDirtyAfterLoad()} */
+        private boolean m_dirtyAfterLoad = false;
+
+        /** See {@link #isResetRequiredAfterLoad()} */
+        private boolean m_resetRequiredAfterLoad = false;
+
+        public LoadResultEntry(final LoadResultEntryType type, final String message) {
             this(type, message, null);
         }
 
@@ -528,6 +535,35 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
             return EMPTY;
         }
 
+        /**
+         * @return whether the (sub-)workflow was changed due to problems (e.g., using default values for missing
+         *         attributes) during the load process.
+         */
+        boolean isDirtyAfterLoad() {
+            return m_dirtyAfterLoad;
+        }
+
+        /**
+         * Use {@link #addErrorDirtyAfterLoad(String)} to set this to true.
+         */
+        protected void setDirtyAfterLoad() {
+            m_dirtyAfterLoad = true;
+        }
+
+        /**
+         * @return whether the (sub-)workflow needs to be reset after loading due to problems during the load process.
+         */
+        boolean isResetRequiredAfterLoad() {
+            return m_resetRequiredAfterLoad;
+        }
+
+        /**
+         * Use {@link #addErrorResetRequired(String)} to set this to true.
+         */
+        protected void setResetRequiredAfterLoad() {
+            m_resetRequiredAfterLoad = true;
+        }
+
         /** {@inheritDoc} */
         @Override
         public String toString() {
@@ -568,14 +604,18 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
             super(LoadResultEntryType.Ok, name);
         }
 
+        /**
+         * TODO maybe it makes sense to think about errors and warnings and define them in a way that
+         * setting an error (reporting a problem of a certain type or severity) always sets dirty or even reset required
+         * @param error
+         */
         public void addError(final String error) {
             addError(error, false);
         }
 
-        public void addError(final String error,
-                final boolean isErrorDuringDataLoad) {
-            LoadResultEntryType t = isErrorDuringDataLoad
-            ? LoadResultEntryType.DataLoadError : LoadResultEntryType.Error;
+        public void addError(final String error, final boolean isDataLoadError) {
+            LoadResultEntryType t =
+                isDataLoadError ? LoadResultEntryType.DataLoadError : LoadResultEntryType.Error;
             m_errors.add(new LoadResultEntry(t, error));
         }
 
