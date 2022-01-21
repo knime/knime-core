@@ -64,6 +64,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -185,7 +186,9 @@ public class NodeViewEntTest {
         @SuppressWarnings("unchecked")
         final BiConsumer<String, SelectionEvent> consumerMock = mock(BiConsumer.class);
         var selectionEventSource = SelectionEventSourceTest.createSelectionEventSource(consumerMock);
-        var nodeViewEnt = new NodeViewEnt(nnc, selectionEventSource);
+        var initialSelection = selectionEventSource.addEventListenerAndGetInitialEvent(nnc).map(SelectionEvent::getKeys)
+            .orElse(Collections.emptyList());
+        var nodeViewEnt = new NodeViewEnt(nnc, initialSelection);
 
         assertThat(nodeViewEnt.getInitialSelection(), is(List.of("k1", "k2")));
 

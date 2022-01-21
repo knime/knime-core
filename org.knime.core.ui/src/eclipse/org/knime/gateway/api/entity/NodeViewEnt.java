@@ -48,14 +48,11 @@
  */
 package org.knime.gateway.api.entity;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.webui.node.view.NodeViewManager;
 import org.knime.core.webui.page.PageUtil;
-import org.knime.gateway.impl.service.events.SelectionEventSource;
-import org.knime.gateway.impl.service.events.SelectionEventSource.SelectionEventMode;
 
 /**
  * Node view entity containing the info required by the UI (i.e. frontend) to be able display a node view.
@@ -72,10 +69,9 @@ public final class NodeViewEnt extends NodeUIExtensionEnt {
 
     /**
      * @param nnc the node to create the node view entity for
-     * @param selectionEventSource used to retrieve the initial selection and synchronously register the associated node
-     *            with the 'event source'
+     * @param initialSelection list of row keys representing the initial selection
      */
-    public NodeViewEnt(final NativeNodeContainer nnc, final SelectionEventSource selectionEventSource) {
+    public NodeViewEnt(final NativeNodeContainer nnc, final List<String> initialSelection) {
         super(nnc, ExtensionType.VIEW);
 
         var nodeViewManager = NodeViewManager.getInstance();
@@ -85,18 +81,7 @@ public final class NodeViewEnt extends NodeUIExtensionEnt {
         var id = PageUtil.getPageId(nnc, page.isStatic(), false);
         m_resourceInfo = new ResourceInfoEnt(id, url, path, page);
         m_info = new NodeInfoEnt(nnc);
-        if (selectionEventSource != null) {
-            var selectionEvent = selectionEventSource.addEventListenerAndGetInitialEvent(nnc).orElse(null);
-            if (selectionEvent != null) {
-                assert selectionEvent.getMode() == SelectionEventMode.ADD
-                    || selectionEvent.getMode() == SelectionEventMode.REPLACE;
-                m_initialSelection = selectionEvent.getKeys();
-            } else {
-                m_initialSelection = Collections.emptyList();
-            }
-        } else {
-            m_initialSelection = Collections.emptyList();
-        }
+        m_initialSelection = initialSelection;
     }
 
     /**
