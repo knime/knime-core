@@ -99,7 +99,6 @@ import org.knime.core.node.workflow.WorkflowTableBackendSettings.TableBackendUnk
 import org.knime.core.node.workflow.def.CoreToDefUtil;
 import org.knime.core.node.workflow.execresult.WorkflowExecutionResult;
 import org.knime.core.node.workflow.loader.NodeContainerLoader;
-import org.knime.core.node.workflow.loader.file.FileSubNodeContainerLoader;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.LockFailedException;
@@ -838,9 +837,10 @@ public class FileWorkflowLoader implements NodeContainerLoader {
             loadResult.addError(error);
         }
 
-        NodeType nodeType = tryLoadDebug(e -> String.format(
-            "Can't retrieve node type for contained node with id suffix %d, attempting to read ordinary (native) node: %s",
-            nodeIDSuffix, e), NodeType.NativeNode, () -> loadNodeType(nodeSetting), loadResult);
+        // TODO fix
+        NodeType nodeType = tryLoadDebug(String.format(
+            "Can't retrieve node type for contained node with id suffix %d, attempting to read ordinary (native) node: "),
+            NodeType.NativeNode, () -> loadNodeType(nodeSetting), loadResult);
 
         NodeUIInformation nodeUIInfo = null;
         String uiInfoClassName;
@@ -927,25 +927,27 @@ public class FileWorkflowLoader implements NodeContainerLoader {
                 failingNodeIDSet.add(nodeIDSuffix);
                 // node directory is the parent of the settings.xml
                 m_obsoleteNodeDirectories.add(nodeFile.getParent());
-                continue;
+                return Optional.empty();
             }
         }
         // NodeContainerMetaPersistor
 
-        var meta = persistor.getMetaPersistor();
-        if (m_nodeContainerLoaderMap.containsKey(nodeIDSuffix)) {
-            var randomID = getRandomNodeID();
-            loadResult.setDirtyAfterLoad();
-            loadResult.addError("Duplicate id encountered in workflow: " + nodeIDSuffix + ", uniquifying to random id "
-                + randomID + ", this possibly screws the connections");
-            nodeIDSuffix = randomID;
-        }
-        meta.setNodeIDSuffix(nodeIDSuffix);
-        meta.setUIInfo(nodeUIInfo);
-        if (persistor.isDirtyAfterLoad()) {
-            loadResult.setDirtyAfterLoad();
-        }
-        m_nodeContainerLoaderMap.put(nodeIDSuffix, persistor);
+//        var meta = persistor.getMetaPersistor();
+//        if (m_nodeContainerLoaderMap.containsKey(nodeIDSuffix)) {
+//            var randomID = getRandomNodeID();
+//            loadResult.setDirtyAfterLoad();
+//            loadResult.addError("Duplicate id encountered in workflow: " + nodeIDSuffix + ", uniquifying to random id "
+//                + randomID + ", this possibly screws the connections");
+//            nodeIDSuffix = randomID;
+//        }
+//        meta.setNodeIDSuffix(nodeIDSuffix);
+//        meta.setUIInfo(nodeUIInfo);
+//        if (persistor.isDirtyAfterLoad()) {
+//            loadResult.setDirtyAfterLoad();
+//        }
+//        m_nodeContainerLoaderMap.put(nodeIDSuffix, persistor);
+        // TODO
+        return null;
     }
 
     /**
@@ -1582,13 +1584,15 @@ public class FileWorkflowLoader implements NodeContainerLoader {
     }
 
     NodeContainerLoader createNativeNodeContainerPersistorLoad(final ReferencedFile nodeFile) {
-        return new FileNativeNodeContainerLoader(nodeFile, getLoadHelper(), getLoadVersion(),
-            getWorkflowDataRepository(), mustWarnOnDataLoadError());
+        return null;
+//        return new FileNativeNodeContainerLoader(nodeFile, getLoadHelper(), getLoadVersion(),
+//            getWorkflowDataRepository(), mustWarnOnDataLoadError());
     }
 
     NodeContainerLoader createSubNodeContainerPersistorLoad(final ReferencedFile nodeFile) {
-        return new FileSubNodeContainerLoader(nodeFile, getLoadHelper(), getLoadVersion(),
-            getWorkflowDataRepository(), mustWarnOnDataLoadError());
+        return null;
+//        return new FileSubNodeContainerLoader(nodeFile, getLoadHelper(), getLoadVersion(),
+//            getWorkflowDataRepository(), mustWarnOnDataLoadError());
     }
 
     NodeContainerLoader createWorkflowLoader(final ReferencedFile wfmFile) {

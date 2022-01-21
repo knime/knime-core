@@ -64,8 +64,14 @@ import org.knime.core.util.workflowalizer.AuthorInformation;
 import org.knime.core.workflow.def.AnnotationDataDef;
 import org.knime.core.workflow.def.AuthorInformationDef;
 import org.knime.core.workflow.def.ConnectionDef;
+import org.knime.core.workflow.def.JobManagerDef;
+import org.knime.core.workflow.def.MetaNodeDataDef;
+import org.knime.core.workflow.def.NodeAnnotationDef;
 import org.knime.core.workflow.def.NodeDef;
+import org.knime.core.workflow.def.NodeLocksDef;
+import org.knime.core.workflow.def.NodeMessageDef;
 import org.knime.core.workflow.def.NodeRefDef;
+import org.knime.core.workflow.def.NodeUIInfoDef;
 import org.knime.core.workflow.def.StyleDef;
 import org.knime.core.workflow.def.WorkflowCredentialsDef;
 import org.knime.core.workflow.def.WorkflowDef;
@@ -274,6 +280,78 @@ public class DefWorkflowManagerWrapper implements WorkflowDef {
     @Override
     public String getState() {
         return m_wfm.getNodeContainerState().toString();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public MetaNodeDataDef getMetaNodeData() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getCustomDescription() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeAnnotationDef getAnnotation() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeUIInfoDef getUiInfo() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeLocksDef getLocks() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeMessageDef getMessage() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public JobManagerDef getJobManager() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getNodeType() {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 
