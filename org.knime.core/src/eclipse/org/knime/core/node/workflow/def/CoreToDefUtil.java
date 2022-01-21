@@ -58,6 +58,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContent;
 import org.knime.core.node.Node;
@@ -77,9 +78,11 @@ import org.knime.core.node.config.base.ConfigIntEntry;
 import org.knime.core.node.config.base.ConfigLongEntry;
 import org.knime.core.node.config.base.ConfigShortEntry;
 import org.knime.core.node.config.base.ConfigStringEntry;
+import org.knime.core.node.workflow.Annotation;
 import org.knime.core.node.workflow.ComponentMetadata;
 import org.knime.core.node.workflow.ComponentMetadata.ComponentNodeType;
 import org.knime.core.node.workflow.ConnectionUIInformation;
+import org.knime.core.node.workflow.Credentials;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation;
 import org.knime.core.node.workflow.NodeAnnotation;
@@ -89,6 +92,9 @@ import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.NodePort;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.util.Version;
+import org.knime.core.util.workflowalizer.AuthorInformation;
+import org.knime.core.workflow.def.AnnotationDataDef;
+import org.knime.core.workflow.def.AuthorInformationDef;
 import org.knime.core.workflow.def.ComponentMetadataDef;
 import org.knime.core.workflow.def.ConfigDef;
 import org.knime.core.workflow.def.ConfigMapDef;
@@ -107,7 +113,9 @@ import org.knime.core.workflow.def.PortDef;
 import org.knime.core.workflow.def.PortTypeDef;
 import org.knime.core.workflow.def.StyleDef;
 import org.knime.core.workflow.def.TemplateInfoDef;
+import org.knime.core.workflow.def.WorkflowCredentialsDef;
 import org.knime.core.workflow.def.impl.DefaultAnnotationDataDef;
+import org.knime.core.workflow.def.impl.DefaultAuthorInformationDef;
 import org.knime.core.workflow.def.impl.DefaultBoundsDef;
 import org.knime.core.workflow.def.impl.DefaultComponentMetadataDef;
 import org.knime.core.workflow.def.impl.DefaultConfigMapDef;
@@ -426,14 +434,15 @@ public class CoreToDefUtil {
             .build();
     }
 
-    public static NodeAnnotationDef toNodeAnnotationDef(final NodeAnnotation na) {
+    public static AnnotationDataDef toAnnotationDataDef(final Annotation na) {
         // TODO I've seen this in the wfm wrapper too
         List<StyleDef> styles = Arrays.stream(na.getStyleRanges())
             .map(s -> DefaultStyleDef.builder().setFgcolor(s.getFgColor()).setFontname(s.getFontName())
                 .setFontsize(s.getFontSize()).setFontstyle(s.getFontStyle()).setLength(s.getLength())
                 .setStart(s.getStart()).build())
             .collect(Collectors.toList());
-        DefaultAnnotationDataDef annoData = DefaultAnnotationDataDef.builder()//
+
+        return DefaultAnnotationDataDef.builder()//
             .setText(na.getText())//
             .setAlignment(na.getAlignment().toString())//
             .setBgcolor(na.getBgColor())//
@@ -445,8 +454,13 @@ public class CoreToDefUtil {
             .setLocation(createCoordinate(na.getX(), na.getY()))//
             .setStyles(styles)//
             .build();
+    }
+
+    public static NodeAnnotationDef toNodeAnnotationDef(final NodeAnnotation na) {
         return DefaultNodeAnnotationDef.builder()//
-            .setAnnotationDefault(na.getData().isDefault()).setData(annoData).build();
+            .setAnnotationDefault(na.getData().isDefault())//
+            .setData(toAnnotationDataDef(na))//
+            .build();
     }
 
     public static CoordinateDef createCoordinate(final int x, final int y) {
@@ -548,5 +562,29 @@ public class CoreToDefUtil {
             throw new IllegalArgumentException(
                 "Can not convert flow variable " + variable + " to plain java description.");
         }
+    }
+
+    /**
+     * @param credentials
+     * @return
+     */
+    public static WorkflowCredentialsDef toWorkflowCredentialsDef(final List<Credentials> credentials) {
+        // TODO
+        throw new NotImplementedException("Credentials storage not implemented yet");
+//        return DefaultWorkflowCredentialsDef.builder().build();
+    }
+
+    /**
+     * @param authorInformation
+     * @return
+     */
+    public static AuthorInformationDef toAuthorInformationDef(final AuthorInformation authorInformation) {
+        var builder = DefaultAuthorInformationDef.builder()//
+            .setAuthoredBy(authorInformation.getAuthor())//
+            .setAuthoredWhen(authorInformation.getAuthoredDate());//
+        authorInformation.getLastEditor().ifPresent(builder::setLastEditedBy);
+        authorInformation.getLastEditDate().ifPresent(builder::setLastEditedWhen);
+
+        return builder.build();
     }
 }

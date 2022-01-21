@@ -107,6 +107,10 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
      * @since 3.7*/
     WorkflowDataRepository getWorkflowDataRepository();
 
+    /**
+     * Copied from use in WorkflowManager: "Name of this workflow (usually displayed at top of the node figure). May be
+     * null to use name of workflow directory."
+     */
     String getName();
 
     /** @return cipher associated with the metanode/workflow, often just

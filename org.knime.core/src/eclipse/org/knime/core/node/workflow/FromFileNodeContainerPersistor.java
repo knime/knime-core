@@ -57,6 +57,7 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 
 /**
+ * TODO this doesn't seem to have anything file specific in it
  *
  * @author wiswedel
  */
