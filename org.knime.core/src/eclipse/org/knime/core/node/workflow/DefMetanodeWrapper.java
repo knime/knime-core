@@ -53,19 +53,16 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.knime.core.node.workflow.def.CoreToDefUtil;
-import org.knime.core.workflow.def.ConfigMapDef;
-import org.knime.core.workflow.def.FlowObjectDef;
-import org.knime.core.workflow.def.MetaNodeDef;
+import org.knime.core.workflow.def.MetaNodeDataDef;
 import org.knime.core.workflow.def.NodeUIInfoDef;
 import org.knime.core.workflow.def.PortDef;
 import org.knime.core.workflow.def.TemplateInfoDef;
-import org.knime.core.workflow.def.WorkflowDef;
 
 /**
  *
  * @author carlwitt
  */
-public class DefMetanodeWrapper extends DefNodeContainerWrapper implements MetaNodeDef {
+public class DefMetanodeWrapper extends DefNodeContainerWrapper implements MetaNodeDataDef {
 
     private WorkflowManager m_wfm;
 
@@ -82,23 +79,23 @@ public class DefMetanodeWrapper extends DefNodeContainerWrapper implements MetaN
         m_wfm = wfm;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ConfigMapDef getModelSettings() {
-        // TODO do we need this?
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ConfigMapDef getInternalNodeSubSettings() {
-        // TODO do we need this?
-        return null;
-    }
+//    /**
+//     * {@inheritDoc}
+//     */
+//    @Override
+//    public ConfigMapDef getModelSettings() {
+//        // TODO do we need this?
+//        return null;
+//    }
+//
+//    /**
+//     * {@inheritDoc}
+//     */
+//    @Override
+//    public ConfigMapDef getInternalNodeSubSettings() {
+//        // TODO do we need this?
+//        return null;
+//    }
 
     /**
      * {@inheritDoc}
@@ -134,31 +131,31 @@ public class DefMetanodeWrapper extends DefNodeContainerWrapper implements MetaN
         return CoreToDefUtil.toNodeUIInfoDef(m_wfm.getOutPortsBarUIInfo());
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ConfigMapDef getVariableSettings() {
-        // TODO do we need this?
-        return null;
-    }
+//    /**
+//     * {@inheritDoc}
+//     */
+//    @Override
+//    public ConfigMapDef getVariableSettings() {
+//        // TODO do we need this?
+//        return null;
+//    }
+//
+//    /**
+//     * {@inheritDoc}
+//     */
+//    @Override
+//    public List<FlowObjectDef> getFlowStack() {
+//        // TODO do we need this?
+//        return null;
+//    }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public List<FlowObjectDef> getFlowStack() {
-        // TODO do we need this?
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public WorkflowDef getWorkflow() {
-        return new DefWorkflowManagerWrapper(m_wfm);
-    }
+//    /**
+//     * {@inheritDoc}
+//     */
+//    @Override
+//    public WorkflowDef getWorkflow() {
+//        return new DefWorkflowManagerWrapper(m_wfm);
+//    }
 
     /**
      * {@inheritDoc}

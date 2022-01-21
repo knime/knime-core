@@ -106,8 +106,8 @@ import org.knime.core.util.workflowalizer.AuthorInformation;
 import org.knime.core.workflow.def.ConnectionDef;
 import org.knime.core.workflow.def.NodeDef;
 import org.knime.core.workflow.def.impl.DefaultConnectionDef;
-import org.knime.core.workflow.def.impl.DefaultMetaNodeDef;
-import org.knime.core.workflow.def.impl.DefaultMetaNodeDef.DefaultMetaNodeDefBuilder;
+import org.knime.core.workflow.def.impl.DefaultMetaNodeDataDef;
+import org.knime.core.workflow.def.impl.DefaultMetaNodeDataDef.DefaultMetaNodeDataDefBuilder;
 import org.knime.core.workflow.def.impl.DefaultWorkflowDef;
 import org.knime.core.workflow.def.impl.DefaultWorkflowDef.DefaultWorkflowDefBuilder;
 import org.knime.core.workflow.def.impl.DefaultWorkflowMetadataDef;
@@ -276,7 +276,7 @@ public class FileWorkflowLoader implements NodeContainerLoader {
 
     // -- Builders --
 
-    final DefaultMetaNodeDefBuilder m_metaNodeDefBuilder = DefaultMetaNodeDef.builder();
+    final DefaultMetaNodeDataDefBuilder m_metaNodeDefBuilder = DefaultMetaNodeDataDef.builder();
 
     final DefaultWorkflowProjectDefBuilder m_workflowProjectDefBuilder = DefaultWorkflowProjectDef.builder();
 
