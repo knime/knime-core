@@ -95,7 +95,7 @@ public class NodeViewNodeFactory extends NodeFactory<NodeViewNodeModel> implemen
      *
      */
     public NodeViewNodeFactory() {
-        this(0, 0);
+        this(1, 0);
     }
 
     /**
