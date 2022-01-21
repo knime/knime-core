@@ -148,7 +148,7 @@ public class NodeContainerParentTest {
 
     private static WorkflowManager createEmptyWorkflow() throws IOException {
         File dir = FileUtil.createTempDir("workflow");
-        File workflowFile = new File(dir, FileWorkflowLoader.WORKFLOW_FILE);
+        File workflowFile = new File(dir, WorkflowPersistor.WORKFLOW_FILE);
         if (workflowFile.createNewFile()) {
             WorkflowCreationHelper creationHelper = new WorkflowCreationHelper();
             WorkflowContext.Factory fac = new WorkflowContext.Factory(workflowFile.getParentFile());

@@ -51,7 +51,7 @@ package org.knime.core.util;
 import java.io.File;
 
 import org.knime.core.node.workflow.FileSingleNodeContainerPersistor;
-import org.knime.core.node.workflow.FileWorkflowLoader;
+import org.knime.core.node.workflow.WorkflowPersistor;
 
 
 /**
@@ -77,11 +77,11 @@ public final class KnimeFileUtil {
         // It is a workflow if it contains a workflow file but not its parent.
         File parent = file.getParentFile();
         if (parent != null) {
-            if (new File(parent, FileWorkflowLoader.WORKFLOW_FILE).exists()) {
+            if (new File(parent, WorkflowPersistor.WORKFLOW_FILE).exists()) {
                 return false;
             }
         }
-        return new File(file, FileWorkflowLoader.WORKFLOW_FILE).exists();
+        return new File(file, WorkflowPersistor.WORKFLOW_FILE).exists();
     }
 
     /**
@@ -93,13 +93,13 @@ public final class KnimeFileUtil {
         if (file == null || !file.exists() || !file.isDirectory()) {
             return false;
         }
-        if (new File(file, FileWorkflowLoader.METAINFO_FILE).exists()) {
+        if (new File(file, WorkflowPersistor.METAINFO_FILE).exists()) {
             return true;
         }  else if (
                 // workflow or metanode
-                new File(file, FileWorkflowLoader.WORKFLOW_FILE).exists()
+                new File(file, WorkflowPersistor.WORKFLOW_FILE).exists()
                 // workflow template
-                || new File(file, FileWorkflowLoader.TEMPLATE_FILE).exists()
+                || new File(file, WorkflowPersistor.TEMPLATE_FILE).exists()
                 // node
                 || new File(file, FileSingleNodeContainerPersistor.
                         SETTINGS_FILE_NAME).exists()) {
@@ -118,7 +118,7 @@ public final class KnimeFileUtil {
         if (file == null || !file.exists() || !file.isDirectory()) {
             return false;
         }
-        File templateFile = new File(file, FileWorkflowLoader.TEMPLATE_FILE);
+        File templateFile = new File(file, WorkflowPersistor.TEMPLATE_FILE);
         return templateFile.exists();
     }
 
@@ -136,7 +136,7 @@ public final class KnimeFileUtil {
             // parent must have a workflow file for this to be a meta (or sub) node
             return false;
         }
-        return new File(file, FileWorkflowLoader.WORKFLOW_FILE).exists()
-            && new File(parent, FileWorkflowLoader.WORKFLOW_FILE).exists();
+        return new File(file, WorkflowPersistor.WORKFLOW_FILE).exists()
+            && new File(parent, WorkflowPersistor.WORKFLOW_FILE).exists();
     }
 }

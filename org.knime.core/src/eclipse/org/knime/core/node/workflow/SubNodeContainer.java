@@ -2903,7 +2903,7 @@ public final class SubNodeContainer extends SingleNodeContainer
                     copy.setTemplateInformation(template);
                     NodeSettings templateSettings = MetaNodeTemplateInformation.createNodeSettingsForTemplate(copy);
                     templateSettings.saveToXML(
-                        new FileOutputStream(new File(workflowDirRef.getFile(), FileWorkflowLoader.TEMPLATE_FILE)));
+                        new FileOutputStream(new File(workflowDirRef.getFile(), WorkflowPersistor.TEMPLATE_FILE)));
 
                     FileSingleNodeContainerPersistor.save(copy, workflowDirRef, exec,
                         new WorkflowSaveHelper(true, false));

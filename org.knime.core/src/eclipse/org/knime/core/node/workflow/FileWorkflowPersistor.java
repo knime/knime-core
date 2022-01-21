@@ -1264,13 +1264,13 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
     }
 
     int loadNodeIDSuffix(final NodeSettingsRO settings) throws InvalidSettingsException {
-        return settings.getInt(FileWorkflowLoader.KEY_ID);
+        return settings.getInt(WorkflowPersistor.KEY_ID);
     }
 
     String loadUIInfoClassName(final NodeSettingsRO settings) throws InvalidSettingsException {
         if (getLoadVersion().isOlderThan(LoadVersion.V200)) {
-            if (settings.containsKey(FileWorkflowLoader.KEY_UI_INFORMATION)) {
-                return settings.getString(FileWorkflowLoader.KEY_UI_INFORMATION);
+            if (settings.containsKey(WorkflowPersistor.KEY_UI_INFORMATION)) {
+                return settings.getString(WorkflowPersistor.KEY_UI_INFORMATION);
             }
         } else {
             if (settings.containsKey(CFG_UIINFO_CLASS)) {
@@ -1437,7 +1437,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
     }
 
     NodeSettingsRO loadSettingsForConnections(final NodeSettingsRO set) throws InvalidSettingsException {
-        return set.getNodeSettings(FileWorkflowLoader.KEY_CONNECTIONS);
+        return set.getNodeSettings(WorkflowPersistor.KEY_CONNECTIONS);
     }
 
     ConnectionContainerTemplate loadConnection(final NodeSettingsRO settings) throws InvalidSettingsException {
@@ -1507,7 +1507,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
     }
 
     NodeSettingsRO loadSettingsForNodes(final NodeSettingsRO set) throws InvalidSettingsException {
-        return set.getNodeSettings(FileWorkflowLoader.KEY_NODES);
+        return set.getNodeSettings(WorkflowPersistor.KEY_NODES);
     }
 
     /**
@@ -1797,7 +1797,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
         if (getLoadVersion().isOlderThan(LoadVersion.V200)) {
             return true;
         }
-        return new File(workflowDir, FileWorkflowLoader.SAVED_WITH_DATA_FILE).isFile();
+        return new File(workflowDir, WorkflowPersistor.SAVED_WITH_DATA_FILE).isFile();
     }
 
 
@@ -1910,7 +1910,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
     public static String save(final WorkflowManager wm, final ReferencedFile rawWorkflowDirRef,
         final ExecutionMonitor execMon, final WorkflowSaveHelper saveHelper)
                 throws IOException, CanceledExecutionException, LockFailedException {
-        final String name = wm.getDirectNCParent().getCipherFileName(FileWorkflowLoader.WORKFLOW_FILE);
+        final String name = wm.getDirectNCParent().getCipherFileName(WorkflowPersistor.WORKFLOW_FILE);
         NodeSettings preFilledSettings = new NodeSettings(name);
         saveHeader(preFilledSettings);
         wm.getTemplateInformation().save(preFilledSettings);
@@ -1928,7 +1928,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
         }
         // as per 2.10 template workflows are also saved under workflow.knime (previously it was all contained in
         // template.knime). The new template.knime file is written elsewhere.
-        final String name = wm.getDirectNCParent().getCipherFileName(FileWorkflowLoader.WORKFLOW_FILE);
+        final String name = wm.getDirectNCParent().getCipherFileName(WorkflowPersistor.WORKFLOW_FILE);
         NodeSettings preFilledSettings = new NodeSettings(name);
         saveContent(wm, preFilledSettings, rawWorkflowDirRef, execMon, saveHelper);
         return name;
@@ -2045,7 +2045,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
             saveEditorUIInformation(wm, preFilledSettings);
 
             File workflowFile = new File(workflowDir, fName);
-            String toBeDeletedFileName = Role.Template.equals(r) ? FileWorkflowLoader.TEMPLATE_FILE : FileWorkflowLoader.WORKFLOW_FILE;
+            String toBeDeletedFileName = Role.Template.equals(r) ? WorkflowPersistor.TEMPLATE_FILE : WorkflowPersistor.WORKFLOW_FILE;
             new File(workflowDir, toBeDeletedFileName).delete();
             new File(workflowDir, WorkflowCipher.getCipherFileName(toBeDeletedFileName)).delete();
 
@@ -2053,7 +2053,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
             os = wm.getDirectNCParent().cipherOutput(os);
             preFilledSettings.saveToXML(os);
             if (saveHelper.isSaveData()) {
-                File saveWithDataFile = new File(workflowDir, FileWorkflowLoader.SAVED_WITH_DATA_FILE);
+                File saveWithDataFile = new File(workflowDir, WorkflowPersistor.SAVED_WITH_DATA_FILE);
                 BufferedWriter o = new BufferedWriter(new FileWriter(saveWithDataFile));
                 o.write("Do not delete this file!");
                 o.newLine();
@@ -2211,7 +2211,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
      * @return The sub config where subsequent writing takes place.
      */
     protected static NodeSettingsWO saveSettingsForNodes(final NodeSettingsWO settings) {
-        return settings.addNodeSettings(FileWorkflowLoader.KEY_NODES);
+        return settings.addNodeSettings(WorkflowPersistor.KEY_NODES);
     }
 
     /**
@@ -2221,7 +2221,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
      * @return The sub config where subsequent writing takes place.
      */
     protected static NodeSettingsWO saveSettingsForConnections(final NodeSettingsWO settings) {
-        return settings.addNodeSettings(FileWorkflowLoader.KEY_CONNECTIONS);
+        return settings.addNodeSettings(WorkflowPersistor.KEY_CONNECTIONS);
     }
 
     protected static void saveNodeContainer(final NodeSettingsWO settings, final ReferencedFile workflowDirRef,
@@ -2279,7 +2279,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
     }
 
     protected static void saveNodeIDSuffix(final NodeSettingsWO settings, final NodeContainer nc) {
-        settings.addInt(FileWorkflowLoader.KEY_ID, nc.getID().getIndex());
+        settings.addInt(WorkflowPersistor.KEY_ID, nc.getID().getIndex());
     }
 
     protected static void saveFileLocation(final NodeSettingsWO settings, final String location) {

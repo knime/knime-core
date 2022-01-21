@@ -7766,7 +7766,7 @@ public final class WorkflowManager extends NodeContainer
                 NodeSettings templateSettings = MetaNodeTemplateInformation.createNodeSettingsForTemplate(copy);
                 copy.save(directory, new WorkflowSaveHelper(true, false), exec);
                 templateSettings.saveToXML(
-                    new FileOutputStream(new File(workflowDirRef.getFile(), FileWorkflowLoader.TEMPLATE_FILE)));
+                    new FileOutputStream(new File(workflowDirRef.getFile(), WorkflowPersistor.TEMPLATE_FILE)));
             }
             return template;
         } finally {

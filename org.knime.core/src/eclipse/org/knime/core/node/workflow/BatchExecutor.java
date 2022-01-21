@@ -724,7 +724,7 @@ public class BatchExecutor {
         // the workflow may be contained in a sub-directory
         // if run on a archived workflow (typical scenario if workflow is
         // exported to a zip using the wizard)
-        if (!new File(config.workflowLocation, FileWorkflowLoader.WORKFLOW_FILE).exists()) {
+        if (!new File(config.workflowLocation, WorkflowPersistor.WORKFLOW_FILE).exists()) {
             File[] children = config.workflowLocation.listFiles();
             if (children.length == 0) {
                 throw new IOException("No workflow directory at " + config.workflowLocation);

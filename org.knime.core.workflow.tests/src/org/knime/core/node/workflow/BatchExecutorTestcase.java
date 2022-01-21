@@ -464,14 +464,14 @@ public class BatchExecutorTestcase {
                 "-destDir=" + destDir.getAbsolutePath()});
         assertEquals("Non-zero return value", 0, ret);
         assertTrue("Not enough file in destination directory", destDir.list().length > 5);
-        assertTrue("No workflow in destination directory", new File(destDir, FileWorkflowLoader.WORKFLOW_FILE).isFile());
+        assertTrue("No workflow in destination directory", new File(destDir, WorkflowPersistor.WORKFLOW_FILE).isFile());
 
         // save in place
         FileUtil.deleteRecursively(destDir);
         destDir.mkdir();
         FileUtil.unzip(standardTestWorkflowZip, destDir);
         destDir = destDir.listFiles()[0]; // workflow is in a subdirectory of the zip
-        File workflowFile = new File(destDir, FileWorkflowLoader.WORKFLOW_FILE);
+        File workflowFile = new File(destDir, WorkflowPersistor.WORKFLOW_FILE);
         long timestamp = workflowFile.lastModified();
         Thread.sleep(1000);
         ret =
@@ -479,7 +479,7 @@ public class BatchExecutorTestcase {
                 "-workflow.variable=destinationFile," + csvOut.getAbsolutePath() + ",String"});
         assertEquals("Non-zero return value", 0, ret);
         assertTrue("Not enough file in workflow directory after save", destDir.list().length > 5);
-        assertTrue("No workflow in destination directory", new File(destDir, FileWorkflowLoader.WORKFLOW_FILE).isFile());
+        assertTrue("No workflow in destination directory", new File(destDir, WorkflowPersistor.WORKFLOW_FILE).isFile());
         assertTrue("Workflow not altered after in-place save", workflowFile.lastModified() > timestamp);
     }
 
