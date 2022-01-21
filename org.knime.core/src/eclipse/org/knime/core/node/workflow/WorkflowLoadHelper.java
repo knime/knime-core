@@ -262,7 +262,7 @@ public class WorkflowLoadHelper {
      * overwrite this.
      * @return the name of the .knime file. */
     public String getDotKNIMEFileName() {
-        return isTemplateFlow() ? FileWorkflowLoader.TEMPLATE_FILE : FileWorkflowLoader.WORKFLOW_FILE;
+        return isTemplateFlow() ? WorkflowPersistor.TEMPLATE_FILE : WorkflowPersistor.WORKFLOW_FILE;
     }
 
 
@@ -425,7 +425,7 @@ public class WorkflowLoadHelper {
                     if (version.isOlderThan(LoadVersion.V2100)) {
                         workflowDotKNIME = dotKNIMERef; // before 2.10 everything was stored in template.knime
                     } else {
-                        workflowDotKNIME = new ReferencedFile(dotKNIMERef.getParent(), FileWorkflowLoader.WORKFLOW_FILE);
+                        workflowDotKNIME = new ReferencedFile(dotKNIMERef.getParent(), WorkflowPersistor.WORKFLOW_FILE);
                     }
                     persistor = new FileWorkflowPersistor(workflowDataRepository, workflowDotKNIME, this,
                         version, !isTemplateFlow());

@@ -99,7 +99,6 @@ import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.ConnectionContainer;
-import org.knime.core.node.workflow.FileWorkflowLoader;
 import org.knime.core.node.workflow.FlowObjectStack;
 import org.knime.core.node.workflow.FlowVariable.Scope;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation;
@@ -117,6 +116,7 @@ import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowLock;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.core.node.workflow.metadata.MetaInfoFile;
 import org.knime.core.node.workflow.metadata.MetadataXML;
 import org.osgi.framework.Bundle;
@@ -688,7 +688,7 @@ public final class WorkflowSummaryCreator {
             }
             final ReferencedFile rf = wfm.getProjectWFM().getWorkingDir();
             // TODO coined to legacy workflow format
-            File metadataFile = new File(rf.getFile(), FileWorkflowLoader.METAINFO_FILE);
+            File metadataFile = new File(rf.getFile(), WorkflowPersistor.METAINFO_FILE);
             if (!metadataFile.exists()) {
                 return null;
             }

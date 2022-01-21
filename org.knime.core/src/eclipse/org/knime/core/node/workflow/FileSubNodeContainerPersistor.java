@@ -418,7 +418,7 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
 
     private FileWorkflowPersistor createWorkflowPersistor(final ReferencedFile nodeSettingsFile,
         final WorkflowDataRepository workflowDataRepository) {
-        String workflowKNIME = getNodeSettings().getString("workflow-file", FileWorkflowLoader.WORKFLOW_FILE);
+        String workflowKNIME = getNodeSettings().getString("workflow-file", WorkflowPersistor.WORKFLOW_FILE);
         return new FileWorkflowPersistor(workflowDataRepository,
             new ReferencedFile(nodeSettingsFile.getParent(), workflowKNIME), getLoadHelper(),
             getLoadVersion(), false) {
@@ -559,7 +559,7 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
         LockFailedException {
         NativeNodeContainer virtualInNode = subnodeNC.getVirtualInNode();
         // added in 4.3, see AP-15029
-        settings.addString("workflow-file", subnodeNC.getCipherFileName(FileWorkflowLoader.WORKFLOW_FILE));
+        settings.addString("workflow-file", subnodeNC.getCipherFileName(WorkflowPersistor.WORKFLOW_FILE));
         settings.addInt("virtual-in-ID", virtualInNode.getID().getIndex());
         NodeSettingsWO inportsSettings = settings.addNodeSettings("inports");
         // input of subnode is represented by output of virtual in node.

@@ -71,6 +71,39 @@ import org.knime.core.util.workflowalizer.AuthorInformation;
  */
 public interface WorkflowPersistor extends NodeContainerPersistor {
 
+    /** Key for nodes. */
+    public static final String KEY_NODES = "nodes";
+
+    /** Key for connections. */
+    public static final String KEY_CONNECTIONS = "connections";
+
+    public static final String KEY_UI_INFORMATION = "extraInfoClassName";
+
+    /** Key for this node's internal ID. */
+    static final String KEY_ID = "id";
+
+    /** Identifier for KNIME workflows when saved to disc. */
+    public static final String WORKFLOW_FILE = "workflow.knime";
+
+    /** Identifier for KNIME meta mode templates when saved to disc. */
+    public static final String TEMPLATE_FILE = "template.knime";
+
+    /** Identifier for KNIME workflows SVG export when saved to disc.
+     * @since 2.8 */
+    public static final String SVG_WORKFLOW_FILE = "workflow.svg";
+
+    /** Identifier for KNIME templates SVG export when saved to disc.
+     * @since 2.8 */
+    public static final String SVG_TEMPLATE_FILE = "template.svg";
+
+    /** File used to signal that workflow was saved in usual manner. It will
+     * always be present in the workflow directory unless the workflow is
+     * exported with the "exclude data" flag being set. */
+    public static final String SAVED_WITH_DATA_FILE = ".savedWithData";
+
+    /** Constant for the meta info file name. */
+    public static final String METAINFO_FILE = "workflowset.meta";
+
     /** @return The version of the workflow or template being loaded.
      * @since 3.7*/
     public LoadVersion getLoadVersion();

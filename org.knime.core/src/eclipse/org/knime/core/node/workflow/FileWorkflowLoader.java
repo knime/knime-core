@@ -127,6 +127,8 @@ import org.knime.core.workflow.def.impl.DefaultWorkflowProjectDef.DefaultWorkflo
 @SuppressWarnings("javadoc")
 public class FileWorkflowLoader implements NodeContainerLoader {
 
+    // COPIED FROM WorkflowPersistor > > > >
+
     /** Key for nodes. */
     public static final String KEY_NODES = "nodes";
 
@@ -166,6 +168,8 @@ public class FileWorkflowLoader implements NodeContainerLoader {
 
     /** Constant for the meta info file name. */
     public static final String METAINFO_FILE = "workflowset.meta";
+
+    // < < < <  COPIED FROM WorkflowPersistor
 
     /** KNIME Node type: native, meta or sub node. */
     private enum NodeType {
