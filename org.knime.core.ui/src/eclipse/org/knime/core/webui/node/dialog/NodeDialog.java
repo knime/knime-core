@@ -167,6 +167,10 @@ public abstract class NodeDialog implements DataServiceProvider {
                     NodeSettings modelSettings;
                     modelSettings = getOrCreateSubSettings(settings, SettingsType.MODEL.getConfigKey());
                     settingsMap.put(SettingsType.MODEL, modelSettings);
+                } else {
+                    // even if the node has no model settings,
+                    // we still have to add empty model settings since the wfm expects node settings to be present
+                    settings.addNodeSettings(SettingsType.MODEL.getConfigKey());
                 }
                 if (hasViewSettings()) {
                     viewSettings = getOrCreateSubSettings(settings, SettingsType.VIEW.getConfigKey());
