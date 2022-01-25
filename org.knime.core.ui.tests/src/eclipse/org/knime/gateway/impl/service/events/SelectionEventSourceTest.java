@@ -51,6 +51,10 @@ package org.knime.gateway.impl.service.events;
 import static org.awaitility.Awaitility.await;
 import static org.awaitility.Duration.FIVE_SECONDS;
 import static org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
@@ -62,18 +66,24 @@ import java.io.IOException;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
+import org.awaitility.Awaitility;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.knime.core.data.RowKey;
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.property.hilite.HiLiteListener;
+import org.knime.core.node.property.hilite.KeyEvent;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeInputNodeFactory;
+import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeOutputNodeFactory;
 import org.knime.gateway.impl.service.events.SelectionEventSource.SelectionEventMode;
 import org.knime.testing.util.WorkflowManagerUtil;
 
@@ -170,6 +180,69 @@ public class SelectionEventSourceTest {
         m_hlh.fireClearHiLiteEvent();
     }
 
+    /**
+     * Tests the {@code async}-parameter of the
+     * {@link SelectionEventSource#processSelectionEvent(NativeNodeContainer, SelectionEventMode, boolean, List)}-method.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testProcessSelectionEventAsync() throws Exception {
+        var wfm = WorkflowManagerUtil.createEmptyWorkflow();
+        NativeNodeContainer nnc = WorkflowManagerUtil.createAndAddNode(wfm,
+            new VirtualSubNodeOutputNodeFactory(new PortType[]{BufferedDataTable.TYPE}));
+
+        var hiLiteHandler = nnc.getNodeModel().getInHiLiteHandler(0);
+        var hiLiteListener = new TestHiLiteListener();
+        hiLiteHandler.addHiLiteListener(hiLiteListener);
+
+        // async call
+        SelectionEventSource.processSelectionEvent(nnc, SelectionEventMode.ADD, true, List.of("1"));
+        SelectionEventSource.processSelectionEvent(nnc, SelectionEventMode.REMOVE, true, List.of("1"));
+        SelectionEventSource.processSelectionEvent(nnc, SelectionEventMode.REPLACE, true, List.of("1"));
+        Awaitility.await().atMost(5, TimeUnit.SECONDS).pollInterval(200, TimeUnit.MILLISECONDS)
+            .untilAsserted(() -> assertThat(hiLiteListener.m_callerThreadName, notNullValue()));
+        assertThat(hiLiteListener.m_callerThreadName, is(not("INVALID")));
+        assertThat(hiLiteListener.m_callerThreadName, is(not(Thread.currentThread().getName())));
+        hiLiteListener.m_callerThreadName = null;
+
+        // sync call
+        SelectionEventSource.processSelectionEvent(nnc, SelectionEventMode.ADD, false, List.of("2"));
+        SelectionEventSource.processSelectionEvent(nnc, SelectionEventMode.REMOVE, false, List.of("2"));
+        SelectionEventSource.processSelectionEvent(nnc, SelectionEventMode.REPLACE, false, List.of("2"));
+        assertThat(hiLiteListener.m_callerThreadName, is(Thread.currentThread().getName()));
+    }
+
+    private static class TestHiLiteListener implements HiLiteListener {
+
+        String m_callerThreadName = null;
+
+        @Override
+        public void hiLite(final KeyEvent event) {
+            updateThreadName();
+        }
+
+        @Override
+        public void unHiLite(final KeyEvent event) {
+            updateThreadName();
+        }
+
+        @Override
+        public void unHiLiteAll(final KeyEvent event) {
+            updateThreadName();
+        }
+
+        private void updateThreadName() {
+            var threadName = Thread.currentThread().getName();
+            if (m_callerThreadName == null) {
+                m_callerThreadName = threadName;
+            } else if (!m_callerThreadName.equals(threadName)) {
+                m_callerThreadName = "INVALID";
+            }
+        }
+
+    }
+
     private static boolean verifySelectionEvent(final SelectionEvent se, final String workflowId, final String nodeId) {
         return se.getKeys().equals(ROWKEYS_1_2) && se.getMode() == SelectionEventMode.ADD
             && se.getNodeId().equals(nodeId) && se.getWorkflowId().equals(workflowId)
@@ -188,7 +261,7 @@ public class SelectionEventSourceTest {
 
     private static void registerSelectionEventSource(final BiConsumer<String, SelectionEvent> selectionEventConsumer,
         final NativeNodeContainer node) {
-        createSelectionEventSource(selectionEventConsumer).addEventListener(node);
+        createSelectionEventSource(selectionEventConsumer).addEventListenerFor(node);
     }
 
 }

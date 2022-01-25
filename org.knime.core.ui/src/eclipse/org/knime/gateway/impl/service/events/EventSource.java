@@ -57,7 +57,7 @@ import java.util.function.BiConsumer;
  * The implementations call {@link #sendEvent(Object)} to emit events.
  *
  * An event source is directly associated with a certain event-type and is able to register event listener
- * ({@link #addEventListener(Object)} depending on the concrete event type instance.
+ * ({@link #addEventListenerFor(Object)} depending on the concrete event type instance.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz
  *
@@ -68,6 +68,11 @@ public abstract class EventSource<T, E> {
 
     private final BiConsumer<String, Object> m_eventConsumer;
 
+    /**
+     * Lock to make sure that the initial events issued by {@link #addEventListenerAndGetInitialEventFor(Object)} are
+     * the first being forwarded to the event consumer (via {@link #sendEvent(Object)}) when
+     * {@link #addEventListenerFor(Object)} is being called.
+     */
     private final Object m_sendEventLock = new Object();
 
     /*
@@ -76,7 +81,7 @@ public abstract class EventSource<T, E> {
     private Runnable m_preEventCreationCallback = null;
 
     /**
-     * @param eventConsumer the consumer for forward the emitted events to
+     * @param eventConsumer consumes the emitted events
      */
     protected EventSource(final BiConsumer<String, Object> eventConsumer) {
         m_eventConsumer = eventConsumer;
@@ -91,7 +96,7 @@ public abstract class EventSource<T, E> {
      *         only returns if there is an event at event listener registration time)
      * @throws IllegalArgumentException if object describing the event type isn't valid
      */
-    public abstract Optional<E> addEventListenerAndGetInitialEvent(T eventTypeEnt);
+    public abstract Optional<E> addEventListenerAndGetInitialEventFor(T eventTypeEnt);
 
     /**
      * Registers a listener with the event source for the specified type of event.
@@ -100,10 +105,10 @@ public abstract class EventSource<T, E> {
      *
      * @throws IllegalArgumentException if object describing the event type isn't valid
      */
-    public void addEventListener(final T eventTypeEnt) {
+    public void addEventListenerFor(final T eventTypeEnt) {
         // make sure the returned event is the first being send!
         synchronized (m_sendEventLock) {
-            addEventListenerAndGetInitialEvent(eventTypeEnt).ifPresent(this::sendEvent);
+            addEventListenerAndGetInitialEventFor(eventTypeEnt).ifPresent(this::sendEvent);
         }
     }
 

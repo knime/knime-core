@@ -130,7 +130,7 @@ public class NodeViewEntTest {
         assertThat(ent.getWorkflowId(), is("root"));
         assertThat(ent.getNodeId(), is("root:2"));
         assertThat(ent.getInitialData(), is("dummy initial data"));
-        assertThat(ent.getInitialSelection().size(), is(0));
+        assertThat(ent.getInitialSelection(), is(nullValue()));
         var resourceInfo = ent.getResourceInfo();
         assertThat(resourceInfo.getUrl(), endsWith("index.html"));
         assertThat(resourceInfo.getPath(), is(nullValue()));
@@ -186,7 +186,7 @@ public class NodeViewEntTest {
         @SuppressWarnings("unchecked")
         final BiConsumer<String, SelectionEvent> consumerMock = mock(BiConsumer.class);
         var selectionEventSource = SelectionEventSourceTest.createSelectionEventSource(consumerMock);
-        var initialSelection = selectionEventSource.addEventListenerAndGetInitialEvent(nnc).map(SelectionEvent::getKeys)
+        var initialSelection = selectionEventSource.addEventListenerAndGetInitialEventFor(nnc).map(SelectionEvent::getKeys)
             .orElse(Collections.emptyList());
         var nodeViewEnt = new NodeViewEnt(nnc, initialSelection);
 

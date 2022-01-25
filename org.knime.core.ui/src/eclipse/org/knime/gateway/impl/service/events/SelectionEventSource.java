@@ -107,7 +107,8 @@ public class SelectionEventSource extends EventSource<NativeNodeContainer, Selec
      * {@inheritDoc}
      */
     @Override
-    public Optional<SelectionEvent> addEventListenerAndGetInitialEvent(final NativeNodeContainer nnc) {
+    public Optional<SelectionEvent> addEventListenerAndGetInitialEventFor(final NativeNodeContainer nnc) {
+        // TODO see UIEXT-51
         var handler = nnc.getNodeModel().getInHiLiteHandler(0);
         synchronized (handler) {
             var hiLitKeys = handler.getHiLitKeys();
