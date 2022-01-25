@@ -42,7 +42,7 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
  */
-package org.knime.core.node.workflow;
+package org.knime.core.node.workflow.def;
 
 import static org.junit.Assert.fail;
 
@@ -55,6 +55,11 @@ import java.nio.file.StandardOpenOption;
 import org.junit.Test;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
+import org.knime.core.node.workflow.DefWorkflowManagerWrapper;
+import org.knime.core.node.workflow.WorkflowLoadHelper;
+import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.workflow.WorkflowPersistor;
+import org.knime.core.node.workflow.WorkflowTestCase;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.workflow.def.RootWorkflowDef;
 import org.knime.core.workflow.def.WorkflowDef;
