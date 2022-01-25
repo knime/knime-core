@@ -48,6 +48,11 @@ import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.workflow.NodeContainer.NodeLocks;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
+import org.knime.core.node.workflow.def.Def;
+import org.knime.core.node.workflow.def.Res;
+import org.knime.core.workflow.def.JobManagerDef;
+import org.knime.core.workflow.def.NodeDef;
+import org.knime.core.workflow.def.NodeRefDef;
 
 interface NodeContainerMetaPersistor {
 
@@ -72,28 +77,38 @@ interface NodeContainerMetaPersistor {
      */
     ReferencedFile getNodeContainerDirectory();
 
+    @Def(heldBy = NodeRefDef.class, comment = "not sure about this")
     int getNodeIDSuffix();
 
     void setNodeIDSuffix(final int nodeIDSuffix);
 
+    @Def(heldBy = NodeDef.class, comment="annotation")
     NodeAnnotationData getNodeAnnotationData();
 
+    @Def(heldBy = NodeDef.class)
     String getCustomDescription();
 
     /**
      * For instance, a special job manager for streamed node execution.
      * @return null for the default node execution job manager
      */
+    @Def(heldBy = NodeDef.class, comment = "as JobManagerDef")
     NodeExecutionJobManager getExecutionJobManager();
 
+    @Def(heldBy = JobManagerDef.class, comment = "settings")
     NodeSettingsRO getExecutionJobSettings();
 
+    @Res
     InternalNodeContainerState getState();
 
+    @Def(heldBy = NodeDef.class, comment = "uiInfo")
     NodeUIInformation getUIInfo();
 
+    @Res
     NodeMessage getNodeMessage();
 
+    // TODO Res or Def?
+    @Def(heldBy = NodeDef.class, comment = "getLocks()")
     NodeLocks getNodeLocks();
 
     boolean isDirtyAfterLoad();

@@ -134,6 +134,8 @@ public final class NodeUIInformation {
      * If set, the coordinates set should be changed right after edit part activation. They should be rounded to the
      * closest grid position.
      *
+     * TODO this is actually set in workflow editor settings - not on a per node setting
+     *
      * @return true if set coordinates should be snapped to grid.
      * @since 2.6
      */

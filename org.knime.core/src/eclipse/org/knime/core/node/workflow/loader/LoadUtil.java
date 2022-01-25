@@ -44,35 +44,70 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   21 Jan 2022 (carlwitt): created
+ *   25 Jan 2022 (carlwitt): created
  */
 package org.knime.core.node.workflow.loader;
 
-import java.io.IOException;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
-import org.knime.core.workflow.def.NodeDef;
 
 /**
  *
- * @author Carl Witt, KNIME AG, Zurich, Switzerland
+ * @author carlwitt
  */
-public interface  NodeContainerLoader {
+public class LoadUtil {
+
+
+    @FunctionalInterface
+    private interface LoaderCode<T> {
+        T load() throws InvalidSettingsException;
+    }
 
     /**
-     * Get the workflow description loaded from the loader's data source.
+     * Generates error message "Unable to load <attributeName>: <invalid settings exception message>"
      *
-     * @param parentLoader null for workflows, non-null for metanodes (and components?)
-     * @param parentSettings
+     * TODO maybe pass the logger to the load result and log it from there?
+     *
+     * Outputs the message on debug level and adds it to the load result.
+     *
+     * Sets the loadResult to dirty.
+     *
+     * @param <T>
+     * @param attributeName
+     * @param fallback
+     * @param r
      * @param loadResult
-     * @throws InvalidSettingsException
-     * @throws IOException
-     *
-     *             TODO get rid of NodeSettingsRO
+     * @param logTo
+     * @return Fallback if the loader code throws an {@link InvalidSettingsException}. Otherwise the loaded value.
      */
-    NodeDef getLoadResult(final NodeContainerLoader parentLoader, final NodeSettingsRO parentSettings,
-        LoadResult loadResult) throws InvalidSettingsException, IOException;
+    private static <T> T tryLoadWithDefaultGeneric(final Function<Throwable, String> errorMessageGen, final T fallback,
+        final LoaderCode<T> r, final LoadResult loadResult, final BiConsumer<Object, Throwable> logTo) {
+        try {
+            return r.load();
+        } catch (InvalidSettingsException e) {
+            var error = errorMessageGen.apply(e);
+            logTo.accept(error, e);
+            loadResult.setDirtyAfterLoad();
+            loadResult.addError(error);
+        }
+        return fallback;
+    }
+
+    // TODO I didn't pay attention during refactoring and always used tryLoadDebug, but some should emit warnings or errors
+    // seems as if loadResult is always using setError (except for two cases) even if the log level is debug - probably
+    // not consistent but should stay like this for now
+    private <T> T tryLoadDebug(final Function<Throwable, String> errorMessageGen, final T fallback,
+        final LoaderCode<T> r, final LoadResult loadResult) {
+        return tryLoadWithDefaultGeneric(errorMessageGen, fallback, r, loadResult, getLogger()::debug);
+    }
+
+    private <T> T tryLoadDebug(final String attributeName, final T fallback, final LoaderCode<T> r,
+        final LoadResult loadResult) {
+        return tryLoadWithDefaultGeneric(e -> "Unable to load " + attributeName + ": " + e.getMessage(), fallback, r,
+            loadResult, getLogger()::debug);
+    }
 
 }
