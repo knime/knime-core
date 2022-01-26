@@ -431,17 +431,17 @@ public final class KNIMEConstants {
      *
      * <pre>
      * #processors | #def thread count
-     *      1      |     1
-     *      2      |     3
-     *      4      |     6
-     *      8      |    12
+     *      1      |     2
+     *      2      |     4
+     *      4      |     8
+     *      8      |    16
      *    ...      |    ...
-     *     96      |    144
+     *     96      |    192
      * </pre>
      * @since 4.5
      * @see #DEF_MAX_THREAD_COUNT
      */
-    public static final float PROCESSOR_COUNT_TO_DEF_THREAD_COUNT_MULTIPLIER = 1.5f; // see also AP-17177
+    public static final float PROCESSOR_COUNT_TO_DEF_THREAD_COUNT_MULTIPLIER = 2.0f; // see also AP-17177, AP-18321
 
     /**
      * The default number of threads used by KNIME, derived from the system's {@linkplain Runtime#availableProcessors()
