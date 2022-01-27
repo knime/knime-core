@@ -66,7 +66,7 @@ import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.util.CoreConstants;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.Version;
-import org.knime.core.workflow.def.WorkflowProjectDef;
+import org.knime.core.workflow.def.RootWorkflowDef;
 
 /**
  * Callback class that is used during loading of a workflow to read
@@ -173,7 +173,7 @@ public class WorkflowLoadHelper {
     /**
      * @param pojo
      */
-    public WorkflowLoadHelper(final WorkflowProjectDef pojo) {
+    public WorkflowLoadHelper(final RootWorkflowDef pojo) {
         this(false, // FIXME determine if this is a template project
             false, // FIXME determine if this is a template project
             // FIXME create a proper workflow context
@@ -297,7 +297,7 @@ public class WorkflowLoadHelper {
      * @param definition
      * @return
      */
-    WorkflowPersistor createLoadPersistor(final WorkflowProjectDef definition) {
+    WorkflowPersistor createLoadPersistor(final RootWorkflowDef definition) {
         // FIXME version checking and version details string construction, handling problematic versions
         // FIXME determining dirty after load
         // FIXME nightly checking

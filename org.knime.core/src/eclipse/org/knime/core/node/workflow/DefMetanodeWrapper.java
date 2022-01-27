@@ -56,11 +56,11 @@ import org.knime.core.node.workflow.def.CoreToDefUtil;
 import org.knime.core.workflow.def.MetaNodeDataDef;
 import org.knime.core.workflow.def.NodeUIInfoDef;
 import org.knime.core.workflow.def.PortDef;
-import org.knime.core.workflow.def.TemplateInfoDef;
+import org.knime.core.workflow.def.TemplateLinkDef;
 
 /**
  *
- * @author carlwitt
+ * @author Carl Witt, KNIME AG, Zurich, Switzerland
  */
 public class DefMetanodeWrapper extends DefNodeContainerWrapper implements MetaNodeDataDef {
 
@@ -161,8 +161,17 @@ public class DefMetanodeWrapper extends DefNodeContainerWrapper implements MetaN
      * {@inheritDoc}
      */
     @Override
-    public TemplateInfoDef getTemplateInfo() {
-        return CoreToDefUtil.toTemplateInfoDef(m_wfm.getTemplateInformation());
+    public Integer getId() {
+        // TODO not sure about this
+        return m_wfm.getID().getIndex();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public TemplateLinkDef getLink() {
+        return CoreToDefUtil.toTemplateLinkDef(m_wfm.getTemplateInformation());
     }
 
 }

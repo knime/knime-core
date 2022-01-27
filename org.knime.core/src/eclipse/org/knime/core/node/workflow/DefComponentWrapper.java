@@ -57,7 +57,7 @@ import org.knime.core.workflow.def.ComponentDef;
 import org.knime.core.workflow.def.ComponentDialogSettingsDef;
 import org.knime.core.workflow.def.ComponentMetadataDef;
 import org.knime.core.workflow.def.PortDef;
-import org.knime.core.workflow.def.TemplateInfoDef;
+import org.knime.core.workflow.def.TemplateLinkDef;
 import org.knime.core.workflow.def.WorkflowDef;
 import org.knime.core.workflow.def.impl.DefaultComponentDialogSettingsDef;
 
@@ -118,7 +118,7 @@ public class DefComponentWrapper extends DefSingleNodeContainerWrapper implement
      * {@inheritDoc}
      */
     @Override
-    public Integer getVirtualInNodeIDSuffix() {
+    public Integer getVirtualInNodeId() {
         return m_nc.getVirtualInNodeID().getIndex();
     }
 
@@ -126,7 +126,7 @@ public class DefComponentWrapper extends DefSingleNodeContainerWrapper implement
      * {@inheritDoc}
      */
     @Override
-    public Integer getVirtualOutNodeIDSuffix() {
+    public Integer getVirtualOutNodeId() {
         return m_nc.getVirtualOutNodeID().getIndex();
     }
 
@@ -155,8 +155,18 @@ public class DefComponentWrapper extends DefSingleNodeContainerWrapper implement
      * {@inheritDoc}
      */
     @Override
-    public TemplateInfoDef getTemplateInfo() {
-        return CoreToDefUtil.toTemplateInfoDef(m_nc.getTemplateInformation());
+    public TemplateLinkDef getLink() {
+        // unclear if this needs to be a link here or a full template information
+        return CoreToDefUtil.toTemplateLinkDef(m_nc.getTemplateInformation());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Integer getId() {
+        // TODO is this the suffix we're looking for?
+        return m_nc.getID().getIndex();
     }
 
 }

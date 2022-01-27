@@ -80,7 +80,6 @@ import org.knime.core.node.config.base.ConfigShortEntry;
 import org.knime.core.node.config.base.ConfigStringEntry;
 import org.knime.core.node.workflow.Annotation;
 import org.knime.core.node.workflow.ComponentMetadata;
-import org.knime.core.node.workflow.ComponentMetadata.ComponentNodeType;
 import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.Credentials;
 import org.knime.core.node.workflow.FlowVariable;
@@ -88,7 +87,6 @@ import org.knime.core.node.workflow.MetaNodeTemplateInformation;
 import org.knime.core.node.workflow.NodeAnnotation;
 import org.knime.core.node.workflow.NodeContainer.NodeLocks;
 import org.knime.core.node.workflow.NodeExecutionJobManager;
-import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.NodePort;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.util.Version;
@@ -104,15 +102,15 @@ import org.knime.core.workflow.def.CoordinateDef;
 import org.knime.core.workflow.def.FlowObjectDef;
 import org.knime.core.workflow.def.JobManagerDef;
 import org.knime.core.workflow.def.NativeNodeDef;
-import org.knime.core.workflow.def.NodeAndBundleInfoDef;
 import org.knime.core.workflow.def.NodeAnnotationDef;
 import org.knime.core.workflow.def.NodeLocksDef;
-import org.knime.core.workflow.def.NodeMessageDef;
 import org.knime.core.workflow.def.NodeUIInfoDef;
 import org.knime.core.workflow.def.PortDef;
 import org.knime.core.workflow.def.PortTypeDef;
 import org.knime.core.workflow.def.StyleDef;
-import org.knime.core.workflow.def.TemplateInfoDef;
+import org.knime.core.workflow.def.TemplateDef;
+import org.knime.core.workflow.def.TemplateLinkDef;
+import org.knime.core.workflow.def.VendorDef;
 import org.knime.core.workflow.def.WorkflowCredentialsDef;
 import org.knime.core.workflow.def.impl.DefaultAnnotationDataDef;
 import org.knime.core.workflow.def.impl.DefaultAuthorInformationDef;
@@ -141,15 +139,15 @@ import org.knime.core.workflow.def.impl.DefaultConnectionUISettingsDef;
 import org.knime.core.workflow.def.impl.DefaultCoordinateDef;
 import org.knime.core.workflow.def.impl.DefaultFlowVariableDef;
 import org.knime.core.workflow.def.impl.DefaultJobManagerDef;
-import org.knime.core.workflow.def.impl.DefaultNodeAndBundleInfoDef;
 import org.knime.core.workflow.def.impl.DefaultNodeAnnotationDef;
 import org.knime.core.workflow.def.impl.DefaultNodeLocksDef;
-import org.knime.core.workflow.def.impl.DefaultNodeMessageDef;
 import org.knime.core.workflow.def.impl.DefaultNodeUIInfoDef;
 import org.knime.core.workflow.def.impl.DefaultPortDef;
 import org.knime.core.workflow.def.impl.DefaultPortTypeDef;
 import org.knime.core.workflow.def.impl.DefaultStyleDef;
-import org.knime.core.workflow.def.impl.DefaultTemplateInfoDef;
+import org.knime.core.workflow.def.impl.DefaultTemplateDef;
+import org.knime.core.workflow.def.impl.DefaultTemplateLinkDef;
+import org.knime.core.workflow.def.impl.DefaultVendorDef;
 
 /**
  *
@@ -399,11 +397,6 @@ public class CoreToDefUtil {
         return null;
     }
 
-    public static NodeMessageDef toNodeMessageDef(final NodeMessage nm) {
-        return DefaultNodeMessageDef.builder().setMessage(nm.getMessage()).setType(nm.getMessageType().toString())
-            .build();
-    }
-
     public static NodeUIInfoDef toNodeUIInfoDef(final NodeUIInformation uiInfoDef) {
 
         if (uiInfoDef == null) {
@@ -468,13 +461,19 @@ public class CoreToDefUtil {
 
     }
 
-    public static TemplateInfoDef toTemplateInfoDef(final MetaNodeTemplateInformation i) {
+    public static TemplateDef toTemplateDef(final MetaNodeTemplateInformation i) {
         // TODO flow variables and example data info
-        return DefaultTemplateInfoDef.builder()//
-            .setRole(i.getRole().toString())//
+        return DefaultTemplateDef.builder()//
             .setTimestamp(i.getTimestamp() != null
                 ? OffsetDateTime.ofInstant(i.getTimestamp().toInstant(), ZoneId.systemDefault()) : null)//
             .setType(i.getNodeContainerTemplateType() != null ? i.getNodeContainerTemplateType().toString() : null)//
+            .build();
+    }
+
+    public static TemplateLinkDef toTemplateLinkDef(final MetaNodeTemplateInformation i) {
+        // TODO flow variables and example data info
+        return DefaultTemplateLinkDef.builder()//
+            .setUri(i.getSourceURI().toString())//
             .build();
     }
 
@@ -499,16 +498,21 @@ public class CoreToDefUtil {
             .build();
     }
 
-    public static NodeAndBundleInfoDef toNodeAndBundleInfoDef(final NodeAndBundleInformationPersistor p) {
-        return DefaultNodeAndBundleInfoDef.builder()//
-            .setNodeBundleName(p.getBundleName().orElse(null))//
-            .setNodeBundleSymbolicName(p.getBundleSymbolicName().orElse(null))//
-            .setNodeBundleVendor(p.getBundleVendor().orElse(null))//
-            .setNodeBundleVersion(p.getBundleVersion().map(Version::toString).orElse(null))//
-            .setNodeFeatureName(p.getFeatureName().orElse(null))//
-            .setNodeFeatureSymbolicName(p.getFeatureSymbolicName().orElse(null))//
-            .setNodeFeatureVendor(p.getFeatureVendor().orElse(null))//
-            .setNodeFeatureVersion(p.getFeatureVersion().map(Version::toString).orElse(null))//
+    public static VendorDef toBundleVendorDef(final NodeAndBundleInformationPersistor p) {
+        return DefaultVendorDef.builder()//
+            .setName(p.getBundleName().orElse(null))//
+            .setSymbolicName(p.getBundleSymbolicName().orElse(null))//
+            .setVendor(p.getBundleVendor().orElse(null))//
+            .setVersion(p.getBundleVersion().map(Version::toString).orElse(null))//
+            .build();
+
+    }
+    public static VendorDef toFeatureVendorDef(final NodeAndBundleInformationPersistor p) {
+        return DefaultVendorDef.builder()//
+            .setName(p.getFeatureName().orElse(null))//
+            .setSymbolicName(p.getFeatureSymbolicName().orElse(null))//
+            .setVendor(p.getFeatureVendor().orElse(null))//
+            .setVersion(p.getFeatureVersion().map(Version::toString).orElse(null))//
             .build();
     }
 
@@ -516,7 +520,7 @@ public class CoreToDefUtil {
         return DefaultComponentMetadataDef.builder()//
             .setDescription(m.getDescription().orElse(null))//
             .setIcon(m.getIcon().orElse(null))//
-            .setNodeType(m.getNodeType().map(ComponentNodeType::toString).orElse(null))//
+//            .setNodeType(m.getNodeType().map(ComponentNodeType::toString).orElse(null))//
             .setInPortNames(m.getInPortNames().map(Arrays::asList).orElse(null))//
             .setInPortDescriptions(m.getInPortDescriptions().map(Arrays::asList).orElse(null))//
             .setOutPortNames(m.getOutPortNames().map(Arrays::asList).orElse(null))//

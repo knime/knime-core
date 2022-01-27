@@ -53,7 +53,6 @@ import org.knime.core.workflow.def.JobManagerDef;
 import org.knime.core.workflow.def.NodeAnnotationDef;
 import org.knime.core.workflow.def.NodeDef;
 import org.knime.core.workflow.def.NodeLocksDef;
-import org.knime.core.workflow.def.NodeMessageDef;
 import org.knime.core.workflow.def.NodeUIInfoDef;
 
 /**
@@ -99,22 +98,6 @@ public abstract class DefNodeContainerWrapper implements NodeDef {
     @Override
     public NodeLocksDef getLocks() {
         return CoreToDefUtil.toNodeLocksDef(m_nc.getNodeLocks());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getState() {
-        return m_nc.getNodeContainerState().toString();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeMessageDef getMessage() {
-        return CoreToDefUtil.toNodeMessageDef(m_nc.getNodeMessage());
     }
 
     /**
