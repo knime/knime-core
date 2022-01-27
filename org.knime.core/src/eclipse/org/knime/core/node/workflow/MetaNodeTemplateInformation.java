@@ -570,9 +570,9 @@ public final class MetaNodeTemplateInformation implements Cloneable {
 
     static NodeSettings createNodeSettingsForTemplate(final NodeContainerTemplate template) {
         NodeSettings settings = new NodeSettings(Role.Template.toString());
-        FileWorkflowPersistor.saveHeader(settings);
+        FileWorkflowSaver.saveHeader(settings);
         template.getTemplateInformation().save(settings, true);
-        FileWorkflowPersistor.saveWorkflowCipher(settings, template.getWorkflowCipher());
+        FileWorkflowSaver.saveWorkflowCipher(settings, template.getWorkflowCipher());
         return settings;
     }
 

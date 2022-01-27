@@ -45,14 +45,10 @@
 package org.knime.core.node.workflow;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -60,7 +56,6 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -73,18 +68,15 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.NotImplementedException;
-import org.knime.core.data.TableBackend;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeAndBundleInformationPersistor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.CheckUtils;
@@ -97,10 +89,8 @@ import org.knime.core.node.workflow.WorkflowTableBackendSettings.TableBackendUnk
 import org.knime.core.node.workflow.def.CoreToDefUtil;
 import org.knime.core.node.workflow.execresult.WorkflowExecutionResult;
 import org.knime.core.node.workflow.loader.DefLoader;
-import org.knime.core.node.workflow.loader.NodeContainerLoader;
-import org.knime.core.util.FileUtil;
+import org.knime.core.node.workflow.loader.LoadUtil;
 import org.knime.core.util.LoadVersion;
-import org.knime.core.util.LockFailedException;
 import org.knime.core.util.workflowalizer.AuthorInformation;
 import org.knime.core.workflow.def.ConnectionDef;
 import org.knime.core.workflow.def.NodeDef;
@@ -120,7 +110,7 @@ import org.knime.core.workflow.def.impl.WorkflowMetadataDefBuilder;
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  */
 @SuppressWarnings("javadoc")
-public class FileWorkflowLoader implements DefLoader<WorkflowDef> {
+public class FileWorkflowLoader implements LoadUtil, DefLoader<WorkflowDef> {
 
     // COPIED FROM WorkflowPersistor > > > >
 
@@ -187,37 +177,37 @@ public class FileWorkflowLoader implements DefLoader<WorkflowDef> {
     static final LoadVersion VERSION_LATEST = LoadVersion.V4010;
 
     /** Format used to save author/edit infos. */
-    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss Z");
+    static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss Z");
 
-    private static final String CFG_UIINFO_SUB_CONFIG = "ui_settings";
+    static final String CFG_UIINFO_SUB_CONFIG = "ui_settings";
 
     /** Key for UI info's class name. */
-    private static final String CFG_UIINFO_CLASS = "ui_classname";
+    static final String CFG_UIINFO_CLASS = "ui_classname";
 
     /** Key for workflow variables. */
-    private static final String CFG_WKF_VARIABLES = "workflow_variables";
+    static final String CFG_WKF_VARIABLES = "workflow_variables";
 
     /** key used to store the editor specific settings (since 2.6). */
-    private static final String CFG_EDITOR_INFO = "workflow_editor_settings";
+    static final String CFG_EDITOR_INFO = "workflow_editor_settings";
 
     /** Key for credentials. */
-    private static final String CFG_CREDENTIALS = "workflow_credentials";
+    static final String CFG_CREDENTIALS = "workflow_credentials";
 
-    private static final String CFG_AUTHOR_INFORMATION = "authorInformation";
+    static final String CFG_AUTHOR_INFORMATION = "authorInformation";
 
-    private static final String CFG_EDITOR_SNAP_GRID = "workflow.editor.snapToGrid";
+    static final String CFG_EDITOR_SNAP_GRID = "workflow.editor.snapToGrid";
 
-    private static final String CFG_EDITOR_SHOW_GRID = "workflow.editor.ShowGrid";
+    static final String CFG_EDITOR_SHOW_GRID = "workflow.editor.ShowGrid";
 
-    private static final String CFG_EDITOR_X_GRID = "workflow.editor.gridX";
+    static final String CFG_EDITOR_X_GRID = "workflow.editor.gridX";
 
-    private static final String CFG_EDITOR_Y_GRID = "workflow.editor.gridY";
+    static final String CFG_EDITOR_Y_GRID = "workflow.editor.gridY";
 
-    private static final String CFG_EDITOR_ZOOM = "workflow.editor.zoomLevel";
+    static final String CFG_EDITOR_ZOOM = "workflow.editor.zoomLevel";
 
-    private static final String CFG_EDITOR_CURVED_CONNECTIONS = "workflow.editor.curvedConnections";
+    static final String CFG_EDITOR_CURVED_CONNECTIONS = "workflow.editor.curvedConnections";
 
-    private static final String CFG_EDITOR_CONNECTION_WIDTH = "workflow.editor.connectionWidth";
+    static final String CFG_EDITOR_CONNECTION_WIDTH = "workflow.editor.connectionWidth";
 
     /**
      * The key under which the bounds to store the {@link ConnectionUIInformation} are registered. *
@@ -322,6 +312,7 @@ public class FileWorkflowLoader implements DefLoader<WorkflowDef> {
         return m_versionString;
     }
 
+    @Override
     NodeLogger getLogger() {
         return m_logger;
     }
@@ -486,8 +477,8 @@ public class FileWorkflowLoader implements DefLoader<WorkflowDef> {
         }
         setWorkflowBackendTableSettings(m_tableBackendSettings);
 
-        setWorkflowAnnotations(tryLoadDebug("workflow annotations", Collections.emptyList(),
-            () -> loadWorkflowAnnotations(m_workflowSett), loadResult));
+        tryLoadDebug("workflow annotations", Collections.emptyList(),
+            this::loadWorkflowAnnotations, loadResult);
 
         setWizardState(tryLoadDebug("wizard state", null, () -> loadWizardState(m_workflowSett),             loadResult));
 
@@ -1365,6 +1356,8 @@ public class FileWorkflowLoader implements DefLoader<WorkflowDef> {
         }
     }
 
+    NodeSettingsRO settings;
+
     /**
      * Load annotations (added in v2.3).
      *
@@ -1372,7 +1365,7 @@ public class FileWorkflowLoader implements DefLoader<WorkflowDef> {
      * @return non-null list.
      * @throws InvalidSettingsException If this fails for any reason.
      */
-    List<WorkflowAnnotation> loadWorkflowAnnotations(final NodeSettingsRO settings) throws InvalidSettingsException {
+   public List<WorkflowAnnotation> loadWorkflowAnnotations() throws InvalidSettingsException {
         if (getLoadVersion().isOlderThan(LoadVersion.V230)) {
             // no credentials in v2.2 and before
             return Collections.emptyList();
@@ -1590,14 +1583,6 @@ public class FileWorkflowLoader implements DefLoader<WorkflowDef> {
     }
 
     /**
-     * @return version that is saved
-     * @since 3.7
-     */
-    protected static LoadVersion getSaveVersion() {
-        return VERSION_LATEST;
-    }
-
-    /**
      * Synchronized call to DATE_FORMAT.format(Date).
      *
      * @param date ... not null.
@@ -1606,539 +1591,6 @@ public class FileWorkflowLoader implements DefLoader<WorkflowDef> {
     static String formatDate(final OffsetDateTime date) {
         synchronized (DATE_FORMAT) {
             return DATE_FORMAT.format(date);
-        }
-    }
-
-    protected static void saveUIInfoClassName(final NodeSettingsWO settings, final UIInformation info) {
-        settings.addString(CFG_UIINFO_CLASS, info != null ? info.getClass().getName() : null);
-    }
-
-    protected static void saveUIInfoSettings(final NodeSettingsWO settings, final UIInformation uiInfo) {
-        if (uiInfo == null) {
-            return;
-        }
-        // nest into separate sub config
-        var subConfig = settings.addNodeSettings(CFG_UIINFO_SUB_CONFIG);
-        uiInfo.save(subConfig);
-    }
-
-    public static String save(final WorkflowManager wm, final ReferencedFile rawWorkflowDirRef,
-        final ExecutionMonitor execMon, final WorkflowSaveHelper saveHelper)
-        throws IOException, CanceledExecutionException, LockFailedException {
-        final var name = wm.getDirectNCParent().getCipherFileName(WORKFLOW_FILE);
-        var preFilledSettings = new NodeSettings(name);
-        saveHeader(preFilledSettings);
-        wm.getTemplateInformation().save(preFilledSettings);
-        saveWizardState(wm, preFilledSettings, saveHelper);
-        saveContent(wm, preFilledSettings, rawWorkflowDirRef, execMon, saveHelper);
-        return name;
-    }
-
-    public static String saveAsTemplate(final WorkflowManager wm, final ReferencedFile rawWorkflowDirRef,
-        final ExecutionMonitor execMon, final WorkflowSaveHelper saveHelper)
-        throws IOException, CanceledExecutionException, LockFailedException {
-        var tI = wm.getTemplateInformation();
-        if (!Role.Template.equals(tI.getRole())) {
-            throw new IllegalStateException("Cannot save workflow as template (role " + tI.getRole() + ")");
-        }
-        // as per 2.10 template workflows are also saved under workflow.knime (previously it was all contained in
-        // template.knime). The new template.knime file is written elsewhere.
-        final var name = wm.getDirectNCParent().getCipherFileName(WORKFLOW_FILE);
-        var preFilledSettings = new NodeSettings(name);
-        saveContent(wm, preFilledSettings, rawWorkflowDirRef, execMon, saveHelper);
-        return name;
-    }
-
-    /**
-     * @param wm The WFM to save.
-     * @param preFilledSettings The settings eventually written to workflow.knime (or workflow.knime.encrypted). For
-     *            workflows it contains the version number, cipher, template infos etc. The name of the setting defines
-     *            the output file name (so it's important!)
-     * @param rawWorkflowDirRef To save to.
-     * @param execMon ...
-     * @param saveHelper ...
-     * @throws IOException ...
-     * @throws CanceledExecutionException ...
-     * @throws LockFailedException ...
-     */
-    private static void saveContent(final WorkflowManager wm, final NodeSettings preFilledSettings,
-        final ReferencedFile rawWorkflowDirRef, final ExecutionMonitor execMon, final WorkflowSaveHelper saveHelper)
-        throws IOException, CanceledExecutionException, LockFailedException {
-        var workflowDirRef = rawWorkflowDirRef;
-        var r = wm.getTemplateInformation().getRole();
-        final var fName = preFilledSettings.getKey();
-        if (!workflowDirRef.fileLockRootForVM()) {
-            throw new LockFailedException(
-                "Can't write workflow to \"" + workflowDirRef + "\" because the directory can't be locked");
-        }
-        try {
-            final var nodeContainerDirectory = wm.getNodeContainerDirectory();
-            final var autoSaveDirectory = wm.getAutoSaveDirectory();
-            if (!saveHelper.isAutoSave() && workflowDirRef.equals(nodeContainerDirectory)) {
-                if (!nodeContainerDirectory.isDirty()) {
-                    return;
-                } else {
-                    workflowDirRef = nodeContainerDirectory; // update variable assignment to do changes on member
-                    // delete "old" node directories if not saving to the working
-                    // directory -- do this before saving the nodes (dirs newly created)
-                    WorkflowManager.deleteObsoleteNodeDirs(nodeContainerDirectory.getDeletedNodesFileLocations());
-                }
-            }
-            if (saveHelper.isAutoSave() && workflowDirRef.equals(autoSaveDirectory)) {
-                if (!autoSaveDirectory.isDirty()) {
-                    return;
-                } else {
-                    workflowDirRef = autoSaveDirectory;
-                    WorkflowManager.deleteObsoleteNodeDirs(autoSaveDirectory.getDeletedNodesFileLocations());
-                }
-            }
-            var workflowDir = workflowDirRef.getFile();
-            workflowDir.mkdirs();
-            if (!workflowDir.isDirectory()) {
-                throw new IOException("Unable to create or write directory \": " + workflowDir + "\"");
-            }
-            saveWorkflowName(preFilledSettings, wm.getNameField());
-            saveAuthorInformation(wm.getAuthorInformation(), preFilledSettings);
-            saveWorkflowCipher(preFilledSettings, wm.getWorkflowCipher());
-            FileNodeContainerMetaPersistor.save(preFilledSettings, wm, workflowDirRef);
-            saveWorkflowVariables(wm, preFilledSettings);
-            saveCredentials(wm, preFilledSettings);
-            saveTableBackend(wm, preFilledSettings);
-            saveWorkflowAnnotations(wm, preFilledSettings);
-
-            var nodesSettings = saveSettingsForNodes(preFilledSettings);
-            var nodes = wm.getNodeContainers();
-            var progRatio = 1.0 / (nodes.size() + 1);
-
-            for (NodeContainer nextNode : nodes) {
-                var id = nextNode.getID().getIndex();
-                var subExec = execMon.createSubProgress(progRatio);
-                execMon.setMessage(nextNode.getNameWithID());
-                var sub = nodesSettings.addNodeSettings("node_" + id);
-                NodeContext.pushContext(nextNode);
-                try {
-                    saveNodeContainer(sub, workflowDirRef, nextNode, subExec, saveHelper);
-                } finally {
-                    NodeContext.removeLastContext();
-                }
-                subExec.setProgress(1.0);
-            }
-
-            execMon.setMessage("connection information");
-            var connSettings = saveSettingsForConnections(preFilledSettings);
-            var connectionNumber = 0;
-            for (ConnectionContainer cc : wm.getConnectionContainers()) {
-                var nextConnectionConfig = connSettings.addNodeSettings("connection_" + connectionNumber);
-                saveConnection(nextConnectionConfig, cc);
-                connectionNumber += 1;
-            }
-            var inCount = wm.getNrInPorts();
-            var inPortsSetts = inCount > 0 ? saveInPortsSetting(preFilledSettings) : null;
-            NodeSettingsWO inPortsSettsEnum = null;
-            if (inPortsSetts != null) {
-                //TODO actually not neccessary to save the class name
-                saveInportsBarUIInfoClassName(inPortsSetts, wm.getInPortsBarUIInfo());
-                saveInportsBarUIInfoSettings(inPortsSetts, wm.getInPortsBarUIInfo());
-                inPortsSettsEnum = saveInPortsEnumSetting(inPortsSetts);
-            }
-            for (var i = 0; i < inCount; i++) {
-                var sPort = saveInPortSetting(inPortsSettsEnum, i);
-                saveInPort(sPort, wm, i);
-            }
-            var outCount = wm.getNrOutPorts();
-            var outPortsSetts = outCount > 0 ? saveOutPortsSetting(preFilledSettings) : null;
-            NodeSettingsWO outPortsSettsEnum = null;
-            if (outPortsSetts != null) {
-                saveOutportsBarUIInfoClassName(outPortsSetts, wm.getOutPortsBarUIInfo());
-                saveOutportsBarUIInfoSettings(outPortsSetts, wm.getOutPortsBarUIInfo());
-                outPortsSettsEnum = saveOutPortsEnumSetting(outPortsSetts);
-            }
-            for (var i = 0; i < outCount; i++) {
-                var singlePort = saveOutPortSetting(outPortsSettsEnum, i);
-                saveOutPort(singlePort, wm, i);
-            }
-            saveEditorUIInformation(wm, preFilledSettings);
-
-            var workflowFile = new File(workflowDir, fName);
-            var toBeDeletedFileName = Role.Template.equals(r) ? TEMPLATE_FILE : WORKFLOW_FILE;
-            new File(workflowDir, toBeDeletedFileName).delete();
-            new File(workflowDir, WorkflowCipher.getCipherFileName(toBeDeletedFileName)).delete();
-
-            OutputStream os = new FileOutputStream(workflowFile);
-            os = wm.getDirectNCParent().cipherOutput(os);
-            preFilledSettings.saveToXML(os);
-            if (saveHelper.isSaveData()) {
-                var saveWithDataFile = new File(workflowDir, SAVED_WITH_DATA_FILE);
-                var o = new BufferedWriter(new FileWriter(saveWithDataFile));
-                o.write("Do not delete this file!");
-                o.newLine();
-                o.write("This file serves to indicate that the workflow was written as part of the usual save "
-                    + "routine (not exported).");
-                o.newLine();
-                o.newLine();
-                o.write("Workflow was last saved by user ");
-                o.write(System.getProperty("user.name"));
-                o.write(" on " + new Date());
-                o.close();
-            }
-            if (saveHelper.isAutoSave() && autoSaveDirectory == null) {
-                wm.setAutoSaveDirectory(workflowDirRef);
-            }
-            if (!saveHelper.isAutoSave() && nodeContainerDirectory == null) {
-                wm.setNodeContainerDirectory(workflowDirRef);
-            }
-            var wmState = wm.getNodeContainerState();
-            // non remote executions
-            var isExecutingLocally = wmState.isExecutionInProgress() && !wmState.isExecutingRemotely();
-            if (workflowDirRef.equals(nodeContainerDirectory) && !isExecutingLocally) {
-                wm.unsetDirty();
-            }
-            workflowDirRef.setDirty(isExecutingLocally);
-            execMon.setProgress(1.0);
-        } finally {
-            workflowDirRef.fileUnlockRootForVM();
-        }
-    }
-
-    /** Add version field. */
-    static void saveHeader(final NodeSettings settings) {
-        settings.addString(WorkflowLoadHelper.CFG_CREATED_BY, KNIMEConstants.VERSION);
-        settings.addBoolean(WorkflowLoadHelper.CFG_NIGHTLY, KNIMEConstants.isNightlyBuild());
-        settings.addString(WorkflowLoadHelper.CFG_VERSION, getSaveVersion().getVersionString());
-    }
-
-    /**
-     * Saves the status of the wizard if set so in the save-helper.
-     *
-     * @param wm ...
-     * @param preFilledSettings ...
-     * @param saveHelper ...
-     */
-    private static void saveWizardState(final WorkflowManager wm, final NodeSettings preFilledSettings,
-        final WorkflowSaveHelper saveHelper) {
-        //don't save the wizard state if
-        //(1) simply not desired
-        //(2) the workflow is or is part of a metanode
-        //(3) hasn't been started in wizard execution mode (i.e. not from the web portal)
-        if (!saveHelper.isSaveWizardController() || !wm.isProject() || !wm.isInWizardExecution()) {
-            return;
-        }
-        var wizardSettings = preFilledSettings.addNodeSettings("wizard");
-        final var wizardController = wm.getWizardExecutionController();
-        assert wizardController != null;
-        wizardController.save(wizardSettings);
-    }
-
-    protected static void saveWorkflowName(final NodeSettingsWO settings, final String name) {
-        settings.addString("name", name);
-    }
-
-    /**
-     * Metanode locking information.
-     *
-     * @param settings
-     * @param workflowCipher
-     */
-    protected static void saveWorkflowCipher(final NodeSettings settings, final WorkflowCipher workflowCipher) {
-        if (!workflowCipher.isNullCipher()) {
-            var cipherSettings = settings.addNodeSettings("cipher");
-            workflowCipher.save(cipherSettings);
-        }
-    }
-
-    /** @since 3.7 */
-    protected static void saveAuthorInformation(final AuthorInformation aI, final NodeSettingsWO settings) {
-        if (aI != null) {
-            final var sub = settings.addNodeSettings(CFG_AUTHOR_INFORMATION);
-            sub.addString("authored-by", aI.getAuthor());
-            var authorWhen = aI.getAuthoredDate() == null ? null : formatDate(aI.getAuthoredDate());
-            sub.addString("authored-when", authorWhen);
-            sub.addString("lastEdited-by", aI.getLastEditor().orElse(null));
-            var lastEditWhen = aI.getLastEditDate() == null ? null
-                : aI.getLastEditDate().isPresent() ? formatDate(aI.getLastEditDate().get()) : null;
-            sub.addString("lastEdited-when", lastEditWhen);
-        }
-    }
-
-    /**
-     * @param settings
-     * @since 2.6
-     */
-    static void saveEditorUIInformation(final WorkflowManager wfm, final NodeSettings settings) {
-        var editorInfo = wfm.getEditorUIInformation();
-        if (editorInfo != null) {
-            var editorConfig = settings.addNodeSettings(CFG_EDITOR_INFO);
-            editorConfig.addBoolean(CFG_EDITOR_SNAP_GRID, editorInfo.getSnapToGrid());
-            editorConfig.addBoolean(CFG_EDITOR_SHOW_GRID, editorInfo.getShowGrid());
-            editorConfig.addInt(CFG_EDITOR_X_GRID, editorInfo.getGridX());
-            editorConfig.addInt(CFG_EDITOR_Y_GRID, editorInfo.getGridY());
-            editorConfig.addDouble(CFG_EDITOR_ZOOM, editorInfo.getZoomLevel());
-            editorConfig.addBoolean(CFG_EDITOR_CURVED_CONNECTIONS, editorInfo.getHasCurvedConnections());
-            editorConfig.addInt(CFG_EDITOR_CONNECTION_WIDTH, editorInfo.getConnectionLineWidth());
-        }
-    }
-
-    protected static void saveWorkflowVariables(final WorkflowManager wfm, final NodeSettingsWO settings) {
-        var vars = wfm.getWorkflowVariables();
-        if (!vars.isEmpty()) {
-            var wfmVarSub = settings.addNodeSettings(CFG_WKF_VARIABLES);
-            var i = 0;
-            for (FlowVariable v : vars) {
-                v.save(wfmVarSub.addNodeSettings("Var_" + (i++)));
-            }
-        }
-    }
-
-    protected static void saveCredentials(final WorkflowManager wfm, final NodeSettingsWO settings) {
-        var credentialsStore = wfm.getCredentialsStore();
-        var sub = settings.addNodeSettings(CFG_CREDENTIALS);
-        synchronized (credentialsStore) {
-            for (Credentials c : credentialsStore.getCredentials()) {
-                var s = sub.addNodeSettings(c.getName());
-                c.save(s);
-            }
-        }
-    }
-
-    /**
-     * Save the {@link TableBackend} set on workflow projects.
-     *
-     * @since 4.3
-     */
-    protected static void saveTableBackend(final WorkflowManager wfm, final NodeSettingsWO settings) {
-        wfm.getTableBackendSettings().ifPresent(backendSettings -> backendSettings.saveSettingsTo(settings));
-    }
-
-    protected static void saveWorkflowAnnotations(final WorkflowManager manager, final NodeSettingsWO settings) {
-        var annotations = manager.getWorkflowAnnotations();
-        if (annotations.isEmpty()) {
-            return;
-        }
-        var annoSettings = settings.addNodeSettings("annotations");
-        var i = 0;
-        for (Annotation a : annotations) {
-            var t = annoSettings.addNodeSettings("annotation_" + i);
-            a.save(t);
-            i += 1;
-        }
-    }
-
-    /**
-     * Save nodes in an own sub-config object as a series of configs.
-     *
-     * @param settings To save to.
-     * @return The sub config where subsequent writing takes place.
-     */
-    protected static NodeSettingsWO saveSettingsForNodes(final NodeSettingsWO settings) {
-        return settings.addNodeSettings(KEY_NODES);
-    }
-
-    /**
-     * Save connections in an own sub-config object.
-     *
-     * @param settings To save to.
-     * @return The sub config where subsequent writing takes place.
-     */
-    protected static NodeSettingsWO saveSettingsForConnections(final NodeSettingsWO settings) {
-        return settings.addNodeSettings(KEY_CONNECTIONS);
-    }
-
-    /**
-     * Saves recursively to a directory
-     *
-     * @param settings
-     * @param workflowDirRef
-     * @param container
-     * @param exec
-     * @param saveHelper
-     * @throws CanceledExecutionException
-     * @throws IOException
-     * @throws LockFailedException
-     */
-    protected static void saveNodeContainer(final NodeSettingsWO settings, final ReferencedFile workflowDirRef,
-        final NodeContainer container, final ExecutionMonitor exec, final WorkflowSaveHelper saveHelper)
-        throws CanceledExecutionException, IOException, LockFailedException {
-        var parent = container.getParent();
-        var workingDir = parent.getNodeContainerDirectory();
-        var isWorkingDir = workflowDirRef.equals(workingDir);
-
-        saveNodeIDSuffix(settings, container);
-        var idSuffix = container.getID().getIndex();
-
-        // name of sub-directory container node/sub-workflow settings
-        // all chars which are not letter or number are replaced by '_'
-        final var containerName = container.getName();
-        var nodeDirID = FileUtil.getValidFileName(containerName,
-            container instanceof WorkflowManager || container instanceof SubNodeContainer ? 12 : -1);
-        nodeDirID = nodeDirID.concat(" (#" + idSuffix + ")");
-
-        // try to re-use previous node dir (might be different from calculated
-        // one above in case node was renamed between releases)
-        if (isWorkingDir && container.getNodeContainerDirectory() != null) {
-            var ncDirectory = container.getNodeContainerDirectory();
-            nodeDirID = ncDirectory.getFile().getName();
-        }
-
-        var nodeDirectoryRef = new ReferencedFile(workflowDirRef, nodeDirID);
-        String fileName;
-        if (container instanceof WorkflowManager) {
-            fileName = FileWorkflowLoader.save((WorkflowManager)container, nodeDirectoryRef, exec, saveHelper);
-        } else {
-            fileName = FileSingleNodeContainerPersistor.save((SingleNodeContainer)container, nodeDirectoryRef, exec,
-                saveHelper);
-        }
-        saveFileLocation(settings, nodeDirID + "/" + fileName);
-        saveNodeType(settings, container);
-
-        //save node UI info
-        saveNodeUIInformation(settings, container.getUIInformation());
-    }
-
-    /**
-     * Helper to save a {@link NodeUIInformation} object.
-     */
-    private static void saveNodeUIInformation(final NodeSettingsWO settings, final NodeUIInformation nodeUIInfo) {
-        //save UI info class name (TODO: for historical reasons, probably not needed anymore)
-        settings.addString(CFG_UIINFO_CLASS, nodeUIInfo != null ? nodeUIInfo.getClass().getName() : null);
-        //save UI info settings
-        //nest into separate sub config
-        if (nodeUIInfo != null) {
-            var subConfig = settings.addNodeSettings(CFG_UIINFO_SUB_CONFIG);
-            subConfig.addIntArray(KEY_BOUNDS, nodeUIInfo.getBounds());
-        }
-    }
-
-    protected static void saveNodeIDSuffix(final NodeSettingsWO settings, final NodeContainer nc) {
-        settings.addInt(KEY_ID, nc.getID().getIndex());
-    }
-
-    protected static void saveFileLocation(final NodeSettingsWO settings, final String location) {
-        settings.addString("node_settings_file", location);
-    }
-
-    protected static void saveNodeType(final NodeSettingsWO settings, final NodeContainer nc) {
-        // obsolote since LoadVersion.V2100 - written to help old knime installs to read new workflows
-        // treat sub and metanodes the same
-        settings.addBoolean("node_is_meta", !(nc instanceof NativeNodeContainer));
-        NodeType nodeType;
-        if (nc instanceof NativeNodeContainer) {
-            nodeType = NodeType.NativeNode;
-        } else if (nc instanceof WorkflowManager) {
-            nodeType = NodeType.MetaNode;
-        } else if (nc instanceof SubNodeContainer) {
-            nodeType = NodeType.SubNode;
-        } else {
-            throw new IllegalArgumentException(
-                "Unsupported node container class: " + nc == null ? "<null>" : nc.getClass().getName());
-        }
-        settings.addString("node_type", nodeType.name()); // added for 2.10Pre
-    }
-
-    protected static NodeSettingsWO saveInPortsSetting(final NodeSettingsWO settings) {
-        return settings.addNodeSettings("meta_in_ports");
-    }
-
-    protected static NodeSettingsWO saveInPortsEnumSetting(final NodeSettingsWO settings) {
-        return settings.addNodeSettings("port_enum");
-    }
-
-    protected static NodeSettingsWO saveInPortSetting(final NodeSettingsWO settings, final int portIndex) {
-        return settings.addNodeSettings("inport_" + portIndex);
-    }
-
-    /**
-     * @since 3.5
-     */
-    protected static void saveInportsBarUIInfoClassName(final NodeSettingsWO settings, final NodeUIInformation info) {
-        settings.addString(CFG_UIINFO_CLASS, info != null ? info.getClass().getName() : null);
-    }
-
-    /**
-     * @since 3.5
-     */
-    protected static void saveInportsBarUIInfoSettings(final NodeSettingsWO settings, final NodeUIInformation uiInfo) {
-        saveNodeUIInformation(settings, uiInfo);
-    }
-
-    protected static void saveInPort(final NodeSettingsWO settings, final WorkflowManager wm, final int portIndex) {
-        var inport = wm.getInPort(portIndex);
-        settings.addInt("index", portIndex);
-        settings.addString("name", inport.getPortName());
-        var portTypeSettings = settings.addNodeSettings("type");
-        inport.getPortType().save(portTypeSettings);
-    }
-
-    protected static NodeSettingsWO saveOutPortsSetting(final NodeSettingsWO settings) {
-        return settings.addNodeSettings("meta_out_ports");
-    }
-
-    protected static NodeSettingsWO saveOutPortsEnumSetting(final NodeSettingsWO settings) {
-        return settings.addNodeSettings("port_enum");
-    }
-
-    /**
-     * @since 3.5
-     */
-    protected static void saveOutportsBarUIInfoClassName(final NodeSettingsWO settings, final NodeUIInformation info) {
-        settings.addString(CFG_UIINFO_CLASS, info != null ? info.getClass().getName() : null);
-    }
-
-    /**
-     * @since 3.5
-     */
-    protected static void saveOutportsBarUIInfoSettings(final NodeSettingsWO settings, final NodeUIInformation uiInfo) {
-        saveNodeUIInformation(settings, uiInfo);
-    }
-
-    protected static NodeSettingsWO saveOutPortSetting(final NodeSettingsWO settings, final int portIndex) {
-        return settings.addNodeSettings("outport_" + portIndex);
-    }
-
-    protected static void saveOutPort(final NodeSettingsWO settings, final WorkflowManager wm, final int portIndex) {
-        var outport = wm.getOutPort(portIndex);
-        settings.addInt("index", portIndex);
-        settings.addString("name", outport.getPortName());
-        var portTypeSettings = settings.addNodeSettings("type");
-        outport.getPortType().save(portTypeSettings);
-    }
-
-    protected static void saveConnection(final NodeSettingsWO settings, final ConnectionContainer connection) {
-        var sourceID = connection.getSource().getIndex();
-        var destID = connection.getDest().getIndex();
-        switch (connection.getType()) {
-            case WFMIN:
-                sourceID = -1;
-                break;
-            case WFMOUT:
-                destID = -1;
-                break;
-            case WFMTHROUGH:
-                sourceID = -1;
-                destID = -1;
-                break;
-            default:
-                // all handled above
-        }
-        settings.addInt("sourceID", sourceID);
-        settings.addInt("destID", destID);
-        var sourcePort = connection.getSourcePort();
-        settings.addInt("sourcePort", sourcePort);
-        var targetPort = connection.getDestPort();
-        settings.addInt("destPort", targetPort);
-        var uiInfo = connection.getUIInfo();
-        if (uiInfo != null) {
-            //TODO there is actually no need to store the class name - just keep it for now for backwards compatibility
-            settings.addString(CFG_UIINFO_CLASS, uiInfo.getClass().getName());
-            // nest into separate sub config
-            var subConfig = settings.addNodeSettings(CFG_UIINFO_SUB_CONFIG);
-            var allBendpoints = uiInfo.getAllBendpoints();
-            subConfig.addInt(KEY_BENDPOINTS + "_size", allBendpoints.length);
-            for (var i = 0; i < allBendpoints.length; i++) {
-                subConfig.addIntArray(KEY_BENDPOINTS + "_" + i, allBendpoints[i]);
-            }
-        }
-        if (!connection.isDeletable()) {
-            settings.addBoolean("isDeletable", false);
         }
     }
 

@@ -586,7 +586,7 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
         settings.addBoolean("hideInWizard", subnodeNC.isHideInWizard());
         settings.addString("customCSS", subnodeNC.getCssStyles());
         WorkflowManager workflowManager = subnodeNC.getWorkflowManager();
-        FileWorkflowPersistor.save(workflowManager, nodeDirRef, exec, saveHelper);
+        FileWorkflowSaver.save(workflowManager, nodeDirRef, exec, saveHelper);
     }
 
     /**

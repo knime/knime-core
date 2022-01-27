@@ -52,18 +52,87 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeLogger.LEVEL;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 
 /**
  *
- * @author carlwitt
+ * @author Carl Witt, KNIME AG, Zurich, Switzerland
+ * @noreference
  */
-public class LoadUtil {
+public interface LoadUtil {
 
-
+    /**
+     * @noreference
+     */
     @FunctionalInterface
-    private interface LoaderCode<T> {
+    public interface LoaderCode<T> {
         T load() throws InvalidSettingsException;
+    }
+
+    /**
+     * For signaling problems during the load process and indicating the severity of the problem.
+     *
+     * @author Carl Witt, KNIME AG, Zurich, Switzerland
+     */
+    public class LoadProblem extends RuntimeException {
+
+        private final boolean m_workflowDirty;
+
+        private final boolean m_workflowNeedsReset;
+
+        private final NodeLogger.LEVEL m_severity;
+
+        /**
+         * @param message the detail message (which is saved for later retrieval by the {@link #getMessage()} method).
+         * @param cause the cause (which is saved for later retrieval by the {@link #getCause()} method). (A
+         *            {@code null} value is permitted, and indicates that the cause is nonexistent or unknown.)
+         */
+        public LoadProblem(final String message, final Throwable cause) {
+            super(message, cause);
+            m_workflowDirty = true;
+            m_workflowNeedsReset = false;
+            m_severity = LEVEL.DEBUG;
+        }
+
+        /**
+         * @param message the detail message (which is saved for later retrieval by the {@link #getMessage()} method).
+         * @param cause the cause (which is saved for later retrieval by the {@link #getCause()} method). (A
+         *            {@code null} value is permitted, and indicates that the cause is nonexistent or unknown.)
+         * @param workflowDirty
+         * @param workflowNeedsReset
+         * @param severity
+         */
+        public LoadProblem(final String message, final Throwable cause, final boolean workflowDirty,
+            final boolean workflowNeedsReset, final LEVEL severity) {
+            super(message, cause);
+            m_workflowDirty = workflowDirty;
+            m_workflowNeedsReset = workflowNeedsReset;
+            m_severity = severity;
+        }
+
+        /**
+         * @return whether the workflow is considered changed after the load process
+         */
+        boolean isWorkflowDirty() {
+            return m_workflowDirty;
+        }
+
+        /**
+         * @return whether the workflow needs to be reset after the load process
+         */
+        boolean isWorkflowNeedsReset() {
+            return m_workflowNeedsReset;
+        }
+
+        /**
+         * @return the severity of the
+         */
+        NodeLogger.LEVEL getSeverity() {
+            return m_severity;
+        }
+
     }
 
     /**
@@ -83,7 +152,7 @@ public class LoadUtil {
      * @param logTo
      * @return Fallback if the loader code throws an {@link InvalidSettingsException}. Otherwise the loaded value.
      */
-    private static <T> T tryLoadWithDefaultGeneric(final Function<Throwable, String> errorMessageGen, final T fallback,
+    default <T> T tryLoadWithDefaultGeneric(final Function<Throwable, String> errorMessageGen, final T fallback,
         final LoaderCode<T> r, final LoadResult loadResult, final BiConsumer<Object, Throwable> logTo) {
         try {
             return r.load();
@@ -99,15 +168,20 @@ public class LoadUtil {
     // TODO I didn't pay attention during refactoring and always used tryLoadDebug, but some should emit warnings or errors
     // seems as if loadResult is always using setError (except for two cases) even if the log level is debug - probably
     // not consistent but should stay like this for now
-    private <T> T tryLoadDebug(final Function<Throwable, String> errorMessageGen, final T fallback,
+    default <T> T tryLoadDebug(final Function<Throwable, String> errorMessageGen, final T fallback,
         final LoaderCode<T> r, final LoadResult loadResult) {
         return tryLoadWithDefaultGeneric(errorMessageGen, fallback, r, loadResult, getLogger()::debug);
     }
 
-    private <T> T tryLoadDebug(final String attributeName, final T fallback, final LoaderCode<T> r,
+    default <T> T tryLoadDebug(final String attributeName, final T fallback, final LoaderCode<T> r,
         final LoadResult loadResult) {
         return tryLoadWithDefaultGeneric(e -> "Unable to load " + attributeName + ": " + e.getMessage(), fallback, r,
             loadResult, getLogger()::debug);
     }
+
+    /**
+     * @return
+     */
+    NodeLogger getLogger();
 
 }
