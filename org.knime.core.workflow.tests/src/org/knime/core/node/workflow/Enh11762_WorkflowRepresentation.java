@@ -44,7 +44,6 @@
  */
 package org.knime.core.node.workflow;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import java.io.File;
@@ -57,10 +56,10 @@ import org.junit.Test;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
+import org.knime.core.workflow.def.RootWorkflowDef;
 import org.knime.core.workflow.def.WorkflowDef;
-import org.knime.core.workflow.def.WorkflowProjectDef;
+import org.knime.core.workflow.def.impl.DefaultRootWorkflowDef;
 import org.knime.core.workflow.def.impl.DefaultWorkflowDef;
-import org.knime.core.workflow.def.impl.DefaultWorkflowProjectDef;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -82,7 +81,7 @@ public class Enh11762_WorkflowRepresentation extends WorkflowTestCase {
 		String json = workflowToString(mapper);
 
 		// restore POJO from String representation
-		mapper.readValue(json, WorkflowProjectDef.class);
+		mapper.readValue(json, RootWorkflowDef.class);
 	}
 
 	/**
@@ -99,13 +98,13 @@ public class Enh11762_WorkflowRepresentation extends WorkflowTestCase {
 		String json = workflowToString(mapper);
 
 		// convert String to POJO
-		WorkflowProjectDef pojo = mapper.readValue(json, WorkflowProjectDef.class);
-		
+		RootWorkflowDef pojo = mapper.readValue(json, RootWorkflowDef.class);
+
 		// create a workflow manager from the POJO using an appropriate persistor
 		ExecutionMonitor exec = new ExecutionMonitor();
 		WorkflowLoadHelper loader = new WorkflowLoadHelper(pojo);
 		WorkflowLoadResult loadResult = WorkflowManager.ROOT.load(pojo, exec, loader, true);
-        WorkflowManager restoredManager = loadResult.getWorkflowManager();
+		WorkflowManager restoredManager = loadResult.getWorkflowManager();
 
         //FIXME check that the workflow manager is present and looking good
 		if (restoredManager == null) {
@@ -144,7 +143,7 @@ public class Enh11762_WorkflowRepresentation extends WorkflowTestCase {
 		// wrap workflow manager to get a workflow project definition interface implementation
 		DefWorkflowManagerWrapper def = new DefWorkflowManagerWrapper(wfm);
 		// copy information to information-only POJO
-		DefaultWorkflowProjectDef projectDef = new DefaultWorkflowProjectDef(def.asProjectDef());
+		DefaultRootWorkflowDef projectDef = new DefaultRootWorkflowDef(def.asProjectDef());
 
 		// serialize into JSON
 		String pretty = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(projectDef);

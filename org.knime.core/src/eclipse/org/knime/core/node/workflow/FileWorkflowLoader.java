@@ -108,12 +108,12 @@ import org.knime.core.workflow.def.NodeDef;
 import org.knime.core.workflow.def.impl.DefaultConnectionDef;
 import org.knime.core.workflow.def.impl.DefaultMetaNodeDataDef;
 import org.knime.core.workflow.def.impl.DefaultMetaNodeDataDef.DefaultMetaNodeDataDefBuilder;
+import org.knime.core.workflow.def.impl.DefaultRootWorkflowDef;
+import org.knime.core.workflow.def.impl.DefaultRootWorkflowDef.DefaultRootWorkflowDefBuilder;
 import org.knime.core.workflow.def.impl.DefaultWorkflowDef;
 import org.knime.core.workflow.def.impl.DefaultWorkflowDef.DefaultWorkflowDefBuilder;
 import org.knime.core.workflow.def.impl.DefaultWorkflowMetadataDef;
 import org.knime.core.workflow.def.impl.DefaultWorkflowMetadataDef.DefaultWorkflowMetadataDefBuilder;
-import org.knime.core.workflow.def.impl.DefaultWorkflowProjectDef;
-import org.knime.core.workflow.def.impl.DefaultWorkflowProjectDef.DefaultWorkflowProjectDefBuilder;
 
 /**
  * Recursively walks through the legacy directory structure, generating the workflow defs.
@@ -282,7 +282,7 @@ public class FileWorkflowLoader implements NodeContainerLoader {
 
     final DefaultMetaNodeDataDefBuilder m_metaNodeDefBuilder = DefaultMetaNodeDataDef.builder();
 
-    final DefaultWorkflowProjectDefBuilder m_workflowProjectDefBuilder = DefaultWorkflowProjectDef.builder();
+    final DefaultRootWorkflowDefBuilder m_workflowProjectDefBuilder = DefaultRootWorkflowDef.builder();
 
     /**
      * Holds the nodes (TODO move to builder) until build is called. Key is the node ID (suffix?)
@@ -541,14 +541,14 @@ public class FileWorkflowLoader implements NodeContainerLoader {
         setWorkflowVariables(tryLoadDebug("workflow variables", Collections.emptyList(),
             () -> loadWorkflowVariables(m_workflowSett), loadResult));
 
-        setCredentials(tryLoadDebug("credentials", Collections.emptyList(), () -> {
-            var credentials = loadCredentials(m_workflowSett);
-            // request to initialize credentials - if available
-            if (credentials != null && !credentials.isEmpty()) {
-                credentials = getLoadHelper().loadCredentialsPrefilled(credentials);
-            }
-            return credentials;
-        }, loadResult));
+//        setCredentials(tryLoadDebug("credentials", Collections.emptyList(), () -> {
+//            var credentials = loadCredentials(m_workflowSett);
+//            // request to initialize credentials - if available
+//            if (credentials != null && !credentials.isEmpty()) {
+//                credentials = getLoadHelper().loadCredentialsPrefilled(credentials);
+//            }
+//            return credentials;
+//        }, loadResult));
 
         WorkflowTableBackendSettings m_tableBackendSettings = null;
         try {
@@ -2219,12 +2219,12 @@ public class FileWorkflowLoader implements NodeContainerLoader {
         //TODO add to builder
     }
 
-    /**
-     * @param credentials the credentials to set
-     */
-    void setCredentials(final List<Credentials> credentials) {
-        m_workflowDefBuilder.setWorkflowCredentials(CoreToDefUtil.toWorkflowCredentialsDef(credentials));
-    }
+//    /**
+//     * @param credentials the credentials to set
+//     */
+//    void setCredentials(final List<Credentials> credentials) {
+//        m_workflowDefBuilder.setWorkflowCredentials(CoreToDefUtil.toWorkflowCredentialsDef(credentials));
+//    }
 
     /**
      * @param wizardState the wizardState to set

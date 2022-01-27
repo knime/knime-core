@@ -69,22 +69,18 @@ import org.knime.core.workflow.def.MetaNodeDataDef;
 import org.knime.core.workflow.def.NodeAnnotationDef;
 import org.knime.core.workflow.def.NodeDef;
 import org.knime.core.workflow.def.NodeLocksDef;
-import org.knime.core.workflow.def.NodeMessageDef;
-import org.knime.core.workflow.def.NodeRefDef;
 import org.knime.core.workflow.def.NodeUIInfoDef;
+import org.knime.core.workflow.def.RootWorkflowDef;
 import org.knime.core.workflow.def.StyleDef;
-import org.knime.core.workflow.def.WorkflowCredentialsDef;
 import org.knime.core.workflow.def.WorkflowDef;
 import org.knime.core.workflow.def.WorkflowMetadataDef;
-import org.knime.core.workflow.def.WorkflowProjectDef;
 import org.knime.core.workflow.def.WorkflowUISettingsDef;
 import org.knime.core.workflow.def.impl.DefaultAnnotationDataDef;
 import org.knime.core.workflow.def.impl.DefaultAuthorInformationDef;
 import org.knime.core.workflow.def.impl.DefaultConnectionDef;
-import org.knime.core.workflow.def.impl.DefaultNodeRefDef;
+import org.knime.core.workflow.def.impl.DefaultRootWorkflowDef;
 import org.knime.core.workflow.def.impl.DefaultStyleDef;
 import org.knime.core.workflow.def.impl.DefaultWorkflowMetadataDef;
-import org.knime.core.workflow.def.impl.DefaultWorkflowProjectDef;
 import org.knime.core.workflow.def.impl.DefaultWorkflowUISettingsDef;
 
 /**
@@ -179,14 +175,6 @@ public class DefWorkflowManagerWrapper implements WorkflowDef {
      * {@inheritDoc}
      */
     @Override
-    public WorkflowCredentialsDef getWorkflowCredentials() {
-        return () -> m_wfm.getCredentialsStore().toString(); //// ????????
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Map<String, NodeDef> getNodes() {
         return m_wfm.getNodeContainers().stream()//
             .collect(Collectors.toMap(nc -> Integer.toString(nc.getID().getIndex()), DefWorkflowManagerWrapper::getNodeDef));
@@ -202,16 +190,6 @@ public class DefWorkflowManagerWrapper implements WorkflowDef {
         } else {
             throw new IllegalStateException();
         }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public List<NodeRefDef> getNodeRefs() {
-        return m_wfm.getNodeContainers().stream().map(NodeContainer::getID)
-            .map(id -> DefaultNodeRefDef.builder().setReference(id.toString()).setId(id.getIndex()).build())
-            .collect(Collectors.toList());
     }
 
     /**
@@ -253,33 +231,17 @@ public class DefWorkflowManagerWrapper implements WorkflowDef {
     }
 
     /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Boolean isProject() {
-        return m_wfm.isProject();
-    }
-
-    /**
      *
      * Use new {@link FileWorkflowPersistor#parseVersion(String)} to restore a {@link LoadVersion} object from this
      * String.
      *
      * @return description of the workflow project represented by the wrapped workflow manager in POJO format
      */
-    public WorkflowProjectDef asProjectDef() {
-        return DefaultWorkflowProjectDef.builder()//
+    public RootWorkflowDef asProjectDef() {
+        return DefaultRootWorkflowDef.builder()//
                 .setLoadVersion(m_wfm.getLoadVersion().getVersionString())//
                 .setWorkflow(this)
                 .build();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getState() {
-        return m_wfm.getNodeContainerState().toString();
     }
 
     /**
@@ -331,15 +293,6 @@ public class DefWorkflowManagerWrapper implements WorkflowDef {
      * {@inheritDoc}
      */
     @Override
-    public NodeMessageDef getMessage() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public JobManagerDef getJobManager() {
         // TODO Auto-generated method stub
         return null;
@@ -350,6 +303,24 @@ public class DefWorkflowManagerWrapper implements WorkflowDef {
      */
     @Override
     public String getNodeType() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Integer getId() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getCipher() {
         // TODO Auto-generated method stub
         return null;
     }

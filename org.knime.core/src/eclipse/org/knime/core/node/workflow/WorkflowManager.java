@@ -210,7 +210,7 @@ import org.knime.core.util.Pair;
 import org.knime.core.util.VMFileLocker;
 import org.knime.core.util.pathresolve.ResolverUtil;
 import org.knime.core.util.workflowalizer.AuthorInformation;
-import org.knime.core.workflow.def.WorkflowProjectDef;
+import org.knime.core.workflow.def.RootWorkflowDef;
 
 /**
  * Container holding nodes and connections of a (sub) workflow. In contrast to previous implementations, this class will
@@ -10634,7 +10634,7 @@ public final class WorkflowManager extends NodeContainer
      * @return A workflow load result, which also contains the loaded workflow.
      * @throws CanceledExecutionException If canceled.
      */
-    public WorkflowLoadResult load(final WorkflowProjectDef definition, final ExecutionMonitor exec,
+    public WorkflowLoadResult load(final RootWorkflowDef definition, final ExecutionMonitor exec,
         final WorkflowLoadHelper loadHelper, final boolean keepNodeMessages)
         throws CanceledExecutionException {
         WorkflowPersistor loader = loadHelper.createLoadPersistor(definition);

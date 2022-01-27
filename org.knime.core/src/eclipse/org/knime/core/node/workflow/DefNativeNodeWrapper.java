@@ -53,7 +53,7 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.workflow.def.CoreToDefUtil;
 import org.knime.core.workflow.def.ConfigMapDef;
 import org.knime.core.workflow.def.NativeNodeDef;
-import org.knime.core.workflow.def.NodeAndBundleInfoDef;
+import org.knime.core.workflow.def.VendorDef;
 
 /**
  * Provides a {@link NativeNodeDef} view on a native node (a node with a factory) in a workflow.
@@ -82,14 +82,6 @@ public class DefNativeNodeWrapper extends DefSingleNodeContainerWrapper implemen
      * {@inheritDoc}
      */
     @Override
-    public NodeAndBundleInfoDef getNodeAndBundleInfo() {
-        return CoreToDefUtil.toNodeAndBundleInfoDef(m_nc.getNodeAndBundleInformation());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public ConfigMapDef getFactorySettings() {
         NodeSettings s = new NodeSettings("factory_settings");
         m_nc.getNode().getFactory().saveAdditionalFactorySettings(s);
@@ -99,14 +91,6 @@ public class DefNativeNodeWrapper extends DefSingleNodeContainerWrapper implemen
             // TODO
             throw new RuntimeException(ex);
         }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getName() {
-        return m_nc.getName();
     }
 
     /**
@@ -134,6 +118,40 @@ public class DefNativeNodeWrapper extends DefSingleNodeContainerWrapper implemen
             throw new RuntimeException(ex);
         }
 
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Integer getId() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getNodeName() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public VendorDef getFeature() {
+        return CoreToDefUtil.toFeatureVendorDef(m_nc.getNodeAndBundleInformation());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public VendorDef getBundle() {
+        return CoreToDefUtil.toBundleVendorDef(m_nc.getNodeAndBundleInformation());
     }
 
 }

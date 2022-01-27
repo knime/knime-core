@@ -58,7 +58,6 @@ import org.knime.core.node.workflow.def.DefToCoreUtil;
 import org.knime.core.workflow.def.JobManagerDef;
 import org.knime.core.workflow.def.NodeAnnotationDef;
 import org.knime.core.workflow.def.NodeDef;
-import org.knime.core.workflow.def.NodeMessageDef;
 
 /**
  * TODO Do we need caching like in the FileNodeContainerMetaPersistor, which has fields like m_jobManager,
@@ -169,16 +168,16 @@ public class DefNodeContainerMetaPersistor implements NodeContainerMetaPersistor
      */
     @Override
     public InternalNodeContainerState getState() {
-        return InternalNodeContainerState.valueOf(m_def.getState());
-    }
+
+        return null;
+        }
 
     /**
      * {@inheritDoc}
      */
     @Override
     public NodeMessage getNodeMessage() {
-        NodeMessageDef messageDef = m_def.getMessage();
-        return new NodeMessage(NodeMessage.Type.valueOf(messageDef.getType()), messageDef.getMessage());
+        return null;
     }
 
     /**

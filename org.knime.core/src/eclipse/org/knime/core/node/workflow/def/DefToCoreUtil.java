@@ -114,7 +114,7 @@ import org.knime.core.workflow.def.NativeNodeDef;
 import org.knime.core.workflow.def.NodeLocksDef;
 import org.knime.core.workflow.def.NodeUIInfoDef;
 import org.knime.core.workflow.def.PortTypeDef;
-import org.knime.core.workflow.def.TemplateInfoDef;
+import org.knime.core.workflow.def.TemplateDef;
 import org.knime.core.workflow.def.WorkflowUISettingsDef;
 
 /**
@@ -202,17 +202,11 @@ public class DefToCoreUtil {
         return builder.build();
     }
 
-    public static MetaNodeTemplateInformation toTemplateInfo(final TemplateInfoDef def) {
-            if (def.getRole().equals("None")) {
-                // TODO
-                throw new NotImplementedException("Metanode template information = None not implemented yet.");
-            } else {
-                // TODO
+    public static MetaNodeTemplateInformation toTemplateInfo(final TemplateDef def) {
                 throw new NotImplementedException("Metanode template information import implemented yet.");
 //                Role.valueOf(def.getRole()), TemplateType.valueOf(def.getType()),
 //                new URI(def.getUri()), java.util.Date.from(def.getTimestamp().toInstant()), null, null
 //                return MetaNodeTemplateInformation.creat);
-            }
     }
 
     public static EditorUIInformation toEditorUIInformation(final WorkflowUISettingsDef def) {
@@ -405,7 +399,7 @@ public class DefToCoreUtil {
     }
 
     public static NodeAndBundleInformationPersistor toNodeAndBundleInformationPersistor(final NativeNodeDef def) {
-        return NodeAndBundleInformationPersistor.load(def.getNodeAndBundleInfo(), def.getFactory());
+        return NodeAndBundleInformationPersistor.load(def.getNodeName(), def.getFeature(), def.getBundle(), def.getFactory());
     }
 
     public static NodeUIInformation toNodeUIInformation(final NodeUIInfoDef uiInfoDef) {
@@ -481,7 +475,8 @@ public class DefToCoreUtil {
         //        var value = type.loadValue(toNodeSettings(def.getValue()));
         //        FlowVariable.lo
         try {
-            return FlowVariable.load(toNodeSettings(def.getValue()));
+            // TODO what should be the key?
+            return FlowVariable.load(toNodeSettings(def.getValue(), "???"));
         } catch (InvalidSettingsException ex) {
             throw new IllegalArgumentException("Can not load flow variable from " + def, ex);
         }
