@@ -1,0 +1,1398 @@
+{
+  "cipher" : null,
+  "loadVersion" : "4.1.0",
+  "staticNodeInfo" : null,
+  "workflow" : {
+    "annotations" : [ {
+      "alignment" : "LEFT",
+      "annotationVersion" : 20151123,
+      "bgcolor" : 16777215,
+      "borderColor" : 16766976,
+      "borderSize" : 10,
+      "defFontSize" : 11,
+      "height" : 140,
+      "location" : {
+        "x" : 200,
+        "y" : 0
+      },
+      "styles" : [ ],
+      "text" : "A workflow annotation",
+      "width" : 250
+    } ],
+    "state" : "IDLE",
+    "workflowCredentials" : {
+      "configBase" : "Credentials store for workflow + \"enh11762_WorkflowRepresentation 0\" ([] credentials)"
+    },
+    "nodes" : {
+      "0:1" : {
+        "name" : "Table Creator",
+        "factory" : "org.knime.base.node.io.tablecreator.TableCreator2NodeFactory",
+        "nodeType" : "NativeNode",
+        "nodeAndBundleInfo" : {
+          "nodeBundleName" : "KNIME Base Nodes",
+          "nodeBundleSymbolicName" : "org.knime.base",
+          "nodeBundleVendor" : "KNIME AG, Zurich, Switzerland",
+          "nodeBundleVersion" : "4.5.0.v202108091057",
+          "nodeFeatureName" : null,
+          "nodeFeatureSymbolicName" : null,
+          "nodeFeatureVendor" : null,
+          "nodeFeatureVersion" : null,
+          "nodeName" : null
+        },
+        "factorySettings" : {
+          "children" : { },
+          "configType" : "ConfigMap",
+          "key" : "factory_settings"
+        },
+        "nodeCreationConfig" : null,
+        "state" : "CONFIGURED",
+        "variableSettings" : null,
+        "modelSettings" : {
+          "children" : {
+            "rowIndices" : {
+              "array" : [ 0 ],
+              "configType" : "ConfigValueIntArray"
+            },
+            "columnIndices" : {
+              "array" : [ 0 ],
+              "configType" : "ConfigValueIntArray"
+            },
+            "values" : {
+              "array" : [ "test" ],
+              "configType" : "ConfigValueStringArray"
+            },
+            "rowIdPrefix" : {
+              "configType" : "ConfigValueString",
+              "value" : "Row"
+            },
+            "rowIdSuffix" : {
+              "configType" : "ConfigValueString",
+              "value" : ""
+            },
+            "rowIdStartValue" : {
+              "configType" : "ConfigValueInt",
+              "value" : 0
+            },
+            "highlightOutputTable" : {
+              "configType" : "ConfigValueBoolean",
+              "value" : false
+            },
+            "columnProperties" : {
+              "children" : {
+                "0" : {
+                  "children" : {
+                    "UserSetValues" : {
+                      "configType" : "ConfigValueBoolean",
+                      "value" : false
+                    },
+                    "MissValuePattern" : {
+                      "configType" : "ConfigValueString",
+                      "value" : ""
+                    },
+                    "FormatParameter" : {
+                      "configType" : "ConfigValueString",
+                      "value" : null
+                    },
+                    "ReadPossValsFromFile" : {
+                      "configType" : "ConfigValueBoolean",
+                      "value" : false
+                    },
+                    "SkipThisColumn" : {
+                      "configType" : "ConfigValueBoolean",
+                      "value" : false
+                    },
+                    "ColumnName" : {
+                      "configType" : "ConfigValueString",
+                      "value" : "column1"
+                    },
+                    "ColumnClass" : {
+                      "children" : {
+                        "cell_class" : {
+                          "configType" : "ConfigValueString",
+                          "value" : "org.knime.core.data.def.StringCell"
+                        },
+                        "is_null" : {
+                          "configType" : "ConfigValueBoolean",
+                          "value" : false
+                        }
+                      },
+                      "configType" : "ConfigMap",
+                      "key" : "ColumnClass"
+                    }
+                  },
+                  "configType" : "ConfigMap",
+                  "key" : "0"
+                }
+              },
+              "configType" : "ConfigMap",
+              "key" : "columnProperties"
+            }
+          },
+          "configType" : "ConfigMap",
+          "key" : "model"
+        },
+        "internalNodeSubSettings" : {
+          "children" : {
+            "memory_policy" : {
+              "children" : { },
+              "configType" : "ConfigMap",
+              "key" : "memory_policy"
+            }
+          },
+          "configType" : "ConfigMap",
+          "key" : "internal_node_subsettings"
+        },
+        "flowStack" : {
+          "children" : {
+            "flow_stack" : {
+              "children" : { },
+              "configType" : "ConfigMap",
+              "key" : "flow_stack"
+            }
+          },
+          "configType" : "ConfigMap",
+          "key" : "flow_stack"
+        },
+        "jobManager" : null,
+        "annotation" : {
+          "annotationDefault" : true,
+          "data" : {
+            "alignment" : "CENTER",
+            "annotationVersion" : null,
+            "bgcolor" : 16777215,
+            "borderColor" : 0,
+            "borderSize" : 0,
+            "defFontSize" : -1,
+            "height" : 0,
+            "location" : {
+              "x" : 0,
+              "y" : 0
+            },
+            "styles" : [ ],
+            "text" : "",
+            "width" : 0
+          }
+        },
+        "message" : {
+          "message" : "",
+          "type" : "RESET"
+        },
+        "locks" : {
+          "hasConfigureLock" : false,
+          "hasDeleteLock" : false,
+          "hasResetLock" : false
+        },
+        "uiInfo" : {
+          "bounds" : {
+            "height" : 82,
+            "location" : {
+              "x" : 209,
+              "y" : 252
+            },
+            "width" : 100
+          },
+          "dropLocation" : false,
+          "hasAbsoluteCoordinates" : true,
+          "snapToGrid" : false,
+          "symbolRelative" : true
+        },
+        "customDescription" : null
+      },
+      "0:3" : {
+        "workflow" : {
+          "annotations" : [ ],
+          "state" : "IDLE",
+          "workflowCredentials" : {
+            "configBase" : "Credentials store for workflow + \"Component 0:3:0\" ([] credentials)"
+          },
+          "nodes" : {
+            "0:3:0:4" : {
+              "name" : "Component Output",
+              "factory" : "org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeOutputNodeFactory",
+              "nodeType" : "NativeNode",
+              "nodeAndBundleInfo" : {
+                "nodeBundleName" : "KNIME Core API",
+                "nodeBundleSymbolicName" : "org.knime.core",
+                "nodeBundleVendor" : "KNIME AG, Zurich, Switzerland",
+                "nodeBundleVersion" : "4.5.0.qualifier",
+                "nodeFeatureName" : null,
+                "nodeFeatureSymbolicName" : null,
+                "nodeFeatureVendor" : null,
+                "nodeFeatureVersion" : null,
+                "nodeName" : null
+              },
+              "factorySettings" : {
+                "children" : { },
+                "configType" : "ConfigMap",
+                "key" : "factory_settings"
+              },
+              "nodeCreationConfig" : null,
+              "state" : "IDLE",
+              "variableSettings" : null,
+              "modelSettings" : {
+                "children" : {
+                  "variable-filter" : {
+                    "children" : {
+                      "filter-type" : {
+                        "configType" : "ConfigValueString",
+                        "value" : "STANDARD"
+                      },
+                      "included_names" : {
+                        "array" : [ ],
+                        "configType" : "ConfigValueBooleanArray"
+                      },
+                      "excluded_names" : {
+                        "array" : [ ],
+                        "configType" : "ConfigValueBooleanArray"
+                      },
+                      "enforce_option" : {
+                        "configType" : "ConfigValueString",
+                        "value" : "EnforceInclusion"
+                      },
+                      "name_pattern" : {
+                        "children" : {
+                          "pattern" : {
+                            "configType" : "ConfigValueString",
+                            "value" : ""
+                          },
+                          "type" : {
+                            "configType" : "ConfigValueString",
+                            "value" : "Wildcard"
+                          },
+                          "caseSensitive" : {
+                            "configType" : "ConfigValueBoolean",
+                            "value" : true
+                          }
+                        },
+                        "configType" : "ConfigMap",
+                        "key" : "name_pattern"
+                      }
+                    },
+                    "configType" : "ConfigMap",
+                    "key" : "variable-filter"
+                  },
+                  "variable-prefix" : {
+                    "configType" : "ConfigValueString",
+                    "value" : null
+                  },
+                  "port-names" : {
+                    "array" : [ ],
+                    "configType" : "ConfigValueBooleanArray"
+                  },
+                  "port-descriptions" : {
+                    "array" : [ ],
+                    "configType" : "ConfigValueBooleanArray"
+                  }
+                },
+                "configType" : "ConfigMap",
+                "key" : "model"
+              },
+              "internalNodeSubSettings" : {
+                "children" : {
+                  "memory_policy" : {
+                    "children" : { },
+                    "configType" : "ConfigMap",
+                    "key" : "memory_policy"
+                  }
+                },
+                "configType" : "ConfigMap",
+                "key" : "internal_node_subsettings"
+              },
+              "flowStack" : {
+                "children" : {
+                  "flow_stack" : {
+                    "children" : { },
+                    "configType" : "ConfigMap",
+                    "key" : "flow_stack"
+                  }
+                },
+                "configType" : "ConfigMap",
+                "key" : "flow_stack"
+              },
+              "jobManager" : null,
+              "annotation" : {
+                "annotationDefault" : true,
+                "data" : {
+                  "alignment" : "CENTER",
+                  "annotationVersion" : null,
+                  "bgcolor" : 16777215,
+                  "borderColor" : 0,
+                  "borderSize" : 0,
+                  "defFontSize" : -1,
+                  "height" : 0,
+                  "location" : {
+                    "x" : 0,
+                    "y" : 0
+                  },
+                  "styles" : [ ],
+                  "text" : "",
+                  "width" : 0
+                }
+              },
+              "message" : {
+                "message" : "Component does not have input data, execute upstream nodes first",
+                "type" : "WARNING"
+              },
+              "locks" : {
+                "hasConfigureLock" : false,
+                "hasDeleteLock" : true,
+                "hasResetLock" : false
+              },
+              "uiInfo" : {
+                "bounds" : {
+                  "height" : 0,
+                  "location" : {
+                    "x" : 250,
+                    "y" : 120
+                  },
+                  "width" : 0
+                },
+                "dropLocation" : false,
+                "hasAbsoluteCoordinates" : true,
+                "snapToGrid" : false,
+                "symbolRelative" : true
+              },
+              "customDescription" : null
+            },
+            "0:3:0:3" : {
+              "name" : "Component Input",
+              "factory" : "org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeInputNodeFactory",
+              "nodeType" : "NativeNode",
+              "nodeAndBundleInfo" : {
+                "nodeBundleName" : "KNIME Core API",
+                "nodeBundleSymbolicName" : "org.knime.core",
+                "nodeBundleVendor" : "KNIME AG, Zurich, Switzerland",
+                "nodeBundleVersion" : "4.5.0.qualifier",
+                "nodeFeatureName" : null,
+                "nodeFeatureSymbolicName" : null,
+                "nodeFeatureVendor" : null,
+                "nodeFeatureVersion" : null,
+                "nodeName" : null
+              },
+              "factorySettings" : {
+                "children" : {
+                  "port_0" : {
+                    "children" : {
+                      "index" : {
+                        "configType" : "ConfigValueInt",
+                        "value" : 0
+                      },
+                      "type" : {
+                        "children" : {
+                          "object_class" : {
+                            "configType" : "ConfigValueString",
+                            "value" : "org.knime.core.node.BufferedDataTable"
+                          }
+                        },
+                        "configType" : "ConfigMap",
+                        "key" : "type"
+                      }
+                    },
+                    "configType" : "ConfigMap",
+                    "key" : "port_0"
+                  }
+                },
+                "configType" : "ConfigMap",
+                "key" : "factory_settings"
+              },
+              "nodeCreationConfig" : null,
+              "state" : "IDLE",
+              "variableSettings" : null,
+              "modelSettings" : {
+                "children" : {
+                  "variable-filter" : {
+                    "children" : {
+                      "filter-type" : {
+                        "configType" : "ConfigValueString",
+                        "value" : "STANDARD"
+                      },
+                      "included_names" : {
+                        "array" : [ ],
+                        "configType" : "ConfigValueBooleanArray"
+                      },
+                      "excluded_names" : {
+                        "array" : [ ],
+                        "configType" : "ConfigValueBooleanArray"
+                      },
+                      "enforce_option" : {
+                        "configType" : "ConfigValueString",
+                        "value" : "EnforceInclusion"
+                      },
+                      "name_pattern" : {
+                        "children" : {
+                          "pattern" : {
+                            "configType" : "ConfigValueString",
+                            "value" : ""
+                          },
+                          "type" : {
+                            "configType" : "ConfigValueString",
+                            "value" : "Wildcard"
+                          },
+                          "caseSensitive" : {
+                            "configType" : "ConfigValueBoolean",
+                            "value" : true
+                          }
+                        },
+                        "configType" : "ConfigMap",
+                        "key" : "name_pattern"
+                      }
+                    },
+                    "configType" : "ConfigMap",
+                    "key" : "variable-filter"
+                  },
+                  "variable-prefix" : {
+                    "configType" : "ConfigValueString",
+                    "value" : null
+                  },
+                  "port-names" : {
+                    "array" : [ "Port 1" ],
+                    "configType" : "ConfigValueStringArray"
+                  },
+                  "port-descriptions" : {
+                    "array" : [ "" ],
+                    "configType" : "ConfigValueStringArray"
+                  },
+                  "sub-node-description" : {
+                    "configType" : "ConfigValueString",
+                    "value" : ""
+                  }
+                },
+                "configType" : "ConfigMap",
+                "key" : "model"
+              },
+              "internalNodeSubSettings" : {
+                "children" : {
+                  "memory_policy" : {
+                    "children" : { },
+                    "configType" : "ConfigMap",
+                    "key" : "memory_policy"
+                  }
+                },
+                "configType" : "ConfigMap",
+                "key" : "internal_node_subsettings"
+              },
+              "flowStack" : {
+                "children" : {
+                  "flow_stack" : {
+                    "children" : { },
+                    "configType" : "ConfigMap",
+                    "key" : "flow_stack"
+                  }
+                },
+                "configType" : "ConfigMap",
+                "key" : "flow_stack"
+              },
+              "jobManager" : null,
+              "annotation" : {
+                "annotationDefault" : true,
+                "data" : {
+                  "alignment" : "CENTER",
+                  "annotationVersion" : null,
+                  "bgcolor" : 16777215,
+                  "borderColor" : 0,
+                  "borderSize" : 0,
+                  "defFontSize" : -1,
+                  "height" : 0,
+                  "location" : {
+                    "x" : 0,
+                    "y" : 0
+                  },
+                  "styles" : [ ],
+                  "text" : "",
+                  "width" : 0
+                }
+              },
+              "message" : {
+                "message" : "Component does not have input data, execute upstream nodes first",
+                "type" : "WARNING"
+              },
+              "locks" : {
+                "hasConfigureLock" : false,
+                "hasDeleteLock" : true,
+                "hasResetLock" : false
+              },
+              "uiInfo" : {
+                "bounds" : {
+                  "height" : 0,
+                  "location" : {
+                    "x" : 50,
+                    "y" : 120
+                  },
+                  "width" : 0
+                },
+                "dropLocation" : false,
+                "hasAbsoluteCoordinates" : true,
+                "snapToGrid" : false,
+                "symbolRelative" : true
+              },
+              "customDescription" : null
+            },
+            "0:3:0:2" : {
+              "name" : "Column Filter",
+              "factory" : "org.knime.base.node.preproc.filter.column.DataColumnSpecFilterNodeFactory",
+              "nodeType" : "NativeNode",
+              "nodeAndBundleInfo" : {
+                "nodeBundleName" : "KNIME Base Nodes",
+                "nodeBundleSymbolicName" : "org.knime.base",
+                "nodeBundleVendor" : "KNIME AG, Zurich, Switzerland",
+                "nodeBundleVersion" : "4.5.0.v202108091057",
+                "nodeFeatureName" : null,
+                "nodeFeatureSymbolicName" : null,
+                "nodeFeatureVendor" : null,
+                "nodeFeatureVersion" : null,
+                "nodeName" : null
+              },
+              "factorySettings" : {
+                "children" : { },
+                "configType" : "ConfigMap",
+                "key" : "factory_settings"
+              },
+              "nodeCreationConfig" : null,
+              "state" : "IDLE",
+              "variableSettings" : null,
+              "modelSettings" : {
+                "children" : { },
+                "configType" : "ConfigMap",
+                "key" : "model"
+              },
+              "internalNodeSubSettings" : {
+                "children" : {
+                  "memory_policy" : {
+                    "children" : { },
+                    "configType" : "ConfigMap",
+                    "key" : "memory_policy"
+                  }
+                },
+                "configType" : "ConfigMap",
+                "key" : "internal_node_subsettings"
+              },
+              "flowStack" : {
+                "children" : {
+                  "flow_stack" : {
+                    "children" : { },
+                    "configType" : "ConfigMap",
+                    "key" : "flow_stack"
+                  }
+                },
+                "configType" : "ConfigMap",
+                "key" : "flow_stack"
+              },
+              "jobManager" : null,
+              "annotation" : {
+                "annotationDefault" : true,
+                "data" : {
+                  "alignment" : "CENTER",
+                  "annotationVersion" : null,
+                  "bgcolor" : 16777215,
+                  "borderColor" : 0,
+                  "borderSize" : 0,
+                  "defFontSize" : -1,
+                  "height" : 0,
+                  "location" : {
+                    "x" : 0,
+                    "y" : 0
+                  },
+                  "styles" : [ ],
+                  "text" : "",
+                  "width" : 0
+                }
+              },
+              "message" : {
+                "message" : "",
+                "type" : "RESET"
+              },
+              "locks" : {
+                "hasConfigureLock" : false,
+                "hasDeleteLock" : false,
+                "hasResetLock" : false
+              },
+              "uiInfo" : {
+                "bounds" : {
+                  "height" : 82,
+                  "location" : {
+                    "x" : 150,
+                    "y" : 120
+                  },
+                  "width" : 99
+                },
+                "dropLocation" : false,
+                "hasAbsoluteCoordinates" : true,
+                "snapToGrid" : false,
+                "symbolRelative" : true
+              },
+              "customDescription" : null
+            }
+          },
+          "metadata" : {
+            "authorInformation" : {
+              "authoredBy" : "<unknown>",
+              "authoredWhen" : 0.0,
+              "lastEditedBy" : null,
+              "lastEditedWhen" : null
+            },
+            "createdBy" : "4.5.0.qualifier",
+            "createdByNightly" : true,
+            "customDescription" : null,
+            "name" : "Component"
+          },
+          "project" : false,
+          "connections" : [ {
+            "destID" : 2,
+            "destPort" : 1,
+            "sourceID" : 3,
+            "sourcePort" : 1,
+            "uiSettings" : null
+          } ],
+          "workflowEditorSettings" : {
+            "connectionWidth" : 1,
+            "curvedConnections" : false,
+            "gridX" : -1,
+            "gridY" : -1,
+            "showGrid" : false,
+            "snapToGrid" : false,
+            "zoomLevel" : 1.0
+          },
+          "nodeRefs" : [ {
+            "id" : 2,
+            "reference" : "0:3:0:2"
+          }, {
+            "id" : 3,
+            "reference" : "0:3:0:3"
+          }, {
+            "id" : 4,
+            "reference" : "0:3:0:4"
+          } ]
+        },
+        "nodeType" : "Component",
+        "virtualInNodeIDSuffix" : 3,
+        "virtualOutNodeIDSuffix" : 4,
+        "hideInWizard" : false,
+        "cssStyles" : "",
+        "metadata" : {
+          "description" : null,
+          "icon" : null,
+          "inPortDescriptions" : null,
+          "inPortNames" : null,
+          "nodeType" : null,
+          "outPortDescriptions" : null,
+          "outPortNames" : null
+        },
+        "inPorts" : [ {
+          "index" : 0,
+          "name" : "Variable Inport",
+          "type" : "PortType(PortObjectSpec,FlowVariablePortObject)"
+        }, {
+          "index" : 1,
+          "name" : "Inport 1",
+          "type" : "PortType(DataTableSpec,BufferedDataTable)"
+        } ],
+        "outPorts" : [ {
+          "index" : 0,
+          "name" : "Variable Outport",
+          "type" : "PortType(PortObjectSpec,FlowVariablePortObject)"
+        } ],
+        "layoutJSON" : "{\"parentLayoutLegacyMode\":false}",
+        "configurationLayoutJSON" : "{}",
+        "templateInfo" : {
+          "exampleInputDataInfo" : null,
+          "incomingFlowVars" : null,
+          "role" : "None",
+          "timestamp" : null,
+          "type" : null,
+          "uri" : null
+        },
+        "variableSettings" : null,
+        "modelSettings" : {
+          "children" : { },
+          "configType" : "ConfigMap",
+          "key" : "model"
+        },
+        "internalNodeSubSettings" : {
+          "children" : {
+            "memory_policy" : {
+              "children" : { },
+              "configType" : "ConfigMap",
+              "key" : "memory_policy"
+            }
+          },
+          "configType" : "ConfigMap",
+          "key" : "internal_node_subsettings"
+        },
+        "flowStack" : {
+          "children" : {
+            "flow_stack" : {
+              "children" : { },
+              "configType" : "ConfigMap",
+              "key" : "flow_stack"
+            }
+          },
+          "configType" : "ConfigMap",
+          "key" : "flow_stack"
+        },
+        "jobManager" : null,
+        "annotation" : {
+          "annotationDefault" : false,
+          "data" : {
+            "alignment" : "CENTER",
+            "annotationVersion" : null,
+            "bgcolor" : 16777215,
+            "borderColor" : 0,
+            "borderSize" : 0,
+            "defFontSize" : -1,
+            "height" : 19,
+            "location" : {
+              "x" : 257,
+              "y" : 239
+            },
+            "styles" : [ ],
+            "text" : "",
+            "width" : 137
+          }
+        },
+        "message" : {
+          "message" : "Component Input 0:3:0:3: Component does not have input data, execute upstream nodes first",
+          "type" : "WARNING"
+        },
+        "state" : "IDLE",
+        "locks" : {
+          "hasConfigureLock" : false,
+          "hasDeleteLock" : false,
+          "hasResetLock" : false
+        },
+        "uiInfo" : {
+          "bounds" : {
+            "height" : 82,
+            "location" : {
+              "x" : 309,
+              "y" : 177
+            },
+            "width" : 83
+          },
+          "dropLocation" : false,
+          "hasAbsoluteCoordinates" : true,
+          "snapToGrid" : false,
+          "symbolRelative" : true
+        },
+        "customDescription" : null
+      },
+      "0:5" : {
+        "workflow" : {
+          "annotations" : [ ],
+          "state" : "CONFIGURED",
+          "workflowCredentials" : {
+            "configBase" : "Credentials store for workflow + \"Metanode 0:5\" ([] credentials)"
+          },
+          "nodes" : {
+            "0:5:4" : {
+              "name" : "Column Filter",
+              "factory" : "org.knime.base.node.preproc.filter.column.DataColumnSpecFilterNodeFactory",
+              "nodeType" : "NativeNode",
+              "nodeAndBundleInfo" : {
+                "nodeBundleName" : "KNIME Base Nodes",
+                "nodeBundleSymbolicName" : "org.knime.base",
+                "nodeBundleVendor" : "KNIME AG, Zurich, Switzerland",
+                "nodeBundleVersion" : "4.5.0.v202108091057",
+                "nodeFeatureName" : null,
+                "nodeFeatureSymbolicName" : null,
+                "nodeFeatureVendor" : null,
+                "nodeFeatureVersion" : null,
+                "nodeName" : null
+              },
+              "factorySettings" : {
+                "children" : { },
+                "configType" : "ConfigMap",
+                "key" : "factory_settings"
+              },
+              "nodeCreationConfig" : null,
+              "state" : "CONFIGURED",
+              "variableSettings" : null,
+              "modelSettings" : {
+                "children" : {
+                  "column-filter" : {
+                    "children" : {
+                      "filter-type" : {
+                        "configType" : "ConfigValueString",
+                        "value" : "STANDARD"
+                      },
+                      "included_names" : {
+                        "array" : [ "column1" ],
+                        "configType" : "ConfigValueStringArray"
+                      },
+                      "excluded_names" : {
+                        "array" : [ ],
+                        "configType" : "ConfigValueBooleanArray"
+                      },
+                      "enforce_option" : {
+                        "configType" : "ConfigValueString",
+                        "value" : "EnforceExclusion"
+                      },
+                      "name_pattern" : {
+                        "children" : {
+                          "pattern" : {
+                            "configType" : "ConfigValueString",
+                            "value" : ""
+                          },
+                          "type" : {
+                            "configType" : "ConfigValueString",
+                            "value" : "Wildcard"
+                          },
+                          "caseSensitive" : {
+                            "configType" : "ConfigValueBoolean",
+                            "value" : true
+                          }
+                        },
+                        "configType" : "ConfigMap",
+                        "key" : "name_pattern"
+                      },
+                      "datatype" : {
+                        "children" : {
+                          "typelist" : {
+                            "children" : { },
+                            "configType" : "ConfigMap",
+                            "key" : "typelist"
+                          }
+                        },
+                        "configType" : "ConfigMap",
+                        "key" : "datatype"
+                      }
+                    },
+                    "configType" : "ConfigMap",
+                    "key" : "column-filter"
+                  }
+                },
+                "configType" : "ConfigMap",
+                "key" : "model"
+              },
+              "internalNodeSubSettings" : {
+                "children" : {
+                  "memory_policy" : {
+                    "children" : { },
+                    "configType" : "ConfigMap",
+                    "key" : "memory_policy"
+                  }
+                },
+                "configType" : "ConfigMap",
+                "key" : "internal_node_subsettings"
+              },
+              "flowStack" : {
+                "children" : {
+                  "flow_stack" : {
+                    "children" : { },
+                    "configType" : "ConfigMap",
+                    "key" : "flow_stack"
+                  }
+                },
+                "configType" : "ConfigMap",
+                "key" : "flow_stack"
+              },
+              "jobManager" : null,
+              "annotation" : {
+                "annotationDefault" : true,
+                "data" : {
+                  "alignment" : "CENTER",
+                  "annotationVersion" : null,
+                  "bgcolor" : 16777215,
+                  "borderColor" : 0,
+                  "borderSize" : 0,
+                  "defFontSize" : -1,
+                  "height" : 0,
+                  "location" : {
+                    "x" : 0,
+                    "y" : 0
+                  },
+                  "styles" : [ ],
+                  "text" : "",
+                  "width" : 0
+                }
+              },
+              "message" : {
+                "message" : "",
+                "type" : "RESET"
+              },
+              "locks" : {
+                "hasConfigureLock" : false,
+                "hasDeleteLock" : false,
+                "hasResetLock" : false
+              },
+              "uiInfo" : {
+                "bounds" : {
+                  "height" : 82,
+                  "location" : {
+                    "x" : 150,
+                    "y" : 120
+                  },
+                  "width" : 99
+                },
+                "dropLocation" : false,
+                "hasAbsoluteCoordinates" : true,
+                "snapToGrid" : false,
+                "symbolRelative" : true
+              },
+              "customDescription" : null
+            }
+          },
+          "metadata" : {
+            "authorInformation" : {
+              "authoredBy" : "<unknown>",
+              "authoredWhen" : 0.0,
+              "lastEditedBy" : null,
+              "lastEditedWhen" : null
+            },
+            "createdBy" : "4.5.0.qualifier",
+            "createdByNightly" : true,
+            "customDescription" : null,
+            "name" : "Metanode"
+          },
+          "project" : false,
+          "connections" : [ {
+            "destID" : 4,
+            "destPort" : 1,
+            "sourceID" : 5,
+            "sourcePort" : 0,
+            "uiSettings" : null
+          } ],
+          "workflowEditorSettings" : {
+            "connectionWidth" : 1,
+            "curvedConnections" : false,
+            "gridX" : -1,
+            "gridY" : -1,
+            "showGrid" : false,
+            "snapToGrid" : false,
+            "zoomLevel" : 1.0
+          },
+          "nodeRefs" : [ {
+            "id" : 4,
+            "reference" : "0:5:4"
+          } ]
+        },
+        "nodeType" : "MetaNode",
+        "variableSettings" : null,
+        "inPorts" : [ {
+          "index" : 0,
+          "name" : "Inport 0",
+          "type" : "PortType(DataTableSpec,BufferedDataTable)"
+        } ],
+        "outPorts" : [ ],
+        "templateInfo" : {
+          "exampleInputDataInfo" : null,
+          "incomingFlowVars" : null,
+          "role" : "None",
+          "timestamp" : null,
+          "type" : null,
+          "uri" : null
+        },
+        "modelSettings" : null,
+        "inPortsBarUIInfo" : null,
+        "outPortsBarUIInfo" : null,
+        "internalNodeSubSettings" : null,
+        "flowStack" : null,
+        "jobManager" : null,
+        "annotation" : {
+          "annotationDefault" : true,
+          "data" : {
+            "alignment" : "CENTER",
+            "annotationVersion" : null,
+            "bgcolor" : 16777215,
+            "borderColor" : 0,
+            "borderSize" : 0,
+            "defFontSize" : -1,
+            "height" : 0,
+            "location" : {
+              "x" : 0,
+              "y" : 0
+            },
+            "styles" : [ ],
+            "text" : "",
+            "width" : 0
+          }
+        },
+        "message" : {
+          "message" : "",
+          "type" : "RESET"
+        },
+        "state" : "CONFIGURED",
+        "locks" : {
+          "hasConfigureLock" : false,
+          "hasDeleteLock" : false,
+          "hasResetLock" : false
+        },
+        "uiInfo" : {
+          "bounds" : {
+            "height" : 69,
+            "location" : {
+              "x" : 309,
+              "y" : 302
+            },
+            "width" : 73
+          },
+          "dropLocation" : false,
+          "hasAbsoluteCoordinates" : true,
+          "snapToGrid" : false,
+          "symbolRelative" : true
+        },
+        "customDescription" : null
+      }
+    },
+    "metadata" : {
+      "authorInformation" : {
+        "authoredBy" : "hornm",
+        "authoredWhen" : 1621593111.000000000,
+        "lastEditedBy" : "hornm",
+        "lastEditedWhen" : 1621593174.000000000
+      },
+      "createdBy" : "4.5.0.qualifier",
+      "createdByNightly" : true,
+      "customDescription" : null,
+      "name" : "enh11762_WorkflowRepresentation"
+    },
+    "project" : true,
+    "connections" : [ {
+      "destID" : 3,
+      "destPort" : 1,
+      "sourceID" : 1,
+      "sourcePort" : 1,
+      "uiSettings" : null
+    }, {
+      "destID" : 5,
+      "destPort" : 0,
+      "sourceID" : 1,
+      "sourcePort" : 1,
+      "uiSettings" : null
+    } ],
+    "workflowEditorSettings" : {
+      "connectionWidth" : 1,
+      "curvedConnections" : true,
+      "gridX" : 25,
+      "gridY" : 25,
+      "showGrid" : true,
+      "snapToGrid" : true,
+      "zoomLevel" : 1.0
+    },
+    "nodeRefs" : [ {
+      "id" : 1,
+      "reference" : "0:1"
+    }, {
+      "id" : 3,
+      "reference" : "0:3"
+    }, {
+      "id" : 5,
+      "reference" : "0:5"
+    } ]
+  }
+}rue,
+      "customDescription" : null,
+      "name" : null
+    }
+  }
+}ype" : "RESET"
+        },
+        "jobManager" : null,
+        "nodeAnnotation" : {
+          "annotationDefault" : true,
+          "data" : {
+            "alignment" : "CENTER",
+            "annotationVersion" : null,
+            "bgcolor" : 16777215,
+            "borderColor" : 0,
+            "borderSize" : 0,
+            "defFontSize" : -1,
+            "height" : 0,
+            "location" : {
+              "x" : 0,
+              "y" : 0
+            },
+            "styles" : [ ],
+            "text" : "",
+            "width" : 0
+          }
+        },
+        "customDescription" : null,
+        "nodeLocks" : {
+          "hasConfigureLock" : false,
+          "hasDeleteLock" : false,
+          "hasResetLock" : false
+        },
+        "nodeUIInfo" : {
+          "bounds" : {
+            "height" : 69,
+            "location" : {
+              "x" : 309,
+              "y" : 302
+            },
+            "width" : 73
+          },
+          "dropLocation" : false,
+          "hasAbsoluteCoordinates" : true,
+          "snapToGrid" : false,
+          "symbolRelative" : true
+        },
+        "workflowCredentials" : {
+          "configBase" : "Credentials store for workflow + \"Metanode 0:5\" ([] credentials)"
+        },
+        "annotations" : [ ],
+        "nodes" : {
+          "0:5:4" : {
+            "name" : "Column Filter",
+            "factory" : "org.knime.base.node.preproc.filter.column.DataColumnSpecFilterNodeFactory",
+            "kind" : "NativeNode",
+            "nodeAndBundleInfo" : {
+              "nodeBundleName" : "KNIME Base Nodes",
+              "nodeBundleSymbolicName" : "org.knime.base",
+              "nodeBundleVendor" : "KNIME AG, Zurich, Switzerland",
+              "nodeBundleVersion" : "4.5.0.v202108091057",
+              "nodeFeatureName" : null,
+              "nodeFeatureSymbolicName" : null,
+              "nodeFeatureVendor" : null,
+              "nodeFeatureVersion" : null,
+              "nodeName" : null
+            },
+            "factorySettings" : {
+              "children" : { },
+              "configType" : "ConfigMap",
+              "key" : "factory_settings"
+            },
+            "nodeCreationConfig" : null,
+            "state" : "CONFIGURED",
+            "modelSettings" : {
+              "children" : {
+                "column-filter" : {
+                  "children" : {
+                    "filter-type" : {
+                      "configType" : "ConfigValueString",
+                      "value" : "STANDARD"
+                    },
+                    "included_names" : {
+                      "array" : [ "column1" ],
+                      "configType" : "ConfigValueStringArray"
+                    },
+                    "excluded_names" : {
+                      "array" : [ ],
+                      "configType" : "ConfigValueBooleanArray"
+                    },
+                    "enforce_option" : {
+                      "configType" : "ConfigValueString",
+                      "value" : "EnforceExclusion"
+                    },
+                    "name_pattern" : {
+                      "children" : {
+                        "pattern" : {
+                          "configType" : "ConfigValueString",
+                          "value" : ""
+                        },
+                        "type" : {
+                          "configType" : "ConfigValueString",
+                          "value" : "Wildcard"
+                        },
+                        "caseSensitive" : {
+                          "configType" : "ConfigValueBoolean",
+                          "value" : true
+                        }
+                      },
+                      "configType" : "ConfigMap",
+                      "key" : "name_pattern"
+                    },
+                    "datatype" : {
+                      "children" : {
+                        "typelist" : {
+                          "children" : { },
+                          "configType" : "ConfigMap",
+                          "key" : "typelist"
+                        }
+                      },
+                      "configType" : "ConfigMap",
+                      "key" : "datatype"
+                    }
+                  },
+                  "configType" : "ConfigMap",
+                  "key" : "column-filter"
+                }
+              },
+              "configType" : "ConfigMap",
+              "key" : "model"
+            },
+            "variableSettings" : null,
+            "internalNodeSubSettings" : {
+              "children" : {
+                "memory_policy" : {
+                  "children" : { },
+                  "configType" : "ConfigMap",
+                  "key" : "memory_policy"
+                }
+              },
+              "configType" : "ConfigMap",
+              "key" : "internal_node_subsettings"
+            },
+            "flowStack" : {
+              "children" : {
+                "flow_stack" : {
+                  "children" : { },
+                  "configType" : "ConfigMap",
+                  "key" : "flow_stack"
+                }
+              },
+              "configType" : "ConfigMap",
+              "key" : "flow_stack"
+            },
+            "nodeMessage" : {
+              "message" : "",
+              "type" : "RESET"
+            },
+            "jobManager" : null,
+            "nodeAnnotation" : {
+              "annotationDefault" : true,
+              "data" : {
+                "alignment" : "CENTER",
+                "annotationVersion" : null,
+                "bgcolor" : 16777215,
+                "borderColor" : 0,
+                "borderSize" : 0,
+                "defFontSize" : -1,
+                "height" : 0,
+                "location" : {
+                  "x" : 0,
+                  "y" : 0
+                },
+                "styles" : [ ],
+                "text" : "",
+                "width" : 0
+              }
+            },
+            "customDescription" : null,
+            "nodeLocks" : {
+              "hasConfigureLock" : false,
+              "hasDeleteLock" : false,
+              "hasResetLock" : false
+            },
+            "nodeUIInfo" : {
+              "bounds" : {
+                "height" : 82,
+                "location" : {
+                  "x" : 150,
+                  "y" : 120
+                },
+                "width" : 99
+              },
+              "dropLocation" : false,
+              "hasAbsoluteCoordinates" : true,
+              "snapToGrid" : false,
+              "symbolRelative" : true
+            }
+          }
+        },
+        "metadata" : {
+          "authorInformation" : {
+            "authoredBy" : "<unknown>",
+            "authoredWhen" : 0.0,
+            "lastEditedBy" : null,
+            "lastEditedWhen" : null
+          },
+          "createdBy" : "4.5.0.qualifier",
+          "createdByNightly" : true,
+          "customDescription" : null,
+          "name" : null
+        },
+        "connections" : [ {
+          "destID" : 4,
+          "destPort" : 1,
+          "sourceID" : 5,
+          "sourcePort" : 0,
+          "uiSettings" : null
+        } ],
+        "workflowEditorSettings" : {
+          "connectionWidth" : 1,
+          "curvedConnections" : false,
+          "gridX" : -1,
+          "gridY" : -1,
+          "showGrid" : false,
+          "snapToGrid" : false,
+          "zoomLevel" : 1.0
+        },
+        "nodeRefs" : [ {
+          "id" : 4,
+          "reference" : "0:5:4"
+        } ],
+        "project" : false
+      }
+    },
+    "metadata" : {
+      "authorInformation" : {
+        "authoredBy" : "hornm",
+        "authoredWhen" : 1621593111.000000000,
+        "lastEditedBy" : "hornm",
+        "lastEditedWhen" : 1621593174.000000000
+      },
+      "createdBy" : "4.5.0.qualifier",
+      "createdByNightly" : true,
+      "customDescription" : null,
+      "name" : null
+    },
+    "connections" : [ {
+      "destID" : 3,
+      "destPort" : 1,
+      "sourceID" : 1,
+      "sourcePort" : 1,
+      "uiSettings" : null
+    }, {
+      "destID" : 5,
+      "destPort" : 0,
+      "sourceID" : 1,
+      "sourcePort" : 1,
+      "uiSettings" : null
+    } ],
+    "workflowEditorSettings" : {
+      "connectionWidth" : 1,
+      "curvedConnections" : true,
+      "gridX" : 25,
+      "gridY" : 25,
+      "showGrid" : true,
+      "snapToGrid" : true,
+      "zoomLevel" : 1.0
+    },
+    "nodeRefs" : [ {
+      "id" : 1,
+      "reference" : "0:1"
+    }, {
+      "id" : 3,
+      "reference" : "0:3"
+    }, {
+      "id" : 5,
+      "reference" : "0:5"
+    } ],
+    "project" : true,
+    "state" : "IDLE",
+    "kind" : "Node",
+    "nodeMessage" : {
+      "message" : "",
+      "type" : "RESET"
+    },
+    "jobManager" : null,
+    "nodeAnnotation" : {
+      "annotationDefault" : true,
+      "data" : {
+        "alignment" : "CENTER",
+        "annotationVersion" : null,
+        "bgcolor" : 16777215,
+        "borderColor" : 0,
+        "borderSize" : 0,
+        "defFontSize" : -1,
+        "height" : 0,
+        "location" : {
+          "x" : 0,
+          "y" : 0
+        },
+        "styles" : [ ],
+        "text" : "",
+        "width" : 0
+      }
+    },
+    "customDescription" : null,
+    "nodeLocks" : {
+      "hasConfigureLock" : false,
+      "hasDeleteLock" : false,
+      "hasResetLock" : false
+    },
+    "nodeUIInfo" : null
+  }
+}: null
+  }
+}

@@ -9002,9 +9002,9 @@ public final class WorkflowManager extends NodeContainer
                 workflowDir.mkdirs();
                 boolean isTemplate = getTemplateInformation().getRole().equals(Role.Template);
                 if (isTemplate) {
-                    FileWorkflowPersistor.saveAsTemplate(this, directoryReference, exec, saveHelper);
+                    FileWorkflowSaver.saveAsTemplate(this, directoryReference, exec, saveHelper);
                 } else {
-                    FileWorkflowPersistor.save(this, directoryReference, exec, saveHelper);
+                    FileWorkflowSaver.save(this, directoryReference, exec, saveHelper);
                     WorkflowSaveHook.runHooks(this, saveHelper.isSaveData(), workflowDir);
                 }
             } finally {
