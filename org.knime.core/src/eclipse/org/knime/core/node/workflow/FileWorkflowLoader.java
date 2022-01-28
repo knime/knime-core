@@ -105,11 +105,16 @@ import org.knime.core.util.LockFailedException;
 import org.knime.core.util.workflowalizer.AuthorInformation;
 import org.knime.core.workflow.def.ConnectionDef;
 import org.knime.core.workflow.def.NodeDef;
+import org.knime.core.workflow.def.WorkflowDef;
 import org.knime.core.workflow.def.impl.DefaultConnectionDef;
-import org.knime.core.workflow.def.impl.MetaNodeDataDefBuilder;
-import org.knime.core.workflow.def.impl.RootWorkflowDefBuilder;
-import org.knime.core.workflow.def.impl.WorkflowDefBuilder;
-import org.knime.core.workflow.def.impl.WorkflowMetadataDefBuilder;
+import org.knime.core.workflow.def.impl.DefaultMetaNodeDef;
+import org.knime.core.workflow.def.impl.DefaultMetaNodeDef.DefaultMetaNodeDefBuilder;
+import org.knime.core.workflow.def.impl.DefaultRootWorkflowDef;
+import org.knime.core.workflow.def.impl.DefaultRootWorkflowDef.DefaultRootWorkflowDefBuilder;
+import org.knime.core.workflow.def.impl.DefaultWorkflowDef;
+import org.knime.core.workflow.def.impl.DefaultWorkflowDef.DefaultWorkflowDefBuilder;
+import org.knime.core.workflow.def.impl.DefaultWorkflowMetadataDef;
+import org.knime.core.workflow.def.impl.DefaultWorkflowMetadataDef.DefaultWorkflowMetadataDefBuilder;
 
 /**
  * Recursively walks through the legacy directory structure, generating the workflow defs.
@@ -276,18 +281,18 @@ public class FileWorkflowLoader implements NodeContainerLoader {
 
     // -- Builders --
 
-    final MetaNodeDataDefBuilder m_metaNodeDefBuilder = MetaNodeDataDefBuilder.builder();
+    final DefaultMetaNodeDefBuilder m_metaNodeDefBuilder = DefaultMetaNodeDef.builder();
 
-    final RootWorkflowDefBuilder m_workflowProjectDefBuilder = RootWorkflowDefBuilder.builder();
+    final DefaultRootWorkflowDefBuilder m_workflowProjectDefBuilder = DefaultRootWorkflowDef.builder();
 
     /**
      * Holds the nodes (TODO move to builder) until build is called. Key is the node ID (suffix?)
      */
     Map<Integer, NodeDef> m_nodesToAdd = new HashMap<>();
 
-    final WorkflowDefBuilder m_workflowDefBuilder = WorkflowDefBuilder.builder();
+    final DefaultWorkflowDefBuilder m_workflowDefBuilder = DefaultWorkflowDef.builder();
 
-    final WorkflowMetadataDefBuilder m_workflowMetadataDefBuilder = WorkflowMetadataDefBuilder.builder();
+    final DefaultWorkflowMetadataDefBuilder m_workflowMetadataDefBuilder = DefaultWorkflowMetadataDef.builder();
 
     private NodeSettingsRO m_workflowSett;
 
@@ -2287,7 +2292,7 @@ public class FileWorkflowLoader implements NodeContainerLoader {
      * {@inheritDoc}
      */
     @Override
-    public NodeDef getLoadResult(final NodeContainerLoader parentPersistor, final NodeSettingsRO parentSettings,
+    public WorkflowDef getLoadResult(final NodeContainerLoader parentPersistor, final NodeSettingsRO parentSettings,
         final LoadResult loadResult) throws InvalidSettingsException, IOException {
         return m_workflowDefBuilder//
 

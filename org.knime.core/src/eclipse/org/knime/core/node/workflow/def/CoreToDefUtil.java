@@ -108,47 +108,46 @@ import org.knime.core.workflow.def.NodeUIInfoDef;
 import org.knime.core.workflow.def.PortDef;
 import org.knime.core.workflow.def.PortTypeDef;
 import org.knime.core.workflow.def.StyleDef;
-import org.knime.core.workflow.def.TemplateDef;
 import org.knime.core.workflow.def.TemplateLinkDef;
+import org.knime.core.workflow.def.TemplateMetadataDef;
 import org.knime.core.workflow.def.VendorDef;
 import org.knime.core.workflow.def.WorkflowCredentialsDef;
-import org.knime.core.workflow.def.impl.AnnotationDataDefBuilder;
-import org.knime.core.workflow.def.impl.AuthorInformationDefBuilder;
-import org.knime.core.workflow.def.impl.BoundsDefBuilder;
-import org.knime.core.workflow.def.impl.ComponentMetadataDefBuilder;
-import org.knime.core.workflow.def.impl.ConfigMapDefBuilder;
-import org.knime.core.workflow.def.impl.ConfigValueBooleanArrayDefBuilder;
-import org.knime.core.workflow.def.impl.ConfigValueBooleanDefBuilder;
-import org.knime.core.workflow.def.impl.ConfigValueByteArrayDefBuilder;
-import org.knime.core.workflow.def.impl.ConfigValueByteDefBuilder;
-import org.knime.core.workflow.def.impl.ConfigValueCharArrayDefBuilder;
-import org.knime.core.workflow.def.impl.ConfigValueCharDefBuilder;
-import org.knime.core.workflow.def.impl.ConfigValueDoubleArrayDefBuilder;
-import org.knime.core.workflow.def.impl.ConfigValueDoubleDefBuilder;
-import org.knime.core.workflow.def.impl.ConfigValueFloatArrayDefBuilder;
-import org.knime.core.workflow.def.impl.ConfigValueFloatDefBuilder;
-import org.knime.core.workflow.def.impl.ConfigValueIntArrayDefBuilder;
-import org.knime.core.workflow.def.impl.ConfigValueIntDefBuilder;
-import org.knime.core.workflow.def.impl.ConfigValueLongArrayDefBuilder;
-import org.knime.core.workflow.def.impl.ConfigValueLongDefBuilder;
-import org.knime.core.workflow.def.impl.ConfigValueShortArrayDefBuilder;
-import org.knime.core.workflow.def.impl.ConfigValueShortDefBuilder;
-import org.knime.core.workflow.def.impl.ConfigValueStringArrayDefBuilder;
-import org.knime.core.workflow.def.impl.ConfigValueStringDefBuilder;
-import org.knime.core.workflow.def.impl.ConnectionUISettingsDefBuilder;
-import org.knime.core.workflow.def.impl.CoordinateDefBuilder;
+import org.knime.core.workflow.def.impl.DefaultAnnotationDataDef;
+import org.knime.core.workflow.def.impl.DefaultAuthorInformationDef;
 import org.knime.core.workflow.def.impl.DefaultBoundsDef;
-import org.knime.core.workflow.def.impl.FlowVariableDefBuilder;
-import org.knime.core.workflow.def.impl.JobManagerDefBuilder;
-import org.knime.core.workflow.def.impl.NodeAnnotationDefBuilder;
-import org.knime.core.workflow.def.impl.NodeLocksDefBuilder;
-import org.knime.core.workflow.def.impl.NodeUIInfoDefBuilder;
-import org.knime.core.workflow.def.impl.PortDefBuilder;
-import org.knime.core.workflow.def.impl.PortTypeDefBuilder;
-import org.knime.core.workflow.def.impl.StyleDefBuilder;
-import org.knime.core.workflow.def.impl.TemplateDefBuilder;
-import org.knime.core.workflow.def.impl.TemplateLinkDefBuilder;
-import org.knime.core.workflow.def.impl.VendorDefBuilder;
+import org.knime.core.workflow.def.impl.DefaultComponentMetadataDef;
+import org.knime.core.workflow.def.impl.DefaultConfigMapDef;
+import org.knime.core.workflow.def.impl.DefaultConfigValueBooleanArrayDef;
+import org.knime.core.workflow.def.impl.DefaultConfigValueBooleanDef;
+import org.knime.core.workflow.def.impl.DefaultConfigValueByteArrayDef;
+import org.knime.core.workflow.def.impl.DefaultConfigValueByteDef;
+import org.knime.core.workflow.def.impl.DefaultConfigValueCharArrayDef;
+import org.knime.core.workflow.def.impl.DefaultConfigValueCharDef;
+import org.knime.core.workflow.def.impl.DefaultConfigValueDoubleArrayDef;
+import org.knime.core.workflow.def.impl.DefaultConfigValueDoubleDef;
+import org.knime.core.workflow.def.impl.DefaultConfigValueFloatArrayDef;
+import org.knime.core.workflow.def.impl.DefaultConfigValueFloatDef;
+import org.knime.core.workflow.def.impl.DefaultConfigValueIntArrayDef;
+import org.knime.core.workflow.def.impl.DefaultConfigValueIntDef;
+import org.knime.core.workflow.def.impl.DefaultConfigValueLongArrayDef;
+import org.knime.core.workflow.def.impl.DefaultConfigValueLongDef;
+import org.knime.core.workflow.def.impl.DefaultConfigValueShortArrayDef;
+import org.knime.core.workflow.def.impl.DefaultConfigValueShortDef;
+import org.knime.core.workflow.def.impl.DefaultConfigValueStringArrayDef;
+import org.knime.core.workflow.def.impl.DefaultConfigValueStringDef;
+import org.knime.core.workflow.def.impl.DefaultConnectionUISettingsDef;
+import org.knime.core.workflow.def.impl.DefaultCoordinateDef;
+import org.knime.core.workflow.def.impl.DefaultFlowVariableDef;
+import org.knime.core.workflow.def.impl.DefaultJobManagerDef;
+import org.knime.core.workflow.def.impl.DefaultNodeAnnotationDef;
+import org.knime.core.workflow.def.impl.DefaultNodeLocksDef;
+import org.knime.core.workflow.def.impl.DefaultNodeUIInfoDef;
+import org.knime.core.workflow.def.impl.DefaultPortDef;
+import org.knime.core.workflow.def.impl.DefaultPortTypeDef;
+import org.knime.core.workflow.def.impl.DefaultStyleDef;
+import org.knime.core.workflow.def.impl.DefaultTemplateLinkDef;
+import org.knime.core.workflow.def.impl.DefaultTemplateMetadataDef;
+import org.knime.core.workflow.def.impl.DefaultVendorDef;
 
 /**
  *
@@ -192,7 +191,7 @@ public class CoreToDefUtil {
         List<CoordinateDef> bendPoints = Arrays.stream(connectionUIInformation.getAllBendpoints())//
             .map(p -> createCoordinate(p[0], p[1]))//
             .collect(Collectors.toList());
-        return ConnectionUISettingsDefBuilder.builder()//
+        return DefaultConnectionUISettingsDef.builder()//
             .setBendPoints(bendPoints).build();
     }
 
@@ -224,7 +223,7 @@ public class CoreToDefUtil {
                     children.put(childKey, subTreeDef);
                 }
             }
-            return ConfigMapDefBuilder.builder()//
+            return DefaultConfigMapDef.builder()//
                     .setConfigType("ConfigMap")//
                     .setKey(key)//
                     .setChildren(children).build();
@@ -249,14 +248,14 @@ public class CoreToDefUtil {
             List<Boolean> asList = IntStream.range(0, booleanValues.length)//
                 .mapToObj(idx -> booleanValues[idx])//
                 .collect(Collectors.toList());
-            return ConfigValueBooleanArrayDefBuilder.builder()//
+            return DefaultConfigValueBooleanArrayDef.builder()//
                 .setConfigType("ConfigValueBooleanArray")//
                 .setArray(asList)//
                 .build();
         }
         byte[] byteValues = innerNode.getByteArray(childKey, null);
         if (byteValues != null) {
-            return ConfigValueByteArrayDefBuilder.builder()//
+            return DefaultConfigValueByteArrayDef.builder()//
                 .setConfigType("ConfigValueByteArray")//
                 .setArray(byteValues)//
                 .build();
@@ -267,7 +266,7 @@ public class CoreToDefUtil {
                 //
                 .mapToObj(idx -> Integer.valueOf(charValues[//
                 idx])).collect(Collectors.toList());
-            return ConfigValueCharArrayDefBuilder.builder()//
+            return DefaultConfigValueCharArrayDef.builder()//
                 .setConfigType("ConfigValueCharArray")//
                 .setArray(asList)//
                 .build();
@@ -277,7 +276,7 @@ public class CoreToDefUtil {
             List<Double> asList = IntStream.range(0, doubleValues.length)//
                 .mapToObj(idx -> doubleValues[idx])//
                 .collect(Collectors.toList());
-            return ConfigValueDoubleArrayDefBuilder.builder()//
+            return DefaultConfigValueDoubleArrayDef.builder()//
                 .setConfigType("ConfigValueDoubleArray")//
                 .setArray(asList)//
                 .build();
@@ -287,7 +286,7 @@ public class CoreToDefUtil {
             List<Float> asList = IntStream.range(0, floatValues.length)//
                 .mapToObj(idx -> floatValues[idx])//
                 .collect(Collectors.toList());
-            return ConfigValueFloatArrayDefBuilder.builder()//
+            return DefaultConfigValueFloatArrayDef.builder()//
                 .setConfigType("ConfigValueFloatArray")//
                 .setArray(asList)//
                 .build();
@@ -297,7 +296,7 @@ public class CoreToDefUtil {
             List<Integer> asList = IntStream.range(0, intValues.length)//
                 .mapToObj(idx -> intValues[idx])//
                 .collect(Collectors.toList());
-            return ConfigValueIntArrayDefBuilder.builder()//
+            return DefaultConfigValueIntArrayDef.builder()//
                 .setConfigType("ConfigValueIntArray")//
                 .setArray(asList)//
                 .build();
@@ -307,7 +306,7 @@ public class CoreToDefUtil {
             List<Long> asList = IntStream.range(0, longValues.length)//
                 .mapToObj(idx -> longValues[idx])//
                 .collect(Collectors.toList());
-            return ConfigValueLongArrayDefBuilder.builder()//
+            return DefaultConfigValueLongArrayDef.builder()//
                 .setConfigType("ConfigValueLongArray")//
                 .setArray(asList)//
                 .build();
@@ -318,7 +317,7 @@ public class CoreToDefUtil {
                 //
                 .mapToObj((idx -> Integer.valueOf(shortValues[//
                 idx]))).collect(Collectors.toList());
-            return ConfigValueShortArrayDefBuilder.builder()//
+            return DefaultConfigValueShortArrayDef.builder()//
                 .setConfigType("ConfigValueShortArray")//
                 .setArray(asList)//
                 .build();
@@ -328,7 +327,7 @@ public class CoreToDefUtil {
             List<String> asList = IntStream.range(0, stringValues.length)//
                 .mapToObj(idx -> stringValues[idx])//
                 .collect(Collectors.toList());
-            return ConfigValueStringArrayDefBuilder.builder()//
+            return DefaultConfigValueStringArrayDef.builder()//
                 .setConfigType("ConfigValueStringArray")//
                 .setArray(asList)//
                 .build();
@@ -339,37 +338,37 @@ public class CoreToDefUtil {
     private static Optional<ConfigDef> abstractConfigurationEntryToTypedLeaf(final AbstractConfigEntry child) {
         // for children: check whether they are leafs by testing on all leaf types
         if (child instanceof ConfigBooleanEntry) {
-            return Optional.of(ConfigValueBooleanDefBuilder.builder()//
+            return Optional.of(DefaultConfigValueBooleanDef.builder()//
             .setValue(((ConfigBooleanEntry)child).getBoolean())//
             .setConfigType("ConfigValueBoolean")//
             .build());
         } else if (child instanceof ConfigByteEntry) {
-            return Optional.of(ConfigValueByteDefBuilder.builder()//
+            return Optional.of(DefaultConfigValueByteDef.builder()//
             .setValue((int)((ConfigByteEntry)child).getByte())//
             .setConfigType("ConfigValueByte")//
             .build());
         } else if (child instanceof ConfigCharEntry) {
-            return Optional.of(ConfigValueCharDefBuilder.builder()//
+            return Optional.of(DefaultConfigValueCharDef.builder()//
             .setValue((int)((ConfigCharEntry)child).getChar())//
             .setConfigType("ConfigValueChar")//
             .build());
         } else if (child instanceof ConfigDoubleEntry) {
-            return Optional.of(ConfigValueDoubleDefBuilder.builder()//
+            return Optional.of(DefaultConfigValueDoubleDef.builder()//
             .setValue(((ConfigDoubleEntry)child).getDouble())//
             .setConfigType("ConfigValueDouble")//
             .build());
         } else if (child instanceof ConfigFloatEntry) {
-            return Optional.of(ConfigValueFloatDefBuilder.builder()//
+            return Optional.of(DefaultConfigValueFloatDef.builder()//
             .setValue(((ConfigFloatEntry)child).getFloat())//
             .setConfigType("ConfigValueFloat")//
             .build());
         } else if (child instanceof ConfigIntEntry) {
-            return Optional.of(ConfigValueIntDefBuilder.builder()//
+            return Optional.of(DefaultConfigValueIntDef.builder()//
             .setValue(((ConfigIntEntry)child).getInt())//
             .setConfigType("ConfigValueInt")//
             .build());
         } else if (child instanceof ConfigLongEntry) {
-            return Optional.of(ConfigValueLongDefBuilder.builder()//
+            return Optional.of(DefaultConfigValueLongDef.builder()//
             .setValue(((ConfigLongEntry)child).getLong())//
             .setConfigType("ConfigValueLong")//
             .build());
@@ -380,12 +379,12 @@ public class CoreToDefUtil {
             .setConfigType("ConfigValuePassword")//
             .build());
           } */ else if (child instanceof ConfigShortEntry) {
-            return Optional.of(ConfigValueShortDefBuilder.builder()//
+            return Optional.of(DefaultConfigValueShortDef.builder()//
             .setValue((int)((ConfigShortEntry)child).getShort())//
             .setConfigType("ConfigValueShort")//
             .build());
         } else if (child instanceof ConfigStringEntry) {
-            return Optional.of(ConfigValueStringDefBuilder.builder()//
+            return Optional.of(DefaultConfigValueStringDef.builder()//
             .setValue(((ConfigStringEntry)child).getString())//
             .setConfigType("ConfigValueString")//
             .build());
@@ -405,21 +404,23 @@ public class CoreToDefUtil {
         }
 
         int[] bounds = uiInfoDef.getBounds();
-        DefaultBoundsDef boundsDef = BoundsDefBuilder.builder()//
+        DefaultBoundsDef boundsDef = DefaultBoundsDef.builder()//
             .setLocation(createCoordinate(bounds[0], bounds[1]))//
             .setWidth(bounds[2])//
             .setHeight(bounds[3])//
             .build();
 
-        return NodeUIInfoDefBuilder.builder()//
+        return DefaultNodeUIInfoDef.builder()//
             .setBounds(boundsDef)//
+//            .setDropLocation(uiInfoDef.isDropLocation())//
             .setHasAbsoluteCoordinates(uiInfoDef.hasAbsoluteCoordinates())//
+//            .setSnapToGrid(uiInfoDef.getSnapToGrid())//
             .setSymbolRelative(uiInfoDef.isSymbolRelative())//
             .build();
     }
 
     public static NodeLocksDef toNodeLocksDef(final NodeLocks def) {
-        return NodeLocksDefBuilder.builder()//
+        return DefaultNodeLocksDef.builder()//
             .setHasConfigureLock(def.hasConfigureLock())//
             .setHasDeleteLock(def.hasDeleteLock())//
             .setHasResetLock(def.hasResetLock())//
@@ -429,12 +430,12 @@ public class CoreToDefUtil {
     public static AnnotationDataDef toAnnotationDataDef(final Annotation na) {
         // TODO I've seen this in the wfm wrapper too
         List<StyleDef> styles = Arrays.stream(na.getStyleRanges())
-            .map(s -> StyleDefBuilder.builder().setFgcolor(s.getFgColor()).setFontname(s.getFontName())
+            .map(s -> DefaultStyleDef.builder().setFgcolor(s.getFgColor()).setFontname(s.getFontName())
                 .setFontsize(s.getFontSize()).setFontstyle(s.getFontStyle()).setLength(s.getLength())
                 .setStart(s.getStart()).build())
             .collect(Collectors.toList());
 
-        return AnnotationDataDefBuilder.builder()//
+        return DefaultAnnotationDataDef.builder()//
             .setText(na.getText())//
             .setAlignment(na.getAlignment().toString())//
             .setBgcolor(na.getBgColor())//
@@ -449,29 +450,31 @@ public class CoreToDefUtil {
     }
 
     public static NodeAnnotationDef toNodeAnnotationDef(final NodeAnnotation na) {
-        return NodeAnnotationDefBuilder.builder()//
+        return DefaultNodeAnnotationDef.builder()//
             .setAnnotationDefault(na.getData().isDefault())//
             .setData(toAnnotationDataDef(na))//
             .build();
     }
 
     public static CoordinateDef createCoordinate(final int x, final int y) {
-        return CoordinateDefBuilder.builder().setX(x).setY(y).build();
+        return DefaultCoordinateDef.builder().setX(x).setY(y).build();
 
     }
 
-    public static TemplateDef toTemplateDef(final MetaNodeTemplateInformation i) {
-        // TODO flow variables and example data info
-        return TemplateDefBuilder.builder()//
+    public static TemplateMetadataDef toTemplateDef(final MetaNodeTemplateInformation i) {
+        return DefaultTemplateMetadataDef.builder()//
             .setTimestamp(i.getTimestamp() != null
                 ? OffsetDateTime.ofInstant(i.getTimestamp().toInstant(), ZoneId.systemDefault()) : null)//
-            .setType(i.getNodeContainerTemplateType() != null ? i.getNodeContainerTemplateType().toString() : null)//
+            // TODO
+            .setExampleInputDataInfo(null)//
+            // TODO
+            .setIncomingFlowVars(null)//
             .build();
     }
 
     public static TemplateLinkDef toTemplateLinkDef(final MetaNodeTemplateInformation i) {
         // TODO flow variables and example data info
-        return TemplateLinkDefBuilder.builder()//
+        return DefaultTemplateLinkDef.builder()//
             .setUri(i.getSourceURI().toString())//
             .build();
     }
@@ -481,7 +484,7 @@ public class CoreToDefUtil {
      * @return
      */
     public static PortDef toPortDef(final NodePort p) {
-        PortTypeDef portType = PortTypeDefBuilder.builder()//
+        PortTypeDef portType = DefaultPortTypeDef.builder()//
                 .setColor(p.getPortType().getColor())//
                 .setHidden(p.getPortType().isHidden())//
                 .setName(p.getPortType().getName())//
@@ -490,7 +493,7 @@ public class CoreToDefUtil {
                 .setPortObjectSpecClass(p.getPortType().getPortObjectSpecClass().getCanonicalName())//
                 .build();
 
-        return PortDefBuilder.builder()//
+        return DefaultPortDef.builder()//
             .setIndex(p.getPortIndex())//
             .setName(p.getPortName())//
             .setPortType(portType)//
@@ -498,7 +501,7 @@ public class CoreToDefUtil {
     }
 
     public static VendorDef toBundleVendorDef(final NodeAndBundleInformationPersistor p) {
-        return VendorDefBuilder.builder()//
+        return DefaultVendorDef.builder()//
             .setName(p.getBundleName().orElse(null))//
             .setSymbolicName(p.getBundleSymbolicName().orElse(null))//
             .setVendor(p.getBundleVendor().orElse(null))//
@@ -507,7 +510,7 @@ public class CoreToDefUtil {
 
     }
     public static VendorDef toFeatureVendorDef(final NodeAndBundleInformationPersistor p) {
-        return VendorDefBuilder.builder()//
+        return DefaultVendorDef.builder()//
             .setName(p.getFeatureName().orElse(null))//
             .setSymbolicName(p.getFeatureSymbolicName().orElse(null))//
             .setVendor(p.getFeatureVendor().orElse(null))//
@@ -516,7 +519,7 @@ public class CoreToDefUtil {
     }
 
     public static ComponentMetadataDef toComponentMetadataDef(final ComponentMetadata m) {
-        return ComponentMetadataDefBuilder.builder()//
+        return DefaultComponentMetadataDef.builder()//
             .setDescription(m.getDescription().orElse(null))//
             .setIcon(m.getIcon().orElse(null))//
 //            .setNodeType(m.getNodeType().map(ComponentNodeType::toString).orElse(null))//
@@ -540,7 +543,7 @@ public class CoreToDefUtil {
         jobManager.save(ns);
 
         try {
-            return JobManagerDefBuilder.builder()//
+            return DefaultJobManagerDef.builder()//
                 .setFactory(jobManager.getID())//
                 .setSettings(CoreToDefUtil.toConfigMapDef(ns))//
                 .build();
@@ -558,7 +561,7 @@ public class CoreToDefUtil {
         NodeSettings sub = new NodeSettings("FlowVariable");
         variable.save(sub);
         try {
-            return FlowVariableDefBuilder.builder()//
+            return DefaultFlowVariableDef.builder()//
                 .setValue(toConfigMapDef(sub))//
                 .build();
         } catch (InvalidSettingsException ex) {
@@ -582,7 +585,7 @@ public class CoreToDefUtil {
      * @return
      */
     public static AuthorInformationDef toAuthorInformationDef(final AuthorInformation authorInformation) {
-        var builder = AuthorInformationDefBuilder.builder()//
+        var builder = DefaultAuthorInformationDef.builder()//
             .setAuthoredBy(authorInformation.getAuthor())//
             .setAuthoredWhen(authorInformation.getAuthoredDate());//
         authorInformation.getLastEditor().ifPresent(builder::setLastEditedBy);
