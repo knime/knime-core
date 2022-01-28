@@ -53,16 +53,17 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.knime.core.node.workflow.def.CoreToDefUtil;
-import org.knime.core.workflow.def.MetaNodeDataDef;
+import org.knime.core.workflow.def.MetaNodeDef;
 import org.knime.core.workflow.def.NodeUIInfoDef;
 import org.knime.core.workflow.def.PortDef;
 import org.knime.core.workflow.def.TemplateLinkDef;
+import org.knime.core.workflow.def.WorkflowDef;
 
 /**
  *
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  */
-public class DefMetanodeWrapper extends DefNodeContainerWrapper implements MetaNodeDataDef {
+public class DefMetanodeWrapper extends DefNodeContainerWrapper implements MetaNodeDef {
 
     private WorkflowManager m_wfm;
 
@@ -172,6 +173,14 @@ public class DefMetanodeWrapper extends DefNodeContainerWrapper implements MetaN
     @Override
     public TemplateLinkDef getLink() {
         return CoreToDefUtil.toTemplateLinkDef(m_wfm.getTemplateInformation());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public WorkflowDef getWorkflow() {
+        return new DefWorkflowManagerWrapper(m_wfm);
     }
 
 }

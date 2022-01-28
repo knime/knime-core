@@ -147,7 +147,7 @@ public abstract class DefSingleNodeContainerWrapper extends DefNodeContainerWrap
                 def = CoreToDefUtil.toFlowVariableDef((FlowVariable)s);
             // scope context
             } else if (s instanceof FlowScopeContext) {
-                String scopeType = s.getClass().getSimpleName();
+                String scopeType = s.getClass().getCanonicalName();
                 FlowScopeContext context = (FlowScopeContext)s;
                 def = FlowContextDefBuilder.builder()//
                     .setContextType(scopeType)//

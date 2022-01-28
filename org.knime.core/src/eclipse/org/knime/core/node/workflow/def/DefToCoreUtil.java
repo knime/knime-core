@@ -85,6 +85,7 @@ import org.knime.core.workflow.def.AnnotationDataDef;
 import org.knime.core.workflow.def.AuthorInformationDef;
 import org.knime.core.workflow.def.BoundsDef;
 import org.knime.core.workflow.def.ComponentMetadataDef;
+import org.knime.core.workflow.def.ComponentTemplateDef;
 import org.knime.core.workflow.def.ConfigDef;
 import org.knime.core.workflow.def.ConfigMapDef;
 import org.knime.core.workflow.def.ConfigValueArrayDef;
@@ -110,11 +111,11 @@ import org.knime.core.workflow.def.ConfigValueStringDef;
 import org.knime.core.workflow.def.ConnectionUISettingsDef;
 import org.knime.core.workflow.def.FlowContextDef;
 import org.knime.core.workflow.def.FlowVariableDef;
+import org.knime.core.workflow.def.MetaNodeTemplateDef;
 import org.knime.core.workflow.def.NativeNodeDef;
 import org.knime.core.workflow.def.NodeLocksDef;
 import org.knime.core.workflow.def.NodeUIInfoDef;
 import org.knime.core.workflow.def.PortTypeDef;
-import org.knime.core.workflow.def.TemplateDef;
 import org.knime.core.workflow.def.WorkflowUISettingsDef;
 
 /**
@@ -202,12 +203,21 @@ public class DefToCoreUtil {
         return builder.build();
     }
 
-    public static MetaNodeTemplateInformation toTemplateInfo(final TemplateDef def) {
-                throw new NotImplementedException("Metanode template information import implemented yet.");
+    public static MetaNodeTemplateInformation toTemplateInfo(final ComponentTemplateDef def) {
+        // TODO
+                throw new NotImplementedException("Component template information import not implemented yet.");
 //                Role.valueOf(def.getRole()), TemplateType.valueOf(def.getType()),
 //                new URI(def.getUri()), java.util.Date.from(def.getTimestamp().toInstant()), null, null
 //                return MetaNodeTemplateInformation.creat);
     }
+
+    public static MetaNodeTemplateInformation toTemplateInfo(final MetaNodeTemplateDef def) {
+     // TODO
+        throw new NotImplementedException("Metanode template information import not implemented yet.");
+//        Role.valueOf(def.getRole()), TemplateType.valueOf(def.getType()),
+//        new URI(def.getUri()), java.util.Date.from(def.getTimestamp().toInstant()), null, null
+//        return MetaNodeTemplateInformation.creat);
+}
 
     public static EditorUIInformation toEditorUIInformation(final WorkflowUISettingsDef def) {
         return EditorUIInformation.builder()//
@@ -413,8 +423,10 @@ public class DefToCoreUtil {
         BoundsDef boundsDef = uiInfoDef.getBounds();
         return NodeUIInformation.builder()//
             .setHasAbsoluteCoordinates(uiInfoDef.hasAbsoluteCoordinates())//
+            .setIsDropLocation(false) // is only used to specify the location of a node and the shape of metanode bars
             .setIsSymbolRelative(uiInfoDef.isSymbolRelative())//
             .setNodeLocation(boundsDef.getLocation().getX(), boundsDef.getLocation().getY(), boundsDef.getWidth(), boundsDef.getHeight())//
+            .setSnapToGrid(false) // is only used to specify the location of a node and the shape of metanode bars
             .build();
     }
 
