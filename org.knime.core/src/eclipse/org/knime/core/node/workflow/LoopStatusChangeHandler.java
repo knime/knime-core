@@ -52,6 +52,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
+import org.knime.core.node.workflow.NativeNodeContainer.LoopStatus;
+
 /**
  * Manages loop state change events. An event listener is registered on a target status and is notified when the loop
  * enters this target status.
@@ -70,20 +72,22 @@ import java.util.concurrent.CopyOnWriteArraySet;
  *  </ul>
  * @author Benjamin Moser, KNIME GmbH, Konstanz
  * @since 4.6
- * @noextend
  * @noreference
  */
-public class LoopStatusChangeHandler {
+public final class LoopStatusChangeHandler {
 
-    private final Map<NativeNodeContainer.LoopStatus, Set<LoopStatusChangeListener>> m_loopStatusListeners = new ConcurrentHashMap<>();
+    private final Map<LoopStatus, Set<LoopStatusChangeListener>> m_loopStatusListeners =
+        new ConcurrentHashMap<>();
 
     /**
-     * Add a listener that will be notified when the loop enters the {@link org.knime.core.node.workflow.NativeNodeContainer.LoopStatus.PAUSED}
-     * state. This applies directly after the "Pause Loop Execution" action is triggered.
+     * Add a listener that will be notified when the loop enters the
+     * {@link org.knime.core.node.workflow.NativeNodeContainer.LoopStatus#PAUSED} state. This applies directly after the
+     * "Pause Loop Execution" action is triggered.
+     *
      * @param l The listener to add
      */
     public void addLoopPausedListener(final LoopStatusChangeListener l) {
-        addListener(NativeNodeContainer.LoopStatus.PAUSED, l);
+        addListener(LoopStatus.PAUSED, l);
     }
 
     /**
@@ -91,24 +95,24 @@ public class LoopStatusChangeHandler {
      * @param l The listener to remove
      */
     public void removeLoopPausedListener(final LoopStatusChangeListener l) {
-        removeListener(NativeNodeContainer.LoopStatus.PAUSED, l);
+        removeListener(LoopStatus.PAUSED, l);
     }
 
     /**
      * Notify all listeners subscribed to the target status.
      * @param newStatus The new loop status and target status of all listeners to notify.
      */
-    public void notifyLoopStatusChangeListener(final NativeNodeContainer.LoopStatus newStatus) {
+    public void notifyLoopStatusChangeListener(final LoopStatus newStatus) {
         m_loopStatusListeners.getOrDefault(newStatus, Collections.emptySet()).forEach(
-                LoopStatusChangeListener::stateChanged
+                LoopStatusChangeListener::statusChanged
         );
     }
 
-    private void addListener(final NativeNodeContainer.LoopStatus target, final LoopStatusChangeListener l) {
+    private void addListener(final LoopStatus target, final LoopStatusChangeListener l) {
         m_loopStatusListeners.computeIfAbsent(target, k -> new CopyOnWriteArraySet<>()).add(l);
     }
 
-    private void removeListener(final NativeNodeContainer.LoopStatus target, final LoopStatusChangeListener l) {
+    private void removeListener(final LoopStatus target, final LoopStatusChangeListener l) {
         m_loopStatusListeners.getOrDefault(target, Collections.emptySet()).remove(l);
     }
 

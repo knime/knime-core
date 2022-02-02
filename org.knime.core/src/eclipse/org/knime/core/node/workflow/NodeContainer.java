@@ -188,8 +188,6 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
         m_stateChangeListeners =
             new CopyOnWriteArraySet<NodeStateChangeListener>();
 
-    private final LoopStatusChangeHandler m_loopStatusChangeHandler = new LoopStatusChangeHandler();
-
     private final CopyOnWriteArraySet<NodeMessageListener> m_messageListeners =
         new CopyOnWriteArraySet<NodeMessageListener>();
 
@@ -1181,13 +1179,6 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
         }
         // every thing not know is simple node.
         return NodeContainerSettings.SplitType.USER;
-    }
-
-    /**
-     * @since 4.6
-     */
-    public LoopStatusChangeHandler getLoopStatusChangeHandler() {
-        return m_loopStatusChangeHandler;
     }
 
     /* ------------- ports --------------- */

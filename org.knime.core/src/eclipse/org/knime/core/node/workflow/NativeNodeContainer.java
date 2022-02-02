@@ -133,6 +133,8 @@ public class NativeNodeContainer extends SingleNodeContainer {
      * bug 5207. This field is set when status changes to EXECUTED and set to null when reset. */
     private NodeAndBundleInformationPersistor m_nodeAndBundleInformation;
 
+    private LoopStatusChangeHandler m_loopStatusChangeHandler;
+
     /**
      * Create new SingleNodeContainer based on existing Node.
      *
@@ -920,6 +922,21 @@ public class NativeNodeContainer extends SingleNodeContainer {
     }
 
     /**
+     * @return always the same the {@link LoopStatusChangeHandler}-instance or an empty optional if this node is not a
+     *         loop end
+     *
+     * @noreference This method is not intended to be referenced by clients.
+     *
+     * @since 4.6
+     */
+    public Optional<LoopStatusChangeHandler> getLoopStatusChangeHandler() {
+        if (this.isModelCompatibleTo(LoopEndNode.class) && m_loopStatusChangeHandler == null) {
+            m_loopStatusChangeHandler = new LoopStatusChangeHandler();
+        }
+        return Optional.ofNullable(m_loopStatusChangeHandler);
+    }
+
+    /**
      * @see NodeModel#resetAndConfigureLoopBody()
      */
     boolean resetAndConfigureLoopBody() {
@@ -940,6 +957,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
     void pauseLoopExecution(final boolean enablePausing) {
         if (getInternalState().isExecutionInProgress()) {
             getNode().setPauseLoopExecution(enablePausing);
+            getLoopStatusChangeHandler().ifPresent(h -> h.notifyLoopStatusChangeListener(LoopStatus.PAUSED));
         }
     }
 

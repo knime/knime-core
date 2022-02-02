@@ -48,12 +48,11 @@
 package org.knime.core.node.workflow;
 
 /**
- *
  * @see LoopStatusChangeHandler
  * @author Benjamin Moser, Knime GmbH, Konstanz
  * @since 4.6
- * @noextend
- * @noreference
+ * @noimplement This interface is not intended to be implemented by clients.
+ * @noreference This interface is not intended to be referenced by clients.
  */
 @FunctionalInterface
 public interface LoopStatusChangeListener {
@@ -61,6 +60,6 @@ public interface LoopStatusChangeListener {
     /**
      * The listener callback
      */
-    void stateChanged();
+    void statusChanged();
 
 }
