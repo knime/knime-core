@@ -75,46 +75,15 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.NotImplementedException;
-import org.knime.core.data.TableBackend;
-import org.knime.core.internal.ReferencedFile;
-import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.KNIMEConstants;
-import org.knime.core.node.NodeAndBundleInformationPersistor;
-import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeSettings;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.port.PortObject;
-import org.knime.core.node.port.PortType;
-import org.knime.core.node.util.CheckUtils;
-import org.knime.core.node.workflow.FromFileNodeContainerPersistor.PersistorWithPortIndex;
-import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
-import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
-import org.knime.core.node.workflow.WorkflowPersistor.NodeFactoryUnknownException;
-import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
-import org.knime.core.node.workflow.WorkflowTableBackendSettings.TableBackendUnknownException;
-import org.knime.core.node.workflow.def.CoreToDefUtil;
-import org.knime.core.node.workflow.execresult.WorkflowExecutionResult;
-import org.knime.core.node.workflow.loader.NodeContainerLoader;
-import org.knime.core.util.FileUtil;
-import org.knime.core.util.LoadVersion;
-import org.knime.core.util.LockFailedException;
 import org.knime.core.util.workflowalizer.AuthorInformation;
 import org.knime.core.workflow.def.ConnectionDef;
 import org.knime.core.workflow.def.NodeDef;
 import org.knime.core.workflow.def.WorkflowDef;
 import org.knime.core.workflow.def.impl.DefaultConnectionDef;
-import org.knime.core.workflow.def.impl.DefaultMetaNodeDef;
-import org.knime.core.workflow.def.impl.DefaultMetaNodeDef.DefaultMetaNodeDefBuilder;
-import org.knime.core.workflow.def.impl.DefaultRootWorkflowDef;
-import org.knime.core.workflow.def.impl.DefaultRootWorkflowDef.DefaultRootWorkflowDefBuilder;
-import org.knime.core.workflow.def.impl.DefaultWorkflowDef;
-import org.knime.core.workflow.def.impl.DefaultWorkflowDef.DefaultWorkflowDefBuilder;
-import org.knime.core.workflow.def.impl.DefaultWorkflowMetadataDef;
-import org.knime.core.workflow.def.impl.DefaultWorkflowMetadataDef.DefaultWorkflowMetadataDefBuilder;
+import org.knime.core.workflow.def.impl.MetaNodeDataDefBuilder;
+import org.knime.core.workflow.def.impl.RootWorkflowDefBuilder;
+import org.knime.core.workflow.def.impl.WorkflowDefBuilder;
+import org.knime.core.workflow.def.impl.WorkflowMetadataDefBuilder;
 
 /**
  * Recursively walks through the legacy directory structure, generating the workflow defs.
@@ -281,18 +250,18 @@ public class FileWorkflowLoader implements NodeContainerLoader {
 
     // -- Builders --
 
-    final DefaultMetaNodeDefBuilder m_metaNodeDefBuilder = DefaultMetaNodeDef.builder();
+    final MetaNodeDataDefBuilder m_metaNodeDefBuilder = MetaNodeDataDefBuilder.builder();
 
-    final DefaultRootWorkflowDefBuilder m_workflowProjectDefBuilder = DefaultRootWorkflowDef.builder();
+    final RootWorkflowDefBuilder m_workflowProjectDefBuilder = RootWorkflowDefBuilder.builder();
 
     /**
      * Holds the nodes (TODO move to builder) until build is called. Key is the node ID (suffix?)
      */
     Map<Integer, NodeDef> m_nodesToAdd = new HashMap<>();
 
-    final DefaultWorkflowDefBuilder m_workflowDefBuilder = DefaultWorkflowDef.builder();
+    final WorkflowDefBuilder m_workflowDefBuilder = WorkflowDefBuilder.builder();
 
-    final DefaultWorkflowMetadataDefBuilder m_workflowMetadataDefBuilder = DefaultWorkflowMetadataDef.builder();
+    final WorkflowMetadataDefBuilder m_workflowMetadataDefBuilder = WorkflowMetadataDefBuilder.builder();
 
     private NodeSettingsRO m_workflowSett;
 
