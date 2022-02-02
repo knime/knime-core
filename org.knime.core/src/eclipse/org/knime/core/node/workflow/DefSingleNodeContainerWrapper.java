@@ -61,8 +61,8 @@ import org.knime.core.node.workflow.def.CoreToDefUtil;
 import org.knime.core.workflow.def.ConfigMapDef;
 import org.knime.core.workflow.def.FlowObjectDef;
 import org.knime.core.workflow.def.SingleNodeDef;
-import org.knime.core.workflow.def.impl.DefaultFlowContextDef;
-import org.knime.core.workflow.def.impl.DefaultFlowMarkerDef;
+import org.knime.core.workflow.def.impl.FlowContextDefBuilder;
+import org.knime.core.workflow.def.impl.FlowMarkerDefBuilder;
 
 /**
  *
@@ -149,14 +149,14 @@ public abstract class DefSingleNodeContainerWrapper extends DefNodeContainerWrap
             } else if (s instanceof FlowScopeContext) {
                 String scopeType = s.getClass().getSimpleName();
                 FlowScopeContext context = (FlowScopeContext)s;
-                def = DefaultFlowContextDef.builder()//
+                def = FlowContextDefBuilder.builder()//
                     .setContextType(scopeType)//
                     .setActive(!context.isInactiveScope())//
                     .build();
                 result.add(def);
             // flow marker
             } else if (s instanceof InnerFlowLoopExecuteMarker) {
-                def = DefaultFlowMarkerDef.builder().setClassName(s.getClass().getName()).build();
+                def = FlowMarkerDefBuilder.builder().setClassName(s.getClass().getName()).build();
             } else {
                 throw new IllegalArgumentException(
                     String.format("No serialization implemented for flow objects of type %s (%s)", s.getClass(), s));

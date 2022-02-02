@@ -64,24 +64,19 @@ import org.knime.core.util.workflowalizer.AuthorInformation;
 import org.knime.core.workflow.def.AnnotationDataDef;
 import org.knime.core.workflow.def.AuthorInformationDef;
 import org.knime.core.workflow.def.ConnectionDef;
-import org.knime.core.workflow.def.JobManagerDef;
-import org.knime.core.workflow.def.MetaNodeDataDef;
-import org.knime.core.workflow.def.NodeAnnotationDef;
 import org.knime.core.workflow.def.NodeDef;
-import org.knime.core.workflow.def.NodeLocksDef;
-import org.knime.core.workflow.def.NodeUIInfoDef;
 import org.knime.core.workflow.def.RootWorkflowDef;
 import org.knime.core.workflow.def.StyleDef;
 import org.knime.core.workflow.def.WorkflowDef;
 import org.knime.core.workflow.def.WorkflowMetadataDef;
 import org.knime.core.workflow.def.WorkflowUISettingsDef;
-import org.knime.core.workflow.def.impl.DefaultAnnotationDataDef;
-import org.knime.core.workflow.def.impl.DefaultAuthorInformationDef;
-import org.knime.core.workflow.def.impl.DefaultConnectionDef;
-import org.knime.core.workflow.def.impl.DefaultRootWorkflowDef;
-import org.knime.core.workflow.def.impl.DefaultStyleDef;
-import org.knime.core.workflow.def.impl.DefaultWorkflowMetadataDef;
-import org.knime.core.workflow.def.impl.DefaultWorkflowUISettingsDef;
+import org.knime.core.workflow.def.impl.AnnotationDataDefBuilder;
+import org.knime.core.workflow.def.impl.AuthorInformationDefBuilder;
+import org.knime.core.workflow.def.impl.ConnectionDefBuilder;
+import org.knime.core.workflow.def.impl.RootWorkflowDefBuilder;
+import org.knime.core.workflow.def.impl.StyleDefBuilder;
+import org.knime.core.workflow.def.impl.WorkflowMetadataDefBuilder;
+import org.knime.core.workflow.def.impl.WorkflowUISettingsDefBuilder;
 
 /**
  *
@@ -112,7 +107,7 @@ public class DefWorkflowManagerWrapper implements WorkflowDef {
                  .map(CoreToDefUtil::toConnectionUISettingsDef)//
                 .orElse(null);
 
-            result.add(DefaultConnectionDef.builder()//
+            result.add(ConnectionDefBuilder.builder()//
                 .setSourcePort(connection.getSourcePort())//
                 .setSourceID(connection.getSource().getIndex())//
                 .setDestPort(connection.getDestPort())//
@@ -130,7 +125,7 @@ public class DefWorkflowManagerWrapper implements WorkflowDef {
     @Override
     public WorkflowUISettingsDef getWorkflowEditorSettings() {
         final var wfEditorSettings = m_wfm.getEditorUIInformation();
-        return DefaultWorkflowUISettingsDef.builder()//
+        return WorkflowUISettingsDefBuilder.builder()//
             .setSnapToGrid(wfEditorSettings.getSnapToGrid())//
             .setShowGrid(wfEditorSettings.getShowGrid())//
             .setCurvedConnections(wfEditorSettings.getHasCurvedConnections())//
@@ -143,7 +138,7 @@ public class DefWorkflowManagerWrapper implements WorkflowDef {
 
     @Override
     public WorkflowMetadataDef getMetadata() {
-        return DefaultWorkflowMetadataDef.builder()//
+        return WorkflowMetadataDefBuilder.builder()//
                 .setName(m_wfm.getNameField())
                 .setCreatedByNightly(KNIMEConstants.isNightlyBuild())//
                 .setCreatedBy(KNIMEConstants.VERSION)//
@@ -163,7 +158,7 @@ public class DefWorkflowManagerWrapper implements WorkflowDef {
             .map(d -> OffsetDateTime.ofInstant(d.toInstant(), ZoneId.systemDefault()))//
             .orElse(null);
 
-        return DefaultAuthorInformationDef.builder()//
+        return AuthorInformationDefBuilder.builder()//
             .setLastEditedWhen(lastEditDate)//
             .setAuthoredWhen(authDate)//
             .setAuthoredBy(authorInfo.getAuthor())//
@@ -202,7 +197,7 @@ public class DefWorkflowManagerWrapper implements WorkflowDef {
 
             final var styles = new ArrayList<StyleDef>();
             for (final var style : annotation.getStyleRanges()) {
-                styles.add(DefaultStyleDef.builder()//
+                styles.add(StyleDefBuilder.builder()//
                     .setStart(style.getStart())//
                     .setLength(style.getLength())//
                     .setFontstyle(style.getFontStyle())//
@@ -212,7 +207,7 @@ public class DefWorkflowManagerWrapper implements WorkflowDef {
                     .build());
             }
 
-            AnnotationDataDef annotationData = DefaultAnnotationDataDef.builder()//
+            AnnotationDataDef annotationData = AnnotationDataDefBuilder.builder()//
                 .setLocation(CoreToDefUtil.createCoordinate(annotation.getX(), annotation.getY()))//
                 .setWidth(annotation.getWidth())//
                 .setHeight(annotation.getHeight())//
@@ -238,82 +233,10 @@ public class DefWorkflowManagerWrapper implements WorkflowDef {
      * @return description of the workflow project represented by the wrapped workflow manager in POJO format
      */
     public RootWorkflowDef asProjectDef() {
-        return DefaultRootWorkflowDef.builder()//
+        return RootWorkflowDefBuilder.builder()//
                 .setLoadVersion(m_wfm.getLoadVersion().getVersionString())//
                 .setWorkflow(this)
                 .build();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public MetaNodeDataDef getMetaNodeData() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getCustomDescription() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeAnnotationDef getAnnotation() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeUIInfoDef getUiInfo() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeLocksDef getLocks() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public JobManagerDef getJobManager() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getNodeType() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Integer getId() {
-        // TODO Auto-generated method stub
-        return null;
     }
 
     /**
