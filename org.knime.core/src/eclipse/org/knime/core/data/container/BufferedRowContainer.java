@@ -85,7 +85,7 @@ final class BufferedRowContainer implements RowContainer, RowWriteCursor {
 
     private final BufferedDataContainer m_delegate;
 
-    private boolean m_first = true;
+    private boolean m_needsCommit = false;
 
     BufferedRowContainer(final BufferedDataContainer delegate, final ValueSchema schema) {
         m_row = new BufferedRowWrite(delegate, schema);
@@ -99,13 +99,16 @@ final class BufferedRowContainer implements RowContainer, RowWriteCursor {
 
     @Override
     public RowWrite forward() {
-        // TODO I don't like the 'm_first' :-(
-        if (!m_first) {
-            m_row.commit();
-        } else {
-            m_first = false;
-        }
+        commitIfNecessary();
+        m_needsCommit = true;
         return m_row;
+    }
+
+    private void commitIfNecessary() {
+        if (m_needsCommit) {
+            m_row.commit();
+            m_needsCommit = false;
+        }
     }
 
     @Override
@@ -115,6 +118,7 @@ final class BufferedRowContainer implements RowContainer, RowWriteCursor {
 
     @Override
     public BufferedDataTable finish() throws IOException {
+        commitIfNecessary();
         m_delegate.close();
         return m_delegate.getTable();
     }
@@ -123,7 +127,6 @@ final class BufferedRowContainer implements RowContainer, RowWriteCursor {
     public void close() {
         // called before finish
         if (!m_delegate.isClosed()) {
-            m_row.commit();
             m_delegate.close();
             m_delegate.getBufferedTable().close();
         }
