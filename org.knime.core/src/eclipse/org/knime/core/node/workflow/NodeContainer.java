@@ -78,6 +78,7 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
+import org.knime.core.node.web.WebTemplate;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
 import org.knime.core.node.workflow.NodePropertyChangedEvent.NodeProperty;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
@@ -186,6 +187,8 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
     private final CopyOnWriteArraySet<NodeStateChangeListener>
         m_stateChangeListeners =
             new CopyOnWriteArraySet<NodeStateChangeListener>();
+
+    private final LoopStatusChangeHandler m_loopStatusChangeHandler = new LoopStatusChangeHandler();
 
     private final CopyOnWriteArraySet<NodeMessageListener> m_messageListeners =
         new CopyOnWriteArraySet<NodeMessageListener>();
@@ -1178,6 +1181,13 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
         }
         // every thing not know is simple node.
         return NodeContainerSettings.SplitType.USER;
+    }
+
+    /**
+     * @since 4.6
+     */
+    public LoopStatusChangeHandler getLoopStatusChangeHandler() {
+        return m_loopStatusChangeHandler;
     }
 
     /* ------------- ports --------------- */
