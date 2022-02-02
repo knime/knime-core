@@ -75,11 +75,37 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.NotImplementedException;
+import org.knime.core.data.TableBackend;
+import org.knime.core.internal.ReferencedFile;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.KNIMEConstants;
+import org.knime.core.node.NodeAndBundleInformationPersistor;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeSettings;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortType;
+import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.workflow.FromFileNodeContainerPersistor.PersistorWithPortIndex;
+import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
+import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
+import org.knime.core.node.workflow.WorkflowPersistor.NodeFactoryUnknownException;
+import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
+import org.knime.core.node.workflow.WorkflowTableBackendSettings.TableBackendUnknownException;
+import org.knime.core.node.workflow.def.CoreToDefUtil;
+import org.knime.core.node.workflow.execresult.WorkflowExecutionResult;
+import org.knime.core.node.workflow.loader.NodeContainerLoader;
+import org.knime.core.util.FileUtil;
+import org.knime.core.util.LoadVersion;
+import org.knime.core.util.LockFailedException;
 import org.knime.core.util.workflowalizer.AuthorInformation;
 import org.knime.core.workflow.def.ConnectionDef;
 import org.knime.core.workflow.def.NodeDef;
-import org.knime.core.workflow.def.WorkflowDef;
-import org.knime.core.workflow.def.impl.DefaultConnectionDef;
+import org.knime.core.workflow.def.impl.ConnectionDefBuilder;
 import org.knime.core.workflow.def.impl.MetaNodeDataDefBuilder;
 import org.knime.core.workflow.def.impl.RootWorkflowDefBuilder;
 import org.knime.core.workflow.def.impl.WorkflowDefBuilder;
@@ -1230,7 +1256,7 @@ public class FileWorkflowLoader implements NodeContainerLoader {
                 "Exception while loading connection UI " + "information between nodes " + sourceID + " and " + destID,
                 t);
         }
-        return DefaultConnectionDef.builder()//
+        return ConnectionDefBuilder.builder()//
             .setSourceID(sourceID)//
             .setSourcePort(sourcePort)//
             .setDestID(destID)//
@@ -2261,12 +2287,9 @@ public class FileWorkflowLoader implements NodeContainerLoader {
      * {@inheritDoc}
      */
     @Override
-    public WorkflowDef getLoadResult(final NodeContainerLoader parentPersistor, final NodeSettingsRO parentSettings,
-        final LoadResult loadResult) throws InvalidSettingsException, IOException {
-        return m_workflowDefBuilder//
-
-//                .setNodes(m_nodesToAdd)
-                .build();
+    public NodeDef getLoadResult(final NodeContainerLoader parentLoader, final NodeSettingsRO parentSettings, final LoadResult loadResult)
+        throws InvalidSettingsException, IOException {
+        // TODO Auto-generated method stub
+        return null;
     }
-
 }
