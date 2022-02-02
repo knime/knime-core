@@ -413,10 +413,9 @@ public class DefToCoreUtil {
         BoundsDef boundsDef = uiInfoDef.getBounds();
         return NodeUIInformation.builder()//
             .setHasAbsoluteCoordinates(uiInfoDef.hasAbsoluteCoordinates())//
-            .setIsDropLocation(uiInfoDef.isDropLocation())//
             .setIsSymbolRelative(uiInfoDef.isSymbolRelative())//
             .setNodeLocation(boundsDef.getLocation().getX(), boundsDef.getLocation().getY(), boundsDef.getWidth(), boundsDef.getHeight())//
-            .setSnapToGrid(uiInfoDef.isSnapToGrid()).build();
+            .build();
     }
 
     public static NodeLocks toNodeLocks(final NodeLocksDef def) {

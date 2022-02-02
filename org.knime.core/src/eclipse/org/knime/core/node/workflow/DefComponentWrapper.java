@@ -59,7 +59,7 @@ import org.knime.core.workflow.def.ComponentMetadataDef;
 import org.knime.core.workflow.def.PortDef;
 import org.knime.core.workflow.def.TemplateLinkDef;
 import org.knime.core.workflow.def.WorkflowDef;
-import org.knime.core.workflow.def.impl.DefaultComponentDialogSettingsDef;
+import org.knime.core.workflow.def.impl.ComponentDialogSettingsDefBuilder;
 
 /**
  * Provides a {@link ComponentDef} view on a component node in a workflow.
@@ -135,7 +135,7 @@ public class DefComponentWrapper extends DefSingleNodeContainerWrapper implement
      */
     @Override
     public ComponentDialogSettingsDef getDialogSettings() {
-        return DefaultComponentDialogSettingsDef.builder()//
+        return ComponentDialogSettingsDefBuilder.builder()//
                 .setConfigurationLayoutJSON(m_nc.getSubnodeConfigurationLayoutStringProvider().getConfigurationLayoutString())//
                 .setLayoutJSON(m_nc.getSubnodeLayoutStringProvider().getLayoutString())//
                 .setHideInWizard(m_nc.isHideInWizard())//
