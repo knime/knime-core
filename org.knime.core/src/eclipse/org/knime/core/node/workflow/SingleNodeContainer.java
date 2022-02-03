@@ -110,8 +110,8 @@ public abstract class SingleNodeContainer extends NodeContainer {
     /** The sub settings entry containing the flow variable settings. These
      * settings are not available in the derived node model. */
     static final String CFG_VARIABLES = "variables";
-
-    private static final String CFG_VIEW = "view";
+    /** Sub settings entry containing the node-view settings. */
+    static final String CFG_VIEW = "view";
 
     /** Name of the sub-directory containing node-local files. These files
      * manually copied by the user and the node will automatically list those
@@ -1219,6 +1219,13 @@ public abstract class SingleNodeContainer extends NodeContainer {
          */
         public void setVariablesSettings(final NodeSettings variablesSettings) {
             m_variablesSettings = variablesSettings;
+        }
+
+        /**
+         * @param viewSettings the viewSettings to set
+         */
+        public void setViewSettings(final NodeSettings viewSettings) {
+            m_viewSettings = viewSettings;
         }
 
         /** {@inheritDoc} */

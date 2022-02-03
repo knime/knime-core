@@ -273,14 +273,25 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
             setDirtyAfterLoad();
         }
         m_sncSettings.setModelSettings(modelSettings);
+
+        try {
+            m_sncSettings.setViewSettings(loadViewSettings(settingsForNode));
+        } catch (InvalidSettingsException e) {
+            String msg = "Unable load view settings: " + e.getMessage();
+            result.addError(msg);
+            getLogger().debug(msg, e);
+            setDirtyAfterLoad();
+        }
+
         try {
             m_sncSettings.setVariablesSettings(loadVariableSettings(settingsForNode));
         } catch (InvalidSettingsException e) {
-            String msg = "Could load variable settings: " + e.getMessage();
+            String msg = "Could not load variable settings: " + e.getMessage();
             result.addError(msg);
             setDirtyAfterLoad();
             setNeedsResetAfterLoad();
         }
+
         try {
             m_flowObjects = loadFlowObjects(m_nodeSettings);
         } catch (Exception e) {
@@ -428,6 +439,13 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
         // defined by NodeModel#saveSettings -- these settings were never confirmed through validate/load though)
         if (settings.containsKey(SingleNodeContainer.CFG_MODEL)) {
             return (NodeSettings)settings.getNodeSettings(SingleNodeContainer.CFG_MODEL);
+        }
+        return null;
+    }
+
+    private static NodeSettings loadViewSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+        if (settings.containsKey(SingleNodeContainer.CFG_VIEW)) {
+            return (NodeSettings)settings.getNodeSettings(SingleNodeContainer.CFG_VIEW);
         }
         return null;
     }
