@@ -174,7 +174,7 @@ public abstract class DataServiceManager {
      * @throws IOException if applying the data failed
      * @throws IllegalStateException if there is no text apply data service
      */
-    public void callTextAppyDataService(final NodeContainer nc, final String request) throws IOException {
+    public void callTextApplyDataService(final NodeContainer nc, final String request) throws IOException {
         var service = getApplyDataService(nc).orElse(null);
         if (service instanceof TextReExecuteDataService) {
             ((TextReExecuteDataService)service).reExecute(request);

@@ -378,7 +378,7 @@ public class NodeViewManagerTest {
     /**
      * Tests {@link NodeViewManager#callTextInitialDataService(NodeContainer)},
      * {@link NodeViewManager#callTextDataService(NodeContainer, String)} and
-     * {@link NodeViewManager#callTextAppyDataService(NodeContainer, String)}
+     * {@link NodeViewManager#callTextApplyDataService(NodeContainer, String)}
      */
     @Test
     public void testCallDataServices() {
@@ -419,7 +419,7 @@ public class NodeViewManagerTest {
         assertThat(nodeViewManager.callTextInitialDataService(nc), is("init service"));
         assertThat(nodeViewManager.callTextDataService(nc, ""), is("general data service"));
         String message =
-            assertThrows(IOException.class, () -> nodeViewManager.callTextAppyDataService(nc, "ERROR,test"))
+            assertThrows(IOException.class, () -> nodeViewManager.callTextApplyDataService(nc, "ERROR,test"))
                 .getMessage();
         assertThat(message, is("re-execute data service"));
     }

@@ -187,7 +187,7 @@ public class NodeDialogManagerTest {
     /**
      * Tests {@link NodeDialogManager#callTextInitialDataService(NodeContainer)},
      * {@link NodeDialogManager#callTextDataService(NodeContainer, String)} and
-     * {@link NodeDialogManager#callTextAppyDataService(NodeContainer, String)}
+     * {@link NodeDialogManager#callTextApplyDataService(NodeContainer, String)}
      *
      * @throws IOException
      * @throws InvalidSettingsException
@@ -222,7 +222,7 @@ public class NodeDialogManagerTest {
         var nodeDialogManager = NodeDialogManager.getInstance();
         assertThat(nodeDialogManager.callTextInitialDataService(nc), is("the node settings"));
         assertThat(nodeDialogManager.callTextDataService(nc, ""), is("general data service"));
-        nodeDialogManager.callTextAppyDataService(nc, "key,node settings value");
+        nodeDialogManager.callTextApplyDataService(nc, "key,node settings value");
         var modelSettings = ((NodeDialogNodeModel)nc.getNode().getNodeModel()).getLoadNodeSettings();
         assertThat(modelSettings.getString("key"), is("node settings value"));
         assertThat(nc.getNodeSettings().getNodeSettings("model").getString("key"), is("node settings value"));
@@ -230,7 +230,7 @@ public class NodeDialogManagerTest {
         assertThat(viewSettings.getString("key"), is("node settings value"));
         assertThat(nc.getNodeSettings().getNodeSettings("view").getString("key"), is("node settings value"));
         String message =
-            assertThrows(IOException.class, () -> nodeDialogManager.callTextAppyDataService(nc, "ERROR,invalid"))
+            assertThrows(IOException.class, () -> nodeDialogManager.callTextApplyDataService(nc, "ERROR,invalid"))
                 .getMessage();
         assertThat(message, is("Invalid node settings"));
     }

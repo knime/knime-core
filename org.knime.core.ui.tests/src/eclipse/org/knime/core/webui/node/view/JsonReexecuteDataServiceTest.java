@@ -77,7 +77,7 @@ public class JsonReexecuteDataServiceTest {
             NodeViewManagerTest.createNodeWithNodeView(wfm, m -> NodeViewTest.createNodeView(page, m));
         wfm.executeAllAndWaitUntilDone();
 
-        NodeViewManager.getInstance().callTextAppyDataService(nnc, "data to apply");
+        NodeViewManager.getInstance().callTextApplyDataService(nnc, "data to apply");
         NodeViewNodeModel model = (NodeViewNodeModel)nnc.getNodeModel();
         Awaitility.await().untilAsserted(() -> {
             assertThat(model.getPreReexecuteData(), is("data to apply"));
