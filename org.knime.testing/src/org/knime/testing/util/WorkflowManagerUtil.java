@@ -51,16 +51,25 @@ package org.knime.testing.util;
 import java.io.File;
 import java.io.IOException;
 
+import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.DynamicNodeFactory;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.extension.NodeFactoryExtensionManager;
 import org.knime.core.node.workflow.NativeNodeContainer;
+import org.knime.core.node.workflow.UnsupportedWorkflowVersionException;
 import org.knime.core.node.workflow.WorkflowContext;
 import org.knime.core.node.workflow.WorkflowCreationHelper;
+import org.knime.core.node.workflow.WorkflowLoadHelper;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
+import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.util.FileUtil;
+import org.knime.core.util.LoadVersion;
+import org.knime.core.util.LockFailedException;
+import org.knime.core.util.Version;
 
 /**
  * Utilities for tests using functionality related to the {@link WorkflowManager}.
@@ -77,6 +86,44 @@ public final class WorkflowManagerUtil {
             // is not present (causes an exception on the first call
             // 'Invalid extension point: org.knime.workbench.repository.nodes')
         }
+    }
+
+    /**
+     * Loads a workflow into memory. Mainly copied from {@code org.knime.testing.core.ng.WorkflowLoadTest}.
+     *
+     * @param workflowDir
+     * @return the loaded workflow
+     * @throws IOException
+     * @throws InvalidSettingsException
+     * @throws CanceledExecutionException
+     * @throws UnsupportedWorkflowVersionException
+     * @throws LockFailedException
+     */
+    public static WorkflowManager loadWorkflow(final File workflowDir) throws IOException, InvalidSettingsException,
+        CanceledExecutionException, UnsupportedWorkflowVersionException, LockFailedException {
+        WorkflowLoadHelper loadHelper = new WorkflowLoadHelper() {
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public WorkflowContext getWorkflowContext() {
+                WorkflowContext.Factory fac = new WorkflowContext.Factory(workflowDir);
+                return fac.createContext();
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public UnknownKNIMEVersionLoadPolicy getUnknownKNIMEVersionLoadPolicy(
+                final LoadVersion workflowKNIMEVersion, final Version createdByKNIMEVersion,
+                final boolean isNightlyBuild) {
+                return UnknownKNIMEVersionLoadPolicy.Try;
+            }
+        };
+
+        WorkflowLoadResult loadRes = WorkflowManager.loadProject(workflowDir, new ExecutionMonitor(), loadHelper);
+        return loadRes.getWorkflowManager();
     }
 
     /**
