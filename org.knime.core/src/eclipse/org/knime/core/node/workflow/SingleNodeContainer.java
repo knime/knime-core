@@ -776,6 +776,15 @@ public abstract class SingleNodeContainer extends NodeContainer {
         }
     }
 
+    /**
+     * Replaces the node's view settings with the provided ones.
+     *
+     * @param settings
+     */
+    void loadViewSettings(final NodeSettingsRO settings) {
+        m_settings.m_viewSettings = settings;
+    }
+
     /** {@inheritDoc} */
     @Override
     WorkflowCopyContent loadContent(final NodeContainerPersistor nodePersistor,

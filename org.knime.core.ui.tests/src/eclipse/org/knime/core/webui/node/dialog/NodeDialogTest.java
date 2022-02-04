@@ -48,18 +48,25 @@
  */
 package org.knime.core.webui.node.dialog;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.Map;
 import java.util.Optional;
 
-import org.junit.After;
-import org.junit.Before;
+import org.junit.Test;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.config.base.JSONConfig;
+import org.knime.core.node.config.base.JSONConfig.WriterConfig;
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.webui.data.DataService;
 import org.knime.core.webui.page.Page;
+import org.knime.testing.node.dialog.NodeDialogNodeFactory;
 import org.knime.testing.util.WorkflowManagerUtil;
 
 /**
@@ -69,18 +76,80 @@ import org.knime.testing.util.WorkflowManagerUtil;
  */
 public class NodeDialogTest {
 
-    private WorkflowManager m_wfm;
+    /**
+     * Tests that model- and view-settings a being applied correctly and most importantly that the node is being reset
+     * in case of changed model settings but not in case of changed view settings.
+     *
+     * @throws IOException
+     * @throws InvalidSettingsException
+     */
+    @Test
+    public void testApplyChangedSettings() throws IOException, InvalidSettingsException {
+        var wfm = WorkflowManagerUtil.createEmptyWorkflow();
+        var nc = WorkflowManagerUtil.createAndAddNode(wfm,
+            new NodeDialogNodeFactory(() -> createNodeDialog(Page.builder(() -> "test", "test.html").build(),
+                createTextSettingsDataService(), null)));
 
-    @SuppressWarnings("javadoc")
-    @Before
-    public void createEmptyWorkflow() throws IOException {
-        m_wfm = WorkflowManagerUtil.createEmptyWorkflow();
+        var modelSettings = new NodeSettings("model");
+        var viewSettings = new NodeSettings("view");
+        modelSettings.addInt("model_key1", 1);
+        viewSettings.addInt("view_key1", 1);
+
+        var nodeDialogManager = NodeDialogManager.getInstance();
+        nodeDialogManager.callTextApplyDataService(nc, settingsToString(modelSettings, viewSettings));
+        wfm.executeAllAndWaitUntilDone();
+        assertThat(nc.getNodeContainerState().isExecuted(), is(true));
+
+        // change view settings and apply -> node is not being reset
+        viewSettings.addInt("view_key2", 2);
+        nodeDialogManager.callTextApplyDataService(nc, settingsToString(modelSettings, viewSettings));
+        assertThat(nc.getNodeContainerState().isExecuted(), is(true));
+        var newSettings = new NodeSettings("node_settings");
+        wfm.saveNodeSettings(nc.getID(), newSettings);
+        assertThat(newSettings.getNodeSettings(SettingsType.VIEW.getConfigKey()), is(viewSettings));
+
+        // change model settings and apply -> node is expected to be reset
+        modelSettings.addInt("model_key2", 2);
+        nodeDialogManager.callTextApplyDataService(nc, settingsToString(modelSettings, viewSettings));
+        assertThat(nc.getNodeContainerState().isExecuted(), is(false));
+        wfm.saveNodeSettings(nc.getID(), newSettings);
+        assertThat(newSettings.getNodeSettings(SettingsType.MODEL.getConfigKey()), is(modelSettings));
+
+        WorkflowManagerUtil.disposeWorkflow(wfm);
     }
 
-    @SuppressWarnings("javadoc")
-    @After
-    public void disposeWorkflow() {
-        WorkflowManagerUtil.disposeWorkflow(m_wfm);
+    private static TextSettingsDataService createTextSettingsDataService() {
+        return new TextSettingsDataService() {
+
+            @Override
+            public String getInitialData(final Map<SettingsType, NodeSettingsRO> settings,
+                final PortObjectSpec[] specs) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public void applyData(final String textSettings, final Map<SettingsType, NodeSettingsWO> settings) {
+                stringToSettings(textSettings, settings.get(SettingsType.MODEL), settings.get(SettingsType.VIEW));
+            }
+        };
+    }
+
+    private static final String SEP = "###################";
+
+    private static String settingsToString(final NodeSettingsRO modelSettings, final NodeSettingsRO viewSettings) {
+        return JSONConfig.toJSONString(modelSettings, WriterConfig.DEFAULT) + SEP
+            + JSONConfig.toJSONString(viewSettings, WriterConfig.DEFAULT);
+    }
+
+    private static void stringToSettings(final String s, final NodeSettingsWO modelSettings,
+        final NodeSettingsWO viewSettings) {
+        var splitString = s.split(SEP); // NOSONAR
+        try {
+            JSONConfig.readJSON(modelSettings, new StringReader(splitString[0]));
+            JSONConfig.readJSON(viewSettings, new StringReader(splitString[1]));
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     /**
@@ -99,7 +168,8 @@ public class NodeDialogTest {
             }
 
             @Override
-            public String getInitialData(final Map<SettingsType, NodeSettingsRO> settings, final PortObjectSpec[] specs) {
+            public String getInitialData(final Map<SettingsType, NodeSettingsRO> settings,
+                final PortObjectSpec[] specs) {
                 return "test settings";
             }
 

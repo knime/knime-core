@@ -157,51 +157,97 @@ public abstract class NodeDialog implements DataServiceProvider {
         @Override
         public void applyData(final String data) throws IOException {
             var settings = new NodeSettings("node_settings");
+            // to keep another copy of the settings to be able to tell whether
+            // settings have been changed
+            var previousSettings = new NodeSettings("previous_settings");
             var wfm = m_nnc.getParent();
             var nodeID = m_nnc.getID();
             try {
                 wfm.saveNodeSettings(nodeID, settings);
-                Map<SettingsType, NodeSettingsWO> settingsMap = new EnumMap<>(SettingsType.class);
-                NodeSettings viewSettings = null;
-                if (hasModelSettings()) {
-                    NodeSettings modelSettings;
-                    modelSettings = getOrCreateSubSettings(settings, SettingsType.MODEL.getConfigKey());
-                    settingsMap.put(SettingsType.MODEL, modelSettings);
-                } else {
-                    // even if the node has no model settings,
-                    // we still have to add empty model settings since the wfm expects node settings to be present
-                    settings.addNodeSettings(SettingsType.MODEL.getConfigKey());
-                }
-                if (hasViewSettings()) {
-                    viewSettings = getOrCreateSubSettings(settings, SettingsType.VIEW.getConfigKey());
-                    settingsMap.put(SettingsType.VIEW, viewSettings);
-                }
+                wfm.saveNodeSettings(nodeID, previousSettings);
 
+                Map<SettingsType, NodeSettingsWO> settingsMap = new EnumMap<>(SettingsType.class);
+                NodeSettings modelSettings = getModelSettings(settings, settingsMap);
+                NodeSettings viewSettings =  getViewSettings(settings, settingsMap);
+
+                // transfer data into settings
                 getSettingsDataService().applyData(data, settingsMap);
 
-                if (viewSettings != null) {
+                var modelSettingsChanged = modelSettingsChanged(previousSettings, modelSettings);
+                var viewSettingsChanged = viewSettingsChanged(previousSettings, viewSettings);
+
+                if (viewSettingsChanged) {
+                    // load settings into node view
                     var nodeView = NodeViewManager.getInstance().getNodeView(m_nnc);
                     nodeView.validateSettings(viewSettings);
                     nodeView.loadValidatedSettingsFrom(viewSettings);
                 }
 
-                wfm.loadNodeSettings(nodeID, settings);
+                if (modelSettingsChanged) {
+                    // 'persist' settings and load model settings into the node model
+                    wfm.loadNodeSettings(nodeID, settings);
+                } else if (viewSettingsChanged) {
+                    // 'persist' view settings only (without resetting the node)
+                    wfm.loadNodeViewSettings(nodeID, settings);
+                }
 
             } catch (InvalidSettingsException ex) {
                 throw new IOException("Invalid node settings", ex);
             }
         }
 
+        private boolean viewSettingsChanged(final NodeSettings previousSettings, final NodeSettings viewSettings)
+            throws InvalidSettingsException {
+            if (viewSettings != null) {
+                var previousViewSettings = getOrCreateSubSettings(previousSettings, SettingsType.VIEW.getConfigKey());
+                return !previousViewSettings.equals(viewSettings);
+            }
+            return false;
+        }
+
+        private boolean modelSettingsChanged(final NodeSettings previousSettings, final NodeSettings modelSettings)
+            throws InvalidSettingsException {
+            if (modelSettings != null) {
+                var previousModelSettings = getOrCreateSubSettings(previousSettings, SettingsType.MODEL.getConfigKey());
+                return !previousModelSettings.equals(modelSettings);
+            }
+            return false;
+        }
+
+        private NodeSettings getViewSettings(final NodeSettings settings,
+            final Map<SettingsType, NodeSettingsWO> settingsMap) throws InvalidSettingsException {
+            if (hasViewSettings()) {
+                var viewSettings = getOrCreateSubSettings(settings, SettingsType.VIEW.getConfigKey());
+                settingsMap.put(SettingsType.VIEW, viewSettings);
+                return viewSettings;
+            }
+            return null;
+        }
+
+        private NodeSettings getModelSettings(final NodeSettings settings,
+            final Map<SettingsType, NodeSettingsWO> settingsMap) throws InvalidSettingsException {
+            if (hasModelSettings()) {
+                var modelSettings = getOrCreateSubSettings(settings, SettingsType.MODEL.getConfigKey());
+                settingsMap.put(SettingsType.MODEL, modelSettings);
+                return modelSettings;
+            } else {
+                // even if the node has no model settings,
+                // we still have to add empty model settings since the wfm expects node settings to be present
+                settings.addNodeSettings(SettingsType.MODEL.getConfigKey());
+                return null;
+            }
+        }
+
         private NodeSettings getOrCreateSubSettings(final NodeSettings settings, final String key)
             throws InvalidSettingsException {
-            NodeSettings modelSettings;
+            NodeSettings subSettings;
             if (settings.containsKey(key)) {
-                modelSettings = settings.getNodeSettings(key);
+                subSettings = settings.getNodeSettings(key);
             } else {
-                modelSettings = new NodeSettings(key);
-                settings.addNodeSettings(modelSettings);
+                subSettings = new NodeSettings(key);
+                settings.addNodeSettings(subSettings);
             }
-            return modelSettings;
+            return subSettings;
         }
 
         private boolean hasModelSettings() {
