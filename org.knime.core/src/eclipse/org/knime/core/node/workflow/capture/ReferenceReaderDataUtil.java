@@ -50,22 +50,27 @@ package org.knime.core.node.workflow.capture;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
+import java.util.UUID;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.exec.dataexchange.PortObjectIDSettings;
+import org.knime.core.node.exec.dataexchange.PortObjectIDSettings.ReferenceType;
+import org.knime.core.node.exec.dataexchange.PortObjectRepository;
 import org.knime.core.node.exec.dataexchange.in.PortObjectInNodeModel;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortUtil;
@@ -73,67 +78,43 @@ import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
-import org.knime.core.util.FileUtil;
+import org.knime.core.node.workflow.virtual.AbstractPortObjectRepositoryNodeModel;
 
 /**
- * Pending implementation!
+ * Utility methods mainly to transfer data of so called 'PortObject- or BufferedDataTable- Reference Reader'-nodes (see,
+ * e.g., {@link PortObjectInNodeModel})
  *
  * @since 4.6
  * @author Dionysios Stolis, KNIME GmbH, Berlin, Germany
+ * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  *
  * @noreference This class is not intended to be referenced by clients.
  */
-public final class WorkflowPortUtil {
+public final class ReferenceReaderDataUtil {
 
-    private WorkflowPortUtil() {
+    private ReferenceReaderDataUtil() {
         // utility
     }
 
     /**
-     * @param po
-     * @param workflowName
-     * @param exec
-     * @return
-     * @throws Exception
-     */
-    public static File writeWorkflowPortObject(final WorkflowPortObject po, final String workflowName,
-        final ExecutionMonitor exec) throws Exception {
-
-        var segment = po.getSpec().getWorkflowSegment();
-        var poCopy = po.transformAndCopy((wfm, dir) -> {
-            var dataDir = new File(dir, "data");
-            dataDir.mkdir();
-            wfm.setName(workflowName);
-            try {
-                writeReferenceReaderNodeData(segment, wfm, dataDir, exec);
-            } catch (IOException | CanceledExecutionException | URISyntaxException | InvalidSettingsException ex) {
-                ExceptionUtils.rethrow(ex);
-            }
-        });
-        final var tmpFile = FileUtil.createTempFile("workflow-port-object", ".portobject", true);
-        PortUtil.writeObjectToFile(poCopy, tmpFile, exec);
-        return tmpFile;
-    }
-
-    /**
-     * @param segment
-     * @param wfm
-     * @param tmpDataDir
-     * @param exec
+     * Writes the 'reference reader node'-data of a workflow to file.
+     *
+     *
+     * @param wfm a {@link WorkflowManager}
+     * @param portObjectReaderSufIds a set of the referenced reader node identifiers
+     * @param tmpDataDir the data directory
+     * @param exec a {@link ExecutionMonitor}
      * @throws IOException
      * @throws CanceledExecutionException
      * @throws URISyntaxException
      * @throws InvalidSettingsException
      */
-    private static void writeReferenceReaderNodeData(final WorkflowSegment segment, final WorkflowManager wfm,
+    public static void writeReferenceReaderData(final WorkflowManager wfm, final Set<NodeIDSuffix> portObjectReaderSufIds,
         final File tmpDataDir, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException, URISyntaxException, InvalidSettingsException {
         // reconfigure reference reader nodes and store their data in temp directory
         exec.setMessage(() -> "Introducing reference reader nodes.");
-        final Set<NodeIDSuffix> portObjectReaderSufIds = segment.getPortObjectReferenceReaderNodes();
         for (NodeIDSuffix portObjectReaderSufId : portObjectReaderSufIds) {
-
             final NodeID portObjectReaderId = portObjectReaderSufId.prependParent(wfm.getID());
             final var portObjectReaderNC = wfm.findNodeContainer(portObjectReaderId);
             assert portObjectReaderNC instanceof NativeNodeContainer;
@@ -172,73 +153,94 @@ public final class WorkflowPortUtil {
         }
     }
 
-    private static PortObject writeReferenceReaderDataForWorkflowPort(final WorkflowPortObject wpo, final File dataDir,
-        final ExecutionMonitor exec)
-        throws IOException, CanceledExecutionException, URISyntaxException, InvalidSettingsException {
-        var spec = wpo.getSpec();
-        var segment = spec.getWorkflowSegment();
-        var wfm = segment.loadWorkflow();
-        var newSegment = new WorkflowSegment(wfm, segment.getConnectedInputs(), segment.getConnectedOutputs(),
-            segment.getPortObjectReferenceReaderNodes());
-        try {
-            writeReferenceReaderNodeData(segment, wfm, dataDir, exec);
-            return new WorkflowPortObject(new WorkflowPortObjectSpec(newSegment, spec.getWorkflowName(),
-                spec.getInputIDs(), spec.getOutputIDs()));
-        } finally {
-            newSegment.serializeAndDisposeWorkflow();
-            segment.disposeWorkflow();
-        }
-    }
-
-    /**
-     * Checks a {@link WorkflowLoadResult} and possibly turns it into a warning message or an exception.
-     *
-     * @param lr the load result to check
-     *
-     * @return a warning message if there are warnings, or else <code>null</code>
-     * @throws IllegalStateException thrown if there are loading errors
-     */
-    private static String checkLoadResult(final WorkflowLoadResult lr) {
-        switch (lr.getType()) {
-            case Warning:
-                return "Problem(s) while loading the workflow:\n" + lr;
-            case Error:
-                throw new IllegalStateException("Error(s) while loading the workflow: \n" + lr);
-            case Ok:
-            case DataLoadError: // ignore data load errors
-            default:
-                return null;
-
-        }
-    }
-
-    /**
-     * Helper method to load the workflow from a {@link WorkflowSegment}.
-     *
-     * @param ws the segment to load the workflow from
-     * @param warningConsumer called if there was a warning while loading
-     * @return the load workflow manager
-     *
-     * @throws IllegalStateException if there were loading errors
-     */
-    private static WorkflowManager loadWorkflow(final WorkflowSegment ws, final Consumer<String> warningConsumer) {
-        AtomicReference<IllegalStateException> exception = new AtomicReference<>();
-        var wfm = ws.loadWorkflow(lr -> { // NOSONAR
+    private static WorkflowPortObject writeReferenceReaderDataForWorkflowPort(final WorkflowPortObject wpo,
+        final File dataDir, final ExecutionMonitor exec) throws IOException {
+        return wpo.transformAndCopy(wfm -> {
             try {
-                String warning = checkLoadResult(lr);
-                if (warning != null) {
-                    warningConsumer.accept(warning);
-                }
-            } catch (IllegalStateException e) {
-                exception.set(e);
-                return;
+                writeReferenceReaderData(wfm, wpo.getSpec().getWorkflowSegment().getPortObjectReferenceReaderNodes(),
+                    dataDir, exec);
+            } catch (IOException | CanceledExecutionException | URISyntaxException | InvalidSettingsException ex) {
+                ExceptionUtils.rethrow(ex);
             }
         });
+    }
 
-        if (exception.get() != null) {
-            ws.disposeWorkflow();
-            throw exception.get();
+    /**
+     * Copies the 'reference reader node'-data to the {@link PortObjectRepository}, returns the corresponding nodes id.
+     *
+     * Note: this operation potentially manipulates the passed workflow manager (changing the port object reference
+     * type, e.g. from 'file' to 'repository')
+     *
+     * @param wfm <T> The specific PortObject class of interest.
+     * @param exec a {@link ExecutionContext}
+     * @param portObjRepoNodeModel special node model that receives the port objects and makes them available through the
+     *            {@link PortObjectRepository}
+     * @return a set of {@link NodeIDSuffix}.
+     * @throws IOException
+     * @throws CanceledExecutionException
+     * @throws InvalidSettingsException
+     */
+    public static Set<NodeIDSuffix> copyReferenceReaderData(final WorkflowManager wfm, final ExecutionContext exec,
+        final AbstractPortObjectRepositoryNodeModel portObjRepoNodeModel)
+        throws InvalidSettingsException, CanceledExecutionException, IOException {
+        Set<NodeIDSuffix> res = new HashSet<>();
+        for (var nc : wfm.getNodeContainers()) {
+            if (nc instanceof NativeNodeContainer
+                && ((NativeNodeContainer)nc).getNodeModel() instanceof PortObjectInNodeModel) {
+                exec.setProgress("Copying data for node " + nc.getID());
+                PortObjectInNodeModel portObjectReader =
+                    (PortObjectInNodeModel)((NativeNodeContainer)nc).getNodeModel();
+                final PortObjectIDSettings poSettings = portObjectReader.getInputNodeSettingsCopy();
+                if (poSettings.getReferenceType() != ReferenceType.FILE) {
+                    throw new IllegalStateException(
+                        "Reference reader nodes expected to reference a file. But the reference type is "
+                            + poSettings.getReferenceType());
+                }
+                var uri = poSettings.getUri();
+                var wfFile = wfm.getNodeContainerDirectory().getFile();
+                var absoluteDataFile = new File(wfFile, uri.toString().replace("knime://knime.workflow", ""));
+                if (!absoluteDataFile.getCanonicalPath().startsWith(wfFile.getCanonicalPath())) {
+                    throw new IllegalStateException(
+                        "Trying to read in a data file outside of the workflow directory. Not allowed!");
+                }
+                var po = readPortObjectFromFile(absoluteDataFile, exec, poSettings.isTable());
+                var uuid = UUID.randomUUID();
+                portObjRepoNodeModel.addPortObject(uuid, po);
+                PortObjectRepository.add(uuid, po);
+                updatePortObjectReferenceReaderReference(wfm, nc.getID(), poSettings, uuid);
+                res.add(NodeIDSuffix.create(wfm.getID(), nc.getID()));
+            }
         }
-        return wfm;
+        return res;
+    }
+
+    private static PortObject readPortObjectFromFile(final File absoluteDataFile, final ExecutionContext exec,
+        final boolean isTable) throws CanceledExecutionException, IOException {
+        try (InputStream in = absoluteDataFile.toURI().toURL().openStream()) {
+            return readPortObject(exec, in, isTable);
+        }
+    }
+
+    private static void updatePortObjectReferenceReaderReference(final WorkflowManager wfm, final NodeID nodeId,
+        final PortObjectIDSettings poSettings, final UUID id) throws InvalidSettingsException {
+        poSettings.setId(id);
+        final var settings = new NodeSettings("root");
+        wfm.saveNodeSettings(nodeId, settings);
+        final NodeSettingsWO modelSettings = settings.addNodeSettings("model");
+        poSettings.saveSettings(modelSettings);
+        wfm.loadNodeSettings(nodeId, settings);
+    }
+
+    private static PortObject readPortObject(final ExecutionContext exec, final InputStream in, final boolean isTable)
+        throws CanceledExecutionException, IOException {
+        PortObject po;
+        if (isTable) {
+            try (ContainerTable table = DataContainer.readFromStream(in)) {
+                po = exec.createBufferedDataTable(table, exec);
+            }
+        } else {
+            po = PortUtil.readObjectFromStream(in, exec);
+        }
+        return po;
     }
 }

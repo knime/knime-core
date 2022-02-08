@@ -88,7 +88,6 @@ import org.knime.core.util.FileUtil;
 import org.knime.core.util.FileUtil.ZipFileFilter;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.LockFailedException;
-import org.knime.core.util.Pair;
 import org.knime.core.util.VMFileLocker;
 import org.knime.core.util.Version;
 
@@ -217,26 +216,24 @@ public final class WorkflowSegment {
      */
     public WorkflowManager loadWorkflow(final Consumer<WorkflowLoadResult> loadResultCallback) {
         if (m_wfm == null) {
-            m_wfm = loadNewWorkflowInstance(loadResultCallback).getFirst();
+            m_wfm = loadWorkflowInternal(loadResultCallback);
         }
         return m_wfm;
     }
 
-    // TODO different name here
-    Pair<WorkflowManager, File> loadNewWorkflowInstance(final Consumer<WorkflowLoadResult> loadResultCallback) {
+    WorkflowManager loadWorkflowInternal(final Consumer<WorkflowLoadResult> loadResultCallback) {
         File tmpDir = null;
-        try (ZipInputStream in = new ZipInputStream(new ByteArrayInputStream(m_wfmStream))) {
+        try (var in = new ZipInputStream(new ByteArrayInputStream(m_wfmStream))) {
             tmpDir = FileUtil.createTempDir("workflow_segment");
             FileUtil.unzip(in, tmpDir, 1);
-            WorkflowLoadHelper loadHelper = createWorkflowLoadHelper(tmpDir, warning -> {
-                NodeLogger.getLogger(WorkflowSegment.class).warn(warning);
-            });
+            var loadHelper =
+                createWorkflowLoadHelper(tmpDir, warning -> NodeLogger.getLogger(WorkflowSegment.class).warn(warning));
             WorkflowLoadResult loadResult =
                 WorkflowManager.EXTRACTED_WORKFLOW_ROOT.load(tmpDir, new ExecutionMonitor(), loadHelper, false);
             if (loadResultCallback != null) {
                 loadResultCallback.accept(loadResult);
             }
-            return Pair.create(loadResult.getWorkflowManager(), tmpDir);
+            return loadResult.getWorkflowManager();
         } catch (InvalidSettingsException | CanceledExecutionException | UnsupportedWorkflowVersionException
                 | LockFailedException | IOException ex) {
             // should never happen
@@ -369,7 +366,7 @@ public final class WorkflowSegment {
          *            installed)
          * @param spec can be <code>null</code>
          */
-        public IOInfo(final PortType type, final DataTableSpec spec) {
+        IOInfo(final PortType type, final DataTableSpec spec) {
             m_spec = spec;
             m_type = type;
         }

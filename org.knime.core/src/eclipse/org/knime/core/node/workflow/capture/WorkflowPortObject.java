@@ -48,7 +48,6 @@
  */
 package org.knime.core.node.workflow.capture;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -57,7 +56,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.zip.ZipEntry;
 
 import javax.swing.JComponent;
@@ -156,13 +155,13 @@ public class WorkflowPortObject extends AbstractPortObject {
                 tables.add(entry.getValue());
             }
             out.putNextEntry(new ZipEntry("input_data_ports.xml"));
-            ModelContent model = new ModelContent("input_data_ports.xml");
+            var model = new ModelContent("input_data_ports.xml");
             saveIDs(model, ids);
-            try (final NonClosableOutputStream.Zip zout = new NonClosableOutputStream.Zip(out)) {
+            try (final var zout = new NonClosableOutputStream.Zip(out)) {
                 model.saveToXML(zout);
             }
 
-            for (int i = 0; i < tables.size(); i++) {
+            for (var i = 0; i < tables.size(); i++) {
                 out.putNextEntry(new ZipEntry("input_table_" + i + ".bin"));
                 DataContainer.writeToStream(tables.get(i), out, exec);
             }
@@ -171,7 +170,7 @@ public class WorkflowPortObject extends AbstractPortObject {
 
     private static void saveIDs(final ModelContentWO model, final List<String> ids) {
         model.addInt("num_ids", ids.size());
-        for (int i = 0; i < ids.size(); i++) {
+        for (var i = 0; i < ids.size(); i++) {
             model.addString("id_" + i, ids.get(i));
         }
     }
@@ -189,7 +188,7 @@ public class WorkflowPortObject extends AbstractPortObject {
                 ModelContentRO model = ModelContent.loadFromXML(nonCloseIn);
                 List<String> ports = loadIDs(model);
                 m_inputData = new HashMap<>(ports.size());
-                for (int i = 0; i < ports.size(); i++) {
+                for (var i = 0; i < ports.size(); i++) {
                     entry = in.getNextEntry();
                     assert entry.getName().equals("input_table_" + i + ".bin");
                     DataTable table = DataContainer.readFromStream(nonCloseIn);
@@ -202,9 +201,9 @@ public class WorkflowPortObject extends AbstractPortObject {
     }
 
     private static List<String> loadIDs(final ModelContentRO model) throws InvalidSettingsException {
-        int size = model.getInt("num_ids");
+        var size = model.getInt("num_ids");
         List<String> ids = new ArrayList<>(size);
-        for (int i = 0; i < size; i++) {
+        for (var i = 0; i < size; i++) {
             ids.add(model.getString("id_" + i));
         }
         return ids;
@@ -228,39 +227,51 @@ public class WorkflowPortObject extends AbstractPortObject {
     @Override
     public JComponent[] getViews() {
         if (m_inputData != null) {
-            return m_inputData.entrySet().stream().map(e -> {
-                return new BufferedDataTableView(e.getValue()) {
+            return m_inputData.entrySet().stream() //
+                .map(e -> new BufferedDataTableView(e.getValue()) {
                     @Override
                     public String getName() {
                         return "Input data for '" + e.getKey() + "'";
                     }
-                };
-            }).toArray(s -> new JComponent[s]);
+                }).toArray(s -> new JComponent[s]);
         } else {
             return new JComponent[0];
         }
     }
 
-     /**
-     * @param wfmConsumer
-     * @return
+    /**
+     * Transforms the workflow (the WorkflowManager-instance and the folder associated with it) of the current
+     * WorkflowPortObject through the consumer and returns a new instance of the WorkflowPortObject (with all the other
+     * properties copied).
+     *
+     * @param wfmTransformer does the 'in-place' transformation of the WorkflowManager and/or the folder associated with
+     *            the WorkflowManager (note: before the resulting WorkflowPortObject is being created, the
+     *            WorkflowManager is being saved to the given directory and, hence, will overwrite some files in it)
+     * @return a copy of {@link WorkflowPortObject}
      * @throws IOException
      * @since 4.6
-     * TODO New name pack, and unpack in the receiver side
      */
-    WorkflowPortObject transformAndCopy(final BiConsumer<WorkflowManager, File> wfmConsumer) throws IOException {
+    public WorkflowPortObject transformAndCopy(final Consumer<WorkflowManager> wfmTransformer) throws IOException {
         var segment = m_spec.getWorkflowSegment();
-        var wfmCopy = segment.loadNewWorkflowInstance(null);
-        wfmConsumer.accept(wfmCopy.getFirst(), wfmCopy.getSecond());
+        var wfmCopy = segment.loadWorkflowInternal(null);
+        wfmTransformer.accept(wfmCopy);
         byte[] wfmStream;
         try {
-            wfmStream = WorkflowSegment.wfmToStream(wfmCopy.getFirst(), wfmCopy.getSecond());
+            wfmStream = WorkflowSegment.wfmToStream(wfmCopy, wfmCopy.getNodeContainerDirectory().getFile());
         } finally {
-            WorkflowManager.EXTRACTED_WORKFLOW_ROOT.removeNode(wfmCopy.getFirst().getID());
+            WorkflowManager.EXTRACTED_WORKFLOW_ROOT.removeNode(wfmCopy.getID());
         }
-        var copySegment = new WorkflowSegment(wfmStream, segment.getName(), segment.getConnectedInputs(), segment.getConnectedOutputs(), segment.getPortObjectReferenceReaderNodes());
-        var poSpecCopy = new WorkflowPortObjectSpec(copySegment, wfmCopy.getFirst().getName(), m_spec.getInputIDs(), m_spec.getOutputIDs());
-        return new WorkflowPortObject(poSpecCopy, m_inputData);
+
+        var segmentCopy = new WorkflowSegment(wfmStream, segment.getName(), segment.getConnectedInputs(),
+            segment.getConnectedOutputs(), segment.getPortObjectReferenceReaderNodes());
+        try {
+            var poSpecCopy =
+                new WorkflowPortObjectSpec(segmentCopy, wfmCopy.getName(), m_spec.getInputIDs(), m_spec.getOutputIDs());
+            return new WorkflowPortObject(poSpecCopy, m_inputData);
+        } finally {
+            segmentCopy.serializeAndDisposeWorkflow();
+            segment.disposeWorkflow();
+        }
     }
 
 }
