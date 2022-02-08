@@ -59,6 +59,7 @@ import org.knime.core.node.workflow.FlowVariable.Scope;
 import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
 import org.knime.core.node.workflow.def.CoreToDefUtil;
 import org.knime.core.workflow.def.ConfigMapDef;
+import org.knime.core.workflow.def.FlowContextDef.ContextTypeEnum;
 import org.knime.core.workflow.def.FlowObjectDef;
 import org.knime.core.workflow.def.SingleNodeDef;
 import org.knime.core.workflow.def.impl.FlowContextDefBuilder;
@@ -150,7 +151,7 @@ public abstract class DefSingleNodeContainerWrapper extends DefNodeContainerWrap
                 String scopeType = s.getClass().getCanonicalName();
                 FlowScopeContext context = (FlowScopeContext)s;
                 def = FlowContextDefBuilder.builder()//
-                    .setContextType(scopeType)//
+                    .setContextType(ContextTypeEnum.valueOf(scopeType))//
                     .setActive(!context.isInactiveScope())//
                     .build();
                 result.add(def);

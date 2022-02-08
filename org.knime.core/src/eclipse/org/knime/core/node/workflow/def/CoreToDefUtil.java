@@ -170,7 +170,7 @@ public class CoreToDefUtil {
      * @return the node settings in a representation that can be converted to various formats
      * @throws InvalidSettingsException
      */
-    public static ConfigMapDef toConfigMapDef(final NodeSettingsRO settings) throws InvalidSettingsException {
+    public static ConfigMapDef toConfigMapDef(final ConfigBaseRO settings) throws InvalidSettingsException {
 
         if (settings == null) {
             return null;

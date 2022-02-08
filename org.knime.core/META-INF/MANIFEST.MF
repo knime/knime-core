@@ -177,4 +177,5 @@ Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Eclipse-BundleShape: dir
 Automatic-Module-Name: org.knime.core
-Import-Package: org.knime.core.workflow.def
+Import-Package: org.knime.core.workflow.def,
+ org.knime.core.workflow.def.impl
