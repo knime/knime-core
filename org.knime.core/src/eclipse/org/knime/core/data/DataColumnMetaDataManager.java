@@ -48,7 +48,6 @@
  */
 package org.knime.core.data;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -74,7 +73,7 @@ final class DataColumnMetaDataManager {
 
     private final Map<Class<? extends DataColumnMetaData>, DataColumnMetaData> m_valueMetaDataMap;
 
-    static final DataColumnMetaDataManager EMPTY = new DataColumnMetaDataManager(Collections.emptyMap());
+    static final DataColumnMetaDataManager EMPTY = new DataColumnMetaDataManager(Map.of());
 
     private DataColumnMetaDataManager(
         final Map<Class<? extends DataColumnMetaData>, DataColumnMetaData> valueMetaDataMap) {
@@ -88,7 +87,7 @@ final class DataColumnMetaDataManager {
         }
         @SuppressWarnings("unchecked") // the check above ensures that wildCardMetaData
         // is indeed of type MetaData<T>
-        final M typedMetaData = (M)wildCardMetaData;
+        final M typedMetaData = (M)wildCardMetaData;//NOSONAR
         return Optional.of(typedMetaData);
     }
 
@@ -107,8 +106,17 @@ final class DataColumnMetaDataManager {
     }
 
     static DataColumnMetaDataManager load(final ConfigRO config) throws InvalidSettingsException {
-        final Map<Class<? extends DataColumnMetaData>, DataColumnMetaData> metaDataMap = new HashMap<>();
 
+        if (config.keySet().isEmpty()) {
+            return EMPTY;
+        } else {
+
+            return recreateFromConfig(config);
+        }
+    }
+
+    private static DataColumnMetaDataManager recreateFromConfig(final ConfigRO config) throws InvalidSettingsException {
+        final Map<Class<? extends DataColumnMetaData>, DataColumnMetaData> metaDataMap = new HashMap<>();
         for (String key : config) {
             final Optional<DataColumnMetaDataSerializer<?>> serializer =
                 DataColumnMetaDataRegistry.INSTANCE.getSerializer(key);
@@ -206,8 +214,12 @@ final class DataColumnMetaDataManager {
         }
 
         DataColumnMetaDataManager create() {
-            return new DataColumnMetaDataManager(m_valueMetaDataMap.entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().create())));
+            if (m_valueMetaDataMap.isEmpty()) {
+                return EMPTY;
+            } else {
+                return new DataColumnMetaDataManager(m_valueMetaDataMap.entrySet().stream()
+                    .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().create())));
+            }
         }
     }
 }
