@@ -132,17 +132,6 @@ public class DefWorkflowManagerWrapper implements WorkflowDef {
             .build();
     }
 
-//    @Override
-//    public WorkflowMetadataDef getMetadata() {
-//        return new WorkflowMetadataDefBuilder()//
-//                .setName(m_wfm.getNameField())
-//                .setCreatedByNightly(KNIMEConstants.isNightlyBuild())//
-//                .setCreatedBy(KNIMEConstants.VERSION)//
-//                .setAuthorInformation(getAuthorInformation(m_wfm.getAuthorInformation()))
-//                .build();
-//    }
-
-
     /**
      * {@inheritDoc}
      */
