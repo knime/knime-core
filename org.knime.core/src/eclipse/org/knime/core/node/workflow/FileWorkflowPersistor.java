@@ -126,8 +126,6 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
     /** key used to store the editor specific settings (since 2.6). */
     private static final String CFG_EDITOR_INFO = "workflow_editor_settings";
 
-    /** Key for credentials. */
-    private static final String CFG_CREDENTIALS = "workflow_credentials";
 
     private static final String CFG_AUTHOR_INFORMATION = "authorInformation";
 
@@ -197,8 +195,6 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
 
     private List<FlowVariable> m_workflowVariables;
 
-    private List<Credentials> m_credentials;
-
     private WorkflowTableBackendSettings m_tableBackendSettings;
 
     private List<WorkflowAnnotation> m_workflowAnnotations;
@@ -220,6 +216,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
     private final List<ReferencedFile> m_obsoleteNodeDirectories;
 
     /** Parse the version string, return {@link LoadVersion#FUTURE} if it can't be parsed. */
+    // TODO was moved to RootWorkflowLoader
     static LoadVersion parseVersion(final String versionString) {
         boolean isBeforeV2 = versionString.equals("0.9.0");
         isBeforeV2 |= versionString.equals("1.0");
@@ -380,12 +377,6 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
     @Override
     public List<FlowVariable> getWorkflowVariables() {
         return m_workflowVariables;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public List<Credentials> getCredentials() {
-        return m_credentials;
     }
 
     @Override
@@ -638,19 +629,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
             m_workflowVariables = Collections.emptyList();
         }
 
-        try {
-            m_credentials = loadCredentials(m_workflowSett);
-            // request to initialize credentials - if available
-            if (m_credentials != null && !m_credentials.isEmpty()) {
-                m_credentials = getLoadHelper().loadCredentialsPrefilled(m_credentials);
-            }
-        } catch (InvalidSettingsException e) {
-            String error = "Unable to load credentials: " + e.getMessage();
-            getLogger().debug(error, e);
-            setDirtyAfterLoad();
-            loadResult.addError(error);
-            m_credentials = Collections.emptyList();
-        }
+
 
         try {
             m_tableBackendSettings = loadTableBackendSettings(m_workflowSett);
@@ -1596,34 +1575,6 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
                 result.add(FlowVariable.load(wfmVarSub.getNodeSettings(key)));
             }
             return result;
-        }
-    }
-
-    /**
-     * Loads credentials, this method returns an empty list. Credentials added for v2.2
-     *
-     * @param settings to load from.
-     * @return the credentials list
-     * @throws InvalidSettingsException If this fails for any reason.
-     */
-    List<Credentials> loadCredentials(final NodeSettingsRO settings) throws InvalidSettingsException {
-        if (getLoadVersion().isOlderThan(LoadVersion.V220)) {
-            // no credentials in v2.1 and before
-            return Collections.emptyList();
-        } else {
-            NodeSettingsRO sub = settings.getNodeSettings(CFG_CREDENTIALS);
-            List<Credentials> r = new ArrayList<Credentials>();
-            Set<String> credsNameSet = new HashSet<String>();
-            for (String key : sub.keySet()) {
-                NodeSettingsRO child = sub.getNodeSettings(key);
-                Credentials c = Credentials.load(child);
-                if (!credsNameSet.add(c.getName())) {
-                    getLogger().warn("Duplicate credentials variable \"" + c.getName() + "\" -- ignoring it");
-                } else {
-                    r.add(c);
-                }
-            }
-            return r;
         }
     }
 

@@ -230,6 +230,7 @@ public class WorkflowLoadHelper {
      * @since 3.7
      */
     // see also org.knime.core.node.workflow.FileWorkflowPersistor.saveHeader(NodeSettings)
+    // TODO was moved to RootWorkflowLoader
     public UnknownKNIMEVersionLoadPolicy getUnknownKNIMEVersionLoadPolicy(final LoadVersion workflowKNIMEVersion,
         final Version createdByKNIMEVersion, final boolean isNightlyBuild) {
         return UnknownKNIMEVersionLoadPolicy.Abort;
@@ -291,23 +292,6 @@ public class WorkflowLoadHelper {
     FromFileNodeContainerPersistor createLoadPersistor(final File directory)
             throws IOException, UnsupportedWorkflowVersionException {
         return createTemplateLoadPersistor(directory, null);
-    }
-
-    /**
-     * see {@link #createTemplateLoadPersistor(File, URI)} as reference for the FIXMEs
-     * @param definition
-     * @return
-     */
-    WorkflowPersistor createLoadPersistor(final RootWorkflowDef definition) {
-        // FIXME version checking and version details string construction, handling problematic versions
-        // FIXME determining dirty after load
-        // FIXME nightly checking
-        // FIXME MetaNodeTemplateInformation loading from workflow.knime
-        // FIXME possibly overwrite template information, renaming the workflow (persistor.setNameOverwrite)
-        // FIXME create a workflow data repository
-
-        return null; //new DefWorkflowPersistor(definition, this);
-
     }
 
     /** Create persistor for a workflow or template.
