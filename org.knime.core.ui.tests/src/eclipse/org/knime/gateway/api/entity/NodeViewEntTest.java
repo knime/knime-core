@@ -122,6 +122,7 @@ public class NodeViewEntTest {
             }, null, null);
         };
         NativeNodeContainer nnc = WorkflowManagerUtil.createAndAddNode(wfm, new NodeViewNodeFactory(nodeViewCreator));
+        wfm.executeAllAndWaitUntilDone();
         nnc.setNodeMessage(NodeMessage.newWarning("node message"));
         nnc.getNodeAnnotation().getData().setText("node annotation");
 
@@ -139,7 +140,7 @@ public class NodeViewEntTest {
         var nodeInfo = ent.getNodeInfo();
         assertThat(nodeInfo.getNodeName(), is("NodeView"));
         assertThat(nodeInfo.getNodeAnnotation(), is("node annotation"));
-        assertThat(nodeInfo.getNodeState(), is("configured"));
+        assertThat(nodeInfo.getNodeState(), is("executed"));
         assertThat(nodeInfo.getNodeWarnMessage(), is("node message"));
         assertThat(nodeInfo.getNodeErrorMessage(), is(nullValue()));
 
@@ -149,6 +150,7 @@ public class NodeViewEntTest {
             return NodeViewTest.createNodeView(p);
         };
         nnc = WorkflowManagerUtil.createAndAddNode(wfm, new NodeViewNodeFactory(nodeViewCreator));
+        wfm.executeAllAndWaitUntilDone();
         ent = new NodeViewEnt(nnc, null);
         resourceInfo = ent.getResourceInfo();
         assertThat(ent.getInitialData(), is(nullValue()));
@@ -179,6 +181,7 @@ public class NodeViewEntTest {
         Function<NodeViewNodeModel, NodeView> nodeViewCreator =
             m -> NodeViewTest.createNodeView(Page.builder(() -> "blub", "index.html").build());
         NativeNodeContainer nnc = WorkflowManagerUtil.createAndAddNode(wfm, new NodeViewNodeFactory(nodeViewCreator));
+        wfm.executeAllAndWaitUntilDone();
 
         var hiLiteHandler = nnc.getNodeModel().getInHiLiteHandler(0);
         hiLiteHandler.fireHiLiteEvent(new RowKey("k1"), new RowKey("k2"));
@@ -188,7 +191,7 @@ public class NodeViewEntTest {
         var selectionEventSource = SelectionEventSourceTest.createSelectionEventSource(consumerMock);
         var initialSelection = selectionEventSource.addEventListenerAndGetInitialEventFor(nnc).map(SelectionEvent::getKeys)
             .orElse(Collections.emptyList());
-        var nodeViewEnt = new NodeViewEnt(nnc, initialSelection);
+        var nodeViewEnt = new NodeViewEnt(nnc, () -> initialSelection);
 
         assertThat(nodeViewEnt.getInitialSelection(), is(List.of("k1", "k2")));
 

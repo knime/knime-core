@@ -54,8 +54,6 @@ import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.webui.data.text.TextInitialDataService;
 import org.knime.core.webui.node.DataServiceManager;
-import org.knime.core.webui.node.dialog.NodeDialogManager;
-import org.knime.core.webui.node.view.NodeViewManager;
 
 /**
  * Super classes for node-ui-extension entities, e.g., node view and node dialog.
@@ -85,8 +83,10 @@ public abstract class NodeUIExtensionEnt {
     /**
      * @param nnc the node to create the entity for
      * @param extensionType
+     * @param dataServiceManager can be {@code null}
      */
-    protected NodeUIExtensionEnt(final NativeNodeContainer nnc, final ExtensionType extensionType) {
+    protected NodeUIExtensionEnt(final NativeNodeContainer nnc, final ExtensionType extensionType,
+        final DataServiceManager dataServiceManager) {
         WorkflowManager wfm = nnc.getParent();
         WorkflowManager projectWfm = wfm.getProjectWFM();
 
@@ -102,9 +102,8 @@ public abstract class NodeUIExtensionEnt {
         }
         m_nodeId = new NodeIDEnt(nnc.getID(), isComponentProject).toString();
 
-        DataServiceManager dataServiceManager =
-            extensionType == ExtensionType.VIEW ? NodeViewManager.getInstance() : NodeDialogManager.getInstance();
-        if (dataServiceManager.getDataServiceOfType(nnc, TextInitialDataService.class).isPresent()) {
+        if (dataServiceManager != null
+            && dataServiceManager.getDataServiceOfType(nnc, TextInitialDataService.class).isPresent()) {
             m_initialData = dataServiceManager.callTextInitialDataService(nnc);
         } else {
             m_initialData = null;

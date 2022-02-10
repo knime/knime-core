@@ -31,7 +31,7 @@
  *
  *  Additional permission relating to nodes for KNIME that extend the Node
  *  Extension (and in particular that are based on subclasses of NodeModel,
- *  NodeDialog, and NodeDialog) and that only interoperate with KNIME through
+ *  NodeDialog, and NodeView) and that only interoperate with KNIME through
  *  standard APIs ("Nodes"):
  *  Nodes are deemed to be separate and independent programs and to not be
  *  covered works.  Notwithstanding anything to the contrary in the
@@ -44,39 +44,22 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 15, 2021 (hornm): created
+ *   Feb 8, 2022 (hornm): created
  */
-package org.knime.gateway.api.entity;
+package org.knime.gateway.impl.service.events;
 
-import org.knime.core.node.workflow.NativeNodeContainer;
-import org.knime.core.webui.node.dialog.NodeDialogManager;
-import org.knime.core.webui.page.PageUtil;
+import org.knime.gateway.api.entity.NodeViewEnt;
 
 /**
- * Node dialog entity containing the info required by the UI (i.e. frontend) to be able to display a node dialog.
+ * An event that signals a node view to update itself.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
-public class NodeDialogEnt extends NodeUIExtensionEnt {
-
-    private final ResourceInfoEnt m_resourceInfo;
+public interface NodeViewStateEvent {
 
     /**
-     * @param nnc
+     * @return the updated/changed node view entity
      */
-    public NodeDialogEnt(final NativeNodeContainer nnc) {
-        super(nnc, ExtensionType.DIALOG, NodeDialogManager.getInstance());
-
-        var nodeDialogManager = NodeDialogManager.getInstance();
-        var url = nodeDialogManager.getNodeDialogPageUrl(nnc);
-        var page = nodeDialogManager.getNodeDialog(nnc).getPage();
-        var id = PageUtil.getPageId(nnc, page.isStatic(), true);
-        m_resourceInfo = new ResourceInfoEnt(id, url, null, page);
-    }
-
-    @Override
-    public ResourceInfoEnt getResourceInfo() {
-        return m_resourceInfo;
-    }
+    NodeViewEnt getNodeView();
 
 }

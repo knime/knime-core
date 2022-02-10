@@ -44,83 +44,86 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Sep 28, 2021 (hornm): created
+ *   Feb 8, 2022 (hornm): created
  */
-package org.knime.gateway.api.entity;
+package org.knime.gateway.impl.service.events;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
-import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.NativeNodeContainer;
-import org.knime.core.webui.node.view.NodeViewManager;
-import org.knime.core.webui.page.PageUtil;
+import org.knime.core.node.workflow.NodeStateChangeListener;
+import org.knime.gateway.api.entity.NodeViewEnt;
 
 /**
- * Node view entity containing the info required by the UI (i.e. frontend) to be able display a node view.
+ * Emits {@link NodeViewStateEvent NodeViewStateEvents} which signal a node view to update itself (depending on the
+ * underlying node state).
+ *
+ * Implementation only covers 'single node views' so far and should eventually be extended to composite views, too (see
+ * UIEXT-143).
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
-public final class NodeViewEnt extends NodeUIExtensionEnt {
+public class NodeViewStateEventSource extends EventSource<NativeNodeContainer, NodeViewStateEvent> {
 
-    private final NodeInfoEnt m_info;
+    private NodeStateChangeListener m_nodeStateChangeListener;
 
-    private final ResourceInfoEnt m_resourceInfo;
+    private NativeNodeContainer m_nnc;
 
-    private List<String> m_initialSelection;
+    private final Supplier<List<String>> m_initialSelectionSupplier;
 
-    /**
-     * @param nnc the node to create the node view entity for
-     * @param initialSelection list of row keys representing the initial selection, supplied lazily (will not been
-     *            called, if the node is not executed)
-     */
-    public NodeViewEnt(final NativeNodeContainer nnc, final Supplier<List<String>> initialSelection) {
-        super(nnc, ExtensionType.VIEW, nnc.getNodeContainerState().isExecuted() ? NodeViewManager.getInstance() : null);
-        CheckUtils.checkArgument(NodeViewManager.hasNodeView(nnc), "The provided node doesn't have a node view");
-
-        var nodeState = nnc.getNodeContainerState();
-        if (nodeState.isExecuted()) {
-            var nodeViewManager = NodeViewManager.getInstance();
-            var url = nodeViewManager.getNodeViewPageUrl(nnc).orElse(null);
-            var path = nodeViewManager.getNodeViewPagePath(nnc).orElse(null);
-            var page = nodeViewManager.getNodeView(nnc).getPage();
-            var id = PageUtil.getPageId(nnc, page.isStatic(), false);
-            m_resourceInfo = new ResourceInfoEnt(id, url, path, page);
-            m_initialSelection = initialSelection == null ? null : initialSelection.get();
-        } else {
-            m_resourceInfo = null;
-            m_initialSelection = null;
-        }
-        m_info = new NodeInfoEnt(nnc);
-    }
+    private final Runnable m_preEventCreationCallback;
 
     /**
-     * Creates a new instances without a initial selection and without the underlying node being registered with the
-     * selection event source.
-     *
-     * @param nnc the node to create the node view entity for
+     * @param eventConsumer all emitted events are passed to this consumer
+     * @param preEventCreationCallback called right before a new event is created (and passed to the consumer)
+     * @param initialSelectionSupplier supplier for the initial selection required to create a
+     *            {@link NodeViewEnt}-instance
      */
-    public NodeViewEnt(final NativeNodeContainer nnc) {
-        this(nnc, null);
-    }
-
-    /**
-     * @return additional info for the node providing the view
-     */
-    public NodeInfoEnt getNodeInfo() {
-        return m_info;
+    public NodeViewStateEventSource(final BiConsumer<String, Object> eventConsumer,
+        final Runnable preEventCreationCallback, final Supplier<List<String>> initialSelectionSupplier) {
+        super(eventConsumer);
+        m_preEventCreationCallback = preEventCreationCallback;
+        m_initialSelectionSupplier = initialSelectionSupplier;
     }
 
     @Override
-    public ResourceInfoEnt getResourceInfo() {
-        return m_resourceInfo;
+    public Optional<NodeViewStateEvent> addEventListenerAndGetInitialEventFor(final NativeNodeContainer nnc) {
+        m_nnc = nnc;
+        m_nodeStateChangeListener = e -> {
+            m_preEventCreationCallback.run();
+            var nodeViewStateEvent = createEvent(m_nnc, m_initialSelectionSupplier);
+            sendEvent(nodeViewStateEvent);
+        };
+        nnc.addNodeStateChangeListener(m_nodeStateChangeListener);
+        return Optional.empty();
     }
 
-    /**
-     * @return the initially hilit (row) keys (aka selection)
-     */
-    public List<String> getInitialSelection() {
-        return m_initialSelection;
+    private static NodeViewStateEvent createEvent(final NativeNodeContainer nnc,
+        final Supplier<List<String>> initialSelectionSupplier) {
+        var nodeViewEnt = new NodeViewEnt(nnc, initialSelectionSupplier);
+        return () -> nodeViewEnt;
+    }
+
+    @Override
+    public void removeEventListener(final NativeNodeContainer nnc) {
+        if (nnc.removeNodeStateChangeListener(m_nodeStateChangeListener)) {
+            m_nodeStateChangeListener = null;
+            m_nnc = null;
+        }
+    }
+
+    @Override
+    public void removeAllEventListeners() {
+        removeEventListener(m_nnc);
+        m_nnc = null;
+    }
+
+    @Override
+    protected String getName() {
+        return "NodeViewState";
     }
 
 }
