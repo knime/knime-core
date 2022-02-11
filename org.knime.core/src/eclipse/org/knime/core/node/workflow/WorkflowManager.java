@@ -210,7 +210,6 @@ import org.knime.core.util.Pair;
 import org.knime.core.util.VMFileLocker;
 import org.knime.core.util.pathresolve.ResolverUtil;
 import org.knime.core.util.workflowalizer.AuthorInformation;
-import org.knime.core.workflow.def.RootWorkflowDef;
 
 /**
  * Container holding nodes and connections of a (sub) workflow. In contrast to previous implementations, this class will
@@ -10622,25 +10621,25 @@ public final class WorkflowManager extends NodeContainer
 
     // FOR NOW - persistor-free
 
-    /**
-     * Loads a workflow described as a POJO into this workflow instance.
-     *
-     * @param definition description of the workflow, nodes, connections, metadata
-     * @param exec For progress/cancellation (currently not supported)
-     * @param loadHelper callback to load credentials and such (if available) during load of the underlying
-     *            <code>SingleNodeContainer</code> (may be null).
-     * @param keepNodeMessages Whether to keep the messages that are associated with the nodes in the loaded workflow
-     *            (mostly false but true when remotely computed results are loaded).
-     * @return A workflow load result, which also contains the loaded workflow.
-     * @throws CanceledExecutionException If canceled.
-     */
-    public WorkflowLoadResult load(final RootWorkflowDef definition, final ExecutionMonitor exec,
-        final WorkflowLoadHelper loadHelper, final boolean keepNodeMessages)
-        throws CanceledExecutionException {
-        WorkflowPersistor loader = loadHelper.createLoadPersistor(definition);
-        exec.checkCanceled();
-        return loadDef(loader, exec, keepNodeMessages);
-    }
+//    /**
+//     * Loads a workflow described as a POJO into this workflow instance.
+//     *
+//     * @param definition description of the workflow, nodes, connections, metadata
+//     * @param exec For progress/cancellation (currently not supported)
+//     * @param loadHelper callback to load credentials and such (if available) during load of the underlying
+//     *            <code>SingleNodeContainer</code> (may be null).
+//     * @param keepNodeMessages Whether to keep the messages that are associated with the nodes in the loaded workflow
+//     *            (mostly false but true when remotely computed results are loaded).
+//     * @return A workflow load result, which also contains the loaded workflow.
+//     * @throws CanceledExecutionException If canceled.
+//     */
+//    public WorkflowLoadResult load(final RootWorkflowDef definition, final ExecutionMonitor exec,
+//        final WorkflowLoadHelper loadHelper, final boolean keepNodeMessages)
+//        throws CanceledExecutionException {
+//        WorkflowPersistor loader = loadHelper.createLoadPersistor(definition);
+//        exec.checkCanceled();
+//        return loadDef(loader, exec, keepNodeMessages);
+//    }
 
     /**
      * Def-based loading version of #load.

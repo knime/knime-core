@@ -68,7 +68,6 @@ import org.knime.core.workflow.def.NodeLocksDef;
 import org.knime.core.workflow.def.NodeUIInfoDef;
 import org.knime.core.workflow.def.impl.AnnotationDataDefBuilder;
 import org.knime.core.workflow.def.impl.BoundsDefBuilder;
-import org.knime.core.workflow.def.impl.CoordinateDefBuilder;
 import org.knime.core.workflow.def.impl.JobManagerDefBuilder;
 import org.knime.core.workflow.def.impl.NodeAnnotationDefBuilder;
 import org.knime.core.workflow.def.impl.NodeDefBuilder;
@@ -159,9 +158,9 @@ class NodeLoader {
                 .setBorderColor(settings.getInt("borderColor")) //
                 .setWidth(settings.getInt("width")) //
                 .setHeight(settings.getInt("height")) //
-                .setAlignment(settings.getString("alignment")) //
+                .setTextAlignment(settings.getString("alignment")) //
                 .setBorderSize(settings.getInt("borderSize")) //
-                .setDefFontSize(settings.getInt("defFontSize")) //
+                .setDefaultFontSize(settings.getInt("defFontSize")) //
                 .setAnnotationVersion(settings.getInt("annotation-version")) //
                 .build();
         } catch (InvalidSettingsException e) {

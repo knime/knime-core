@@ -77,7 +77,7 @@ public class SubNodeLoader extends SingleNodeLoader {
      * Constructor
      */
     SubNodeLoader() {
-        super(ComponentDefBuilder.builder());
+        super(new ComponentDefBuilder());
     }
 
 
@@ -129,7 +129,7 @@ public class SubNodeLoader extends SingleNodeLoader {
             //FIXME After new error handling
 
         }
-        return TemplateLinkDefBuilder.builder() //
+        return new TemplateLinkDefBuilder() //
             .setUri(uri) //
             .build();
     }
@@ -141,7 +141,7 @@ public class SubNodeLoader extends SingleNodeLoader {
 
             //TODO Use Collectors.groupingBy to return Map<String, List<String>
             // use the map to fill the following list fields
-            return ComponentMetadataDefBuilder.builder() //
+            return new ComponentMetadataDefBuilder() //
                 .setDescription(description) //
                 //TODO What is this?
                 .setIcon(null) //
@@ -152,7 +152,7 @@ public class SubNodeLoader extends SingleNodeLoader {
                 .build();
         } catch (InvalidSettingsException e) {
             //FIXME After new error handling
-            return ComponentMetadataDefBuilder.builder() //
+            return new ComponentMetadataDefBuilder() //
                 .build();
         }
     }
@@ -213,7 +213,7 @@ public class SubNodeLoader extends SingleNodeLoader {
                 } catch (InvalidSettingsException | NullPointerException e) {
                     //FIXME After the decision of the error handling
                     //FIXME Nullpointer should be removed
-                    return PortDefBuilder.builder().build();
+                    return new PortDefBuilder().build();
                 }
             }).collect(Collectors.toList());
     }
@@ -225,10 +225,10 @@ public class SubNodeLoader extends SingleNodeLoader {
         if (objectClassString == null) {
             throw new InvalidSettingsException("No port object class found to create PortType object");
         }
-        return PortDefBuilder.builder() //
+        return new PortDefBuilder() //
             .setIndex(index) //
             .setName(settings.getKey()) //
-            .setPortType(PortTypeDefBuilder.builder().setPortObjectClass(objectClassString).build()) //
+            .setPortType(new PortTypeDefBuilder().setPortObjectClass(objectClassString).build()) //
             .build();
     }
 

@@ -125,11 +125,11 @@ import org.knime.core.workflow.def.WorkflowUISettingsDef;
 public class DefToCoreUtil {
 
     public static AnnotationData toAnnotationData(final AnnotationData annoData, final AnnotationDataDef def) {
-        annoData.setAlignment(TextAlignment.valueOf(def.getAlignment()));
+        annoData.setAlignment(TextAlignment.valueOf(def.getTextAlignment()));
         annoData.setBgColor(def.getBgcolor());
         annoData.setBorderColor(def.getBorderColor());
         annoData.setBorderSize(def.getBorderSize());
-        annoData.setDefaultFontSize(def.getDefFontSize());
+        annoData.setDefaultFontSize(def.getDefaultFontSize());
         annoData.setX(def.getLocation().getX());
         annoData.setY(def.getLocation().getY());
         annoData.setWidth(def.getWidth());

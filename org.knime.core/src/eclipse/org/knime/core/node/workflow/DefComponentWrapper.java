@@ -135,7 +135,7 @@ public class DefComponentWrapper extends DefSingleNodeContainerWrapper implement
      */
     @Override
     public ComponentDialogSettingsDef getDialogSettings() {
-        return ComponentDialogSettingsDefBuilder.builder()//
+        return new ComponentDialogSettingsDefBuilder()//
                 .setConfigurationLayoutJSON(m_nc.getSubnodeConfigurationLayoutStringProvider().getConfigurationLayoutString())//
                 .setLayoutJSON(m_nc.getSubnodeLayoutStringProvider().getLayoutString())//
                 .setHideInWizard(m_nc.isHideInWizard())//

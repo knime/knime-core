@@ -161,10 +161,10 @@ public class MetaNodeLoader extends NodeLoader {
         }
         var index = settings.getInt("index");
         var name = settings.getString("name");
-        var portTypeDef = PortTypeDefBuilder.builder()//
+        var portTypeDef = new PortTypeDefBuilder()//
             .setPortObjectClass(settings.getConfigBase("type").getString("object_class"))//
             .build();
-        return PortDefBuilder.builder()//
+        return new PortDefBuilder()//
             .setIndex(index)//
             .setName(name)//
             .setPortType(portTypeDef)// TODO port type def contains many more fields but I think none of them are necessary (except for spec class maybe?) since all the additional info is pulled from the port type registry using the class name
@@ -184,10 +184,10 @@ public class MetaNodeLoader extends NodeLoader {
         final var loadOrdinal = m_loadVersion.ordinal();
         var bounds = subSettings.getIntArray("extrainfo.node.bounds");
         var symbolRelative = loadOrdinal >= LoadVersion.V230.ordinal();
-        DefaultBoundsDef boundsDef = BoundsDefBuilder.builder()
-            .setLocation(CoordinateDefBuilder.builder().setX(bounds[0]).setY(bounds[1]).build())//
+        DefaultBoundsDef boundsDef = new BoundsDefBuilder()
+            .setLocation(new CoordinateDefBuilder().setX(bounds[0]).setY(bounds[1]).build())//
             .setWidth(bounds[2]).setHeight(bounds[3]).build();
-        return NodeUIInfoDefBuilder.builder()//
+        return new NodeUIInfoDefBuilder()//
             .setBounds(boundsDef)//
             .setSymbolRelative(symbolRelative)//
             //.setHasAbsoluteCoordinates(null) // TODO
