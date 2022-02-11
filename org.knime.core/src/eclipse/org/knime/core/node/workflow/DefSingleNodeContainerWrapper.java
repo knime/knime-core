@@ -150,14 +150,14 @@ public abstract class DefSingleNodeContainerWrapper extends DefNodeContainerWrap
             } else if (s instanceof FlowScopeContext) {
                 String scopeType = s.getClass().getCanonicalName();
                 FlowScopeContext context = (FlowScopeContext)s;
-                def = FlowContextDefBuilder.builder()//
+                def = new FlowContextDefBuilder()//
                     .setContextType(ContextTypeEnum.valueOf(scopeType))//
                     .setActive(!context.isInactiveScope())//
                     .build();
                 result.add(def);
             // flow marker
             } else if (s instanceof InnerFlowLoopExecuteMarker) {
-                def = FlowMarkerDefBuilder.builder().setClassName(s.getClass().getName()).build();
+                def = new FlowMarkerDefBuilder().setClassName(s.getClass().getName()).build();
             } else {
                 throw new IllegalArgumentException(
                     String.format("No serialization implemented for flow objects of type %s (%s)", s.getClass(), s));

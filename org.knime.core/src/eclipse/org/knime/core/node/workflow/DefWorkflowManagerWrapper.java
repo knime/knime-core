@@ -57,7 +57,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.workflow.def.CoreToDefUtil;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.workflowalizer.AuthorInformation;
@@ -66,16 +65,13 @@ import org.knime.core.workflow.def.AuthorInformationDef;
 import org.knime.core.workflow.def.ConnectionDef;
 import org.knime.core.workflow.def.NodeDef;
 import org.knime.core.workflow.def.RootWorkflowDef;
-import org.knime.core.workflow.def.StyleDef;
 import org.knime.core.workflow.def.WorkflowDef;
-import org.knime.core.workflow.def.WorkflowMetadataDef;
 import org.knime.core.workflow.def.WorkflowUISettingsDef;
 import org.knime.core.workflow.def.impl.AnnotationDataDefBuilder;
 import org.knime.core.workflow.def.impl.AuthorInformationDefBuilder;
 import org.knime.core.workflow.def.impl.ConnectionDefBuilder;
 import org.knime.core.workflow.def.impl.RootWorkflowDefBuilder;
-import org.knime.core.workflow.def.impl.StyleDefBuilder;
-import org.knime.core.workflow.def.impl.WorkflowMetadataDefBuilder;
+import org.knime.core.workflow.def.impl.StyleRangeDefBuilder;
 import org.knime.core.workflow.def.impl.WorkflowUISettingsDefBuilder;
 
 /**
@@ -107,7 +103,7 @@ public class DefWorkflowManagerWrapper implements WorkflowDef {
                  .map(CoreToDefUtil::toConnectionUISettingsDef)//
                 .orElse(null);
 
-            result.add(ConnectionDefBuilder.builder()//
+            result.add(new ConnectionDefBuilder()//
                 .setSourcePort(connection.getSourcePort())//
                 .setSourceID(connection.getSource().getIndex())//
                 .setDestPort(connection.getDestPort())//
@@ -125,7 +121,7 @@ public class DefWorkflowManagerWrapper implements WorkflowDef {
     @Override
     public WorkflowUISettingsDef getWorkflowEditorSettings() {
         final var wfEditorSettings = m_wfm.getEditorUIInformation();
-        return WorkflowUISettingsDefBuilder.builder()//
+        return new WorkflowUISettingsDefBuilder()//
             .setSnapToGrid(wfEditorSettings.getSnapToGrid())//
             .setShowGrid(wfEditorSettings.getShowGrid())//
             .setCurvedConnections(wfEditorSettings.getHasCurvedConnections())//
@@ -136,35 +132,16 @@ public class DefWorkflowManagerWrapper implements WorkflowDef {
             .build();
     }
 
-    @Override
-    public WorkflowMetadataDef getMetadata() {
-        return WorkflowMetadataDefBuilder.builder()//
-                .setName(m_wfm.getNameField())
-                .setCreatedByNightly(KNIMEConstants.isNightlyBuild())//
-                .setCreatedBy(KNIMEConstants.VERSION)//
-                .setAuthorInformation(getAuthorInformation(m_wfm.getAuthorInformation()))
-                .build();
-    }
+//    @Override
+//    public WorkflowMetadataDef getMetadata() {
+//        return new WorkflowMetadataDefBuilder()//
+//                .setName(m_wfm.getNameField())
+//                .setCreatedByNightly(KNIMEConstants.isNightlyBuild())//
+//                .setCreatedBy(KNIMEConstants.VERSION)//
+//                .setAuthorInformation(getAuthorInformation(m_wfm.getAuthorInformation()))
+//                .build();
+//    }
 
-
-    private static AuthorInformationDef getAuthorInformation(final AuthorInformation authorInfo) {
-
-        final var authDate = Optional//
-            .ofNullable(authorInfo.getAuthoredDate())//
-            .map(d -> OffsetDateTime.ofInstant(d.toInstant(), ZoneId.systemDefault()))//
-            .orElse(null);
-
-        final var lastEditDate = authorInfo.getLastEditDate()//
-            .map(d -> OffsetDateTime.ofInstant(d.toInstant(), ZoneId.systemDefault()))//
-            .orElse(null);
-
-        return AuthorInformationDefBuilder.builder()//
-            .setLastEditedWhen(lastEditDate)//
-            .setAuthoredWhen(authDate)//
-            .setAuthoredBy(authorInfo.getAuthor())//
-            .setLastEditedBy(authorInfo.getLastEditor().orElse(null))//
-            .build();
-    }
 
     /**
      * {@inheritDoc}
@@ -195,32 +172,30 @@ public class DefWorkflowManagerWrapper implements WorkflowDef {
         final var result = new ArrayList<AnnotationDataDef>();
         for (final var annotation : m_wfm.getWorkflowAnnotations()) {
 
-            final var styles = new ArrayList<StyleDef>();
-            for (final var style : annotation.getStyleRanges()) {
-                styles.add(StyleDefBuilder.builder()//
-                    .setStart(style.getStart())//
-                    .setLength(style.getLength())//
-                    .setFontstyle(style.getFontStyle())//
-                    .setFontsize(style.getFontSize())//
-                    .setFontname(style.getFontName())//
-                    .setFgcolor(style.getFgColor())//
-                    .build());
-            }
-
-            AnnotationDataDef annotationData = AnnotationDataDefBuilder.builder()//
+            var annotationData = new AnnotationDataDefBuilder()//
                 .setLocation(CoreToDefUtil.createCoordinate(annotation.getX(), annotation.getY()))//
                 .setWidth(annotation.getWidth())//
                 .setHeight(annotation.getHeight())//
-                .setDefFontSize(annotation.getDefaultFontSize())//
+                .setDefaultFontSize(annotation.getDefaultFontSize())//
                 .setBorderSize(annotation.getBorderSize())//
                 .setBorderColor(annotation.getBorderColor())//
                 .setBgcolor(annotation.getBgColor())//
                 .setText(annotation.getText())//
-                .setStyles(styles)//
                 .setAnnotationVersion(annotation.getVersion())//
-                .setAlignment(annotation.getAlignment().toString()).build();
-            result.add(annotationData);
+                .setTextAlignment(annotation.getAlignment().toString());
 
+            for (final var style : annotation.getStyleRanges()) {
+                annotationData.addStyles(new StyleRangeDefBuilder()//
+                    .setStart(style.getStart())//
+                    .setLength(style.getLength())//
+                    .setFontStyle(style.getFontStyle())//
+                    .setFontSize(style.getFontSize())//
+                    .setFontName(style.getFontName())//
+                    .setColor(style.getFgColor())//
+                    .build());
+            }
+
+            result.add(annotationData.build());
         }
         return result;
     }
@@ -233,20 +208,41 @@ public class DefWorkflowManagerWrapper implements WorkflowDef {
      * @return description of the workflow project represented by the wrapped workflow manager in POJO format
      */
     public RootWorkflowDef asProjectDef() {
-        return RootWorkflowDefBuilder.builder()//
-                .setLoadVersion(m_wfm.getLoadVersion().getVersionString())//
+        return new RootWorkflowDefBuilder()//
+                .setWorkflowFormatVersion(m_wfm.getLoadVersion().getVersionString())//
                 .setWorkflow(this)
                 .build();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String getCipher() {
-        // TODO Auto-generated method stub
-        return null;
+        // TODO workflow cipher
+        return Optional.ofNullable(m_wfm.getWorkflowCipher()).map(WorkflowCipher::toString).orElse(null);
     }
 
+    @Override
+    public String getName() {
+        return m_wfm.getName();
+    }
+
+    @Override
+    public AuthorInformationDef getAuthorInformation() {
+        AuthorInformation authorInfo = m_wfm.getAuthorInformation();
+        final var authDate = Optional//
+            .ofNullable(authorInfo.getAuthoredDate())//
+            .map(d -> OffsetDateTime.ofInstant(d.toInstant(), ZoneId.systemDefault()))//
+            .orElse(null);
+
+        final var lastEditDate = authorInfo.getLastEditDate()//
+            .map(d -> OffsetDateTime.ofInstant(d.toInstant(), ZoneId.systemDefault()))//
+            .orElse(null);
+
+        return new AuthorInformationDefBuilder()//
+            .setLastEditedWhen(lastEditDate)//
+            .setAuthoredWhen(authDate)//
+            .setAuthoredBy(authorInfo.getAuthor())//
+            .setLastEditedBy(authorInfo.getLastEditor().orElse(null))//
+            .build();
+    }
 
 }
