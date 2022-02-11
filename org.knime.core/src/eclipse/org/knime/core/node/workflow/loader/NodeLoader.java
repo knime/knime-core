@@ -83,6 +83,7 @@ import org.knime.core.workflow.def.impl.NodeUIInfoDefBuilder;
 class NodeLoader {
 
     private final NodeDefBuilder m_nodeBuilder;
+
     private Optional<Integer> m_nodeId;
 
     // Can be component, native, metanode builder
@@ -136,21 +137,22 @@ class NodeLoader {
         //        return nodeIDSuffix;
     }
 
-    private static NodeAnnotationDef loadAnnotation(final ConfigBaseRO settings, final LoadVersion loadVersion) throws InvalidSettingsException {
+    private static NodeAnnotationDef loadAnnotation(final ConfigBaseRO settings, final LoadVersion loadVersion)
+        throws InvalidSettingsException {
         if (!loadVersion.isOlderThan(LoadVersion.V230) || !settings.containsKey("annotations")) {
             // no credentials in v2.2 and before
-            return NodeAnnotationDefBuilder.builder().build();
+            return new NodeAnnotationDefBuilder().build();
         }
-      return NodeAnnotationDefBuilder.builder() //
-              .setAnnotationDefault(false) //
-              .setData(loadAnnotationDataDef(settings)) //
-              .build();
+        return new NodeAnnotationDefBuilder() //
+            .setAnnotationDefault(false) //
+            .setData(loadAnnotationDataDef(settings)) //
+            .build();
     }
 
     private static AnnotationDataDef loadAnnotationDataDef(final ConfigBaseRO settings)
         throws InvalidSettingsException {
         try {
-            return AnnotationDataDefBuilder.builder() //
+            return new AnnotationDataDefBuilder() //
                 .setText(settings.getString("text")) //
                 .setBgcolor(settings.getInt("bgcolor")) //
                 .setLocation(loadCoordinateDef(settings)) //
@@ -164,41 +166,40 @@ class NodeLoader {
                 .build();
         } catch (InvalidSettingsException e) {
             // TODO Proper exception handling
-            return AnnotationDataDefBuilder.builder().build();
+            return new AnnotationDataDefBuilder().build();
         }
     }
 
     private static CoordinateDef loadCoordinateDef(final ConfigBaseRO settings) throws InvalidSettingsException {
-        return CoordinateDefBuilder.builder()
-                .setX(settings.getInt("x-coordinate"))
-                .setY(settings.getInt("y-coordinate"))
-                .build();
+        return CoreToDefUtil.createCoordinate(settings.getInt("x-coordinate"), settings.getInt("y-coordinate"));
     }
 
     private static JobManagerDef loadJobManager(final ConfigBaseRO settings) throws InvalidSettingsException {
         try {
             if (!settings.containsKey("job.manager")) {
-                return JobManagerDefBuilder.builder().build();
+                return new JobManagerDefBuilder().build();
             }
             var jobManagerSettings = settings.getConfigBase("job.manager");
             var factoryId = jobManagerSettings.getString("job.manager.factory.id");
-            return JobManagerDefBuilder.builder()
-                    .setFactory(factoryId)
-                    .setSettings(CoreToDefUtil.toConfigMapDef(jobManagerSettings.getConfigBase("job.manager.settings")))
-                    .build();
+            return new JobManagerDefBuilder()//
+                .setFactory(factoryId)//
+                .setSettings(CoreToDefUtil.toConfigMapDef(jobManagerSettings.getConfigBase("job.manager.settings")))
+                .build();
         } catch (InvalidSettingsException e) {
             // TODO proper error handling
         }
-        return JobManagerDefBuilder.builder().build();
+        return new JobManagerDefBuilder().build();
 
     }
 
     private static NodeLocksDef loadLocks(final ConfigBaseRO settings, final LoadVersion loadVersion) {
         var hasDeleteLock = loadVersion.isOlderThan(LoadVersion.V200) ? true : settings.getBoolean("isDeletable", true);
-        var hasResetLock = loadVersion.isOlderThan(LoadVersion.V3010) ? false : settings.getBoolean("hasResetLock", false);
-        var hasConfigureLock = loadVersion.isOlderThan(LoadVersion.V3010) ? false : settings.getBoolean("hasConfigureLock", false);
+        var hasResetLock =
+            loadVersion.isOlderThan(LoadVersion.V3010) ? false : settings.getBoolean("hasResetLock", false);
+        var hasConfigureLock =
+            loadVersion.isOlderThan(LoadVersion.V3010) ? false : settings.getBoolean("hasConfigureLock", false);
 
-        return NodeLocksDefBuilder.builder() //
+        return new NodeLocksDefBuilder() //
             .setHasConfigureLock(hasConfigureLock) //
             .setHasDeleteLock(hasDeleteLock) //
             .setHasResetLock(hasResetLock) //
@@ -245,8 +246,8 @@ class NodeLoader {
 
     }
 
-
-    private static NodeType loadNodeType(final ConfigBaseRO settings, final LoadVersion loadVersion) throws InvalidSettingsException {
+    private static NodeType loadNodeType(final ConfigBaseRO settings, final LoadVersion loadVersion)
+        throws InvalidSettingsException {
         if (loadVersion.isOlderThan(LoadVersion.V200)) {
             var factory = settings.getString("factory");
             if (ObsoleteMetaNodeFileWorkflowPersistor.OLD_META_NODES.contains(factory)) {
@@ -267,11 +268,9 @@ class NodeLoader {
         }
     }
 
-
-
     private static NodeUIInfoDef loadUIInfo(final ConfigBaseRO settings) throws InvalidSettingsException {
         try {
-            return NodeUIInfoDefBuilder.builder() //
+            return new NodeUIInfoDefBuilder() //
                 .setBounds(loadBoundsDef(settings)) //
                 .setHasAbsoluteCoordinates(null) //
                 .setSymbolRelative(null) //
@@ -281,36 +280,39 @@ class NodeLoader {
             // throw new InvalidSettingsException(errorMessage, e);
 
         }
-        return NodeUIInfoDefBuilder.builder().build();
+        return new NodeUIInfoDefBuilder().build();
     }
 
     private static BoundsDef loadBoundsDef(final ConfigBaseRO settings) throws InvalidSettingsException {
         try {
             var bounds = settings.getIntArray("extrainfo.node.bounds");
-            return BoundsDefBuilder.builder() //
-                .setLocation(CoordinateDefBuilder.builder().setX(bounds[0]).setY(bounds[1]).build()) //
+            return new BoundsDefBuilder() //
+                .setLocation(CoreToDefUtil.createCoordinate(bounds[0], bounds[1])) //
                 .setHeight(bounds[2]) //
                 .setWidth(bounds[3]) //
                 .build();
         } catch (Exception e) {
             // TODO throw proper exception
         }
-        return BoundsDefBuilder.builder().build();
+        return new BoundsDefBuilder().build();
     }
 
-    private String loadUIInfoClassName(final ConfigBaseRO settings, final LoadVersion loadVersion) throws InvalidSettingsException {
+    private String loadUIInfoClassName(final ConfigBaseRO settings, final LoadVersion loadVersion)
+        throws InvalidSettingsException {
         try {
-        if (loadVersion.isOlderThan(LoadVersion.V200)) {
-            if (settings.containsKey(WorkflowPersistor.KEY_UI_INFORMATION)) {
-                return settings.getString(WorkflowPersistor.KEY_UI_INFORMATION);
+            if (loadVersion.isOlderThan(LoadVersion.V200)) {
+                if (settings.containsKey(WorkflowPersistor.KEY_UI_INFORMATION)) {
+                    return settings.getString(WorkflowPersistor.KEY_UI_INFORMATION);
+                }
+            } else {
+                if (settings.containsKey("ui_classname")) {
+                    return settings.getString("ui_classname");
+                }
             }
-        } else {
-            if (settings.containsKey("ui_classname")) {
-                return settings.getString("ui_classname");
-            }
-        }
-        }catch (InvalidSettingsException e) {
-            var errorMessage = String.format("Unable to load UI information class name to node with ID suffix %s, no UI information available: %s", m_nodeId.get(), e.getMessage());
+        } catch (InvalidSettingsException e) {
+            var errorMessage = String.format(
+                "Unable to load UI information class name to node with ID suffix %s, no UI information available: %s",
+                m_nodeId.get(), e.getMessage());
             throw new InvalidSettingsException(errorMessage, e);
         }
         return null;
