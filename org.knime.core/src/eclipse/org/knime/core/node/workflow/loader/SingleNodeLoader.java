@@ -164,13 +164,12 @@ public abstract class SingleNodeLoader extends NodeLoader {
             }
         } catch (InvalidSettingsException e) {
             //TODO Proper error handling
-            return FlowObjectDefBuilder.builder().build();
+            return new FlowObjectDefBuilder().build();
         }
 
     }
 
-    private static FlowContextDef loadFlowContextDef(final String type)
-        throws InvalidSettingsException {
+    private static FlowContextDef loadFlowContextDef(final String type) throws InvalidSettingsException {
         ContextTypeEnum contextType = ContextTypeEnum.valueOf(type);
         // TODO directly load the isActive from the settings and set it, no addtitional conversions for the rest string valiues
         // TODO probably the following will be the implemention for the loaders with version lower than 4.6.0
@@ -179,7 +178,7 @@ public abstract class SingleNodeLoader extends NodeLoader {
             case LOOPCONTEXT_EXECUTE:
             case FLOWCAPTURECONTEXT:
             case SCOPECONTEXT:
-                return FlowContextDefBuilder.builder() //
+                return new FlowContextDefBuilder() //
                     .setActive(true) //
                     .setContextType(contextType) //
                     .build();
@@ -187,7 +186,7 @@ public abstract class SingleNodeLoader extends NodeLoader {
             case FLOWCAPTURECONTEXT_INACTIVE:
             case SCOPECONTEXT_INACTIVE:
                 // TODO Will convert the string to enum with false as active
-                return FlowContextDefBuilder.builder() //
+                return new FlowContextDefBuilder() //
                     .setActive(false) //
                     .setContextType(contextType) //
                     .build();
@@ -197,7 +196,7 @@ public abstract class SingleNodeLoader extends NodeLoader {
     }
 
     private static FlowVariableDef loadFlowVariableDef(final ConfigBaseRO sub) throws InvalidSettingsException {
-        return FlowVariableDefBuilder.builder() //
+        return new FlowVariableDefBuilder() //
             .setValue(CoreToDefUtil.toConfigMapDef(sub)) //
             .build();
     }

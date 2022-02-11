@@ -129,7 +129,7 @@ public class NativeNodeLoader extends SingleNodeLoader {
      * Constructor
      */
     public NativeNodeLoader() {
-        super(NativeNodeDefBuilder.builder());
+        super(new NativeNodeDefBuilder());
     }
 
     /**
@@ -190,7 +190,7 @@ public class NativeNodeLoader extends SingleNodeLoader {
     }
 
     private static VendorDef loadBundle(final ConfigBaseRO settings) throws InvalidSettingsException {
-        return VendorDefBuilder.builder() //
+        return new VendorDefBuilder() //
             .setName(settings.getString(NODE_BUNDLE_NAME_KEY, "")) //
             .setSymbolicName(fixExtensionName(settings.getString(NODE_BUNDLE_SYMBOLIC_NAME_KEY))) //
             .setVendor(settings.getString(NODE_BUNDLE_VENDOR_KEY, "")) //
@@ -199,7 +199,7 @@ public class NativeNodeLoader extends SingleNodeLoader {
     }
 
     private static VendorDef loadFeature(final ConfigBaseRO settings) throws InvalidSettingsException {
-        return VendorDefBuilder.builder() //
+        return new VendorDefBuilder() //
             .setName(settings.getString(NODE_FEATURE_NAME_KEY, "")) //
             .setSymbolicName(fixExtensionName(settings.getString(NODE_FEATURE_SYMBOLIC_NAME_KEY))) //
             .setVendor(settings.getString(NODE_FEATURE_VENDOR_KEY, "")) //
