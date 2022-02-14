@@ -123,7 +123,7 @@ public class NodeViewStateEventSource extends EventSource<NativeNodeContainer, N
 
     @Override
     protected String getName() {
-        return "NodeViewState";
+        return "NodeViewStateEvent";
     }
 
 }

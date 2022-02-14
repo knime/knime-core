@@ -100,7 +100,7 @@ public class SelectionEventSource extends EventSource<NativeNodeContainer, Selec
      */
     @Override
     protected String getName() {
-        return "Selection";
+        return "SelectionEvent";
     }
 
     /**
