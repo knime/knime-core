@@ -57,6 +57,7 @@ import org.knime.core.data.UnmaterializedCell.UnmaterializedDataCellException;
 import org.knime.core.data.container.storage.AbstractTableStoreReader;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.util.CheckUtils;
+import org.knime.core.table.row.Selection;
 
 /**
  * A class for specifying filters over {@link BufferedDataTable BufferedDataTables}. The filter may restrict which rows
@@ -189,6 +190,23 @@ public final class TableFilter {
      */
     public static TableFilter filterRangeOfRows(final long fromIndex, final long toIndex) {
         return (new Builder()).withFromRowIndex(fromIndex).withToRowIndex(toIndex).build();
+    }
+
+    /**
+     * Create a new {@link TableFilter} corresponding to the given {@link Selection}.
+     *
+     * @param selection the selected columns and row range
+     * @return a new {@link TableFilter}
+     */
+    public static TableFilter fromSelection(final Selection selection) {
+        final Builder builder = new TableFilter.Builder();
+        if (!selection.columns().allSelected()) {
+            builder.withMaterializeColumnIndices(selection.columns().getSelected());
+        }
+        if (!selection.rows().allSelected()) {
+            builder.withFromRowIndex(selection.rows().fromIndex()).withToRowIndex(selection.rows().toIndex() + 1);
+        }
+        return builder.build();
     }
 
     /**
