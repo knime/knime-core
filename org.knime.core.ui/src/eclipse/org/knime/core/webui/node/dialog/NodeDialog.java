@@ -156,25 +156,25 @@ public abstract class NodeDialog implements DataServiceProvider {
 
         @Override
         public void applyData(final String data) throws IOException {
-            var settings = new NodeSettings("node_settings");
+            var nodeSettings = new NodeSettings("node_settings");
             // to keep another copy of the settings to be able to tell whether
             // settings have been changed
-            var previousSettings = new NodeSettings("previous_settings");
+            var previousNodeSettings = new NodeSettings("previous_settings");
             var wfm = m_nnc.getParent();
             var nodeID = m_nnc.getID();
             try {
-                wfm.saveNodeSettings(nodeID, settings);
-                wfm.saveNodeSettings(nodeID, previousSettings);
+                wfm.saveNodeSettings(nodeID, nodeSettings);
+                wfm.saveNodeSettings(nodeID, previousNodeSettings);
 
                 Map<SettingsType, NodeSettingsWO> settingsMap = new EnumMap<>(SettingsType.class);
-                NodeSettings modelSettings = getModelSettings(settings, settingsMap);
-                NodeSettings viewSettings =  getViewSettings(settings, settingsMap);
+                NodeSettings modelSettings = getModelSettings(nodeSettings, settingsMap);
+                NodeSettings viewSettings =  getViewSettings(nodeSettings, settingsMap);
 
                 // transfer data into settings
                 getSettingsDataService().applyData(data, settingsMap);
 
-                var modelSettingsChanged = modelSettingsChanged(previousSettings, modelSettings);
-                var viewSettingsChanged = viewSettingsChanged(previousSettings, viewSettings);
+                var modelSettingsChanged = modelSettingsChanged(previousNodeSettings, modelSettings);
+                var viewSettingsChanged = viewSettingsChanged(previousNodeSettings, viewSettings);
 
                 if (viewSettingsChanged) {
                     // load settings into node view
@@ -185,10 +185,10 @@ public abstract class NodeDialog implements DataServiceProvider {
 
                 if (modelSettingsChanged) {
                     // 'persist' settings and load model settings into the node model
-                    wfm.loadNodeSettings(nodeID, settings);
+                    wfm.loadNodeSettings(nodeID, nodeSettings);
                 } else if (viewSettingsChanged) {
                     // 'persist' view settings only (without resetting the node)
-                    wfm.loadNodeViewSettings(nodeID, settings);
+                    wfm.loadNodeViewSettings(nodeID, nodeSettings);
                 }
 
             } catch (InvalidSettingsException ex) {
