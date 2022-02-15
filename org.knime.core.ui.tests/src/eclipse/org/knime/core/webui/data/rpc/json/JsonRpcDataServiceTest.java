@@ -53,7 +53,7 @@ import static org.hamcrest.Matchers.is;
 
 import java.io.IOException;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.webui.data.rpc.json.impl.JsonRpcDataServiceImpl;
 import org.knime.core.webui.data.rpc.json.impl.JsonRpcSingleServer;
@@ -77,7 +77,7 @@ public class JsonRpcDataServiceTest {
      * @throws IOException
      */
     @Test
-    public void testJsonRpcDataService() throws IOException {
+    void testJsonRpcDataService() throws IOException {
         var wfm = WorkflowManagerUtil.createEmptyWorkflow();
         var page = Page.builder(() -> "content", "index.html").build();
         NativeNodeContainer nnc = NodeViewManagerTest.createNodeWithNodeView(wfm, m -> NodeViewTest.createNodeView(page,
