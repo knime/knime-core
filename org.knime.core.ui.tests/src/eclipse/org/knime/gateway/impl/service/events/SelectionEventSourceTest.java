@@ -133,7 +133,7 @@ public class SelectionEventSourceTest {
         m_nnc.getNodeModel().getInHiLiteHandler(0).fireHiLiteEvent(stringListToRowKeySet(ROWKEYS_1_2));
 
         await().pollDelay(ONE_HUNDRED_MILLISECONDS).timeout(FIVE_SECONDS)
-            .untilAsserted(() -> verify(consumerMock, times(1)).accept(eq("Selection"),
+            .untilAsserted(() -> verify(consumerMock, times(1)).accept(eq("SelectionEvent"),
                 argThat(se -> verifySelectionEvent(se, "root", "root:1"))));
 
         assertEquals(m_hlh.getHiLitKeys(), stringListToRowKeySet(ROWKEYS_1_2));
@@ -153,7 +153,7 @@ public class SelectionEventSourceTest {
         m_nnc.getNodeModel().getInHiLiteHandler(0).fireUnHiLiteEvent(stringListToRowKeySet(ROWKEYS_1));
 
         await().pollDelay(ONE_HUNDRED_MILLISECONDS).timeout(FIVE_SECONDS)
-            .untilAsserted(() -> verify(consumerMock, times(1)).accept(eq("Selection"),
+            .untilAsserted(() -> verify(consumerMock, times(1)).accept(eq("SelectionEvent"),
                 argThat(se -> se.getKeys().equals(ROWKEYS_1) && se.getMode() == SelectionEventMode.REMOVE)));
 
         assertEquals(m_hlh.getHiLitKeys(), stringListToRowKeySet(ROWKEYS_2));
@@ -173,7 +173,7 @@ public class SelectionEventSourceTest {
         m_nnc.getNodeModel().getInHiLiteHandler(0).fireReplaceHiLiteEvent(stringListToRowKeySet(ROWKEYS_2));
 
         await().pollDelay(ONE_HUNDRED_MILLISECONDS).timeout(FIVE_SECONDS)
-            .untilAsserted(() -> verify(consumerMock, times(1)).accept(eq("Selection"),
+            .untilAsserted(() -> verify(consumerMock, times(1)).accept(eq("SelectionEvent"),
                 argThat(se -> se.getKeys().equals(ROWKEYS_2) && se.getMode() == SelectionEventMode.REPLACE)));
 
         assertEquals(m_hlh.getHiLitKeys(), stringListToRowKeySet(ROWKEYS_2));

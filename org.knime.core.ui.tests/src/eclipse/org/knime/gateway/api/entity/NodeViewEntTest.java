@@ -197,7 +197,7 @@ public class NodeViewEntTest {
 
         hiLiteHandler.fireHiLiteEvent(new RowKey("k3"));
         await().pollDelay(ONE_HUNDRED_MILLISECONDS).timeout(FIVE_SECONDS)
-            .untilAsserted(() -> verify(consumerMock, times(1)).accept(eq("Selection"),
+            .untilAsserted(() -> verify(consumerMock, times(1)).accept(eq("SelectionEvent"),
                 argThat(se -> se.getKeys().equals(List.of("k3")) && se.getMode() == SelectionEventMode.ADD)));
 
         WorkflowManagerUtil.disposeWorkflow(wfm);

@@ -100,12 +100,13 @@ public class NodeViewEntUtilTest {
         var eventSource =
             NodeViewEntUtil.createNodeViewEntAndEventSources(nnc, eventConsumer, false).getSecond()[0];
         fireHiLiteEvent(hlh, "test");
-        verify(eventConsumer).accept(eq("Selection"), argThat(se -> verifySelectionEvent((SelectionEvent)se, "test")));
+        verify(eventConsumer).accept(eq("SelectionEvent"),
+            argThat(se -> verifySelectionEvent((SelectionEvent)se, "test")));
 
         /* assert that all the listeners are removed from the selection event source on node state change */
         wfm.resetAndConfigureAll();
         fireHiLiteEvent(hlh, "test2");
-        verify(eventConsumer, never()).accept(eq("Selection"),
+        verify(eventConsumer, never()).accept(eq("SelectionEvent"),
             argThat(se -> verifySelectionEvent((SelectionEvent)se, "test2")));
 
         eventSource.removeAllEventListeners();
@@ -115,22 +116,24 @@ public class NodeViewEntUtilTest {
         wfm.executeAllAndWaitUntilDone();
         NodeViewEntUtil.createNodeViewEntAndEventSources(nnc, eventConsumer, true);
         fireHiLiteEvent(hlh, "test3");
-        verify(eventConsumer).accept(eq("Selection"), argThat(se -> verifySelectionEvent((SelectionEvent)se, "test3")));
+        verify(eventConsumer).accept(eq("SelectionEvent"),
+            argThat(se -> verifySelectionEvent((SelectionEvent)se, "test3")));
         // test node view state event: configured
         wfm.resetAndConfigureAll();
-        awaitUntilAsserted(() -> verify(eventConsumer).accept(eq("NodeViewState"),
+        awaitUntilAsserted(() -> verify(eventConsumer).accept(eq("NodeViewStateEvent"),
             argThat(se -> verifyNodeViewStateEvent((NodeViewStateEvent)se, "configured", null))));
         // make sure no selection events are fired if node is not executed
         fireHiLiteEvent(hlh, "test4");
-        verify(eventConsumer, never()).accept(eq("Selection"),
+        verify(eventConsumer, never()).accept(eq("SelectionEvent"),
             argThat(se -> verifySelectionEvent((SelectionEvent)se, "test4")));
         // test node view state event: executed
         wfm.executeAllAndWaitUntilDone();
-        awaitUntilAsserted(() -> verify(eventConsumer).accept(eq("NodeViewState"),
+        awaitUntilAsserted(() -> verify(eventConsumer).accept(eq("NodeViewStateEvent"),
             argThat(se -> verifyNodeViewStateEvent((NodeViewStateEvent)se, "executed", "the initial data"))));
         // make sure that selection events are issued again
         fireHiLiteEvent(hlh, "test5");
-        verify(eventConsumer).accept(eq("Selection"), argThat(se -> verifySelectionEvent((SelectionEvent)se, "test5")));
+        verify(eventConsumer).accept(eq("SelectionEvent"),
+            argThat(se -> verifySelectionEvent((SelectionEvent)se, "test5")));
 
         WorkflowManagerUtil.disposeWorkflow(wfm);
     }
