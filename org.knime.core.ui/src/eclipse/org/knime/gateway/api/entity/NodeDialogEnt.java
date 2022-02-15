@@ -48,6 +48,7 @@
  */
 package org.knime.gateway.api.entity;
 
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.webui.node.dialog.NodeDialogManager;
 import org.knime.core.webui.page.PageUtil;
@@ -66,6 +67,7 @@ public class NodeDialogEnt extends NodeUIExtensionEnt {
      */
     public NodeDialogEnt(final NativeNodeContainer nnc) {
         super(nnc, ExtensionType.DIALOG, NodeDialogManager.getInstance());
+        CheckUtils.checkArgument(NodeDialogManager.hasNodeDialog(nnc), "The provided node doesn't have a node dialog");
 
         var nodeDialogManager = NodeDialogManager.getInstance();
         var url = nodeDialogManager.getNodeDialogPageUrl(nnc);
