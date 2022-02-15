@@ -48,8 +48,11 @@
  */
 package org.knime.core.webui.data.rpc.json;
 
+import static com.googlecode.jsonrpc4j.ErrorResolver.JsonError.CUSTOM_SERVER_ERROR_UPPER;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 
@@ -57,6 +60,7 @@ import org.junit.jupiter.api.Test;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.webui.data.rpc.json.impl.JsonRpcDataServiceImpl;
 import org.knime.core.webui.data.rpc.json.impl.JsonRpcSingleServer;
+import org.knime.core.webui.data.rpc.json.impl.ObjectMapperUtil;
 import org.knime.core.webui.node.view.NodeView;
 import org.knime.core.webui.node.view.NodeViewManager;
 import org.knime.core.webui.node.view.NodeViewManagerTest;
@@ -69,7 +73,7 @@ import org.knime.testing.util.WorkflowManagerUtil;
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
-public class JsonRpcDataServiceTest {
+class JsonRpcDataServiceTest {
 
     /**
      * Tests {@link JsonRpcDataServiceImpl} when used in a {@link NodeView}.
@@ -91,13 +95,43 @@ public class JsonRpcDataServiceTest {
         WorkflowManagerUtil.disposeWorkflow(wfm);
     }
 
-    @SuppressWarnings("javadoc")
     public static class MyService {
 
         public String myMethod() {
             return "my service method result"; // NOSONAR
         }
+    }
 
+    @Test
+    void testJsonRpcDataServiceError() throws IOException {
+        var wfm = WorkflowManagerUtil.createEmptyWorkflow();
+        var page = Page.builder(() -> "content", "index.html").build();
+        NativeNodeContainer nnc = NodeViewManagerTest.createNodeWithNodeView(wfm, m -> NodeViewTest.createNodeView(page,
+            null, new JsonRpcDataServiceImpl(new JsonRpcSingleServer<ErroneusService>(new ErroneusService())), null));
+        wfm.executeAllAndWaitUntilDone();
+
+        var jsonRpcRequest = "{\"jsonrpc\":\"2.0\", \"id\":1, \"method\":\"erroneusMethod\", \"params\": [\"foo\"]}";
+        String response = NodeViewManager.getInstance().callTextDataService(nnc, jsonRpcRequest);
+        final var root = ObjectMapperUtil.getInstance().getObjectMapper().readTree(response);
+        assertTrue(root.has("error"));
+        final var error = root.get("error");
+        assertTrue(error.has("code"));
+        assertEquals(CUSTOM_SERVER_ERROR_UPPER, error.get("code").asInt());
+        assertTrue(error.has("message"));
+        assertEquals("foo", error.get("message").asText());
+        assertTrue(error.has("data"));
+        final var data = error.get("data");
+        assertTrue(data.has("typeName"));
+        assertEquals("java.lang.IllegalArgumentException", data.get("typeName").asText());
+        assertTrue(data.has("stackTrace"));
+        WorkflowManagerUtil.disposeWorkflow(wfm);
+    }
+
+    public static class ErroneusService {
+
+        public String erroneusMethod(final String param) {
+            throw new IllegalArgumentException(param);
+        }
     }
 
 }

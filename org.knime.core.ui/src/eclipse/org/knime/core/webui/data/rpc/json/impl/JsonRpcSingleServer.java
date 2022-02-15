@@ -48,14 +48,18 @@
  */
 package org.knime.core.webui.data.rpc.json.impl;
 
+import static com.googlecode.jsonrpc4j.ErrorResolver.JsonError.CUSTOM_SERVER_ERROR_UPPER;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Arrays;
 
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.webui.data.rpc.RpcSingleServer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.googlecode.jsonrpc4j.ErrorResolver.JsonError;
 
 /**
  * A convenience specialization of {@link JsonRpcServer} that supports only one service interface and thus spares the
@@ -76,6 +80,32 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * @since 4.3
  */
 public class JsonRpcSingleServer<S> implements RpcSingleServer<S> {
+
+    static final class ErrorData {
+
+        private final String m_typeName;
+
+        private final String[] m_stackTrace;
+
+        ErrorData(final Throwable t) {
+            m_typeName = t.getClass().getName();
+            m_stackTrace = Arrays.stream(t.getStackTrace()).map(StackTraceElement::toString).toArray(String[]::new);
+        }
+
+        /**
+         * @return the type name of the {@link Exception} that lead to the error
+         */
+        public String getTypeName() {
+            return m_typeName;
+        }
+
+        /**
+         * @return the stack trace of the {@link Exception} that lead to the error
+         */
+        public String[] getStackTrace() {
+            return m_stackTrace;
+        }
+    }
 
     /**
      * Node data service implementor. Can be local (node model lives in the same JVM as client) or remote.
@@ -99,6 +129,8 @@ public class JsonRpcSingleServer<S> implements RpcSingleServer<S> {
         CheckUtils.checkNotNull(mapper, "Object mapper passed to JSON-RPC server must not be null.");
         m_handler = CheckUtils.checkNotNull(handler, "The node data service implementation must not be null.");
         m_jsonRpcServer = new com.googlecode.jsonrpc4j.JsonRpcServer(mapper, handler);
+        m_jsonRpcServer.setErrorResolver(
+            (t, method, arguments) -> new JsonError(CUSTOM_SERVER_ERROR_UPPER, t.getMessage(), new ErrorData(t)));
     }
 
     @Override
