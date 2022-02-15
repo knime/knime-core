@@ -48,45 +48,31 @@
  */
 package org.knime.core.webui.node.view;
 
-import java.io.IOException;
 import java.util.Optional;
 
-import org.junit.After;
-import org.junit.Before;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.webui.data.ApplyDataService;
 import org.knime.core.webui.data.DataService;
 import org.knime.core.webui.data.InitialDataService;
 import org.knime.core.webui.data.json.impl.JsonReExecuteDataServiceImpl;
 import org.knime.core.webui.page.Page;
 import org.knime.testing.node.view.NodeViewNodeModel;
-import org.knime.testing.util.WorkflowManagerUtil;
 
 /**
- * Tests for {@link NodeView}.
+ * Helper methods and tests for {@link NodeView NodeViews}.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
-public class NodeViewTest {
+public final class NodeViewTest {
 
-    private WorkflowManager m_wfm;
-
-    @SuppressWarnings("javadoc")
-    @Before
-    public void createEmptyWorkflow() throws IOException {
-        m_wfm = WorkflowManagerUtil.createEmptyWorkflow();
-    }
-
-    @SuppressWarnings("javadoc")
-    @After
-    public void disposeWorkflow() {
-        WorkflowManagerUtil.disposeWorkflow(m_wfm);
+    private NodeViewTest() {
+        // at the moment it's just a utility class
     }
 
     static NodeView createNodeView(final Page page, final NodeViewNodeModel m) {
-        return createNodeView(page, null, null, new JsonReExecuteDataServiceImpl<String, NodeViewNodeModel>(m, String.class));
+        return createNodeView(page, null, null,
+            new JsonReExecuteDataServiceImpl<String, NodeViewNodeModel>(m, String.class));
     }
 
     @SuppressWarnings("javadoc")
@@ -95,8 +81,8 @@ public class NodeViewTest {
     }
 
     @SuppressWarnings("javadoc")
-    public static NodeView createNodeView(final Page page, final InitialDataService initDataService, final DataService dataService,
-        final ApplyDataService applyDataService) {
+    public static NodeView createNodeView(final Page page, final InitialDataService initDataService,
+        final DataService dataService, final ApplyDataService applyDataService) {
         return new NodeView() { // NOSONAR
 
             @Override
