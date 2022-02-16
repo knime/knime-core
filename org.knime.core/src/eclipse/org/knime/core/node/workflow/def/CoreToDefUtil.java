@@ -97,6 +97,7 @@ import org.knime.core.workflow.def.ConfigMapDef;
 import org.knime.core.workflow.def.ConfigValueBooleanArrayDef;
 import org.knime.core.workflow.def.ConnectionUISettingsDef;
 import org.knime.core.workflow.def.CoordinateDef;
+import org.knime.core.workflow.def.CredentialPlaceholderDef;
 import org.knime.core.workflow.def.FlowObjectDef;
 import org.knime.core.workflow.def.JobManagerDef;
 import org.knime.core.workflow.def.NativeNodeDef;
@@ -108,7 +109,6 @@ import org.knime.core.workflow.def.PortTypeDef;
 import org.knime.core.workflow.def.StyleRangeDef;
 import org.knime.core.workflow.def.TemplateLinkDef;
 import org.knime.core.workflow.def.VendorDef;
-import org.knime.core.workflow.def.WorkflowCredentialsDef;
 import org.knime.core.workflow.def.impl.AnnotationDataDefBuilder;
 import org.knime.core.workflow.def.impl.AuthorInformationDefBuilder;
 import org.knime.core.workflow.def.impl.BoundsDefBuilder;
@@ -221,9 +221,10 @@ public class CoreToDefUtil {
                 }
             }
             return new ConfigMapDefBuilder()//
-                    .setConfigType("ConfigMap")//
                     .setKey(key)//
-                    .setChildren(children).build();
+                    .setChildren(children)//
+                    .setConfigType("ConfigMap")//
+                    .build();
         } else {
             // recursion anchor
             return abstractConfigurationEntryToTypedLeaf(settings)//
@@ -246,15 +247,15 @@ public class CoreToDefUtil {
                 .mapToObj(idx -> booleanValues[idx])//
                 .collect(Collectors.toList());
             return new ConfigValueBooleanArrayDefBuilder()//
-                .setConfigType("ConfigValueBooleanArray")//
                 .setArray(asList)//
+                .setConfigType("ConfigValueBooleanArray")//
                 .build();
         }
         byte[] byteValues = innerNode.getByteArray(childKey, null);
         if (byteValues != null) {
             return new ConfigValueByteArrayDefBuilder()//
-                .setConfigType("ConfigValueByteArray")//
                 .setArray(byteValues)//
+                .setConfigType("ConfigValueByteArray")//
                 .build();
         }
         char[] charValues = innerNode.getCharArray(childKey, null);
@@ -264,8 +265,8 @@ public class CoreToDefUtil {
                 .mapToObj(idx -> Integer.valueOf(charValues[//
                 idx])).collect(Collectors.toList());
             return new ConfigValueCharArrayDefBuilder()//
-                .setConfigType("ConfigValueCharArray")//
                 .setArray(asList)//
+                .setConfigType("ConfigValueCharArray")//
                 .build();
         }
         double[] doubleValues = innerNode.getDoubleArray(childKey, null);
@@ -274,8 +275,8 @@ public class CoreToDefUtil {
                 .mapToObj(idx -> doubleValues[idx])//
                 .collect(Collectors.toList());
             return new ConfigValueDoubleArrayDefBuilder()//
-                .setConfigType("ConfigValueDoubleArray")//
                 .setArray(asList)//
+                .setConfigType("ConfigValueDoubleArray")//
                 .build();
         }
         float[] floatValues = innerNode.getFloatArray(childKey, null);
@@ -284,8 +285,8 @@ public class CoreToDefUtil {
                 .mapToObj(idx -> floatValues[idx])//
                 .collect(Collectors.toList());
             return new ConfigValueFloatArrayDefBuilder()//
-                .setConfigType("ConfigValueFloatArray")//
                 .setArray(asList)//
+                .setConfigType("ConfigValueFloatArray")//
                 .build();
         }
         int[] intValues = innerNode.getIntArray(childKey, null);
@@ -294,8 +295,8 @@ public class CoreToDefUtil {
                 .mapToObj(idx -> intValues[idx])//
                 .collect(Collectors.toList());
             return new ConfigValueIntArrayDefBuilder()//
-                .setConfigType("ConfigValueIntArray")//
                 .setArray(asList)//
+                .setConfigType("ConfigValueIntArray")//
                 .build();
         }
         long[] longValues = innerNode.getLongArray(childKey, null);
@@ -304,8 +305,8 @@ public class CoreToDefUtil {
                 .mapToObj(idx -> longValues[idx])//
                 .collect(Collectors.toList());
             return new ConfigValueLongArrayDefBuilder()//
-                .setConfigType("ConfigValueLongArray")//
                 .setArray(asList)//
+                .setConfigType("ConfigValueLongArray")//
                 .build();
         }
         short[] shortValues = innerNode.getShortArray(childKey, null);
@@ -315,8 +316,8 @@ public class CoreToDefUtil {
                 .mapToObj((idx -> Integer.valueOf(shortValues[//
                 idx]))).collect(Collectors.toList());
             return new ConfigValueShortArrayDefBuilder()//
-                .setConfigType("ConfigValueShortArray")//
                 .setArray(asList)//
+                .setConfigType("ConfigValueShortArray")//
                 .build();
         }
         String[] stringValues = innerNode.getStringArray(childKey, (String[])null);
@@ -325,8 +326,8 @@ public class CoreToDefUtil {
                 .mapToObj(idx -> stringValues[idx])//
                 .collect(Collectors.toList());
             return new ConfigValueStringArrayDefBuilder()//
-                .setConfigType("ConfigValueStringArray")//
                 .setArray(asList)//
+                .setConfigType("ConfigValueStringArray")//
                 .build();
         }
         return null;
@@ -570,7 +571,7 @@ public class CoreToDefUtil {
      * @param credentials
      * @return
      */
-    public static WorkflowCredentialsDef toWorkflowCredentialsDef(final List<Credentials> credentials) {
+    public static CredentialPlaceholderDef toWorkflowCredentialsDef(final List<Credentials> credentials) {
         // TODO
         throw new NotImplementedException("Credentials storage not implemented yet");
 //        return DefaultWorkflowCredentialsDef.builder().build();

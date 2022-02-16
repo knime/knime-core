@@ -48,31 +48,28 @@
  */
 package org.knime.core.node.workflow.loader;
 
-import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
-import org.knime.core.node.config.base.ConfigBase;
 import org.knime.core.node.config.base.ConfigBaseRO;
-import org.knime.core.node.workflow.FileWorkflowPersistor;
 import org.knime.core.node.workflow.UnsupportedWorkflowVersionException;
 import org.knime.core.node.workflow.WorkflowLoadHelper.UnknownKNIMEVersionLoadPolicy;
+import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.core.node.workflow.def.CoreToDefUtil;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.Version;
 import org.knime.core.workflow.def.ConfigMapDef;
 import org.knime.core.workflow.def.CredentialPlaceholderDef;
+import org.knime.core.workflow.def.FlowVariableDef;
 import org.knime.core.workflow.def.RootWorkflowDef;
-import org.knime.core.workflow.def.WorkflowDef;
 import org.knime.core.workflow.def.impl.CredentialPlaceholderDefBuilder;
+import org.knime.core.workflow.def.impl.FlowVariableDefBuilder;
 import org.knime.core.workflow.def.impl.RootWorkflowDefBuilder;
 
 /**
@@ -82,73 +79,81 @@ import org.knime.core.workflow.def.impl.RootWorkflowDefBuilder;
  */
 public class RootWorkflowLoader {
 
-    /** Lists element identifiers for different workflow information. */
-    enum ConfigKey {
+    /** String constants, such as key names in the workflow configuration, file names, etc. */
+    public enum Const {
+            /** @see RootWorkflowDef#getWorkflowFormatVersion() */
+            WORKFLOW_FORMAT_VERSION("version"),
             /**
              * @see {@link RootWorkflowDef#isCreatorIsNightly()}
              * @see {@link KNIMEConstants#isNightlyBuild()}
              */
             CREATOR_IS_NIGHTLY("created_by_nightly"),
-            /** @see {@link RootWorkflowDef#getCreatorVersion()} */
+            /** @see RootWorkflowDef#getSavedWithVersion() */
             CREATOR_KNIME_VERSION("created_by"),
-            /** @see {@link CredentialPlaceholderDef#getLogin()} */
-            CREDENTIAL_PLACEHOLDER_LOGIN("login"),
-            /** @see {@link CredentialPlaceholderDef#getName()} */
-            CREDENTIAL_PLACEHOLDER_NAME("name"),
-            /** @see {@link RootWorkflowDef#getCredentialPlaceholders()} */
-            CREDENTIAL_PLACEHOLDERS("workflow_credentials"),
-            /** @see {@link RootWorkflowDef#getTableBackendSettings()} */
+            /** @see RootWorkflowDef#getTableBackendSettings() */
             TABLE_BACKEND("tableBackend"),
-            /** @see {@link RootWorkflowDef#getWorkflowFormatVersion()} */
-            WORKFLOW_FORMAT_VERSION("version");
+            /** @see RootWorkflowDef#getFlowVariables() */
+            CFG_WKF_VARIABLES("workflow_variables"),
+            /**
+             * Name of the file used to signal that workflow was with data. It is present in the workflow directory
+             * unless the workflow is exported with the "exclude data" flag being set.
+             *
+             * @see RootWorkflowDefBuilder#setSavedWithData(Boolean)
+             */
+            SAVED_WITH_DATA_FILE_NAME(".savedWithData"),
+            /** @see RootWorkflowDef#getCredentialPlaceholders() */
+            CREDENTIAL_PLACEHOLDERS("workflow_credentials"),
+            /** @see CredentialPlaceholderDef#getName() */
+            CREDENTIAL_PLACEHOLDER_NAME("name"),
+            /** @see CredentialPlaceholderDef#getLogin() */
+            CREDENTIAL_PLACEHOLDER_LOGIN("login"),
+            /** Used when the */
+            DEFAULT_LOAD_VERSION_STRING("0.9.0");
 
-        String m_key;
+        final String m_const;
 
-        ConfigKey(final String key) {
-            m_key = key;
+        Const(final String key) {
+            m_const = key;
+        }
+
+        /** @return the string constant. */
+        public String get() {
+            return m_const;
         }
     }
 
-    private final RootWorkflowDefBuilder m_builder = new RootWorkflowDefBuilder();
+    /**
+     * Loads the workflow global information (load version, etc.) and the actual workflow.
+     *
+     * @param directory The directory that contains the workflow to load
+     * @param handleUnknownVersion what to do if the version is unknown // TODO is this really used properly
+     * @return a description of the workflow as POJOs
+     */
+    public static RootWorkflowDef load(final File directory, final UnknownKNIMEVersionLoadPolicy handleUnknownVersion)
+        throws IOException {
 
-    private ConfigBase m_workflowDescription = new SimpleConfig("root");
+        var workflowConfig = WorkflowLoader.parseWorkflowConfig(directory);
+        var workflowFormatVersion = LoadVersion.fromVersionString(loadWorkflowFormatVersionString(workflowConfig));
 
-    private LoadVersion m_workflowFormatVersion;
+//        var isSetDirtyAfterLoad =
+//            isVersionCompatible(workflowFormatVersion, creatorVersion, creatorIsNightly, handleUnknownVersion);
+//        if (isSetDirtyAfterLoad) {
+//            // TODO error handling
+//            //            persistor.setDirtyAfterLoad();
+//        }
+
+        // TODO how to nest the load result?
+        // or use a flat, referential form? e.g., [{problem: can't load string, wf: wf_ref}, {problem: can't load.., wf: wf2}]
+
+    }
 
     /**
-     * Loads the project specific information (load version, etc.) and the actual workflow.
-     *
-     * @param directory The directory to load from
-     * @throws IOException If an IO error occurred
-     * @throws UnsupportedWorkflowVersionException If the workflow is of an unsupported version
+     * @param directory The directory that contains the workflow to load
+     * @return a description of the workflow as POJOs
      */
-    public void load(final File directory) throws IOException, UnsupportedWorkflowVersionException {
-
-        File dotKnime = FileWorkflowLoader.getKnimeFile(directory);
-
-        try (var fis = new FileInputStream(dotKnime); var bis = new BufferedInputStream(fis)) {
-            m_workflowDescription.load(bis);
-        }
-
-        m_workflowFormatVersion = parseVersion(loadWorkflowFormatVersionString(dotKnime, m_workflowDescription));
-        var creatorVersion = loadCreatorVersion(m_workflowDescription);
-        var creatorIsNightly = m_workflowDescription.getBoolean(ConfigKey.CREATOR_IS_NIGHTLY.m_key, false); // added in 3.5.0
-
-        var loadPolicy = getUnknownKNIMEVersionLoadPolicy(m_workflowFormatVersion, creatorVersion, creatorIsNightly);
-        var isSetDirtyAfterLoad =
-            isVersionCompatible(m_workflowFormatVersion, creatorVersion, creatorIsNightly, loadPolicy);
-        if (isSetDirtyAfterLoad) {
-            // TODO
-            //            persistor.setDirtyAfterLoad();
-        }
-
-        getBuilder()//
-            .setWorkflowFormatVersion(m_workflowFormatVersion.getVersionString())//
-            .setCreatorIsNightly(creatorIsNightly)//
-            .setWorkflow(loadWorkflow(directory))//
-            .setTableBackendSettings(loadTableBackendSettings(m_workflowDescription))//
-            .setCredentialPlaceholders(loadCredentialPlaceholders(m_workflowDescription));
-        Optional.ofNullable(creatorVersion).map(Version::toString).ifPresent(getBuilder()::setSavedWithVersion);
+    public static RootWorkflowDef load(final File directory)
+        throws IOException, UnsupportedWorkflowVersionException, InvalidSettingsException {
+        return load(directory, UnknownKNIMEVersionLoadPolicy.Abort);
     }
 
     /**
@@ -170,48 +175,18 @@ public class RootWorkflowLoader {
      * @since 3.7
      */
     // see also org.knime.core.node.workflow.FileWorkflowPersistor.saveHeader(NodeSettings)
-    public UnknownKNIMEVersionLoadPolicy getUnknownKNIMEVersionLoadPolicy(final LoadVersion workflowKNIMEVersion,
+    public static UnknownKNIMEVersionLoadPolicy getUnknownKNIMEVersionLoadPolicy(final LoadVersion workflowKNIMEVersion,
         final Version createdByKNIMEVersion, final boolean isNightlyBuild) {
         return UnknownKNIMEVersionLoadPolicy.Abort;
     }
 
-    RootWorkflowDefBuilder getBuilder() {
-        return m_builder;
-    }
-
-    RootWorkflowDef getDef() {
-        return getBuilder().build();
-    }
-
     /**
-     * TODO copied from {@link FileWorkflowPersistor} Parse the version string, return {@link LoadVersion#FUTURE} if it
-     * can't be parsed.
-     */
-    static LoadVersion parseVersion(final String versionString) {
-        boolean isBeforeV2 = versionString.equals("0.9.0");
-        isBeforeV2 |= versionString.equals("1.0");
-        isBeforeV2 |= versionString.matches("1\\.[01234]\\.[0-9].*");
-        if (isBeforeV2) {
-            return LoadVersion.UNKNOWN;
-        }
-        return LoadVersion.get(versionString).orElse(LoadVersion.FUTURE);
-    }
-
-    /**
-     * @param directory that contains the workflow
-     */
-    private WorkflowDef loadWorkflow(final File directory) {
-        var loader = new FileWorkflowLoader(m_workflowFormatVersion);
-        return loader.load(directory, m_workflowDescription);
-    }
-
-    /**
-     * @param settings parsed contents of workflow.knime
+     * @param workflowConfig the parsed contents of the workflow.knime XML file
      * @return the version of the KNIME instance that was used to create the workflow.
      */
-    private static Version loadCreatorVersion(final ConfigBase settings) {
+    private static Version loadCreatorVersion(final ConfigBaseRO workflowConfig) {
         Version createdWith = null;
-        var createdWithString = settings.getString(ConfigKey.CREATOR_KNIME_VERSION.m_key, null);
+        var createdWithString = workflowConfig.getString(Const.CREATOR_KNIME_VERSION.get(), null);
         if (createdWithString != null) {
             try {
                 createdWith = new Version(createdWithString);
@@ -226,25 +201,94 @@ public class RootWorkflowLoader {
     }
 
     /**
-     * Loads credentials, this method returns an empty list. Credentials added for v2.2
-     *
-     * @param parsed contents of workflow.knime
-     * @return the credentials list
-     * @throws InvalidSettingsException If this fails for any reason.
+     * @param workflowConfig the parsed contents of the workflow.knime XML file
+     * @return load version, see {@link LoadVersion}
      */
-    private List<CredentialPlaceholderDef> loadCredentialPlaceholders(final ConfigBaseRO settings) {
+    private static String loadWorkflowFormatVersionString(final ConfigBaseRO workflowConfig) throws IOException {
+        // CeBIT 2006 version did not contain a version string.
+        String versionString;
+        if (workflowConfig.containsKey(Const.WORKFLOW_FORMAT_VERSION.get())) {
+            try {
+                versionString = workflowConfig.getString(Const.WORKFLOW_FORMAT_VERSION.get());
+            } catch (InvalidSettingsException e) {
+                throw new IOException("Can't read version number from \"" + workflowConfig.getKey() + "\"", e);
+            }
+        } else {
+            versionString = Const.DEFAULT_LOAD_VERSION_STRING.get();
+        }
+        return versionString;
+    }
+
+    /**
+     * TODO move to new persistor - this is beyond data loading logic Checks if the workflow can be loaded with the
+     * running version of KNIME.
+     *
+     * @param workflowFormatVersion the version of the workflow format that was used to write the workflow to load
+     * @param createdWith the version with which the workflow was created
+     * @param isNightly whether created by a nightly version of KNIME
+     * @param loadPolicy
+     * @return true if everything is ok, false if the workflow can be loaded but must be considered changed after load
+     * @throws UnsupportedWorkflowVersionException if the workflow cannot be loaded
+     */
+    private static boolean isVersionCompatible(final LoadVersion workflowFormatVersion, final Version createdWith,
+        final boolean isNightly, final UnknownKNIMEVersionLoadPolicy loadPolicy)
+        throws UnsupportedWorkflowVersionException {
+
+        // TODO get rid of KNIMEConstants - or move to knime shared
+        var isFutureWorkflow = createdWith != null && !new Version(KNIMEConstants.VERSION).isSameOrNewer(createdWith);
+
+        // TODO is running nightly doesn't make sense for general loader code -> move to core invocation
+        // if (version == LoadVersion.FUTURE || isFutureWorkflow || (!isRunningNightly && isNightly)) {
+        if (workflowFormatVersion == LoadVersion.FUTURE || isFutureWorkflow) {
+            if (loadPolicy == UnknownKNIMEVersionLoadPolicy.Abort) {
+                throw new UnsupportedWorkflowVersionException(
+                    unableToLoadErrorMessage(workflowFormatVersion, createdWith, isFutureWorkflow));
+            } else {
+                return false;
+            }
+        } else if (workflowFormatVersion.isOlderThan(LoadVersion.V200)) {
+            // TODO
+            //            LOGGER.warn("The current KNIME version (" + KNIMEConstants.VERSION + ") is different from the one that "
+            //                    + "created the workflow (" + version + ") you are trying to load. In some rare cases, it  "
+            //                    + "might not be possible to load all data or some nodes can't be configured. "
+            //                    + "Please re-configure and/or re-execute these nodes.");
+        }
+        return true;
+    }
+
+    /**
+     * Determine if the workflow was saved with workflow execution results or only its description (e.g., using the
+     * "export without data" option from the GUI).
+     *
+     * @param workflowDir contains the workflow
+     * @param workflowFormatVersion the version of the workflow format that was used to write the workflow to load
+     * @return true for old workflows (&lt;2.0) or if there is a {@value WorkflowPersistor#SAVED_WITH_DATA_FILE} file.
+     */
+    private static boolean loadSavedWithData(final File workflowDir, final LoadVersion workflowFormatVersion) {
+        if (workflowFormatVersion.isOlderThan(LoadVersion.V200)) {
+            return true;
+        }
+        return new File(workflowDir, Const.SAVED_WITH_DATA_FILE_NAME.get()).isFile();
+    }
+
+    /**
+     * @param workflowFormatVersion the version of the workflow format that was used to write the workflow to load
+     * @param workflowConfig parsed contents of workflow.knime
+     */
+    private static List<CredentialPlaceholderDef> loadCredentialPlaceholderDefs(final ConfigBaseRO workflowConfig,
+        final LoadVersion workflowFormatVersion) {
         try {
-            if (m_workflowFormatVersion.isOlderThan(LoadVersion.V220)) {
+            if (workflowFormatVersion.isOlderThan(LoadVersion.V220)) {
                 // no credentials in v2.1 and before
                 return List.of();
             }
 
-            ConfigBaseRO sub = settings.getConfigBase(ConfigKey.CREDENTIAL_PLACEHOLDERS.m_key);
+            ConfigBaseRO sub = workflowConfig.getConfigBase(Const.CREDENTIAL_PLACEHOLDERS.get());
             List<CredentialPlaceholderDef> placeholders = new ArrayList<>();
             Set<String> unique = new HashSet<>();
             for (String key : sub.keySet()) {
                 ConfigBaseRO placeholder = sub.getConfigBase(key);
-                CredentialPlaceholderDef p = loadCredentialPlaceholder(placeholder);
+                var p = loadCredentialPlaceholderDef(placeholder);
                 if (!unique.add(p.getName())) {
                     // TODO
                     //                    getLogger().warn("Duplicate credentials variable \"" + c.getName() + "\" -- ignoring it");
@@ -263,11 +307,14 @@ public class RootWorkflowLoader {
         }
     }
 
-    private static CredentialPlaceholderDef loadCredentialPlaceholder(final ConfigBaseRO settings)
+    /**
+     * @param workflowConfig parsed contents of workflow.knime
+     */
+    private static CredentialPlaceholderDef loadCredentialPlaceholderDef(final ConfigBaseRO workflowConfig)
         throws InvalidSettingsException {
         return new CredentialPlaceholderDefBuilder()//
-            .setName(settings.getString(ConfigKey.CREDENTIAL_PLACEHOLDER_NAME.m_key))//
-            .setLogin(settings.getString(ConfigKey.CREDENTIAL_PLACEHOLDER_LOGIN.m_key))//
+            .setName(workflowConfig.getString(Const.CREDENTIAL_PLACEHOLDER_NAME.get()))//
+            .setLogin(workflowConfig.getString(Const.CREDENTIAL_PLACEHOLDER_LOGIN.get()))//
             .build();
         // TODO move to persistor
         // request to initialize credentials - if available
@@ -286,86 +333,48 @@ public class RootWorkflowLoader {
     }
 
     /**
-     * @param settings the parsed contents of the workflow.knime XML file
-     * @return
+     * @param workflowConfig the parsed contents of the workflow.knime XML file
      */
-    private static ConfigMapDef loadTableBackendSettings(final ConfigBaseRO settings) {
-        try {
-            if (settings.containsKey(ConfigKey.TABLE_BACKEND.m_key)) {
-                return CoreToDefUtil.toConfigMapDef(settings.getConfigBase(ConfigKey.TABLE_BACKEND.m_key));
-            }
-        } catch (InvalidSettingsException e) {
-            // TODO
-            //            var error = "Unable to load table backend: " + e.getMessage();
-            //            getLogger().debug(error, e);
-            //            loadResult.setDirtyAfterLoad();
-            //            loadResult.setResetRequiredAfterLoad();
-            //            loadResult.addError(error, true);
-            // TODO error handling special / move to persistor?
-            //            if (e instanceof TableBackendUnknownException) { // NOSONAR
-            //                loadResult.addMissingTableFormat(((TableBackendUnknownException)e).getFormatInfo());
-            //            }
+    private static ConfigMapDef loadTableBackendSettingsDef(final ConfigBaseRO workflowConfig)
+        throws InvalidSettingsException {
+        if (workflowConfig.containsKey(Const.TABLE_BACKEND.get())) {
+            return CoreToDefUtil.toConfigMapDef(workflowConfig.getConfigBase(Const.TABLE_BACKEND.get()));
         }
-        // TODO or empty settings?
         return null;
     }
 
     /**
-     * @param dotKNIME
-     * @param settings
-     * @return load version, see {@link LoadVersion}
-     * @throws IOException
-     */
-    private static String loadWorkflowFormatVersionString(final File dotKNIME, final ConfigBase settings)
-        throws IOException {
-        // CeBIT 2006 version did not contain a version string.
-        String versionString;
-        if (settings.containsKey(ConfigKey.WORKFLOW_FORMAT_VERSION.m_key)) {
-            try {
-                versionString = settings.getString(ConfigKey.WORKFLOW_FORMAT_VERSION.m_key);
-            } catch (InvalidSettingsException e) {
-                throw new IOException("Can't read version number from \"" + dotKNIME.getAbsolutePath() + "\"", e);
-            }
-        } else {
-            versionString = "0.9.0";
-        }
-        return versionString;
-    }
-
-    /**
-     * TODO move to new persistor - this is beyond data loading logic Checks if the workflow can be loaded with the
-     * running version of KNIME.
+     * Load workflow variables (not available in 1.3.x flows).
      *
-     * @param version the minimum version required to load the workflow
-     * @param createdWith the version with which the workflow was created
-     * @param isNightly whether created by a nightly version of KNIME
-     * @param loadPolicy
-     * @return true if everything is ok, false if the workflow can be loaded but must be considered changed after load
-     * @throws UnsupportedWorkflowVersionException if the workflow cannot be loaded
+     * @param workflowConfig
+     * @param workflowFormatVersion the version of the workflow format that was used to write the workflow to load
+     * @return The variables in a list.
+     * @throws InvalidSettingsException If any settings-related error occurs.
      */
-    private static boolean isVersionCompatible(final LoadVersion version, final Version createdWith,
-        final boolean isNightly, final UnknownKNIMEVersionLoadPolicy loadPolicy)
-        throws UnsupportedWorkflowVersionException {
-
-        boolean isRunningNightly = KNIMEConstants.isNightlyBuild();
-        boolean isFutureWorkflow =
-            createdWith != null && !new Version(KNIMEConstants.VERSION).isSameOrNewer(createdWith);
-
-        if (version == LoadVersion.FUTURE || isFutureWorkflow || (!isRunningNightly && isNightly)) {
-            if (loadPolicy == UnknownKNIMEVersionLoadPolicy.Abort) {
-                throw new UnsupportedWorkflowVersionException(
-                    unableToLoadErrorMessage(version, createdWith, isFutureWorkflow));
-            } else {
-                return false;
-            }
-        } else if (version.isOlderThan(LoadVersion.V200)) {
-            // TODO
-            //            LOGGER.warn("The current KNIME version (" + KNIMEConstants.VERSION + ") is different from the one that "
-            //                    + "created the workflow (" + version + ") you are trying to load. In some rare cases, it  "
-            //                    + "might not be possible to load all data or some nodes can't be configured. "
-            //                    + "Please re-configure and/or re-execute these nodes.");
+    private static List<FlowVariableDef> loadWorkflowVariableDefs(final ConfigBaseRO workflowConfig,
+        final LoadVersion workflowFormatVersion) throws InvalidSettingsException {
+        if (workflowFormatVersion.isOlderThan(LoadVersion.V200)
+            || !workflowConfig.containsKey(Const.CFG_WKF_VARIABLES.get())) {
+            return List.of();
         }
-        return true;
+
+        var wfmVarSub = workflowConfig.getConfigBase(Const.CFG_WKF_VARIABLES.get());
+        List<FlowVariableDef> result = new ArrayList<>();
+        for (String key : wfmVarSub.keySet()) {
+            ConfigBaseRO sub = wfmVarSub.getConfigBase(key);
+            var def = new FlowVariableDefBuilder()//
+                // TODO
+                //            final String name = CheckUtils.checkSettingNotNull(sub.getString("name"), "name must not be null");
+                .setName(sub.getString("name"))//
+                // TODO
+                //            final VariableValue<?> value = VariableType.load(sub);
+                .setValue(null)
+                // TODO
+                .setPropertyClass(null)//
+                .build();
+            result.add(def);
+        }
+        return result;
     }
 
     /**

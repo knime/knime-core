@@ -48,7 +48,6 @@
  */
 package org.knime.core.node.workflow;
 
-import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -125,10 +124,10 @@ public class DefWorkflowManagerWrapper implements WorkflowDef {
             .setSnapToGrid(wfEditorSettings.getSnapToGrid())//
             .setShowGrid(wfEditorSettings.getShowGrid())//
             .setCurvedConnections(wfEditorSettings.getHasCurvedConnections())//
-            .setZoomLevel(BigDecimal.valueOf(wfEditorSettings.getZoomLevel()))//
+            .setZoomLevel(wfEditorSettings.getZoomLevel())//
             .setGridX(wfEditorSettings.getGridX())//
             .setGridY(wfEditorSettings.getGridY())//
-            .setConnectionWidth(wfEditorSettings.getConnectionLineWidth())//
+            .setConnectionLineWidth(wfEditorSettings.getConnectionLineWidth())//
             .build();
     }
 

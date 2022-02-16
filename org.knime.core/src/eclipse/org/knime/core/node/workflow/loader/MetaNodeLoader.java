@@ -48,6 +48,8 @@
  */
 package org.knime.core.node.workflow.loader;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
@@ -57,7 +59,6 @@ import org.knime.core.util.LoadVersion;
 import org.knime.core.workflow.def.MetaNodeDef;
 import org.knime.core.workflow.def.NodeUIInfoDef;
 import org.knime.core.workflow.def.PortDef;
-import org.knime.core.workflow.def.WorkflowDef;
 import org.knime.core.workflow.def.impl.BoundsDefBuilder;
 import org.knime.core.workflow.def.impl.CoordinateDefBuilder;
 import org.knime.core.workflow.def.impl.DefaultBoundsDef;
@@ -76,13 +77,22 @@ public class MetaNodeLoader extends NodeLoader {
      * The identifiers for configuration elements, e.g., in template.knime {@code <config key="meta_in_ports">
     <entry key="ui_classname" type="xstring" ... }
      */
-    private enum ConfigKey {
-            OUT_PORTS("meta_out_ports"), IN_PORTS("meta_in_ports");
+    private enum Const {
+            /** @see MetaNodeDef#getInPorts() */
+            IN_PORTS("meta_in_ports"),
+            /** @see MetaNodeDef#getInPorts() */
+            OUT_PORTS("meta_out_ports"),
+            /** The name of the file that contains the configuration of this Metandode */
+            SETTINGS_FILE_NAME("workflow.knime");
 
-        final String m_key;
+        private final String m_key;
 
-        ConfigKey(final String settingsKey) {
+        Const(final String settingsKey) {
             m_key = settingsKey;
+        }
+
+        String get() {
+            return m_key;
         }
     }
 
@@ -92,7 +102,19 @@ public class MetaNodeLoader extends NodeLoader {
         super(new MetaNodeDefBuilder());
     }
 
-    private List<PortDef> loadPorts(final ConfigBaseRO workflowSett, final ConfigKey whichPorts) {
+    /**
+     * {@inheritDoc}
+     *
+     * @throws IOException
+     */
+    @Override
+    protected ConfigBaseRO loadNodeConfig(final ConfigBaseRO workflowConfig, final File nodeDirectory)
+        throws IOException {
+        File settingsFile = new File(nodeDirectory, Const.SETTINGS_FILE_NAME.get());
+        return SimpleConfig.parseConfig(settingsFile.getAbsolutePath(), settingsFile);
+    }
+
+    private List<PortDef> loadPorts(final ConfigBaseRO workflowSett, final Const whichPorts) {
         ConfigBaseRO portsEnum = null;
         try {
             var ports = loadPortsSetting(workflowSett, whichPorts);
@@ -105,7 +127,7 @@ public class MetaNodeLoader extends NodeLoader {
             //                  getLogger().debug(error, e);
             //                  loadResult.setDirtyAfterLoad();
             //                    loadResult.addError(error);
-            if (whichPorts == ConfigKey.IN_PORTS) {
+            if (whichPorts == Const.IN_PORTS) {
                 // TODO
                 //                  loadResult.addError(error);
                 //                  loadResult.setResetRequiredAfterLoad();
@@ -178,14 +200,14 @@ public class MetaNodeLoader extends NodeLoader {
         // in previous releases, the settings were directly written to the
         // top-most node settings object; since 2.0 they are put into a
         // separate sub-settings object
-        var subSettings = m_loadVersion.isOlderThan(LoadVersion.V200) ? portSettings
-            : portSettings.getConfigBase("ui_settings");
+        var subSettings =
+            m_loadVersion.isOlderThan(LoadVersion.V200) ? portSettings : portSettings.getConfigBase("ui_settings");
         final var loadOrdinal = m_loadVersion.ordinal();
         var bounds = subSettings.getIntArray("extrainfo.node.bounds");
         var symbolRelative = loadOrdinal >= LoadVersion.V230.ordinal();
-        DefaultBoundsDef boundsDef = new BoundsDefBuilder()
-            .setLocation(new CoordinateDefBuilder().setX(bounds[0]).setY(bounds[1]).build())//
-            .setWidth(bounds[2]).setHeight(bounds[3]).build();
+        DefaultBoundsDef boundsDef =
+            new BoundsDefBuilder().setLocation(new CoordinateDefBuilder().setX(bounds[0]).setY(bounds[1]).build())//
+                .setWidth(bounds[2]).setHeight(bounds[3]).build();
         return new NodeUIInfoDefBuilder()//
             .setBounds(boundsDef)//
             .setSymbolRelative(symbolRelative)//
@@ -198,13 +220,13 @@ public class MetaNodeLoader extends NodeLoader {
      * @return nullable
      * @throws InvalidSettingsException
      */
-    private ConfigBaseRO loadPortsSetting(final ConfigBaseRO settings, final ConfigKey key)
+    private ConfigBaseRO loadPortsSetting(final ConfigBaseRO settings, final Const key)
         throws InvalidSettingsException {
         if (m_loadVersion.isOlderThan(LoadVersion.V200)) {
             return null;
         }
-        if (settings.containsKey(key.m_key)) {
-            return settings.getConfigBase(key.m_key);
+        if (settings.containsKey(key.get())) {
+            return settings.getConfigBase(key.get());
         }
         return null;
     }
@@ -224,7 +246,7 @@ public class MetaNodeLoader extends NodeLoader {
      * @param key whether to load input port or output port bar information
      * @return nullable
      */
-    private NodeUIInfoDef loadPortsBarUIInfo(final ConfigBaseRO settings, final ConfigKey key) {
+    private NodeUIInfoDef loadPortsBarUIInfo(final ConfigBaseRO settings, final Const key) {
         if (m_loadVersion.isOlderThan(LoadVersion.V200)) {
             return null;
         }
@@ -253,11 +275,11 @@ public class MetaNodeLoader extends NodeLoader {
     }
 
     @Override
-    MetaNodeLoader load(final ConfigBaseRO parentSettings, final ConfigBaseRO settings, final LoadVersion loadVersion)
-        throws InvalidSettingsException {
-        super.load(parentSettings, settings, loadVersion);
+    MetaNodeLoader load(final ConfigBaseRO workflowConfig, final File nodeDirectory,
+        final LoadVersion workflowFormatVersion) throws InvalidSettingsException, IOException {
+        super.load(workflowConfig, nodeDirectory, workflowFormatVersion);
 
-        m_loadVersion = loadVersion;
+        m_loadVersion = workflowFormatVersion;
 
         // TODO move to standalone metanode
         //        setTemplateInformation(tryLoadDebug("template information", MetaNodeTemplateInformation.NONE, () -> {
@@ -273,14 +295,13 @@ public class MetaNodeLoader extends NodeLoader {
         //        }, loadResult));
 
         // TODO
-        WorkflowDef workflow = new FileWorkflowLoader(loadVersion).load(null, null);
 
         getNodeBuilder()//
-            .setInPorts(loadPorts(settings, ConfigKey.IN_PORTS))//
-            .setOutPorts(loadPorts(settings, ConfigKey.OUT_PORTS))//
-            .setInPortsBarUIInfo(loadPortsBarUIInfo(settings, ConfigKey.IN_PORTS))//
-            .setOutPortsBarUIInfo(loadPortsBarUIInfo(settings, ConfigKey.OUT_PORTS))//
-            .setWorkflow(workflow)//
+            .setWorkflow(WorkflowLoader.load(nodeDirectory, workflowFormatVersion))//
+            .setInPorts(loadPorts(m_nodeConfig, Const.IN_PORTS))//
+            .setOutPorts(loadPorts(m_nodeConfig, Const.OUT_PORTS))//
+            .setInPortsBarUIInfo(loadPortsBarUIInfo(m_nodeConfig, Const.IN_PORTS))//
+            .setOutPortsBarUIInfo(loadPortsBarUIInfo(m_nodeConfig, Const.OUT_PORTS))//
             .setLink(null); // TODO
         return this;
     }

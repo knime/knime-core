@@ -48,6 +48,8 @@
  */
 package org.knime.core.node.workflow.loader;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -55,8 +57,6 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeAndBundleInformationPersistor;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.config.base.ConfigBaseRO;
 import org.knime.core.node.workflow.def.CoreToDefUtil;
 import org.knime.core.util.LoadVersion;
@@ -120,7 +120,8 @@ public class NativeNodeLoader extends SingleNodeLoader {
             map.put(Pattern.compile("^com\\.knime\\.explorer\\.nodes"), "org.knime.explorer.nodes"); // NOSONAR
         } catch (PatternSyntaxException e) {
             map.clear(); // if one fails, all fail
-            NodeLogger.getLogger(NodeAndBundleInformationPersistor.class).coding(e.getMessage(), e);
+             // TODO error handling
+            //NodeLogger.getLogger(NodeAndBundleInformationPersistor.class).coding(e.getMessage(), e);
         }
         EXTENSION_RENAME_MAP = Collections.unmodifiableMap(map);
     }
@@ -132,24 +133,19 @@ public class NativeNodeLoader extends SingleNodeLoader {
         super(new NativeNodeDefBuilder());
     }
 
-    /**
-     * @param parentSettings
-     * @param settings
-     * @param loadVersion
-     * @throws InvalidSettingsException
-     */
     @Override
-    public NativeNodeLoader load(final ConfigBaseRO parentSettings, final ConfigBaseRO settings, final LoadVersion loadVersion)
-        throws InvalidSettingsException {
-        super.load(parentSettings, settings, loadVersion);
+    public NativeNodeLoader load(final ConfigBaseRO workflowConfig, final File nodeDirectory,
+        final LoadVersion workflowFormatVersion) throws InvalidSettingsException, IOException {
+        super.load(workflowConfig, nodeDirectory, workflowFormatVersion);
 
         // The load method should throw specific error messages
-        getNodeBuilder().setFactory(loadFactory(parentSettings, settings, loadVersion)) //
-            .setFactorySettings(loadFactorySettings(settings)) //
-            .setNodeName(settings.getString(NODE_NAME_KEY)) //
-            .setBundle(loadBundle(settings)) //
-            .setFeature(loadFeature(settings)) //
-            .setNodeCreationConfig(loadCreationConfig(settings));
+        getNodeBuilder()//
+            .setFactory(loadFactory(workflowConfig, m_nodeConfig, workflowFormatVersion)) //
+            .setFactorySettings(loadFactorySettings(m_nodeConfig)) //
+            .setNodeName(m_nodeConfig.getString(NODE_NAME_KEY)) //
+            .setBundle(loadBundle(m_nodeConfig)) //
+            .setFeature(loadFeature(m_nodeConfig)) //
+            .setNodeCreationConfig(loadCreationConfig(m_nodeConfig));
         return this;
     }
 
@@ -174,10 +170,10 @@ public class NativeNodeLoader extends SingleNodeLoader {
         return CoreToDefUtil.toConfigMapDef(nodeCreationSettings);
     }
 
-    private static String loadFactory(final ConfigBaseRO parentSettings, final ConfigBaseRO settings,
-        final LoadVersion loadVersion) throws InvalidSettingsException {
-        if (loadVersion.isOlderThan(LoadVersion.V200)) {
-            var factoryName = parentSettings.getString(FACTORY_KEY);
+    private static String loadFactory(final ConfigBaseRO workflowConfig, final ConfigBaseRO nodeConfig,
+        final LoadVersion workflowFormatVersion) throws InvalidSettingsException {
+        if (workflowFormatVersion.isOlderThan(LoadVersion.V200)) {
+            var factoryName = workflowConfig.getString(FACTORY_KEY);
             // This is a hack to load old J48 Nodes Model from pre-2.0 workflows
             if ("org.knime.ext.weka.j48_2.WEKAJ48NodeFactory2".equals(factoryName)
                 || "org.knime.ext.weka.j48.WEKAJ48NodeFactory".equals(factoryName)) {
@@ -185,7 +181,7 @@ public class NativeNodeLoader extends SingleNodeLoader {
             }
             return factoryName;
         } else {
-            return settings.getString(FACTORY_KEY);
+            return nodeConfig.getString(FACTORY_KEY);
         }
 
     }
