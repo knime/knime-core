@@ -85,6 +85,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JSpinner.DefaultEditor;
+import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.LayoutFocusTraversalPolicy;
 import javax.swing.SwingConstants;
@@ -116,6 +117,7 @@ import org.knime.core.node.workflow.FlowObjectStack;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.FlowVariable.Type;
 import org.knime.core.node.workflow.ICredentials;
+import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
 import org.knime.core.node.workflow.NodeContext;
@@ -127,6 +129,7 @@ import org.knime.core.node.workflow.VariableType.DoubleType;
 import org.knime.core.node.workflow.VariableType.IntType;
 import org.knime.core.node.workflow.VariableType.StringType;
 import org.knime.core.util.MutableInteger;
+import org.knime.core.util.Pair;
 
 
 /**
@@ -429,7 +432,9 @@ public abstract class NodeDialogPane {
             final boolean isWriteProtected)
         throws NotConfigurableException {
         NodeSettingsRO modelSettings = null;
+        NodeSettingsRO viewSettings = null;
         NodeSettingsRO flowVariablesSettings = null;
+        NodeSettingsRO viewFlowVariablesSettings = null;
         m_flowObjectStack = foStack;
         m_credentialsProvider = credentialsProvider;
         m_specs = specs;
@@ -439,6 +444,8 @@ public abstract class NodeDialogPane {
         SingleNodeContainerSettings sncSettings;
         try {
             sncSettings = new SingleNodeContainerSettings(settings);
+            viewSettings = sncSettings.getViewSettings();
+            viewFlowVariablesSettings = sncSettings.getViewVariablesSettings();
             modelSettings = sncSettings.getModelSettings();
             flowVariablesSettings = sncSettings.getVariablesSettings();
         } catch (InvalidSettingsException ise) {
@@ -480,7 +487,7 @@ public abstract class NodeDialogPane {
         // add the flow variables tab
         addFlowVariablesTab();
         m_flowVariablesModelChanged = false;
-        initFlowVariablesTab(modelSettings, flowVariablesSettings);
+        initFlowVariablesTab(modelSettings, viewSettings, flowVariablesSettings, viewFlowVariablesSettings);
 
         // output memory policy and job manager (stored in NodeContainer)
         if (m_memPolicyTab != null || m_jobMgrTab != null) {
@@ -526,9 +533,9 @@ public abstract class NodeDialogPane {
     void internalSaveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
         NodeSettings model = new NodeSettings("field_ignored");
 
-
         NodeContext.pushContext(m_nodeContext);
         try {
+            // TODO figure out if we need that for viewModel as well
             saveSettingsTo(model);
         } catch (InvalidSettingsException ise) {
             throw ise;
@@ -540,12 +547,16 @@ public abstract class NodeDialogPane {
             NodeContext.removeLastContext();
         }
         if (m_flowVariablesModelChanged) {
+            // TODO add view model stuff in there
             updateFlowVariablesTab();
         }
         NodeSettings variables = m_flowVariableTab.getVariableSettings();
+        NodeSettings viewVariables = m_flowVariableTab.getViewVariableSettings();
         SingleNodeContainerSettings s = new SingleNodeContainerSettings();
         s.setModelSettings(model);
         s.setVariablesSettings(variables);
+        s.setViewSettings(model);
+        s.setViewVariablesSettings(viewVariables);
         if (m_memPolicyTab != null) {
             s.setMemoryPolicy(m_memPolicyTab.getStatus());
         }
@@ -1479,10 +1490,12 @@ public abstract class NodeDialogPane {
      * @param nodeSettings The (user) settings of the node.
      * @param variableSettings The flow variable settings.
      */
-    private void initFlowVariablesTab(final NodeSettingsRO nodeSettings, final NodeSettingsRO variableSettings) {
+    private void initFlowVariablesTab(final NodeSettingsRO nodeSettings, final NodeSettingsRO viewSettings,
+        final NodeSettingsRO variableSettings, final NodeSettingsRO viewVariableSettings) {
         m_flowVariableTab.setErrorLabel("");
-        m_flowVariableTab.setVariableSettings(nodeSettings, variableSettings, m_flowObjectStack,
-                                                                     Collections.emptySet());
+        m_flowVariableTab.setVariableSettings(nodeSettings, viewSettings, variableSettings, viewVariableSettings,
+            m_flowObjectStack, Collections.emptySet());
+
         for (final FlowVariableModel m : m_flowVariablesModelList) {
             final ConfigEditTreeNode configNode = m_flowVariableTab.findTreeNodeForChild(m.getKeys());
             if (configNode != null) {
@@ -1500,11 +1513,15 @@ public abstract class NodeDialogPane {
         m_flowVariableTab.setErrorLabel("");
         NodeSettings settings = new NodeSettings("save");
         NodeSettings variableSettings;
+
+        NodeSettings viewVariableSettings;
         commitComponentsRecursively(getPanel());
         NodeContext.pushContext(m_nodeContext);
         try {
             saveSettingsTo(settings);
             variableSettings = m_flowVariableTab.getVariableSettings();
+            viewVariableSettings = m_flowVariableTab.getViewVariableSettings();
+
         } catch (Throwable e) {
             if (!(e instanceof InvalidSettingsException)) {
                 m_logger.error("Saving intermediate settings failed with "
@@ -1517,7 +1534,33 @@ public abstract class NodeDialogPane {
         } finally {
             NodeContext.removeLastContext();
         }
-        m_flowVariableTab.setVariableSettings(settings, variableSettings, m_flowObjectStack, m_flowVariablesModelList);
+        if (hasModelOrViewSettings().getSecond()) {
+            m_flowVariableTab.setVariableSettings(getNodeSettings(), getViewSettings(), variableSettings,
+                viewVariableSettings, m_flowObjectStack, m_flowVariablesModelList);
+        } else {
+            m_flowVariableTab.setVariableSettings(settings, null, variableSettings, null, m_flowObjectStack,
+                m_flowVariablesModelList);
+        }
+
+    }
+
+    private NodeSettings getNodeSettings() {
+       var nodeContainer = (NativeNodeContainer)m_nodeContext.getNodeContainer();
+       var modelSettings = new NodeSettings("node_settings");
+       nodeContainer.getNode().saveModelSettingsTo(modelSettings);
+
+       return modelSettings;
+    }
+
+    private NodeSettings getViewSettings() {
+       var nodeContainer = (NativeNodeContainer)m_nodeContext.getNodeContainer();
+       NodeSettings viewSettings;
+       try {
+           viewSettings = nodeContainer.getNodeSettings().getNodeSettings("view");
+       } catch (InvalidSettingsException e) {
+           viewSettings = null;
+       }
+       return viewSettings;
     }
 
     /** Updates the warning message below the panel to inform the user
@@ -1546,6 +1589,14 @@ public abstract class NodeDialogPane {
         } else {
             m_statusBarLabel.setVisible(false);
         }
+    }
+
+    /**
+     * Overwrite this methods if view settings are present
+     * @return <code>(true, false)</code> (i.e. model settings but no view settings) by default
+     */
+    public Pair<Boolean, Boolean> hasModelOrViewSettings() {
+        return Pair.create(true, false);
     }
 
     /**
@@ -1591,14 +1642,16 @@ public abstract class NodeDialogPane {
     @SuppressWarnings("serial")
     private class FlowVariablesTab extends JPanel implements ConfigEditTreeEventListener {
         private final ConfigEditJTree m_tree;
+        private final ConfigEditJTree m_viewTree;
         private final JLabel m_errorLabel;
-        private final JScrollPane m_scrollPane;
+        private final JComponent m_contentPane;
         private final JPanel m_noFlowVariablesDisplay;
 
         /** Creates new tab. */
         public FlowVariablesTab() {
             super(new BorderLayout());
             m_tree = new ConfigEditJTree();
+            m_viewTree = new ConfigEditJTree();
             m_noFlowVariablesDisplay = new JPanel(new BorderLayout());
             final JLabel noVariablesMessage = new JLabel("There are no flow variables.");
             noVariablesMessage.setHorizontalAlignment(SwingConstants.CENTER);
@@ -1608,23 +1661,56 @@ public abstract class NodeDialogPane {
             m_noFlowVariablesDisplay.setOpaque(true);
             // nesting m_tree directly into the scrollpane causes the dialog
             // to take oversized dimensions
-            final JPanel panel = new JPanel(new BorderLayout());
-            panel.add(m_tree, BorderLayout.CENTER);
-            m_scrollPane = new JScrollPane(panel);
+
             final int panelMinimumWidth = ConfigEditJTree.MINIMUM_ROW_WIDTH;
             final Dimension scrollPaneSize = new Dimension(panelMinimumWidth, 167);
-            m_scrollPane.setMinimumSize(scrollPaneSize);
-            m_scrollPane.setPreferredSize(scrollPaneSize);
-            add(m_scrollPane, BorderLayout.CENTER);
+            final JPanel modelPanel = new JPanel(new BorderLayout());
+            final JPanel viewPanel = new JPanel(new BorderLayout());
+            final JScrollPane modelScrollPane = new JScrollPane(modelPanel);
+            final JScrollPane viewScrollPane = new JScrollPane(viewPanel);
+            modelPanel.add(m_tree, BorderLayout.CENTER);
+            viewPanel.add(m_viewTree, BorderLayout.CENTER);
+            modelScrollPane.setMinimumSize(scrollPaneSize);
+            modelScrollPane.setPreferredSize(scrollPaneSize);
+            viewScrollPane.setMinimumSize(scrollPaneSize);
+            viewScrollPane.setPreferredSize(scrollPaneSize);
+
+            if (hasModelOrViewSettings().getSecond()) {
+                final JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+                m_viewTree.getParent().add(new JLabel("View Settings"), BorderLayout.NORTH);
+
+                if (hasModelOrViewSettings().getFirst()) {
+                    m_tree.getParent().add(new JLabel("Node Settings"), BorderLayout.NORTH);
+                    splitPane.setTopComponent(modelScrollPane);
+                    splitPane.setBottomComponent(viewScrollPane);
+                }
+                m_contentPane = (hasModelOrViewSettings().getFirst()) ? splitPane : viewScrollPane;
+            } else {
+                m_contentPane = modelScrollPane;
+            }
+            add(m_contentPane, BorderLayout.CENTER);
+
             m_errorLabel = new JLabel();
             m_errorLabel.setForeground(Color.RED);
             add(m_errorLabel, BorderLayout.NORTH);
-            m_scrollPane.getViewport().addComponentListener(new ComponentAdapter() {
-               @Override
-               public void componentResized(final ComponentEvent ce) {
-                   m_tree.setViewportWidth(ce.getComponent().getWidth());
-               }
-            });
+
+            if (hasModelOrViewSettings().getFirst()) {
+                modelScrollPane.getViewport().addComponentListener(new ComponentAdapter() {
+                    @Override
+                    public void componentResized(final ComponentEvent ce) {
+                        m_tree.setViewportWidth(ce.getComponent().getWidth());
+                    }
+                });
+            }
+
+            if (hasModelOrViewSettings().getSecond()) {
+                viewScrollPane.getViewport().addComponentListener(new ComponentAdapter() {
+                    @Override
+                    public void componentResized(final ComponentEvent ce) {
+                        m_viewTree.setViewportWidth(ce.getComponent().getWidth());
+                    }
+                });
+            }
         }
 
         /** Find the tree node that is associated with the given key path.
@@ -1637,19 +1723,24 @@ public abstract class NodeDialogPane {
 
         private void updateView() {
             final ConfigEditTreeNode root = m_tree.getModel().getRoot();
-            final boolean displayTree = ((root != null) && (root.getChildCount() > 0));
+            final boolean displayTree =
+                ((root != null) && (root.getChildCount() > 0)) && hasModelOrViewSettings().getFirst();
 
-            if (displayTree) {
-                if (m_scrollPane.getParent() == null) {
+            final ConfigEditTreeNode viewRoot = m_viewTree.getModel().getRoot();
+            final boolean displayViewTree =
+                ((viewRoot != null) && (viewRoot.getChildCount() > 0)) && hasModelOrViewSettings().getSecond();
+
+            if (displayTree || displayViewTree) {
+                if (m_contentPane.getParent() == null) {
                     ViewUtils.invokeAndWaitInEDT(() -> {
                         remove(m_noFlowVariablesDisplay);
-                        add(m_scrollPane, BorderLayout.CENTER);
+                        add(m_contentPane, BorderLayout.CENTER);
                     });
                 }
             } else {
                 if (m_noFlowVariablesDisplay.getParent() == null) {
                     ViewUtils.invokeAndWaitInEDT(() -> {
-                        remove(m_scrollPane);
+                        remove(m_contentPane);
                         add(m_noFlowVariablesDisplay, BorderLayout.CENTER);
                     });
                 }
@@ -1660,13 +1751,17 @@ public abstract class NodeDialogPane {
          * Update the panel to reflect new properties.
          *
          * @param nodeSettings Settings of the node (or currently entered in the remaining tabs of the dialog.
+         * @param viewSettings Specific view settings of node views
          * @param varSettings The variable mask.
+         * @param viewVarSettings The view variable mask
          * @param stack the stack to get the variables from.
          * @param variableModels The models that may be used in the main panels of the dialog to overwrite settings in
          *            place.
          */
         void setVariableSettings(final NodeSettingsRO nodeSettings,
+                                 final NodeSettingsRO viewSettings,
                                  final NodeSettingsRO varSettings,
+                                 final NodeSettingsRO viewVarSettings,
                                  final FlowObjectStack stack,
                                  final Collection<FlowVariableModel> variableModels) {
             if (nodeSettings != null && !(nodeSettings instanceof Config)) {
@@ -1679,27 +1774,42 @@ public abstract class NodeDialogPane {
                         + Config.class + " -- disabling flow variables tab");
                 return;
             }
-            final Config nodeSetsCopy = (nodeSettings == null) ? new NodeSettings("variables") : (Config)nodeSettings;
+            Config nodeSetsCopy;
+            Config viewSetsCopy;
+            nodeSetsCopy = (nodeSettings == null) ? new NodeSettings("variables") : (Config)nodeSettings;
+            viewSetsCopy = (viewSettings == null) ? new NodeSettings("view_variables") : (Config)viewSettings;
             ConfigEditTreeModel model;
+            ConfigEditTreeModel viewModel;
             try {
                 model = (varSettings == null) ? ConfigEditTreeModel.create(nodeSetsCopy)
-                                              : ConfigEditTreeModel.create(nodeSetsCopy, varSettings);
+                    : ConfigEditTreeModel.create(nodeSetsCopy, varSettings);
+
+                viewModel = (viewVarSettings == null) ? ConfigEditTreeModel.create(viewSetsCopy)
+                    : ConfigEditTreeModel.create(viewSetsCopy, viewVarSettings);
             } catch (InvalidSettingsException e) {
                 JOptionPane.showMessageDialog(this, "Errors reading variable "
                         + "configuration: " + e.getMessage(), "Error",
                         JOptionPane.ERROR_MESSAGE);
                 model = ConfigEditTreeModel.create(nodeSetsCopy);
+                viewModel = ConfigEditTreeModel.create(viewSetsCopy);
             }
             final ConfigEditTreeModel newModel = model;
+            final ConfigEditTreeModel newViewModel = viewModel;
             ViewUtils.invokeAndWaitInEDT(new Runnable() {
                 @Override
                 public void run() {
                     newModel.update(variableModels);
+                    newViewModel.update(variableModels);
                     m_tree.setFlowObjectStack(stack);
+                    m_viewTree.setFlowObjectStack(stack);
                     FlowVariablesTab lis = FlowVariablesTab.this;
                     m_tree.getModel().removeConfigEditTreeEventListener(lis);
                     m_tree.setModel(newModel);
+                    m_viewTree.getModel().removeConfigEditTreeEventListener(lis);
+                    m_viewTree.setModel(newViewModel);
+
                     newModel.addConfigEditTreeEventListener(lis);
+                    newViewModel.addConfigEditTreeEventListener(lis);
                     // if this isn't run after initialization it will not paint
                     // the very first row in the table correctly
                     // (label slightly off & combo box not visible)
@@ -1708,6 +1818,7 @@ public abstract class NodeDialogPane {
                         @Override
                         public void run() {
                             m_tree.repaint();
+                            m_viewTree.repaint();
                         }
                     });
                 }
@@ -1734,6 +1845,18 @@ public abstract class NodeDialogPane {
             }
             return null;
         }
+
+        public NodeSettings getViewVariableSettings() {
+            m_viewTree.getCellEditor().cancelCellEditing();
+            ConfigEditTreeModel viewModel = m_viewTree.getModel();
+            if (viewModel.hasConfiguration()) {
+                NodeSettings settings = new NodeSettings("view_variables");
+                viewModel.writeVariablesTo(settings);
+                return settings;
+            }
+            return null;
+        }
+
 
         /** @return list of params that are controlled by a variable (then
          * shown in status bar).

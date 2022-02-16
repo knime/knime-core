@@ -54,14 +54,18 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContext;
+import org.knime.core.util.Pair;
 import org.knime.core.webui.data.ApplyDataService;
 import org.knime.core.webui.data.DataServiceProvider;
 import org.knime.core.webui.data.InitialDataService;
@@ -256,5 +260,30 @@ public abstract class NodeDialog implements DataServiceProvider {
      * @return a {@link TextSettingsDataService}-instance
      */
     protected abstract TextSettingsDataService getSettingsDataService();
+
+    /**
+     * @return a legacy flow variable node dialog
+     */
+    public NodeDialogPane createLegacyFlowVariableNodeDialog() {
+        return new NodeDialogPane() {
+
+            @Override
+            public Pair<Boolean, Boolean> hasModelOrViewSettings() {
+                Boolean hasView = m_settingsTypes.contains(SettingsType.VIEW);
+                Boolean hasModel = m_settingsTypes.contains(SettingsType.MODEL);
+                return Pair.create(hasModel, hasView);
+            }
+
+            @Override
+            protected void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec[] specs)
+                throws NotConfigurableException {
+            }
+
+            @Override
+            protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
+            }
+        };
+
+    }
 
 }

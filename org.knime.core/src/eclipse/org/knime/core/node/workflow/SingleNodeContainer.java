@@ -112,6 +112,7 @@ public abstract class SingleNodeContainer extends NodeContainer {
     static final String CFG_VARIABLES = "variables";
     /** Sub settings entry containing the node-view settings. */
     static final String CFG_VIEW = "view";
+    static final String CFG_VIEW_VARIABLES = "view_variables";
 
     /** Name of the sub-directory containing node-local files. These files
      * manually copied by the user and the node will automatically list those
@@ -1114,6 +1115,7 @@ public abstract class SingleNodeContainer extends NodeContainer {
         private NodeSettingsRO m_modelSettings;
         private NodeSettingsRO m_variablesSettings;
         private NodeSettingsRO m_viewSettings;
+        private NodeSettingsRO m_viewVariablesSettings;
 
         /**
          * Creates a settings object with default values.
@@ -1148,6 +1150,10 @@ public abstract class SingleNodeContainer extends NodeContainer {
             } else {
                 m_variablesSettings = null;
             }
+
+            m_viewVariablesSettings = settings.containsKey(CFG_VIEW_VARIABLES) ?
+                                      settings.getNodeSettings(CFG_VIEW_VARIABLES) : null;
+
             m_modelSettings = settings.getNodeSettings(CFG_MODEL);
             m_viewSettings = settings.containsKey(CFG_VIEW) ? settings.getNodeSettings(CFG_VIEW) : null;
         }
@@ -1171,6 +1177,10 @@ public abstract class SingleNodeContainer extends NodeContainer {
             if (m_viewSettings != null) {
                 NodeSettingsWO view = settings.addNodeSettings(CFG_VIEW);
                 m_viewSettings.copyTo(view);
+            }
+            if (m_viewVariablesSettings != null) {
+                NodeSettingsWO viewVariables = settings.addNodeSettings(CFG_VIEW_VARIABLES);
+                m_viewVariablesSettings.copyTo(viewVariables);
             }
         }
 
@@ -1232,10 +1242,31 @@ public abstract class SingleNodeContainer extends NodeContainer {
         }
 
         /**
+         * @return the viewSettings
+         */
+        public NodeSettingsRO getViewSettings() {
+            return m_viewSettings;
+        }
+
+        /**
          * @param viewSettings the viewSettings to set
          */
         public void setViewSettings(final NodeSettings viewSettings) {
             m_viewSettings = viewSettings;
+        }
+
+        /**
+         * @return the viewVariablesSettings
+         */
+        public NodeSettingsRO getViewVariablesSettings() {
+            return m_viewVariablesSettings;
+        }
+
+        /**
+         * @param viewVariablesSettings the viewVariablesSettings to set
+         */
+        public void setViewVariablesSettings(final NodeSettings viewVariablesSettings) {
+            m_viewVariablesSettings = viewVariablesSettings;
         }
 
         /** {@inheritDoc} */
