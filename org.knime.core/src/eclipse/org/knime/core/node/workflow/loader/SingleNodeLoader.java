@@ -48,12 +48,15 @@
  */
 package org.knime.core.node.workflow.loader;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.base.ConfigBaseRO;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.def.CoreToDefUtil;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.workflow.def.ConfigMapDef;
@@ -83,17 +86,48 @@ public abstract class SingleNodeLoader extends NodeLoader {
     }
 
     @Override
-    SingleNodeLoader load(final ConfigBaseRO parentSettings, final ConfigBaseRO settings, final LoadVersion loadVersion)
-        throws InvalidSettingsException {
-        super.load(parentSettings, settings, loadVersion);
+    SingleNodeLoader load(final ConfigBaseRO workflowConfig, final File nodeDirectory, final LoadVersion loadVersion)
+        throws InvalidSettingsException, IOException {
+        super.load(workflowConfig, nodeDirectory, loadVersion);
 
         //The load methods should throw specific error messages
-        getNodeBuilder().setFlowStack(loadFlowStackObjects(settings, loadVersion)) //
-            .setInternalNodeSubSettings(loadInternalNodeSubSettings(settings)) //
-            .setModelSettings(loadModelSettings(settings)) //
-            .setVariableSettings(loadVariableSettings(settings));
+        getNodeBuilder()//
+            .setFlowStack(loadFlowStackObjects(m_nodeConfig, loadVersion)) //
+            .setInternalNodeSubSettings(loadInternalNodeSubSettings(m_nodeConfig)) //
+            .setModelSettings(loadModelSettings(m_nodeConfig)) //
+            .setVariableSettings(loadVariableSettings(m_nodeConfig));
 
         return this;
+    }
+
+    @Override
+    protected ConfigBaseRO loadNodeConfig(final ConfigBaseRO workflowConfig, final File nodeDirectory) {
+
+        // TODO const string
+        File configFile = new File(nodeDirectory, "settings.xml");
+        // TODO decipher
+//        InputStream in = new FileInputStream(configFile);
+//        try {
+//            in = getParentPersistor().decipherInput(in);
+//            return NodeSettings.loadFromXML(new BufferedInputStream(in));
+//        } finally {
+//            try {
+//                in.close();
+//            } catch (IOException e) {
+//                getLogger().error("Failed to close input stream on \""
+//                        + configFile.getAbsolutePath() + "\"", e);
+//            }
+//        }
+        try {
+            return SimpleConfig.parseConfig(configFile.getAbsolutePath(), configFile);
+        } catch (IOException ex) {
+            // TODO error handling
+            // var error = "Unable to load settings for node with ID suffix " + nodeIDSuffix;
+            //            getLogger().debug(error, e);
+            //            loadResult.setDirtyAfterLoad();
+            //            loadResult.addError(error);
+            throw new IllegalArgumentException("Cannot load settings.xml ", ex);
+        }
     }
 
     private static ConfigMapDef loadInternalNodeSubSettings(final ConfigBaseRO settings)
@@ -103,6 +137,9 @@ public abstract class SingleNodeLoader extends NodeLoader {
 
     private static ConfigMapDef loadVariableSettings(final ConfigBaseRO settings) throws InvalidSettingsException {
         // TODO Need to clarify what exactly is this
+        if(!settings.containsKey("variables")) {
+            return null;
+        }
         return CoreToDefUtil.toConfigMapDef(settings.getConfigBase("variables"));
     }
 
@@ -172,29 +209,19 @@ public abstract class SingleNodeLoader extends NodeLoader {
     }
 
     private static FlowContextDef loadFlowContextDef(final String type) throws InvalidSettingsException {
-        ContextTypeEnum contextType = ContextTypeEnum.valueOf(type);
+        ContextTypeEnum contextType = type.startsWith("LOOP") ? ContextTypeEnum.LOOP : null;
+        contextType = type.startsWith("FLOW") ? ContextTypeEnum.FLOWCAPTURE : null;
+        contextType = type.startsWith("SCOPE") ? ContextTypeEnum.SCOPE : null;
+        boolean isActive = !type.endsWith("_INACTIVE");
+
+        CheckUtils.checkNotNull(contextType, "Unknown flow object type: " + contextType);
+
         // TODO directly load the isActive from the settings and set it, no addtitional conversions for the rest string valiues
         // TODO probably the following will be the implemention for the loaders with version lower than 4.6.0
-        switch (contextType) {
-            case LOOPCONTEXT:
-            case LOOPCONTEXT_EXECUTE:
-            case FLOWCAPTURECONTEXT:
-            case SCOPECONTEXT:
-                return new FlowContextDefBuilder() //
-                    .setActive(true) //
-                    .setContextType(contextType) //
-                    .build();
-            case LOOPCONTEXT_INACTIVE:
-            case FLOWCAPTURECONTEXT_INACTIVE:
-            case SCOPECONTEXT_INACTIVE:
-                // TODO Will convert the string to enum with false as active
-                return new FlowContextDefBuilder() //
-                    .setActive(false) //
-                    .setContextType(contextType) //
-                    .build();
-            default:
-                throw new InvalidSettingsException("Unknown flow object type: " + contextType);
-        }
+        return new FlowContextDefBuilder() //
+            .setActive(isActive) //
+            .setContextType(contextType) //
+            .build();
     }
 
     private static FlowVariableDef loadFlowVariableDef(final ConfigBaseRO sub) throws InvalidSettingsException {

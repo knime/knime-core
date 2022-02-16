@@ -44,41 +44,17 @@
  */
 package org.knime.core.node.workflow.def;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-import static org.knime.core.workflow.def.ComponentDef.Attribute.IN_PORTS;
-import static org.knime.core.workflow.def.ComponentDef.Attribute.OUT_PORTS;
-
-import java.awt.Component;
 import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
+import java.lang.reflect.Proxy;
+import java.util.Map;
 
 import org.junit.Test;
-import org.knime.core.internal.ReferencedFile;
-import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
-import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
-import org.knime.core.util.LoadVersion;
-import org.knime.core.node.workflow.DefWorkflowManagerWrapper;
-import org.knime.core.node.workflow.FileWorkflowLoader;
-import org.knime.core.node.workflow.WorkflowDataRepository;
-import org.knime.core.node.workflow.WorkflowLoadHelper;
-import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.core.node.workflow.WorkflowTestCase;
-import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
-import org.knime.core.workflow.def.ComponentDef;
-import org.knime.core.workflow.def.Load;
-import org.knime.core.workflow.def.WorkflowDef;
-import org.knime.core.workflow.def.WorkflowProjectDef;
-import org.knime.core.workflow.def.impl.DefaultWorkflowDef;
-import org.knime.core.workflow.def.impl.DefaultWorkflowProjectDef;
-import org.knime.core.workflow.def.loader.ComponentLoader;
-import org.knime.core.workflow.def.loader.WorkflowLoader;
+import org.knime.core.node.workflow.loader.RootWorkflowLoader;
+import org.knime.core.workflow.def.NodeDef;
+import org.knime.core.workflow.def.RootWorkflowDef;
+import org.knime.core.workflow.def.impl.NodeDefBuilder;
+import org.knime.core.workflow.loader.LoadExceptionSupplier;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -92,26 +68,15 @@ public class FileWorkflowLoaderTest extends WorkflowTestCase {
 		
 		File workflowDirectory = new File("src/test/resources/enh11762_WorkflowRepresentation");
 		
-		final WorkflowLoadHelper loadHelper = new WorkflowLoadHelper(workflowDirectory);
-		
 		// TODO introduce a factory that chooses the correct loader for a stream/directory/file
-		FileWorkflowLoader fwl = new FileWorkflowLoader(loadHelper); 
-		
-		fwl.getDef(new WorkflowLoadResult("workflow name"));
-		
+		RootWorkflowDef def = RootWorkflowLoader.load(workflowDirectory);
+
+		final ObjectMapper mapper = new ObjectMapper();
+		mapper.registerModule(new JavaTimeModule());
+		String pretty = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(def);
+		System.out.println(pretty);
 		// TODO fix a JSON to load the ground truth Defs from and compare them to the file loaded Defs.
 		
 	}
 	
-	@Test
-	public void testFilter() {
-		
-		// only load workflow annotations
-		new WorkflowLoader.Filter().include(WorkflowDef.Attribute.ANNOTATIONS);
-		
-		// load everything from (top-level) components except their recursive contents
-        new ComponentLoader.Filter().includeAll().except(ComponentDef.Attribute.WORKFLOW);
-        
-	}
-
 }

@@ -1074,6 +1074,8 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
                 loadResult.addError(error);
                 continue;
             }
+
+            // check source node exists
             int sourceIDSuffix = c.getSourceSuffix();
             NodeContainerPersistor sourceNodePersistor = m_nodeContainerLoaderMap.get(sourceIDSuffix);
             if (sourceNodePersistor == null && sourceIDSuffix != -1) {
@@ -1085,6 +1087,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
             }
             fixSourcePortIfNecessary(sourceNodePersistor, c, getLoadVersion());
 
+            // check target node exists
             int destIDSuffix = c.getDestSuffix();
             NodeContainerPersistor destNodePersistor = m_nodeContainerLoaderMap.get(destIDSuffix);
             if (destNodePersistor == null && destIDSuffix != -1) {
@@ -1096,6 +1099,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
             }
             fixDestPortIfNecessary(destNodePersistor, c, getLoadVersion());
 
+            // check duplicate connections
             if (!m_connectionSet.add(c)) {
                 setDirtyAfterLoad();
                 loadResult.addError("Duplicate connection information: " + c);
@@ -1894,6 +1898,15 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
             failingNodePersistor.guessPortTypesFromConnectedNodes(nodeInfo, additionalFactorySettings, upstreamNodes,
                 downstreamNodes);
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<Credentials> getCredentials() {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 

@@ -62,7 +62,8 @@ import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
-import org.knime.core.node.workflow.loader.FileWorkflowLoader;
+import org.knime.core.node.workflow.loader.RootWorkflowLoader;
+import org.knime.core.node.workflow.loader.WorkflowLoader;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.LockFailedException;
 import org.knime.core.util.workflowalizer.AuthorInformation;
@@ -109,7 +110,7 @@ public class FileWorkflowSaver {
     /** @since 3.7*/
     protected static void saveAuthorInformation(final AuthorInformation aI, final NodeSettingsWO settings) {
         if (aI != null) {
-            final NodeSettingsWO sub = settings.addNodeSettings(FileWorkflowLoader.CFG_AUTHOR_INFORMATION);
+            final NodeSettingsWO sub = settings.addNodeSettings(WorkflowLoader.Const.CFG_AUTHOR_INFORMATION.get());
             sub.addString("authored-by", aI.getAuthor());
             String authorWhen = aI.getAuthoredDate() == null ? null : FileWorkflowPersistor.formatDate(aI.getAuthoredDate());
             sub.addString("authored-when", authorWhen);
@@ -123,7 +124,7 @@ public class FileWorkflowSaver {
     protected static void saveWorkflowVariables(final WorkflowManager wfm, final NodeSettingsWO settings) {
         List<FlowVariable> vars = wfm.getWorkflowVariables();
         if (!vars.isEmpty()) {
-            NodeSettingsWO wfmVarSub = settings.addNodeSettings(FileWorkflowLoader.CFG_WKF_VARIABLES);
+            NodeSettingsWO wfmVarSub = settings.addNodeSettings(RootWorkflowLoader.Const.CFG_WKF_VARIABLES.get());
             int i = 0;
             for (FlowVariable v : vars) {
                 v.save(wfmVarSub.addNodeSettings("Var_" + (i++)));
@@ -133,7 +134,7 @@ public class FileWorkflowSaver {
 
     protected static void saveCredentials(final WorkflowManager wfm, final NodeSettingsWO settings) {
         CredentialsStore credentialsStore = wfm.getCredentialsStore();
-        NodeSettingsWO sub = settings.addNodeSettings(FileWorkflowLoader.CFG_CREDENTIALS);
+        NodeSettingsWO sub = settings.addNodeSettings(RootWorkflowLoader.Const.CREDENTIAL_PLACEHOLDERS.get());
         synchronized (credentialsStore) {
             for (Credentials c : credentialsStore.getCredentials()) {
                 NodeSettingsWO s = sub.addNodeSettings(c.getName());
@@ -569,15 +570,15 @@ public class FileWorkflowSaver {
     static void saveEditorUIInformation(final WorkflowManager wfm, final NodeSettings settings) {
         EditorUIInformation editorInfo = wfm.getEditorUIInformation();
         if (editorInfo != null) {
-            NodeSettingsWO editorConfig = settings.addNodeSettings(FileWorkflowLoader.CFG_EDITOR_INFO);
+            NodeSettingsWO editorConfig = settings.addNodeSettings(WorkflowLoader.Const.CFG_EDITOR_INFO.get());
 
-            editorConfig.addBoolean(FileWorkflowLoader.CFG_EDITOR_SNAP_GRID, editorInfo.getSnapToGrid());
-            editorConfig.addBoolean(FileWorkflowLoader.CFG_EDITOR_SHOW_GRID, editorInfo.getShowGrid());
-            editorConfig.addInt(FileWorkflowLoader.CFG_EDITOR_X_GRID, editorInfo.getGridX());
-            editorConfig.addInt(FileWorkflowLoader.CFG_EDITOR_Y_GRID, editorInfo.getGridY());
-            editorConfig.addDouble(FileWorkflowLoader.CFG_EDITOR_ZOOM, editorInfo.getZoomLevel());
-            editorConfig.addBoolean(FileWorkflowLoader.CFG_EDITOR_CURVED_CONNECTIONS, editorInfo.getHasCurvedConnections());
-            editorConfig.addInt(FileWorkflowLoader.CFG_EDITOR_CONNECTION_WIDTH, editorInfo.getConnectionLineWidth());
+            editorConfig.addBoolean(WorkflowLoader.Const.CFG_EDITOR_SNAP_GRID.get(), editorInfo.getSnapToGrid());
+            editorConfig.addBoolean(WorkflowLoader.Const.CFG_EDITOR_SHOW_GRID.get(), editorInfo.getShowGrid());
+            editorConfig.addInt(WorkflowLoader.Const.CFG_EDITOR_X_GRID.get(), editorInfo.getGridX());
+            editorConfig.addInt(WorkflowLoader.Const.CFG_EDITOR_Y_GRID.get(), editorInfo.getGridY());
+            editorConfig.addDouble(WorkflowLoader.Const.CFG_EDITOR_ZOOM.get(), editorInfo.getZoomLevel());
+            editorConfig.addBoolean(WorkflowLoader.Const.CFG_EDITOR_CURVED_CONNECTIONS.get(), editorInfo.getHasCurvedConnections());
+            editorConfig.addInt(WorkflowLoader.Const.CFG_EDITOR_CONNECTION_WIDTH.get(), editorInfo.getConnectionLineWidth());
         }
     }
 

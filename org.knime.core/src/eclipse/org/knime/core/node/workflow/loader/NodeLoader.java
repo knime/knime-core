@@ -48,6 +48,8 @@
  */
 package org.knime.core.node.workflow.loader;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Optional;
 
 import org.knime.core.node.InvalidSettingsException;
@@ -79,11 +81,13 @@ import org.knime.core.workflow.def.impl.NodeUIInfoDefBuilder;
  * @author Dionysios Stolis, KNIME GmbH, Berlin, Germany
  * @author Carl Witt, KNIME GmbH, Berlin, Germany
  */
-class NodeLoader {
+abstract class NodeLoader {
 
     private final NodeDefBuilder m_nodeBuilder;
 
     private Optional<Integer> m_nodeId;
+
+    protected ConfigBaseRO m_nodeConfig;
 
     // Can be component, native, metanode builder
     NodeLoader(final NodeDefBuilder nodeBuilder) {
@@ -92,24 +96,35 @@ class NodeLoader {
     }
 
     /**
-     * @param parentSettings
-     * @param settings
-     * @param singleNode
+     * @param workflowConfig describes the containing workflow. Contains, e.g., the node's id, description, etc.
+     * @param nodeDirectory contains the description of the node and possibly a nested workflow
+     * @param workflowFormatVersion implicitly specifies the format of the descriptions
+     * @throws IOException
      */
-    NodeLoader load(final ConfigBaseRO parentSettings, final ConfigBaseRO settings, final LoadVersion loadVersion)
-        throws InvalidSettingsException {
+    NodeLoader load(final ConfigBaseRO workflowConfig, final File nodeDirectory,
+        final LoadVersion workflowFormatVersion) throws InvalidSettingsException, IOException {
+
+        m_nodeConfig = loadNodeConfig(workflowConfig, nodeDirectory);
 
         // the load methods should throw specific error messages
-        m_nodeId = loadNodeId(parentSettings);
+        m_nodeId = loadNodeId(workflowConfig);
         m_nodeBuilder.setId(m_nodeId.get()) //
-            .setAnnotation(loadAnnotation(parentSettings, loadVersion)) //
-            .setCustomDescription(loadCustomDescription(parentSettings, settings, loadVersion)) //
-            .setJobManager(loadJobManager(settings)) //
-            .setLocks(loadLocks(parentSettings, loadVersion)) //
-            .setNodeType(loadType(parentSettings, loadVersion)) //
-            .setUiInfo(loadUIInfo(parentSettings));
+            .setAnnotation(loadAnnotation(workflowConfig, workflowFormatVersion)) //
+            .setCustomDescription(loadCustomDescription(workflowConfig, m_nodeConfig, workflowFormatVersion)) //
+            .setJobManager(loadJobManager(m_nodeConfig)) //
+            .setLocks(loadLocks(workflowConfig, workflowFormatVersion)) //
+            .setNodeType(loadType(workflowConfig, workflowFormatVersion)) //
+            .setUiInfo(loadUIInfo(workflowConfig));
         return this;
     }
+
+    /**
+     * @param workflowConfig the configuration of the workflow containing the node.
+     * @param nodeDirectory directory that contains the the node's configuration file (e.g., settings.xml, template.knime)
+     * @return the parsed element tree
+     * @throws IOException
+     */
+    protected abstract ConfigBaseRO loadNodeConfig(ConfigBaseRO workflowConfig, File nodeDirectory) throws IOException;
 
     private static Optional<Integer> loadNodeId(final ConfigBaseRO settings) throws InvalidSettingsException {
         try {
@@ -177,7 +192,7 @@ class NodeLoader {
     private static JobManagerDef loadJobManager(final ConfigBaseRO settings) throws InvalidSettingsException {
         try {
             if (!settings.containsKey("job.manager")) {
-                return new JobManagerDefBuilder().build();
+                return null; // has required fields! new JobManagerDefBuilder().build();
             }
             var jobManagerSettings = settings.getConfigBase("job.manager");
             var factoryId = jobManagerSettings.getString("job.manager.factory.id");

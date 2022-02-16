@@ -62,10 +62,8 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeAndBundleInformationPersistor;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.workflow.def.Def;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.workflowalizer.AuthorInformation;
-import org.knime.core.workflow.def.WorkflowMetadataDef;
 
 /**
  *
@@ -146,7 +144,6 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
      * Copied from use in WorkflowManager: "Name of this workflow (usually displayed at top of the node figure). May be
      * null to use name of workflow directory."
      */
-    @Def(heldBy = WorkflowMetadataDef.class)
     String getName();
 
     /** @return cipher associated with the metanode/workflow, often just

@@ -48,9 +48,11 @@
  */
 package org.knime.core.node.workflow.loader;
 
-
+import java.io.File;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.knime.core.node.InvalidSettingsException;
@@ -68,39 +70,37 @@ import org.knime.core.workflow.def.impl.PortTypeDefBuilder;
 import org.knime.core.workflow.def.impl.TemplateLinkDefBuilder;
 
 /**
+ * Loads the description of a Component node in a workflow. Components are internally also referred to as SubNodes.
  *
  * @author Dionysios Stolis, KNIME GmbH, Berlin, Germany
  */
-public class SubNodeLoader extends SingleNodeLoader {
+public class ComponentLoader extends SingleNodeLoader {
 
     /**
      * Constructor
      */
-    SubNodeLoader() {
+    ComponentLoader() {
         super(new ComponentDefBuilder());
     }
 
-
     @Override
-    SubNodeLoader load(final ConfigBaseRO parentSettings, final ConfigBaseRO settings, final LoadVersion loadVersion)
-        throws InvalidSettingsException {
-        super.load(parentSettings, settings, loadVersion);
+    ComponentLoader load(final ConfigBaseRO workflowConfig, final File nodeDirectory,
+        final LoadVersion workflowFormatVersion) throws InvalidSettingsException, IOException {
+        super.load(workflowConfig, nodeDirectory, workflowFormatVersion);
 
         //The load methods should throw specific error messages
         getNodeBuilder().setDialogSettings(null) //
-            .setInPorts(loadInPorts(settings)) //
-            .setOutPorts(loadOutPorts(settings)) //
-            .setVirtualInNodeId(loadVirtualInNodeId(settings)) //
-            .setVirtualOutNodeId(loadVirtualOutNodeId(settings)) //
+            .setInPorts(loadInPorts(m_nodeConfig)) //
+            .setOutPorts(loadOutPorts(m_nodeConfig)) //
+            .setVirtualInNodeId(loadVirtualInNodeId(m_nodeConfig)) //
+            .setVirtualOutNodeId(loadVirtualOutNodeId(m_nodeConfig)) //
             // TODO We should pass the proper setting for the link, currently passing the template.knime.
-            .setLink(loadLink(settings)) //
+            .setLink(loadLink(m_nodeConfig)) //
             .setMetadata(null) //
-            //TODO We should use the WorkflowLoader.
-            .setWorkflow(null);
+            .setWorkflow(WorkflowLoader.load(nodeDirectory, workflowFormatVersion));
 
         return this;
     }
-
 
     /**
      * {@inheritDoc}
@@ -120,20 +120,21 @@ public class SubNodeLoader extends SingleNodeLoader {
 
     private TemplateLinkDef loadLink(final ConfigBaseRO settings) {
         // TODO This mehtod will be improved after the new error handling
-        String uri = null;
+        Optional<String> uri = Optional.empty();
         try {
             var templateSettings = settings.getConfigBase("workflow_template_information");
-            uri = templateSettings.getString("sourceURI");
-//            if (uri.isBlank()) {
-//                throw new InvalidSettingsException("Cannot not read source URI from emtpy string");
-//            }
+            uri = Optional.ofNullable(templateSettings.getString("sourceURI"));
+            //            if (uri.isBlank()) {
+            //                throw new InvalidSettingsException("Cannot not read source URI from emtpy string");
+            //            }
         } catch (InvalidSettingsException e) {
             //FIXME After new error handling
 
         }
-        return new TemplateLinkDefBuilder() //
-            .setUri(uri) //
-            .build();
+        var builder = new TemplateLinkDefBuilder();
+        uri.ifPresent(builder::setUri);
+        // TODO uri is required
+        return uri.isPresent() ? builder.build() : null;
     }
 
     private ComponentMetadataDef loadMetadata(final ConfigBaseRO settings) {

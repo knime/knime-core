@@ -48,7 +48,13 @@
  */
 package org.knime.core.node.workflow.loader;
 
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+
 import org.knime.core.node.config.base.ConfigBase;
+import org.knime.core.node.config.base.ConfigBaseRO;
 
 /**
  * We need a concrete implementation of {@link ConfigBase} in order to load into it with
@@ -64,5 +70,19 @@ class SimpleConfig extends ConfigBase {
     @Override
     public ConfigBase getInstance(final String key) {
         return new SimpleConfig(key);
+    }
+
+    /**
+     * @param nameForConfig the key of the root configuration element.
+     * @param xmlFile workflow description file, e.g., workflow.knime, template.knime, settings.xml, etc.
+     * @return the parsed tree
+     * @throws IOException
+     */
+    public static ConfigBaseRO parseConfig(final String nameForConfig, final File xmlFile) throws IOException {
+        var result = new SimpleConfig(nameForConfig);
+        try (var fis = new FileInputStream(xmlFile); var bis = new BufferedInputStream(fis)) {
+            result.load(bis);
+        }
+        return result;
     }
 }
