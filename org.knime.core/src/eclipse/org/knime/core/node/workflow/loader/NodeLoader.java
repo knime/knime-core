@@ -96,7 +96,7 @@ class NodeLoader {
      * @param settings
      * @param singleNode
      */
-    void load(final ConfigBaseRO parentSettings, final ConfigBaseRO settings, final LoadVersion loadVersion)
+    NodeLoader load(final ConfigBaseRO parentSettings, final ConfigBaseRO settings, final LoadVersion loadVersion)
         throws InvalidSettingsException {
 
         // the load methods should throw specific error messages
@@ -108,6 +108,7 @@ class NodeLoader {
             .setLocks(loadLocks(parentSettings, loadVersion)) //
             .setNodeType(loadType(parentSettings, loadVersion)) //
             .setUiInfo(loadUIInfo(parentSettings));
+        return this;
     }
 
     private static Optional<Integer> loadNodeId(final ConfigBaseRO settings) throws InvalidSettingsException {

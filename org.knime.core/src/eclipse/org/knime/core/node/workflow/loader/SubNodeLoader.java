@@ -82,7 +82,7 @@ public class SubNodeLoader extends SingleNodeLoader {
 
 
     @Override
-    void load(final ConfigBaseRO parentSettings, final ConfigBaseRO settings, final LoadVersion loadVersion)
+    SubNodeLoader load(final ConfigBaseRO parentSettings, final ConfigBaseRO settings, final LoadVersion loadVersion)
         throws InvalidSettingsException {
         super.load(parentSettings, settings, loadVersion);
 
@@ -97,6 +97,8 @@ public class SubNodeLoader extends SingleNodeLoader {
             .setMetadata(null) //
             //TODO We should use the WorkflowLoader.
             .setWorkflow(null);
+
+        return this;
     }
 
 
