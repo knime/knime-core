@@ -427,7 +427,14 @@ public abstract class WorkflowTestCase {
 
     protected void executeAndWait(final NodeID... ids)
         throws Exception {
-        NodeID prefix = null;
+        executeDontWait(ids);
+        for (NodeID id : ids) {
+            waitWhileNodeInExecution(id);
+        }
+    }
+
+	protected void executeDontWait(final NodeID... ids) {
+		NodeID prefix = null;
         WorkflowManager parent = null;
         for (NodeID id : ids) {
             if (prefix == null) {
@@ -441,10 +448,7 @@ public abstract class WorkflowTestCase {
         if (parent != null) {
             parent.executeUpToHere(ids);
         }
-        for (NodeID id : ids) {
-            waitWhileNodeInExecution(id);
-        }
-    }
+	}
 
     protected void reset(final NodeID... ids) {
         for (NodeID id : ids) {
