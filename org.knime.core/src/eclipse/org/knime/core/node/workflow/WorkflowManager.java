@@ -4655,15 +4655,16 @@ public final class WorkflowManager extends NodeContainer
                 return true;
             }
             // check for at least one executed and resetable node!
+            var hasResetableNode = false;
             for (NodeContainer nc : nodeValues) {
                 if (nc.getInternalState().isExecutionInProgress()) {
                     return false;
                 }
                 if (nc.canPerformReset()) {
-                    return true;
+                    hasResetableNode = true;
                 }
             }
-            return false;
+            return hasResetableNode;
         }
     }
 
