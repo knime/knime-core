@@ -86,11 +86,10 @@ public class MetaNodeLoader extends NodeLoader {
         }
     }
 
-    private final LoadVersion m_loadVersion;
+    private LoadVersion m_loadVersion;
 
-    MetaNodeLoader(final MetaNodeDefBuilder nodeBuilder, final LoadVersion loadVersion) {
-        super(nodeBuilder);
-        m_loadVersion = loadVersion;
+    public MetaNodeLoader() {
+        super(new MetaNodeDefBuilder());
     }
 
     private List<PortDef> loadPorts(final ConfigBaseRO workflowSett, final ConfigKey whichPorts) {
@@ -254,9 +253,11 @@ public class MetaNodeLoader extends NodeLoader {
     }
 
     @Override
-    void load(final ConfigBaseRO parentSettings, final ConfigBaseRO settings, final LoadVersion loadVersion)
+    MetaNodeLoader load(final ConfigBaseRO parentSettings, final ConfigBaseRO settings, final LoadVersion loadVersion)
         throws InvalidSettingsException {
         super.load(parentSettings, settings, loadVersion);
+
+        m_loadVersion = loadVersion;
 
         // TODO move to standalone metanode
         //        setTemplateInformation(tryLoadDebug("template information", MetaNodeTemplateInformation.NONE, () -> {
@@ -271,7 +272,8 @@ public class MetaNodeLoader extends NodeLoader {
         //            return m_templateInformation; // don't change (set again with identical value)
         //        }, loadResult));
 
-        WorkflowDef workflow = null; // TODO
+        // TODO
+        WorkflowDef workflow = new FileWorkflowLoader(loadVersion).load(null, null);
 
         getNodeBuilder()//
             .setInPorts(loadPorts(settings, ConfigKey.IN_PORTS))//
@@ -280,7 +282,7 @@ public class MetaNodeLoader extends NodeLoader {
             .setOutPortsBarUIInfo(loadPortsBarUIInfo(settings, ConfigKey.OUT_PORTS))//
             .setWorkflow(workflow)//
             .setLink(null); // TODO
-
+        return this;
     }
 
 }

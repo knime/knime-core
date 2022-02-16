@@ -83,7 +83,7 @@ public abstract class SingleNodeLoader extends NodeLoader {
     }
 
     @Override
-    void load(final ConfigBaseRO parentSettings, final ConfigBaseRO settings, final LoadVersion loadVersion)
+    SingleNodeLoader load(final ConfigBaseRO parentSettings, final ConfigBaseRO settings, final LoadVersion loadVersion)
         throws InvalidSettingsException {
         super.load(parentSettings, settings, loadVersion);
 
@@ -92,6 +92,8 @@ public abstract class SingleNodeLoader extends NodeLoader {
             .setInternalNodeSubSettings(loadInternalNodeSubSettings(settings)) //
             .setModelSettings(loadModelSettings(settings)) //
             .setVariableSettings(loadVariableSettings(settings));
+
+        return this;
     }
 
     private static ConfigMapDef loadInternalNodeSubSettings(final ConfigBaseRO settings)

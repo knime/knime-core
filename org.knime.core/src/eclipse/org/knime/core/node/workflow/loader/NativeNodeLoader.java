@@ -139,7 +139,7 @@ public class NativeNodeLoader extends SingleNodeLoader {
      * @throws InvalidSettingsException
      */
     @Override
-    public void load(final ConfigBaseRO parentSettings, final ConfigBaseRO settings, final LoadVersion loadVersion)
+    public NativeNodeLoader load(final ConfigBaseRO parentSettings, final ConfigBaseRO settings, final LoadVersion loadVersion)
         throws InvalidSettingsException {
         super.load(parentSettings, settings, loadVersion);
 
@@ -150,6 +150,7 @@ public class NativeNodeLoader extends SingleNodeLoader {
             .setBundle(loadBundle(settings)) //
             .setFeature(loadFeature(settings)) //
             .setNodeCreationConfig(loadCreationConfig(settings));
+        return this;
     }
 
     /**
