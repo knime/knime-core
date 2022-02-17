@@ -5524,6 +5524,12 @@ public final class WorkflowManager extends NodeContainer
     public void cancelExecution(final NodeContainer nc) {
         try (WorkflowLock lock = lock()) {
             disableNodeForExecution(nc.getID());
+            if (nc instanceof NativeNodeContainer) {
+                NativeNodeContainer nnc = (NativeNodeContainer)nc;
+                if (nnc.isModelCompatibleTo(LoopEndNode.class)) {
+                    nnc.getNode().setPauseLoopExecution(false);
+                }
+            }
             if (nc.getInternalState().isExecutionInProgress()) {
                 nc.cancelExecution();
             }
