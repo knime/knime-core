@@ -7420,7 +7420,9 @@ public final class WorkflowManager extends NodeContainer
             return updateMetaNodeLinkWithCache(id, exec, loadHelper, visitedTemplateMap);
         } finally {
             for (NodeContainerTemplate tempLink : visitedTemplateMap.values()) {
-                tempLink.getParent().removeNode(tempLink.getID());
+                if (tempLink != null) {
+                    tempLink.getParent().removeNode(tempLink.getID());
+                }
             }
         }
     }
