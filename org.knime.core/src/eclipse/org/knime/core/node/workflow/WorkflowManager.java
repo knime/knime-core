@@ -2002,6 +2002,8 @@ public final class WorkflowManager extends NodeContainer
      * @param settings the node setting which contain the view settings (i.e. not the view settings themselves)
      * @throws InvalidSettingsException if the view settings couldn't be loaded
      * @throws IllegalArgumentException if the passed node id does not reference a {@link SingleNodeContainer}
+     *
+     * @since 4.6
      */
     public void loadNodeViewSettings(final NodeID id, final NodeSettingsRO settings) throws InvalidSettingsException {
         var nc = getNodeContainer(id);

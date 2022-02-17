@@ -173,8 +173,10 @@ public abstract class NodeDialog implements DataServiceProvider {
                 // transfer data into settings
                 getSettingsDataService().applyData(data, settingsMap);
 
-                var modelSettingsChanged = modelSettingsChanged(previousNodeSettings, modelSettings);
-                var viewSettingsChanged = viewSettingsChanged(previousNodeSettings, viewSettings);
+                var modelSettingsChanged =
+                    settingsChanged(previousNodeSettings, modelSettings, SettingsType.MODEL.getConfigKey());
+                var viewSettingsChanged =
+                    settingsChanged(previousNodeSettings, viewSettings, SettingsType.VIEW.getConfigKey());
 
                 if (viewSettingsChanged) {
                     // load settings into node view
@@ -196,20 +198,11 @@ public abstract class NodeDialog implements DataServiceProvider {
             }
         }
 
-        private boolean viewSettingsChanged(final NodeSettings previousSettings, final NodeSettings viewSettings)
+        private boolean settingsChanged(final NodeSettings previousNodeSettings, final NodeSettings subSettings, final String subSettingsKey)
             throws InvalidSettingsException {
-            if (viewSettings != null) {
-                var previousViewSettings = getOrCreateSubSettings(previousSettings, SettingsType.VIEW.getConfigKey());
-                return !previousViewSettings.equals(viewSettings);
-            }
-            return false;
-        }
-
-        private boolean modelSettingsChanged(final NodeSettings previousSettings, final NodeSettings modelSettings)
-            throws InvalidSettingsException {
-            if (modelSettings != null) {
-                var previousModelSettings = getOrCreateSubSettings(previousSettings, SettingsType.MODEL.getConfigKey());
-                return !previousModelSettings.equals(modelSettings);
+            if (subSettings != null) {
+                var previousViewSettings = getOrCreateSubSettings(previousNodeSettings, subSettingsKey);
+                return !previousViewSettings.equals(subSettings);
             }
             return false;
         }
