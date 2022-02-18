@@ -48,9 +48,6 @@
  */
 package org.knime.core.webui.node.view;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -59,10 +56,8 @@ import java.util.Optional;
 import java.util.WeakHashMap;
 import java.util.regex.Pattern;
 
-import org.apache.commons.io.FileUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
@@ -87,11 +82,16 @@ import org.knime.core.webui.page.Resource;
  */
 public final class NodeViewManager extends DataServiceManager {
 
+    /**
+     * Domain name used to identify resources requested for a node view.
+     */
+    public static final String DOMAIN_NAME = "org.knime.core.ui.view";
+
+    private static final String URL = "http://" + DOMAIN_NAME;
+
     private static final String NODE_VIEW_DEBUG_PATTERN_PROP = "org.knime.ui.dev.node.view.url.factory-class";
 
     private static final String NODE_VIEW_DEBUG_URL_PROP = "org.knime.ui.dev.node.view.url";
-
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(NodeViewManager.class);
 
     private static NodeViewManager instance;
 
@@ -200,12 +200,11 @@ public final class NodeViewManager extends DataServiceManager {
     }
 
     /**
-     * Provides the URL which serves the node view page.
-     * The full URL is usually only available if the AP is run as desktop application.
+     * Provides the URL which serves the node view page. The full URL is usually only available if the AP is run as
+     * desktop application.
      *
      * @param nnc the node which provides the node view
      * @return the page url if available, otherwise an empty optional
-     * @throws IllegalStateException if the node doesn't have a node view or the node view url couldn't be retrieved
      */
     public Optional<String> getNodeViewPageUrl(final NativeNodeContainer nnc) {
         if (isRunAsDesktopApplication()) {
@@ -213,20 +212,7 @@ public final class NodeViewManager extends DataServiceManager {
             if (debugUrl.isPresent()) {
                 return debugUrl;
             }
-            try {
-                var page = getNodeView(nnc).getPage();
-                var url =
-                    PageUtil.writePageResourcesToDiscAndGetFileUrl(nnc, page, false, pageRootPath -> {
-                        var nodeCleanUpCallback = m_nodeCleanUpCallbacks.get(nnc.getID());
-                        if (nodeCleanUpCallback != null && !page.isCompletelyStatic()) {
-                            nodeCleanUpCallback.onCleanUp(() -> deleteResources(pageRootPath));
-                        }
-                    });
-                return Optional.of(url);
-            } catch (IOException ex) {
-                throw new IllegalStateException(
-                    "Page URL for the view of node '" + nnc.getNameWithID() + "' couldn't be created.", ex);
-            }
+            return Optional.of(URL + "/" + getNodeViewPagePathInternal(nnc));
         } else {
             return Optional.empty();
         }
@@ -237,18 +223,22 @@ public final class NodeViewManager extends DataServiceManager {
      * is <b>not</b> run as a desktop application (but as an 'executor' as part of the server infrastructure).
      *
      * @param nnc the node which provides the node view
-     * @return the relative page path if available, otherwise an empty optional
+     * @return the relative page path
      */
     public Optional<String> getNodeViewPagePath(final NativeNodeContainer nnc) {
         if (!isRunAsDesktopApplication()) {
-            var page = getNodeView(nnc).getPage();
-            var isStaticPage = page.isCompletelyStatic();
-            var pageId = PageUtil.getPageId(nnc, isStaticPage, false);
-            registerPage(nnc.getID(), page, pageId);
-            return Optional.of(pageId + "/" + page.getRelativePath());
+            return Optional.of(getNodeViewPagePathInternal(nnc));
         } else {
             return Optional.empty();
         }
+    }
+
+    private String getNodeViewPagePathInternal(final NativeNodeContainer nnc) {
+        var page = getNodeView(nnc).getPage();
+        var isStaticPage = page.isCompletelyStatic();
+        var pageId = PageUtil.getPageId(nnc, isStaticPage, false);
+        registerPage(nnc.getID(), page, pageId);
+        return pageId + "/" + page.getRelativePath();
     }
 
     private void registerPage(final NodeID nodeId, final Page page, final String pageId) {
@@ -286,28 +276,32 @@ public final class NodeViewManager extends DataServiceManager {
         }
     }
 
-    private static boolean isRunAsDesktopApplication() {
-        return !"true".equals(System.getProperty("java.awt.headless"));
+    /**
+     * Gives access to page resources via a full URL. NOTE: Only those resources are available that belong to a page
+     * whose URL has been requested via {@link #getNodeViewPageUrl(NativeNodeContainer)}.
+     *
+     * @param url the resource url
+     * @return the resource or an empty optional if there is no resource available at the given URL
+     */
+    public Optional<Resource> getNodeViewPageResourceFromUrl(final String url) {
+        return getNodeViewPageResource(getResourceIdFromUrl(url));
     }
 
-    private static void deleteResources(final Path rootPath) {
-        if (Files.exists(rootPath)) {
-            try {
-                FileUtils.deleteDirectory(rootPath.toFile());
-            } catch (IOException | IllegalArgumentException e) {
-                LOGGER.error("Directory " + rootPath + " could not be deleted", e);
-            }
-        }
+    private static String getResourceIdFromUrl(final String url) {
+        return url.replace(URL, "");
+    }
+
+    private static boolean isRunAsDesktopApplication() {
+        return !"true".equals(System.getProperty("java.awt.headless"));
     }
 
     /**
      * For testing purposes only.
      */
-    void clearCachesAndFiles() {
+    void clearCaches() {
         m_nodeViewMap.clear();
         m_nodeCleanUpCallbacks.clear();
         m_pageMap.clear();
-        PageUtil.clearUIExtensionFiles();
     }
 
     /**

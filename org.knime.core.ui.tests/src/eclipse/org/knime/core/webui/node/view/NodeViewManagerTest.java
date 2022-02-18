@@ -58,17 +58,15 @@ import static org.knime.core.webui.node.view.NodeViewTest.createNodeView;
 import static org.knime.core.webui.page.PageTest.BUNDLE_ID;
 import static org.knime.testing.util.WorkflowManagerUtil.createAndAddNode;
 
-import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
 import org.awaitility.Awaitility;
+import org.awaitility.core.ThrowingRunnable;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -91,8 +89,6 @@ import org.knime.testing.node.view.NodeViewNodeFactory;
 import org.knime.testing.node.view.NodeViewNodeModel;
 import org.knime.testing.util.WorkflowManagerUtil;
 
-import com.google.common.io.Files;
-
 /**
  * Tests for {@link NodeViewManager}.
  *
@@ -110,7 +106,7 @@ public class NodeViewManagerTest {
     @Before
     @After
     public void clearNodeViewManagerCachesAndFiles() {
-        NodeViewManager.getInstance().clearCachesAndFiles();
+        NodeViewManager.getInstance().clearCaches();
     }
 
     @SuppressWarnings("javadoc")
@@ -219,25 +215,10 @@ public class NodeViewManagerTest {
         String url2 = nodeViewManager.getNodeViewPageUrl(nnc2).orElse(null);
         String url3 = nodeViewManager.getNodeViewPageUrl(nnc3).orElse(null);
         String url4 = nodeViewManager.getNodeViewPageUrl(nnc3).orElse(null);
-        assertThat("file url of static pages not expected to change", url, is(url2));
-        assertThat("file url of dynamic pages expected to change between node instances", url, is(not(url3)));
-        assertThat("file url of dynamic pages not expected for same node instance (without node state change)", url3,
+        assertThat("url of static pages not expected to change", url, is(url2));
+        assertThat("url of dynamic pages expected to change between node instances", url, is(not(url3)));
+        assertThat("url of dynamic pages not expected for same node instance (without node state change)", url3,
             is(url4));
-        assertThat("resource files are expected to be written, too",
-            new File(new URI(url.replace("page.html", "resource.html"))).exists(), is(true));
-        assertThat(new File(new URI(url)).exists(), is(true));
-        assertThat(new File(new URI(url3)).exists(), is(true));
-        String pageContent = Files.readLines(new File(new URI(url3)), StandardCharsets.UTF_8).get(0);
-        assertThat(pageContent, is("page content"));
-
-        // impose node state changes
-        m_wfm.executeAllAndWaitUntilDone();
-        var dynamicPage2 = Page.builder(() -> "new page content", "page.html")
-            .addResourceFromString(() -> "resource content", "resource.html").build();
-        nnc = createNodeWithNodeView(m_wfm, m -> createNodeView(dynamicPage2));
-        String url5 = nodeViewManager.getNodeViewPageUrl(nnc).orElse(null);
-        pageContent = Files.readLines(new File(new URI(url5)), StandardCharsets.UTF_8).get(0);
-        assertThat(pageContent, is("new page content"));
 
         runOnExecutor(() -> assertThat(nodeViewManager.getNodeViewPageUrl(nnc2).isEmpty(), is(true)));
     }
@@ -297,8 +278,7 @@ public class NodeViewManagerTest {
     }
 
     /**
-     * Makes sure that in case of a dynamic page the node view cache (but not! the page resource files) is cleaned up
-     * after a node state change, node removal and closing the workflow.
+     * Makes sure that the page-cache is cleaned up after node removal or closing the workflow for dynamic pages.
      *
      * @throws URISyntaxException
      */
@@ -306,73 +286,53 @@ public class NodeViewManagerTest {
     public void testNodeCleanUpDynamicPage() throws URISyntaxException {
         var page = Page.builder(() -> "test page content", "index.html").build();
         var nc = createNodeWithNodeView(m_wfm, m -> createNodeView(page));
-
         var nodeViewManager = NodeViewManager.getInstance();
 
-        // node state change
-        String url = nodeViewManager.getNodeViewPageUrl(nc).orElse(null);
-        assertThat("node view file resource expected to be written", new File(new URI(url)).exists(), is(true));
-        assertThat(nodeViewManager.getNodeViewMapSize(), is(1));
-        m_wfm.executeAllAndWaitUntilDone();
-        Awaitility.await().pollInterval(1, TimeUnit.SECONDS).atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
-            assertThat("dynamic pages are expected to be remain if the node state changed",
-                new File(new URI(url)).exists(), is(true));
-            assertThat(nodeViewManager.getNodeViewMapSize(), is(1));
-        });
-
         // remove node
-        String url2 = nodeViewManager.getNodeViewPageUrl(nc).orElse(null);
-        assertThat("node view file resource expected to be written", new File(new URI(url2)).exists(), is(true));
+        nodeViewManager.getNodeViewPageUrl(nc);
         assertThat(nodeViewManager.getNodeViewMapSize(), is(1));
+        assertThat(nodeViewManager.getPageMapSize(), is(1));
         m_wfm.removeNode(nc.getID());
-        Awaitility.await().pollInterval(1, TimeUnit.SECONDS).atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
-            assertThat("dynamic pages are expected to be removed if the respective node has been removed",
-                new File(new URI(url2)).exists(), is(false));
+        untilAsserted(() -> {
             assertThat(nodeViewManager.getNodeViewMapSize(), is(0));
+            assertThat(nodeViewManager.getPageMapSize(), is(0));
         });
 
         // close workflow
-        String url3 = nodeViewManager.getNodeViewPageUrl(nc).orElse(null);
-        assertThat("node view file resource expected to be written", new File(new URI(url3)).exists(), is(true));
+        nodeViewManager.getNodeViewPageUrl(nc);
         assertThat(nodeViewManager.getNodeViewMapSize(), is(1));
+        assertThat(nodeViewManager.getPageMapSize(), is(1));
         m_wfm.getParent().removeProject(m_wfm.getID());
-        Awaitility.await().pollInterval(1, TimeUnit.SECONDS).atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
-            assertThat("dynamic pages are expected to be removed after the workflow has been closed",
-                new File(new URI(url3)).exists(), is(false));
+        untilAsserted(() -> {
             assertThat(nodeViewManager.getNodeViewMapSize(), is(0));
+            assertThat(nodeViewManager.getPageMapSize(), is(0));
         });
     }
 
-
     /**
-     * Makes sure that in case of a static page the node view cache and(!) the page resource files are cleaned up after
-     * a node state change, node removal and closing the workflow.
+     * Makes sure that the page-cache is cleaned up after node removal or closing the workflow for static pages.
      */
     @Test
     public void testNodeCleanUpStaticPage() {
         var staticPage = Page.builder(BUNDLE_ID, "files", "page.html").build();
         var nc = createNodeWithNodeView(m_wfm, m -> createNodeView(staticPage));
-
-        // node state change
-        String url = NodeViewManager.getInstance().getNodeViewPageUrl(nc).orElse(null);
-        m_wfm.executeAllAndWaitUntilDone();
-        Awaitility.await().pollInterval(1, TimeUnit.SECONDS).atMost(5, TimeUnit.SECONDS)
-            .untilAsserted(() -> assertThat("static pages are expected to remain if the node state changed",
-                new File(new URI(url)).exists(), is(true)));
+        var nodeViewManager = NodeViewManager.getInstance();
 
         // remove node
-        String url2 = NodeViewManager.getInstance().getNodeViewPageUrl(nc).orElse(null);
+        nodeViewManager.getNodeViewPageUrl(nc);
+        assertThat(nodeViewManager.getPageMapSize(), is(1));
         m_wfm.removeNode(nc.getID());
-        Awaitility.await().pollInterval(1, TimeUnit.SECONDS).atMost(5, TimeUnit.SECONDS).untilAsserted(
-            () -> assertThat("static pages are expected to be remain if the respective node has been removed",
-                new File(new URI(url2)).exists(), is(true)));
+        untilAsserted(() -> assertThat(nodeViewManager.getPageMapSize(), is(0)));
 
         // close workflow
-        String url3 = NodeViewManager.getInstance().getNodeViewPageUrl(nc).orElse(null);
+        nodeViewManager.getNodeViewPageUrl(nc);
+        assertThat(nodeViewManager.getPageMapSize(), is(1));
         m_wfm.getParent().removeProject(m_wfm.getID());
-        Awaitility.await().pollInterval(1, TimeUnit.SECONDS).atMost(5, TimeUnit.SECONDS)
-            .untilAsserted(() -> assertThat("static pages are expected to be remain after the workflow has been closed",
-                new File(new URI(url3)).exists(), is(true)));
+        untilAsserted(() -> assertThat(nodeViewManager.getPageMapSize(), is(0)));
+    }
+
+    private static void untilAsserted(final ThrowingRunnable assertion) {
+        Awaitility.await().pollInterval(1, TimeUnit.SECONDS).atMost(5, TimeUnit.SECONDS).untilAsserted(assertion);
     }
 
     /**
