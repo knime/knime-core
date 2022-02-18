@@ -190,6 +190,37 @@ public final class ValueFactoryUtils {
         }
     }
 
+    /**
+     * Creates a DataType from the logical type stored in a ColumnarSchema.
+     *
+     * @param traits must contain the {@link LogicalTypeTrait}
+     * @return The {@link DataType}
+     * @throws IllegalArgumentException if no logical type is contained in the {@link DataTraits}
+     * @since 4.6
+     */
+    public static DataType getDataTypeForTraits(final DataTraits traits) {
+        final JsonNode json = extractLogicalTypeJson(traits);
+        final String valueFactoryName = json.get(CFG_VALUE_FACTORY_CLASS).asText();
+
+        if (VoidValueFactory.class.getName().equals(valueFactoryName)) {
+            return DataType.getType(DataCell.class);
+        } else if (json.has(CFG_DATA_TYPE)) {
+            return loadDataTypeFromJson((ObjectNode)json.get(CFG_DATA_TYPE));
+        } else if (SPECIFIC_COLLECTION_FACTORY_PROVIDER.hasFactoryFor(valueFactoryName)) {
+            return SPECIFIC_COLLECTION_FACTORY_PROVIDER.getTypeFor(SPECIFIC_COLLECTION_FACTORY_PROVIDER.getFactoryFor(valueFactoryName));
+        } else {
+            var factory = getValueFactoryFromExtensionPoint(valueFactoryName).orElseThrow();
+            if (factory instanceof CollectionValueFactory) {
+                var elementTraits = ((ListDataTraits)traits).getInner();
+                var elementType = getDataTypeForTraits(elementTraits);
+                var cellClass = REGISTRY.getCellClassForValueFactory(factory);
+                return DataType.getType(cellClass, elementType);
+            } else {
+                return getDataTypeFromExtensionPoint(factory);
+            }
+        }
+    }
+
     private static ValueFactory<?, ?> getValueFactoryFromExtensionPoint(final DataTraits traits,
         final IDataRepository dataRepository, final String valueFactoryName) {
         var valueFactory = getValueFactoryFromExtensionPoint(valueFactoryName)
