@@ -48,132 +48,20 @@
  */
 package org.knime.core.node.workflow.virtual.parchunk;
 
-import java.io.File;
-import java.io.IOException;
-
-import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.port.PortObject;
-import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.ScopeEndNode;
+import org.knime.core.node.workflow.virtual.DefaultVirtualPortObjectOutNodeModel;
 
 
 /**
- * 
+ *
  * @author wiswedel, University of Konstanz
  */
-public final class VirtualParallelizedChunkPortObjectOutNodeModel extends NodeModel
+public final class VirtualParallelizedChunkPortObjectOutNodeModel extends DefaultVirtualPortObjectOutNodeModel
     implements ScopeEndNode<FlowVirtualScopeContext> {
 
-	private PortObjectSpec[] m_outSpecs;
-	private PortObject[] m_outObjects;
-	
-	/**
-	 * @param inTypes 
-	 * 
-	 */
-	public VirtualParallelizedChunkPortObjectOutNodeModel(final PortType[] inTypes) {
-		super(inTypes, new PortType[0]);
-	}
-	
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
-			throws InvalidSettingsException {
-		return new PortObjectSpec[0];
-	}
-	
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec)
-			throws Exception {
-		m_outObjects = inObjects;
-		m_outSpecs = new PortObjectSpec[inObjects.length];
-		for (int i = 0; i < inObjects.length; i++) {
-		    if (inObjects[i] != null) {
-		        m_outSpecs[i] = inObjects[i].getSpec();
-		    } else {
-		        m_outSpecs[i] = null;
-		    }
-		}
-		return new PortObject[0];
-	}
-	
-	/**
-	 * @return the outObjects
-	 */
-	public PortObject[] getOutObjects() {
-		return m_outObjects;
-	}
-	
-	/**
-	 * @return the outSpecs
-	 */
-	public PortObjectSpec[] getOutSpecs() {
-		return m_outSpecs;
+	VirtualParallelizedChunkPortObjectOutNodeModel(final PortType[] inTypes) {
+		super(inTypes);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected void reset() {
-		// no internals
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected void saveSettingsTo(final NodeSettingsWO settings) {
-		// no settings
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected void validateSettings(final NodeSettingsRO settings)
-			throws InvalidSettingsException {
-		// no settings
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
-			throws InvalidSettingsException {
-		// no settings
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected void loadInternals(final File nodeInternDir,
-			final ExecutionMonitor exec) throws IOException,
-			CanceledExecutionException {
-		// no internals
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected void saveInternals(final File nodeInternDir,
-			final ExecutionMonitor exec) throws IOException,
-			CanceledExecutionException {
-		// no internals
-	}
 }

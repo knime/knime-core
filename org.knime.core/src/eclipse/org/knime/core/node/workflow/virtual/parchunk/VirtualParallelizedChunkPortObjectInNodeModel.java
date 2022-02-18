@@ -48,133 +48,19 @@
  */
 package org.knime.core.node.workflow.virtual.parchunk;
 
-import java.io.File;
-import java.io.IOException;
-
-import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.port.PortObject;
-import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.ScopeStartNode;
-import org.knime.core.node.workflow.VariableType;
+import org.knime.core.node.workflow.virtual.DefaultVirtualPortObjectInNodeModel;
 
 /**
- * 
+ *
  * @author wiswedel, University of Konstanz
  */
-public class VirtualParallelizedChunkPortObjectInNodeModel extends NodeModel
+public class VirtualParallelizedChunkPortObjectInNodeModel extends DefaultVirtualPortObjectInNodeModel
     implements ScopeStartNode<FlowVirtualScopeContext> {
 
-	private VirtualParallelizedChunkNodeInput m_input;
-
-	/**
-	 * @param outPortTypes
-	 */
 	VirtualParallelizedChunkPortObjectInNodeModel(final PortType[] outPortTypes) {
-		super(new PortType[0], outPortTypes);
-	}
-	
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec)
-			throws Exception {
-		if (m_input == null) {
-			throw new Exception("Output objects in virtual input node have " 
-					+ "not been set");
-		}
-        for (FlowVariable f : m_input.getFlowVariables()) {
-            pushFlowVariable(f);
-        }
-        return m_input.getInputObjects();
-	}
-
-    @SuppressWarnings("unchecked")
-    private <T> void pushFlowVariable(final FlowVariable fv) {
-        pushFlowVariable(fv.getName(), (VariableType<T>)fv.getVariableType(), (T)fv.getValue(fv.getVariableType()));
-    }
-
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
-			throws InvalidSettingsException {
-		// let's do everyting in execute (includes flow var population)
-		return null;
-	}
-	
-	public void setVirtualNodeInput(final VirtualParallelizedChunkNodeInput input) {
-		PortObject[] objects = input.getInputObjects();
-		if (objects.length != getNrOutPorts()) {
-			throw new IllegalArgumentException(
-					"Invalid length of output objects: expected: " 
-					+ getNrOutPorts() + " actual: " + objects.length);
-		}
-		m_input = input;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected void reset() {
-		m_input = null;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected void saveSettingsTo(final NodeSettingsWO settings) {
-		// no settings
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected void validateSettings(final NodeSettingsRO settings)
-			throws InvalidSettingsException {
-		// no settings
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
-			throws InvalidSettingsException {
-		// no settings
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected void loadInternals(final File nodeInternDir,
-			final ExecutionMonitor exec) throws IOException,
-			CanceledExecutionException {
-		// no internals
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected void saveInternals(final File nodeInternDir,
-			final ExecutionMonitor exec) throws IOException,
-			CanceledExecutionException {
-		// no internals
+	    super(outPortTypes);
 	}
 
 }

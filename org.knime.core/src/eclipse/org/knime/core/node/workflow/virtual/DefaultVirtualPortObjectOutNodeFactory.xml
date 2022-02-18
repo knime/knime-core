@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./empty.png" type="LoopEnd">
+    <name>Virtual End</name>
+    <shortDescription>End node of a virtualized execution</shortDescription>
+    <fullDescription>
+    <intro>
+        End node of virtual computation. The node collects the results
+        of an execution branch and passes it back to the original caller.
+    </intro>
+    </fullDescription>
+    <ports>
+        <!-- port definition defined in java code -->
+    </ports>
+</knimeNode>

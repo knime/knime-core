@@ -55,11 +55,21 @@ abstract class FlowObject implements Cloneable {
 
     private NodeID m_owner;
 
-    void setOwner(final NodeID owner) {
+    /** Set the owner, framework method.
+     *
+     * @param owner The owner
+     * @noreference Not to be called outside the core framework.
+     */
+    protected final void setOwner(final NodeID owner) {
         m_owner = owner;
     }
 
-    NodeID getOwner() {
+    /** The owner set by the framework (the owner is the node that first created the flow variable).
+     *
+     * @return the owner, may be null if not set by the framework
+     * @noreference Not to be used outside the framework.
+     */
+    public final NodeID getOwner() {
         return m_owner;
     }
 

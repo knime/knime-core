@@ -78,6 +78,8 @@ public final class VirtualNodeSetFactory implements NodeSetFactory {
             addClass(VirtualSubNodeOutputNodeFactory.class);
             addClass(VirtualParallelizedChunkPortObjectInNodeFactory.class);
             addClass(VirtualParallelizedChunkPortObjectOutNodeFactory.class);
+            addClass(DefaultVirtualPortObjectInNodeFactory.class);
+            addClass(DefaultVirtualPortObjectOutNodeFactory.class);
             addClass(VirtualPortObjectInNodeFactory.class);
             addClass(VirtualPortObjectOutNodeFactory.class);
         }

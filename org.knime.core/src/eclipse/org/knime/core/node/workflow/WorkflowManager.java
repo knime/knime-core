@@ -190,10 +190,10 @@ import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 import org.knime.core.node.workflow.execresult.WorkflowExecutionResult;
 import org.knime.core.node.workflow.virtual.AbstractPortObjectRepositoryNodeModel;
+import org.knime.core.node.workflow.virtual.VirtualNodeInput;
 import org.knime.core.node.workflow.virtual.parchunk.FlowVirtualScopeContext;
 import org.knime.core.node.workflow.virtual.parchunk.ParallelizedChunkContent;
 import org.knime.core.node.workflow.virtual.parchunk.ParallelizedChunkContentMaster;
-import org.knime.core.node.workflow.virtual.parchunk.VirtualParallelizedChunkNodeInput;
 import org.knime.core.node.workflow.virtual.parchunk.VirtualParallelizedChunkPortObjectInNodeFactory;
 import org.knime.core.node.workflow.virtual.parchunk.VirtualParallelizedChunkPortObjectInNodeModel;
 import org.knime.core.node.workflow.virtual.parchunk.VirtualParallelizedChunkPortObjectOutNodeFactory;
@@ -285,6 +285,12 @@ public final class WorkflowManager extends NodeContainer
      */
     private boolean m_hideInUI = false;
 
+    /** A scope context that, if set, is pushed first onto the flow variable stack of any new source node.
+     * Field was added as part of AP-18320 (integrated deployment, workflow executor unable to properly capture
+     * information).
+     * This field will be <code>null</code> for the most part. It must be null for workflow projects.
+     */
+    private FlowScopeContext m_initalScopeContext;
 
     /** Vector holding workflow specific variables. */
     private Vector<FlowVariable> m_workflowVariables;
@@ -3707,8 +3713,9 @@ public final class WorkflowManager extends NodeContainer
                     duplicateLoopBodyInSubWFMandAttach(subwfm, extInConnections, startID, endID, loopNodes, i);
                 if (startNC != null) {
                     NativeNodeContainer virtualInNode =
-                        (NativeNodeContainer)subwfm.getNodeContainer(copiedNodes.getVirtualInputID());
-                    FlowVirtualScopeContext.registerHostNodeForPortObjectPersistence(startNC, virtualInNode, exec);
+                        subwfm.getNodeContainer(copiedNodes.getVirtualInputID(), NativeNodeContainer.class, true);
+                    var virtualScopeCtx = virtualInNode.getOutgoingFlowObjectStack().peek(FlowVirtualScopeContext.class);
+                    virtualScopeCtx.registerHostNodeForPortObjectPersistence(startNC, exec);
                 }
                 copiedNodes.executeChunk();
                 pccm.addParallelChunk(i, copiedNodes);
@@ -3896,7 +3903,7 @@ public final class WorkflowManager extends NodeContainer
         }
         // set chunk of table to be processed in new virtual start node
         LoopStartParallelizeNode startModel = castNodeModel(startID, LoopStartParallelizeNode.class);
-        VirtualParallelizedChunkNodeInput data = startModel.getVirtualNodeInput(chunkIndex);
+        VirtualNodeInput data = startModel.getVirtualNodeInput(chunkIndex);
         VirtualParallelizedChunkPortObjectInNodeModel virtualInModel =
             subWFM.castNodeModel(virtualStartID, VirtualParallelizedChunkPortObjectInNodeModel.class);
         virtualInModel.setVirtualNodeInput(data);
@@ -9664,6 +9671,9 @@ public final class WorkflowManager extends NodeContainer
         }
         // otherwise push variables of parent...
         getDirectNCParent().pushWorkflowVariablesOnStack(sos);
+        if (m_initalScopeContext != null) {
+            sos.pushWithOwner(m_initalScopeContext);
+        }
         // ... and then our own
         if (m_workflowVariables != null) {
             // if we have some vars, put them on stack
@@ -9697,6 +9707,20 @@ public final class WorkflowManager extends NodeContainer
         // push own variables and the ones of the parent(s):
         pushWorkflowVariablesOnStack(sos);
         return sos;
+    }
+
+    /**
+     * Sets an initial scope context on all nodes in this workflow. Not to be used on projects but only for "special
+     * execution" modes (Workflow Executor in Integrated Deployment).
+     *
+     * @param context context to set, might be null.
+     */
+    public void setInitialScopeContext(final FlowScopeContext context) {
+        CheckUtils.checkArgument(context == null || context.getOwner() != null, "context has no owner");
+        CheckUtils.checkState(context == null || !isProject(), "Not to be called on workflow project");
+        m_initalScopeContext = context;
+        reconfigureAllNodesOnlyInThisWFM(false);
+        setDirty();
     }
 
     /**

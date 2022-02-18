@@ -42,14 +42,13 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
+ *
  * History
  *   Mar 31, 2011 (wiswedel): created
  */
-package org.knime.core.node.workflow.virtual.parchunk;
+package org.knime.core.node.workflow.virtual;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import org.knime.core.node.port.PortObject;
@@ -59,41 +58,24 @@ import org.knime.core.node.workflow.FlowVariable;
  * Utility object that represents the output objects of virtual input nodes.
  * @author wiswedel, University of Konstanz
  */
-public final class VirtualParallelizedChunkNodeInput {
-	
+public final class VirtualNodeInput {
+
 	private final PortObject[] m_inputObjects;
 	private final List<FlowVariable> m_flowVariables;
-	private final int m_chunkIndex;
-	/**
-	 * @param inputObjects
-	 * @param chunkIndex
-	 */
-	@SuppressWarnings("unchecked")
-	public VirtualParallelizedChunkNodeInput(
-			final PortObject[] inputObjects, final int chunkIndex) {
-		this(inputObjects, Collections.EMPTY_LIST, chunkIndex);
-	}
-	
+
 	/**
 	 * @param inputObjects
 	 * @param flowVariables
-	 * @param chunkIndex
 	 */
-	public VirtualParallelizedChunkNodeInput(final PortObject[] inputObjects,
-			final List<FlowVariable> flowVariables, final int chunkIndex) {
+    public VirtualNodeInput(final PortObject[] inputObjects, final List<FlowVariable> flowVariables) {
 		if (Arrays.asList(inputObjects).contains(null)) {
 			throw new NullPointerException("Null elements not allowed");
 		}
 		if (flowVariables.contains(null)) {
 			throw new NullPointerException("Null elements not allowed");
 		}
-		if (chunkIndex < 0) {
-			throw new IllegalArgumentException(
-					"Illegal chunk index: " + chunkIndex);
-		}
 		m_inputObjects = inputObjects;
 		m_flowVariables = flowVariables;
-		m_chunkIndex = chunkIndex;
 	}
 
 	/**
@@ -108,12 +90,5 @@ public final class VirtualParallelizedChunkNodeInput {
 	public List<FlowVariable> getFlowVariables() {
 		return m_flowVariables;
 	}
-	/**
-	 * @return the chunkIndex
-	 */
-	public int getChunkIndex() {
-		return m_chunkIndex;
-	}
-	
 
 }
