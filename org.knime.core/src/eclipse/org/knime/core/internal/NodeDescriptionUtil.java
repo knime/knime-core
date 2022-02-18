@@ -37,12 +37,6 @@ import org.knime.core.node.NodeLogger;
  */
 public final class NodeDescriptionUtil {
 
-    /**
-     * Matches one or more whitespace characters (as defined in java.util.regex.Pattern).
-     * This includes line breaks (\n and \r\n)
-     */
-    private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s+");
-
     private NodeDescriptionUtil() {
 
     }

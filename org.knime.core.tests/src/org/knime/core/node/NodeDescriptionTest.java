@@ -162,7 +162,7 @@ public class NodeDescriptionTest {
         NodeDescription description = parser.parseDescription(XSD_v41.class);
 
         // exemplary test for markup/whitespace
-        Assert.assertEquals("Unexpected intro text", description.getIntro().orElseThrow(), "My <b>own</b> intro");
+        Assert.assertEquals("Unexpected intro text", description.getIntro().orElseThrow().strip(), "My <b>own</b> intro");
 
         // grouped options
         Assert.assertEquals("Unexpected group name", description.getDialogOptionGroups().get(1).getName().orElseThrow(), "group two");
@@ -186,7 +186,7 @@ public class NodeDescriptionTest {
         // Links
         Assert.assertEquals("Unexpected link target", description.getLinks().get(0).getTarget(),
             "http://www.knime.com/about");
-        Assert.assertEquals("Unexpected link description", description.getLinks().get(0).getText(), "textcontent");
+        Assert.assertEquals("Unexpected link description", description.getLinks().get(0).getText().strip(), "textcontent");
 
         // interactive view name & description
         Assert.assertEquals("Unexpected interactive view name", description.getInteractiveViewName(),
@@ -196,7 +196,7 @@ public class NodeDescriptionTest {
 
         // dynamic port group descriptions
         Assert.assertEquals("Unexpected dynamic port group description",
-            description.getDynamicInPortGroups().get(1).getGroupDescription(), "dyn in port two description");
+            description.getDynamicInPortGroups().get(1).getGroupDescription().strip(), "dyn in port two description");
     }
 
     /**
