@@ -57,7 +57,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.junit.Test;
-import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -80,11 +80,10 @@ public class NodeDialogTest {
      * Tests that model- and view-settings a being applied correctly and most importantly that the node is being reset
      * in case of changed model settings but not in case of changed view settings.
      *
-     * @throws IOException
-     * @throws InvalidSettingsException
+     * @throws Exception
      */
     @Test
-    public void testApplyChangedSettings() throws IOException, InvalidSettingsException {
+    public void testApplyChangedSettings() throws Exception {
         var wfm = WorkflowManagerUtil.createEmptyWorkflow();
         var nc = WorkflowManagerUtil.createAndAddNode(wfm,
             new NodeDialogNodeFactory(() -> createNodeDialog(Page.builder(() -> "test", "test.html").build(),
@@ -99,6 +98,8 @@ public class NodeDialogTest {
         nodeDialogManager.callTextApplyDataService(nc, settingsToString(modelSettings, viewSettings));
         wfm.executeAllAndWaitUntilDone();
         assertThat(nc.getNodeContainerState().isExecuted(), is(true));
+        wfm.save(wfm.getContext().getCurrentLocation(), new ExecutionMonitor(), false);
+        assertThat(wfm.isDirty(), is(false));
 
         // change view settings and apply -> node is not being reset
         viewSettings.addInt("view_key2", 2);
@@ -107,6 +108,7 @@ public class NodeDialogTest {
         var newSettings = new NodeSettings("node_settings");
         wfm.saveNodeSettings(nc.getID(), newSettings);
         assertThat(newSettings.getNodeSettings(SettingsType.VIEW.getConfigKey()), is(viewSettings));
+        assertThat(nc.isDirty(), is(true));
 
         // change model settings and apply -> node is expected to be reset
         modelSettings.addInt("model_key2", 2);

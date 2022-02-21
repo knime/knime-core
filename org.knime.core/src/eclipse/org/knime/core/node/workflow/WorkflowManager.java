@@ -2010,6 +2010,7 @@ public final class WorkflowManager extends NodeContainer
         if (nc instanceof SingleNodeContainer) {
             var snc = (SingleNodeContainer)nc;
             snc.loadViewSettings(settings.getNodeSettings(SingleNodeContainer.CFG_VIEW));
+            notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.NODE_SETTINGS_CHANGED, id, null, null));
         } else {
             throw new IllegalArgumentException("Node view settings can only be loaded for native nodes or components");
         }

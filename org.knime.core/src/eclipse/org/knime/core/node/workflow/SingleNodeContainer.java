@@ -783,6 +783,7 @@ public abstract class SingleNodeContainer extends NodeContainer {
      */
     void loadViewSettings(final NodeSettingsRO settings) {
         m_settings.m_viewSettings = settings;
+        setDirty();
     }
 
     /** {@inheritDoc} */
