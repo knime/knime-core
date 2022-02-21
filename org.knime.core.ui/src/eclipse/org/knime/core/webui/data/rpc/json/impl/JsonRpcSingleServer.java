@@ -53,7 +53,6 @@ import static com.googlecode.jsonrpc4j.ErrorResolver.JsonError.CUSTOM_SERVER_ERR
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Arrays;
 
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.webui.data.rpc.RpcSingleServer;
@@ -80,32 +79,6 @@ import com.googlecode.jsonrpc4j.ErrorResolver.JsonError;
  * @since 4.3
  */
 public class JsonRpcSingleServer<S> implements RpcSingleServer<S> {
-
-    static final class ErrorData {
-
-        private final String m_typeName;
-
-        private final String[] m_stackTrace;
-
-        ErrorData(final Throwable t) {
-            m_typeName = t.getClass().getName();
-            m_stackTrace = Arrays.stream(t.getStackTrace()).map(StackTraceElement::toString).toArray(String[]::new);
-        }
-
-        /**
-         * @return the type name of the {@link Exception} that lead to the error
-         */
-        public String getTypeName() {
-            return m_typeName;
-        }
-
-        /**
-         * @return the stack trace of the {@link Exception} that lead to the error
-         */
-        public String[] getStackTrace() {
-            return m_stackTrace;
-        }
-    }
 
     /**
      * Node data service implementor. Can be local (node model lives in the same JVM as client) or remote.

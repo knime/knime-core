@@ -48,6 +48,8 @@
  */
 package org.knime.core.webui.data.rpc.json.impl;
 
+import static com.googlecode.jsonrpc4j.ErrorResolver.JsonError.CUSTOM_SERVER_ERROR_UPPER;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -58,6 +60,7 @@ import org.knime.core.node.util.CheckUtils;
 import org.knime.core.webui.data.rpc.RpcServer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.googlecode.jsonrpc4j.ErrorResolver.JsonError;
 import com.googlecode.jsonrpc4j.JsonRpcMultiServer;
 
 /**
@@ -100,6 +103,8 @@ public class JsonRpcServer implements RpcServer {
     public JsonRpcServer(final ObjectMapper mapper) {
         CheckUtils.checkNotNull(mapper, "Object mapper passed to JSON-RPC server must not be null.");
         m_jsonRpcServer = new JsonRpcMultiServer(mapper);
+        m_jsonRpcServer.setErrorResolver(
+            (t, method, arguments) -> new JsonError(CUSTOM_SERVER_ERROR_UPPER, t.getMessage(), new ErrorData(t)));
     }
 
     /**
