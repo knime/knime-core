@@ -112,7 +112,7 @@ public abstract class SingleNodeContainer extends NodeContainer {
     static final String CFG_VARIABLES = "variables";
     /** Sub settings entry containing the node-view settings. */
     static final String CFG_VIEW = "view";
-    static final String CFG_VIEW_VARIABLES = "view_variables";
+    private static final String CFG_VIEW_VARIABLES = "view_variables";
 
     /** Name of the sub-directory containing node-local files. These files
      * manually copied by the user and the node will automatically list those

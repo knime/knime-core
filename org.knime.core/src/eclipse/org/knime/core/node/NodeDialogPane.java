@@ -129,7 +129,6 @@ import org.knime.core.node.workflow.VariableType.DoubleType;
 import org.knime.core.node.workflow.VariableType.IntType;
 import org.knime.core.node.workflow.VariableType.StringType;
 import org.knime.core.util.MutableInteger;
-import org.knime.core.util.Pair;
 
 
 /**
@@ -535,7 +534,6 @@ public abstract class NodeDialogPane {
 
         NodeContext.pushContext(m_nodeContext);
         try {
-            // TODO figure out if we need that for viewModel as well
             saveSettingsTo(model);
         } catch (InvalidSettingsException ise) {
             throw ise;
@@ -547,7 +545,6 @@ public abstract class NodeDialogPane {
             NodeContext.removeLastContext();
         }
         if (m_flowVariablesModelChanged) {
-            // TODO add view model stuff in there
             updateFlowVariablesTab();
         }
         NodeSettings variables = m_flowVariableTab.getVariableSettings();
@@ -1534,7 +1531,7 @@ public abstract class NodeDialogPane {
         } finally {
             NodeContext.removeLastContext();
         }
-        if (hasModelOrViewSettings().getSecond()) {
+        if (hasViewSettings()) {
             m_flowVariableTab.setVariableSettings(getNodeSettings(), getViewSettings(), variableSettings,
                 viewVariableSettings, m_flowObjectStack, m_flowVariablesModelList);
         } else {
@@ -1557,7 +1554,7 @@ public abstract class NodeDialogPane {
        NodeSettings viewSettings;
        try {
            viewSettings = nodeContainer.getNodeSettings().getNodeSettings("view");
-       } catch (InvalidSettingsException e) {
+       } catch (InvalidSettingsException e) { // NOSONAR
            viewSettings = null;
        }
        return viewSettings;
@@ -1592,11 +1589,17 @@ public abstract class NodeDialogPane {
     }
 
     /**
-     * Overwrite this methods if view settings are present
-     * @return <code>(true, false)</code> (i.e. model settings but no view settings) by default
+     * @return {@code true} if the node dialog provides model settings
      */
-    public Pair<Boolean, Boolean> hasModelOrViewSettings() {
-        return Pair.create(true, false);
+    protected boolean hasModelSettings() {
+        return true;
+    }
+
+    /**
+     * @return {@code true} if the node dialog provides view settings
+     */
+    protected boolean hasViewSettings() {
+        return false;
     }
 
     /**
@@ -1663,28 +1666,30 @@ public abstract class NodeDialogPane {
             // to take oversized dimensions
 
             final int panelMinimumWidth = ConfigEditJTree.MINIMUM_ROW_WIDTH;
-            final Dimension scrollPaneSize = new Dimension(panelMinimumWidth, 167);
-            final JPanel modelPanel = new JPanel(new BorderLayout());
-            final JPanel viewPanel = new JPanel(new BorderLayout());
-            final JScrollPane modelScrollPane = new JScrollPane(modelPanel);
-            final JScrollPane viewScrollPane = new JScrollPane(viewPanel);
+            final var scrollPaneSize = new Dimension(panelMinimumWidth, 167);
+            final var modelPanel = new JPanel(new BorderLayout());
+            final var modelScrollPane = new JScrollPane(modelPanel);
             modelPanel.add(m_tree, BorderLayout.CENTER);
-            viewPanel.add(m_viewTree, BorderLayout.CENTER);
             modelScrollPane.setMinimumSize(scrollPaneSize);
             modelScrollPane.setPreferredSize(scrollPaneSize);
-            viewScrollPane.setMinimumSize(scrollPaneSize);
-            viewScrollPane.setPreferredSize(scrollPaneSize);
 
-            if (hasModelOrViewSettings().getSecond()) {
-                final JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+            JScrollPane viewScrollPane = null;
+            if (hasViewSettings()) {
+                final var splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
                 m_viewTree.getParent().add(new JLabel("View Settings"), BorderLayout.NORTH);
 
-                if (hasModelOrViewSettings().getFirst()) {
-                    m_tree.getParent().add(new JLabel("Node Settings"), BorderLayout.NORTH);
+                final var viewPanel = new JPanel(new BorderLayout());
+                viewScrollPane = new JScrollPane(viewPanel);
+                viewPanel.add(m_viewTree, BorderLayout.CENTER);
+                viewScrollPane.setMinimumSize(scrollPaneSize);
+                viewScrollPane.setPreferredSize(scrollPaneSize);
+
+                if (hasModelSettings()) {
+                    m_tree.getParent().add(new JLabel("Model Settings"), BorderLayout.NORTH);
                     splitPane.setTopComponent(modelScrollPane);
                     splitPane.setBottomComponent(viewScrollPane);
                 }
-                m_contentPane = (hasModelOrViewSettings().getFirst()) ? splitPane : viewScrollPane;
+                m_contentPane = hasModelSettings() ? splitPane : viewScrollPane;
             } else {
                 m_contentPane = modelScrollPane;
             }
@@ -1694,7 +1699,7 @@ public abstract class NodeDialogPane {
             m_errorLabel.setForeground(Color.RED);
             add(m_errorLabel, BorderLayout.NORTH);
 
-            if (hasModelOrViewSettings().getFirst()) {
+            if (hasModelSettings()) {
                 modelScrollPane.getViewport().addComponentListener(new ComponentAdapter() {
                     @Override
                     public void componentResized(final ComponentEvent ce) {
@@ -1703,7 +1708,7 @@ public abstract class NodeDialogPane {
                 });
             }
 
-            if (hasModelOrViewSettings().getSecond()) {
+            if (viewScrollPane != null) {
                 viewScrollPane.getViewport().addComponentListener(new ComponentAdapter() {
                     @Override
                     public void componentResized(final ComponentEvent ce) {
@@ -1723,12 +1728,10 @@ public abstract class NodeDialogPane {
 
         private void updateView() {
             final ConfigEditTreeNode root = m_tree.getModel().getRoot();
-            final boolean displayTree =
-                ((root != null) && (root.getChildCount() > 0)) && hasModelOrViewSettings().getFirst();
+            final boolean displayTree = ((root != null) && (root.getChildCount() > 0)) && hasModelSettings();
 
             final ConfigEditTreeNode viewRoot = m_viewTree.getModel().getRoot();
-            final boolean displayViewTree =
-                ((viewRoot != null) && (viewRoot.getChildCount() > 0)) && hasModelOrViewSettings().getSecond();
+            final boolean displayViewTree = ((viewRoot != null) && (viewRoot.getChildCount() > 0)) && hasViewSettings();
 
             if (displayTree || displayViewTree) {
                 if (m_contentPane.getParent() == null) {
@@ -1850,7 +1853,7 @@ public abstract class NodeDialogPane {
             m_viewTree.getCellEditor().cancelCellEditing();
             ConfigEditTreeModel viewModel = m_viewTree.getModel();
             if (viewModel.hasConfiguration()) {
-                NodeSettings settings = new NodeSettings("view_variables");
+                var settings = new NodeSettings("view_variables");
                 viewModel.writeVariablesTo(settings);
                 return settings;
             }
