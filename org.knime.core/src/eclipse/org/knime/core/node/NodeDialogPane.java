@@ -1676,13 +1676,13 @@ public abstract class NodeDialogPane {
             JScrollPane viewScrollPane = null;
             if (hasViewSettings()) {
                 final var splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-                m_viewTree.getParent().add(new JLabel("View Settings"), BorderLayout.NORTH);
 
                 final var viewPanel = new JPanel(new BorderLayout());
                 viewScrollPane = new JScrollPane(viewPanel);
                 viewPanel.add(m_viewTree, BorderLayout.CENTER);
                 viewScrollPane.setMinimumSize(scrollPaneSize);
                 viewScrollPane.setPreferredSize(scrollPaneSize);
+                m_viewTree.getParent().add(new JLabel("View Settings"), BorderLayout.NORTH);
 
                 if (hasModelSettings()) {
                     m_tree.getParent().add(new JLabel("Model Settings"), BorderLayout.NORTH);

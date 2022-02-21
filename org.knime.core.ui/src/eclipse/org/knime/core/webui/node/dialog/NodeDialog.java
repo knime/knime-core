@@ -264,7 +264,12 @@ public abstract class NodeDialog implements DataServiceProvider {
      * @return a legacy flow variable node dialog
      */
     public final NodeDialogPane createLegacyFlowVariableNodeDialog() {
-        return new NodeDialogPane() {
+        return new NodeDialogPane() { // NOSONAR
+
+            @Override
+            public void onOpen() {
+                setSelected("Flow Variables");
+            }
 
             @Override
             protected boolean hasModelSettings() {
