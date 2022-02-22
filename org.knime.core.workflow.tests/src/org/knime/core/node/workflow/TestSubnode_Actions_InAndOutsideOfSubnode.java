@@ -138,15 +138,9 @@ public class TestSubnode_Actions_InAndOutsideOfSubnode extends WorkflowTestCase 
             assertTrue("should be in-execution: " + subnodeNodeState, subnodeNodeState.isExecutionInProgress());
 
             final SubNodeContainer subNC = m.getNodeContainer(m_subnode12, SubNodeContainer.class, true);
-            final NodeContainer snOutputNode = findNodeContainer(m_subnodeOutput_12_13);
 
-            waitWhile(snOutputNode, new Hold() {
-                @Override
-                protected boolean shouldHold() {
-                    return !snOutputNode.getNodeContainerState().isExecuted();
-                }
-            });
-            checkState(snOutputNode, EXECUTED);
+            waitWhile(m_subnodeOutput_12_13, nc -> !nc.getNodeContainerState().isExecuted(), -1);
+            checkState(m_subnodeOutput_12_13, EXECUTED);
             checkState(m_subnode12, EXECUTING);
 
             checkState(m_dataGen1, EXECUTED);

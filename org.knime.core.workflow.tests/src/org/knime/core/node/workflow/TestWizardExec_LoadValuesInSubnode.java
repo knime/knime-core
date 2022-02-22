@@ -106,13 +106,13 @@ public class TestWizardExec_LoadValuesInSubnode extends WorkflowTestCase {
         checkState(m_filterSubnode, InternalNodeContainerState.CONFIGURED);
         WizardExecutionController wizardController = wfm.getWizardExecutionController();
         wizardController.stepFirst();
-        waitWhile(wfm, new WizardHold(wfm));
+        waitWhile(wfm, new WizardHold(), -1);
         assertTrue("Should have steps", wizardController.hasCurrentWizardPage());
         checkState(m_colFilterInFilterSubnode, InternalNodeContainerState.EXECUTED);
         WizardPage currentWizardPage = wizardController.getCurrentWizardPage();
         //don't load anything here, just execute to next subnode (all columns included)
         wizardController.stepNext();
-        waitWhile(wfm, new WizardHold(wfm));
+        waitWhile(wfm, new WizardHold(), -1);
         checkState(m_noClustersSubnode, InternalNodeContainerState.EXECUTED);
         currentWizardPage = wizardController.getCurrentWizardPage();
         Map<String, String> valueMap = new HashMap<String, String>();
@@ -126,7 +126,7 @@ public class TestWizardExec_LoadValuesInSubnode extends WorkflowTestCase {
         for (int curLoop = 1; curLoop <= numLoops; curLoop++) {
             String stringInputID = m_labelClustersSubnode.getIndex() + ":0:" + m_stringInputInLabelClustersSubnode.getIndex();
             wizardController.stepNext();
-            waitWhile(wfm, new WizardHold(wfm));
+            waitWhile(wfm, new WizardHold(), -1);
             checkState(m_labelClustersSubnode, InternalNodeContainerState.EXECUTED);
             checkState(m_loopEndNode, InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC);
             currentWizardPage = wizardController.getCurrentWizardPage();
@@ -141,14 +141,14 @@ public class TestWizardExec_LoadValuesInSubnode extends WorkflowTestCase {
 
         //display result of labeling
         wizardController.stepNext();
-        waitWhile(wfm, new WizardHold(wfm));
+        waitWhile(wfm, new WizardHold(), -1);
         checkState(m_showClustersSubnode, InternalNodeContainerState.EXECUTED);
         currentWizardPage = wizardController.getCurrentWizardPage();
         assertEquals("Result page should have 2 components", 2, currentWizardPage.getPageMap().size());
 
         //finish execute
         wizardController.stepNext();
-        waitWhile(wfm, new WizardHold(wfm));
+        waitWhile(wfm, new WizardHold(), -1);
         assertFalse("Should have no more pages", wizardController.hasCurrentWizardPage());
         checkState(wfm, InternalNodeContainerState.EXECUTED);
     }
@@ -159,22 +159,22 @@ public class TestWizardExec_LoadValuesInSubnode extends WorkflowTestCase {
         WizardExecutionController wizardController = wfm.getWizardExecutionController();
         assertFalse("Should have no previous steps", wizardController.hasPreviousWizardPage());
         wizardController.stepFirst();
-        waitWhile(wfm, new WizardHold(wfm));
+        waitWhile(wfm, new WizardHold(), -1);
         assertTrue("should have steps", wizardController.hasCurrentWizardPage());
         checkState(m_colFilterInFilterSubnode, InternalNodeContainerState.EXECUTED);
 
         //standard no of clusters (5)
         wizardController.stepNext();
-        waitWhile(wfm, new WizardHold(wfm));
+        waitWhile(wfm, new WizardHold(), -1);
         checkState(m_noClustersSubnode, InternalNodeContainerState.EXECUTED);
 
         //two loop iterations
         wizardController.stepNext();
-        waitWhile(wfm, new WizardHold(wfm));
+        waitWhile(wfm, new WizardHold(), -1);
         checkState(m_labelClustersSubnode, InternalNodeContainerState.EXECUTED);
         checkState(m_loopEndNode, InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC);
         wizardController.stepNext();
-        waitWhile(wfm, new WizardHold(wfm));
+        waitWhile(wfm, new WizardHold(), -1);
         checkState(m_labelClustersSubnode, InternalNodeContainerState.EXECUTED);
         checkState(m_loopEndNode, InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC);
 

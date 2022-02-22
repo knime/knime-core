@@ -54,6 +54,7 @@ import static org.knime.core.node.workflow.InternalNodeContainerState.IDLE;
 import static org.knime.core.node.workflow.InternalNodeContainerState.UNCONFIGURED_MARKEDFOREXEC;
 
 import java.util.Collections;
+import java.util.function.Predicate;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -105,7 +106,7 @@ public class Bug6713_newWizardContainingOldMetanode extends WorkflowTestCase {
         WizardExecutionController wizardController = wfm.getWizardExecutionController();
         wizardController.stepFirst();
 
-        waitWhile(wfm, new WizardHold(wfm));
+        waitWhile(wfm, new WizardHold(), -1);
         assertTrue("should have steps", wizardController.hasCurrentWizardPage());
         checkState(m_subnodeFirstPage_6, EXECUTED);
         checkState(m_subnodeSecondPage_7, CONFIGURED_MARKEDFOREXEC);
@@ -118,7 +119,7 @@ public class Bug6713_newWizardContainingOldMetanode extends WorkflowTestCase {
 
 
         wizardController.stepNext();
-        waitWhile(wfm, new WizardHold(wfm));
+        waitWhile(wfm, new WizardHold(), -1);
         checkState(wfm, CONFIGURED_MARKEDFOREXEC, UNCONFIGURED_MARKEDFOREXEC);
         checkStateOfMany(EXECUTED, m_subnodeFirstPage_6, m_subnodeSecondPage_7, m_javaEdit_3);
         checkStateOfMany(CONFIGURED_MARKEDFOREXEC, m_metaNode_8, m_javaEdit_InMetaNode_8_4);
@@ -128,7 +129,7 @@ public class Bug6713_newWizardContainingOldMetanode extends WorkflowTestCase {
 //        assertEquals(m_subnodeSecondPage_7.toString(), currentWizardPage.getPageNodeID());
 
         wizardController.stepNext();
-        waitWhile(wfm, new WizardHold(wfm));
+        waitWhile(wfm, new WizardHold(), -1);
         checkState(m_subnodeThirdPage_9, EXECUTED);
         checkState(wfm, EXECUTED);
         assertTrue("should have steps (3rd/last page)", wizardController.hasCurrentWizardPage());
@@ -136,22 +137,18 @@ public class Bug6713_newWizardContainingOldMetanode extends WorkflowTestCase {
 //        assertEquals(m_subnodeSecondPage_7.toString(), currentWizardPage.getPageNodeID());
 
         wizardController.stepNext();
-        waitWhile(wfm, new WizardHold(wfm));
+        waitWhile(wfm, new WizardHold(), -1);
         assertFalse("should have no more pages", wizardController.hasCurrentWizardPage());
         checkState(wfm, EXECUTED);
     }
 
-    static final class WizardHold extends Hold {
-        private final WorkflowManager m_wfm;
-
-        WizardHold(final WorkflowManager wfm) {
-            m_wfm = wfm;
-        }
+    static final class WizardHold implements Predicate<NodeContainer> {
 
         @Override
-        protected boolean shouldHold() {
-            try (WorkflowLock lock = m_wfm.lock()) {
-                return !m_wfm.getNodeContainerState().isHalted();
+        public boolean test(NodeContainer nc) {
+        	var wfm = (WorkflowManager)nc;
+            try (WorkflowLock lock = wfm.lock()) {
+                return !wfm.getNodeContainerState().isHalted();
             }
         }
     }

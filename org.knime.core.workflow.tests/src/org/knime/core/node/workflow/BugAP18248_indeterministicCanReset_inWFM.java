@@ -140,13 +140,7 @@ public class BugAP18248_indeterministicCanReset_inWFM extends WorkflowTestCase {
         	assertThat("Workflow resetable state when all reset", component1Mgr.canResetAll(), is(true));
         	
         	executeDontWait(m_component1_block_2);
-        	NodeContainer component1_block_2_node = findNodeContainer(m_component1_block_2);
-        	waitWhile(component1_block_2_node, new Hold() {
-        		@Override
-        		protected boolean shouldHold() {
-        			return component1_block_2_node.getInternalState() != EXECUTING;
-        		}
-        	});
+        	waitWhile(m_component1_block_2, nc -> nc.getInternalState() != EXECUTING, -1);
         	assertThat("Component resetable state while executing", m.canResetNode(m_component1_3), is(false));
         	assertThat("Workflow resetable state when all reset", component1Mgr.canResetAll(), is(false));
         	checkState(m_component1_block_2, EXECUTING);
@@ -180,13 +174,7 @@ public class BugAP18248_indeterministicCanReset_inWFM extends WorkflowTestCase {
     		assertThat("Workflow resetable state when one is executed", component2Mgr.canResetAll(), is(true));
     		
     		executeDontWait(m_component2_block_7);
-        	NodeContainer component2_block_7_node = findNodeContainer(m_component1_block_2);
-        	waitWhile(component2_block_7_node, new Hold() {
-        		@Override
-        		protected boolean shouldHold() {
-        			return component2_block_7_node.getInternalState() != EXECUTING;
-        		}
-        	});
+        	waitWhile(m_component2_block_7, nc -> nc.getInternalState() != EXECUTING, -1);
     		assertThat("Component resetable state while executing", m.canResetNode(m_component2_5), is(false));
     		assertThat("Workflow resetable state when one is executed", component2Mgr.canResetAll(), is(false));
     		checkState(m_component2_block_7, EXECUTING);

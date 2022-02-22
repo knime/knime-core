@@ -475,18 +475,27 @@ public abstract class WorkflowTestCase {
 
     protected void waitWhileNodeInExecution(final NodeContainer node)
     throws Exception {
-        waitWhile(node, new Hold() {
-            @Override
-            protected boolean shouldHold() {
-                InternalNodeContainerState s = node.getInternalState();
-                return s.isExecutionInProgress();
-            }
-        });
+        waitWhile(node, nc -> nc.getInternalState().isExecutionInProgress(), -1);
     }
 
-    protected void waitWhile(final NodeContainer nc,
-            final Hold hold) throws Exception {
-        if (!hold.shouldHold()) {
+    /**
+     *  Pause and wait while a node is not in a certain state.
+     * 
+     * @param nodeID The node of interest (only to fetch the corresponding NodeContainer)
+     * @param hold The predicate on the NodeContainer associated with the ID, as long as it's test-method returns true
+     * the method won't return (unless a timeout occurs)
+     * @param secondsToWaitAtMost The seconds to wait at most, negative value for infinite wait 
+     * @throws Exception
+     */
+    protected void waitWhile(NodeID nodeID, final Predicate<NodeContainer> hold, int secondsToWaitAtMost) throws Exception {
+    	waitWhile(findNodeContainer(nodeID), hold, secondsToWaitAtMost);
+    }
+    
+    /**
+     * Similar to {@link #waitWhile(NodeID, Predicate, int)}, except that the NodeContainer is passed as argument.
+     */
+	protected void waitWhile(NodeContainer nc, final Predicate<NodeContainer> hold, int secondsToWaitAtMost) throws Exception {
+        if (!hold.test(nc)) {
             return;
         }
 
@@ -509,13 +518,13 @@ public abstract class WorkflowTestCase {
         lock.lock();
         nc.addNodeStateChangeListener(l);
         try {
-            while (hold.shouldHold()) {
-                int secToWait = hold.getSecondsToWaitAtMost();
+            while (hold.test(nc)) {
+                int secToWait = secondsToWaitAtMost;
                 if (secToWait > 0) {
                     condition.await(secToWait, TimeUnit.SECONDS);
                     break;
                 } else {
-                    condition.await(10, TimeUnit.SECONDS);
+                    condition.await(10, TimeUnit.SECONDS); // do another iteration (no break)
                 }
             }
         } finally {
@@ -555,18 +564,7 @@ public abstract class WorkflowTestCase {
             // in most cases we wait for individual nodes to finish. This
             // does not mean that the workflow state is also updated, give
             // it a second to finish its cleanup
-            waitWhile(m_manager, new Hold() {
-                /** {@inheritDoc} */
-                @Override
-                protected boolean shouldHold() {
-                    return m_manager.getInternalState().isExecutionInProgress();
-                }
-                /** {@inheritDoc} */
-                @Override
-                protected int getSecondsToWaitAtMost() {
-                    return 2;
-                }
-            });
+            waitWhile(m_manager, mgr -> mgr.getInternalState().isExecutionInProgress(), 2);
             if (!WorkflowManager.ROOT.canRemoveNode(m_manager.getID())) {
                 String error = "Cannot remove workflow, dump follows";
                 m_logger.error(error);
@@ -609,13 +607,6 @@ public abstract class WorkflowTestCase {
         return m_logger;
     }
 
-    protected static abstract class Hold {
-        protected abstract boolean shouldHold();
-        protected int getSecondsToWaitAtMost() {
-            return -1;
-        }
-    }
-    
     /** Utility 'rule' that will cause test failures to log the current call stack to NodeLogger.error IF the
      * failure cause is of a certain exception class.
      * 

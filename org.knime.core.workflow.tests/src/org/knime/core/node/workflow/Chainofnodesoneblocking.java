@@ -126,15 +126,11 @@ public class Chainofnodesoneblocking extends WorkflowTestCase {
         try {
             m.executeUpToHere(m_tblView);
             checkState(m_blocker, CONFIGURED_MARKEDFOREXEC, EXECUTING);
-            final NodeContainer blockerNC = m.getNodeContainer(m_blocker);
-            waitWhile(blockerNC, new Hold() {
-                @Override
-                protected boolean shouldHold() {
-                    return blockerNC.getInternalState().equals(CONFIGURED_MARKEDFOREXEC)
-                    || blockerNC.getInternalState().equals(CONFIGURED_QUEUED)
-                    || blockerNC.getInternalState().equals(PREEXECUTE);
-                }
-            });
+            waitWhile(m_blocker, nc -> {
+            	return nc.getInternalState().equals(CONFIGURED_MARKEDFOREXEC)
+            			|| nc.getInternalState().equals(CONFIGURED_QUEUED)
+            			|| nc.getInternalState().equals(PREEXECUTE);
+            }, -1);
             checkState(m_blocker, EXECUTING);
 
             // test reset node
@@ -165,13 +161,8 @@ public class Chainofnodesoneblocking extends WorkflowTestCase {
             }
 
             // test cancel node
-            m.cancelExecution(blockerNC);
-            waitWhile(blockerNC, new Hold() {
-                @Override
-                protected boolean shouldHold() {
-                    return !blockerNC.getInternalState().equals(CONFIGURED);
-                }
-            });
+            m.cancelExecution(findNodeContainer(m_blocker));
+            waitWhile(m_blocker, nc -> !nc.getInternalState().equals(CONFIGURED), -1);
             checkState(m_blocker, CONFIGURED);
             checkState(m_colFilter, CONFIGURED);
             checkState(m_tblView, CONFIGURED);

@@ -49,6 +49,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.function.Predicate;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -106,7 +107,7 @@ public class TestWizardExec_Loop_Simple extends WorkflowTestCase {
         WizardExecutionController wizardController = wfm.getWizardExecutionController();
         wizardController.stepFirst();
 
-        waitWhile(wfm, new WizardHold(wfm));
+        waitWhile(wfm, new WizardHold(), -1);
         assertTrue("should have steps", wizardController.hasCurrentWizardPage());
         checkState(m_subnodeQueryStringBool15, InternalNodeContainerState.EXECUTED);
         WizardPage currentWizardPage = wizardController.getCurrentWizardPage(); // outside loop
@@ -117,7 +118,7 @@ public class TestWizardExec_Loop_Simple extends WorkflowTestCase {
 
 
         wizardController.stepNext();
-        waitWhile(wfm, new WizardHold(wfm));
+        waitWhile(wfm, new WizardHold(), -1);
         checkState(wfm, InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC,
             InternalNodeContainerState.UNCONFIGURED_MARKEDFOREXEC);
         checkState(m_subnodeQueryStringBool15, InternalNodeContainerState.EXECUTED);
@@ -127,7 +128,7 @@ public class TestWizardExec_Loop_Simple extends WorkflowTestCase {
 //        assertEquals(m_subnodeInLOOPQueryInt14.toString(), currentWizardPage.getPageNodeID());
 
         wizardController.stepNext();
-        waitWhile(wfm, new WizardHold(wfm));
+        waitWhile(wfm, new WizardHold(), -1);
         checkState(m_subnodeInLOOPQueryInt14, InternalNodeContainerState.EXECUTED);
         checkState(m_loopEnd11, InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC);
         assertTrue("should have steps (loop iteration 1)", wizardController.hasCurrentWizardPage());
@@ -135,7 +136,7 @@ public class TestWizardExec_Loop_Simple extends WorkflowTestCase {
 //        assertEquals(m_subnodeInLOOPQueryInt14.toString(), currentWizardPage.getPageNodeID());
 
         wizardController.stepNext();
-        waitWhile(wfm, new WizardHold(wfm));
+        waitWhile(wfm, new WizardHold(), -1);
         assertFalse("should have no more pages", wizardController.hasCurrentWizardPage());
         checkState(wfm, InternalNodeContainerState.EXECUTED);
 
@@ -152,13 +153,13 @@ public class TestWizardExec_Loop_Simple extends WorkflowTestCase {
         assertFalse("should have no previous steps", wizardController.hasPreviousWizardPage());
         wizardController.stepFirst();
 
-        waitWhile(wfm, new WizardHold(wfm));
+        waitWhile(wfm, new WizardHold(), -1);
         assertFalse("should have no previous steps", wizardController.hasPreviousWizardPage());
         checkState(m_subnodeQueryStringBool15, InternalNodeContainerState.EXECUTED);
         wizardController.getCurrentWizardPage(); // outside loop
 
         wizardController.stepNext();
-        waitWhile(wfm, new WizardHold(wfm));
+        waitWhile(wfm, new WizardHold(), -1);
         checkState(m_subnodeInLOOPQueryInt14, InternalNodeContainerState.EXECUTED);
         assertTrue("should have previous steps", wizardController.hasPreviousWizardPage());
 
@@ -169,15 +170,15 @@ public class TestWizardExec_Loop_Simple extends WorkflowTestCase {
         wizardController.getCurrentWizardPage(); // outside loop QF
 
         wizardController.stepNext();
-        waitWhile(wfm, new WizardHold(wfm));
+        waitWhile(wfm, new WizardHold(), -1);
         checkState(m_subnodeInLOOPQueryInt14, InternalNodeContainerState.EXECUTED); // first iteration
 
         wizardController.stepNext();
-        waitWhile(wfm, new WizardHold(wfm));
+        waitWhile(wfm, new WizardHold(), -1);
         checkState(m_subnodeInLOOPQueryInt14, InternalNodeContainerState.EXECUTED); // second iteration
 
         wizardController.stepNext();
-        waitWhile(wfm, new WizardHold(wfm));
+        waitWhile(wfm, new WizardHold(), -1);
         checkState(wfm, InternalNodeContainerState.EXECUTED);
     }
 
@@ -185,17 +186,12 @@ public class TestWizardExec_Loop_Simple extends WorkflowTestCase {
      *
      * @author wiswedel
      */
-    static final class WizardHold extends Hold {
-        private final WorkflowManager m_wfm;
-
-        WizardHold(final WorkflowManager wfm) {
-            m_wfm = wfm;
-        }
+    static final class WizardHold implements Predicate<NodeContainer> {
 
         @Override
-        protected boolean shouldHold() {
-            try (WorkflowLock lock = m_wfm.lock()) {
-                return !m_wfm.getNodeContainerState().isHalted();
+        public boolean test(NodeContainer nc) {
+            try (WorkflowLock lock = ((WorkflowManager)nc).lock()) {
+                return !nc.getNodeContainerState().isHalted();
             }
         }
     }

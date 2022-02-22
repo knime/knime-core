@@ -101,12 +101,7 @@ public class BugAP11710_Subnode_Cancel extends WorkflowTestCase {
             m.executeUpToHere(m_varToTableRow_3);
             waitWhileNodeInExecution(findNodeContainer(m_outputInSubnode_4_4));
             NodeContainer blockingNode = findNodeContainer(m_blocking_4_5);
-            waitWhile(blockingNode, new Hold() {
-                @Override
-                protected boolean shouldHold() {
-                    return !blockingNode.getInternalState().equals(EXECUTING);
-                }
-            });
+            waitWhile(m_blocking_4_5, nc -> !nc.getInternalState().equals(EXECUTING), -1);
             InternalNodeContainerState subnodeState = subnode.getInternalState();
             Assert.assertThat("subnode in some executing state: " + subnodeState,
                 subnodeState.isExecutionInProgress(), is(true));

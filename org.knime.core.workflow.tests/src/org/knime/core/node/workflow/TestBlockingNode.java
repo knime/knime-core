@@ -127,21 +127,8 @@ public class TestBlockingNode extends WorkflowTestCase {
         execVarLock.lock();
         try {
         	getManager().executeAll();
-        	NodeContainer blockVariableNode = findNodeContainer(m_blockVariable_4);
-        	NodeContainer blockTableNode = findNodeContainer(m_blockTable_3);
-			waitWhile(blockVariableNode, new Hold() {
-				
-				@Override
-				protected boolean shouldHold() {
-					return !blockVariableNode.getInternalState().equals(EXECUTING);
-				}
-			});
-			waitWhile(blockTableNode, new Hold() {
-				@Override
-				protected boolean shouldHold() {
-					return !blockTableNode.getInternalState().equals(EXECUTING);
-				}
-			});
+			waitWhile(m_blockVariable_4, nc -> !nc.getInternalState().equals(EXECUTING), -1);
+			waitWhile(m_blockTable_3, nc -> !nc.getInternalState().equals(EXECUTING), -1);
 			Thread.sleep(100); // NOSONAR // give some time to reach the user code in BlockingNodeModel
 			assertThat("Var lock has waiting threads", execVarLock.hasQueuedThreads(), is(true));
 			assertThat("Table lock has waiting threads", execTableLock.hasQueuedThreads(), is(true));

@@ -75,18 +75,7 @@ public class TestFailSideBranchInLoop extends WorkflowTestCase {
         checkState(m_loopEnd4, InternalNodeContainerState.CONFIGURED);
         checkState(m_csvWriterInLoop13, InternalNodeContainerState.IDLE);
         getManager().executeUpToHere(m_loopEnd4);
-        final NodeContainer loopEndNC = getManager().getNodeContainer(m_loopEnd4);
-        waitWhile(loopEndNC, new Hold() {
-
-            @Override
-            protected boolean shouldHold() {
-                return loopEndNC.getNodeContainerState().isExecutionInProgress();
-            }
-            @Override
-            protected int getSecondsToWaitAtMost() {
-                return 2;
-            }
-        });
+        waitWhile(m_loopEnd4, nc -> nc.getNodeContainerState().isExecutionInProgress(), 2);
         checkState(m_loopEnd4, InternalNodeContainerState.CONFIGURED);
         checkState(m_loopStart3, InternalNodeContainerState.EXECUTED);
     }
