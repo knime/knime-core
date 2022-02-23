@@ -3,7 +3,6 @@ package org.knime.core.internal;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -38,8 +37,10 @@ import org.knime.core.node.NodeLogger;
  */
 public final class NodeDescriptionUtil {
 
-    private NodeDescriptionUtil() {
+    private static final Pattern CRLF = Pattern.compile("\\r\\n");
 
+    private NodeDescriptionUtil() {
+        // utility
     }
 
     /**
@@ -51,7 +52,7 @@ public final class NodeDescriptionUtil {
         @Override
         protected Transformer initialize() {
             try (InputStream xslt = NodeDescriptionUtil.class.getResourceAsStream("removeNamespaces.xslt")) {
-                Transformer transformer = TransformerFactory.newInstance().newTransformer(new StreamSource(xslt));
+                var transformer = TransformerFactory.newInstance().newTransformer(new StreamSource(xslt)); // NOSONAR not an external entity
                 transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
                 transformer.setOutputProperty(OutputKeys.INDENT, "no");
                 return transformer;
@@ -72,7 +73,7 @@ public final class NodeDescriptionUtil {
      * @return the String without surrounding XML tags.
      */
     public static String stripXmlFragment(final String contents) {
-        int first = 0;
+        var first = 0;
         while ((first < contents.length()) && (contents.charAt(first) != '>')) {
             first++;
         }
@@ -101,10 +102,10 @@ public final class NodeDescriptionUtil {
             return null;
         }
 
-        XmlOptions xmlOptions = new XmlOptions().setLoadStripComments() // strip comments
+        var xmlOptions = new XmlOptions().setLoadStripComments() // strip comments
             .setLoadStripProcinsts(); // strip processing instructions
 
-        StringWriter writer = new StringWriter();
+        var writer = new StringWriter();
         try {
             REMOVE_NAMESPACES_TRANSFORMER.get().transform(new StreamSource(obj.newReader(xmlOptions)),
                 new StreamResult(writer));
@@ -114,10 +115,10 @@ public final class NodeDescriptionUtil {
             e.printStackTrace();
         }
 
-        String s = writer.toString();
+        var s = writer.toString();
         // On Windows, the transformer produces CRLF (\r\n) line endings, on Unix only LF (\n)
         if (Platform.OS_WIN32.equals(Platform.getOS())) {
-            s = s.replaceAll("\\r\\n", "\n");
+            s = CRLF.matcher(s).replaceAll("\n");
         }
         return NodeDescriptionUtil.stripXmlFragment(s);
     }
@@ -208,13 +209,13 @@ public final class NodeDescriptionUtil {
      * @return A list of {@link NodeDescription.DialogOptionGroup}s based on the input elements.
      */
     public static <G extends XmlObject, O extends XmlObject> List<NodeDescription.DialogOptionGroup> extractDialogOptionGroups(
-            List<O> ungroupedOptions,
-            List<G> groups,
-            Function<G, String> groupNameGetter,
-            Function<G, XmlObject> groupDescGetter,
-            Function<G, List<O>> optionGroupGetter,
-            Function<O, String> optionNameGetter,
-            Function<O, Boolean> optionOptionalGetter) {
+            final List<O> ungroupedOptions,
+            final List<G> groups,
+            final Function<G, String> groupNameGetter,
+            final Function<G, XmlObject> groupDescGetter,
+            final Function<G, List<O>> optionGroupGetter,
+            final Function<O, String> optionNameGetter,
+            final Function<O, Boolean> optionOptionalGetter) {
         return Stream.concat(
                 extractUngroupedOptions(ungroupedOptions, optionNameGetter, optionOptionalGetter).stream(),
                 groups.stream().map(g -> new NodeDescription.DialogOptionGroup(
@@ -235,9 +236,9 @@ public final class NodeDescriptionUtil {
      *      ungrouped options.
      */
     public static <O extends XmlObject> Optional<NodeDescription.DialogOptionGroup> extractUngroupedOptions(
-            List<O> ungroupedOptions,
-            Function<O, String> optionNameGetter,
-            Function<O, Boolean> optionOptionalGetter
+            final List<O> ungroupedOptions,
+            final Function<O, String> optionNameGetter,
+            final Function<O, Boolean> optionOptionalGetter
     ) {
         if (!ungroupedOptions.isEmpty()) {
             return Optional.of(new NodeDescription.DialogOptionGroup(
