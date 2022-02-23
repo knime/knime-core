@@ -25,6 +25,7 @@ import org.apache.commons.lang3.concurrent.ConcurrentException;
 import org.apache.commons.lang3.concurrent.LazyInitializer;
 import org.apache.xmlbeans.XmlObject;
 import org.apache.xmlbeans.XmlOptions;
+import org.eclipse.core.runtime.Platform;
 import org.knime.core.node.NodeDescription;
 import org.knime.core.node.NodeLogger;
 
@@ -101,8 +102,7 @@ public final class NodeDescriptionUtil {
         }
 
         XmlOptions xmlOptions = new XmlOptions().setLoadStripComments() // strip comments
-            .setLoadStripProcinsts() // strip processing instructions
-            .setLoadStripWhitespace(); // strip insignificant whitespace
+            .setLoadStripProcinsts(); // strip processing instructions
 
         StringWriter writer = new StringWriter();
         try {
@@ -114,7 +114,12 @@ public final class NodeDescriptionUtil {
             e.printStackTrace();
         }
 
-        return NodeDescriptionUtil.stripXmlFragment(writer.toString());
+        String s = writer.toString();
+        // On Windows, the transformer produces CRLF (\r\n) line endings, on Unix only LF (\n)
+        if (Platform.OS_WIN32.equals(Platform.getOS())) {
+            s = s.replaceAll("\\r\\n", "\n");
+        }
+        return NodeDescriptionUtil.stripXmlFragment(s);
     }
 
     /**
