@@ -157,7 +157,7 @@ class XMLCellWriterUtil {
 		NamedNodeMap attrs = element.getAttributes();
 		for (int i = 0; i < attrs.getLength(); i++) {
 			Node attr = attrs.item(i);
-			if (attr.getNodeName().equals("xml:space")
+			if (attr.getNodeName().equals("xml:space") && attr.getNamespaceURI() != null
 					&& attr.getNamespaceURI().equals(XMLConstants.XML_NS_URI)) {
 				if (attr.getNodeValue().equals("preserve")) {
 					hasXmlSpaceAttr = true;
