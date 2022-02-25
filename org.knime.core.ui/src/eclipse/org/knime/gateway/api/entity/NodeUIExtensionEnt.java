@@ -54,6 +54,9 @@ import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.webui.data.text.TextInitialDataService;
 import org.knime.core.webui.node.DataServiceManager;
+import org.knime.core.webui.node.PageResourceManager;
+import org.knime.core.webui.page.PageUtil;
+import org.knime.core.webui.page.PageUtil.PageKind;
 
 /**
  * Super classes for node-ui-extension entities, e.g., node view and node dialog.
@@ -62,31 +65,26 @@ import org.knime.core.webui.node.DataServiceManager;
  */
 public abstract class NodeUIExtensionEnt {
 
-    /**
-     * The type of the node extension.
-     */
-    @SuppressWarnings("javadoc")
-    protected enum ExtensionType {
-            VIEW, DIALOG;
-    }
-
     private final String m_nodeId;
 
     private final String m_workflowId;
 
     private final String m_projectId;
 
-    private final String m_extensionType;
-
     private final String m_initialData;
+
+    private final ResourceInfoEnt m_resourceInfo;
+
+    private final PageKind m_pageKind;
 
     /**
      * @param nnc the node to create the entity for
-     * @param extensionType
+     * @param pageResourceManager can be {@code null}
      * @param dataServiceManager can be {@code null}
+     * @param pageKind the page type
      */
-    protected NodeUIExtensionEnt(final NativeNodeContainer nnc, final ExtensionType extensionType,
-        final DataServiceManager dataServiceManager) {
+    protected NodeUIExtensionEnt(final NativeNodeContainer nnc, final PageResourceManager pageResourceManager,
+        final DataServiceManager dataServiceManager, final PageKind pageKind) {
         WorkflowManager wfm = nnc.getParent();
         WorkflowManager projectWfm = wfm.getProjectWFM();
 
@@ -109,7 +107,17 @@ public abstract class NodeUIExtensionEnt {
             m_initialData = null;
         }
 
-        m_extensionType = extensionType.toString().toLowerCase();
+        if (pageResourceManager != null) {
+            var url = pageResourceManager.getPageUrl(nnc).orElse(null);
+            var path = pageResourceManager.getPagePath(nnc).orElse(null);
+            var page = pageResourceManager.getPage(nnc);
+            var id = PageUtil.getPageId(nnc, page.isStatic(), pageKind);
+            m_resourceInfo = new ResourceInfoEnt(id, url, path, page.getType());
+        } else {
+            m_resourceInfo = null;
+        }
+
+        m_pageKind = pageKind;
     }
 
     /**
@@ -136,7 +144,9 @@ public abstract class NodeUIExtensionEnt {
     /**
      * @return see {@link ResourceInfoEnt}
      */
-    public abstract ResourceInfoEnt getResourceInfo();
+    public final ResourceInfoEnt getResourceInfo() {
+        return m_resourceInfo;
+    }
 
     /**
      * @return initial data
@@ -149,7 +159,7 @@ public abstract class NodeUIExtensionEnt {
      * @return the type of the node ui extension
      */
     public String getExtensionType() {
-        return m_extensionType;
+        return m_pageKind.toString();
     }
 
 }

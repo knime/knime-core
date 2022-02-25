@@ -48,7 +48,7 @@
  */
 package org.knime.gateway.api.entity;
 
-import org.knime.core.webui.page.Page;
+import org.knime.core.webui.page.Resource;
 
 /**
  * Information around the web resource (e.g. html or javascript document) representing a node view.
@@ -65,10 +65,10 @@ public final class ResourceInfoEnt {
 
     private final String m_id;
 
-    ResourceInfoEnt(final String id, final String url, final String path, final Page page) {
+    ResourceInfoEnt(final String id, final String url, final String path, final Resource.Type resourceType) {
         m_url = url;
         m_path = path;
-        m_type = page.getType().toString();
+        m_type = resourceType.toString();
         m_id = id;
     }
 

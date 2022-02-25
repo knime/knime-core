@@ -103,7 +103,7 @@ public class NodeViewStateEventSource extends EventSource<NativeNodeContainer, N
 
     private static NodeViewStateEvent createEvent(final NativeNodeContainer nnc,
         final Supplier<List<String>> initialSelectionSupplier) {
-        var nodeViewEnt = new NodeViewEnt(nnc, initialSelectionSupplier);
+        var nodeViewEnt = NodeViewEnt.create(nnc, initialSelectionSupplier);
         return () -> nodeViewEnt;
     }
 

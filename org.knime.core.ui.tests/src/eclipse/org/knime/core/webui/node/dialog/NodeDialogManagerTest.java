@@ -56,11 +56,8 @@ import static org.knime.core.webui.node.dialog.NodeDialogTest.createNodeDialog;
 import static org.knime.core.webui.page.PageTest.BUNDLE_ID;
 import static org.knime.testing.util.WorkflowManagerUtil.createAndAddNode;
 
-import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.function.Supplier;
 
@@ -84,8 +81,6 @@ import org.knime.testing.node.dialog.NodeDialogNodeModel;
 import org.knime.testing.node.dialog.NodeDialogNodeView;
 import org.knime.testing.util.WorkflowManagerUtil;
 
-import com.google.common.io.Files;
-
 /**
  * Tests for {@link NodeDialogManager}.
  *
@@ -101,7 +96,7 @@ public class NodeDialogManagerTest {
     @Before
     @After
     public void clearNodeDialogManagerCachesAndFiles() {
-        NodeDialogManager.getInstance().clearCachesAndFiles();
+        NodeDialogManager.getInstance().clearCaches();
     }
 
     @SuppressWarnings("javadoc")
@@ -147,29 +142,14 @@ public class NodeDialogManagerTest {
         NativeNodeContainer nnc2 = createNodeWithNodeDialog(m_wfm, () -> createNodeDialog(staticPage));
         NativeNodeContainer nnc3 = createNodeWithNodeDialog(m_wfm, () -> createNodeDialog(dynamicPage));
         var nodeDialogManager = NodeDialogManager.getInstance();
-        String url = nodeDialogManager.getNodeDialogPageUrl(nnc);
-        String url2 = nodeDialogManager.getNodeDialogPageUrl(nnc2);
-        String url3 = nodeDialogManager.getNodeDialogPageUrl(nnc3);
-        String url4 = nodeDialogManager.getNodeDialogPageUrl(nnc3);
-        assertThat("file url of static pages not expected to change", url, is(url2));
-        assertThat("file url of dynamic pages expected to change between node instances", url, is(not(url3)));
-        assertThat("file url of dynamic pages not expected for same node instance (without node state change)", url3,
+        String url = nodeDialogManager.getPageUrl(nnc).orElse(null);
+        String url2 = nodeDialogManager.getPageUrl(nnc2).orElse(null);
+        String url3 = nodeDialogManager.getPageUrl(nnc3).orElse(null);
+        String url4 = nodeDialogManager.getPageUrl(nnc3).orElse(null);
+        assertThat("url of static pages not expected to change", url, is(url2));
+        assertThat("url of dynamic pages expected to change between node instances", url, is(not(url3)));
+        assertThat("url of dynamic pages not expected for same node instance (without node state change)", url3,
             is(url4));
-        assertThat("resource files are expected to be written, too",
-            new File(new URI(url.replace("page.html", "resource.html"))).exists(), is(true));
-        assertThat(new File(new URI(url)).exists(), is(true));
-        assertThat(new File(new URI(url3)).exists(), is(true));
-        String pageContent = Files.readLines(new File(new URI(url3)), StandardCharsets.UTF_8).get(0);
-        assertThat(pageContent, is("page content"));
-
-        // impose node state changes
-        m_wfm.executeAllAndWaitUntilDone();
-        var dynamicPage2 = Page.builder(() -> "new page content", "page.html")
-            .addResourceFromString(() -> "resource content", "resource.html").build();
-        nnc = createNodeWithNodeDialog(m_wfm, () -> createNodeDialog(dynamicPage2));
-        String url5 = nodeDialogManager.getNodeDialogPageUrl(nnc);
-        pageContent = Files.readLines(new File(new URI(url5)), StandardCharsets.UTF_8).get(0);
-        assertThat(pageContent, is("new page content"));
     }
 
     /**

@@ -44,46 +44,26 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Jan 11, 2022 (hornm): created
+ *   Feb 24, 2022 (hornm): created
  */
 package org.knime.core.webui.node;
 
 import java.io.IOException;
-import java.util.Map;
 import java.util.Optional;
-import java.util.WeakHashMap;
 
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.webui.data.ApplyDataService;
 import org.knime.core.webui.data.DataService;
-import org.knime.core.webui.data.DataServiceProvider;
 import org.knime.core.webui.data.InitialDataService;
 import org.knime.core.webui.data.text.TextApplyDataService;
 import org.knime.core.webui.data.text.TextDataService;
 import org.knime.core.webui.data.text.TextInitialDataService;
-import org.knime.core.webui.data.text.TextReExecuteDataService;
 
 /**
- * Manages the data services (i.e. {@link InitialDataService}, {@link DataService} and {@link ApplyDataService})
- * available for node views and node dialogs.
- *
- * Data service instances are only created once and cached until the respective node is disposed.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
-public abstract class DataServiceManager {
-
-    private final Map<NodeContainer, InitialDataService> m_initialDataServices = new WeakHashMap<>();
-
-    private final Map<NodeContainer, DataService> m_dataServices = new WeakHashMap<>();
-
-    private final Map<NodeContainer, ApplyDataService> m_applyDataServices = new WeakHashMap<>();
-
-    /**
-     * @param nc
-     * @return the data service provide for the given node
-     */
-    protected abstract DataServiceProvider getDataServiceProvider(NodeContainer nc);
+public interface DataServiceManager {
 
     /**
      * Returns data service instance of the given type or an empty optional of no data service of that type is
@@ -95,21 +75,7 @@ public abstract class DataServiceManager {
      *            {@link ApplyDataService}.
      * @return the data service instance or an empty optional if no data service is available
      */
-    @SuppressWarnings("unchecked")
-    public <S> Optional<S> getDataServiceOfType(final NodeContainer nc, final Class<S> dataServiceClass) {
-        Object ds = null;
-        if (InitialDataService.class.isAssignableFrom(dataServiceClass)) {
-            ds = getInitialDataService(nc).orElse(null);
-        } else if (DataService.class.isAssignableFrom(dataServiceClass)) {
-            ds = getDataService(nc).orElse(null);
-        } else if (ApplyDataService.class.isAssignableFrom(dataServiceClass)) {
-            ds = getApplyDataService(nc).orElse(null);
-        }
-        if (ds != null && !dataServiceClass.isAssignableFrom(ds.getClass())) {
-            ds = null;
-        }
-        return Optional.ofNullable((S)ds);
-    }
+    <S> Optional<S> getDataServiceOfType(NodeContainer nc, Class<S> dataServiceClass);
 
     /**
      * Helper to call the {@link TextInitialDataService}.
@@ -118,25 +84,7 @@ public abstract class DataServiceManager {
      * @return the initial data
      * @throws IllegalStateException if there is not initial data service available
      */
-    public String callTextInitialDataService(final NodeContainer nc) {
-        var service = getInitialDataService(nc).filter(TextInitialDataService.class::isInstance).orElse(null);
-        if (service != null) {
-            return ((TextInitialDataService)service).getInitialData();
-        } else {
-            throw new IllegalStateException("No text initial data service available");
-        }
-    }
-
-    private Optional<InitialDataService> getInitialDataService(final NodeContainer nc) {
-        InitialDataService ds;
-        if (!m_initialDataServices.containsKey(nc)) {
-            ds = getDataServiceProvider(nc).createInitialDataService().orElse(null);
-            m_initialDataServices.put(nc, ds);
-        } else {
-            ds = m_initialDataServices.get(nc);
-        }
-        return Optional.ofNullable(ds);
-    }
+    String callTextInitialDataService(NodeContainer nc);
 
     /**
      * Helper to call the {@link TextDataService}.
@@ -146,25 +94,7 @@ public abstract class DataServiceManager {
      * @return the data service response
      * @throws IllegalStateException if there is no text data service
      */
-    public String callTextDataService(final NodeContainer nc, final String request) {
-        var service = getDataService(nc).filter(TextDataService.class::isInstance).orElse(null);
-        if (service != null) {
-            return ((TextDataService)service).handleRequest(request);
-        } else {
-            throw new IllegalStateException("No text data service available");
-        }
-    }
-
-    private Optional<DataService> getDataService(final NodeContainer nc) {
-        DataService ds;
-        if (!m_dataServices.containsKey(nc)) {
-            ds = getDataServiceProvider(nc).createDataService().orElse(null);
-            m_dataServices.put(nc, ds);
-        } else {
-            ds = m_dataServices.get(nc);
-        }
-        return Optional.ofNullable(ds);
-    }
+    String callTextDataService(NodeContainer nc, String request);
 
     /**
      * Helper to call the {@link TextApplyDataService}.
@@ -174,26 +104,6 @@ public abstract class DataServiceManager {
      * @throws IOException if applying the data failed
      * @throws IllegalStateException if there is no text apply data service
      */
-    public void callTextApplyDataService(final NodeContainer nc, final String request) throws IOException {
-        var service = getApplyDataService(nc).orElse(null);
-        if (service instanceof TextReExecuteDataService) {
-            ((TextReExecuteDataService)service).reExecute(request);
-        } else if (service instanceof TextApplyDataService) {
-            ((TextApplyDataService)service).applyData(request);
-        } else {
-            throw new IllegalStateException("No text apply data service available");
-        }
-    }
-
-    private Optional<ApplyDataService> getApplyDataService(final NodeContainer nc) {
-        ApplyDataService ds;
-        if (!m_applyDataServices.containsKey(nc)) {
-            ds = getDataServiceProvider(nc).createApplyDataService().orElse(null);
-            m_applyDataServices.put(nc, ds);
-        } else {
-            ds = m_applyDataServices.get(nc);
-        }
-        return Optional.ofNullable(ds);
-    }
+    void callTextApplyDataService(NodeContainer nc, String request) throws IOException;
 
 }

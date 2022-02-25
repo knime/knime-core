@@ -102,7 +102,7 @@ public final class NodeViewEntUtil {
             eventSources = new EventSource[]{selectionEventSource};
         }
 
-        return Pair.create(new NodeViewEnt(nnc, initialSelectionSupplier), eventSources);
+        return Pair.create(NodeViewEnt.create(nnc, initialSelectionSupplier), eventSources);
     }
 
     private static class RemoveAllEventListenersOnNodeStateChange implements NodeStateChangeListener {

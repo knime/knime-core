@@ -48,19 +48,17 @@
  */
 package org.knime.core.webui.node.dialog;
 
-import java.io.IOException;
 import java.util.Map;
-import java.util.Optional;
 import java.util.WeakHashMap;
-import java.util.regex.Pattern;
 
-import org.knime.core.node.NodeFactory;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.webui.data.DataServiceProvider;
-import org.knime.core.webui.node.DataServiceManager;
-import org.knime.core.webui.page.PageUtil;
+import org.knime.core.webui.node.AbstractNodeUIManager;
+import org.knime.core.webui.node.util.NodeCleanUpCallback;
+import org.knime.core.webui.page.Page;
+import org.knime.core.webui.page.PageUtil.PageKind;
 
 /**
  * Manages (web-ui) node dialog instances and provides associated functionality.
@@ -69,11 +67,7 @@ import org.knime.core.webui.page.PageUtil;
  *
  * @since 4.5
  */
-public final class NodeDialogManager extends DataServiceManager {
-
-    private static final String NODE_DIALOG_DEBUG_PATTERN_PROP = "org.knime.ui.dev.node.dialog.url.factory-class";
-
-    private static final String NODE_DIALOG_DEBUG_URL_PROP = "org.knime.ui.dev.node.dialog.url";
+public final class NodeDialogManager extends AbstractNodeUIManager {
 
     private static NodeDialogManager instance;
 
@@ -115,7 +109,11 @@ public final class NodeDialogManager extends DataServiceManager {
         if (!hasNodeDialog(nc)) {
             throw new IllegalArgumentException("The node " + nc.getNameWithID() + " doesn't provide a node dialog");
         }
-        return m_nodeDialogMap.computeIfAbsent(nc, id -> createNodeDialog(nc));
+        var nnc = (NativeNodeContainer) nc;
+        return m_nodeDialogMap.computeIfAbsent(nc, id -> {
+            new NodeCleanUpCallback(nnc, () -> m_nodeDialogMap.remove(nnc));
+            return createNodeDialog(nc);
+        });
     }
 
     private static NodeDialog createNodeDialog(final NodeContainer nc) {
@@ -130,45 +128,11 @@ public final class NodeDialogManager extends DataServiceManager {
     }
 
     /**
-     * Provides the URL which serves the node dialog page.
-     *
-     * @param nnc the node which provides the node dialog
-     * @return the page url
-     * @throws IllegalStateException if the node doesn't have a node dialog or the url couldn't be retrieved
-     */
-    public String getNodeDialogPageUrl(final NativeNodeContainer nnc) {
-        var debugUrl = getNodeDialogDebugUrl(nnc.getNode().getFactory().getClass());
-        if (debugUrl.isPresent()) {
-            return debugUrl.get();
-        }
-        try {
-            var page = getNodeDialog(nnc).getPage();
-            return PageUtil.writePageResourcesToDiscAndGetFileUrl(nnc, page, true, null);
-        } catch (IOException ex) {
-            throw new IllegalStateException(
-                "Page URL for the view of node '" + nnc.getNameWithID() + "' couldn't be created.", ex);
-        }
-    }
-
-    private static Optional<String>
-        getNodeDialogDebugUrl(@SuppressWarnings("rawtypes") final Class<? extends NodeFactory> nodeFactoryClass) {
-        var pattern = System.getProperty(NODE_DIALOG_DEBUG_PATTERN_PROP);
-        var url = System.getProperty(NODE_DIALOG_DEBUG_URL_PROP);
-        if (url == null) {
-            return Optional.empty();
-        }
-        if (pattern == null || Pattern.matches(pattern, nodeFactoryClass.getName())) {
-            return Optional.of(url);
-        }
-        return Optional.empty();
-    }
-
-    /**
      * For testing purposes only.
      */
-    void clearCachesAndFiles() {
+    void clearCaches() {
        m_nodeDialogMap.clear();
-       PageUtil.clearUIExtensionFiles();
+       clearPageMap();
     }
 
     /**
@@ -177,6 +141,22 @@ public final class NodeDialogManager extends DataServiceManager {
     @Override
     protected DataServiceProvider getDataServiceProvider(final NodeContainer nc) {
         return getNodeDialog(nc);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Page getPage(final NativeNodeContainer nnc) {
+        return getNodeDialog(nnc).getPage();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected PageKind getPageKind() {
+        return PageKind.DIALOG;
     }
 
 }

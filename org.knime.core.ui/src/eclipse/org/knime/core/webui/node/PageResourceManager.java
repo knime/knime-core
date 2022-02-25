@@ -44,65 +44,70 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 15, 2021 (hornm): created
+ *   Feb 24, 2022 (hornm): created
  */
-package org.knime.core.webui.page;
+package org.knime.core.webui.node;
+
+import java.util.Optional;
 
 import org.knime.core.node.workflow.NativeNodeContainer;
+import org.knime.core.webui.page.Page;
+import org.knime.core.webui.page.Resource;
 
 /**
- * Utility methods around {@link Page}s.
+ * Gives access to the pages and page resources for nodes (i.e. pages that represent, e.g., node dialogs and views).
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
- *
- * @since 4.5
  */
-public final class PageUtil {
+public interface PageResourceManager {
 
     /**
-     * The page kinds, i.e. defines what a page is supposed to represent.
+     * @return a unique domain name used to identify page resources of this kind
      */
-    public enum PageKind {
-            /**
-             * A node dialog.
-             */
-            DIALOG,
-            /**
-             * A node view
-             */
-            VIEW;
-
-        @Override
-        public String toString() {
-            return super.toString().toLowerCase();
-        }
-
-    }
+    String getDomainName();
 
     /**
-     * Determines the page id. The page id is a valid file name!
+     * @param nnc the node to get the page for
      *
-     * @param nnc the node providing the node view page
-     * @param isStaticPage whether it's a static page
-     * @param pageKind the kind of the page
-     * @return the page id
+     * @return the page for the given node
+     * @throws IllegalArgumentException if there is no page given for the node
      */
-    @SuppressWarnings("java:S2301")
-    public static String getPageId(final NativeNodeContainer nnc, final boolean isStaticPage, final PageKind pageKind) {
-        String id;
-        if (isStaticPage) {
-            id = nnc.getNode().getFactory().getClass().getName();
-        } else {
-            id = nnc.getID().toString().replace(":", "_");
-        }
-        if (pageKind == PageKind.DIALOG) {
-            id = "dialog_" + id;
-        }
-        return id;
-    }
+    Page getPage(NativeNodeContainer nnc);
 
-    private PageUtil() {
-        // utility class
-    }
+    /**
+     * Provides the URL which serves the page. The full URL is usually only available if the AP is run as desktop
+     * application.
+     *
+     * @param nnc the node which provides the page
+     * @return the page url if available, otherwise an empty optional
+     */
+    Optional<String> getPageUrl(NativeNodeContainer nnc);
+
+    /**
+     * Provides the relative path for a page, if available. The relative path is usually only available if the AP is
+     * <b>not</b> run as a desktop application (but as an 'executor' as part of the server infrastructure).
+     *
+     * @param nnc the node which provides the page
+     * @return the relative page path
+     */
+    Optional<String> getPagePath(NativeNodeContainer nnc);
+
+    /**
+     * Gives access to page resources. NOTE: Only those resources are available that belong to a page whose path has
+     * been requested via {@link #getPagePath(NativeNodeContainer)}.
+     *
+     * @param resourceId the id of the resource
+     * @return the resource or an empty optional if there is no resource for the given id available
+     */
+    Optional<Resource> getPageResource(String resourceId);
+
+    /**
+     * Gives access to page resources via a full URL. NOTE: Only those resources are available that belong to a page
+     * whose URL has been requested via {@link #getPageUrl(NativeNodeContainer)}.
+     *
+     * @param url the resource url
+     * @return the resource or an empty optional if there is no resource available at the given URL
+     */
+    Optional<Resource> getPageResourceFromUrl(String url);
 
 }

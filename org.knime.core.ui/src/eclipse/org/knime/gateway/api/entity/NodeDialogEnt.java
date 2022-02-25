@@ -51,7 +51,7 @@ package org.knime.gateway.api.entity;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.webui.node.dialog.NodeDialogManager;
-import org.knime.core.webui.page.PageUtil;
+import org.knime.core.webui.page.PageUtil.PageKind;
 
 /**
  * Node dialog entity containing the info required by the UI (i.e. frontend) to be able to display a node dialog.
@@ -60,25 +60,12 @@ import org.knime.core.webui.page.PageUtil;
  */
 public class NodeDialogEnt extends NodeUIExtensionEnt {
 
-    private final ResourceInfoEnt m_resourceInfo;
-
     /**
      * @param nnc
      */
     public NodeDialogEnt(final NativeNodeContainer nnc) {
-        super(nnc, ExtensionType.DIALOG, NodeDialogManager.getInstance());
+        super(nnc, NodeDialogManager.getInstance(), NodeDialogManager.getInstance(), PageKind.DIALOG);
         CheckUtils.checkArgument(NodeDialogManager.hasNodeDialog(nnc), "The provided node doesn't have a node dialog");
-
-        var nodeDialogManager = NodeDialogManager.getInstance();
-        var url = nodeDialogManager.getNodeDialogPageUrl(nnc);
-        var page = nodeDialogManager.getNodeDialog(nnc).getPage();
-        var id = PageUtil.getPageId(nnc, page.isStatic(), true);
-        m_resourceInfo = new ResourceInfoEnt(id, url, null, page);
-    }
-
-    @Override
-    public ResourceInfoEnt getResourceInfo() {
-        return m_resourceInfo;
     }
 
 }

@@ -54,7 +54,7 @@ import java.util.function.Supplier;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.webui.node.view.NodeViewManager;
-import org.knime.core.webui.page.PageUtil;
+import org.knime.core.webui.page.PageUtil.PageKind;
 
 /**
  * Node view entity containing the info required by the UI (i.e. frontend) to be able display a node view.
@@ -65,33 +65,21 @@ public final class NodeViewEnt extends NodeUIExtensionEnt {
 
     private final NodeInfoEnt m_info;
 
-    private final ResourceInfoEnt m_resourceInfo;
-
     private List<String> m_initialSelection;
 
     /**
      * @param nnc the node to create the node view entity for
      * @param initialSelection list of row keys representing the initial selection, supplied lazily (will not been
      *            called, if the node is not executed)
+     * @return a new instance
      */
-    public NodeViewEnt(final NativeNodeContainer nnc, final Supplier<List<String>> initialSelection) {
-        super(nnc, ExtensionType.VIEW, nnc.getNodeContainerState().isExecuted() ? NodeViewManager.getInstance() : null);
-        CheckUtils.checkArgument(NodeViewManager.hasNodeView(nnc), "The provided node doesn't have a node view");
-
-        var nodeState = nnc.getNodeContainerState();
-        if (nodeState.isExecuted()) {
-            var nodeViewManager = NodeViewManager.getInstance();
-            var url = nodeViewManager.getNodeViewPageUrl(nnc).orElse(null);
-            var path = nodeViewManager.getNodeViewPagePath(nnc).orElse(null);
-            var page = nodeViewManager.getNodeView(nnc).getPage();
-            var id = PageUtil.getPageId(nnc, page.isStatic(), false);
-            m_resourceInfo = new ResourceInfoEnt(id, url, path, page);
-            m_initialSelection = initialSelection == null ? null : initialSelection.get();
+    public static NodeViewEnt create(final NativeNodeContainer nnc, final Supplier<List<String>> initialSelection) {
+        if (nnc.getNodeContainerState().isExecuted()) {
+            return new NodeViewEnt(nnc, initialSelection, NodeViewManager.getInstance());
         } else {
-            m_resourceInfo = null;
-            m_initialSelection = null;
+            return new NodeViewEnt(nnc, null, null);
         }
-        m_info = new NodeInfoEnt(nnc);
+
     }
 
     /**
@@ -99,9 +87,18 @@ public final class NodeViewEnt extends NodeUIExtensionEnt {
      * selection event source.
      *
      * @param nnc the node to create the node view entity for
+     * @return a new instance
      */
-    public NodeViewEnt(final NativeNodeContainer nnc) {
-        this(nnc, null);
+    public static NodeViewEnt create(final NativeNodeContainer nnc) {
+        return create(nnc, null);
+    }
+
+    private NodeViewEnt(final NativeNodeContainer nnc, final Supplier<List<String>> initialSelection,
+        final NodeViewManager nodeViewManager) {
+        super(nnc, nodeViewManager, nodeViewManager, PageKind.VIEW);
+        CheckUtils.checkArgument(NodeViewManager.hasNodeView(nnc), "The provided node doesn't have a node view");
+        m_initialSelection = initialSelection == null ? null : initialSelection.get();
+        m_info = new NodeInfoEnt(nnc);
     }
 
     /**
@@ -109,11 +106,6 @@ public final class NodeViewEnt extends NodeUIExtensionEnt {
      */
     public NodeInfoEnt getNodeInfo() {
         return m_info;
-    }
-
-    @Override
-    public ResourceInfoEnt getResourceInfo() {
-        return m_resourceInfo;
     }
 
     /**

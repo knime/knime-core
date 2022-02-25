@@ -44,65 +44,60 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 15, 2021 (hornm): created
+ *   Feb 18, 2022 (hornm): created
  */
-package org.knime.core.webui.page;
+package org.knime.core.webui.node.util;
 
 import org.knime.core.node.workflow.NativeNodeContainer;
+import org.knime.core.node.workflow.WorkflowEvent;
+import org.knime.core.node.workflow.WorkflowListener;
+import org.knime.core.node.workflow.WorkflowManager;
 
 /**
- * Utility methods around {@link Page}s.
- *
- * @author Martin Horn, KNIME GmbH, Konstanz, Germany
- *
- * @since 4.5
+ * Helper to clean-up after a node removal or workflow disposal. Once a clean-up has been triggered, all the registered
+ * listeners (on the node and the workflow) are removed which renders the NodeCleanUpCallback-instance useless
+ * afterwards.
  */
-public final class PageUtil {
+public final class NodeCleanUpCallback implements WorkflowListener {
+
+    private Runnable m_onCleanUp;
+
+    private NativeNodeContainer m_nnc;
 
     /**
-     * The page kinds, i.e. defines what a page is supposed to represent.
-     */
-    public enum PageKind {
-            /**
-             * A node dialog.
-             */
-            DIALOG,
-            /**
-             * A node view
-             */
-            VIEW;
-
-        @Override
-        public String toString() {
-            return super.toString().toLowerCase();
-        }
-
-    }
-
-    /**
-     * Determines the page id. The page id is a valid file name!
+     * A new callback instance.
      *
-     * @param nnc the node providing the node view page
-     * @param isStaticPage whether it's a static page
-     * @param pageKind the kind of the page
-     * @return the page id
+     * @param nnc the node to watch
+     * @param onCleanUp the callback to call when the node is being diposed.
      */
-    @SuppressWarnings("java:S2301")
-    public static String getPageId(final NativeNodeContainer nnc, final boolean isStaticPage, final PageKind pageKind) {
-        String id;
-        if (isStaticPage) {
-            id = nnc.getNode().getFactory().getClass().getName();
-        } else {
-            id = nnc.getID().toString().replace(":", "_");
-        }
-        if (pageKind == PageKind.DIALOG) {
-            id = "dialog_" + id;
-        }
-        return id;
+    public NodeCleanUpCallback(final NativeNodeContainer nnc, final Runnable onCleanUp) {
+        WorkflowManager.ROOT.addListener(NodeCleanUpCallback.this);
+        nnc.getParent().addListener(NodeCleanUpCallback.this);
+        m_nnc = nnc;
+        m_onCleanUp = onCleanUp;
     }
 
-    private PageUtil() {
-        // utility class
+    @Override
+    public void workflowChanged(final WorkflowEvent e) {
+        if (e.getType() == WorkflowEvent.Type.NODE_REMOVED) {
+            if (e.getOldValue() instanceof WorkflowManager && ((WorkflowManager)e.getOldValue()).getID()
+                .getIndex() == m_nnc.getParent().getProjectWFM().getID().getIndex()) {
+                // workflow has been closed
+                cleanUp();
+            }
+            if (e.getOldValue() instanceof NativeNodeContainer
+                && ((NativeNodeContainer)e.getOldValue()).getID().equals(m_nnc.getID())) {
+                // node removed
+                cleanUp();
+            }
+        }
     }
 
+    private void cleanUp() {
+        WorkflowManager.ROOT.removeListener(NodeCleanUpCallback.this);
+        m_nnc.getParent().removeListener(NodeCleanUpCallback.this);
+        m_onCleanUp.run();
+        m_nnc = null;
+        m_onCleanUp = null;
+    }
 }

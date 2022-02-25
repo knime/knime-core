@@ -197,7 +197,7 @@ public class NodeViewManagerTest {
     }
 
     /**
-     * Tests {@link NodeViewManager#getNodeViewPageUrl(NativeNodeContainer)}.
+     * Tests {@link NodeViewManager#getPageUrl(NativeNodeContainer)}.
      *
      * @throws URISyntaxException
      * @throws IOException
@@ -211,20 +211,20 @@ public class NodeViewManagerTest {
         NativeNodeContainer nnc2 = createNodeWithNodeView(m_wfm, m -> createNodeView(staticPage));
         NativeNodeContainer nnc3 = createNodeWithNodeView(m_wfm, m -> createNodeView(dynamicPage));
         var nodeViewManager = NodeViewManager.getInstance();
-        String url = nodeViewManager.getNodeViewPageUrl(nnc).orElse("");
-        String url2 = nodeViewManager.getNodeViewPageUrl(nnc2).orElse(null);
-        String url3 = nodeViewManager.getNodeViewPageUrl(nnc3).orElse(null);
-        String url4 = nodeViewManager.getNodeViewPageUrl(nnc3).orElse(null);
+        String url = nodeViewManager.getPageUrl(nnc).orElse("");
+        String url2 = nodeViewManager.getPageUrl(nnc2).orElse(null);
+        String url3 = nodeViewManager.getPageUrl(nnc3).orElse(null);
+        String url4 = nodeViewManager.getPageUrl(nnc3).orElse(null);
         assertThat("url of static pages not expected to change", url, is(url2));
         assertThat("url of dynamic pages expected to change between node instances", url, is(not(url3)));
         assertThat("url of dynamic pages not expected for same node instance (without node state change)", url3,
             is(url4));
 
-        runOnExecutor(() -> assertThat(nodeViewManager.getNodeViewPageUrl(nnc2).isEmpty(), is(true)));
+        runOnExecutor(() -> assertThat(nodeViewManager.getPageUrl(nnc2).isEmpty(), is(true)));
     }
 
     /**
-     * Tests {@link NodeViewManager#getNodeViewPagePath(NativeNodeContainer)}.
+     * Tests {@link NodeViewManager#getPagePath(NativeNodeContainer)}.
      */
     @Test
     public void testGetNodeViewPagePath() {
@@ -235,12 +235,12 @@ public class NodeViewManagerTest {
         var nnc2 = createNodeWithNodeView(m_wfm, m -> createNodeView(dynamicPage));
 
         var nodeViewManager = NodeViewManager.getInstance();
-        assertThat(nodeViewManager.getNodeViewPagePath(nnc).isEmpty(), is(true));
+        assertThat(nodeViewManager.getPagePath(nnc).isEmpty(), is(true));
 
         runOnExecutor(() -> { // NOSONAR
-            String path = nodeViewManager.getNodeViewPagePath(nnc).orElse(null);
+            String path = nodeViewManager.getPagePath(nnc).orElse(null);
             assertThat(nodeViewManager.getPageMapSize(), is(1));
-            String path2 = nodeViewManager.getNodeViewPagePath(nnc2).orElse(null);
+            String path2 = nodeViewManager.getPagePath(nnc2).orElse(null);
             assertThat(nodeViewManager.getPageMapSize(), is(2));
             var resourcePrefix1 = nnc.getNode().getFactory().getClass().getName();
             var resourcePrefix2 = nnc2.getID().toString().replace(":", "_");
@@ -258,12 +258,12 @@ public class NodeViewManagerTest {
 
     private static void testGetNodeViewPageResource(final String resourcePrefix1, final String resourcePrefix2) {
         var nodeViewManager = NodeViewManager.getInstance();
-        assertThat(nodeViewManager.getNodeViewPageResource(resourcePrefix1 + "/page.html").isPresent(), is(true));
-        assertThat(nodeViewManager.getNodeViewPageResource(resourcePrefix1 + "/resource.html").isPresent(), is(true));
-        assertThat(nodeViewManager.getNodeViewPageResource(resourcePrefix2 + "/resource.html").isPresent(), is(true));
-        assertThat(nodeViewManager.getNodeViewPageResource("/test").isEmpty(), is(true));
-        assertThat(nodeViewManager.getNodeViewPageResource("test").isEmpty(), is(true));
-        assertThat(nodeViewManager.getNodeViewPageResource("test/test").isEmpty(), is(true));
+        assertThat(nodeViewManager.getPageResource(resourcePrefix1 + "/page.html").isPresent(), is(true));
+        assertThat(nodeViewManager.getPageResource(resourcePrefix1 + "/resource.html").isPresent(), is(true));
+        assertThat(nodeViewManager.getPageResource(resourcePrefix2 + "/resource.html").isPresent(), is(true));
+        assertThat(nodeViewManager.getPageResource("/test").isEmpty(), is(true));
+        assertThat(nodeViewManager.getPageResource("test").isEmpty(), is(true));
+        assertThat(nodeViewManager.getPageResource("test/test").isEmpty(), is(true));
     }
 
     /**
@@ -289,7 +289,7 @@ public class NodeViewManagerTest {
         var nodeViewManager = NodeViewManager.getInstance();
 
         // remove node
-        nodeViewManager.getNodeViewPageUrl(nc);
+        nodeViewManager.getPageUrl(nc);
         assertThat(nodeViewManager.getNodeViewMapSize(), is(1));
         assertThat(nodeViewManager.getPageMapSize(), is(1));
         m_wfm.removeNode(nc.getID());
@@ -299,7 +299,7 @@ public class NodeViewManagerTest {
         });
 
         // close workflow
-        nodeViewManager.getNodeViewPageUrl(nc);
+        nodeViewManager.getPageUrl(nc);
         assertThat(nodeViewManager.getNodeViewMapSize(), is(1));
         assertThat(nodeViewManager.getPageMapSize(), is(1));
         m_wfm.getParent().removeProject(m_wfm.getID());
@@ -319,13 +319,13 @@ public class NodeViewManagerTest {
         var nodeViewManager = NodeViewManager.getInstance();
 
         // remove node
-        nodeViewManager.getNodeViewPageUrl(nc);
+        nodeViewManager.getPageUrl(nc);
         assertThat(nodeViewManager.getPageMapSize(), is(1));
         m_wfm.removeNode(nc.getID());
         untilAsserted(() -> assertThat(nodeViewManager.getPageMapSize(), is(0)));
 
         // close workflow
-        nodeViewManager.getNodeViewPageUrl(nc);
+        nodeViewManager.getPageUrl(nc);
         assertThat(nodeViewManager.getPageMapSize(), is(1));
         m_wfm.getParent().removeProject(m_wfm.getID());
         untilAsserted(() -> assertThat(nodeViewManager.getPageMapSize(), is(0)));

@@ -48,30 +48,20 @@
  */
 package org.knime.core.webui.node.view;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.WeakHashMap;
-import java.util.regex.Pattern;
 
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContext;
-import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowEvent;
-import org.knime.core.node.workflow.WorkflowListener;
-import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.webui.data.DataServiceProvider;
-import org.knime.core.webui.node.DataServiceManager;
+import org.knime.core.webui.node.AbstractNodeUIManager;
 import org.knime.core.webui.node.dialog.SettingsType;
+import org.knime.core.webui.node.util.NodeCleanUpCallback;
 import org.knime.core.webui.page.Page;
-import org.knime.core.webui.page.PageUtil;
-import org.knime.core.webui.page.Resource;
+import org.knime.core.webui.page.PageUtil.PageKind;
 
 /**
  * Manages (web-ui) node view instances and provides associated functionality.
@@ -80,26 +70,11 @@ import org.knime.core.webui.page.Resource;
  *
  * @since 4.5
  */
-public final class NodeViewManager extends DataServiceManager {
-
-    /**
-     * Domain name used to identify resources requested for a node view.
-     */
-    public static final String DOMAIN_NAME = "org.knime.core.ui.view";
-
-    private static final String URL = "http://" + DOMAIN_NAME;
-
-    private static final String NODE_VIEW_DEBUG_PATTERN_PROP = "org.knime.ui.dev.node.view.url.factory-class";
-
-    private static final String NODE_VIEW_DEBUG_URL_PROP = "org.knime.ui.dev.node.view.url";
+public final class NodeViewManager extends AbstractNodeUIManager {
 
     private static NodeViewManager instance;
 
     private final Map<NodeContainer, NodeView> m_nodeViewMap = new WeakHashMap<>();
-
-    private final Map<NodeID, NodeCleanUpCallback> m_nodeCleanUpCallbacks = new HashMap<>();
-
-    private final Map<String, Page> m_pageMap = new HashMap<>();
 
     /**
      * Returns the singleton instance for this class.
@@ -170,129 +145,9 @@ public final class NodeViewManager extends DataServiceManager {
     }
 
     private void registerNodeView(final NativeNodeContainer nnc, final NodeView nodeView) {
-        var nodeId = nnc.getID();
-        m_nodeViewMap.put(nnc, nodeView);
-
-        var nodeCleanUpCallback = new NodeCleanUpCallback(nnc, () -> {
-            m_nodeViewMap.remove(nnc);
-            m_nodeCleanUpCallbacks.remove(nodeId);
-        });
-        m_nodeCleanUpCallbacks.put(nodeId, nodeCleanUpCallback);
-    }
-
-    /**
-     * Optionally returns a debug url for a view which is controlled by a system property.
-     *
-     * @param nodeFactoryClass the node factory class to get the node view debug url for
-     * @return a debug url or an empty optional of none is set
-     */
-    private static Optional<String>
-        getNodeViewDebugUrl(@SuppressWarnings("rawtypes") final Class<? extends NodeFactory> nodeFactoryClass) {
-        String pattern = System.getProperty(NODE_VIEW_DEBUG_PATTERN_PROP);
-        String url = System.getProperty(NODE_VIEW_DEBUG_URL_PROP);
-        if (url == null) {
-            return Optional.empty();
+        if (m_nodeViewMap.put(nnc, nodeView) == null) {
+            new NodeCleanUpCallback(nnc, () -> m_nodeViewMap.remove(nnc));
         }
-        if (pattern == null || Pattern.matches(pattern, nodeFactoryClass.getName())) {
-            return Optional.of(url);
-        }
-        return Optional.empty();
-    }
-
-    /**
-     * Provides the URL which serves the node view page. The full URL is usually only available if the AP is run as
-     * desktop application.
-     *
-     * @param nnc the node which provides the node view
-     * @return the page url if available, otherwise an empty optional
-     */
-    public Optional<String> getNodeViewPageUrl(final NativeNodeContainer nnc) {
-        if (isRunAsDesktopApplication()) {
-            var debugUrl = getNodeViewDebugUrl(nnc.getNode().getFactory().getClass());
-            if (debugUrl.isPresent()) {
-                return debugUrl;
-            }
-            return Optional.of(URL + "/" + getNodeViewPagePathInternal(nnc));
-        } else {
-            return Optional.empty();
-        }
-    }
-
-    /**
-     * Provides the relative path for a node view, if available. The relative path is usually only available if the AP
-     * is <b>not</b> run as a desktop application (but as an 'executor' as part of the server infrastructure).
-     *
-     * @param nnc the node which provides the node view
-     * @return the relative page path
-     */
-    public Optional<String> getNodeViewPagePath(final NativeNodeContainer nnc) {
-        if (!isRunAsDesktopApplication()) {
-            return Optional.of(getNodeViewPagePathInternal(nnc));
-        } else {
-            return Optional.empty();
-        }
-    }
-
-    private String getNodeViewPagePathInternal(final NativeNodeContainer nnc) {
-        var page = getNodeView(nnc).getPage();
-        var isStaticPage = page.isCompletelyStatic();
-        var pageId = PageUtil.getPageId(nnc, isStaticPage, false);
-        registerPage(nnc.getID(), page, pageId);
-        return pageId + "/" + page.getRelativePath();
-    }
-
-    private void registerPage(final NodeID nodeId, final Page page, final String pageId) {
-        m_pageMap.put(pageId, page);
-        var nodeCleanUpCallback = m_nodeCleanUpCallbacks.get(nodeId);
-        if (nodeCleanUpCallback != null) {
-            nodeCleanUpCallback.onCleanUp(() -> m_pageMap.remove(pageId));
-        }
-    }
-
-    /**
-     * Gives access to page resources. NOTE: Only those resources are available that belong to a page whose path has
-     * been requested via {@link #getNodeViewPagePath(NativeNodeContainer)}.
-     *
-     * @param resourceId the id of the resource
-     * @return the resource or an empty optional if there is no resource for the given id available
-     */
-    public Optional<Resource> getNodeViewPageResource(final String resourceId) {
-        var split = resourceId.indexOf("/");
-        if (split <= 0) {
-            return Optional.empty();
-        }
-
-        var pageId = resourceId.substring(0, split);
-        var page = m_pageMap.get(pageId);
-        if (page == null) {
-            return Optional.empty();
-        }
-
-        var relPath = resourceId.substring(split + 1, resourceId.length());
-        if (page.getRelativePath().equals(relPath)) {
-            return Optional.of(page);
-        } else {
-            return Optional.ofNullable(page.getContext().get(relPath));
-        }
-    }
-
-    /**
-     * Gives access to page resources via a full URL. NOTE: Only those resources are available that belong to a page
-     * whose URL has been requested via {@link #getNodeViewPageUrl(NativeNodeContainer)}.
-     *
-     * @param url the resource url
-     * @return the resource or an empty optional if there is no resource available at the given URL
-     */
-    public Optional<Resource> getNodeViewPageResourceFromUrl(final String url) {
-        return getNodeViewPageResource(getResourceIdFromUrl(url));
-    }
-
-    private static String getResourceIdFromUrl(final String url) {
-        return url.replace(URL, "");
-    }
-
-    private static boolean isRunAsDesktopApplication() {
-        return !"true".equals(System.getProperty("java.awt.headless"));
     }
 
     /**
@@ -300,8 +155,7 @@ public final class NodeViewManager extends DataServiceManager {
      */
     void clearCaches() {
         m_nodeViewMap.clear();
-        m_nodeCleanUpCallbacks.clear();
-        m_pageMap.clear();
+        clearPageMap();
     }
 
     /**
@@ -314,66 +168,35 @@ public final class NodeViewManager extends DataServiceManager {
     }
 
     /**
-     * For testing purposes only.
-     *
-     * @return
-     */
-    int getPageMapSize() {
-        return m_pageMap.size();
-    }
-
-    /*
-     * Helper to clean-up after a node removal or workflow disposal.
-     * Once a clean-up has been triggered, all the registered listeners (on the node and the workflow) are removed which
-     * renders the NodeCleanUpCallback-instance useless afterwards.
-     */
-    private static class NodeCleanUpCallback implements WorkflowListener {
-
-        private final List<Runnable> m_onCleanUp = new ArrayList<>();
-
-        private NativeNodeContainer m_nnc;
-
-        NodeCleanUpCallback(final NativeNodeContainer nnc, final Runnable onCleanUp) {
-            WorkflowManager.ROOT.addListener(NodeCleanUpCallback.this);
-            nnc.getParent().addListener(NodeCleanUpCallback.this);
-            m_nnc = nnc;
-            m_onCleanUp.add(onCleanUp);
-        }
-
-        void onCleanUp(final Runnable r) {
-            m_onCleanUp.add(r);
-        }
-
-        @Override
-        public void workflowChanged(final WorkflowEvent e) {
-            if (e.getType() == WorkflowEvent.Type.NODE_REMOVED) {
-                if (e.getOldValue() instanceof WorkflowManager && ((WorkflowManager)e.getOldValue()).getID()
-                    .getIndex() == m_nnc.getParent().getProjectWFM().getID().getIndex()) {
-                    // workflow has been closed
-                    cleanUp();
-                }
-                if (e.getOldValue() instanceof NativeNodeContainer
-                    && ((NativeNodeContainer)e.getOldValue()).getID().equals(m_nnc.getID())) {
-                    // node removed
-                    cleanUp();
-                }
-            }
-        }
-
-        private void cleanUp() {
-            WorkflowManager.ROOT.removeListener(NodeCleanUpCallback.this);
-            m_nnc.getParent().removeListener(NodeCleanUpCallback.this);
-            m_onCleanUp.forEach(Runnable::run);
-            m_nnc = null;
-            m_onCleanUp.clear();
-        }
-    }
-
-    /**
      * {@inheritDoc}
      */
     @Override
     protected DataServiceProvider getDataServiceProvider(final NodeContainer nc) {
         return getNodeView(nc);
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Page getPage(final NativeNodeContainer nnc) {
+        return getNodeView(nnc).getPage();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected PageKind getPageKind() {
+        return PageKind.VIEW;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected final int getPageMapSize() {
+        return super.getPageMapSize();
+    }
+
 }
