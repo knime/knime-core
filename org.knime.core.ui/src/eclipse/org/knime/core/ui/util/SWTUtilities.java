@@ -160,7 +160,7 @@ public class SWTUtilities {
             Shell likelyActiveShell = null;
 
             for (Shell s : display.getShells()) {
-                if (s.getText().startsWith(product.getName())) {
+                if (product != null && s.getText().startsWith(product.getName())) {
                     return s;
                 }
 
