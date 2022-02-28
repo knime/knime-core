@@ -70,8 +70,8 @@ public interface TextSettingsDataService {
      * Infers a single text-based settings representation from possibly multiple {@link NodeSettingsRO}-instances (one
      * per {@link SettingsType}).
      *
-     * @param settings the settings to read from
-     * @param specs the specs for configuring the settings
+     * @param settings the settings to read from; can be empty settings if none have been stored with the node, yet
+     * @param specs the specs for configuring the settings (includes the flow variable port)
      * @return a new text-based settings representation
      */
     String getInitialData(Map<SettingsType, NodeSettingsRO> settings, PortObjectSpec[] specs);
@@ -85,4 +85,15 @@ public interface TextSettingsDataService {
      * @param settings the settings instances to write into
      */
     void applyData(final String textSettings, Map<SettingsType, NodeSettingsWO> settings);
+
+    /**
+     * Saves the default settings to the given settings objects. Will be called if there are no settings stored with the
+     * node, yet, and is mainly used to be able to properly show the flow variable configuration (e.g., to overwrite
+     * settings).
+     *
+     * @param settings the settings to write into
+     * @param specs the node's input specs (includes the flow variable port)
+     */
+    void saveDefaultSettings(Map<SettingsType, NodeSettingsWO> settings, PortObjectSpec[] specs);
+
 }

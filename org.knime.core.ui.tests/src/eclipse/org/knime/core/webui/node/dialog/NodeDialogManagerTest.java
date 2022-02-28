@@ -189,6 +189,13 @@ public class NodeDialogManagerTest {
                 assertThat(settings.size(), is(2));
                 return "the node settings";
             }
+
+            @Override
+            public void saveDefaultSettings(final Map<SettingsType, NodeSettingsWO> settings,
+                final PortObjectSpec[] specs) {
+                //
+            }
+
         }, new TextDataService() {
 
             @Override

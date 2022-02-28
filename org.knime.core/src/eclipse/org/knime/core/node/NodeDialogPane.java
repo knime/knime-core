@@ -109,6 +109,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelFlowVariableCompatib
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.util.SharedIcons;
 import org.knime.core.node.util.ViewUtils;
@@ -454,6 +455,9 @@ public abstract class NodeDialogPane {
         }
         if (modelSettings == null) {
             modelSettings = new NodeSettings("empty");
+        }
+        if (viewSettings == null && hasViewSettings()) {
+            viewSettings = getViewSettings();
         }
         if (m_memPolicyTab != null) {
             MemoryPolicy memoryPolicy = sncSettings.getMemoryPolicy();
@@ -1549,15 +1553,14 @@ public abstract class NodeDialogPane {
        return modelSettings;
     }
 
-    private NodeSettings getViewSettings() {
-       var nodeContainer = (NativeNodeContainer)m_nodeContext.getNodeContainer();
-       NodeSettings viewSettings;
-       try {
-           viewSettings = nodeContainer.getNodeSettings().getNodeSettings("view");
-       } catch (InvalidSettingsException e) { // NOSONAR
-           viewSettings = null;
-       }
-       return viewSettings;
+    private NodeSettingsRO getViewSettings() {
+        var nodeContainer = (NativeNodeContainer)m_nodeContext.getNodeContainer();
+        try {
+            return nodeContainer.getNodeSettings().getNodeSettings("view");
+        } catch (InvalidSettingsException e) { // NOSONAR
+            var specsWithFlowVariablePort = ArrayUtils.insert(0, m_specs, FlowVariablePortObjectSpec.INSTANCE);
+            return getDefaultViewSettings(specsWithFlowVariablePort);
+        }
     }
 
     /** Updates the warning message below the panel to inform the user
@@ -1600,6 +1603,20 @@ public abstract class NodeDialogPane {
      */
     protected boolean hasViewSettings() {
         return false;
+    }
+
+    /**
+     * Implemented by sub-classes to provide default view settings used in the flow variable tab. Will only be called as
+     * long as there are no view settings stored with the node.
+     *
+     * @param specs the node's input specs including flow variable port
+     * @return the default view settings
+     *
+     * @since 4.6
+     */
+    protected NodeSettingsRO getDefaultViewSettings(final PortObjectSpec[] specs) {
+        throw new IllegalStateException(
+            "This method must be overwritten if view settings are being used. Most likely an implementation error.");
     }
 
     /**

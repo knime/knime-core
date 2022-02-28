@@ -49,6 +49,7 @@
 package org.knime.core.webui.node.dialog;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Optional;
@@ -56,6 +57,7 @@ import java.util.Set;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.Node;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
@@ -63,8 +65,11 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.workflow.CredentialsProvider;
+import org.knime.core.node.workflow.FlowObjectStack;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContext;
+import org.knime.core.node.workflow.NodeID;
 import org.knime.core.webui.data.ApplyDataService;
 import org.knime.core.webui.data.DataServiceProvider;
 import org.knime.core.webui.data.InitialDataService;
@@ -264,34 +269,60 @@ public abstract class NodeDialog implements DataServiceProvider {
      * @return a legacy flow variable node dialog
      */
     public final NodeDialogPane createLegacyFlowVariableNodeDialog() {
-        return new NodeDialogPane() { // NOSONAR
+        return new LegacyFlowVariableNodeDialog();
+    }
 
-            @Override
-            public void onOpen() {
-                setSelected("Flow Variables");
-            }
+    final class LegacyFlowVariableNodeDialog extends NodeDialogPane {
 
-            @Override
-            protected boolean hasModelSettings() {
-                return m_settingsTypes.contains(SettingsType.MODEL);
-            }
+        @Override
+        public void onOpen() {
+            setSelected("Flow Variables");
+        }
 
-            @Override
-            protected boolean hasViewSettings() {
-                return m_settingsTypes.contains(SettingsType.VIEW);
-            }
+        @Override
+        protected boolean hasModelSettings() {
+            return m_settingsTypes.contains(SettingsType.MODEL);
+        }
 
-            @Override
-            protected void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec[] specs)
-                throws NotConfigurableException {
-                //
-            }
+        @Override
+        protected boolean hasViewSettings() {
+            return m_settingsTypes.contains(SettingsType.VIEW);
+        }
 
-            @Override
-            protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
-                //
+        @Override
+        protected void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec[] specs)
+            throws NotConfigurableException {
+            //
+        }
+
+        @Override
+        protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
+            //
+        }
+
+        @Override
+        protected NodeSettingsRO getDefaultViewSettings(final PortObjectSpec[] specs) {
+            if (hasViewSettings()) {
+                var ns = new NodeSettings("default_view_settings");
+                getSettingsDataService().saveDefaultSettings(Map.of(SettingsType.VIEW, ns), specs);
+                return ns;
+            } else {
+                return super.getDefaultViewSettings(specs);
             }
-        };
+        }
+
+        /**
+         * For testing purposes only!
+         *
+         * @throws NotConfigurableException
+         */
+        void initDialogForTesting(final NodeSettingsRO settings, final PortObjectSpec[] spec)
+            throws NotConfigurableException {
+            Node.invokeDialogInternalLoad(this, settings, spec, null,
+                FlowObjectStack.createFromFlowVariableList(Collections.emptyList(), new NodeID(0)),
+                CredentialsProvider.EMPTY_CREDENTIALS_PROVIDER, false);
+            setSelected("Flow Variables");
+        }
 
     }
 

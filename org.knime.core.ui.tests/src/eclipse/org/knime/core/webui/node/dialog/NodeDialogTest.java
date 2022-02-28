@@ -51,6 +51,7 @@ package org.knime.core.webui.node.dialog;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
+import java.awt.Container;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.Map;
@@ -61,10 +62,16 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.config.ConfigEditJTree;
+import org.knime.core.node.config.ConfigEditTreeModel.ConfigEditTreeNode;
 import org.knime.core.node.config.base.JSONConfig;
 import org.knime.core.node.config.base.JSONConfig.WriterConfig;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.workflow.NativeNodeContainer;
+import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.webui.data.DataService;
+import org.knime.core.webui.node.dialog.NodeDialog.LegacyFlowVariableNodeDialog;
 import org.knime.core.webui.page.Page;
 import org.knime.testing.node.dialog.NodeDialogNodeFactory;
 import org.knime.testing.util.WorkflowManagerUtil;
@@ -120,6 +127,65 @@ public class NodeDialogTest {
         WorkflowManagerUtil.disposeWorkflow(wfm);
     }
 
+    /**
+     * Tests to create the legacy flow variable node dialog ({@link NodeDialog#createLegacyFlowVariableNodeDialog()})
+     * and makes sure the default view settings and applied view settings are available in the flow variable tree
+     * (jtree).
+     *
+     * @throws IOException
+     * @throws NotConfigurableException
+     */
+    @Test
+    public void testCreateLegacyFlowVariableNodeDialog() throws IOException, NotConfigurableException {
+        var wfm = WorkflowManagerUtil.createEmptyWorkflow();
+        var nc = WorkflowManagerUtil.createAndAddNode(wfm,
+            new NodeDialogNodeFactory(() -> createNodeDialog(Page.builder(() -> "test", "test.html").build(),
+                createTextSettingsDataService(), null)));
+
+        openLegacyFlowVariableDialogAndCheckViewSettings(nc, "a default view setting value");
+
+        var newViewSettings = new NodeSettings("new_view_settings");
+        newViewSettings.addString("new view setting", "new view setting value");
+        NodeDialogManager.getInstance().callTextApplyDataService(nc,
+            settingsToString(newViewSettings, newViewSettings));
+        openLegacyFlowVariableDialogAndCheckViewSettings(nc, "new view setting value");
+    }
+
+    private static void openLegacyFlowVariableDialogAndCheckViewSettings(final NativeNodeContainer nc,
+        final String viewSettingValue) throws NotConfigurableException {
+        NodeContext.pushContext(nc);
+        LegacyFlowVariableNodeDialog legacyNodeDialog;
+        try {
+            legacyNodeDialog = (LegacyFlowVariableNodeDialog)NodeDialogManager.getInstance().getNodeDialog(nc)
+                .createLegacyFlowVariableNodeDialog();
+            var nodeSettings = new NodeSettings("node_settings");
+            var modelSettings = nodeSettings.addNodeSettings("model");
+            modelSettings.addString("default model setting", "default model setting value");
+            nodeSettings.addNodeSettings("internal_node_subsettings");
+            legacyNodeDialog.initDialogForTesting(nodeSettings, new PortObjectSpec[]{});
+        } finally {
+            NodeContext.removeLastContext();
+        }
+        var tabbedPane = getChild(legacyNodeDialog.getPanel(), 1);
+        var flowVariablesTab = getChild(getChild(getChild(tabbedPane, 0), 0), 0);
+
+        var modelSettingsJTree =
+            (ConfigEditJTree)getChild(getChild(getChild(getChild(getChild(flowVariablesTab, 0), 1), 0), 0), 0);
+        var modelRootNode = modelSettingsJTree.getModel().getRoot();
+        var firstModelConfigNode = (ConfigEditTreeNode)modelRootNode.getChildAt(0);
+        assertThat(firstModelConfigNode.getConfigEntry().toStringValue(), is("default model setting value"));
+
+        var viewSettingsJTree =
+                (ConfigEditJTree)getChild(getChild(getChild(getChild(getChild(flowVariablesTab, 0), 2), 0), 0), 0);
+        var viewRootNode = viewSettingsJTree.getModel().getRoot();
+        var firstViewConfigNode = (ConfigEditTreeNode)viewRootNode.getChildAt(0);
+        assertThat(firstViewConfigNode.getConfigEntry().toStringValue(), is(viewSettingValue));
+    }
+
+    private static Container getChild(final Container cont, final int index) {
+        return (Container)cont.getComponent(index);
+    }
+
     private static TextSettingsDataService createTextSettingsDataService() {
         return new TextSettingsDataService() {
 
@@ -132,6 +198,12 @@ public class NodeDialogTest {
             @Override
             public void applyData(final String textSettings, final Map<SettingsType, NodeSettingsWO> settings) {
                 stringToSettings(textSettings, settings.get(SettingsType.MODEL), settings.get(SettingsType.VIEW));
+            }
+
+            @Override
+            public void saveDefaultSettings(final Map<SettingsType, NodeSettingsWO> settings,
+                final PortObjectSpec[] specs) {
+                settings.get(SettingsType.VIEW).addString("a default view setting", "a default view setting value");
             }
         };
     }
@@ -173,6 +245,11 @@ public class NodeDialogTest {
             public String getInitialData(final Map<SettingsType, NodeSettingsRO> settings,
                 final PortObjectSpec[] specs) {
                 return "test settings";
+            }
+
+            @Override
+            public void saveDefaultSettings(final Map<SettingsType, NodeSettingsWO> settings, final PortObjectSpec[] specs) {
+                //
             }
 
         };
