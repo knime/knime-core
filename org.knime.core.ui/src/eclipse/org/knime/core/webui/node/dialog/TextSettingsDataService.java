@@ -70,7 +70,8 @@ public interface TextSettingsDataService {
      * Infers a single text-based settings representation from possibly multiple {@link NodeSettingsRO}-instances (one
      * per {@link SettingsType}).
      *
-     * @param settings the settings to read from; can be empty settings if none have been stored with the node, yet
+     * @param settings the settings to read from; if there are no settings with the node stored, yet, the default node
+     *            settings will be supplied (see {@link #saveDefaultSettings(Map, PortObjectSpec[])})
      * @param specs the specs for configuring the settings (includes the flow variable port)
      * @return a new text-based settings representation
      */

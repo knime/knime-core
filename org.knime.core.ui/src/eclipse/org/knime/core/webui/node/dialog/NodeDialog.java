@@ -133,25 +133,28 @@ public abstract class NodeDialog implements DataServiceProvider {
             }
 
             NodeContext.pushContext(m_nnc);
+            var settingsDataService = getSettingsDataService();
             try {
                 Map<SettingsType, NodeSettingsRO> settings = new EnumMap<>(SettingsType.class);
-                if (m_settingsTypes.contains(SettingsType.MODEL)) {
-                    var modelSettings = new NodeSettings("node_settings");
-                    m_nnc.getNode().saveModelSettingsTo(modelSettings);
-                    settings.put(SettingsType.MODEL, modelSettings);
-                }
-                if (m_settingsTypes.contains(SettingsType.VIEW)) {
-                    NodeSettings viewSettings;
-                    try {
-                        viewSettings = m_nnc.getNodeSettings().getNodeSettings(SettingsType.VIEW.getConfigKey());
-                    } catch (InvalidSettingsException ex) { // NOSONAR
-                        viewSettings = new NodeSettings(SettingsType.VIEW.getConfigKey());
-                    }
-                    settings.put(SettingsType.VIEW, viewSettings);
-                }
-                return getSettingsDataService().getInitialData(settings, specs);
+                getSettings(SettingsType.MODEL, settingsDataService, specs, settings);
+                getSettings(SettingsType.VIEW, settingsDataService, specs, settings);
+                return settingsDataService.getInitialData(settings, specs);
             } finally {
                 NodeContext.removeLastContext();
+            }
+        }
+
+        private void getSettings(final SettingsType settingsType, final TextSettingsDataService settingsDataService,
+            final PortObjectSpec[] specs, final Map<SettingsType, NodeSettingsRO> resultSettings) {
+            if (m_settingsTypes.contains(settingsType)) {
+                NodeSettings settings;
+                try {
+                    settings = m_nnc.getNodeSettings().getNodeSettings(settingsType.getConfigKey());
+                } catch (InvalidSettingsException ex) { // NOSONAR
+                    settings = new NodeSettings("default_settings");
+                    settingsDataService.saveDefaultSettings(Map.of(settingsType, settings), specs);
+                }
+                resultSettings.put(settingsType, settings);
             }
         }
     }
