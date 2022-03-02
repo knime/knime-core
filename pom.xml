@@ -143,9 +143,14 @@
 					<url>${knime.rest.p2}</url>
 				</repository>
 				<repository>
-					<id>p2-knime-python</id>
+					<id>p2-knime-python-legacy</id>
 					<layout>p2</layout>
-					<url>${knime.python.p2}</url>
+					<url>${knime.python.legacy.p2}</url>
+				</repository>
+				<repository>
+					<id>p2-knime-conda</id>
+					<layout>p2</layout>
+					<url>${knime.conda.p2}</url>
 				</repository>
 				<repository>
 					<id>p2-knime-filehandling</id>
