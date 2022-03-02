@@ -284,6 +284,15 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
         }
 
         try {
+            m_sncSettings.setViewVariablesSettings(loadViewVariablesSettings(settingsForNode));
+        } catch (InvalidSettingsException e) {
+            String msg = "Unable load view variable settings: " + e.getMessage();
+            result.addError(msg);
+            getLogger().debug(msg, e);
+            setDirtyAfterLoad();
+        }
+
+        try {
             m_sncSettings.setVariablesSettings(loadVariableSettings(settingsForNode));
         } catch (InvalidSettingsException e) {
             String msg = "Could not load variable settings: " + e.getMessage();
@@ -446,6 +455,13 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
     private static NodeSettings loadViewSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         if (settings.containsKey(SingleNodeContainer.CFG_VIEW)) {
             return (NodeSettings)settings.getNodeSettings(SingleNodeContainer.CFG_VIEW);
+        }
+        return null;
+    }
+
+    private static NodeSettings loadViewVariablesSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+        if (settings.containsKey(SingleNodeContainer.CFG_VIEW_VARIABLES)) {
+            return (NodeSettings)settings.getNodeSettings(SingleNodeContainer.CFG_VIEW_VARIABLES);
         }
         return null;
     }

@@ -51,6 +51,7 @@ package org.knime.core.webui.node.dialog;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThrows;
 import static org.knime.core.webui.node.dialog.NodeDialogTest.createNodeDialog;
 import static org.knime.core.webui.page.PageTest.BUNDLE_ID;
@@ -209,17 +210,31 @@ public class NodeDialogManagerTest {
         var nodeDialogManager = NodeDialogManager.getInstance();
         assertThat(nodeDialogManager.callTextInitialDataService(nc), is("the node settings"));
         assertThat(nodeDialogManager.callTextDataService(nc, ""), is("general data service"));
+        // apply data, i.e. settings
         nodeDialogManager.callTextApplyDataService(nc, "key,node settings value");
+
+        // check node model settings
         var modelSettings = ((NodeDialogNodeModel)nc.getNode().getNodeModel()).getLoadNodeSettings();
         assertThat(modelSettings.getString("key"), is("node settings value"));
         assertThat(nc.getNodeSettings().getNodeSettings("model").getString("key"), is("node settings value"));
-        var viewSettings = ((NodeDialogNodeView)NodeViewManager.getInstance().getNodeView(nc)).getLoadNodeSettings();
+
+        // check view settings
+        var viewSettings = getNodeViewSettings(nc);
+        assertThat(viewSettings, is(nullValue())); // no view settings available without updating the node view
+        NodeViewManager.getInstance().updateNodeViewSettings(nc);
+        viewSettings = getNodeViewSettings(nc);
         assertThat(viewSettings.getString("key"), is("node settings value"));
         assertThat(nc.getNodeSettings().getNodeSettings("view").getString("key"), is("node settings value"));
+
+        // check error on apply settings
         String message =
             assertThrows(IOException.class, () -> nodeDialogManager.callTextApplyDataService(nc, "ERROR,invalid"))
                 .getMessage();
         assertThat(message, is("Invalid node settings"));
+    }
+
+    private static NodeSettingsRO getNodeViewSettings(final NodeContainer nc) {
+        return ((NodeDialogNodeView)NodeViewManager.getInstance().getNodeView(nc)).getLoadNodeSettings();
     }
 
     /**

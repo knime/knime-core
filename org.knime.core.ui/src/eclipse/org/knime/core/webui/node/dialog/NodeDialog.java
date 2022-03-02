@@ -190,10 +190,9 @@ public abstract class NodeDialog implements DataServiceProvider {
                     settingsChanged(previousNodeSettings, viewSettings, SettingsType.VIEW.getConfigKey());
 
                 if (viewSettingsChanged) {
-                    // load settings into node view
+                    // validate settings
                     var nodeView = NodeViewManager.getInstance().getNodeView(m_nnc);
                     nodeView.validateSettings(viewSettings);
-                    nodeView.loadValidatedSettingsFrom(viewSettings);
                 }
 
                 if (modelSettingsChanged) {
@@ -277,9 +276,11 @@ public abstract class NodeDialog implements DataServiceProvider {
 
     final class LegacyFlowVariableNodeDialog extends NodeDialogPane {
 
+        private static final String FLOW_VARIABLES_TAB_NAME = "Flow Variables";
+
         @Override
         public void onOpen() {
-            setSelected("Flow Variables");
+            setSelected(FLOW_VARIABLES_TAB_NAME);
         }
 
         @Override
@@ -324,7 +325,7 @@ public abstract class NodeDialog implements DataServiceProvider {
             Node.invokeDialogInternalLoad(this, settings, spec, null,
                 FlowObjectStack.createFromFlowVariableList(Collections.emptyList(), new NodeID(0)),
                 CredentialsProvider.EMPTY_CREDENTIALS_PROVIDER, false);
-            setSelected("Flow Variables");
+            setSelected(FLOW_VARIABLES_TAB_NAME);
         }
 
     }

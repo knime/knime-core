@@ -51,6 +51,8 @@ package org.knime.gateway.api.entity;
 import java.util.List;
 import java.util.function.Supplier;
 
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.webui.node.view.NodeViewManager;
@@ -75,11 +77,17 @@ public final class NodeViewEnt extends NodeUIExtensionEnt {
      */
     public static NodeViewEnt create(final NativeNodeContainer nnc, final Supplier<List<String>> initialSelection) {
         if (nnc.getNodeContainerState().isExecuted()) {
-            return new NodeViewEnt(nnc, initialSelection, NodeViewManager.getInstance());
+            try {
+                NodeViewManager.getInstance().updateNodeViewSettings(nnc);
+                return new NodeViewEnt(nnc, initialSelection, NodeViewManager.getInstance(), null);
+            } catch (InvalidSettingsException ex) {
+                var message = "Failed to update node view settings";
+                NodeLogger.getLogger(NodeViewEnt.class).error(message, ex);
+                return new NodeViewEnt(nnc, null, null, message + ":" + ex.getMessage());
+            }
         } else {
-            return new NodeViewEnt(nnc, null, null);
+            return new NodeViewEnt(nnc, null, null, null);
         }
-
     }
 
     /**
@@ -94,11 +102,11 @@ public final class NodeViewEnt extends NodeUIExtensionEnt {
     }
 
     private NodeViewEnt(final NativeNodeContainer nnc, final Supplier<List<String>> initialSelection,
-        final NodeViewManager nodeViewManager) {
+        final NodeViewManager nodeViewManager, final String customErrorMessage) {
         super(nnc, nodeViewManager, nodeViewManager, PageType.VIEW);
         CheckUtils.checkArgument(NodeViewManager.hasNodeView(nnc), "The provided node doesn't have a node view");
         m_initialSelection = initialSelection == null ? null : initialSelection.get();
-        m_info = new NodeInfoEnt(nnc);
+        m_info = new NodeInfoEnt(nnc, customErrorMessage);
     }
 
     /**

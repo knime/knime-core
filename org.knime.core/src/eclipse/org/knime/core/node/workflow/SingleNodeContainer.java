@@ -49,6 +49,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 import org.knime.core.node.BufferedDataTable;
@@ -112,7 +113,7 @@ public abstract class SingleNodeContainer extends NodeContainer {
     static final String CFG_VARIABLES = "variables";
     /** Sub settings entry containing the node-view settings. */
     static final String CFG_VIEW = "view";
-    private static final String CFG_VIEW_VARIABLES = "view_variables";
+    static final String CFG_VIEW_VARIABLES = "view_variables";
 
     /** Name of the sub-directory containing node-local files. These files
      * manually copied by the user and the node will automatically list those
@@ -334,7 +335,7 @@ public abstract class SingleNodeContainer extends NodeContainer {
             return Collections.emptyMap();
         }
         NodeSettings fromModel = m_settings.getModelSettingsClone();
-        List<FlowVariable> newVariableList = overwriteModelSettingsWithFlowVariables(fromModel, variablesSettings,
+        List<FlowVariable> newVariableList = overwriteSettingsWithFlowVariables(fromModel, variablesSettings,
             getFlowObjectStack().getAvailableFlowVariables(VariableType.getAllTypes()));
 
         NodeContext.pushContext(this);
@@ -355,21 +356,21 @@ public abstract class SingleNodeContainer extends NodeContainer {
         return newVariableHash;
     }
 
-    private static List<FlowVariable> overwriteModelSettingsWithFlowVariables(
-        final NodeSettings modelSettingsToOverwrite, final NodeSettingsRO variablesSettings,
-        final Map<String, FlowVariable> flowVariablesMap) throws InvalidSettingsException {
+    private static List<FlowVariable> overwriteSettingsWithFlowVariables(final NodeSettings settingsToOverwrite,
+        final NodeSettingsRO variablesSettings, final Map<String, FlowVariable> flowVariablesMap)
+        throws InvalidSettingsException {
         if (variablesSettings == null) {
             return Collections.emptyList();
         }
         ConfigEditTreeModel configEditor;
         try {
-            configEditor = ConfigEditTreeModel.create(modelSettingsToOverwrite, variablesSettings);
+            configEditor = ConfigEditTreeModel.create(settingsToOverwrite, variablesSettings);
         } catch (final InvalidSettingsException e) {
             throw new InvalidSettingsException("Errors reading flow variables: " + e.getMessage(), e);
         }
         List<FlowVariable> newVariableList;
         try {
-            newVariableList = configEditor.overwriteSettings(modelSettingsToOverwrite, flowVariablesMap);
+            newVariableList = configEditor.overwriteSettings(settingsToOverwrite, flowVariablesMap);
         } catch (InvalidSettingsException e) {
             throw new InvalidSettingsException(
                 "Errors overwriting node settings with flow variables: " + e.getMessage(), e);
@@ -396,9 +397,32 @@ public abstract class SingleNodeContainer extends NodeContainer {
             saveNodeSettingsToDefault();
         }
         NodeSettings modelSettings = m_settings.getModelSettingsClone();
-        overwriteModelSettingsWithFlowVariables(modelSettings, m_settings.getVariablesSettings(),
+        overwriteSettingsWithFlowVariables(modelSettings, m_settings.getVariablesSettings(),
             getFlowObjectStack().getAvailableFlowVariables(VariableType.getAllTypes()));
         return modelSettings;
+    }
+
+    /**
+     * Extracts and returns the view settings of a node. The (sub-)settings that are controlled by flow variables are
+     * replaced by the flow variable value.
+     *
+     * NOTE: this method can fail if the set flow variables are not available in the flow object stack (mainly because
+     * upstream nodes aren't executed, yet)
+     *
+     * @return the node's 'view' settings, with setting values replaced with the value of the controlling flow variable
+     *         (if so); or an empty optional if there are no view-settings
+     * @throws InvalidSettingsException
+     *
+     * @since 4.6
+     */
+    public Optional<NodeSettings> getViewSettingsUsingFlowObjectStack() throws InvalidSettingsException {
+        if (m_settings.getViewSettings() == null) {
+            return Optional.empty();
+        }
+        var viewSettings = m_settings.getViewSettingsClone();
+        overwriteSettingsWithFlowVariables(viewSettings, m_settings.getViewVariablesSettings(),
+            getFlowObjectStack().getAvailableFlowVariables(VariableType.getAllTypes()));
+        return Optional.of(viewSettings);
     }
 
     /** Load cleaned and "variable adjusted" into underlying implementation.  Throws exception
@@ -1244,6 +1268,17 @@ public abstract class SingleNodeContainer extends NodeContainer {
         /**
          * @return the viewSettings
          */
+        public NodeSettings getViewSettingsClone() {
+            NodeSettings s = new NodeSettings("ignored");
+            if (m_viewSettings != null) {
+                m_viewSettings.copyTo(s);
+            }
+            return s;
+        }
+
+        /**
+         * @return the viewSettings
+         */
         public NodeSettingsRO getViewSettings() {
             return m_viewSettings;
         }
@@ -1251,7 +1286,7 @@ public abstract class SingleNodeContainer extends NodeContainer {
         /**
          * @param viewSettings the viewSettings to set
          */
-        public void setViewSettings(final NodeSettings viewSettings) {
+        public void setViewSettings(final NodeSettingsRO viewSettings) {
             m_viewSettings = viewSettings;
         }
 

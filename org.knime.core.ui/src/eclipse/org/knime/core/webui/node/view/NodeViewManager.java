@@ -58,7 +58,6 @@ import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.webui.data.DataServiceProvider;
 import org.knime.core.webui.node.AbstractNodeUIManager;
-import org.knime.core.webui.node.dialog.SettingsType;
 import org.knime.core.webui.node.util.NodeCleanUpCallback;
 import org.knime.core.webui.page.Page;
 import org.knime.core.webui.page.PageUtil.PageType;
@@ -120,6 +119,28 @@ public final class NodeViewManager extends AbstractNodeUIManager {
         return createAndRegisterNodeView(nnc);
     }
 
+    /**
+     * Updates the view settings of a already created node view (i.e. a node view that has already been requested via
+     * {@link #getNodeView(NodeContainer)} at least once).
+     *
+     * Updating the view settings means to get the current node settings from the node and provide them to the view (via
+     * {@link NodeView#loadValidatedSettingsFrom(org.knime.core.node.NodeSettingsRO)}.
+     *
+     * NOTE: The settings (values) being passed to the node view are already combined with upstream flow variables (in
+     * case settings are overwritten by flow variables).
+     *
+     * @param nc the node container to update the node view for
+     * @throws InvalidSettingsException if settings couldn't be updated
+     * @throws IllegalArgumentException if the passed node container does not provide a node view
+     */
+    public void updateNodeViewSettings(final NodeContainer nc) throws InvalidSettingsException {
+        var nodeView = getNodeView(nc);
+        var viewSettings = ((NativeNodeContainer)nc).getViewSettingsUsingFlowObjectStack();
+        if (viewSettings.isPresent()) {
+            nodeView.loadValidatedSettingsFrom(viewSettings.get());
+        }
+    }
+
     private NodeView createAndRegisterNodeView(final NativeNodeContainer nnc) {
         @SuppressWarnings("unchecked")
         NodeViewFactory<NodeModel> fac = (NodeViewFactory<NodeModel>)nnc.getNode().getFactory();
@@ -127,17 +148,6 @@ public final class NodeViewManager extends AbstractNodeUIManager {
         try {
             var nodeView = fac.createNodeView(nnc.getNodeModel());
             registerNodeView(nnc, nodeView);
-
-            var nodeSettings = nnc.getNodeSettings();
-            if (nodeSettings.containsKey(SettingsType.VIEW.getConfigKey())) {
-                try {
-                    var viewSettings = nodeSettings.getNodeSettings(SettingsType.VIEW.getConfigKey());
-                    nodeView.loadValidatedSettingsFrom(viewSettings);
-                } catch (InvalidSettingsException ex) { // NOSONAR
-                    //
-                }
-            }
-
             return nodeView;
         } finally {
             NodeContext.removeLastContext();

@@ -229,7 +229,7 @@ public class NodeDialogTest {
     /**
      * Helper to create a {@link NodeDialog}.
      *
-     * @param page the page to create the node dialg with
+     * @param page the page to create the node dialog with
      *
      * @return a new dialog instance
      */

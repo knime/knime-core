@@ -552,12 +552,14 @@ public abstract class NodeDialogPane {
             updateFlowVariablesTab();
         }
         NodeSettings variables = m_flowVariableTab.getVariableSettings();
-        NodeSettings viewVariables = m_flowVariableTab.getViewVariableSettings();
         SingleNodeContainerSettings s = new SingleNodeContainerSettings();
         s.setModelSettings(model);
         s.setVariablesSettings(variables);
-        s.setViewSettings(model);
-        s.setViewVariablesSettings(viewVariables);
+        if (hasViewSettings()) {
+            var viewVariables = m_flowVariableTab.getViewVariableSettings();
+            s.setViewSettings(getViewSettings());
+            s.setViewVariablesSettings(viewVariables);
+        }
         if (m_memPolicyTab != null) {
             s.setMemoryPolicy(m_memPolicyTab.getStatus());
         }

@@ -192,7 +192,7 @@ public class NodeViewManagerTest {
         m_wfm.loadNodeSettings(nc.getID(), settings);
 
         // test
-        NodeViewManager.getInstance().getNodeView(nc);
+        NodeViewManager.getInstance().updateNodeViewSettings(nc);
         assertTrue(loadedNodeSettings.get().containsKey("view setting key"));
     }
 

@@ -64,18 +64,29 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 import org.junit.Assert;
 import org.junit.Test;
 import org.knime.core.data.RowKey;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettings;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.config.base.JSONConfig;
+import org.knime.core.node.config.base.JSONConfig.WriterConfig;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeInputNodeFactory;
+import org.knime.core.webui.data.ApplyDataService;
+import org.knime.core.webui.data.DataService;
+import org.knime.core.webui.data.InitialDataService;
 import org.knime.core.webui.data.text.TextInitialDataService;
 import org.knime.core.webui.node.view.NodeView;
 import org.knime.core.webui.node.view.NodeViewTest;
@@ -103,35 +114,34 @@ public class NodeViewEntTest {
      * Tests {@link NodeViewEnt#NodeViewEnt(NativeNodeContainer)}.
      *
      * @throws IOException
+     * @throws InvalidSettingsException
      */
     @Test
-    public void testNodeViewEnt() throws IOException {
+    public void testNodeViewEnt() throws IOException, InvalidSettingsException {
         var wfm = WorkflowManagerUtil.createEmptyWorkflow();
 
         NativeNodeContainer nncWithoutNodeView =
             WorkflowManagerUtil.createAndAddNode(wfm, new VirtualSubNodeInputNodeFactory(null, new PortType[0]));
         Assert.assertThrows(IllegalArgumentException.class, () -> NodeViewEnt.create(nncWithoutNodeView));
 
-        Function<NodeViewNodeModel, NodeView> nodeViewCreator = m -> {
-            Page p = Page.builder(() -> "blub", "index.html").build();
-            return NodeViewTest.createNodeView(p, new TextInitialDataService() {
-
-                @Override
-                public String getInitialData() {
-                    return "dummy initial data";
-                }
-            }, null, null);
-        };
+        Function<NodeViewNodeModel, NodeView> nodeViewCreator = m -> new TestNodeView();
         NativeNodeContainer nnc = WorkflowManagerUtil.createAndAddNode(wfm, new NodeViewNodeFactory(nodeViewCreator));
-        wfm.executeAllAndWaitUntilDone();
+
+        initViewSettings(nnc);
+        var ent = NodeViewEnt.create(nnc, null);
+        checkViewSettings(ent, "view setting value");
+
+        overwriteViewSettingWithFlowVariable(nnc);
+        ent = NodeViewEnt.create(nnc, null);
+        checkViewSettings(ent, "flow variable value");
+
         nnc.setNodeMessage(NodeMessage.newWarning("node message"));
         nnc.getNodeAnnotation().getData().setText("node annotation");
-
-        var ent = NodeViewEnt.create(nnc, null);
+        ent = NodeViewEnt.create(nnc, null);
         assertThat(ent.getProjectId(), startsWith("workflow"));
         assertThat(ent.getWorkflowId(), is("root"));
         assertThat(ent.getNodeId(), is("root:2"));
-        assertThat(ent.getInitialData(), is("dummy initial data"));
+        assertThat(ent.getInitialData(), startsWith("dummy initial data"));
         assertThat(ent.getInitialSelection(), is(nullValue()));
         var resourceInfo = ent.getResourceInfo();
         assertThat(resourceInfo.getUrl(), endsWith("index.html"));
@@ -170,6 +180,47 @@ public class NodeViewEntTest {
         WorkflowManagerUtil.disposeWorkflow(wfm);
     }
 
+    private static void initViewSettings(final NativeNodeContainer nnc) throws InvalidSettingsException {
+        var nodeSettings = new NodeSettings("node_settings");
+        nodeSettings.addNodeSettings("model");
+        nodeSettings.addNodeSettings("internal_node_subsettings");
+
+        // some dummy view settings
+        var viewSettings = nodeSettings.addNodeSettings("view");
+        viewSettings.addString("view setting key", "view setting value");
+        viewSettings.addString("view setting key 2", "view setting value 2");
+
+        var parent = nnc.getParent();
+        parent.loadNodeSettings(nnc.getID(), nodeSettings);
+        parent.executeAllAndWaitUntilDone();
+    }
+
+    private static void overwriteViewSettingWithFlowVariable(final NativeNodeContainer nnc)
+        throws InvalidSettingsException {
+        var parent = nnc.getParent();
+        var nodeSettings = new NodeSettings("node_settings");
+        parent.saveNodeSettings(nnc.getID(), nodeSettings);
+        var viewVariables = nodeSettings.addNodeSettings("view_variables");
+        viewVariables.addString("version", "V_2019_09_13");
+        var variableTree = viewVariables.addNodeSettings("tree");
+        var variableTreeNode = variableTree.addNodeSettings("view setting key");
+        variableTreeNode.addString("used_variable", "flow variable");
+        variableTreeNode.addString("exposed_variable", null);
+
+        parent.loadNodeSettings(nnc.getID(), nodeSettings);
+        parent.executeAllAndWaitUntilDone();
+
+        nnc.getFlowObjectStack().push(new FlowVariable("flow variable", "flow variable value"));
+    }
+
+    private static void checkViewSettings(final NodeViewEnt ent, final String expectedSettingValue)
+        throws IOException, InvalidSettingsException {
+        var settingsWithOverwrittenFlowVariable = new NodeSettings("");
+        JSONConfig.readJSON(settingsWithOverwrittenFlowVariable,
+            new StringReader(ent.getInitialData().replace("dummy initial data", "")));
+        assertThat(settingsWithOverwrittenFlowVariable.getString("view setting key"), is(expectedSettingValue));
+    }
+
     /**
      * Tests the {@link SelectionEventSource} in conjunction with {@link NodeViewEnt}.
      *
@@ -204,5 +255,47 @@ public class NodeViewEntTest {
         WorkflowManagerUtil.disposeWorkflow(wfm);
     }
 
+
+    private class TestNodeView implements NodeView {
+
+        private NodeSettingsRO m_settings;
+
+        @Override
+        public Optional<InitialDataService> createInitialDataService() {
+            return Optional.of(new TextInitialDataService() {
+
+                @Override
+                public String getInitialData() {
+                    return "dummy initial data\n" + JSONConfig.toJSONString(m_settings, WriterConfig.DEFAULT);
+                }
+            });
+        }
+
+        @Override
+        public Optional<DataService> createDataService() {
+            return Optional.empty();
+        }
+
+        @Override
+        public Optional<ApplyDataService> createApplyDataService() {
+            return Optional.empty();
+        }
+
+        @Override
+        public Page getPage() {
+            return Page.builder(() -> "blub", "index.html").build();
+        }
+
+        @Override
+        public void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+            //
+        }
+
+        @Override
+        public void loadValidatedSettingsFrom(final NodeSettingsRO settings) {
+            m_settings = settings;
+        }
+
+    }
 
 }

@@ -71,10 +71,16 @@ public final class NodeInfoEnt {
 
     private final String m_warningMessage;
 
+    NodeInfoEnt(final NativeNodeContainer nnc) {
+        this(nnc, null);
+    }
+
     /**
      * @param nnc
+     * @param errorMessage a custom error message (will replace a potentially available error message provided by the
+     *            node)
      */
-    NodeInfoEnt(final NativeNodeContainer nnc) {
+    NodeInfoEnt(final NativeNodeContainer nnc, final String errorMessage) {
         m_name = nnc.getName();
         m_annotation = nnc.getNodeAnnotation().toString();
         NodeContainerState state = nnc.getNodeContainerState();
@@ -91,7 +97,11 @@ public final class NodeInfoEnt {
         }
         var message = nnc.getNodeMessage();
         var messageType = message.getMessageType();
-        m_errorMessage = messageType == Type.ERROR ? message.getMessage() : null;
+        if (errorMessage != null) {
+            m_errorMessage = errorMessage;
+        } else {
+            m_errorMessage = messageType == Type.ERROR ? message.getMessage() : null;
+        }
         m_warningMessage = messageType == Type.WARNING ? message.getMessage() : null;
     }
 
