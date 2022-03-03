@@ -231,7 +231,6 @@ abstract class NodeLoader {
                 "Can't retrieve node type for contained node with id suffix %d, attempting to read ordinary (native) node: %s",
                 m_nodeId.get(), e.getMessage());
             return "NativeNode";
-
 //            throw new InvalidSettingsException(errorMessage, e);
         }
     }
@@ -275,10 +274,15 @@ abstract class NodeLoader {
         } else {
             final var nodeTypeString = settings.getString("node_type");
             CheckUtils.checkSettingNotNull(nodeTypeString, "node type must not be null");
-            try {
-                return NodeType.valueOf(nodeTypeString);
-            } catch (IllegalArgumentException iae) {
-                throw new InvalidSettingsException("Can't parse node type: " + nodeTypeString);
+            switch (nodeTypeString) {
+                case "MetaNode":
+                    return NodeType.METANODE;
+                case "SubNode":
+                    return NodeType.SUBNODE;
+                case "NativeNode":
+                    return NodeType.NATIVE_NODE;
+                default:
+                    throw new InvalidSettingsException("Can't parse node type: " + nodeTypeString);
             }
         }
     }
