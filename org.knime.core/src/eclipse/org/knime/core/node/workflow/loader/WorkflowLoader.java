@@ -262,7 +262,7 @@ public class WorkflowLoader {
         //      }
 
         builder//
-            .setName(loadWorkflowName(workflowConfig, workflowFormatVersion))//
+            .setName(() -> loadName(workflowConfig, workflowFormatVersion), "Workflow")//
             .setAuthorInformation(loadAuthorInformationDef(workflowConfig, workflowFormatVersion))
             .setAnnotations(loadAnnotationDefs(workflowConfig, workflowFormatVersion))//
             // TODO cipher
@@ -275,7 +275,7 @@ public class WorkflowLoader {
         // TODO
         var nodesConfig = loadNodesConfig(workflowConfig);
         for (String nodeKey : nodesConfig.keySet()) {
-            builder.putNodes(nodeKey,
+            builder.putToNodes(nodeKey,
                 loadNodeDef(nodesConfig, nodeKey, workflowConfig, workflowDirectory, workflowFormatVersion));
         }
 
@@ -284,7 +284,7 @@ public class WorkflowLoader {
         var connectionsConfig = loadConnectionsConfig(workflowConfig, workflowFormatVersion);
         for (String connectionKey : connectionsConfig.keySet()) {
             var connection = loadConnectionDef(connectionsConfig.getConfigBase(connectionKey), workflowFormatVersion);
-            builder.addConnections(connection);
+            builder.addToConnections(connection);
         }
 
         return builder.build();
@@ -425,7 +425,7 @@ public class WorkflowLoader {
         return null;
     }
 
-    private static String loadWorkflowName(final ConfigBaseRO set, final LoadVersion workflowFormatVersion)
+    private static String loadName(final ConfigBaseRO set, final LoadVersion workflowFormatVersion)
         throws InvalidSettingsException {
         if (workflowFormatVersion.isOlderThan(LoadVersion.V200)) {
             return "Workflow Manager";
@@ -543,7 +543,7 @@ public class WorkflowLoader {
         for (String key : styleConfigs.keySet()) {
             try {
                 var def = loadStyleRangeDef(styleConfigs.getConfigBase(key));
-                builder.addStyles(def);
+                builder.addToStyles(def);
             } catch (InvalidSettingsException ex) {
                 // TODO
             }
@@ -701,7 +701,7 @@ public class WorkflowLoader {
                     for (var i = 0; i < size; i++) {
                         var tmp = subSettings.getIntArray(Const.KEY_BENDPOINTS.get() + "_" + i);
                         //TODO add bendpoint directly as int array
-                        builder.addBendPoints(CoreToDefUtil.createCoordinate(tmp[0], tmp[1]));
+                        builder.addToBendPoints(CoreToDefUtil.createCoordinate(tmp[0], tmp[1]));
                     }
                 }
             }
