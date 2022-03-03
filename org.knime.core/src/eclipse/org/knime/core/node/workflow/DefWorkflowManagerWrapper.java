@@ -173,7 +173,7 @@ public class DefWorkflowManagerWrapper implements WorkflowDef {
                 .setTextAlignment(annotation.getAlignment().toString());
 
             for (final var style : annotation.getStyleRanges()) {
-                annotationData.addStyles(new StyleRangeDefBuilder()//
+                annotationData.addToStyles(new StyleRangeDefBuilder()//
                     .setStart(style.getStart())//
                     .setLength(style.getLength())//
                     .setFontStyle(style.getFontStyle())//

@@ -68,9 +68,11 @@ import org.knime.core.workflow.def.ConfigMapDef;
 import org.knime.core.workflow.def.CredentialPlaceholderDef;
 import org.knime.core.workflow.def.FlowVariableDef;
 import org.knime.core.workflow.def.RootWorkflowDef;
+import org.knime.core.workflow.def.WorkflowDef;
 import org.knime.core.workflow.def.impl.CredentialPlaceholderDefBuilder;
 import org.knime.core.workflow.def.impl.FlowVariableDefBuilder;
 import org.knime.core.workflow.def.impl.RootWorkflowDefBuilder;
+import org.knime.core.workflow.def.impl.WorkflowDefBuilder;
 
 /**
  * Loads a workflow project, i.e., a top-level workflow that is not contained in another workflow.
@@ -128,23 +130,43 @@ public class RootWorkflowLoader {
      * @param directory The directory that contains the workflow to load
      * @param handleUnknownVersion what to do if the version is unknown // TODO is this really used properly
      * @return a description of the workflow as POJOs
+     * @throws IOException when the workflow settings cannot be parsed from the given directory, or the workflow format
+     *             version cannot be extracted from the parsed workflow settings
      */
     public static RootWorkflowDef load(final File directory, final UnknownKNIMEVersionLoadPolicy handleUnknownVersion)
         throws IOException {
 
+        //TODO use handleUnknownVersion
+
         var workflowConfig = WorkflowLoader.parseWorkflowConfig(directory);
         var workflowFormatVersion = LoadVersion.fromVersionString(loadWorkflowFormatVersionString(workflowConfig));
 
-//        var isSetDirtyAfterLoad =
-//            isVersionCompatible(workflowFormatVersion, creatorVersion, creatorIsNightly, handleUnknownVersion);
-//        if (isSetDirtyAfterLoad) {
-//            // TODO error handling
-//            //            persistor.setDirtyAfterLoad();
-//        }
+        return new RootWorkflowDefBuilder()//
+            .setCreatorIsNightly(() -> loadCreatorIsNightly(workflowConfig), true)//
+            .setCredentialPlaceholders(() -> loadCredentialPlaceholderDefs(workflowConfig, workflowFormatVersion),
+                List.of())//
+            .setFlowVariables(() -> loadWorkflowVariableDefs(workflowConfig, workflowFormatVersion), List.of())//
+            .setSavedWithData(() -> loadSavedWithData(directory, workflowFormatVersion), true)//
+            .setSavedWithVersion(() -> loadCreatorVersion(workflowConfig).toString(), LoadVersion.UNKNOWN.toString())//
+            .setTableBackendSettings(() -> loadTableBackendSettingsDef(workflowConfig), null)//
+            .setWorkflow(() -> WorkflowLoader.load(directory, workflowConfig, workflowFormatVersion), defaultWorkflow())//
+            .setWorkflowFormatVersion(workflowFormatVersion.toString())//
+            .build();
+
+        //        var isSetDirtyAfterLoad =
+        //            isVersionCompatible(workflowFormatVersion, creatorVersion, creatorIsNightly, handleUnknownVersion);
+        //        if (isSetDirtyAfterLoad) {
+        //            // TODO error handling
+        //            //            persistor.setDirtyAfterLoad();
+        //        }
 
         // TODO how to nest the load result?
         // or use a flat, referential form? e.g., [{problem: can't load string, wf: wf_ref}, {problem: can't load.., wf: wf2}]
 
+    }
+
+    private static WorkflowDef defaultWorkflow() {
+        return new WorkflowDefBuilder().build();
     }
 
     /**
@@ -198,6 +220,20 @@ public class RootWorkflowLoader {
             }
         }
         return createdWith;
+    }
+
+    /**
+     * @param workflowConfig the parsed contents of the workflow.knime XML file
+     * @return the version of the KNIME instance that was used to create the workflow.
+     * @throws InvalidSettingsException
+     */
+    private static boolean loadCreatorIsNightly(final ConfigBaseRO workflowConfig) throws InvalidSettingsException {
+        if (!workflowConfig.containsKey(Const.CREATOR_IS_NIGHTLY.get())) {
+            throw new InvalidSettingsException(
+                "Workflow settings do not specify whether the workflow was created by a nightly version of KNIME ("
+                    + Const.CREATOR_IS_NIGHTLY.get() + ")");
+        }
+        return workflowConfig.getBoolean(Const.CREATOR_IS_NIGHTLY.get());
     }
 
     /**
