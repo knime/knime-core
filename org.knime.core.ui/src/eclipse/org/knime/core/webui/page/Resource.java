@@ -61,18 +61,18 @@ import java.io.InputStream;
 public interface Resource {
 
     /**
-     * The resource type.
+     * The resource content type.
      */
-    enum Type {
+    enum ContentType {
             HTML, VUE_COMPONENT_LIB;
 
-        static Type determineType(final String path) {
+        static ContentType determineType(final String path) {
             if (path.endsWith(".js")) {
                 return VUE_COMPONENT_LIB;
             } else if (path.endsWith(".html")) {
                 return HTML;
             } else {
-                throw new IllegalArgumentException("Can't determine resource type for path " + path);
+                throw new IllegalArgumentException("Can't determine resource content type for path " + path);
             }
         }
     }
@@ -95,8 +95,8 @@ public interface Resource {
     boolean isStatic();
 
     /**
-     * @return the type of the resource
+     * @return the content type of the resource
      */
-    Type getType();
+    ContentType getContentType();
 
 }

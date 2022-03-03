@@ -82,7 +82,7 @@ import org.knime.core.webui.node.view.NodeViewTest;
 import org.knime.core.webui.page.Page;
 import org.knime.core.webui.page.PageTest;
 import org.knime.core.webui.page.PageUtil;
-import org.knime.core.webui.page.PageUtil.PageKind;
+import org.knime.core.webui.page.PageUtil.PageType;
 import org.knime.core.webui.page.Resource;
 import org.knime.gateway.impl.service.events.SelectionEvent;
 import org.knime.gateway.impl.service.events.SelectionEventSource;
@@ -136,8 +136,8 @@ public class NodeViewEntTest {
         var resourceInfo = ent.getResourceInfo();
         assertThat(resourceInfo.getUrl(), endsWith("index.html"));
         assertThat(resourceInfo.getPath(), is(nullValue()));
-        assertThat(resourceInfo.getType(), is(Resource.Type.HTML.toString()));
-        assertThat(resourceInfo.getId(), is(PageUtil.getPageId(nnc, false, PageKind.VIEW)));
+        assertThat(resourceInfo.getType(), is(Resource.ContentType.HTML.toString()));
+        assertThat(resourceInfo.getId(), is(PageUtil.getPageId(nnc, false, PageType.VIEW)));
         var nodeInfo = ent.getNodeInfo();
         assertThat(nodeInfo.getNodeName(), is("NodeView"));
         assertThat(nodeInfo.getNodeAnnotation(), is("node annotation"));
@@ -155,7 +155,7 @@ public class NodeViewEntTest {
         ent = NodeViewEnt.create(nnc, null);
         resourceInfo = ent.getResourceInfo();
         assertThat(ent.getInitialData(), is(nullValue()));
-        assertThat(resourceInfo.getType(), is(Resource.Type.VUE_COMPONENT_LIB.toString()));
+        assertThat(resourceInfo.getType(), is(Resource.ContentType.VUE_COMPONENT_LIB.toString()));
         assertThat(resourceInfo.getUrl(), endsWith("component.umd.min.js"));
         assertThat(resourceInfo.getPath(), is(nullValue()));
 

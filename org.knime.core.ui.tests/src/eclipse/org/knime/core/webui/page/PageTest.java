@@ -58,7 +58,7 @@ import java.util.stream.Collectors;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
-import org.knime.core.webui.page.Resource.Type;
+import org.knime.core.webui.page.Resource.ContentType;
 
 /**
  * Tests {@link Page}.
@@ -85,18 +85,18 @@ public class PageTest {
     }
 
     /**
-     * Tests {@link Page#getType()}.
+     * Tests {@link Page#getContentType()}.
      */
     @Test
     public void testIsComponent() {
         var page = Page.builder(BUNDLE_ID, "files", "page.html").build();
-        assertThat(page.getType(), is(Type.HTML));
+        assertThat(page.getContentType(), is(ContentType.HTML));
 
         page = Page.builder(BUNDLE_ID, "files", "component.umd.min.js").build();
-        assertThat(page.getType(), is(Type.VUE_COMPONENT_LIB));
+        assertThat(page.getContentType(), is(ContentType.VUE_COMPONENT_LIB));
 
         var page2 = Page.builder(() -> "content", "component.blub").build();
-        assertThrows(IllegalArgumentException.class, page2::getType);
+        assertThrows(IllegalArgumentException.class, page2::getContentType);
     }
 
     /**

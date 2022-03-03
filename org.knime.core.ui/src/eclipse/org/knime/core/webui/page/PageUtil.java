@@ -62,7 +62,7 @@ public final class PageUtil {
     /**
      * The page kinds, i.e. defines what a page is supposed to represent.
      */
-    public enum PageKind {
+    public enum PageType {
             /**
              * A node dialog.
              */
@@ -84,21 +84,18 @@ public final class PageUtil {
      *
      * @param nnc the node providing the node view page
      * @param isStaticPage whether it's a static page
-     * @param pageKind the kind of the page
+     * @param pageType the kind of the page
      * @return the page id
      */
     @SuppressWarnings("java:S2301")
-    public static String getPageId(final NativeNodeContainer nnc, final boolean isStaticPage, final PageKind pageKind) {
+    public static String getPageId(final NativeNodeContainer nnc, final boolean isStaticPage, final PageType pageType) {
         String id;
         if (isStaticPage) {
             id = nnc.getNode().getFactory().getClass().getName();
         } else {
             id = nnc.getID().toString().replace(":", "_");
         }
-        if (pageKind == PageKind.DIALOG) {
-            id = "dialog_" + id;
-        }
-        return id;
+        return pageType.toString() + "_" + id;
     }
 
     private PageUtil() {

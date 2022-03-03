@@ -56,7 +56,7 @@ import org.knime.core.webui.data.text.TextInitialDataService;
 import org.knime.core.webui.node.DataServiceManager;
 import org.knime.core.webui.node.PageResourceManager;
 import org.knime.core.webui.page.PageUtil;
-import org.knime.core.webui.page.PageUtil.PageKind;
+import org.knime.core.webui.page.PageUtil.PageType;
 
 /**
  * Super classes for node-ui-extension entities, e.g., node view and node dialog.
@@ -75,16 +75,16 @@ public abstract class NodeUIExtensionEnt {
 
     private final ResourceInfoEnt m_resourceInfo;
 
-    private final PageKind m_pageKind;
+    private final PageType m_pageType;
 
     /**
      * @param nnc the node to create the entity for
      * @param pageResourceManager can be {@code null}
      * @param dataServiceManager can be {@code null}
-     * @param pageKind the page type
+     * @param pageType the page type
      */
     protected NodeUIExtensionEnt(final NativeNodeContainer nnc, final PageResourceManager pageResourceManager,
-        final DataServiceManager dataServiceManager, final PageKind pageKind) {
+        final DataServiceManager dataServiceManager, final PageType pageType) {
         WorkflowManager wfm = nnc.getParent();
         WorkflowManager projectWfm = wfm.getProjectWFM();
 
@@ -111,13 +111,13 @@ public abstract class NodeUIExtensionEnt {
             var url = pageResourceManager.getPageUrl(nnc).orElse(null);
             var path = pageResourceManager.getPagePath(nnc).orElse(null);
             var page = pageResourceManager.getPage(nnc);
-            var id = PageUtil.getPageId(nnc, page.isStatic(), pageKind);
-            m_resourceInfo = new ResourceInfoEnt(id, url, path, page.getType());
+            var id = PageUtil.getPageId(nnc, page.isStatic(), pageType);
+            m_resourceInfo = new ResourceInfoEnt(id, url, path, page.getContentType());
         } else {
             m_resourceInfo = null;
         }
 
-        m_pageKind = pageKind;
+        m_pageType = pageType;
     }
 
     /**
@@ -159,7 +159,7 @@ public abstract class NodeUIExtensionEnt {
      * @return the type of the node ui extension
      */
     public String getExtensionType() {
-        return m_pageKind.toString();
+        return m_pageType.toString();
     }
 
 }

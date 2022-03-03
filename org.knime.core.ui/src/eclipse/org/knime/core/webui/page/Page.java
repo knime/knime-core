@@ -128,8 +128,8 @@ public final class Page implements Resource {
      * {@inheritDoc}
      */
     @Override
-    public Type getType() {
-        return m_pageResource.getType();
+    public ContentType getContentType() {
+        return m_pageResource.getContentType();
     }
 
     /**

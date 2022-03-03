@@ -61,7 +61,7 @@ import org.knime.core.webui.node.AbstractNodeUIManager;
 import org.knime.core.webui.node.dialog.SettingsType;
 import org.knime.core.webui.node.util.NodeCleanUpCallback;
 import org.knime.core.webui.page.Page;
-import org.knime.core.webui.page.PageUtil.PageKind;
+import org.knime.core.webui.page.PageUtil.PageType;
 
 /**
  * Manages (web-ui) node view instances and provides associated functionality.
@@ -187,8 +187,8 @@ public final class NodeViewManager extends AbstractNodeUIManager {
      * {@inheritDoc}
      */
     @Override
-    protected PageKind getPageKind() {
-        return PageKind.VIEW;
+    protected PageType getPageType() {
+        return PageType.VIEW;
     }
 
     /**

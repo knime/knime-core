@@ -90,8 +90,8 @@ public class PageBuilder {
             }
 
             @Override
-            public Type getType() {
-                return Type.determineType(relativePath);
+            public ContentType getContentType() {
+                return ContentType.determineType(relativePath);
             }
 
         };
@@ -130,8 +130,8 @@ public class PageBuilder {
             }
 
             @Override
-            public Type getType() {
-                return Type.determineType(relativePath);
+            public ContentType getContentType() {
+                return ContentType.determineType(relativePath);
             }
 
         });

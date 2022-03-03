@@ -61,14 +61,14 @@ public final class ResourceInfoEnt {
 
     private final String m_path;
 
-    private final String m_type;
+    private final String m_contentType;
 
     private final String m_id;
 
-    ResourceInfoEnt(final String id, final String url, final String path, final Resource.Type resourceType) {
+    ResourceInfoEnt(final String id, final String url, final String path, final Resource.ContentType resourceContentType) {
         m_url = url;
         m_path = path;
-        m_type = resourceType.toString();
+        m_contentType = resourceContentType.toString();
         m_id = id;
     }
 
@@ -103,7 +103,7 @@ public final class ResourceInfoEnt {
      * @return the resource type
      */
     public String getType() {
-        return m_type;
+        return m_contentType;
     }
 
 }

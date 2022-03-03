@@ -69,7 +69,7 @@ import org.knime.core.webui.data.text.TextReExecuteDataService;
 import org.knime.core.webui.node.util.NodeCleanUpCallback;
 import org.knime.core.webui.page.Page;
 import org.knime.core.webui.page.PageUtil;
-import org.knime.core.webui.page.PageUtil.PageKind;
+import org.knime.core.webui.page.PageUtil.PageType;
 import org.knime.core.webui.page.Resource;
 
 /**
@@ -96,7 +96,7 @@ public abstract class AbstractNodeUIManager implements DataServiceManager, PageR
 
     private final Map<String, Page> m_pageMap = new HashMap<>();
 
-    private final String m_pageKind = getPageKind().toString();
+    private final String m_pageKind = getPageType().toString();
 
     /*
      * Domain name used to identify resources requested for a node view.
@@ -116,11 +116,11 @@ public abstract class AbstractNodeUIManager implements DataServiceManager, PageR
     protected abstract DataServiceProvider getDataServiceProvider(NodeContainer nc);
 
     /**
-     * The kind of pages the node ui manager implementation manages. E.g. whether these are view-pages or dialog-pages.
+     * The type of pages the node ui manager implementation manages. E.g. whether these are view-pages or dialog-pages.
      *
-     * @return the page kind
+     * @return the page type
      */
-    protected abstract PageKind getPageKind();
+    protected abstract PageType getPageType();
 
     /**
      * {@inheritDoc}
@@ -216,14 +216,6 @@ public abstract class AbstractNodeUIManager implements DataServiceManager, PageR
         return Optional.ofNullable(ds);
     }
 
-    private final String registerPage(final NativeNodeContainer nnc, final Page page, final PageKind pageKind) {
-        var pageId = PageUtil.getPageId(nnc, page.isCompletelyStatic(), pageKind);
-        if (m_pageMap.put(pageId, page) == null) {
-            new NodeCleanUpCallback(nnc, () -> m_pageMap.remove(pageId));
-        }
-        return pageId + "/" + page.getRelativePath();
-    }
-
     /**
      * Clears the page map.
      */
@@ -296,7 +288,15 @@ public abstract class AbstractNodeUIManager implements DataServiceManager, PageR
     }
 
     private String getPagePathInternal(final NativeNodeContainer nnc) {
-        return registerPage(nnc, getPage(nnc), getPageKind());
+        return registerPage(nnc, getPage(nnc), getPageType());
+    }
+
+    private String registerPage(final NativeNodeContainer nnc, final Page page, final PageType pageKind) {
+        var pageId = PageUtil.getPageId(nnc, page.isCompletelyStatic(), pageKind);
+        if (m_pageMap.put(pageId, page) == null) {
+            new NodeCleanUpCallback(nnc, () -> m_pageMap.remove(pageId));
+        }
+        return pageId + "/" + page.getRelativePath();
     }
 
     @Override
