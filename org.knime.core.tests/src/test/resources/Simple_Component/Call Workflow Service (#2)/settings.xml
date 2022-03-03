@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config xmlns="http://www.knime.org/2008/09/XMLConfig" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.knime.org/2008/09/XMLConfig http://www.knime.org/XMLConfig_2008_09.xsd" key="settings.xml">
+    <entry key="node_file" type="xstring" value="settings.xml"/>
+    <config key="flow_stack"/>
+    <config key="internal_node_subsettings">
+        <entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
+    </config>
+    <config key="model">
+        <entry key="discardJobOnSuccessfulExecution" type="xboolean" value="true"/>
+        <entry key="isSynchronous" type="xboolean" value="false"/>
+        <entry key="keepFailingJobs" type="xboolean" value="true"/>
+        <entry key="workflow" type="xstring" value="/CalleeTest"/>
+        <entry key="loadTimeout" type="xint" value="60"/>
+        <config key="calleeProperties">
+            <config key="inputs">
+                <config key="input-0">
+                    <entry key="parameterName" type="xstring" value="input-parameter"/>
+                    <config key="portType">
+                        <entry key="object_class" type="xstring" value="org.knime.core.node.BufferedDataTable"/>
+                    </config>
+                </config>
+            </config>
+            <config key="outputs">
+                <config key="output-0">
+                    <entry key="parameterName" type="xstring" value="output-parameter"/>
+                    <config key="portType">
+                        <entry key="object_class" type="xstring" value="org.knime.core.node.BufferedDataTable"/>
+                    </config>
+                </config>
+            </config>
+        </config>
+    </config>
+    <entry key="customDescription" type="xstring" isnull="true" value=""/>
+    <entry key="state" type="xstring" value="IDLE"/>
+    <entry key="factory" type="xstring" value="org.knime.workflowservices.knime.caller.CallWorkflowNodeFactory"/>
+    <entry key="node-name" type="xstring" value="Call Workflow Service"/>
+    <entry key="node-bundle-name" type="xstring" value="KNIME Nodes to build and use KNIME workflow services"/>
+    <entry key="node-bundle-symbolic-name" type="xstring" value="org.knime.workflowservices.labs"/>
+    <entry key="node-bundle-vendor" type="xstring" value="KNIME AG, Zurich, Switzerland"/>
+    <entry key="node-bundle-version" type="xstring" value="4.6.0.v202112231111"/>
+    <entry key="node-feature-name" type="xstring" isnull="true" value=""/>
+    <entry key="node-feature-symbolic-name" type="xstring" isnull="true" value=""/>
+    <entry key="node-feature-vendor" type="xstring" isnull="true" value=""/>
+    <entry key="node-feature-version" type="xstring" value="0.0.0"/>
+    <config key="factory_settings"/>
+    <config key="node_creation_config">
+        <config key="FileSystem"/>
+        <config key="Inputs">
+            <config key="port_0">
+                <entry key="object_class" type="xstring" value="org.knime.core.node.BufferedDataTable"/>
+            </config>
+        </config>
+        <config key="Outputs">
+            <config key="port_0">
+                <entry key="object_class" type="xstring" value="org.knime.core.node.BufferedDataTable"/>
+            </config>
+        </config>
+    </config>
+    <entry key="name" type="xstring" value="Call Workflow Service"/>
+    <entry key="hasContent" type="xboolean" value="false"/>
+    <entry key="isInactive" type="xboolean" value="false"/>
+    <config key="ports">
+        <config key="port_1">
+            <entry key="index" type="xint" value="1"/>
+            <entry key="port_dir_location" type="xstring" isnull="true" value=""/>
+        </config>
+    </config>
+    <config key="filestores">
+        <entry key="file_store_location" type="xstring" isnull="true" value=""/>
+        <entry key="file_store_id" type="xstring" isnull="true" value=""/>
+    </config>
+</config>

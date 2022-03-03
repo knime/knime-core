@@ -209,10 +209,17 @@ public abstract class SingleNodeLoader extends NodeLoader {
     }
 
     private static FlowContextDef loadFlowContextDef(final String type) throws InvalidSettingsException {
-        ContextTypeEnum contextType = type.startsWith("LOOP") ? ContextTypeEnum.LOOP : null;
-        contextType = type.startsWith("FLOW") ? ContextTypeEnum.FLOWCAPTURE : null;
-        contextType = type.startsWith("SCOPE") ? ContextTypeEnum.SCOPE : null;
-        boolean isActive = !type.endsWith("_INACTIVE");
+
+        ContextTypeEnum contextType = null;
+
+        if (type.toUpperCase().startsWith("LOOP")) {
+            contextType = ContextTypeEnum.LOOP;
+        } else if (type.toUpperCase().startsWith("FLOW")) {
+           contextType = ContextTypeEnum.FLOWCAPTURE;
+        } else if (type.toUpperCase().startsWith("SCOPE")) {
+            contextType = ContextTypeEnum.SCOPE;
+        }
+        boolean isActive = !type.toUpperCase().endsWith("_INACTIVE");
 
         CheckUtils.checkNotNull(contextType, "Unknown flow object type: " + contextType);
 
