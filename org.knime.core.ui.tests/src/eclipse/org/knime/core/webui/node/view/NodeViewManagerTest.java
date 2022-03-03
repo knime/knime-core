@@ -242,8 +242,8 @@ public class NodeViewManagerTest {
             assertThat(nodeViewManager.getPageMapSize(), is(1));
             String path2 = nodeViewManager.getPagePath(nnc2).orElse(null);
             assertThat(nodeViewManager.getPageMapSize(), is(2));
-            var resourcePrefix1 = nnc.getNode().getFactory().getClass().getName();
-            var resourcePrefix2 = nnc2.getID().toString().replace(":", "_");
+            var resourcePrefix1 = "view_" + nnc.getNode().getFactory().getClass().getName();
+            var resourcePrefix2 = "view_" + nnc2.getID().toString().replace(":", "_");
             assertThat(path, is(resourcePrefix1 + "/page.html"));
             assertThat(path2, is(resourcePrefix2 + "/page.html"));
 
