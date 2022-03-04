@@ -85,7 +85,6 @@ import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JSpinner.DefaultEditor;
-import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.LayoutFocusTraversalPolicy;
 import javax.swing.SwingConstants;
@@ -1666,7 +1665,7 @@ public abstract class NodeDialogPane {
         private final ConfigEditJTree m_tree;
         private final ConfigEditJTree m_viewTree;
         private final JLabel m_errorLabel;
-        private final JComponent m_contentPane;
+        private final JScrollPane m_contentPane;
         private final JPanel m_noFlowVariablesDisplay;
 
         /** Creates new tab. */
@@ -1686,55 +1685,27 @@ public abstract class NodeDialogPane {
 
             final int panelMinimumWidth = ConfigEditJTree.MINIMUM_ROW_WIDTH;
             final var scrollPaneSize = new Dimension(panelMinimumWidth, 167);
-            final var modelPanel = new JPanel(new BorderLayout());
-            final var modelScrollPane = new JScrollPane(modelPanel);
-            modelPanel.add(m_tree, BorderLayout.CENTER);
-            modelScrollPane.setMinimumSize(scrollPaneSize);
-            modelScrollPane.setPreferredSize(scrollPaneSize);
+            final var contentPanel = new JPanel(new BorderLayout());
+            m_contentPane = new JScrollPane(contentPanel);
 
-            JScrollPane viewScrollPane = null;
-            if (hasViewSettings()) {
-                final var splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+            contentPanel.add(m_tree, BorderLayout.NORTH);
+            contentPanel.add(m_viewTree, BorderLayout.CENTER);
+            m_contentPane.setMinimumSize(scrollPaneSize);
+            m_contentPane.setPreferredSize(scrollPaneSize);
 
-                final var viewPanel = new JPanel(new BorderLayout());
-                viewScrollPane = new JScrollPane(viewPanel);
-                viewPanel.add(m_viewTree, BorderLayout.CENTER);
-                viewScrollPane.setMinimumSize(scrollPaneSize);
-                viewScrollPane.setPreferredSize(scrollPaneSize);
-                m_viewTree.getParent().add(new JLabel("View Settings"), BorderLayout.NORTH);
-
-                if (hasModelSettings()) {
-                    m_tree.getParent().add(new JLabel("Model Settings"), BorderLayout.NORTH);
-                    splitPane.setTopComponent(modelScrollPane);
-                    splitPane.setBottomComponent(viewScrollPane);
-                }
-                m_contentPane = hasModelSettings() ? splitPane : viewScrollPane;
-            } else {
-                m_contentPane = modelScrollPane;
-            }
             add(m_contentPane, BorderLayout.CENTER);
 
             m_errorLabel = new JLabel();
             m_errorLabel.setForeground(Color.RED);
             add(m_errorLabel, BorderLayout.NORTH);
 
-            if (hasModelSettings()) {
-                modelScrollPane.getViewport().addComponentListener(new ComponentAdapter() {
-                    @Override
-                    public void componentResized(final ComponentEvent ce) {
-                        m_tree.setViewportWidth(ce.getComponent().getWidth());
-                    }
-                });
-            }
-
-            if (viewScrollPane != null) {
-                viewScrollPane.getViewport().addComponentListener(new ComponentAdapter() {
-                    @Override
-                    public void componentResized(final ComponentEvent ce) {
-                        m_viewTree.setViewportWidth(ce.getComponent().getWidth());
-                    }
-                });
-            }
+            m_contentPane.getViewport().addComponentListener(new ComponentAdapter() {
+                @Override
+                public void componentResized(final ComponentEvent ce) {
+                    m_tree.setViewportWidth(ce.getComponent().getWidth());
+                    m_viewTree.setViewportWidth(ce.getComponent().getWidth());
+                }
+            });
         }
 
         /** Find the tree node that is associated with the given key path.
