@@ -109,12 +109,12 @@ public class EnhAP11813_EfficientTemplateUpdateCheck extends WorkflowTestCase {
 		assertTrue(wfm.checkUpdateMetaNodeLink(compId, new WorkflowLoadHelper(true, true, null)));
 		verify(resolveMock, times(2)).resolveToLocalOrTempFileConditional(any(), any(), any());
 
-		// bit hacky way to ensure that the file is _not_ resolved conditionally when
+		// ensures that the file is _not_ resolved conditionally when
 		// calling wfm.updateMetaNodeLink
 		Mockito.reset(resolveMock);
 		when(resolveMock.resolveToFile(any())).thenReturn(null);
 		when(resolveMock.resolveToLocalOrTempFile(any())).thenReturn(null);
-		assertThrows(NullPointerException.class, () -> wfm.updateMetaNodeLink(compId, new ExecutionMonitor(), null));
+		wfm.updateMetaNodeLink(compId, new ExecutionMonitor(), null);
 		verify(resolveMock).resolveToFile(any());
 		verify(resolveMock, never()).resolveToLocalOrTempFile(any());
 		verify(resolveMock).resolveToLocalOrTempFileConditional(any(), any(), any());
