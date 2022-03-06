@@ -51,8 +51,11 @@ package org.knime.core.node.exec.dataexchange.in;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainer;
@@ -121,12 +124,18 @@ public final class PortObjectInNodeModel extends NodeModel {
             // if a node is referenced we can just take and clone the flow variables of that node
             // (by that, e.g., passwords of credential flow variables don't get lost)
             NodeContainer nc = getReferencedNode();
-            nc.getOutPort(m_portObjectIDSettings.getPortIdx()).getFlowObjectStack().getAllAvailableFlowVariables()
-                .values().stream().filter(f -> f.getScope() == Scope.Flow)
-                .forEach(v -> Node.invokePushFlowVariable(this, v.withNewName(v.getName())));
+            List<FlowVariable> listOfClones = nc.getOutPort(m_portObjectIDSettings.getPortIdx()).getFlowObjectStack()
+                .getAllAvailableFlowVariables().values() //
+                .stream() //
+                .filter(f -> f.getScope() == Scope.Flow) //
+                .map(v -> v.withNewName(v.getName())) //
+                .collect(Collectors.toList());
+            Collections.reverse(listOfClones); // push in reverse order, AP-18630
+            listOfClones.stream().forEach(v -> Node.invokePushFlowVariable(this, v));
         } else {
-            for (FlowVariable fv : m_portObjectIDSettings.getFlowVariables()) {
-                Node.invokePushFlowVariable(this, fv);
+            var flowVarList = m_portObjectIDSettings.getFlowVariables();
+            for (var reverseIterator = flowVarList.listIterator(flowVarList.size()); reverseIterator.hasPrevious();) {
+                Node.invokePushFlowVariable(this, reverseIterator.previous()); // reverse order, AP-18630
             }
         }
     }
