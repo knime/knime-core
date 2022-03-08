@@ -1081,7 +1081,7 @@ public class Buffer implements KNIMEStreamConstants {
                             initOutputWriter(m_binFile);
                         }
                         writeBlobDataCell(bc, rewrite);
-                        wc = new BlobWrapperDataCell(this, rewrite, cl, bc);
+                        wc = new BlobWrapperDataCell(this, rewrite, cl);
                     } else {
                         wc = new BlobWrapperDataCell(this, rewrite, cl);
                     }
