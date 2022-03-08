@@ -98,7 +98,8 @@ public final class BlobWrapperDataCell extends DataCell {
         m_blobAddress = ba;
         m_blobClass = cl;
         if (cell != null) {
-            assert cell.getBlobAddress().getBufferID() == ba.getBufferID();
+            assert cell.getBlobAddress().getBufferID() == ba.getBufferID() : String
+                .format("Different blob address; cell: %s; wrapper: %s", cell.getBlobAddress(), m_blobAddress);
             m_cellRef = new SoftReference<BlobDataCell>(cell);
         }
     }
