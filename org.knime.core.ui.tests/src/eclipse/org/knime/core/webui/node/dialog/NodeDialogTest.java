@@ -170,13 +170,13 @@ public class NodeDialogTest {
         var flowVariablesTab = getChild(getChild(getChild(tabbedPane, 0), 0), 0);
 
         var modelSettingsJTree =
-            (ConfigEditJTree)getChild(getChild(getChild(getChild(getChild(flowVariablesTab, 0), 1), 0), 0), 0);
+            (ConfigEditJTree)getChild(getChild(getChild(getChild(flowVariablesTab, 0), 0), 0), 0);
         var modelRootNode = modelSettingsJTree.getModel().getRoot();
         var firstModelConfigNode = (ConfigEditTreeNode)modelRootNode.getChildAt(0);
         assertThat(firstModelConfigNode.getConfigEntry().toStringValue(), is("default model setting value"));
 
         var viewSettingsJTree =
-                (ConfigEditJTree)getChild(getChild(getChild(getChild(getChild(flowVariablesTab, 0), 2), 0), 0), 0);
+                (ConfigEditJTree)getChild(getChild(getChild(getChild(flowVariablesTab, 0), 0), 0), 1);
         var viewRootNode = viewSettingsJTree.getModel().getRoot();
         var firstViewConfigNode = (ConfigEditTreeNode)viewRootNode.getChildAt(0);
         assertThat(firstViewConfigNode.getConfigEntry().toStringValue(), is(viewSettingValue));
