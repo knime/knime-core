@@ -48,8 +48,9 @@
 
 package org.knime.core.node.util;
 
-import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataValue;
@@ -63,24 +64,38 @@ import org.knime.core.data.DataValue;
 public class DataValueColumnFilter implements ColumnFilter {
 
 
-    private final Class<? extends DataValue>[] m_filterClasses;
+    private final List<Class<? extends DataValue>> m_filterClasses;
 
     /**Constructor for class DataValueColumnFilter.
      * @param filterValueClasses classes derived from DataValue.
      * All other columns will be filtered.
      */
+    @SafeVarargs
     public DataValueColumnFilter(
             final Class<? extends DataValue>... filterValueClasses) {
+        this(List.of(checkVarArgs(filterValueClasses)));
+    }
+
+    private static Class<? extends DataValue>[] checkVarArgs(final Class<? extends DataValue>[] filterValueClasses) {
         if (filterValueClasses == null || filterValueClasses.length == 0) {
-            throw new NullPointerException("Classes must not be null");
+            throw new NullPointerException("Classes must not be null");//NOSONAR unfortunately API
         }
-        List<Class<? extends DataValue>> list =
-            Arrays.asList(filterValueClasses);
-        if (list.contains(null)) {
-            throw new NullPointerException("List of value classes must not "
-                    + "contain null elements.");
+        return filterValueClasses;
+    }
+
+    /**
+     * Constructor for class {@link DataValueColumnFilter}.
+     * @param filterValueClasses classes derived from DataValue
+     * @since 4.6
+     */
+    public DataValueColumnFilter(final Collection<Class<? extends DataValue>> filterValueClasses) {
+        if (filterValueClasses == null || filterValueClasses.isEmpty()) {
+            throw new NullPointerException("Classes must not be null");//NOSONAR unfortunately API
         }
-        m_filterClasses = filterValueClasses;
+        if (filterValueClasses.stream().anyMatch(Objects::isNull)) {
+            throw new NullPointerException("List of value classes must not contain null elements.");//NOSONAR
+        }
+        m_filterClasses = List.copyOf(filterValueClasses);
     }
 
     /**
@@ -105,18 +120,18 @@ public class DataValueColumnFilter implements ColumnFilter {
      */
     @Override
     public String allFilteredMsg() {
-        StringBuffer error = new StringBuffer(
+        StringBuilder error = new StringBuilder(
         "No column in spec compatible to");
-        if (m_filterClasses.length == 1) {
+        if (m_filterClasses.size() == 1) {
             error.append(" \"");
-            error.append(m_filterClasses[0].getSimpleName());
+            error.append(m_filterClasses.get(0).getSimpleName());
             error.append('"');
         } else {
-            for (int i = 0; i < m_filterClasses.length; i++) {
+            for (int i = 0; i < m_filterClasses.size(); i++) {
                 error.append(" \"");
-                error.append(m_filterClasses[i].getSimpleName());
+                error.append(m_filterClasses.get(i).getSimpleName());
                 error.append('"');
-                if (i == m_filterClasses.length - 2) { // second last
+                if (i == m_filterClasses.size() - 2) { // second last
                     error.append(" or");
                 }
             }
@@ -128,6 +143,6 @@ public class DataValueColumnFilter implements ColumnFilter {
     /** {@inheritDoc} */
     @Override
     public String toString() {
-        return "Filter on " + ConvenienceMethods.getShortStringFrom(Arrays.asList(m_filterClasses), 3);
+        return "Filter on " + ConvenienceMethods.getShortStringFrom(m_filterClasses, 3);
     }
 }
