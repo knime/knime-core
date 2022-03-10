@@ -129,12 +129,12 @@ public class RootWorkflowLoader {
         //TODO use handleUnknownVersion
 
         // if we can't load the workflow settings and workflow format version, we throw an exception here - loading process seems rather hopeless
-        var projectLoader = new ProjectLoader(directory);
-        var workflowConfig = projectLoader.getWorkflowConfig();
-        var workflowFormatVersion = projectLoader.getWorkflowFormatVersion();
+        var creatorLoader = new CreatorLoader(directory);
+        var workflowConfig = creatorLoader.getWorkflowConfig();
+        var workflowFormatVersion = creatorLoader.getWorkflowFormatVersion();
 
         return new RootWorkflowDefBuilder()//
-            .setProject(projectLoader.getProjectDef())//
+            .setCreator(creatorLoader.getCreatorDef())//
             .setCredentialPlaceholders(() -> loadCredentialPlaceholderDefs(workflowConfig, workflowFormatVersion),
                 List.of())//
             .setFlowVariables(() -> loadWorkflowVariableDefs(workflowConfig, workflowFormatVersion), List.of())//

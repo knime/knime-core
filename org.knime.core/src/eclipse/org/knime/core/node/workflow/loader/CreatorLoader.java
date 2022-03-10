@@ -56,8 +56,8 @@ import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.config.base.ConfigBaseRO;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.Version;
-import org.knime.core.workflow.def.ProjectDef;
-import org.knime.core.workflow.def.impl.ProjectDefBuilder;
+import org.knime.core.workflow.def.CreatorDef;
+import org.knime.core.workflow.def.impl.CreatorDefBuilder;
 
 /**
  * Extracts basic information such as workflow format version from a directory containing a top-level workflow,
@@ -65,20 +65,20 @@ import org.knime.core.workflow.def.impl.ProjectDefBuilder;
  *
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  */
-public class ProjectLoader {
+public class CreatorLoader {
 
     /** String constants, such as key names in the workflow configuration, file names, etc. */
     public enum Const {
             /**
-             * @see {@link ProjectDef#isCreatorIsNightly()}
+             * @see {@link CreatorDef#isCreatorIsNightly()}
              * @see {@link KNIMEConstants#isNightlyBuild()}
              */
             CREATOR_IS_NIGHTLY("created_by_nightly"),
-            /** @see ProjectDef#getSavedWithVersion() */
+            /** @see CreatorDef#getSavedWithVersion() */
             CREATOR_KNIME_VERSION("created_by"),
             /** Used when the workflow is so old that it doesn't contain a workflow format version yet. */
             ANCIENT_LOAD_VERSION_STRING("0.9.0"),
-            /** @see ProjectDef#getWorkflowFormatVersion() */
+            /** @see CreatorDef#getWorkflowFormatVersion() */
             WORKFLOW_FORMAT_VERSION("version");
 
         final String m_const;
@@ -149,7 +149,7 @@ public class ProjectLoader {
         return versionString;
     }
 
-    private final ProjectDef m_def;
+    private final CreatorDef m_def;
 
     private ConfigBaseRO m_workflowConfig;
 
@@ -160,10 +160,10 @@ public class ProjectLoader {
      * @throws IOException if the workflow.knime cannot be accessed in the given directory or its contents cannot be
      *             parsed
      */
-    public ProjectLoader(final File directory) throws IOException {
+    public CreatorLoader(final File directory) throws IOException {
         m_workflowConfig = WorkflowLoader.parseWorkflowConfig(directory);
 
-        m_def = new ProjectDefBuilder()//
+        m_def = new CreatorDefBuilder()//
             .setWorkflowFormatVersion(() -> loadWorkflowFormatVersionString(m_workflowConfig),
                 LoadVersion.UNKNOWN.toString())//
             .setSavedWithVersion(() -> loadCreatorVersion(m_workflowConfig).toString(), LoadVersion.UNKNOWN.toString())//
@@ -189,7 +189,7 @@ public class ProjectLoader {
      * @return the extracted information (workflow format version etc.) about the project (e.g., workflow, shared
      *         component)
      */
-    ProjectDef getProjectDef() {
+    CreatorDef getCreatorDef() {
         return m_def;
     }
 
