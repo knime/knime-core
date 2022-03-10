@@ -75,31 +75,16 @@ import org.knime.core.workflow.def.impl.RootWorkflowDefBuilder;
 import org.knime.core.workflow.def.impl.WorkflowDefBuilder;
 
 /**
- * Loads a workflow project, i.e., a top-level workflow that is not contained in another workflow.
+ * Loads a standalone component (a.k.a. template), i.e., a top-level component that is not part of a workflow but can
+ * for instance be dragged from the KNIME explorer into a workflow to be inserted into a workflow.
  *
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  */
-public class RootWorkflowLoader {
+public class RootComponentLoader {
 
     /** String constants, such as key names in the workflow configuration, file names, etc. */
     public enum Const {
-            /** @see RootWorkflowDef#getTableBackendSettings() */
-            TABLE_BACKEND("tableBackend"),
-            /** @see RootWorkflowDef#getFlowVariables() */
-            CFG_WKF_VARIABLES("workflow_variables"),
-            /**
-             * Name of the file used to signal that workflow was with data. It is present in the workflow directory
-             * unless the workflow is exported with the "exclude data" flag being set.
-             *
-             * @see RootWorkflowDefBuilder#setSavedWithData(Boolean)
-             */
-            SAVED_WITH_DATA_FILE_NAME(".savedWithData"),
-            /** @see RootWorkflowDef#getCredentialPlaceholders() */
-            CREDENTIAL_PLACEHOLDERS("workflow_credentials"),
-            /** @see CredentialPlaceholderDef#getName() */
-            CREDENTIAL_PLACEHOLDER_NAME("name"),
-            /** @see CredentialPlaceholderDef#getLogin() */
-            CREDENTIAL_PLACEHOLDER_LOGIN("login");
+        NONE_YET("");
 
         final String m_const;
 
@@ -121,26 +106,25 @@ public class RootWorkflowLoader {
      * @return a description of the workflow as POJOs
      * @throws IOException when the workflow settings cannot be parsed from the given directory, or the workflow format
      *             version cannot be extracted from the parsed workflow settings
-     * @throws InvalidSettingsException when the workflow settings do not contain a workflow format version
      */
     public static RootWorkflowDef load(final File directory, final UnknownKNIMEVersionLoadPolicy handleUnknownVersion)
-        throws IOException, InvalidSettingsException {
+        throws IOException {
 
         //TODO use handleUnknownVersion
 
-        // if we can't load the workflow settings and workflow format version, we throw an exception here - loading process seems rather hopeless
-        var projectLoader = new ProjectLoader(directory);
-        var workflowConfig = projectLoader.getWorkflowConfig();
-        var workflowFormatVersion = projectLoader.getWorkflowFormatVersion();
+        var workflowConfig = WorkflowLoader.parseWorkflowConfig(directory);
+        var workflowFormatVersion = LoadVersion.fromVersionString(loadWorkflowFormatVersionString(workflowConfig));
 
         return new RootWorkflowDefBuilder()//
-            .setProject(projectLoader.getProjectDef())//
+            .setCreatorIsNightly(() -> loadCreatorIsNightly(workflowConfig), true)//
             .setCredentialPlaceholders(() -> loadCredentialPlaceholderDefs(workflowConfig, workflowFormatVersion),
                 List.of())//
             .setFlowVariables(() -> loadWorkflowVariableDefs(workflowConfig, workflowFormatVersion), List.of())//
             .setSavedWithData(() -> loadSavedWithData(directory, workflowFormatVersion), true)//
+            .setSavedWithVersion(() -> loadCreatorVersion(workflowConfig).toString(), LoadVersion.UNKNOWN.toString())//
             .setTableBackendSettings(() -> loadTableBackendSettingsDef(workflowConfig), null)//
             .setWorkflow(() -> WorkflowLoader.load(directory, workflowConfig, workflowFormatVersion), defaultWorkflow())//
+            .setWorkflowFormatVersion(workflowFormatVersion.toString())//
             .build();
 
         //        var isSetDirtyAfterLoad =
@@ -162,10 +146,9 @@ public class RootWorkflowLoader {
     /**
      * @param directory The directory that contains the workflow to load
      * @return a description of the workflow as POJOs
-     * @throws IOException if the workflow.knime file in the given directory cannot be accessed
-     * @throws InvalidSettingsException if the workflow settings do not contain a workflow format version
      */
-    public static RootWorkflowDef load(final File directory) throws IOException, InvalidSettingsException {
+    public static RootWorkflowDef load(final File directory)
+        throws IOException, UnsupportedWorkflowVersionException, InvalidSettingsException {
         return load(directory, UnknownKNIMEVersionLoadPolicy.Abort);
     }
 
@@ -191,6 +174,59 @@ public class RootWorkflowLoader {
     public static UnknownKNIMEVersionLoadPolicy getUnknownKNIMEVersionLoadPolicy(final LoadVersion workflowKNIMEVersion,
         final Version createdByKNIMEVersion, final boolean isNightlyBuild) {
         return UnknownKNIMEVersionLoadPolicy.Abort;
+    }
+
+    /**
+     * @param workflowConfig the parsed contents of the workflow.knime XML file
+     * @return the version of the KNIME instance that was used to create the workflow.
+     */
+    private static Version loadCreatorVersion(final ConfigBaseRO workflowConfig) {
+        Version createdWith = null;
+        var createdWithString = workflowConfig.getString(Const.CREATOR_KNIME_VERSION.get(), null);
+        if (createdWithString != null) {
+            try {
+                createdWith = new Version(createdWithString);
+            } catch (IllegalArgumentException e) {
+                // ideally this goes into the 'LoadResult' but it's not instantiated yet
+                // TODO
+                //                LOGGER.warn(String.format("Unable to parse version string \"%s\" (file \"%s\"): %s", createdBy,
+                //                    dotKNIME.getAbsolutePath(), e.getMessage()), e);
+            }
+        }
+        return createdWith;
+    }
+
+    /**
+     * @param workflowConfig the parsed contents of the workflow.knime XML file
+     * @return the version of the KNIME instance that was used to create the workflow.
+     * @throws InvalidSettingsException
+     */
+    private static boolean loadCreatorIsNightly(final ConfigBaseRO workflowConfig) throws InvalidSettingsException {
+        if (!workflowConfig.containsKey(Const.CREATOR_IS_NIGHTLY.get())) {
+            throw new InvalidSettingsException(
+                "Workflow settings do not specify whether the workflow was created by a nightly version of KNIME ("
+                    + Const.CREATOR_IS_NIGHTLY.get() + ")");
+        }
+        return workflowConfig.getBoolean(Const.CREATOR_IS_NIGHTLY.get());
+    }
+
+    /**
+     * @param workflowConfig the parsed contents of the workflow.knime XML file
+     * @return load version, see {@link LoadVersion}
+     */
+    private static String loadWorkflowFormatVersionString(final ConfigBaseRO workflowConfig) throws IOException {
+        // CeBIT 2006 version did not contain a version string.
+        String versionString;
+        if (workflowConfig.containsKey(Const.WORKFLOW_FORMAT_VERSION.get())) {
+            try {
+                versionString = workflowConfig.getString(Const.WORKFLOW_FORMAT_VERSION.get());
+            } catch (InvalidSettingsException e) {
+                throw new IOException("Can't read version number from \"" + workflowConfig.getKey() + "\"", e);
+            }
+        } else {
+            versionString = Const.DEFAULT_LOAD_VERSION_STRING.get();
+        }
+        return versionString;
     }
 
     /**
