@@ -52,10 +52,8 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
-import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.base.ConfigBaseRO;
 import org.knime.core.node.util.CheckUtils;
@@ -66,9 +64,9 @@ import org.knime.core.node.workflow.def.CoreToDefUtil;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.workflow.def.AnnotationDataDef;
 import org.knime.core.workflow.def.AuthorInformationDef;
+import org.knime.core.workflow.def.BaseNodeDef;
 import org.knime.core.workflow.def.ConnectionDef;
 import org.knime.core.workflow.def.ConnectionUISettingsDef;
-import org.knime.core.workflow.def.NodeDef;
 import org.knime.core.workflow.def.StyleRangeDef;
 import org.knime.core.workflow.def.WorkflowDef;
 import org.knime.core.workflow.def.WorkflowUISettingsDef;
@@ -76,6 +74,7 @@ import org.knime.core.workflow.def.impl.AnnotationDataDefBuilder;
 import org.knime.core.workflow.def.impl.AuthorInformationDefBuilder;
 import org.knime.core.workflow.def.impl.ConnectionDefBuilder;
 import org.knime.core.workflow.def.impl.ConnectionUISettingsDefBuilder;
+import org.knime.core.workflow.def.impl.DefaultAuthorInformationDef;
 import org.knime.core.workflow.def.impl.StyleRangeDefBuilder;
 import org.knime.core.workflow.def.impl.WorkflowDefBuilder;
 import org.knime.core.workflow.def.impl.WorkflowUISettingsDefBuilder;
@@ -178,6 +177,13 @@ public class WorkflowLoader {
 
     private static final ConfigBaseRO EMPTY_SETTINGS = new SimpleConfig("<<empty>>");
 
+    private static final DefaultAuthorInformationDef DEFAULT_AUTHOR_INFORMATION = new AuthorInformationDefBuilder()//
+        .setAuthoredBy("<unknown>") //
+        .setAuthoredWhen(OffsetDateTime.of(1970, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC)) //
+        .setLastEditedBy(null) //
+        .setLastEditedWhen(null) //
+        .build();
+
     /** Format used to save author/edit infos. */
     static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss Z");
 
@@ -195,51 +201,12 @@ public class WorkflowLoader {
     }
 
     /**
-     * Also validates the directory argument.
-     *
-     * @param workflowDirectory from which to load the workflow.
-     * @return the workflow.knime file in the given directory.
-     */
-    static File getWorkflowDotKnimeFile(final File workflowDirectory) throws IOException {
-        if (workflowDirectory == null) {
-            throw new IllegalArgumentException("Directory must not be null.");
-        }
-        if (!workflowDirectory.isDirectory()) {
-            throw new IOException("Not a directory: " + workflowDirectory);
-        }
-        if (!workflowDirectory.canRead()) {
-            throw new IOException("Cannot read from directory: " + workflowDirectory);
-        }
-
-        // template.knime or workflow.knime
-        // TODO ReferencedFile usage
-        var dotKNIMERef = new ReferencedFile(new ReferencedFile(workflowDirectory), Const.WORKFLOW_FILE_NAME.get());
-        var dotKNIME = dotKNIMERef.getFile();
-
-        if (!dotKNIME.isFile()) {
-            throw new IOException(String.format("No %s file in directory %s", Const.WORKFLOW_FILE_NAME.get(),
-                workflowDirectory.getAbsolutePath()));
-        }
-        return dotKNIME;
-    }
-
-    /**
-     * Parses the file (usually workflow.knime) that describes the workflow.
-     *
-     * @param workflowDirectory containing the workflow
-     */
-    public static ConfigBaseRO parseWorkflowConfig(final File workflowDirectory) throws IOException {
-        var workflowDotKnime = WorkflowLoader.getWorkflowDotKnimeFile(workflowDirectory);
-        return SimpleConfig.parseConfig(workflowDotKnime.getAbsolutePath(), workflowDotKnime);
-    }
-
-    /**
      * @param nodeDirectory the directory that contains the node configuration and possibly the contained subworkflow
      * @param workflowFormatVersion the version of the workflow format that was used to write the workflow to load
      */
     public static WorkflowDef load(final File nodeDirectory, final LoadVersion workflowFormatVersion)
         throws IOException, InvalidSettingsException {
-        var workflowConfig = parseWorkflowConfig(nodeDirectory);
+        var workflowConfig = LoaderUtils.parseWorkflowConfig(nodeDirectory);
         return load(nodeDirectory, workflowConfig, workflowFormatVersion);
     }
 
@@ -263,28 +230,32 @@ public class WorkflowLoader {
 
         builder//
             .setName(() -> loadName(workflowConfig, workflowFormatVersion), "Workflow")//
-            .setAuthorInformation(loadAuthorInformationDef(workflowConfig, workflowFormatVersion))
-            .setAnnotations(loadAnnotationDefs(workflowConfig, workflowFormatVersion))//
+            .setAuthorInformation(() -> loadAuthorInformationDef(workflowConfig, workflowFormatVersion),
+                DEFAULT_AUTHOR_INFORMATION)
+            .setAnnotations(() -> loadAnnotationDefs(workflowConfig, workflowFormatVersion), List.of())//
             // TODO cipher
             //          .setCipher(loadCipher())//
-            .setWorkflowEditorSettings(loadEditorUIInformationDef(workflowConfig, workflowFormatVersion));
+            .setWorkflowEditorSettings(() -> loadEditorUIInformationDef(workflowConfig, workflowFormatVersion),
+                new WorkflowUISettingsDefBuilder().build());
 
         // TODO name methods consistently
         // TODO javadoc
         // nodes
-        // TODO
         var nodesConfig = loadNodesConfig(workflowConfig);
         for (String nodeKey : nodesConfig.keySet()) {
+            //TODO Default node key?
             builder.putToNodes(nodeKey,
-                loadNodeDef(nodesConfig, nodeKey, workflowConfig, workflowDirectory, workflowFormatVersion));
+                () -> loadNodeDef(nodesConfig, nodeKey, workflowConfig, workflowDirectory, workflowFormatVersion),
+                null);
         }
 
+
         // connections
-        //
         var connectionsConfig = loadConnectionsConfig(workflowConfig, workflowFormatVersion);
         for (String connectionKey : connectionsConfig.keySet()) {
-            var connection = loadConnectionDef(connectionsConfig.getConfigBase(connectionKey), workflowFormatVersion);
-            builder.addToConnections(connection);
+            //            var connection =loadConnectionDef(connectionsConfig.getConfigBase(connectionKey), workflowFormatVersion) ;
+            builder.addToConnections(
+                () -> loadConnectionDef(connectionsConfig.getConfigBase(connectionKey), workflowFormatVersion), null);
         }
 
         return builder.build();
@@ -343,34 +314,6 @@ public class WorkflowLoader {
     //    }
 
     /**
-     * The node settings file is typically named settings.xml (for native nodes and components) and workflow.knime for
-     * meta nodes. However, the actual name is stored in the parent workflow's entry that describes the node.
-     *
-     * @param workflowNodeConfig the configuration tree in the workflow description (workflow.knime) that describes the
-     *            node
-     * @param workflowDir the directory that contains the node directory
-     * @return
-     * @throws InvalidSettingsException
-     */
-    private static File loadNodeFile(final ConfigBaseRO workflowNodeConfig, final File workflowDir)
-        throws InvalidSettingsException {
-        // relative path to node configuration file
-        var fileString = workflowNodeConfig.getString(Const.KEY_NODE_SETTINGS_FILE.get());
-        if (fileString == null) {
-            throw new InvalidSettingsException(
-                "Unable to read settings " + "file for node " + workflowNodeConfig.getKey());
-        }
-        // fileString is something like "File Reader(#1)/settings.xml", thus
-        // it contains two levels of the hierarchy. We leave it here to the
-        // java.io.File implementation to resolve these levels
-        var nodeFile = new File(workflowDir, fileString);
-        if (!nodeFile.isFile() || !nodeFile.canRead()) {
-            throw new InvalidSettingsException("Unable to read settings " + "file " + nodeFile.getAbsolutePath());
-        }
-        return nodeFile;
-    }
-
-    /**
      * @param settings
      * @param workflowFormatVersion the version of the workflow format that was used to write the workflow to load
      * @return the type of node described by a settings entry (contained in workflow's workflow.knime file).
@@ -393,6 +336,7 @@ public class WorkflowLoader {
                 final var nodeTypeString = settings.getString("node_type");
                 CheckUtils.checkSettingNotNull(nodeTypeString, "node type must not be null");
                 try {
+                    // TODO might be error prone?
                     result = NodeType.valueOf(nodeTypeString);
                 } catch (IllegalArgumentException iae) {
                     throw new InvalidSettingsException("Can't parse node type: " + nodeTypeString);
@@ -495,19 +439,15 @@ public class WorkflowLoader {
         }
     }
 
-
     /**
      * @param workflowConfig
      * @param workflowFormatVersion
      */
     private static List<AnnotationDataDef> loadAnnotationDefs(final ConfigBaseRO workflowConfig,
         final LoadVersion workflowFormatVersion) throws InvalidSettingsException {
-        if (workflowFormatVersion.isOlderThan(LoadVersion.V230)) {
+        if (workflowFormatVersion.isOlderThan(LoadVersion.V230) || !workflowConfig.containsKey("annotations")) {
             return List.of();
         } else {
-            if (!workflowConfig.containsKey("annotations")) {
-                return Collections.emptyList();
-            }
             var annoSettings = workflowConfig.getConfigBase("annotations");
             List<AnnotationDataDef> result = new ArrayList<>();
             for (String key : annoSettings.keySet()) {
@@ -529,24 +469,19 @@ public class WorkflowLoader {
             .setBgcolor(annotationConfig.getInt("bgcolor"))//
             .setLocation(CoreToDefUtil.createCoordinate(annotationConfig.getInt("x-coordinate"),
                 annotationConfig.getInt("y-coordinate")))//
-            .setWidth(
-                annotationConfig.getInt("width"))//
+            .setWidth(annotationConfig.getInt("width"))//
             .setHeight(annotationConfig.getInt("height"))//
             .setBorderSize(annotationConfig.getInt("borderSize", 0)) // default to 0 for backward compatibility
             .setBorderColor(annotationConfig.getInt("borderColor", 0)) // default for backward compatibility
             .setDefaultFontSize(annotationConfig.getInt("defFontSize", -1)) // default for backward compatibility
             .setAnnotationVersion(annotationConfig.getInt("annotation-version", -1)) // default to VERSION_OLD
-            .setTextAlignment(
-                workflowFormatVersion.ordinal() >= LoadVersion.V250.ordinal() ? annotationConfig.getString("alignment") : "LEFT");
+            .setTextAlignment(workflowFormatVersion.ordinal() >= LoadVersion.V250.ordinal()
+                ? annotationConfig.getString("alignment") : "LEFT");
 
         ConfigBaseRO styleConfigs = annotationConfig.getConfigBase("styles");
         for (String key : styleConfigs.keySet()) {
-            try {
-                var def = loadStyleRangeDef(styleConfigs.getConfigBase(key));
-                builder.addToStyles(def);
-            } catch (InvalidSettingsException ex) {
-                // TODO
-            }
+            builder.addToStyles(() -> loadStyleRangeDef(styleConfigs.getConfigBase(key)),
+                new StyleRangeDefBuilder().build());
         }
         return builder.build();
     }
@@ -573,7 +508,7 @@ public class WorkflowLoader {
      * @param workflowFormatVersion
      * @return a node describing what's behind the given node id (might be a metanode, component, or native node).
      */
-    private static NodeDef loadNodeDef(final ConfigBaseRO nodesConfig, final String nodeKey,
+    private static BaseNodeDef loadNodeDef(final ConfigBaseRO nodesConfig, final String nodeKey,
         final ConfigBaseRO workflowConfig, final File workflowDir, final LoadVersion workflowFormatVersion)
         throws InvalidSettingsException, IOException {
 
@@ -588,26 +523,20 @@ public class WorkflowLoader {
 
         // contains the information about the node that is in the workflow description
         ConfigBaseRO workflowNodeConfig = nodesConfig.getConfigBase(nodeKey);
-
-        var nodeType = loadNodeType(workflowNodeConfig, workflowFormatVersion);
-
-        //        Path.of(nodeConfigFile)
-        // TODO maybe this can be moved
-        var settingsFile = loadNodeFile(workflowNodeConfig, workflowDir);
+        var settingsFile = LoaderUtils.loadNodeFile(workflowNodeConfig, workflowDir);
         var nodeDirectory = settingsFile.getParentFile();
 
-        // TODO error handling
-        //
         // var childResult = new LoadResult(nodeType.toString() + " with ID suffix " + nodeIDSuffix);
         // var childDef = persistor.getLoadResult(this, nodeSetting, childResult);
         // loadResult.addChildError(childResult);
+        var nodeType = loadNodeType(workflowNodeConfig, workflowFormatVersion);
         switch (nodeType) {
             case MetaNode:
-                return new MetaNodeLoader().load(workflowConfig, nodeDirectory, workflowFormatVersion).getNodeDef();
+                return MetaNodeLoader.load(workflowConfig, nodeDirectory, workflowFormatVersion);
             case NativeNode:
-                return new NativeNodeLoader().load(workflowConfig, nodeDirectory, workflowFormatVersion).getNodeDef();
+                return NativeNodeLoader.load(workflowConfig, nodeDirectory, workflowFormatVersion);
             case SubNode:
-                return new ComponentLoader().load(workflowConfig, nodeDirectory, workflowFormatVersion).getNodeDef();
+                return ComponentLoader.load(workflowConfig, nodeDirectory, workflowFormatVersion);
             default:
                 throw new IllegalStateException("Unknown node type: " + nodeType);
         }
@@ -646,8 +575,8 @@ public class WorkflowLoader {
      * @param connectionConfig the part of the workflow configurations that describes one particular connection
      * @param workflowFormatVersion
      */
-    private static ConnectionDef loadConnectionDef(final ConfigBaseRO connectionConfig, final LoadVersion workflowFormatVersion)
-        throws InvalidSettingsException {
+    private static ConnectionDef loadConnectionDef(final ConfigBaseRO connectionConfig,
+        final LoadVersion workflowFormatVersion) throws InvalidSettingsException {
 
         //        try {
         var sourceID = connectionConfig.getInt("sourceID");
@@ -723,7 +652,8 @@ public class WorkflowLoader {
     private static WorkflowUISettingsDef loadEditorUIInformationDef(final ConfigBaseRO workflowConfig,
         final LoadVersion workflowFormatVersion) throws InvalidSettingsException {
         var builder = new WorkflowUISettingsDefBuilder();
-        if (workflowFormatVersion.isOlderThan(LoadVersion.V260) || !workflowConfig.containsKey(Const.CFG_EDITOR_INFO.get())) {
+        if (workflowFormatVersion.isOlderThan(LoadVersion.V260)
+            || !workflowConfig.containsKey(Const.CFG_EDITOR_INFO.get())) {
             return builder.build();
         }
         var editorCfg = workflowConfig.getConfigBase(Const.CFG_EDITOR_INFO.get());
@@ -764,53 +694,51 @@ public class WorkflowLoader {
 
     private static AuthorInformationDef loadAuthorInformationDef(final ConfigBaseRO settings,
         final LoadVersion loadVersion) throws InvalidSettingsException {
+        try {
+            if (loadVersion.ordinal() >= LoadVersion.V280.ordinal()
+                && settings.containsKey(Const.CFG_AUTHOR_INFORMATION.get())) {
+                final var sub = settings.getConfigBase(Const.CFG_AUTHOR_INFORMATION.get());
+                if (sub == null) {
+                    return DEFAULT_AUTHOR_INFORMATION;
+                }
+                return new AuthorInformationDefBuilder()//
+                    .setAuthoredBy(() -> loadAuthorSetting(sub, "authored-by"), "<unknown>")//
+                    .setAuthoredWhen(() -> loadAuthorInformationDate(sub, "authored-when"),
+                        OffsetDateTime.of(1970, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC))//
+                    .setLastEditedBy(() -> loadAuthorSetting(sub, "lastEdited-by"), "<unknown>")//
+                    .setLastEditedWhen(() -> loadAuthorInformationDate(sub, "lastEdited-when"),
+                        OffsetDateTime.of(1970, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC))//
+                    .build();
+            } else {
+                return DEFAULT_AUTHOR_INFORMATION;
+            }
 
-        if (loadVersion.ordinal() >= LoadVersion.V280.ordinal()
-            && settings.containsKey(Const.CFG_AUTHOR_INFORMATION.get())) {
-            final var sub = settings.getConfigBase(Const.CFG_AUTHOR_INFORMATION.get());
-            final var author = sub.getString("authored-by");
-            final var authorDateS = sub.getString("authored-when");
-            OffsetDateTime authorDate;
-            if (authorDateS == null) {
-                authorDate = null;
-            } else {
-                try {
-                    authorDate = parseDate(authorDateS);
-                } catch (DateTimeParseException e) {
-                    authorDate = OffsetDateTime.ofInstant(Instant.EPOCH, ZoneOffset.UTC);
-                    // TODO
-                    //                    loadResult.addWarning(String.format("Can't parse authored-when-date \"%s\". Replaced with \"%s\".",
-                    //                        authorDateS, authorDate.toString()));
-                }
-            }
-            final var editor = sub.getString("lastEdited-by");
-            final var editDateS = sub.getString("lastEdited-when");
-            OffsetDateTime editDate;
-            if (editDateS == null) {
-                editDate = null;
-            } else {
-                try {
-                    editDate = parseDate(editDateS);
-                } catch (DateTimeParseException e) {
-                    editDate = OffsetDateTime.ofInstant(Instant.EPOCH, ZoneOffset.UTC);
-                    // TODO
-                    //                    loadResult.addWarning(String.format("Can't parse lastEdit-when-date \"%s\". Replaced with \"%s\".",
-                    //                        editDateS, editDate.toString()));
-                }
-            }
-            return new AuthorInformationDefBuilder()//
-                .setAuthoredBy(author)//
-                .setAuthoredWhen(authorDate)//
-                .setLastEditedBy(editor)//
-                .setLastEditedWhen(editDate)//
-                .build();
-        } else {
-            return new AuthorInformationDefBuilder()//
-                .setAuthoredBy("<unknown>")//
-                .setAuthoredWhen(OffsetDateTime.of(1970, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC))//
-                .setLastEditedBy(null)//
-                .setLastEditedWhen(null)//
-                .build();
+        } catch (InvalidSettingsException e) {
+            var errorMessage = "Unable to load workflow author information: " + e.getMessage();
+            throw new InvalidSettingsException(errorMessage, e);
+        }
+    }
+
+    private static String loadAuthorSetting(final ConfigBaseRO sub, final String key) throws InvalidSettingsException {
+        try {
+            return sub.getString(key);
+        } catch (InvalidSettingsException e) {
+            var errorMessage = String.format("Unable to load the %s: %s", key, e.getMessage());
+            throw new InvalidSettingsException(errorMessage, e);
+        }
+    }
+
+    private static OffsetDateTime loadAuthorInformationDate(final ConfigBaseRO sub, final String key)
+        throws InvalidSettingsException {
+        try {
+            var date = sub.getString(key);
+            return date == null ? null : parseDate(date);
+        } catch (InvalidSettingsException e) {
+            var errorMessage = String.format("Unable to load the %s: %s", key, e.getMessage());
+            throw new InvalidSettingsException(errorMessage, e);
+        } catch (DateTimeParseException e) {
+            //TODO Should we warn for this?
+            return OffsetDateTime.ofInstant(Instant.EPOCH, ZoneOffset.UTC);
         }
     }
 

@@ -49,7 +49,7 @@
 package org.knime.core.node.workflow.loader;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.groups.Tuple.tuple;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -61,6 +61,13 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.base.ConfigBaseRO;
 import org.knime.core.node.util.NodeLoaderTestUtils;
 import org.knime.core.util.LoadVersion;
+import org.knime.core.workflow.def.ConfigMapDef;
+import org.knime.core.workflow.def.JobManagerDef;
+import org.knime.core.workflow.def.NodeAnnotationDef;
+import org.knime.core.workflow.def.WorkflowDef;
+import org.knime.core.workflow.def.impl.ComponentDefBuilder.WithExceptionsDefaultComponentDef;
+import org.knime.core.workflow.def.impl.NodeDefBuilder.WithExceptionsDefaultNodeDef;
+import org.knime.core.workflow.def.impl.SingleNodeDefBuilder.WithExceptionsDefaultSingleNodeDef;
 
 /**
  *
@@ -70,13 +77,9 @@ class ComponentLoaderTest {
 
     private ConfigBaseRO m_configBaseRO;
 
-    private ComponentLoader m_componentLoader;
-
-
     @BeforeEach
     void setUp() {
         m_configBaseRO = mock(ConfigBaseRO.class);
-        m_componentLoader = new ComponentLoader();
     }
 
     @Test
@@ -87,9 +90,11 @@ class ComponentLoaderTest {
         when(m_configBaseRO.getInt("id")).thenReturn(1);
         when(m_configBaseRO.containsKey("customDescription")).thenReturn(true);
         when(m_configBaseRO.getString("node_type")).thenReturn("SubNode");
+
         // when
-        m_componentLoader.load(m_configBaseRO, file, LoadVersion.FUTURE);
-        var componentDef = m_componentLoader.getNodeDef();
+        var componentDef = ComponentLoader.load(m_configBaseRO, file, LoadVersion.FUTURE);
+        var singleNodeDef = componentDef.getNode();
+        var nodeDef = singleNodeDef.getNode();
 
         // then
 
@@ -102,30 +107,88 @@ class ComponentLoaderTest {
         assertThat(componentDef.getOutPorts()).isEmpty();
         assertThat(componentDef.getVirtualInNodeId()).isEqualTo(3);
         assertThat(componentDef.getVirtualOutNodeId()).isEqualTo(4);
-        assertThat(componentDef.getLink()).isNull();
-        //TODO Shall we pass it to the workflow test or somthing similar?
+        assertThat(componentDef.getLink()).isNotNull();
+        //TODO Shall we pass it to the workflow test or something similar?
         var workflow = componentDef.getWorkflow();
 
         // Assert SingleNodeLoader
-        assertThat(componentDef.getFlowStack()).isEmpty(); //
+        assertThat(singleNodeDef.getFlowStack()).isEmpty(); //
         //TODO assert the ConfigMap value
-        assertThat(componentDef.getInternalNodeSubSettings().getChildren()).containsKey("memory_policy");
+        assertThat(singleNodeDef.getInternalNodeSubSettings().getChildren()).containsKey("memory_policy");
 //        assertThat(nativeNodeDef.getModelSettings().getChildren());
-        assertThat(componentDef.getVariableSettings().getChildren()).isEmpty();
+        assertThat(singleNodeDef.getVariableSettings().getChildren()).isEmpty();
 
         // Assert NodeLoader
-        assertThat(componentDef.getId()).isEqualTo(1);
-        assertThat(componentDef.getAnnotation().getData()).isNull();
-        assertThat(componentDef.getCustomDescription()).isNull();
-        assertThat(componentDef.getJobManager()).isNull();
-        assertThat(componentDef.getLocks()) //
+        assertThat(nodeDef.getId()).isEqualTo(1);
+        assertThat(nodeDef.getAnnotation().getData()).isNull();
+        assertThat(nodeDef.getCustomDescription()).isNull();
+        assertThat(nodeDef.getJobManager()).isNotNull();
+        assertThat(nodeDef.getLocks()) //
             .extracting("m_hasDeleteLock", "m_hasResetLock", "m_hasConfigureLock") //
             .containsExactly(false, false, false);
-        assertThat(componentDef.getNodeType()).isEqualTo("SubNode");
-        assertThat(componentDef.getUiInfo()).extracting(n -> n.hasAbsoluteCoordinates(), n -> n.isSymbolRelative(),
+        assertThat(nodeDef.getUiInfo()).extracting(n -> n.hasAbsoluteCoordinates(), n -> n.isSymbolRelative(),
             n -> n.getBounds().getHeight(), n -> n.getBounds().getLocation(), n -> n.getBounds().getWidth())
-            .containsOnlyNulls();
+            .containsNull();
 
+        assertThat(((WithExceptionsDefaultComponentDef) componentDef).getLoadExceptions().size()).isOne();
+        assertThat(((WithExceptionsDefaultSingleNodeDef) singleNodeDef).getLoadExceptions()).isEmpty();
+        assertThat(((WithExceptionsDefaultNodeDef) nodeDef).getLoadExceptions()).isEmpty();
+    }
+
+    @Test
+    void multiPortComponentTest() throws InvalidSettingsException, IOException {
+        // given
+        var file = NodeLoaderTestUtils.readResourceFolder("MultiPort_Component");
+
+        when(m_configBaseRO.getInt("id")).thenReturn(431);
+        when(m_configBaseRO.containsKey("customDescription")).thenReturn(false);
+        when(m_configBaseRO.containsKey("annotations")).thenReturn(false);
+        when(m_configBaseRO.getIntArray("extrainfo.node.bounds")) //
+            .thenReturn(new int[]{2541, 1117, 122, 65});
+
+        // when
+        var componentDef = ComponentLoader.load(m_configBaseRO, file, LoadVersion.FUTURE);
+        var singleNodeDef = componentDef.getNode();
+        var nodeDef = singleNodeDef.getNode();
+
+        // then
+
+        // Assert MetaNodeLoader
+        assertThat(componentDef.getInPorts())
+            .extracting(p -> p.getIndex(), p -> p.getName(),
+                p -> p.getPortType().getPortObjectClass().endsWith("BufferedDataTable"))
+            .contains(tuple(0, "inport_0", true));
+        assertThat(componentDef.getOutPorts())
+            .extracting(p -> p.getIndex(), p -> p.getName(),
+                p -> p.getPortType().getPortObjectClass().endsWith("BufferedDataTable"))
+            .contains(tuple(0, "outport_0", true),
+                tuple(1, "outport_1", true));
+        assertThat(componentDef.getVirtualInNodeId()).isEqualTo(10);
+        assertThat(componentDef.getVirtualOutNodeId()).isEqualTo(11);
+        assertThat(componentDef.getLink()).isNotNull();
+        assertThat(componentDef.getWorkflow()).isInstanceOf(WorkflowDef.class);
+
+        // Assert SingleNodeLoader
+        assertThat(singleNodeDef.getFlowStack()).isEmpty(); //
+        //TODO assert the ConfigMap value
+        assertThat(singleNodeDef.getInternalNodeSubSettings().getChildren()).containsKey("memory_policy");
+//        assertThat(nativeNodeDef.getModelSettings().getChildren());
+        assertThat(singleNodeDef.getVariableSettings()).isInstanceOf(ConfigMapDef.class);
+
+
+        // Assert NodeLoader
+        assertThat(nodeDef.getId()).isEqualTo(431);
+        assertThat(nodeDef.getAnnotation()).isInstanceOf(NodeAnnotationDef.class);
+        assertThat(nodeDef.getCustomDescription()).isNull();
+        assertThat(nodeDef.getJobManager()).isInstanceOf(JobManagerDef.class);
+        assertThat(nodeDef.getLocks()) //
+            .extracting("m_hasDeleteLock", "m_hasResetLock", "m_hasConfigureLock") //
+            .containsExactly(false, false, false);
+        assertThat(nodeDef.getUiInfo()).extracting(n -> n.getBounds().getLocation().getX(),
+            n -> n.getBounds().getLocation().getY(), n -> n.getBounds().getHeight(), n -> n.getBounds().getWidth())
+            .containsExactly(2541, 1117, 122, 65);
+
+        assertThat(((WithExceptionsDefaultComponentDef) componentDef).getLoadExceptions()).isEmpty();
     }
 
 }

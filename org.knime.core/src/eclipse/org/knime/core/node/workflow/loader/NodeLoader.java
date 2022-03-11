@@ -48,18 +48,15 @@
  */
 package org.knime.core.node.workflow.loader;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Optional;
+import java.util.Random;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.base.ConfigBaseRO;
-import org.knime.core.node.util.CheckUtils;
-import org.knime.core.node.workflow.ObsoleteMetaNodeFileWorkflowPersistor;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.core.node.workflow.def.CoreToDefUtil;
 import org.knime.core.util.LoadVersion;
-import org.knime.core.util.workflowalizer.NodeMetadata.NodeType;
 import org.knime.core.workflow.def.AnnotationDataDef;
 import org.knime.core.workflow.def.BoundsDef;
 import org.knime.core.workflow.def.CoordinateDef;
@@ -70,6 +67,7 @@ import org.knime.core.workflow.def.NodeLocksDef;
 import org.knime.core.workflow.def.NodeUIInfoDef;
 import org.knime.core.workflow.def.impl.AnnotationDataDefBuilder;
 import org.knime.core.workflow.def.impl.BoundsDefBuilder;
+import org.knime.core.workflow.def.impl.CoordinateDefBuilder;
 import org.knime.core.workflow.def.impl.JobManagerDefBuilder;
 import org.knime.core.workflow.def.impl.NodeAnnotationDefBuilder;
 import org.knime.core.workflow.def.impl.NodeDefBuilder;
@@ -77,23 +75,21 @@ import org.knime.core.workflow.def.impl.NodeLocksDefBuilder;
 import org.knime.core.workflow.def.impl.NodeUIInfoDefBuilder;
 
 /**
+ * Responsible for loading the KNIME properties which are used by the Nodes, Components, Metanodes and Workflows
  *
  * @author Dionysios Stolis, KNIME GmbH, Berlin, Germany
  * @author Carl Witt, KNIME GmbH, Berlin, Germany
  */
-abstract class NodeLoader {
+final class NodeLoader {
 
-    private final NodeDefBuilder m_nodeBuilder;
-
-    private Optional<Integer> m_nodeId;
-
-    protected ConfigBaseRO m_nodeConfig;
-
-    // Can be component, native, metanode builder
-    NodeLoader(final NodeDefBuilder nodeBuilder) {
-        m_nodeBuilder = nodeBuilder;
-        m_nodeId = Optional.empty();
+    private NodeLoader() {
     }
+
+    private static final JobManagerDef DEFAULT_JOB_MANAGER = new JobManagerDefBuilder() //
+        .setFactory("") //
+        .build();
+
+    private static final NodeAnnotationDef DEFAULT_NODE_ANNOTATION = new NodeAnnotationDefBuilder().build();
 
     /**
      * @param workflowConfig describes the containing workflow. Contains, e.g., the node's id, description, etc.
@@ -101,62 +97,52 @@ abstract class NodeLoader {
      * @param workflowFormatVersion implicitly specifies the format of the descriptions
      * @throws IOException
      */
-    NodeLoader load(final ConfigBaseRO workflowConfig, final File nodeDirectory,
-        final LoadVersion workflowFormatVersion) throws InvalidSettingsException, IOException {
+    static NodeDef load(final ConfigBaseRO workflowConfig, final ConfigBaseRO nodeConfig,
+        final LoadVersion workflowFormatVersion) {
 
-        m_nodeConfig = loadNodeConfig(workflowConfig, nodeDirectory);
-
-        // the load methods should throw specific error messages
-        m_nodeId = loadNodeId(workflowConfig);
-        m_nodeBuilder.setId(m_nodeId.get()) //
-            .setAnnotation(loadAnnotation(workflowConfig, workflowFormatVersion)) //
-            .setCustomDescription(loadCustomDescription(workflowConfig, m_nodeConfig, workflowFormatVersion)) //
-            .setJobManager(loadJobManager(m_nodeConfig)) //
+        return new NodeDefBuilder().setId(() -> loadNodeId(workflowConfig), getRandomNodeID()) //
+            .setAnnotation(() -> loadAnnotation(workflowConfig, workflowFormatVersion), DEFAULT_NODE_ANNOTATION) //
+            .setCustomDescription(() -> loadCustomDescription(workflowConfig, nodeConfig, workflowFormatVersion), "") //
+            .setJobManager(() -> loadJobManager(nodeConfig), DEFAULT_JOB_MANAGER) //
             .setLocks(loadLocks(workflowConfig, workflowFormatVersion)) //
-            .setNodeType(loadType(workflowConfig, workflowFormatVersion)) //
-            .setUiInfo(loadUIInfo(workflowConfig));
-        return this;
+            .setUiInfo(loadUIInfo(workflowConfig, workflowFormatVersion)) //
+            .build();
     }
 
     /**
-     * @param workflowConfig the configuration of the workflow containing the node.
-     * @param nodeDirectory directory that contains the the node's configuration file (e.g., settings.xml, template.knime)
-     * @return the parsed element tree
-     * @throws IOException
+     * Loads the node's that should be unique within the workflow
+     *
+     * @param settings a representation of the workflow.knime file.
+     * @return a node id
+     * @throws InvalidSettingsException
      */
-    protected abstract ConfigBaseRO loadNodeConfig(ConfigBaseRO workflowConfig, File nodeDirectory) throws IOException;
-
-    private static Optional<Integer> loadNodeId(final ConfigBaseRO settings) throws InvalidSettingsException {
+    private static Integer loadNodeId(final ConfigBaseRO settings) throws InvalidSettingsException {
         try {
-            return Optional.ofNullable(settings.getInt("id"));
-        } catch (InvalidSettingsException e) {
-            var random = getRandomNodeID();
-            var errorMessage = String.format("Unable to load node ID (internal id \"%s\"), trying random number %d",
-                settings.getKey(), random);
-            //  Feed the error message to the new loadResult
-            return Optional.of(random);
+            return Optional.ofNullable(settings.getInt("id")).orElse(getRandomNodeID());
+        } catch (InvalidSettingsException e) { //NOSONAR
+            var errorMessage =
+                String.format("Unable to load node ID (internal id \"%s\"), trying random number", settings.getKey());
+            throw new InvalidSettingsException(errorMessage, e);
         }
     }
 
     private static Integer getRandomNodeID() {
-        return 10000 + (int)(Math.random() * 10000);
-        //TODO The old functionality could check if the node container map contained the generated random int
-        // the new one doesn't have access to the node ids of the other workflow's node.
-
-        // Old functionality
-        // some number between 10k and 20k, hopefully unique.
-        //        int nodeIDSuffix = 10000 + (int)(Math.random() * 10000);
-        //        while (m_nodeContainerLoaderMap.containsKey(nodeIDSuffix)) {
-        //            nodeIDSuffix += 1;
-        //        }
-        //        return nodeIDSuffix;
+        return 10000 + new Random().nextInt(10000);
     }
 
+    /**
+     * Loads the annotations.
+     *
+     * @param settings a representation of the workflow.knime file.
+     * @param loadVersion
+     * @return
+     * @throws InvalidSettingsException
+     */
     private static NodeAnnotationDef loadAnnotation(final ConfigBaseRO settings, final LoadVersion loadVersion)
         throws InvalidSettingsException {
         if (!loadVersion.isOlderThan(LoadVersion.V230) || !settings.containsKey("annotations")) {
             // no credentials in v2.2 and before
-            return new NodeAnnotationDefBuilder().build();
+            return DEFAULT_NODE_ANNOTATION;
         }
         return new NodeAnnotationDefBuilder() //
             .setAnnotationDefault(false) //
@@ -170,7 +156,7 @@ abstract class NodeLoader {
             return new AnnotationDataDefBuilder() //
                 .setText(settings.getString("text")) //
                 .setBgcolor(settings.getInt("bgcolor")) //
-                .setLocation(loadCoordinateDef(settings)) //
+                .setLocation(() -> loadCoordinateDef(settings), new CoordinateDefBuilder().build()) //
                 .setBorderColor(settings.getInt("borderColor")) //
                 .setWidth(settings.getInt("width")) //
                 .setHeight(settings.getInt("height")) //
@@ -180,8 +166,8 @@ abstract class NodeLoader {
                 .setAnnotationVersion(settings.getInt("annotation-version")) //
                 .build();
         } catch (InvalidSettingsException e) {
-            // TODO Proper exception handling
-            return new AnnotationDataDefBuilder().build();
+            var errorMessage = "Can't load node annotation: " + e.getMessage();
+            throw new InvalidSettingsException(errorMessage, e);
         }
     }
 
@@ -189,24 +175,34 @@ abstract class NodeLoader {
         return CoreToDefUtil.createCoordinate(settings.getInt("x-coordinate"), settings.getInt("y-coordinate"));
     }
 
+    /**
+     *
+     * @param settings
+     * @return
+     * @throws InvalidSettingsException
+     */
     private static JobManagerDef loadJobManager(final ConfigBaseRO settings) throws InvalidSettingsException {
         try {
             if (!settings.containsKey("job.manager")) {
-                return null; // has required fields! new JobManagerDefBuilder().build();
+                return DEFAULT_JOB_MANAGER;
             }
             var jobManagerSettings = settings.getConfigBase("job.manager");
-            var factoryId = jobManagerSettings.getString("job.manager.factory.id");
             return new JobManagerDefBuilder()//
-                .setFactory(factoryId)//
+                .setFactory(() -> jobManagerSettings.getString("job.manager.factory.id"), "")//
                 .setSettings(CoreToDefUtil.toConfigMapDef(jobManagerSettings.getConfigBase("job.manager.settings")))
                 .build();
-        } catch (InvalidSettingsException e) {
-            // TODO proper error handling
+        } catch (InvalidSettingsException e) { //NOSONAR
+            var errorMessage = "Can't restore node execution job manager: " + e.getMessage();
+            throw new InvalidSettingsException(errorMessage, e);
         }
-        return new JobManagerDefBuilder().build();
-
     }
 
+    /**
+     *
+     * @param settings
+     * @param loadVersion
+     * @return
+     */
     private static NodeLocksDef loadLocks(final ConfigBaseRO settings, final LoadVersion loadVersion) {
         var hasDeleteLock = loadVersion.isOlderThan(LoadVersion.V200) ? true : settings.getBoolean("isDeletable", true);
         var hasResetLock =
@@ -221,20 +217,14 @@ abstract class NodeLoader {
             .build();
     }
 
-    private String loadType(final ConfigBaseRO settings, final LoadVersion loadVersion)
-        throws InvalidSettingsException {
-        try {
-            return loadNodeType(settings, loadVersion).toString();
-        } catch (InvalidSettingsException e) {
-            // Freed the error to the new load result
-            var errorMessage = String.format(
-                "Can't retrieve node type for contained node with id suffix %d, attempting to read ordinary (native) node: %s",
-                m_nodeId.get(), e.getMessage());
-            return "NativeNode";
-//            throw new InvalidSettingsException(errorMessage, e);
-        }
-    }
-
+    /**
+     *
+     * @param parentSettings
+     * @param settings
+     * @param loadVersion
+     * @return
+     * @throws InvalidSettingsException
+     */
     private static String loadCustomDescription(final ConfigBaseRO parentSettings, final ConfigBaseRO settings,
         final LoadVersion loadVersion) throws InvalidSettingsException {
         try {
@@ -252,71 +242,53 @@ abstract class NodeLoader {
                 return settings.getString("customDescription");
             }
         } catch (InvalidSettingsException e) {
-            // TODO Throw proper exception
-            // var errorMessage = String.format("Can't load custom description for the node %d", m_nodeId.get());
-            // throw new InvalidSettingsException(errorMessage, e);
-        }
-        return null;
-
-    }
-
-    private static NodeType loadNodeType(final ConfigBaseRO settings, final LoadVersion loadVersion)
-        throws InvalidSettingsException {
-        if (loadVersion.isOlderThan(LoadVersion.V200)) {
-            var factory = settings.getString("factory");
-            if (ObsoleteMetaNodeFileWorkflowPersistor.OLD_META_NODES.contains(factory)) {
-                return NodeType.METANODE;
-            } else {
-                return NodeType.NATIVE_NODE;
-            }
-        } else if (loadVersion.isOlderThan(LoadVersion.V2100Pre)) {
-            return settings.getBoolean("node_is_meta") ? NodeType.METANODE : NodeType.NATIVE_NODE;
-        } else {
-            final var nodeTypeString = settings.getString("node_type");
-            CheckUtils.checkSettingNotNull(nodeTypeString, "node type must not be null");
-            switch (nodeTypeString) {
-                case "MetaNode":
-                    return NodeType.METANODE;
-                case "SubNode":
-                    return NodeType.SUBNODE;
-                case "NativeNode":
-                    return NodeType.NATIVE_NODE;
-                default:
-                    throw new InvalidSettingsException("Can't parse node type: " + nodeTypeString);
-            }
+            var errorMessage = "Invalid custom description in settings: " + e.getMessage();
+            throw new InvalidSettingsException(errorMessage, e);
         }
     }
 
-    private static NodeUIInfoDef loadUIInfo(final ConfigBaseRO settings) throws InvalidSettingsException {
-        try {
-            return new NodeUIInfoDefBuilder() //
-                .setBounds(loadBoundsDef(settings)) //
-                .setHasAbsoluteCoordinates(null) //
-                .setSymbolRelative(null) //
-                .build();
-        } catch (InvalidSettingsException e) {
-            // var errorMessage = String.format("Error meessage for the ui info", null);
-            // throw new InvalidSettingsException(errorMessage, e);
-
-        }
-        return new NodeUIInfoDefBuilder().build();
+    /**
+     *
+     * @param settings
+     * @return
+     * @throws InvalidSettingsException
+     */
+    static NodeUIInfoDef loadUIInfo(final ConfigBaseRO settings, final LoadVersion loadVersion) {
+        var symbolRelative = loadVersion.ordinal() >= LoadVersion.V230.ordinal();
+        return new NodeUIInfoDefBuilder() //
+            .setBounds(() -> loadBoundsDef(settings), new BoundsDefBuilder().build()) //
+            //TODO What's the key of this? For the metanode loader we set it as null
+            .setHasAbsoluteCoordinates(settings.getBoolean("absolute_coordinates", false)) //
+            .setSymbolRelative(symbolRelative) //
+            .build();
     }
 
     private static BoundsDef loadBoundsDef(final ConfigBaseRO settings) throws InvalidSettingsException {
         try {
             var bounds = settings.getIntArray("extrainfo.node.bounds");
+            if (bounds.length == 0) {
+                return new BoundsDefBuilder().build();
+            }
             return new BoundsDefBuilder() //
                 .setLocation(CoreToDefUtil.createCoordinate(bounds[0], bounds[1])) //
                 .setHeight(bounds[2]) //
                 .setWidth(bounds[3]) //
                 .build();
-        } catch (Exception e) {
-            // TODO throw proper exception
+        } catch (InvalidSettingsException e) {
+            var errorMessage = String.format("Unable to load the UI Bounds for the node id %d: %s",
+                settings.getInt("id"), e.getMessage());
+            throw new InvalidSettingsException(errorMessage, e);
         }
-        return new BoundsDefBuilder().build();
     }
 
-    private String loadUIInfoClassName(final ConfigBaseRO settings, final LoadVersion loadVersion)
+    /**
+     *
+     * @param settings
+     * @param loadVersion
+     * @return
+     * @throws InvalidSettingsException
+     */
+    private static String loadUIInfoClassName(final ConfigBaseRO settings, final LoadVersion loadVersion)
         throws InvalidSettingsException {
         try {
             if (loadVersion.isOlderThan(LoadVersion.V200)) {
@@ -331,21 +303,9 @@ abstract class NodeLoader {
         } catch (InvalidSettingsException e) {
             var errorMessage = String.format(
                 "Unable to load UI information class name to node with ID suffix %s, no UI information available: %s",
-                m_nodeId.get(), e.getMessage());
+                settings.getInt("id"), e.getMessage());
             throw new InvalidSettingsException(errorMessage, e);
         }
         return null;
     }
-
-    /**
-     * @return the nodeBuilder
-     */
-    NodeDefBuilder getNodeBuilder() {
-        return m_nodeBuilder;
-    }
-
-    NodeDef getNodeDef() {
-        return m_nodeBuilder.build();
-    }
-
 }

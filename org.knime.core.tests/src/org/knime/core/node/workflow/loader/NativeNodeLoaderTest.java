@@ -52,9 +52,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Paths;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -63,6 +61,9 @@ import org.knime.core.node.config.base.ConfigBaseRO;
 import org.knime.core.node.util.NodeLoaderTestUtils;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.workflow.def.impl.DefaultFlowContextDef;
+import org.knime.core.workflow.def.impl.NativeNodeDefBuilder.WithExceptionsDefaultNativeNodeDef;
+import org.knime.core.workflow.def.impl.NodeDefBuilder.WithExceptionsDefaultNodeDef;
+import org.knime.core.workflow.def.impl.SingleNodeDefBuilder.WithExceptionsDefaultSingleNodeDef;
 
 /**
  *
@@ -72,13 +73,9 @@ class NativeNodeLoaderTest {
 
     private ConfigBaseRO m_configBaseRO;
 
-    private NativeNodeLoader m_nativeNodeLoader;
-
-
     @BeforeEach
     void setUp() {
         m_configBaseRO = mock(ConfigBaseRO.class);
-        m_nativeNodeLoader = new NativeNodeLoader();
     }
 
 
@@ -89,11 +86,12 @@ class NativeNodeLoaderTest {
 
         when(m_configBaseRO.getInt("id")).thenReturn(1);
         when(m_configBaseRO.containsKey("customDescription")).thenReturn(true);
-        when(m_configBaseRO.getString("node_type")).thenReturn("NativeNode");
 
         // when
-        m_nativeNodeLoader.load(m_configBaseRO, file, LoadVersion.FUTURE);
-        var nativeNodeDef = m_nativeNodeLoader.getNodeDef();
+
+        var nativeNodeDef = NativeNodeLoader.load(m_configBaseRO, file, LoadVersion.FUTURE);
+        var singleNodeDef = nativeNodeDef.getNode();
+        var nodeDef = singleNodeDef.getNode();
 
         // then
 
@@ -109,25 +107,48 @@ class NativeNodeLoaderTest {
         assertThat(nativeNodeDef.getNodeCreationConfig().getChildren()).containsKey("Pass through");
 
         // Assert SingleNodeLoader
-        assertThat(nativeNodeDef.getFlowStack()).hasSize(2) //
+        assertThat(singleNodeDef.getFlowStack()).hasSize(2) //
         .hasAtLeastOneElementOfType(DefaultFlowContextDef.class);
         //TODO assert the ConfigMap value
-        assertThat(nativeNodeDef.getInternalNodeSubSettings().getChildren()).containsKey("memory_policy");
+        assertThat(singleNodeDef.getInternalNodeSubSettings().getChildren()).containsKey("memory_policy");
 //        assertThat(nativeNodeDef.getModelSettings().getChildren());
-        assertThat(nativeNodeDef.getVariableSettings()).isNull();
+        assertThat(singleNodeDef.getVariableSettings()).isNotNull();
 
         // Assert NodeLoader
-        assertThat(nativeNodeDef.getId()).isEqualTo(1);
-        assertThat(nativeNodeDef.getAnnotation().getData()).isNull();
-        assertThat(nativeNodeDef.getCustomDescription()).isEqualTo("test");
-        assertThat(nativeNodeDef.getJobManager()).isNull();
-        assertThat(nativeNodeDef.getLocks()) //
+        assertThat(nodeDef.getId()).isEqualTo(1);
+        assertThat(nodeDef.getAnnotation().getData()).isNull();
+        assertThat(nodeDef.getCustomDescription()).isEqualTo("test");
+        assertThat(nodeDef.getJobManager().getFactory()).isEqualTo("");
+        assertThat(nodeDef.getLocks()) //
             .extracting("m_hasDeleteLock", "m_hasResetLock", "m_hasConfigureLock") //
             .containsExactly(false, false, false);
-        assertThat(nativeNodeDef.getNodeType()).isEqualTo("NativeNode");
-        assertThat(nativeNodeDef.getUiInfo()).extracting(n -> n.hasAbsoluteCoordinates(), n -> n.isSymbolRelative(),
+        assertThat(nodeDef.getUiInfo()).extracting(n -> n.hasAbsoluteCoordinates(), n -> n.isSymbolRelative(),
             n -> n.getBounds().getHeight(), n -> n.getBounds().getLocation(), n -> n.getBounds().getWidth())
-            .containsOnlyNulls();
+            .containsNull();
+
+        assertThat(((WithExceptionsDefaultNativeNodeDef) nativeNodeDef).getLoadExceptions()).isEmpty();
+        assertThat(((WithExceptionsDefaultSingleNodeDef) singleNodeDef).getLoadExceptions()).isEmpty();
+        assertThat(((WithExceptionsDefaultNodeDef) nodeDef).getLoadExceptions()).isEmpty();
+    }
+
+    @Test
+    void testGenericLoopStart_withNodeDefException() throws InvalidSettingsException, IOException {
+        // given
+        var file = NodeLoaderTestUtils.readResourceFolder("Generic_Loop_Start");
+
+        when(m_configBaseRO.getInt("id")).thenReturn(1);
+        when(m_configBaseRO.containsKey("customDescription")).thenReturn(true);
+        when(m_configBaseRO.getBoolean("absolute_coordinates")).thenThrow(InvalidSettingsException.class);
+
+        // when
+        var nativeNodeDef = NativeNodeLoader.load(m_configBaseRO, file, LoadVersion.FUTURE);
+        var singleNodeDef = nativeNodeDef.getNode();
+        var nodeDef = singleNodeDef.getNode();
+
+        // then
+        assertThat(((WithExceptionsDefaultNativeNodeDef) nativeNodeDef).getLoadExceptions()).isEmpty();
+        assertThat(((WithExceptionsDefaultSingleNodeDef) singleNodeDef).getLoadExceptions()).isEmpty();
+        assertThat(((WithExceptionsDefaultNodeDef) nodeDef).getLoadExceptions().size()).isOne();
     }
 
 }
