@@ -90,25 +90,9 @@ public final class NodeDescriptionUtil {
     }
 
     /**
-     * Replaces whitespace characters in input String with spaces. In particular, replaces multiple successive
-     * whitespace characters with a single space character. Additionally, strips leading and trailing whitespace.
-     *
-     * @param input the input string
-     * @return the input string with whitespace characters replaced and stripped.
-     */
-    public static String normalizeWhitespace(final String input) {
-        if (input == null) {
-            return null;
-        }
-        String s = WHITESPACE_PATTERN.matcher(input).replaceAll(" ");
-        // strip leading and trailing whitespace characters (as defined in java.lang.character.isWhiteSpace)
-        return s.strip();
-    }
-
-    /**
      * Obtain a String representation of the children of the given XML object. Intended for pretty-printing contents of
-     * nodes that resemble HTML-formatted text. Strip comments, namespace prefixes and namespace attributes and
-     * normalises whitespace. If the given String is {@code null}, the method returns {@code null}.
+     * nodes that resemble HTML-formatted text. Strip comments, namespace prefixes and namespace attributes.
+     * If the given String is {@code null}, the method returns {@code null}.
      *
      * @param obj the XML object whose child nodes should be printed to a String
      * @return a string representation of the nodes children, or null if {@code obj} is null.

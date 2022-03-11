@@ -393,10 +393,10 @@ public abstract class NodeDescription {
         }
 
         /**
-         * @return the name of this option group.
+         * @return the name of this option group if available, else an empty optional.
          */
-        public String getName() {
-            return m_name;
+        public Optional<String> getName() {
+            return Optional.ofNullable(m_name);
         }
 
         /**

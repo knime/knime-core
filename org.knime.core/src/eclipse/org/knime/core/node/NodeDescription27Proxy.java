@@ -366,7 +366,7 @@ public final class NodeDescription27Proxy extends NodeDescription {
     @Override
     public Optional<String> getShortDescription() {
         return Optional
-            .ofNullable(NodeDescriptionUtil.normalizeWhitespace(m_document.getKnimeNode().getShortDescription()));
+            .ofNullable(m_document.getKnimeNode().getShortDescription());
     }
 
 }
