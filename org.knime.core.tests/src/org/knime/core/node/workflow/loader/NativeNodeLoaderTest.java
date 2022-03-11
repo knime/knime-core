@@ -60,6 +60,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.base.ConfigBaseRO;
 import org.knime.core.node.util.NodeLoaderTestUtils;
 import org.knime.core.util.LoadVersion;
+import org.knime.core.workflow.def.impl.DefaultFilestoreDef;
 import org.knime.core.workflow.def.impl.DefaultFlowContextDef;
 import org.knime.core.workflow.def.impl.NativeNodeDefBuilder.WithExceptionsDefaultNativeNodeDef;
 import org.knime.core.workflow.def.impl.NodeDefBuilder.WithExceptionsDefaultNodeDef;
@@ -105,6 +106,7 @@ class NativeNodeLoaderTest {
         .containsExactly(null, null, null, "0.0.0");
         //TODO assert the creation config value
         assertThat(nativeNodeDef.getNodeCreationConfig().getChildren()).containsKey("Pass through");
+        assertThat(nativeNodeDef.getFilestore()).isInstanceOf(DefaultFilestoreDef.class);
 
         // Assert SingleNodeLoader
         assertThat(singleNodeDef.getFlowStack()).hasSize(2) //
