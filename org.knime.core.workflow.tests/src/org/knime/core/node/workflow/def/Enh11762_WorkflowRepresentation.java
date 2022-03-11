@@ -108,8 +108,8 @@ public class Enh11762_WorkflowRepresentation extends WorkflowTestCase {
 		// create a workflow manager from the POJO using an appropriate persistor
 		ExecutionMonitor exec = new ExecutionMonitor();
 		WorkflowLoadHelper loader = new WorkflowLoadHelper(pojo);
-		WorkflowLoadResult loadResult = WorkflowManager.ROOT.load(pojo, exec, loader, true);
-		WorkflowManager restoredManager = loadResult.getWorkflowManager();
+		WorkflowLoadResult loadResult = (WorkflowLoadResult) new Object(); // TODO
+		WorkflowManager restoredManager = null; // TODO
 
         //FIXME check that the workflow manager is present and looking good
 		if (restoredManager == null) {
