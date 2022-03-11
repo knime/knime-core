@@ -61,9 +61,11 @@ import org.knime.core.node.config.base.ConfigBaseRO;
 import org.knime.core.node.workflow.def.CoreToDefUtil;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.workflow.def.ConfigMapDef;
+import org.knime.core.workflow.def.FilestoreDef;
 import org.knime.core.workflow.def.NativeNodeDef;
 import org.knime.core.workflow.def.VendorDef;
 import org.knime.core.workflow.def.impl.ConfigMapDefBuilder;
+import org.knime.core.workflow.def.impl.FilestoreDefBuilder;
 import org.knime.core.workflow.def.impl.NativeNodeDefBuilder;
 import org.knime.core.workflow.def.impl.VendorDefBuilder;
 
@@ -148,6 +150,7 @@ public class NativeNodeLoader {
             .setBundle(() -> loadBundle(nodeConfig), new VendorDefBuilder().build()) //
             .setFeature(() -> loadFeature(nodeConfig), new VendorDefBuilder().build()) //
             .setNodeCreationConfig(() -> loadCreationConfig(nodeConfig), new ConfigMapDefBuilder().build())
+            .setFilestore(() -> loadFilestore(workflowConfig, workflowFormatVersion), new FilestoreDefBuilder().build())
             .setNode(SingleNodeLoader.load(workflowConfig, nodeConfig, workflowFormatVersion)) //
             .build();
 
@@ -241,6 +244,17 @@ public class NativeNodeLoader {
             .setVendor(settings.getString(NODE_FEATURE_VENDOR_KEY, "")) //
             .setVersion(settings.getString(NODE_FEATURE_VERSION_KEY, "")) //
             .build();
+    }
+
+    private static FilestoreDef loadFilestore(final ConfigBaseRO settings, final LoadVersion loadVersion) throws InvalidSettingsException {
+        if (loadVersion.isOlderThan(LoadVersion.V260) || !settings.containsKey("filestores")) {
+            return new FilestoreDefBuilder().build();
+        }
+        var filestoreSettings = settings.getConfigBase("filestores");
+        return new FilestoreDefBuilder()
+                .setLocation(() -> filestoreSettings.getString("file_store_location"), "")
+                .setId(() -> filestoreSettings.getString("file_store_id"), "")
+                .build();
     }
 
     /**
