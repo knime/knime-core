@@ -61,6 +61,7 @@ import org.knime.core.node.workflow.def.CoreToDefUtil;
 import org.knime.core.workflow.def.ConfigMapDef;
 import org.knime.core.workflow.def.FlowContextDef.ContextTypeEnum;
 import org.knime.core.workflow.def.FlowObjectDef;
+import org.knime.core.workflow.def.NodeDef;
 import org.knime.core.workflow.def.SingleNodeDef;
 import org.knime.core.workflow.def.impl.FlowContextDefBuilder;
 import org.knime.core.workflow.def.impl.FlowMarkerDefBuilder;
@@ -68,8 +69,9 @@ import org.knime.core.workflow.def.impl.FlowMarkerDefBuilder;
 /**
  *
  * @author hornm
+ *
  */
-public abstract class DefSingleNodeContainerWrapper extends DefNodeContainerWrapper implements SingleNodeDef {
+public class DefSingleNodeContainerWrapper implements SingleNodeDef {
 
     private final SingleNodeContainer m_nc;
 
@@ -77,7 +79,6 @@ public abstract class DefSingleNodeContainerWrapper extends DefNodeContainerWrap
      * @param nc
      */
     public DefSingleNodeContainerWrapper(final SingleNodeContainer nc) {
-        super(nc);
         m_nc = nc;
     }
 
@@ -166,6 +167,14 @@ public abstract class DefSingleNodeContainerWrapper extends DefNodeContainerWrap
         }
 
         return result;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeDef getNode() {
+        return new DefNodeContainerWrapper(m_nc);
     }
 
 }

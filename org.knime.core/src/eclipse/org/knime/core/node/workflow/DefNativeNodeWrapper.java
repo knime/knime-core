@@ -53,6 +53,7 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.workflow.def.CoreToDefUtil;
 import org.knime.core.workflow.def.ConfigMapDef;
 import org.knime.core.workflow.def.NativeNodeDef;
+import org.knime.core.workflow.def.SingleNodeDef;
 import org.knime.core.workflow.def.VendorDef;
 
 /**
@@ -61,7 +62,7 @@ import org.knime.core.workflow.def.VendorDef;
  * @author hornm
  * @author Carl Witt, KNIME GmbH, Berlin, Germany
  */
-public class DefNativeNodeWrapper extends DefSingleNodeContainerWrapper implements NativeNodeDef {
+public class DefNativeNodeWrapper implements NativeNodeDef {
 
     private final NativeNodeContainer m_nc;
 
@@ -69,13 +70,7 @@ public class DefNativeNodeWrapper extends DefSingleNodeContainerWrapper implemen
      * @param nc
      */
     public DefNativeNodeWrapper(final NativeNodeContainer nc) {
-        super(nc);
         m_nc = nc;
-    }
-
-    @Override
-    public String getNodeType() {
-        return "NativeNode";
     }
 
     /**
@@ -124,18 +119,8 @@ public class DefNativeNodeWrapper extends DefSingleNodeContainerWrapper implemen
      * {@inheritDoc}
      */
     @Override
-    public Integer getId() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public String getNodeName() {
-        // TODO Auto-generated method stub
-        return null;
+        return m_nc.getName();
     }
 
     /**
@@ -152,6 +137,14 @@ public class DefNativeNodeWrapper extends DefSingleNodeContainerWrapper implemen
     @Override
     public VendorDef getBundle() {
         return CoreToDefUtil.toBundleVendorDef(m_nc.getNodeAndBundleInformation());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public SingleNodeDef getNode() {
+        return new DefSingleNodeContainerWrapper(m_nc);
     }
 
 }

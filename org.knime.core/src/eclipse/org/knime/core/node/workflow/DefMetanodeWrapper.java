@@ -54,6 +54,7 @@ import java.util.stream.IntStream;
 
 import org.knime.core.node.workflow.def.CoreToDefUtil;
 import org.knime.core.workflow.def.MetaNodeDef;
+import org.knime.core.workflow.def.NodeDef;
 import org.knime.core.workflow.def.NodeUIInfoDef;
 import org.knime.core.workflow.def.PortDef;
 import org.knime.core.workflow.def.TemplateLinkDef;
@@ -63,20 +64,14 @@ import org.knime.core.workflow.def.WorkflowDef;
  *
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  */
-public class DefMetanodeWrapper extends DefNodeContainerWrapper implements MetaNodeDef {
+public class DefMetanodeWrapper implements MetaNodeDef {
 
     private WorkflowManager m_wfm;
-
-    @Override
-    public String getNodeType() {
-        return "MetaNode";
-    }
 
     /**
      * @param wfm
      */
     public DefMetanodeWrapper(final WorkflowManager wfm) {
-        super(wfm);
         m_wfm = wfm;
     }
 
@@ -162,15 +157,6 @@ public class DefMetanodeWrapper extends DefNodeContainerWrapper implements MetaN
      * {@inheritDoc}
      */
     @Override
-    public Integer getId() {
-        // TODO not sure about this
-        return m_wfm.getID().getIndex();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public TemplateLinkDef getLink() {
         return CoreToDefUtil.toTemplateLinkDef(m_wfm.getTemplateInformation());
     }
@@ -181,6 +167,14 @@ public class DefMetanodeWrapper extends DefNodeContainerWrapper implements MetaN
     @Override
     public WorkflowDef getWorkflow() {
         return new DefWorkflowManagerWrapper(m_wfm);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeDef getNode() {
+        return new DefNodeContainerWrapper(m_wfm);
     }
 
 }

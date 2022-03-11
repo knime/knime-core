@@ -161,7 +161,7 @@ public class CreatorLoader {
      *             parsed
      */
     public CreatorLoader(final File directory) throws IOException {
-        m_workflowConfig = WorkflowLoader.parseWorkflowConfig(directory);
+        m_workflowConfig = LoaderUtils.parseWorkflowConfig(directory);
 
         m_def = new CreatorDefBuilder()//
             .setWorkflowFormatVersion(() -> loadWorkflowFormatVersionString(m_workflowConfig),

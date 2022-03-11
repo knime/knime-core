@@ -154,9 +154,11 @@ public class RootComponentLoader {
         var workflowConfig = creatorLoader.getWorkflowConfig();
         var workflowFormatVersion = creatorLoader.getWorkflowFormatVersion();
 
+        // TODO add a field for the timestamp of the last change to this component
         return new RootComponentDefBuilder()//
             .setCreator(creatorLoader.getCreatorDef())//
-            .setComponent(ComponentLoader.load, null)//
+            // TODO a default does not seem to make sense here.
+            .setComponent(() -> ComponentLoader.load(workflowConfig, directory, workflowFormatVersion), null)//
             .build();
 
     }

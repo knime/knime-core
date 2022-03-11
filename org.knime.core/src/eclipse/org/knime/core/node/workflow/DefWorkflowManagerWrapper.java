@@ -56,19 +56,22 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.workflow.def.CoreToDefUtil;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.workflowalizer.AuthorInformation;
 import org.knime.core.workflow.def.AnnotationDataDef;
 import org.knime.core.workflow.def.AuthorInformationDef;
+import org.knime.core.workflow.def.BaseNodeDef;
 import org.knime.core.workflow.def.ConnectionDef;
-import org.knime.core.workflow.def.NodeDef;
+import org.knime.core.workflow.def.CreatorDef;
 import org.knime.core.workflow.def.RootWorkflowDef;
 import org.knime.core.workflow.def.WorkflowDef;
 import org.knime.core.workflow.def.WorkflowUISettingsDef;
 import org.knime.core.workflow.def.impl.AnnotationDataDefBuilder;
 import org.knime.core.workflow.def.impl.AuthorInformationDefBuilder;
 import org.knime.core.workflow.def.impl.ConnectionDefBuilder;
+import org.knime.core.workflow.def.impl.CreatorDefBuilder;
 import org.knime.core.workflow.def.impl.RootWorkflowDefBuilder;
 import org.knime.core.workflow.def.impl.StyleRangeDefBuilder;
 import org.knime.core.workflow.def.impl.WorkflowUISettingsDefBuilder;
@@ -135,12 +138,12 @@ public class DefWorkflowManagerWrapper implements WorkflowDef {
      * {@inheritDoc}
      */
     @Override
-    public Map<String, NodeDef> getNodes() {
+    public Map<String, BaseNodeDef> getNodes() {
         return m_wfm.getNodeContainers().stream()//
-            .collect(Collectors.toMap(nc -> Integer.toString(nc.getID().getIndex()), DefWorkflowManagerWrapper::getNodeDef));
+            .collect(Collectors.toMap(nc -> Integer.toString(nc.getID().getIndex()), DefWorkflowManagerWrapper::getBaseNodeDef));
     }
 
-    private static NodeDef getNodeDef(final NodeContainer nc) {
+    private static BaseNodeDef getBaseNodeDef(final NodeContainer nc) {
         if (nc instanceof WorkflowManager) {
             return new DefMetanodeWrapper((WorkflowManager)nc);
         } else if (nc instanceof NativeNodeContainer) {
@@ -196,8 +199,14 @@ public class DefWorkflowManagerWrapper implements WorkflowDef {
      * @return description of the workflow project represented by the wrapped workflow manager in POJO format
      */
     public RootWorkflowDef asProjectDef() {
+        CreatorDef creator = new CreatorDefBuilder()//
+                .setCreatorIsNightly(KNIMEConstants.isNightlyBuild())//
+                .setSavedWithVersion(KNIMEConstants.VERSION)//
+                .setWorkflowFormatVersion(LoadVersion.latest().getVersionString())//
+                .build();
+
         return new RootWorkflowDefBuilder()//
-                .setWorkflowFormatVersion(m_wfm.getLoadVersion().getVersionString())//
+                .setCreator(creator)//
                 .setWorkflow(this)
                 .build();
     }

@@ -57,9 +57,11 @@ import org.knime.core.workflow.def.ComponentDef;
 import org.knime.core.workflow.def.ComponentDialogSettingsDef;
 import org.knime.core.workflow.def.ComponentMetadataDef;
 import org.knime.core.workflow.def.PortDef;
+import org.knime.core.workflow.def.SingleNodeDef;
 import org.knime.core.workflow.def.TemplateLinkDef;
 import org.knime.core.workflow.def.WorkflowDef;
 import org.knime.core.workflow.def.impl.ComponentDialogSettingsDefBuilder;
+import org.knime.core.workflow.def.impl.SingleNodeDefBuilder;
 
 /**
  * Provides a {@link ComponentDef} view on a component node in a workflow.
@@ -67,7 +69,7 @@ import org.knime.core.workflow.def.impl.ComponentDialogSettingsDefBuilder;
  * @author hornm
  * @author Carl Witt, KNIME GmbH, Berlin, Germany
  */
-public class DefComponentWrapper extends DefSingleNodeContainerWrapper implements ComponentDef {
+public class DefComponentWrapper implements ComponentDef {
 
     private final SubNodeContainer m_nc;
 
@@ -75,13 +77,12 @@ public class DefComponentWrapper extends DefSingleNodeContainerWrapper implement
      * @param nc
      */
     public DefComponentWrapper(final SubNodeContainer nc) {
-        super(nc);
         m_nc = nc;
     }
 
     @Override
-    public String getNodeType() {
-        return "Component";
+    public SingleNodeDef getNode() {
+        return new SingleNodeDefBuilder().build();
     }
 
     /**
@@ -158,15 +159,6 @@ public class DefComponentWrapper extends DefSingleNodeContainerWrapper implement
     public TemplateLinkDef getLink() {
         // unclear if this needs to be a link here or a full template information
         return CoreToDefUtil.toTemplateLinkDef(m_nc.getTemplateInformation());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Integer getId() {
-        // TODO is this the suffix we're looking for?
-        return m_nc.getID().getIndex();
     }
 
 }

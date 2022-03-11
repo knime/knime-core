@@ -60,7 +60,7 @@ import org.knime.core.workflow.def.NodeUIInfoDef;
  * @author hornm
  * @author Carl Witt, KNIME GmbH, Berlin, Germany
  */
-public abstract class DefNodeContainerWrapper implements NodeDef {
+public class DefNodeContainerWrapper implements NodeDef {
 
     private NodeContainer m_nc;
 
@@ -106,6 +106,14 @@ public abstract class DefNodeContainerWrapper implements NodeDef {
     @Override
     public JobManagerDef getJobManager() {
         return CoreToDefUtil.toJobManager(m_nc.getJobManager());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Integer getId() {
+        return m_nc.getID().getIndex();
     }
 
 }

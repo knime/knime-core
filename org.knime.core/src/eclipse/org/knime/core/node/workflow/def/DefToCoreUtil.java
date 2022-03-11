@@ -85,7 +85,6 @@ import org.knime.core.workflow.def.AnnotationDataDef;
 import org.knime.core.workflow.def.AuthorInformationDef;
 import org.knime.core.workflow.def.BoundsDef;
 import org.knime.core.workflow.def.ComponentMetadataDef;
-import org.knime.core.workflow.def.ComponentTemplateDef;
 import org.knime.core.workflow.def.ConfigDef;
 import org.knime.core.workflow.def.ConfigMapDef;
 import org.knime.core.workflow.def.ConfigValueArrayDef;
@@ -111,11 +110,12 @@ import org.knime.core.workflow.def.ConfigValueStringDef;
 import org.knime.core.workflow.def.ConnectionUISettingsDef;
 import org.knime.core.workflow.def.FlowContextDef;
 import org.knime.core.workflow.def.FlowVariableDef;
-import org.knime.core.workflow.def.MetaNodeTemplateDef;
 import org.knime.core.workflow.def.NativeNodeDef;
 import org.knime.core.workflow.def.NodeLocksDef;
 import org.knime.core.workflow.def.NodeUIInfoDef;
 import org.knime.core.workflow.def.PortTypeDef;
+import org.knime.core.workflow.def.RootComponentDef;
+import org.knime.core.workflow.def.RootMetaNodeDef;
 import org.knime.core.workflow.def.WorkflowUISettingsDef;
 
 /**
@@ -203,7 +203,7 @@ public class DefToCoreUtil {
         return builder.build();
     }
 
-    public static MetaNodeTemplateInformation toTemplateInfo(final ComponentTemplateDef def) {
+    public static MetaNodeTemplateInformation toTemplateInfo(final RootComponentDef def) {
         // TODO
                 throw new NotImplementedException("Component template information import not implemented yet.");
 //                Role.valueOf(def.getRole()), TemplateType.valueOf(def.getType()),
@@ -211,7 +211,7 @@ public class DefToCoreUtil {
 //                return MetaNodeTemplateInformation.creat);
     }
 
-    public static MetaNodeTemplateInformation toTemplateInfo(final MetaNodeTemplateDef def) {
+    public static MetaNodeTemplateInformation toTemplateInfo(final RootMetaNodeDef def) {
      // TODO
         throw new NotImplementedException("Metanode template information import not implemented yet.");
 //        Role.valueOf(def.getRole()), TemplateType.valueOf(def.getType()),
