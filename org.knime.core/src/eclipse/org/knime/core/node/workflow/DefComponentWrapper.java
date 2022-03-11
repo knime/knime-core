@@ -61,7 +61,6 @@ import org.knime.core.workflow.def.SingleNodeDef;
 import org.knime.core.workflow.def.TemplateLinkDef;
 import org.knime.core.workflow.def.WorkflowDef;
 import org.knime.core.workflow.def.impl.ComponentDialogSettingsDefBuilder;
-import org.knime.core.workflow.def.impl.SingleNodeDefBuilder;
 
 /**
  * Provides a {@link ComponentDef} view on a component node in a workflow.
@@ -82,7 +81,7 @@ public class DefComponentWrapper implements ComponentDef {
 
     @Override
     public SingleNodeDef getNode() {
-        return new SingleNodeDefBuilder().build();
+        return new DefSingleNodeContainerWrapper(m_nc);
     }
 
     /**
