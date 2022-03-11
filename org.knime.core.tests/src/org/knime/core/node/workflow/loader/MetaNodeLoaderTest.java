@@ -49,6 +49,7 @@
 package org.knime.core.node.workflow.loader;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -60,6 +61,12 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.base.ConfigBaseRO;
 import org.knime.core.node.util.NodeLoaderTestUtils;
 import org.knime.core.util.LoadVersion;
+import org.knime.core.workflow.def.JobManagerDef;
+import org.knime.core.workflow.def.NodeAnnotationDef;
+import org.knime.core.workflow.def.NodeUIInfoDef;
+import org.knime.core.workflow.def.WorkflowDef;
+import org.knime.core.workflow.def.impl.MetaNodeDefBuilder.WithExceptionsDefaultMetaNodeDef;
+import org.knime.core.workflow.def.impl.NodeDefBuilder.WithExceptionsDefaultNodeDef;
 
 /**
  *
@@ -69,13 +76,9 @@ class MetaNodeLoaderTest {
 
     private ConfigBaseRO m_configBaseRO;
 
-    private MetaNodeLoader m_metaNodeLoader;
-
-
     @BeforeEach
     void setUp() {
         m_configBaseRO = mock(ConfigBaseRO.class);
-        m_metaNodeLoader = new MetaNodeLoader();
     }
 
     @Test
@@ -85,35 +88,89 @@ class MetaNodeLoaderTest {
 
         when(m_configBaseRO.getInt("id")).thenReturn(1);
         when(m_configBaseRO.containsKey("customDescription")).thenReturn(true);
-        when(m_configBaseRO.getString("node_type")).thenReturn("MetaNode");
 
         // when
-        m_metaNodeLoader.load(m_configBaseRO, file, LoadVersion.FUTURE);
-        var metanodeDef = m_metaNodeLoader.getNodeDef();
+        var metanodeDef = MetaNodeLoader.load(m_configBaseRO, file, LoadVersion.FUTURE);
+        var nodeDef = metanodeDef.getNode();
 
         // then
 
         // Assert MetaNodeLoader
         assertThat(metanodeDef.getInPorts()).isEmpty();
         assertThat(metanodeDef.getOutPorts()).isEmpty();
-        assertThat(metanodeDef.getInPortsBarUIInfo()).isNull();
-        assertThat(metanodeDef.getOutPortsBarUIInfo()).isNull();
+        assertThat(metanodeDef.getInPortsBarUIInfo()).isNotNull();
+        assertThat(metanodeDef.getOutPortsBarUIInfo()).isNotNull();
         assertThat(metanodeDef.getLink()).isNull();
+        assertThat(metanodeDef.getWorkflow()).isNotNull();
+
         //TODO Shall we pass it to the workflow test or something similar?
         var workflow = metanodeDef.getWorkflow();
 
         // Assert NodeLoader
-        assertThat(metanodeDef.getId()).isEqualTo(1);
-        assertThat(metanodeDef.getAnnotation().getData()).isNull();
-        assertThat(metanodeDef.getCustomDescription()).isNull();
-        assertThat(metanodeDef.getJobManager()).isNull();
-        assertThat(metanodeDef.getLocks()) //
+        assertThat(nodeDef.getId()).isEqualTo(1);
+        assertThat(nodeDef.getAnnotation().getData()).isNull();
+        assertThat(nodeDef.getCustomDescription()).isNull();
+        assertThat(nodeDef.getJobManager()).isNotNull();
+        assertThat(nodeDef.getLocks()) //
             .extracting("m_hasDeleteLock", "m_hasResetLock", "m_hasConfigureLock") //
             .containsExactly(false, false, false);
-        assertThat(metanodeDef.getNodeType()).isEqualTo("MetaNode");
-        assertThat(metanodeDef.getUiInfo()).extracting(n -> n.hasAbsoluteCoordinates(), n -> n.isSymbolRelative(),
+        assertThat(nodeDef.getUiInfo()).extracting(n -> n.hasAbsoluteCoordinates(), n -> n.isSymbolRelative(),
             n -> n.getBounds().getHeight(), n -> n.getBounds().getLocation(), n -> n.getBounds().getWidth())
-            .containsOnlyNulls();
+            .containsNull();
 
+        assertThat(((WithExceptionsDefaultMetaNodeDef)metanodeDef).getLoadExceptions()).isEmpty();
+        assertThat(((WithExceptionsDefaultNodeDef)nodeDef).getLoadExceptions()).isEmpty();
+    }
+
+    @Test
+    void multiportMetaNodetLoaderTest() throws IOException, InvalidSettingsException {
+        // given
+        var file = NodeLoaderTestUtils.readResourceFolder("MultiPort_Metanode");
+
+        when(m_configBaseRO.getInt("id")).thenReturn(431);
+        when(m_configBaseRO.containsKey("customDescription")).thenReturn(false);
+        when(m_configBaseRO.containsKey("annotations")).thenReturn(false);
+        when(m_configBaseRO.getIntArray("extrainfo.node.bounds")) //
+            .thenReturn(new int[]{2541, 1117, 122, 65});
+
+        // when
+        var metanodeDef = MetaNodeLoader.load(m_configBaseRO, file, LoadVersion.FUTURE);
+        var nodeDef = metanodeDef.getNode();
+
+        // then
+
+        // Assert MetaNodeLoader
+        assertThat(metanodeDef.getInPorts())
+            .extracting(p -> p.getIndex(), p -> p.getName(),
+                p -> p.getPortType().getPortObjectClass().endsWith("BufferedDataTable"))
+            .contains(tuple(0, "Inport 0", true));
+        assertThat(metanodeDef.getOutPorts())
+            .extracting(p -> p.getIndex(), p -> p.getName(),
+                p -> p.getPortType().getPortObjectClass().endsWith("BufferedDataTable"))
+            .contains(tuple(0, "Connected to: Concatenated table", true),
+                tuple(1, "Connected to: Concatenated table", true));
+        assertThat(metanodeDef.getInPortsBarUIInfo()).isInstanceOf(NodeUIInfoDef.class);
+        assertThat(metanodeDef.getOutPortsBarUIInfo()).isInstanceOf(NodeUIInfoDef.class);
+        assertThat(metanodeDef.getLink()).isNull();
+        assertThat(metanodeDef.getWorkflow()).isInstanceOf(WorkflowDef.class);
+
+        // Assert NodeLoader
+        assertThat(nodeDef.getId()).isEqualTo(431);
+        assertThat(nodeDef.getAnnotation()).isInstanceOf(NodeAnnotationDef.class);
+        assertThat(nodeDef.getCustomDescription()).isNull();
+        assertThat(nodeDef.getJobManager()).isInstanceOf(JobManagerDef.class);
+        assertThat(nodeDef.getLocks()) //
+            .extracting("m_hasDeleteLock", "m_hasResetLock", "m_hasConfigureLock") //
+            .containsExactly(false, false, false);
+        assertThat(nodeDef.getUiInfo()).extracting(n -> n.getBounds().getLocation().getX(),
+            n -> n.getBounds().getLocation().getY(), n -> n.getBounds().getHeight(), n -> n.getBounds().getWidth())
+            .containsExactly(2541, 1117, 122, 65);
+        try {
+            //TODO Cant cast to WithExceptionsDefaultNodeDef
+            var exceptions = ((WithExceptionsDefaultNodeDef) nodeDef).getLoadExceptions();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        assertThat(((WithExceptionsDefaultMetaNodeDef)metanodeDef).getLoadExceptions()).isEmpty();
     }
 }

@@ -63,15 +63,17 @@ import org.knime.core.util.LoadVersion;
 import org.knime.core.workflow.def.ConfigMapDef;
 import org.knime.core.workflow.def.NativeNodeDef;
 import org.knime.core.workflow.def.VendorDef;
+import org.knime.core.workflow.def.impl.ConfigMapDefBuilder;
 import org.knime.core.workflow.def.impl.NativeNodeDefBuilder;
 import org.knime.core.workflow.def.impl.VendorDefBuilder;
 
 /**
+ * Responsible for loading the properties of a KNIME node.
  *
  * @author Dionysios Stolis, KNIME GmbH, Berlin, Germany
  * @author Carl Witt, KNIME GmbH, Berlin, Germany
  */
-public class NativeNodeLoader extends SingleNodeLoader {
+public class NativeNodeLoader {
 
     private static final String NODE_NAME_KEY = "node-name";
 
@@ -120,43 +122,44 @@ public class NativeNodeLoader extends SingleNodeLoader {
             map.put(Pattern.compile("^com\\.knime\\.explorer\\.nodes"), "org.knime.explorer.nodes"); // NOSONAR
         } catch (PatternSyntaxException e) {
             map.clear(); // if one fails, all fail
-             // TODO error handling
+            // TODO error handling
             //NodeLogger.getLogger(NodeAndBundleInformationPersistor.class).coding(e.getMessage(), e);
         }
         EXTENSION_RENAME_MAP = Collections.unmodifiableMap(map);
     }
 
     /**
-     * Constructor
+     * TODO
+     *
+     * @param workflowConfig
+     * @param nodeDirectory
+     * @param workflowFormatVersion
+     * @return a {@link NativeNodeLoader}
+     * @throws IOException
      */
-    public NativeNodeLoader() {
-        super(new NativeNodeDefBuilder());
-    }
+    static NativeNodeDef load(final ConfigBaseRO workflowConfig, final File nodeDirectory,
+        final LoadVersion workflowFormatVersion) throws IOException {
+        var nodeConfig = LoaderUtils.readNodeConfigFromFile(nodeDirectory);
 
-    @Override
-    public NativeNodeLoader load(final ConfigBaseRO workflowConfig, final File nodeDirectory,
-        final LoadVersion workflowFormatVersion) throws InvalidSettingsException, IOException {
-        super.load(workflowConfig, nodeDirectory, workflowFormatVersion);
+        return new NativeNodeDefBuilder()//
+            .setFactory(() -> loadFactory(workflowConfig, nodeConfig, workflowFormatVersion), "") //
+            .setFactorySettings(() -> loadFactorySettings(nodeConfig), new ConfigMapDefBuilder().build()) //
+            .setNodeName(() -> nodeConfig.getString(NODE_NAME_KEY), "") //
+            .setBundle(() -> loadBundle(nodeConfig), new VendorDefBuilder().build()) //
+            .setFeature(() -> loadFeature(nodeConfig), new VendorDefBuilder().build()) //
+            .setNodeCreationConfig(() -> loadCreationConfig(nodeConfig), new ConfigMapDefBuilder().build())
+            .setNode(SingleNodeLoader.load(workflowConfig, nodeConfig, workflowFormatVersion)) //
+            .build();
 
-        // The load method should throw specific error messages
-        getNodeBuilder()//
-            .setFactory(loadFactory(workflowConfig, m_nodeConfig, workflowFormatVersion)) //
-            .setFactorySettings(loadFactorySettings(m_nodeConfig)) //
-            .setNodeName(m_nodeConfig.getString(NODE_NAME_KEY)) //
-            .setBundle(loadBundle(m_nodeConfig)) //
-            .setFeature(loadFeature(m_nodeConfig)) //
-            .setNodeCreationConfig(loadCreationConfig(m_nodeConfig));
-        return this;
     }
 
     /**
-     * {@inheritDoc}
+     * TODO Write an example Loads the additional factory settings.
+     *
+     * @param settings a representation of the node's settings.xml.
+     * @return a {@link ConfigMapDef} with the factory settings.
+     * @throws InvalidSettingsException
      */
-    @Override
-    NativeNodeDefBuilder getNodeBuilder() {
-        return (NativeNodeDefBuilder)super.getNodeBuilder();
-    }
-
     private static ConfigMapDef loadFactorySettings(final ConfigBaseRO settings) throws InvalidSettingsException {
         var factorySettings =
             settings.containsKey(FACTORY_SETTINGS_KEY) ? settings.getConfigBase(FACTORY_SETTINGS_KEY) : null;
@@ -164,28 +167,57 @@ public class NativeNodeLoader extends SingleNodeLoader {
         return CoreToDefUtil.toConfigMapDef(factorySettings);
     }
 
+    /**
+     * Loads the node creation configuration (e.g flow variable port object)
+     *
+     * @param settings a representation of the node's settings.xml.
+     * @return
+     * @throws InvalidSettingsException
+     * @since 4.2
+     */
     private static ConfigMapDef loadCreationConfig(final ConfigBaseRO settings) throws InvalidSettingsException {
         var nodeCreationSettings =
             settings.containsKey(NODE_CREATION_CONFIG_KEY) ? settings.getConfigBase(NODE_CREATION_CONFIG_KEY) : null;
         return CoreToDefUtil.toConfigMapDef(nodeCreationSettings);
     }
 
+    /**
+     * Loads the factory name of the node.
+     *
+     * @param workflowConfig a representation of the workflow's workflow.knime file.
+     * @param nodeConfig a representation of the node's settings.xml file.
+     * @param workflowFormatVersion the {@link LoadVersion}.
+     * @return the node's factory name.
+     * @throws InvalidSettingsException
+     * @since 3.5
+     */
     private static String loadFactory(final ConfigBaseRO workflowConfig, final ConfigBaseRO nodeConfig,
         final LoadVersion workflowFormatVersion) throws InvalidSettingsException {
-        if (workflowFormatVersion.isOlderThan(LoadVersion.V200)) {
-            var factoryName = workflowConfig.getString(FACTORY_KEY);
-            // This is a hack to load old J48 Nodes Model from pre-2.0 workflows
-            if ("org.knime.ext.weka.j48_2.WEKAJ48NodeFactory2".equals(factoryName)
-                || "org.knime.ext.weka.j48.WEKAJ48NodeFactory".equals(factoryName)) {
-                factoryName = "org.knime.ext.weka.knimeJ48.KnimeJ48NodeFactory";
+        try {
+            if (workflowFormatVersion.isOlderThan(LoadVersion.V200)) {
+                var factoryName = workflowConfig.getString(FACTORY_KEY);
+                // This is a hack to load old J48 Nodes Model from pre-2.0 workflows
+                if ("org.knime.ext.weka.j48_2.WEKAJ48NodeFactory2".equals(factoryName)
+                    || "org.knime.ext.weka.j48.WEKAJ48NodeFactory".equals(factoryName)) {
+                    factoryName = "org.knime.ext.weka.knimeJ48.KnimeJ48NodeFactory";
+                }
+                return factoryName;
+            } else {
+                return nodeConfig.getString(FACTORY_KEY);
             }
-            return factoryName;
-        } else {
-            return nodeConfig.getString(FACTORY_KEY);
+        } catch (InvalidSettingsException e) {
+            var errorMessage = "Unable to load the factory name: " + e.getMessage();
+            throw new InvalidSettingsException(errorMessage, e);
         }
-
     }
 
+    /**
+     * Loads the bundle information of a node.
+     *
+     * @param settings a representation of the node's settings.xml file.
+     * @return a {@link VendorDef}
+     * @throws InvalidSettingsException
+     */
     private static VendorDef loadBundle(final ConfigBaseRO settings) throws InvalidSettingsException {
         return new VendorDefBuilder() //
             .setName(settings.getString(NODE_BUNDLE_NAME_KEY, "")) //
@@ -195,6 +227,13 @@ public class NativeNodeLoader extends SingleNodeLoader {
             .build();
     }
 
+    /**
+     * Loads the feature information of a node.
+     *
+     * @param settings a representation of the node's settings.xml file.
+     * @return a {@link VendorDef}
+     * @throws InvalidSettingsException
+     */
     private static VendorDef loadFeature(final ConfigBaseRO settings) throws InvalidSettingsException {
         return new VendorDefBuilder() //
             .setName(settings.getString(NODE_FEATURE_NAME_KEY, "")) //
@@ -223,13 +262,5 @@ public class NativeNodeLoader extends SingleNodeLoader {
             }
         }
         return extName;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    NativeNodeDef getNodeDef() {
-        return getNodeBuilder().build();
     }
 }
