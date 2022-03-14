@@ -55,6 +55,7 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.Arrays;
 import java.util.Optional;
 
 import org.eclipse.core.runtime.IProduct;
@@ -93,28 +94,29 @@ public class SWTUtilities {
      *      forced to walk the shells at this point (thank you very much, SWT) as we've just launched, the chances
      *      that some other random shell starting with the product name is also present is much lower (like zero) now
      *      than at a later time during the application's lifespan.
+     * @return The shell identified as the KNIME shell (window)
      */
-    public static void markKNIMEShell() {
-        Shell shell = PlatformUI.getWorkbench().getDisplay().getActiveShell();
+    public static Optional<Shell> markKNIMEShell() {
+        var shell = PlatformUI.getWorkbench().getDisplay().getActiveShell();
 
         if (shell == null) {
             // shell would be null at this point if the application was backgrounded while it was launching.. oh SWT.
+            // on some linux window managers the product is null when app is in background
             final IProduct product = Platform.getProduct();
-            for (final Shell s : PlatformUI.getWorkbench().getDisplay().getShells()) {
-                if (s.getText().startsWith(product.getName())) {
-                    shell = s;
-                    break;
-                }
+            if (product != null) {
+                shell = Arrays.stream(PlatformUI.getWorkbench().getDisplay().getShells()) //
+                        .filter(s -> s.getText().startsWith(product.getName())) //
+                        .findFirst().orElse(null);
             }
 
             if (shell == null) {
                 NodeLogger.getLogger(SWTUtilities.class).error("Unable to mark the KAP shell.");
-
-                return;
+                return Optional.empty();
             }
         }
 
         shell.setData(KAP_SHELL_DATA_KEY, new Object());
+        return Optional.of(shell);
     }
 
     /**
@@ -131,8 +133,8 @@ public class SWTUtilities {
                 return shell;
             }
         }
-
-        return null;
+        // why calling it another time? markKNIMEShell might have failed when app was in background but now it is not
+        return markKNIMEShell().orElse(null);
     }
 
     /**
