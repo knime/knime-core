@@ -66,8 +66,8 @@ import org.knime.core.workflow.def.JobManagerDef;
 import org.knime.core.workflow.def.NodeAnnotationDef;
 import org.knime.core.workflow.def.WorkflowDef;
 import org.knime.core.workflow.def.impl.ComponentDefBuilder.WithExceptionsDefaultComponentDef;
+import org.knime.core.workflow.def.impl.ConfigurableNodeDefBuilder.WithExceptionsDefaultConfigurableNodeDef;
 import org.knime.core.workflow.def.impl.NodeDefBuilder.WithExceptionsDefaultNodeDef;
-import org.knime.core.workflow.def.impl.SingleNodeDefBuilder.WithExceptionsDefaultSingleNodeDef;
 
 /**
  *
@@ -93,8 +93,8 @@ class ComponentLoaderTest {
 
         // when
         var componentDef = ComponentLoader.load(m_configBaseRO, file, LoadVersion.FUTURE);
-        var singleNodeDef = componentDef.getNode();
-        var nodeDef = singleNodeDef.getNode();
+        var singleNodeDef = componentDef.getConfigurableNode();
+        var nodeDef = singleNodeDef.getBaseNode();
 
         // then
 
@@ -131,7 +131,7 @@ class ComponentLoaderTest {
             .containsNull();
 
         assertThat(((WithExceptionsDefaultComponentDef) componentDef).getLoadExceptions().size()).isOne();
-        assertThat(((WithExceptionsDefaultSingleNodeDef) singleNodeDef).getLoadExceptions()).isEmpty();
+        assertThat(((WithExceptionsDefaultConfigurableNodeDef) singleNodeDef).getLoadExceptions()).isEmpty();
         assertThat(((WithExceptionsDefaultNodeDef) nodeDef).getLoadExceptions()).isEmpty();
     }
 
@@ -148,8 +148,8 @@ class ComponentLoaderTest {
 
         // when
         var componentDef = ComponentLoader.load(m_configBaseRO, file, LoadVersion.FUTURE);
-        var singleNodeDef = componentDef.getNode();
-        var nodeDef = singleNodeDef.getNode();
+        var singleNodeDef = componentDef.getConfigurableNode();
+        var nodeDef = singleNodeDef.getBaseNode();
 
         // then
 

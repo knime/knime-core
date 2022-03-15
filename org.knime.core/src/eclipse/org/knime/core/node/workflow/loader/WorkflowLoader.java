@@ -64,9 +64,9 @@ import org.knime.core.node.workflow.def.CoreToDefUtil;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.workflow.def.AnnotationDataDef;
 import org.knime.core.workflow.def.AuthorInformationDef;
-import org.knime.core.workflow.def.BaseNodeDef;
 import org.knime.core.workflow.def.ConnectionDef;
 import org.knime.core.workflow.def.ConnectionUISettingsDef;
+import org.knime.core.workflow.def.NodeDef;
 import org.knime.core.workflow.def.StyleRangeDef;
 import org.knime.core.workflow.def.WorkflowDef;
 import org.knime.core.workflow.def.WorkflowUISettingsDef;
@@ -508,7 +508,7 @@ public class WorkflowLoader {
      * @param workflowFormatVersion
      * @return a node describing what's behind the given node id (might be a metanode, component, or native node).
      */
-    private static BaseNodeDef loadNodeDef(final ConfigBaseRO nodesConfig, final String nodeKey,
+    private static NodeDef loadNodeDef(final ConfigBaseRO nodesConfig, final String nodeKey,
         final ConfigBaseRO workflowConfig, final File workflowDir, final LoadVersion workflowFormatVersion)
         throws InvalidSettingsException, IOException {
 

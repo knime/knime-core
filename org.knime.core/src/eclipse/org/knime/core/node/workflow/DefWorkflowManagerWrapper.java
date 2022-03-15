@@ -62,9 +62,9 @@ import org.knime.core.util.LoadVersion;
 import org.knime.core.util.workflowalizer.AuthorInformation;
 import org.knime.core.workflow.def.AnnotationDataDef;
 import org.knime.core.workflow.def.AuthorInformationDef;
-import org.knime.core.workflow.def.BaseNodeDef;
 import org.knime.core.workflow.def.ConnectionDef;
 import org.knime.core.workflow.def.CreatorDef;
+import org.knime.core.workflow.def.NodeDef;
 import org.knime.core.workflow.def.RootWorkflowDef;
 import org.knime.core.workflow.def.WorkflowDef;
 import org.knime.core.workflow.def.WorkflowUISettingsDef;
@@ -138,12 +138,12 @@ public class DefWorkflowManagerWrapper implements WorkflowDef {
      * {@inheritDoc}
      */
     @Override
-    public Map<String, BaseNodeDef> getNodes() {
+    public Map<String, NodeDef> getNodes() {
         return m_wfm.getNodeContainers().stream()//
-            .collect(Collectors.toMap(nc -> Integer.toString(nc.getID().getIndex()), DefWorkflowManagerWrapper::getBaseNodeDef));
+            .collect(Collectors.toMap(nc -> Integer.toString(nc.getID().getIndex()), DefWorkflowManagerWrapper::getNodeDef));
     }
 
-    private static BaseNodeDef getBaseNodeDef(final NodeContainer nc) {
+    private static NodeDef getNodeDef(final NodeContainer nc) {
         if (nc instanceof WorkflowManager) {
             return new DefMetanodeWrapper((WorkflowManager)nc);
         } else if (nc instanceof NativeNodeContainer) {
@@ -200,7 +200,7 @@ public class DefWorkflowManagerWrapper implements WorkflowDef {
      */
     public RootWorkflowDef asProjectDef() {
         CreatorDef creator = new CreatorDefBuilder()//
-                .setCreatorIsNightly(KNIMEConstants.isNightlyBuild())//
+                .setNightly(KNIMEConstants.isNightlyBuild())//
                 .setSavedWithVersion(KNIMEConstants.VERSION)//
                 .setWorkflowFormatVersion(LoadVersion.latest().getVersionString())//
                 .build();

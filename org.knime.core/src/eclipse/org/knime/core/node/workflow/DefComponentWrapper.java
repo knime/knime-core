@@ -56,8 +56,8 @@ import org.knime.core.node.workflow.def.CoreToDefUtil;
 import org.knime.core.workflow.def.ComponentDef;
 import org.knime.core.workflow.def.ComponentDialogSettingsDef;
 import org.knime.core.workflow.def.ComponentMetadataDef;
+import org.knime.core.workflow.def.ConfigurableNodeDef;
 import org.knime.core.workflow.def.PortDef;
-import org.knime.core.workflow.def.SingleNodeDef;
 import org.knime.core.workflow.def.TemplateLinkDef;
 import org.knime.core.workflow.def.WorkflowDef;
 import org.knime.core.workflow.def.impl.ComponentDialogSettingsDefBuilder;
@@ -80,7 +80,7 @@ public class DefComponentWrapper implements ComponentDef {
     }
 
     @Override
-    public SingleNodeDef getNode() {
+    public ConfigurableNodeDef getConfigurableNode() {
         return new DefSingleNodeContainerWrapper(m_nc);
     }
 
@@ -158,6 +158,14 @@ public class DefComponentWrapper implements ComponentDef {
     public TemplateLinkDef getLink() {
         // unclear if this needs to be a link here or a full template information
         return CoreToDefUtil.toTemplateLinkDef(m_nc.getTemplateInformation());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getNodeType() {
+        return "Component";
     }
 
 }

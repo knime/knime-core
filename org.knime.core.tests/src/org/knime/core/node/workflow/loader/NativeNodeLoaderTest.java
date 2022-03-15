@@ -60,11 +60,11 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.base.ConfigBaseRO;
 import org.knime.core.node.util.NodeLoaderTestUtils;
 import org.knime.core.util.LoadVersion;
+import org.knime.core.workflow.def.impl.ConfigurableNodeDefBuilder.WithExceptionsDefaultConfigurableNodeDef;
 import org.knime.core.workflow.def.impl.DefaultFilestoreDef;
 import org.knime.core.workflow.def.impl.DefaultFlowContextDef;
 import org.knime.core.workflow.def.impl.NativeNodeDefBuilder.WithExceptionsDefaultNativeNodeDef;
 import org.knime.core.workflow.def.impl.NodeDefBuilder.WithExceptionsDefaultNodeDef;
-import org.knime.core.workflow.def.impl.SingleNodeDefBuilder.WithExceptionsDefaultSingleNodeDef;
 
 /**
  *
@@ -91,8 +91,8 @@ class NativeNodeLoaderTest {
         // when
 
         var nativeNodeDef = NativeNodeLoader.load(m_configBaseRO, file, LoadVersion.FUTURE);
-        var singleNodeDef = nativeNodeDef.getNode();
-        var nodeDef = singleNodeDef.getNode();
+        var singleNodeDef = nativeNodeDef.getConfigurableNode();
+        var nodeDef = singleNodeDef.getBaseNode();
 
         // then
 
@@ -129,7 +129,7 @@ class NativeNodeLoaderTest {
             .containsNull();
 
         assertThat(((WithExceptionsDefaultNativeNodeDef) nativeNodeDef).getLoadExceptions()).isEmpty();
-        assertThat(((WithExceptionsDefaultSingleNodeDef) singleNodeDef).getLoadExceptions()).isEmpty();
+        assertThat(((WithExceptionsDefaultConfigurableNodeDef) singleNodeDef).getLoadExceptions()).isEmpty();
         assertThat(((WithExceptionsDefaultNodeDef) nodeDef).getLoadExceptions()).isEmpty();
     }
 
@@ -144,12 +144,12 @@ class NativeNodeLoaderTest {
 
         // when
         var nativeNodeDef = NativeNodeLoader.load(m_configBaseRO, file, LoadVersion.FUTURE);
-        var singleNodeDef = nativeNodeDef.getNode();
-        var nodeDef = singleNodeDef.getNode();
+        var singleNodeDef = nativeNodeDef.getConfigurableNode();
+        var nodeDef = singleNodeDef.getBaseNode();
 
         // then
         assertThat(((WithExceptionsDefaultNativeNodeDef) nativeNodeDef).getLoadExceptions()).isEmpty();
-        assertThat(((WithExceptionsDefaultSingleNodeDef) singleNodeDef).getLoadExceptions()).isEmpty();
+        assertThat(((WithExceptionsDefaultConfigurableNodeDef) singleNodeDef).getLoadExceptions()).isEmpty();
         assertThat(((WithExceptionsDefaultNodeDef) nodeDef).getLoadExceptions().size()).isOne();
     }
 

@@ -49,9 +49,9 @@
 package org.knime.core.node.workflow;
 
 import org.knime.core.node.workflow.def.CoreToDefUtil;
+import org.knime.core.workflow.def.BaseNodeDef;
 import org.knime.core.workflow.def.JobManagerDef;
 import org.knime.core.workflow.def.NodeAnnotationDef;
-import org.knime.core.workflow.def.NodeDef;
 import org.knime.core.workflow.def.NodeLocksDef;
 import org.knime.core.workflow.def.NodeUIInfoDef;
 
@@ -60,7 +60,7 @@ import org.knime.core.workflow.def.NodeUIInfoDef;
  * @author hornm
  * @author Carl Witt, KNIME GmbH, Berlin, Germany
  */
-public class DefNodeContainerWrapper implements NodeDef {
+public class DefNodeContainerWrapper implements BaseNodeDef {
 
     private NodeContainer m_nc;
 

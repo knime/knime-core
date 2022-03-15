@@ -60,7 +60,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.Stack;
 import java.util.TreeMap;
@@ -80,7 +79,6 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.node.workflow.WorkflowTableBackendSettings.TableBackendUnknownException;
-import org.knime.core.node.workflow.execresult.WorkflowExecutionResult;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.workflowalizer.AuthorInformation;
 
@@ -126,6 +124,8 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
     /** key used to store the editor specific settings (since 2.6). */
     private static final String CFG_EDITOR_INFO = "workflow_editor_settings";
 
+    /** Key for credentials. */
+    private static final String CFG_CREDENTIALS = "workflow_credentials";
 
     private static final String CFG_AUTHOR_INFORMATION = "authorInformation";
 
@@ -194,6 +194,8 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
     private String m_nameOverwrite;
 
     private List<FlowVariable> m_workflowVariables;
+
+    private List<Credentials> m_credentials;
 
     private WorkflowTableBackendSettings m_tableBackendSettings;
 
@@ -379,6 +381,12 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
         return m_workflowVariables;
     }
 
+    /** {@inheritDoc} */
+    @Override
+    public List<Credentials> getCredentials() {
+        return m_credentials;
+    }
+
     @Override
     public WorkflowTableBackendSettings getWorkflowTableBackendSettings() {
         return m_tableBackendSettings;
@@ -491,53 +499,25 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
     @Override
     public void preLoadNodeContainer(final WorkflowPersistor parentPersistor, final NodeSettingsRO parentSettings,
         final LoadResult loadResult) throws InvalidSettingsException, IOException {
-
         m_parentPersistor = parentPersistor;
-
-        /**
-         * Data Provider
-         *
-         * extract information from workflow.knime file
-         */
         final ReferencedFile knimeFile = getWorkflowKNIMEFile();
-
-        /**
-         * Error handling
-         */
         if (knimeFile == null || !knimeFile.getFile().isFile()) {
             setDirtyAfterLoad();
             String error = "Can't read workflow file \"" + knimeFile + "\"";
             throw new IOException(error);
         }
-
         // workflow.knime (or template.knime)
         File nodeFile = knimeFile.getFile();
         ReferencedFile parentRef = knimeFile.getParent();
-
-        /**
-         * Error handling
-         */
         if (parentRef == null) {
             setDirtyAfterLoad();
             throw new IOException("Parent directory of file \"" + knimeFile + "\" is not represented by "
                 + ReferencedFile.class.getSimpleName() + " object");
         }
-
-        /**
-         * Data Provider
-         */
         m_mustWarnOnDataLoadError = loadIfMustWarnOnDataLoadError(parentRef.getFile());
-
-        /**
-         * Data Loading
-         */
         NodeSettingsRO subWFSettings;
         try {
             InputStream in = new FileInputStream(nodeFile);
-            /**
-             * Security
-             * TODO should be different persistors for component, metanode, workflow
-             */
             if (m_parentPersistor != null) { // real metanode, not a project
                 // the workflow.knime (or template.knime) file is not encrypted
                 // with this metanode's cipher but possibly with a parent
@@ -552,9 +532,6 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
         }
         m_workflowSett = subWFSettings;
 
-        /**
-         * Manipulation
-         */
         try {
             if (m_nameOverwrite != null) {
                 m_name = m_nameOverwrite;
@@ -570,12 +547,6 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
         }
 
         try {
-            /**
-             * Data loading
-             * Conversion
-             * Version management
-             * Security
-             */
             m_workflowCipher = loadWorkflowCipher(getLoadVersion(), m_workflowSett);
         } catch (InvalidSettingsException e) {
             String error = "Unable to load workflow cipher: " + e.getMessage();
@@ -588,18 +559,9 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
         try {
             if (m_templateInformation != null) {
                 // template information was set after construction (this node is a link created from a template)
-                /**
-                 * Sanity checking
-                 */
                 assert m_templateInformation.getRole() == Role.Link;
             } else {
-                /**
-                 * Data Loading
-                 */
                 m_templateInformation = MetaNodeTemplateInformation.load(m_workflowSett, getLoadVersion());
-                /**
-                 * Sanity checking: fail if not set
-                 */
                 CheckUtils.checkSettingNotNull(m_templateInformation, "No template information");
             }
         } catch (InvalidSettingsException e) {
@@ -629,7 +591,19 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
             m_workflowVariables = Collections.emptyList();
         }
 
-
+        try {
+            m_credentials = loadCredentials(m_workflowSett);
+            // request to initialize credentials - if available
+            if (m_credentials != null && !m_credentials.isEmpty()) {
+                m_credentials = getLoadHelper().loadCredentialsPrefilled(m_credentials);
+            }
+        } catch (InvalidSettingsException e) {
+            String error = "Unable to load credentials: " + e.getMessage();
+            getLogger().debug(error, e);
+            setDirtyAfterLoad();
+            loadResult.addError(error);
+            m_credentials = Collections.emptyList();
+        }
 
         try {
             m_tableBackendSettings = loadTableBackendSettings(m_workflowSett);
@@ -674,14 +648,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
             setDirtyAfterLoad();
             loadResult.addError(error);
         }
-
-        /**
-         * Data loading
-         * Detect errors and signal them
-         */
         boolean isResetRequired = m_metaPersistor.load(subWFSettings, metaFlowParentSettings, loadResult);
-        // TODO idea: if reset required use a different implementation of the template step
-
         if (isResetRequired) {
             setNeedsResetAfterLoad();
         }
@@ -824,9 +791,6 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
             }
         }
 
-        /**
-         * Input ports bar user interface information
-         */
         NodeSettingsRO outPorts = null;
         m_inPortsBarUIInfo = inPortsBarUIInfo;
         NodeUIInformation outPortsBarUIInfo = null;
@@ -845,10 +809,6 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
             getLogger().debug(error, e);
             loadResult.addError(error);
         }
-
-        /**
-         * Output ports bar user interface information
-         */
         if (uiInfoClassName != null) {
             try {
                 if (!getLoadVersion().isOlderThan(LoadVersion.V200)) {
@@ -996,12 +956,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
             }
             try {
                 LoadResult childResult = new LoadResult(nodeType.toString() + " with ID suffix " + nodeIDSuffix);
-
-                /**
-                 * Recurse
-                 */
                 persistor.preLoadNodeContainer(this, nodeSetting, childResult);
-
                 loadResult.addChildError(childResult);
             } catch (Throwable e) {
                 String error =
@@ -1074,8 +1029,6 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
                 loadResult.addError(error);
                 continue;
             }
-
-            // check source node exists
             int sourceIDSuffix = c.getSourceSuffix();
             NodeContainerPersistor sourceNodePersistor = m_nodeContainerLoaderMap.get(sourceIDSuffix);
             if (sourceNodePersistor == null && sourceIDSuffix != -1) {
@@ -1085,9 +1038,8 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
                 }
                 continue;
             }
-            fixSourcePortIfNecessary(sourceNodePersistor, c, getLoadVersion());
+            fixSourcePortIfNecessary(sourceNodePersistor, c);
 
-            // check target node exists
             int destIDSuffix = c.getDestSuffix();
             NodeContainerPersistor destNodePersistor = m_nodeContainerLoaderMap.get(destIDSuffix);
             if (destNodePersistor == null && destIDSuffix != -1) {
@@ -1097,9 +1049,8 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
                 }
                 continue;
             }
-            fixDestPortIfNecessary(destNodePersistor, c, getLoadVersion());
+            fixDestPortIfNecessary(destNodePersistor, c);
 
-            // check duplicate connections
             if (!m_connectionSet.add(c)) {
                 setDirtyAfterLoad();
                 loadResult.addError("Duplicate connection information: " + c);
@@ -1136,21 +1087,18 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
     /**
      * Fixes source port index if necessary. Fixes the mandatory flow variable port object.
      *
-     * TODO move somewhere else
-     *
      * @param sourcePersistor The persistor of the source node.
      * @param c The connection template to be fixed.
-     * @param loadVersion TODO
-     *
      */
-    static void fixSourcePortIfNecessary(final NodeContainerPersistor sourcePersistor,
-        final ConnectionContainerTemplate c, final LoadVersion loadVersion) {
+    void fixSourcePortIfNecessary(final NodeContainerPersistor sourcePersistor, final ConnectionContainerTemplate c) {
         // v2.1 and before did not have flow variable ports (index 0)
-        if (loadVersion.isOlderThan(LoadVersion.V220) && sourcePersistor instanceof FileSingleNodeContainerPersistor) {
-            // correct port index only for ordinary nodes (no new flow
-            // variable ports on metanodes)
-            int index = c.getSourcePort();
-            c.setSourcePort(index + 1);
+        if (getLoadVersion().isOlderThan(LoadVersion.V220)) {
+            if (sourcePersistor instanceof FileSingleNodeContainerPersistor) {
+                // correct port index only for ordinary nodes (no new flow
+                // variable ports on metanodes)
+                int index = c.getSourcePort();
+                c.setSourcePort(index + 1);
+            }
         }
     }
 
@@ -1159,15 +1107,11 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
      * swapped. Subclasses will overwrite this method (e.g. to enable loading flows, which did not have the mandatory
      * flow variable port object).
      *
-     * TODO move somewhere else
-     *
      * @param destPersistor The persistor of the destination node.
      * @param c The connection template to be fixed.
-     * @param loadVersion TODO
      */
-    static void fixDestPortIfNecessary(final NodeContainerPersistor destPersistor, final ConnectionContainerTemplate c,
-        final LoadVersion loadVersion) {
-        if (loadVersion.isOlderThan(LoadVersion.V220)) {
+    void fixDestPortIfNecessary(final NodeContainerPersistor destPersistor, final ConnectionContainerTemplate c) {
+        if (getLoadVersion().isOlderThan(LoadVersion.V220)) {
             if (destPersistor instanceof FileNativeNodeContainerPersistor) {
                 FileNativeNodeContainerPersistor pers = (FileNativeNodeContainerPersistor)destPersistor;
                 /* workflows saved with 1.x.x have misleading port indices for
@@ -1204,7 +1148,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
                 int index = c.getDestPort();
                 c.setDestPort(index + 1);
             }
-        } else if (loadVersion.isOlderThan(LoadVersion.V220)) {
+        } else if (getLoadVersion().isOlderThan(LoadVersion.V220)) {
             // v2.1 and before did not have flow variable ports (index 0)
             if (destPersistor instanceof FileSingleNodeContainerPersistor) {
                 // correct port index only for ordinary nodes (no new flow
@@ -1583,6 +1527,34 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
     }
 
     /**
+     * Loads credentials, this method returns an empty list. Credentials added for v2.2
+     *
+     * @param settings to load from.
+     * @return the credentials list
+     * @throws InvalidSettingsException If this fails for any reason.
+     */
+    List<Credentials> loadCredentials(final NodeSettingsRO settings) throws InvalidSettingsException {
+        if (getLoadVersion().isOlderThan(LoadVersion.V220)) {
+            // no credentials in v2.1 and before
+            return Collections.emptyList();
+        } else {
+            NodeSettingsRO sub = settings.getNodeSettings(CFG_CREDENTIALS);
+            List<Credentials> r = new ArrayList<Credentials>();
+            Set<String> credsNameSet = new HashSet<String>();
+            for (String key : sub.keySet()) {
+                NodeSettingsRO child = sub.getNodeSettings(key);
+                Credentials c = Credentials.load(child);
+                if (!credsNameSet.add(c.getName())) {
+                    getLogger().warn("Duplicate credentials variable \"" + c.getName() + "\" -- ignoring it");
+                } else {
+                    r.add(c);
+                }
+            }
+            return r;
+        }
+    }
+
+    /**
      * Loads table backend settings (only for workflow projects). Might throw {@link TableBackendUnknownException}.
      */
     WorkflowTableBackendSettings loadTableBackendSettings(final NodeSettingsRO settings)
@@ -1779,10 +1751,6 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
         return nodeIDSuffix;
     }
 
-    Optional<WorkflowExecutionResult> getExecutionResult() {
-        return Optional.empty();
-    }
-
     /**
      * {@inheritDoc}
      *
@@ -1899,15 +1867,5 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
                 downstreamNodes);
         }
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public List<Credentials> getCredentials() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
 
 }

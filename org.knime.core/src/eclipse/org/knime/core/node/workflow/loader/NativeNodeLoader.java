@@ -151,7 +151,7 @@ public class NativeNodeLoader {
             .setFeature(() -> loadFeature(nodeConfig), new VendorDefBuilder().build()) //
             .setNodeCreationConfig(() -> loadCreationConfig(nodeConfig), new ConfigMapDefBuilder().build())
             .setFilestore(() -> loadFilestore(workflowConfig, workflowFormatVersion), new FilestoreDefBuilder().build())
-            .setNode(SingleNodeLoader.load(workflowConfig, nodeConfig, workflowFormatVersion)) //
+            .setConfigurableNode(ConfigurableNodeLoader.load(workflowConfig, nodeConfig, workflowFormatVersion)) //
             .build();
 
     }

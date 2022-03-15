@@ -91,7 +91,7 @@ class MetaNodeLoaderTest {
 
         // when
         var metanodeDef = MetaNodeLoader.load(m_configBaseRO, file, LoadVersion.FUTURE);
-        var nodeDef = metanodeDef.getNode();
+        var nodeDef = metanodeDef.getBaseNode();
 
         // then
 
@@ -135,7 +135,7 @@ class MetaNodeLoaderTest {
 
         // when
         var metanodeDef = MetaNodeLoader.load(m_configBaseRO, file, LoadVersion.FUTURE);
-        var nodeDef = metanodeDef.getNode();
+        var nodeDef = metanodeDef.getBaseNode();
 
         // then
 

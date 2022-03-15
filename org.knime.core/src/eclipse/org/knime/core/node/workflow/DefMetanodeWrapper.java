@@ -53,8 +53,8 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.knime.core.node.workflow.def.CoreToDefUtil;
+import org.knime.core.workflow.def.BaseNodeDef;
 import org.knime.core.workflow.def.MetaNodeDef;
-import org.knime.core.workflow.def.NodeDef;
 import org.knime.core.workflow.def.NodeUIInfoDef;
 import org.knime.core.workflow.def.PortDef;
 import org.knime.core.workflow.def.TemplateLinkDef;
@@ -173,8 +173,16 @@ public class DefMetanodeWrapper implements MetaNodeDef {
      * {@inheritDoc}
      */
     @Override
-    public NodeDef getNode() {
+    public BaseNodeDef getBaseNode() {
         return new DefNodeContainerWrapper(m_wfm);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getNodeType() {
+        return "MetaNode";
     }
 
 }

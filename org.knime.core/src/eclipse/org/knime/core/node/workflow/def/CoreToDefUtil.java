@@ -143,7 +143,6 @@ import org.knime.core.workflow.def.impl.NodeUIInfoDefBuilder;
 import org.knime.core.workflow.def.impl.PortDefBuilder;
 import org.knime.core.workflow.def.impl.PortTypeDefBuilder;
 import org.knime.core.workflow.def.impl.StyleRangeDefBuilder;
-import org.knime.core.workflow.def.impl.TemplateLinkDefBuilder;
 import org.knime.core.workflow.def.impl.VendorDefBuilder;
 
 /**
@@ -471,9 +470,9 @@ public class CoreToDefUtil {
 
     public static TemplateLinkDef toTemplateLinkDef(final MetaNodeTemplateInformation i) {
         // TODO flow variables and example data info
-        return new TemplateLinkDefBuilder()//
-            .setUri(i.getSourceURI().toString())//
-            .build();
+        return null; //new TemplateLinkDefBuilder()//
+//            .setUri(i.getSourceURI().toString())// getSourceURI can return null
+//            .build();
     }
 
     /**

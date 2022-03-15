@@ -167,7 +167,7 @@ public class CreatorLoader {
             .setWorkflowFormatVersion(() -> loadWorkflowFormatVersionString(m_workflowConfig),
                 LoadVersion.UNKNOWN.toString())//
             .setSavedWithVersion(() -> loadCreatorVersion(m_workflowConfig).toString(), LoadVersion.UNKNOWN.toString())//
-            .setCreatorIsNightly(() -> loadCreatorIsNightly(m_workflowConfig), true)//
+            .setNightly(() -> loadCreatorIsNightly(m_workflowConfig), true)//
             .build();
 
         m_workflowFormatVersion = LoadVersion.fromVersionString(m_def.getWorkflowFormatVersion());

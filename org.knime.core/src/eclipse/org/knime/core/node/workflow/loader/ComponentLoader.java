@@ -95,7 +95,7 @@ public final class ComponentLoader {
                 .build()) //
             .setWorkflow(() -> WorkflowLoader.load(nodeDirectory, workflowFormatVersion),
                 new WorkflowDefBuilder().build()) //
-            .setNode(SingleNodeLoader.load(workflowConfig, componentConfig, workflowFormatVersion)) //
+            .setConfigurableNode(ConfigurableNodeLoader.load(workflowConfig, componentConfig, workflowFormatVersion)) //
             .build();
     }
 

@@ -110,7 +110,7 @@ public class MetaNodeLoader {
             .setOutPortsBarUIInfo(() -> loadPortsBarUIInfo(metaNodeConfig, Const.OUT_PORTS, workflowFormatVersion),
                 new NodeUIInfoDefBuilder().build())//
             .setLink(null) // TODO
-            .setNode(NodeLoader.load(workflowConfig, metaNodeConfig, workflowFormatVersion)) //
+            .setBaseNode(NodeLoader.load(workflowConfig, metaNodeConfig, workflowFormatVersion)) //
             .build();
     }
 

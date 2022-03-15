@@ -48,14 +48,13 @@
  */
 package org.knime.core.node.workflow;
 
-import org.apache.commons.lang3.NotImplementedException;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.workflow.def.CoreToDefUtil;
 import org.knime.core.workflow.def.ConfigMapDef;
+import org.knime.core.workflow.def.ConfigurableNodeDef;
 import org.knime.core.workflow.def.FilestoreDef;
 import org.knime.core.workflow.def.NativeNodeDef;
-import org.knime.core.workflow.def.SingleNodeDef;
 import org.knime.core.workflow.def.VendorDef;
 
 /**
@@ -145,7 +144,7 @@ public class DefNativeNodeWrapper implements NativeNodeDef {
      * {@inheritDoc}
      */
     @Override
-    public SingleNodeDef getNode() {
+    public ConfigurableNodeDef getConfigurableNode() {
         return new DefSingleNodeContainerWrapper(m_nc);
     }
 
@@ -154,11 +153,19 @@ public class DefNativeNodeWrapper implements NativeNodeDef {
      */
     @Override
     public FilestoreDef getFilestore() {
-        throw new NotImplementedException("File store extraction from native node container");
-//        return new FilestoreDefBuilder()//
+        // TODO implement;
+        return null; //new FilestoreDefBuilder()//
 //                .setId()//
 //                .setLocation()//
 //                .build();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getNodeType() {
+        return "NativeNode";
     }
 
 }

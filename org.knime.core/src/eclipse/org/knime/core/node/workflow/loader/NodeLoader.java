@@ -58,19 +58,19 @@ import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.core.node.workflow.def.CoreToDefUtil;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.workflow.def.AnnotationDataDef;
+import org.knime.core.workflow.def.BaseNodeDef;
 import org.knime.core.workflow.def.BoundsDef;
 import org.knime.core.workflow.def.CoordinateDef;
 import org.knime.core.workflow.def.JobManagerDef;
 import org.knime.core.workflow.def.NodeAnnotationDef;
-import org.knime.core.workflow.def.NodeDef;
 import org.knime.core.workflow.def.NodeLocksDef;
 import org.knime.core.workflow.def.NodeUIInfoDef;
 import org.knime.core.workflow.def.impl.AnnotationDataDefBuilder;
+import org.knime.core.workflow.def.impl.BaseNodeDefBuilder;
 import org.knime.core.workflow.def.impl.BoundsDefBuilder;
 import org.knime.core.workflow.def.impl.CoordinateDefBuilder;
 import org.knime.core.workflow.def.impl.JobManagerDefBuilder;
 import org.knime.core.workflow.def.impl.NodeAnnotationDefBuilder;
-import org.knime.core.workflow.def.impl.NodeDefBuilder;
 import org.knime.core.workflow.def.impl.NodeLocksDefBuilder;
 import org.knime.core.workflow.def.impl.NodeUIInfoDefBuilder;
 
@@ -97,10 +97,10 @@ final class NodeLoader {
      * @param workflowFormatVersion implicitly specifies the format of the descriptions
      * @throws IOException
      */
-    static NodeDef load(final ConfigBaseRO workflowConfig, final ConfigBaseRO nodeConfig,
+    static BaseNodeDef load(final ConfigBaseRO workflowConfig, final ConfigBaseRO nodeConfig,
         final LoadVersion workflowFormatVersion) {
 
-        return new NodeDefBuilder().setId(() -> loadNodeId(workflowConfig), getRandomNodeID()) //
+        return new BaseNodeDefBuilder().setId(() -> loadNodeId(workflowConfig), getRandomNodeID()) //
             .setAnnotation(() -> loadAnnotation(workflowConfig, workflowFormatVersion), DEFAULT_NODE_ANNOTATION) //
             .setCustomDescription(() -> loadCustomDescription(workflowConfig, nodeConfig, workflowFormatVersion), "") //
             .setJobManager(() -> loadJobManager(nodeConfig), DEFAULT_JOB_MANAGER) //

@@ -58,16 +58,16 @@ import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.def.CoreToDefUtil;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.workflow.def.ConfigMapDef;
+import org.knime.core.workflow.def.ConfigurableNodeDef;
 import org.knime.core.workflow.def.FlowContextDef;
 import org.knime.core.workflow.def.FlowContextDef.ContextTypeEnum;
 import org.knime.core.workflow.def.FlowObjectDef;
 import org.knime.core.workflow.def.FlowVariableDef;
-import org.knime.core.workflow.def.SingleNodeDef;
 import org.knime.core.workflow.def.impl.ConfigMapDefBuilder;
+import org.knime.core.workflow.def.impl.ConfigurableNodeDefBuilder;
 import org.knime.core.workflow.def.impl.FlowContextDefBuilder;
 import org.knime.core.workflow.def.impl.FlowObjectDefBuilder;
 import org.knime.core.workflow.def.impl.FlowVariableDefBuilder;
-import org.knime.core.workflow.def.impl.SingleNodeDefBuilder;
 
 /**
  * Responsible for loading the KNIME properties which are used by the Nodes and Componets
@@ -75,9 +75,9 @@ import org.knime.core.workflow.def.impl.SingleNodeDefBuilder;
  * @author Dionysios Stolis, KNIME GmbH, Berlin, Germany
  * @author Carl Witt, KNIME GmbH, Berlin, Germany
  */
-final class SingleNodeLoader {
+final class ConfigurableNodeLoader {
 
-    private SingleNodeLoader() {}
+    private ConfigurableNodeLoader() {}
 
     private static final String INTERNAL_NODE_SUBSETTINGS_KEY = "internal_node_subsettings";
 
@@ -91,14 +91,14 @@ final class SingleNodeLoader {
 
     private static final ConfigMapDef DEFAULT_CONFIG_MAP = new ConfigMapDefBuilder().build();
 
-    static SingleNodeDef load(final ConfigBaseRO workflowConfig, final ConfigBaseRO nodeConfig, final LoadVersion loadVersion) {
+    static ConfigurableNodeDef load(final ConfigBaseRO workflowConfig, final ConfigBaseRO nodeConfig, final LoadVersion loadVersion) {
 
-        return new SingleNodeDefBuilder()//
+        return new ConfigurableNodeDefBuilder()//
             .setFlowStack(() -> loadFlowStackObjects(nodeConfig, loadVersion), List.of()) //
             .setInternalNodeSubSettings(() -> loadInternalNodeSubSettings(nodeConfig), DEFAULT_CONFIG_MAP) //
             .setModelSettings(() -> loadModelSettings(nodeConfig), DEFAULT_CONFIG_MAP) //
             .setVariableSettings(() -> loadVariableSettings(nodeConfig), DEFAULT_CONFIG_MAP)
-            .setNode(NodeLoader.load(workflowConfig, nodeConfig, loadVersion)) //
+            .setBaseNode(NodeLoader.load(workflowConfig, nodeConfig, loadVersion)) //
             .build();
     }
 
