@@ -8857,7 +8857,6 @@ public final class WorkflowManager extends NodeContainer
                 dest = translationMap.get(destSuffix);
                 source = translationMap.get(sourceSuffix);
             }
-            System.out.println(String.format("\tTrying to add connection from %s port %s to %s port %s", source, c.getSourcePort(),dest,c.getDestPort()));
             if (!canAddConnection(source, c.getSourcePort(), dest, c.getDestPort(), true, currentlyLoadingFlow)) {
                 String warn = "Unable to insert connection \"" + c + "\"";
                 LOGGER.warn(warn);
