@@ -14,7 +14,7 @@
 		-Dsun.net.client.defaultReadTimeout=0 -Xmx4G \
 		-XX:CompileCommand=exclude,javax/swing/text/GlyphView,getBreakSpot
 		</surefireArgLine>
-		<revision>4.5.1</revision>
+		<revision>4.5.2</revision>
 	</properties>
 
 	<build>
