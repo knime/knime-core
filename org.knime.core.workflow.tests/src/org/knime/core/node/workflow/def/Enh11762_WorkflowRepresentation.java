@@ -63,8 +63,7 @@ import org.knime.core.node.workflow.WorkflowTestCase;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.workflow.def.RootWorkflowDef;
 import org.knime.core.workflow.def.WorkflowDef;
-import org.knime.core.workflow.def.impl.DefaultRootWorkflowDef;
-import org.knime.core.workflow.def.impl.DefaultWorkflowDef;
+import org.knime.core.workflow.def.impl.FallibleRootWorkflowDef;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -148,7 +147,7 @@ public class Enh11762_WorkflowRepresentation extends WorkflowTestCase {
 		// wrap workflow manager to get a workflow project definition interface implementation
 		DefWorkflowManagerWrapper def = new DefWorkflowManagerWrapper(wfm);
 		// copy information to information-only POJO
-		DefaultRootWorkflowDef projectDef = new DefaultRootWorkflowDef(def.asProjectDef());
+		RootWorkflowDef projectDef = new FallibleRootWorkflowDef(def.asProjectDef());
 
 		// serialize into JSON
 		String pretty = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(projectDef);

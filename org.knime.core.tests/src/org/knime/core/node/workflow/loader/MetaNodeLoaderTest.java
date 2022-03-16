@@ -65,8 +65,7 @@ import org.knime.core.workflow.def.JobManagerDef;
 import org.knime.core.workflow.def.NodeAnnotationDef;
 import org.knime.core.workflow.def.NodeUIInfoDef;
 import org.knime.core.workflow.def.WorkflowDef;
-import org.knime.core.workflow.def.impl.MetaNodeDefBuilder.WithExceptionsDefaultMetaNodeDef;
-import org.knime.core.workflow.def.impl.NodeDefBuilder.WithExceptionsDefaultNodeDef;
+import org.knime.core.workflow.def.impl.FallibleBaseNodeDef;
 
 /**
  *
@@ -91,7 +90,7 @@ class MetaNodeLoaderTest {
 
         // when
         var metanodeDef = MetaNodeLoader.load(m_configBaseRO, file, LoadVersion.FUTURE);
-        var nodeDef = metanodeDef.getBaseNode();
+        var nodeDef = (FallibleBaseNodeDef)metanodeDef.getBaseNode();
 
         // then
 
@@ -118,8 +117,8 @@ class MetaNodeLoaderTest {
             n -> n.getBounds().getHeight(), n -> n.getBounds().getLocation(), n -> n.getBounds().getWidth())
             .containsNull();
 
-        assertThat(((WithExceptionsDefaultMetaNodeDef)metanodeDef).getLoadExceptions()).isEmpty();
-        assertThat(((WithExceptionsDefaultNodeDef)nodeDef).getLoadExceptions()).isEmpty();
+        assertThat(metanodeDef.getLoadExceptions()).isEmpty();
+        assertThat(nodeDef.getLoadExceptions()).isEmpty();
     }
 
     @Test
@@ -135,7 +134,7 @@ class MetaNodeLoaderTest {
 
         // when
         var metanodeDef = MetaNodeLoader.load(m_configBaseRO, file, LoadVersion.FUTURE);
-        var nodeDef = metanodeDef.getBaseNode();
+        var nodeDef = (FallibleBaseNodeDef)metanodeDef.getBaseNode();
 
         // then
 
@@ -167,10 +166,10 @@ class MetaNodeLoaderTest {
             .containsExactly(2541, 1117, 122, 65);
         try {
             //TODO Cant cast to WithExceptionsDefaultNodeDef
-            var exceptions = ((WithExceptionsDefaultNodeDef) nodeDef).getLoadExceptions();
+            var exceptions = nodeDef.getLoadExceptions();
         } catch (Exception e) {
             e.printStackTrace();
         }
-        assertThat(((WithExceptionsDefaultMetaNodeDef)metanodeDef).getLoadExceptions()).isEmpty();
+        assertThat(metanodeDef.getLoadExceptions()).isEmpty();
     }
 }

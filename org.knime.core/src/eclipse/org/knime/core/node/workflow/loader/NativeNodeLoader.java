@@ -62,9 +62,9 @@ import org.knime.core.node.workflow.def.CoreToDefUtil;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.workflow.def.ConfigMapDef;
 import org.knime.core.workflow.def.FilestoreDef;
-import org.knime.core.workflow.def.NativeNodeDef;
 import org.knime.core.workflow.def.VendorDef;
 import org.knime.core.workflow.def.impl.ConfigMapDefBuilder;
+import org.knime.core.workflow.def.impl.FallibleNativeNodeDef;
 import org.knime.core.workflow.def.impl.FilestoreDefBuilder;
 import org.knime.core.workflow.def.impl.NativeNodeDefBuilder;
 import org.knime.core.workflow.def.impl.VendorDefBuilder;
@@ -139,7 +139,7 @@ public class NativeNodeLoader {
      * @return a {@link NativeNodeLoader}
      * @throws IOException
      */
-    static NativeNodeDef load(final ConfigBaseRO workflowConfig, final File nodeDirectory,
+    static FallibleNativeNodeDef load(final ConfigBaseRO workflowConfig, final File nodeDirectory,
         final LoadVersion workflowFormatVersion) throws IOException {
         var nodeConfig = LoaderUtils.readNodeConfigFromFile(nodeDirectory);
 

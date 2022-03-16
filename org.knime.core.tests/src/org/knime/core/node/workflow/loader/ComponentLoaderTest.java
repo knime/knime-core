@@ -65,9 +65,8 @@ import org.knime.core.workflow.def.ConfigMapDef;
 import org.knime.core.workflow.def.JobManagerDef;
 import org.knime.core.workflow.def.NodeAnnotationDef;
 import org.knime.core.workflow.def.WorkflowDef;
-import org.knime.core.workflow.def.impl.ComponentDefBuilder.WithExceptionsDefaultComponentDef;
-import org.knime.core.workflow.def.impl.ConfigurableNodeDefBuilder.WithExceptionsDefaultConfigurableNodeDef;
-import org.knime.core.workflow.def.impl.NodeDefBuilder.WithExceptionsDefaultNodeDef;
+import org.knime.core.workflow.def.impl.FallibleBaseNodeDef;
+import org.knime.core.workflow.def.impl.FallibleConfigurableNodeDef;
 
 /**
  *
@@ -93,17 +92,16 @@ class ComponentLoaderTest {
 
         // when
         var componentDef = ComponentLoader.load(m_configBaseRO, file, LoadVersion.FUTURE);
-        var singleNodeDef = componentDef.getConfigurableNode();
-        var nodeDef = singleNodeDef.getBaseNode();
+        var singleNodeDef = (FallibleConfigurableNodeDef) componentDef.getConfigurableNode();
+        var nodeDef = (FallibleBaseNodeDef) singleNodeDef.getBaseNode();
 
         // then
 
         // Assert ComponentLoader
         assertThat(componentDef.getDialogSettings()).isNull();
-        assertThat(componentDef.getInPorts()).hasSize(1)
-        .extracting(p -> p.getIndex(), p -> p.getName()) //
-        .containsExactlyInAnyOrder( //
-            tuple(0, "inport_0"));
+        assertThat(componentDef.getInPorts()).hasSize(1).extracting(p -> p.getIndex(), p -> p.getName()) //
+            .containsExactlyInAnyOrder( //
+                tuple(0, "inport_0"));
         assertThat(componentDef.getOutPorts()).isEmpty();
         assertThat(componentDef.getVirtualInNodeId()).isEqualTo(3);
         assertThat(componentDef.getVirtualOutNodeId()).isEqualTo(4);
@@ -115,7 +113,7 @@ class ComponentLoaderTest {
         assertThat(singleNodeDef.getFlowStack()).isEmpty(); //
         //TODO assert the ConfigMap value
         assertThat(singleNodeDef.getInternalNodeSubSettings().getChildren()).containsKey("memory_policy");
-//        assertThat(nativeNodeDef.getModelSettings().getChildren());
+        //        assertThat(nativeNodeDef.getModelSettings().getChildren());
         assertThat(singleNodeDef.getVariableSettings().getChildren()).isEmpty();
 
         // Assert NodeLoader
@@ -130,9 +128,9 @@ class ComponentLoaderTest {
             n -> n.getBounds().getHeight(), n -> n.getBounds().getLocation(), n -> n.getBounds().getWidth())
             .containsNull();
 
-        assertThat(((WithExceptionsDefaultComponentDef) componentDef).getLoadExceptions().size()).isOne();
-        assertThat(((WithExceptionsDefaultConfigurableNodeDef) singleNodeDef).getLoadExceptions()).isEmpty();
-        assertThat(((WithExceptionsDefaultNodeDef) nodeDef).getLoadExceptions()).isEmpty();
+        assertThat(componentDef.getLoadExceptions().size()).isOne();
+        assertThat(singleNodeDef.getLoadExceptions()).isEmpty();
+        assertThat(nodeDef.getLoadExceptions()).isEmpty();
     }
 
     @Test
@@ -161,8 +159,7 @@ class ComponentLoaderTest {
         assertThat(componentDef.getOutPorts())
             .extracting(p -> p.getIndex(), p -> p.getName(),
                 p -> p.getPortType().getPortObjectClass().endsWith("BufferedDataTable"))
-            .contains(tuple(0, "outport_0", true),
-                tuple(1, "outport_1", true));
+            .contains(tuple(0, "outport_0", true), tuple(1, "outport_1", true));
         assertThat(componentDef.getVirtualInNodeId()).isEqualTo(10);
         assertThat(componentDef.getVirtualOutNodeId()).isEqualTo(11);
         assertThat(componentDef.getLink()).isNotNull();
@@ -172,9 +169,8 @@ class ComponentLoaderTest {
         assertThat(singleNodeDef.getFlowStack()).isEmpty(); //
         //TODO assert the ConfigMap value
         assertThat(singleNodeDef.getInternalNodeSubSettings().getChildren()).containsKey("memory_policy");
-//        assertThat(nativeNodeDef.getModelSettings().getChildren());
+        //        assertThat(nativeNodeDef.getModelSettings().getChildren());
         assertThat(singleNodeDef.getVariableSettings()).isInstanceOf(ConfigMapDef.class);
-
 
         // Assert NodeLoader
         assertThat(nodeDef.getId()).isEqualTo(431);
@@ -188,7 +184,7 @@ class ComponentLoaderTest {
             n -> n.getBounds().getLocation().getY(), n -> n.getBounds().getHeight(), n -> n.getBounds().getWidth())
             .containsExactly(2541, 1117, 122, 65);
 
-        assertThat(((WithExceptionsDefaultComponentDef) componentDef).getLoadExceptions()).isEmpty();
+        assertThat(componentDef.getLoadExceptions()).isEmpty();
     }
 
 }

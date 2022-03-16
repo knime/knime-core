@@ -74,7 +74,6 @@ import org.knime.core.workflow.def.impl.AnnotationDataDefBuilder;
 import org.knime.core.workflow.def.impl.AuthorInformationDefBuilder;
 import org.knime.core.workflow.def.impl.ConnectionDefBuilder;
 import org.knime.core.workflow.def.impl.ConnectionUISettingsDefBuilder;
-import org.knime.core.workflow.def.impl.DefaultAuthorInformationDef;
 import org.knime.core.workflow.def.impl.StyleRangeDefBuilder;
 import org.knime.core.workflow.def.impl.WorkflowDefBuilder;
 import org.knime.core.workflow.def.impl.WorkflowUISettingsDefBuilder;
@@ -177,7 +176,7 @@ public class WorkflowLoader {
 
     private static final ConfigBaseRO EMPTY_SETTINGS = new SimpleConfig("<<empty>>");
 
-    private static final DefaultAuthorInformationDef DEFAULT_AUTHOR_INFORMATION = new AuthorInformationDefBuilder()//
+    private static final AuthorInformationDef DEFAULT_AUTHOR_INFORMATION = new AuthorInformationDefBuilder()//
         .setAuthoredBy("<unknown>") //
         .setAuthoredWhen(OffsetDateTime.of(1970, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC)) //
         .setLastEditedBy(null) //

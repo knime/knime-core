@@ -60,6 +60,7 @@ import org.knime.core.util.LoadVersion;
 import org.knime.core.workflow.def.MetaNodeDef;
 import org.knime.core.workflow.def.NodeUIInfoDef;
 import org.knime.core.workflow.def.PortDef;
+import org.knime.core.workflow.def.impl.FallibleMetaNodeDef;
 import org.knime.core.workflow.def.impl.MetaNodeDefBuilder;
 import org.knime.core.workflow.def.impl.NodeUIInfoDefBuilder;
 import org.knime.core.workflow.def.impl.PortDefBuilder;
@@ -96,7 +97,7 @@ public class MetaNodeLoader {
         }
     }
 
-    static MetaNodeDef load(final ConfigBaseRO workflowConfig, final File nodeDirectory,
+    static FallibleMetaNodeDef load(final ConfigBaseRO workflowConfig, final File nodeDirectory,
         final LoadVersion workflowFormatVersion) throws IOException {
         var metaNodeConfig = LoaderUtils.readWorkflowConfigFromFile(nodeDirectory);
 

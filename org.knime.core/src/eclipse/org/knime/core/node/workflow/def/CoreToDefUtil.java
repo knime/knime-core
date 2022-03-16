@@ -91,6 +91,7 @@ import org.knime.core.util.Version;
 import org.knime.core.util.workflowalizer.AuthorInformation;
 import org.knime.core.workflow.def.AnnotationDataDef;
 import org.knime.core.workflow.def.AuthorInformationDef;
+import org.knime.core.workflow.def.BoundsDef;
 import org.knime.core.workflow.def.ComponentMetadataDef;
 import org.knime.core.workflow.def.ConfigDef;
 import org.knime.core.workflow.def.ConfigMapDef;
@@ -134,7 +135,6 @@ import org.knime.core.workflow.def.impl.ConfigValueStringArrayDefBuilder;
 import org.knime.core.workflow.def.impl.ConfigValueStringDefBuilder;
 import org.knime.core.workflow.def.impl.ConnectionUISettingsDefBuilder;
 import org.knime.core.workflow.def.impl.CoordinateDefBuilder;
-import org.knime.core.workflow.def.impl.DefaultBoundsDef;
 import org.knime.core.workflow.def.impl.FlowVariableDefBuilder;
 import org.knime.core.workflow.def.impl.JobManagerDefBuilder;
 import org.knime.core.workflow.def.impl.NodeAnnotationDefBuilder;
@@ -401,7 +401,7 @@ public class CoreToDefUtil {
         }
 
         int[] bounds = uiInfoDef.getBounds();
-        DefaultBoundsDef boundsDef = new BoundsDefBuilder()//
+        BoundsDef boundsDef = new BoundsDefBuilder()//
             .setLocation(createCoordinate(bounds[0], bounds[1]))//
             .setWidth(bounds[2])//
             .setHeight(bounds[3])//

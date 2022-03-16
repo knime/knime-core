@@ -59,12 +59,12 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.base.ConfigBaseRO;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.LoadVersion;
-import org.knime.core.workflow.def.ComponentDef;
 import org.knime.core.workflow.def.ComponentMetadataDef;
 import org.knime.core.workflow.def.PortDef;
 import org.knime.core.workflow.def.TemplateLinkDef;
 import org.knime.core.workflow.def.impl.ComponentDefBuilder;
 import org.knime.core.workflow.def.impl.ComponentMetadataDefBuilder;
+import org.knime.core.workflow.def.impl.FallibleComponentDef;
 import org.knime.core.workflow.def.impl.PortDefBuilder;
 import org.knime.core.workflow.def.impl.PortTypeDefBuilder;
 import org.knime.core.workflow.def.impl.TemplateLinkDefBuilder;
@@ -79,7 +79,7 @@ public final class ComponentLoader {
 
     private ComponentLoader() {}
 
-    static ComponentDef load(final ConfigBaseRO workflowConfig, final File nodeDirectory,
+    static FallibleComponentDef load(final ConfigBaseRO workflowConfig, final File nodeDirectory,
         final LoadVersion workflowFormatVersion) throws IOException {
         var componentConfig = LoaderUtils.readNodeConfigFromFile(nodeDirectory);
 

@@ -60,11 +60,10 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.base.ConfigBaseRO;
 import org.knime.core.node.util.NodeLoaderTestUtils;
 import org.knime.core.util.LoadVersion;
-import org.knime.core.workflow.def.impl.ConfigurableNodeDefBuilder.WithExceptionsDefaultConfigurableNodeDef;
-import org.knime.core.workflow.def.impl.DefaultFilestoreDef;
-import org.knime.core.workflow.def.impl.DefaultFlowContextDef;
-import org.knime.core.workflow.def.impl.NativeNodeDefBuilder.WithExceptionsDefaultNativeNodeDef;
-import org.knime.core.workflow.def.impl.NodeDefBuilder.WithExceptionsDefaultNodeDef;
+import org.knime.core.workflow.def.FilestoreDef;
+import org.knime.core.workflow.def.FlowContextDef;
+import org.knime.core.workflow.def.impl.FallibleBaseNodeDef;
+import org.knime.core.workflow.def.impl.FallibleConfigurableNodeDef;
 
 /**
  *
@@ -79,7 +78,6 @@ class NativeNodeLoaderTest {
         m_configBaseRO = mock(ConfigBaseRO.class);
     }
 
-
     @Test
     void testGenericLoopStart() throws InvalidSettingsException, IOException {
         // given
@@ -91,36 +89,37 @@ class NativeNodeLoaderTest {
         // when
 
         var nativeNodeDef = NativeNodeLoader.load(m_configBaseRO, file, LoadVersion.FUTURE);
-        var singleNodeDef = nativeNodeDef.getConfigurableNode();
-        var nodeDef = singleNodeDef.getBaseNode();
+        var singleNodeDef = (FallibleConfigurableNodeDef)nativeNodeDef.getConfigurableNode();
+        var nodeDef = (FallibleBaseNodeDef)singleNodeDef.getBaseNode();
 
         // then
 
         // Assert NativeNodeLoader
         assertThat(nativeNodeDef.getNodeName()).isEqualTo("Generic Loop Start");
-        assertThat(nativeNodeDef.getBundle()).extracting(bundle -> bundle.getName(),
-            bundle -> bundle.getSymbolicName(), bundle -> bundle.getVendor(), bundle -> bundle.getVersion())
-        .containsExactly("KNIME Base Nodes", "org.knime.base", "KNIME AG, Zurich, Switzerland", "4.6.0.v202201041551");
-        assertThat(nativeNodeDef.getFeature()).extracting(feature -> feature.getName(),
-            feature -> feature.getSymbolicName(), feature -> feature.getVendor(), feature -> feature.getVersion())
-        .containsExactly(null, null, null, "0.0.0");
+        assertThat(nativeNodeDef.getBundle()).extracting(bundle -> bundle.getName(), bundle -> bundle.getSymbolicName(),
+            bundle -> bundle.getVendor(), bundle -> bundle.getVersion()).containsExactly("KNIME Base Nodes",
+                "org.knime.base", "KNIME AG, Zurich, Switzerland", "4.6.0.v202201041551");
+        assertThat(nativeNodeDef.getFeature())
+            .extracting(feature -> feature.getName(), feature -> feature.getSymbolicName(),
+                feature -> feature.getVendor(), feature -> feature.getVersion())
+            .containsExactly(null, null, null, "0.0.0");
         //TODO assert the creation config value
         assertThat(nativeNodeDef.getNodeCreationConfig().getChildren()).containsKey("Pass through");
-        assertThat(nativeNodeDef.getFilestore()).isInstanceOf(DefaultFilestoreDef.class);
+        assertThat(nativeNodeDef.getFilestore()).isInstanceOf(FilestoreDef.class);
 
         // Assert SingleNodeLoader
         assertThat(singleNodeDef.getFlowStack()).hasSize(2) //
-        .hasAtLeastOneElementOfType(DefaultFlowContextDef.class);
+            .hasAtLeastOneElementOfType(FlowContextDef.class);
         //TODO assert the ConfigMap value
         assertThat(singleNodeDef.getInternalNodeSubSettings().getChildren()).containsKey("memory_policy");
-//        assertThat(nativeNodeDef.getModelSettings().getChildren());
+        //        assertThat(nativeNodeDef.getModelSettings().getChildren());
         assertThat(singleNodeDef.getVariableSettings()).isNotNull();
 
         // Assert NodeLoader
         assertThat(nodeDef.getId()).isEqualTo(1);
         assertThat(nodeDef.getAnnotation().getData()).isNull();
         assertThat(nodeDef.getCustomDescription()).isEqualTo("test");
-        assertThat(nodeDef.getJobManager().getFactory()).isEqualTo("");
+        assertThat(nodeDef.getJobManager().getFactory()).isEmpty();
         assertThat(nodeDef.getLocks()) //
             .extracting("m_hasDeleteLock", "m_hasResetLock", "m_hasConfigureLock") //
             .containsExactly(false, false, false);
@@ -128,9 +127,9 @@ class NativeNodeLoaderTest {
             n -> n.getBounds().getHeight(), n -> n.getBounds().getLocation(), n -> n.getBounds().getWidth())
             .containsNull();
 
-        assertThat(((WithExceptionsDefaultNativeNodeDef) nativeNodeDef).getLoadExceptions()).isEmpty();
-        assertThat(((WithExceptionsDefaultConfigurableNodeDef) singleNodeDef).getLoadExceptions()).isEmpty();
-        assertThat(((WithExceptionsDefaultNodeDef) nodeDef).getLoadExceptions()).isEmpty();
+        assertThat(nativeNodeDef.getLoadExceptions()).isEmpty();
+        assertThat(singleNodeDef.getLoadExceptions()).isEmpty();
+        assertThat(nodeDef.getLoadExceptions()).isEmpty();
     }
 
     @Test
@@ -144,13 +143,13 @@ class NativeNodeLoaderTest {
 
         // when
         var nativeNodeDef = NativeNodeLoader.load(m_configBaseRO, file, LoadVersion.FUTURE);
-        var singleNodeDef = nativeNodeDef.getConfigurableNode();
-        var nodeDef = singleNodeDef.getBaseNode();
+        var singleNodeDef = (FallibleConfigurableNodeDef)nativeNodeDef.getConfigurableNode();
+        var nodeDef = (FallibleBaseNodeDef)singleNodeDef.getBaseNode();
 
         // then
-        assertThat(((WithExceptionsDefaultNativeNodeDef) nativeNodeDef).getLoadExceptions()).isEmpty();
-        assertThat(((WithExceptionsDefaultConfigurableNodeDef) singleNodeDef).getLoadExceptions()).isEmpty();
-        assertThat(((WithExceptionsDefaultNodeDef) nodeDef).getLoadExceptions().size()).isOne();
+        assertThat(nativeNodeDef.getLoadExceptions()).isEmpty();
+        assertThat(singleNodeDef.getLoadExceptions()).isEmpty();
+        assertThat(nodeDef.getLoadExceptions().size()).isOne();
     }
 
 }
