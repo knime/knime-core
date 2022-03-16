@@ -2206,17 +2206,17 @@ public final class WorkflowManager extends NodeContainer
      */
     private boolean markForExecutionAllAffectedNodes(final int outPortIndex) {
         try (WorkflowLock lock = lock()) {
-            HashSet<Integer> p = new HashSet<Integer>();
-            if (outPortIndex >= 0) {
-                p.add(outPortIndex);
-            } else {
-                // if all ports are to be used, add them explicitly
-                for (int o = 0; o < this.getNrOutPorts(); o++) {
-                    p.add(o);
+            // the nodes in this workflow/metanode directly connected to the relevant output port(s)
+            LinkedHashMap<NodeID, Set<Integer>> nodesConnectedToOutput = new LinkedHashMap<>();
+            for (var cc : m_workflow.getConnectionsByDest(getID())) {
+                var destPort = cc.getDestPort();
+                if (outPortIndex == -1 || destPort == outPortIndex) {
+                    nodesConnectedToOutput.computeIfAbsent(cc.getSource(), id -> new LinkedHashSet<Integer>())
+                        .add(cc.getSourcePort());
                 }
             }
-            LinkedHashMap<NodeID, Set<Integer>> sortedNodes = m_workflow.createBackwardsBreadthFirstSortedList(p);
-            for (Map.Entry<NodeID, Set<Integer>> entry : sortedNodes.entrySet()) {
+
+            for (Map.Entry<NodeID, Set<Integer>> entry : nodesConnectedToOutput.entrySet()) {
                 final NodeID thisID = entry.getKey();
                 if (thisID.equals(getID())) {
                     continue; // skip WFM
@@ -2240,7 +2240,6 @@ public final class WorkflowManager extends NodeContainer
                             // TODO other states. Any reason to bomb?
                     }
                 } else {
-                    assert thisNode instanceof WorkflowManager;
                     Set<Integer> outPortIndicces = entry.getValue();
                     for (Integer i : outPortIndicces) {
                         if (!((WorkflowManager)thisNode).markForExecutionAllAffectedNodes(i)) {
@@ -2248,11 +2247,11 @@ public final class WorkflowManager extends NodeContainer
                         }
                     }
                 }
-            } // endfor all nodes in sorted list
+            }
             lock.queueCheckForNodeStateChangeNotification(true);
-            if (sortedNodes.containsKey(this.getID())) {
+            if (nodesConnectedToOutput.containsKey(this.getID())) {
                 // list contained WFM, go up one level
-                Set<Integer> is = sortedNodes.get(this.getID());
+                Set<Integer> is = nodesConnectedToOutput.get(this.getID());
                 for (Integer i : is) {
                     getParent().markAndQueuePredecessors(this.getID(), i);
                 }

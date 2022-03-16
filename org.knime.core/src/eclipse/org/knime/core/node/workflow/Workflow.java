@@ -67,7 +67,6 @@ import java.util.stream.Collectors;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.workflow.ConnectionContainer.ConnectionType;
 import org.knime.core.util.Pair;
 
 /** Container class wrapping wrapping the network of nodes forming
@@ -1056,116 +1055,6 @@ class Workflow {
                 } else {
                     // add the WFM itself if reached but don't continue the search:
                     nodes.add(prevNodeID);
-                }
-            }
-        }
-    }
-
-    /**
-     * Return map of node ids to set of port indices based on list of output
-     * ports. The map's iterator returns the elements sorted by traversing the
-     * graph backwards, breadth first, the set of port indices represents the
-     * input ports actually used within the graph covered. Include this WFM if
-     * any incoming ports are connected.
-     *
-     * @param outportIndices set of integers indicating the ports of interest
-     * @return BF sorted list of node ids
-     */
-    LinkedHashMap<NodeID, Set<Integer>> createBackwardsBreadthFirstSortedList(final Set<Integer> outportIndices) {
-        // this will be our result
-        LinkedHashMap<NodeID, Set<Integer>> sortedNodes = new LinkedHashMap<NodeID, Set<Integer>>();
-        // find everything that is connected to an output port of this workflow
-        // with an index contained in the set and complete the list,
-        // quick&dirty backwards depth first:
-        HashSet<NodeID> inclusionList = new HashSet<NodeID>();
-        for (ConnectionContainer cc : m_connectionsByDest.get(getID())) {
-            if (outportIndices.contains(cc.getDestPort())) {
-                NodeID prevID = cc.getSource();
-                inclusionList.add(prevID);
-                if (!prevID.equals(this.getID())) {
-                    completeSetBackwards(inclusionList, prevID, cc.getSourcePort());
-                    // also add this node as starting point for our ordered list
-                    if (sortedNodes.containsKey(prevID)) {
-                        // node already added: add port index to set
-                        Set<Integer> is = sortedNodes.get(prevID);
-                        is.add(cc.getSourcePort());
-                    } else {
-                        // node does not yet exist:
-                        Set<Integer> is = new HashSet<Integer>();
-                        is.add(cc.getSourcePort());
-                        sortedNodes.put(prevID, is);
-                    }
-                } else {
-                    assert cc.getType().equals(ConnectionType.WFMTHROUGH);
-                    Set<Integer> is = new HashSet<Integer>();
-                    is.add(cc.getSourcePort());
-                    sortedNodes.put(prevID, is);
-                }
-            }
-        }
-        // now take this set of unordered nodes as inclusion set for a proper
-        // backwards breadth first search:
-        expandListBackwardsBreadthFirst(sortedNodes, inclusionList);
-        // return the list...
-        return sortedNodes;
-    }
-
-    /** Expand a given list of nodes to include all predecessors which are
-     * connected to anyone of the nodes in a backwards breadth first manner.
-     * Also includes WFM itself but stops then. Do not include any other
-     * nodes which are not contained in the inclusion list.
-     *
-     * @param sortedNodes existing, already sorted list of (end) nodes
-     * @param inclusionList all nodes which are to be considered
-     */
-    private void expandListBackwardsBreadthFirst(
-            final LinkedHashMap<NodeID, Set<Integer>> sortedNodes,
-            final Set<NodeID> inclusionList) {
-        // keep adding nodes until we can't find new ones anymore
-        for (int i = 0; i < sortedNodes.size(); i++) {
-            // Not a very nice way to iterate over the keys of a map...
-            //   (but since we constantly add to it in this loop?!)
-            Object[] ani = sortedNodes.keySet().toArray();
-            NodeID currNode = (NodeID)(ani[i]);
-            // avoid to close loop and start with WFM again:
-            if (currNode.equals(this.getID())) {
-                continue;
-            }
-            // look at all predecessors of this node
-            for (ConnectionContainer cc : m_connectionsByDest.get(currNode)) {
-                NodeID prevNode = cc.getSource();
-                // don't check nodes which are already in the list...
-                if (!sortedNodes.containsKey(prevNode)) {
-                    // and make sure all successors which are part of the
-                    // inclusion list of this nodes are already
-                    // in the list
-                    boolean allContained = true;
-                    Set<Integer> outgoingPorts = new HashSet<Integer>();
-                    for (ConnectionContainer cc2
-                                   : m_connectionsBySource.get(prevNode)) {
-                        NodeID succ = cc2.getDest();
-                        if (!succ.equals(getID())) {
-                            // its not a WFMOUT connection...
-                            if (!sortedNodes.containsKey(succ)) {
-                                // ...and its not already in the list...
-                                if (inclusionList.contains(succ)) {
-                                    // ...but if it is in the inclusion list
-                                    // then do not (yet!) include it!
-                                    allContained = false;
-                                }
-                            } else {
-                                // not WFMOUT but dest is in our list: needs
-                                // to be remembered as "outgoing" port within
-                                // this BF search.
-                                outgoingPorts.add(cc2.getSourcePort());
-                            }
-                        }
-                    }
-                    if (allContained) {
-                        // if all successors are already in the BFS list (or
-                        // not to be considered): add it!
-                        sortedNodes.put(prevNode, outgoingPorts);
-                    }
                 }
             }
         }
