@@ -49,6 +49,7 @@ package org.knime.core.data.container.filter;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.IntStream;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
@@ -201,7 +202,10 @@ public final class TableFilter {
     public static TableFilter fromSelection(final Selection selection) {
         final Builder builder = new TableFilter.Builder();
         if (!selection.columns().allSelected()) {
-            builder.withMaterializeColumnIndices(selection.columns().getSelected());
+            builder.withMaterializeColumnIndices(IntStream.of(selection.columns().getSelected())//
+                .filter(i -> i > 0)// the row key column is always included and therefore not subject to TableFilter
+                .map(i -> i - 1)// adjust for the row key column
+                .toArray());
         }
         if (!selection.rows().allSelected()) {
             builder.withFromRowIndex(selection.rows().fromIndex()).withToRowIndex(selection.rows().toIndex() + 1);
