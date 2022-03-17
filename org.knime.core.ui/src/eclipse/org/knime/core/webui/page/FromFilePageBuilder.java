@@ -61,7 +61,7 @@ import java.util.function.Supplier;
 
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Platform;
-import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.NodeLogger;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 
@@ -74,6 +74,8 @@ import org.osgi.framework.FrameworkUtil;
  * @since 4.5
  */
 public final class FromFilePageBuilder extends PageBuilder {
+
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(FromFilePageBuilder.class);
 
     private final Class<?> m_clazz;
 
@@ -151,13 +153,13 @@ public final class FromFilePageBuilder extends PageBuilder {
 
     private static FileResource createResourceFromFile(final Path relativeFilePath, final Path file) {
         assert !relativeFilePath.isAbsolute();
-        CheckUtils.checkArgument(Files.isRegularFile(file), "The file '%s' doesn't exist (or is not a regular file)",
-            file);
+        if (!Files.isRegularFile(file)) {
+            LOGGER.codingWithFormat("The file '%s' doesn't exist (or is not a regular file)", file);
+        }
         return new FileResource(file, relativeFilePath);
     }
 
     private static void createResourcesFromDir(final Path root, final Path dir, final List<Resource> res) {
-        assert Files.isDirectory(dir);
         try (DirectoryStream<Path> dirStream = Files.newDirectoryStream(dir)) {
             dirStream.forEach(f -> {
                 if (Files.isDirectory(f)) {
@@ -167,7 +169,7 @@ public final class FromFilePageBuilder extends PageBuilder {
                 }
             });
         } catch (IOException ex) {
-            throw new IllegalStateException("Failed to resolve resources from directory " + dir, ex);
+            LOGGER.codingWithFormat("Failed to resolve resources from directory %s", dir, ex);
         }
     }
 
