@@ -92,6 +92,8 @@ public final class NodeAndBundleInformationPersistor extends NodeAndBundleInform
                     "org.knime.features.bigdata.spark.feature.group");
             map.put(Pattern.compile("^com\\.knime\\.features\\.bigdata(.+)"), "org.knime.features.bigdata$1");
             map.put(Pattern.compile("^com\\.knime\\.bigdata(.+)"), "org.knime.bigdata$1");
+            map.put(Pattern.compile("^org\\.knime\\.features\\.testing\\.core\\.feature\\.group"),
+                "org.knime.features.testing.application.feature.group");
             map.put(Pattern.compile("^com\\.knime\\.features\\.personalproductivity(.+)"),
                 "org.knime.features.personalproductivity$1");
             map.put(Pattern.compile("^com\\.knime\\.explorer\\.nodes"), "org.knime.explorer.nodes");
