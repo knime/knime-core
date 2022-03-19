@@ -2,10 +2,10 @@ package org.knime.core.node.workflow.loader;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.junit.Test;
@@ -41,13 +41,10 @@ public class FallibleBuilderTest {
     private static class MetanodeExample {
 
         // ok
-        static final BaseNodeDef BASE_NODE = new BaseNodeDefBuilder()//
-            .build();
+        static final BaseNodeDef BASE_NODE = new BaseNodeDefBuilder().setId(1).build();
 
         // ok
-        static final PortTypeDef SOME_TYPE = new PortTypeDefBuilder()//
-            .setName("some type name")//
-            .build();
+        static final PortTypeDef SOME_TYPE = new PortTypeDefBuilder().setName("some type name").build();
 
         // ok
         static final PortDef DEFAULT_PORT = new PortDefBuilder().build();
@@ -98,33 +95,49 @@ public class FallibleBuilderTest {
             .setBaseNode(BASE_NODE).build();
     }
 
-    public void testStuff() throws Exception {
-
-        var lesList = MetanodeExample.withInPortErrorsList;
-        var lesIndividual = MetanodeExample.withInPortErrorsIndividual;
+    private static void testStuff() throws Exception {
 
         FallibleMetaNodeDef def = MetaNodeLoader.load(null, null, null); //
 
-        // non-recursive
-        if (!def.getSupplierExceptions().isEmpty()) {
-            Map<MetaNodeDef.Attribute, List<LoadException>> problems = def.getSupplierExceptions();
+        if (def.hasExceptions()) {
+            List<LoadExceptionSupplier<?>> problems = def.getFlattenedLoadExceptions();
 
-            if (problems.get(MetaNodeDef.Attribute.IN_PORTS) != null) {
-                // logging
-                // load result add error
+            for (LoadExceptionSupplier<?> problem : problems) {
+                // non-recursive
+                if (problem.getLoadException().isPresent()) {
+                    // logging
+                    // load result add error
+                    System.out.println(problem.getLoadException().get().getAttribute());
+                } else {
+                    // recursively
+                    // handle recursively: problem.getLoadExceptions();
+                }
             }
-
         }
+    }
 
-        // recursive
-        if (!def.getChildrenWithLoadExceptions().isEmpty()) {
+    /**
+     * Test that building fails when passing null to a required field.
+     */
+    @Test
+    public void testRequiredField() {
+        // explicitly set null
+        final BaseNodeDefBuilder builder = new BaseNodeDefBuilder().setId(null);
+        assertThrows(IllegalArgumentException.class, () -> builder.build());
 
-            for (var child : def.getChildrenWithLoadExceptions().values()) {
+        // supplier yield null
+        final BaseNodeDefBuilder builder2 = new BaseNodeDefBuilder().setId(() -> null, 3);
+        assertThrows(IllegalArgumentException.class, () -> builder2.build());
 
-            }
+        // supplier default is null
+        final BaseNodeDefBuilder builder3 = new BaseNodeDefBuilder().setId(() -> {
+            throw new Exception();
+        }, null);
+        assertThrows(IllegalArgumentException.class, () -> builder3.build());
 
-        }
-
+        // never called
+        final BaseNodeDefBuilder builder4 = new BaseNodeDefBuilder();
+        assertThrows(IllegalArgumentException.class, () -> builder4.build());
     }
 
     /**
@@ -148,59 +161,77 @@ public class FallibleBuilderTest {
 
         for (FallibleMetaNodeDef metaNodeWithErrors : testCases) {
 
-            // since the fallible supplier () -> WITH_EXCEPTION_PORT doesn't throw an
-            // exception the object itself hasn't had loading exceptions
-            assertThat(metaNodeWithErrors.getSupplierExceptions()).isEmpty();
+            // the fallible supplier () -> WITH_EXCEPTION_PORT doesn't throw an
+            // exception but the builder notices that there's a LoadException attached to it and thus
+            // adds a load exception to the
+            assertThat(metaNodeWithErrors.hasExceptions()).isTrue();
+            assertThat(metaNodeWithErrors.getFaultyInPorts().size()).isEqualTo(2);
+            assertThat(metaNodeWithErrors.getSuppliers().get(MetaNodeDef.Attribute.IN_PORTS_ELEMENTS))
+                .hasSameElementsAs(metaNodeWithErrors.getFaultyInPorts());
 
-            var children = metaNodeWithErrors.getChildrenWithLoadExceptions();
-            assertThat(children).isNotEmpty();
+            // no outport exceptions
+            assertThat(metaNodeWithErrors.getFaultyOutPorts()).isEmpty();
+
+            // check the structure of the map with the exceptions
+            var loadExceptions = metaNodeWithErrors.getSuppliers();
+            assertThat(loadExceptions).isNotEmpty();
 
             // check that there's a list of exception suppliers listed under IN_PORTS:
-            assertThat(children).containsOnlyKeys(MetaNodeDef.Attribute.IN_PORTS);
+            assertThat(loadExceptions).containsOnlyKeys(MetaNodeDef.Attribute.IN_PORTS_ELEMENTS);
             // the list references two faulty defs: WITH_EXCEPTION_PORT and WITH_EXCEPTION_PORT2
-            assertThat(children.get(MetaNodeDef.Attribute.IN_PORTS)).size().isEqualTo(2);
+            assertThat(loadExceptions.get(MetaNodeDef.Attribute.IN_PORTS_ELEMENTS)).size().isEqualTo(2);
 
             // convenience getter
-            assertThat(metaNodeWithErrors.getInPortsWithException())//
-                .isEqualTo(children.get(MetaNodeDef.Attribute.IN_PORTS));
+            assertThat(metaNodeWithErrors.getFaultyInPorts())//
+                .isEqualTo(loadExceptions.get(MetaNodeDef.Attribute.IN_PORTS_ELEMENTS));
 
-            List<FalliblePortDef> inportExceptions = metaNodeWithErrors.getInPortsWithException();
+            List<FalliblePortDef> faultyInPorts = metaNodeWithErrors.getFaultyInPorts();
 
             {
                 // the first has one exception on name
-                FalliblePortDef withExceptionPort = inportExceptions.get(0);
+                FalliblePortDef withExceptionPort = faultyInPorts.get(0);
 
                 // only one key in the map, that's name
                 assertEquals(Set.of(PortDef.Attribute.NAME),
-                    Set.copyOf(withExceptionPort.getSupplierExceptions().keySet()));
+                    Set.copyOf(withExceptionPort.getSuppliers().keySet()));
 
                 // only one exception associated to it...
-                assertThat(withExceptionPort.getSupplierExceptions().get(PortDef.Attribute.NAME).size()).isOne();
+                assertThat(withExceptionPort.getSuppliers().get(PortDef.Attribute.NAME).size()).isOne();
                 // and the convenience getter
                 assertThat(withExceptionPort.getNameException()).isPresent();
 
                 // looks like this
                 // exceptions have no semantic equals built-in.
-                exceptionEquals(new LoadException(new IllegalStateException("Cannot load name for port 1")),
+                exceptionEquals(
+                    new LoadException(PortDef.Attribute.NAME, new IllegalStateException("Cannot load name for port 1")),
                     withExceptionPort.getNameException().get());
             }
 
             {
                 // the second has an exception on index and port type
-                LoadExceptionSupplier<PortDef.Attribute> withExceptionPort = //
-                    inportExceptions.get(1);
+                FalliblePortDef withExceptionPort = faultyInPorts.get(1);
 
-                assertEquals(Set.of(PortDef.Attribute.INDEX, PortDef.Attribute.PORT_TYPE),
-                    Set.copyOf(withExceptionPort.getSupplierExceptions().keySet()));
+                assertThat(withExceptionPort.getSuppliers())//
+                    .containsOnlyKeys(PortDef.Attribute.INDEX, PortDef.Attribute.PORT_TYPE);
 
                 // one exception associated to index
-                assertThat(withExceptionPort.getSupplierExceptions().get(PortDef.Attribute.INDEX).size()).isOne();
-                exceptionEquals(new LoadException(new InvalidSettingsException("Still cannot load index for port 2")),
-                    withExceptionPort.getSupplierExceptions().get(PortDef.Attribute.INDEX).get(0));
+                assertThat(withExceptionPort.getSuppliers().get(PortDef.Attribute.INDEX).size()).isOne();
+                assertThat(withExceptionPort.getIndexException()).isPresent();
 
-                assertThat(withExceptionPort.getSupplierExceptions().get(PortDef.Attribute.PORT_TYPE).size()).isOne();
-                exceptionEquals(new LoadException(new IOException("Cannot load type for port 2")),
-                    withExceptionPort.getSupplierExceptions().get(PortDef.Attribute.PORT_TYPE).get(0));
+                exceptionEquals(
+                    new LoadException(PortDef.Attribute.INDEX,
+                        new InvalidSettingsException("Still cannot load index for port 2")),
+                    withExceptionPort.getIndexException().get());
+
+                // one exception associated to port type
+                assertThat(withExceptionPort.getSuppliers().get(PortDef.Attribute.PORT_TYPE).size()).isOne();
+                assertThat(withExceptionPort.getFaultyPortType()).isPresent();
+
+                var falliblePortTypeDef = withExceptionPort.getFaultyPortType().get();
+                var actual = falliblePortTypeDef.getLoadException().get();
+                exceptionEquals(
+                    new LoadException(PortDef.Attribute.PORT_TYPE, new IOException("Cannot load type for port 2")),
+                    actual);
             }
         }
     }
