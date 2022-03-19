@@ -60,10 +60,14 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.base.ConfigBaseRO;
 import org.knime.core.node.util.NodeLoaderTestUtils;
 import org.knime.core.util.LoadVersion;
+import org.knime.core.workflow.def.BaseNodeDef;
 import org.knime.core.workflow.def.FilestoreDef;
 import org.knime.core.workflow.def.FlowContextDef;
+import org.knime.core.workflow.def.NodeUIInfoDef;
 import org.knime.core.workflow.def.impl.FallibleBaseNodeDef;
 import org.knime.core.workflow.def.impl.FallibleConfigurableNodeDef;
+import org.knime.core.workflow.def.impl.FallibleNodeUIInfoDef;
+import org.knime.core.workflow.loader.LoadException;
 
 /**
  *
@@ -89,8 +93,8 @@ class NativeNodeLoaderTest {
         // when
 
         var nativeNodeDef = NativeNodeLoader.load(m_configBaseRO, file, LoadVersion.FUTURE);
-        var singleNodeDef = (FallibleConfigurableNodeDef)nativeNodeDef.getConfigurableNode();
-        var nodeDef = (FallibleBaseNodeDef)singleNodeDef.getBaseNode();
+        var confNodeDef = (FallibleConfigurableNodeDef)nativeNodeDef.getConfigurableNode();
+        var nodeDef = (FallibleBaseNodeDef)confNodeDef.getBaseNode();
 
         // then
 
@@ -107,13 +111,13 @@ class NativeNodeLoaderTest {
         assertThat(nativeNodeDef.getNodeCreationConfig().getChildren()).containsKey("Pass through");
         assertThat(nativeNodeDef.getFilestore()).isInstanceOf(FilestoreDef.class);
 
-        // Assert SingleNodeLoader
-        assertThat(singleNodeDef.getFlowStack()).hasSize(2) //
+        // Assert ConfigurableNodeLoader
+        assertThat(confNodeDef.getFlowStack()).hasSize(2) //
             .hasAtLeastOneElementOfType(FlowContextDef.class);
         //TODO assert the ConfigMap value
-        assertThat(singleNodeDef.getInternalNodeSubSettings().getChildren()).containsKey("memory_policy");
+        assertThat(confNodeDef.getInternalNodeSubSettings().getChildren()).containsKey("memory_policy");
         //        assertThat(nativeNodeDef.getModelSettings().getChildren());
-        assertThat(singleNodeDef.getVariableSettings()).isNotNull();
+        assertThat(confNodeDef.getVariableSettings()).isNotNull();
 
         // Assert NodeLoader
         assertThat(nodeDef.getId()).isEqualTo(1);
@@ -127,9 +131,9 @@ class NativeNodeLoaderTest {
             n -> n.getBounds().getHeight(), n -> n.getBounds().getLocation(), n -> n.getBounds().getWidth())
             .containsNull();
 
-        assertThat(nativeNodeDef.getLoadExceptions()).isEmpty();
-        assertThat(singleNodeDef.getLoadExceptions()).isEmpty();
-        assertThat(nodeDef.getLoadExceptions()).isEmpty();
+        assertThat(nativeNodeDef.getSupplierExceptions()).isEmpty();
+        assertThat(confNodeDef.getSupplierExceptions()).isEmpty();
+        assertThat(nodeDef.getSupplierExceptions()).isEmpty();
     }
 
     @Test
@@ -143,13 +147,24 @@ class NativeNodeLoaderTest {
 
         // when
         var nativeNodeDef = NativeNodeLoader.load(m_configBaseRO, file, LoadVersion.FUTURE);
-        var singleNodeDef = (FallibleConfigurableNodeDef)nativeNodeDef.getConfigurableNode();
-        var nodeDef = (FallibleBaseNodeDef)singleNodeDef.getBaseNode();
+        var confNodeDef = (FallibleConfigurableNodeDef)nativeNodeDef.getConfigurableNode();
+        var nodeDef = (FallibleBaseNodeDef)confNodeDef.getBaseNode();
 
         // then
-        assertThat(nativeNodeDef.getLoadExceptions()).isEmpty();
-        assertThat(singleNodeDef.getLoadExceptions()).isEmpty();
-        assertThat(nodeDef.getLoadExceptions().size()).isOne();
+        assertThat(nativeNodeDef.getSupplierExceptions()).isEmpty();
+        assertThat(confNodeDef.getSupplierExceptions()).isEmpty();
+        assertThat(nodeDef.getSupplierExceptions()).isEmpty();
+        assertThat(nodeDef.getChildrenWithLoadExceptions()).containsOnlyKeys(BaseNodeDef.Attribute.UI_INFO);
+        assertThat(nodeDef.getChildrenWithLoadExceptions().get(BaseNodeDef.Attribute.UI_INFO)).singleElement()// list with one LoadExceptionSupplier
+            .isExactlyInstanceOf(FallibleNodeUIInfoDef.class);
+
+        FallibleNodeUIInfoDef uiInfo =
+            (FallibleNodeUIInfoDef)nodeDef.getChildrenWithLoadExceptions().get(BaseNodeDef.Attribute.UI_INFO).get(0);
+        assertThat(uiInfo.getSupplierExceptions().get(NodeUIInfoDef.Attribute.SYMBOL_RELATIVE))//
+            .singleElement()//
+            .isExactlyInstanceOf(LoadException.class)//
+            .extracting(LoadException::getCause)//
+            .isExactlyInstanceOf(InvalidSettingsException.class);
     }
 
 }

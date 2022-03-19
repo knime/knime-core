@@ -128,9 +128,9 @@ class ComponentLoaderTest {
             n -> n.getBounds().getHeight(), n -> n.getBounds().getLocation(), n -> n.getBounds().getWidth())
             .containsNull();
 
-        assertThat(componentDef.getLoadExceptions().size()).isOne();
-        assertThat(singleNodeDef.getLoadExceptions()).isEmpty();
-        assertThat(nodeDef.getLoadExceptions()).isEmpty();
+        assertThat(componentDef.getSupplierExceptions().size()).isOne();
+        assertThat(singleNodeDef.getSupplierExceptions()).isEmpty();
+        assertThat(nodeDef.getSupplierExceptions()).isEmpty();
     }
 
     @Test
@@ -184,7 +184,7 @@ class ComponentLoaderTest {
             n -> n.getBounds().getLocation().getY(), n -> n.getBounds().getHeight(), n -> n.getBounds().getWidth())
             .containsExactly(2541, 1117, 122, 65);
 
-        assertThat(componentDef.getLoadExceptions()).isEmpty();
+        assertThat(componentDef.getSupplierExceptions()).isEmpty();
     }
 
 }

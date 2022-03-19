@@ -117,8 +117,8 @@ class MetaNodeLoaderTest {
             n -> n.getBounds().getHeight(), n -> n.getBounds().getLocation(), n -> n.getBounds().getWidth())
             .containsNull();
 
-        assertThat(metanodeDef.getLoadExceptions()).isEmpty();
-        assertThat(nodeDef.getLoadExceptions()).isEmpty();
+        assertThat(metanodeDef.getSupplierExceptions()).isEmpty();
+        assertThat(nodeDef.getSupplierExceptions()).isEmpty();
     }
 
     @Test
@@ -166,10 +166,10 @@ class MetaNodeLoaderTest {
             .containsExactly(2541, 1117, 122, 65);
         try {
             //TODO Cant cast to WithExceptionsDefaultNodeDef
-            var exceptions = nodeDef.getLoadExceptions();
+            var exceptions = nodeDef.getSupplierExceptions();
         } catch (Exception e) {
             e.printStackTrace();
         }
-        assertThat(metanodeDef.getLoadExceptions()).isEmpty();
+        assertThat(metanodeDef.getSupplierExceptions()).isEmpty();
     }
 }

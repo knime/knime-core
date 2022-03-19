@@ -239,7 +239,7 @@ public class NativeNodeLoader {
      */
     private static VendorDef loadFeature(final ConfigBaseRO settings) throws InvalidSettingsException {
         return new VendorDefBuilder() //
-            .setName(settings.getString(NODE_FEATURE_NAME_KEY, "")) //
+            .setName(() -> settings.getString(NODE_FEATURE_NAME_KEY), "") //
             .setSymbolicName(fixExtensionName(settings.getString(NODE_FEATURE_SYMBOLIC_NAME_KEY))) //
             .setVendor(settings.getString(NODE_FEATURE_VENDOR_KEY, "")) //
             .setVersion(settings.getString(NODE_FEATURE_VERSION_KEY, "")) //
