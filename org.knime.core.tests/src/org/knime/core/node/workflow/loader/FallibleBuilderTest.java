@@ -12,12 +12,16 @@ import org.junit.Test;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.workflow.def.BaseNodeDef;
 import org.knime.core.workflow.def.MetaNodeDef;
+import org.knime.core.workflow.def.NodeAnnotationDef;
 import org.knime.core.workflow.def.PortDef;
 import org.knime.core.workflow.def.PortTypeDef;
 import org.knime.core.workflow.def.impl.BaseNodeDefBuilder;
+import org.knime.core.workflow.def.impl.FallibleBaseNodeDef;
 import org.knime.core.workflow.def.impl.FallibleMetaNodeDef;
+import org.knime.core.workflow.def.impl.FallibleNodeAnnotationDef;
 import org.knime.core.workflow.def.impl.FalliblePortDef;
 import org.knime.core.workflow.def.impl.MetaNodeDefBuilder;
+import org.knime.core.workflow.def.impl.NodeAnnotationDefBuilder;
 import org.knime.core.workflow.def.impl.PortDefBuilder;
 import org.knime.core.workflow.def.impl.PortTypeDefBuilder;
 import org.knime.core.workflow.loader.LoadException;
@@ -95,27 +99,6 @@ public class FallibleBuilderTest {
             .setBaseNode(BASE_NODE).build();
     }
 
-    private static void testStuff() throws Exception {
-
-        FallibleMetaNodeDef def = MetaNodeLoader.load(null, null, null); //
-
-        if (def.hasExceptions()) {
-            List<LoadExceptionSupplier<?>> problems = def.getFlattenedLoadExceptions();
-
-            for (LoadExceptionSupplier<?> problem : problems) {
-                // non-recursive
-                if (problem.getLoadException().isPresent()) {
-                    // logging
-                    // load result add error
-                    System.out.println(problem.getLoadException().get().getAttribute());
-                } else {
-                    // recursively
-                    // handle recursively: problem.getLoadExceptions();
-                }
-            }
-        }
-    }
-
     /**
      * Test that building fails when passing null to a required field.
      */
@@ -138,6 +121,109 @@ public class FallibleBuilderTest {
         // never called
         final BaseNodeDefBuilder builder4 = new BaseNodeDefBuilder();
         assertThrows(IllegalArgumentException.class, () -> builder4.build());
+    }
+
+    /**
+     * Test that the convenience getters of Fallible*Def return the same thing as via access through
+     * {@link LoadExceptionSupplier#getSuppliers()}.
+     */
+    @Test
+    public void testConvenienceGetters() {
+        // single def with null default
+        {
+            FallibleBaseNodeDef faultyBaseNode = new BaseNodeDefBuilder().setId(0).setAnnotation(() -> {
+                throw new Exception();
+            }, null).build();
+
+            // default is used
+            assertThat(faultyBaseNode.getAnnotation()).isNull();
+            // but a load exception is stored
+            assertThat(faultyBaseNode.getAnnotationException()).containsInstanceOf(LoadException.class);
+            // however, null can't be wrapped into a fallible def
+            assertThat(faultyBaseNode.getFaultyAnnotation()).isEmpty();
+        }
+        // single def with clean non-null default
+        {
+            FallibleNodeAnnotationDef defaultAnnotation = new NodeAnnotationDefBuilder().build();
+            FallibleBaseNodeDef faultyBaseNode = new BaseNodeDefBuilder().setId(0).setAnnotation(() -> {
+                throw new IOException();
+            }, defaultAnnotation).build();
+
+            // default is used
+            assertThat(faultyBaseNode.getAnnotation()).isEqualTo(defaultAnnotation);
+            // but a load exception is stored
+            assertThat(faultyBaseNode.getAnnotationException()).containsInstanceOf(LoadException.class);
+            // which can also be accessed via convenience wrapper
+            assertThat(faultyBaseNode.getFaultyAnnotation()).isPresent();
+
+            // and the convenience wrapped object behaves as expected
+            FallibleNodeAnnotationDef faultyAnnotation = faultyBaseNode.getFaultyAnnotation().get();
+            // contains the same content
+            assertThat(faultyAnnotation).isEqualTo(defaultAnnotation);
+            // but also the load exception
+            assertThat(faultyAnnotation.hasExceptions()).isTrue();
+            assertThat(faultyAnnotation.getSuppliers()).isEmpty(); // only exception present, no children
+            // and the load exception wraps the IOException from above
+            assertThat(faultyAnnotation.getLoadException()).containsInstanceOf(LoadException.class);
+            assertThat(faultyAnnotation.getLoadException().get().getCause()).isInstanceOf(IOException.class);
+        }
+        // single def with default that has load exceptions
+        {
+            FallibleNodeAnnotationDef faultyDefaultAnnotation = new NodeAnnotationDefBuilder()//
+                .setData(() -> {
+                    throw new RuntimeException();
+                }, null).build();
+            FallibleBaseNodeDef faultyBaseNode = new BaseNodeDefBuilder().setId(0).setAnnotation(() -> {
+                throw new IOException();
+            }, faultyDefaultAnnotation).build();
+
+            // default is used
+            assertThat(faultyBaseNode.getAnnotation()).isEqualTo(faultyDefaultAnnotation);
+            // but a load exception is stored
+            assertThat(faultyBaseNode.getAnnotationException()).containsInstanceOf(LoadException.class);
+            // which can also be accessed via convenience wrapper
+            assertThat(faultyBaseNode.getFaultyAnnotation()).isPresent();
+
+            // and the convenience wrapped object behaves as expected
+            FallibleNodeAnnotationDef faultyAnnotation = faultyBaseNode.getFaultyAnnotation().get();
+            // contains the same content
+            assertThat(faultyAnnotation).isEqualTo(faultyDefaultAnnotation);
+            // but has exceptions
+            assertThat(faultyAnnotation.hasExceptions()).isTrue();
+
+            // the load exception that caused the usage of the default
+            assertThat(faultyAnnotation.getLoadException()).containsInstanceOf(LoadException.class);
+            assertThat(faultyAnnotation.getLoadException().get().getCause()).isInstanceOf(IOException.class);
+            // and the previously present exceptions
+            assertThat(faultyAnnotation.getSuppliers()).containsOnlyKeys(NodeAnnotationDef.Attribute.DATA);
+            assertThat(faultyAnnotation.getDataException().get().getCause()).isInstanceOf(RuntimeException.class);
+        }
+        // single non-def
+        {
+            FallibleBaseNodeDef faultyBaseNode = new BaseNodeDefBuilder().setId(() -> {
+                throw new Exception();
+            }, 13).build();
+
+            // default is used
+            assertThat(faultyBaseNode.getId()).isEqualTo(13);
+            // but a load exception is stored
+            assertThat(faultyBaseNode.getIdException()).containsInstanceOf(LoadException.class);
+
+            // check propagation to containing def
+            FallibleMetaNodeDef metanode = new MetaNodeDefBuilder().setBaseNode(faultyBaseNode).build();
+            // via map
+            assertThat(metanode.getSuppliers().get(MetaNodeDef.Attribute.BASE_NODE).size()).isOne();
+            // same as LoadExceptionSupplier convenience
+            assertThat(metanode.hasExceptions(MetaNodeDef.Attribute.BASE_NODE)).isTrue();
+            // same as convenience getter
+            assertThat(metanode.getFaultyBaseNode()).isPresent();
+
+            // check access
+            // via map
+            var faultyList = metanode.getSuppliers().get(MetaNodeDef.Attribute.BASE_NODE);
+            // yields the same as convenience getter
+            assertThat(faultyList).containsOnly(metanode.getFaultyBaseNode().get());
+        }
     }
 
     /**
@@ -192,8 +278,7 @@ public class FallibleBuilderTest {
                 FalliblePortDef withExceptionPort = faultyInPorts.get(0);
 
                 // only one key in the map, that's name
-                assertEquals(Set.of(PortDef.Attribute.NAME),
-                    Set.copyOf(withExceptionPort.getSuppliers().keySet()));
+                assertEquals(Set.of(PortDef.Attribute.NAME), Set.copyOf(withExceptionPort.getSuppliers().keySet()));
 
                 // only one exception associated to it...
                 assertThat(withExceptionPort.getSuppliers().get(PortDef.Attribute.NAME).size()).isOne();
