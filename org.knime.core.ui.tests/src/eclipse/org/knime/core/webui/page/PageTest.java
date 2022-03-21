@@ -49,13 +49,18 @@
 package org.knime.core.webui.page;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThrows;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
+import org.apache.log4j.AppenderSkeleton;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+import org.apache.log4j.spi.LoggingEvent;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.knime.core.webui.page.Resource.ContentType;
@@ -100,13 +105,36 @@ public class PageTest {
     }
 
     /**
-     * Test if a page is created for file that doesn't exist.
+     * Test if a page is created for a file that doesn't exist.
      */
     @Test
     public void testNonExistingFile() {
-        String message = assertThrows(IllegalArgumentException.class,
-            () -> Page.builder("org.knime.core.ui.tests", "files", "non-existing-file.html").build()).getMessage();
-        assertThat(message, containsString("doesn't exist"));
+        AtomicReference<LoggingEvent> lastLogEvent = new AtomicReference<>();
+        AppenderSkeleton logAppender = new AppenderSkeleton() {
+
+            @Override
+            public boolean requiresLayout() {
+                return false;
+            }
+
+            @Override
+            public void close() {
+                //
+            }
+
+            @Override
+            protected void append(final LoggingEvent event) {
+                lastLogEvent.set(event);
+            }
+        };
+        Logger.getRootLogger().addAppender(logAppender);
+        try {
+            Page.builder("org.knime.core.ui.tests", "files", "non-existing-file.html").build();
+        } finally {
+            Logger.getRootLogger().removeAppender(logAppender);
+        }
+        assertThat(lastLogEvent.get().getLevel(), is(Level.ERROR));
+        assertThat(lastLogEvent.get().getMessage().toString(), endsWith("doesn't exist (or is not a regular file)"));
     }
 
     /**
