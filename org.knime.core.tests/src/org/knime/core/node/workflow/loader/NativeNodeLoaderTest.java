@@ -67,7 +67,7 @@ import org.knime.core.workflow.def.NodeUIInfoDef;
 import org.knime.core.workflow.def.impl.FallibleBaseNodeDef;
 import org.knime.core.workflow.def.impl.FallibleConfigurableNodeDef;
 import org.knime.core.workflow.def.impl.FallibleNodeUIInfoDef;
-import org.knime.core.workflow.loader.LoadException;
+import org.knime.core.workflow.loader.LoadExceptionSupplier;
 
 /**
  *
@@ -131,9 +131,9 @@ class NativeNodeLoaderTest {
             n -> n.getBounds().getHeight(), n -> n.getBounds().getLocation(), n -> n.getBounds().getWidth())
             .containsNull();
 
-        assertThat(nativeNodeDef.getSupplierExceptions()).isEmpty();
-        assertThat(confNodeDef.getSupplierExceptions()).isEmpty();
-        assertThat(nodeDef.getSupplierExceptions()).isEmpty();
+        assertThat(nativeNodeDef.hasExceptions()).isFalse();
+        assertThat(confNodeDef.hasExceptions()).isFalse();
+        assertThat(nodeDef.hasExceptions()).isFalse();
     }
 
     @Test
@@ -151,19 +151,18 @@ class NativeNodeLoaderTest {
         var nodeDef = (FallibleBaseNodeDef)confNodeDef.getBaseNode();
 
         // then
-        assertThat(nativeNodeDef.getSupplierExceptions()).isEmpty();
-        assertThat(confNodeDef.getSupplierExceptions()).isEmpty();
-        assertThat(nodeDef.getSupplierExceptions()).isEmpty();
-        assertThat(nodeDef.getChildrenWithLoadExceptions()).containsOnlyKeys(BaseNodeDef.Attribute.UI_INFO);
-        assertThat(nodeDef.getChildrenWithLoadExceptions().get(BaseNodeDef.Attribute.UI_INFO)).singleElement()// list with one LoadExceptionSupplier
+        assertThat(nativeNodeDef.hasExceptions()).isFalse();
+        assertThat(confNodeDef.hasExceptions()).isFalse();
+        assertThat(nodeDef.hasExceptions()).isFalse();
+        assertThat(nodeDef.getSuppliers()).containsOnlyKeys(BaseNodeDef.Attribute.UI_INFO);
+        assertThat(nodeDef.getSuppliers().get(BaseNodeDef.Attribute.UI_INFO)).singleElement()// list with one LoadExceptionSupplier
             .isExactlyInstanceOf(FallibleNodeUIInfoDef.class);
 
-        FallibleNodeUIInfoDef uiInfo =
-            (FallibleNodeUIInfoDef)nodeDef.getChildrenWithLoadExceptions().get(BaseNodeDef.Attribute.UI_INFO).get(0);
-        assertThat(uiInfo.getSupplierExceptions().get(NodeUIInfoDef.Attribute.SYMBOL_RELATIVE))//
+        FallibleNodeUIInfoDef uiInfo = nodeDef.getFaultyUiInfo().get();
+        assertThat(uiInfo.getSuppliers().get(NodeUIInfoDef.Attribute.SYMBOL_RELATIVE))//
             .singleElement()//
-            .isExactlyInstanceOf(LoadException.class)//
-            .extracting(LoadException::getCause)//
+            .isExactlyInstanceOf(LoadExceptionSupplier.class)//
+            .extracting(les -> les.getLoadException().get())//
             .isExactlyInstanceOf(InvalidSettingsException.class);
     }
 

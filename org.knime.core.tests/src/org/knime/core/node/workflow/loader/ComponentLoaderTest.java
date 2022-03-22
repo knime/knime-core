@@ -50,15 +50,12 @@ package org.knime.core.node.workflow.loader;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.config.base.ConfigBaseRO;
+import org.knime.core.node.config.base.ConfigBase;
 import org.knime.core.node.util.NodeLoaderTestUtils;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.workflow.def.ConfigMapDef;
@@ -74,21 +71,15 @@ import org.knime.core.workflow.def.impl.FallibleConfigurableNodeDef;
  */
 class ComponentLoaderTest {
 
-    private ConfigBaseRO m_configBaseRO;
-
-    @BeforeEach
-    void setUp() {
-        m_configBaseRO = mock(ConfigBaseRO.class);
-    }
-
     @Test
     void simpleComponentLoaderTest() throws InvalidSettingsException, IOException {
         // given
         var file = NodeLoaderTestUtils.readResourceFolder("Simple_Component");
 
-        when(m_configBaseRO.getInt("id")).thenReturn(1);
-        when(m_configBaseRO.containsKey("customDescription")).thenReturn(true);
-        when(m_configBaseRO.getString("node_type")).thenReturn("SubNode");
+        ConfigBase m_configBaseRO = new SimpleConfig("mock");
+        m_configBaseRO.addInt("id", 1);
+        m_configBaseRO.addString("node_type", "SubNode");
+        m_configBaseRO.addString("customDescription", "");
 
         // when
         var componentDef = ComponentLoader.load(m_configBaseRO, file, LoadVersion.FUTURE);
@@ -106,8 +97,6 @@ class ComponentLoaderTest {
         assertThat(componentDef.getVirtualInNodeId()).isEqualTo(3);
         assertThat(componentDef.getVirtualOutNodeId()).isEqualTo(4);
         assertThat(componentDef.getLink()).isNotNull();
-        //TODO Shall we pass it to the workflow test or something similar?
-        var workflow = componentDef.getWorkflow();
 
         // Assert SingleNodeLoader
         assertThat(singleNodeDef.getFlowStack()).isEmpty(); //
@@ -128,9 +117,9 @@ class ComponentLoaderTest {
             n -> n.getBounds().getHeight(), n -> n.getBounds().getLocation(), n -> n.getBounds().getWidth())
             .containsNull();
 
-        assertThat(componentDef.getSupplierExceptions().size()).isOne();
-        assertThat(singleNodeDef.getSupplierExceptions()).isEmpty();
-        assertThat(nodeDef.getSupplierExceptions()).isEmpty();
+        assertThat(componentDef.getSuppliers().size()).isOne();
+        assertThat(singleNodeDef.hasExceptions()).isFalse();
+        assertThat(nodeDef.hasExceptions()).isFalse();
     }
 
     @Test
@@ -138,14 +127,12 @@ class ComponentLoaderTest {
         // given
         var file = NodeLoaderTestUtils.readResourceFolder("MultiPort_Component");
 
-        when(m_configBaseRO.getInt("id")).thenReturn(431);
-        when(m_configBaseRO.containsKey("customDescription")).thenReturn(false);
-        when(m_configBaseRO.containsKey("annotations")).thenReturn(false);
-        when(m_configBaseRO.getIntArray("extrainfo.node.bounds")) //
-            .thenReturn(new int[]{2541, 1117, 122, 65});
+        ConfigBase workflowConfig = new SimpleConfig("mock");
+        workflowConfig.addInt("id", 431);
+        workflowConfig.addIntArray("extrainfo.node.bounds", new int[]{2541, 1117, 122, 65});
 
         // when
-        var componentDef = ComponentLoader.load(m_configBaseRO, file, LoadVersion.FUTURE);
+        var componentDef = ComponentLoader.load(workflowConfig, file, LoadVersion.FUTURE);
         var singleNodeDef = componentDef.getConfigurableNode();
         var nodeDef = singleNodeDef.getBaseNode();
 
@@ -184,7 +171,7 @@ class ComponentLoaderTest {
             n -> n.getBounds().getLocation().getY(), n -> n.getBounds().getHeight(), n -> n.getBounds().getWidth())
             .containsExactly(2541, 1117, 122, 65);
 
-        assertThat(componentDef.getSupplierExceptions()).isEmpty();
+        assertThat(componentDef.hasExceptions()).isFalse();
     }
 
 }
