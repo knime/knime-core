@@ -69,6 +69,8 @@ import org.knime.core.workflow.def.impl.FallibleConfigurableNodeDef;
 import org.knime.core.workflow.def.impl.FallibleNodeUIInfoDef;
 import org.knime.core.workflow.loader.LoadExceptionSupplier;
 
+
+
 /**
  *
  * @author Dionysios Stolis, KNIME GmbH, Berlin, Germany
@@ -89,6 +91,9 @@ class NativeNodeLoaderTest {
 
         when(m_configBaseRO.getInt("id")).thenReturn(1);
         when(m_configBaseRO.containsKey("customDescription")).thenReturn(true);
+        when(m_configBaseRO.containsKey("extrainfo.node.bounds")).thenReturn(true);
+        when(m_configBaseRO.getIntArray("extrainfo.node.bounds")) //
+            .thenReturn(new int[]{2541, 1117, 122, 65});
 
         // when
 
@@ -102,7 +107,7 @@ class NativeNodeLoaderTest {
         assertThat(nativeNodeDef.getNodeName()).isEqualTo("Generic Loop Start");
         assertThat(nativeNodeDef.getBundle()).extracting(bundle -> bundle.getName(), bundle -> bundle.getSymbolicName(),
             bundle -> bundle.getVendor(), bundle -> bundle.getVersion()).containsExactly("KNIME Base Nodes",
-                "org.knime.base", "KNIME AG, Zurich, Switzerland", "4.6.0.v202201041551");
+                "org.knime.base", "KNIME AG, Zurich, Switzerland", "4.6.0.v202202251606");
         assertThat(nativeNodeDef.getFeature())
             .extracting(feature -> feature.getName(), feature -> feature.getSymbolicName(),
                 feature -> feature.getVendor(), feature -> feature.getVersion())
@@ -121,7 +126,7 @@ class NativeNodeLoaderTest {
 
         // Assert NodeLoader
         assertThat(nodeDef.getId()).isEqualTo(1);
-        assertThat(nodeDef.getAnnotation().getData()).isNull();
+        assertThat(nodeDef.getAnnotation().getData()).extracting(a -> a.getText().startsWith("Test Node"), a -> a.getBgcolor()).contains(true, 16777215);
         assertThat(nodeDef.getCustomDescription()).isEqualTo("test");
         assertThat(nodeDef.getJobManager().getFactory()).isEmpty();
         assertThat(nodeDef.getLocks()) //
@@ -129,7 +134,7 @@ class NativeNodeLoaderTest {
             .containsExactly(false, false, false);
         assertThat(nodeDef.getUiInfo()).extracting(n -> n.hasAbsoluteCoordinates(), n -> n.isSymbolRelative(),
             n -> n.getBounds().getHeight(), n -> n.getBounds().getLocation(), n -> n.getBounds().getWidth())
-            .containsNull();
+            .contains(false, true);
 
         assertThat(nativeNodeDef.hasExceptions()).isFalse();
         assertThat(confNodeDef.hasExceptions()).isFalse();
@@ -143,7 +148,8 @@ class NativeNodeLoaderTest {
 
         when(m_configBaseRO.getInt("id")).thenReturn(1);
         when(m_configBaseRO.containsKey("customDescription")).thenReturn(true);
-        when(m_configBaseRO.getBoolean("absolute_coordinates")).thenThrow(InvalidSettingsException.class);
+        when(m_configBaseRO.containsKey("extrainfo.node.bounds")).thenReturn(true);
+        when(m_configBaseRO.getIntArray("extrainfo.node.bounds")).thenThrow(InvalidSettingsException.class);
 
         // when
         var nativeNodeDef = NativeNodeLoader.load(m_configBaseRO, file, LoadVersion.FUTURE);

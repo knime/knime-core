@@ -55,7 +55,6 @@ import java.io.IOException;
 
 import org.junit.jupiter.api.Test;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.config.base.ConfigBase;
 import org.knime.core.node.util.NodeLoaderTestUtils;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.workflow.def.ConfigMapDef;
@@ -76,7 +75,7 @@ class ComponentLoaderTest {
         // given
         var file = NodeLoaderTestUtils.readResourceFolder("Simple_Component");
 
-        ConfigBase m_configBaseRO = new SimpleConfig("mock");
+        var m_configBaseRO = new SimpleConfig("mock");
         m_configBaseRO.addInt("id", 1);
         m_configBaseRO.addString("node_type", "SubNode");
         m_configBaseRO.addString("customDescription", "");
@@ -97,6 +96,7 @@ class ComponentLoaderTest {
         assertThat(componentDef.getVirtualInNodeId()).isEqualTo(3);
         assertThat(componentDef.getVirtualOutNodeId()).isEqualTo(4);
         assertThat(componentDef.getLink()).isNotNull();
+        assertThat(componentDef.getWorkflow().getNodes()).hasSize(3);
 
         // Assert SingleNodeLoader
         assertThat(singleNodeDef.getFlowStack()).isEmpty(); //
@@ -107,12 +107,12 @@ class ComponentLoaderTest {
 
         // Assert NodeLoader
         assertThat(nodeDef.getId()).isEqualTo(1);
-        assertThat(nodeDef.getAnnotation().getData()).isNull();
+        assertThat(nodeDef.getAnnotation().isAnnotationDefault()).isFalse();
         assertThat(nodeDef.getCustomDescription()).isNull();
         assertThat(nodeDef.getJobManager()).isNotNull();
         assertThat(nodeDef.getLocks()) //
             .extracting("m_hasDeleteLock", "m_hasResetLock", "m_hasConfigureLock") //
-            .containsExactly(false, false, false);
+            .containsExactly(true, false, false);
         assertThat(nodeDef.getUiInfo()).extracting(n -> n.hasAbsoluteCoordinates(), n -> n.isSymbolRelative(),
             n -> n.getBounds().getHeight(), n -> n.getBounds().getLocation(), n -> n.getBounds().getWidth())
             .containsNull();
@@ -127,7 +127,7 @@ class ComponentLoaderTest {
         // given
         var file = NodeLoaderTestUtils.readResourceFolder("MultiPort_Component");
 
-        ConfigBase workflowConfig = new SimpleConfig("mock");
+        var workflowConfig = new SimpleConfig("mock");
         workflowConfig.addInt("id", 431);
         workflowConfig.addIntArray("extrainfo.node.bounds", new int[]{2541, 1117, 122, 65});
 
@@ -166,7 +166,7 @@ class ComponentLoaderTest {
         assertThat(nodeDef.getJobManager()).isInstanceOf(JobManagerDef.class);
         assertThat(nodeDef.getLocks()) //
             .extracting("m_hasDeleteLock", "m_hasResetLock", "m_hasConfigureLock") //
-            .containsExactly(false, false, false);
+            .containsExactly(true, false, false);
         assertThat(nodeDef.getUiInfo()).extracting(n -> n.getBounds().getLocation().getX(),
             n -> n.getBounds().getLocation().getY(), n -> n.getBounds().getHeight(), n -> n.getBounds().getWidth())
             .containsExactly(2541, 1117, 122, 65);

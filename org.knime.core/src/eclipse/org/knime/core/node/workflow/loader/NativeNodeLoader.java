@@ -48,6 +48,9 @@
  */
 package org.knime.core.node.workflow.loader;
 
+import static org.knime.core.node.workflow.loader.LoaderUtils.DEFAULT_CONFIG_MAP;
+import static org.knime.core.node.workflow.loader.LoaderUtils.DEFAULT_EMPTY_STRING;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
@@ -59,47 +62,31 @@ import java.util.regex.PatternSyntaxException;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.base.ConfigBaseRO;
 import org.knime.core.node.workflow.def.CoreToDefUtil;
+import org.knime.core.node.workflow.loader.LoaderUtils.Const;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.workflow.def.ConfigMapDef;
 import org.knime.core.workflow.def.FilestoreDef;
 import org.knime.core.workflow.def.VendorDef;
-import org.knime.core.workflow.def.impl.ConfigMapDefBuilder;
 import org.knime.core.workflow.def.impl.FallibleNativeNodeDef;
 import org.knime.core.workflow.def.impl.FilestoreDefBuilder;
 import org.knime.core.workflow.def.impl.NativeNodeDefBuilder;
 import org.knime.core.workflow.def.impl.VendorDefBuilder;
+import org.knime.core.workflow.loader.FallibleSupplier;
 
 /**
- * Responsible for loading the properties of a KNIME node.
+ * Loads the description of a Native Node. Native node are also referred as KNIME Nodes.
  *
  * @author Dionysios Stolis, KNIME GmbH, Berlin, Germany
  * @author Carl Witt, KNIME GmbH, Berlin, Germany
  */
-public class NativeNodeLoader {
+public final class NativeNodeLoader {
 
-    private static final String NODE_NAME_KEY = "node-name";
+    private NativeNodeLoader() {
+    }
 
-    private static final String NODE_BUNDLE_NAME_KEY = "node-bundle-name";
+    private static final VendorDef DEFAULT_VENDOR_DEF = new VendorDefBuilder().build();
 
-    private static final String NODE_BUNDLE_SYMBOLIC_NAME_KEY = "node-bundle-symbolic-name";
-
-    private static final String NODE_BUNDLE_VENDOR_KEY = "node-bundle-vendor";
-
-    private static final String NODE_BUNDLE_VERSION_KEY = "node-bundle-version";
-
-    private static final String NODE_FEATURE_NAME_KEY = "node-feature-name";
-
-    private static final String NODE_FEATURE_SYMBOLIC_NAME_KEY = "node-feature-symbolic-name";
-
-    private static final String NODE_FEATURE_VENDOR_KEY = "node-feature-vendor";
-
-    private static final String NODE_FEATURE_VERSION_KEY = "node-feature-version";
-
-    private static final String NODE_CREATION_CONFIG_KEY = "node_creation_config";
-
-    private static final String FACTORY_KEY = "factory";
-
-    private static final String FACTORY_SETTINGS_KEY = "factory_settings";
+    private static final FilestoreDef DEFAULT_FILE_STORE_DEF = new FilestoreDefBuilder().build();
 
     /**
      * Maps a regular expression to the a new extension name. For instance, after open sourcing the big data extensions
@@ -131,41 +118,42 @@ public class NativeNodeLoader {
     }
 
     /**
-     * TODO
+     * Loads the properties of a native node into {@link FallibleNativeNodeDefl}, stores the loading exceptions using
+     * the {@link FallibleSupplier}
      *
-     * @param workflowConfig
-     * @param nodeDirectory
-     * @param workflowFormatVersion
-     * @return a {@link NativeNodeLoader}
-     * @throws IOException
+     * @param workflowConfig a read only representation of the workflow.knime
+     * @param nodeDirectory a {@link File} of the node folder.
+     * @param workflowFormatVersion an {@link LoadVersion}.
+     * @return a {@link FallibleNativeNodeDef}
+     * @throws IOException when the settings.xml can't be found.
      */
     static FallibleNativeNodeDef load(final ConfigBaseRO workflowConfig, final File nodeDirectory,
         final LoadVersion workflowFormatVersion) throws IOException {
         var nodeConfig = LoaderUtils.readNodeConfigFromFile(nodeDirectory);
 
         return new NativeNodeDefBuilder()//
-            .setFactory(() -> loadFactory(workflowConfig, nodeConfig, workflowFormatVersion), "") //
-            .setFactorySettings(() -> loadFactorySettings(nodeConfig), new ConfigMapDefBuilder().build()) //
-            .setNodeName(() -> nodeConfig.getString(NODE_NAME_KEY), "") //
-            .setBundle(() -> loadBundle(nodeConfig), new VendorDefBuilder().build()) //
-            .setFeature(() -> loadFeature(nodeConfig), new VendorDefBuilder().build()) //
-            .setNodeCreationConfig(() -> loadCreationConfig(nodeConfig), new ConfigMapDefBuilder().build())
-            .setFilestore(() -> loadFilestore(workflowConfig, workflowFormatVersion), new FilestoreDefBuilder().build())
+            .setFactory(() -> loadFactory(workflowConfig, nodeConfig, workflowFormatVersion), DEFAULT_EMPTY_STRING) //
+            .setFactorySettings(() -> loadFactorySettings(nodeConfig), DEFAULT_CONFIG_MAP) //
+            .setNodeName(() -> nodeConfig.getString(Const.NODE_NAME_KEY.get()), DEFAULT_EMPTY_STRING) //
+            .setBundle(() -> loadBundle(nodeConfig), DEFAULT_VENDOR_DEF) //
+            .setFeature(() -> loadFeature(nodeConfig), DEFAULT_VENDOR_DEF) //
+            .setNodeCreationConfig(() -> loadCreationConfig(nodeConfig), DEFAULT_CONFIG_MAP)
+            .setFilestore(() -> loadFilestore(workflowConfig, workflowFormatVersion), DEFAULT_FILE_STORE_DEF)
             .setConfigurableNode(ConfigurableNodeLoader.load(workflowConfig, nodeConfig, workflowFormatVersion)) //
             .build();
 
     }
 
     /**
-     * TODO Write an example Loads the additional factory settings.
+     * Loads the factory settings from the {@code settings}.
      *
-     * @param settings a representation of the node's settings.xml.
+     * @param settings a read only representation of the node's settings.xml.
      * @return a {@link ConfigMapDef} with the factory settings.
      * @throws InvalidSettingsException
      */
     private static ConfigMapDef loadFactorySettings(final ConfigBaseRO settings) throws InvalidSettingsException {
-        var factorySettings =
-            settings.containsKey(FACTORY_SETTINGS_KEY) ? settings.getConfigBase(FACTORY_SETTINGS_KEY) : null;
+        var factorySettings = settings.containsKey(Const.FACTORY_SETTINGS_KEY.get())
+            ? settings.getConfigBase(Const.FACTORY_SETTINGS_KEY.get()) : null;
 
         return CoreToDefUtil.toConfigMapDef(factorySettings);
     }
@@ -173,88 +161,92 @@ public class NativeNodeLoader {
     /**
      * Loads the node creation configuration (e.g flow variable port object)
      *
-     * @param settings a representation of the node's settings.xml.
-     * @return
+     * @param settings a read only representation of the node's settings.xml.
+     * @return a {@link ConfigMapDef} with the creation configs.
      * @throws InvalidSettingsException
      * @since 4.2
      */
     private static ConfigMapDef loadCreationConfig(final ConfigBaseRO settings) throws InvalidSettingsException {
-        var nodeCreationSettings =
-            settings.containsKey(NODE_CREATION_CONFIG_KEY) ? settings.getConfigBase(NODE_CREATION_CONFIG_KEY) : null;
+        var nodeCreationSettings = settings.containsKey(Const.NODE_CREATION_CONFIG_KEY.get())
+            ? settings.getConfigBase(Const.NODE_CREATION_CONFIG_KEY.get()) : null;
         return CoreToDefUtil.toConfigMapDef(nodeCreationSettings);
     }
 
     /**
-     * Loads the factory name of the node.
+     * Loads the factory name either from {@code workflowConfig} or {@code nodeConfig} according to the
+     * {@code workflowFormatVersion}.
      *
-     * @param workflowConfig a representation of the workflow's workflow.knime file.
-     * @param nodeConfig a representation of the node's settings.xml file.
-     * @param workflowFormatVersion the {@link LoadVersion}.
+     * @param workflowConfig a read only representation of the workflow's workflow.knime file.
+     * @param nodeConfig a read only representation of the node's settings.xml file.
+     * @param workflowFormatVersion a {@link LoadVersion}.
      * @return the node's factory name.
      * @throws InvalidSettingsException
      * @since 3.5
      */
     private static String loadFactory(final ConfigBaseRO workflowConfig, final ConfigBaseRO nodeConfig,
         final LoadVersion workflowFormatVersion) throws InvalidSettingsException {
-        try {
-            if (workflowFormatVersion.isOlderThan(LoadVersion.V200)) {
-                var factoryName = workflowConfig.getString(FACTORY_KEY);
-                // This is a hack to load old J48 Nodes Model from pre-2.0 workflows
-                if ("org.knime.ext.weka.j48_2.WEKAJ48NodeFactory2".equals(factoryName)
-                    || "org.knime.ext.weka.j48.WEKAJ48NodeFactory".equals(factoryName)) {
-                    factoryName = "org.knime.ext.weka.knimeJ48.KnimeJ48NodeFactory";
-                }
-                return factoryName;
-            } else {
-                return nodeConfig.getString(FACTORY_KEY);
+        if (workflowFormatVersion.isOlderThan(LoadVersion.V200)) {
+            var factoryName = workflowConfig.getString(Const.FACTORY_KEY.get());
+            // This is a hack to load old J48 Nodes Model from pre-2.0 workflows
+            if ("org.knime.ext.weka.j48_2.WEKAJ48NodeFactory2".equals(factoryName)
+                || "org.knime.ext.weka.j48.WEKAJ48NodeFactory".equals(factoryName)) {
+                factoryName = "org.knime.ext.weka.knimeJ48.KnimeJ48NodeFactory";
             }
-        } catch (InvalidSettingsException e) {
-            var errorMessage = "Unable to load the factory name: " + e.getMessage();
-            throw new InvalidSettingsException(errorMessage, e);
+            return factoryName;
+        } else {
+            return nodeConfig.getString(Const.FACTORY_KEY.get());
         }
     }
 
     /**
-     * Loads the bundle information of a node.
+     * Loads the bundle information of a node from the {@code settings}.
      *
-     * @param settings a representation of the node's settings.xml file.
+     * @param settings a read only representation of the node's settings.xml file.
      * @return a {@link VendorDef}
-     * @throws InvalidSettingsException
      */
-    private static VendorDef loadBundle(final ConfigBaseRO settings) throws InvalidSettingsException {
+    private static VendorDef loadBundle(final ConfigBaseRO settings) {
         return new VendorDefBuilder() //
-            .setName(settings.getString(NODE_BUNDLE_NAME_KEY, "")) //
-            .setSymbolicName(fixExtensionName(settings.getString(NODE_BUNDLE_SYMBOLIC_NAME_KEY))) //
-            .setVendor(settings.getString(NODE_BUNDLE_VENDOR_KEY, "")) //
-            .setVersion(settings.getString(NODE_BUNDLE_VERSION_KEY, "")) //
+            .setName(settings.getString(Const.NODE_BUNDLE_NAME_KEY.get(), DEFAULT_EMPTY_STRING)) //
+            .setSymbolicName(
+                fixExtensionName(settings.getString(Const.NODE_BUNDLE_SYMBOLIC_NAME_KEY.get(), DEFAULT_EMPTY_STRING))) //
+            .setVendor(settings.getString(Const.NODE_BUNDLE_VENDOR_KEY.get(), DEFAULT_EMPTY_STRING)) //
+            .setVersion(settings.getString(Const.NODE_BUNDLE_VERSION_KEY.get(), DEFAULT_EMPTY_STRING)) //
             .build();
     }
 
     /**
-     * Loads the feature information of a node.
+     * Loads the feature information of a node from the {@code settings}.
      *
-     * @param settings a representation of the node's settings.xml file.
+     * @param settings a read only representation of the node's settings.xml file.
      * @return a {@link VendorDef}
-     * @throws InvalidSettingsException
      */
-    private static VendorDef loadFeature(final ConfigBaseRO settings) throws InvalidSettingsException {
+    private static VendorDef loadFeature(final ConfigBaseRO settings) {
         return new VendorDefBuilder() //
-            .setName(() -> settings.getString(NODE_FEATURE_NAME_KEY), "") //
-            .setSymbolicName(fixExtensionName(settings.getString(NODE_FEATURE_SYMBOLIC_NAME_KEY))) //
-            .setVendor(settings.getString(NODE_FEATURE_VENDOR_KEY, "")) //
-            .setVersion(settings.getString(NODE_FEATURE_VERSION_KEY, "")) //
+            .setName(settings.getString(Const.NODE_FEATURE_NAME_KEY.get(), DEFAULT_EMPTY_STRING)) //
+            .setSymbolicName(
+                fixExtensionName(settings.getString(Const.NODE_FEATURE_SYMBOLIC_NAME_KEY.get(), DEFAULT_EMPTY_STRING))) //
+            .setVendor(settings.getString(Const.NODE_FEATURE_VENDOR_KEY.get(), DEFAULT_EMPTY_STRING)) //
+            .setVersion(settings.getString(Const.NODE_FEATURE_VERSION_KEY.get(), DEFAULT_EMPTY_STRING)) //
             .build();
     }
 
-    private static FilestoreDef loadFilestore(final ConfigBaseRO settings, final LoadVersion loadVersion) throws InvalidSettingsException {
-        if (loadVersion.isOlderThan(LoadVersion.V260) || !settings.containsKey("filestores")) {
-            return new FilestoreDefBuilder().build();
+    /**
+     * Loads the filestores of a native node from the {@code settings}.
+     *
+     * @param settings a read only representation of the node's settings.xml file.
+     * @param loadVersion a {@link LoadVersion}
+     * @return a {@link FilestoreDef}
+     * @throws InvalidSettingsException
+     */
+    private static FilestoreDef loadFilestore(final ConfigBaseRO settings, final LoadVersion loadVersion)
+        throws InvalidSettingsException {
+        if (loadVersion.isOlderThan(LoadVersion.V260) || !settings.containsKey(Const.FILESTORES_KEY.get())) {
+            return DEFAULT_FILE_STORE_DEF;
         }
-        var filestoreSettings = settings.getConfigBase("filestores");
+        var filestoreSettings = settings.getConfigBase(Const.FILESTORES_KEY.get());
         return new FilestoreDefBuilder()
-                .setLocation(() -> filestoreSettings.getString("file_store_location"), "")
-                .setId(() -> filestoreSettings.getString("file_store_id"), "")
-                .build();
+            .setLocation(() -> filestoreSettings.getString(Const.FILESTORES_LOCATION_KEY.get()), DEFAULT_EMPTY_STRING)
+            .setId(() -> filestoreSettings.getString(Const.FILESTORES_ID_KEY.get()), DEFAULT_EMPTY_STRING).build();
     }
 
     /**

@@ -54,34 +54,162 @@ import java.io.IOException;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.base.ConfigBaseRO;
-import org.knime.core.node.workflow.loader.WorkflowLoader.Const;
+import org.knime.core.node.workflow.def.CoreToDefUtil;
+import org.knime.core.util.LoadVersion;
+import org.knime.core.workflow.def.AnnotationDataDef;
+import org.knime.core.workflow.def.ConfigMapDef;
+import org.knime.core.workflow.def.StyleRangeDef;
+import org.knime.core.workflow.def.impl.AnnotationDataDefBuilder;
+import org.knime.core.workflow.def.impl.ConfigMapDefBuilder;
+import org.knime.core.workflow.def.impl.StyleRangeDefBuilder;
 
 /**
  * //TODO We can add all the read from file methods for the files workflow.knime, settings.xml, template.knime.
  *
  * @author Dionysios Stolis, KNIME GmbH, Berlin, Germany
  */
-public class LoaderUtils {
+final class LoaderUtils {
 
-    private static final String WORKFLOW_SETTINGS_FILE_NAME = "workflow.knime";
+    private LoaderUtils() {}
 
-    private static final String NODE_SETTINGS_FILE_NAME = "settings.xml";
+    enum Const {
+        /** @see NativeNodeLoader#load */
+        NODE_NAME_KEY("node-name"),
+        /** @see NativeNodeLoader#loadBundle */
+        NODE_BUNDLE_NAME_KEY("node-bundle-name"), //
+        NODE_BUNDLE_SYMBOLIC_NAME_KEY("node-bundle-symbolic-name"), //
+        NODE_BUNDLE_VENDOR_KEY("node-bundle-vendor"), //
+        NODE_BUNDLE_VERSION_KEY("node-bundle-version"),
+        /** @see NativeNodeLoader#loadFeature */
+        NODE_FEATURE_NAME_KEY("node-feature-name"), //
+        NODE_FEATURE_SYMBOLIC_NAME_KEY("node-feature-symbolic-name"), //
+        NODE_FEATURE_VENDOR_KEY("node-feature-vendor"), //
+        NODE_FEATURE_VERSION_KEY("node-feature-version"),
+        /** @see NativeNodeLoader#loadCreationConfig */
+        NODE_CREATION_CONFIG_KEY("node_creation_config"),
+        /** @see NativeNodeLoader#loadFactory */
+        FACTORY_KEY("factory"),
+        /** @see NativeNodeLoader#loadFactorySettings */
+        FACTORY_SETTINGS_KEY("factory_settings"),
+        /** @see NativeNodeLoader#loadFilestore */
+        FILESTORES_KEY("filestores"),
+        FILESTORES_LOCATION_KEY("file_store_location"),
+        FILESTORES_ID_KEY("file_store_id"),
+
+        /** @see MetaNodeLoader#loadInPorts */
+        META_IN_PORTS_KEY("meta_in_ports"),
+        /** @see MetaNodeLoader#loadOutPorts */
+        META_OUT_PORTS_KEY("meta_out_ports"),
+        /** @see MetaNodeLoader#loadPortsSettingsEnum */
+        PORT_ENUM_KEY("port_enum"),
+        /** @see MetaNodeLoader#loadNodeUIInformation */
+        UI_SETTINGS_KEY("ui_settings"),
+
+        /** @see MetaNodeLoader#loadPort */
+        /** @see ComponentLoader#loadPort */
+        PORT_INDEX_KEY("index"), //
+        PORT_NAME_KEY("name"), //
+        PORT_TYPE_KEY("type"), //
+        PORT_OBJECT_CLASS_KEY("object_class"),
+
+        /** @see ComponentLoader#loadMetadata */
+        DESCRIPTION_KEY("description"), //
+        METADATA_KEY("metadata"), //
+        METADATA_NAME_KEY("name"), //
+        INPORTS_KEY("inports"), //
+        OUTPORTS_KEY("outports"),
+        /** @see ComponentLoader#loadTemplateLink */
+        WORKFLOW_TEMPLATE_INFORMATION_KEY("workflow_template_information"),
+        /** @see ComponentLoader#loadVirtualInNodeId */
+        VIRTUAL_IN_ID_KEY("virtual-in-ID"),
+        /** @see ComponentLoader#loadVirtualInNodeId */
+        VIRTUAL_OUT_ID_KEY("virtual-out-ID"),
+        /** @see ComponentLoader#loadIcon */
+        ICON_KEY("icon"),
+
+
+        /** @see ConfigurableNodeLoader#loadInternalNodeSubSettings */
+        INTERNAL_NODE_SUBSETTINGS("internal_node_subsettings"),
+        /** @see ConfigurableNodeLoader#loadVariableSettings */
+        VARIABLES_KEY("variables"),
+        /** @see ConfigurableNodeLoader#loadModelSettings */
+        MODEL_KEY("model"),
+        /** @see ConfigurableNodeLoader#loadFlowStackObjects */
+        SCOPE_STACK_KEY("scope_stack"),
+        FLOW_STACK_KEY("flow_stack"),
+        /** @see ConfigurableNodeLoader#loadFlowObjectDef */
+        TYPE_KEY("type"),
+        VARIABLE("variable"),
+        /** @see ConfigurableNodeLoader#loadFlowContextDef */
+        INACTIVE("_INACTIVE"),
+        /** @see ConfigurableNodeLoader#loadFlowContextType */
+        LOOP("LOOP"),
+        FLOW("FLOW"),
+        SCOPE("SCOPE"),
+
+        /** @see NodeLoader#loadNodeId */
+        ID_KEY("id"),
+        /** @see NodeLoader#loadAnnotation */
+        CUSTOM_NAME_KEY("customName"),  //
+        NODE_ANNOTATION_KEY("nodeAnnotation"),
+        /** @see NodeLoader#loadJobManager */
+        JOB_MANAGER_KEY("job.manager"), //
+        JOB_MANAGER_FACTORY_ID_KEY("job.manager.factory.id"),
+        JOB_MANAGER_SETTINGS_KEY("job.manager.settings"),
+        /** @see NodeLoader#loadLocks */
+        IS_DELETABLE_KEY("isDeletable"), //
+        HAS_RESET_LOCK_KEY("hasResetLock"), //
+        HAS_CONFIGURE_LOCK_KEY("hasConfigureLock"),
+        /** @see NodeLoader#loadCustomDescription */
+        CUSTOM_DESCRIPTION_KEY("customDescription"),
+        /** @see NodeLoader#loadBoundsDef */
+        EXTRA_NODE_INFO_BOUNDS_KEY("extrainfo.node.bounds"),
+
+        /** @see LoaderUtils#readWorkflowConfigFromFile */
+        WORKFLOW_FILE_NAME("workflow.knime"),
+        /** @see LoaderUtils#loadNodeFile */
+        NODE_SETTINGS_FILE("node_settings_file"),
+        /** @see LoaderUtils#readNodeConfigFromFile(File)*/
+        NODE_SETTINGS_FILE_NAME("settings.xml");
+
+    /**
+     * @param string
+     */
+    Const(final String string) {
+        m_key = string;
+    }
+
+    /**
+     * @return the key
+     */
+    public String get() {
+        return m_key;
+    }
+
+    final String m_key;
+}
+
+    static final int DEFAULT_NEGATIVE_INDEX = -1;
+
+    static final String DEFAULT_EMPTY_STRING = "";
+
+    static final ConfigMapDef DEFAULT_CONFIG_MAP = new ConfigMapDefBuilder().build();
 
     static ConfigBaseRO readNodeConfigFromFile(final File nodeDirectory) throws IOException {
-        var nodeSettingsFile = new File(nodeDirectory, NODE_SETTINGS_FILE_NAME);
+        var nodeSettingsFile = new File(nodeDirectory, Const.NODE_SETTINGS_FILE_NAME.get());
         try {
             return SimpleConfig.parseConfig(nodeSettingsFile.getAbsolutePath(), nodeSettingsFile);
         } catch (IOException e) {
-            throw new IOException("Cannot load the " + NODE_SETTINGS_FILE_NAME, e);
+            throw new IOException("Cannot load the " + Const.NODE_SETTINGS_FILE_NAME.get(), e);
         }
     }
 
     static ConfigBaseRO readWorkflowConfigFromFile(final File nodeDirectory) throws IOException {
-        var workflowSettingsFile = new File(nodeDirectory, WORKFLOW_SETTINGS_FILE_NAME);
+        var workflowSettingsFile = new File(nodeDirectory, Const.WORKFLOW_FILE_NAME.get());
         try {
             return SimpleConfig.parseConfig(workflowSettingsFile.getAbsolutePath(), workflowSettingsFile);
         } catch (IOException e) {
-            throw new IOException("Cannot load the " + WORKFLOW_SETTINGS_FILE_NAME, e);
+            throw new IOException("Cannot load the " + Const.WORKFLOW_FILE_NAME.get(), e);
         }
     }
 
@@ -138,7 +266,7 @@ public class LoaderUtils {
     static File loadNodeFile(final ConfigBaseRO workflowNodeConfig, final File workflowDir)
         throws InvalidSettingsException {
         // relative path to node configuration file
-        var fileString = workflowNodeConfig.getString(Const.KEY_NODE_SETTINGS_FILE.get());
+        var fileString = workflowNodeConfig.getString(Const.NODE_SETTINGS_FILE.get());
         if (fileString == null) {
             throw new InvalidSettingsException(
                 "Unable to read settings " + "file for node " + workflowNodeConfig.getKey());
@@ -151,5 +279,47 @@ public class LoaderUtils {
             throw new InvalidSettingsException("Unable to read settings " + "file " + nodeFile.getAbsolutePath());
         }
         return nodeFile;
+    }
+
+    /**
+     * @param annotationConfig
+     * @param workflowFormatVersion
+     */
+    static AnnotationDataDef loadAnnotationDef(final ConfigBaseRO annotationConfig,
+        final LoadVersion workflowFormatVersion) throws InvalidSettingsException {
+        var builder = new AnnotationDataDefBuilder()//
+            .setText(annotationConfig.getString("text"))//
+            .setBgcolor(annotationConfig.getInt("bgcolor"))//
+            .setLocation(CoreToDefUtil.createCoordinate(annotationConfig.getInt("x-coordinate"),
+                annotationConfig.getInt("y-coordinate")))//
+            .setWidth(annotationConfig.getInt("width"))//
+            .setHeight(annotationConfig.getInt("height"))//
+            .setBorderSize(annotationConfig.getInt("borderSize", 0)) // default to 0 for backward compatibility
+            .setBorderColor(annotationConfig.getInt("borderColor", 0)) // default for backward compatibility
+            .setDefaultFontSize(annotationConfig.getInt("defFontSize", -1)) // default for backward compatibility
+            .setAnnotationVersion(annotationConfig.getInt("annotation-version", -1)) // default to VERSION_OLD
+            .setTextAlignment(workflowFormatVersion.ordinal() >= LoadVersion.V250.ordinal()
+                ? annotationConfig.getString("alignment") : "LEFT");
+
+        ConfigBaseRO styleConfigs = annotationConfig.getConfigBase("styles");
+        for (String key : styleConfigs.keySet()) {
+            builder.addToStyles(() -> loadStyleRangeDef(styleConfigs.getConfigBase(key)),
+                new StyleRangeDefBuilder().build());
+        }
+        return builder.build();
+    }
+
+    /**
+     * @param styleConfig
+     */
+    private static StyleRangeDef loadStyleRangeDef(final ConfigBaseRO styleConfig) throws InvalidSettingsException {
+        return new StyleRangeDefBuilder()//
+            .setStart(styleConfig.getInt("start"))//
+            .setLength(styleConfig.getInt("length"))//
+            .setFontName(styleConfig.getString("fontname"))//
+            .setFontStyle(styleConfig.getInt("fontstyle"))//
+            .setFontSize(styleConfig.getInt("fontsize"))//
+            .setColor(styleConfig.getInt("fgcolor"))//
+            .build();
     }
 }

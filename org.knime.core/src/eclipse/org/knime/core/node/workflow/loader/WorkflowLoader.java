@@ -53,39 +53,38 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.base.ConfigBaseRO;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.ObsoleteMetaNodeFileWorkflowPersistor;
-import org.knime.core.node.workflow.TemplateNodeContainerPersistor;
-import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.core.node.workflow.def.CoreToDefUtil;
 import org.knime.core.util.LoadVersion;
+import org.knime.core.util.Pair;
 import org.knime.core.workflow.def.AnnotationDataDef;
 import org.knime.core.workflow.def.AuthorInformationDef;
 import org.knime.core.workflow.def.ConnectionDef;
 import org.knime.core.workflow.def.ConnectionUISettingsDef;
 import org.knime.core.workflow.def.NodeDef;
-import org.knime.core.workflow.def.StyleRangeDef;
 import org.knime.core.workflow.def.WorkflowDef;
 import org.knime.core.workflow.def.WorkflowUISettingsDef;
-import org.knime.core.workflow.def.impl.AnnotationDataDefBuilder;
 import org.knime.core.workflow.def.impl.AuthorInformationDefBuilder;
 import org.knime.core.workflow.def.impl.ConnectionDefBuilder;
 import org.knime.core.workflow.def.impl.ConnectionUISettingsDefBuilder;
-import org.knime.core.workflow.def.impl.StyleRangeDefBuilder;
+import org.knime.core.workflow.def.impl.FallibleConnectionDef;
+import org.knime.core.workflow.def.impl.FallibleNodeDef;
+import org.knime.core.workflow.def.impl.NodeDefBuilder;
 import org.knime.core.workflow.def.impl.WorkflowDefBuilder;
 import org.knime.core.workflow.def.impl.WorkflowUISettingsDefBuilder;
+import org.knime.core.workflow.loader.LoadException;
 
 /**
  * Recursively walks through the legacy directory structure, generating the workflow defs.
  *
- * TODO remove this comment: Used to implement {@link WorkflowPersistor} and {@link TemplateNodeContainerPersistor}
- *
- * TODO remove suppresswarnings('javadoc')
- *
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
+ * @author Dionysios Stolis, KNIME GmbH, Berlin, Germany
  */
 @SuppressWarnings("javadoc")
 public class WorkflowLoader {
@@ -116,14 +115,13 @@ public class WorkflowLoader {
             /** @see WorkflowDef#getConnections() */
             KEY_CONNECTIONS("connections"),
             /** @see WorkflowDef#getNodes() */
-            KEY_NODES("nodes"),
+            NODES_KEY("nodes"),
             /** */
             KEY_UI_INFORMATION("extraInfoClassName"),
             /**
              * The relative path of the file that contains the node configuration. For example
              * {@code 2_1 Building (#1444)/settings.xml}
              */
-            KEY_NODE_SETTINGS_FILE("node_settings_file"),
             /** Constant for the meta info file name. */
             METAINFO_FILE_NAME("workflowset.meta"),
             /** Identifier for KNIME templates SVG export when saved to disk. */
@@ -132,8 +130,7 @@ public class WorkflowLoader {
             SVG_WORKFLOW_FILE_NAME("workflow.svg"),
             /** Identifier for KNIME meta mode templates when saved to disk. */
             TEMPLATE_FILE_NAME("template.knime"),
-            /** Identifier for KNIME workflows when saved to disk. */
-            WORKFLOW_FILE_NAME("workflow.knime"),
+
             /** @see WorkflowDef#getAuthorInformation() */
             CFG_AUTHOR_INFORMATION("authorInformation"),
             /** */
@@ -204,7 +201,7 @@ public class WorkflowLoader {
      * @param workflowFormatVersion the version of the workflow format that was used to write the workflow to load
      */
     public static WorkflowDef load(final File nodeDirectory, final LoadVersion workflowFormatVersion)
-        throws IOException, InvalidSettingsException {
+        throws IOException {
         var workflowConfig = LoaderUtils.parseWorkflowConfig(nodeDirectory);
         return load(nodeDirectory, workflowConfig, workflowFormatVersion);
     }
@@ -217,100 +214,64 @@ public class WorkflowLoader {
      * @param workflowFormatVersion the version of the workflow format that was used to write the workflow to load
      */
     public static WorkflowDef load(final File workflowDirectory, final ConfigBaseRO workflowConfig,
-        final LoadVersion workflowFormatVersion) throws InvalidSettingsException, IOException {
+        final LoadVersion workflowFormatVersion) {
 
-        var builder = new WorkflowDefBuilder();
-
-        // TODO error handling
-        //      if (workflowKNIMEFile == null || m_workflowSett == null) {
-        //          loadResult.setDirtyAfterLoad();
-        //          throw new IllegalStateException("The method preLoadNodeContainer has either not been called or failed");
-        //      }
-
-        builder//
+        return new WorkflowDefBuilder() //
             .setName(() -> loadName(workflowConfig, workflowFormatVersion), "Workflow")//
             .setAuthorInformation(() -> loadAuthorInformationDef(workflowConfig, workflowFormatVersion),
                 DEFAULT_AUTHOR_INFORMATION)
             .setAnnotations(() -> loadAnnotationDefs(workflowConfig, workflowFormatVersion), List.of())//
-            // TODO cipher
-            //          .setCipher(loadCipher())//
+            .setNodes(() -> loadNodesDef(workflowConfig, workflowDirectory, workflowFormatVersion), Map.of()) //
+            .setConnections(() -> loadConnectionsDef(workflowConfig, workflowFormatVersion), List.of()) //
             .setWorkflowEditorSettings(() -> loadEditorUIInformationDef(workflowConfig, workflowFormatVersion),
-                new WorkflowUISettingsDefBuilder().build());
-
-        // TODO name methods consistently
-        // TODO javadoc
-        // nodes
-        var nodesConfig = loadNodesConfig(workflowConfig);
-        for (String nodeKey : nodesConfig.keySet()) {
-            //TODO Default node key?
-            builder.putToNodes(nodeKey,
-                () -> loadNodeDef(nodesConfig, nodeKey, workflowConfig, workflowDirectory, workflowFormatVersion),
-                null);
-        }
-
-
-        // connections
-        var connectionsConfig = loadConnectionsConfig(workflowConfig, workflowFormatVersion);
-        for (String connectionKey : connectionsConfig.keySet()) {
-            //            var connection =loadConnectionDef(connectionsConfig.getConfigBase(connectionKey), workflowFormatVersion) ;
-            builder.addToConnections(
-                () -> loadConnectionDef(connectionsConfig.getConfigBase(connectionKey), workflowFormatVersion), null);
-        }
-
-        return builder.build();
-
-        // TODO error handling
-        //      var nodeFile = knimeFile.getFile();
-        //        var parentRef = knimeFile.getParent();
-        //        if (parentRef == null) {
-        //            loadResult.setDirtyAfterLoad();
-        //            throw new IOException("Parent directory of file \"" + knimeFile + "\" is not represented by "
-        //                + ReferencedFile.class.getSimpleName() + " object");
-        //        }
-
-        // TODO deciphering
-        //        ConfigBaseRO subWFSettings;
-        //        try {
-        //            InputStream in = new FileInputStream(nodeFile);
-        //            /**
-        //             * Security TODO should be different persistors for component, metanode, workflow
-        //             */
-        //            if (m_parentPersistor != null) { // real metanode, not a project
-        //                // the workflow.knime (or template.knime) file is not encrypted
-        //                // with this metanode's cipher but possibly with a parent
-        //                // cipher
-        //                in = m_parentPersistor.decipherInput(in);
-        //            }
-        //            in = new BufferedInputStream(in);
-        //            subWFSettings = NodeSettings.loadFromXML(in);
-        //        } catch (IOException ioe) {
-        //            loadResult.setDirtyAfterLoad();
-        //            throw ioe;
-        //        }
-        //        m_workflowSett = subWFSettings;
-
+                new WorkflowUISettingsDefBuilder().build()) //
+            .build();
     }
 
-    // TODO wizard state?
-    //    /**
-    //     * @return the wizard state saved in the file or null (often null).
-    //     * @param settings ...
-    //     * @throws InvalidSettingsException ...
-    //     */
-    //    ConfigBaseRO loadWizardState(final ConfigBaseRO settings) throws InvalidSettingsException {
-    //        return settings.containsKey("wizard") ? settings.getConfigBase("wizard") : null;
-    //    }
+    /**
+     *
+     * @param workflowConfig
+     * @param workflowDirectory
+     * @param workflowFormatVersion
+     * @return
+     * @throws InvalidSettingsException
+     */
+    private static Map<String, NodeDef> loadNodesDef(final ConfigBaseRO workflowConfig, final File workflowDirectory,
+        final LoadVersion workflowFormatVersion) throws InvalidSettingsException {
+        var nodesSettings = workflowConfig.getConfigBase(Const.NODES_KEY.get());
+        return nodesSettings.keySet().stream().map(key -> {
+            try {
+                var nodeSetting = nodesSettings.getConfigBase(key);
+                var nodeDef = loadNodeDef(nodeSetting, key, workflowConfig, workflowDirectory, workflowFormatVersion);
+                return Pair.create(key, nodeDef);
+            } catch (InvalidSettingsException | IOException e) {
+                var exception = new LoadException(WorkflowDef.Attribute.NODES_ELEMENTS, e);
+                return Pair.create(key, new FallibleNodeDef(new NodeDefBuilder().build(), exception));
+            }
+        }).collect(Collectors.toMap(Pair::getFirst, Pair::getSecond));
+    }
 
-    // TODO workflow cipher
-    //    WorkflowCipher loadWorkflowCipher(final LoadVersion loadVersion, final ConfigBaseRO settings)
-    //        throws InvalidSettingsException {
-    //        // added in v2.5 - no check necessary
-    //        if ((workflowFormatVersion.ordinal() < LoadVersion.V250.ordinal()) || !settings.containsKey("cipher")) {
-    //            return WorkflowCipher.NULL_CIPHER;
-    //        }
-    //        var cipherSettings = settings.getConfigBase("cipher");
-    //        return WorkflowCipher.load(loadVersion, cipherSettings);
-    //    }
+    /**
+     *
+     * @param workflowConfig
+     * @param workflowFormatVersion
+     * @return
+     * @throws InvalidSettingsException
+     */
+    private static List<ConnectionDef> loadConnectionsDef(final ConfigBaseRO workflowConfig,
+        final LoadVersion workflowFormatVersion) throws InvalidSettingsException {
+        var connectionsSettings = workflowConfig.getConfigBase(Const.KEY_CONNECTIONS.get());
+        return connectionsSettings.keySet().stream().map(key -> {
+            try {
+                var connectionSetting = connectionsSettings.getConfigBase(key);
+                return loadConnectionDef(connectionSetting, workflowFormatVersion);
+            } catch (InvalidSettingsException e) {
+                var exception = new LoadException(WorkflowDef.Attribute.CONNECTIONS_ELEMENTS, e);
+                return new FallibleConnectionDef(new ConnectionDefBuilder().build(), exception);
+            }
+        }).collect(Collectors.toList());
+
+    }
 
     /**
      * @param settings
@@ -397,48 +358,6 @@ public class WorkflowLoader {
     }
 
     /**
-     * @param workflowFormatVersion the version of the workflow format that was used to write the workflow to load
-     */
-    private static ConfigBaseRO loadNodesConfig(final ConfigBaseRO workflowConfig) {
-        try {
-            return workflowConfig.getConfigBase(Const.KEY_NODES.get());
-        } catch (InvalidSettingsException e) {
-            // TODO error handling
-            //            var error = "Can't load nodes in workflow, config not found: " + e.getMessage();
-            //            getLogger().debug(error, e);
-            //            loadResult.addError(error);
-            //            loadResult.setDirtyAfterLoad();
-            //            loadResult.setResetRequiredAfterLoad();
-            // TODO error handling special
-            // stop loading here
-            return EMPTY_SETTINGS;
-        }
-    }
-
-    /**
-     * @param workflowConfig
-     * @param workflowFormatVersion the version of the workflow format that was used to write the workflow to load
-     */
-    private static ConfigBaseRO loadConnectionsConfig(final ConfigBaseRO workflowConfig,
-        final LoadVersion workflowFormatVersion) {
-        ConfigBaseRO connectionSettings;
-        try {
-            connectionSettings = workflowConfig.getConfigBase(Const.KEY_CONNECTIONS.get());
-            if (connectionSettings == null) {
-                connectionSettings = EMPTY_SETTINGS;
-            }
-            return connectionSettings;
-        } catch (InvalidSettingsException e) {
-            // TODO error handling
-            //            var error = "Can't load workflow connections, config not found: " + e.getMessage();
-            //            getLogger().debug(error, e);
-            //            loadResult.setDirtyAfterLoad();
-            //            loadResult.addError(error);
-            return EMPTY_SETTINGS;
-        }
-    }
-
-    /**
      * @param workflowConfig
      * @param workflowFormatVersion
      */
@@ -451,52 +370,10 @@ public class WorkflowLoader {
             List<AnnotationDataDef> result = new ArrayList<>();
             for (String key : annoSettings.keySet()) {
                 var child = annoSettings.getConfigBase(key);
-                result.add(loadAnnotationDef(child, workflowFormatVersion));
+                result.add(LoaderUtils.loadAnnotationDef(child, workflowFormatVersion));
             }
             return result;
         }
-    }
-
-    /**
-     * @param annotationConfig
-     * @param workflowFormatVersion
-     */
-    private static AnnotationDataDef loadAnnotationDef(final ConfigBaseRO annotationConfig,
-        final LoadVersion workflowFormatVersion) throws InvalidSettingsException {
-        var builder = new AnnotationDataDefBuilder()//
-            .setText(annotationConfig.getString("text"))//
-            .setBgcolor(annotationConfig.getInt("bgcolor"))//
-            .setLocation(CoreToDefUtil.createCoordinate(annotationConfig.getInt("x-coordinate"),
-                annotationConfig.getInt("y-coordinate")))//
-            .setWidth(annotationConfig.getInt("width"))//
-            .setHeight(annotationConfig.getInt("height"))//
-            .setBorderSize(annotationConfig.getInt("borderSize", 0)) // default to 0 for backward compatibility
-            .setBorderColor(annotationConfig.getInt("borderColor", 0)) // default for backward compatibility
-            .setDefaultFontSize(annotationConfig.getInt("defFontSize", -1)) // default for backward compatibility
-            .setAnnotationVersion(annotationConfig.getInt("annotation-version", -1)) // default to VERSION_OLD
-            .setTextAlignment(workflowFormatVersion.ordinal() >= LoadVersion.V250.ordinal()
-                ? annotationConfig.getString("alignment") : "LEFT");
-
-        ConfigBaseRO styleConfigs = annotationConfig.getConfigBase("styles");
-        for (String key : styleConfigs.keySet()) {
-            builder.addToStyles(() -> loadStyleRangeDef(styleConfigs.getConfigBase(key)),
-                new StyleRangeDefBuilder().build());
-        }
-        return builder.build();
-    }
-
-    /**
-     * @param styleConfig
-     */
-    private static StyleRangeDef loadStyleRangeDef(final ConfigBaseRO styleConfig) throws InvalidSettingsException {
-        return new StyleRangeDefBuilder()//
-            .setStart(styleConfig.getInt("start"))//
-            .setLength(styleConfig.getInt("length"))//
-            .setFontName(styleConfig.getString("fontname"))//
-            .setFontStyle(styleConfig.getInt("fontstyle"))//
-            .setFontSize(styleConfig.getInt("fontsize"))//
-            .setColor(styleConfig.getInt("fgcolor"))//
-            .build();
     }
 
     /**
@@ -511,23 +388,11 @@ public class WorkflowLoader {
         final ConfigBaseRO workflowConfig, final File workflowDir, final LoadVersion workflowFormatVersion)
         throws InvalidSettingsException, IOException {
 
-        if (!nodesConfig.containsKey(nodeKey)) {
-            // TODO error handling
-            var error = "Unable to load settings for node with internal id " + nodeKey;
-            //            getLogger().debug(error, e);
-            //            loadResult.setDirtyAfterLoad();
-            //            loadResult.addError(error);
-            throw new InvalidSettingsException(error);
-        }
-
         // contains the information about the node that is in the workflow description
-        ConfigBaseRO workflowNodeConfig = nodesConfig.getConfigBase(nodeKey);
+        var workflowNodeConfig = nodesConfig.getConfigBase(nodeKey);
         var settingsFile = LoaderUtils.loadNodeFile(workflowNodeConfig, workflowDir);
         var nodeDirectory = settingsFile.getParentFile();
 
-        // var childResult = new LoadResult(nodeType.toString() + " with ID suffix " + nodeIDSuffix);
-        // var childDef = persistor.getLoadResult(this, nodeSetting, childResult);
-        // loadResult.addChildError(childResult);
         var nodeType = loadNodeType(workflowNodeConfig, workflowFormatVersion);
         switch (nodeType) {
             case MetaNode:
@@ -539,72 +404,33 @@ public class WorkflowLoader {
             default:
                 throw new IllegalStateException("Unknown node type: " + nodeType);
         }
-
-        // TODO error handling
-        // catch {
-        //            var error =
-        //                "Unable to load node with ID suffix " + nodeIDSuffix + " into workflow, skipping it: " + e.getMessage();
-        //            String loadErrorString;
-        //            if (e instanceof NodeFactoryUnknownException) {
-        //                loadErrorString = e.getMessage();
-        //            } else {
-        //                loadErrorString = error;
-        //            }
-        //            if (e instanceof InvalidSettingsException || e instanceof IOException
-        //                || e instanceof NodeFactoryUnknownException) {
-        //                getLogger().debug(error, e);
-        //            } else {
-        //                getLogger().error(error, e);
-        //            }
-        //            loadResult.addError(loadErrorString);
-        //            if (e instanceof NodeFactoryUnknownException) {
-        //                missingNodeIDMap.put(nodeIDSuffix, (NodeFactoryUnknownException)e);
-        //                // don't set dirty
-        //            } else {
-        //                loadResult.setDirtyAfterLoad();
-        //                failingNodeIDSet.add(nodeIDSuffix);
-        //                // node directory is the parent of the settings.xml
-        //                m_obsoleteNodeDirectories.add(nodeFile.getParent());
-        //                return Optional.empty();
-        //            }
-        //        }
     }
 
     /**
-     * @param connectionConfig the part of the workflow configurations that describes one particular connection
+     *
+     * @param connectionConfig
      * @param workflowFormatVersion
+     * @return
      */
     private static ConnectionDef loadConnectionDef(final ConfigBaseRO connectionConfig,
-        final LoadVersion workflowFormatVersion) throws InvalidSettingsException {
-
-        //        try {
-        var sourceID = connectionConfig.getInt("sourceID");
-        var destID = loadConnectionDestID(connectionConfig, workflowFormatVersion);
-        var sourcePort = connectionConfig.getInt("sourcePort");
-        var destPort = loadConnectionDestPort(connectionConfig, workflowFormatVersion);
-        // this attribute is in most cases not present (not saved)
-        var isDeletable = connectionConfig.getBoolean("isDeletable", true);
-        if (sourceID != -1 && sourceID == destID) {
-            throw new InvalidSettingsException("Source and Destination must not be equal, id is " + sourceID);
-        }
-
-        return new ConnectionDefBuilder()//
-            .setSourceID(sourceID)//
-            .setSourcePort(sourcePort)//
-            .setDestID(destID)//
-            .setDestPort(destPort)//
-            .setDeletable(isDeletable)//
-            .setUiSettings(loadConnectionUISettingsDef(connectionConfig, workflowFormatVersion)).build();
-        //        } catch (InvalidSettingsException e) {
-        //            // TODO error handling
-        //            var error = "Can't load connection with internal ID \"" + connectionKey + "\": " + e.getMessage();
-        //            getLogger().debug(error, e);
-        //            loadResult.setDirtyAfterLoad();
-        //            loadResult.addError(error);
+        final LoadVersion workflowFormatVersion) {
+        //TODO Should we check this later?
+        //        if (sourceID != -1 && sourceID == destID) {
+        //            throw new InvalidSettingsException("Source and Destination must not be equal, id is " + sourceID);
         //        }
+        return new ConnectionDefBuilder()//
+            .setSourceID(() -> connectionConfig.getInt("sourceID"), 0)//
+            .setSourcePort(() -> connectionConfig.getInt("sourcePort"), 0) //
+            .setDestID(() -> loadConnectionDestID(connectionConfig, workflowFormatVersion), 0)//
+            .setDestPort(() -> loadConnectionDestPort(connectionConfig, workflowFormatVersion), 0)//
+            .setDeletable(connectionConfig.getBoolean("isDeletable", true))//
+            .setUiSettings(loadConnectionUISettingsDef(connectionConfig, workflowFormatVersion)) //
+            .build();
     }
 
     /**
+     * FIXME Should we have the ui info class name in the def.yaml?
+     *
      * @param connectionConfig the part of the workflow configurations that describes one particular connection
      * @param workflowFormatVersion the version of the workflow format that was used to write the workflow to load
      */
@@ -643,7 +469,7 @@ public class WorkflowLoader {
     }
 
     /**
-     * Load editor information (grid settings, zoom level, et cetera).
+     * Load editor information (grid settings, zoom level, etc).
      *
      * @param workflowConfig
      * @param workflowFormatVersion the version of the workflow format that was used to write the workflow to load
@@ -670,27 +496,6 @@ public class WorkflowLoader {
         return builder.build();
     }
 
-    // TODO wizard state?
-    //    /**
-    //     * @return the wizard state saved in the file or null (often null).
-    //     * @param settings ...
-    //     * @throws InvalidSettingsException ...
-    //     */
-    //    ConfigBaseRO loadWizardState(final ConfigBaseRO settings) throws InvalidSettingsException {
-    //        return settings.containsKey("wizard") ? settings.getConfigBase("wizard") : null;
-    //    }
-
-    // TODO workflow cipher
-    //    WorkflowCipher loadWorkflowCipher(final LoadVersion loadVersion, final ConfigBaseRO settings)
-    //        throws InvalidSettingsException {
-    //        // added in v2.5 - no check necessary
-    //        if ((workflowFormatVersion.ordinal() < LoadVersion.V250.ordinal()) || !settings.containsKey("cipher")) {
-    //            return WorkflowCipher.NULL_CIPHER;
-    //        }
-    //        var cipherSettings = settings.getConfigBase("cipher");
-    //        return WorkflowCipher.load(loadVersion, cipherSettings);
-    //    }
-
     private static AuthorInformationDef loadAuthorInformationDef(final ConfigBaseRO settings,
         final LoadVersion loadVersion) throws InvalidSettingsException {
         try {
@@ -711,7 +516,6 @@ public class WorkflowLoader {
             } else {
                 return DEFAULT_AUTHOR_INFORMATION;
             }
-
         } catch (InvalidSettingsException e) {
             var errorMessage = "Unable to load workflow author information: " + e.getMessage();
             throw new InvalidSettingsException(errorMessage, e);
@@ -740,26 +544,4 @@ public class WorkflowLoader {
             return OffsetDateTime.ofInstant(Instant.EPOCH, ZoneOffset.UTC);
         }
     }
-
-    // TODO wizard state?
-    //    /**
-    //     * @return the wizard state saved in the file or null (often null).
-    //     * @param settings ...
-    //     * @throws InvalidSettingsException ...
-    //     */
-    //    ConfigBaseRO loadWizardState(final ConfigBaseRO settings) throws InvalidSettingsException {
-    //        return settings.containsKey("wizard") ? settings.getConfigBase("wizard") : null;
-    //    }
-
-    // TODO workflow cipher
-    //    WorkflowCipher loadWorkflowCipher(final LoadVersion loadVersion, final ConfigBaseRO settings)
-    //        throws InvalidSettingsException {
-    //        // added in v2.5 - no check necessary
-    //        if ((workflowFormatVersion.ordinal() < LoadVersion.V250.ordinal()) || !settings.containsKey("cipher")) {
-    //            return WorkflowCipher.NULL_CIPHER;
-    //        }
-    //        var cipherSettings = settings.getConfigBase("cipher");
-    //        return WorkflowCipher.load(loadVersion, cipherSettings);
-    //    }
-
 }

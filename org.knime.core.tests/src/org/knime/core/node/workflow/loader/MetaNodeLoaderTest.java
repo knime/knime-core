@@ -64,7 +64,6 @@ import org.knime.core.util.LoadVersion;
 import org.knime.core.workflow.def.JobManagerDef;
 import org.knime.core.workflow.def.NodeAnnotationDef;
 import org.knime.core.workflow.def.NodeUIInfoDef;
-import org.knime.core.workflow.def.WorkflowDef;
 import org.knime.core.workflow.def.impl.FallibleBaseNodeDef;
 
 /**
@@ -101,9 +100,7 @@ class MetaNodeLoaderTest {
         assertThat(metanodeDef.getOutPortsBarUIInfo()).isNotNull();
         assertThat(metanodeDef.getLink()).isNull();
         assertThat(metanodeDef.getWorkflow()).isNotNull();
-
-        //TODO Shall we pass it to the workflow test or something similar?
-        var workflow = metanodeDef.getWorkflow();
+        assertThat(metanodeDef.getWorkflow().getNodes()).hasSize(1);
 
         // Assert NodeLoader
         assertThat(nodeDef.getId()).isEqualTo(1);
@@ -129,6 +126,7 @@ class MetaNodeLoaderTest {
         when(m_configBaseRO.getInt("id")).thenReturn(431);
         when(m_configBaseRO.containsKey("customDescription")).thenReturn(false);
         when(m_configBaseRO.containsKey("annotations")).thenReturn(false);
+        when(m_configBaseRO.containsKey("extrainfo.node.bounds")).thenReturn(true);
         when(m_configBaseRO.getIntArray("extrainfo.node.bounds")) //
             .thenReturn(new int[]{2541, 1117, 122, 65});
 
@@ -151,7 +149,7 @@ class MetaNodeLoaderTest {
         assertThat(metanodeDef.getInPortsBarUIInfo()).isInstanceOf(NodeUIInfoDef.class);
         assertThat(metanodeDef.getOutPortsBarUIInfo()).isInstanceOf(NodeUIInfoDef.class);
         assertThat(metanodeDef.getLink()).isNull();
-        assertThat(metanodeDef.getWorkflow()).isInstanceOf(WorkflowDef.class);
+        assertThat(metanodeDef.getWorkflow().getNodes()).hasSize(4);
 
         // Assert NodeLoader
         assertThat(nodeDef.getId()).isEqualTo(431);

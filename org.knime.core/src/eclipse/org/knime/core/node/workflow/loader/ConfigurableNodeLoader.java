@@ -48,7 +48,8 @@
  */
 package org.knime.core.node.workflow.loader;
 
-import java.util.Collections;
+import static org.knime.core.node.workflow.loader.LoaderUtils.DEFAULT_CONFIG_MAP;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -56,6 +57,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.base.ConfigBaseRO;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.def.CoreToDefUtil;
+import org.knime.core.node.workflow.loader.LoaderUtils.Const;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.workflow.def.ConfigMapDef;
 import org.knime.core.workflow.def.ConfigurableNodeDef;
@@ -63,35 +65,27 @@ import org.knime.core.workflow.def.FlowContextDef;
 import org.knime.core.workflow.def.FlowContextDef.ContextTypeEnum;
 import org.knime.core.workflow.def.FlowObjectDef;
 import org.knime.core.workflow.def.FlowVariableDef;
-import org.knime.core.workflow.def.impl.ConfigMapDefBuilder;
 import org.knime.core.workflow.def.impl.ConfigurableNodeDefBuilder;
 import org.knime.core.workflow.def.impl.FlowContextDefBuilder;
 import org.knime.core.workflow.def.impl.FlowObjectDefBuilder;
 import org.knime.core.workflow.def.impl.FlowVariableDefBuilder;
 
 /**
- * Responsible for loading the KNIME properties which are used by the Nodes and Componets
+ * Loads the description of a ConfigurableNode into {@link ConfigurableNodeDef}. ConfigurableNode are internally also
+ * referred to as SingleNode.
  *
  * @author Dionysios Stolis, KNIME GmbH, Berlin, Germany
  * @author Carl Witt, KNIME GmbH, Berlin, Germany
  */
 final class ConfigurableNodeLoader {
 
-    private ConfigurableNodeLoader() {}
+    private ConfigurableNodeLoader() {
+    }
 
-    private static final String INTERNAL_NODE_SUBSETTINGS_KEY = "internal_node_subsettings";
+    private static final FlowObjectDef DEFAULT_FLOW_OBJECT = new FlowObjectDefBuilder().build();
 
-    private static final String VARIABLES_KEY = "variables";
-
-    private static final String MODEL_KEY = "model";
-
-    private static final String SCOPE_STACK_KEY = "scope_stack";
-
-    private static final String FLOW_STACK_KEY = "flow_stack";
-
-    private static final ConfigMapDef DEFAULT_CONFIG_MAP = new ConfigMapDefBuilder().build();
-
-    static ConfigurableNodeDef load(final ConfigBaseRO workflowConfig, final ConfigBaseRO nodeConfig, final LoadVersion loadVersion) {
+    static ConfigurableNodeDef load(final ConfigBaseRO workflowConfig, final ConfigBaseRO nodeConfig,
+        final LoadVersion loadVersion) {
 
         return new ConfigurableNodeDefBuilder()//
             .setFlowStack(() -> loadFlowStackObjects(nodeConfig, loadVersion), List.of()) //
@@ -103,108 +97,85 @@ final class ConfigurableNodeLoader {
     }
 
     /**
-     * Loads the internal node sub settings (e.g memory_policy).
+     * Loads the internal node sub settings (e.g memory_policy) from the {@code settings}.
      *
-     * @param settings a representation of the node's settings.xml file.
+     * @param settings a read only representation of the node's settings.xml.
      * @return a {@link ConfigMapDef}
      * @throws InvalidSettingsException
      */
     private static ConfigMapDef loadInternalNodeSubSettings(final ConfigBaseRO settings)
         throws InvalidSettingsException {
-        try {
-            return CoreToDefUtil.toConfigMapDef(settings.getConfigBase(INTERNAL_NODE_SUBSETTINGS_KEY));
-        } catch (InvalidSettingsException e) {
-            var errorMessage = "Unable to load the interal node sub settings: " + e.getMessage();
-            throw new InvalidSettingsException(errorMessage, e);
+        if (!settings.containsKey(Const.INTERNAL_NODE_SUBSETTINGS.get())) {
+            return DEFAULT_CONFIG_MAP;
         }
+        return CoreToDefUtil.toConfigMapDef(settings.getConfigBase(Const.INTERNAL_NODE_SUBSETTINGS.get()));
     }
 
     /**
-     * Loads the variable settings.
-     * TODO We need better explanation of this property
+     * Loads the variable settings from the {@code settings}.
      *
-     * @param settings a representation of the node's settings.xml file.
+     * @param settings a read only representation of the node's settings.xml.
      * @return a {@link ConfigMapDef}
      * @throws InvalidSettingsException
      */
     private static ConfigMapDef loadVariableSettings(final ConfigBaseRO settings) throws InvalidSettingsException {
-        if (!settings.containsKey(VARIABLES_KEY)) {
-            return new ConfigMapDefBuilder().build();
+        if (!settings.containsKey(Const.VARIABLES_KEY.get())) {
+            return DEFAULT_CONFIG_MAP;
         }
-        try {
-            return CoreToDefUtil.toConfigMapDef(settings.getConfigBase(VARIABLES_KEY));
-        } catch (InvalidSettingsException e) {
-            var errorMessage = "Could not load variable settings: " + e.getMessage();
-            throw new InvalidSettingsException(errorMessage, e);
-        }
+        return CoreToDefUtil.toConfigMapDef(settings.getConfigBase(Const.VARIABLES_KEY.get()));
     }
 
     /**
-     * Loads the node's model settings (e.g SettingsModelID)
-     * TODO We need better explanation of the model setting.
-     * TODO When it used ?
+     * Loads the model settings (e.g SettingsModelID) from the {@code settings}.
      *
-     * @param settings a representation of the node's settings.xml file.
+     * @param settings a read only representation of the node's settings.xml.
      * @return a {@link ConfigMapDef}
      * @throws InvalidSettingsException
      */
     private static ConfigMapDef loadModelSettings(final ConfigBaseRO settings) throws InvalidSettingsException {
+        if (!settings.containsKey(Const.MODEL_KEY.get())) {
+            return DEFAULT_CONFIG_MAP;
+        }
         // settings not present if node never had settings (different since 2.8 -- before the node always had settings,
         // defined by NodeModel#saveSettings -- these settings were never confirmed through validate/load though)
-        try {
-            if (settings.containsKey(MODEL_KEY)) {
-                return CoreToDefUtil.toConfigMapDef(settings.getConfigBase(MODEL_KEY));
-            } else {
-                return new ConfigMapDefBuilder().build();
-            }
-        } catch (InvalidSettingsException e) {
-            var errorMessage = "Unable to load model settings: " + e.getMessage();
-            throw new InvalidSettingsException(errorMessage, e);
-        }
+        return CoreToDefUtil.toConfigMapDef(settings.getConfigBase(Const.MODEL_KEY.get()));
     }
 
     /**
-     * Loads the list of the flow stack object defs from the settings file.
+     * Loads a list of the flow stack object from the {@code settings}.
      *
-     * @param settings to load from, ignored in this implementation (flow variables added in later versions)
+     * @param settings a read only representation of the node's settings.xml.
      * @return either a list of {@link FlowObjectDef} or an empty list.
-     * @throws InvalidSettingsException if that fails for any reason.
+     * @throws InvalidSettingsException
      */
     private static List<FlowObjectDef> loadFlowStackObjects(final ConfigBaseRO settings, final LoadVersion loadVersion)
         throws InvalidSettingsException {
         if (loadVersion.isOlderThan(LoadVersion.V200)) {
-            return Collections.emptyList();
+            return List.of();
         }
-        try {
-            var stackSet = loadVersion.isOlderThan(LoadVersion.V220) ? settings.getConfigBase(SCOPE_STACK_KEY)
-                : settings.getConfigBase(FLOW_STACK_KEY);
+        var stackSet = loadVersion.isOlderThan(LoadVersion.V220) ? settings.getConfigBase(Const.SCOPE_STACK_KEY.get())
+            : settings.getConfigBase(Const.FLOW_STACK_KEY.get());
 
-            return stackSet.keySet().stream() //
-                .map(key -> {
-                    try {
-                        if (stackSet.containsKey(key)) {
-                            return stackSet.getConfigBase(key);
-                        } else {
-                            return null;
-                        }
-                    } catch (InvalidSettingsException e) {
-                        // FIXME Is error prone?
-                        throw new RuntimeException(e);
+        return stackSet.keySet().stream() //
+            .map(key -> {
+                try {
+                    if (stackSet.containsKey(key)) {
+                        return stackSet.getConfigBase(key);
+                    } else {
+                        return null;
                     }
-                }) //
-                .map(t -> {
-                    try {
-                        //FIXME Provide different solution on this.
-                        return loadFlowObjectDef(t);
-                    } catch (InvalidSettingsException ex) {
-                        throw new RuntimeException(ex);
-                    }
-                }) //
-                .collect(Collectors.toList());
-        } catch (Exception e) {
-            var errorMessage = "Error loading flow variables: " + e.getMessage();
-            throw new InvalidSettingsException(errorMessage, e);
-        }
+                } catch (InvalidSettingsException e) {
+                    throw new RuntimeException(e); //NOSONAR
+                }
+            }) //
+            .map(t -> {
+                try {
+                    return loadFlowObjectDef(t);
+                } catch (InvalidSettingsException ex) {
+                    throw new RuntimeException(ex); //NOSONAR
+                }
+            }) //
+            .collect(Collectors.toList());
     }
 
     /**
@@ -216,14 +187,14 @@ final class ConfigurableNodeLoader {
      */
     private static FlowObjectDef loadFlowObjectDef(final ConfigBaseRO sub) throws InvalidSettingsException {
         if (sub == null) {
-            return new FlowObjectDefBuilder().build();
+            return DEFAULT_FLOW_OBJECT;
         }
         try {
-            var type = sub.getString("type");
-            return "variable".equals(type) ? loadFlowVariableDef(sub) : loadFlowContextDef(type);
-        } catch (InvalidSettingsException e) {
-            var errorMessage = "Unable to load the flow stack object: " + e.getMessage();
-            throw new InvalidSettingsException(errorMessage, e);
+            var type = sub.getString(Const.TYPE_KEY.get());
+            return Const.VARIABLE.get().equals(type) ? loadFlowVariableDef(sub) : loadFlowContextDef(type);
+        } catch (InvalidSettingsException e) { //NOSONAR
+            // Provides a default def, doesn't want to interrupt of loading the other flow objects
+            return DEFAULT_FLOW_OBJECT;
         }
     }
 
@@ -236,7 +207,7 @@ final class ConfigurableNodeLoader {
      */
     private static FlowContextDef loadFlowContextDef(final String type) {
 
-        boolean isActive = !type.toUpperCase().endsWith("_INACTIVE");
+        boolean isActive = !type.toUpperCase().endsWith(Const.INACTIVE.get());
 
         return new FlowContextDefBuilder() //
             .setActive(isActive) //
@@ -248,11 +219,11 @@ final class ConfigurableNodeLoader {
     private static ContextTypeEnum loadFlowContextType(final String type) {
         ContextTypeEnum contextType = null;
 
-        if (type.toUpperCase().startsWith("LOOP")) {
+        if (type.toUpperCase().startsWith(Const.LOOP.get())) {
             contextType = ContextTypeEnum.LOOP;
-        } else if (type.toUpperCase().startsWith("FLOW")) {
+        } else if (type.toUpperCase().startsWith(Const.FLOW.get())) {
             contextType = ContextTypeEnum.FLOWCAPTURE;
-        } else if (type.toUpperCase().startsWith("SCOPE")) {
+        } else if (type.toUpperCase().startsWith(Const.SCOPE.get())) {
             contextType = ContextTypeEnum.SCOPE;
         }
 
@@ -262,7 +233,7 @@ final class ConfigurableNodeLoader {
     }
 
     /**
-     * TODO
+     * Loads the flow variable
      *
      * @param sub
      * @return
@@ -270,9 +241,8 @@ final class ConfigurableNodeLoader {
      */
     private static FlowVariableDef loadFlowVariableDef(final ConfigBaseRO sub) {
         return new FlowVariableDefBuilder() //
-            .setValue(() -> CoreToDefUtil.toConfigMapDef(sub), new ConfigMapDefBuilder().build()) //
+            .setValue(() -> CoreToDefUtil.toConfigMapDef(sub), DEFAULT_CONFIG_MAP) //
             .build();
-
     }
 
 }

@@ -48,6 +48,9 @@
  */
 package org.knime.core.node.workflow.loader;
 
+import static org.knime.core.node.workflow.loader.LoaderUtils.DEFAULT_EMPTY_STRING;
+import static org.knime.core.node.workflow.loader.LoaderUtils.DEFAULT_NEGATIVE_INDEX;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Base64;
@@ -58,39 +61,65 @@ import java.util.stream.Collectors;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.base.ConfigBaseRO;
 import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.workflow.loader.LoaderUtils.Const;
 import org.knime.core.util.LoadVersion;
+import org.knime.core.workflow.def.ComponentDef;
+import org.knime.core.workflow.def.ComponentDialogSettingsDef;
 import org.knime.core.workflow.def.ComponentMetadataDef;
 import org.knime.core.workflow.def.PortDef;
 import org.knime.core.workflow.def.TemplateLinkDef;
 import org.knime.core.workflow.def.impl.ComponentDefBuilder;
+import org.knime.core.workflow.def.impl.ComponentDialogSettingsDefBuilder;
 import org.knime.core.workflow.def.impl.ComponentMetadataDefBuilder;
 import org.knime.core.workflow.def.impl.FallibleComponentDef;
+import org.knime.core.workflow.def.impl.FalliblePortDef;
 import org.knime.core.workflow.def.impl.PortDefBuilder;
 import org.knime.core.workflow.def.impl.PortTypeDefBuilder;
 import org.knime.core.workflow.def.impl.TemplateLinkDefBuilder;
 import org.knime.core.workflow.def.impl.WorkflowDefBuilder;
+import org.knime.core.workflow.loader.FallibleSupplier;
+import org.knime.core.workflow.loader.LoadException;
 
 /**
- * Loads the description of a Component node in a workflow. Components are internally also referred to as SubNodes.
+ * Loads the description of a Component into {@link ComponentDef}. Components are internally also referred to as
+ * SubNodes.
  *
  * @author Dionysios Stolis, KNIME GmbH, Berlin, Germany
  */
 public final class ComponentLoader {
 
-    private ComponentLoader() {}
+    private ComponentLoader() {
+    }
 
+    //FIXME Remove the uri from the required fields
+    private static final TemplateLinkDef DEFAULT_TEMPLATE_LINK =
+        new TemplateLinkDefBuilder().setUri("localhost").build();
+
+    private static final byte[] DEFAULT_ICON = new byte[0];
+
+    /**
+     * Loads the properties of a Component into {@link FallibleComponentDef}, stores the loading exceptions using the
+     * {@link FallibleSupplier}.
+     *
+     * @param workflowConfig a read only representation of the workflow.knime.
+     * @param nodeDirectory a {@link File} of the node folder.
+     * @param workflowFormatVersion an {@link LoadVersion}.
+     * @return a {@link FallibleComponentDef}
+     * @throws IOException whether the settings.xml can't be found.
+     */
     static FallibleComponentDef load(final ConfigBaseRO workflowConfig, final File nodeDirectory,
         final LoadVersion workflowFormatVersion) throws IOException {
         var componentConfig = LoaderUtils.readNodeConfigFromFile(nodeDirectory);
 
-        return new ComponentDefBuilder().setDialogSettings(null) //
+        return new ComponentDefBuilder() //
+            .setDialogSettings(() -> loadDialogSettings(componentConfig),
+                new ComponentDialogSettingsDefBuilder().build()) //
             .setInPorts(() -> loadInPorts(componentConfig), List.of()) //
             .setOutPorts(() -> loadOutPorts(componentConfig), List.of()) //
-            //TODO What can be the default virtual node id?
-            .setVirtualInNodeId(() -> loadVirtualInNodeId(componentConfig), 0) //
-            .setVirtualOutNodeId(() -> loadVirtualOutNodeId(componentConfig), 0) //
+            .setVirtualInNodeId(() -> loadVirtualInNodeId(componentConfig), DEFAULT_NEGATIVE_INDEX) //
+            .setVirtualOutNodeId(() -> loadVirtualOutNodeId(componentConfig), DEFAULT_NEGATIVE_INDEX) //
             // TODO We should pass the proper setting for the link, currently passing the template.knime.
-            .setLink(() -> loadLink(componentConfig), new TemplateLinkDefBuilder().setUri("").build()) //
+            .setLink(() -> loadTemplateLink(componentConfig), DEFAULT_TEMPLATE_LINK) //
             .setMetadata(() -> loadMetadata(componentConfig), new ComponentMetadataDefBuilder() //
                 .build()) //
             .setWorkflow(() -> WorkflowLoader.load(nodeDirectory, workflowFormatVersion),
@@ -102,42 +131,119 @@ public final class ComponentLoader {
     /**
      * TODO
      *
+     * @param settings TODO
+     * @return a {@link ComponentDialogSettingsDef}
+     */
+    private static ComponentDialogSettingsDef loadDialogSettings(final ConfigBaseRO settings) {
+        //FIXME
+        return null;
+    }
+
+    /**
+     * Loads the input ports from the {@code settings}.
+     *
+     * @param settings a read only representation of the node's settings.xml.
+     * @return a list of {@link PortDef}.
+     * @throws InvalidSettingsException
+     */
+    private static List<PortDef> loadInPorts(final ConfigBaseRO settings) throws InvalidSettingsException {
+        var inPortsSettings = loadSetting(settings, Const.INPORTS_KEY.get());
+        if (inPortsSettings == null || inPortsSettings.keySet().isEmpty()) {
+            return List.of();
+        }
+        return loadPorts(inPortsSettings);
+    }
+
+    /**
+     * Loads the output ports from the {@code settings}
+     *
+     * @param settings a read only representation of the node's settings.xml.
+     * @return a list of {@link PortDef}.
+     * @throws InvalidSettingsException
+     */
+    private static List<PortDef> loadOutPorts(final ConfigBaseRO settings) throws InvalidSettingsException {
+        var outPortsSettings = loadSetting(settings, Const.OUTPORTS_KEY.get());
+        if (outPortsSettings == null || outPortsSettings.keySet().isEmpty()) {
+            return List.of();
+        }
+        return loadPorts(outPortsSettings);
+    }
+
+    /**
+     * Loads the virtual input node id from the {@code settings}.
+     *
+     * @param settings a read only representation of the node's settings.xml.
+     * @return an {@link Integer}
+     * @throws InvalidSettingsException when the virtual input id is less than zero.
+     */
+    private static Integer loadVirtualInNodeId(final ConfigBaseRO settings) throws InvalidSettingsException {
+        var virtualId = settings.getInt(Const.VIRTUAL_IN_ID_KEY.get());
+        CheckUtils.checkSetting(virtualId >= 0, "Node ID < 0: %d", virtualId);
+        return virtualId;
+    }
+
+    /**
+     * Loads the virtual output node id from the {@code settings}.
+     *
+     * @param settings a read only representation of the node's settings.xml.
+     * @return an {@link Integer}
+     * @throws InvalidSettingsException when the virtual output id is less than zero.
+     */
+    private static Integer loadVirtualOutNodeId(final ConfigBaseRO settings) throws InvalidSettingsException {
+        var virtualId = settings.getInt(Const.VIRTUAL_OUT_ID_KEY.get());
+        CheckUtils.checkSetting(virtualId >= 0, "Node ID < 0: %d", virtualId);
+        return virtualId;
+    }
+
+    /**
+     * TODO Loads the link of the referenced workflow.
+     *
      * @param settings
      * @return
      * @throws InvalidSettingsException
      */
-    private static TemplateLinkDef loadLink(final ConfigBaseRO settings) throws InvalidSettingsException {
-        if (!settings.containsKey("workflow_template_information")) {
-            //FIXME Change the required field
-            return new TemplateLinkDefBuilder().setUri("localhost").build();
+    private static TemplateLinkDef loadTemplateLink(final ConfigBaseRO settings) throws InvalidSettingsException {
+        //FIXME Read the tempalte link and timestamp? from the template.knime.
+        if (!settings.containsKey(Const.WORKFLOW_TEMPLATE_INFORMATION_KEY.get())) {
+            return DEFAULT_TEMPLATE_LINK;
         }
 
-        var templateSettings = settings.getConfigBase("workflow_template_information");
+        var templateSettings = settings.getConfigBase(Const.WORKFLOW_TEMPLATE_INFORMATION_KEY.get());
+        //TODO Move it to the const enum
         return Optional.ofNullable(templateSettings.getString("sourceURI")) //
             .map(uri -> new TemplateLinkDefBuilder().setUri(uri).build()) //
             .orElseThrow(() -> new InvalidSettingsException("Cannot not read source URI from emtpy string"));
     }
 
+    /**
+     * Loads the component's metadata from the {@code settings}
+     *
+     * @param settings a read only representation of the node's settings.xml.
+     * @return a {@link ComponenetMetadataDef}
+     * @throws InvalidSettingsException
+     */
     private static ComponentMetadataDef loadMetadata(final ConfigBaseRO settings) throws InvalidSettingsException {
-        if (!settings.containsKey("metadata")) {
+        if (!settings.containsKey(Const.DESCRIPTION_KEY.get())) {
             return new ComponentMetadataDefBuilder().build();
         }
-        try {
-            var metadataSettings = settings.getConfigBase("metadata");
-            return new ComponentMetadataDefBuilder() //
-                .setDescription(() -> metadataSettings.getString("description"), "") //
-                //TODO Do we need default component icon?
-                .setIcon(() -> loadIcon(metadataSettings), null) //
-                .setInPortDescriptions(() -> loadPortsProperties(metadataSettings, "inports", "description"), List.of()) //
-                .setInPortNames(() -> loadPortsProperties(metadataSettings, "inports", "name"), List.of()) //
-                .setOutPortDescriptions(() -> loadPortsProperties(metadataSettings, "outports", "description"),
-                    List.of()) //
-                .setOutPortNames(() -> loadPortsProperties(metadataSettings, "outports", "name"), List.of()) //
-                .build();
-        } catch (InvalidSettingsException e) {
-            var errorMessage = "Unable to load component metadata: " + e.getMessage();
-            throw new InvalidSettingsException(errorMessage, e);
-        }
+
+        var metadataSettings = settings.getConfigBase(Const.METADATA_KEY.get());
+        return new ComponentMetadataDefBuilder() //
+            .setDescription(() -> metadataSettings.getString(Const.DESCRIPTION_KEY.get()), DEFAULT_EMPTY_STRING) //
+            .setIcon(() -> loadIcon(metadataSettings), DEFAULT_ICON) //
+            .setInPortDescriptions(
+                () -> loadPortsProperties(metadataSettings, Const.INPORTS_KEY.get(), Const.DESCRIPTION_KEY.get()),
+                List.of()) //
+            .setInPortNames(
+                () -> loadPortsProperties(metadataSettings, Const.INPORTS_KEY.get(), Const.METADATA_NAME_KEY.get()),
+                List.of()) //
+            .setOutPortDescriptions(
+                () -> loadPortsProperties(metadataSettings, Const.OUTPORTS_KEY.get(), Const.DESCRIPTION_KEY.get()),
+                List.of()) //
+            .setOutPortNames(
+                () -> loadPortsProperties(metadataSettings, Const.OUTPORTS_KEY.get(), Const.METADATA_NAME_KEY.get()),
+                List.of()) //
+            .build();
     }
 
     private static List<String> loadPortsProperties(final ConfigBaseRO sub, final String portsKey,
@@ -152,7 +258,7 @@ public final class ComponentLoader {
             inportsSetting.keySet().stream().forEach(key -> {
                 try {
                     var portSetting = inportsSetting.getConfigBase(key);
-                    var index = portSetting.getInt("index", -1);
+                    var index = portSetting.getInt(Const.PORT_INDEX_KEY.get(), DEFAULT_NEGATIVE_INDEX);
                     properties[index] = portSetting.getString(propertyKey);
                 } catch (InvalidSettingsException ex) {
                     throw new RuntimeException(ex);
@@ -180,77 +286,35 @@ public final class ComponentLoader {
     }
 
     private static byte[] loadIcon(final ConfigBaseRO sub) throws InvalidSettingsException {
-        try {
-            if (sub.containsKey("icon")) {
-                return Base64.getDecoder().decode(sub.getString("icon"));
-            } else {
-                return new byte[0];
-            }
-        } catch (InvalidSettingsException e) {
-            var errorMessage = "Unable to load the component's icon: " + e.getMessage();
-            throw new InvalidSettingsException(errorMessage, e);
+        if (sub.containsKey(Const.ICON_KEY.get())) {
+            return DEFAULT_ICON;
         }
-    }
-
-    private static Integer loadVirtualInNodeId(final ConfigBaseRO settings) throws InvalidSettingsException {
-        var virtualId = settings.getInt("virtual-in-ID");
-        CheckUtils.checkSetting(virtualId >= 0, "Node ID < 0: %d", virtualId);
-        return virtualId;
-    }
-
-    private static Integer loadVirtualOutNodeId(final ConfigBaseRO settings) throws InvalidSettingsException {
-        var virtualId = settings.getInt("virtual-out-ID");
-        CheckUtils.checkSetting(virtualId >= 0, "Node ID < 0: %d", virtualId);
-        return virtualId;
-    }
-
-    private static List<PortDef> loadInPorts(final ConfigBaseRO settings) throws InvalidSettingsException {
-        var inPortsSettings = loadSetting(settings, "inports");
-        if (inPortsSettings == null || inPortsSettings.keySet().isEmpty()) {
-            return List.of();
-        }
-        return loadPorts(inPortsSettings);
-    }
-
-    private static List<PortDef> loadOutPorts(final ConfigBaseRO settings) throws InvalidSettingsException {
-        var outPortsSettings = loadSetting(settings, "outports");
-        if (outPortsSettings == null || outPortsSettings.keySet().isEmpty()) {
-            return List.of();
-        }
-        return loadPorts(outPortsSettings);
+        return Base64.getDecoder().decode(sub.getString(Const.ICON_KEY.get()));
     }
 
     private static List<PortDef> loadPorts(final ConfigBaseRO portSettings) {
-        return portSettings.keySet().stream() //
-            .map(key -> {
-                try {
-                    return portSettings.getConfigBase(key);
-                } catch (InvalidSettingsException e) { //NOSONAR
-                    return null;
-                }
-            }).map(inPortSetting -> {
-                try {
-                    return loadPort(inPortSetting);
-                } catch (InvalidSettingsException e) { //NOSONAR
-                    return new PortDefBuilder().build();
-                }
-            }).collect(Collectors.toList());
+        return portSettings.keySet().stream().map(key -> {
+            try {
+                var inPortSetting = portSettings.getConfigBase(key);
+                return loadPort(inPortSetting);
+            } catch (InvalidSettingsException e) {
+                var exception = new LoadException(ComponentDef.Attribute.IN_PORTS_ELEMENTS, e);
+                return new FalliblePortDef(new PortDefBuilder().build(), exception);
+            }
+        }).collect(Collectors.toList());
     }
 
-    private static PortDef loadPort(final ConfigBaseRO settings) throws InvalidSettingsException {
+    private static PortDef loadPort(final ConfigBaseRO settings) {
         if (settings == null) {
             return new PortDefBuilder().build();
         }
-        var index = settings.getInt("index");
-        var portTypeSettings = settings.getConfigBase("type");
-        var objectClassString = portTypeSettings.getString("object_class");
-        if (objectClassString == null) {
-            throw new InvalidSettingsException("No port object class found to create PortType object");
-        }
         return new PortDefBuilder() //
-            .setIndex(index) //
-            .setName(settings.getKey()) //
-            .setPortType(new PortTypeDefBuilder().setPortObjectClass(objectClassString).build()) //
+            .setIndex(() -> settings.getInt(Const.PORT_INDEX_KEY.get()), DEFAULT_NEGATIVE_INDEX) //
+            .setName(() -> settings.getKey(), DEFAULT_EMPTY_STRING) //
+            .setPortType(() -> new PortTypeDefBuilder() //
+                .setPortObjectClass(settings.getConfigBase(Const.PORT_TYPE_KEY.get()) //
+                    .getString(Const.PORT_OBJECT_CLASS_KEY.get()))
+                .build(), new PortTypeDefBuilder().build()) //
             .build();
     }
 

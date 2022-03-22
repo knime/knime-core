@@ -58,6 +58,7 @@ import org.knime.core.node.util.NodeLoaderTestUtils;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.workflow.def.AuthorInformationDef;
 import org.knime.core.workflow.def.WorkflowUISettingsDef;
+import org.knime.core.workflow.def.impl.FallibleWorkflowDef;
 
 /**
  *
@@ -71,7 +72,7 @@ class WorkflowLoaderTest {
         var file = NodeLoaderTestUtils.readResourceFolder("Workflow_Test");
 
         // when
-        var workflowDef = WorkflowLoader.load(file, LoadVersion.FUTURE);
+        var workflowDef = (FallibleWorkflowDef)WorkflowLoader.load(file, LoadVersion.FUTURE);
 
         // then
         assertThat(workflowDef.getAnnotations()).hasSize(3);
@@ -81,5 +82,7 @@ class WorkflowLoaderTest {
         assertThat(workflowDef.getName()).isNull();
         assertThat(workflowDef.getNodes()).hasSize(7);
         assertThat(workflowDef.getWorkflowEditorSettings()).isInstanceOf(WorkflowUISettingsDef.class);
+
+        assertThat(workflowDef.hasExceptions()).isFalse();
     }
 }
