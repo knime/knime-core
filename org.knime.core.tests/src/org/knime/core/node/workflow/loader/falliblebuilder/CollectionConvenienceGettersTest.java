@@ -25,18 +25,25 @@ import org.knime.core.workflow.loader.LoadExceptionSupplier;
 /**
  * Test that the convenience getters of Fallible*Def return the same thing as via access through
  * {@link LoadExceptionSupplier#getSuppliers()} for various constellations.
- *  <pre>
+ *
+ * <pre>
  *  - Single instance: see {@link SingleConvenienceGettersTest}
  *  - Collection attribute
- *    - Def type
- *      - null default value
- *      - clean default value (no load exceptions)
- *      - faulty default value (with load exceptions)
- *    - primitive type
- *      - null default value
- *      - actual default value
+ *    - Make sure it doesn't matter whether setting collection elements in bulk (set*) or individually (addTo, putTo)
  *
- *  </pre>
+ *    - List
+ *      - convenience setter
+ *        - Def type
+ *          - null default value
+ *          - clean default value (no load exceptions)
+ *          - faulty default value (with load exceptions)
+ *        - primitive type
+ *          - null default value
+ *          - actual default value
+ *    - Map
+ *
+ *
+ * </pre>
  *
  * collection types).
  *
@@ -67,7 +74,7 @@ public class CollectionConvenienceGettersTest {
             new PortDefBuilder().setIndex(0).setName("port name").setPortType(SOME_TYPE).build();
 
         // has exceptions on loading name
-        static final PortDef WITH_EXCEPTION_PORT = new PortDefBuilder()//
+        static final FalliblePortDef WITH_EXCEPTION_PORT = new PortDefBuilder()//
             .setIndex(0)//
             .setName(() -> {
                 throw new IllegalStateException("Cannot load name for port 1");
@@ -75,7 +82,7 @@ public class CollectionConvenienceGettersTest {
             .build();
 
         // has exceptions on loading index and port type
-        static final PortDef WITH_EXCEPTION_PORT2 = new PortDefBuilder()//
+        static final FalliblePortDef WITH_EXCEPTION_PORT2 = new PortDefBuilder()//
             .setIndex(() -> {
                 throw new InvalidSettingsException("Cannot load index for port 2");
             }, 0)
@@ -118,22 +125,29 @@ public class CollectionConvenienceGettersTest {
     @Test
     public void testCollectException() {
 
-        // both should have the same exception structure
+        // all three should have the same exception structure
         var testCases = List.of(MetanodeExample.withInPortErrorsList, MetanodeExample.withInPortErrorsIndividual,
             MetanodeExample.withInPortErrorsMixed);
 
+        // irrespective of how the object was constructed, assert the expected exception structure
         for (FallibleMetaNodeDef metaNodeWithErrors : testCases) {
 
-            // the fallible supplier () -> WITH_EXCEPTION_PORT doesn't throw an
-            // exception but the builder notices that there's a LoadException attached to it and thus
-            // adds a load exception to the
+            // metanode indicates load problems are present
             assertThat(metaNodeWithErrors.hasExceptions()).isTrue();
-            assertThat(metaNodeWithErrors.getFaultyInPorts().size()).isEqualTo(2);
+            //
+            assertThat(metaNodeWithErrors.hasExceptions(MetaNodeDef.Attribute.IN_PORTS_ELEMENTS)).isTrue();
+
+            // access via LoadExceptionSupplier interfaces yields the same as convenience getters
             assertThat(metaNodeWithErrors.getSuppliers().get(MetaNodeDef.Attribute.IN_PORTS_ELEMENTS))
                 .hasSameElementsAs(metaNodeWithErrors.getFaultyInPorts());
+            // flattened getter returns the same as convenience getter
+            // (because there's only one key in the map, IN_PORTS_ELEMENTS)
+            assertThat(metaNodeWithErrors.getFlattenedLoadExceptions())
+                .containsOnly(MetanodeExample.WITH_EXCEPTION_PORT, MetanodeExample.WITH_EXCEPTION_PORT2);
 
-            // no outport exceptions
-            assertThat(metaNodeWithErrors.getFaultyOutPorts()).isEmpty();
+            // no exception on the collection container, only on the elements
+            // TODO?
+            assertThat(metaNodeWithErrors.getInPortsExceptions()).isEmpty();
 
             // check the structure of the map with the exceptions
             var loadExceptions = metaNodeWithErrors.getSuppliers();
@@ -149,6 +163,8 @@ public class CollectionConvenienceGettersTest {
                 .isEqualTo(loadExceptions.get(MetaNodeDef.Attribute.IN_PORTS_ELEMENTS));
 
             List<FalliblePortDef> faultyInPorts = metaNodeWithErrors.getFaultyInPorts();
+            assertThat(metaNodeWithErrors.getFlattenedLoadExceptions())
+                .containsOnly(MetanodeExample.WITH_EXCEPTION_PORT, MetanodeExample.WITH_EXCEPTION_PORT2);
 
             {
                 // the first has one exception on name
