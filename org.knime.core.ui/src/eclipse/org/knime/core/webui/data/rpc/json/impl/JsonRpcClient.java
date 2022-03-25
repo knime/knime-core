@@ -188,7 +188,7 @@ public class JsonRpcClient extends AbstractRpcClient {
             String exceptionClassName = errorNode.get("data").get("typeName").asText();
             @SuppressWarnings("unchecked")
             Class<? extends Exception> exceptionClass = (Class<? extends Exception>)Class.forName(exceptionClassName);
-            String message = errorNode.get("data").get("message").asText();
+            String message = errorNode.get("message").asText();
             if (message != null) {
                 throw exceptionClass.getDeclaredConstructor(String.class).newInstance(message);
             } else {

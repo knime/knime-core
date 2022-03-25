@@ -57,6 +57,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.knime.core.node.util.CheckUtils;
+import org.knime.core.webui.data.DataServiceException;
 import org.knime.core.webui.data.rpc.RpcServer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -81,6 +82,10 @@ import com.googlecode.jsonrpc4j.JsonRpcMultiServer;
  */
 public class JsonRpcServer implements RpcServer {
 
+    static final int INTERNAL_ERROR_CODE = CUSTOM_SERVER_ERROR_UPPER;
+
+    static final int USER_ERROR_CODE = CUSTOM_SERVER_ERROR_UPPER - 1;
+
     /**
      * Node data service implementations. Can be local (directly execute using node model in the same JVM) or remote
      * (execute using remote node model). Simply records what is added to {@link #m_jsonRpcServer}, since the API
@@ -103,8 +108,9 @@ public class JsonRpcServer implements RpcServer {
     public JsonRpcServer(final ObjectMapper mapper) {
         CheckUtils.checkNotNull(mapper, "Object mapper passed to JSON-RPC server must not be null.");
         m_jsonRpcServer = new JsonRpcMultiServer(mapper);
-        m_jsonRpcServer.setErrorResolver(
-            (t, method, arguments) -> new JsonError(CUSTOM_SERVER_ERROR_UPPER, t.getMessage(), new ErrorData(t)));
+        m_jsonRpcServer.setErrorResolver((t, method, arguments) -> t instanceof DataServiceException
+            ? new JsonError(USER_ERROR_CODE, t.getMessage(), new JsonRpcUserErrorData((DataServiceException)t))
+            : new JsonError(INTERNAL_ERROR_CODE, t.getMessage(), new JsonRpcInternalErrorData(t)));
     }
 
     /**

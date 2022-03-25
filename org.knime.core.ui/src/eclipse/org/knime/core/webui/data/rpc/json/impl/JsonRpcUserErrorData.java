@@ -44,51 +44,25 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Sep 14, 2021 (hornm): created
+ *   Feb 21, 2022 (hornm): created
  */
-package org.knime.core.webui.data.rpc.json;
+package org.knime.core.webui.data.rpc.json.impl;
 
-import java.io.IOException;
-
-import org.knime.core.webui.data.DataServiceContext;
-import org.knime.core.webui.data.rpc.RpcDataService;
-import org.knime.core.webui.data.rpc.RpcServerManager;
-import org.knime.core.webui.data.rpc.json.impl.ObjectMapperUtil;
-import org.knime.core.webui.data.text.TextDataService;
-
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.knime.core.webui.data.DataServiceException;
 
 /**
- * A {@link RpcDataService} where the rpc requests and responses are encoded using the json-rpc standard
- * (https://www.jsonrpc.org/specification).
- *
- * @author Martin Horn, KNIME GmbH, Konstanz, Germany
- *
- * @since 4.5
+ * @author Marc Bux, KNIME GmbH, Berlin, Germany
  */
-public interface JsonRpcDataService extends RpcDataService, TextDataService {
+final class JsonRpcUserErrorData {
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    default String handleRequest(final String request) {
-        try {
-            final var response = RpcServerManager.doRpc(getRpcServer(), request);
-            final var warningMessages = DataServiceContext.getContext().getWarningMessages();
-            if (warningMessages != null && warningMessages.length > 0) {
-                final var mapper = ObjectMapperUtil.getInstance().getObjectMapper();
-                final var root = (ObjectNode)mapper.readTree(response);
-                if (root.has("result")) {
-                    return root.set("warningMessages", mapper.valueToTree(warningMessages)).toString();
-                }
-            }
-            return response;
-        } catch (IOException ex) {
-            throw new IllegalStateException("A problem occurred while making a rpc call.", ex);
-        } finally {
-            DataServiceContext.getContext().clear();
-        }
+    private final String m_details;
+
+    JsonRpcUserErrorData(final DataServiceException e) {
+        m_details = e.getDetails();
+    }
+
+    public String getDetails() {
+        return m_details;
     }
 
 }

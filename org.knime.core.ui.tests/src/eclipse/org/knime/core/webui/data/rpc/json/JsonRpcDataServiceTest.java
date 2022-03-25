@@ -58,6 +58,7 @@ import java.io.IOException;
 
 import org.junit.jupiter.api.Test;
 import org.knime.core.node.workflow.NativeNodeContainer;
+import org.knime.core.webui.data.DataServiceException;
 import org.knime.core.webui.data.rpc.json.impl.JsonRpcDataServiceImpl;
 import org.knime.core.webui.data.rpc.json.impl.JsonRpcSingleServer;
 import org.knime.core.webui.data.rpc.json.impl.ObjectMapperUtil;
@@ -103,11 +104,15 @@ class JsonRpcDataServiceTest {
     }
 
     @Test
-    void testJsonRpcDataServiceError() throws IOException {
+    void testJsonRpcDataServiceInternalError() throws IOException {
         var wfm = WorkflowManagerUtil.createEmptyWorkflow();
         var page = Page.builder(() -> "content", "index.html").build();
-        NativeNodeContainer nnc = NodeViewManagerTest.createNodeWithNodeView(wfm, m -> NodeViewTest.createNodeView(page,
-            null, new JsonRpcDataServiceImpl(new JsonRpcSingleServer<ErroneusService>(new ErroneusService())), null));
+        NativeNodeContainer nnc =
+            NodeViewManagerTest.createNodeWithNodeView(wfm,
+                m -> NodeViewTest.createNodeView(page, null,
+                    new JsonRpcDataServiceImpl(
+                        new JsonRpcSingleServer<ServiceThrowingInternalError>(new ServiceThrowingInternalError())),
+                    null));
         wfm.executeAllAndWaitUntilDone();
 
         var jsonRpcRequest = "{\"jsonrpc\":\"2.0\", \"id\":1, \"method\":\"erroneusMethod\", \"params\": [\"foo\"]}";
@@ -127,10 +132,41 @@ class JsonRpcDataServiceTest {
         WorkflowManagerUtil.disposeWorkflow(wfm);
     }
 
-    public static class ErroneusService {
-
+    public static class ServiceThrowingInternalError {
         public String erroneusMethod(final String param) {
             throw new IllegalArgumentException(param);
+        }
+    }
+
+    @Test
+    void testJsonRpcDataServiceUserError() throws IOException {
+        var wfm = WorkflowManagerUtil.createEmptyWorkflow();
+        var page = Page.builder(() -> "content", "index.html").build();
+        NativeNodeContainer nnc = NodeViewManagerTest.createNodeWithNodeView(wfm,
+            m -> NodeViewTest.createNodeView(page, null, new JsonRpcDataServiceImpl(
+                new JsonRpcSingleServer<ServiceThrowingUserError>(new ServiceThrowingUserError())), null));
+        wfm.executeAllAndWaitUntilDone();
+
+        var jsonRpcRequest =
+            "{\"jsonrpc\":\"2.0\", \"id\":1, \"method\":\"erroneusMethod\", \"params\": [\"foo\", \"bar\"]}";
+        String response = NodeViewManager.getInstance().callTextDataService(nnc, jsonRpcRequest);
+        final var root = ObjectMapperUtil.getInstance().getObjectMapper().readTree(response);
+        assertTrue(root.has("error"));
+        final var error = root.get("error");
+        assertTrue(error.has("code"));
+        assertEquals(CUSTOM_SERVER_ERROR_UPPER - 1, error.get("code").asInt());
+        assertTrue(error.has("message"));
+        assertEquals("foo", error.get("message").asText());
+        assertTrue(error.has("data"));
+        final var data = error.get("data");
+        assertTrue(data.has("details"));
+        assertEquals("bar", data.get("details").asText());
+        WorkflowManagerUtil.disposeWorkflow(wfm);
+    }
+
+    public static class ServiceThrowingUserError {
+        public String erroneusMethod(final String param1, final String param2) {
+            throw new DataServiceException(param1, param2);
         }
     }
 

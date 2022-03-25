@@ -48,13 +48,15 @@
  */
 package org.knime.core.webui.data.rpc.json.impl;
 
-import static com.googlecode.jsonrpc4j.ErrorResolver.JsonError.CUSTOM_SERVER_ERROR_UPPER;
+import static org.knime.core.webui.data.rpc.json.impl.JsonRpcServer.INTERNAL_ERROR_CODE;
+import static org.knime.core.webui.data.rpc.json.impl.JsonRpcServer.USER_ERROR_CODE;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
 import org.knime.core.node.util.CheckUtils;
+import org.knime.core.webui.data.DataServiceException;
 import org.knime.core.webui.data.rpc.RpcSingleServer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -102,8 +104,9 @@ public class JsonRpcSingleServer<S> implements RpcSingleServer<S> {
         CheckUtils.checkNotNull(mapper, "Object mapper passed to JSON-RPC server must not be null.");
         m_handler = CheckUtils.checkNotNull(handler, "The node data service implementation must not be null.");
         m_jsonRpcServer = new com.googlecode.jsonrpc4j.JsonRpcServer(mapper, handler);
-        m_jsonRpcServer.setErrorResolver(
-            (t, method, arguments) -> new JsonError(CUSTOM_SERVER_ERROR_UPPER, t.getMessage(), new ErrorData(t)));
+        m_jsonRpcServer.setErrorResolver((t, method, arguments) -> t instanceof DataServiceException
+            ? new JsonError(USER_ERROR_CODE, t.getMessage(), new JsonRpcUserErrorData((DataServiceException)t))
+            : new JsonError(INTERNAL_ERROR_CODE, t.getMessage(), new JsonRpcInternalErrorData(t)));
     }
 
     @Override

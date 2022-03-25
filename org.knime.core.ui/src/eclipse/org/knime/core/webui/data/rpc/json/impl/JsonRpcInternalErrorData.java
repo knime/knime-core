@@ -51,42 +51,25 @@ package org.knime.core.webui.data.rpc.json.impl;
 import java.util.Arrays;
 
 /**
- * Object passed as data with a json-rpc error response in case of unchecked exception.
- *
  * @author Marc Bux, KNIME GmbH, Berlin, Germany
  */
-final class ErrorData {
+final class JsonRpcInternalErrorData {
 
     private final String m_typeName;
 
     private final String[] m_stackTrace;
 
-    private final String m_message;
-
-    ErrorData(final Throwable t) {
+    JsonRpcInternalErrorData(final Throwable t) {
         m_typeName = t.getClass().getName();
-        m_message = t.getMessage();
         m_stackTrace = Arrays.stream(t.getStackTrace()).map(StackTraceElement::toString).toArray(String[]::new);
     }
 
-    /**
-     * @return the type name of the {@link Exception} that lead to the error
-     */
     public String getTypeName() {
         return m_typeName;
     }
 
-    /**
-     * @return the error message
-     */
-    public String getMessage() {
-        return m_message;
-    }
-
-    /**
-     * @return the stack trace of the {@link Exception} that lead to the error
-     */
     public String[] getStackTrace() {
         return m_stackTrace;
     }
+
 }
