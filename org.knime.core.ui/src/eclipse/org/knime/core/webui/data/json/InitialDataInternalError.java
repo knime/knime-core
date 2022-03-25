@@ -44,62 +44,33 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Sep 8, 2021 (hornm): created
+ *   7 Mar 2022 (Marc Bux, KNIME GmbH, Berlin, Germany): created
  */
 package org.knime.core.webui.data.json;
 
-import org.knime.core.webui.data.DataServiceContext;
-import org.knime.core.webui.data.DataServiceException;
-import org.knime.core.webui.data.rpc.json.impl.ObjectMapperUtil;
-import org.knime.core.webui.data.text.TextInitialDataService;
+import java.util.Arrays;
 
 /**
- * Implementation of the {@link TextInitialDataService} where the returned initial data is serialized into a JSON object
- * string.
- *
- * @author Martin Horn, KNIME GmbH, Konstanz, Germany
- * @param <D> the type of the data object for initialization
- *
- * @since 4.5
+ * @author Marc Bux, KNIME GmbH, Berlin, Germany
  */
-public interface JsonInitialDataService<D> extends TextInitialDataService {
+final class InitialDataInternalError {
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    default String getInitialData() {
-        final var mapper = ObjectMapperUtil.getInstance().getObjectMapper();
-        try {
-            final var root = mapper.createObjectNode();
-            root.set("result", mapper.readTree(toJson(getInitialDataObject())));
-            final var warningMessages = DataServiceContext.getContext().getWarningMessages();
-            if (warningMessages != null && warningMessages.length > 0) {
-                root.set("warningMessages", mapper.valueToTree(warningMessages));
-            }
-            return root.toString();
-        } catch (DataServiceException e) {
-            return mapper.createObjectNode().set("userError", mapper.valueToTree(new InitialDataUserError(e)))
-                .toString();
-        } catch (Throwable t) { // NOSONAR
-            return mapper.createObjectNode().set("internalError", mapper.valueToTree(new InitialDataInternalError(t)))
-                .toString();
-        } finally {
-            DataServiceContext.getContext().clear();
-        }
+    private final Throwable m_throwable;
+
+    InitialDataInternalError(final Throwable throwable) {
+        m_throwable = throwable;
     }
 
-    /**
-     * @return a object representing the initial data
-     */
-    D getInitialDataObject();
+    public String getMessage() {
+        return m_throwable.getMessage();
+    }
 
-    /**
-     * Turns the initial data object into a JSON-string.
-     *
-     * @param dataObject
-     * @return the json-serialized initial data object
-     */
-    String toJson(D dataObject);
+    public String getTypeName() {
+        return m_throwable.getClass().getName();
+    }
+
+    public String[] getStackTrace() {
+        return Arrays.stream(m_throwable.getStackTrace()).map(StackTraceElement::toString).toArray(String[]::new);
+    }
 
 }

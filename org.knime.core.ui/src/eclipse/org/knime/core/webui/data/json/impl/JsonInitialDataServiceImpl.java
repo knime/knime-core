@@ -51,6 +51,7 @@ package org.knime.core.webui.data.json.impl;
 import java.util.function.Supplier;
 
 import org.knime.core.node.NodeLogger;
+import org.knime.core.webui.data.DataServiceException;
 import org.knime.core.webui.data.json.JsonInitialDataService;
 import org.knime.core.webui.data.rpc.json.impl.ObjectMapperUtil;
 
@@ -105,7 +106,11 @@ public class JsonInitialDataServiceImpl<D> implements JsonInitialDataService<D> 
             return m_mapper.writeValueAsString(dataObject);
         } catch (JsonProcessingException ex) {
             NodeLogger.getLogger(getClass()).error(ex);
-            return ex.getMessage();
+            final var cause = ex.getCause();
+            if (cause instanceof DataServiceException) {
+                throw (DataServiceException)cause;
+            }
+            throw new IllegalStateException("A problem occurred while obtaining initial data.", ex);
         }
     }
 
