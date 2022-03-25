@@ -53,7 +53,7 @@ public class FallibleBuilderTest {
         // stored here
         assertThat(byteValueDef.getValueException()).containsInstanceOf(LoadException.class);
         // default value is used instead: minimum range value
-        assertThat(byteValueDef.getValue()).isEqualByComparingTo(-128);
+        assertThat(byteValueDef.getValue()).isEqualTo(-128);
     }
 
 }

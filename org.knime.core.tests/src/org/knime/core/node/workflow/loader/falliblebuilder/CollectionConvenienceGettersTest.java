@@ -146,8 +146,10 @@ public class CollectionConvenienceGettersTest {
                 .containsOnly(MetanodeExample.WITH_EXCEPTION_PORT, MetanodeExample.WITH_EXCEPTION_PORT2);
 
             // no exception on the collection container, only on the elements
-            // TODO?
-            assertThat(metaNodeWithErrors.getInPortsExceptions()).isEmpty();
+            assertThat(metaNodeWithErrors.getInPortsException()).isEmpty();
+
+            // TODO how to obtain the exceptions associated to the individual elements?
+//            assertThat(metaNodeWithErrors.getInPortsExceptions()).isEmpty();
 
             // check the structure of the map with the exceptions
             var loadExceptions = metaNodeWithErrors.getSuppliers();
