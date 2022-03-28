@@ -50,6 +50,10 @@ package org.knime.core.node.workflow.loader;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.util.Optional;
 
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.InvalidSettingsException;
@@ -59,9 +63,11 @@ import org.knime.core.util.LoadVersion;
 import org.knime.core.workflow.def.AnnotationDataDef;
 import org.knime.core.workflow.def.ConfigMapDef;
 import org.knime.core.workflow.def.StyleRangeDef;
+import org.knime.core.workflow.def.TemplateLinkDef;
 import org.knime.core.workflow.def.impl.AnnotationDataDefBuilder;
 import org.knime.core.workflow.def.impl.ConfigMapDefBuilder;
 import org.knime.core.workflow.def.impl.StyleRangeDefBuilder;
+import org.knime.core.workflow.def.impl.TemplateLinkDefBuilder;
 
 /**
  * //TODO We can add all the read from file methods for the files workflow.knime, settings.xml, template.knime.
@@ -70,130 +76,137 @@ import org.knime.core.workflow.def.impl.StyleRangeDefBuilder;
  */
 final class LoaderUtils {
 
-    private LoaderUtils() {}
+    private LoaderUtils() {
+    }
 
     enum Const {
-        /** @see NativeNodeLoader#load */
-        NODE_NAME_KEY("node-name"),
-        /** @see NativeNodeLoader#loadBundle */
-        NODE_BUNDLE_NAME_KEY("node-bundle-name"), //
-        NODE_BUNDLE_SYMBOLIC_NAME_KEY("node-bundle-symbolic-name"), //
-        NODE_BUNDLE_VENDOR_KEY("node-bundle-vendor"), //
-        NODE_BUNDLE_VERSION_KEY("node-bundle-version"),
-        /** @see NativeNodeLoader#loadFeature */
-        NODE_FEATURE_NAME_KEY("node-feature-name"), //
-        NODE_FEATURE_SYMBOLIC_NAME_KEY("node-feature-symbolic-name"), //
-        NODE_FEATURE_VENDOR_KEY("node-feature-vendor"), //
-        NODE_FEATURE_VERSION_KEY("node-feature-version"),
-        /** @see NativeNodeLoader#loadCreationConfig */
-        NODE_CREATION_CONFIG_KEY("node_creation_config"),
-        /** @see NativeNodeLoader#loadFactory */
-        FACTORY_KEY("factory"),
-        /** @see NativeNodeLoader#loadFactorySettings */
-        FACTORY_SETTINGS_KEY("factory_settings"),
-        /** @see NativeNodeLoader#loadFilestore */
-        FILESTORES_KEY("filestores"),
-        FILESTORES_LOCATION_KEY("file_store_location"),
-        FILESTORES_ID_KEY("file_store_id"),
+            /** @see NativeNodeLoader#load */
+            NODE_NAME_KEY("node-name"),
+            /** @see NativeNodeLoader#loadBundle */
+            NODE_BUNDLE_NAME_KEY("node-bundle-name"), //
+            NODE_BUNDLE_SYMBOLIC_NAME_KEY("node-bundle-symbolic-name"), //
+            NODE_BUNDLE_VENDOR_KEY("node-bundle-vendor"), //
+            NODE_BUNDLE_VERSION_KEY("node-bundle-version"),
+            /** @see NativeNodeLoader#loadFeature */
+            NODE_FEATURE_NAME_KEY("node-feature-name"), //
+            NODE_FEATURE_SYMBOLIC_NAME_KEY("node-feature-symbolic-name"), //
+            NODE_FEATURE_VENDOR_KEY("node-feature-vendor"), //
+            NODE_FEATURE_VERSION_KEY("node-feature-version"),
+            /** @see NativeNodeLoader#loadCreationConfig */
+            NODE_CREATION_CONFIG_KEY("node_creation_config"),
+            /** @see NativeNodeLoader#loadFactory */
+            FACTORY_KEY("factory"),
+            /** @see NativeNodeLoader#loadFactorySettings */
+            FACTORY_SETTINGS_KEY("factory_settings"),
+            /** @see NativeNodeLoader#loadFilestore */
+            FILESTORES_KEY("filestores"), FILESTORES_LOCATION_KEY("file_store_location"),
+            FILESTORES_ID_KEY("file_store_id"),
 
-        /** @see MetaNodeLoader#loadInPorts */
-        META_IN_PORTS_KEY("meta_in_ports"),
-        /** @see MetaNodeLoader#loadOutPorts */
-        META_OUT_PORTS_KEY("meta_out_ports"),
-        /** @see MetaNodeLoader#loadPortsSettingsEnum */
-        PORT_ENUM_KEY("port_enum"),
-        /** @see MetaNodeLoader#loadNodeUIInformation */
-        UI_SETTINGS_KEY("ui_settings"),
+            /** @see MetaNodeLoader#loadInPorts */
+            META_IN_PORTS_KEY("meta_in_ports"),
+            /** @see MetaNodeLoader#loadOutPorts */
+            META_OUT_PORTS_KEY("meta_out_ports"),
+            /** @see MetaNodeLoader#loadPortsSettingsEnum */
+            PORT_ENUM_KEY("port_enum"),
+            /** @see MetaNodeLoader#loadNodeUIInformation */
+            UI_SETTINGS_KEY("ui_settings"),
 
-        /** @see MetaNodeLoader#loadPort */
-        /** @see ComponentLoader#loadPort */
-        PORT_INDEX_KEY("index"), //
-        PORT_NAME_KEY("name"), //
-        PORT_TYPE_KEY("type"), //
-        PORT_OBJECT_CLASS_KEY("object_class"),
+            /** @see MetaNodeLoader#loadPort */
+            /** @see ComponentLoader#loadPort */
+            PORT_INDEX_KEY("index"), //
+            PORT_NAME_KEY("name"), //
+            PORT_TYPE_KEY("type"), //
+            PORT_OBJECT_CLASS_KEY("object_class"),
 
-        /** @see ComponentLoader#loadMetadata */
-        DESCRIPTION_KEY("description"), //
-        METADATA_KEY("metadata"), //
-        METADATA_NAME_KEY("name"), //
-        INPORTS_KEY("inports"), //
-        OUTPORTS_KEY("outports"),
-        /** @see ComponentLoader#loadTemplateLink */
-        WORKFLOW_TEMPLATE_INFORMATION_KEY("workflow_template_information"),
-        /** @see ComponentLoader#loadVirtualInNodeId */
-        VIRTUAL_IN_ID_KEY("virtual-in-ID"),
-        /** @see ComponentLoader#loadVirtualInNodeId */
-        VIRTUAL_OUT_ID_KEY("virtual-out-ID"),
-        /** @see ComponentLoader#loadIcon */
-        ICON_KEY("icon"),
+            /** @see ComponentLoader#loadMetadata */
+            DESCRIPTION_KEY("description"), //
+            METADATA_KEY("metadata"), //
+            METADATA_NAME_KEY("name"), //
+            INPORTS_KEY("inports"), //
+            OUTPORTS_KEY("outports"),
+            /** @see LoaderUtils#loadTemplateLink */
+            WORKFLOW_TEMPLATE_INFORMATION_KEY("workflow_template_information"), //
+            SOURCE_URI_KEY("sourceURI"), TIMESTAMP("timestamp"),
+            /** @see ComponentLoader#loadVirtualInNodeId */
+            VIRTUAL_IN_ID_KEY("virtual-in-ID"),
+            /** @see ComponentLoader#loadVirtualInNodeId */
+            VIRTUAL_OUT_ID_KEY("virtual-out-ID"),
+            /** @see ComponentLoader#loadIcon */
+            ICON_KEY("icon"),
 
+            /** @see ConfigurableNodeLoader#loadInternalNodeSubSettings */
+            INTERNAL_NODE_SUBSETTINGS("internal_node_subsettings"),
+            /** @see ConfigurableNodeLoader#loadVariableSettings */
+            VARIABLES_KEY("variables"),
+            /** @see ConfigurableNodeLoader#loadModelSettings */
+            MODEL_KEY("model"),
+            /** @see ConfigurableNodeLoader#loadFlowStackObjects */
+            SCOPE_STACK_KEY("scope_stack"), FLOW_STACK_KEY("flow_stack"),
+            /** @see ConfigurableNodeLoader#loadFlowObjectDef */
+            TYPE_KEY("type"), VARIABLE("variable"),
+            /** @see ConfigurableNodeLoader#loadFlowContextDef */
+            INACTIVE("_INACTIVE"),
+            /** @see ConfigurableNodeLoader#loadFlowContextType */
+            LOOP("LOOP"), FLOW("FLOW"), SCOPE("SCOPE"),
 
-        /** @see ConfigurableNodeLoader#loadInternalNodeSubSettings */
-        INTERNAL_NODE_SUBSETTINGS("internal_node_subsettings"),
-        /** @see ConfigurableNodeLoader#loadVariableSettings */
-        VARIABLES_KEY("variables"),
-        /** @see ConfigurableNodeLoader#loadModelSettings */
-        MODEL_KEY("model"),
-        /** @see ConfigurableNodeLoader#loadFlowStackObjects */
-        SCOPE_STACK_KEY("scope_stack"),
-        FLOW_STACK_KEY("flow_stack"),
-        /** @see ConfigurableNodeLoader#loadFlowObjectDef */
-        TYPE_KEY("type"),
-        VARIABLE("variable"),
-        /** @see ConfigurableNodeLoader#loadFlowContextDef */
-        INACTIVE("_INACTIVE"),
-        /** @see ConfigurableNodeLoader#loadFlowContextType */
-        LOOP("LOOP"),
-        FLOW("FLOW"),
-        SCOPE("SCOPE"),
+            /** @see NodeLoader#loadNodeId */
+            ID_KEY("id"),
+            /** @see NodeLoader#loadAnnotation */
+            CUSTOM_NAME_KEY("customName"), //
+            NODE_ANNOTATION_KEY("nodeAnnotation"),
+            /** @see NodeLoader#loadJobManager */
+            JOB_MANAGER_KEY("job.manager"), //
+            JOB_MANAGER_FACTORY_ID_KEY("job.manager.factory.id"), JOB_MANAGER_SETTINGS_KEY("job.manager.settings"),
+            /** @see NodeLoader#loadLocks */
+            IS_DELETABLE_KEY("isDeletable"), //
+            HAS_RESET_LOCK_KEY("hasResetLock"), //
+            HAS_CONFIGURE_LOCK_KEY("hasConfigureLock"),
+            /** @see NodeLoader#loadCustomDescription */
+            CUSTOM_DESCRIPTION_KEY("customDescription"),
+            /** @see NodeLoader#loadBoundsDef */
+            EXTRA_NODE_INFO_BOUNDS_KEY("extrainfo.node.bounds"),
 
-        /** @see NodeLoader#loadNodeId */
-        ID_KEY("id"),
-        /** @see NodeLoader#loadAnnotation */
-        CUSTOM_NAME_KEY("customName"),  //
-        NODE_ANNOTATION_KEY("nodeAnnotation"),
-        /** @see NodeLoader#loadJobManager */
-        JOB_MANAGER_KEY("job.manager"), //
-        JOB_MANAGER_FACTORY_ID_KEY("job.manager.factory.id"),
-        JOB_MANAGER_SETTINGS_KEY("job.manager.settings"),
-        /** @see NodeLoader#loadLocks */
-        IS_DELETABLE_KEY("isDeletable"), //
-        HAS_RESET_LOCK_KEY("hasResetLock"), //
-        HAS_CONFIGURE_LOCK_KEY("hasConfigureLock"),
-        /** @see NodeLoader#loadCustomDescription */
-        CUSTOM_DESCRIPTION_KEY("customDescription"),
-        /** @see NodeLoader#loadBoundsDef */
-        EXTRA_NODE_INFO_BOUNDS_KEY("extrainfo.node.bounds"),
+            /** @see LoaderUtils#readWorkflowConfigFromFile */
+            WORKFLOW_FILE_NAME("workflow.knime"),
+            /** @see LoaderUtils#loadNodeFile */
+            NODE_SETTINGS_FILE("node_settings_file"),
+            /** @see LoaderUtils#readNodeConfigFromFile(File) */
+            NODE_SETTINGS_FILE_NAME("settings.xml"),
+            /** @see LoaderUtils#readTemplateConfigFromFile */
+            TEMPLATE_FILE_NAME("template.knime");
 
-        /** @see LoaderUtils#readWorkflowConfigFromFile */
-        WORKFLOW_FILE_NAME("workflow.knime"),
-        /** @see LoaderUtils#loadNodeFile */
-        NODE_SETTINGS_FILE("node_settings_file"),
-        /** @see LoaderUtils#readNodeConfigFromFile(File)*/
-        NODE_SETTINGS_FILE_NAME("settings.xml");
+        /**
+         * @param string
+         */
+        Const(final String string) {
+            m_key = string;
+        }
 
-    /**
-     * @param string
-     */
-    Const(final String string) {
-        m_key = string;
+        /**
+         * @return the key
+         */
+        public String get() {
+            return m_key;
+        }
+
+        final String m_key;
     }
-
-    /**
-     * @return the key
-     */
-    public String get() {
-        return m_key;
-    }
-
-    final String m_key;
-}
 
     static final int DEFAULT_NEGATIVE_INDEX = -1;
 
     static final String DEFAULT_EMPTY_STRING = "";
 
+    static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss Z");
+
     static final ConfigMapDef DEFAULT_CONFIG_MAP = new ConfigMapDefBuilder().build();
+
+    static final TemplateLinkDef DEFAULT_TEMPLATE_LINK = new TemplateLinkDefBuilder().build();
+
+    static OffsetDateTime parseDate(final String s) {
+        synchronized (DATE_FORMAT) {
+            return OffsetDateTime.parse(s, DATE_FORMAT);
+        }
+    }
 
     static ConfigBaseRO readNodeConfigFromFile(final File nodeDirectory) throws IOException {
         var nodeSettingsFile = new File(nodeDirectory, Const.NODE_SETTINGS_FILE_NAME.get());
@@ -210,6 +223,20 @@ final class LoaderUtils {
             return SimpleConfig.parseConfig(workflowSettingsFile.getAbsolutePath(), workflowSettingsFile);
         } catch (IOException e) {
             throw new IOException("Cannot load the " + Const.WORKFLOW_FILE_NAME.get(), e);
+        }
+    }
+
+    static Optional<ConfigBaseRO> readTemplateConfigFromFile(final File nodeDirectory) throws IOException {
+        var templateSettingsFile = new File(nodeDirectory, Const.TEMPLATE_FILE_NAME.get());
+        if (templateSettingsFile.exists()) {
+            try {
+                return Optional
+                    .of(SimpleConfig.parseConfig(templateSettingsFile.getAbsolutePath(), templateSettingsFile));
+            } catch (IOException e) {
+                throw new IOException("Cannot load the " + Const.TEMPLATE_FILE_NAME.get(), e);
+            }
+        } else {
+            return Optional.empty();
         }
     }
 
@@ -251,7 +278,6 @@ final class LoaderUtils {
         var workflowDotKnime = LoaderUtils.getWorkflowDotKnimeFile(workflowDirectory);
         return SimpleConfig.parseConfig(workflowDotKnime.getAbsolutePath(), workflowDotKnime);
     }
-
 
     /**
      * The node settings file is typically named settings.xml (for native nodes and components) and workflow.knime for
@@ -320,6 +346,28 @@ final class LoaderUtils {
             .setFontStyle(styleConfig.getInt("fontstyle"))//
             .setFontSize(styleConfig.getInt("fontsize"))//
             .setColor(styleConfig.getInt("fgcolor"))//
+            .build();
+    }
+
+    /**
+     * Loads the template link of a Component or MetaNode from the {@code templateSettings}. The only usage of
+     * template.knime is to read the template information for the stand alone MetaNodes (Template role). Components, and
+     * MetaNodes as NativeNodes, have the template information in their settings.xml and workflow.knime accordingly.
+     *
+     * @param templateSettings a read only representation either of template.knime, settings.xml or workflow.knime.
+     * @return a {@link TemplateLinkDef}.
+     * @throws InvalidSettingsException
+     */
+    static TemplateLinkDef loadTemplateLink(final ConfigBaseRO templateSettings) throws InvalidSettingsException {
+        if (!templateSettings.containsKey(Const.WORKFLOW_TEMPLATE_INFORMATION_KEY.get())) {
+            return DEFAULT_TEMPLATE_LINK;
+        }
+
+        var templateInformationSettings = templateSettings.getConfigBase(Const.WORKFLOW_TEMPLATE_INFORMATION_KEY.get());
+        return new TemplateLinkDefBuilder()
+            .setUri(templateInformationSettings.getString(Const.SOURCE_URI_KEY.get(), DEFAULT_EMPTY_STRING)) //
+            .setUpdatedAt(() -> parseDate(templateInformationSettings.getString(Const.TIMESTAMP.get())),
+                OffsetDateTime.of(1970, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC)) //
             .build();
     }
 }

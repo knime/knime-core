@@ -71,9 +71,9 @@ import org.knime.core.workflow.def.impl.FallibleConfigurableNodeDef;
 class ComponentLoaderTest {
 
     @Test
-    void simpleComponentLoaderTest() throws InvalidSettingsException, IOException {
+    void templateComponentLoaderTest() throws InvalidSettingsException, IOException {
         // given
-        var file = NodeLoaderTestUtils.readResourceFolder("Simple_Component");
+        var file = NodeLoaderTestUtils.readResourceFolder("Component_Template");
 
         var m_configBaseRO = new SimpleConfig("mock");
         m_configBaseRO.addInt("id", 1);
@@ -95,7 +95,7 @@ class ComponentLoaderTest {
         assertThat(componentDef.getOutPorts()).isEmpty();
         assertThat(componentDef.getVirtualInNodeId()).isEqualTo(3);
         assertThat(componentDef.getVirtualOutNodeId()).isEqualTo(4);
-        assertThat(componentDef.getLink()).isNotNull();
+        assertThat(componentDef.getLink().getUpdatedAt().getMonthValue()).isEqualTo(1);
         assertThat(componentDef.getWorkflow().getNodes()).hasSize(3);
 
         // Assert SingleNodeLoader
@@ -117,7 +117,7 @@ class ComponentLoaderTest {
             n -> n.getBounds().getHeight(), n -> n.getBounds().getLocation(), n -> n.getBounds().getWidth())
             .containsNull();
 
-        assertThat(componentDef.getSuppliers().size()).isOne();
+        assertThat(componentDef.getSuppliers()).isEmpty();
         assertThat(singleNodeDef.hasExceptions()).isFalse();
         assertThat(nodeDef.hasExceptions()).isFalse();
     }
@@ -125,7 +125,7 @@ class ComponentLoaderTest {
     @Test
     void multiPortComponentTest() throws InvalidSettingsException, IOException {
         // given
-        var file = NodeLoaderTestUtils.readResourceFolder("MultiPort_Component");
+        var file = NodeLoaderTestUtils.readResourceFolder("Workflow_Test/Component__Link");
 
         var workflowConfig = new SimpleConfig("mock");
         workflowConfig.addInt("id", 431);
@@ -149,7 +149,8 @@ class ComponentLoaderTest {
             .contains(tuple(0, "outport_0", true), tuple(1, "outport_1", true));
         assertThat(componentDef.getVirtualInNodeId()).isEqualTo(10);
         assertThat(componentDef.getVirtualOutNodeId()).isEqualTo(11);
-        assertThat(componentDef.getLink()).isNotNull();
+        assertThat(componentDef.getLink().getUpdatedAt().getYear()).isEqualTo(2022);
+        assertThat(componentDef.getLink().getUri()).isEqualTo("knime://knime.mountpoint/Component");
         assertThat(componentDef.getWorkflow()).isInstanceOf(WorkflowDef.class);
 
         // Assert SingleNodeLoader

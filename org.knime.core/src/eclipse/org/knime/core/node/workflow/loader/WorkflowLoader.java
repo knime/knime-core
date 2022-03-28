@@ -49,7 +49,6 @@ import java.io.IOException;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
@@ -180,22 +179,6 @@ public class WorkflowLoader {
         .setLastEditedWhen(null) //
         .build();
 
-    /** Format used to save author/edit infos. */
-    static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss Z");
-
-    /**
-     * Synchronized call to DATE_FORMAT.parse(String).
-     *
-     * @param s To parse, not null.
-     * @return The date.
-     * @throws DateTimeParseException if the text cannot be parsed
-     */
-    private static OffsetDateTime parseDate(final String s) {
-        synchronized (DATE_FORMAT) {
-            return OffsetDateTime.parse(s, DATE_FORMAT);
-        }
-    }
-
     /**
      * @param nodeDirectory the directory that contains the node configuration and possibly the contained subworkflow
      * @param workflowFormatVersion the version of the workflow format that was used to write the workflow to load
@@ -245,7 +228,7 @@ public class WorkflowLoader {
                 var nodeDef = loadNodeDef(nodeSetting, key, workflowConfig, workflowDirectory, workflowFormatVersion);
                 return Pair.create(key, nodeDef);
             } catch (InvalidSettingsException | IOException e) {
-                var exception = new LoadException(WorkflowDef.Attribute.NODES_ELEMENTS, e);
+                var exception = new LoadException(WorkflowDef.Attribute.NODES, e);
                 return Pair.create(key, new FallibleNodeDef(new NodeDefBuilder().build(), exception));
             }
         }).collect(Collectors.toMap(Pair::getFirst, Pair::getSecond));
@@ -266,7 +249,7 @@ public class WorkflowLoader {
                 var connectionSetting = connectionsSettings.getConfigBase(key);
                 return loadConnectionDef(connectionSetting, workflowFormatVersion);
             } catch (InvalidSettingsException e) {
-                var exception = new LoadException(WorkflowDef.Attribute.CONNECTIONS_ELEMENTS, e);
+                var exception = new LoadException(WorkflowDef.Attribute.CONNECTIONS, e);
                 return new FallibleConnectionDef(new ConnectionDefBuilder().build(), exception);
             }
         }).collect(Collectors.toList());
@@ -535,7 +518,7 @@ public class WorkflowLoader {
         throws InvalidSettingsException {
         try {
             var date = sub.getString(key);
-            return date == null ? null : parseDate(date);
+            return date == null ? null : LoaderUtils.parseDate(date);
         } catch (InvalidSettingsException e) {
             var errorMessage = String.format("Unable to load the %s: %s", key, e.getMessage());
             throw new InvalidSettingsException(errorMessage, e);

@@ -50,12 +50,12 @@ package org.knime.core.node.workflow.loader;
 
 import static org.knime.core.node.workflow.loader.LoaderUtils.DEFAULT_EMPTY_STRING;
 import static org.knime.core.node.workflow.loader.LoaderUtils.DEFAULT_NEGATIVE_INDEX;
+import static org.knime.core.node.workflow.loader.LoaderUtils.DEFAULT_TEMPLATE_LINK;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Base64;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.knime.core.node.InvalidSettingsException;
@@ -67,7 +67,6 @@ import org.knime.core.workflow.def.ComponentDef;
 import org.knime.core.workflow.def.ComponentDialogSettingsDef;
 import org.knime.core.workflow.def.ComponentMetadataDef;
 import org.knime.core.workflow.def.PortDef;
-import org.knime.core.workflow.def.TemplateLinkDef;
 import org.knime.core.workflow.def.impl.ComponentDefBuilder;
 import org.knime.core.workflow.def.impl.ComponentDialogSettingsDefBuilder;
 import org.knime.core.workflow.def.impl.ComponentMetadataDefBuilder;
@@ -75,7 +74,6 @@ import org.knime.core.workflow.def.impl.FallibleComponentDef;
 import org.knime.core.workflow.def.impl.FalliblePortDef;
 import org.knime.core.workflow.def.impl.PortDefBuilder;
 import org.knime.core.workflow.def.impl.PortTypeDefBuilder;
-import org.knime.core.workflow.def.impl.TemplateLinkDefBuilder;
 import org.knime.core.workflow.def.impl.WorkflowDefBuilder;
 import org.knime.core.workflow.loader.FallibleSupplier;
 import org.knime.core.workflow.loader.LoadException;
@@ -90,10 +88,6 @@ public final class ComponentLoader {
 
     private ComponentLoader() {
     }
-
-    //FIXME Remove the uri from the required fields
-    private static final TemplateLinkDef DEFAULT_TEMPLATE_LINK =
-        new TemplateLinkDefBuilder().setUri("localhost").build();
 
     private static final byte[] DEFAULT_ICON = new byte[0];
 
@@ -118,8 +112,8 @@ public final class ComponentLoader {
             .setOutPorts(() -> loadOutPorts(componentConfig), List.of()) //
             .setVirtualInNodeId(() -> loadVirtualInNodeId(componentConfig), DEFAULT_NEGATIVE_INDEX) //
             .setVirtualOutNodeId(() -> loadVirtualOutNodeId(componentConfig), DEFAULT_NEGATIVE_INDEX) //
-            // TODO We should pass the proper setting for the link, currently passing the template.knime.
-            .setLink(() -> loadTemplateLink(componentConfig), DEFAULT_TEMPLATE_LINK) //
+            // The template.knime is redundant for the Components, settings.xml contains the template information.
+            .setLink(() -> LoaderUtils.loadTemplateLink(componentConfig), DEFAULT_TEMPLATE_LINK) //
             .setMetadata(() -> loadMetadata(componentConfig), new ComponentMetadataDefBuilder() //
                 .build()) //
             .setWorkflow(() -> WorkflowLoader.load(nodeDirectory, workflowFormatVersion),
@@ -129,9 +123,9 @@ public final class ComponentLoader {
     }
 
     /**
-     * TODO
+     * TODO What is this?
      *
-     * @param settings TODO
+     * @param settings
      * @return a {@link ComponentDialogSettingsDef}
      */
     private static ComponentDialogSettingsDef loadDialogSettings(final ConfigBaseRO settings) {
@@ -193,26 +187,6 @@ public final class ComponentLoader {
         var virtualId = settings.getInt(Const.VIRTUAL_OUT_ID_KEY.get());
         CheckUtils.checkSetting(virtualId >= 0, "Node ID < 0: %d", virtualId);
         return virtualId;
-    }
-
-    /**
-     * TODO Loads the link of the referenced workflow.
-     *
-     * @param settings
-     * @return
-     * @throws InvalidSettingsException
-     */
-    private static TemplateLinkDef loadTemplateLink(final ConfigBaseRO settings) throws InvalidSettingsException {
-        //FIXME Read the tempalte link and timestamp? from the template.knime.
-        if (!settings.containsKey(Const.WORKFLOW_TEMPLATE_INFORMATION_KEY.get())) {
-            return DEFAULT_TEMPLATE_LINK;
-        }
-
-        var templateSettings = settings.getConfigBase(Const.WORKFLOW_TEMPLATE_INFORMATION_KEY.get());
-        //TODO Move it to the const enum
-        return Optional.ofNullable(templateSettings.getString("sourceURI")) //
-            .map(uri -> new TemplateLinkDefBuilder().setUri(uri).build()) //
-            .orElseThrow(() -> new InvalidSettingsException("Cannot not read source URI from emtpy string"));
     }
 
     /**

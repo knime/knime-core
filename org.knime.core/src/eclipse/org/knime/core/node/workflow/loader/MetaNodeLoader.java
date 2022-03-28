@@ -64,7 +64,6 @@ import org.knime.core.workflow.def.MetaNodeDef;
 import org.knime.core.workflow.def.NodeUIInfoDef;
 import org.knime.core.workflow.def.PortDef;
 import org.knime.core.workflow.def.PortTypeDef;
-import org.knime.core.workflow.def.TemplateLinkDef;
 import org.knime.core.workflow.def.impl.FallibleMetaNodeDef;
 import org.knime.core.workflow.def.impl.MetaNodeDefBuilder;
 import org.knime.core.workflow.def.impl.NodeUIInfoDefBuilder;
@@ -99,6 +98,8 @@ public final class MetaNodeLoader {
     static FallibleMetaNodeDef load(final ConfigBaseRO workflowConfig, final File nodeDirectory,
         final LoadVersion workflowFormatVersion) throws IOException {
         var metaNodeConfig = LoaderUtils.readWorkflowConfigFromFile(nodeDirectory);
+        // if the template.knime doesn't exist the template information lives in the MetaNode's workflow.knime.
+        var templateConfig = LoaderUtils.readTemplateConfigFromFile(nodeDirectory).orElseGet(() -> metaNodeConfig);
 
         return new MetaNodeDefBuilder()//
             .setWorkflow(() -> WorkflowLoader.load(nodeDirectory, workflowFormatVersion),
@@ -111,7 +112,7 @@ public final class MetaNodeLoader {
             .setOutPortsBarUIInfo(
                 () -> loadPortsBarUIInfo(metaNodeConfig, Const.META_OUT_PORTS_KEY.get(), workflowFormatVersion),
                 DEFAULT_NODE_UI)//
-            .setLink(loadTempateLink(null)) // TODO
+            .setLink(() -> LoaderUtils.loadTemplateLink(templateConfig), LoaderUtils.DEFAULT_TEMPLATE_LINK) //
             .setBaseNode(NodeLoader.load(workflowConfig, metaNodeConfig, workflowFormatVersion)) //
             .build();
     }
@@ -180,11 +181,6 @@ public final class MetaNodeLoader {
             var errorMessage = String.format("Can't load workflow ports %s, config not found: %s", key, e.getMessage());
             throw new InvalidSettingsException(errorMessage, e);
         }
-    }
-
-    private static TemplateLinkDef loadTempateLink(final ConfigBaseRO settings) {
-        //FIXME Implement it in the LoaderUtils to be shared within MetanodeLoader and ComponenetLoader
-        return null;
     }
 
     private static ConfigBaseRO loadPortsSettingsEnum(final ConfigBaseRO settings) throws InvalidSettingsException {

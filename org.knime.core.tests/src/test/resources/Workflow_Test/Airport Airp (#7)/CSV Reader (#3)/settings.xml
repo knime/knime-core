@@ -6,66 +6,6 @@
         <entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
     </config>
     <config key="model">
-        <config key="settings">
-            <config key="file_selection_Internals">
-                <entry key="SettingsModelID" type="xstring" value="SMID_ReaderFileChooser"/>
-                <entry key="EnabledStatus" type="xboolean" value="true"/>
-            </config>
-            <config key="file_selection">
-                <config key="file_system_chooser__Internals">
-                    <entry key="has_fs_port" type="xboolean" value="false"/>
-                    <entry key="overwritten_by_variable" type="xboolean" value="false"/>
-                    <entry key="convenience_fs_category" type="xstring" value="CUSTOM_URL"/>
-                    <entry key="relative_to" type="xstring" value="knime.workflow.data"/>
-                    <entry key="mountpoint" type="xstring" value="knime-temp-space"/>
-                    <entry key="custom_url_timeout" type="xint" value="1000"/>
-                    <entry key="connected_fs" type="xboolean" value="true"/>
-                </config>
-                <config key="path">
-                    <entry key="location_present" type="xboolean" value="true"/>
-                    <entry key="file_system_type" type="xstring" value="CUSTOM_URL"/>
-                    <entry key="file_system_specifier" type="xstring" value="1000"/>
-                    <entry key="path" type="xstring" value="knime://LOCAL/Lesson1/Data/airports.csv"/>
-                </config>
-                <config key="filter_mode_Internals">
-                    <entry key="SettingsModelID" type="xstring" value="SMID_FilterMode"/>
-                    <entry key="EnabledStatus" type="xboolean" value="false"/>
-                </config>
-                <config key="filter_mode">
-                    <entry key="filter_mode" type="xstring" value="FILE"/>
-                    <entry key="include_subfolders" type="xboolean" value="false"/>
-                    <config key="filter_options">
-                        <entry key="filter_files_extension" type="xboolean" value="false"/>
-                        <entry key="files_extension_expression" type="xstring" value=""/>
-                        <entry key="files_extension_case_sensitive" type="xboolean" value="false"/>
-                        <entry key="filter_files_name" type="xboolean" value="false"/>
-                        <entry key="files_name_expression" type="xstring" value="*"/>
-                        <entry key="files_name_case_sensitive" type="xboolean" value="false"/>
-                        <entry key="files_name_filter_type" type="xstring" value="WILDCARD"/>
-                        <entry key="include_hidden_files" type="xboolean" value="false"/>
-                        <entry key="include_special_files" type="xboolean" value="true"/>
-                        <entry key="filter_folders_name" type="xboolean" value="false"/>
-                        <entry key="folders_name_expression" type="xstring" value="*"/>
-                        <entry key="folders_name_case_sensitive" type="xboolean" value="false"/>
-                        <entry key="folders_name_filter_type" type="xstring" value="WILDCARD"/>
-                        <entry key="include_hidden_folders" type="xboolean" value="false"/>
-                        <entry key="follow_links" type="xboolean" value="true"/>
-                    </config>
-                </config>
-            </config>
-            <entry key="has_column_header" type="xboolean" value="true"/>
-            <entry key="has_row_id" type="xboolean" value="false"/>
-            <entry key="support_short_data_rows" type="xboolean" value="false"/>
-            <entry key="skip_empty_data_rows" type="xboolean" value="false"/>
-            <entry key="prepend_file_idx_to_row_id" type="xboolean" value="false"/>
-            <entry key="comment_char" type="xstring" value="#"/>
-            <entry key="column_delimiter" type="xstring" value=","/>
-            <entry key="quote_char" type="xstring" value="&quot;"/>
-            <entry key="quote_escape_char" type="xstring" value="&quot;"/>
-            <entry key="use_line_break_row_delimiter" type="xboolean" value="true"/>
-            <entry key="row_delimiter" type="xstring" value="%%00010"/>
-            <entry key="autodetect_buffer_size" type="xint" value="1048576"/>
-        </config>
         <config key="table_spec_config_Internals">
             <entry key="version" type="xstring" value="V4_4"/>
             <config key="individual_specs">
@@ -570,6 +510,66 @@
                 </config>
             </config>
         </config>
+        <config key="settings">
+            <entry key="has_column_header" type="xboolean" value="true"/>
+            <entry key="has_row_id" type="xboolean" value="false"/>
+            <entry key="support_short_data_rows" type="xboolean" value="false"/>
+            <entry key="skip_empty_data_rows" type="xboolean" value="false"/>
+            <entry key="prepend_file_idx_to_row_id" type="xboolean" value="false"/>
+            <entry key="comment_char" type="xstring" value="#"/>
+            <entry key="column_delimiter" type="xstring" value=","/>
+            <entry key="quote_char" type="xstring" value="&quot;"/>
+            <entry key="quote_escape_char" type="xstring" value="&quot;"/>
+            <entry key="use_line_break_row_delimiter" type="xboolean" value="true"/>
+            <entry key="row_delimiter" type="xstring" value="%%00010"/>
+            <entry key="autodetect_buffer_size" type="xint" value="1048576"/>
+            <config key="file_selection_Internals">
+                <entry key="SettingsModelID" type="xstring" value="SMID_ReaderFileChooser"/>
+                <entry key="EnabledStatus" type="xboolean" value="true"/>
+            </config>
+            <config key="file_selection">
+                <config key="file_system_chooser__Internals">
+                    <entry key="has_fs_port" type="xboolean" value="false"/>
+                    <entry key="overwritten_by_variable" type="xboolean" value="false"/>
+                    <entry key="convenience_fs_category" type="xstring" value="CUSTOM_URL"/>
+                    <entry key="relative_to" type="xstring" value="knime.workflow.data"/>
+                    <entry key="mountpoint" type="xstring" value="knime-temp-space"/>
+                    <entry key="custom_url_timeout" type="xint" value="1000"/>
+                    <entry key="connected_fs" type="xboolean" value="true"/>
+                </config>
+                <config key="path">
+                    <entry key="location_present" type="xboolean" value="true"/>
+                    <entry key="file_system_type" type="xstring" value="CUSTOM_URL"/>
+                    <entry key="file_system_specifier" type="xstring" value="1000"/>
+                    <entry key="path" type="xstring" value="knime://LOCAL/Lesson1/Data/airports.csv"/>
+                </config>
+                <config key="filter_mode_Internals">
+                    <entry key="SettingsModelID" type="xstring" value="SMID_FilterMode"/>
+                    <entry key="EnabledStatus" type="xboolean" value="false"/>
+                </config>
+                <config key="filter_mode">
+                    <entry key="filter_mode" type="xstring" value="FILE"/>
+                    <entry key="include_subfolders" type="xboolean" value="false"/>
+                    <config key="filter_options">
+                        <entry key="filter_files_extension" type="xboolean" value="false"/>
+                        <entry key="files_extension_expression" type="xstring" value=""/>
+                        <entry key="files_extension_case_sensitive" type="xboolean" value="false"/>
+                        <entry key="filter_files_name" type="xboolean" value="false"/>
+                        <entry key="files_name_expression" type="xstring" value="*"/>
+                        <entry key="files_name_case_sensitive" type="xboolean" value="false"/>
+                        <entry key="files_name_filter_type" type="xstring" value="WILDCARD"/>
+                        <entry key="include_hidden_files" type="xboolean" value="false"/>
+                        <entry key="include_special_files" type="xboolean" value="true"/>
+                        <entry key="filter_folders_name" type="xboolean" value="false"/>
+                        <entry key="folders_name_expression" type="xstring" value="*"/>
+                        <entry key="folders_name_case_sensitive" type="xboolean" value="false"/>
+                        <entry key="folders_name_filter_type" type="xstring" value="WILDCARD"/>
+                        <entry key="include_hidden_folders" type="xboolean" value="false"/>
+                        <entry key="follow_links" type="xboolean" value="true"/>
+                    </config>
+                </config>
+            </config>
+        </config>
         <config key="advanced_settings">
             <entry key="spec_merge_mode_Internals" type="xstring" value="UNION"/>
             <entry key="fail_on_differing_specs" type="xboolean" value="true"/>
@@ -600,8 +600,8 @@
     <config key="nodeAnnotation">
         <entry key="text" type="xstring" value="Airports"/>
         <entry key="bgcolor" type="xint" value="16777215"/>
-        <entry key="x-coordinate" type="xint" value="47"/>
-        <entry key="y-coordinate" type="xint" value="319"/>
+        <entry key="x-coordinate" type="xint" value="113"/>
+        <entry key="y-coordinate" type="xint" value="182"/>
         <entry key="width" type="xint" value="106"/>
         <entry key="height" type="xint" value="15"/>
         <entry key="alignment" type="xstring" value="CENTER"/>

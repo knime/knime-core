@@ -80,9 +80,9 @@ class MetaNodeLoaderTest {
     }
 
     @Test
-    void simpleMetaNodetLoaderTest() throws InvalidSettingsException, IOException {
+    void templateMetaNodetLoaderTest() throws InvalidSettingsException, IOException {
         // given
-        var file = NodeLoaderTestUtils.readResourceFolder("Simple_Metanode");
+        var file = NodeLoaderTestUtils.readResourceFolder("Metanode_Template");
 
         when(m_configBaseRO.getInt("id")).thenReturn(1);
         when(m_configBaseRO.containsKey("customDescription")).thenReturn(true);
@@ -98,7 +98,8 @@ class MetaNodeLoaderTest {
         assertThat(metanodeDef.getOutPorts()).isEmpty();
         assertThat(metanodeDef.getInPortsBarUIInfo()).isNotNull();
         assertThat(metanodeDef.getOutPortsBarUIInfo()).isNotNull();
-        assertThat(metanodeDef.getLink()).isNull();
+        assertThat(metanodeDef.getLink().getUpdatedAt().getMonthValue()).isEqualTo(1);
+        assertThat(metanodeDef.getLink().getUri()).isNull();
         assertThat(metanodeDef.getWorkflow()).isNotNull();
         assertThat(metanodeDef.getWorkflow().getNodes()).hasSize(1);
 
@@ -119,9 +120,9 @@ class MetaNodeLoaderTest {
     }
 
     @Test
-    void multiportMetaNodetLoaderTest() throws IOException, InvalidSettingsException {
+    void linkMetaNodetLoaderTest() throws IOException, InvalidSettingsException {
         // given
-        var file = NodeLoaderTestUtils.readResourceFolder("MultiPort_Metanode");
+        var file = NodeLoaderTestUtils.readResourceFolder("Workflow_Test/Metanode_Link");
 
         when(m_configBaseRO.getInt("id")).thenReturn(431);
         when(m_configBaseRO.containsKey("customDescription")).thenReturn(false);
@@ -148,7 +149,8 @@ class MetaNodeLoaderTest {
                 tuple(1, "Connected to: Concatenated table", true));
         assertThat(metanodeDef.getInPortsBarUIInfo()).isInstanceOf(NodeUIInfoDef.class);
         assertThat(metanodeDef.getOutPortsBarUIInfo()).isInstanceOf(NodeUIInfoDef.class);
-        assertThat(metanodeDef.getLink()).isNull();
+        assertThat(metanodeDef.getLink().getUpdatedAt().getYear()).isEqualTo(2022);
+        assertThat(metanodeDef.getLink().getUri()).isEqualTo("knime://knime.mountpoint/MetanodeTest");
         assertThat(metanodeDef.getWorkflow().getNodes()).hasSize(4);
 
         // Assert NodeLoader
