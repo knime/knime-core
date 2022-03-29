@@ -61,6 +61,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 /**
  * A {@link RpcDataService} where the rpc requests and responses are encoded using the json-rpc standard
  * (https://www.jsonrpc.org/specification).
+ * <p>
+ * Data service implementations can obtain a {@link DataServiceContext}. This context can be used to add warning
+ * messages, which will then be added to the data service response.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  *

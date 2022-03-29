@@ -90,12 +90,20 @@ public interface JsonInitialDataService<D> extends TextInitialDataService {
     }
 
     /**
+     * Obtains an object representing the initial data.
+     * <p>
+     * Clients implementing this method can obtain a {@link DataServiceContext}. This context can be used to add warning
+     * messages, which will then be added to the initial data.
+     *
      * @return a object representing the initial data
      */
     D getInitialDataObject();
 
     /**
      * Turns the initial data object into a JSON-string.
+     * <p>
+     * Clients implementing this method can obtain a {@link DataServiceContext}. This context can be used to add warning
+     * messages, which will then be added to the initial data.
      *
      * @param dataObject
      * @return the json-serialized initial data object
