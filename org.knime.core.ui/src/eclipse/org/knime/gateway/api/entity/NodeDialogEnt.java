@@ -60,12 +60,22 @@ import org.knime.core.webui.page.PageUtil.PageType;
  */
 public class NodeDialogEnt extends NodeUIExtensionEnt {
 
+    private final FlowVariableSettingsEnt m_flowVariableSettings;
+
     /**
      * @param nnc
      */
     public NodeDialogEnt(final NativeNodeContainer nnc) {
         super(nnc, NodeDialogManager.getInstance(), NodeDialogManager.getInstance(), PageType.DIALOG);
         CheckUtils.checkArgument(NodeDialogManager.hasNodeDialog(nnc), "The provided node doesn't have a node dialog");
+        m_flowVariableSettings = new FlowVariableSettingsEnt(nnc);
+    }
+
+    /**
+     * @return a representation of the flow variable settings
+     */
+    public FlowVariableSettingsEnt getFlowVariableSettings() {
+        return m_flowVariableSettings;
     }
 
 }
