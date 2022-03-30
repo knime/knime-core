@@ -57,6 +57,7 @@ import java.util.function.Supplier;
 import org.junit.Test;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
+import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.webui.node.dialog.NodeDialog;
 import org.knime.core.webui.node.dialog.NodeDialogManagerTest;
@@ -90,6 +91,7 @@ public class NodeDialogEntTest {
         var nnc = NodeDialogManagerTest.createNodeWithNodeDialog(wfm, nodeDialogCreator);
 
         initNodeSettings(nnc);
+        nnc.getFlowObjectStack().push(new FlowVariable("flow variable 2", "test"));
 
         var flowVariableSettingsEnt = new NodeDialogEnt(nnc).getFlowVariableSettings();
 
@@ -100,17 +102,24 @@ public class NodeDialogEntTest {
             + "  \"modelVariables\" : {\n"
             + "    \"model setting\" : {\n"
             + "      \"leaf\" : true,\n"
+            + "      \"controllingFlowVariableAvailable\" : false,\n"
             + "      \"controllingFlowVariableName\" : \"flow variable 1\"\n"
             + "    }\n"
             + "  },\n"
             + "  \"viewVariables\" : {\n"
             + "    \"view setting\" : {\n"
             + "      \"leaf\" : true,\n"
+            + "      \"controllingFlowVariableAvailable\" : true,\n"
             + "      \"controllingFlowVariableName\" : \"flow variable 2\"\n"
             + "    },\n"
             + "    \"nested\" : {\n"
+            + "      \"nested view settings 2\" : {\n"
+            + "        \"leaf\" : true,\n"
+            + "        \"exposedFlowVariableName\" : \"exposed var name\"\n"
+            + "      },\n"
             + "      \"nested view settings\" : {\n"
             + "        \"leaf\" : true,\n"
+            + "        \"controllingFlowVariableAvailable\" : false,\n"
             + "        \"controllingFlowVariableName\" : \"flow variable 3\",\n"
             + "        \"exposedFlowVariableName\" : \"exposed var name\"\n"
             + "      }\n"
@@ -137,7 +146,7 @@ public class NodeDialogEntTest {
         parent.executeAllAndWaitUntilDone();
     }
 
-    private static void initModelSettings(final NodeSettings ns) throws InvalidSettingsException {
+    private static void initModelSettings(final NodeSettings ns) {
         var modelSettings = ns.addNodeSettings("model");
         modelSettings.addString("model setting", "model setting value");
     }
@@ -167,9 +176,13 @@ public class NodeDialogEntTest {
         variableTreeNode1.addString("used_variable", "flow variable 2");
         variableTreeNode1.addString("exposed_variable", null);
 
-        var variableTreeNode2 = variableTree.addNodeSettings("nested").addNodeSettings("nested view settings");
+        var nested = variableTree.addNodeSettings("nested");
+        var variableTreeNode2 = nested.addNodeSettings("nested view settings");
         variableTreeNode2.addString("used_variable", "flow variable 3");
         variableTreeNode2.addString("exposed_variable", "exposed var name");
+
+        var variableTreeNode3 = nested.addNodeSettings("nested view settings 2");
+        variableTreeNode3.addString("exposed_variable", "exposed var name");
     }
 
 }

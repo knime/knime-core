@@ -50,6 +50,7 @@ package org.knime.gateway.api.entity;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
@@ -73,29 +74,33 @@ public class FlowVariableSettingsEnt {
 
     FlowVariableSettingsEnt(final NativeNodeContainer nnc) {
         var nodeSettings = nnc.getNodeSettings();
-        m_modelVariables = createSettingsTree(CFG_MODEL_VARIABLES, nodeSettings);
-        m_viewVariables = createSettingsTree(CFG_VIEW_VARIABLES, nodeSettings);
+        var flowVariables = nnc.getFlowObjectStack().getAllAvailableFlowVariables().keySet();
+        m_modelVariables = createSettingsTree(CFG_MODEL_VARIABLES, nodeSettings, flowVariables);
+        m_viewVariables = createSettingsTree(CFG_VIEW_VARIABLES, nodeSettings, flowVariables);
     }
 
-    private static Map<String, Object> createSettingsTree(final String settingsKey, final NodeSettings nodeSettings) {
+    private static Map<String, Object> createSettingsTree(final String settingsKey, final NodeSettings nodeSettings,
+        final Set<String> flowVariables) {
         try {
             var ns = nodeSettings.getNodeSettings(settingsKey).getNodeSettings("tree");
-            return createSettingsTree(ns, new HashMap<>());
+            return createSettingsTree(ns, flowVariables, new HashMap<>());
         } catch (InvalidSettingsException ex) { // NOSONAR
             return null; // NOSONAR
         }
     }
 
     private static Map<String, Object> createSettingsTree(final NodeSettings nodeSettings,
-        final Map<String, Object> settingsTreeNodeEnts) {
+        final Set<String> flowVariables, final Map<String, Object> settingsTreeNodeEnts) {
         for (var key : nodeSettings) {
             try {
                 var subSettings = nodeSettings.getNodeSettings(key);
                 if (hasOnlyLeafChildren(subSettings)) {
-                    settingsTreeNodeEnts.put(key, new SettingsTreeLeafEnt(subSettings.getString("used_variable", null),
+                    var usedVariable = subSettings.getString("used_variable", null);
+                    var isUsedVariableAvailable = usedVariable != null && flowVariables.contains(usedVariable);
+                    settingsTreeNodeEnts.put(key, new SettingsTreeLeafEnt(usedVariable, isUsedVariableAvailable,
                         subSettings.getString("exposed_variable", null)));
                 } else {
-                    settingsTreeNodeEnts.put(key, createSettingsTree(subSettings, new HashMap<>()));
+                    settingsTreeNodeEnts.put(key, createSettingsTree(subSettings, flowVariables, new HashMap<>()));
                 }
             } catch (InvalidSettingsException ex) { // NOSONAR
                 //
@@ -137,8 +142,12 @@ public class FlowVariableSettingsEnt {
 
         private final String m_exposedFlowVariableName;
 
-        SettingsTreeLeafEnt(final String controllingFlowVariableName, final String exposedFlowVariableName) {
+        private boolean m_isControllingFlowVariableAvailable;
+
+        SettingsTreeLeafEnt(final String controllingFlowVariableName, final boolean isControllingFlowVariableAvailable,
+            final String exposedFlowVariableName) {
             m_controllingFlowVariableName = controllingFlowVariableName;
+            m_isControllingFlowVariableAvailable = isControllingFlowVariableAvailable;
             m_exposedFlowVariableName = exposedFlowVariableName;
         }
 
@@ -150,6 +159,11 @@ public class FlowVariableSettingsEnt {
         @SuppressWarnings("unused")
         public String getControllingFlowVariableName() {
             return m_controllingFlowVariableName;
+        }
+
+        @SuppressWarnings("unused")
+        public Boolean isControllingFlowVariableAvailable() {
+            return m_controllingFlowVariableName == null ? null : m_isControllingFlowVariableAvailable;
         }
 
         @SuppressWarnings("unused")
