@@ -50,7 +50,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URI;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 
@@ -66,7 +65,6 @@ import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.util.CoreConstants;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.Version;
-import org.knime.core.workflow.def.RootWorkflowDef;
 
 /**
  * Callback class that is used during loading of a workflow to read
@@ -168,17 +166,6 @@ public class WorkflowLoadHelper {
     /** @param isTemplate whether this is a template loader */
     public WorkflowLoadHelper(final boolean isTemplate) {
         this(isTemplate, null);
-    }
-
-    /**
-     * TODO Workflow Format remove
-     * @param pojo
-     */
-    public WorkflowLoadHelper(final RootWorkflowDef pojo) {
-        this(false, // FIXME determine if this is a template project
-            false, // FIXME determine if this is a template project
-            // FIXME create a proper workflow context
-            new WorkflowContext.Factory(Paths.get(KNIMEConstants.getKNIMETempDir()).toFile()).createContext());
     }
 
     /**
