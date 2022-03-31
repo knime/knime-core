@@ -63,7 +63,7 @@ import org.knime.core.webui.page.PageUtil.PageType;
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
-public abstract class NodeUIExtensionEnt {
+public class NodeUIExtensionEnt {
 
     private final String m_nodeId;
 

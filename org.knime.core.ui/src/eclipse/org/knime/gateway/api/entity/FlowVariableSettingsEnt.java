@@ -62,7 +62,7 @@ import org.knime.core.node.workflow.NativeNodeContainer;
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
-public class FlowVariableSettingsEnt {
+public final class FlowVariableSettingsEnt {
 
     private static final String CFG_VIEW_VARIABLES = "view_variables";
 
@@ -83,43 +83,45 @@ public class FlowVariableSettingsEnt {
         final Set<String> flowVariables) {
         try {
             var ns = nodeSettings.getNodeSettings(settingsKey).getNodeSettings("tree");
-            return createSettingsTree(ns, flowVariables, new HashMap<>());
+            var settingsTree = new HashMap<String, Object>();
+            createSettingsTree(ns, flowVariables, settingsTree);
+            return settingsTree;
         } catch (InvalidSettingsException ex) { // NOSONAR
             return null; // NOSONAR
         }
     }
 
-    private static Map<String, Object> createSettingsTree(final NodeSettings nodeSettings,
-        final Set<String> flowVariables, final Map<String, Object> settingsTreeNodeEnts) {
+    private static void createSettingsTree(final NodeSettings nodeSettings, final Set<String> flowVariables,
+        final Map<String, Object> settingsTreeNodeEnts) throws InvalidSettingsException {
         for (var key : nodeSettings) {
-            try {
-                var subSettings = nodeSettings.getNodeSettings(key);
-                if (hasOnlyLeafChildren(subSettings)) {
-                    var usedVariable = subSettings.getString("used_variable", null);
-                    var isUsedVariableAvailable = usedVariable != null && flowVariables.contains(usedVariable);
-                    settingsTreeNodeEnts.put(key, new SettingsTreeLeafEnt(usedVariable, isUsedVariableAvailable,
-                        subSettings.getString("exposed_variable", null)));
-                } else {
-                    settingsTreeNodeEnts.put(key, createSettingsTree(subSettings, flowVariables, new HashMap<>()));
-                }
-            } catch (InvalidSettingsException ex) { // NOSONAR
-                //
+            var subSettings = nodeSettings.getNodeSettings(key);
+            if (isFlowVariableSetting(subSettings)) {
+                var usedVariable = subSettings.getString("used_variable", null);
+                var isUsedVariableAvailable = usedVariable != null && flowVariables.contains(usedVariable);
+                settingsTreeNodeEnts.put(key, new SettingsTreeLeafEnt(usedVariable, isUsedVariableAvailable,
+                    subSettings.getString("exposed_variable", null)));
+            } else {
+                var settingsTree = new HashMap<String, Object>();
+                createSettingsTree(subSettings, flowVariables, settingsTree);
+                settingsTreeNodeEnts.put(key, settingsTree);
             }
         }
-        return settingsTreeNodeEnts;
     }
 
-    private static boolean hasOnlyLeafChildren(final NodeSettings ns) {
-        for (var key : ns) {
-            try {
-                if (!ns.getNodeSettings(key).isLeaf()) {
-                    return false;
-                }
-            } catch (InvalidSettingsException ex) { // NOSONAR
-                //
-            }
+    private static boolean isFlowVariableSetting(final NodeSettings ns) {
+        try {
+            ns.getString("used_variable");
+            return true;
+        } catch (InvalidSettingsException ex) { // NOSONAR
+            //
         }
-        return true;
+        try {
+            ns.getString("exposed_variable");
+            return true;
+        } catch (InvalidSettingsException ex) { // NOSONAR
+            //
+        }
+        return false;
     }
 
     /**
@@ -142,7 +144,7 @@ public class FlowVariableSettingsEnt {
 
         private final String m_exposedFlowVariableName;
 
-        private boolean m_isControllingFlowVariableAvailable;
+        private final boolean m_isControllingFlowVariableAvailable;
 
         SettingsTreeLeafEnt(final String controllingFlowVariableName, final boolean isControllingFlowVariableAvailable,
             final String exposedFlowVariableName) {
