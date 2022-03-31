@@ -141,9 +141,7 @@ public final class NodeExecutionJobManagerPool {
      * @return A customized job manager or the default one if no settings were
      *         stored.
      * @throws InvalidSettingsException If that fails.
-     * @deprecated use {@link #load(String, NodeSettingsRO)} instead.
      */
-    @Deprecated
     public static NodeExecutionJobManager load(final NodeSettingsRO sncSettings)
             throws InvalidSettingsException {
         String jobManagerID = sncSettings.getString(CFG_JOB_MANAGER_FACTORY_ID);
@@ -163,39 +161,16 @@ public final class NodeExecutionJobManagerPool {
     }
 
     /**
-     * @param factoryClassName Qualified name of a class that implements NodeExecutionJobManagerFactory, e.g.,
-     *            org.knime.core.streaming.SimpleStreamerNodeExecutionJobManagerFactory.
-     * @param managerSettings Arbitrary settings for the job manager instance, e.g., chunk size for streaming.
-     * @return a job manager instance for the given id and initializes it with custom parameters. Could be a singleton
-     *         (e.g., thread manager) or a new manager (e.g., streaming manager).
-     * @throws IllegalArgumentException if the factory for the requested name is not found or if the instantiated manager can not load the given settings
-     */
-    public static NodeExecutionJobManager load(final String factoryClassName, final NodeSettingsRO managerSettings) {
-        NodeExecutionJobManagerFactory reference = getJobManagerFactory(factoryClassName);
-        if (reference == null) {
-            throw new IllegalArgumentException(
-                String.format("Unknown job manager factory id \"%s\" (job manager factory possibly not installed?)",
-                    factoryClassName));
-        }
-        NodeExecutionJobManager jobManager = reference.getInstance();
-        try {
-            jobManager.load(managerSettings);
-        } catch (InvalidSettingsException ex) {
-            throw new IllegalArgumentException(String.format(
-                "Job manager instantiated from factory %s can not load the given job manager settings: %s",
-                factoryClassName, managerSettings), ex);
-        }
-        return jobManager;
-    }
-
-    /**
-     * Updates the settings of the passed job manager - if the settings specify the same type of job manager - or
-     * creates and returns a new instance of that new type of job manager.
+     * Updates the settings of the passed job manager - if the settings specify
+     * the same type of job manager - or creates and returns a new instance of
+     * that new type of job manager.
      *
-     * @param instance the "old" job manager that will be updated if its type fits the type in the settings, or null to
-     *            create a new instance.
+     * @param instance the "old" job manager that will be updated if its type
+     *            fits the type in the settings, or null to create a new
+     *            instance.
      * @param ncSettings the new settings to apply
-     * @return either the specified instance with new settings, or a new instance of a new type with the new settings.
+     * @return either the specified instance with new settings, or a new
+     *         instance of a new type with the new settings.
      * @throws InvalidSettingsException if the settings are invalid
      */
     public static NodeExecutionJobManager load(
