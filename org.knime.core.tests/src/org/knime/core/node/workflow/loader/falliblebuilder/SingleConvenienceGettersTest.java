@@ -3,8 +3,10 @@ package org.knime.core.node.workflow.loader.falliblebuilder;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
+import java.util.Map;
 
 import org.junit.Test;
+import org.knime.core.workflow.def.ConnectionDef;
 import org.knime.core.workflow.def.MetaNodeDef;
 import org.knime.core.workflow.def.NodeAnnotationDef;
 import org.knime.core.workflow.def.impl.BaseNodeDefBuilder;
@@ -13,6 +15,7 @@ import org.knime.core.workflow.def.impl.FallibleMetaNodeDef;
 import org.knime.core.workflow.def.impl.FallibleNodeAnnotationDef;
 import org.knime.core.workflow.def.impl.MetaNodeDefBuilder;
 import org.knime.core.workflow.def.impl.NodeAnnotationDefBuilder;
+import org.knime.core.workflow.loader.ListLoadExceptionSupplierAdapter;
 import org.knime.core.workflow.loader.LoadException;
 import org.knime.core.workflow.loader.LoadExceptionSupplier;
 
@@ -102,10 +105,24 @@ public class SingleConvenienceGettersTest {
 
         // default is used
         assertThat(faultyBaseNode.getAnnotation()).isEqualTo(faultyDefaultAnnotation);
-        // but a load exception is stored
-        assertThat(faultyBaseNode.getAnnotationException()).containsInstanceOf(LoadException.class);
+        // but a load exception is stored - > LES for complex types ; LE for primitve types
+        // TODO rename for complex and primitives
+        assertThat(faultyBaseNode.getAnnotationExceptionSupplier()).containsInstanceOf(LoadException.class);
         // which can also be accessed via convenience wrapper
         assertThat(faultyBaseNode.getFaultyAnnotation()).isPresent();
+
+        // WorkflowDef implementation
+        // including default values that have been added due to LoadException
+        workflow.getConnections();
+        // gives access to the children and their LoadExceptions
+        ListLoadExceptionSupplierAdapter lles = workflow.getConnectionsExceptionSupplier(); // returns ListLoadExceptionSupplierAdapter
+        lles.getList(); // get the data
+        Map<Integer, LoadExceptionSupplier<ConnectionDef.Attribute>> children = lles.getExceptionalChildren();
+
+        // give FallibleConnectionDef to inspect exceptions
+        workflow.getFaultyConnections();
+        // getConnections() but filtered to those elements without LoadExceptions
+        workflow.getCleanConnections();
 
         // and the convenience wrapped object behaves as expected
         FallibleNodeAnnotationDef faultyAnnotation = faultyBaseNode.getFaultyAnnotation().get();
