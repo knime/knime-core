@@ -66,7 +66,10 @@ import org.knime.core.webui.page.Page;
 import org.knime.testing.util.WorkflowManagerUtil;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.core.util.DefaultIndenter;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
 /**
@@ -126,7 +129,9 @@ public class NodeDialogEntTest {
             + "    }\n"
             + "  }\n"
             + "}";
-        var json = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(flowVariableSettingsEnt);
+        ObjectWriter writer =
+            mapper.writer(new DefaultPrettyPrinter().withObjectIndenter(new DefaultIndenter().withLinefeed("\n")));
+        var json = writer.writeValueAsString(flowVariableSettingsEnt);
         assertThat(json, is(expectedJson));
 
         WorkflowManagerUtil.disposeWorkflow(wfm);
