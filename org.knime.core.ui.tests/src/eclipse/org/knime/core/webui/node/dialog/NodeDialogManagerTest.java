@@ -178,23 +178,24 @@ public class NodeDialogManagerTest {
     @Test
     public void testCallDataServices() throws IOException, InvalidSettingsException {
         var page = Page.builder(() -> "test page content", "index.html").build();
-        Supplier<NodeDialog> nodeDialogSupplier = () -> createNodeDialog(page, new TextSettingsDataService() { // NOSONAR
+        Supplier<NodeDialog> nodeDialogSupplier = () -> createNodeDialog(page, new TextNodeSettingsService() { // NOSONAR
 
             @Override
-            public void applyData(final String s, final Map<SettingsType, NodeSettingsWO> settings) {
+            public void toNodeSettings(final String s, final Map<SettingsType, NodeSettingsWO> settings) {
                 var split = s.split(",");
                 settings.get(SettingsType.MODEL).addString(split[0], split[1]);
                 settings.get(SettingsType.VIEW).addString(split[0], split[1]);
             }
 
             @Override
-            public String getInitialData(final Map<SettingsType, NodeSettingsRO> settings, final PortObjectSpec[] specs) {
+            public String fromNodeSettings(final Map<SettingsType, NodeSettingsRO> settings,
+                final PortObjectSpec[] specs) {
                 assertThat(settings.size(), is(2));
                 return "the node settings";
             }
 
             @Override
-            public void saveDefaultSettings(final Map<SettingsType, NodeSettingsWO> settings,
+            public void getDefaultNodeSettings(final Map<SettingsType, NodeSettingsWO> settings,
                 final PortObjectSpec[] specs) {
                 //
             }

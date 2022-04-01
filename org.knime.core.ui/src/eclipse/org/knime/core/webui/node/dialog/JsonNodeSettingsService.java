@@ -44,7 +44,7 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Jan 5, 2022 (hornm): created
+ *   Apr 1, 2022 (hornm): created
  */
 package org.knime.core.webui.node.dialog;
 
@@ -56,45 +56,56 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObjectSpec;
 
 /**
- * Translates text-based settings (strings) used on the frontend-side from (initial-data) and to (apply-data) the
- * backend-side settings representation (i.e. {@link NodeSettings}).
+ * A {@link TextNodeSettingsService}-specialization where the {@link NodeSettings} are translated to/from json-strings.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
- * @author Marc Bux, KNIME GmbH, Berlin, Germany
+ * @param <S> the type of the settings object {@link NodeSettings} are translated from/to
  */
-public interface TextSettingsDataService {
+public interface JsonNodeSettingsService<S> extends TextNodeSettingsService {
+
+    @Override
+    default void toNodeSettings(final String textSettings, final Map<SettingsType, NodeSettingsWO> settings) {
+        toNodeSettingsFromObject(fromJson(textSettings), settings);
+    }
 
     /**
-     * Called when a dialog is initialized.
+     * Similar to {@link #toNodeSettings(String, Map)}, but instead translates an arbitrary object to
+     * {@link NodeSettingsWO}-instances.
      *
-     * Infers a single text-based settings representation from possibly multiple {@link NodeSettingsRO}-instances (one
-     * per {@link SettingsType}).
-     *
-     * @param settings the settings to read from; if there are no settings with the node stored, yet, the default node
-     *            settings will be supplied (see {@link #saveDefaultSettings(Map, PortObjectSpec[])})
-     * @param specs the specs for configuring the settings (includes the flow variable port)
-     * @return a new text-based settings representation
+     * @param jsonSettings
+     * @param settings
      */
-    String getInitialData(Map<SettingsType, NodeSettingsRO> settings, PortObjectSpec[] specs);
+    void toNodeSettingsFromObject(S jsonSettings, final Map<SettingsType, NodeSettingsWO> settings);
 
     /**
-     * Called when dialog settings are applied.
+     * De-serializes the settings object from a json string.
      *
-     * Translates text-based settings to {@link NodeSettingsWO}-instances of certain {@link SettingsType}.
-     *
-     * @param textSettings the text-based settings object
-     * @param settings the settings instances to write into
+     * @param json
+     * @return the deserialized settings object
      */
-    void applyData(final String textSettings, Map<SettingsType, NodeSettingsWO> settings);
+    S fromJson(String json);
+
+    @Override
+    default String fromNodeSettings(final Map<SettingsType, NodeSettingsRO> settings, final PortObjectSpec[] specs) {
+        return toJson(fromNodeSettingsToObject(settings, specs));
+    }
 
     /**
-     * Saves the default settings to the given settings objects. Will be called if there are no settings stored with the
-     * node, yet, and is mainly used to be able to properly show the flow variable configuration (e.g., to overwrite
-     * settings).
+     * Similar to {@link #fromNodeSettings(Map, PortObjectSpec[])}, but instead infers an object from
+     * {@link NodeSettingsRO}-instances.
      *
-     * @param settings the settings to write into
-     * @param specs the node's input specs (includes the flow variable port)
+     * @param settings
+     * @param specs
+     * @return a new object representing the settings
      */
-    void saveDefaultSettings(Map<SettingsType, NodeSettingsWO> settings, PortObjectSpec[] specs);
+    S fromNodeSettingsToObject(final Map<SettingsType, NodeSettingsRO> settings, final PortObjectSpec[] specs);
+
+    /**
+     * Serializes the settings object into a json-string.
+     *
+     * @param obj
+     * @return the serialized json string
+     */
+    String toJson(S obj);
 
 }

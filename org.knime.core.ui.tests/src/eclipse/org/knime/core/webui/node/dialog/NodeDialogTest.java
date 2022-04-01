@@ -220,22 +220,22 @@ public class NodeDialogTest {
         return (Container)cont.getComponent(index);
     }
 
-    private static TextSettingsDataService createTextSettingsDataService() {
-        return new TextSettingsDataService() {
+    private static TextNodeSettingsService createTextSettingsDataService() {
+        return new TextNodeSettingsService() {
 
             @Override
-            public String getInitialData(final Map<SettingsType, NodeSettingsRO> settings,
+            public String fromNodeSettings(final Map<SettingsType, NodeSettingsRO> settings,
                 final PortObjectSpec[] specs) {
                 throw new UnsupportedOperationException();
             }
 
             @Override
-            public void applyData(final String textSettings, final Map<SettingsType, NodeSettingsWO> settings) {
+            public void toNodeSettings(final String textSettings, final Map<SettingsType, NodeSettingsWO> settings) {
                 stringToSettings(textSettings, settings.get(SettingsType.MODEL), settings.get(SettingsType.VIEW));
             }
 
             @Override
-            public void saveDefaultSettings(final Map<SettingsType, NodeSettingsWO> settings,
+            public void getDefaultNodeSettings(final Map<SettingsType, NodeSettingsWO> settings,
                 final PortObjectSpec[] specs) {
                 settings.get(SettingsType.VIEW).addString("a default view setting", "a default view setting value");
             }
@@ -268,21 +268,22 @@ public class NodeDialogTest {
      * @return a new dialog instance
      */
     public static NodeDialog createNodeDialog(final Page page) {
-        var settingsMapper = new TextSettingsDataService() {
+        var settingsMapper = new TextNodeSettingsService() {
 
             @Override
-            public void applyData(final String textSettings, final Map<SettingsType, NodeSettingsWO> settings) {
+            public void toNodeSettings(final String textSettings, final Map<SettingsType, NodeSettingsWO> settings) {
                 //
             }
 
             @Override
-            public String getInitialData(final Map<SettingsType, NodeSettingsRO> settings,
+            public String fromNodeSettings(final Map<SettingsType, NodeSettingsRO> settings,
                 final PortObjectSpec[] specs) {
                 return "test settings";
             }
 
             @Override
-            public void saveDefaultSettings(final Map<SettingsType, NodeSettingsWO> settings, final PortObjectSpec[] specs) {
+            public void getDefaultNodeSettings(final Map<SettingsType, NodeSettingsWO> settings,
+                final PortObjectSpec[] specs) {
                 //
             }
 
@@ -290,7 +291,7 @@ public class NodeDialogTest {
         return createNodeDialog(page, settingsMapper, null);
     }
 
-    static NodeDialog createNodeDialog(final Page page, final TextSettingsDataService settingsDataService,
+    static NodeDialog createNodeDialog(final Page page, final TextNodeSettingsService settingsDataService,
         final DataService dataService) {
         return new NodeDialog(SettingsType.MODEL, SettingsType.VIEW) {
 
@@ -300,7 +301,7 @@ public class NodeDialogTest {
             }
 
             @Override
-            protected TextSettingsDataService getSettingsDataService() {
+            protected TextNodeSettingsService getNodeSettingsService() {
                 return settingsDataService;
             }
 
