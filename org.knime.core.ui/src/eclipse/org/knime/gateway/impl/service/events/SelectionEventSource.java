@@ -103,21 +103,25 @@ public class SelectionEventSource extends EventSource<NativeNodeContainer, Selec
 
     /**
      * {@inheritDoc}
+     *
+     * Note: if there is already an event listener registered for the given node, the method-call will have no effect and
+     * return an empty optional.
      */
     @Override
     public Optional<SelectionEvent> addEventListenerAndGetInitialEventFor(final NativeNodeContainer nnc) {
         // TODO see UIEXT-51
         var handler = nnc.getNodeModel().getInHiLiteHandler(0);
         synchronized (handler) {
-            var hiLitKeys = handler.getHiLitKeys();
-            var listener = new PerNodeHiliteListener(this::sendEvent, nnc);
-            var selectionEvent = listener.createSelectionEvent(SelectionEventMode.ADD, hiLitKeys);
             var nodeID = nnc.getID();
             if (!m_hiLiteListeners.containsKey(nodeID)) {
+                var hiLitKeys = handler.getHiLitKeys();
+                var listener = new PerNodeHiliteListener(this::sendEvent, nnc);
+                var selectionEvent = listener.createSelectionEvent(SelectionEventMode.ADD, hiLitKeys);
                 handler.addHiLiteListener(listener);
                 m_hiLiteListeners.put(nnc.getID(), Pair.create(handler, listener));
+                return Optional.ofNullable(selectionEvent);
             }
-            return Optional.ofNullable(selectionEvent);
+            return Optional.empty();
         }
     }
 
