@@ -48,6 +48,7 @@
  */
 package org.knime.gateway.impl.service.events;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -66,8 +67,6 @@ import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.util.Pair;
 import org.knime.gateway.api.entity.NodeIDEnt;
 
-import com.google.common.collect.MapMaker;
-
 /**
  * An event source that emits selection events (i.e. hiliting events) to the given event consumer.
  *
@@ -85,8 +84,7 @@ public class SelectionEventSource extends EventSource<NativeNodeContainer, Selec
             ADD, REMOVE, REPLACE
     }
 
-    private final Map<NodeID, Pair<HiLiteHandler, HiLiteListener>> m_hiLiteListeners =
-        new MapMaker().weakValues().makeMap();
+    private final Map<NodeID, Pair<HiLiteHandler, HiLiteListener>> m_hiLiteListeners = new HashMap<>();
 
     /**
      * @param eventConsumer selection events will be forwarded to this consumer
