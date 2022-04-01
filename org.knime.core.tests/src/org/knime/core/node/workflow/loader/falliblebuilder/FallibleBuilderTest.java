@@ -109,7 +109,5 @@ public class FallibleBuilderTest {
         assertThat(semiGoodDef.hasExceptions(ConfigValueByteDef.Attribute.CONFIG_TYPE)).isFalse();
         // also not on the convenience getter
         assertThat(semiGoodDef.getConfigTypeException()).isEmpty();
-
     }
-
 }

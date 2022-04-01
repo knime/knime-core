@@ -20,11 +20,11 @@ import org.knime.core.workflow.def.impl.MetaNodeDefBuilder;
 import org.knime.core.workflow.def.impl.PortDefBuilder;
 import org.knime.core.workflow.def.impl.PortTypeDefBuilder;
 import org.knime.core.workflow.loader.LoadException;
-import org.knime.core.workflow.loader.LoadExceptionSupplier;
+import org.knime.core.workflow.loader.LoadExceptionTree;
 
 /**
  * Test that the convenience getters of Fallible*Def return the same thing as via access through
- * {@link LoadExceptionSupplier#getSuppliers()} for various constellations.
+ * {@link LoadExceptionTree#getSuppliers()} for various constellations.
  *
  * <pre>
  *  - Single instance: see {@link SingleConvenienceGettersTest}
@@ -55,7 +55,7 @@ public class CollectionConvenienceGettersTest {
      * Build two metanodes with identical contents, but using different builder methods (addToInPorts and setInPorts).
      *
      * Some of the inports are decorated with {@link LoadException}s that should later be retrievable via
-     * {@link LoadExceptionSupplier#getChildrenWithLoadExceptions()}.
+     * {@link LoadExceptionTree#getChildrenWithLoadExceptions()}.
      *
      */
     private static class MetanodeExample {

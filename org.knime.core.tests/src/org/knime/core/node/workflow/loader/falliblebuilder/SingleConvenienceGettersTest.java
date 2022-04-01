@@ -17,11 +17,11 @@ import org.knime.core.workflow.def.impl.MetaNodeDefBuilder;
 import org.knime.core.workflow.def.impl.NodeAnnotationDefBuilder;
 import org.knime.core.workflow.loader.ListLoadExceptionSupplierAdapter;
 import org.knime.core.workflow.loader.LoadException;
-import org.knime.core.workflow.loader.LoadExceptionSupplier;
+import org.knime.core.workflow.loader.LoadExceptionTree;
 
 /**
  * Test that the convenience getters of Fallible*Def return the same thing as via access through
- * {@link LoadExceptionSupplier#getSuppliers()} for various constellations.
+ * {@link LoadExceptionTree#getSuppliers()} for various constellations.
  *  <pre>
  *  - Single instance attribute
  *    - Def type
@@ -59,7 +59,7 @@ public class SingleConvenienceGettersTest {
 
     /**
      * Test that the convenience getters of Fallible*Def return the same thing as via access through
-     * {@link LoadExceptionSupplier#getSuppliers()} for a default with no load exceptions.
+     * {@link LoadExceptionTree#getSuppliers()} for a default with no load exceptions.
      */
     @Test
     public void testSingleDefCleanDefault() {
@@ -90,7 +90,7 @@ public class SingleConvenienceGettersTest {
 
     /**
      * Test that the convenience getters of Fallible*Def return the same thing as via access through
-     * {@link LoadExceptionSupplier#getSuppliers()} for a default with load exceptions.
+     * {@link LoadExceptionTree#getSuppliers()} for a default with load exceptions.
      */
     @Test
     public void testSingleDefFaultyDefault() {
@@ -117,7 +117,7 @@ public class SingleConvenienceGettersTest {
         // gives access to the children and their LoadExceptions
         ListLoadExceptionSupplierAdapter lles = workflow.getConnectionsExceptionSupplier(); // returns ListLoadExceptionSupplierAdapter
         lles.getList(); // get the data
-        Map<Integer, LoadExceptionSupplier<ConnectionDef.Attribute>> children = lles.getExceptionalChildren();
+        Map<Integer, LoadExceptionTree<ConnectionDef.Attribute>> children = lles.getExceptionalChildren();
 
         // give FallibleConnectionDef to inspect exceptions
         workflow.getFaultyConnections();
@@ -141,7 +141,7 @@ public class SingleConvenienceGettersTest {
 
     /**
      * Test that the convenience getters of Fallible*Def return the same thing as via access through
-     * {@link LoadExceptionSupplier#getSuppliers()} for a null default for a non-def type.
+     * {@link LoadExceptionTree#getSuppliers()} for a null default for a non-def type.
      */
     @Test
     public void testSinglePrimitiveNullDefault() {
@@ -173,7 +173,7 @@ public class SingleConvenienceGettersTest {
 
     /**
      * Test that the convenience getters of Fallible*Def return the same thing as via access through
-     * {@link LoadExceptionSupplier#getSuppliers()} for a non-null default for a non-def type.
+     * {@link LoadExceptionTree#getSuppliers()} for a non-null default for a non-def type.
      */
     @Test
     public void testSinglePrimitiveActualDefault() {
