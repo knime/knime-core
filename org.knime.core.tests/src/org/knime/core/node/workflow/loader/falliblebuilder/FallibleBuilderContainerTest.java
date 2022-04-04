@@ -68,8 +68,9 @@ public class FallibleBuilderContainerTest {
             .isSameAs(containerException);
 
         // element at offset 1 has an exception
-        assertThat(stringArray.getArrayExceptionTree().get().getExceptionTree(1).get().getSupplyException().get().getCause())//
-            .isSameAs(elementException);
+        assertThat(
+            stringArray.getArrayExceptionTree().get().getExceptionTree(1).get().getSupplyException().get().getCause())//
+                .isSameAs(elementException);
         // and the convenience method for that
         assertThat(stringArray.getArrayElementException(1).get().getCause()).isSameAs(elementException);
     }
@@ -144,15 +145,25 @@ public class FallibleBuilderContainerTest {
             .isSameAs(containerException);
 
         // ------------------------ element exceptions ------------------------
+        // everything fine with elements at offsets 0 and 1
+        assertThat(styles.getStylesExceptionTree().get().getExceptionTree(0)).isEmpty();
+        assertThat(styles.getStylesExceptionTree().get().getExceptionTree(1)).isEmpty();
+
         // element at offset 2 has an exception
-        assertThat(styles.getStylesExceptionTree().get().getExceptionTree(2).get().getSupplyException().get().getCause())//
-            .isSameAs(element1Exception);
-        // convenience getter: first child to have an exception is at offset 1
+        assertThat(
+            styles.getStylesExceptionTree().get().getExceptionTree(2).get().getSupplyException().get().getCause())//
+                .isSameAs(element1Exception);
+
+        // convenience getter: first child to have an exception is at offset 2
         assertThat(styles.getStylesExceptionTrees().get(0).getSupplyException()).get().isSameAs(element1Exception);
 
+        // everything fine with element at offset 3
+        assertThat(styles.getStylesExceptionTree().get().getExceptionTree(3)).isEmpty();
+
         // element at offset 4 has an exception
-        assertThat(styles.getStylesExceptionTree().get().getExceptionTree(4).get().getSupplyException().get().getCause())//
-            .isSameAs(element2Exception);
+        assertThat(
+            styles.getStylesExceptionTree().get().getExceptionTree(4).get().getSupplyException().get().getCause())//
+                .isSameAs(element2Exception);
         // convenience getter: second child to have an exception is the one at offset 4
         assertThat(styles.getStylesExceptionTrees().get(1).getSupplyException()).get().isSameAs(element2Exception);
 
