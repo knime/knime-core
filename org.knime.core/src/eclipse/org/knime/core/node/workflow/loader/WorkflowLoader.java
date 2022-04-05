@@ -388,7 +388,7 @@ public class WorkflowLoader {
         builder.setSnapToGrid(editorCfg.getBoolean(Const.WORKFLOW_EDITOR_SNAPTOGRID_KEY.get()))//
             .setShowGrid(editorCfg.getBoolean(Const.WORKFLOW_EDITOR_SHOWGRID_KEY.get()))//
             .setGridX(editorCfg.getInt(Const.WORKFLOW_EDITOR_GRID_X_KEY.get()))//
-            .setGridY(editorCfg.getInt(Const.WORKFLOW_EDITOR_GIRD_Y_KEY.get()))//
+            .setGridY(editorCfg.getInt(Const.WORKFLOW_EDITOR_GRID_Y_KEY.get()))//
             .setZoomLevel(editorCfg.getDouble(Const.WORKFLOW_EDITOR_ZOOM_LEVEL_KEY.get()));
         if (editorCfg.containsKey(Const.WORKFLOW_EDITOR_CURVED_CONNECTIONS_KEY.get())) {
             builder.setCurvedConnections((editorCfg.getBoolean(Const.WORKFLOW_EDITOR_CURVED_CONNECTIONS_KEY.get())));

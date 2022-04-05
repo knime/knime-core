@@ -54,16 +54,15 @@ import java.nio.file.StandardOpenOption;
 
 import org.junit.Test;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.DefWorkflowManagerWrapper;
 import org.knime.core.node.workflow.WorkflowLoadHelper;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.node.workflow.WorkflowPersistor;
-import org.knime.core.node.workflow.WorkflowTestCase;
+import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
+import org.knime.core.node.workflow.WorkflowTestCase;
 import org.knime.core.workflow.def.RootWorkflowDef;
+import org.knime.core.workflow.def.StandaloneDef;
 import org.knime.core.workflow.def.WorkflowDef;
-import org.knime.core.workflow.def.impl.FallibleRootWorkflowDef;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -106,7 +105,6 @@ public class Enh11762_WorkflowRepresentation extends WorkflowTestCase {
 
 		// create a workflow manager from the POJO using an appropriate persistor
 		ExecutionMonitor exec = new ExecutionMonitor();
-		WorkflowLoadHelper loader = new WorkflowLoadHelper(pojo);
 		WorkflowLoadResult loadResult = (WorkflowLoadResult) new Object(); // TODO
 		WorkflowManager restoredManager = null; // TODO
 
@@ -147,7 +145,7 @@ public class Enh11762_WorkflowRepresentation extends WorkflowTestCase {
 		// wrap workflow manager to get a workflow project definition interface implementation
 		DefWorkflowManagerWrapper def = new DefWorkflowManagerWrapper(wfm);
 		// copy information to information-only POJO
-		RootWorkflowDef projectDef = new FallibleRootWorkflowDef(def.asProjectDef());
+		StandaloneDef projectDef = def.asProjectDef();
 
 		// serialize into JSON
 		String pretty = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(projectDef);

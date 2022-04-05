@@ -52,7 +52,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.apache.commons.lang3.NotImplementedException;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeAndBundleInformationPersistor;
@@ -77,7 +76,6 @@ import org.knime.core.node.workflow.FlowLoopContext;
 import org.knime.core.node.workflow.FlowLoopContext.RestoredFlowLoopContext;
 import org.knime.core.node.workflow.FlowScopeContext;
 import org.knime.core.node.workflow.FlowVariable;
-import org.knime.core.node.workflow.MetaNodeTemplateInformation;
 import org.knime.core.node.workflow.NodeContainer.NodeLocks;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.util.workflowalizer.AuthorInformation;
@@ -114,8 +112,6 @@ import org.knime.core.workflow.def.NativeNodeDef;
 import org.knime.core.workflow.def.NodeLocksDef;
 import org.knime.core.workflow.def.NodeUIInfoDef;
 import org.knime.core.workflow.def.PortTypeDef;
-import org.knime.core.workflow.def.RootComponentDef;
-import org.knime.core.workflow.def.RootMetaNodeDef;
 import org.knime.core.workflow.def.WorkflowUISettingsDef;
 
 /**
@@ -202,22 +198,6 @@ public class DefToCoreUtil {
         }
         return builder.build();
     }
-
-    public static MetaNodeTemplateInformation toTemplateInfo(final RootComponentDef def) {
-        // TODO
-                throw new NotImplementedException("Component template information import not implemented yet.");
-//                Role.valueOf(def.getRole()), TemplateType.valueOf(def.getType()),
-//                new URI(def.getUri()), java.util.Date.from(def.getTimestamp().toInstant()), null, null
-//                return MetaNodeTemplateInformation.creat);
-    }
-
-    public static MetaNodeTemplateInformation toTemplateInfo(final RootMetaNodeDef def) {
-     // TODO
-        throw new NotImplementedException("Metanode template information import not implemented yet.");
-//        Role.valueOf(def.getRole()), TemplateType.valueOf(def.getType()),
-//        new URI(def.getUri()), java.util.Date.from(def.getTimestamp().toInstant()), null, null
-//        return MetaNodeTemplateInformation.creat);
-}
 
     public static EditorUIInformation toEditorUIInformation(final WorkflowUISettingsDef def) {
         return EditorUIInformation.builder()//

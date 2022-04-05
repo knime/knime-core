@@ -74,12 +74,12 @@ import org.knime.core.workflow.def.impl.TemplateInfoDefBuilder;
  *
  * @author Dionysios Stolis, KNIME GmbH, Berlin, Germany
  */
-final class LoaderUtils {
+public final class LoaderUtils {
 
     private LoaderUtils() {
     }
 
-    enum Const {
+    public enum Const {
             /** @see NativeNodeLoader#load */
             NODE_NAME_KEY("node-name"),
             /** @see NativeNodeLoader#loadBundle */
@@ -212,7 +212,7 @@ final class LoaderUtils {
             WORKFLOW_EDITOR_SNAPTOGRID_KEY("workflow.editor.snapToGrid"), //
             WORKFLOW_EDITOR_SHOWGRID_KEY("workflow.editor.ShowGrid"), //
             WORKFLOW_EDITOR_GRID_X_KEY("workflow.editor.gridX"), //
-            WORKFLOW_EDITOR_GIRD_Y_KEY("workflow.editor.gridY"), //
+            WORKFLOW_EDITOR_GRID_Y_KEY("workflow.editor.gridY"), //
             WORKFLOW_EDITOR_ZOOM_LEVEL_KEY("workflow.editor.zoomLevel"), //
             UI_CLASSNAME_KEY("ui_classname"), //
             WORKFLOW_EDITOR_CONNECTION_WIDTH_KEY("workflow.editor.connectionWidth"), //

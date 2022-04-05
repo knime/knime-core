@@ -57,7 +57,7 @@ import org.knime.core.workflow.def.BaseNodeDef;
 import org.knime.core.workflow.def.MetaNodeDef;
 import org.knime.core.workflow.def.NodeUIInfoDef;
 import org.knime.core.workflow.def.PortDef;
-import org.knime.core.workflow.def.TemplateLinkDef;
+import org.knime.core.workflow.def.TemplateInfoDef;
 import org.knime.core.workflow.def.WorkflowDef;
 
 /**
@@ -157,7 +157,7 @@ public class DefMetanodeWrapper implements MetaNodeDef {
      * {@inheritDoc}
      */
     @Override
-    public TemplateLinkDef getLink() {
+    public TemplateInfoDef getLink() {
         return CoreToDefUtil.toTemplateLinkDef(m_wfm.getTemplateInformation());
     }
 

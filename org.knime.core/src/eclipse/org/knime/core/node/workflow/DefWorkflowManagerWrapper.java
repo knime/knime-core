@@ -65,14 +65,14 @@ import org.knime.core.workflow.def.AuthorInformationDef;
 import org.knime.core.workflow.def.ConnectionDef;
 import org.knime.core.workflow.def.CreatorDef;
 import org.knime.core.workflow.def.NodeDef;
-import org.knime.core.workflow.def.RootWorkflowDef;
+import org.knime.core.workflow.def.StandaloneDef;
 import org.knime.core.workflow.def.WorkflowDef;
 import org.knime.core.workflow.def.WorkflowUISettingsDef;
 import org.knime.core.workflow.def.impl.AnnotationDataDefBuilder;
 import org.knime.core.workflow.def.impl.AuthorInformationDefBuilder;
 import org.knime.core.workflow.def.impl.ConnectionDefBuilder;
 import org.knime.core.workflow.def.impl.CreatorDefBuilder;
-import org.knime.core.workflow.def.impl.RootWorkflowDefBuilder;
+import org.knime.core.workflow.def.impl.StandaloneDefBuilder;
 import org.knime.core.workflow.def.impl.StyleRangeDefBuilder;
 import org.knime.core.workflow.def.impl.WorkflowUISettingsDefBuilder;
 
@@ -192,29 +192,21 @@ public class DefWorkflowManagerWrapper implements WorkflowDef {
     }
 
     /**
-     *
      * Use new {@link FileWorkflowPersistor#parseVersion(String)} to restore a {@link LoadVersion} object from this
      * String.
      *
      * @return description of the workflow project represented by the wrapped workflow manager in POJO format
      */
-    public RootWorkflowDef asProjectDef() {
+    public StandaloneDef asProjectDef() {
         CreatorDef creator = new CreatorDefBuilder()//
                 .setNightly(KNIMEConstants.isNightlyBuild())//
                 .setSavedWithVersion(KNIMEConstants.VERSION)//
-                .setWorkflowFormatVersion(LoadVersion.latest().getVersionString())//
                 .build();
 
-        return new RootWorkflowDefBuilder()//
+        return new StandaloneDefBuilder()//
                 .setCreator(creator)//
-                .setWorkflow(this)
+                .setContents(this)
                 .build();
-    }
-
-    @Override
-    public String getCipher() {
-        // TODO workflow cipher
-        return Optional.ofNullable(m_wfm.getWorkflowCipher()).map(WorkflowCipher::toString).orElse(null);
     }
 
     @Override
