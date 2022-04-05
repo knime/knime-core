@@ -79,9 +79,9 @@ import org.knime.core.workflow.loader.FallibleSupplier;
  * @author Dionysios Stolis, KNIME GmbH, Berlin, Germany
  * @author Carl Witt, KNIME GmbH, Berlin, Germany
  */
-public final class StandAloneLoader {
+public final class StandaloneLoader {
 
-    private StandAloneLoader() {
+    private StandaloneLoader() {
     }
 
     private static final CredentialPlaceholderDef DEFAULT_CREDENTIAL_PLACEHOLDER =
