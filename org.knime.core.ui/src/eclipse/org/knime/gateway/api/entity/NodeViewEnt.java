@@ -81,9 +81,8 @@ public final class NodeViewEnt extends NodeUIExtensionEnt {
                 NodeViewManager.getInstance().updateNodeViewSettings(nnc);
                 return new NodeViewEnt(nnc, initialSelection, NodeViewManager.getInstance(), null);
             } catch (InvalidSettingsException ex) {
-                var message = "Failed to update node view settings";
-                NodeLogger.getLogger(NodeViewEnt.class).error(message, ex);
-                return new NodeViewEnt(nnc, null, null, message + ":" + ex.getMessage());
+                NodeLogger.getLogger(NodeViewEnt.class).error("Failed to update node view settings", ex);
+                return new NodeViewEnt(nnc, null, null, ex.getMessage());
             }
         } else {
             return new NodeViewEnt(nnc, null, null, null);
