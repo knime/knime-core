@@ -66,6 +66,7 @@ import org.knime.core.workflow.def.FlowContextDef.ContextTypeEnum;
 import org.knime.core.workflow.def.FlowObjectDef;
 import org.knime.core.workflow.def.FlowVariableDef;
 import org.knime.core.workflow.def.impl.ConfigurableNodeDefBuilder;
+import org.knime.core.workflow.def.impl.FallibleConfigurableNodeDef;
 import org.knime.core.workflow.def.impl.FlowContextDefBuilder;
 import org.knime.core.workflow.def.impl.FlowObjectDefBuilder;
 import org.knime.core.workflow.def.impl.FlowVariableDefBuilder;
@@ -84,7 +85,7 @@ final class ConfigurableNodeLoader {
 
     private static final FlowObjectDef DEFAULT_FLOW_OBJECT = new FlowObjectDefBuilder().build();
 
-    static ConfigurableNodeDef load(final ConfigBaseRO workflowConfig, final ConfigBaseRO nodeConfig,
+    static FallibleConfigurableNodeDef load(final ConfigBaseRO workflowConfig, final ConfigBaseRO nodeConfig,
         final LoadVersion loadVersion) {
 
         return new ConfigurableNodeDefBuilder()//

@@ -53,12 +53,11 @@ import static org.knime.core.node.workflow.loader.LoaderUtils.DEFAULT_EMPTY_STRI
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.Set;
 
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.config.base.ConfigBase;
 import org.knime.core.node.config.base.ConfigBaseRO;
 import org.knime.core.node.workflow.loader.LoaderUtils.Const;
+import org.knime.core.node.workflow.loader.WorkflowLoader.NodeType;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.workflow.def.MetaNodeDef;
 import org.knime.core.workflow.def.NodeUIInfoDef;
@@ -85,6 +84,8 @@ public final class MetaNodeLoader {
 
     private static final NodeUIInfoDef DEFAULT_NODE_UI = new NodeUIInfoDefBuilder().build();
 
+    private static final PortDef DEFAULT_PORT_DEF = new PortDefBuilder().build();
+
     /**
      * Loads the properties of a MetaNode into {@link FallibleMetaNodeDef}, stores the loading exceptions using the
      * {@link FallibleSupplier}
@@ -101,11 +102,12 @@ public final class MetaNodeLoader {
         // if the template.knime doesn't exist the template information lives in the MetaNode's workflow.knime.
         var templateConfig = LoaderUtils.readTemplateConfigFromFile(nodeDirectory).orElseGet(() -> metaNodeConfig);
 
-        return new MetaNodeDefBuilder()//
+        var builder = new MetaNodeDefBuilder()//
+            .setNodeType(NodeType.METANODE.toString()) // FIXME
             .setWorkflow(() -> WorkflowLoader.load(nodeDirectory, workflowFormatVersion),
                 new WorkflowDefBuilder().build())//
-            .setInPorts(() -> loadInPorts(metaNodeConfig, workflowFormatVersion), List.of())//
-            .setOutPorts(() -> loadOutPorts(metaNodeConfig, workflowFormatVersion), List.of())//
+            //            .setInPorts(() -> loadInPorts(metaNodeConfig, workflowFormatVersion), List.of())//
+            //            .setOutPorts(() -> loadOutPorts(metaNodeConfig, workflowFormatVersion), List.of())//
             .setInPortsBarUIInfo(
                 () -> loadPortsBarUIInfo(metaNodeConfig, Const.META_IN_PORTS_KEY.get(), workflowFormatVersion),
                 DEFAULT_NODE_UI)//
@@ -113,8 +115,11 @@ public final class MetaNodeLoader {
                 () -> loadPortsBarUIInfo(metaNodeConfig, Const.META_OUT_PORTS_KEY.get(), workflowFormatVersion),
                 DEFAULT_NODE_UI)//
             .setLink(() -> LoaderUtils.loadTemplateLink(templateConfig), LoaderUtils.DEFAULT_TEMPLATE_LINK) //
-            .setBaseNode(NodeLoader.load(workflowConfig, metaNodeConfig, workflowFormatVersion)) //
-            .build();
+            .setBaseNode(NodeLoader.load(workflowConfig, metaNodeConfig, workflowFormatVersion));
+        setInPorts(builder, metaNodeConfig, workflowFormatVersion);
+        setOutPorts(builder, metaNodeConfig, workflowFormatVersion);
+
+        return builder.build();
     }
 
     /**
@@ -125,15 +130,15 @@ public final class MetaNodeLoader {
      * @return a list of {@link PortDef}.
      * @throws InvalidSettingsException
      */
-    private static List<PortDef> loadInPorts(final ConfigBaseRO settings, final LoadVersion workflowFormatVersion)
-        throws InvalidSettingsException {
-        var inPortsSettings = loadSetting(settings, Const.META_IN_PORTS_KEY.get(), workflowFormatVersion);
-        if (inPortsSettings == null || inPortsSettings.keySet().isEmpty()) {
-            return List.of();
-        }
-        var inPortsEnum = loadPortsSettingsEnum(inPortsSettings);
-        return loadPorts(inPortsEnum);
-    }
+    //    private static List<PortDef> loadInPorts(final ConfigBaseRO settings, final LoadVersion workflowFormatVersion)
+    //        throws InvalidSettingsException {
+    //        var inPortsSettings = loadSetting(settings, Const.META_IN_PORTS_KEY.get(), workflowFormatVersion);
+    //        if (inPortsSettings == null || inPortsSettings.keySet().isEmpty()) {
+    //            return List.of();
+    //        }
+    //        var inPortsEnum = loadPortsSettingsEnum(inPortsSettings);
+    //        return loadPorts(inPortsEnum);
+    //    }
 
     /**
      * Loads the MetaNode's output ports from the {@code settings}.
@@ -143,16 +148,31 @@ public final class MetaNodeLoader {
      * @return a list of {@link PortDef}.
      * @throws InvalidSettingsException
      */
-    private static List<PortDef> loadOutPorts(final ConfigBaseRO settings, final LoadVersion loadVersion)
-        throws InvalidSettingsException {
-        var inPortsSettings = loadSetting(settings, Const.META_OUT_PORTS_KEY.get(), loadVersion);
-        if (inPortsSettings == null || inPortsSettings.keySet().isEmpty()) {
-            return List.of();
-        }
+    //    private static List<PortDef> loadOutPorts(final ConfigBaseRO settings, final LoadVersion loadVersion)
+    //        throws InvalidSettingsException {
+    //        var inPortsSettings = loadSetting(settings, Const.META_OUT_PORTS_KEY.get(), loadVersion);
+    //        if (inPortsSettings == null || inPortsSettings.keySet().isEmpty()) {
+    //            return List.of();
+    //        }
+    //
+    //        var outPortsEnum = loadPortsSettingsEnum(inPortsSettings);
+    //        return loadPorts(outPortsEnum);
+    //    }
 
-        var outPortsEnum = loadPortsSettingsEnum(inPortsSettings);
-        return loadPorts(outPortsEnum);
-    }
+    //    private static ConfigBaseRO loadPortsSettingsEnum(final ConfigBaseRO settings, final Const key,
+    //        final LoadVersion loadVersion) throws InvalidSettingsException {
+    //        try {
+    //            var inPortsSettings = loadSetting(settings, key.get(), loadVersion);
+    //            if (inPortsSettings == null || inPortsSettings.keySet().isEmpty() || !settings.containsKey(key.get())) {
+    //                return null;
+    //            }
+    //
+    //            return settings.getConfigBase(Const.PORT_ENUM_KEY.get());
+    //        } catch (InvalidSettingsException e) {
+    //            var errorMessage = "Can't load ports enum: " + e.getMessage();
+    //            throw new InvalidSettingsException(errorMessage, e);
+    //        }
+    //    }
 
     /**
      * Load the input/output ports bar ui info from the {@code settings}.
@@ -184,50 +204,79 @@ public final class MetaNodeLoader {
     }
 
     private static ConfigBaseRO loadPortsSettingsEnum(final ConfigBaseRO settings) throws InvalidSettingsException {
-        try {
+        if (settings == null || !settings.containsKey(Const.PORT_ENUM_KEY.get())) {
+            return null;
+        } else {
             return settings.getConfigBase(Const.PORT_ENUM_KEY.get());
-        } catch (InvalidSettingsException e) {
-            var errorMessage = "Can't load port enum: " + e.getMessage();
-            throw new InvalidSettingsException(errorMessage, e);
         }
     }
 
-    private static List<PortDef> loadPorts(final ConfigBaseRO portsEnum) {
-        Set<String> keySet = portsEnum == null ? Set.of() : portsEnum.keySet();
-        var portCount = portsEnum == null ? 0 : keySet.size();
-        var portDefs = new PortDef[portCount];
-        for (String key : keySet) {
-            if (portsEnum != null) {
-                ConfigBase portConfig;
-                try {
-                    portConfig = portsEnum.getConfigBase(key);
-                    PortDef port = loadPort(portConfig);
-                    if (port.getIndex() >= 0 && port.getIndex() < portCount) {
-                        portDefs[port.getIndex()] = port;
-                    }
-                } catch (InvalidSettingsException ex) {
-                    //TODO Shall i follow the m_metaNodeBuilder.addToInPorts(portDef) ?
-                    //TODO How can i put to the load problems the exceptions from the higher layer?
-                }
-
+    private static void setInPorts(final MetaNodeDefBuilder builder, final ConfigBaseRO settings,
+        final LoadVersion loadVersion) {
+        try {
+            var inPortsSettings = loadSetting(settings, Const.META_IN_PORTS_KEY.get(), loadVersion);
+            if (inPortsSettings == null) {
+                builder.setInPorts(List.of());
             }
-        }
-        for (var i = 0; i < portDefs.length; i++) {
-            if (portDefs[i] == null) {
-                //FIXME
-                // new funcitonality
-                portDefs[i] = new PortDefBuilder().build();
-                // Old funcitonality
-                //                loadResult.setDirtyAfterLoad();
-                //                loadResult.addError("Assigning fallback port type for " + "missing input port " + i);
-                //                portDefs[i] = new WorkflowPortTemplate(i, FALLBACK_PORTTYPE);
+            var inPortsEnum = loadPortsSettingsEnum(inPortsSettings);
+            if (inPortsEnum != null) {
+                inPortsEnum.keySet().forEach(
+                    key -> builder.addToInPorts(() -> loadPort(inPortsEnum.getConfigBase(key)), DEFAULT_PORT_DEF));
             }
+        } catch (InvalidSettingsException ex) {
+            builder.setInPorts(() -> {
+                throw ex;
+            }, List.of());
         }
-
-        return List.of(portDefs);
     }
+
+    private static void setOutPorts(final MetaNodeDefBuilder builder, final ConfigBaseRO settings,
+        final LoadVersion loadVersion) {
+        try {
+            var inPortsSettings = loadSetting(settings, Const.META_OUT_PORTS_KEY.get(), loadVersion);
+            if (inPortsSettings == null) {
+                builder.setOutPorts(List.of());
+            }
+            var inPortsEnum = loadPortsSettingsEnum(inPortsSettings);
+            if (inPortsEnum != null) {
+                inPortsEnum.keySet().forEach(
+                    key -> builder.addToOutPorts(() -> loadPort(inPortsEnum.getConfigBase(key)), DEFAULT_PORT_DEF));
+            }
+        } catch (InvalidSettingsException ex) {
+            builder.setOutPorts(() -> {
+                throw ex;
+            }, List.of());
+        }
+    }
+
+    //    private static List<PortDef> loadPorts(final ConfigBaseRO portsEnum) {
+    //        Set<String> keySet = portsEnum == null ? Set.of() : portsEnum.keySet();
+    //        var portCount = portsEnum == null ? 0 : keySet.size();
+    //        var portDefs = new PortDef[portCount];
+    //        for (String key : keySet) {
+    //            if (portsEnum != null) {
+    //                ConfigBase portConfig;
+    //                try {
+    //                    portConfig = portsEnum.getConfigBase(key);
+    //                    PortDef port = loadPort(portConfig);
+    //                    if (port.getIndex() >= 0 && port.getIndex() < portCount) {
+    //                        portDefs[port.getIndex()] = port;
+    //                    }
+    //                } catch (InvalidSettingsException ex) {
+    //                    //TODO Shall i follow the m_metaNodeBuilder.addToInPorts(portDef) ?
+    //                    //TODO How can i put to the load problems the exceptions from the higher layer?
+    //                }
+    //
+    //            }
+    //        }
+    //
+    //        return List.of(portDefs);
+    //    }
 
     private static PortDef loadPort(final ConfigBaseRO settings) {
+        if (settings == null) {
+            return DEFAULT_PORT_DEF;
+        }
         return new PortDefBuilder()//
             .setIndex(() -> settings.getInt(Const.PORT_INDEX_KEY.get()), -1) // Negative default index
             .setName(() -> settings.getString(Const.PORT_NAME_KEY.get()), DEFAULT_EMPTY_STRING)//

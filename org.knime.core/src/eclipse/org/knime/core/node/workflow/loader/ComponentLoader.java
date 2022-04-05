@@ -56,12 +56,14 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Base64;
 import java.util.List;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.base.ConfigBaseRO;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.loader.LoaderUtils.Const;
+import org.knime.core.node.workflow.loader.WorkflowLoader.NodeType;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.workflow.def.ComponentDef;
 import org.knime.core.workflow.def.ComponentDialogSettingsDef;
@@ -71,12 +73,10 @@ import org.knime.core.workflow.def.impl.ComponentDefBuilder;
 import org.knime.core.workflow.def.impl.ComponentDialogSettingsDefBuilder;
 import org.knime.core.workflow.def.impl.ComponentMetadataDefBuilder;
 import org.knime.core.workflow.def.impl.FallibleComponentDef;
-import org.knime.core.workflow.def.impl.FalliblePortDef;
 import org.knime.core.workflow.def.impl.PortDefBuilder;
 import org.knime.core.workflow.def.impl.PortTypeDefBuilder;
 import org.knime.core.workflow.def.impl.WorkflowDefBuilder;
 import org.knime.core.workflow.loader.FallibleSupplier;
-import org.knime.core.workflow.loader.LoadException;
 
 /**
  * Loads the description of a Component into {@link ComponentDef}. Components are internally also referred to as
@@ -91,9 +91,11 @@ public final class ComponentLoader {
 
     private static final byte[] DEFAULT_ICON = new byte[0];
 
+    private static final PortDef DEFAULT_PORT_DEF = new PortDefBuilder().build();
+
     /**
-     * Loads the properties of a Component into {@link FallibleComponentDef}, stores the loading exceptions using the
-     * {@link FallibleSupplier}.
+     * Loads the properties of a Component into {@link FallibleComponentDef}, each loader stores the loading exceptions
+     * using the {@link FallibleSupplier}.
      *
      * @param workflowConfig a read only representation of the workflow.knime.
      * @param nodeDirectory a {@link File} of the node folder.
@@ -105,62 +107,83 @@ public final class ComponentLoader {
         final LoadVersion workflowFormatVersion) throws IOException {
         var componentConfig = LoaderUtils.readNodeConfigFromFile(nodeDirectory);
 
-        return new ComponentDefBuilder() //
-            .setDialogSettings(() -> loadDialogSettings(componentConfig),
-                new ComponentDialogSettingsDefBuilder().build()) //
-            .setInPorts(() -> loadInPorts(componentConfig), List.of()) //
-            .setOutPorts(() -> loadOutPorts(componentConfig), List.of()) //
+        var builder = new ComponentDefBuilder() //
+            .setNodeType(NodeType.COMPONENT.toString()) // TODO Do we need it?
+            .setDialogSettings(loadDialogSettings(componentConfig)) //
             .setVirtualInNodeId(() -> loadVirtualInNodeId(componentConfig), DEFAULT_NEGATIVE_INDEX) //
             .setVirtualOutNodeId(() -> loadVirtualOutNodeId(componentConfig), DEFAULT_NEGATIVE_INDEX) //
+            .setDialogSettings(() -> loadDialogSettings(componentConfig), null)
             // The template.knime is redundant for the Components, settings.xml contains the template information.
             .setLink(() -> LoaderUtils.loadTemplateLink(componentConfig), DEFAULT_TEMPLATE_LINK) //
             .setMetadata(() -> loadMetadata(componentConfig), new ComponentMetadataDefBuilder() //
                 .build()) //
             .setWorkflow(() -> WorkflowLoader.load(nodeDirectory, workflowFormatVersion),
                 new WorkflowDefBuilder().build()) //
-            .setConfigurableNode(ConfigurableNodeLoader.load(workflowConfig, componentConfig, workflowFormatVersion)) //
-            .build();
+            .setConfigurableNode(ConfigurableNodeLoader.load(workflowConfig, componentConfig, workflowFormatVersion));
+
+        setInPorts(builder, componentConfig);
+        setOutPorts(builder, componentConfig);
+
+        return builder.build();
+
     }
 
     /**
-     * TODO What is this?
+     * Loads the input ports from the {@code componentConfig}, and set them into the {@code builder}.
      *
-     * @param settings
+     * @param builder an instance of the current {@link ComponentDefBuilder}.
+     * @param componentConfig a read only representation of the component's settings.xml.
+     */
+    private static void setInPorts(final ComponentDefBuilder builder, final ConfigBaseRO componentConfig) {
+        try {
+            var inPortsSettings = loadSetting(componentConfig, Const.INPORTS_KEY.get());
+            if (inPortsSettings != null) {
+                inPortsSettings.keySet() //
+                    .forEach(key -> builder.addToInPorts(() -> loadPort(inPortsSettings.getConfigBase(key)),
+                        DEFAULT_PORT_DEF));
+            }
+        } catch (InvalidSettingsException ex) {
+            builder.setInPorts(() -> {
+                throw ex;
+            }, List.of());
+        }
+    }
+
+    /**
+     * Loads the out ports from the {@code componentConfig}, and set them into the {@code builder}.
+     *
+     * @param builder an instance of the current {@link ComponentDefBuilder}.
+     * @param componentConfig a read only representation of the component's settings.xml.
+     */
+    private static void setOutPorts(final ComponentDefBuilder builder, final ConfigBaseRO componentConfig) {
+        try {
+            var inPortsSettings = loadSetting(componentConfig, Const.OUTPORTS_KEY.get());
+            if (inPortsSettings != null) {
+                inPortsSettings.keySet() //
+                    .forEach(key -> builder.addToOutPorts(() -> loadPort(inPortsSettings.getConfigBase(key)),
+                        DEFAULT_PORT_DEF));
+            }
+        } catch (InvalidSettingsException ex) {
+            builder.setOutPorts(() -> {
+                throw ex;
+            }, List.of());
+        }
+    }
+
+    /**
+     * Loads the component's dialog settings from the {@code settings}
+     *
+     * @param settings a read only representation of the node's settings.xml.
      * @return a {@link ComponentDialogSettingsDef}
      */
     private static ComponentDialogSettingsDef loadDialogSettings(final ConfigBaseRO settings) {
-        //FIXME
-        return null;
-    }
-
-    /**
-     * Loads the input ports from the {@code settings}.
-     *
-     * @param settings a read only representation of the node's settings.xml.
-     * @return a list of {@link PortDef}.
-     * @throws InvalidSettingsException
-     */
-    private static List<PortDef> loadInPorts(final ConfigBaseRO settings) throws InvalidSettingsException {
-        var inPortsSettings = loadSetting(settings, Const.INPORTS_KEY.get());
-        if (inPortsSettings == null || inPortsSettings.keySet().isEmpty()) {
-            return List.of();
-        }
-        return loadPorts(inPortsSettings);
-    }
-
-    /**
-     * Loads the output ports from the {@code settings}
-     *
-     * @param settings a read only representation of the node's settings.xml.
-     * @return a list of {@link PortDef}.
-     * @throws InvalidSettingsException
-     */
-    private static List<PortDef> loadOutPorts(final ConfigBaseRO settings) throws InvalidSettingsException {
-        var outPortsSettings = loadSetting(settings, Const.OUTPORTS_KEY.get());
-        if (outPortsSettings == null || outPortsSettings.keySet().isEmpty()) {
-            return List.of();
-        }
-        return loadPorts(outPortsSettings);
+        return new ComponentDialogSettingsDefBuilder() //
+            .setLayoutJSON(settings.getString(Const.LAYOUT_JSON_KEY.get(), DEFAULT_EMPTY_STRING)) //
+            .setConfigurationLayoutJSON(
+                settings.getString(Const.CONFIGURATION_LAYOUT_JSON_KEY.get(), DEFAULT_EMPTY_STRING)) //
+            .setCssStyles(settings.getString(Const.CUSTOM_CSS_KEY.get(), DEFAULT_EMPTY_STRING)) //
+            .setHideInWizard(settings.getBoolean(Const.HIDE_IN_WIZARD_KEY.get(), false)) //
+            .build();
     }
 
     /**
@@ -222,28 +245,37 @@ public final class ComponentLoader {
 
     private static List<String> loadPortsProperties(final ConfigBaseRO sub, final String portsKey,
         final String propertyKey) throws InvalidSettingsException {
-        try {
-            var inportsSetting = loadSetting(sub, portsKey);
-            if (inportsSetting == null) {
-                return List.of();
-            }
-
-            String[] properties = new String[inportsSetting.keySet().size()]; //NOSONAR
-            inportsSetting.keySet().stream().forEach(key -> {
-                try {
-                    var portSetting = inportsSetting.getConfigBase(key);
-                    var index = portSetting.getInt(Const.PORT_INDEX_KEY.get(), DEFAULT_NEGATIVE_INDEX);
-                    properties[index] = portSetting.getString(propertyKey);
-                } catch (InvalidSettingsException ex) {
-                    throw new RuntimeException(ex);
-                }
-            });
-            return List.of(properties);
-        } catch (Exception e) {
-            var errorMessage =
-                String.format("Unable to load the component's %s %s: %s", portsKey, propertyKey, e.getMessage());
-            throw new InvalidSettingsException(errorMessage, e);
+        //        try {
+        var inportsSetting = loadSetting(sub, portsKey);
+        if (inportsSetting == null) {
+            return List.of();
         }
+
+        var treeMap = new TreeMap<>();
+        for (var key : inportsSetting.keySet()) {
+            var portSetting = inportsSetting.getConfigBase(key);
+            var index = portSetting.getInt(Const.PORT_INDEX_KEY.get(), DEFAULT_NEGATIVE_INDEX);
+            treeMap.put(index, portSetting.getString(propertyKey));
+        }
+        return treeMap.values().stream() //
+            .map(Object::toString).collect(Collectors.toList());
+        //
+        //            String[] properties = new String[inportsSetting.keySet().size()]; //NOSONAR
+        //            inportsSetting.keySet().stream().forEach(key -> {
+        //                try {
+        //                    var portSetting = inportsSetting.getConfigBase(key);
+        //                    var index = portSetting.getInt(Const.PORT_INDEX_KEY.get(), DEFAULT_NEGATIVE_INDEX);
+        //                    properties[index] = portSetting.getString(propertyKey);
+        //                } catch (InvalidSettingsException ex) {
+        //                    throw new RuntimeException(ex);
+        //                }
+        //            });
+        //            return List.of(properties);
+        //        } catch (Exception e) {
+        //            var errorMessage =
+        //                String.format("Unable to load the component's %s %s: %s", portsKey, propertyKey, e.getMessage());
+        //            throw new InvalidSettingsException(errorMessage, e);
+        //        }
     }
 
     private static ConfigBaseRO loadSetting(final ConfigBaseRO sub, final String key) throws InvalidSettingsException {
@@ -266,21 +298,9 @@ public final class ComponentLoader {
         return Base64.getDecoder().decode(sub.getString(Const.ICON_KEY.get()));
     }
 
-    private static List<PortDef> loadPorts(final ConfigBaseRO portSettings) {
-        return portSettings.keySet().stream().map(key -> {
-            try {
-                var inPortSetting = portSettings.getConfigBase(key);
-                return loadPort(inPortSetting);
-            } catch (InvalidSettingsException e) {
-                var exception = new LoadException(ComponentDef.Attribute.IN_PORTS_ELEMENTS, e);
-                return new FalliblePortDef(new PortDefBuilder().build(), exception);
-            }
-        }).collect(Collectors.toList());
-    }
-
     private static PortDef loadPort(final ConfigBaseRO settings) {
         if (settings == null) {
-            return new PortDefBuilder().build();
+            return DEFAULT_PORT_DEF;
         }
         return new PortDefBuilder() //
             .setIndex(() -> settings.getInt(Const.PORT_INDEX_KEY.get()), DEFAULT_NEGATIVE_INDEX) //

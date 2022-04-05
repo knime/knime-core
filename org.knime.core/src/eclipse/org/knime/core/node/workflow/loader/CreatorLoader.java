@@ -48,14 +48,9 @@
  */
 package org.knime.core.node.workflow.loader;
 
-import java.io.File;
-import java.io.IOException;
-
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.config.base.ConfigBaseRO;
-import org.knime.core.util.LoadVersion;
-import org.knime.core.util.Version;
 import org.knime.core.workflow.def.CreatorDef;
 import org.knime.core.workflow.def.impl.CreatorDefBuilder;
 
@@ -65,7 +60,10 @@ import org.knime.core.workflow.def.impl.CreatorDefBuilder;
  *
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  */
-public class CreatorLoader {
+final class CreatorLoader {
+
+    private CreatorLoader() {
+    }
 
     /** String constants, such as key names in the workflow configuration, file names, etc. */
     public enum Const {
@@ -93,6 +91,21 @@ public class CreatorLoader {
         }
     }
 
+    private static final String UNKNOWN_VERSION = "<unknown>";
+
+    /**
+     * TODO
+     *
+     * @param workflowConfig
+     * @return
+     */
+    static CreatorDef loadCreator(final ConfigBaseRO workflowConfig) {
+        return new CreatorDefBuilder()//
+            .setSavedWithVersion(() -> loadCreatorVersion(workflowConfig), UNKNOWN_VERSION)//
+            .setNightly(() -> loadCreatorIsNightly(workflowConfig), true)//
+            .build();
+    }
+
     /**
      * @param workflowConfig the parsed contents of the workflow.knime XML file
      * @return the version of the KNIME instance that was used to create the workflow.
@@ -108,89 +121,34 @@ public class CreatorLoader {
     }
 
     /**
-     * @param workflowConfig the parsed contents of the workflow.knime XML file
-     * @return the version of the KNIME instance that was used to create the workflow.
-     * @throws InvalidSettingsException when the version string in the settings cannot be converted to a {@link Version}
+     * Loads the creator version
+     *
+     * @param workflowConfig
+     * @return
+     * @throws InvalidSettingsException
      */
-    private static Version loadCreatorVersion(final ConfigBaseRO workflowConfig) throws InvalidSettingsException {
-        Version createdWith = null;
-        var createdWithString = workflowConfig.getString(Const.CREATOR_KNIME_VERSION.get(), null);
-        if (createdWithString != null) {
-            try {
-                createdWith = new Version(createdWithString);
-            } catch (IllegalArgumentException e) {
-                var message = String.format("Unable to parse version string \"%s\" (file \"%s\")", createdWithString,
-                    workflowConfig.getKey());
-                throw new InvalidSettingsException(message, e);
-            }
+    private static String loadCreatorVersion(final ConfigBaseRO workflowConfig) throws InvalidSettingsException {
+        if (!workflowConfig.containsKey(Const.CREATOR_KNIME_VERSION.get())) {
+            return UNKNOWN_VERSION;
         }
-        return createdWith;
+        return workflowConfig.getString(Const.CREATOR_KNIME_VERSION.get());
     }
 
+
     /**
-     * @param workflowConfig the parsed contents of the workflow.knime XML file
-     * @return load version, see {@link LoadVersion}
-     * @throws InvalidSettingsException if the settings do not contain a workflow format version
+     * TODO
+     *
+     * @param workflowConfig
+     * @return
+     * @throws InvalidSettingsException
      */
-    private static String loadWorkflowFormatVersionString(final ConfigBaseRO workflowConfig)
-        throws InvalidSettingsException {
-        String versionString;
+    private static String loadWorkflowFormatVersion(final ConfigBaseRO workflowConfig) throws InvalidSettingsException {
         if (workflowConfig.containsKey(Const.WORKFLOW_FORMAT_VERSION.get())) {
-            try {
-                versionString = workflowConfig.getString(Const.WORKFLOW_FORMAT_VERSION.get());
-            } catch (InvalidSettingsException e) {
-                throw new InvalidSettingsException("Can't read version number from \"" + workflowConfig.getKey() + "\"",
-                    e);
-            }
+            return workflowConfig.getString(Const.WORKFLOW_FORMAT_VERSION.get());
             // CeBIT 2006 version did not contain a version string.
         } else {
-            versionString = Const.ANCIENT_LOAD_VERSION_STRING.get();
+            return Const.ANCIENT_LOAD_VERSION_STRING.get();
         }
-        return versionString;
-    }
-
-    private final CreatorDef m_def;
-
-    private ConfigBaseRO m_workflowConfig;
-
-    private LoadVersion m_workflowFormatVersion;
-
-    /**
-     * @param directory that contains the top-level project (workflow, component, etc.)
-     * @throws IOException if the workflow.knime cannot be accessed in the given directory or its contents cannot be
-     *             parsed
-     */
-    public CreatorLoader(final File directory) throws IOException {
-        m_workflowConfig = LoaderUtils.parseWorkflowConfig(directory);
-
-        m_def = new CreatorDefBuilder()//
-            .setWorkflowFormatVersion(() -> loadWorkflowFormatVersionString(m_workflowConfig),
-                LoadVersion.UNKNOWN.toString())//
-            .setSavedWithVersion(() -> loadCreatorVersion(m_workflowConfig).toString(), LoadVersion.UNKNOWN.toString())//
-            .setNightly(() -> loadCreatorIsNightly(m_workflowConfig), true)//
-            .build();
-
-        m_workflowFormatVersion = LoadVersion.fromVersionString(m_def.getWorkflowFormatVersion());
-
-    }
-
-    /**
-     * @return the workflow settings extracted from the directory given to the constructor
-     */
-    ConfigBaseRO getWorkflowConfig() {
-        return m_workflowConfig;
-    }
-
-    LoadVersion getWorkflowFormatVersion() {
-        return m_workflowFormatVersion;
-    }
-
-    /**
-     * @return the extracted information (workflow format version etc.) about the project (e.g., workflow, shared
-     *         component)
-     */
-    CreatorDef getCreatorDef() {
-        return m_def;
     }
 
 }

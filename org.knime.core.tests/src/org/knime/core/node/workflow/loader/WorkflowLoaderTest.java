@@ -70,17 +70,18 @@ class WorkflowLoaderTest {
     void simpleMetaNodetLoaderTest() throws InvalidSettingsException, IOException {
         // given
         var file = NodeLoaderTestUtils.readResourceFolder("Workflow_Test");
-
         // when
         var workflowDef = (FallibleWorkflowDef)WorkflowLoader.load(file, LoadVersion.FUTURE);
 
         // then
-        assertThat(workflowDef.getAnnotations()).hasSize(3);
+        assertThat(workflowDef.getAnnotations()).hasSize(3).extracting(a -> !a.getText().isEmpty()).containsOnly(true);
         assertThat(workflowDef.getAuthorInformation()).isInstanceOf(AuthorInformationDef.class);
-        assertThat(workflowDef.getCipher()).isNull();
-        assertThat(workflowDef.getConnections()).hasSize(6);
+        //        assertThat(workflowDef.getCipher()).isNull();
+        assertThat(workflowDef.getConnections()).hasSize(6).extracting(c -> c.getDestID() != null
+            && c.getDestPort() != null && c.getSourceID() != null && c.getSourcePort() != null).containsOnly(true);
         assertThat(workflowDef.getName()).isNull();
-        assertThat(workflowDef.getNodes()).hasSize(7);
+        assertThat(workflowDef.getNodes()).hasSize(7).containsKeys("node_14", "node_13", "node_12", "node_7", "node_11",
+            "node_8", "node_10");
         assertThat(workflowDef.getWorkflowEditorSettings()).isInstanceOf(WorkflowUISettingsDef.class);
 
         assertThat(workflowDef.hasExceptions()).isFalse();

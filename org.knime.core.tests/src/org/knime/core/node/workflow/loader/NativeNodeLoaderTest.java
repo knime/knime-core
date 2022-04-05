@@ -60,12 +60,10 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.base.ConfigBaseRO;
 import org.knime.core.node.util.NodeLoaderTestUtils;
 import org.knime.core.util.LoadVersion;
-import org.knime.core.workflow.def.BaseNodeDef;
 import org.knime.core.workflow.def.FilestoreDef;
 import org.knime.core.workflow.def.FlowContextDef;
 import org.knime.core.workflow.def.impl.FallibleBaseNodeDef;
 import org.knime.core.workflow.def.impl.FallibleConfigurableNodeDef;
-import org.knime.core.workflow.def.impl.FallibleNodeUIInfoDef;
 
 
 
@@ -156,12 +154,14 @@ class NativeNodeLoaderTest {
 
         // then
 
-        assertThat(nativeNodeDef.hasExceptions()).isTrue();
-        assertThat(confNodeDef.hasExceptions()).isTrue();
-        assertThat(nodeDef.hasExceptions()).isTrue();
-        assertThat(nodeDef.getSuppliers()).containsOnlyKeys(BaseNodeDef.Attribute.UI_INFO);
-        assertThat(nodeDef.getSuppliers().get(BaseNodeDef.Attribute.UI_INFO)).singleElement()// list with one LoadExceptionSupplier
-            .isExactlyInstanceOf(FallibleNodeUIInfoDef.class);
+        assertThat(nativeNodeDef.hasExceptions()).isFalse();
+        assertThat(confNodeDef.hasExceptions()).isFalse();
+        assertThat(nodeDef.hasExceptions()).isFalse();
+//        assertThat(nodeDef.getAnnotation().)
+        assertThat(nodeDef.getExceptionalChildren()).isNotEmpty();
+//        assertThat(nodeDef.getSuppliers()).containsOnlyKeys(BaseNodeDef.Attribute.UI_INFO);
+//        assertThat(nodeDef.getSuppliers().get(BaseNodeDef.Attribute.UI_INFO)).singleElement()// list with one LoadExceptionSupplier
+//            .isExactlyInstanceOf(FallibleNodeUIInfoDef.class);
         //FIXME
 //        FallibleNodeUIInfoDef uiInfo = nodeDef.getFaultyUiInfo().get();
 //        assertThat(uiInfo.getSuppliers().get(NodeUIInfoDef.Attribute.SYMBOL_RELATIVE))//

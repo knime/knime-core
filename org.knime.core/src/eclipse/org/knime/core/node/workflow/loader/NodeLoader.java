@@ -69,6 +69,8 @@ import org.knime.core.workflow.def.NodeUIInfoDef;
 import org.knime.core.workflow.def.impl.AnnotationDataDefBuilder;
 import org.knime.core.workflow.def.impl.BaseNodeDefBuilder;
 import org.knime.core.workflow.def.impl.BoundsDefBuilder;
+import org.knime.core.workflow.def.impl.FallibleBaseNodeDef;
+import org.knime.core.workflow.def.impl.FallibleBoundsDef;
 import org.knime.core.workflow.def.impl.JobManagerDefBuilder;
 import org.knime.core.workflow.def.impl.NodeAnnotationDefBuilder;
 import org.knime.core.workflow.def.impl.NodeLocksDefBuilder;
@@ -104,7 +106,7 @@ final class NodeLoader {
      * @param workflowFormatVersion an {@link LoadVersion}.
      * @return a {@link BaseNodeDef}
      */
-    static BaseNodeDef load(final ConfigBaseRO workflowConfig, final ConfigBaseRO nodeConfig,
+    static FallibleBaseNodeDef load(final ConfigBaseRO workflowConfig, final ConfigBaseRO nodeConfig,
         final LoadVersion workflowFormatVersion) {
 
         return new BaseNodeDefBuilder() //
@@ -164,7 +166,7 @@ final class NodeLoader {
                 var isDefault = nodeAnnotationSettings == null;
                 return new NodeAnnotationDefBuilder() //
                     .setAnnotationDefault(isDefault) //
-                    .setData(LoaderUtils.loadAnnotationDef(nodeAnnotationSettings, workflowFormatVersion)) //
+                    .setData(LoaderUtils.loadAnnotation(nodeAnnotationSettings, workflowFormatVersion)) //
                     .build();
             } else {
                 return new NodeAnnotationDefBuilder().setAnnotationDefault(true).build();
@@ -274,14 +276,14 @@ final class NodeLoader {
             .build();
     }
 
-    private static BoundsDef loadBoundsDef(final ConfigBaseRO settings) throws InvalidSettingsException {
+    private static FallibleBoundsDef loadBoundsDef(final ConfigBaseRO settings) throws InvalidSettingsException {
         if (!settings.containsKey(Const.EXTRA_NODE_INFO_BOUNDS_KEY.get())) {
-            return DEFAULT_BOUNDS;
+            return (FallibleBoundsDef)DEFAULT_BOUNDS;
         }
         try {
             var bounds = settings.getIntArray(Const.EXTRA_NODE_INFO_BOUNDS_KEY.get());
             if (bounds.length == 0 || bounds.length < 4) {
-                return DEFAULT_BOUNDS;
+                return (FallibleBoundsDef)DEFAULT_BOUNDS;
             }
             return new BoundsDefBuilder() //
                 .setLocation(CoreToDefUtil.createCoordinate(bounds[0], bounds[1])) //

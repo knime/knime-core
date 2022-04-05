@@ -63,11 +63,11 @@ import org.knime.core.util.LoadVersion;
 import org.knime.core.workflow.def.AnnotationDataDef;
 import org.knime.core.workflow.def.ConfigMapDef;
 import org.knime.core.workflow.def.StyleRangeDef;
-import org.knime.core.workflow.def.TemplateLinkDef;
+import org.knime.core.workflow.def.TemplateInfoDef;
 import org.knime.core.workflow.def.impl.AnnotationDataDefBuilder;
 import org.knime.core.workflow.def.impl.ConfigMapDefBuilder;
 import org.knime.core.workflow.def.impl.StyleRangeDefBuilder;
-import org.knime.core.workflow.def.impl.TemplateLinkDefBuilder;
+import org.knime.core.workflow.def.impl.TemplateInfoDefBuilder;
 
 /**
  * //TODO We can add all the read from file methods for the files workflow.knime, settings.xml, template.knime.
@@ -99,12 +99,12 @@ final class LoaderUtils {
             /** @see NativeNodeLoader#loadFactorySettings */
             FACTORY_SETTINGS_KEY("factory_settings"),
             /** @see NativeNodeLoader#loadFilestore */
-            FILESTORES_KEY("filestores"), FILESTORES_LOCATION_KEY("file_store_location"),
-            FILESTORES_ID_KEY("file_store_id"),
+            FILESTORES_KEY("filestores"), //
+            FILESTORES_LOCATION_KEY("file_store_location"), FILESTORES_ID_KEY("file_store_id"),
 
-            /** @see MetaNodeLoader#loadInPorts */
+            /** @see MetaNodeLoader#setInPorts */
             META_IN_PORTS_KEY("meta_in_ports"),
-            /** @see MetaNodeLoader#loadOutPorts */
+            /** @see MetaNodeLoader#setOutPorts */
             META_OUT_PORTS_KEY("meta_out_ports"),
             /** @see MetaNodeLoader#loadPortsSettingsEnum */
             PORT_ENUM_KEY("port_enum"),
@@ -124,9 +124,16 @@ final class LoaderUtils {
             METADATA_NAME_KEY("name"), //
             INPORTS_KEY("inports"), //
             OUTPORTS_KEY("outports"),
+            /** @see ComponentLoader#loadDialogSettings */
+            LAYOUT_JSON_KEY("layoutJSON"),
+            CONFIGURATION_LAYOUT_JSON_KEY("configurationLayoutJSON"),
+            CUSTOM_CSS_KEY("customCSS"),
+            HIDE_IN_WIZARD_KEY("hideInWizard"),
+
             /** @see LoaderUtils#loadTemplateLink */
             WORKFLOW_TEMPLATE_INFORMATION_KEY("workflow_template_information"), //
-            SOURCE_URI_KEY("sourceURI"), TIMESTAMP("timestamp"),
+            SOURCE_URI_KEY("sourceURI"), //
+            TIMESTAMP("timestamp"),
             /** @see ComponentLoader#loadVirtualInNodeId */
             VIRTUAL_IN_ID_KEY("virtual-in-ID"),
             /** @see ComponentLoader#loadVirtualInNodeId */
@@ -156,7 +163,8 @@ final class LoaderUtils {
             NODE_ANNOTATION_KEY("nodeAnnotation"),
             /** @see NodeLoader#loadJobManager */
             JOB_MANAGER_KEY("job.manager"), //
-            JOB_MANAGER_FACTORY_ID_KEY("job.manager.factory.id"), JOB_MANAGER_SETTINGS_KEY("job.manager.settings"),
+            JOB_MANAGER_FACTORY_ID_KEY("job.manager.factory.id"), //
+            JOB_MANAGER_SETTINGS_KEY("job.manager.settings"),
             /** @see NodeLoader#loadLocks */
             IS_DELETABLE_KEY("isDeletable"), //
             HAS_RESET_LOCK_KEY("hasResetLock"), //
@@ -170,10 +178,49 @@ final class LoaderUtils {
             WORKFLOW_FILE_NAME("workflow.knime"),
             /** @see LoaderUtils#loadNodeFile */
             NODE_SETTINGS_FILE("node_settings_file"),
-            /** @see LoaderUtils#readNodeConfigFromFile(File) */
+            /** @see LoaderUtils#readNodeConfigFromFile */
             NODE_SETTINGS_FILE_NAME("settings.xml"),
             /** @see LoaderUtils#readTemplateConfigFromFile */
-            TEMPLATE_FILE_NAME("template.knime");
+            TEMPLATE_FILE_NAME("template.knime"),
+
+            /** @see StandAloneLoader#loadTableBackendSettings */
+            TABLE_BACKEND_KEY("tableBackend"),
+            /** @see StandAloneLoader#setWorkflowVariables */
+            WORKFLOW_VARIABLES_KEY("workflow_variables"),
+            /** @see StandAloneLoader#loadFlowVariable */
+            FLOW_VARIABLE_NAME_KEY("name"),
+            FLOW_VARIABLE_VALUE_KEY("value"),
+            FLOW_VARIABLE_CLASS_KEY("class"),
+
+            /** @see StandAloneLoader#setCredentialPlaceholders */
+            CREDENTIAL_PLACEHOLDERS_KEY("workflow_credentials"),
+            CREDENTIAL_PLACEHOLDER_NAME_KEY("name"), //
+            CREDENTIAL_PLACEHOLDER_LOGIN_KEY("login"), //
+
+            /** @see WorkflowLoader#setConnections */
+            WORKFLOW_CONNECTIONS_KEY("connections"),
+            /** @see WorkflowLoader#setNodes */
+            WORKFLOW_NODES_KEY("nodes"),
+            /** @see WorkflowLoader#loadAuthorInformation */
+            AUTHOR_INFORMATION_KEY("authorInformation"), AUTHORED_BY_KEY("authored-by"),
+            AUTHORED_WHEN_KEY("authored-when"), LAST_EDITED_BY_KEY("lastEdited-by"),
+            LAST_EDITED_WHEN_KEY("lastEdited-when"),
+            /** @see WorkflowLoader#setAnnotations */
+            WORKFLOW_ANNOTATIONS_KEY("annotations"),
+            /** @see WorkflowLoader#loadWorkflowUISettings @since 2.6 */
+            WORKFLOW_EDITOR_SETTINGS_KEY("workflow_editor_settings"), //
+            WORKFLOW_EDITOR_SNAPTOGRID_KEY("workflow.editor.snapToGrid"), //
+            WORKFLOW_EDITOR_SHOWGRID_KEY("workflow.editor.ShowGrid"), //
+            WORKFLOW_EDITOR_GRID_X_KEY("workflow.editor.gridX"), //
+            WORKFLOW_EDITOR_GIRD_Y_KEY("workflow.editor.gridY"), //
+            WORKFLOW_EDITOR_ZOOM_LEVEL_KEY("workflow.editor.zoomLevel"), //
+            UI_CLASSNAME_KEY("ui_classname"), //
+            WORKFLOW_EDITOR_CONNECTION_WIDTH_KEY("workflow.editor.connectionWidth"), //
+            WORKFLOW_EDITOR_CURVED_CONNECTIONS_KEY("workflow.editor.curvedConnections"),
+            /** @see WorkflowLoader#loadConnectionUISettings */
+            EXTRA_INFO_CLASS_NAME_KEY("extraInfoClassName"),
+            /** @see WorkflowLoader#loadConnectionUISettings */
+            EXTRA_INFO_CONNECTION_BENDPOINTS_KEY("extrainfo.conn.bendpoints");
 
         /**
          * @param string
@@ -200,7 +247,7 @@ final class LoaderUtils {
 
     static final ConfigMapDef DEFAULT_CONFIG_MAP = new ConfigMapDefBuilder().build();
 
-    static final TemplateLinkDef DEFAULT_TEMPLATE_LINK = new TemplateLinkDefBuilder().build();
+    static final TemplateInfoDef DEFAULT_TEMPLATE_LINK = new TemplateInfoDefBuilder().setUri("TEST").build();
 
     static OffsetDateTime parseDate(final String s) {
         synchronized (DATE_FORMAT) {
@@ -208,8 +255,8 @@ final class LoaderUtils {
         }
     }
 
-    static ConfigBaseRO readNodeConfigFromFile(final File nodeDirectory) throws IOException {
-        var nodeSettingsFile = new File(nodeDirectory, Const.NODE_SETTINGS_FILE_NAME.get());
+    static ConfigBaseRO readNodeConfigFromFile(final File directory) throws IOException {
+        var nodeSettingsFile = new File(directory, Const.NODE_SETTINGS_FILE_NAME.get());
         try {
             return SimpleConfig.parseConfig(nodeSettingsFile.getAbsolutePath(), nodeSettingsFile);
         } catch (IOException e) {
@@ -217,8 +264,8 @@ final class LoaderUtils {
         }
     }
 
-    static ConfigBaseRO readWorkflowConfigFromFile(final File nodeDirectory) throws IOException {
-        var workflowSettingsFile = new File(nodeDirectory, Const.WORKFLOW_FILE_NAME.get());
+    static ConfigBaseRO readWorkflowConfigFromFile(final File directory) throws IOException {
+        var workflowSettingsFile = new File(directory, Const.WORKFLOW_FILE_NAME.get());
         try {
             return SimpleConfig.parseConfig(workflowSettingsFile.getAbsolutePath(), workflowSettingsFile);
         } catch (IOException e) {
@@ -226,8 +273,8 @@ final class LoaderUtils {
         }
     }
 
-    static Optional<ConfigBaseRO> readTemplateConfigFromFile(final File nodeDirectory) throws IOException {
-        var templateSettingsFile = new File(nodeDirectory, Const.TEMPLATE_FILE_NAME.get());
+    static Optional<ConfigBaseRO> readTemplateConfigFromFile(final File directory) throws IOException {
+        var templateSettingsFile = new File(directory, Const.TEMPLATE_FILE_NAME.get());
         if (templateSettingsFile.exists()) {
             try {
                 return Optional
@@ -311,7 +358,7 @@ final class LoaderUtils {
      * @param annotationConfig
      * @param workflowFormatVersion
      */
-    static AnnotationDataDef loadAnnotationDef(final ConfigBaseRO annotationConfig,
+    static AnnotationDataDef loadAnnotation(final ConfigBaseRO annotationConfig,
         final LoadVersion workflowFormatVersion) throws InvalidSettingsException {
         var builder = new AnnotationDataDefBuilder()//
             .setText(annotationConfig.getString("text"))//
@@ -358,13 +405,13 @@ final class LoaderUtils {
      * @return a {@link TemplateLinkDef}.
      * @throws InvalidSettingsException
      */
-    static TemplateLinkDef loadTemplateLink(final ConfigBaseRO templateSettings) throws InvalidSettingsException {
+    static TemplateInfoDef loadTemplateLink(final ConfigBaseRO templateSettings) throws InvalidSettingsException {
         if (!templateSettings.containsKey(Const.WORKFLOW_TEMPLATE_INFORMATION_KEY.get())) {
             return DEFAULT_TEMPLATE_LINK;
         }
 
         var templateInformationSettings = templateSettings.getConfigBase(Const.WORKFLOW_TEMPLATE_INFORMATION_KEY.get());
-        return new TemplateLinkDefBuilder()
+        return new TemplateInfoDefBuilder()
             .setUri(templateInformationSettings.getString(Const.SOURCE_URI_KEY.get(), DEFAULT_EMPTY_STRING)) //
             .setUpdatedAt(() -> parseDate(templateInformationSettings.getString(Const.TIMESTAMP.get())),
                 OffsetDateTime.of(1970, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC)) //

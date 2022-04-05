@@ -63,6 +63,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.base.ConfigBaseRO;
 import org.knime.core.node.workflow.def.CoreToDefUtil;
 import org.knime.core.node.workflow.loader.LoaderUtils.Const;
+import org.knime.core.node.workflow.loader.WorkflowLoader.NodeType;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.workflow.def.ConfigMapDef;
 import org.knime.core.workflow.def.FilestoreDef;
@@ -132,6 +133,7 @@ public final class NativeNodeLoader {
         var nodeConfig = LoaderUtils.readNodeConfigFromFile(nodeDirectory);
 
         return new NativeNodeDefBuilder()//
+            .setNodeType(NodeType.NATIVENODE.toString()) // FIXME
             .setFactory(() -> loadFactory(workflowConfig, nodeConfig, workflowFormatVersion), DEFAULT_EMPTY_STRING) //
             .setFactorySettings(() -> loadFactorySettings(nodeConfig), DEFAULT_CONFIG_MAP) //
             .setNodeName(() -> nodeConfig.getString(Const.NODE_NAME_KEY.get()), DEFAULT_EMPTY_STRING) //
@@ -245,8 +247,9 @@ public final class NativeNodeLoader {
         }
         var filestoreSettings = settings.getConfigBase(Const.FILESTORES_KEY.get());
         return new FilestoreDefBuilder()
-            .setLocation(() -> filestoreSettings.getString(Const.FILESTORES_LOCATION_KEY.get()), DEFAULT_EMPTY_STRING)
-            .setId(() -> filestoreSettings.getString(Const.FILESTORES_ID_KEY.get()), DEFAULT_EMPTY_STRING).build();
+            .setLocation(() -> filestoreSettings.getString(Const.FILESTORES_LOCATION_KEY.get()), DEFAULT_EMPTY_STRING) //
+            .setId(() -> filestoreSettings.getString(Const.FILESTORES_ID_KEY.get()), DEFAULT_EMPTY_STRING) //
+            .build();
     }
 
     /**
