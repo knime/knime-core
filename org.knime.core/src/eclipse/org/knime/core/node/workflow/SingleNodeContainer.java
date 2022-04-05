@@ -330,23 +330,38 @@ public abstract class SingleNodeContainer extends NodeContainer {
      * {@link FlowObjectStack}.
      */
     private Map<String, FlowVariable> applySettingsUsingFlowObjectStack() throws InvalidSettingsException {
-        NodeSettingsRO variablesSettings = m_settings.getVariablesSettings();
-        if (variablesSettings == null) {
+        NodeSettingsRO viewVariableSettings = m_settings.getViewVariablesSettings();
+        NodeSettingsRO variableSettings = m_settings.getVariablesSettings();
+        if (variableSettings == null && viewVariableSettings == null) {
             return Collections.emptyMap();
         }
-        NodeSettings fromModel = m_settings.getModelSettingsClone();
-        List<FlowVariable> newVariableList = overwriteSettingsWithFlowVariables(fromModel, variablesSettings,
-            getFlowObjectStack().getAvailableFlowVariables(VariableType.getAllTypes()));
 
-        NodeContext.pushContext(this);
-        try {
-            performValidateSettings(fromModel);
-            performLoadModelSettingsFrom(fromModel);
-        } catch (InvalidSettingsException e) {
-            throw new InvalidSettingsException("Errors loading flow variables into node : " + e.getMessage(), e);
-        } finally {
-            NodeContext.removeLastContext();
+        List<FlowVariable> newVariableList = new ArrayList<>();
+
+        if (viewVariableSettings != null) {
+            NodeSettings fromViewModel = m_settings.getViewSettingsClone();
+            List<FlowVariable> newViewVariableList = overwriteSettingsWithFlowVariables(fromViewModel,
+                viewVariableSettings, getFlowObjectStack().getAvailableFlowVariables(VariableType.getAllTypes()));
+            newVariableList.addAll(newViewVariableList);
         }
+
+        if (variableSettings != null) {
+            NodeSettings fromModel = m_settings.getModelSettingsClone();
+            List<FlowVariable> newModelVariableList = overwriteSettingsWithFlowVariables(fromModel, variableSettings,
+                getFlowObjectStack().getAvailableFlowVariables(VariableType.getAllTypes()));
+            newVariableList.addAll(newModelVariableList);
+
+            NodeContext.pushContext(this);
+            try {
+                performValidateSettings(fromModel);
+                performLoadModelSettingsFrom(fromModel);
+            } catch (InvalidSettingsException e) {
+                throw new InvalidSettingsException("Errors loading flow variables into node : " + e.getMessage(), e);
+            } finally {
+                NodeContext.removeLastContext();
+            }
+        }
+
         Map<String, FlowVariable> newVariableHash = new LinkedHashMap<String, FlowVariable>();
         for (FlowVariable v : newVariableList) {
             if (newVariableHash.put(v.getName(), v) != null) {
