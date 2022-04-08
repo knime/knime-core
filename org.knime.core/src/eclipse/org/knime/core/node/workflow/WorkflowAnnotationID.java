@@ -105,4 +105,12 @@ public class WorkflowAnnotationID {
     public int hashCode() {
         return Objects.hash(m_index, m_wfID);
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        return m_wfID.toString() + ":" + m_index;
+    }
 }
