@@ -91,4 +91,11 @@ public final class MetaNodeToSubNodeResult {
         }
     }
 
+    /**
+     * @return The ID of the newly created node (the result of the conversion).
+     */
+    public NodeID getConvertedNodeID() {
+        return m_nodeID;
+    }
+
 }
