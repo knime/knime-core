@@ -76,6 +76,12 @@ public class WorkflowEvent {
             NODE_ADDED,
             /** Node removed from workflow. */
             NODE_REMOVED,
+            /** Node has been collapsed into a metanode or a component
+             * @since 4.6 */
+            NODE_COLLAPSED,
+            /** Metanode or component has been expanded
+             * @since 4.6 */
+            NODE_EXPANDED,
             /** Node setting of a node in the workflow changed
              * @since 4.1 */
             NODE_SETTINGS_CHANGED,

@@ -4145,7 +4145,9 @@ public final class WorkflowManager extends NodeContainer
             // and finally remove old sub workflow
             this.removeNode(nodeID);
 
-            return new ExpandSubnodeResult(this, newContent, undoCopyPersistor);
+            var result = new ExpandSubnodeResult(this, newContent, undoCopyPersistor);
+            notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.NODE_EXPANDED, null, null, result));
+            return result;
         }
     }
 
@@ -4610,7 +4612,9 @@ public final class WorkflowManager extends NodeContainer
             // and finally: delete the original nodes and annotations.
             Stream.of(orgIDs).forEach(id -> removeNode(id));
             Stream.of(orgAnnos).forEach(anno -> removeAnnotation(anno));
-            return new CollapseIntoMetaNodeResult(this, newWFM.getID(), undoPersistor);
+            var result = new CollapseIntoMetaNodeResult(this, newWFM.getID(), undoPersistor);
+            notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.NODE_COLLAPSED, null, null, result));
+            return result;
         }
     }
 
