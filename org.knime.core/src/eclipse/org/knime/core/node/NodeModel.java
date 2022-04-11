@@ -829,6 +829,7 @@ public abstract class NodeModel implements ViewableModel {
         } finally {
             // reset these property handlers
             resetHiLiteHandlers();
+            m_initialScopeContext = null;
             setHasContent(false); // also fires stateChanged()
         }
     }
@@ -1637,11 +1638,24 @@ public abstract class NodeModel implements ViewableModel {
         return true;
     }
 
+    /** the loop context is set by a loop end node in order to signal that another iteration is to be done. */
     private FlowLoopContext m_loopContext;
 
     final FlowLoopContext getLoopContext() {
         return m_loopContext;
     }
+
+    final void clearLoopContext() {
+        m_loopContext = null;
+    }
+
+    /** Context object that is put on the stack by any {@link ScopeStartNode}. Kept here as member to address
+     * AP-18601 -- the same context object should be used during different configurations (until node is executed/reset)
+     * Implementations of {@link FlowScopeContext} are (unfortunately) mutable and pushed through the workflow
+     * via configure storm. This can lead to out-of-sync situations where when a 2nd/3rd configure storm only propagates
+     * partly (propagation stops when output of a node doesn't change).
+     */
+    private FlowScopeContext m_initialScopeContext;
 
     /**
      * Return appropriate FlowLoopContext object depending on the type of ScopeStartNode.
@@ -1649,23 +1663,20 @@ public abstract class NodeModel implements ViewableModel {
      * @return initial FlowLoopContext object to be put on stack.
      */
     final FlowScopeContext getInitialScopeContext() {
-        if (this instanceof LoopStartNode) {
-            return new FlowLoopContext();
+        if (m_initialScopeContext == null) {
+            if (this instanceof LoopStartNode) {
+                m_initialScopeContext = new FlowLoopContext();
+            } else if (this instanceof CaptureWorkflowStartNode) {
+                m_initialScopeContext = new FlowCaptureContext();
+            } else if (this instanceof VirtualParallelizedChunkPortObjectInNodeModel) {
+                m_initialScopeContext = new FlowVirtualScopeContext();
+            } else if (this instanceof ScopeStartNode) {
+                m_initialScopeContext = new FlowTryCatchContext();
+            } else {
+                m_initialScopeContext = null;
+            }
         }
-        if (this instanceof CaptureWorkflowStartNode) {
-            return new FlowCaptureContext();
-        }
-        if (this instanceof VirtualParallelizedChunkPortObjectInNodeModel) {
-            return new FlowVirtualScopeContext();
-        }
-        if (this instanceof ScopeStartNode) {
-            return new FlowTryCatchContext();
-        }
-        return null;
-    }
-
-    final void clearLoopContext() {
-        m_loopContext = null;
+        return m_initialScopeContext;
     }
 
     private boolean m_pauseAfterNextExecution = false;
