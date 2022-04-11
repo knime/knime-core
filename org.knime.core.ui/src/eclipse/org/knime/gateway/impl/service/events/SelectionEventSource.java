@@ -142,6 +142,15 @@ public class SelectionEventSource extends EventSource<NativeNodeContainer, Selec
     }
 
     /**
+     * The total number of event listener registered for the event source. Mainly for testing purposes.
+     *
+     * @return the total number of event listeners registered
+     */
+    public int getNumEventListeners() {
+        return m_hiLiteListeners.size();
+    }
+
+    /**
      * Forwards selection events to the hilite-handler associated with the given node.
      *
      * @param nc the node to use the hilite handler for
