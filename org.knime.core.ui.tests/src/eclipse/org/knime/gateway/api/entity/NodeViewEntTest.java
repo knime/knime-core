@@ -53,6 +53,7 @@ import static org.awaitility.Duration.FIVE_SECONDS;
 import static org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.endsWith;
+import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.startsWith;
@@ -134,6 +135,7 @@ public class NodeViewEntTest {
         overwriteViewSettingWithFlowVariable(nnc);
         ent = NodeViewEnt.create(nnc, null);
         checkViewSettings(ent, "flow variable value");
+        checkOutgoingFlowVariable(nnc, "exposed_flow_variable", "exposed view settings value");
 
         nnc.setNodeMessage(NodeMessage.newWarning("node message"));
         nnc.getNodeAnnotation().getData().setText("node annotation");
@@ -189,6 +191,7 @@ public class NodeViewEntTest {
         var viewSettings = nodeSettings.addNodeSettings("view");
         viewSettings.addString("view setting key", "view setting value");
         viewSettings.addString("view setting key 2", "view setting value 2");
+        viewSettings.addString("exposed view setting key", "exposed view settings value");
 
         var parent = nnc.getParent();
         parent.loadNodeSettings(nnc.getID(), nodeSettings);
@@ -204,9 +207,14 @@ public class NodeViewEntTest {
         var viewVariables = nodeSettings.addNodeSettings("view_variables");
         viewVariables.addString("version", "V_2019_09_13");
         var variableTree = viewVariables.addNodeSettings("tree");
+
         var variableTreeNode = variableTree.addNodeSettings("view setting key");
         variableTreeNode.addString("used_variable", "flow variable");
         variableTreeNode.addString("exposed_variable", null);
+
+        var exposedVariableTreeNode = variableTree.addNodeSettings("exposed view setting key");
+        exposedVariableTreeNode.addString("used_variable", null);
+        exposedVariableTreeNode.addString("exposed_variable", "exposed_flow_variable");
 
         parent.loadNodeSettings(nnc.getID(), nodeSettings);
         parent.executeAllAndWaitUntilDone();
@@ -220,6 +228,12 @@ public class NodeViewEntTest {
         JSONConfig.readJSON(settingsWithOverwrittenFlowVariable,
             new StringReader(ent.getInitialData().replace("dummy initial data", "")));
         assertThat(settingsWithOverwrittenFlowVariable.getString("view setting key"), is(expectedSettingValue));
+    }
+
+    private static void checkOutgoingFlowVariable(final NativeNodeContainer nnc, final String key, final String value) {
+        var outgoingFlowVariables = nnc.getOutgoingFlowObjectStack().getAllAvailableFlowVariables();
+        assertThat(outgoingFlowVariables, hasKey(key));
+        assertThat(outgoingFlowVariables.get(key).getValueAsString(), is(value));
     }
 
     /**
