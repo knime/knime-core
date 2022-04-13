@@ -1631,20 +1631,31 @@ public abstract class NodeDialogPane {
     }
 
     private static String buildVariableOverwriteWarning(final Collection<String> params) {
-        final StringBuilder b = new StringBuilder();
+        final var b = new StringBuilder();
         if (params.size() == 1) {
             final String key = params.iterator().next();
             b.append("The \"").append(key);
             b.append("\" parameter is controlled by a variable.");
         } else {
             int size = params.size();
-            int i = 0;
+            // examples of output for different numbers of parameters:
+            // size == 2:
+            //   Parameters "filter-type" and "enforce_option" are controlled by variables.
+            // size == 3:
+            //   Parameters "filter-type", "enforce_option" and "pattern" are controlled by variables.
+            // size > 3:
+            //   Parameters "filter-type", "enforce_option", "pattern" and 1 more are controlled by variables.
+            var i = 0;
+            b.append("Parameters ");
             for (String s : params) {
                 b.append("\"").append(s).append("\"");
-                if (i == size - 2) {
-                    b.append(" and ");
-                } else if (i == size - 1) {
+                if (i == size - 1) {
                     // last key, nothing to separate
+                } else if (i == 2) {
+                    b.append(" and ").append(size - i - 1).append(" more");
+                    break;
+                } else if (i == size - 2) {
+                    b.append(" and ");
                 } else {
                     b.append(", ");
                 }
