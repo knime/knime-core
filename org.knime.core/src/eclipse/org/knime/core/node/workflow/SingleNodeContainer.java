@@ -340,8 +340,8 @@ public abstract class SingleNodeContainer extends NodeContainer {
 
         if (viewVariableSettings != null) {
             NodeSettings fromViewModel = m_settings.getViewSettingsClone();
-            List<FlowVariable> newViewVariableList = overwriteSettingsWithFlowVariables(fromViewModel,
-                viewVariableSettings, getFlowObjectStack().getAvailableFlowVariables(VariableType.getAllTypes()));
+            List<FlowVariable> newViewVariableList =
+                overwriteSettingsWithFlowVariables(fromViewModel, viewVariableSettings, null);
             newVariableList.addAll(newViewVariableList);
         }
 
@@ -362,13 +362,13 @@ public abstract class SingleNodeContainer extends NodeContainer {
             }
         }
 
-        Map<String, FlowVariable> newVariableHash = new LinkedHashMap<String, FlowVariable>();
+        Map<String, FlowVariable> newVariableMap = new LinkedHashMap<String, FlowVariable>();
         for (FlowVariable v : newVariableList) {
-            if (newVariableHash.put(v.getName(), v) != null) {
+            if (newVariableMap.put(v.getName(), v) != null) {
                 LOGGER.warn("Duplicate variable assignment for key \"" + v.getName() + "\")");
             }
         }
-        return newVariableHash;
+        return newVariableMap;
     }
 
     private static List<FlowVariable> overwriteSettingsWithFlowVariables(final NodeSettings settingsToOverwrite,

@@ -197,6 +197,7 @@ public class NodeViewEntTest {
 
     private static void overwriteViewSettingWithFlowVariable(final NativeNodeContainer nnc)
         throws InvalidSettingsException {
+
         var parent = nnc.getParent();
         var nodeSettings = new NodeSettings("node_settings");
         parent.saveNodeSettings(nnc.getID(), nodeSettings);

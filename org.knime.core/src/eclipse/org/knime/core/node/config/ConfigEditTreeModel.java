@@ -291,11 +291,12 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
         getRoot().writeVariablesTo(config, false);
     }
 
-    /** Modifies the first argument to reflect the values of the mask
-     * represented by this object.
-     * @param settingsTree settings tree to modify (supposed to have
-     * equivalent tree structure)
-     * @param variables The map of variables-values to apply.
+    /**
+     * Modifies the first argument to reflect the values of the mask represented by this object.
+     *
+     * @param settingsTree settings tree to modify (supposed to have equivalent tree structure)
+     * @param variables The map of variables-values to apply. May be null to ignore variable assignment and only produce
+     *            the list of exposed variables
      * @return A list of exposed variables
      * @throws InvalidSettingsException If reading fails
      */
@@ -638,6 +639,7 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
                 return Collections.emptyList();
             }
             List<FlowVariable> result = null;
+
             AbstractConfigEntry thisEntry = getConfigEntry();
             String key = thisEntry.getKey();
             final AbstractConfigEntry original;
@@ -651,7 +653,7 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
             ConfigEntries originalType = original.getType();
             CheckUtils.checkSetting(originalType == thisEntry.getType(),
                 "Non matching config elements for key \"%s\", %s vs. %s", key, originalType, thisEntry.getType());
-            if (isOverwrittenByVariable()) {
+            if (variables != null && isOverwrittenByVariable()) {
                 overwriteWithVariable(counterpart, variables, key);
             }
             String newVar = getExposeVariableName();
