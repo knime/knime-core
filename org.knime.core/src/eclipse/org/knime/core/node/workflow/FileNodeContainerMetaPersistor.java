@@ -122,6 +122,8 @@ class FileNodeContainerMetaPersistor implements NodeContainerMetaPersistor {
         }
         m_loadHelper = loadHelper;
         m_loadVersion = version;
+        // if not further specified let index start with 1 (not 0), see also AP-18797
+        m_nodeIDSuffix = 1;
     }
 
     protected NodeLogger getLogger() {
