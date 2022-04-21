@@ -44,57 +44,43 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Aug 23, 2021 (hornm): created
+ *   12 Apr 2022 (marcbux): created
  */
-package org.knime.core.webui.node.view;
+package org.knime.core.webui.node.view.selection;
 
-import java.util.Optional;
-
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.webui.data.DataServiceProvider;
-import org.knime.core.webui.node.view.selection.SelectionTranslationService;
-import org.knime.core.webui.page.Page;
+import java.io.IOException;
+import java.util.List;
 
 /**
- * Represents a view of a node.
+ * A {@link TextSelectionTranslationService} where the selection request is represented as a JSON-object.
  *
- * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  * @author Marc Bux, KNIME GmbH, Berlin, Germany
+ * @param <S> the type of the selection object to translate
  *
- * @since 4.5
+ * @since 4.6
  */
-public interface NodeView extends DataServiceProvider {
+public interface JsonSelectionTranslationService<S> extends TextSelectionTranslationService {
 
-    /**
-     * Returns the (html) page which represents the view UI.
-     *
-     * @return the page
-     */
-    Page getPage();
-
-    /**
-     * Validates the given settings before loading it via {@link #loadValidatedSettingsFrom(NodeSettingsRO)}.
-     *
-     * @param settings settings to validate
-     * @throws InvalidSettingsException if the validation failed
-     */
-    void validateSettings(NodeSettingsRO settings) throws InvalidSettingsException;
-
-    /**
-     * Loads validated settings.
-     *
-     * @param settings settings to load
-     */
-    void loadValidatedSettingsFrom(NodeSettingsRO settings);
-
-    /**
-     * @return optional service to translate selection requests
-     *
-     * @since 4.6
-     */
-    default Optional<SelectionTranslationService> createSelectionTranslationService() {
-        return Optional.empty();
+    @Override
+    default List<String> translate(final String selection) throws IOException {
+        return translate(fromJson(selection));
     }
+
+    /**
+     * Translates a selection object to an array of row keys.
+     *
+     * @param selection the selection request
+     * @return the result of the translation, i.e., a list of row keys
+     */
+    List<String> translate(S selection);
+
+    /**
+     * Deserializes the selection object from a JSON string.
+     *
+     * @param selection a JSON string
+     * @return the deserialized selection object
+     * @throws IOException
+     */
+    S fromJson(String selection) throws IOException;
 
 }

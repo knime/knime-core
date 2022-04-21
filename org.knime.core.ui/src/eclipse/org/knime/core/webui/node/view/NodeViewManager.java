@@ -48,7 +48,10 @@
  */
 package org.knime.core.webui.node.view;
 
+import java.io.IOException;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.WeakHashMap;
 
 import org.knime.core.node.InvalidSettingsException;
@@ -59,6 +62,8 @@ import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.webui.data.DataServiceProvider;
 import org.knime.core.webui.node.AbstractNodeUIManager;
 import org.knime.core.webui.node.util.NodeCleanUpCallback;
+import org.knime.core.webui.node.view.selection.SelectionTranslationService;
+import org.knime.core.webui.node.view.selection.TextSelectionTranslationService;
 import org.knime.core.webui.page.Page;
 import org.knime.core.webui.page.PageUtil.PageType;
 
@@ -66,6 +71,7 @@ import org.knime.core.webui.page.PageUtil.PageType;
  * Manages (web-ui) node view instances and provides associated functionality.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
+ * @author Marc Bux, KNIME GmbH, Berlin, Germany
  *
  * @since 4.5
  */
@@ -74,6 +80,8 @@ public final class NodeViewManager extends AbstractNodeUIManager {
     private static NodeViewManager instance;
 
     private final Map<NodeContainer, NodeView> m_nodeViewMap = new WeakHashMap<>();
+
+    private final Map<NodeContainer, SelectionTranslationService> m_selectionServices = new WeakHashMap<>();
 
     /**
      * Returns the singleton instance for this class.
@@ -117,6 +125,31 @@ public final class NodeViewManager extends AbstractNodeUIManager {
             return nodeView;
         }
         return createAndRegisterNodeView(nnc);
+    }
+
+    /**
+     * Helper to call the {@link TextSelectionTranslationService}.
+     *
+     * @param nc the node to call the data service for
+     * @param request the selection request representing the selection to apply
+     * @return the result of the translation, i.e., an array of row keys
+     * @throws IOException if applying the selection failed
+     * @throws IllegalStateException if there is no text selection translation service
+     */
+    public List<String> callTextSelectionTranslationService(final NodeContainer nc, final String request)
+        throws IOException {
+        var service =
+            getSelectionTranslationService(nc).filter(TextSelectionTranslationService.class::isInstance).orElse(null);
+        if (service != null) {
+            return ((TextSelectionTranslationService)service).translate(request);
+        } else {
+            throw new IllegalStateException("No text selection translation service available.");
+        }
+    }
+
+    private Optional<SelectionTranslationService> getSelectionTranslationService(final NodeContainer nc) {
+        return Optional.ofNullable(m_selectionServices.computeIfAbsent(nc,
+            k -> getNodeView(nc).createSelectionTranslationService().orElse(null)));
     }
 
     /**
@@ -165,6 +198,7 @@ public final class NodeViewManager extends AbstractNodeUIManager {
      */
     void clearCaches() {
         m_nodeViewMap.clear();
+        m_selectionServices.clear();
         clearPageMap();
     }
 

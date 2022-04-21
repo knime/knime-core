@@ -22,6 +22,7 @@ Export-Package: org.knime.core.ui,
  org.knime.core.webui.node,
  org.knime.core.webui.node.dialog,
  org.knime.core.webui.node.view,
+ org.knime.core.webui.node.view.selection,
  org.knime.core.webui.page,
  org.knime.gateway.api.entity,
  org.knime.gateway.impl.service.events

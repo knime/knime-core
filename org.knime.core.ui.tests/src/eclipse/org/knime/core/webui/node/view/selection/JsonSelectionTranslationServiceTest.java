@@ -44,57 +44,48 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Aug 23, 2021 (hornm): created
+ *   21 Apr 2022 (Marc Bux, KNIME GmbH, Berlin, Germany): created
  */
-package org.knime.core.webui.node.view;
+package org.knime.core.webui.node.view.selection;
 
-import java.util.Optional;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.webui.data.DataServiceProvider;
-import org.knime.core.webui.node.view.selection.SelectionTranslationService;
+import java.io.IOException;
+import java.util.List;
+
+import org.junit.Test;
+import org.knime.core.webui.node.view.NodeViewManager;
+import org.knime.core.webui.node.view.NodeViewManagerTest;
+import org.knime.core.webui.node.view.NodeViewTest;
 import org.knime.core.webui.page.Page;
+import org.knime.testing.util.WorkflowManagerUtil;
 
 /**
- * Represents a view of a node.
+ * Tests {@link JsonSelectionTranslationServiceImpl}.
  *
- * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  * @author Marc Bux, KNIME GmbH, Berlin, Germany
- *
- * @since 4.5
  */
-public interface NodeView extends DataServiceProvider {
+@SuppressWarnings("javadoc")
+public class JsonSelectionTranslationServiceTest {
 
-    /**
-     * Returns the (html) page which represents the view UI.
-     *
-     * @return the page
-     */
-    Page getPage();
+    public static class TestSelection {
+        public List<String> selection;
+    }
 
-    /**
-     * Validates the given settings before loading it via {@link #loadValidatedSettingsFrom(NodeSettingsRO)}.
-     *
-     * @param settings settings to validate
-     * @throws InvalidSettingsException if the validation failed
-     */
-    void validateSettings(NodeSettingsRO settings) throws InvalidSettingsException;
+    @Test
+    public void testJsonReexecuteDataService() throws IOException {
+        var wfm = WorkflowManagerUtil.createEmptyWorkflow();
+        var page = Page.builder(() -> "content", "index.html").build();
+        var nnc = NodeViewManagerTest.createNodeWithNodeView(wfm, m -> NodeViewTest.createNodeView(page, null, null,
+            null, new JsonSelectionTranslationServiceImpl<>(TestSelection.class, s -> s.selection)));
+        wfm.executeAllAndWaitUntilDone();
 
-    /**
-     * Loads validated settings.
-     *
-     * @param settings settings to load
-     */
-    void loadValidatedSettingsFrom(NodeSettingsRO settings);
+        var rowKeys =
+            NodeViewManager.getInstance().callTextSelectionTranslationService(nnc, "{\"selection\":[\"foo\"]}");
+        assertThat(rowKeys, is(List.of("foo")));
 
-    /**
-     * @return optional service to translate selection requests
-     *
-     * @since 4.6
-     */
-    default Optional<SelectionTranslationService> createSelectionTranslationService() {
-        return Optional.empty();
+        WorkflowManagerUtil.disposeWorkflow(wfm);
     }
 
 }

@@ -56,6 +56,7 @@ import org.knime.core.webui.data.ApplyDataService;
 import org.knime.core.webui.data.DataService;
 import org.knime.core.webui.data.InitialDataService;
 import org.knime.core.webui.data.json.impl.JsonReExecuteDataServiceImpl;
+import org.knime.core.webui.node.view.selection.SelectionTranslationService;
 import org.knime.core.webui.page.Page;
 import org.knime.testing.node.view.NodeViewNodeModel;
 
@@ -63,6 +64,7 @@ import org.knime.testing.node.view.NodeViewNodeModel;
  * Helper methods and tests for {@link NodeView NodeViews}.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
+ * @author Marc Bux, KNIME GmbH, Berlin, Germany
  */
 public final class NodeViewTest {
 
@@ -83,6 +85,13 @@ public final class NodeViewTest {
     @SuppressWarnings("javadoc")
     public static NodeView createNodeView(final Page page, final InitialDataService initDataService,
         final DataService dataService, final ApplyDataService applyDataService) {
+        return createNodeView(page, initDataService, dataService, applyDataService, null);
+    }
+
+    @SuppressWarnings("javadoc")
+    public static NodeView createNodeView(final Page page, final InitialDataService initDataService,
+        final DataService dataService, final ApplyDataService applyDataService,
+        final SelectionTranslationService selectionTranslationService) {
         return new NodeView() { // NOSONAR
 
             @Override
@@ -98,6 +107,11 @@ public final class NodeViewTest {
             @Override
             public Optional<ApplyDataService> createApplyDataService() {
                 return Optional.ofNullable(applyDataService);
+            }
+
+            @Override
+            public Optional<SelectionTranslationService> createSelectionTranslationService() {
+                return Optional.ofNullable(selectionTranslationService);
             }
 
             @Override

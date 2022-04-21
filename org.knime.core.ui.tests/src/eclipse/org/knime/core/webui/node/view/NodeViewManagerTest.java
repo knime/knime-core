@@ -60,6 +60,7 @@ import static org.knime.testing.util.WorkflowManagerUtil.createAndAddNode;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -84,6 +85,7 @@ import org.knime.core.webui.data.InitialDataService;
 import org.knime.core.webui.data.text.TextDataService;
 import org.knime.core.webui.data.text.TextInitialDataService;
 import org.knime.core.webui.data.text.TextReExecuteDataService;
+import org.knime.core.webui.node.view.selection.TextSelectionTranslationService;
 import org.knime.core.webui.page.Page;
 import org.knime.testing.node.view.NodeViewNodeFactory;
 import org.knime.testing.node.view.NodeViewNodeModel;
@@ -93,6 +95,7 @@ import org.knime.testing.util.WorkflowManagerUtil;
  * Tests for {@link NodeViewManager}.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
+ * @author Marc Bux, KNIME GmbH, Berlin, Germany
  */
 public class NodeViewManagerTest {
 
@@ -382,6 +385,25 @@ public class NodeViewManagerTest {
             assertThrows(IOException.class, () -> nodeViewManager.callTextApplyDataService(nc, "ERROR,test"))
                 .getMessage();
         assertThat(message, is("re-execute data service"));
+    }
+
+    /**
+     * Tests {@link NodeViewManager#callTextSelectionTranslationService(NodeContainer, String)}
+     */
+    @Test
+    public void testCallSelectionTranslationService() {
+        var page = Page.builder(() -> "test page content", "index.html").build();
+        var nodeView = createNodeView(page, null, null, null, new TextSelectionTranslationService() {
+            @Override
+            public List<String> translate(final String selection) throws IOException {
+                throw new IOException(selection);
+            }
+        });
+        var nc = NodeViewManagerTest.createNodeWithNodeView(m_wfm, m -> nodeView);
+
+        var message = assertThrows(IOException.class,
+            () -> NodeViewManager.getInstance().callTextSelectionTranslationService(nc, "foo")).getMessage();
+        assertThat(message, is("foo"));
     }
 
     /**

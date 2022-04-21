@@ -44,57 +44,48 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Aug 23, 2021 (hornm): created
+ *   12 Apr 2022 (Marc Bux, KNIME GmbH, Berlin, Germany): created
  */
-package org.knime.core.webui.node.view;
+package org.knime.core.webui.node.view.selection;
 
-import java.util.Optional;
+import java.io.IOException;
+import java.util.List;
+import java.util.function.Function;
 
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.webui.data.DataServiceProvider;
-import org.knime.core.webui.node.view.selection.SelectionTranslationService;
-import org.knime.core.webui.page.Page;
+import org.knime.core.webui.data.rpc.json.impl.ObjectMapperUtil;
 
 /**
- * Represents a view of a node.
+ * Implementation of the {@link JsonSelectionTranslationService}.
  *
- * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  * @author Marc Bux, KNIME GmbH, Berlin, Germany
+ * @param <S> the type of the selection object to translate
  *
- * @since 4.5
+ * @since 4.6
  */
-public interface NodeView extends DataServiceProvider {
+public class JsonSelectionTranslationServiceImpl<S> implements JsonSelectionTranslationService<S> {
+
+    private final Class<S> m_selectionType;
+
+    private final Function<S, List<String>> m_selectionTranslator;
 
     /**
-     * Returns the (html) page which represents the view UI.
-     *
-     * @return the page
+     * @param selectionType the type of the selection object to translate
+     * @param selectionTranslator the function for translating the selection object to an array of row keys
      */
-    Page getPage();
+    public JsonSelectionTranslationServiceImpl(final Class<S> selectionType,
+        final Function<S, List<String>> selectionTranslator) {
+        m_selectionType = selectionType;
+        m_selectionTranslator = selectionTranslator;
+    }
 
-    /**
-     * Validates the given settings before loading it via {@link #loadValidatedSettingsFrom(NodeSettingsRO)}.
-     *
-     * @param settings settings to validate
-     * @throws InvalidSettingsException if the validation failed
-     */
-    void validateSettings(NodeSettingsRO settings) throws InvalidSettingsException;
+    @Override
+    public List<String> translate(final S data) {
+        return m_selectionTranslator.apply(data);
+    }
 
-    /**
-     * Loads validated settings.
-     *
-     * @param settings settings to load
-     */
-    void loadValidatedSettingsFrom(NodeSettingsRO settings);
-
-    /**
-     * @return optional service to translate selection requests
-     *
-     * @since 4.6
-     */
-    default Optional<SelectionTranslationService> createSelectionTranslationService() {
-        return Optional.empty();
+    @Override
+    public S fromJson(final String selection) throws IOException {
+        return ObjectMapperUtil.getInstance().getObjectMapper().readValue(selection, m_selectionType);
     }
 
 }
