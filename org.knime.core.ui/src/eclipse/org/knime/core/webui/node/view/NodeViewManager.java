@@ -60,12 +60,15 @@ import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.webui.data.DataServiceProvider;
+import org.knime.core.webui.data.rpc.json.impl.ObjectMapperUtil;
 import org.knime.core.webui.node.AbstractNodeUIManager;
 import org.knime.core.webui.node.util.NodeCleanUpCallback;
 import org.knime.core.webui.node.view.selection.SelectionTranslationService;
 import org.knime.core.webui.node.view.selection.TextSelectionTranslationService;
 import org.knime.core.webui.page.Page;
 import org.knime.core.webui.page.PageUtil.PageType;
+
+import com.fasterxml.jackson.core.type.TypeReference;
 
 /**
  * Manages (web-ui) node view instances and provides associated functionality.
@@ -134,7 +137,6 @@ public final class NodeViewManager extends AbstractNodeUIManager {
      * @param request the selection request representing the selection to apply
      * @return the result of the translation, i.e., an array of row keys
      * @throws IOException if applying the selection failed
-     * @throws IllegalStateException if there is no text selection translation service
      */
     public List<String> callTextSelectionTranslationService(final NodeContainer nc, final String request)
         throws IOException {
@@ -143,7 +145,9 @@ public final class NodeViewManager extends AbstractNodeUIManager {
         if (service != null) {
             return ((TextSelectionTranslationService)service).translate(request);
         } else {
-            throw new IllegalStateException("No text selection translation service available.");
+            return ObjectMapperUtil.getInstance().getObjectMapper().readValue(request,
+                new TypeReference<List<String>>() {
+                });
         }
     }
 

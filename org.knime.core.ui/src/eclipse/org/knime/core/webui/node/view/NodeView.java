@@ -93,7 +93,7 @@ public interface NodeView extends DataServiceProvider {
      *
      * @since 4.6
      */
-    default Optional<SelectionTranslationService> createSelectionTranslationService() {
+    default Optional<? extends SelectionTranslationService> createSelectionTranslationService() {
         return Optional.empty();
     }
 
