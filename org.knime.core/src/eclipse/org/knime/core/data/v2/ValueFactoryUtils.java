@@ -254,7 +254,8 @@ public final class ValueFactoryUtils {
      */
     public static ValueFactory<?, ?> getValueFactory(final DataType type, //NOSONAR
         final IWriteFileStoreHandler fileStoreHandler) {
-        return getValueFactory(type, t -> new DictEncodedDataCellValueFactory(fileStoreHandler, type));
+        return getValueFactory(type, t -> new DictEncodedDataCellValueFactory(fileStoreHandler, type),
+            fileStoreHandler);
     }
 
     /**
@@ -264,11 +265,13 @@ public final class ValueFactoryUtils {
      *
      * @param type for which a factory is needed
      * @param fallbackFactoryProvider provides a catch all ValueFactory for all types where no specific factory exists
+     * @param fileStoreHandler for writing file stores
      * @return the {@link ValueFactory} for the provided type
      * @noreference This method is not intended to be referenced by clients.
      */
     public static ValueFactory<?, ?> getValueFactory(final DataType type, //NOSONAR
-        final Function<DataType, ValueFactory<?, ?>> fallbackFactoryProvider) {
+        final Function<DataType, ValueFactory<?, ?>> fallbackFactoryProvider,
+        final IWriteFileStoreHandler fileStoreHandler) {
         ValueFactory<?, ?> factory = null;
 
         // Handle special cases
@@ -292,7 +295,9 @@ public final class ValueFactoryUtils {
         if (factory instanceof CollectionValueFactory) {
             @SuppressWarnings("null")
             final DataType elementType = type.getCollectionElementType();
-            final ValueFactory<?, ?> elementFactory = getValueFactory(elementType, fallbackFactoryProvider);
+            final ValueFactory<?, ?> elementFactory = getValueFactory(elementType,
+                t -> new DictEncodedDataCellValueFactory(fileStoreHandler, elementType),
+                fileStoreHandler);
             ((CollectionValueFactory<?, ?>)factory).initialize(elementFactory, elementType);
         }
         return factory;

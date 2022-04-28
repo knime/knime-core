@@ -174,7 +174,7 @@ final class SerializerFactoryValueSchema implements ValueSchema {
         final Map<DataType, String> factoryMapping, final DataCellSerializerFactory cellSerializerFactory,
         final IWriteFileStoreHandler fileStoreHandler) {
         var factory = ValueFactoryUtils.getValueFactory(type,
-            t -> new DataCellValueFactory(cellSerializerFactory, fileStoreHandler, t));
+            t -> new DataCellValueFactory(cellSerializerFactory, fileStoreHandler, t), fileStoreHandler);
         factoryMapping.put(type, factory.getClass().getName());
         return factory;
     }
