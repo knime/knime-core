@@ -48,6 +48,7 @@
 package org.knime.core.node.workflow;
 
 import java.util.Arrays;
+import java.util.List;
 
 import org.eclipse.swt.SWT;
 import org.knime.core.node.InvalidSettingsException;
@@ -56,6 +57,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.util.LoadVersion;
+import org.knime.core.workflow.def.StyleRangeDef;
 
 /**
  * @author  Bernd Wiswedel, KNIME AG, Zurich, Switzerland
@@ -154,6 +156,23 @@ public class AnnotationData implements Cloneable {
             throw new NullPointerException("Argument must not be null.");
         }
         m_styleRanges = styleRanges;
+    }
+
+    /** @param styleRanges the styleRanges to set */
+    public final void setStyleRanges(final List<StyleRangeDef> styleRanges) {
+        if (styleRanges == null || styleRanges.contains(null)) {
+            throw new RuntimeException("Argument must not be null.");
+        }
+        m_styleRanges = styleRanges.stream().map(s -> {
+            var styleRange = new StyleRange();
+            styleRange.setFgColor(s.getColor());
+            styleRange.setFontName(s.getFontName());
+            styleRange.setFontSize(s.getFontSize());
+            styleRange.setFontStyle(s.getFontStyle());
+            styleRange.setLength(s.getLength());
+            styleRange.setStart(s.getStart());
+            return styleRange;
+        }).toArray(StyleRange[]::new);
     }
 
     /** @return the bgColor */

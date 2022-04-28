@@ -62,6 +62,7 @@ import org.knime.core.eclipseUtil.OSGIHelper;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.Version;
 import org.knime.core.util.workflowalizer.NodeAndBundleInformation;
+import org.knime.core.workflow.def.VendorDef;
 import org.osgi.framework.Bundle;
 
 /**
@@ -264,6 +265,13 @@ public final class NodeAndBundleInformationPersistor extends NodeAndBundleInform
 
         return new NodeAndBundleInformationPersistor(factoryClass, bundleSymbolicName, bundleName, bundleVendor, nodeName,
             bundleVersion, featureSymbolicName, featureName, featureVendor, featureVersion);
+    }
+
+    public static NodeAndBundleInformationPersistor load(final String nodeName, final VendorDef feature,
+        final VendorDef bundle, final String factoryName) {
+        return new NodeAndBundleInformationPersistor(factoryName, bundle.getSymbolicName(), bundle.getName(),
+            bundle.getVendor(), nodeName, new Version(bundle.getVersion()), feature.getSymbolicName(),
+            feature.getName(), feature.getVendor(), new Version(feature.getVersion()));
     }
 
     /** {@inheritDoc} */

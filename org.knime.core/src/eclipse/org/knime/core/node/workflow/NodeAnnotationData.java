@@ -47,7 +47,6 @@
  */
 package org.knime.core.node.workflow;
 
-
 /**
  *
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
@@ -91,6 +90,5 @@ public final class NodeAnnotationData extends AnnotationData {
         result.setText(customName);
         return result;
     }
-
 
 }

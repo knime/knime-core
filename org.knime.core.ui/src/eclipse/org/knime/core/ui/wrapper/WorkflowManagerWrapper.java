@@ -456,6 +456,8 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
     public WorkflowCopyContent paste(final WorkflowCopyUI workflowCopy) {
         if (workflowCopy instanceof WorkflowPersistorWrapper) {
             return unwrap().paste(((WorkflowPersistorWrapper)workflowCopy).unwrap());
+        } else if (workflowCopy instanceof WorkflowDefWrapper) {
+            return unwrap().paste(((WorkflowDefWrapper)workflowCopy).unwrap());
         } else {
             throw new IllegalArgumentException(
                 "Only workflow copies of type '" + WorkflowPersistorWrapper.class.getSimpleName() + "' allowed.");

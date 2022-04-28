@@ -56,6 +56,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Predicate;
 
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.filestore.internal.EmptyFileStoreHandler;
@@ -101,11 +102,15 @@ import org.knime.core.node.workflow.FlowVariable.Scope;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.action.InteractiveWebViewsResult;
 import org.knime.core.node.workflow.action.InteractiveWebViewsResult.Builder;
+import org.knime.core.node.workflow.def.DefToCoreUtil;
 import org.knime.core.node.workflow.execresult.NativeNodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 import org.knime.core.node.workflow.execresult.NodeExecutionResult;
 import org.knime.core.node.workflow.virtual.parchunk.FlowVirtualScopeContext;
+import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeInputNodeModel;
+import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeOutputNodeModel;
+import org.knime.core.workflow.def.NativeNodeDef;
 import org.w3c.dom.Element;
 
 /**
@@ -135,6 +140,16 @@ public class NativeNodeContainer extends SingleNodeContainer {
 
     private LoopStatusChangeHandler m_loopStatusChangeHandler;
 
+    /** Used to exclude virtual nodes from copy operations. */
+    static final Predicate<NodeContainer> IS_VIRTUAL_IN_OUT_NODE = nc -> {
+        if (nc instanceof NativeNodeContainer) {
+            var nnc = (NativeNodeContainer)nc;
+            return nnc.isModelCompatibleTo(VirtualSubNodeInputNodeModel.class)
+                    || nnc.isModelCompatibleTo(VirtualSubNodeOutputNodeModel.class);
+        }
+        return false;
+    };
+
     /**
      * Create new SingleNodeContainer based on existing Node.
      *
@@ -163,6 +178,23 @@ public class NativeNodeContainer extends SingleNodeContainer {
             m_nodeAndBundleInformation = persistor.getNodeAndBundleInformation();
         }
         assert m_node != null : persistor.getClass().getSimpleName()
+                + " did not provide Node instance for "
+                + getClass().getSimpleName() + " with id \"" + id + "\"";
+        setPortNames();
+        m_node.addMessageListener(new UnderlyingNodeMessageListener());
+    }
+
+    /**
+     * Create new NativeNode from def.
+     *
+     * @param parent the workflow manager holding this node
+     * @param id the identifier
+     * @param persistor to read from
+     */
+    NativeNodeContainer(final WorkflowManager parent, final NodeID id, final NativeNodeDef def) {
+        super(parent, id, def);
+        m_node = DefToCoreUtil.toNode(def);
+        assert m_node != null : def.getNodeName()
                 + " did not provide Node instance for "
                 + getClass().getSimpleName() + " with id \"" + id + "\"";
         setPortNames();

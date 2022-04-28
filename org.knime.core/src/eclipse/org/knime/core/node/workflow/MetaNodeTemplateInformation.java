@@ -64,6 +64,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.LoadVersion;
+import org.knime.core.workflow.def.TemplateInfoDef;
 
 /**
  * Additional information that is associated with a metanode that are used
@@ -414,6 +415,27 @@ public final class MetaNodeTemplateInformation implements Cloneable {
         final Class<? extends NodeContainerTemplate> cl) {
         TemplateType type = TemplateType.get(cl);
         return new MetaNodeTemplateInformation(Role.Template, type, null, OffsetDateTime.now(), null, null);
+    }
+
+
+    /**
+     * Creates a new instance of the template information from the template definition.
+     *
+     * @param def a {@link TemplateInfoDef}.
+     * @param type a {@link TemplateType}.
+     * @return a {@link MetaNodeTemplateInformation}.
+     */
+    public static MetaNodeTemplateInformation createNewTemplate(final TemplateInfoDef def, final TemplateType type) {
+        return new MetaNodeTemplateInformation(getRole(def), type, URI.create(def.getUri()), def.getUpdatedAt(), null,
+            null);
+    }
+
+    private static Role getRole(final TemplateInfoDef def) {
+        if (def.getUri().isEmpty()) {
+            return def.getUpdatedAt() == null ? Role.None : Role.Template;
+        } else {
+            return Role.Link;
+        }
     }
 
     /**

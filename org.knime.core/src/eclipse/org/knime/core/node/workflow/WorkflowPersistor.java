@@ -295,29 +295,29 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
         }
 
         /** @return the source identifier */
-        int getSourceSuffix() {
+        public int getSourceSuffix() {
             return m_sourceSuffix;
         }
 
         /** @return the source port */
-        int getSourcePort() {
+        public int getSourcePort() {
             return m_sourcePort;
         }
 
         /** @return the destination identifier. */
-        int getDestSuffix() {
+        public int getDestSuffix() {
             return m_destSuffix;
         }
 
         /** @return the destination port */
-        int getDestPort() {
+        public int getDestPort() {
             return m_destPort;
         }
 
         /**
          * @return the isDeletable
          */
-        boolean isDeletable() {
+        public boolean isDeletable() {
             return m_isDeletable;
         }
 
@@ -349,7 +349,7 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
         }
 
         /** @return the uiInfo */
-        ConnectionUIInformation getUiInfo() {
+        public ConnectionUIInformation getUiInfo() {
             return m_uiInfo;
         }
 

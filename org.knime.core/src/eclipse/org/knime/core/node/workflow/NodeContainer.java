@@ -85,8 +85,12 @@ import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.action.InteractiveWebViewsResult;
 import org.knime.core.node.workflow.changes.ChangesTracker;
 import org.knime.core.node.workflow.changes.TrackedChanges;
+import org.knime.core.node.workflow.def.DefToCoreUtil;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
+import org.knime.core.workflow.def.BaseNodeDef;
+import org.knime.core.workflow.def.NodeLocksDef;
+import org.knime.core.workflow.def.WorkflowDef;
 
 /**
  * Abstract super class for containers holding node or just structural
@@ -220,6 +224,34 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
         m_nodeLocks = new NodeLocks(false, false, false);
         m_annotation = new NodeAnnotation(new NodeAnnotationData(true));
         m_annotation.registerOnNodeContainer(getID(), () -> setDirty());
+        addUIInformationListener(m_annotation);
+    }
+
+    /**
+     *
+     * Create new NodeContainer with IDLE state from the base node definition.
+     *
+     * @param parent the {@link WorkflowManager} holding this node
+     * @param id the nodes identifier
+     */
+    NodeContainer(final WorkflowManager parent, final NodeID id, final BaseNodeDef def) {
+        m_parent = parent;
+        if (m_parent == null) {
+            // make sure at least the top node knows how to execute stuff
+            m_jobManager = NodeExecutionJobManagerPool.getDefaultJobManagerFactory().getInstance();
+        }
+        m_id = id;
+        m_state = InternalNodeContainerState.IDLE;
+        if (def != null) {
+            m_nodeLocks = DefToCoreUtil.toNodeLocks(def.getLocks());
+            m_customDescription = def.getCustomDescription();
+            m_annotation = NodeAnnotation.copyFrom(def.getAnnotation());
+        } else {
+            m_nodeLocks = new NodeLocks(false, false, false);
+            m_annotation = new NodeAnnotation(new NodeAnnotationData(true));
+        }
+
+        m_annotation.registerOnNodeContainer(getID(), this::setDirty);
         addUIInformationListener(m_annotation);
     }
 
@@ -1606,6 +1638,19 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
             final LoadResult loadResult, final boolean preserveNodeMessage)
             throws CanceledExecutionException;
 
+    /**
+     * Restores content from the workflow definition, This represents the second step when loading a workflow.
+     *
+     * @param workflowDef a {@link WorkflowDef}
+     * @param exec for progress
+     * @param loadResult Where to report errors/warnings to
+     * @return The workflow content that was inserted (NodeID's and annotations), for single node containers the result
+     *         is null.
+     * @throws CanceledExecutionException
+     */
+    abstract WorkflowCopyContent loadContent(final WorkflowDef workflowDef, final ExecutionMonitor exec,
+        final LoadResult loadResult) throws CanceledExecutionException;
+
     /** Load information from execution result. Subclasses will override this
      * method and will call this implementation as <code>super.loadEx...</code>.
      * @param result The execution result (contains port objects, messages, etc)
@@ -1790,6 +1835,18 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
             m_hasDeleteLock = hasDeleteLock;
             m_hasResetLock = hasResetLock;
             m_hasConfigureLock = hasConfigureLock;
+        }
+
+        /**
+         * TODO
+         *
+         * @param locksDef
+         * @since 4.6.0
+         */
+        public NodeLocks(final NodeLocksDef locksDef) {
+            m_hasDeleteLock = locksDef.hasDeleteLock();
+            m_hasResetLock = locksDef.hasResetLock();
+            m_hasConfigureLock = locksDef.hasConfigureLock();
         }
 
         /**

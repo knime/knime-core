@@ -44,6 +44,9 @@
  */
 package org.knime.core.node.workflow;
 
+import org.knime.core.node.workflow.def.DefToCoreUtil;
+import org.knime.core.workflow.def.NodeAnnotationDef;
+
 /**
  * Annotation associated with a node. Moves with the node. Can't be moved
  * separately.
@@ -114,6 +117,13 @@ public final class NodeAnnotation extends Annotation implements NodeUIInformatio
     protected void fireChangeEvent() {
         m_changeListener.run();
         super.fireChangeEvent();
+    }
+
+    static NodeAnnotation copyFrom(final NodeAnnotationDef def) {
+        var annotationData = DefToCoreUtil.toAnnotationData(def.getData());
+        var nodeAnnotationData =  new NodeAnnotationData(def.isAnnotationDefault());
+        nodeAnnotationData.copyFrom(annotationData, false);
+        return new NodeAnnotation(nodeAnnotationData);
     }
 
 }

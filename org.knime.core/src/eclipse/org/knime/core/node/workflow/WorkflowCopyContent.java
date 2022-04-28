@@ -165,10 +165,21 @@ public final class WorkflowCopyContent {
         private WorkflowAnnotationID[] m_annotationIDs;
         /** see {@link #setIncludeInOutConnections(boolean)}. */
         private boolean m_isIncludeInOutConnections;
-        /** A map which maps old NodeID to preferred ID suffix in the target wfm. Used for template loading. */
+
+        /**
+         * A map which maps old NodeID to preferred ID suffix in the target wfm. When updating a linked metanode or
+         * component, the content will be inserted via copy & paste. Since the new instance is supposed to have the same
+         * node ID as the old one it can be set via {@link #setNodeID(NodeID, int, NodeUIInformation)}.
+         */
         private Map<NodeID, Integer> m_suggestedNodeIDSuffixMap;
-        /** A map which maps old NodeID to UI infos in the target wfm. Used for template loading. */
+
+        /**
+         * A map which maps old NodeID to UI infos in the target wfm. Similar to {@link #m_suggestedNodeIDSuffixMap},
+         * only used for updating metanodes or components. To insert the updated content in the same position as the
+         * outdated node, the ui info can be set via {@link #setNodeID(NodeID, int, NodeUIInformation)}
+         */
         private Map<NodeID, NodeUIInformation> m_uiInfoMap;
+
         /** A offset by which nodes and connection bend points are shifted when inserted into the final workflow. Value
          * is either <code>null</code> or a two-dimensional array.
          */

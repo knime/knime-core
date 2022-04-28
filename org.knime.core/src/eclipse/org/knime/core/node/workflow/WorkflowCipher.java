@@ -70,6 +70,8 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.workflow.WorkflowCipherPrompt.PromptCancelled;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.crypto.HexUtils;
+import org.knime.core.workflow.def.CipherDef;
+import org.knime.core.workflow.def.impl.CipherDefBuilder;
 
 /** A cipher object associated with a metanode or workflow. Most workflows
  * have the {@link #NULL_CIPHER} assigned, i.e. no locking/encryption.
@@ -254,6 +256,10 @@ final class WorkflowCipher implements Cloneable {
         return NULL_CIPHER == this;
     }
 
+    static boolean isNullCipherDef(final CipherDef def) {
+        return def == null || def.getEncryptionKey() == null || def.getPasswordDigest() == null;
+    }
+
     /** Save cipher settings.
      * @param cipherSettings to save to. */
     void save(final NodeSettingsWO cipherSettings) {
@@ -340,6 +346,35 @@ final class WorkflowCipher implements Cloneable {
             return null;
         }
         return MessageDigest.getInstance("SHA1").digest(password.getBytes());
+    }
+
+    static WorkflowCipher toWorkflowCipher(final CipherDef def) {
+        if (isNullCipherDef(def)) {
+            return null;
+        }
+        var passwordDigestHex = def.getPasswordDigest();
+        var encryptionKeyHex = def.getEncryptionKey();
+        byte[] passwordDigest = HexUtils.hexToBytes(passwordDigestHex);
+        byte[] encryptionKey = HexUtils.hexToBytes(encryptionKeyHex);
+        encryptionKey = removeVersionPrefixIfPresent(encryptionKey);
+        var hint = def.getPasswordHint();
+        var keySpec = new SecretKeySpec(encryptionKey, "AES");
+        return new WorkflowCipher(keySpec, passwordDigest, hint, false);
+    }
+
+    CipherDef toDef() {
+        if (isNullCipher()) {
+            return new CipherDefBuilder().build();
+        }
+        var passwordDigestHex = HexUtils.bytesToHex(m_passwordDigest);
+        byte[] key = m_secretKey.getEncoded();
+        key = ArrayUtils.addAll(PREPEND_TO_KEY, key);
+        var encryptionKeyHex = HexUtils.bytesToHex(key);
+        return new CipherDefBuilder() //
+            .setEncryptionKey(encryptionKeyHex) //
+            .setPasswordDigest(passwordDigestHex) //
+            .setPasswordHint(m_passwordHint) //
+            .build();
     }
 
 }

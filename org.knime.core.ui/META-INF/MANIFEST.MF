@@ -43,3 +43,4 @@ Require-Bundle: org.apache.commons.lang3;bundle-version="[3.2.1,4.0.0)",
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Automatic-Module-Name: org.knime.core.ui
+Import-Package: org.knime.core.workflow.def

@@ -341,6 +341,40 @@ class Workflow {
         return bfsSortedNodes;
     }
 
+    /**
+     * @param includeNodes the nodes that induce the subgraph - all connections between these nodes will be included in
+     *            the result.
+     * @param includeDanglingConnections if true, also include connections where only one endpoint is in the included
+     *            node set
+     * @return connections on the selected nodes. Useful for copying a part of the workflow.
+     */
+    Set<ConnectionContainer> getInducedConnections(final Set<NodeID> includeNodes, final boolean includeDanglingConnections) {
+        HashSet<ConnectionContainer> inducedConnections = new HashSet<>();
+
+        for (NodeID nodeID : includeNodes) {
+            // throws exception if not present in workflow
+            m_wfm.getNodeContainer(nodeID);
+
+            // outgoing connections
+            for (ConnectionContainer out : getConnectionsBySource(nodeID)) {
+                // induced <=> both nodes are in the include set
+                final boolean induced = includeNodes.contains(out.getDest());
+                if (induced || includeDanglingConnections) {
+                    inducedConnections.add(out);
+                }
+            }
+
+            // incoming connections - only for dangling incoming connections
+            if (includeDanglingConnections) {
+                for (ConnectionContainer in : getConnectionsByDest(nodeID)) {
+                    // will add induced connections twice, but the set filters them out
+                    inducedConnections.add(in);
+                }
+            }
+        }
+        return inducedConnections;
+    }
+
     /** Return map of node ids to set of port indices based on argument list
      * of node ids. The map is sorted by traversing the graph breadth first,
      * the set of port indices represents the input ports actually used
