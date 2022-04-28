@@ -158,7 +158,8 @@ public final class ValueFactoryUtils {
             .build();
 
     /**
-     * Loads a specific collection {@link ValueFactory} from className if className refers to a specific collection ValueFactory.
+     * Loads a specific collection {@link ValueFactory} from className if className refers to a specific collection
+     * ValueFactory.
      *
      * @param className name of a value factory
      * @return an instance of the class corresponding to className or an empty optional
@@ -207,7 +208,8 @@ public final class ValueFactoryUtils {
         } else if (json.has(CFG_DATA_TYPE)) {
             return loadDataTypeFromJson((ObjectNode)json.get(CFG_DATA_TYPE));
         } else if (SPECIFIC_COLLECTION_FACTORY_PROVIDER.hasFactoryFor(valueFactoryName)) {
-            return SPECIFIC_COLLECTION_FACTORY_PROVIDER.getTypeFor(SPECIFIC_COLLECTION_FACTORY_PROVIDER.getFactoryFor(valueFactoryName));
+            return SPECIFIC_COLLECTION_FACTORY_PROVIDER
+                .getTypeFor(SPECIFIC_COLLECTION_FACTORY_PROVIDER.getFactoryFor(valueFactoryName));
         } else {
             var factory = getValueFactoryFromExtensionPoint(valueFactoryName).orElseThrow();
             if (factory instanceof CollectionValueFactory) {
@@ -344,8 +346,7 @@ public final class ValueFactoryUtils {
         var updatedInnerTraits =
             getTraitsForInnerStructTraits(traitsWithoutType, valueFactory.getElementValueFactory());
         return new DefaultStructDataTraits(
-            ArrayUtils.add(traitsWithoutType.getTraits(), getLogicalTypeTrait(valueFactory)),
-            updatedInnerTraits);
+            ArrayUtils.add(traitsWithoutType.getTraits(), getLogicalTypeTrait(valueFactory)), updatedInnerTraits);
     }
 
     private static DataTraits[] getTraitsForInnerStructTraits(final StructDataTraits traitsWithoutType,
@@ -376,7 +377,6 @@ public final class ValueFactoryUtils {
         var dataTraitsWithType = ArrayUtils.add(traitsWithoutType.getTraits(), getLogicalTypeTrait(valueFactory));
         return new DefaultListDataTraits(dataTraitsWithType, getTraits(elementValueFactory));
     }
-
 
     @SuppressWarnings("deprecation")
     private static boolean isDataCellValueFactory(final ValueFactory<?, ?> factory) {
@@ -423,10 +423,10 @@ public final class ValueFactoryUtils {
         CheckUtils.checkArgument(arrayNode.isArray(), "The provided node '%s' is not an array node.", arrayNode);
         ArrayNode array = (ArrayNode)arrayNode;
         return IntStream.range(0, array.size())//
-        .mapToObj(array::get)//
-        .map(JsonNode::asText)//
-        .map(ValueFactoryUtils::getValueClass)//
-        .collect(toList());
+            .mapToObj(array::get)//
+            .map(JsonNode::asText)//
+            .map(ValueFactoryUtils::getValueClass)//
+            .collect(toList());
     }
 
     private static Class<? extends DataValue> getValueClass(final String valueClassName) {
