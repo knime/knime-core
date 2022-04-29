@@ -57,9 +57,13 @@ import static org.knime.core.data.join.JoinTestInput.cell;
 import static org.knime.core.data.join.JoinTestInput.col;
 import static org.knime.core.data.join.JoinTestInput.defaultRow;
 
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
@@ -71,6 +75,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.join.JoinSpecification.Builder;
 import org.knime.core.data.join.JoinSpecification.InputTable;
 import org.knime.core.data.join.JoinTableSettings.JoinColumn;
 import org.knime.core.data.join.JoinTableSettings.SpecialJoinColumn;
@@ -118,6 +123,35 @@ public class JoinSpecificationTest {
             new String[]{"A", "C", "E"}, InputTable.LEFT, m_specs[LEFT]);
         m_settings[RIGHT] = new JoinTableSettings(true, JoinColumn.array("A", "Y", "Z", "A"),
             new String[]{"U", "V", "A"}, InputTable.RIGHT, m_specs[RIGHT]);
+    }
+
+    /**
+     * The completeness of the copy constructor {@link Builder#from(JoinSpecification)} is extremely important because
+     * disjunctive joins rely on it (a disjunctive join is reduced to a series of conjunctive joins, each copying and
+     * modifying the original join specification - if a part of the specification is not copied, the join will not
+     * adhere to the specification).
+     *
+     * When adding a new field to the join specification builder, this test will fail, reminding developers to add the
+     * new field to the copy constructor {@link Builder#from(JoinSpecification)}
+     *
+     * Added in response to AP-18854: Inconsistent Behaviour between Match All and Match Any when comparing Row IDs
+     */
+    @Test
+    public void checkCopyConstructorCoverage() {
+        var publicBuilderMethods = Arrays.stream(JoinSpecification.Builder.class.getDeclaredMethods())//
+            .filter(m -> Modifier.isPublic(m.getModifiers())).map(Method::getName)//
+            .collect(Collectors.toSet());
+
+        // before changing: make sure to add the new field to {@link Builder#from(JoinSpecification)}!
+        Set<String> expectedBuilderMethods =
+            Set.of("rowKeyFactory", "retainMatched", "mergeJoinColumns", "conjunctive", "build", "outputRowOrder",
+                "dataCellComparisonMode", "from", "columnNameDisambiguator", "usingOnlyJoinClause");
+
+        Set<String> newMethods = new HashSet<>(publicBuilderMethods);
+        newMethods.removeAll(expectedBuilderMethods);
+        assertTrue(String.format(
+            "Builder has new methods %s, make sure the new fields are added to the copy constructor Builder#from",
+            newMethods), newMethods.isEmpty());
     }
 
     /**
