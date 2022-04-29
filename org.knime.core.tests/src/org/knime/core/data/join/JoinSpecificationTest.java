@@ -55,10 +55,18 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.knime.core.data.join.JoinTestInput.cell;
 import static org.knime.core.data.join.JoinTestInput.col;
+import static org.knime.core.data.join.JoinTestInput.defaultRow;
 
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -67,10 +75,14 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.join.JoinSpecification.Builder;
 import org.knime.core.data.join.JoinSpecification.InputTable;
 import org.knime.core.data.join.JoinTableSettings.JoinColumn;
 import org.knime.core.data.join.JoinTableSettings.SpecialJoinColumn;
+import org.knime.core.data.join.implementation.JoinImplementation;
+import org.knime.core.data.join.implementation.JoinerFactory.JoinAlgorithm;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.InvalidSettingsException;
 
 /**
@@ -111,6 +123,35 @@ public class JoinSpecificationTest {
             new String[]{"A", "C", "E"}, InputTable.LEFT, m_specs[LEFT]);
         m_settings[RIGHT] = new JoinTableSettings(true, JoinColumn.array("A", "Y", "Z", "A"),
             new String[]{"U", "V", "A"}, InputTable.RIGHT, m_specs[RIGHT]);
+    }
+
+    /**
+     * The completeness of the copy constructor {@link Builder#from(JoinSpecification)} is extremely important because
+     * disjunctive joins rely on it (a disjunctive join is reduced to a series of conjunctive joins, each copying and
+     * modifying the original join specification - if a part of the specification is not copied, the join will not
+     * adhere to the specification).
+     *
+     * When adding a new field to the join specification builder, this test will fail, reminding developers to add the
+     * new field to the copy constructor {@link Builder#from(JoinSpecification)}
+     *
+     * Added in response to AP-18854: Inconsistent Behaviour between Match All and Match Any when comparing Row IDs
+     */
+    @Test
+    public void checkCopyConstructorCoverage() {
+        var publicBuilderMethods = Arrays.stream(JoinSpecification.Builder.class.getDeclaredMethods())//
+            .filter(m -> Modifier.isPublic(m.getModifiers())).map(Method::getName)//
+            .collect(Collectors.toSet());
+
+        // before changing: make sure to add the new field to {@link Builder#from(JoinSpecification)}!
+        Set<String> expectedBuilderMethods =
+            Set.of("rowKeyFactory", "retainMatched", "mergeJoinColumns", "conjunctive", "build", "outputRowOrder",
+                "dataCellComparisonMode", "from", "columnNameDisambiguator", "usingOnlyJoinClause");
+
+        Set<String> newMethods = new HashSet<>(publicBuilderMethods);
+        newMethods.removeAll(expectedBuilderMethods);
+        assertTrue(String.format(
+            "Builder has new methods %s, make sure the new fields are added to the copy constructor Builder#from",
+            newMethods), newMethods.isEmpty());
     }
 
     /**
@@ -895,6 +936,162 @@ public class JoinSpecificationTest {
         assertEquals(new RowKey("left_right"), factory.apply(m_rows[LEFT], m_rows[RIGHT]));
         assertEquals(new RowKey("left_?"), factory.apply(m_rows[LEFT], null));
         assertEquals(new RowKey("?_right"), factory.apply(null, m_rows[RIGHT]));
+    }
+
+    /**
+     * When using createKeepRowKeysFactory, it is expected that: both row keys are present and equal, or exactly one row
+     * key is present.
+     * The present row key is then set as the row key of the output.
+     */
+    @Test
+    public void testCreateKeepRowKeysFactory() {
+        final BiFunction<DataRow, DataRow, RowKey> factory = new KeepRowKeysFactory();
+        final DataRow left = JoinTestInput.defaultRow("key,a,b,c");
+        final DataRow right = JoinTestInput.defaultRow("key,x,y,z");
+        assertEquals(new RowKey("key"), factory.apply(left, right));
+        assertEquals(new RowKey("key"), factory.apply(left, null));
+        assertEquals(new RowKey("key"), factory.apply(null, right));
+    }
+
+    /**
+     * When using createKeepRowKeysFactory, it is expected that: both row keys are present and equal, or exactly one row
+     * key is present. The present row key is then set as the row key of the output.
+     * @throws CanceledExecutionException
+     */
+    @Test
+    public void testKeepRowKeysApplicable() throws InvalidSettingsException, CanceledExecutionException {
+        final BufferedDataTable left = JoinTestInput.table("A", false, //
+            defaultRow("Row0,a"), defaultRow("Row1,a"), defaultRow("Row2,a"));
+        final BufferedDataTable right = JoinTestInput.table("X", false, //
+            defaultRow("Row0,a"),defaultRow("Row1,x"),defaultRow("Row2,x"));
+
+        JoinColumn[] onRowKey = new JoinColumn[]{new JoinColumn(SpecialJoinColumn.ROW_KEY)};
+
+        // whether to retain matches, left unmatched rows, and right unmatched rows
+        boolean[][] retainMatchesLeftRight = new boolean[][]{//
+            new boolean[]{false, false, false}, //
+            new boolean[]{false, false, true}, //
+            new boolean[]{false, true, false}, //
+            new boolean[]{false, true, true}, //
+            new boolean[]{true, false, false}, //
+            new boolean[]{true, false, true}, //
+            new boolean[]{true, true, false}, //
+            new boolean[]{true, true, true},//
+        };
+        // whether the factory is applicable under the above row retainment settings, depending on whether row keys are
+        // guaranteed to match
+        List<Predicate<Boolean>> applicable = List.of(//
+            rowKeysMatch -> true, //
+            rowKeysMatch -> true, //
+            rowKeysMatch -> true, //
+            rowKeysMatch -> false, //
+            rowKeysMatch -> (Boolean)rowKeysMatch, //
+            rowKeysMatch -> (Boolean)rowKeysMatch, //
+            rowKeysMatch -> (Boolean)rowKeysMatch, //
+            rowKeysMatch -> false//
+        );
+
+        for (int i = 0; i < retainMatchesLeftRight.length; i++) {
+            boolean retainMatches = retainMatchesLeftRight[i][0];
+            boolean retainLeft = retainMatchesLeftRight[i][1];
+            boolean retainTrue = retainMatchesLeftRight[i][2];
+
+            /**
+             * Split table output
+             */
+            // row keys match: join on row keys
+            {
+                var rowKeysMatch = true;
+                var splitOutput = true;
+                boolean isApplicable = !retainMatches || rowKeysMatch;
+
+                var leftSettings = new JoinTableSettings(retainLeft, onRowKey, new String[0], InputTable.LEFT, left);
+                var rightSettings = new JoinTableSettings(retainTrue, onRowKey, new String[0], InputTable.RIGHT, right);
+                var joinSpec = new JoinSpecification.Builder(leftSettings, rightSettings)//
+                    .retainMatched(retainMatches)//
+                    .conjunctive(true)//
+                    .build();
+
+                Optional<String> result = KeepRowKeysFactory.applicable(joinSpec, splitOutput);
+                assertTrue(isApplicable ? result.isEmpty() : result.isPresent());
+
+                JoinImplementation impl = JoinAlgorithm.AUTO.getFactory().create(joinSpec, JoinTestInput.EXEC);
+                impl.joinOutputSplit().getResults();
+            }
+
+            // row keys don't match: join disjunctive on row keys and also something else
+            {
+                var rowKeysMatch = false;
+                var splitOutput = true;
+                boolean isApplicable = !retainMatches || rowKeysMatch;
+
+                var leftSettings = new JoinTableSettings(retainLeft, //
+                    new JoinColumn[]{onRowKey[0], new JoinColumn("A")}, //
+                    new String[0], InputTable.LEFT, left);
+                var rightSettings = new JoinTableSettings(retainTrue, //
+                    new JoinColumn[]{onRowKey[0], new JoinColumn("X")}, //
+                    new String[0], InputTable.RIGHT, right);
+                var joinSpec = new JoinSpecification.Builder(leftSettings, rightSettings)//
+                    .retainMatched(retainMatches)//
+                    .conjunctive(false)//
+                    .build();
+
+                Optional<String> result = KeepRowKeysFactory.applicable(joinSpec, splitOutput);
+                assertTrue(String.format("%s %s", Arrays.toString(retainMatchesLeftRight[i]), result.toString()), //
+                    isApplicable ? result.isEmpty() : result.isPresent());
+
+                JoinImplementation impl = JoinAlgorithm.AUTO.getFactory().create(joinSpec, JoinTestInput.EXEC);
+                impl.joinOutputSplit().getResults();
+            }
+
+            /**
+             * Single table output
+             */
+            // row keys match: join on row keys
+            {
+                var rowKeysMatch = true;
+                var splitOutput = false;
+                boolean isApplicable = applicable.get(i).test(rowKeysMatch);
+
+                var leftSettings = new JoinTableSettings(retainLeft, onRowKey, new String[0], InputTable.LEFT, left);
+                var rightSettings = new JoinTableSettings(retainTrue, onRowKey, new String[0], InputTable.RIGHT, right);
+                var joinSpec = new JoinSpecification.Builder(leftSettings, rightSettings)//
+                    .retainMatched(retainMatches)//
+                    .conjunctive(true)//
+                    .build();
+
+                Optional<String> result = KeepRowKeysFactory.applicable(joinSpec, splitOutput);
+                assertTrue(isApplicable ? result.isEmpty() : result.isPresent());
+
+                JoinImplementation impl = JoinAlgorithm.AUTO.getFactory().create(joinSpec, JoinTestInput.EXEC);
+                impl.joinOutputCombined().getResults();
+            }
+
+            // row keys don't match: join disjunctive on row keys and also something else
+            {
+                var rowKeysMatch = false;
+                var splitOutput = false;
+                boolean isApplicable = applicable.get(i).test(rowKeysMatch);
+
+                var leftSettings = new JoinTableSettings(retainLeft, //
+                    new JoinColumn[]{onRowKey[0], new JoinColumn("A")}, //
+                    new String[0], InputTable.LEFT, left);
+                var rightSettings = new JoinTableSettings(retainTrue, //
+                    new JoinColumn[]{onRowKey[0], new JoinColumn("X")}, //
+                    new String[0], InputTable.RIGHT, right);
+                var joinSpec = new JoinSpecification.Builder(leftSettings, rightSettings)//
+                    .retainMatched(retainMatches)//
+                    .conjunctive(false)//
+                    .build();
+
+                Optional<String> result = KeepRowKeysFactory.applicable(joinSpec, splitOutput);
+                assertTrue(isApplicable ? result.isEmpty() : result.isPresent());
+
+                JoinImplementation impl = JoinAlgorithm.AUTO.getFactory().create(joinSpec, JoinTestInput.EXEC);
+                impl.joinOutputCombined().getResults();
+            }
+        }
+
     }
 
     /**
