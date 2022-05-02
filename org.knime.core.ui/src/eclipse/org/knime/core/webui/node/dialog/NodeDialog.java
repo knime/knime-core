@@ -277,6 +277,7 @@ public abstract class NodeDialog implements DataServiceProvider {
     final class LegacyFlowVariableNodeDialog extends NodeDialogPane {
 
         private static final String FLOW_VARIABLES_TAB_NAME = "Flow Variables";
+        private NodeSettingsRO m_modelSettings;
 
         @Override
         public void onOpen() {
@@ -296,12 +297,12 @@ public abstract class NodeDialog implements DataServiceProvider {
         @Override
         protected void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec[] specs)
             throws NotConfigurableException {
-            //
+            m_modelSettings = settings;
         }
 
         @Override
         protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
-            //
+            m_modelSettings.copyTo(settings);
         }
 
         @Override

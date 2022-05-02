@@ -59,6 +59,7 @@ import java.util.Optional;
 
 import org.junit.Test;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -153,19 +154,8 @@ public class NodeDialogTest {
 
     private static void openLegacyFlowVariableDialogAndCheckViewSettings(final NativeNodeContainer nc,
         final String viewSettingValue) throws NotConfigurableException {
-        NodeContext.pushContext(nc);
-        LegacyFlowVariableNodeDialog legacyNodeDialog;
-        try {
-            legacyNodeDialog = (LegacyFlowVariableNodeDialog)NodeDialogManager.getInstance().getNodeDialog(nc)
-                .createLegacyFlowVariableNodeDialog();
-            var nodeSettings = new NodeSettings("node_settings");
-            var modelSettings = nodeSettings.addNodeSettings("model");
-            modelSettings.addString("default model setting", "default model setting value");
-            nodeSettings.addNodeSettings("internal_node_subsettings");
-            legacyNodeDialog.initDialogForTesting(nodeSettings, new PortObjectSpec[]{});
-        } finally {
-            NodeContext.removeLastContext();
-        }
+        LegacyFlowVariableNodeDialog legacyNodeDialog = initLegacyFlowVariableDialog(nc);
+
         var tabbedPane = getChild(legacyNodeDialog.getPanel(), 1);
         var flowVariablesTab = getChild(getChild(getChild(tabbedPane, 0), 0), 0);
 
@@ -180,6 +170,50 @@ public class NodeDialogTest {
         var viewRootNode = viewSettingsJTree.getModel().getRoot();
         var firstViewConfigNode = (ConfigEditTreeNode)viewRootNode.getChildAt(0);
         assertThat(firstViewConfigNode.getConfigEntry().toStringValue(), is(viewSettingValue));
+    }
+
+    private static LegacyFlowVariableNodeDialog initLegacyFlowVariableDialog(final NativeNodeContainer nc)
+        throws NotConfigurableException {
+        NodeContext.pushContext(nc);
+        LegacyFlowVariableNodeDialog legacyNodeDialog;
+        try {
+            legacyNodeDialog = (LegacyFlowVariableNodeDialog)NodeDialogManager.getInstance().getNodeDialog(nc)
+                .createLegacyFlowVariableNodeDialog();
+            var nodeSettings = new NodeSettings("node_settings");
+            var modelSettings = nodeSettings.addNodeSettings("model");
+            modelSettings.addString("default model setting", "default model setting value");
+            nodeSettings.addNodeSettings("internal_node_subsettings");
+            legacyNodeDialog.initDialogForTesting(nodeSettings, new PortObjectSpec[]{});
+        } finally {
+            NodeContext.removeLastContext();
+        }
+        return legacyNodeDialog;
+    }
+
+    /**
+     * Makes sure that model settings are properly saved again after the legacy node dialog has been closed. The model
+     * settings are essentially just 'taken over' - i.e. not modified from within the legacy node dialog.
+     *
+     * @throws IOException
+     * @throws InvalidSettingsException
+     * @throws NotConfigurableException
+     */
+    @Test
+    public void testLegacyFlowVariableDialogModelSettingsOnClose()
+        throws IOException, InvalidSettingsException, NotConfigurableException {
+        var wfm = WorkflowManagerUtil.createEmptyWorkflow();
+        var nc = WorkflowManagerUtil.createAndAddNode(wfm,
+            new NodeDialogNodeFactory(() -> createNodeDialog(Page.builder(() -> "test", "test.html").build(),
+                createTextSettingsDataService(), null)));
+
+        LegacyFlowVariableNodeDialog legacyNodeDialog = initLegacyFlowVariableDialog(nc);
+
+        var settings = new NodeSettings("test");
+        legacyNodeDialog.finishEditingAndSaveSettingsTo(settings);
+        assertThat(settings.getNodeSettings("model").getString("default model setting"),
+            is("default model setting value"));
+
+        WorkflowManagerUtil.disposeWorkflow(wfm);
     }
 
     private static Container getChild(final Container cont, final int index) {
