@@ -43,7 +43,6 @@ try {
                 'knime-js-base',
                 'knime-json',
                 'knime-kerberos',
-                'knime-office365',
                 'knime-productivity-oss',
                 'knime-python-legacy',
                 'knime-r',

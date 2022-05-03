@@ -187,11 +187,6 @@
 					<layout>p2</layout>
 					<url>${knime.core.columnar.p2}</url>
 				</repository>
-				<repository>
-					<id>p2-knime-office365</id>
-					<layout>p2</layout>
-					<url>${knime.office365.p2}</url>
-				</repository>
 			</repositories>
 		</profile>
 	</profiles>
