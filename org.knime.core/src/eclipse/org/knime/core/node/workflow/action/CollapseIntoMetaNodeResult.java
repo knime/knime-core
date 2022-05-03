@@ -50,7 +50,6 @@ package org.knime.core.node.workflow.action;
 
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.WorkflowLock;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
@@ -89,17 +88,9 @@ public final class CollapseIntoMetaNodeResult {
     }
 
     public void undo() {
-        undoWithResult();
-    }
-
-    /**
-     * Undo the collapse.
-     * @return WorkflowCopyContent containing IDs of the newly re-introduced workflow parts.
-     */
-    public WorkflowCopyContent undoWithResult() {
         try (WorkflowLock l = m_hostWFM.lock()) {
             m_hostWFM.removeNode(m_collapsedMetanodeID);
-            return m_hostWFM.paste(m_undoCopyPersistor);
+            m_hostWFM.paste(m_undoCopyPersistor);
         }
     }
 

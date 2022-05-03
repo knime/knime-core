@@ -48,6 +48,7 @@
  */
 package org.knime.core.ui.wrapper;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -60,6 +61,7 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.context.ModifiableNodeCreationConfiguration;
 import org.knime.core.node.dialog.ExternalNodeData;
 import org.knime.core.node.port.MetaPortInfo;
+import org.knime.core.node.workflow.AnnotationData;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.ConnectionID;
 import org.knime.core.node.workflow.ConnectionUIInformation;
@@ -183,9 +185,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
             }
         }
         if (annotationIDs != null) {
-            for (WorkflowAnnotation wa : wfm.getWorkflowAnnotations(annotationIDs)) {
-                wfm.removeAnnotation(wa);
-            }
+            Arrays.stream(annotationIDs).forEach(wfm::removeAnnotation);
         }
     }
 
@@ -558,8 +558,8 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
     }
 
     @Override
-    public WorkflowAnnotationID addWorkflowAnnotation(final WorkflowAnnotation annotation) {
-        return unwrap().addWorkflowAnnotation(annotation);
+    public WorkflowAnnotation addWorkflowAnnotation(final AnnotationData annoData, final int preferredIndex) {
+        return unwrap().addWorkflowAnnotation(annoData, -1);
     }
 
     @Override

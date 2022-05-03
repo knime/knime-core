@@ -63,6 +63,7 @@ import org.knime.core.node.NodeAndBundleInformationPersistor;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.port.PortType;
 import org.knime.core.util.LoadVersion;
+import org.knime.core.util.Pair;
 import org.knime.core.util.workflowalizer.AuthorInformation;
 
 /**
@@ -166,8 +167,10 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
         return null;
     }
 
-    /** @return (non-mull) map of annotations. */
-    List<WorkflowAnnotation> getWorkflowAnnotations();
+    /**
+     * @return (non-mull) list of annotations and their preferred index "ID" (-1 for any; only relevant for undo/redo)
+     */
+    List<Pair<AnnotationData, Integer>> getWorkflowAnnotations();
 
     /** NodeSettings used to save the wizard state (usually null). */
     NodeSettingsRO getWizardExecutionControllerState();

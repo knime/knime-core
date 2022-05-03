@@ -159,7 +159,7 @@ public class BugAP5667_FileStoresInSubnode extends WorkflowTestCase {
                 NodeID[] innerNodes = IntStream.of(2, 5).mapToObj(
                     i -> innerWFM.getID().createChild(i)).toArray(NodeID[]::new);
                 CollapseIntoMetaNodeResult collapse = innerWFM.collapseIntoMetaNode(
-                    innerNodes, new WorkflowAnnotation[0], "yet another level");
+                    innerNodes, new WorkflowAnnotationID[0], "yet another level");
                 if (m_testModification.equals(TestModifications.SubnodeInSubnode)) {
                     NodeID metaNodeID = collapse.getCollapsedMetanodeID();
                     innerWFM.convertMetaNodeToSubNode(metaNodeID);

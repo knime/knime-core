@@ -70,6 +70,7 @@ import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -109,6 +110,7 @@ import javax.json.JsonValue;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOCase;
 import org.apache.commons.io.filefilter.FileFilterUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
@@ -295,10 +297,9 @@ public final class WorkflowManager extends NodeContainer
     /** Vector holding workflow specific variables. */
     private Vector<FlowVariable> m_workflowVariables;
 
-    /** There is a 1:1 correspondence between annotations and their id
-     * TODO: better using hash maps here? */
-    private final Vector<WorkflowAnnotation> m_annotations = new Vector<WorkflowAnnotation>();
-    private final Vector<WorkflowAnnotationID> m_annotationIDs = new Vector<WorkflowAnnotationID>();
+    /** Workflow annotations, order defines "z-order" */
+    private final List<WorkflowAnnotation> m_annotations = new ArrayList<>();
+
     private int m_nextAnnotationID = 0;
 
     /** for internal usage, holding output table references and file store handlers */
@@ -4263,10 +4264,17 @@ public final class WorkflowManager extends NodeContainer
      * WFM (outgoing connections fed back into inports of the new Metanode).
      *
      * @param orgIDs the ids of the nodes to be moved to the new metanode.
+     * @param annoIDs the ids of the workflow annotations contained (not null).
      * @return null or reason why this cannot be done as string.
      */
-    public String canCollapseNodesIntoMetaNode(final NodeID[] orgIDs) {
+    public String canCollapseNodesIntoMetaNode(final NodeID[] orgIDs, final WorkflowAnnotationID[] annoIDs) {
         try (WorkflowLock lock = lock()) {
+            var inWorkflowAnnoIDs = getWorkflowAnnotationIDs();
+            for (WorkflowAnnotationID anno : annoIDs) {
+                if (!inWorkflowAnnoIDs.contains(anno)) {
+                    return String.format("Annnotation with ID \"%s\" not part of workflow");
+                }
+            }
             // for quick search:
             HashSet<NodeID> orgIDsHash = new HashSet<NodeID>(Arrays.asList(orgIDs));
             // Check if we are allowed to move (=delete) all those nodes
@@ -4363,16 +4371,16 @@ public final class WorkflowManager extends NodeContainer
      * are passed through appropriate ports of the new metanode.
      *
      * @param orgIDs the ids of the nodes to be moved to the new metanode.
-     * @param orgAnnos the workflow annotations to be moved
+     * @param orgAnnoIDs the workflow annotations to be moved
      * @param name of the new metanode
      * @return newly create metanode
      * @throws IllegalArgumentException if collapse cannot be done
      */
-    public CollapseIntoMetaNodeResult collapseIntoMetaNode(final NodeID[] orgIDs, final WorkflowAnnotation[] orgAnnos,
-        final String name) {
+    public CollapseIntoMetaNodeResult collapseIntoMetaNode(final NodeID[] orgIDs,
+        final WorkflowAnnotationID[] orgAnnoIDs, final String name) {
         try (WorkflowLock lock = lock()) {
             // make sure this is still true:
-            String res = canCollapseNodesIntoMetaNode(orgIDs);
+            String res = canCollapseNodesIntoMetaNode(orgIDs, orgAnnoIDs);
             CheckUtils.checkArgument(res == null, res);
             // for quick search:
             HashSet<NodeID> orgIDsHash = new HashSet<NodeID>(Arrays.asList(orgIDs));
@@ -4519,7 +4527,7 @@ public final class WorkflowManager extends NodeContainer
             // copy the nodes into the newly create WFM:
             WorkflowCopyContent.Builder orgContentBuilder = WorkflowCopyContent.builder();
             orgContentBuilder.setNodeIDs(orgIDs);
-            orgContentBuilder.setAnnotationIDs(getWorkflowAnnotationIDs(orgAnnos));
+            orgContentBuilder.setAnnotationIDs(orgAnnoIDs);
             orgContentBuilder.setIncludeInOutConnections(true);
             final WorkflowPersistor undoPersistor = copy(true, orgContentBuilder.build());
 
@@ -4611,7 +4619,7 @@ public final class WorkflowManager extends NodeContainer
             }
             // and finally: delete the original nodes and annotations.
             Stream.of(orgIDs).forEach(id -> removeNode(id));
-            Stream.of(orgAnnos).forEach(anno -> removeAnnotation(anno));
+            Stream.of(orgAnnoIDs).forEach(annoID -> removeAnnotation(annoID));
             var result = new CollapseIntoMetaNodeResult(this, newWFM.getID(), undoPersistor);
             notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.NODE_COLLAPSED, null, null, result));
             return result;
@@ -8037,6 +8045,7 @@ public final class WorkflowManager extends NodeContainer
         Map<Integer, NodeContainerPersistor> loaderMap = new LinkedHashMap<Integer, NodeContainerPersistor>();
         Set<ConnectionContainerTemplate> connTemplates = new HashSet<ConnectionContainerTemplate>();
         Set<ConnectionContainerTemplate> additionalConnTemplates = new HashSet<ConnectionContainerTemplate>();
+        List<Pair<AnnotationData, Integer>> workflowAnnotations;
         boolean isIncludeInOut = content.isIncludeInOutConnections();
         try (WorkflowLock lock = lock()) {
             for (int i = 0; i < nodeIDs.length; i++) {
@@ -8084,8 +8093,12 @@ public final class WorkflowManager extends NodeContainer
                     }
                 }
             }
+            workflowAnnotations = m_annotations.stream() //
+                    .filter(anno -> ArrayUtils.contains(content.getAnnotationIDs(), anno.getID())) //
+                    .map(anno -> Pair.create(anno.getData().clone(), anno.getID().getIndex())) //
+                    .collect(Collectors.toList());
             return new PasteWorkflowContentPersistor(loaderMap, connTemplates, additionalConnTemplates,
-                getWorkflowAnnotations(content.getAnnotationIDs()), isUndoableDeleteCommand);
+                workflowAnnotations);
         }
     }
 
@@ -8441,9 +8454,11 @@ public final class WorkflowManager extends NodeContainer
             new LinkedHashMap<NodeID, NodeContainerPersistor>();
         Map<Integer, ? extends NodeContainerPersistor> nodeLoaderMap = persistor.getNodeLoaderMap();
         exec.setMessage("annotations");
-        List<WorkflowAnnotation> annos = persistor.getWorkflowAnnotations();
-        for (WorkflowAnnotation w : annos) {
-            addWorkflowAnnotationInternal(w);
+        List<Pair<AnnotationData, Integer>> annos = persistor.getWorkflowAnnotations();
+        List<WorkflowAnnotationID> annoIDs = new ArrayList<>();
+        for (Pair<AnnotationData, Integer> w : annos) {
+            WorkflowAnnotation anno = addWorkflowAnnotationInternal(w.getFirst(), w.getSecond());
+            annoIDs.add(anno.getID());
         }
         exec.setMessage("node & connection information");
         Map<Integer, NodeID> translationMap =
@@ -8488,10 +8503,9 @@ public final class WorkflowManager extends NodeContainer
         }
         Collection<NodeID> resultColl = persistorMap.keySet();
         NodeID[] newIDs = resultColl.toArray(new NodeID[resultColl.size()]);
-        WorkflowAnnotation[] newAnnotations = annos.toArray(new WorkflowAnnotation[annos.size()]);
         addConnectionsFromTemplates(persistor.getAdditionalConnectionSet(), loadResult, translationMap, false);
         WorkflowCopyContent.Builder result = WorkflowCopyContent.builder();
-        result.setAnnotationIDs(getWorkflowAnnotationIDs(newAnnotations));
+        result.setAnnotationIDs(annoIDs.toArray(WorkflowAnnotationID[]::new));
         result.setNodeIDs(newIDs);
         return result.build();
     }
@@ -9549,9 +9563,6 @@ public final class WorkflowManager extends NodeContainer
                 });
             }
 
-            //unset workflow annotation ids (in case they are about to be used somewhere else)
-            getWorkflowAnnotations().forEach(wa -> wa.unsetID());
-
             m_dataRepository = null;
         }
     }
@@ -9775,7 +9786,7 @@ public final class WorkflowManager extends NodeContainer
      * @return read-only collection of the ids of all currently registered annotations.
      */
     public Collection<WorkflowAnnotationID> getWorkflowAnnotationIDs() {
-        return Collections.unmodifiableList(m_annotationIDs);
+        return m_annotations.stream().map(WorkflowAnnotation::getID).collect(Collectors.toUnmodifiableList());
     }
 
     /**
@@ -9788,24 +9799,8 @@ public final class WorkflowManager extends NodeContainer
     public WorkflowAnnotation[] getWorkflowAnnotations(final WorkflowAnnotationID... ids) {
         WorkflowAnnotation[] res = new WorkflowAnnotation[ids.length];
         for (int i = 0; i < res.length; i++) {
-            int idx = m_annotationIDs.indexOf(ids[i]);
-            if (idx != -1) {
-                res[i] = m_annotations.get(idx);
-            }
-        }
-        return res;
-    }
-
-    /**
-     * Helper method to get ids that reference the given workflow annotations.
-     *
-     * @param annotations the annotations to get the ids for
-     * @return a new array with the ids
-     */
-    private WorkflowAnnotationID[] getWorkflowAnnotationIDs(final WorkflowAnnotation... annotations) {
-        WorkflowAnnotationID[] res = new WorkflowAnnotationID[annotations.length];
-        for (int i = 0; i < res.length; i++) {
-            res[i] = m_annotationIDs.get(m_annotations.indexOf(annotations[i]));
+            var id = ids[i];
+            res[i] = m_annotations.stream().filter(anno -> anno.getID().equals(id)).findFirst().orElse(null);
         }
         return res;
     }
@@ -9815,30 +9810,36 @@ public final class WorkflowManager extends NodeContainer
      *
      * The workflow annotation id will be set, too!
      *
-     * @param annotation to add
-     * @return the new id for the annotation
+     * @param annoData to add
+     * @param preferredIndex internal ID index, used by editor code to restore annotations during 'undo'. -1 for new ID
+     * @return the new annotation
      * @throws IllegalArgumentException If annotation already registered.
      * @throws IllegalStateException If the annotation is already part of another workflow (i.e. its id has been set
      *             already)
      */
-    public WorkflowAnnotationID addWorkflowAnnotation(final WorkflowAnnotation annotation) {
-        WorkflowAnnotationID annoID = addWorkflowAnnotationInternal(annotation);
+    public WorkflowAnnotation addWorkflowAnnotation(final AnnotationData annoData, final int preferredIndex) {
+        WorkflowAnnotation anno = addWorkflowAnnotationInternal(annoData, preferredIndex);
         setDirty();
-        return annoID;
+        return anno;
     }
 
     /** Adds annotation as in #addWorkf but does not fire dirty event. */
-    private WorkflowAnnotationID addWorkflowAnnotationInternal(final WorkflowAnnotation annotation) {
-        if (m_annotations.contains(annotation)) {
-            throw new IllegalArgumentException("Annotation \"" + annotation + "\" already exists");
+    private WorkflowAnnotation addWorkflowAnnotationInternal(final AnnotationData data,
+        final int preferredIndex) {
+        try (WorkflowLock lock = lock()) {
+            BitSet bitSet = new BitSet();
+            m_annotations.stream().mapToInt(anno -> anno.getID().getIndex()).forEach(bitSet::set);
+            int index = Math.max(0, preferredIndex);
+            if (bitSet.get(index)) {
+                index = bitSet.nextClearBit(0);
+            }
+            WorkflowAnnotationID waID = new WorkflowAnnotationID(getID(), index);
+            WorkflowAnnotation annotation = new WorkflowAnnotation(data, waID);
+            m_annotations.add(annotation);
+            annotation.addUIInformationListener(this);
+            notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.ANNOTATION_ADDED, null, null, annotation));
+            return annotation;
         }
-        WorkflowAnnotationID waID = new WorkflowAnnotationID(getID(), m_nextAnnotationID++);
-        annotation.setID(waID);
-        m_annotations.add(annotation);
-        m_annotationIDs.add(waID);
-        annotation.addUIInformationListener(this);
-        notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.ANNOTATION_ADDED, null, null, annotation));
-        return waID;
     }
 
     /**
@@ -9846,21 +9847,20 @@ public final class WorkflowManager extends NodeContainer
      *
      * The annotation id will be unset!
      *
-     * @param annotation to remove
+     * @param annotationID to remove
      * @throws IllegalArgumentException If annotation is not registered.
      */
-    public void removeAnnotation(final WorkflowAnnotation annotation) {
-        int index = m_annotations.indexOf(annotation);
-        if (index == -1) {
-            throw new IllegalArgumentException("Annotation \"" + annotation + "\" does not exists");
+    public void removeAnnotation(final WorkflowAnnotationID annotationID) {
+        try (WorkflowLock lock = lock()) {
+            int index = IntStream.range(0, m_annotations.size()) //
+                .filter(i -> m_annotations.get(i).getID().equals(annotationID)) //
+                .findFirst() //
+                .orElseThrow(() -> new IllegalArgumentException("Annotation does not exists"));
+            WorkflowAnnotation annotation = m_annotations.remove(index);
+            annotation.removeUIInformationListener(this);
+            notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.ANNOTATION_REMOVED, null, annotation, null));
+            setDirty();
         }
-        m_annotations.remove(index);
-        m_annotationIDs.remove(index);
-        //unset the annotation id
-        annotation.unsetID();
-        annotation.removeUIInformationListener(this);
-        notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.ANNOTATION_REMOVED, null, annotation, null));
-        setDirty();
     }
 
     /**
@@ -9941,9 +9941,7 @@ public final class WorkflowManager extends NodeContainer
     private void alterAnnotationZOrdering(final WorkflowAnnotation annotation, final int noOpIndex,
         final IntFunction<Integer> indexSpecifier) {
         final int index = getZOrderForAnnotation(annotation);
-        if (index == -1) {
-            throw new IllegalArgumentException("Annotation \"" + annotation + "\" does not exist - cannot be moved");
-        }
+        CheckUtils.checkArgument(index >= 0, "Annotation \"%s\" does not exist - cannot be moved", annotation);
 
         if (index == noOpIndex) {
             // cannot move any further in the direction desired
@@ -9952,9 +9950,7 @@ public final class WorkflowManager extends NodeContainer
 
         final int newIndex = indexSpecifier.apply(index).intValue();
         m_annotations.remove(index);
-        m_annotations.insertElementAt(annotation, newIndex);
-        final WorkflowAnnotationID waID = m_annotationIDs.remove(index);
-        m_annotationIDs.insertElementAt(waID, newIndex);
+        m_annotations.add(newIndex, annotation);
         annotation.fireChangeEvent(); // triggers workflow dirty
     }
 

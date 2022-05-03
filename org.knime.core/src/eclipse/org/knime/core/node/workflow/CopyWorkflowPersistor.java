@@ -55,12 +55,14 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.util.LoadVersion;
+import org.knime.core.util.Pair;
 import org.knime.core.util.workflowalizer.AuthorInformation;
 
 /**
@@ -83,7 +85,7 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
     private final WorkflowDataRepository m_workflowDataRepository;
     private final List<FlowVariable> m_workflowVariables;
     private final List<Credentials> m_credentials;
-    private final List<WorkflowAnnotation> m_workflowAnnotations;
+    private final List<Pair<AnnotationData, Integer>> m_workflowAnnotations;
     private final boolean m_isProject;
 
     /** Create copy persistor.
@@ -146,10 +148,10 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
         for (Credentials c : original.getCredentialsStore().getCredentials()) {
             m_credentials.add(c.clone());
         }
-        m_workflowAnnotations = new ArrayList<WorkflowAnnotation>();
+        m_workflowAnnotations = new ArrayList<>();
         for (WorkflowAnnotation w : original.getWorkflowAnnotations()) {
-            WorkflowAnnotation anno = isUndoableDeleteCommand ? w : w.clone();
-            m_workflowAnnotations.add(anno);
+            AnnotationData data = w.getData().clone();
+            m_workflowAnnotations.add(Pair.create(data, w.getID().getIndex()));
         }
     }
 
@@ -238,14 +240,11 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
 
     /** {@inheritDoc} */
     @Override
-    public List<WorkflowAnnotation> getWorkflowAnnotations() {
+    public List<Pair<AnnotationData, Integer>> getWorkflowAnnotations() {
         // must create a new fresh copy on each invocation
         // (multiple pastes possible)
-        ArrayList<WorkflowAnnotation> result = new ArrayList<WorkflowAnnotation>(m_workflowAnnotations.size());
-        for (WorkflowAnnotation a : m_workflowAnnotations) {
-            result.add(a.clone());
-        }
-        return result;
+        return m_workflowAnnotations.stream().map(p -> Pair.create(p.getFirst().clone(), p.getSecond()))
+            .collect(Collectors.toList());
     }
 
     /** {@inheritDoc} */

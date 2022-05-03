@@ -111,7 +111,7 @@ public class Bug3673_CredentialsInputNode_Test1_SimpleNodeWithSavedPassword exte
 //        cnt.setNodeIDs(m_credentialsInput_1);
 //        getManager().copyFromAndPasteHere(getManager(), cnt);
         CollapseIntoMetaNodeResult collapseResult = getManager().collapseIntoMetaNode(
-            new NodeID[] {m_credentialsInput_1}, new WorkflowAnnotation[0], "Collapsed-by-Testflow");
+            new NodeID[] {m_credentialsInput_1}, new WorkflowAnnotationID[0], "Collapsed-by-Testflow");
         WorkflowManager metaNode = getManager().getNodeContainer(
             collapseResult.getCollapsedMetanodeID(), WorkflowManager.class, true);
         getManager().convertMetaNodeToSubNode(metaNode.getID());

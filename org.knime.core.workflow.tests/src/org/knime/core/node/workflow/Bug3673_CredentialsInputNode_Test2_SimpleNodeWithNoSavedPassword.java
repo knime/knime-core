@@ -180,7 +180,7 @@ public class Bug3673_CredentialsInputNode_Test2_SimpleNodeWithNoSavedPassword ex
 
         /* Collapse into subnode - make sure it's there */
         CollapseIntoMetaNodeResult collapseResult = getManager().collapseIntoMetaNode(new NodeID[] {m_credentialsInput_1},
-            new WorkflowAnnotation[0], "Collapsed-by-Testflow");
+            new WorkflowAnnotationID[0], "Collapsed-by-Testflow");
         WorkflowManager metaNode = getManager().getNodeContainer(
             collapseResult.getCollapsedMetanodeID(), WorkflowManager.class, true);
 

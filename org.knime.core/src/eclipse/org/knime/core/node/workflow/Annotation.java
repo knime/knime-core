@@ -65,7 +65,7 @@ import org.knime.core.util.LoadVersion;
  */
 public abstract class Annotation implements UIInformation {
 
-    private AnnotationData m_data;
+    private final AnnotationData m_data;
 
     private CopyOnWriteArraySet<NodeUIInformationListener> m_uiListeners =
             new CopyOnWriteArraySet<NodeUIInformationListener>();
@@ -238,21 +238,6 @@ public abstract class Annotation implements UIInformation {
         m_revisionNumber.incrementAndGet();
 
         fireChangeEvent();
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public Annotation clone() {
-        try {
-            Annotation result = (Annotation)super.clone();
-            AnnotationData clonedData = m_data.clone();
-            result.m_data = clonedData;
-            result.m_uiListeners =
-                new CopyOnWriteArraySet<NodeUIInformationListener>();
-            return result;
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException("Clone failed", e);
-        }
     }
 
     /**

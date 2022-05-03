@@ -49,12 +49,11 @@ package org.knime.core.node.workflow;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
@@ -63,6 +62,7 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.util.LoadVersion;
+import org.knime.core.util.Pair;
 import org.knime.core.util.workflowalizer.AuthorInformation;
 
 /**
@@ -77,28 +77,23 @@ public class PasteWorkflowContentPersistor implements WorkflowPersistor {
     private final Set<ConnectionContainerTemplate> m_connectionSet;
     private final Set<ConnectionContainerTemplate> m_additionalConnectionSet;
     private final Map<Integer, NodeContainerPersistor> m_loaderMap;
-    private final WorkflowAnnotation[] m_copiedAnnotations;
-    private final boolean m_isUndoableDeleteCommand;
+    private final List<Pair<AnnotationData, Integer>> m_copiedAnnotations;
 
     /** Create new persistor.
      * @param loaderMap The loader map.
      * @param connectionSet A copy of connection clones.
      * @param additionalConnectionSet see {@link #getAdditionalConnectionSet()}
      * @param copiedAnnotations Copied workflow annotations.
-     * @param isUndoableDeleteCommand If false, annotations will be cloned in
-     *        {@link #getWorkflowAnnotations()}.
      */
     PasteWorkflowContentPersistor(
             final Map<Integer, NodeContainerPersistor> loaderMap,
             final Set<ConnectionContainerTemplate> connectionSet,
             final Set<ConnectionContainerTemplate> additionalConnectionSet,
-            final WorkflowAnnotation[] copiedAnnotations,
-            final boolean isUndoableDeleteCommand) {
+            final List<Pair<AnnotationData, Integer>> copiedAnnotations) {
         m_connectionSet = connectionSet;
         m_additionalConnectionSet = additionalConnectionSet;
         m_loaderMap = loaderMap;
         m_copiedAnnotations = copiedAnnotations;
-        m_isUndoableDeleteCommand = isUndoableDeleteCommand;
     }
 
     /** {@inheritDoc} */
@@ -236,19 +231,11 @@ public class PasteWorkflowContentPersistor implements WorkflowPersistor {
 
     /** {@inheritDoc} */
     @Override
-    public List<WorkflowAnnotation> getWorkflowAnnotations() {
-        if (m_isUndoableDeleteCommand) {
-            return Arrays.asList(m_copiedAnnotations);
-        } else {
-            // must create a new fresh copy on each invocation
-            // (multiple pastes possible)
-            ArrayList<WorkflowAnnotation> result =
-                new ArrayList<WorkflowAnnotation>(m_copiedAnnotations.length);
-            for (WorkflowAnnotation a : m_copiedAnnotations) {
-                result.add(a.clone());
-            }
-            return result;
-        }
+    public List<Pair<AnnotationData, Integer>> getWorkflowAnnotations() {
+        // must create a new fresh copy on each invocation
+        // (multiple pastes possible)
+        return m_copiedAnnotations.stream().map(p -> Pair.create(p.getFirst().clone(), p.getSecond()))
+            .collect(Collectors.toList());
     }
 
     /** {@inheritDoc} */

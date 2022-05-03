@@ -64,6 +64,7 @@ import org.knime.core.node.dialog.DialogNode;
 import org.knime.core.node.dialog.ExternalNodeData;
 import org.knime.core.node.interactive.InteractiveNode;
 import org.knime.core.node.port.MetaPortInfo;
+import org.knime.core.node.workflow.AnnotationData;
 import org.knime.core.node.workflow.ConnectionID;
 import org.knime.core.node.workflow.EditorUIInformation;
 import org.knime.core.node.workflow.FlowVariable;
@@ -1297,13 +1298,14 @@ public interface WorkflowManagerUI extends NodeContainerUI, UI {
      *
      * The workflow annotation id will be set, too!
      *
-     * @param annotation to add
-     * @return a new id for annotation
+     * @param annoData to add
+     * @param preferredIndex as per WorkflowManager.addWorkflowAnnotation(AnnotationData, int)
+     * @return a new annotation
      * @throws IllegalArgumentException If annotation already registered.
      * @throws IllegalStateException If the annotation is already part of another workflow (i.e. its id has been set
      *             already)
      */
-    WorkflowAnnotationID addWorkflowAnnotation(WorkflowAnnotation annotation);
+    WorkflowAnnotation addWorkflowAnnotation(AnnotationData annoData, int preferredIndex);
 
     /**
      * Resorts the internal ids to move the specified annotation to the last index.

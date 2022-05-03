@@ -101,7 +101,8 @@ public class TestCanXYZResponeTimeBug3285 extends WorkflowTestCase {
         assertTrue(m.canRemoveConnection(m.getIncomingConnectionFor(m_tableView98, 1)));
         assertTrue(m.canRemoveConnection(m.getIncomingConnectionFor(m_firstSplitter2, 1)));
         assertTrue(m.canExecuteNode(m_tableView98));
-        assertNull(m.canCollapseNodesIntoMetaNode(new NodeID[] {m_dataGen1, m_firstSplitter2}));
+		assertNull(m.canCollapseNodesIntoMetaNode(new NodeID[] { m_dataGen1, m_firstSplitter2 },
+				new WorkflowAnnotationID[0]));
         assertTrue(m.canRemoveNode(m_dataGen1));
         assertTrue(m.canRemoveNode(m_firstSplitter2));
         assertTrue(m.canSetJobManager(m_dataGen1));
@@ -124,7 +125,8 @@ public class TestCanXYZResponeTimeBug3285 extends WorkflowTestCase {
         assertTrue(m.canRemoveConnection(m.getIncomingConnectionFor(m_tableView98, 1)));
         assertTrue(m.canRemoveConnection(m.getIncomingConnectionFor(m_firstSplitter2, 1)));
         assertFalse(m.canExecuteNode(m_tableView98));
-        assertNotNull(m.canCollapseNodesIntoMetaNode(new NodeID[] {m_dataGen1, m_firstSplitter2}));
+		assertNotNull(m.canCollapseNodesIntoMetaNode(new NodeID[] { m_dataGen1, m_firstSplitter2 },
+				new WorkflowAnnotationID[0]));
         assertTrue(m.canRemoveNode(m_dataGen1));
         assertTrue(m.canRemoveNode(m_firstSplitter2));
         assertTrue(m.canSetJobManager(m_dataGen1));
@@ -177,7 +179,8 @@ public class TestCanXYZResponeTimeBug3285 extends WorkflowTestCase {
             assertFalse(m.canRemoveConnection(m.getIncomingConnectionFor(m_tableView98, 1)));
             assertFalse(m.canRemoveConnection(m.getIncomingConnectionFor(m_firstSplitter2, 1)));
             assertFalse(m.canExecuteNode(m_tableView98));
-            assertNotNull(m.canCollapseNodesIntoMetaNode(new NodeID[] {m_dataGen1, m_firstSplitter2}));
+			assertNotNull(m.canCollapseNodesIntoMetaNode(new NodeID[] { m_dataGen1, m_firstSplitter2 },
+					new WorkflowAnnotationID[0]));
             assertFalse(m.canRemoveNode(m_dataGen1));
             assertFalse(m.canRemoveNode(m_firstSplitter2));
             m.cancelExecution(m.getNodeContainer(m_tableView98));

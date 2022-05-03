@@ -57,7 +57,7 @@ import org.knime.core.util.LoadVersion;
  *
  * @author Christoph Sieb, University of Konstanz
  */
-public interface UIInformation extends Cloneable {
+public interface UIInformation {
 
     /**
      * Stores all contained information into the given configuration.
@@ -82,9 +82,4 @@ public interface UIInformation extends Cloneable {
     void load(final NodeSettingsRO config, final LoadVersion loadVersion)
         throws InvalidSettingsException;
 
-    /** UIInformation objects are cloneable without further restriction.
-     *
-     * @return a clone of this object
-     */
-    public UIInformation clone();
 }

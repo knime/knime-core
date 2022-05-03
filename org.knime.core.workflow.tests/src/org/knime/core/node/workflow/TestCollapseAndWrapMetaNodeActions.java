@@ -90,10 +90,10 @@ public class TestCollapseAndWrapMetaNodeActions extends WorkflowTestCase {
 
         mgr.resetAndConfigureAll();
         // there is only one in the wfm
-        WorkflowAnnotation annotation = mgr.getWorkflowAnnotations().stream().findFirst().get();
+        var annotation = mgr.getWorkflowAnnotations().stream().findFirst().map(WorkflowAnnotation::getID).get();
         final NodeID[] nodes = new NodeID[] {m_columnFilter_2, m_columnFilter_3, m_columnSplitter_4};
         CollapseIntoMetaNodeResult collapseResult = mgr.collapseIntoMetaNode(nodes,
-            new WorkflowAnnotation[] {annotation}, "Test-Meta/Wrap Node");
+            new WorkflowAnnotationID[] {annotation}, "Test-Meta/Wrap Node");
         NodeID metaSubID = collapseResult.getCollapsedMetanodeID();
         mgr.getNodeContainer(metaSubID, WorkflowManager.class, true);
         assertFalse("Should have removed node: " + m_columnFilter_2, mgr.containsNodeContainer(m_columnFilter_2));
@@ -118,10 +118,10 @@ public class TestCollapseAndWrapMetaNodeActions extends WorkflowTestCase {
 
         mgr.resetAndConfigureAll();
         // there is only one in the wfm
-        WorkflowAnnotation annotation = mgr.getWorkflowAnnotations().stream().findFirst().get();
+        var annotation = mgr.getWorkflowAnnotations().stream().findFirst().map(WorkflowAnnotation::getID).get();
         final NodeID[] nodes = new NodeID[] {m_columnFilter_2, m_columnFilter_3, m_columnSplitter_4};
         CollapseIntoMetaNodeResult collapseResult = mgr.collapseIntoMetaNode(nodes,
-            new WorkflowAnnotation[] {annotation}, "Test-Meta/Wrap Node");
+            new WorkflowAnnotationID[] {annotation}, "Test-Meta/Wrap Node");
         WorkflowManager metaNode = mgr.getNodeContainer(
             collapseResult.getCollapsedMetanodeID(), WorkflowManager.class, true);
         NodeID metaSubID = metaNode.getID();

@@ -59,6 +59,7 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.LoadVersion;
+import org.knime.core.util.Pair;
 import org.knime.core.util.workflowalizer.AuthorInformation;
 
 /**
@@ -166,7 +167,7 @@ final class InsertWorkflowPersistor implements WorkflowPersistor {
 
     /** {@inheritDoc} */
     @Override
-    public List<WorkflowAnnotation> getWorkflowAnnotations() {
+    public List<Pair<AnnotationData, Integer>> getWorkflowAnnotations() {
         return Collections.emptyList();
     }
 

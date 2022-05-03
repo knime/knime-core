@@ -245,7 +245,7 @@ public final class WorkflowCaptureOperation {
                 //group
                 CollapseIntoMetaNodeResult res =
                     tempParent.collapseIntoMetaNode(readerGroup.toArray(new NodeID[readerGroup.size()]),
-                        new WorkflowAnnotation[0], READERS_METANODE_NAME);
+                        new WorkflowAnnotationID[0], READERS_METANODE_NAME);
 
                 //update ids
                 WorkflowManager readersMetanode =

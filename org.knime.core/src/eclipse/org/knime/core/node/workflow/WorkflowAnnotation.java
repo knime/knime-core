@@ -47,64 +47,32 @@
  */
 package org.knime.core.node.workflow;
 
+import org.knime.core.node.util.CheckUtils;
+
 /** Workflow annotation (not associated with a node).
  * Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  */
 public class WorkflowAnnotation extends Annotation {
 
-    private WorkflowAnnotationID m_id = null;
+    private final WorkflowAnnotationID m_id;
 
-    /** New empty annotation. */
-    public WorkflowAnnotation() {
-        this(new AnnotationData());
-    }
-
-    /** Restore annotation.
-     * @param data Data */
-    public WorkflowAnnotation(final AnnotationData data) {
+    /** Restore or create new (empty) annotation.
+     * @param data Data
+     * @param id non-null ID of the annotation, see {@link #getID()} */
+    protected WorkflowAnnotation(final AnnotationData data, final WorkflowAnnotationID id) {
         super(data);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public WorkflowAnnotation clone() {
-        WorkflowAnnotation anno = (WorkflowAnnotation)super.clone();
-        anno.unsetID();
-        return anno;
+        m_id = CheckUtils.checkArgumentNotNull(id);
     }
 
     /**
-     * Sets the annotation id. Can only be called once in order to make sure that the very same annotation is not part
-     * of two or more workflows. If the id has been set already, an exception will be thrown.
+     * The id that makes the workflow annotation unique in a workflow. IDs are the pieces that are remembered in
+     * a command stack for undo/redo. Unlike <code>this</code> object itself a "move-annotation-command" remembers
+     * the ID and is also able to apply an undo-move even after the annotation was deleted and restored again.
      *
-     * @param id the id
-     * @throws IllegalStateException if the id has been set already
-     */
-    void setID(final WorkflowAnnotationID id) throws IllegalStateException {
-        if (m_id != null) {
-            throw new IllegalStateException("Workflow annotation id has been set already");
-        }
-        m_id = id;
-    }
-
-    /**
-     * Sets the associated id to <code>null</code> such that {@link #setID(WorkflowAnnotationID)} can be called again.
-     * Is called when a workflow annotation is removed from its workflow manager
-     * ({@link WorkflowManager#removeAnnotation(WorkflowAnnotation)}).
-     */
-    void unsetID() {
-        m_id = null;
-    }
-
-    /**
-     * Gives access to the workflow annotation id. Id is only available if the workflow annotation is part of a
-     * workflow manager. I.e. when the annotation is added to a workflow manager the annotation id will be set by the
-     * workflow manager (see {@link WorkflowManager#addWorkflowAnnotation(WorkflowAnnotation)}).
-     *
-     * @return the id or <code>null</code> if the workflow annotation is not part of a workflow, yet
+     * @return the id
      * @since 3.7
      */
-    public WorkflowAnnotationID getID() {
+    public final WorkflowAnnotationID getID() {
         return m_id;
     }
 
