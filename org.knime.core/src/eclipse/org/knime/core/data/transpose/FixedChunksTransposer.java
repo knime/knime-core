@@ -56,6 +56,7 @@ import org.knime.core.data.container.filter.TableFilter;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.util.CheckUtils;
 
 /**
  * Class to transpose a table on a fixed chunk size. This means, columns of the input table are transposed in chunks of
@@ -78,6 +79,7 @@ public class FixedChunksTransposer extends AbstractTableTransposer {
     public FixedChunksTransposer(final BufferedDataTable inputTable, final ExecutionContext exec, final int chunkSize)
         throws CanceledExecutionException {
         super(inputTable, exec);
+        CheckUtils.checkArgument(chunkSize > 0, "Chunk size must be at least 1.");
         m_chunkSize = chunkSize;
         m_nrChunks = (int)Math.ceil(m_dataTableSpec.getNumColumns() / (double)chunkSize);
     }

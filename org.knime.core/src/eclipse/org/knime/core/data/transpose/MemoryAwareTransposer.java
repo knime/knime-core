@@ -59,12 +59,11 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.util.Pair;
 
 /**
- * Class to transpose a table with a dynamic chunk size. This means, columns of the input table are transposed in chunks
- * as large as they fit in memory. This brings a significant perfomance increase if the number of table columns is large
- * but the number of rows is small.
+ * Class to transpose a table with a dynamic chunk size. Columns of the input table are transposed in chunks
+ * as large as they fit in memory. This brings a significant performance increase if the number of table columns is large
+ * as fewer (ideally only one) passes over the input table are required.
  *
  * @author Leon Wenzler, KNIME AG, Zurich, Switzerland
  */
@@ -76,6 +75,9 @@ public class MemoryAwareTransposer extends AbstractTableTransposer {
     private final NodeLogger m_logger = NodeLogger.getLogger(MemoryAwareTransposer.class);
 
     private final BooleanSupplier m_isMemoryLow;
+
+    /** The number of columns to convert to rows in a pass over the input table. Can change during a pass. */
+    private int m_dynamicChunkSize;
 
     /**
      * @param inputTable table to transpose
@@ -117,30 +119,29 @@ public class MemoryAwareTransposer extends AbstractTableTransposer {
         final var columnsInputTable = m_rowsInOutTable;
 
         // the number of columns to convert to rows during a pass over the input table
-        var dynamicChunkSize = columnsInputTable;
+        m_dynamicChunkSize = columnsInputTable;
         var chunkStart = 0;
-        var rowProgess = 0;
+        long nextRow = 0;
 
         // iterate over input table columns
         do {
-            // iterate over input table rows
-            var transposeStatus = transposeSingleChunk(chunkStart, dynamicChunkSize, rowProgess);
-            rowProgess = transposeStatus.getFirst();
+            // iterate over input table rows, adapt m_dynamicChunkSize as needed
+            nextRow = transposeChunk(chunkStart, nextRow);
+            // at this point, we have EITHER completed a pass over the input table OR
+            // memory alert system has fired and the dynamic chunk size changed
+            // in which case we restart the transpose chunk method on a smaller chunk
 
-            // if chunk transpose has been completed or chunk size has NOT changed
-            if (rowProgess == m_colsInOutTable || transposeStatus.getSecond() == -1) {
+            // if all rows have been processed, the buffer contains dynamic chunk size complete output rows
+            if (nextRow == m_colsInOutTable) {
                 // we have transformed dynamicChunkSize columns to rows, so write them out
                 for (DataRow row : m_buffer.getRows()) {
-                    m_exec.setMessage(() -> "Adding row \"" + row.getKey() + "\" to table.");
+                    m_exec.setMessage(() -> String.format("Adding row \"%s\" to output table.", row.getKey()));
                     m_container.addRowToTable(row);
                     handleIfCanceled();
                 }
                 m_buffer.clear();
-                chunkStart += dynamicChunkSize;
-                rowProgess = 0;
-            } else {
-                // updating/ shrinking dynamic chunk size
-                dynamicChunkSize = transposeStatus.getSecond();
+                chunkStart += m_dynamicChunkSize;
+                nextRow = 0;
             }
 
         } while (chunkStart < columnsInputTable);
@@ -149,49 +150,68 @@ public class MemoryAwareTransposer extends AbstractTableTransposer {
     }
 
     /**
-     * Does a single transpose pass over the table. Uses dynamicChunkSize as chunk size of columns to process in one
-     * batch. If this chunk size is too large, the memory alert system will notify and the chunk size will be reduced by
-     * the factor of {@link MemoryAwareTransposer#PERCENTAGE_DISCARDED_TABLE}.
+     * Attempt to process a patch of the input table that covers dynamicChunkSize columns and the rows from nextRow
+     * until to the end of the table.
      *
-     * @param chunkStart
-     * @param dynamicChunkSize
-     * @param rowProgess
+     * If the memory alert system signals low memory, the chunk size will be reduced by the factor of
+     * {@link MemoryAwareTransposer#PERCENTAGE_DISCARDED_TABLE} up to a minimum chunk size of 1. If the chunk size has
+     * changed, the method exits and is restarted with a smaller patch.
+     *
+     * <h1>Example</h1> Consider this input table with 4 columns and 5 rows. The current patch is 2 columns wide and
+     * starts at row 2. In the first iteration, the values in cells A and B are appended to the output buffer.
+     *
+     * Now the memory alert system fires. The dynamic chunk size is reduced to k=1. The output buffer is truncated to
+     * contain only k=1 output rows (built from the column containing value A). The method returns and in its next
+     * invocation will process only k=1 column and start at row 3.
+     *
+     * <pre>
+     * - - - -                  - - - -
+     * - - - -                  - - - -
+     * - A B -  memory low =>   - - - -
+     * - * * -                  - * - -
+     * - * * -                  - * - -
+     * </pre>
+     *
+     * @param chunkStart zero-based index of the first column to convert to an output row
+     * @param dynamicChunkSize number columns to attempt converting to output rows
+     * @param nextRow row offset where to start processing the input table
      * @return pair (rowProgess, dynamicChunkSize) that encodes the transpose progress made so far
-     *
      * @throws CanceledExecutionException
      */
-    private Pair<Integer, Integer> transposeSingleChunk(final int chunkStart, int dynamicChunkSize, int rowProgress)
+    private long transposeChunk(final int chunkStart, long nextRow)
         throws CanceledExecutionException {
 
         // generates the indices for the current chunk size, from base index (colIdx) to chunk end
-        final int colsInChunk = Math.min(m_rowsInOutTable - chunkStart, dynamicChunkSize);
+        final int colsInChunk = Math.min(m_rowsInOutTable - chunkStart, m_dynamicChunkSize);
         final int[] indices = IntStream.range(chunkStart, chunkStart + colsInChunk).toArray();
 
         // load only the columns in the current chunk, starting from the current row index
         final var tableFilter =
-            new TableFilter.Builder().withMaterializeColumnIndices(indices).withFromRowIndex(rowProgress).build();
+            new TableFilter.Builder().withMaterializeColumnIndices(indices).withFromRowIndex(nextRow).build();
 
         try (CloseableRowIterator iterator = m_inputTable.filter(tableFilter).iterator()) {
             while (iterator.hasNext()) {
                 DataRow row = iterator.next();
-                setProgress(chunkStart, colsInChunk, rowProgress, row);
+                setProgress(chunkStart, colsInChunk, nextRow, row);
                 // column-wise iteration through input data table
                 m_buffer.storeRowInColumns(row, chunkStart, chunkStart + colsInChunk);
-                rowProgress++;
+                nextRow++;
                 handleIfCanceled();
-                // if memory is low (too much old columns / new rows collected), shrink chunkSize
-                if (m_isMemoryLow.getAsBoolean()) {
-                    dynamicChunkSize = (int)Math.ceil(colsInChunk * (1 - PERCENTAGE_DISCARDED_TABLE));
+                // if memory is low (too much old columns / new rows collected), shrink chunkSize, dispose temp data
+                // if the chunk size is already minimal, don't bother checking the alert system, we just continue.
+                if (m_dynamicChunkSize > 1
+                        && m_isMemoryLow.getAsBoolean()) {
+                    m_dynamicChunkSize = (int)Math.ceil(colsInChunk * (1 - PERCENTAGE_DISCARDED_TABLE));
                     m_logger.debug("Memory condition: reduced chunk size by " + PERCENTAGE_DISCARDED_TABLE + " to "
-                        + dynamicChunkSize + ", iterations completed: " + rowProgress);
-                    m_buffer.truncateRows(dynamicChunkSize);
+                        + m_dynamicChunkSize + ", iterations completed: " + nextRow);
+                    m_buffer.truncateRows(m_dynamicChunkSize);
                     // try again with new iterator and new chunk size, starting from the next row
-                    return new Pair<>(rowProgress, dynamicChunkSize);
+                    return nextRow;
                 }
             }
         }
-        // indicates that no changes in chunk size have been made
-        return new Pair<>(rowProgress, -1);
+        // nextRow == num rows in input table, indicates that no changes in chunk size have been made
+        return nextRow;
     }
 
     /**
@@ -203,8 +223,10 @@ public class MemoryAwareTransposer extends AbstractTableTransposer {
      * @param row
      */
     private void setProgress(final int chunkStart, final int dynamicChunkSize, final long rowIdx, final DataRow row) {
-        final float totalCells = (float)m_colsInOutTable * m_rowsInOutTable;
-        m_exec.setProgress(/*completed cells*/ (chunkStart * m_colsInOutTable + dynamicChunkSize * rowIdx) / totalCells,
-            () -> "Transpose row \"" + row.getKey().getString() + "\" to column.");
+        final long totalCells = (long)m_colsInOutTable * m_rowsInOutTable;
+        final float completedCells = (float)chunkStart * m_colsInOutTable + rowIdx;
+        m_exec.setProgress(completedCells / totalCells,
+            () -> String.format("Processing row \"%s\". Transposing %d columns at once.", row.getKey().getString(),
+                dynamicChunkSize));
     }
 }

@@ -1,15 +1,20 @@
 package org.knime.core.data.transpose;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
@@ -41,6 +46,9 @@ class AbstractTableTransposerTest {
 
     private BufferedDataTable testTable;
 
+    private static final DataRow transposedABCDEF = new DefaultRow("Alpha", "A", "B", "C", "D", "E", "F");
+    private static final DataRow transposed123456 = new DefaultRow("Omega", "1", "2", "3", "4", "5", "6");
+
     /**
      * @throws java.lang.Exception
      */
@@ -62,9 +70,12 @@ class AbstractTableTransposerTest {
         DataTableSpec spec = new DataTableSpec(colSpecs);
         final BufferedDataContainer container = m_exec.createDataContainer(spec);
 
-        container.addRowToTable(new DefaultRow("Row0", "A", "X"));
-        container.addRowToTable(new DefaultRow("Row1", "B", "Y"));
-        container.addRowToTable(new DefaultRow("Row2", "C", "Z"));
+        container.addRowToTable(new DefaultRow("Row0", "A", "1"));
+        container.addRowToTable(new DefaultRow("Row1", "B", "2"));
+        container.addRowToTable(new DefaultRow("Row2", "C", "3"));
+        container.addRowToTable(new DefaultRow("Row3", "D", "4"));
+        container.addRowToTable(new DefaultRow("Row4", "E", "5"));
+        container.addRowToTable(new DefaultRow("Row5", "F", "6"));
         container.close();
         testTable = container.getTable();
 
@@ -72,42 +83,66 @@ class AbstractTableTransposerTest {
     }
 
     @Test
-    void testNoAlert() throws CanceledExecutionException {
-        var transposer = new FixedChunksTransposer(testTable, m_exec, 1000);
-        transposer.transpose();
-        var resultTable = transposer.getTransposedTable();
-        List<DataRow> result = StreamSupport.stream(resultTable.spliterator(), false).collect(Collectors.toList());
-
-        assertThat(dataRowsEqual(result.get(0), new DefaultRow("Alpha", "A", "B", "C"))).isTrue();
-        assertThat(dataRowsEqual(result.get(1), new DefaultRow("Omega", "X", "Y", "Z"))).isTrue();
+    void testMinChunks() {
+        assertThrows(IllegalArgumentException.class, () -> new FixedChunksTransposer(testTable, m_exec, 0));
     }
 
-    @Test
-    void testAlwaysAlert() throws CanceledExecutionException {
-        var transposer = new MemoryAwareTransposer(testTable, m_exec, () -> true);
+    /**
+     * Test transposing the table with different fixed chunk sizes.
+     * @param chunkSize number of columns to transpose at once
+     * @throws CanceledExecutionException
+     */
+    @ParameterizedTest
+    @ValueSource(ints = {1, 2, 3, 4})
+    void testFixedChunksTransposer(final int chunkSize) throws CanceledExecutionException {
+        var transposer = new FixedChunksTransposer(testTable, m_exec, chunkSize);
         transposer.transpose();
         var resultTable = transposer.getTransposedTable();
         List<DataRow> result = StreamSupport.stream(resultTable.spliterator(), false).collect(Collectors.toList());
 
-        assertThat(dataRowsEqual(result.get(0), new DefaultRow("Alpha", "A", "B", "C"))).isTrue();
-        assertThat(dataRowsEqual(result.get(1), new DefaultRow("Omega", "X", "Y", "Z"))).isTrue();
+        assertThat(dataRowsEqual(result.get(0), transposedABCDEF)).isTrue();
+        assertThat(dataRowsEqual(result.get(1), transposed123456)).isTrue();
     }
 
-    @Test
-    void testAlertEverySecondTime() throws CanceledExecutionException {
-        var alertEverySecondTime = new BooleanSupplier() {
-            long i = 0;
-            @Override public boolean getAsBoolean() {
-                return (i++)%2 == 0;
-            }
-        };
-        var transposer = new MemoryAwareTransposer(testTable, m_exec, alertEverySecondTime);
+    /**
+     * Test transposing the table with chunk sizes that react to available memory.
+     * Transpose result must be independent of what the alert system does.
+     * @param alertSystemMock provider for the memory low condition
+     * @throws CanceledExecutionException
+     */
+    @ParameterizedTest
+    @MethodSource("memoryAlertSystemMocks")
+    void testMemoryAwareTransposer(final BooleanSupplier alertSystemMock) throws CanceledExecutionException {
+        var transposer = new MemoryAwareTransposer(testTable, m_exec, alertSystemMock);
         transposer.transpose();
         var resultTable = transposer.getTransposedTable();
         List<DataRow> result = StreamSupport.stream(resultTable.spliterator(), false).collect(Collectors.toList());
 
-        assertThat(dataRowsEqual(result.get(0), new DefaultRow("Alpha", "A", "B", "C"))).isTrue();
-        assertThat(dataRowsEqual(result.get(1), new DefaultRow("Omega", "X", "Y", "Z"))).isTrue();
+        assertThat(dataRowsEqual(result.get(0), transposedABCDEF)).isTrue();
+        assertThat(dataRowsEqual(result.get(1), transposed123456)).isTrue();
+    }
+
+    /** Provides the memory alert system stubs that simulate different low memory scenarios. */
+    private static Stream<BooleanSupplier> memoryAlertSystemMocks() {
+        return Stream.of(
+            // never throw an alert
+            () -> false,
+            // always throw an alert
+            () -> true,
+            // throws an alert: false, true, false, ...
+            new BooleanSupplier() {
+                long i = 0;
+                @Override public boolean getAsBoolean() {
+                    return (i++) % 2 != 0;
+                }
+            },
+            // throws an alert: true, false, true, ...
+            new BooleanSupplier() {
+                long i = 0;
+                @Override public boolean getAsBoolean() {
+                    return (i++) % 2 == 0;
+                }
+            });
     }
 
     @AfterEach
