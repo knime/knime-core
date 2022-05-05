@@ -314,6 +314,19 @@ public final class DoubleCell extends DataCell
         /**
          * Creates a new double cell with the given value.
          *
+         * @param f any float value
+         * @return a new data cell
+         */
+        @DataCellFactoryMethod(name = "Float")
+        public static DataCell create(final float f) {
+            //number representation problem requires us to use the conversion via String
+            //see https://stackoverflow.com/questions/916081/convert-float-to-double-without-losing-precision
+            return new DoubleCell(Double.valueOf(Float.valueOf(f).toString()).doubleValue());
+        }
+
+        /**
+         * Creates a new double cell with the given value.
+         *
          * @param d any double value
          * @return a new data cell
          */
