@@ -62,7 +62,7 @@ import org.knime.core.eclipseUtil.OSGIHelper;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.Version;
 import org.knime.core.util.workflowalizer.NodeAndBundleInformation;
-import org.knime.core.workflow.def.VendorDef;
+import org.knime.shared.workflow.def.VendorDef;
 import org.osgi.framework.Bundle;
 
 /**

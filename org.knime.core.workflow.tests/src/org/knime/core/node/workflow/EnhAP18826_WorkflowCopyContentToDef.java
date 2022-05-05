@@ -58,12 +58,12 @@ import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.knime.core.workflow.def.ConnectionDef;
-import org.knime.core.workflow.def.NativeNodeDef;
-import org.knime.core.workflow.def.WorkflowDef;
-import org.knime.core.workflow.def.impl.ConnectionDefBuilder;
-import org.knime.core.workflow.def.impl.ConnectionUISettingsDefBuilder;
-import org.knime.core.workflow.def.impl.DefaultConnectionDef;
+import org.knime.shared.workflow.def.ConnectionDef;
+import org.knime.shared.workflow.def.NativeNodeDef;
+import org.knime.shared.workflow.def.WorkflowDef;
+import org.knime.shared.workflow.def.impl.ConnectionDefBuilder;
+import org.knime.shared.workflow.def.impl.ConnectionUISettingsDefBuilder;
+import org.knime.shared.workflow.def.impl.DefaultConnectionDef;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
@@ -218,7 +218,7 @@ public class EnhAP18826_WorkflowCopyContentToDef extends WorkflowTestCase { //NO
 		final var copied = m_wfm.copyToDef(spec);
 		WorkflowDef workflow = (WorkflowDef) copied.getContents();
 		
-		assertEquals("Source", workflow.getAnnotations().get(0).getText());
+		assertEquals("Source", workflow.getAnnotations().values().stream().findAny().get().getText());
 	}
 	
 }

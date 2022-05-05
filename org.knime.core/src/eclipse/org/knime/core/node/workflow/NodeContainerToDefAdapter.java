@@ -49,11 +49,11 @@
 package org.knime.core.node.workflow;
 
 import org.knime.core.node.workflow.def.CoreToDefUtil;
-import org.knime.core.workflow.def.BaseNodeDef;
-import org.knime.core.workflow.def.JobManagerDef;
-import org.knime.core.workflow.def.NodeAnnotationDef;
-import org.knime.core.workflow.def.NodeLocksDef;
-import org.knime.core.workflow.def.NodeUIInfoDef;
+import org.knime.shared.workflow.def.BaseNodeDef;
+import org.knime.shared.workflow.def.JobManagerDef;
+import org.knime.shared.workflow.def.NodeAnnotationDef;
+import org.knime.shared.workflow.def.NodeLocksDef;
+import org.knime.shared.workflow.def.NodeUIInfoDef;
 
 /**
  *

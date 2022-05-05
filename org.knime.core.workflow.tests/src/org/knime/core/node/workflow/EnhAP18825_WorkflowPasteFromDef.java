@@ -5,7 +5,7 @@ import static org.hamcrest.Matchers.is;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.knime.core.workflow.def.WorkflowDef;
+import org.knime.shared.workflow.def.WorkflowDef;
 
 /**
  * 

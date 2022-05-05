@@ -110,7 +110,7 @@ import org.knime.core.node.workflow.execresult.NodeExecutionResult;
 import org.knime.core.node.workflow.virtual.parchunk.FlowVirtualScopeContext;
 import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeInputNodeModel;
 import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeOutputNodeModel;
-import org.knime.core.workflow.def.NativeNodeDef;
+import org.knime.shared.workflow.def.NativeNodeDef;
 import org.w3c.dom.Element;
 
 /**

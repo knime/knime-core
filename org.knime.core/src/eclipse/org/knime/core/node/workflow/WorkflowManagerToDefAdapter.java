@@ -61,21 +61,21 @@ import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.workflow.def.CoreToDefUtil;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.workflowalizer.AuthorInformation;
-import org.knime.core.workflow.def.AnnotationDataDef;
-import org.knime.core.workflow.def.AuthorInformationDef;
-import org.knime.core.workflow.def.BaseNodeDef;
-import org.knime.core.workflow.def.ConnectionDef;
-import org.knime.core.workflow.def.CreatorDef;
-import org.knime.core.workflow.def.StandaloneDef;
-import org.knime.core.workflow.def.WorkflowDef;
-import org.knime.core.workflow.def.WorkflowUISettingsDef;
-import org.knime.core.workflow.def.impl.AnnotationDataDefBuilder;
-import org.knime.core.workflow.def.impl.AuthorInformationDefBuilder;
-import org.knime.core.workflow.def.impl.ConnectionDefBuilder;
-import org.knime.core.workflow.def.impl.CreatorDefBuilder;
-import org.knime.core.workflow.def.impl.StandaloneDefBuilder;
-import org.knime.core.workflow.def.impl.StyleRangeDefBuilder;
-import org.knime.core.workflow.def.impl.WorkflowUISettingsDefBuilder;
+import org.knime.shared.workflow.def.AnnotationDataDef;
+import org.knime.shared.workflow.def.AuthorInformationDef;
+import org.knime.shared.workflow.def.BaseNodeDef;
+import org.knime.shared.workflow.def.ConnectionDef;
+import org.knime.shared.workflow.def.CreatorDef;
+import org.knime.shared.workflow.def.StandaloneDef;
+import org.knime.shared.workflow.def.WorkflowDef;
+import org.knime.shared.workflow.def.WorkflowUISettingsDef;
+import org.knime.shared.workflow.def.impl.AnnotationDataDefBuilder;
+import org.knime.shared.workflow.def.impl.AuthorInformationDefBuilder;
+import org.knime.shared.workflow.def.impl.ConnectionDefBuilder;
+import org.knime.shared.workflow.def.impl.CreatorDefBuilder;
+import org.knime.shared.workflow.def.impl.StandaloneDefBuilder;
+import org.knime.shared.workflow.def.impl.StyleRangeDefBuilder;
+import org.knime.shared.workflow.def.impl.WorkflowUISettingsDefBuilder;
 
 /**
  *

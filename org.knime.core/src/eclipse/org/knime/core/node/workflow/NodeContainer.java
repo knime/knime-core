@@ -88,9 +88,9 @@ import org.knime.core.node.workflow.changes.TrackedChanges;
 import org.knime.core.node.workflow.def.DefToCoreUtil;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
-import org.knime.core.workflow.def.BaseNodeDef;
-import org.knime.core.workflow.def.NodeLocksDef;
-import org.knime.core.workflow.def.WorkflowDef;
+import org.knime.shared.workflow.def.BaseNodeDef;
+import org.knime.shared.workflow.def.NodeLocksDef;
+import org.knime.shared.workflow.def.WorkflowDef;
 
 /**
  * Abstract super class for containers holding node or just structural

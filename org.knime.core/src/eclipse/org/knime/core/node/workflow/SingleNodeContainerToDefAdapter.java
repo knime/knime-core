@@ -53,8 +53,8 @@ import org.knime.core.node.Node;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
 import org.knime.core.node.workflow.def.CoreToDefUtil;
-import org.knime.core.workflow.def.ConfigMapDef;
-import org.knime.core.workflow.def.ConfigurableNodeDef;
+import org.knime.shared.workflow.def.ConfigMapDef;
+import org.knime.shared.workflow.def.ConfigurableNodeDef;
 
 /**
  *

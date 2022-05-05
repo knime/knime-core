@@ -70,8 +70,8 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.workflow.WorkflowCipherPrompt.PromptCancelled;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.crypto.HexUtils;
-import org.knime.core.workflow.def.CipherDef;
-import org.knime.core.workflow.def.impl.CipherDefBuilder;
+import org.knime.shared.workflow.def.CipherDef;
+import org.knime.shared.workflow.def.impl.CipherDefBuilder;
 
 /** A cipher object associated with a metanode or workflow. Most workflows
  * have the {@link #NULL_CIPHER} assigned, i.e. no locking/encryption.

@@ -53,14 +53,14 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.knime.core.node.workflow.def.CoreToDefUtil;
-import org.knime.core.workflow.def.CipherDef;
-import org.knime.core.workflow.def.ComponentNodeDef;
-import org.knime.core.workflow.def.ComponentDialogSettingsDef;
-import org.knime.core.workflow.def.ComponentMetadataDef;
-import org.knime.core.workflow.def.PortDef;
-import org.knime.core.workflow.def.TemplateInfoDef;
-import org.knime.core.workflow.def.WorkflowDef;
-import org.knime.core.workflow.def.impl.ComponentDialogSettingsDefBuilder;
+import org.knime.shared.workflow.def.CipherDef;
+import org.knime.shared.workflow.def.ComponentNodeDef;
+import org.knime.shared.workflow.def.ComponentDialogSettingsDef;
+import org.knime.shared.workflow.def.ComponentMetadataDef;
+import org.knime.shared.workflow.def.PortDef;
+import org.knime.shared.workflow.def.TemplateInfoDef;
+import org.knime.shared.workflow.def.WorkflowDef;
+import org.knime.shared.workflow.def.impl.ComponentDialogSettingsDefBuilder;
 
 /**
  * Provides a {@link ComponentNodeDef} view on a component node in a workflow.

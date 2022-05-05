@@ -213,20 +213,20 @@ import org.knime.core.util.Pair;
 import org.knime.core.util.VMFileLocker;
 import org.knime.core.util.pathresolve.ResolverUtil;
 import org.knime.core.util.workflowalizer.AuthorInformation;
-import org.knime.core.workflow.def.BaseNodeDef;
-import org.knime.core.workflow.def.ComponentNodeDef;
-import org.knime.core.workflow.def.MetaNodeDef;
-import org.knime.core.workflow.def.NativeNodeDef;
-import org.knime.core.workflow.def.RootWorkflowDef;
-import org.knime.core.workflow.def.StandaloneDef;
-import org.knime.core.workflow.def.StandaloneDef.ContentTypeEnum;
-import org.knime.core.workflow.def.WorkflowDef;
-import org.knime.core.workflow.def.impl.ComponentNodeDefBuilder;
-import org.knime.core.workflow.def.impl.CreatorDefBuilder;
-import org.knime.core.workflow.def.impl.MetaNodeDefBuilder;
-import org.knime.core.workflow.def.impl.NativeNodeDefBuilder;
-import org.knime.core.workflow.def.impl.StandaloneDefBuilder;
-import org.knime.core.workflow.def.impl.WorkflowDefBuilder;
+import org.knime.shared.workflow.def.BaseNodeDef;
+import org.knime.shared.workflow.def.ComponentNodeDef;
+import org.knime.shared.workflow.def.MetaNodeDef;
+import org.knime.shared.workflow.def.NativeNodeDef;
+import org.knime.shared.workflow.def.RootWorkflowDef;
+import org.knime.shared.workflow.def.StandaloneDef;
+import org.knime.shared.workflow.def.StandaloneDef.ContentTypeEnum;
+import org.knime.shared.workflow.def.WorkflowDef;
+import org.knime.shared.workflow.def.impl.ComponentNodeDefBuilder;
+import org.knime.shared.workflow.def.impl.CreatorDefBuilder;
+import org.knime.shared.workflow.def.impl.MetaNodeDefBuilder;
+import org.knime.shared.workflow.def.impl.NativeNodeDefBuilder;
+import org.knime.shared.workflow.def.impl.StandaloneDefBuilder;
+import org.knime.shared.workflow.def.impl.WorkflowDefBuilder;
 
 /**
  * Container holding nodes and connections of a (sub) workflow. In contrast to previous implementations, this class will

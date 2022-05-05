@@ -45,7 +45,7 @@
 package org.knime.core.node.workflow;
 
 import org.knime.core.node.workflow.def.DefToCoreUtil;
-import org.knime.core.workflow.def.NodeAnnotationDef;
+import org.knime.shared.workflow.def.NodeAnnotationDef;
 
 /**
  * Annotation associated with a node. Moves with the node. Can't be moved

@@ -49,7 +49,7 @@
 package org.knime.core.ui.wrapper;
 
 import org.knime.core.ui.node.workflow.WorkflowCopyUI;
-import org.knime.core.workflow.def.WorkflowDef;
+import org.knime.shared.workflow.def.WorkflowDef;
 
 /**
  *  UI-interface implementation that wraps a {@link WorkflowDef}.

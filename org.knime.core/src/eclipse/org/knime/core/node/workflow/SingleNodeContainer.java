@@ -73,8 +73,8 @@ import org.knime.core.node.workflow.FlowVariable.Scope;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.def.DefToCoreUtil;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
-import org.knime.core.workflow.def.ConfigurableNodeDef;
-import org.knime.core.workflow.def.WorkflowDef;
+import org.knime.shared.workflow.def.ConfigurableNodeDef;
+import org.knime.shared.workflow.def.WorkflowDef;
 import org.w3c.dom.Element;
 
 /**

@@ -51,10 +51,10 @@ package org.knime.core.node.workflow;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.workflow.def.CoreToDefUtil;
-import org.knime.core.workflow.def.ConfigMapDef;
-import org.knime.core.workflow.def.FilestoreDef;
-import org.knime.core.workflow.def.NativeNodeDef;
-import org.knime.core.workflow.def.VendorDef;
+import org.knime.shared.workflow.def.ConfigMapDef;
+import org.knime.shared.workflow.def.FilestoreDef;
+import org.knime.shared.workflow.def.NativeNodeDef;
+import org.knime.shared.workflow.def.VendorDef;
 
 /**
  * Provides a {@link NativeNodeDef} view on a native node (a node with a factory) in a workflow.

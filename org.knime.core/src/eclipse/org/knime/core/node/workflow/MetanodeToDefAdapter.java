@@ -53,12 +53,12 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.knime.core.node.workflow.def.CoreToDefUtil;
-import org.knime.core.workflow.def.CipherDef;
-import org.knime.core.workflow.def.MetaNodeDef;
-import org.knime.core.workflow.def.NodeUIInfoDef;
-import org.knime.core.workflow.def.PortDef;
-import org.knime.core.workflow.def.TemplateInfoDef;
-import org.knime.core.workflow.def.WorkflowDef;
+import org.knime.shared.workflow.def.CipherDef;
+import org.knime.shared.workflow.def.MetaNodeDef;
+import org.knime.shared.workflow.def.NodeUIInfoDef;
+import org.knime.shared.workflow.def.PortDef;
+import org.knime.shared.workflow.def.TemplateInfoDef;
+import org.knime.shared.workflow.def.WorkflowDef;
 
 /**
  *

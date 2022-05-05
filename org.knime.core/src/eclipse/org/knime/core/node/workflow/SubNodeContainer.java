@@ -151,7 +151,7 @@ import org.knime.core.util.LoadVersion;
 import org.knime.core.util.LockFailedException;
 import org.knime.core.util.Pair;
 import org.knime.core.util.ThreadPool;
-import org.knime.core.workflow.def.ComponentNodeDef;
+import org.knime.shared.workflow.def.ComponentNodeDef;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;

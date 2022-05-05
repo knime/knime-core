@@ -57,7 +57,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.util.LoadVersion;
-import org.knime.core.workflow.def.StyleRangeDef;
+import org.knime.shared.workflow.def.StyleRangeDef;
 
 /**
  * @author  Bernd Wiswedel, KNIME AG, Zurich, Switzerland

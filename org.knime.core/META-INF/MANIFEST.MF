@@ -146,6 +146,7 @@ Require-Bundle: org.eclipse.osgi;bundle-version="[3.16.0,4.0.0)";visibility:=ree
  org.apache.log4j;bundle-version="[1.2.15,1.3.0)",
  org.eclipse.core.resources;bundle-version="[3.10.0,4.0.0)";resolution:=optional,
  org.knime.core.util;bundle-version="[5.19.0,6.0.0)";visibility:=reexport,
+ org.knime.shared.workflow.def;bundle-version="4.6.0",
  org.eclipse.ecf.filetransfer;bundle-version="[5.0.0,6.0.0)";resolution:=optional,
  org.knime.core.pmml;bundle-version="[4.0.0,5.0.0)",
  org.apache.commons.httpclient;bundle-version="[3.1.0,3.2.0)",
@@ -171,11 +172,9 @@ Require-Bundle: org.eclipse.osgi;bundle-version="[3.16.0,4.0.0)";visibility:=ree
  net.sf.trove4j;bundle-version="[3.0.3,4.0.0)",
  javax.activation;bundle-version="[1.2.2,2.0.0)",
  org.knime.core.table;bundle-version="[4.4.0,5.0.0)",
- org.eclipse.jdt.annotation;bundle-version="[2.2.600,3.0.0)",
- org.knime.core.workflow.def
+ org.eclipse.jdt.annotation;bundle-version="[2.2.600,3.0.0)"
 Eclipse-RegisterBuddy: org.apache.log4j
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Eclipse-BundleShape: dir
 Automatic-Module-Name: org.knime.core
-Import-Package: org.knime.core.workflow.def
