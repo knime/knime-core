@@ -128,18 +128,16 @@ public class NodeDialogManagerTest {
 
         assertThat(NodeDialogManager.getInstance().callTextInitialDataService(nc), is("test settings"));
         assertThat(nodeDialog.getPage().isCompletelyStatic(), is(false));
+
         hasDialog.set(false);
         assertThat("node not expected to have a node dialog", NodeDialogManager.hasNodeDialog(nc), is(false));
     }
 
     /**
-     * Tests {@link NodeDialogManager#getNodeDialogPageUrl(NativeNodeContainer)}.
-     *
-     * @throws URISyntaxException
-     * @throws IOException
+     * Tests {@link NodeDialogManager#getPageUrl(NativeNodeContainer)}.
      */
     @Test
-    public void testGetNodeDialogPageUrl() throws URISyntaxException, IOException {
+    public void testGetNodeDialogPageUrl() {
         var staticPage = Page.builder(BUNDLE_ID, "files", "page.html").addResourceFile("resource.html").build();
         var dynamicPage = Page.builder(() -> "page content", "page.html")
             .addResourceFromString(() -> "resource content", "resource.html").build();
