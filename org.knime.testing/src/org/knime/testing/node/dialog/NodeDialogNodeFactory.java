@@ -52,6 +52,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 
+import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 import org.knime.core.node.NodeDialogPane;
@@ -72,11 +73,31 @@ public class NodeDialogNodeFactory extends NodeFactory<NodeDialogNodeModel>
 
     private final Supplier<NodeDialog> m_nodeDialogCreator;
 
+    private final BooleanSupplier m_hasDialog;
+
     /**
      * @param nodeDialogCreator
      */
     public NodeDialogNodeFactory(final Supplier<NodeDialog> nodeDialogCreator) {
         m_nodeDialogCreator = nodeDialogCreator;
+        m_hasDialog = () -> true;
+    }
+
+    /**
+     * @param nodeDialogCreator
+     * @param hasDialog allows one to control the {@link #hasNodeDialog()} return value
+     */
+    public NodeDialogNodeFactory(final Supplier<NodeDialog> nodeDialogCreator, final BooleanSupplier hasDialog) {
+        m_nodeDialogCreator = nodeDialogCreator;
+        m_hasDialog = hasDialog;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean hasNodeDialog() {
+        return m_hasDialog.getAsBoolean();
     }
 
     /**

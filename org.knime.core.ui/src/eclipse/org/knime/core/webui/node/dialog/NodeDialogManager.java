@@ -94,8 +94,12 @@ public final class NodeDialogManager extends AbstractNodeUIManager {
      * @return whether the node provides a {@link NodeDialog}
      */
     public static boolean hasNodeDialog(final NodeContainer nc) {
-        return nc instanceof NativeNodeContainer
-            && ((NativeNodeContainer)nc).getNode().getFactory() instanceof NodeDialogFactory;
+        if (nc instanceof NativeNodeContainer) {
+            var nodeFactory = ((NativeNodeContainer)nc).getNode().getFactory();
+            return nodeFactory instanceof NodeDialogFactory && ((NodeDialogFactory)nodeFactory).hasNodeDialog();
+        } else {
+            return false;
+        }
     }
 
     /**

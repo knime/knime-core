@@ -58,8 +58,9 @@ import static org.knime.core.webui.page.PageTest.BUNDLE_ID;
 import static org.knime.testing.util.WorkflowManagerUtil.createAndAddNode;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 import org.junit.After;
@@ -118,7 +119,8 @@ public class NodeDialogManagerTest {
     @Test
     public void testSimpleNodeDialogNode() {
         var page = Page.builder(() -> "test page content", "index.html").build();
-        NativeNodeContainer nc = createNodeWithNodeDialog(m_wfm, () -> createNodeDialog(page));
+        var hasDialog = new AtomicBoolean(true);
+        NativeNodeContainer nc = createNodeWithNodeDialog(m_wfm, () -> createNodeDialog(page), hasDialog::get);
 
         assertThat("node expected to have a node dialog", NodeDialogManager.hasNodeDialog(nc), is(true));
         var nodeDialog = NodeDialogManager.getInstance().getNodeDialog(nc);
@@ -126,6 +128,8 @@ public class NodeDialogManagerTest {
 
         assertThat(NodeDialogManager.getInstance().callTextInitialDataService(nc), is("test settings"));
         assertThat(nodeDialog.getPage().isCompletelyStatic(), is(false));
+        hasDialog.set(false);
+        assertThat("node not expected to have a node dialog", NodeDialogManager.hasNodeDialog(nc), is(false));
     }
 
     /**
@@ -247,6 +251,11 @@ public class NodeDialogManagerTest {
     public static NativeNodeContainer createNodeWithNodeDialog(final WorkflowManager wfm,
         final Supplier<NodeDialog> nodeDialogCreator) {
         return createAndAddNode(wfm, new NodeDialogNodeFactory(nodeDialogCreator));
+    }
+
+    private static NativeNodeContainer createNodeWithNodeDialog(final WorkflowManager wfm,
+        final Supplier<NodeDialog> nodeDialogCreator, final BooleanSupplier hasDialog) {
+        return createAndAddNode(wfm, new NodeDialogNodeFactory(nodeDialogCreator, hasDialog));
     }
 
 }

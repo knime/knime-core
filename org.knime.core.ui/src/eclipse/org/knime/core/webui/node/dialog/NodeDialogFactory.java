@@ -63,6 +63,13 @@ import org.knime.core.node.workflow.NodeContext;
 public interface NodeDialogFactory {
 
     /**
+     * @return {@code true} if there is a dialog, otherwise {@code false}
+     */
+    default boolean hasNodeDialog() {
+        return true;
+    }
+
+    /**
      * Creates a new node dialog instance. It is guaranteed that a {@link NodeContext} is available when the method is
      * called.
      *
