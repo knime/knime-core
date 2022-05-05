@@ -63,7 +63,9 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 
 import org.awaitility.Awaitility;
@@ -130,7 +132,8 @@ public class NodeViewManagerTest {
     @Test
     public void testSimpleNodeViewNode() {
         var page = Page.builder(() -> "test page content", "index.html").build();
-        NativeNodeContainer nc = createNodeWithNodeView(m_wfm, m -> createNodeView(page));
+        var hasView = new AtomicBoolean(true);
+        NativeNodeContainer nc = createNodeWithNodeView(m_wfm, m -> createNodeView(page), hasView::get);
 
         assertThat("node expected to have a node view", NodeViewManager.hasNodeView(nc), is(true));
         var nodeView = NodeViewManager.getInstance().getNodeView(nc);
@@ -140,6 +143,9 @@ public class NodeViewManagerTest {
             () -> NodeViewManager.getInstance().callTextInitialDataService(nc));
         assertThat(ex.getMessage(), containsString("No text initial data service available"));
         assertThat(nodeView.getPage().isCompletelyStatic(), is(false));
+
+        hasView.set(false);
+        assertThat("node not expected to have a node view", NodeViewManager.hasNodeView(nc), is(false));
     }
 
     /**
@@ -416,6 +422,11 @@ public class NodeViewManagerTest {
     public static NativeNodeContainer createNodeWithNodeView(final WorkflowManager wfm,
         final Function<NodeViewNodeModel, NodeView> nodeViewCreator) {
         return createAndAddNode(wfm, new NodeViewNodeFactory(nodeViewCreator));
+    }
+
+    private static NativeNodeContainer createNodeWithNodeView(final WorkflowManager wfm,
+        final Function<NodeViewNodeModel, NodeView> nodeViewCreator, final BooleanSupplier hasView) {
+        return createAndAddNode(wfm, new NodeViewNodeFactory(nodeViewCreator, hasView));
     }
 
     /**

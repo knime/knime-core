@@ -54,6 +54,7 @@ import static org.hamcrest.Matchers.notNullValue;
 
 import java.io.IOException;
 import java.util.Optional;
+import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 
 import org.apache.xmlbeans.XmlException;
@@ -91,6 +92,9 @@ public class NodeViewNodeFactory extends NodeFactory<NodeViewNodeModel> implemen
 
     private String m_initialData = "the initial data";
 
+    private final BooleanSupplier m_hasView;
+
+
     /**
      *
      */
@@ -105,6 +109,18 @@ public class NodeViewNodeFactory extends NodeFactory<NodeViewNodeModel> implemen
         m_nodeViewCreator = nodeViewCreator;
         m_numInputs = 0;
         m_numOutputs = 0;
+        m_hasView = () -> true;
+    }
+
+    /**
+     * @param nodeViewCreator
+     * @param hasView allows one to control the {@link #hasView()} return value
+     */
+    public NodeViewNodeFactory(final Function<NodeViewNodeModel, NodeView> nodeViewCreator, final BooleanSupplier hasView) {
+        m_nodeViewCreator = nodeViewCreator;
+        m_numInputs = 0;
+        m_numOutputs = 0;
+        m_hasView = hasView;
     }
 
     /**
@@ -128,6 +144,7 @@ public class NodeViewNodeFactory extends NodeFactory<NodeViewNodeModel> implemen
                     }
                 }, createReExecuteDataService());
         };
+        m_hasView = () -> true;
     }
 
     private ReExecuteDataService createReExecuteDataService() {
@@ -249,6 +266,14 @@ public class NodeViewNodeFactory extends NodeFactory<NodeViewNodeModel> implemen
             }
         };
     }
+
+
+    @Override
+    public boolean hasView() {
+        return m_hasView.getAsBoolean();
+    }
+
+
 
 
 }

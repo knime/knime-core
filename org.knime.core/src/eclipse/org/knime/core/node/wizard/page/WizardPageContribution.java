@@ -69,6 +69,13 @@ import org.knime.core.node.workflow.NativeNodeContainer;
 public interface WizardPageContribution {
 
     /**
+     * @return {@code true} if there is a view, otherwise {@code false}
+     */
+    default boolean hasView() {
+        return true;
+    }
+
+    /**
      * Validates the value changed and provided by the UI in the node view.
      *
      * @param nnc the node providing the node view to validate the data for
