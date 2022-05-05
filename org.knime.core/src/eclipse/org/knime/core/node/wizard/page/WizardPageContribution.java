@@ -71,7 +71,7 @@ public interface WizardPageContribution {
     /**
      * @return {@code true} if there is a view, otherwise {@code false}
      */
-    default boolean hasView() {
+    default boolean hasNodeView() {
         return true;
     }
 

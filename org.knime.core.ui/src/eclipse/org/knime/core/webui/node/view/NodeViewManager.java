@@ -109,7 +109,7 @@ public final class NodeViewManager extends AbstractNodeUIManager {
     public static boolean hasNodeView(final NodeContainer nc) {
         if (nc instanceof NativeNodeContainer) {
             var nodeFactory = ((NativeNodeContainer)nc).getNode().getFactory();
-            return nodeFactory instanceof NodeViewFactory && ((NodeViewFactory)nodeFactory).hasView();
+            return nodeFactory instanceof NodeViewFactory && ((NodeViewFactory)nodeFactory).hasNodeView();
         } else {
             return false;
         }

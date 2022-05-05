@@ -114,7 +114,7 @@ public class NodeViewNodeFactory extends NodeFactory<NodeViewNodeModel> implemen
 
     /**
      * @param nodeViewCreator
-     * @param hasView allows one to control the {@link #hasView()} return value
+     * @param hasView allows one to control the {@link #hasNodeView()} return value
      */
     public NodeViewNodeFactory(final Function<NodeViewNodeModel, NodeView> nodeViewCreator, final BooleanSupplier hasView) {
         m_nodeViewCreator = nodeViewCreator;
@@ -269,7 +269,7 @@ public class NodeViewNodeFactory extends NodeFactory<NodeViewNodeModel> implemen
 
 
     @Override
-    public boolean hasView() {
+    public boolean hasNodeView() {
         return m_hasView.getAsBoolean();
     }
 

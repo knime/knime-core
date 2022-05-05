@@ -265,7 +265,7 @@ public final class WizardPageUtil {
     public static boolean isWizardPageNode(final NativeNodeContainer nnc) {
         NodeFactory<NodeModel> factory = nnc.getNode().getFactory();
         return factory instanceof WizardNodeFactoryExtension
-            || (factory instanceof WizardPageContribution && ((WizardPageContribution)factory).hasView());
+            || (factory instanceof WizardPageContribution && ((WizardPageContribution)factory).hasNodeView());
     }
 
     /**
