@@ -53,9 +53,7 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.CALLS_REAL_METHODS;
 
-import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Before;
@@ -65,10 +63,9 @@ import org.knime.core.workflow.def.NativeNodeDef;
 import org.knime.core.workflow.def.WorkflowDef;
 import org.knime.core.workflow.def.impl.ConnectionDefBuilder;
 import org.knime.core.workflow.def.impl.ConnectionUISettingsDefBuilder;
-import org.knime.core.workflow.def.impl.FallibleConnectionDef;
+import org.knime.core.workflow.def.impl.DefaultConnectionDef;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Test workflow structure: table creators #1 and #2, joiner #3 connects on
@@ -163,7 +160,7 @@ public class EnhAP18826_WorkflowCopyContentToDef extends WorkflowTestCase { //NO
 		assertThat(workflow.getConnections().size(), is(4));
 		
 		// somehow doesn't match
-		final FallibleConnectionDef conn23 = new ConnectionDefBuilder().setDeletable(true).setSourceID(2).setSourcePort(1).setDestID(3).setDestPort(2).setUiSettings(new ConnectionUISettingsDefBuilder().build()).build();
+		final DefaultConnectionDef conn23 = new ConnectionDefBuilder().setDeletable(true).setSourceID(2).setSourcePort(1).setDestID(3).setDestPort(2).setUiSettings(new ConnectionUISettingsDefBuilder().build()).build();
 		assertThat(workflow.getConnections(), hasItem(conn23));
 	}
 	
@@ -184,7 +181,7 @@ public class EnhAP18826_WorkflowCopyContentToDef extends WorkflowTestCase { //NO
 		assertThat(workflow.getNodes().size(), is(2)); 
 		
 		// only one connection
-		final FallibleConnectionDef conn35 = new ConnectionDefBuilder().setDeletable(true).setSourceID(3).setSourcePort(3).setDestID(5).setDestPort(1).setUiSettings(new ConnectionUISettingsDefBuilder().build()).build();
+		final DefaultConnectionDef conn35 = new ConnectionDefBuilder().setDeletable(true).setSourceID(3).setSourcePort(3).setDestID(5).setDestPort(1).setUiSettings(new ConnectionUISettingsDefBuilder().build()).build();
 		assertThat(workflow.getConnections(), contains(conn35));
 	}
 	

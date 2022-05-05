@@ -151,7 +151,7 @@ import org.knime.core.util.LoadVersion;
 import org.knime.core.util.LockFailedException;
 import org.knime.core.util.Pair;
 import org.knime.core.util.ThreadPool;
-import org.knime.core.workflow.def.ComponentDef;
+import org.knime.core.workflow.def.ComponentNodeDef;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -330,7 +330,7 @@ public final class SubNodeContainer extends SingleNodeContainer
     * @param id ...
     * @param persistor ...
     */
-    SubNodeContainer(final WorkflowManager parent, final NodeID id, final ComponentDef def) {
+    SubNodeContainer(final WorkflowManager parent, final NodeID id, final ComponentNodeDef def) {
         super(parent, id, def);
         m_subnodeScopeContext = new FlowSubnodeScopeContext(this);
         m_wfm = WorkflowManager.newComponentWorkflowManagerInstance(parent, id, def);

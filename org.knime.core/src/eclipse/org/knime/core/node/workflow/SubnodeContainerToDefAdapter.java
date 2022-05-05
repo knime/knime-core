@@ -54,7 +54,7 @@ import java.util.stream.IntStream;
 
 import org.knime.core.node.workflow.def.CoreToDefUtil;
 import org.knime.core.workflow.def.CipherDef;
-import org.knime.core.workflow.def.ComponentDef;
+import org.knime.core.workflow.def.ComponentNodeDef;
 import org.knime.core.workflow.def.ComponentDialogSettingsDef;
 import org.knime.core.workflow.def.ComponentMetadataDef;
 import org.knime.core.workflow.def.PortDef;
@@ -63,12 +63,12 @@ import org.knime.core.workflow.def.WorkflowDef;
 import org.knime.core.workflow.def.impl.ComponentDialogSettingsDefBuilder;
 
 /**
- * Provides a {@link ComponentDef} view on a component node in a workflow.
+ * Provides a {@link ComponentNodeDef} view on a component node in a workflow.
  *
  * @author hornm
  * @author Carl Witt, KNIME GmbH, Berlin, Germany
  */
-public class SubnodeContainerToDefAdapter extends SingleNodeContainerToDefAdapter implements ComponentDef {
+public class SubnodeContainerToDefAdapter extends SingleNodeContainerToDefAdapter implements ComponentNodeDef {
 
     private final SubNodeContainer m_nc;
 
@@ -161,7 +161,7 @@ public class SubnodeContainerToDefAdapter extends SingleNodeContainerToDefAdapte
      */
     @Override
     public NodeTypeEnum getNodeType() {
-        return NodeTypeEnum.COMPONENT;
+        return NodeTypeEnum.COMPONENT_NODE;
     }
 
     /**

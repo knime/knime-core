@@ -1,17 +1,11 @@
 package org.knime.core.node.workflow;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.knime.core.workflow.def.NativeNodeDef;
 import org.knime.core.workflow.def.WorkflowDef;
-import org.knime.core.workflow.def.impl.ConnectionDefBuilder;
-import org.knime.core.workflow.def.impl.ConnectionUISettingsDefBuilder;
-import org.knime.core.workflow.def.impl.FallibleConnectionDef;
 
 /**
  * 

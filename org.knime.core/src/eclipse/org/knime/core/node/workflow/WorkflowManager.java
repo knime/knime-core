@@ -214,14 +214,14 @@ import org.knime.core.util.VMFileLocker;
 import org.knime.core.util.pathresolve.ResolverUtil;
 import org.knime.core.util.workflowalizer.AuthorInformation;
 import org.knime.core.workflow.def.BaseNodeDef;
-import org.knime.core.workflow.def.ComponentDef;
+import org.knime.core.workflow.def.ComponentNodeDef;
 import org.knime.core.workflow.def.MetaNodeDef;
 import org.knime.core.workflow.def.NativeNodeDef;
 import org.knime.core.workflow.def.RootWorkflowDef;
 import org.knime.core.workflow.def.StandaloneDef;
 import org.knime.core.workflow.def.StandaloneDef.ContentTypeEnum;
 import org.knime.core.workflow.def.WorkflowDef;
-import org.knime.core.workflow.def.impl.ComponentDefBuilder;
+import org.knime.core.workflow.def.impl.ComponentNodeDefBuilder;
 import org.knime.core.workflow.def.impl.CreatorDefBuilder;
 import org.knime.core.workflow.def.impl.MetaNodeDefBuilder;
 import org.knime.core.workflow.def.impl.NativeNodeDefBuilder;
@@ -8112,7 +8112,7 @@ public final class WorkflowManager extends NodeContainer
                         .setId(defNodeId).setUiInfo(defUiInfo.orElse(null)).build();
                 } else if (nc instanceof SubNodeContainer) {
                     var originalComponentDef = new SubnodeContainerToDefAdapter((SubNodeContainer)nc);
-                    node = new ComponentDefBuilder(originalComponentDef)//
+                    node = new ComponentNodeDefBuilder(originalComponentDef)//
                         .setId(defNodeId).setUiInfo(defUiInfo.orElse(null)).build();
                 } else if(nc instanceof WorkflowManager) {
                     var originalMetanodeDef = new MetanodeToDefAdapter((WorkflowManager)nc);
@@ -9043,8 +9043,8 @@ public final class WorkflowManager extends NodeContainer
                 return newMetaNodeInstance(this, nodeId, (MetaNodeDef)def);
             case NATIVE_NODE:
                 return new NativeNodeContainer(this, nodeId, (NativeNodeDef)def);
-            case COMPONENT:
-                return new SubNodeContainer(this, nodeId, (ComponentDef)def);
+            case COMPONENT_NODE:
+                return new SubNodeContainer(this, nodeId, (ComponentNodeDef)def);
             default:
                 throw new IllegalArgumentException(
                     String.format("The %s node type is not supported", nodeType.name()));
@@ -9113,14 +9113,14 @@ public final class WorkflowManager extends NodeContainer
 
     /**
      * Creates a new instance of a WorkflowManger for a ComponentNode, restores the @see SubNodeContainer properties
-     * from the {@link ComponentDef}
+     * from the {@link ComponentNodeDef}
      *
      * @param nodeId a {@link NodeID}
-     * @param def a {@link ComponentDef}
+     * @param def a {@link ComponentNodeDef}
      * @return a {@link WorkflowManager}
      */
     static WorkflowManager newComponentWorkflowManagerInstance(final WorkflowManager parent, final NodeID nodeId,
-        final ComponentDef def) {
+        final ComponentNodeDef def) {
         var wfm = new WorkflowManager(parent, nodeId, def, def.getWorkflow());
         wfm.m_cipher = WorkflowCipher.toWorkflowCipher(def.getCipher());
         if (parent.getNodeContainerDirectory() != null) {
