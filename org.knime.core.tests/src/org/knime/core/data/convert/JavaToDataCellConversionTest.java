@@ -187,7 +187,7 @@ public class JavaToDataCellConversionTest {
     }
 
     /**
-     * Test Double, long, int -> DoubleCell conversion.
+     * Test Double, float, long, int -> DoubleCell conversion.
      *
      * @throws Exception When something went wrong
      */
@@ -208,6 +208,10 @@ public class JavaToDataCellConversionTest {
         final DoubleCell cell3 =
             testSimpleConversion(Long.class, DoubleCell.TYPE, DoubleCell.class, Long.MAX_VALUE);
         assertEquals(Long.MAX_VALUE, cell3.getDoubleValue(), FUZZY_DOUBLE_TOLERANCE);
+
+        final DoubleCell cell4 =
+                testSimpleConversion(Float.class, DoubleCell.TYPE, DoubleCell.class, Float.MAX_VALUE);
+            assertEquals(Float.MAX_VALUE, (float) cell4.getDoubleValue(), (float) FUZZY_DOUBLE_TOLERANCE);
     }
 
     /**
@@ -382,8 +386,9 @@ public class JavaToDataCellConversionTest {
         final Collection<Class<?>> set =
             factories.stream().map((factory) -> factory.getSourceType()).collect(Collectors.toSet());
 
-        assertEquals(4, set.size());
+        assertEquals(5, set.size());
         assertTrue(set.contains(Double.class));
+        assertTrue(set.contains(Float.class));
         assertTrue(set.contains(String.class));
         assertTrue(set.contains(Long.class));
         assertTrue(set.contains(Integer.class));
