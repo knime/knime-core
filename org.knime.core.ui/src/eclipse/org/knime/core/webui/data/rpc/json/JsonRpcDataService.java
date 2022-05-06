@@ -76,11 +76,12 @@ public interface JsonRpcDataService extends RpcDataService, TextDataService {
      */
     @Override
     default String handleRequest(final String request) {
-        final var context = DataServiceContext.getContext();
         try {
-            context.clear();
+            DataServiceContext.getContext().clear();
             final var response = RpcServerManager.doRpc(getRpcServer(), request);
-            final var warningMessages = context.getWarningMessages();
+            // We have to get the DataServiceContext again here, since the context may have changed since (or as a
+            // consequence of) clearing it
+            final var warningMessages = DataServiceContext.getContext().getWarningMessages();
             if (warningMessages != null && warningMessages.length > 0) {
                 final var mapper = ObjectMapperUtil.getInstance().getObjectMapper();
                 final var root = (ObjectNode)mapper.readTree(response);
@@ -92,7 +93,7 @@ public interface JsonRpcDataService extends RpcDataService, TextDataService {
         } catch (IOException ex) {
             throw new IllegalStateException("A problem occurred while making a rpc call.", ex);
         } finally {
-            context.clear();
+            DataServiceContext.getContext().clear();
         }
     }
 

@@ -70,14 +70,15 @@ public interface JsonInitialDataService<D> extends TextInitialDataService {
     @Override
     default String getInitialData() {
         final var mapper = ObjectMapperUtil.getInstance().getObjectMapper();
-        final var context = DataServiceContext.getContext();
         try {
             final var root = mapper.createObjectNode();
             // Since the DataServiceContext is public API, warning messages could have been wrongfully added to it.
             // We clear the context here to make sure there are no "stale" warning messages.
-            context.clear();
+            DataServiceContext.getContext().clear();
             root.set("result", mapper.readTree(toJson(getInitialDataObject())));
-            final var warningMessages = context.getWarningMessages();
+            // We have to get the DataServiceContext again here, since the context may have changed since (or as a
+            // consequence of) clearing it
+            final var warningMessages = DataServiceContext.getContext().getWarningMessages();
             if (warningMessages != null && warningMessages.length > 0) {
                 root.set("warningMessages", mapper.valueToTree(warningMessages));
             }
@@ -89,7 +90,7 @@ public interface JsonInitialDataService<D> extends TextInitialDataService {
             return mapper.createObjectNode().set("internalError", mapper.valueToTree(new InitialDataInternalError(t)))
                 .toString();
         } finally {
-            context.clear();
+            DataServiceContext.getContext().clear();
         }
     }
 
