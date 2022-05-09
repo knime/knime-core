@@ -94,7 +94,6 @@ public class NodeViewNodeFactory extends NodeFactory<NodeViewNodeModel> implemen
 
     private final BooleanSupplier m_hasView;
 
-
     /**
      *
      */
@@ -267,13 +266,9 @@ public class NodeViewNodeFactory extends NodeFactory<NodeViewNodeModel> implemen
         };
     }
 
-
     @Override
     public boolean hasNodeView() {
         return m_hasView.getAsBoolean();
     }
-
-
-
 
 }
