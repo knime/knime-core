@@ -36,11 +36,11 @@ Require-Bundle: org.knime.shared.workflow.def;bundle-version="[4.6.0,5.0.0)",
  com.google.guava;bundle-version="[19.0.0,20.0.0)",
  org.eclipse.swt;bundle-version="[3.100.0,4.0.0)",
  org.eclipse.ui.workbench;bundle-version="[3.108.1,4.0.0)",
- com.fasterxml.jackson.core.jackson-databind;bundle-version="[2.12.1,3.0.0)",
- com.fasterxml.jackson.core.jackson-core;bundle-version="[2.12.1,3.0.0)",
- com.github.briandilley.jsonrpc4j;bundle-version="[1.5.2,2.0.0)",
- com.fasterxml.jackson.datatype.jackson-datatype-jdk8;bundle-version="[2.12.1,3.0.0)",
- com.fasterxml.jackson.core.jackson-annotations;bundle-version="[2.12.1,3.0.0)"
+ com.fasterxml.jackson.core.jackson-databind;bundle-version="[2.13.2.2,3.0.0)",
+ com.fasterxml.jackson.core.jackson-core;bundle-version="[2.13.2,3.0.0)",
+ com.fasterxml.jackson.datatype.jackson-datatype-jdk8;bundle-version="[2.13.2,3.0.0)",
+ com.fasterxml.jackson.core.jackson-annotations;bundle-version="[2.13.2,3.0.0)",
+ com.github.briandilley.jsonrpc4j;bundle-version="[1.5.2,2.0.0)"
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Automatic-Module-Name: org.knime.core.ui
