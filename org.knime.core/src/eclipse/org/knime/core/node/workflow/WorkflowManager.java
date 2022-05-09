@@ -4322,7 +4322,7 @@ public final class WorkflowManager extends NodeContainer
             var inWorkflowAnnoIDs = getWorkflowAnnotationIDs();
             for (WorkflowAnnotationID anno : annoIDs) {
                 if (!inWorkflowAnnoIDs.contains(anno)) {
-                    return String.format("Annnotation with ID \"%s\" not part of workflow");
+                    return String.format("Annnotation with ID \"%s\" not part of workflow", anno);
                 }
             }
             // for quick search:
