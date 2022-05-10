@@ -761,9 +761,12 @@ public final class JoinSpecification {
          */
         public static Builder from(final JoinSpecification copyFrom) {
             return new Builder(copyFrom.getSettings(InputTable.LEFT), copyFrom.getSettings(InputTable.RIGHT))
-                .conjunctive(copyFrom.isConjunctive()).retainMatched(copyFrom.isRetainMatched())
-                .rowKeyFactory(copyFrom.getRowKeyFactory()).outputRowOrder(copyFrom.getOutputRowOrder())
-                .mergeJoinColumns(copyFrom.isMergeJoinColumns())
+                .conjunctive(copyFrom.isConjunctive())//
+                .retainMatched(copyFrom.isRetainMatched())//
+                .rowKeyFactory(copyFrom.getRowKeyFactory())//
+                .outputRowOrder(copyFrom.getOutputRowOrder())//
+                .mergeJoinColumns(copyFrom.isMergeJoinColumns())//
+                .dataCellComparisonMode(copyFrom.getDataCellComparisonMode())//
                 .columnNameDisambiguator(copyFrom.getColumnNameDisambiguator());
         }
 
