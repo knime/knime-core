@@ -68,9 +68,10 @@ import org.knime.testing.util.WorkflowManagerUtil;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.util.DefaultIndenter;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 
 /**
  * Tests {@link NodeDialogEnt}.
@@ -98,33 +99,33 @@ public class NodeDialogEntTest {
 
         var flowVariableSettingsEnt = new NodeDialogEnt(nnc).getFlowVariableSettings();
 
-        var mapper = new ObjectMapper();
+        var mapper = JsonMapper.builder().configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true).build();
         mapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
         mapper.setSerializationInclusion(Include.NON_NULL);
         var expectedJson = "{\n"
             + "  \"modelVariables\" : {\n"
             + "    \"model setting\" : {\n"
-            + "      \"leaf\" : true,\n"
             + "      \"controllingFlowVariableAvailable\" : false,\n"
-            + "      \"controllingFlowVariableName\" : \"flow variable 1\"\n"
+            + "      \"controllingFlowVariableName\" : \"flow variable 1\",\n"
+            + "      \"leaf\" : true\n"
             + "    }\n"
             + "  },\n"
             + "  \"viewVariables\" : {\n"
             + "    \"view setting\" : {\n"
-            + "      \"leaf\" : true,\n"
             + "      \"controllingFlowVariableAvailable\" : true,\n"
-            + "      \"controllingFlowVariableName\" : \"flow variable 2\"\n"
+            + "      \"controllingFlowVariableName\" : \"flow variable 2\",\n"
+            + "      \"leaf\" : true\n"
             + "    },\n"
             + "    \"nested\" : {\n"
             + "      \"nested view settings 2\" : {\n"
-            + "        \"leaf\" : true,\n"
-            + "        \"exposedFlowVariableName\" : \"exposed var name\"\n"
+            + "        \"exposedFlowVariableName\" : \"exposed var name\",\n"
+            + "        \"leaf\" : true\n"
             + "      },\n"
             + "      \"nested view settings\" : {\n"
-            + "        \"leaf\" : true,\n"
             + "        \"controllingFlowVariableAvailable\" : false,\n"
             + "        \"controllingFlowVariableName\" : \"flow variable 3\",\n"
-            + "        \"exposedFlowVariableName\" : \"exposed var name\"\n"
+            + "        \"exposedFlowVariableName\" : \"exposed var name\",\n"
+            + "        \"leaf\" : true\n"
             + "      }\n"
             + "    }\n"
             + "  }\n"
