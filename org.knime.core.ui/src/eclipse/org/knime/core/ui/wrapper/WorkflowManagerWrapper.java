@@ -90,6 +90,8 @@ import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.core.ui.node.workflow.WorkflowOutPortUI;
 import org.knime.core.util.CoreConstants;
 import org.knime.core.util.Pair;
+import org.knime.shared.workflow.def.WorkflowDef;
+import org.knime.shared.workflow.storage.util.PasswordRedactor;
 
 /**
  * Implements the {@link WorkflowManagerUI} interface by simply wrapping the {@link WorkflowManager} implementation.
@@ -98,7 +100,12 @@ import org.knime.core.util.Pair;
  *
  * @author Martin Horn, University of Konstanz
  */
-public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowManager> implements WorkflowManagerUI{
+public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowManager> implements WorkflowManagerUI {
+
+    /**
+     * Added as part of AP-18830 - adds a hidden system property to disable the {@link WorkflowDef} based copy/paste.
+     */
+    private static final boolean USE_PERSISTOR_CODE_FOR_COPY_PASTE = Boolean.getBoolean("knime.ui.copy.persistor");
 
     /**
      * @param delegate the wfm to delegate all the calls to
@@ -434,7 +441,10 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
      */
     @Override
     public WorkflowCopyUI copy(final WorkflowCopyContent content) {
-        return WorkflowPersistorWrapper.wrap(unwrap().copy(false, content));
+        if (USE_PERSISTOR_CODE_FOR_COPY_PASTE) {
+            return WorkflowPersistorWrapper.wrap(unwrap().copy(false, content));
+        }
+        return WorkflowDefWrapper.wrap(unwrap().copyToDef(content, PasswordRedactor.asNull()));
     }
 
     /**
