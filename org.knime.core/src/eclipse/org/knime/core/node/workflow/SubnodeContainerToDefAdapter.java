@@ -54,9 +54,9 @@ import java.util.stream.IntStream;
 
 import org.knime.core.node.workflow.def.CoreToDefUtil;
 import org.knime.shared.workflow.def.CipherDef;
-import org.knime.shared.workflow.def.ComponentNodeDef;
 import org.knime.shared.workflow.def.ComponentDialogSettingsDef;
 import org.knime.shared.workflow.def.ComponentMetadataDef;
+import org.knime.shared.workflow.def.ComponentNodeDef;
 import org.knime.shared.workflow.def.PortDef;
 import org.knime.shared.workflow.def.TemplateInfoDef;
 import org.knime.shared.workflow.def.WorkflowDef;
@@ -161,7 +161,7 @@ public class SubnodeContainerToDefAdapter extends SingleNodeContainerToDefAdapte
      */
     @Override
     public NodeTypeEnum getNodeType() {
-        return NodeTypeEnum.COMPONENT_NODE;
+        return NodeTypeEnum.COMPONENT;
     }
 
     /**

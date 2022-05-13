@@ -9041,9 +9041,9 @@ public final class WorkflowManager extends NodeContainer
         switch (nodeType) {
             case METANODE:
                 return newMetaNodeInstance(this, nodeId, (MetaNodeDef)def);
-            case NATIVE_NODE:
+            case NATIVENODE:
                 return new NativeNodeContainer(this, nodeId, (NativeNodeDef)def);
-            case COMPONENT_NODE:
+            case COMPONENT:
                 return new SubNodeContainer(this, nodeId, (ComponentNodeDef)def);
             default:
                 throw new IllegalArgumentException(

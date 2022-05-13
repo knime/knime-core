@@ -157,7 +157,7 @@ public class NativeNodeContainerToDefAdapter extends SingleNodeContainerToDefAda
      */
     @Override
     public NodeTypeEnum getNodeType() {
-        return NodeTypeEnum.NATIVE_NODE;
+        return NodeTypeEnum.NATIVENODE;
     }
 
 }

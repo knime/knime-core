@@ -81,8 +81,8 @@ import org.knime.shared.workflow.def.AuthorInformationDef;
 import org.knime.shared.workflow.def.BaseNodeDef;
 import org.knime.shared.workflow.def.BaseNodeDef.NodeTypeEnum;
 import org.knime.shared.workflow.def.BoundsDef;
-import org.knime.shared.workflow.def.ComponentNodeDef;
 import org.knime.shared.workflow.def.ComponentMetadataDef;
+import org.knime.shared.workflow.def.ComponentNodeDef;
 import org.knime.shared.workflow.def.ConfigDef;
 import org.knime.shared.workflow.def.ConfigMapDef;
 import org.knime.shared.workflow.def.ConfigValueArrayDef;
@@ -509,7 +509,7 @@ public class DefToCoreUtil {
         Supplier<List<PortDef>> inPortsGetter = null;
         if (NodeTypeEnum.METANODE.equals(baseNodeDef.getNodeType())) {
             inPortsGetter = ((MetaNodeDef)baseNodeDef)::getInPorts;
-        } else if (NodeTypeEnum.COMPONENT_NODE.equals(baseNodeDef.getNodeType())) {
+        } else if (NodeTypeEnum.COMPONENT.equals(baseNodeDef.getNodeType())) {
             inPortsGetter = ((ComponentNodeDef)baseNodeDef)::getInPorts;
         }
         var inportsListSupplier = Optional.ofNullable(inPortsGetter).orElse(List::of);
@@ -528,7 +528,7 @@ public class DefToCoreUtil {
         Supplier<List<PortDef>> outPortsGetter = null;
         if (NodeTypeEnum.METANODE.equals(baseNodeDef.getNodeType())) {
             outPortsGetter = ((MetaNodeDef)baseNodeDef)::getOutPorts;
-        } else if (NodeTypeEnum.COMPONENT_NODE.equals(baseNodeDef.getNodeType())) {
+        } else if (NodeTypeEnum.COMPONENT.equals(baseNodeDef.getNodeType())) {
             outPortsGetter = ((ComponentNodeDef)baseNodeDef)::getOutPorts;
         }
         var outportsListSupplier = Optional.ofNullable(outPortsGetter).orElse(List::of);
