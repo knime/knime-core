@@ -151,6 +151,7 @@ import org.knime.core.util.LoadVersion;
 import org.knime.core.util.LockFailedException;
 import org.knime.core.util.Pair;
 import org.knime.core.util.ThreadPool;
+import org.knime.shared.workflow.def.BaseNodeDef;
 import org.knime.shared.workflow.def.ComponentNodeDef;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
@@ -365,9 +366,6 @@ public final class SubNodeContainer extends SingleNodeContainer
         }
         m_metadata = DefToCoreUtil.toComponentMetadata(def.getMetadata());
         m_templateInformation = MetaNodeTemplateInformation.createNewTemplate(def.getTemplateInfo(), TemplateType.SubNode);
-
-        // TODO this is only used to add the virtual in/out nodes
-        checkInOutNodesAfterLoad(null, new LoadResult("stub")); // TODO load result is only a stub
     }
 
     /**
@@ -3057,5 +3055,50 @@ public final class SubNodeContainer extends SingleNodeContainer
         } else {
             return getWorkflowManager().canPerformReset();
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    void loadContent(final BaseNodeDef nodeDef, final ExecutionMonitor exec, final LoadResult loadResult)
+        throws CanceledExecutionException {
+        // Set single node def properties
+        super.loadContent(nodeDef, exec, loadResult);
+
+        var componentNodeDef = (ComponentNodeDef) nodeDef;
+
+        m_wfm.loadContent(componentNodeDef.getWorkflow(), exec, loadResult);
+        if (!m_wfm.getInternalState().equals(InternalNodeContainerState.IDLE)) {
+            // can happen for workflows that were exported without data;
+            // the same check is done by the caller (WorkflowManager#postLoad) and handled appropriately
+            setInternalState(m_wfm.getInternalState(), false);
+        }
+
+        NodeSettingsRO modelSettings = DefToCoreUtil.toNodeSettings(componentNodeDef.getModelSettings());
+        if (modelSettings != null) {
+            try {
+                loadModelSettingsIntoDialogNodes(modelSettings, false);
+            } catch (InvalidSettingsException e) {
+                final String msg = "Could not load Component configuration into dialog-nodes: " + e.getMessage();
+                LOGGER.error(msg, e);
+                loadResult.addError(msg);
+                setDirty();
+            }
+        }
+        // add virtual input/ouput nodes.
+        checkInOutNodesAfterLoad(null, loadResult);
+        loadLegacyPortNamesAndDescriptionsFromInOutNodes();
+
+        // put data input output node if it was executed;
+        final NativeNodeContainer virtualOutNode = getVirtualOutNode();
+        setVirtualOutputIntoOutport(m_wfm.getInternalState());
+        m_wfmStateChangeListener = createAndAddStateListener();
+        m_wfmListener = createAndAddWorkflowListener();
+        getInPort(0).setPortName("Variable Inport");
+        getOutPort(0).setPortName("Variable Outport");
+        getVirtualInNode().addNodeStateChangeListener(new RefreshPortNamesListener());
+        getVirtualOutNode().addNodeStateChangeListener(new RefreshPortNamesListener());
+        refreshPortNames();
     }
 }

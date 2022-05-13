@@ -53,15 +53,21 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import org.knime.core.node.ConfigurableNodeFactory;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
-import org.knime.core.node.NodeAndBundleInformationPersistor;
 import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeFactoryClassMapper;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.config.base.AbstractConfigEntry;
 import org.knime.core.node.config.base.ConfigEntries;
+import org.knime.core.node.context.ModifiableNodeCreationConfiguration;
+import org.knime.core.node.context.NodeCreationConfiguration;
+import org.knime.core.node.extension.InvalidNodeFactoryExtensionException;
+import org.knime.core.node.extension.NodeFactoryExtensionManager;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortTypeRegistry;
@@ -71,16 +77,15 @@ import org.knime.core.node.workflow.ComponentMetadata;
 import org.knime.core.node.workflow.ComponentMetadata.ComponentMetadataBuilder;
 import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.EditorUIInformation;
-import org.knime.core.node.workflow.FileNativeNodeContainerPersistor;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.NodeContainer.NodeLocks;
 import org.knime.core.node.workflow.NodeUIInformation;
+import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.workflowalizer.AuthorInformation;
 import org.knime.shared.workflow.def.AnnotationDataDef;
 import org.knime.shared.workflow.def.AuthorInformationDef;
 import org.knime.shared.workflow.def.BaseNodeDef;
 import org.knime.shared.workflow.def.BaseNodeDef.NodeTypeEnum;
-import org.knime.shared.workflow.def.BoundsDef;
 import org.knime.shared.workflow.def.ComponentMetadataDef;
 import org.knime.shared.workflow.def.ComponentNodeDef;
 import org.knime.shared.workflow.def.ConfigDef;
@@ -117,10 +122,19 @@ import org.knime.shared.workflow.def.WorkflowUISettingsDef;
 
 /**
  *
- * @author Dionysios Stolis
+ * @author Dionysios Stolis, KNIME GmbH, Berlin, Germany
  */
 public class DefToCoreUtil {
 
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(DefToCoreUtil.class);
+
+    /**
+     * Sets annotation data def to AnnotationData
+     *
+     * @param annoData a {@link AnnotationData}
+     * @param def {@link AnnotationDataDef}
+     * @return an {@link AnnotationData}
+     */
     public static AnnotationData toAnnotationData(final AnnotationData annoData, final AnnotationDataDef def) {
         annoData.setAlignment(TextAlignment.valueOf(def.getTextAlignment()));
         annoData.setBgColor(def.getBgcolor());
@@ -134,41 +148,88 @@ public class DefToCoreUtil {
         return annoData;
     }
 
+    /**
+     * Converts a native node def to Node
+     *
+     * @param def a {@link NativeNodeDef}
+     * @return a {@link Node}
+     */
     public static Node toNode(final NativeNodeDef def) {
-        NodeSettingsRO additionalFactorySettings = toNodeSettings(def.getFactorySettings());
-        // TODO catch exception on factory settings load
-        NodeFactory<NodeModel> nodeFactory;
         try {
-            nodeFactory = FileNativeNodeContainerPersistor.loadNodeFactory(def.getFactory());
-        } catch (Exception e) {
-            // setDirtyAfterLoad(); // don't set dirty, missing node placeholder will be used instead
-            throw new RuntimeException(e);
-            // TODO throw new NodeFactoryUnknownException(toNodeAndBundleInformationPersistor(def), additionalFactorySettings, e);
-        }
-        try {
+            NodeSettingsRO additionalFactorySettings = toNodeSettings(def.getFactorySettings());
+            NodeFactory<NodeModel> nodeFactory = loadNodeFactory(def.getFactory());
+            NodeSettingsRO nodeCreationSettings = toNodeSettings(def.getNodeCreationConfig());
             nodeFactory.loadAdditionalFactorySettings(additionalFactorySettings);
-        } catch (Exception e) {
-            // String error = "Unable to load additional factory settings into node factory (node \"" + nodeInfo + "\")";
-            // getLogger().error(error);
-            // setDirtyAfterLoad(); // don't set dirty, missing node placeholder
+            return new Node(nodeFactory, loadCreationConfig(nodeCreationSettings, nodeFactory).orElse(null));
+        } catch (InvalidSettingsException | InstantiationException | IllegalAccessException
+                | InvalidNodeFactoryExtensionException e) {
             throw new RuntimeException(e);
-            // TODO throw new NodeFactoryUnknownException(error, nodeInfo, additionalFactorySettings, e);
-        }
-
-        NodeSettingsRO nodeCreationSettings = toNodeSettings(def.getNodeCreationConfig());
-        // TODO creation config??
-        try {
-            return new Node(nodeFactory,
-                FileNativeNodeContainerPersistor.loadCreationConfig(nodeCreationSettings, nodeFactory).orElse(null));
-        } catch (InvalidSettingsException ex) {
-            // TODO throw new RuntimeException(ex);
-            throw new RuntimeException(ex);
+            // TODO Write the missing extension explanation
+            // We could create the un-checked NodeFactoryUnkowException, because this method is used only by the constructors.
+            // TODO throw new NodeFactoryUnknownException(toNodeAndBundleInformationPersistor(def), additionalFactorySettings, e);
         }
     }
 
     /**
-     * @param portType
-     * @return
+     * Helper to load a nodes {@link NodeCreationConfiguration}.
+     *
+     * @param settings the settings the node creation configuration will be initialized with
+     * @param factory the node factory get the node creation config from
+     * @return the node creation config or an empty optional of the node factory is not of type
+     *         {@link ConfigurableNodeFactory}
+     * @throws InvalidSettingsException
+     * @since 4.2
+     */
+    private static Optional<ModifiableNodeCreationConfiguration> loadCreationConfig(final NodeSettingsRO settings,
+        final NodeFactory<NodeModel> factory) throws InvalidSettingsException {
+        if (factory instanceof ConfigurableNodeFactory) {
+            final ModifiableNodeCreationConfiguration creationConfig =
+                (((ConfigurableNodeFactory<NodeModel>)factory).createNodeCreationConfig());
+            try {
+                creationConfig.loadSettingsFrom(settings);
+            } catch (final InvalidSettingsException e) {
+                throw new InvalidSettingsException("Unable to load creation context", e.getCause());
+            }
+            return Optional.of(creationConfig);
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Creates the node factory instance for the given fully-qualified factory class name.
+     * Otherwise a respective exception will be thrown.
+     *
+     * @since 3.5
+     */
+    @SuppressWarnings("unchecked")
+    private static final NodeFactory<NodeModel> loadNodeFactory(final String factoryClassName) throws InvalidSettingsException,
+        InstantiationException, IllegalAccessException,  InvalidNodeFactoryExtensionException{
+        Optional<NodeFactory<? extends NodeModel>> facOptional =
+                NodeFactoryExtensionManager.getInstance().createNodeFactory(factoryClassName);
+        if (facOptional.isPresent()) {
+            return (NodeFactory<NodeModel>)facOptional.get();
+        }
+        List<NodeFactoryClassMapper> classMapperList = NodeFactoryClassMapper.getRegisteredMappers();
+        for (NodeFactoryClassMapper mapper : classMapperList) {
+            @SuppressWarnings("rawtypes")
+            NodeFactory factory = mapper.mapFactoryClassName(factoryClassName);
+            if (factory != null) {
+                LOGGER.debug(String.format("Replacing stored factory class name \"%s\" by actual factory "
+                    + "class \"%s\" (defined by class mapper \"%s\")", factoryClassName, factory.getClass().getName(),
+                    mapper.getClass().getName()));
+                return factory;
+            }
+        }
+
+        throw new InvalidSettingsException(String.format(
+            "Unknown factory class \"%s\" -- not registered via extension point", factoryClassName));
+    }
+
+    /**
+     * Converts a port type def to PortType.
+     *
+     * @param portType a {@link PortTypeDef}
+     * @return a {@link PortType}
      */
     public static PortType toPortType(final PortTypeDef portType) {
         var objectClassString = portType.getPortObjectClass();
@@ -183,6 +244,12 @@ public class DefToCoreUtil {
 
     }
 
+    /**
+     * Converts a Component MetaData def to ComponentMetadata.
+     *
+     * @param def {@link ComponentMetadataDef}.
+     * @return a {@link ComponentMetadata}.
+     */
     public static ComponentMetadata toComponentMetadata(final ComponentMetadataDef def) {
         ComponentMetadataBuilder builder = ComponentMetadata.builder()//
             .description(def.getDescription())//
@@ -200,10 +267,22 @@ public class DefToCoreUtil {
         return builder.build();
     }
 
+    /**
+     * Converts a Workflow UI settings def to EditorUIInformation.
+     *
+     * @param def {@link WorkflowUISettingsDef}.
+     * @return a {@link EditorUIInformation}.
+     */
     public static EditorUIInformation toEditorUIInformation(final WorkflowUISettingsDef def) {
+
+        if(def == null) {
+            return EditorUIInformation.builder().build();
+        }
+
         return EditorUIInformation.builder()//
             .setGridX(def.getGridX())//
             .setGridY(def.getGridY())//
+            .setConnectionLineWidth(def.getConnectionLineWidth())
             .setHasCurvedConnections(def.isCurvedConnections())//
             .setShowGrid(def.isShowGrid())//
             .setSnapToGrid(def.isSnapToGrid())//
@@ -212,7 +291,10 @@ public class DefToCoreUtil {
     }
 
     /**
-     * TODO entirely replace it
+     * Converts an author information def to Author information.
+     *
+     * @param def {@link AuthorInformationDef}.
+     * @return a {@link AuthorInformation}.
      */
     public static AuthorInformation toAuthorInformation(final AuthorInformationDef def) {
         final var lastEdited =
@@ -226,6 +308,7 @@ public class DefToCoreUtil {
      * Create a node settings tree (comprising {@link AbstractConfigEntry}s) from a {@link ConfigDef} tree.
      *
      * @param def an entity containing the recursive node settings
+     * @return a {@link NodeSettings}
      */
     public static NodeSettings toNodeSettings(final ConfigMapDef def) {
         // TODO should def be allowed to be null here?
@@ -389,24 +472,29 @@ public class DefToCoreUtil {
         // TODO password need passphrase to decode
     }
 
-    public static NodeAndBundleInformationPersistor toNodeAndBundleInformationPersistor(final NativeNodeDef def) {
-        return NodeAndBundleInformationPersistor.load(def.getNodeName(), def.getFeature(), def.getBundle(), def.getFactory());
-    }
-
+    /**
+     * Returning null makes sense here, because a metanode's workflow manager expects null in case the position of the
+     * in/outport bars should be automatically chosen.
+     *
+     * @param uiInfoDef def describing the location and size of a node or metanode in/outport bar
+     * @return null if the given def is null, the converted information otherwise.
+     * @see WorkflowManager#setInPortsBarUIInfo(NodeUIInformation)
+     */
     public static NodeUIInformation toNodeUIInformation(final NodeUIInfoDef uiInfoDef) {
-
-        // TODO currently, both components and root workflows are represented as a WorkflowDef without
-        // NodeUIInfo (used to be in workflow.knime only for nodes).
-        if(uiInfoDef == null) {
-            return NodeUIInformation.builder().build();
+        if (uiInfoDef == null) {
+            // if the node ui information is null on a workflow manager that represents a metanode, the ui will figure
+            // out sensible default values.
+            return null;
         }
 
-        BoundsDef boundsDef = uiInfoDef.getBounds();
-        return NodeUIInformation.builder()//
-            .setHasAbsoluteCoordinates(uiInfoDef.hasAbsoluteCoordinates())//
+        var boundsDef = uiInfoDef.getBounds();
+        return NodeUIInformation.builder() //
+            .setHasAbsoluteCoordinates(uiInfoDef.hasAbsoluteCoordinates()) //
             .setIsDropLocation(false) // is only used to specify the location of a node and the shape of metanode bars
             .setIsSymbolRelative(uiInfoDef.isSymbolRelative())//
-            .setNodeLocation(boundsDef.getLocation().getX(), boundsDef.getLocation().getY(), boundsDef.getWidth(), boundsDef.getHeight())//
+            .setNodeLocation(//
+                boundsDef.getLocation().getX(), boundsDef.getLocation().getY(), //
+                boundsDef.getWidth(), boundsDef.getHeight()) //
             .setSnapToGrid(false) // is only used to specify the location of a node and the shape of metanode bars
             .build();
     }
@@ -478,6 +566,7 @@ public class DefToCoreUtil {
         var annotationData = new AnnotationData();
         annotationData.setBgColor(dataDef.getBgcolor());
         annotationData.setBorderColor(dataDef.getBorderColor());
+        annotationData.setBorderSize(dataDef.getBorderSize());
         annotationData.setAlignment(TextAlignment.valueOf(dataDef.getTextAlignment()));
         annotationData.setDefaultFontSize(dataDef.getDefaultFontSize());
         annotationData.setStyleRanges(dataDef.getStyles());

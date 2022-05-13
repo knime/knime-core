@@ -73,6 +73,7 @@ import org.knime.core.node.workflow.FlowVariable.Scope;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.def.DefToCoreUtil;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
+import org.knime.shared.workflow.def.BaseNodeDef;
 import org.knime.shared.workflow.def.ConfigurableNodeDef;
 import org.knime.shared.workflow.def.WorkflowDef;
 import org.w3c.dom.Element;
@@ -877,10 +878,40 @@ public abstract class SingleNodeContainer extends NodeContainer {
     @Override
     WorkflowCopyContent loadContent(final WorkflowDef workflowDef, final ExecutionMonitor exec, final LoadResult loadResult)
         throws CanceledExecutionException {
-        // TODO Auto-generated method stub
+
         return null;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    void loadContent(final BaseNodeDef nodeDef, final ExecutionMonitor exec, final LoadResult loadResult)
+        throws CanceledExecutionException {
+        synchronized (m_nodeMutex) {
+            if (!(nodeDef instanceof ConfigurableNodeDef)) {
+                throw new IllegalStateException("Expected " + ConfigurableNodeDef.class.getSimpleName()
+                    + " persistor object, got " + nodeDef.getClass().getSimpleName());
+            }
+            exec.checkCanceled();
+            var singleNodeDef = (ConfigurableNodeDef)nodeDef;
+            setInternalState(InternalNodeContainerState.IDLE, false);
+            SingleNodeContainerSettings sncSettings = null;
+            try {
+                var internalSettings = DefToCoreUtil.toNodeSettings(singleNodeDef.getInternalNodeSubSettings());
+                sncSettings = new SingleNodeContainerSettings(internalSettings);
+            } catch (InvalidSettingsException ex) {
+                LOGGER.error(String.format("Can't create the single node container settings: %s", ex.getMessage()));
+            }
+            if (sncSettings == null) {
+                LOGGER.coding("SNC settings from def are null, using default");
+                sncSettings = new SingleNodeContainerSettings();
+            }
+            m_settings = sncSettings;
+            NodeContext.pushContext(this);
+            NodeContext.removeLastContext();
+        }
+    }
 
     /** Called by {@link #loadContent(NodeContainerPersistor, Map, FlowObjectStack, ExecutionMonitor,
      * LoadResult, boolean)} to allow subclasses to load their content (heavy for subnode).
@@ -1213,37 +1244,6 @@ public abstract class SingleNodeContainer extends NodeContainer {
 
             m_modelSettings = settings.getNodeSettings(CFG_MODEL);
             m_viewSettings = settings.containsKey(CFG_VIEW) ? settings.getNodeSettings(CFG_VIEW) : null;
-        }
-
-        /**
-         * Creates a new instance holding the settings contained in the
-         * specified object.
-         *
-         * @param def a {@link TODO}
-         * @throws InvalidSettingsException if the settings in the argument are
-         *             invalid
-         */
-        public SingleNodeContainerSettings(final ConfigurableNodeDef def) throws InvalidSettingsException {
-            NodeSettingsRO sncSettings = DefToCoreUtil.toNodeSettings(def.getInternalNodeSubSettings());
-            if (sncSettings.containsKey(CFG_MEMORY_POLICY)) {
-                String memPolStr = sncSettings.getString(CFG_MEMORY_POLICY);
-                try {
-                    m_memoryPolicy = MemoryPolicy.valueOf(memPolStr);
-                } catch (IllegalArgumentException iae) {
-                    throw new InvalidSettingsException("Invalid memory policy: " + memPolStr);
-                }
-            }
-            // in versions before KNIME 1.2.0, there were no misc settings
-            // in the dialog, we must use caution here: if they are not present
-            // we use the default.
-            m_variablesSettings = DefToCoreUtil.toNodeSettings(def.getVariableSettings());
-
-            m_viewVariablesSettings = null; // TODO
-//                                        settings.containsKey(CFG_VIEW_VARIABLES) ?
-//                                      settings.getNodeSettings(CFG_VIEW_VARIABLES) : null;
-
-            m_modelSettings = DefToCoreUtil.toNodeSettings(def.getModelSettings());
-            m_viewSettings = null; //TODO settings.containsKey(CFG_VIEW) ? settings.getNodeSettings(CFG_VIEW) : null;
         }
 
         /**

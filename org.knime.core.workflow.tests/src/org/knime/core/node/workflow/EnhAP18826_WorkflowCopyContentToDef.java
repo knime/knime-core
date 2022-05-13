@@ -97,22 +97,6 @@ public class EnhAP18826_WorkflowCopyContentToDef extends WorkflowTestCase { //NO
 		// only one annotation in the workflow
 		m_sourceAnnotationID = m_wfm.getWorkflowAnnotationIDs().iterator().next();
 	}
-
-
-	/**
-	 * When copying to def, the result has version information in case we paste to a
-	 * KNIME instance with a different version.
-	 */
-	@Test
-	public void creatorInformation() throws Exception {
-		// empty copy
-		final WorkflowCopyContent spec = WorkflowCopyContent.builder().build();
-		var copied = m_wfm.copyToDef(spec);
-		
-		// creator has version and nightly
-		assertNotNull(copied.getCreator().getSavedWithVersion());
-		assertNotNull(copied.getCreator().isNightly());
-	}
 	
 	/**
 	 * Test copying the joiner node (#3) without dangling connections.
@@ -124,12 +108,10 @@ public class EnhAP18826_WorkflowCopyContentToDef extends WorkflowTestCase { //NO
 			.setIncludeInOutConnections(false)//
 			.build();
 		
-		var copied = m_wfm.copyToDef(spec);
+		var workflow = m_wfm.copyToDef(spec);
 		
-		assertThat("Copy content must be a workflow", copied.getContents() instanceof WorkflowDef);
+		assertThat("Copy content must be a workflow", workflow instanceof WorkflowDef);
 		
-		WorkflowDef workflow = (WorkflowDef) copied.getContents();
-
 		// copied one node
 		assertThat(workflow.getNodes().size(), is(1));
 		
@@ -153,8 +135,7 @@ public class EnhAP18826_WorkflowCopyContentToDef extends WorkflowTestCase { //NO
 			.setIncludeInOutConnections(true)//
 			.build();
 		
-		var copied = m_wfm.copyToDef(spec);
-		WorkflowDef workflow = (WorkflowDef) copied.getContents();
+		var workflow = m_wfm.copyToDef(spec);
 
 		// and four connections
 		assertThat(workflow.getConnections().size(), is(4));
@@ -174,8 +155,7 @@ public class EnhAP18826_WorkflowCopyContentToDef extends WorkflowTestCase { //NO
 			.setIncludeInOutConnections(false)//
 			.build();
 		
-		final var copied = m_wfm.copyToDef(spec);
-		WorkflowDef workflow = (WorkflowDef) copied.getContents();
+		final var workflow = m_wfm.copyToDef(spec);
 
 		// both nodes
 		assertThat(workflow.getNodes().size(), is(2)); 
@@ -201,8 +181,8 @@ public class EnhAP18826_WorkflowCopyContentToDef extends WorkflowTestCase { //NO
 				.setIncludeInOutConnections(true)//
 				.build();
 		
-		WorkflowDef joinerWithDangling = (WorkflowDef) (m_wfm.copyToDef(joinerWithDanglingSpec)).getContents();
-		WorkflowDef twoWithDangling = (WorkflowDef) (m_wfm.copyToDef(twoWithDanglingSpec)).getContents();
+		WorkflowDef joinerWithDangling = m_wfm.copyToDef(joinerWithDanglingSpec);
+		WorkflowDef twoWithDangling = m_wfm.copyToDef(twoWithDanglingSpec);
 
 		final List<ConnectionDef> connections1 = joinerWithDangling.getConnections();
 		final List<ConnectionDef> connections2 = twoWithDangling.getConnections();
@@ -215,8 +195,7 @@ public class EnhAP18826_WorkflowCopyContentToDef extends WorkflowTestCase { //NO
 			.setAnnotationIDs(m_sourceAnnotationID)
 			.build();
 		
-		final var copied = m_wfm.copyToDef(spec);
-		WorkflowDef workflow = (WorkflowDef) copied.getContents();
+		final var workflow = m_wfm.copyToDef(spec);
 		
 		assertEquals("Source", workflow.getAnnotations().values().stream().findAny().get().getText());
 	}

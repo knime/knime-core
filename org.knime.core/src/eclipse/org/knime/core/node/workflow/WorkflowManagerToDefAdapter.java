@@ -50,7 +50,6 @@ package org.knime.core.node.workflow;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -71,7 +70,6 @@ import org.knime.shared.workflow.def.WorkflowDef;
 import org.knime.shared.workflow.def.WorkflowUISettingsDef;
 import org.knime.shared.workflow.def.impl.AnnotationDataDefBuilder;
 import org.knime.shared.workflow.def.impl.AuthorInformationDefBuilder;
-import org.knime.shared.workflow.def.impl.ConnectionDefBuilder;
 import org.knime.shared.workflow.def.impl.CreatorDefBuilder;
 import org.knime.shared.workflow.def.impl.StandaloneDefBuilder;
 import org.knime.shared.workflow.def.impl.StyleRangeDefBuilder;
@@ -99,23 +97,9 @@ public class WorkflowManagerToDefAdapter implements WorkflowDef {
      */
     @Override
     public List<ConnectionDef> getConnections() {
-        final var result = new ArrayList<ConnectionDef>();
-        final var connections = m_wfm.getConnectionContainers();
-        for (final var connection : connections) {
-            final var uiInfo = Optional.ofNullable(connection.getUIInfo())//
-                 .map(CoreToDefUtil::toConnectionUISettingsDef)//
-                .orElse(null);
-
-            result.add(new ConnectionDefBuilder()//
-                .setSourcePort(connection.getSourcePort())//
-                .setSourceID(connection.getSource().getIndex())//
-                .setDestPort(connection.getDestPort())//
-                .setDestID(connection.getDest().getIndex())//
-                .setUiSettings(uiInfo)//
-                .setDeletable(connection.isDeletable())//
-                .build());
-        }
-        return result;
+        return m_wfm.getConnectionContainers().stream()//
+            .map(CoreToDefUtil::connectionContainerToConnectionDef)//
+            .collect(Collectors.toList());
     }
 
     /**
@@ -123,7 +107,8 @@ public class WorkflowManagerToDefAdapter implements WorkflowDef {
      */
     @Override
     public WorkflowUISettingsDef getWorkflowEditorSettings() {
-        final var wfEditorSettings = m_wfm.getEditorUIInformation();
+        final var wfEditorSettings = Optional.ofNullable(m_wfm.getEditorUIInformation())//
+            .orElse(EditorUIInformation.builder().build());
         return new WorkflowUISettingsDefBuilder()//
             .setSnapToGrid(wfEditorSettings.getSnapToGrid())//
             .setShowGrid(wfEditorSettings.getShowGrid())//
@@ -219,21 +204,23 @@ public class WorkflowManagerToDefAdapter implements WorkflowDef {
 
     @Override
     public AuthorInformationDef getAuthorInformation() {
-        AuthorInformation authorInfo = m_wfm.getAuthorInformation();
-        final var authDate = Optional//
-            .ofNullable(authorInfo.getAuthoredDate())//
+        var authorInfo = Optional.ofNullable(m_wfm.getAuthorInformation());
+
+        final var authDate = authorInfo//
+                .map(AuthorInformation::getAuthoredDate)//
             .map(d -> OffsetDateTime.ofInstant(d.toInstant(), ZoneId.systemDefault()))//
             .orElse(null);
 
-        final var lastEditDate = authorInfo.getLastEditDate()//
+        final OffsetDateTime lastEditDate = authorInfo//
+            .flatMap(AuthorInformation::getLastEditDate)//
             .map(d -> OffsetDateTime.ofInstant(d.toInstant(), ZoneId.systemDefault()))//
             .orElse(null);
 
         return new AuthorInformationDefBuilder()//
             .setLastEditedWhen(lastEditDate)//
             .setAuthoredWhen(authDate)//
-            .setAuthoredBy(authorInfo.getAuthor())//
-            .setLastEditedBy(authorInfo.getLastEditor().orElse(null))//
+            .setAuthoredBy(authorInfo.map(AuthorInformation::getAuthor).orElse(null))//
+            .setLastEditedBy(authorInfo.flatMap(AuthorInformation::getLastEditor).orElse(null))//
             .build();
     }
 

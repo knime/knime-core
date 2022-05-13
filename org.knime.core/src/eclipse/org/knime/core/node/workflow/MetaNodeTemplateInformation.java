@@ -58,6 +58,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
@@ -67,8 +68,8 @@ import org.knime.core.util.LoadVersion;
 import org.knime.shared.workflow.def.TemplateInfoDef;
 
 /**
- * Additional information that is associated with a metanode that are used
- * as templates. This includes their source URI and versioning information.
+ * Metadata for linked metanodes and linked components (also known as templates).
+ * This includes source URI and version information.
  *
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  */
@@ -324,6 +325,7 @@ public final class MetaNodeTemplateInformation implements Cloneable {
     }
 
     /**
+     * TODO move this out of the core and into org.knime.shared.workflow.storage
      * Saves this object to the argument settings, optionally including the information about example input data. The
      * later is only required if the respective node is a "shared" template, i.e. stored outside of a workflow. In that
      * case, the information is eventually stored into the {@link WorkflowPersistor#TEMPLATE_FILE} file.
@@ -420,22 +422,21 @@ public final class MetaNodeTemplateInformation implements Cloneable {
 
     /**
      * Creates a new instance of the template information from the template definition.
+     * Role NONE if  link and updatedAt are null.
+     * Role LINK if the uri is not null.
+     * Role TEMPLATE if the uri is null, and the updatedAt is not null.
      *
      * @param def a {@link TemplateInfoDef}.
      * @param type a {@link TemplateType}.
      * @return a {@link MetaNodeTemplateInformation}.
      */
     public static MetaNodeTemplateInformation createNewTemplate(final TemplateInfoDef def, final TemplateType type) {
-        return new MetaNodeTemplateInformation(getRole(def), type, URI.create(def.getUri()), def.getUpdatedAt(), null,
-            null);
-    }
-
-    private static Role getRole(final TemplateInfoDef def) {
-        if (def.getUri().isEmpty()) {
-            return def.getUpdatedAt() == null ? Role.None : Role.Template;
-        } else {
-            return Role.Link;
+        var uri = StringUtils.isEmpty(def.getUri()) ? null : URI.create(def.getUri());
+        var role = Role.Link;
+        if (uri == null) {
+            role = def.getUpdatedAt() == null ? Role.None : Role.Template;
         }
+        return new MetaNodeTemplateInformation(role, type, uri, def.getUpdatedAt(), null, null);
     }
 
     /**
@@ -453,8 +454,11 @@ public final class MetaNodeTemplateInformation implements Cloneable {
     }
 
 
-    /** Load information from argument, throw {@link InvalidSettingsException}
-     * if that fails.
+    /**
+     * TODO move this out of the core and into org.knime.shared.workflow.storage
+     *
+     * Load information from argument, throw {@link InvalidSettingsException} if that fails.
+     *
      * @param settings To load from.
      * @param version The version this workflow is loading from
      * @return a new template loading from the argument settings.
@@ -467,6 +471,8 @@ public final class MetaNodeTemplateInformation implements Cloneable {
     }
 
     /**
+     * TODO move this out of the core and into org.knime.shared.workflow.storage
+     *
      * Load information from argument, throws a {@link InvalidSettingsException} if that fails.
      *
      * @param settings To load from.

@@ -49,6 +49,7 @@
 package org.knime.core.node.workflow;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -76,24 +77,6 @@ public class MetanodeToDefAdapter extends NodeContainerToDefAdapter implements M
         m_wfm = wfm;
     }
 
-//    /**
-//     * {@inheritDoc}
-//     */
-//    @Override
-//    public ConfigMapDef getModelSettings() {
-//        // TODO do we need this?
-//        return null;
-//    }
-//
-//    /**
-//     * {@inheritDoc}
-//     */
-//    @Override
-//    public ConfigMapDef getInternalNodeSubSettings() {
-//        // TODO do we need this?
-//        return null;
-//    }
-
     /**
      * {@inheritDoc}
      */
@@ -117,7 +100,8 @@ public class MetanodeToDefAdapter extends NodeContainerToDefAdapter implements M
      */
     @Override
     public NodeUIInfoDef getInPortsBarUIInfo() {
-        return CoreToDefUtil.toNodeUIInfoDef(m_wfm.getInPortsBarUIInfo());
+        // getInPortsBarUIInfo is null if the inports bar of a metanode was never changed
+        return Optional.ofNullable(m_wfm.getInPortsBarUIInfo()).map(CoreToDefUtil::toNodeUIInfoDef).orElse(null);
     }
 
     /**
@@ -125,34 +109,9 @@ public class MetanodeToDefAdapter extends NodeContainerToDefAdapter implements M
      */
     @Override
     public NodeUIInfoDef getOutPortsBarUIInfo() {
-        return CoreToDefUtil.toNodeUIInfoDef(m_wfm.getOutPortsBarUIInfo());
+        // getOutPortsBarUIInfo is null if the inports bar of a metanode was never changed
+        return Optional.ofNullable(m_wfm.getOutPortsBarUIInfo()).map(CoreToDefUtil::toNodeUIInfoDef).orElse(null);
     }
-
-//    /**
-//     * {@inheritDoc}
-//     */
-//    @Override
-//    public ConfigMapDef getVariableSettings() {
-//        // TODO do we need this?
-//        return null;
-//    }
-//
-//    /**
-//     * {@inheritDoc}
-//     */
-//    @Override
-//    public List<FlowObjectDef> getFlowStack() {
-//        // TODO do we need this?
-//        return null;
-//    }
-
-//    /**
-//     * {@inheritDoc}
-//     */
-//    @Override
-//    public WorkflowDef getWorkflow() {
-//        return new DefWorkflowManagerWrapper(m_wfm);
-//    }
 
     /**
      * {@inheritDoc}
@@ -184,6 +143,6 @@ public class MetanodeToDefAdapter extends NodeContainerToDefAdapter implements M
     @Override
     public CipherDef getCipher() {
         return m_wfm.getWorkflowCipher().toDef();
-        }
+    }
 
 }

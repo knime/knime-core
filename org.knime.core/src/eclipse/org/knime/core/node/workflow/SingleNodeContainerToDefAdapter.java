@@ -92,12 +92,10 @@ public abstract class SingleNodeContainerToDefAdapter extends NodeContainerToDef
      */
     @Override
     public ConfigMapDef getInternalNodeSubSettings() {
-        NodeSettings internal = new NodeSettings(Node.CFG_MISC_SETTINGS);
-        SingleNodeContainerSettings s = m_nc.getSingleNodeContainerSettings();
-        NodeSettings memPol = new NodeSettings(SingleNodeContainer.CFG_MEMORY_POLICY);
-        internal.addNodeSettings(memPol);
+        var internalSettings = new NodeSettings(Node.CFG_MISC_SETTINGS);
+        m_nc.getSingleNodeContainerSettings().save(internalSettings);
         try {
-            return CoreToDefUtil.toConfigMapDef(internal);
+            return CoreToDefUtil.toConfigMapDef(internalSettings);
         } catch (InvalidSettingsException ex) {
             // TODO
             throw new RuntimeException(ex);

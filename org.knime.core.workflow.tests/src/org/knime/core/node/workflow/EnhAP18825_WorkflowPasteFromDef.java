@@ -41,9 +41,7 @@ public class EnhAP18825_WorkflowPasteFromDef extends WorkflowTestCase {
 				.setIncludeInOutConnections(false)//
 				.build();
 
-		var copied = m_wfm.copyToDef(spec);
-
-		var workflowDef = (WorkflowDef) copied.getContents();
+		var workflowDef = m_wfm.copyToDef(spec);
 
 		var pasted = m_wfm.paste(workflowDef);
 
@@ -59,8 +57,7 @@ public class EnhAP18825_WorkflowPasteFromDef extends WorkflowTestCase {
 				.setIncludeInOutConnections(true)//
 				.build();
 
-		final var copied = m_wfm.copyToDef(spec);
-		var workflowDef = (WorkflowDef) copied.getContents();
+		final var workflowDef = m_wfm.copyToDef(spec);
 
 		var pasted = m_wfm.paste(workflowDef);
 
@@ -77,8 +74,7 @@ public class EnhAP18825_WorkflowPasteFromDef extends WorkflowTestCase {
 				.setIncludeInOutConnections(false)//
 				.build();
 
-		var copied = m_wfm.copyToDef(spec);
-		var workflowDef = (WorkflowDef) copied.getContents();
+		var workflowDef = m_wfm.copyToDef(spec);
 
 		var pasted = m_wfm.paste(workflowDef);
 
@@ -94,8 +90,7 @@ public class EnhAP18825_WorkflowPasteFromDef extends WorkflowTestCase {
 				.setIncludeInOutConnections(false)//
 				.build();
 
-		var copied = m_wfm.copyToDef(spec);
-		var workflowDef = (WorkflowDef) copied.getContents();
+		var workflowDef = m_wfm.copyToDef(spec);
 
 		var pasted = m_wfm.paste(workflowDef);
 
@@ -111,8 +106,7 @@ public class EnhAP18825_WorkflowPasteFromDef extends WorkflowTestCase {
 				.setIncludeInOutConnections(false)//
 				.build();
 
-		var copied = m_wfm.copyToDef(spec);
-		var workflowDef = (WorkflowDef) copied.getContents();
+		var workflowDef = m_wfm.copyToDef(spec);
 
 		var pasted = m_wfm.paste(workflowDef);
 
@@ -129,8 +123,7 @@ public class EnhAP18825_WorkflowPasteFromDef extends WorkflowTestCase {
 				.setIncludeInOutConnections(false)//
 				.build();
 
-		var copied = m_wfm.copyToDef(spec);
-		var workflowDef = (WorkflowDef) copied.getContents();
+		var workflowDef = m_wfm.copyToDef(spec);
 
 		var pasted = m_wfm.paste(workflowDef);
 

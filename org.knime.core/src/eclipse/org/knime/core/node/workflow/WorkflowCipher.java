@@ -350,7 +350,7 @@ final class WorkflowCipher implements Cloneable {
 
     static WorkflowCipher toWorkflowCipher(final CipherDef def) {
         if (isNullCipherDef(def)) {
-            return null;
+            return NULL_CIPHER;
         }
         var passwordDigestHex = def.getPasswordDigest();
         var encryptionKeyHex = def.getEncryptionKey();

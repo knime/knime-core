@@ -246,6 +246,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
             m_nodeLocks = DefToCoreUtil.toNodeLocks(def.getLocks());
             m_customDescription = def.getCustomDescription();
             m_annotation = NodeAnnotation.copyFrom(def.getAnnotation());
+            m_uiInformation = DefToCoreUtil.toNodeUIInformation(def.getUiInfo());
         } else {
             m_nodeLocks = new NodeLocks(false, false, false);
             m_annotation = new NodeAnnotation(new NodeAnnotationData(true));
@@ -1639,7 +1640,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
             throws CanceledExecutionException;
 
     /**
-     * Restores content from the workflow definition, This represents the second step when loading a workflow.
+     * Loads the content of the workflow def by creating the NodeContainer instances.
      *
      * @param workflowDef a {@link WorkflowDef}
      * @param exec for progress
@@ -1649,6 +1650,17 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
      * @throws CanceledExecutionException
      */
     abstract WorkflowCopyContent loadContent(final WorkflowDef workflowDef, final ExecutionMonitor exec,
+        final LoadResult loadResult) throws CanceledExecutionException;
+
+    /**
+     * Loads the content of the BaseNodeDef by loading the configuration from the def.
+     *
+     * @param nodeDef a {@link BaseNodeDef}
+     * @param exec for progress
+     * @param loadResult Where to report errors/warnings to
+     * @throws CanceledExecutionException
+     */
+    abstract void loadContent(final BaseNodeDef nodeDef, final ExecutionMonitor exec,
         final LoadResult loadResult) throws CanceledExecutionException;
 
     /** Load information from execution result. Subclasses will override this

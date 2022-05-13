@@ -77,6 +77,7 @@ import org.knime.core.node.config.base.ConfigShortEntry;
 import org.knime.core.node.config.base.ConfigStringEntry;
 import org.knime.core.node.workflow.Annotation;
 import org.knime.core.node.workflow.ComponentMetadata;
+import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.Credentials;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation;
@@ -100,7 +101,6 @@ import org.knime.shared.workflow.def.ConnectionUISettingsDef;
 import org.knime.shared.workflow.def.CoordinateDef;
 import org.knime.shared.workflow.def.CredentialPlaceholderDef;
 import org.knime.shared.workflow.def.JobManagerDef;
-import org.knime.shared.workflow.def.NativeNodeDef;
 import org.knime.shared.workflow.def.NodeAnnotationDef;
 import org.knime.shared.workflow.def.NodeLocksDef;
 import org.knime.shared.workflow.def.NodeUIInfoDef;
@@ -172,7 +172,51 @@ public class CoreToDefUtil {
         return (ConfigMapDef)toConfigDef(config, settings.getKey());
     }
 
+    /**
+     *  Converts the ConnectionContainer to def.
+     *
+     * @param connection a {@link ConnectionContainer}.
+     * @return a {@link ConnectionDef}.L
+     */
+    public static ConnectionDef connectionContainerToConnectionDef(final ConnectionContainer connection) {
+        final var uiInfo = Optional.ofNullable(connection.getUIInfo())//
+            .map(CoreToDefUtil::toConnectionUISettingsDef)//
+            .orElse(null);
+
+        int sourceID = connection.getSource().getIndex();
+        int destID = connection.getDest().getIndex();
+        switch (connection.getType()) {
+            case WFMIN:
+                sourceID = -1;
+                break;
+            case WFMOUT:
+                destID = -1;
+                break;
+            case WFMTHROUGH:
+                sourceID = -1;
+                destID = -1;
+                break;
+            default:
+                // all handled above
+        }
+
+        return new ConnectionDefBuilder()//
+            .setSourcePort(connection.getSourcePort())//
+            .setSourceID(sourceID)//
+            .setDestPort(connection.getDestPort())//
+            .setDestID(destID)//
+            .setUiSettings(uiInfo)//
+            .setDeletable(connection.isDeletable())//
+            .build();
+    }
+
+    /**
+     *
+     * @param cct
+     * @return
+     */
     public static ConnectionDef toConnectionDef(final ConnectionContainerTemplate cct) {
+
         return new ConnectionDefBuilder()//
                 .setDeletable(cct.isDeletable())//
                 .setDestID(cct.getDestSuffix())//
@@ -398,11 +442,6 @@ public class CoreToDefUtil {
         return Optional.empty();
     }
 
-    public static NativeNodeDef toNativeNodeDef(final NodeAndBundleInformationPersistor def) {
-        //TODO
-        return null;
-    }
-
     public static NodeUIInfoDef toNodeUIInfoDef(final NodeUIInformation uiInfoDef) {
 
         if (uiInfoDef == null) {
@@ -465,29 +504,20 @@ public class CoreToDefUtil {
 
     }
 
-//    public static TemplateDef toTemplateDef(final MetaNodeTemplateInformation i) {
-//        // TODO flow variables and example data info
-//        return new TemplateDefBuilder()//
-//            .setTimestamp(i.getTimestamp() != null
-//                ? OffsetDateTime.ofInstant(i.getTimestamp().toInstant(), ZoneId.systemDefault()) : null)//
-//            // TODO
-//            .setExampleInputDataInfo(null)//
-//            // TODO
-//            .setIncomingFlowVars(null)//
-//            .build();
-//    }
-
     /**
-     *  TODO
+     *  Converts the template info to def.
      *
-     * @param info
-     * @return
+     * @param info a {@link MetaNodeTemplateInformation}
+     * @return a {@link TemplateInfoDef}.
      */
     public static TemplateInfoDef toTemplateInfoDef(final MetaNodeTemplateInformation info) {
-        return new TemplateInfoDefBuilder() //
-            .setUpdatedAt(info.getTimestamp()) //
-            .setUri(info.getSourceURI().toString()) //
-            .build();
+        if (info.getSourceURI() != null) {
+            return new TemplateInfoDefBuilder() //
+                .setUpdatedAt(info.getTimestamp()) //
+                .setUri(info.getSourceURI().toString()) //
+                .build();
+        }
+        return new TemplateInfoDefBuilder().setUpdatedAt(info.getTimestamp()).build();
     }
 
     /**
