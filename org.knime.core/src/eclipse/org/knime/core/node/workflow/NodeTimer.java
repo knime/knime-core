@@ -176,6 +176,8 @@ public final class NodeTimer {
         private int m_remoteWorkflowsOpened = 0;
         //Reported since version 4.5
         private int m_columnarStorageWorkflowsOpened = 0;
+        // Reported since 4.6 -- number of times the user switched to the Web-UI perspective.
+        private int m_webUIPerspectiveSwitches = 0;
 
         private int m_workflowsImported = 0;
         private int m_workflowsExported = 0;
@@ -319,6 +321,17 @@ public final class NodeTimer {
             m_workflowsExported++;
         }
 
+        /**
+         * Called by KNIME AP when the user switches to the Web-UI perspective
+         * @since 4.6
+         */
+        public void incWebUIPerspectiveSwitch() {
+            if (DISABLE_GLOBAL_TIMER) {
+                return;
+            }
+            m_webUIPerspectiveSwitches++;
+        }
+
         private void processStatChanges() {
             if (System.currentTimeMillis() > m_timeOfLastSave + SAVEINTERVAL) {
                 asyncWriteToFile(false);
@@ -455,6 +468,7 @@ public final class NodeTimer {
             job.add("columnarStorageWorkflowsOpened", m_columnarStorageWorkflowsOpened);
             job.add("workflowsImported", m_workflowsImported);
             job.add("workflowsExported", m_workflowsExported);
+            job.add("webUIPerspectiveSwitches", m_webUIPerspectiveSwitches);
             job.add("launches", getNrLaunches());
             job.add("lastApplicationID", getApplicationID()); // batch, standard KNIME AP, ...
             job.add("timeSinceLastStart", getCurrentInstanceUpTime());
@@ -725,6 +739,8 @@ public final class NodeTimer {
                         case "workflowsExported":
                             m_workflowsExported = jo.getInt(key);
                             break;
+                        case "webUIPerspectiveSwitches":
+                            m_webUIPerspectiveSwitches = jo.getInt(key);
                         case "uptime":
                             m_avgUpTime = jo.getJsonNumber(key).longValue();
                             break;
