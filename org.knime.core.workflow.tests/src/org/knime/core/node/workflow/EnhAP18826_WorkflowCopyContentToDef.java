@@ -64,6 +64,7 @@ import org.knime.shared.workflow.def.WorkflowDef;
 import org.knime.shared.workflow.def.impl.ConnectionDefBuilder;
 import org.knime.shared.workflow.def.impl.ConnectionUISettingsDefBuilder;
 import org.knime.shared.workflow.def.impl.DefaultConnectionDef;
+import org.knime.shared.workflow.storage.util.PasswordRedactor;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
@@ -108,7 +109,7 @@ public class EnhAP18826_WorkflowCopyContentToDef extends WorkflowTestCase { //NO
 			.setIncludeInOutConnections(false)//
 			.build();
 		
-		var workflow = m_wfm.copyToDef(spec);
+		var workflow = m_wfm.copyToDef(spec, PasswordRedactor.asNull()).getPayload();
 		
 		assertThat("Copy content must be a workflow", workflow instanceof WorkflowDef);
 		
@@ -135,7 +136,7 @@ public class EnhAP18826_WorkflowCopyContentToDef extends WorkflowTestCase { //NO
 			.setIncludeInOutConnections(true)//
 			.build();
 		
-		var workflow = m_wfm.copyToDef(spec);
+		var workflow = m_wfm.copyToDef(spec, PasswordRedactor.asNull()).getPayload();
 
 		// and four connections
 		assertThat(workflow.getConnections().size(), is(4));
@@ -155,7 +156,7 @@ public class EnhAP18826_WorkflowCopyContentToDef extends WorkflowTestCase { //NO
 			.setIncludeInOutConnections(false)//
 			.build();
 		
-		final var workflow = m_wfm.copyToDef(spec);
+		final var workflow = m_wfm.copyToDef(spec, PasswordRedactor.asNull()).getPayload();
 
 		// both nodes
 		assertThat(workflow.getNodes().size(), is(2)); 
@@ -181,8 +182,8 @@ public class EnhAP18826_WorkflowCopyContentToDef extends WorkflowTestCase { //NO
 				.setIncludeInOutConnections(true)//
 				.build();
 		
-		WorkflowDef joinerWithDangling = m_wfm.copyToDef(joinerWithDanglingSpec);
-		WorkflowDef twoWithDangling = m_wfm.copyToDef(twoWithDanglingSpec);
+		var joinerWithDangling = m_wfm.copyToDef(joinerWithDanglingSpec, PasswordRedactor.asNull()).getPayload();
+		var twoWithDangling = m_wfm.copyToDef(twoWithDanglingSpec, PasswordRedactor.asNull()).getPayload();
 
 		final List<ConnectionDef> connections1 = joinerWithDangling.getConnections();
 		final List<ConnectionDef> connections2 = twoWithDangling.getConnections();
@@ -195,7 +196,7 @@ public class EnhAP18826_WorkflowCopyContentToDef extends WorkflowTestCase { //NO
 			.setAnnotationIDs(m_sourceAnnotationID)
 			.build();
 		
-		final var workflow = m_wfm.copyToDef(spec);
+		WorkflowDef workflow = m_wfm.copyToDef(spec, PasswordRedactor.asNull()).getPayload();
 		
 		assertEquals("Source", workflow.getAnnotations().values().stream().findAny().get().getText());
 	}

@@ -50,11 +50,12 @@ package org.knime.core.node.workflow;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
-import org.knime.core.node.workflow.def.CoreToDefUtil;
 import org.knime.shared.workflow.def.ConfigMapDef;
 import org.knime.shared.workflow.def.FilestoreDef;
 import org.knime.shared.workflow.def.NativeNodeDef;
 import org.knime.shared.workflow.def.VendorDef;
+import org.knime.shared.workflow.storage.multidir.util.LoaderUtils;
+import org.knime.shared.workflow.storage.util.PasswordRedactor;
 
 /**
  * Provides a {@link NativeNodeDef} view on a native node (a node with a factory) in a workflow.
@@ -68,9 +69,10 @@ public class NativeNodeContainerToDefAdapter extends SingleNodeContainerToDefAda
 
     /**
      * @param nc
+     * @param passwordHandler
      */
-    public NativeNodeContainerToDefAdapter(final NativeNodeContainer nc) {
-        super(nc);
+    public NativeNodeContainerToDefAdapter(final NativeNodeContainer nc, final PasswordRedactor passwordHandler) {
+        super(nc, passwordHandler);
         m_nc = nc;
     }
 
@@ -82,7 +84,7 @@ public class NativeNodeContainerToDefAdapter extends SingleNodeContainerToDefAda
         NodeSettings s = new NodeSettings("factory_settings");
         m_nc.getNode().getFactory().saveAdditionalFactorySettings(s);
         try {
-            return CoreToDefUtil.toConfigMapDef(s);
+            return LoaderUtils.toConfigMapDef(s, PasswordRedactor.asNull());
         } catch (InvalidSettingsException ex) {
             // TODO
             throw new RuntimeException(ex);
@@ -108,7 +110,7 @@ public class NativeNodeContainerToDefAdapter extends SingleNodeContainerToDefAda
             return s;
         }).orElse(null);
         try {
-            return CoreToDefUtil.toConfigMapDef(creationConfig);
+            return LoaderUtils.toConfigMapDef(creationConfig, PasswordRedactor.asNull());
         } catch (InvalidSettingsException ex) {
             // TODO
             throw new RuntimeException(ex);

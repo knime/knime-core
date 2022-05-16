@@ -53,13 +53,13 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import org.knime.core.node.workflow.def.CoreToDefUtil;
 import org.knime.shared.workflow.def.CipherDef;
 import org.knime.shared.workflow.def.MetaNodeDef;
 import org.knime.shared.workflow.def.NodeUIInfoDef;
 import org.knime.shared.workflow.def.PortDef;
 import org.knime.shared.workflow.def.TemplateInfoDef;
 import org.knime.shared.workflow.def.WorkflowDef;
+import org.knime.shared.workflow.storage.util.PasswordRedactor;
 
 /**
  *
@@ -71,9 +71,10 @@ public class MetanodeToDefAdapter extends NodeContainerToDefAdapter implements M
 
     /**
      * @param wfm
+     * @param passwordHandler TODO
      */
-    public MetanodeToDefAdapter(final WorkflowManager wfm) {
-        super(wfm);
+    public MetanodeToDefAdapter(final WorkflowManager wfm, final PasswordRedactor passwordHandler) {
+        super(wfm, passwordHandler);
         m_wfm = wfm;
     }
 
@@ -126,7 +127,7 @@ public class MetanodeToDefAdapter extends NodeContainerToDefAdapter implements M
      */
     @Override
     public WorkflowDef getWorkflow() {
-        return new WorkflowManagerToDefAdapter(m_wfm);
+        return new WorkflowManagerToDefAdapter(m_wfm, m_passwordHandler);
     }
 
     /**

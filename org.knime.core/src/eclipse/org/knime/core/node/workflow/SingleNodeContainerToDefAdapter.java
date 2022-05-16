@@ -52,9 +52,10 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
-import org.knime.core.node.workflow.def.CoreToDefUtil;
 import org.knime.shared.workflow.def.ConfigMapDef;
 import org.knime.shared.workflow.def.ConfigurableNodeDef;
+import org.knime.shared.workflow.storage.multidir.util.LoaderUtils;
+import org.knime.shared.workflow.storage.util.PasswordRedactor;
 
 /**
  *
@@ -67,9 +68,10 @@ public abstract class SingleNodeContainerToDefAdapter extends NodeContainerToDef
 
     /**
      * @param nc
+     * @param passwordHandler
      */
-    protected SingleNodeContainerToDefAdapter(final SingleNodeContainer nc) {
-        super(nc);
+    protected SingleNodeContainerToDefAdapter(final SingleNodeContainer nc, final PasswordRedactor passwordHandler) {
+        super(nc, passwordHandler);
         m_nc = nc;
     }
 
@@ -80,7 +82,7 @@ public abstract class SingleNodeContainerToDefAdapter extends NodeContainerToDef
     public ConfigMapDef getModelSettings() {
         SingleNodeContainerSettings s = m_nc.getSingleNodeContainerSettings();
         try {
-            return CoreToDefUtil.toConfigMapDef(s.getModelSettings());
+            return LoaderUtils.toConfigMapDef(s.getModelSettings(), m_passwordHandler);
         } catch (InvalidSettingsException ex) {
             // TODO
             throw new RuntimeException(ex);
@@ -95,7 +97,7 @@ public abstract class SingleNodeContainerToDefAdapter extends NodeContainerToDef
         var internalSettings = new NodeSettings(Node.CFG_MISC_SETTINGS);
         m_nc.getSingleNodeContainerSettings().save(internalSettings);
         try {
-            return CoreToDefUtil.toConfigMapDef(internalSettings);
+            return LoaderUtils.toConfigMapDef(internalSettings, m_passwordHandler);
         } catch (InvalidSettingsException ex) {
             // TODO
             throw new RuntimeException(ex);
@@ -109,7 +111,7 @@ public abstract class SingleNodeContainerToDefAdapter extends NodeContainerToDef
     public ConfigMapDef getVariableSettings() {
         SingleNodeContainerSettings s = m_nc.getSingleNodeContainerSettings();
         try {
-            return CoreToDefUtil.toConfigMapDef(s.getVariablesSettings());
+            return LoaderUtils.toConfigMapDef(s.getVariablesSettings(), PasswordRedactor.asNull());
         } catch (InvalidSettingsException ex) {
             // TODO
             throw new RuntimeException(ex);

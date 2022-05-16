@@ -52,7 +52,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import org.knime.core.node.workflow.def.CoreToDefUtil;
 import org.knime.shared.workflow.def.CipherDef;
 import org.knime.shared.workflow.def.ComponentDialogSettingsDef;
 import org.knime.shared.workflow.def.ComponentMetadataDef;
@@ -63,6 +62,7 @@ import org.knime.shared.workflow.def.WorkflowDef;
 import org.knime.shared.workflow.def.impl.ComponentDialogSettingsDefBuilder;
 import org.knime.shared.workflow.def.impl.PortDefBuilder;
 import org.knime.shared.workflow.def.impl.PortTypeDefBuilder;
+import org.knime.shared.workflow.storage.util.PasswordRedactor;
 
 /**
  * Provides a {@link ComponentNodeDef} view on a component node in a workflow.
@@ -76,9 +76,10 @@ public class SubnodeContainerToDefAdapter extends SingleNodeContainerToDefAdapte
 
     /**
      * @param nc
+     * @param passwordHandler
      */
-    public SubnodeContainerToDefAdapter(final SubNodeContainer nc) {
-        super(nc);
+    public SubnodeContainerToDefAdapter(final SubNodeContainer nc, final PasswordRedactor passwordHandler) {
+        super(nc, passwordHandler);
         m_nc = nc;
     }
 
@@ -87,7 +88,7 @@ public class SubnodeContainerToDefAdapter extends SingleNodeContainerToDefAdapte
      */
     @Override
     public WorkflowDef getWorkflow() {
-        return new WorkflowManagerToDefAdapter(m_nc.getWorkflowManager());
+        return new WorkflowManagerToDefAdapter(m_nc.getWorkflowManager(), m_passwordHandler);
     }
 
     /**

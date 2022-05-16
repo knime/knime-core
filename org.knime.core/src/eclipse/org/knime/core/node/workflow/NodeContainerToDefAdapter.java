@@ -48,12 +48,12 @@
  */
 package org.knime.core.node.workflow;
 
-import org.knime.core.node.workflow.def.CoreToDefUtil;
 import org.knime.shared.workflow.def.BaseNodeDef;
 import org.knime.shared.workflow.def.JobManagerDef;
 import org.knime.shared.workflow.def.NodeAnnotationDef;
 import org.knime.shared.workflow.def.NodeLocksDef;
 import org.knime.shared.workflow.def.NodeUIInfoDef;
+import org.knime.shared.workflow.storage.util.PasswordRedactor;
 
 /**
  *
@@ -64,8 +64,15 @@ public abstract class NodeContainerToDefAdapter implements BaseNodeDef {
 
     private NodeContainer m_nc;
 
-    protected NodeContainerToDefAdapter(final NodeContainer nc) {
+    protected final PasswordRedactor m_passwordHandler;
+
+    /**
+     * @param nc
+     * @param passwordHandler
+     */
+    protected NodeContainerToDefAdapter(final NodeContainer nc, final PasswordRedactor passwordHandler) {
         m_nc = nc;
+        m_passwordHandler = passwordHandler;
     }
 
     /**
@@ -105,7 +112,7 @@ public abstract class NodeContainerToDefAdapter implements BaseNodeDef {
      */
     @Override
     public JobManagerDef getJobManager() {
-        return CoreToDefUtil.toJobManager(m_nc.getJobManager());
+        return CoreToDefUtil.toJobManager(m_nc.getJobManager(), m_passwordHandler);
     }
 
     /**

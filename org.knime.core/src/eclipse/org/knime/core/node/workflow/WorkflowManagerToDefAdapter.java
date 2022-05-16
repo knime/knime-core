@@ -57,7 +57,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.knime.core.node.KNIMEConstants;
-import org.knime.core.node.workflow.def.CoreToDefUtil;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.workflowalizer.AuthorInformation;
 import org.knime.shared.workflow.def.AnnotationDataDef;
@@ -74,6 +73,7 @@ import org.knime.shared.workflow.def.impl.CreatorDefBuilder;
 import org.knime.shared.workflow.def.impl.StandaloneDefBuilder;
 import org.knime.shared.workflow.def.impl.StyleRangeDefBuilder;
 import org.knime.shared.workflow.def.impl.WorkflowUISettingsDefBuilder;
+import org.knime.shared.workflow.storage.util.PasswordRedactor;
 
 /**
  *
@@ -84,12 +84,14 @@ import org.knime.shared.workflow.def.impl.WorkflowUISettingsDefBuilder;
 public class WorkflowManagerToDefAdapter implements WorkflowDef {
 
     protected final WorkflowManager m_wfm;
+    private PasswordRedactor m_passwordHandler;
 
     /**
      * @param wfm the workflow manager to use as a base
      */
-    public WorkflowManagerToDefAdapter(final WorkflowManager wfm) {
+    public WorkflowManagerToDefAdapter(final WorkflowManager wfm, final PasswordRedactor passwordHandler) {
         this.m_wfm = wfm;
+        m_passwordHandler = passwordHandler;
     }
 
     /**
@@ -128,16 +130,16 @@ public class WorkflowManagerToDefAdapter implements WorkflowDef {
         return m_wfm.getNodeContainers().stream()//
             .collect(Collectors.toMap(//
                 nc -> Integer.toString(nc.getID().getIndex()), //
-                WorkflowManagerToDefAdapter::getNodeDef));
+                this::getNodeDef));
     }
 
-    private static BaseNodeDef getNodeDef(final NodeContainer nc) {
+    private BaseNodeDef getNodeDef(final NodeContainer nc) {
         if (nc instanceof WorkflowManager) {
-            return new MetanodeToDefAdapter((WorkflowManager)nc);
+            return new MetanodeToDefAdapter((WorkflowManager)nc, m_passwordHandler);
         } else if (nc instanceof NativeNodeContainer) {
-            return new NativeNodeContainerToDefAdapter((NativeNodeContainer)nc);
+            return new NativeNodeContainerToDefAdapter((NativeNodeContainer)nc, m_passwordHandler);
         } else if (nc instanceof SubNodeContainer) {
-            return new SubnodeContainerToDefAdapter((SubNodeContainer)nc);
+            return new SubnodeContainerToDefAdapter((SubNodeContainer)nc, m_passwordHandler);
         } else {
             throw new IllegalStateException();
         }

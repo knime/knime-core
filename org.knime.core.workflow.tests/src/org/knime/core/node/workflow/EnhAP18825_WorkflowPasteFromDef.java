@@ -6,6 +6,7 @@ import static org.hamcrest.Matchers.is;
 import org.junit.Before;
 import org.junit.Test;
 import org.knime.shared.workflow.def.WorkflowDef;
+import org.knime.shared.workflow.storage.util.PasswordRedactor;
 
 /**
  * 
@@ -41,7 +42,7 @@ public class EnhAP18825_WorkflowPasteFromDef extends WorkflowTestCase {
 				.setIncludeInOutConnections(false)//
 				.build();
 
-		var workflowDef = m_wfm.copyToDef(spec);
+		var workflowDef = m_wfm.copyToDef(spec, PasswordRedactor.asNull());
 
 		var pasted = m_wfm.paste(workflowDef);
 
@@ -57,7 +58,7 @@ public class EnhAP18825_WorkflowPasteFromDef extends WorkflowTestCase {
 				.setIncludeInOutConnections(true)//
 				.build();
 
-		final var workflowDef = m_wfm.copyToDef(spec);
+		final var workflowDef = m_wfm.copyToDef(spec, PasswordRedactor.asNull());
 
 		var pasted = m_wfm.paste(workflowDef);
 
@@ -74,7 +75,7 @@ public class EnhAP18825_WorkflowPasteFromDef extends WorkflowTestCase {
 				.setIncludeInOutConnections(false)//
 				.build();
 
-		var workflowDef = m_wfm.copyToDef(spec);
+		var workflowDef = m_wfm.copyToDef(spec, PasswordRedactor.asNull());
 
 		var pasted = m_wfm.paste(workflowDef);
 
@@ -90,7 +91,7 @@ public class EnhAP18825_WorkflowPasteFromDef extends WorkflowTestCase {
 				.setIncludeInOutConnections(false)//
 				.build();
 
-		var workflowDef = m_wfm.copyToDef(spec);
+		var workflowDef = m_wfm.copyToDef(spec, PasswordRedactor.asNull());
 
 		var pasted = m_wfm.paste(workflowDef);
 
@@ -106,7 +107,7 @@ public class EnhAP18825_WorkflowPasteFromDef extends WorkflowTestCase {
 				.setIncludeInOutConnections(false)//
 				.build();
 
-		var workflowDef = m_wfm.copyToDef(spec);
+		var workflowDef = m_wfm.copyToDef(spec, PasswordRedactor.asNull());
 
 		var pasted = m_wfm.paste(workflowDef);
 
@@ -123,7 +124,7 @@ public class EnhAP18825_WorkflowPasteFromDef extends WorkflowTestCase {
 				.setIncludeInOutConnections(false)//
 				.build();
 
-		var workflowDef = m_wfm.copyToDef(spec);
+		var workflowDef = m_wfm.copyToDef(spec, PasswordRedactor.asNull());
 
 		var pasted = m_wfm.paste(workflowDef);
 

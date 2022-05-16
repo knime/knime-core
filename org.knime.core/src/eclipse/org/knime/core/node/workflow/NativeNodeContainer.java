@@ -144,7 +144,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
     private LoopStatusChangeHandler m_loopStatusChangeHandler;
 
     /** Used to exclude virtual nodes from copy operations. */
-    static final Predicate<NodeContainer> IS_VIRTUAL_IN_OUT_NODE = nc -> {
+    public static final Predicate<NodeContainer> IS_VIRTUAL_IN_OUT_NODE = nc -> {
         if (nc instanceof NativeNodeContainer) {
             var nnc = (NativeNodeContainer)nc;
             return nnc.isModelCompatibleTo(VirtualSubNodeInputNodeModel.class)

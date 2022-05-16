@@ -90,6 +90,7 @@ import org.knime.core.ui.node.workflow.WorkflowManagerUI;
 import org.knime.core.ui.node.workflow.WorkflowOutPortUI;
 import org.knime.core.util.CoreConstants;
 import org.knime.core.util.Pair;
+import org.knime.shared.workflow.storage.clipboard.DefClipboardContent;
 
 /**
  * Implements the {@link WorkflowManagerUI} interface by simply wrapping the {@link WorkflowManager} implementation.
@@ -457,7 +458,8 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
         if (workflowCopy instanceof WorkflowPersistorWrapper) {
             return unwrap().paste(((WorkflowPersistorWrapper)workflowCopy).unwrap());
         } else if (workflowCopy instanceof WorkflowDefWrapper) {
-            return unwrap().paste(((WorkflowDefWrapper)workflowCopy).unwrap());
+            // TODO restore payload identifier
+            return unwrap().paste(new DefClipboardContent(((WorkflowDefWrapper)workflowCopy).unwrap()));
         } else {
             throw new IllegalArgumentException(
                 "Only workflow copies of type '" + WorkflowPersistorWrapper.class.getSimpleName() + "' allowed.");

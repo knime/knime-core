@@ -190,7 +190,6 @@ import org.knime.core.node.workflow.action.MetaNodeToSubNodeResult;
 import org.knime.core.node.workflow.action.ReplaceNodeResult;
 import org.knime.core.node.workflow.action.SubNodeToMetaNodeResult;
 import org.knime.core.node.workflow.capture.WorkflowSegment;
-import org.knime.core.node.workflow.def.CoreToDefUtil;
 import org.knime.core.node.workflow.def.DefToCoreUtil;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
@@ -221,10 +220,8 @@ import org.knime.shared.workflow.def.MetaNodeDef;
 import org.knime.shared.workflow.def.NativeNodeDef;
 import org.knime.shared.workflow.def.RootWorkflowDef;
 import org.knime.shared.workflow.def.WorkflowDef;
-import org.knime.shared.workflow.def.impl.ComponentNodeDefBuilder;
-import org.knime.shared.workflow.def.impl.MetaNodeDefBuilder;
-import org.knime.shared.workflow.def.impl.NativeNodeDefBuilder;
-import org.knime.shared.workflow.def.impl.WorkflowDefBuilder;
+import org.knime.shared.workflow.storage.clipboard.DefClipboardContent;
+import org.knime.shared.workflow.storage.util.PasswordRedactor;
 
 /**
  * Container holding nodes and connections of a (sub) workflow. In contrast to previous implementations, this class will
@@ -8088,79 +8085,20 @@ public final class WorkflowManager extends NodeContainer
      *
      * @param content specifies what should be copied (node ids, annotations) and additional information such as whether
      *            to include connections between included nodes and non-included nodes
+     * @param passwordHandler TODO DefClipboardContent
      * @return the copied content in intermediate workflow format
      */
-    public WorkflowDef copyToDef(final WorkflowCopyContent content) {
-        HashSet<NodeID> nodeIDs = new HashSet<>(Arrays.asList(content.getNodeIDs()));
-        CheckUtils.checkArgument(nodeIDs.size() == content.getNodeIDs().length, "Copy spec contains duplicate nodes.");
-
-        // copy contents (nodes, connections, annotations) are stored in a workflow def
-        final var workflowBuilder = new WorkflowDefBuilder();
+    public DefClipboardContent copyToDef(final WorkflowCopyContent content, final PasswordRedactor passwordHandler) {
 
         try (WorkflowLock lock = lock()) {
-
-            // 1. Nodes ------------------------
-
-            // for each node: create a def, possibly updating the id and location in the workflow (move a little bit before paste)
-            for (NodeID nodeID : nodeIDs) {
-                var nc = getNodeContainer(nodeID);
-
-                // if a suggested node ID is present, use it. Otherwise use the node container's id
-                int defNodeId =
-                    Optional.ofNullable(content.getSuggestedNodIDSuffix(nodeID)).orElse(nc.getID().getIndex());
-
-                // if suggested ui information is present, apply the offset from the copy content
-                // this is only present when copying a Component or Metanode, which will call
-                // setNodeID(NodeID, int suggestedNodeIDSuffix, NodeUIInformation) on WorkflowCopyContent
-                var suggestedUiInfo = Optional.ofNullable(content.getOverwrittenUIInfo(nodeID));
-                var defUiInfo = content.getPositionOffset().flatMap(
-                        offset -> suggestedUiInfo.map(si -> NodeUIInformation.builder(si).translate(offset).build()))//
-                    .map(CoreToDefUtil::toNodeUIInfoDef);
-                var defaultUiInfo = CoreToDefUtil.toNodeUIInfoDef(nc.getUIInformation());
-                BaseNodeDef node = null;
-                // Virtual in/out nodes are excluded from the copy result if they are selected directly, otherwise
-                // pasting would allow users to create virtual nodes. They are included when copied as part of an entire
-                // component node (via SubnodeContainerToDefAdapter -> WorkflowManagerToDefAdapter#getNodes).
-                if (nc instanceof NativeNodeContainer && NativeNodeContainer.IS_VIRTUAL_IN_OUT_NODE.negate().test(nc)) {
-                    var originalNativeNodeDef = new NativeNodeContainerToDefAdapter((NativeNodeContainer)nc);
-                    node = new NativeNodeDefBuilder(originalNativeNodeDef)//
-                        .setId(defNodeId).setUiInfo(defUiInfo.orElse(defaultUiInfo)).build();
-                } else if (nc instanceof SubNodeContainer) {
-                    var originalComponentDef = new SubnodeContainerToDefAdapter((SubNodeContainer)nc);
-                    node = new ComponentNodeDefBuilder(originalComponentDef)//
-                        .setId(defNodeId).setUiInfo(defUiInfo.orElse(defaultUiInfo)).build();
-                } else if(nc instanceof WorkflowManager) {
-                    var originalMetanodeDef = new MetanodeToDefAdapter((WorkflowManager)nc);
-                    node = new MetaNodeDefBuilder(originalMetanodeDef)//
-                        .setId(defNodeId).setUiInfo(defUiInfo.orElse(defaultUiInfo)).build();
-                }
-
-                workflowBuilder.putToNodes(String.valueOf(defNodeId), node);
-            }
-
-            // 2. Connections ------------------------
-
-            // connections between selected nodes (and optionally also between included and non-included nodes)
-            Set<ConnectionContainer> inducedConnections =
-                m_workflow.getInducedConnections(nodeIDs, content.isIncludeInOutConnections());
-            // apply copy content translation offset to connections, convert to def, and add to workflow
-            inducedConnections.stream()//
-                .map(cc -> {
-                    var t = new ConnectionContainerTemplate(cc, false);
-                    t.fixPostionOffsetIfPresent(content.getPositionOffset());
-                    return t;
-                })//
-                .map(CoreToDefUtil::toConnectionDef)//
-                .forEach(workflowBuilder::addToConnections);
-
-            // 3. Annotations ------------------------
-            Arrays.stream(getWorkflowAnnotations(content.getAnnotationIDs()))//
-                .forEach(anno -> workflowBuilder.putToAnnotations(//
-                    String.valueOf(anno.getID().getIndex()), // key
-                    CoreToDefUtil.toAnnotationDataDef(anno))); // value
-            return workflowBuilder.build();
+            var safeCopy = CoreToDefUtil.copyToDef(this, content, passwordHandler);
+            var fullCopy = CoreToDefUtil.copyToDef(this, content, PasswordRedactor.unsafe());
+            return new DefClipboardContent(safeCopy);
         }
+
     }
+
+
 
     /**
      * Copy the nodes with the given ids.
@@ -8268,10 +8206,12 @@ public final class WorkflowManager extends NodeContainer
      * @param def The workflow definition.
      * @return The new node ids of the inserted nodes and the annotations in a dedicated object.
      */
-    public WorkflowCopyContent paste(final WorkflowDef def) {
+    public WorkflowCopyContent paste(final DefClipboardContent def) {
         try (WorkflowLock lock = lock()) {
             try {
-                return loadWorkflowContent(def, new ExecutionMonitor(), new LoadResult("Paste into Workflow"));
+            	// TODO compare payload identifier with internal clipboard
+                return loadWorkflowContent(def.getPayload(),
+                		new ExecutionMonitor(), new LoadResult("Paste into Workflow"));
             } catch (CanceledExecutionException e) {
                 throw new IllegalStateException("Cancelation although no access" + " on execution monitor", e);
             }
