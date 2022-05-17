@@ -139,7 +139,7 @@ public class NodeViewEntUtilTest {
     }
 
     private static boolean verifySelectionEvent(final SelectionEvent se, final String rowKey) {
-        return se.getKeys().equals(List.of(rowKey)) && se.getMode() == SelectionEventMode.ADD;
+        return se.getSelection().equals(List.of(rowKey)) && se.getMode() == SelectionEventMode.ADD;
     }
 
     private static boolean verifyNodeViewStateEvent(final NodeViewStateEvent e, final String state,

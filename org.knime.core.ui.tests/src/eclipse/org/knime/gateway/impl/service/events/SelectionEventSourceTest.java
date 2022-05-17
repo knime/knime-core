@@ -56,6 +56,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -63,11 +64,14 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.awaitility.Awaitility;
@@ -76,6 +80,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.knime.core.data.RowKey;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteListener;
@@ -83,8 +89,15 @@ import org.knime.core.node.property.hilite.KeyEvent;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeInputNodeFactory;
-import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeOutputNodeFactory;
+import org.knime.core.webui.data.ApplyDataService;
+import org.knime.core.webui.data.DataService;
+import org.knime.core.webui.data.InitialDataService;
+import org.knime.core.webui.node.view.NodeView;
+import org.knime.core.webui.node.view.selection.SelectionTranslationService;
+import org.knime.core.webui.page.Page;
 import org.knime.gateway.impl.service.events.SelectionEventSource.SelectionEventMode;
+import org.knime.testing.node.view.NodeViewNodeFactory;
+import org.knime.testing.node.view.NodeViewNodeModel;
 import org.knime.testing.util.WorkflowManagerUtil;
 
 /**
@@ -113,7 +126,7 @@ public class SelectionEventSourceTest {
     @Before
     public void setup() throws IOException {
         m_wfm = WorkflowManagerUtil.createEmptyWorkflow();
-        m_nnc = WorkflowManagerUtil.createAndAddNode(m_wfm, new VirtualSubNodeInputNodeFactory(null, new PortType[0]));
+        m_nnc = WorkflowManagerUtil.createAndAddNode(m_wfm, new NodeViewNodeFactory());
         m_hlh = m_nnc.getNodeModel().getInHiLiteHandler(0);
     }
 
@@ -154,7 +167,7 @@ public class SelectionEventSourceTest {
 
         await().pollDelay(ONE_HUNDRED_MILLISECONDS).timeout(FIVE_SECONDS)
             .untilAsserted(() -> verify(consumerMock, times(1)).accept(eq("SelectionEvent"),
-                argThat(se -> se.getKeys().equals(ROWKEYS_1) && se.getMode() == SelectionEventMode.REMOVE)));
+                argThat(se -> se.getSelection().equals(ROWKEYS_1) && se.getMode() == SelectionEventMode.REMOVE)));
 
         assertEquals(m_hlh.getHiLitKeys(), stringListToRowKeySet(ROWKEYS_2));
         m_hlh.fireClearHiLiteEvent();
@@ -174,7 +187,7 @@ public class SelectionEventSourceTest {
 
         await().pollDelay(ONE_HUNDRED_MILLISECONDS).timeout(FIVE_SECONDS)
             .untilAsserted(() -> verify(consumerMock, times(1)).accept(eq("SelectionEvent"),
-                argThat(se -> se.getKeys().equals(ROWKEYS_2) && se.getMode() == SelectionEventMode.REPLACE)));
+                argThat(se -> se.getSelection().equals(ROWKEYS_2) && se.getMode() == SelectionEventMode.REPLACE)));
 
         assertEquals(m_hlh.getHiLitKeys(), stringListToRowKeySet(ROWKEYS_2));
         m_hlh.fireClearHiLiteEvent();
@@ -183,23 +196,18 @@ public class SelectionEventSourceTest {
     /**
      * Tests the {@code async}-parameter of the
      * {@link SelectionEventSource#processSelectionEvent(NativeNodeContainer, SelectionEventMode, boolean, List)}-method.
-     *
-     * @throws Exception
      */
     @Test
-    public void testProcessSelectionEventAsync() throws Exception {
-        var wfm = WorkflowManagerUtil.createEmptyWorkflow();
-        NativeNodeContainer nnc = WorkflowManagerUtil.createAndAddNode(wfm,
-            new VirtualSubNodeOutputNodeFactory(new PortType[]{BufferedDataTable.TYPE}));
-
-        var hiLiteHandler = nnc.getNodeModel().getInHiLiteHandler(0);
+    public void testProcessSelectionEventAsync() {
+        var hiLiteHandler = m_nnc.getNodeModel().getInHiLiteHandler(0);
         var hiLiteListener = new TestHiLiteListener();
         hiLiteHandler.addHiLiteListener(hiLiteListener);
 
         // async call
-        SelectionEventSource.processSelectionEvent(nnc, SelectionEventMode.ADD, true, List.of("1"));
-        SelectionEventSource.processSelectionEvent(nnc, SelectionEventMode.REMOVE, true, List.of("1"));
-        SelectionEventSource.processSelectionEvent(nnc, SelectionEventMode.REPLACE, true, List.of("1"));
+        var rowKeys = stringListToRowKeySet(List.of("1"));
+        SelectionEventSource.processSelectionEvent(m_nnc, SelectionEventMode.ADD, true, rowKeys);
+        SelectionEventSource.processSelectionEvent(m_nnc, SelectionEventMode.REMOVE, true, rowKeys);
+        SelectionEventSource.processSelectionEvent(m_nnc, SelectionEventMode.REPLACE, true, rowKeys);
         Awaitility.await().atMost(5, TimeUnit.SECONDS).pollInterval(200, TimeUnit.MILLISECONDS)
             .untilAsserted(() -> assertThat(hiLiteListener.m_callerThreadName, notNullValue()));
         assertThat(hiLiteListener.m_callerThreadName, is(not("INVALID")));
@@ -207,10 +215,93 @@ public class SelectionEventSourceTest {
         hiLiteListener.m_callerThreadName = null;
 
         // sync call
-        SelectionEventSource.processSelectionEvent(nnc, SelectionEventMode.ADD, false, List.of("2"));
-        SelectionEventSource.processSelectionEvent(nnc, SelectionEventMode.REMOVE, false, List.of("2"));
-        SelectionEventSource.processSelectionEvent(nnc, SelectionEventMode.REPLACE, false, List.of("2"));
+        rowKeys = stringListToRowKeySet(List.of("2"));
+        SelectionEventSource.processSelectionEvent(m_nnc, SelectionEventMode.ADD, false, rowKeys);
+        SelectionEventSource.processSelectionEvent(m_nnc, SelectionEventMode.REMOVE, false, rowKeys);
+        SelectionEventSource.processSelectionEvent(m_nnc, SelectionEventMode.REPLACE, false, rowKeys);
         assertThat(hiLiteListener.m_callerThreadName, is(Thread.currentThread().getName()));
+    }
+
+    /**
+     * Makes sure that an event source registered on a node without a view doesn't emit selection events.
+     */
+    @Test
+    public void testNoSelectionEventForNodeWithoutAView() {
+        NativeNodeContainer nnc = WorkflowManagerUtil.createAndAddNode(m_wfm,
+            new VirtualSubNodeInputNodeFactory(null, new PortType[]{BufferedDataTable.TYPE}));
+
+        @SuppressWarnings("unchecked")
+        final BiConsumer<String, SelectionEvent> consumerMock = mock(BiConsumer.class);
+        registerSelectionEventSource(consumerMock, nnc);
+
+        nnc.getNodeModel().getInHiLiteHandler(0).fireUnHiLiteEvent(new KeyEvent(stringListToRowKeySet(ROWKEYS_1)), false);
+
+        verify(consumerMock, times(0)).accept(eq("SelectionEvent"), any());
+    }
+
+    @Test
+    public void testSelectionEventWithError() {
+        Function<NodeViewNodeModel, NodeView> viewCreator = m -> { // NOSONAR
+            return new NodeView() { // NOSONAR
+
+                @Override
+                public Optional<SelectionTranslationService> createSelectionTranslationService() {
+                    return Optional.of(new SelectionTranslationService() {
+
+                        @Override
+                        public Set<RowKey> toRowKeys(final List<String> selection) throws IOException {
+                            return Collections.emptySet();
+                        }
+
+                        @Override
+                        public List<String> fromRowKeys(final Set<RowKey> rowKeys) throws IOException {
+                            throw new IOException("foo");
+                        }
+                    });
+                }
+
+                @Override
+                public Optional<InitialDataService> createInitialDataService() {
+                    return Optional.empty();
+                }
+
+                @Override
+                public Optional<DataService> createDataService() {
+                    return Optional.empty();
+                }
+
+                @Override
+                public Optional<ApplyDataService> createApplyDataService() {
+                    return Optional.empty();
+                }
+
+                @Override
+                public void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+                    //
+                }
+
+                @Override
+                public void loadValidatedSettingsFrom(final NodeSettingsRO settings) {
+                    //
+                }
+
+                @Override
+                public Page getPage() {
+                    return Page.builder(() -> "foo", "bar").build();
+                }
+
+            };
+        };
+        var nnc = WorkflowManagerUtil.createAndAddNode(m_wfm, new NodeViewNodeFactory(viewCreator));
+
+        @SuppressWarnings("unchecked")
+        final BiConsumer<String, SelectionEvent> consumerMock = mock(BiConsumer.class);
+        registerSelectionEventSource(consumerMock, nnc);
+
+        nnc.getNodeModel().getInHiLiteHandler(0).fireHiLiteEvent(new KeyEvent(stringListToRowKeySet(ROWKEYS_1)), false);
+
+        verify(consumerMock, times(1)).accept(eq("SelectionEvent"), argThat(se -> se.getSelection() == null
+            && se.getMode() == SelectionEventMode.ADD && se.getError().equals("foo")));
     }
 
     private static class TestHiLiteListener implements HiLiteListener {
@@ -244,7 +335,7 @@ public class SelectionEventSourceTest {
     }
 
     private static boolean verifySelectionEvent(final SelectionEvent se, final String workflowId, final String nodeId) {
-        return se.getKeys().equals(ROWKEYS_1_2) && se.getMode() == SelectionEventMode.ADD
+        return se.getSelection().equals(ROWKEYS_1_2) && se.getMode() == SelectionEventMode.ADD
             && se.getNodeId().equals(nodeId) && se.getWorkflowId().equals(workflowId)
             && se.getProjectId().startsWith(WORKFLOW_NAME);
     }

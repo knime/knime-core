@@ -256,8 +256,8 @@ public class NodeViewEntTest {
         @SuppressWarnings("unchecked")
         final BiConsumer<String, SelectionEvent> consumerMock = mock(BiConsumer.class);
         var selectionEventSource = SelectionEventSourceTest.createSelectionEventSource(consumerMock);
-        var initialSelection = selectionEventSource.addEventListenerAndGetInitialEventFor(nnc).map(SelectionEvent::getKeys)
-            .orElse(Collections.emptyList());
+        var initialSelection = selectionEventSource.addEventListenerAndGetInitialEventFor(nnc)
+            .map(SelectionEvent::getSelection).orElse(Collections.emptyList());
         var nodeViewEnt = NodeViewEnt.create(nnc, () -> initialSelection);
 
         assertThat(nodeViewEnt.getInitialSelection(), is(List.of("k1", "k2")));
@@ -265,7 +265,7 @@ public class NodeViewEntTest {
         hiLiteHandler.fireHiLiteEvent(new RowKey("k3"));
         await().pollDelay(ONE_HUNDRED_MILLISECONDS).timeout(FIVE_SECONDS)
             .untilAsserted(() -> verify(consumerMock, times(1)).accept(eq("SelectionEvent"),
-                argThat(se -> se.getKeys().equals(List.of("k3")) && se.getMode() == SelectionEventMode.ADD)));
+                argThat(se -> se.getSelection().equals(List.of("k3")) && se.getMode() == SelectionEventMode.ADD)));
 
         WorkflowManagerUtil.disposeWorkflow(wfm);
     }

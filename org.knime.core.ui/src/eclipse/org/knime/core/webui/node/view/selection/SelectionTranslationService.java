@@ -49,25 +49,39 @@
 package org.knime.core.webui.node.view.selection;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
+import java.util.Set;
+
+import org.knime.core.data.RowKey;
 
 /**
- * A service that translates a selection request to an array of row keys.
+ * Translates between lists of row keys (representing a selection on the backend-side) and a list of strings
+ * (representing the selection on the frontend-side).
  *
  * @author Marc Bux, KNIME GmbH, Berlin, Germany
+ * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  *
  * @since 4.6
  */
 public interface SelectionTranslationService {
 
+
     /**
-     * Translates a selection request to an array of row keys.
+     * Translates a selection to a set of row keys.
      *
-     * @param in the selection request representing the selection to apply
-     * @return the result of the translation, i.e., a list of row keys
+     * @param selection the selection to translate
+     * @return the result of the translation, i.e., a set of row keys (the size of the result set can be different)
      * @throws IOException
      */
-    List<String> translate(InputStream in) throws IOException;
+    Set<RowKey> toRowKeys(List<String> selection) throws IOException;
+
+    /**
+     * Translates a set of row keys into a list of strings representing the selection.
+     *
+     * @param rowKeys the row keys to translate
+     * @return the new string-representation of the list of row keys (the size of the result list can be different)
+     * @throws IOException
+     */
+    List<String> fromRowKeys(Set<RowKey> rowKeys) throws IOException;
 
 }

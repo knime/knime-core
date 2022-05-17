@@ -81,7 +81,12 @@ public interface SelectionEvent {
     SelectionEventMode getMode();
 
     /**
-     * @return the removed/added/replaced (row-)keys
+     * @return the representing the selection (e.g. list of row keys)
      */
-    List<String> getKeys();
+    List<String> getSelection();
+
+    /**
+     * @return an error message if the selection event couldn't be created
+     */
+    String getError();
 }

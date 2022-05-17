@@ -89,7 +89,7 @@ public final class NodeViewEntUtil {
         final BiConsumer<String, Object> eventConsumer, final boolean createNodeViewStateEventSource) {
         var selectionEventSource = new SelectionEventSource(eventConsumer);
         Supplier<List<String>> initialSelectionSupplier = () -> selectionEventSource
-            .addEventListenerAndGetInitialEventFor(nnc).map(SelectionEvent::getKeys).orElse(Collections.emptyList());
+            .addEventListenerAndGetInitialEventFor(nnc).map(SelectionEvent::getSelection).orElse(Collections.emptyList());
 
         EventSource[] eventSources;
         if (createNodeViewStateEventSource) {

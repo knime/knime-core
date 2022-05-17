@@ -60,8 +60,10 @@ import static org.knime.testing.util.WorkflowManagerUtil.createAndAddNode;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -73,6 +75,7 @@ import org.awaitility.core.ThrowingRunnable;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.knime.core.data.RowKey;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
@@ -87,7 +90,7 @@ import org.knime.core.webui.data.InitialDataService;
 import org.knime.core.webui.data.text.TextDataService;
 import org.knime.core.webui.data.text.TextInitialDataService;
 import org.knime.core.webui.data.text.TextReExecuteDataService;
-import org.knime.core.webui.node.view.selection.TextSelectionTranslationService;
+import org.knime.core.webui.node.view.selection.SelectionTranslationService;
 import org.knime.core.webui.page.Page;
 import org.knime.testing.node.view.NodeViewNodeFactory;
 import org.knime.testing.node.view.NodeViewNodeModel;
@@ -394,22 +397,35 @@ public class NodeViewManagerTest {
     }
 
     /**
-     * Tests {@link NodeViewManager#callTextSelectionTranslationService(NodeContainer, String)}
+     * Tests {@link NodeViewManager#callSelectionTranslationService(NodeContainer, Set)} and
+     * {@link NodeViewManager#callSelectionTranslationService(NodeContainer, List)}.
      */
     @Test
     public void testCallSelectionTranslationService() {
         var page = Page.builder(() -> "test page content", "index.html").build();
-        var nodeView = createNodeView(page, null, null, null, new TextSelectionTranslationService() {
+        var nodeView = createNodeView(page, null, null, null, new SelectionTranslationService() {
             @Override
-            public List<String> translate(final String selection) throws IOException {
-                throw new IOException(selection);
+            public Set<RowKey> toRowKeys(final List<String> selection) throws IOException {
+                throw new IOException(selection.toString());
+            }
+
+            @Override
+            public List<String> fromRowKeys(final Set<RowKey> rowKeys) throws IOException {
+                throw new IOException(rowKeys.toString());
             }
         });
         var nc = NodeViewManagerTest.createNodeWithNodeView(m_wfm, m -> nodeView);
 
         var message = assertThrows(IOException.class,
-            () -> NodeViewManager.getInstance().callTextSelectionTranslationService(nc, "foo")).getMessage();
-        assertThat(message, is("foo"));
+            () -> NodeViewManager.getInstance().callSelectionTranslationService(nc, Collections.singletonList("foo")))
+                .getMessage();
+        assertThat(message, is("[foo]"));
+
+        message = assertThrows(IOException.class,
+            () -> NodeViewManager.getInstance().callSelectionTranslationService(nc, Set.of(new RowKey("bar"))))
+                .getMessage();
+        assertThat(message, is("[bar]"));
+
     }
 
     /**

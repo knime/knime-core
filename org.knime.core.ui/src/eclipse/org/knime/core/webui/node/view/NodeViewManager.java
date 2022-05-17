@@ -52,23 +52,22 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.WeakHashMap;
+import java.util.stream.Collectors;
 
+import org.knime.core.data.RowKey;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.webui.data.DataServiceProvider;
-import org.knime.core.webui.data.rpc.json.impl.ObjectMapperUtil;
 import org.knime.core.webui.node.AbstractNodeUIManager;
 import org.knime.core.webui.node.util.NodeCleanUpCallback;
 import org.knime.core.webui.node.view.selection.SelectionTranslationService;
-import org.knime.core.webui.node.view.selection.TextSelectionTranslationService;
 import org.knime.core.webui.page.Page;
 import org.knime.core.webui.page.PageUtil.PageType;
-
-import com.fasterxml.jackson.core.type.TypeReference;
 
 /**
  * Manages (web-ui) node view instances and provides associated functionality.
@@ -135,23 +134,41 @@ public final class NodeViewManager extends AbstractNodeUIManager {
     }
 
     /**
-     * Helper to call the {@link TextSelectionTranslationService}.
+     * Helper to call the {@link SelectionTranslationService#toRowKeys(List)}.
      *
      * @param nc the node to call the data service for
-     * @param request the selection request representing the selection to apply
+     * @param selection the selection to translate
      * @return the result of the translation, i.e., an array of row keys
      * @throws IOException if applying the selection failed
      */
-    public List<String> callTextSelectionTranslationService(final NodeContainer nc, final String request)
+    public Set<RowKey> callSelectionTranslationService(final NodeContainer nc, final List<String> selection)
         throws IOException {
-        var service =
-            getSelectionTranslationService(nc).filter(TextSelectionTranslationService.class::isInstance).orElse(null);
+        var service = getSelectionTranslationService(nc).orElse(null);
         if (service != null) {
-            return ((TextSelectionTranslationService)service).translate(request);
+            return service.toRowKeys(selection);
         } else {
-            return ObjectMapperUtil.getInstance().getObjectMapper().readValue(request,
-                new TypeReference<List<String>>() {
-                });
+            // if no selection translation service is available, turn the list of strings directly into a list of row keys
+            return selection.stream().map(RowKey::new).collect(Collectors.toSet());
+        }
+    }
+
+    /**
+     * Helper to call the {@link SelectionTranslationService#fromRowKeys(Set)}.
+     *
+     * @param nc the node to call the data service for
+     * @param rowKeys the row keys to translate
+     * @return the result of the translation, i.e., a text-representation of the selection
+     * @throws IOException if the translation failed
+     */
+    public List<String> callSelectionTranslationService(final NodeContainer nc, final Set<RowKey> rowKeys)
+        throws IOException {
+        var service = getSelectionTranslationService(nc).filter(SelectionTranslationService.class::isInstance)
+            .orElse(null);
+        if (service != null) {
+            return service.fromRowKeys(rowKeys);
+        } else {
+            // if no selection translation service is available, we just turn the row keys into strings
+            return rowKeys.stream().map(RowKey::toString).collect(Collectors.toList());
         }
     }
 

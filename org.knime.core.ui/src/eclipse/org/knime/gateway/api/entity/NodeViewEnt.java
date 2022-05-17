@@ -71,8 +71,8 @@ public final class NodeViewEnt extends NodeUIExtensionEnt {
 
     /**
      * @param nnc the node to create the node view entity for
-     * @param initialSelection list of row keys representing the initial selection, supplied lazily (will not been
-     *            called, if the node is not executed)
+     * @param initialSelection the initial selection (e.g. a list of row keys or something else), supplied lazily (will
+     *            not be called, if the node is not executed)
      * @return a new instance
      */
     public static NodeViewEnt create(final NativeNodeContainer nnc, final Supplier<List<String>> initialSelection) {
@@ -116,7 +116,7 @@ public final class NodeViewEnt extends NodeUIExtensionEnt {
     }
 
     /**
-     * @return the initially hilit (row) keys (aka selection)
+     * @return the initial selection (e.g. a list of row keys)
      */
     public List<String> getInitialSelection() {
         return m_initialSelection;
