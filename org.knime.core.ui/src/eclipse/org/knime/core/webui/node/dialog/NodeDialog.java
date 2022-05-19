@@ -64,7 +64,6 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.config.base.AbstractConfigEntry;
-import org.knime.core.node.config.base.ConfigStringEntry;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.CredentialsProvider;
@@ -72,6 +71,7 @@ import org.knime.core.node.workflow.FlowObjectStack;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.webui.data.ApplyDataService;
 import org.knime.core.webui.data.DataServiceProvider;
 import org.knime.core.webui.data.InitialDataService;
@@ -261,22 +261,8 @@ public abstract class NodeDialog implements DataServiceProvider {
                 if (modelSettingsChanged) {
                     // 'persist' settings and load model settings into the node model
                     wfm.loadNodeSettings(nodeID, nodeSettings);
-
                 } else if (viewSettingsChanged) {
-                    // if there are any view variables, i.e., variables controlling or exposing settings
-                    if (nodeSettings.containsKey("view_variables")) {
-                        var viewVariables = nodeSettings.getNodeSettings("view_variables").getNodeSettings("tree");
-                        var previousViewSettings =
-                            getOrCreateSubSettings(previousNodeSettings, SettingsType.VIEW.getConfigKey());
-                        if (exposedSettingsChanged(viewVariables, viewSettings, previousViewSettings)) {
-                            // 'persist' settings and reset the node (i.e., do as if model settings had changed)
-                            wfm.loadNodeSettings(nodeID, nodeSettings);
-                            return;
-                        }
-                    }
-
-                    // 'persist' view settings only (without resetting the node)
-                    wfm.loadNodeViewSettings(nodeID, nodeSettings);
+                    loadViewSettingsIntoNode(wfm, nodeID, viewSettings, nodeSettings, previousNodeSettings);
                 }
 
             } catch (InvalidSettingsException ex) {
@@ -284,7 +270,27 @@ public abstract class NodeDialog implements DataServiceProvider {
             }
         }
 
-        // Helper method to determine whether there is any setting that has changed and that is exposed as a variable
+        private static void loadViewSettingsIntoNode(final WorkflowManager wfm,
+            final NodeID nodeID, final NodeSettings viewSettings, final NodeSettings nodeSettings,
+            final NodeSettings previousNodeSettings) throws InvalidSettingsException {
+            // if there are any view variables, i.e., variables controlling or exposing settings
+            if (nodeSettings.containsKey(SettingsType.VIEW.getVariablesConfigKey())) {
+                var viewVariables =
+                    nodeSettings.getNodeSettings(SettingsType.VIEW.getVariablesConfigKey()).getNodeSettings("tree");
+                var previousViewSettings =
+                    getOrCreateSubSettings(previousNodeSettings, SettingsType.VIEW.getConfigKey());
+                if (exposedSettingsChanged(viewVariables, viewSettings, previousViewSettings)) {
+                    // 'persist' settings and reset the node (i.e., do as if model settings had changed)
+                    wfm.loadNodeSettings(nodeID, nodeSettings);
+                    return;
+                }
+            }
+
+            // 'persist' view settings only (without resetting the node)
+            wfm.loadNodeViewSettings(nodeID, nodeSettings);
+        }
+
+        // Helper method to recursively determine whether there is any setting that has changed and that is exposed as a variable
         private static boolean exposedSettingsChanged(final NodeSettingsRO variables, final NodeSettingsRO settings,
             final NodeSettingsRO previousSettings) {
             for (String key : variables) {
@@ -302,14 +308,13 @@ public abstract class NodeDialog implements DataServiceProvider {
                     continue; // unexpected (yet not unrecoverable) state: setting should be present
                 }
 
-                if (isExposedVariable((NodeSettingsRO)variable) && !setting.isIdentical(previousSetting)) {
-                    return true;
-                }
                 if (setting instanceof NodeSettingsRO && previousSetting instanceof NodeSettingsRO) {
                     if (exposedSettingsChanged((NodeSettingsRO)variable, (NodeSettingsRO)setting,
                         (NodeSettingsRO)previousSetting)) {
                         return true;
                     }
+                } else if (isExposedVariable((NodeSettingsRO)variable) && !setting.isIdentical(previousSetting)) {
+                    return true;
                 }
             }
             return false;
@@ -317,7 +322,7 @@ public abstract class NodeDialog implements DataServiceProvider {
 
         // Helper method to get a child of arbitrary type by its key / name
         private static AbstractConfigEntry getSettingsChildByKey(final NodeSettingsRO settings, final String key) {
-            for (int i = 0; i < settings.getChildCount(); i++) {
+            for (var i = 0; i < settings.getChildCount(); i++) {
                 var treeNode = settings.getChildAt(i);
                 if (!(treeNode instanceof AbstractConfigEntry)) {
                     continue; // unexpected (yet not unrecoverable) state: setting should be of type AbstractConfigEntry
@@ -332,24 +337,7 @@ public abstract class NodeDialog implements DataServiceProvider {
 
         // Helper method to determine whether a given setting is exposed as a variable
         private static boolean isExposedVariable(final NodeSettingsRO setting) {
-            // the setting is controlled by or exposed as a variable, iff ...
-            var isExposedVariable = false;
-            for (int i = 0; i < setting.getChildCount(); i++) {
-                final var child = setting.getChildAt(i);
-                // ... all of its children are String settings and ...
-                if (!(child instanceof ConfigStringEntry)) {
-                    return false;
-                }
-                final var stringEntry = (ConfigStringEntry)child;
-                final var key = stringEntry.getKey();
-                // have exposed_variable or used_variable as its key
-                if (key.equals("exposed_variable")) {
-                    isExposedVariable = stringEntry.getString() != null;
-                } else if (!key.equals("used_variable")) {
-                    return false;
-                }
-            }
-            return isExposedVariable;
+            return setting.containsKey("exposed_variable") && setting.getString("exposed_variable", null) != null;
         }
 
         private static boolean settingsChanged(final NodeSettings previousNodeSettings, final NodeSettings subSettings,

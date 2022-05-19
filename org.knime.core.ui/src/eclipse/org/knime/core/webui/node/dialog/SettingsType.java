@@ -83,4 +83,16 @@ public enum SettingsType {
         return m_configKey;
     }
 
+    /**
+     * @return the config key used to store variable settings (i.e. flow variables controlling settings or settings
+     *         exposed as flow variables) with the node
+     */
+    public String getVariablesConfigKey() {
+        if (this == VIEW) {
+            return "view_variables";
+        } else {
+            return "variables";
+        }
+    }
+
 }
