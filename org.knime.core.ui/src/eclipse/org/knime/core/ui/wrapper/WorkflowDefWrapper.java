@@ -50,18 +50,19 @@ package org.knime.core.ui.wrapper;
 
 import org.knime.core.ui.node.workflow.WorkflowCopyUI;
 import org.knime.shared.workflow.def.WorkflowDef;
+import org.knime.shared.workflow.storage.clipboard.DefClipboardContent;
 
 /**
  *  UI-interface implementation that wraps a {@link WorkflowDef}.
  *
  * @author Dionysios Stolis, KNIME GmbH, Berlin, Germany
  */
-public class WorkflowDefWrapper extends AbstractWrapper<WorkflowDef> implements WorkflowCopyUI {
+public final class WorkflowDefWrapper extends AbstractWrapper<DefClipboardContent> implements WorkflowCopyUI {
 
     /**
      * @param delegate the implementation to delegate to
      */
-    private WorkflowDefWrapper(final WorkflowDef delegate) {
+    private WorkflowDefWrapper(final DefClipboardContent delegate) {
         super(delegate);
     }
 
@@ -71,7 +72,7 @@ public class WorkflowDefWrapper extends AbstractWrapper<WorkflowDef> implements 
      * @param def object to wrap
      * @return the wrapper
      */
-    public static final WorkflowDefWrapper wrap(final WorkflowDef def) {
+    public static final WorkflowDefWrapper wrap(final DefClipboardContent def) {
         return (WorkflowDefWrapper)Wrapper.wrapOrGet(def, WorkflowDefWrapper::new);
     }
 

@@ -109,9 +109,7 @@ public class EnhAP18826_WorkflowCopyContentToDef extends WorkflowTestCase { //NO
 			.setIncludeInOutConnections(false)//
 			.build();
 		
-		var workflow = m_wfm.copyToDef(spec, PasswordRedactor.asNull()).getPayload();
-		
-		assertThat("Copy content must be a workflow", workflow instanceof WorkflowDef);
+		WorkflowDef workflow = m_wfm.copyToDef(spec, PasswordRedactor.asNull()).getPayload();
 		
 		// copied one node
 		assertThat(workflow.getNodes().size(), is(1));

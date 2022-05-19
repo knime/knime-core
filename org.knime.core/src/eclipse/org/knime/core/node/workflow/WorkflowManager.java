@@ -86,6 +86,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.Vector;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -220,6 +221,7 @@ import org.knime.shared.workflow.def.MetaNodeDef;
 import org.knime.shared.workflow.def.NativeNodeDef;
 import org.knime.shared.workflow.def.RootWorkflowDef;
 import org.knime.shared.workflow.def.WorkflowDef;
+import org.knime.shared.workflow.storage.clipboard.DefClipboard;
 import org.knime.shared.workflow.storage.clipboard.DefClipboardContent;
 import org.knime.shared.workflow.storage.util.PasswordRedactor;
 
@@ -8082,23 +8084,26 @@ public final class WorkflowManager extends NodeContainer
     }
 
     /**
+     * Returns the redacted content and keeps an unredacted version internally to replace the redacted version on paste
+     * in case their payload identifiers match.
      *
-     * @param content specifies what should be copied (node ids, annotations) and additional information such as whether
-     *            to include connections between included nodes and non-included nodes
-     * @param passwordHandler TODO DefClipboardContent
-     * @return the copied content in intermediate workflow format
+     * @param spec specifies the nodes and annotations to copy and additional settings
+     * @param passwordRedactor handler to remove or alter passwords
+     * @return the copied content in intermediate workflow format with a payload identifier
      */
-    public DefClipboardContent copyToDef(final WorkflowCopyContent content, final PasswordRedactor passwordHandler) {
-
+    public DefClipboardContent copyToDef(final WorkflowCopyContent spec, final PasswordRedactor passwordRedactor) {
         try (WorkflowLock lock = lock()) {
-            var safeCopy = CoreToDefUtil.copyToDef(this, content, passwordHandler);
-            var fullCopy = CoreToDefUtil.copyToDef(this, content, PasswordRedactor.unsafe());
-            return new DefClipboardContent(safeCopy);
+            var payloadIdentifier = UUID.randomUUID();
+            var unredactedPayload = CoreToDefUtil.copyToDef(this, spec, PasswordRedactor.unsafe());
+            var unredactedContent = new DefClipboardContent(payloadIdentifier, unredactedPayload);
+            var redactedPayload = CoreToDefUtil.copyToDef(this, spec, passwordRedactor);
+            var redactedContent = new DefClipboardContent(payloadIdentifier, redactedPayload);
+
+            DefClipboard.getInstance().setContent(unredactedContent);
+
+            return redactedContent;
         }
-
     }
-
-
 
     /**
      * Copy the nodes with the given ids.
@@ -8203,15 +8208,21 @@ public final class WorkflowManager extends NodeContainer
     /**
      * Pastes the contents of the workflow definition into this wfm.
      *
-     * @param def The workflow definition.
+     * @param content The workflow definition.
      * @return The new node ids of the inserted nodes and the annotations in a dedicated object.
      */
-    public WorkflowCopyContent paste(final DefClipboardContent def) {
+    public WorkflowCopyContent paste(final DefClipboardContent content) {
         try (WorkflowLock lock = lock()) {
             try {
-            	// TODO compare payload identifier with internal clipboard
-                return loadWorkflowContent(def.getPayload(),
-                		new ExecutionMonitor(), new LoadResult("Paste into Workflow"));
+                var defClipboardContent = DefClipboard.getInstance().getContent();
+                // compare payload identifiers, if they match the global DefClipboard contains everything
+                // in the given content plus sensitive information like passwords
+                boolean unredactedPayloadAvailable = defClipboardContent//
+                    .map(DefClipboardContent::getPayloadIdentifier)//
+                    .map(uuid -> Objects.equals(uuid, content.getPayloadIdentifier()))//
+                    .orElse(false);
+                var pasteContent = unredactedPayloadAvailable ? defClipboardContent.get() : content;
+                return loadWorkflowContent(pasteContent.getPayload(), new ExecutionMonitor(), new LoadResult("Paste into Workflow"));
             } catch (CanceledExecutionException e) {
                 throw new IllegalStateException("Cancelation although no access" + " on execution monitor", e);
             }

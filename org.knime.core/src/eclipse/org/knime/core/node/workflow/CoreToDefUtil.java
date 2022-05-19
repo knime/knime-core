@@ -380,13 +380,17 @@ public class CoreToDefUtil {
     }
 
     /**
-     * @param content
-     * @param passwordHandler
-     * @return
+     * @param wfm the workflow manager that provides the content to be copied
+     * @param content specifies the nodes and annotations to copy and additional settings
+     * @param passwordRedactor handler to remove or alter passwords
+     * @return a description of the selected content in intermediate workflow format (def)
      */
     public static WorkflowDef copyToDef(final WorkflowManager wfm, final WorkflowCopyContent content,
-        final PasswordRedactor passwordHandler) {
+        final PasswordRedactor passwordRedactor) {
+
         HashSet<NodeID> nodeIDs = new HashSet<>(Arrays.asList(content.getNodeIDs()));
+        CheckUtils.checkArgumentNotNull(passwordRedactor,
+            "No password redactor provided. If passwords should remain unchanged, please specify explicitly by providing an according password redactor.");
         CheckUtils.checkArgument(nodeIDs.size() == content.getNodeIDs().length, "Copy spec contains duplicate nodes.");
 
         // copy contents (nodes, connections, annotations) are stored in a workflow def
@@ -415,15 +419,15 @@ public class CoreToDefUtil {
             // component node (via SubnodeContainerToDefAdapter -> WorkflowManagerToDefAdapter#getNodes).
             if (nc instanceof NativeNodeContainer && NativeNodeContainer.IS_VIRTUAL_IN_OUT_NODE.negate().test(nc)) {
                 var originalNativeNodeDef =
-                    new NativeNodeContainerToDefAdapter((NativeNodeContainer)nc, passwordHandler);
+                    new NativeNodeContainerToDefAdapter((NativeNodeContainer)nc, passwordRedactor);
                 node = new NativeNodeDefBuilder(originalNativeNodeDef)//
                     .setId(defNodeId).setUiInfo(defUiInfo.orElse(defaultUiInfo)).build();
             } else if (nc instanceof SubNodeContainer) {
-                var originalComponentDef = new SubnodeContainerToDefAdapter((SubNodeContainer)nc, passwordHandler);
+                var originalComponentDef = new SubnodeContainerToDefAdapter((SubNodeContainer)nc, passwordRedactor);
                 node = new ComponentNodeDefBuilder(originalComponentDef)//
                     .setId(defNodeId).setUiInfo(defUiInfo.orElse(defaultUiInfo)).build();
             } else if (nc instanceof WorkflowManager) {
-                var originalMetanodeDef = new MetanodeToDefAdapter((WorkflowManager)nc, passwordHandler);
+                var originalMetanodeDef = new MetanodeToDefAdapter((WorkflowManager)nc, passwordRedactor);
                 node = new MetaNodeDefBuilder(originalMetanodeDef)//
                     .setId(defNodeId).setUiInfo(defUiInfo.orElse(defaultUiInfo)).build();
             }
