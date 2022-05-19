@@ -125,6 +125,20 @@ public class NodeDialogTest {
         wfm.saveNodeSettings(nc.getID(), newSettings);
         assertThat(newSettings.getNodeSettings(SettingsType.MODEL.getConfigKey()), is(modelSettings));
 
+        // change view settings and expose as flow variable -> node is expected to reset
+        var variablesTree =
+            newSettings.addNodeSettings("view_variables").addNodeSettings("tree").addNodeSettings("view_key2");
+        variablesTree.addString("used_variable", null);
+        variablesTree.addString("exposed_variable", "foo");
+        wfm.loadNodeSettings(nc.getID(), newSettings);
+        wfm.executeAllAndWaitUntilDone();
+        assertThat(nc.getNodeContainerState().isExecuted(), is(true));
+        viewSettings.addInt("view_key2", 3);
+        nodeDialogManager.callTextApplyDataService(nc, settingsToString(modelSettings, viewSettings));
+        assertThat(nc.getNodeContainerState().isExecuted(), is(false));
+        wfm.saveNodeSettings(nc.getID(), newSettings);
+        assertThat(newSettings.getNodeSettings(SettingsType.VIEW.getConfigKey()), is(viewSettings));
+
         WorkflowManagerUtil.disposeWorkflow(wfm);
     }
 
