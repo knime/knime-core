@@ -119,9 +119,9 @@ public final class PortTypeRegistry {
         m_allOptionalPortTypes.put(PortObject.class,
             new PortType(PortObject.class, true, "Generic Port", PortType.DEFAULT_COLOR, false));
 
-        m_allPortTypes.put(BufferedDataTable.class, new PortType(BufferedDataTable.class, false, "Data", 0, false));
+        m_allPortTypes.put(BufferedDataTable.class, new PortType(BufferedDataTable.class, false, "Table", 0, false));
         m_allOptionalPortTypes.put(BufferedDataTable.class,
-            new PortType(BufferedDataTable.class, true, "Data", 0, false));
+            new PortType(BufferedDataTable.class, true, "Table", 0, false));
     }
 
     private boolean m_allPortTypesRead;
