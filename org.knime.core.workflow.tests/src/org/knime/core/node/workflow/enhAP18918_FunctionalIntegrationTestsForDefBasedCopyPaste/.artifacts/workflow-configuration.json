@@ -1,0 +1,15 @@
+
+{
+    "credentials-15": {
+        "label": "Credential Label",
+        "type": "object",
+        "username": {
+            "type": "string",
+            "default": "user"
+        },
+        "password": {
+            "type": "string",
+            "default": "*************"
+        }
+    }
+}
