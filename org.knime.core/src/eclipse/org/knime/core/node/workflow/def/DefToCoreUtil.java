@@ -71,6 +71,7 @@ import org.knime.core.node.extension.NodeFactoryExtensionManager;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortTypeRegistry;
+import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.AnnotationData;
 import org.knime.core.node.workflow.AnnotationData.TextAlignment;
 import org.knime.core.node.workflow.ComponentMetadata;
@@ -79,6 +80,8 @@ import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.EditorUIInformation;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.NodeContainer.NodeLocks;
+import org.knime.core.node.workflow.NodeExecutionJobManager;
+import org.knime.core.node.workflow.NodeExecutionJobManagerFactory;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.workflowalizer.AuthorInformation;
@@ -112,6 +115,7 @@ import org.knime.shared.workflow.def.ConfigValueStringArrayDef;
 import org.knime.shared.workflow.def.ConfigValueStringDef;
 import org.knime.shared.workflow.def.ConnectionUISettingsDef;
 import org.knime.shared.workflow.def.FlowVariableDef;
+import org.knime.shared.workflow.def.JobManagerDef;
 import org.knime.shared.workflow.def.MetaNodeDef;
 import org.knime.shared.workflow.def.NativeNodeDef;
 import org.knime.shared.workflow.def.NodeLocksDef;
@@ -135,7 +139,7 @@ public class DefToCoreUtil {
      * @param def {@link AnnotationDataDef}
      * @return an {@link AnnotationData}
      */
-    public static AnnotationData toAnnotationData(final AnnotationData annoData, final AnnotationDataDef def) {
+    public static <E extends AnnotationData> E toAnnotationData(final E annoData, final AnnotationDataDef def) {
         annoData.setAlignment(TextAlignment.valueOf(def.getTextAlignment()));
         annoData.setBgColor(def.getBgcolor());
         annoData.setBorderColor(def.getBorderColor());
@@ -145,6 +149,7 @@ public class DefToCoreUtil {
         annoData.setY(def.getLocation().getY());
         annoData.setWidth(def.getWidth());
         annoData.setHeight(def.getHeight());
+        annoData.setText(def.getText());
         return annoData;
     }
 
@@ -155,19 +160,54 @@ public class DefToCoreUtil {
      * @return a {@link Node}
      */
     public static Node toNode(final NativeNodeDef def) {
+        NodeFactory<NodeModel> nodeFactory;
+        NodeSettingsRO nodeCreationSettings;
         try {
             NodeSettingsRO additionalFactorySettings = toNodeSettings(def.getFactorySettings());
-            NodeFactory<NodeModel> nodeFactory = loadNodeFactory(def.getFactory());
-            NodeSettingsRO nodeCreationSettings = toNodeSettings(def.getNodeCreationConfig());
+            nodeFactory = loadNodeFactory(def.getFactory());
+            nodeCreationSettings = toNodeSettings(def.getNodeCreationConfig());
             nodeFactory.loadAdditionalFactorySettings(additionalFactorySettings);
-            return new Node(nodeFactory, loadCreationConfig(nodeCreationSettings, nodeFactory).orElse(null));
         } catch (InvalidSettingsException | InstantiationException | IllegalAccessException
                 | InvalidNodeFactoryExtensionException e) {
+            // TODO currently not doing any type of error handling (unknown node), done as part of AP-18960
             throw new RuntimeException(e);
-            // TODO Write the missing extension explanation
-            // We could create the un-checked NodeFactoryUnkowException, because this method is used only by the constructors.
-            // TODO throw new NodeFactoryUnknownException(toNodeAndBundleInformationPersistor(def), additionalFactorySettings, e);
         }
+        try {
+            return new Node(nodeFactory, loadCreationConfig(nodeCreationSettings, nodeFactory).orElse(null));
+        } catch (InvalidSettingsException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     *  Converts the job manager def to NodeExceution job manager.
+     *
+     * @param def a {@link JobManagerDef}.
+     * @return a {@link NodeExecutionJobManager}.
+     */
+    public static NodeExecutionJobManager toJobManager(final JobManagerDef def) {
+        if (def == null) {
+            return null;
+        }
+        var jobManagerId = def.getFactory();
+        NodeExecutionJobManagerFactory reference = NodeExecutionJobManagerPool.getJobManagerFactory(jobManagerId);
+        if (reference == null) {
+            final var msg = String
+                .format("Unknown job manager factory id %s (job manager factory possibly not installed?", jobManagerId);
+            LOGGER.error(msg);
+            return null;
+        }
+        var settings = toNodeSettings(def.getSettings());
+
+        NodeExecutionJobManager jobManager = reference.getInstance();
+        try {
+            jobManager.load(settings);
+        } catch (InvalidSettingsException ex) {
+            final var msg =
+                String.format("Can't load the job manager with factory id %s: %s", jobManagerId, ex.getMessage());
+            LOGGER.error(msg, ex);
+        }
+        return jobManager;
     }
 
     /**
@@ -240,7 +280,7 @@ public class DefToCoreUtil {
         Class<? extends PortObject> obClass =
             PortTypeRegistry.getInstance().getObjectClass(objectClassString).orElseThrow(() -> new RuntimeException(
                 "Unable to restore port type, " + "can't load class \"" + objectClassString + "\""));
-        return PortTypeRegistry.getInstance().getPortType(obClass);
+        return PortTypeRegistry.getInstance().getPortType(obClass, portType.isOptional());
 
     }
 
@@ -564,15 +604,7 @@ public class DefToCoreUtil {
 
     public static AnnotationData toAnnotationData(final AnnotationDataDef dataDef) {
         var annotationData = new AnnotationData();
-        annotationData.setBgColor(dataDef.getBgcolor());
-        annotationData.setBorderColor(dataDef.getBorderColor());
-        annotationData.setBorderSize(dataDef.getBorderSize());
-        annotationData.setAlignment(TextAlignment.valueOf(dataDef.getTextAlignment()));
-        annotationData.setDefaultFontSize(dataDef.getDefaultFontSize());
-        annotationData.setStyleRanges(dataDef.getStyles());
-        annotationData.setDimension(dataDef.getLocation().getX(), dataDef.getLocation().getY(), dataDef.getWidth(), dataDef.getHeight());
-        annotationData.setText(dataDef.getText());
-        return annotationData;
+        return toAnnotationData(annotationData, dataDef);
     }
 
     /**

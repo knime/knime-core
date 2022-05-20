@@ -102,7 +102,7 @@ import org.knime.core.node.workflow.WorkflowLoadHelper;
  * @since 2.10
  */
 public final class VirtualSubNodeOutputNodeModel extends ExtendedScopeNodeModel
-    implements InactiveBranchConsumer, PortObjectHolder, CredentialsNode {
+    implements InactiveBranchConsumer, PortObjectHolder, CredentialsNode, VirtualSubNodeInOut {
 
     /** Holds the data (specs, objects, flow vars), gets update on reset, configure, execute. */
     private int m_numberOfPorts;
@@ -294,12 +294,7 @@ public final class VirtualSubNodeOutputNodeModel extends ExtendedScopeNodeModel
         return false;
     }
 
-    /**
-     * Sets the sub node container this virtual output node is part of.
-     *
-     * @param subNodeContainer the sub node container
-     * @since 3.3
-     */
+    @Override
     public void setSubNodeContainer(final SubNodeContainer subNodeContainer) {
         m_subNodeContainer = subNodeContainer;
     }

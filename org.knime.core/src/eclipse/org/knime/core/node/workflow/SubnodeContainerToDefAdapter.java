@@ -61,6 +61,8 @@ import org.knime.shared.workflow.def.PortDef;
 import org.knime.shared.workflow.def.TemplateInfoDef;
 import org.knime.shared.workflow.def.WorkflowDef;
 import org.knime.shared.workflow.def.impl.ComponentDialogSettingsDefBuilder;
+import org.knime.shared.workflow.def.impl.PortDefBuilder;
+import org.knime.shared.workflow.def.impl.PortTypeDefBuilder;
 
 /**
  * Provides a {@link ComponentNodeDef} view on a component node in a workflow.
@@ -93,10 +95,14 @@ public class SubnodeContainerToDefAdapter extends SingleNodeContainerToDefAdapte
      */
     @Override
     public List<PortDef> getInPorts() {
-        return IntStream.range(0, m_nc.getNrInPorts())//
+        var result = IntStream.range(0, m_nc.getNrInPorts())//
             .mapToObj(m_nc::getInPort)//
             .map(CoreToDefUtil::toPortDef)//
             .collect(Collectors.toList());
+        // Set optional and hidden as true to the first in port type (aka micky mouse)
+        var firstInPortDef = CoreToDefUtil.toPortDef(m_nc.getInPort(0));
+        result.set(0, modifyToOptional(firstInPortDef));
+        return result;
     }
 
     /**
@@ -104,10 +110,22 @@ public class SubnodeContainerToDefAdapter extends SingleNodeContainerToDefAdapte
      */
     @Override
     public List<PortDef> getOutPorts() {
-        return IntStream.range(0, m_nc.getNrOutPorts())//
+        var result = IntStream.range(0, m_nc.getNrOutPorts())//
             .mapToObj(m_nc::getOutPort)//
             .map(CoreToDefUtil::toPortDef)//
             .collect(Collectors.toList());
+        // Set optional and hidden as true to the first out port type (aka micky mouse)
+        var firstOutPortDef = CoreToDefUtil.toPortDef(m_nc.getOutPort(0));
+        result.set(0, modifyToOptional(firstOutPortDef));
+        return result;
+    }
+
+    private static PortDef modifyToOptional(final PortDef def) {
+        var modifiedPortType = new PortTypeDefBuilder(def.getPortType()).setOptional(true) //
+                .setHidden(true) //
+                .build();
+        return new PortDefBuilder(def) //
+                .setPortType(modifiedPortType).build();
     }
 
     /**

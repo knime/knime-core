@@ -97,6 +97,7 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.inactive.InactiveBranchConsumer;
 import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.CredentialsStore.CredentialsNode;
 import org.knime.core.node.workflow.FlowVariable.Scope;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
@@ -108,8 +109,10 @@ import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 import org.knime.core.node.workflow.execresult.NodeExecutionResult;
 import org.knime.core.node.workflow.virtual.parchunk.FlowVirtualScopeContext;
+import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeInOut;
 import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeInputNodeModel;
 import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeOutputNodeModel;
+import org.knime.shared.workflow.def.BaseNodeDef;
 import org.knime.shared.workflow.def.NativeNodeDef;
 import org.w3c.dom.Element;
 
@@ -194,9 +197,8 @@ public class NativeNodeContainer extends SingleNodeContainer {
     NativeNodeContainer(final WorkflowManager parent, final NodeID id, final NativeNodeDef def) {
         super(parent, id, def);
         m_node = DefToCoreUtil.toNode(def);
-        assert m_node != null : def.getNodeName()
-                + " did not provide Node instance for "
-                + getClass().getSimpleName() + " with id \"" + id + "\"";
+        CheckUtils.checkNotNull(m_node, "%s did not provide Node instance for %s with id \"%s\"",
+            def.getNodeName(), getClass().getSimpleName(), id);
         setPortNames();
         m_node.addMessageListener(new UnderlyingNodeMessageListener());
     }
@@ -1026,6 +1028,38 @@ public class NativeNodeContainer extends SingleNodeContainer {
     }
 
     /* ------------------- Load & Save ---------------- */
+
+    @Override
+    void loadContent(final BaseNodeDef nodeDef, final ExecutionMonitor exec, final LoadResult loadResult)
+        throws CanceledExecutionException {
+        super.loadContent(nodeDef, exec, loadResult);
+        var context = NodeContext.getContext();
+        // inform the virtual input/output node about the containing component
+        if (context != null) { // this is going to be refactored as part of AP-18959
+            var subnodeContainerOptional = context.getContextObjectForClass(SubNodeContainer.class);
+            if (getNodeModel() instanceof VirtualSubNodeInOut && subnodeContainerOptional.isPresent()) {
+                ((VirtualSubNodeInOut)getNodeModel()).setSubNodeContainer(subnodeContainerOptional.get());
+            }
+        }
+
+        var ms =
+            Optional.ofNullable(getSingleNodeContainerSettings()).map(SingleNodeContainerSettings::getModelSettings);
+        if (ms.isPresent()) { // null if the node never had settings - no reason to load them
+            var modelSettings = ms.get();
+            NodeContext.pushContext(this);
+            try {
+                m_node.validateModelSettings(modelSettings);
+                m_node.loadModelSettingsFrom(modelSettings);
+            } catch (InvalidSettingsException ex) {
+                final var msg = String.format("Can't load the node model settings: %s", ex.getMessage());
+                LOGGER.error(msg, ex);
+                loadResult.addError(msg);
+            } finally {
+                NodeContext.removeLastContext();
+            }
+        }
+
+    }
 
     /** {@inheritDoc} */
     @Override

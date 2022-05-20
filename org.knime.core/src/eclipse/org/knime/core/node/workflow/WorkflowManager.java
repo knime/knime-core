@@ -107,11 +107,13 @@ import java.util.stream.Stream;
 import javax.json.JsonException;
 import javax.json.JsonValue;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOCase;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionPoint;
@@ -361,7 +363,7 @@ public final class WorkflowManager extends NodeContainer
      * that they look at one consistent "snapshot" of a workflow. This semaphore will be used by all "connected"
      * children of this node. Isolated workflows create a new semaphore.
      */
-    private WorkflowLock m_workflowLock;
+    private final WorkflowLock m_workflowLock;
 
     /** see {@link #getDirectNCParent()}. */
     private final NodeContainerParent m_directNCParent;
@@ -613,21 +615,23 @@ public final class WorkflowManager extends NodeContainer
     }
 
     /**
-     * Constructor - create workflow manager from {@link WorkflowDef}.
-     * Used for metanodes and components.
+     * Constructor - create workflow manager from {@link WorkflowDef}. Currently used for metanodes and component
+     * workflows. Later also for workflow projects (currently not support via {@link WorkflowDef}.
      *
-     * @param parent
-     * @param id
-     * @param baseNodeDef
-     * @param workflowDef
+     * @param directNCParent Non-null when used within a component/ {@link SubNodeContainer}
+     * @param parent the parent.
+     * @param id The ID
+     * @param isProject Whether workflow represents a project.
+     * @param baseNodeDef The load from (e.g. UI info, custom description, etc)
+     * @param workflowDef The actual workflow.
+     *
+     * @since 4.6
      */
-    public WorkflowManager(final WorkflowManager parent, final NodeID id, final BaseNodeDef baseNodeDef, final WorkflowDef workflowDef) {
+    WorkflowManager(final NodeContainerParent directNCParent, final WorkflowManager parent, final NodeID id,
+        final boolean isProject, final BaseNodeDef baseNodeDef, final WorkflowDef workflowDef) {
         super(parent, id, baseNodeDef);
 
-        PortType[] inTypes = DefToCoreUtil.extractInPortTypes(baseNodeDef);
-        PortType[] outTypes = DefToCoreUtil.extractOutPortTypes(baseNodeDef);
-
-        m_directNCParent = parent;
+        m_directNCParent = assertParentAssignments(directNCParent, parent);
         m_credentialsStore = new CredentialsStore(this);
         m_workflow = new Workflow(this, id);
         m_name = workflowDef.getName();
@@ -635,7 +639,24 @@ public final class WorkflowManager extends NodeContainer
         m_authorInformation = DefToCoreUtil.toAuthorInformation(workflowDef.getAuthorInformation());
         m_wfmListeners = new CopyOnWriteArrayList<>();
         m_dataRepository = new WorkflowDataRepository();
-
+        m_inPorts = new WorkflowInPort[0]; // might be changed/set right after construction (for meta nodes)
+        m_outPorts = new WorkflowOutPort[0];
+        if (isProject || isComponentProjectWFM()) {
+            if (KNIMEConstants.ASSERTIONS_ENABLED) {
+                throw new UnsupportedOperationException(
+                    String.format("Loading workflow and component projects currently not implemented for %s",
+                        WorkflowDef.class.getName()));
+            }
+            m_workflowLock = new WorkflowLock(this);
+            m_dataRepository = new WorkflowDataRepository();
+            m_tableBackendSettings = new WorkflowTableBackendSettings();
+            // TODO  m_workflowContext derived from save location (see old persistor constructor)
+        } else {
+            m_workflowLock = new WorkflowLock(this, m_directNCParent);
+            m_dataRepository = m_directNCParent != null ? m_directNCParent.getProjectWFM().getWorkflowDataRepository()
+                : new WorkflowDataRepository();
+            m_workflowContext = null;
+        }
         LOGGER.debug("Created subworkflow " + this.getID());
     }
 
@@ -8250,8 +8271,7 @@ public final class WorkflowManager extends NodeContainer
     public WorkflowCopyContent paste(final WorkflowDef def) {
         try (WorkflowLock lock = lock()) {
             try {
-                return loadContent(def,
-                    new ExecutionMonitor(), new LoadResult("Paste into Workflow"));
+                return loadWorkflowContent(def, new ExecutionMonitor(), new LoadResult("Paste into Workflow"));
             } catch (CanceledExecutionException e) {
                 throw new IllegalStateException("Cancelation although no access" + " on execution monitor", e);
             }
@@ -8576,23 +8596,29 @@ public final class WorkflowManager extends NodeContainer
         result.setGUIMustReportDataLoadErrors(persistor.mustWarnOnDataLoadError());
     }
 
-    /** {@inheritDoc}
-     * @throws CanceledExecutionException */
-    @Override
-    public WorkflowCopyContent loadContent(final WorkflowDef workflowDef, final ExecutionMonitor exec, final LoadResult loadResult) throws CanceledExecutionException {
+    /**
+     * Inserts the content defined in the argument {@link WorkflowDef} into this workflow.
+     *
+     * @param workflowDef to load from.
+     * @param exec Progress etc.
+     * @param loadResult Where to collect errors.
+     * @return A pair consisting of inserted annotations and a "translation map", i.e. nodes with certain "workflow def
+     *         IDs" mapped to their inserted {@link NodeID}
+     * @throws CanceledExecutionException if canceled.
+     */
+    Pair<WorkflowAnnotationID[], Map<Integer, NodeID>> loadContent(final WorkflowDef workflowDef,
+        final ExecutionMonitor exec, final LoadResult loadResult) throws CanceledExecutionException {
         exec.checkCanceled();
-        assert this != ROOT || workflowDef.getConnections().isEmpty() : "ROOT workflow has no connections: "
-                + workflowDef.getConnections();
+        CheckUtils.checkState(this != ROOT || workflowDef.getConnections().isEmpty(),
+            "ROOT workflow has no connections: " + workflowDef.getConnections());
 
         exec.setMessage("Loading annotations");
-        var loadedAnnotationIDs = workflowDef.getAnnotations().entrySet().stream() //
+        WorkflowAnnotationID[] loadedAnnotationIDs = workflowDef.getAnnotations().entrySet().stream() //
             .map(e -> {
                 var annoData = DefToCoreUtil.toAnnotationData(e.getValue());
-                var annoId = new WorkflowAnnotationID(getID(), Integer.valueOf(e.getKey()));
-                var anno = new WorkflowAnnotation(annoData, annoId);
-                return addWorkflowAnnotationInternal(anno.getData(), anno.getID().getIndex()).getID();
-            }) //
-            .toArray(WorkflowAnnotationID[]::new);
+                int annoId = NumberUtils.toInt(e.getKey(), -1); // accept errors (minor)
+                return addWorkflowAnnotationInternal(annoData, annoId).getID();
+            }).toArray(WorkflowAnnotationID[]::new);
 
         exec.setMessage("Loading node and connection information");
         var connections = workflowDef.getConnections().stream()
@@ -8600,26 +8626,52 @@ public final class WorkflowManager extends NodeContainer
                 c.getDestPort(), c.isDeletable(), DefToCoreUtil.toConnectionUIInformation(c.getUiSettings()))) //
             .collect(Collectors.toSet());
 
-        var nodes = workflowDef.getNodes();
-        Map<Integer, NodeID> translationMap =
-                loadNodesAndConnectionsDef(nodes, connections, exec, loadResult);
+        Map<Integer, NodeID> translationMap = loadNodes(workflowDef.getNodes(), exec, loadResult);
+        addConnectionsFromTemplates(connections, loadResult, translationMap, true);
 
-        // checks if the translation map has successfully translated.
-        if (!translationMap.keySet().isEmpty()) {
-            var isEfficientTranslationMap = workflowDef.getNodes().values().stream().map(BaseNodeDef::getId)
-                .anyMatch(translationMap.keySet().stream().collect(Collectors.toSet())::contains);
-            if (!isEfficientTranslationMap) {
-                throw new IllegalArgumentException("Deficient translation map");
+        return Pair.create(loadedAnnotationIDs, translationMap);
+    }
+
+    /**
+     * Loads content from the def into <code>this</code> workflow.
+     */
+    private WorkflowCopyContent loadWorkflowContent(final WorkflowDef workflowDef, final ExecutionMonitor exec,
+        final LoadResult loadResult) throws CanceledExecutionException {
+        exec.checkCanceled();
+        var workflowContentPair = loadContent(workflowDef, exec, loadResult);
+        var translationMap = workflowContentPair.getSecond();
+        var resultColl = translationMap.values();
+
+        configureAfterLoadWorkflowContent(translationMap);
+        NodeID[] newIDs = resultColl.toArray(new NodeID[resultColl.size()]);
+        return WorkflowCopyContent.builder() //
+                .setAnnotationIDs(workflowContentPair.getFirst()) //
+                .setNodeIDs(newIDs) //
+                .build();
+    }
+
+    /**
+     * configure inserted nodes; to date it configures all source nodes, which trigger configuration of their
+     * downstream nodes. One special handling: Metanodes might have been inserted and they can contain source nodes,
+     * hence they need to be configured 'fully'
+     * @param translationMap
+     */
+    // TODO change this to a proper sweep once WorkflowDef contain possible executed nodes
+    private void configureAfterLoadWorkflowContent(final Map<Integer, NodeID> translationMap) {
+        Set<NodeID> insertedNodesSet = new HashSet<>(translationMap.values());
+
+        Set<NodeID> startNodes = translationMap.values().stream() //
+            .filter(n -> !CollectionUtils.containsAny(insertedNodesSet, Arrays.asList(assemblePredecessors(n)))
+                || getNodeContainer(n) instanceof WorkflowManager)
+            .collect(Collectors.toSet());
+        for (NodeID startNode : m_workflow.createBreadthFirstSortedList(startNodes, true).keySet()) {
+            NodeContainer nc = getNodeContainer(startNode);
+            if (nc instanceof SingleNodeContainer) {
+                configureNodeAndSuccessors(startNode, true);
+            } else {
+                ((WorkflowManager)nc).configureAllNodesInWFM(false);
             }
         }
-
-        var resultColl = translationMap.values();
-        NodeID[] newIDs = resultColl.toArray(new NodeID[resultColl.size()]);
-
-        return WorkflowCopyContent.builder() //
-            .setAnnotationIDs(loadedAnnotationIDs) //
-            .setNodeIDs(newIDs) //
-            .build();
     }
 
     /**
@@ -8971,8 +9023,8 @@ public final class WorkflowManager extends NodeContainer
         return translationMap;
     }
 
-    private Map<Integer, NodeID> loadNodesAndConnectionsDef(final Map<String, ? extends BaseNodeDef> nodesDef,
-        final Set<ConnectionContainerTemplate> connections, final ExecutionMonitor exec, final LoadResult loadResult) throws CanceledExecutionException {
+    private Map<Integer, NodeID> loadNodes(final Map<String, ? extends BaseNodeDef> nodesDef,
+        final ExecutionMonitor exec, final LoadResult loadResult) throws CanceledExecutionException {
         // id suffix are made unique by using the entries in this map
         @SuppressWarnings("serial")
         Map<Integer, NodeID> translationMap = new LinkedHashMap<Integer, NodeID>() {
@@ -9001,15 +9053,10 @@ public final class WorkflowManager extends NodeContainer
                 }
                 translationMap.put(suffix, subNodeId);
                 var container = createNodeContainer(subNodeId, node);
-                container.loadContent(node, exec, loadResult);
                 addNodeContainer(container, false);
-//                if (pers.isDirtyAfterLoad()) { @here we will need this for the actual loading.
-//                    container.setDirty();
-//                }
+                container.loadContent(node, exec, loadResult);
             }
         }
-
-        addConnectionsFromTemplates(connections, loadResult, translationMap, true);
         return translationMap;
     }
 
@@ -9039,8 +9086,8 @@ public final class WorkflowManager extends NodeContainer
      */
     static WorkflowManager newMetaNodeInstance(final WorkflowManager parent, final NodeID nodeId,
         final MetaNodeDef def) {
-        var wfm = new WorkflowManager(parent, nodeId, def, def.getWorkflow());
-        wfm.m_templateInformation = MetaNodeTemplateInformation.createNewTemplate(def.getLink(), TemplateType.MetaNode);
+        var wfm = new WorkflowManager(null, parent, nodeId, false, def, def.getWorkflow());
+        wfm.setTemplateInformation(MetaNodeTemplateInformation.createNewTemplate(def.getLink(), TemplateType.MetaNode));
         wfm.m_cipher = WorkflowCipher.toWorkflowCipher(def.getCipher());
         var inports = def.getInPorts();
         wfm.m_inPorts = new WorkflowInPort[inports.size()];
@@ -9056,9 +9103,8 @@ public final class WorkflowManager extends NodeContainer
             wfm.m_outPorts[i] = new WorkflowOutPort(outports.get(i).getIndex(), portType);
             wfm.m_outPorts[i].setPortName(outports.get(i).getName());
         }
-        wfm.m_inPortsBarUIInfo = DefToCoreUtil.toNodeUIInformation(def.getInPortsBarUIInfo());
-        wfm.m_outPortsBarUIInfo = DefToCoreUtil.toNodeUIInformation(def.getOutPortsBarUIInfo());
-        wfm.m_workflowLock = new WorkflowLock(wfm, wfm.m_directNCParent);
+        wfm.setInPortsBarUIInfo(DefToCoreUtil.toNodeUIInformation(def.getInPortsBarUIInfo()));
+        wfm.setOutPortsBarUIInfo(DefToCoreUtil.toNodeUIInformation(def.getOutPortsBarUIInfo()));
         wfm.setDirty();
         return wfm;
     }
@@ -9074,7 +9120,7 @@ public final class WorkflowManager extends NodeContainer
      */
     static WorkflowManager newProjectInstance(final WorkflowManager parent, final NodeID nodeId,
         final RootWorkflowDef def) throws InvalidSettingsException {
-        var wfm = new WorkflowManager(parent, nodeId, null, def.getWorkflow());
+        var wfm = new WorkflowManager(null, parent, nodeId, true, null, def.getWorkflow());
         var flowVariables = def.getFlowVariables().stream() //
             .map(DefToCoreUtil::toFlowVariable) //
             .collect(Collectors.toList());
@@ -9085,7 +9131,6 @@ public final class WorkflowManager extends NodeContainer
             wfm.m_workflowContext =
                 new WorkflowContext.Factory(parent.getNodeContainerDirectory().getFile()).createContext();
         }
-        wfm.m_workflowLock = new WorkflowLock(wfm);
         return wfm;
     }
 
@@ -9097,21 +9142,11 @@ public final class WorkflowManager extends NodeContainer
      * @param def a {@link ComponentNodeDef}
      * @return a {@link WorkflowManager}
      */
-    static WorkflowManager newComponentWorkflowManagerInstance(final WorkflowManager parent, final NodeID nodeId,
+    static WorkflowManager newComponentWorkflowManagerInstance(final SubNodeContainer directNCParent, final NodeID nodeId,
         final ComponentNodeDef def) {
-        var wfm = new WorkflowManager(parent, nodeId, def, def.getWorkflow());
+        var wfm = new WorkflowManager(directNCParent, null, nodeId, false, def, def.getWorkflow());
+        wfm.setTemplateInformation(MetaNodeTemplateInformation.createNewTemplate(def.getTemplateInfo(), TemplateType.SubNode));;
         wfm.m_cipher = WorkflowCipher.toWorkflowCipher(def.getCipher());
-        if (parent.getNodeContainerDirectory() != null) {
-            wfm.m_workflowContext =
-                new WorkflowContext.Factory(parent.getNodeContainerDirectory().getFile()).createContext();
-        }
-        wfm.m_workflowLock = new WorkflowLock(wfm);
-        // TODO create correct template information - use same as for subnodecontainer
-        wfm.m_templateInformation = MetaNodeTemplateInformation.createNewTemplate(def.getTemplateInfo(), TemplateType.SubNode);
-
-        wfm.m_inPorts = new WorkflowInPort[0];
-        wfm.m_outPorts = new WorkflowOutPort[0];
-
         return wfm;
     }
 

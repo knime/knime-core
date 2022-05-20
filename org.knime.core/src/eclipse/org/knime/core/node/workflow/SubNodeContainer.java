@@ -334,11 +334,11 @@ public final class SubNodeContainer extends SingleNodeContainer
     SubNodeContainer(final WorkflowManager parent, final NodeID id, final ComponentNodeDef def) {
         super(parent, id, def);
         m_subnodeScopeContext = new FlowSubnodeScopeContext(this);
-        m_wfm = WorkflowManager.newComponentWorkflowManagerInstance(parent, id, def);
+        m_wfm = WorkflowManager.newComponentWorkflowManagerInstance(this, new NodeID(id, 0), def);
         m_wfm.setJobManager(null);
         var inports = def.getInPorts();
         var outports = def.getOutPorts();
-        m_outports = new NodeContainerOutPort[def.getOutPorts().size()];
+        m_outports = new NodeContainerOutPort[outports.size()];
         m_outputs = new Output[outports.size()];
         for (var i = 0; i < outports.size(); i++) {
             var portType = DefToCoreUtil.toPortType(outports.get(i).getPortType());
@@ -351,10 +351,11 @@ public final class SubNodeContainer extends SingleNodeContainer
         m_inHiliteHandler = new HiLiteHandler[inports.size()- 1];
         m_virtualInNodeIDSuffix = def.getVirtualInNodeId();
         m_virtualOutNodeIDSuffix = def.getVirtualOutNodeId();
-        m_subnodeLayoutStringProvider = new SubnodeContainerLayoutStringProvider(def.getDialogSettings().getLayoutJSON());
-        m_subnodeConfigurationStringProvider = new SubnodeContainerConfigurationStringProvider(def.getDialogSettings().getConfigurationLayoutJSON());
-        m_hideInWizard = def.getDialogSettings().isHideInWizard();
-        m_customCSS = def.getDialogSettings().getCssStyles();
+        var dialogSettings = def.getDialogSettings();
+        m_subnodeLayoutStringProvider = new SubnodeContainerLayoutStringProvider(dialogSettings.getLayoutJSON());
+        m_subnodeConfigurationStringProvider = new SubnodeContainerConfigurationStringProvider(dialogSettings.getConfigurationLayoutJSON());
+        m_hideInWizard = dialogSettings.isHideInWizard();
+        m_customCSS = dialogSettings.getCssStyles();
         PortType[] inTypes = new PortType[inports.size()];
         for (var i = 0; i < inports.size(); i++) {
             inTypes[i] = DefToCoreUtil.toPortType(inports.get(i).getPortType());
@@ -1952,7 +1953,7 @@ public final class SubNodeContainer extends SingleNodeContainer
         }
     }
 
-    /** Callback from persistor. */
+    /** Callback from persistor. Link the virtual input/output nodes to the component that contains them. */
      void postLoadWFM() {
          getVirtualInNodeModel().setSubNodeContainer(this);
          getVirtualOutNodeModel().setSubNodeContainer(this);
@@ -3067,8 +3068,12 @@ public final class SubNodeContainer extends SingleNodeContainer
         super.loadContent(nodeDef, exec, loadResult);
 
         var componentNodeDef = (ComponentNodeDef) nodeDef;
-
-        m_wfm.loadContent(componentNodeDef.getWorkflow(), exec, loadResult);
+        NodeContext.pushContext(this);
+        try {
+            m_wfm.loadContent(componentNodeDef.getWorkflow(), exec, loadResult);
+        } finally {
+            NodeContext.removeLastContext();
+        }
         if (!m_wfm.getInternalState().equals(InternalNodeContainerState.IDLE)) {
             // can happen for workflows that were exported without data;
             // the same check is done by the caller (WorkflowManager#postLoad) and handled appropriately
@@ -3091,7 +3096,6 @@ public final class SubNodeContainer extends SingleNodeContainer
         loadLegacyPortNamesAndDescriptionsFromInOutNodes();
 
         // put data input output node if it was executed;
-        final NativeNodeContainer virtualOutNode = getVirtualOutNode();
         setVirtualOutputIntoOutport(m_wfm.getInternalState());
         m_wfmStateChangeListener = createAndAddStateListener();
         m_wfmListener = createAndAddWorkflowListener();

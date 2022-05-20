@@ -90,10 +90,14 @@ import org.knime.core.node.workflow.SubNodeContainer;
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  * @since 2.10
  */
-public final class VirtualSubNodeInputNodeModel extends ExtendedScopeNodeModel {
+public final class VirtualSubNodeInputNodeModel extends ExtendedScopeNodeModel implements VirtualSubNodeInOut {
 
     /** Needed to fetch data and flow object stack. */
     private int m_numberOfPorts;
+
+    /**
+     * Used to fetch input data.
+     */
     private SubNodeContainer m_subNodeContainer;
     private VirtualSubNodeInputConfiguration m_configuration;
 
@@ -292,9 +296,7 @@ public final class VirtualSubNodeInputNodeModel extends ExtendedScopeNodeModel {
         // no internals
     }
 
-    /**
-     * @param subNodeContainer
-     */
+    @Override
     public void setSubNodeContainer(final SubNodeContainer subNodeContainer) {
         m_subNodeContainer = subNodeContainer;
     }

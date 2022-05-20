@@ -90,7 +90,6 @@ import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 import org.knime.shared.workflow.def.BaseNodeDef;
 import org.knime.shared.workflow.def.NodeLocksDef;
-import org.knime.shared.workflow.def.WorkflowDef;
 
 /**
  * Abstract super class for containers holding node or just structural
@@ -235,25 +234,22 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
      * @param id the nodes identifier
      */
     NodeContainer(final WorkflowManager parent, final NodeID id, final BaseNodeDef def) {
-        m_parent = parent;
-        if (m_parent == null) {
+        this(parent, id);
+        m_state = InternalNodeContainerState.IDLE;
+        var annoData = new NodeAnnotationData(true);
+        m_nodeLocks = DefToCoreUtil.toNodeLocks(def.getLocks());
+        m_customDescription = def.getCustomDescription();
+        m_uiInformation = DefToCoreUtil.toNodeUIInformation(def.getUiInfo());
+        m_jobManager = DefToCoreUtil.toJobManager(def.getJobManager());
+        annoData = DefToCoreUtil.toAnnotationData(annoData, def.getAnnotation().getData());
+        if (!annoData.isDefault()) {
+            m_annotation.getData().copyFrom(annoData, true);
+        }
+
+        if (m_parent == null && !(m_jobManager instanceof ThreadNodeExecutionJobManager)) {
             // make sure at least the top node knows how to execute stuff
             m_jobManager = NodeExecutionJobManagerPool.getDefaultJobManagerFactory().getInstance();
         }
-        m_id = id;
-        m_state = InternalNodeContainerState.IDLE;
-        if (def != null) {
-            m_nodeLocks = DefToCoreUtil.toNodeLocks(def.getLocks());
-            m_customDescription = def.getCustomDescription();
-            m_annotation = NodeAnnotation.copyFrom(def.getAnnotation());
-            m_uiInformation = DefToCoreUtil.toNodeUIInformation(def.getUiInfo());
-        } else {
-            m_nodeLocks = new NodeLocks(false, false, false);
-            m_annotation = new NodeAnnotation(new NodeAnnotationData(true));
-        }
-
-        m_annotation.registerOnNodeContainer(getID(), this::setDirty);
-        addUIInformationListener(m_annotation);
     }
 
     /**
@@ -1638,19 +1634,6 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
             final FlowObjectStack inStack, final ExecutionMonitor exec,
             final LoadResult loadResult, final boolean preserveNodeMessage)
             throws CanceledExecutionException;
-
-    /**
-     * Loads the content of the workflow def by creating the NodeContainer instances.
-     *
-     * @param workflowDef a {@link WorkflowDef}
-     * @param exec for progress
-     * @param loadResult Where to report errors/warnings to
-     * @return The workflow content that was inserted (NodeID's and annotations), for single node containers the result
-     *         is null.
-     * @throws CanceledExecutionException
-     */
-    abstract WorkflowCopyContent loadContent(final WorkflowDef workflowDef, final ExecutionMonitor exec,
-        final LoadResult loadResult) throws CanceledExecutionException;
 
     /**
      * Loads the content of the BaseNodeDef by loading the configuration from the def.

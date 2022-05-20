@@ -75,7 +75,6 @@ import org.knime.core.node.workflow.def.DefToCoreUtil;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 import org.knime.shared.workflow.def.BaseNodeDef;
 import org.knime.shared.workflow.def.ConfigurableNodeDef;
-import org.knime.shared.workflow.def.WorkflowDef;
 import org.w3c.dom.Element;
 
 /**
@@ -872,19 +871,6 @@ public abstract class SingleNodeContainer extends NodeContainer {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    WorkflowCopyContent loadContent(final WorkflowDef workflowDef, final ExecutionMonitor exec, final LoadResult loadResult)
-        throws CanceledExecutionException {
-
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     @Override
     void loadContent(final BaseNodeDef nodeDef, final ExecutionMonitor exec, final LoadResult loadResult)
         throws CanceledExecutionException {
@@ -901,15 +887,15 @@ public abstract class SingleNodeContainer extends NodeContainer {
                 var internalSettings = DefToCoreUtil.toNodeSettings(singleNodeDef.getInternalNodeSubSettings());
                 sncSettings = new SingleNodeContainerSettings(internalSettings);
             } catch (InvalidSettingsException ex) {
-                LOGGER.error(String.format("Can't create the single node container settings: %s", ex.getMessage()));
+                final String msg = String.format("Can't create the single node container settings: %s", ex.getMessage());
+                LOGGER.error(msg, ex);
+                loadResult.addError(msg);
             }
             if (sncSettings == null) {
                 LOGGER.coding("SNC settings from def are null, using default");
                 sncSettings = new SingleNodeContainerSettings();
             }
             m_settings = sncSettings;
-            NodeContext.pushContext(this);
-            NodeContext.removeLastContext();
         }
     }
 
