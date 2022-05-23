@@ -72,6 +72,7 @@ import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.util.Pair;
 import org.knime.core.webui.data.ApplyDataService;
 import org.knime.core.webui.data.DataServiceProvider;
 import org.knime.core.webui.data.InitialDataService;
@@ -99,8 +100,8 @@ public abstract class NodeDialog implements DataServiceProvider {
      *
      * NOTE: when called a {@link NodeContext} needs to be available
      *
-     * @param settingsTypes the list of {@link SettingsType}s the {@link TextNodeSettingsService} is able to deal with; must not be
-     *            empty
+     * @param settingsTypes the list of {@link SettingsType}s the {@link TextNodeSettingsService} is able to deal with;
+     *            must not be empty
      */
     protected NodeDialog(final SettingsType... settingsTypes) {
         CheckUtils.checkState(settingsTypes.length > 0, "At least one settings type must be provided");
@@ -171,7 +172,12 @@ public abstract class NodeDialog implements DataServiceProvider {
             if (m_settingsTypes.contains(settingsType)) {
                 NodeSettings settings;
                 try {
-                    settings = m_nnc.getNodeSettings().getNodeSettings(settingsType.getConfigKey());
+                    if (settingsType == SettingsType.VIEW) {
+                        settings = m_nnc.getViewSettingsUsingFlowObjectStack()
+                            .orElseThrow(() -> new InvalidSettingsException(""));
+                    } else {
+                        settings = m_nnc.getModelSettingsUsingFlowObjectStack();
+                    }
                 } catch (InvalidSettingsException ex) { // NOSONAR
                     settings = new NodeSettings("default_settings");
                     m_textNodeSettingsService.getDefaultNodeSettings(Map.of(settingsType, settings), specs);
@@ -240,29 +246,47 @@ public abstract class NodeDialog implements DataServiceProvider {
 
                 // extract model and view settings from nodeSettings object
                 Map<SettingsType, NodeSettingsWO> settingsMap = new EnumMap<>(SettingsType.class);
-                NodeSettings modelSettings = getModelSettings(nodeSettings, settingsMap);
-                NodeSettings viewSettings =  getViewSettings(nodeSettings, settingsMap);
+                var modelSettings = getModelSettings(nodeSettings, previousNodeSettings, settingsMap);
+                var viewSettings = getViewSettings(nodeSettings, previousNodeSettings, settingsMap);
 
                 // transfer data into settings, i.e., apply the data to the settings
                 m_textNodeSettingsService.toNodeSettings(data, settingsMap);
 
                 // determine whether model or view settings changed by comparing against the previousNodeSettings
-                var modelSettingsChanged =
-                    settingsChanged(previousNodeSettings, modelSettings, SettingsType.MODEL.getConfigKey());
-                var viewSettingsChanged =
-                    settingsChanged(previousNodeSettings, viewSettings, SettingsType.VIEW.getConfigKey());
+                var modelSettingsChanged = settingsChanged(modelSettings);
+                var viewSettingsChanged = settingsChanged(viewSettings);
 
+                NodeSettings viewVariables = null;
                 if (viewSettingsChanged) {
+                    if (nodeSettings.containsKey(SettingsType.VIEW.getVariablesConfigKey())) {
+                        // if setting is overwritten by a flow variable, then replace the setting in 'viewSettings' by
+                        // by the value given by 'previousViewSettings'
+                        viewVariables = nodeSettings.getNodeSettings(SettingsType.VIEW.getVariablesConfigKey())
+                            .getNodeSettings("tree");
+                        replaceVariableControlledSettingsWithPreviousSettings(viewVariables, viewSettings.getFirst(),
+                            viewSettings.getSecond());
+                    }
+
                     // validate settings
                     var nodeView = NodeViewManager.getInstance().getNodeView(m_nnc);
-                    nodeView.validateSettings(viewSettings);
+                    nodeView.validateSettings(viewSettings.getFirst());
                 }
 
                 if (modelSettingsChanged) {
+                    if (nodeSettings.containsKey(SettingsType.MODEL.getVariablesConfigKey())) {
+                        // if setting is overwritten by flow variable, then replace the setting in 'modelSettings' by
+                        // by the value given by 'previousModelSettings'
+                        var modelVariables = nodeSettings.getNodeSettings(SettingsType.MODEL.getVariablesConfigKey())
+                            .getNodeSettings("tree");
+                        replaceVariableControlledSettingsWithPreviousSettings(modelVariables, modelSettings.getFirst(),
+                            modelSettings.getSecond());
+                    }
+
                     // 'persist' settings and load model settings into the node model
                     wfm.loadNodeSettings(nodeID, nodeSettings);
                 } else if (viewSettingsChanged) {
-                    loadViewSettingsIntoNode(wfm, nodeID, viewSettings, nodeSettings, previousNodeSettings);
+                    loadViewSettingsIntoNode(wfm, nodeID, viewVariables, viewSettings.getFirst(),
+                        viewSettings.getSecond(), nodeSettings);
                 }
 
             } catch (InvalidSettingsException ex) {
@@ -270,30 +294,47 @@ public abstract class NodeDialog implements DataServiceProvider {
             }
         }
 
-        private static void loadViewSettingsIntoNode(final WorkflowManager wfm,
-            final NodeID nodeID, final NodeSettings viewSettings, final NodeSettings nodeSettings,
-            final NodeSettings previousNodeSettings) throws InvalidSettingsException {
+        private static void loadViewSettingsIntoNode(final WorkflowManager wfm, final NodeID nodeID,
+            final NodeSettings viewVariables, final NodeSettings viewSettings, final NodeSettings previousViewSettings,
+            final NodeSettings nodeSettings) throws InvalidSettingsException {
             // if there are any view variables, i.e., variables controlling or exposing settings
-            if (nodeSettings.containsKey(SettingsType.VIEW.getVariablesConfigKey())) {
-                var viewVariables =
-                    nodeSettings.getNodeSettings(SettingsType.VIEW.getVariablesConfigKey()).getNodeSettings("tree");
-                var previousViewSettings =
-                    getOrCreateSubSettings(previousNodeSettings, SettingsType.VIEW.getConfigKey());
-                if (exposedSettingsChanged(viewVariables, viewSettings, previousViewSettings)) {
-                    // 'persist' settings and reset the node (i.e., do as if model settings had changed)
-                    wfm.loadNodeSettings(nodeID, nodeSettings);
-                    return;
-                }
+            if (viewVariables != null && exposedSettingsChanged(viewVariables, viewSettings, previousViewSettings)) {
+                // 'persist' settings and reset the node (i.e., do as if model settings had changed)
+                wfm.loadNodeSettings(nodeID, nodeSettings);
+            } else {
+                // 'persist' view settings only (without resetting the node)
+                wfm.loadNodeViewSettings(nodeID, nodeSettings);
             }
-
-            // 'persist' view settings only (without resetting the node)
-            wfm.loadNodeViewSettings(nodeID, nodeSettings);
         }
 
         // Helper method to recursively determine whether there is any setting that has changed and that is exposed as a variable
         private static boolean exposedSettingsChanged(final NodeSettingsRO variables, final NodeSettingsRO settings,
             final NodeSettingsRO previousSettings) {
-            for (String key : variables) {
+            return traverseSettingsTrees(variables, settings, previousSettings,
+                (variable, setting, previousSetting) -> isExposedAsVariableButNotControlledByAVariable(variable)
+                    && !setting.isIdentical(previousSetting));
+        }
+
+        private static void replaceVariableControlledSettingsWithPreviousSettings(final NodeSettingsRO variables,
+            final NodeSettingsRO settings, final NodeSettingsRO previousSettings) {
+            traverseSettingsTrees(variables, settings, previousSettings, (variable, setting, previousSetting) -> {
+                if (isVariableControllingSetting(variable)) {
+                    // replace the value of setting with the value of previousSetting
+                    var parent = (NodeSettings)setting.getParent();
+                    parent.addEntry(previousSetting);
+                }
+                return false;
+            });
+        }
+
+        /*
+         * Traverses the variable-settings-tree (i.e. whether a setting is controlled by a variable or exposed as a variable)
+         * and a settings tree at the same time and evaluates the 'stopCriterion' at every leaf.
+         * Returns 'true' if the traversal has been stopped early, i.e. before all leaves have been visited.
+         */
+        private static boolean traverseSettingsTrees(final NodeSettingsRO variables, final NodeSettingsRO settings,
+            final NodeSettingsRO previousSettings, final StopCriterion stopCriterion) {
+            for (String key : variables) { // NOSONAR
                 // runtime is quadratic in number of settings, since the getSettingsChildByKey has linear runtime
                 var variable = getSettingsChildByKey(variables, key);
                 if (!(variable instanceof NodeSettingsRO)) {
@@ -309,15 +350,19 @@ public abstract class NodeDialog implements DataServiceProvider {
                 }
 
                 if (setting instanceof NodeSettingsRO && previousSetting instanceof NodeSettingsRO) {
-                    if (exposedSettingsChanged((NodeSettingsRO)variable, (NodeSettingsRO)setting,
-                        (NodeSettingsRO)previousSetting)) {
+                    if (traverseSettingsTrees((NodeSettingsRO)variable, (NodeSettingsRO)setting,
+                        (NodeSettingsRO)previousSetting, stopCriterion)) {
                         return true;
                     }
-                } else if (isExposedVariable((NodeSettingsRO)variable) && !setting.isIdentical(previousSetting)) {
+                } else if (stopCriterion.stop((NodeSettingsRO)variable, setting, previousSetting)) {
                     return true;
                 }
             }
             return false;
+        }
+
+        private static interface StopCriterion {
+            boolean stop(NodeSettingsRO variable, AbstractConfigEntry setting, AbstractConfigEntry previousSetting);
         }
 
         // Helper method to get a child of arbitrary type by its key / name
@@ -335,36 +380,49 @@ public abstract class NodeDialog implements DataServiceProvider {
             return null;
         }
 
-        // Helper method to determine whether a given setting is exposed as a variable
-        private static boolean isExposedVariable(final NodeSettingsRO setting) {
-            return setting.containsKey("exposed_variable") && setting.getString("exposed_variable", null) != null;
+        private static boolean isVariableControllingSetting(final NodeSettingsRO variable) {
+            return variable.getString("used_variable", null) != null;
         }
 
-        private static boolean settingsChanged(final NodeSettings previousNodeSettings, final NodeSettings subSettings,
-            final String subSettingsKey) throws InvalidSettingsException {
-            if (subSettings != null) {
-                var previousViewSettings = getOrCreateSubSettings(previousNodeSettings, subSettingsKey);
-                return !previousViewSettings.equals(subSettings);
+        // Helper method to determine whether a given setting is exposed as a variable
+        private static boolean isExposedAsVariableButNotControlledByAVariable(final NodeSettingsRO variable) {
+            return variable.getString("exposed_variable", null) != null
+                && variable.getString("used_variable", null) == null;
+        }
+
+        private static boolean settingsChanged(final Pair<NodeSettings, NodeSettings> settings) {
+            if (settings != null) {
+                return !settings.getFirst().equals(settings.getSecond());
             }
             return false;
         }
 
-        private NodeSettings getViewSettings(final NodeSettings settings,
-            final Map<SettingsType, NodeSettingsWO> settingsMap) throws InvalidSettingsException {
+        /*
+         * Returns a pair of the view settings and the previous view settings. Or null if there aren't any view settings.
+         */
+        private Pair<NodeSettings, NodeSettings> getViewSettings(final NodeSettings settings,
+            final NodeSettings previousSettings, final Map<SettingsType, NodeSettingsWO> settingsMap)
+            throws InvalidSettingsException {
             if (hasViewSettings()) {
                 var viewSettings = getOrCreateSubSettings(settings, SettingsType.VIEW.getConfigKey());
+                var previousViewSettings = getOrCreateSubSettings(previousSettings, SettingsType.VIEW.getConfigKey());
                 settingsMap.put(SettingsType.VIEW, viewSettings);
-                return viewSettings;
+                return Pair.create(viewSettings, previousViewSettings);
             }
             return null;
         }
 
-        private NodeSettings getModelSettings(final NodeSettings settings,
-            final Map<SettingsType, NodeSettingsWO> settingsMap) throws InvalidSettingsException {
+        /*
+         * Returns a pair of the model settings and the previous model settings. Or null if there aren't any model settings.
+         */
+        private Pair<NodeSettings, NodeSettings> getModelSettings(final NodeSettings settings,
+            final NodeSettings previousSettings, final Map<SettingsType, NodeSettingsWO> settingsMap)
+            throws InvalidSettingsException {
             if (hasModelSettings()) {
                 var modelSettings = getOrCreateSubSettings(settings, SettingsType.MODEL.getConfigKey());
+                var previousModelSettings = getOrCreateSubSettings(previousSettings, SettingsType.MODEL.getConfigKey());
                 settingsMap.put(SettingsType.MODEL, modelSettings);
-                return modelSettings;
+                return Pair.create(modelSettings, previousModelSettings);
             } else {
                 // even if the node has no model settings,
                 // we still have to add empty model settings since the wfm expects node settings to be present
@@ -409,6 +467,7 @@ public abstract class NodeDialog implements DataServiceProvider {
     final class LegacyFlowVariableNodeDialog extends NodeDialogPane {
 
         private static final String FLOW_VARIABLES_TAB_NAME = "Flow Variables";
+
         private NodeSettingsRO m_modelSettings;
 
         @Override

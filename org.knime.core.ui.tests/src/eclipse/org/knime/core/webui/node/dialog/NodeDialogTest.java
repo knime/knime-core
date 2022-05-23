@@ -49,6 +49,7 @@
 package org.knime.core.webui.node.dialog;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 
 import java.awt.Container;
@@ -69,6 +70,7 @@ import org.knime.core.node.config.ConfigEditTreeModel.ConfigEditTreeNode;
 import org.knime.core.node.config.base.JSONConfig;
 import org.knime.core.node.config.base.JSONConfig.WriterConfig;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.webui.data.DataService;
@@ -138,6 +140,72 @@ public class NodeDialogTest {
         assertThat(nc.getNodeContainerState().isExecuted(), is(false));
         wfm.saveNodeSettings(nc.getID(), newSettings);
         assertThat(newSettings.getNodeSettings(SettingsType.VIEW.getConfigKey()), is(viewSettings));
+
+        WorkflowManagerUtil.disposeWorkflow(wfm);
+    }
+
+    /**
+     * Tests that settings that are controlled by flow variables are properly returned in the node dialog's initial data
+     * (i.e. with the flow variable value) and properly applied (i.e. ignored when being written into the node
+     * settings).
+     *
+     * @throws IOException
+     * @throws InvalidSettingsException
+     */
+    @Test
+    public void testGetAndApplySettingsControlledByFlowVariables() throws IOException, InvalidSettingsException {
+        var wfm = WorkflowManagerUtil.createEmptyWorkflow();
+        var nc = WorkflowManagerUtil.createAndAddNode(wfm,
+            new NodeDialogNodeFactory(() -> createNodeDialog(Page.builder(() -> "test", "test.html").build(),
+                createTextSettingsDataService(), null)));
+
+        var modelSettings = new NodeSettings("model");
+        var viewSettings = new NodeSettings("view");
+        modelSettings.addString("model_key1", "model_setting_value");
+        viewSettings.addString("view_key1", "view_setting_value");
+
+        var nodeDialogManager = NodeDialogManager.getInstance();
+        nodeDialogManager.callTextApplyDataService(nc, settingsToString(modelSettings, viewSettings));
+        var nodeSettings = new NodeSettings("node_settings");
+        wfm.saveNodeSettings(nc.getID(), nodeSettings);
+
+        // apply node settings that are controlled by a flow variable -> the flow variable must not end up in the settings
+        wfm.loadNodeSettings(nc.getID(), nodeSettings);
+        var initialSettings = nodeDialogManager.callTextInitialDataService(nc);
+        assertThat(initialSettings,
+            containsString("\"view_key1\":{\"type\":\"string\",\"value\":\"view_setting_value\"}"));
+        assertThat(initialSettings,
+            containsString("\"model_key1\":{\"type\":\"string\",\"value\":\"model_setting_value\"}"));
+
+        var viewVariables = nodeSettings.addNodeSettings("view_variables");
+        viewVariables.addString("version", "V_2019_09_13");
+        var viewVariable = viewVariables.addNodeSettings("tree").addNodeSettings("view_key1");
+        viewVariable.addString("used_variable", "view_variable");
+        viewVariable.addString("exposed_variable", null);
+        var modelVariables = nodeSettings.addNodeSettings("variables");
+        modelVariables.addString("version", "V_2019_09_13");
+        var modelVariable = modelVariables.addNodeSettings("tree").addNodeSettings("model_key1");
+        modelVariable.addString("used_variable", "model_variable");
+        modelVariable.addString("exposed_variable", null);
+        wfm.loadNodeSettings(nc.getID(), nodeSettings);
+        nc.getFlowObjectStack().push(new FlowVariable("view_variable", "view_variable_value"));
+        nc.getFlowObjectStack().push(new FlowVariable("model_variable", "model_variable_value"));
+
+        // make sure that the flow variable value is part of the initial data
+        initialSettings = nodeDialogManager.callTextInitialDataService(nc);
+        assertThat(initialSettings,
+            containsString("\"view_key1\":{\"type\":\"string\",\"value\":\"view_variable_value\"}"));
+        assertThat(initialSettings,
+            containsString("\"model_key1\":{\"type\":\"string\",\"value\":\"model_variable_value\"}"));
+
+        // make sure that any applied settings that are controlled by a flow variable, are ignored
+        // (i.e. aren't 'persisted' with the node settings)
+        viewSettings.addString("view_key1", "new_value_to_be_ignored_on_apply");
+        viewSettings.addString("model_key1", "new_value_to_be_ignored_on_apply");
+        nodeDialogManager.callTextApplyDataService(nc, settingsToString(modelSettings, viewSettings));
+        wfm.saveNodeSettings(nc.getID(), nodeSettings);
+        assertThat(nodeSettings.getNodeSettings("view").getString("view_key1"), is("view_setting_value"));
+        assertThat(nodeSettings.getNodeSettings("model").getString("model_key1"), is("model_setting_value"));
 
         WorkflowManagerUtil.disposeWorkflow(wfm);
     }
@@ -240,7 +308,7 @@ public class NodeDialogTest {
             @Override
             public String fromNodeSettings(final Map<SettingsType, NodeSettingsRO> settings,
                 final PortObjectSpec[] specs) {
-                throw new UnsupportedOperationException();
+                return settingsToString(settings.get(SettingsType.MODEL), settings.get(SettingsType.VIEW));
             }
 
             @Override
