@@ -429,7 +429,9 @@ public class DefToCoreUtil {
         //        var value = type.loadValue(toNodeSettings(def.getValue()));
         //        FlowVariable.lo
         try {
-            return FlowVariable.load(toNodeSettings(def.getValue()));
+            // TODO fix to ConfigMapDef (AP-18944)
+//            return FlowVariable.load(toNodeSettings(def.getValue()));
+            throw new InvalidSettingsException("Loading flow variables not supported");
         } catch (InvalidSettingsException ex) {
             throw new IllegalArgumentException("Can not load flow variable from " + def, ex);
         }
