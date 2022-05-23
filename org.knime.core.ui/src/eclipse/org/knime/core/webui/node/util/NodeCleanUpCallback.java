@@ -79,6 +79,10 @@ public final class NodeCleanUpCallback implements WorkflowListener {
 
     @Override
     public void workflowChanged(final WorkflowEvent e) {
+        if (m_onCleanUp == null) {
+            // already cleaned up
+            return;
+        }
         if (e.getType() == WorkflowEvent.Type.NODE_REMOVED) {
             if (e.getOldValue() instanceof WorkflowManager && ((WorkflowManager)e.getOldValue()).getID()
                 .getIndex() == m_nnc.getParent().getProjectWFM().getID().getIndex()) {
