@@ -201,7 +201,7 @@ public class NodeDialogTest {
         // make sure that any applied settings that are controlled by a flow variable, are ignored
         // (i.e. aren't 'persisted' with the node settings)
         viewSettings.addString("view_key1", "new_value_to_be_ignored_on_apply");
-        viewSettings.addString("model_key1", "new_value_to_be_ignored_on_apply");
+        modelSettings.addString("model_key1", "new_value_to_be_ignored_on_apply");
         nodeDialogManager.callTextApplyDataService(nc, settingsToString(modelSettings, viewSettings));
         wfm.saveNodeSettings(nc.getID(), nodeSettings);
         assertThat(nodeSettings.getNodeSettings("view").getString("view_key1"), is("view_setting_value"));

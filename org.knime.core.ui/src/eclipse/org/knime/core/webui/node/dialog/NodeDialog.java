@@ -180,6 +180,12 @@ public abstract class NodeDialog implements DataServiceProvider {
                     }
                 } catch (InvalidSettingsException ex) { // NOSONAR
                     settings = new NodeSettings("default_settings");
+                    // Important assumption here (which is given):
+                    // We'll end up here when no (model or view) settings have been stored with the node, yet.
+                    // It's the case when no settings have been applied for the node, yet (via the dialog).
+                    // And if no settings have been applied, yet, there can also be no flow variables configured
+                    // to overwrite a setting.
+                    // Thus, no need to merge the default settings with flow variable values (as done above).
                     m_textNodeSettingsService.getDefaultNodeSettings(Map.of(settingsType, settings), specs);
                 }
                 resultSettings.put(settingsType, settings);
@@ -308,7 +314,7 @@ public abstract class NodeDialog implements DataServiceProvider {
         }
 
         // Helper method to recursively determine whether there is any setting that has changed and that is exposed as a variable
-        private static boolean exposedSettingsChanged(final NodeSettingsRO variables, final NodeSettingsRO settings,
+        private static boolean exposedSettingsChanged(final NodeSettingsRO variables, final NodeSettings settings,
             final NodeSettingsRO previousSettings) {
             return traverseSettingsTrees(variables, settings, previousSettings,
                 (variable, setting, previousSetting) -> isExposedAsVariableButNotControlledByAVariable(variable)
@@ -316,7 +322,7 @@ public abstract class NodeDialog implements DataServiceProvider {
         }
 
         private static void replaceVariableControlledSettingsWithPreviousSettings(final NodeSettingsRO variables,
-            final NodeSettingsRO settings, final NodeSettingsRO previousSettings) {
+            final NodeSettings settings, final NodeSettingsRO previousSettings) {
             traverseSettingsTrees(variables, settings, previousSettings, (variable, setting, previousSetting) -> {
                 if (isVariableControllingSetting(variable)) {
                     // replace the value of setting with the value of previousSetting
@@ -330,9 +336,9 @@ public abstract class NodeDialog implements DataServiceProvider {
         /*
          * Traverses the variable-settings-tree (i.e. whether a setting is controlled by a variable or exposed as a variable)
          * and a settings tree at the same time and evaluates the 'stopCriterion' at every leaf.
-         * Returns 'true' if the traversal has been stopped early, i.e. before all leaves have been visited.
+         * Returns 'true' if the stop criterion has been evaluated to 'true' during the traversal.
          */
-        private static boolean traverseSettingsTrees(final NodeSettingsRO variables, final NodeSettingsRO settings,
+        private static boolean traverseSettingsTrees(final NodeSettingsRO variables, final NodeSettings settings,
             final NodeSettingsRO previousSettings, final StopCriterion stopCriterion) {
             for (String key : variables) { // NOSONAR
                 // runtime is quadratic in number of settings, since the getSettingsChildByKey has linear runtime
@@ -350,7 +356,7 @@ public abstract class NodeDialog implements DataServiceProvider {
                 }
 
                 if (setting instanceof NodeSettingsRO && previousSetting instanceof NodeSettingsRO) {
-                    if (traverseSettingsTrees((NodeSettingsRO)variable, (NodeSettingsRO)setting,
+                    if (traverseSettingsTrees((NodeSettingsRO)variable, (NodeSettings)setting,
                         (NodeSettingsRO)previousSetting, stopCriterion)) {
                         return true;
                     }
