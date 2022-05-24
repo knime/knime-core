@@ -7,7 +7,7 @@ Bundle-ClassPath: .
 Bundle-Vendor: KNIME AG, Zurich, Switzerland
 Fragment-Host: org.slf4j.api;bundle-version="[1.7.2.v20121108-1250,2)"
 Require-Bundle: org.knime.core;bundle-version="[4.3.0,5.0.0)",
- org.apache.log4j;bundle-version="[1.2.15,2.0.0)",
+ org.apache.log4j;bundle-version="[1.2.21,2.0.0)",
  org.apache.commons.lang3;bundle-version="[3.9.0,4.0.0)"
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Bundle-ActivationPolicy: lazy
