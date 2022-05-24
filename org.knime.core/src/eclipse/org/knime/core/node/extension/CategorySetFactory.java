@@ -58,6 +58,7 @@ import java.util.Collection;
  *
  * @since 4.6.0
  * @noreference This interface is not intended to be referenced by clients.
+ * @noimplement
  */
 public interface CategorySetFactory {
 
