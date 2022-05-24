@@ -236,7 +236,8 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
     NodeContainer(final WorkflowManager parent, final NodeID id, final BaseNodeDef def) {
         this(parent, id);
         m_state = InternalNodeContainerState.IDLE;
-        var annoData = new NodeAnnotationData(true);
+        // if the node text is empty the annotation data is default
+        var annoData = new NodeAnnotationData(def.getAnnotation().getData().getText().isEmpty());
         m_nodeLocks = DefToCoreUtil.toNodeLocks(def.getLocks());
         m_customDescription = def.getCustomDescription();
         m_uiInformation = DefToCoreUtil.toNodeUIInformation(def.getUiInfo());

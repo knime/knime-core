@@ -130,6 +130,7 @@ public class DefToCoreUtil {
         annoData.setWidth(def.getWidth());
         annoData.setHeight(def.getHeight());
         annoData.setText(def.getText());
+        annoData.setStyleRanges(def.getStyles());
         return annoData;
     }
 
