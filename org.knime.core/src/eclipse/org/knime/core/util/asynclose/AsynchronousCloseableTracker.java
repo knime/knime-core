@@ -58,6 +58,7 @@ import java.util.function.Consumer;
  * Tracks {@link AsynchronousCloseable} objects and allows to wait for all of them to complete.
  *
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
+ * @param <X> the exception thrown by {@link AsynchronousCloseable#asynchronousClose()}
  */
 public final class AsynchronousCloseableTracker<X extends Exception> {
 
@@ -78,16 +79,18 @@ public final class AsynchronousCloseableTracker<X extends Exception> {
      * Closes the provided closeable asynchronously and keeps track of the future handle.
      *
      * @param closeable to close
+     * @throws X the exception thrown by {@link AsynchronousCloseable#asynchronousClose()}
      */
-    public void closeAsynchronously(final AsynchronousCloseable<X> closeable) throws X {
+    public synchronized void closeAsynchronously(final AsynchronousCloseable<X> closeable) throws X {
         m_closingFutures.add(closeable.asynchronousClose());
     }
 
     /**
      * Waits for all tracked {@link AsynchronousCloseable} objects to close.
      */
-    public void waitForAllToClose() {
-        for (var future : m_closingFutures) {
+    public synchronized void waitForAllToClose() {
+        for (var iter = m_closingFutures.iterator(); iter.hasNext();) {
+            var future = iter.next();
             try {
                 future.get();
             } catch (InterruptedException ex) {
@@ -96,6 +99,7 @@ public final class AsynchronousCloseableTracker<X extends Exception> {
             } catch (ExecutionException ex) {//NOSONAR just holds another exception
                 m_closeExceptionConsumer.accept(ex.getCause());
             }
+            iter.remove();
         }
     }
 }
