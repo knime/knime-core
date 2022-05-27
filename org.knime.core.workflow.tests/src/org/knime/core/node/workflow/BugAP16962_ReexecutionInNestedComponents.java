@@ -188,7 +188,8 @@ public class BugAP16962_ReexecutionInNestedComponents extends WorkflowTestCase {
 		assertThat(flowVars.get("Double Widget").getIntValue(), greaterThan(1));
 
 		SubNodeContainer successorPage = (SubNodeContainer) wfm.getNodeContainer(wfm.getID().createChild(11));
-		assertThat(successorPage.getInternalState(), is(InternalNodeContainerState.CONFIGURED));
+		Awaitility.await().atMost(5, TimeUnit.SECONDS).pollInterval(10, TimeUnit.MILLISECONDS).untilAsserted(
+				() -> assertThat(successorPage.getInternalState(), is(InternalNodeContainerState.CONFIGURED)));
 
 		String tableViewValue = getWizardNodeViewValue(wfm, createNodeIDSuffix(9, 0, 28, 0, 26));
 		assertThat("downstream widget view value expected change", tableViewValue,
