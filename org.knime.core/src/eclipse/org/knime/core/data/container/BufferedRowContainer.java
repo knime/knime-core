@@ -175,7 +175,8 @@ final class BufferedRowContainer implements RowContainer, RowWriteCursor {
 
         @Override
         public void setMissing(final int index) {
-            m_readValues[index].setMissing();
+        	// +1 to account for the row key
+            m_readValues[index + 1].setMissing();
         }
 
         @Override
