@@ -49,7 +49,6 @@
 package org.knime.gateway.api.entity;
 
 import org.knime.core.node.workflow.NativeNodeContainer;
-import org.knime.core.node.workflow.NodeContainerState;
 import org.knime.core.node.workflow.NodeMessage.Type;
 
 /**
@@ -71,6 +70,8 @@ public final class NodeInfoEnt {
 
     private final String m_warningMessage;
 
+    private final Boolean m_canExecute;
+
     NodeInfoEnt(final NativeNodeContainer nnc) {
         this(nnc, null);
     }
@@ -83,7 +84,8 @@ public final class NodeInfoEnt {
     NodeInfoEnt(final NativeNodeContainer nnc, final String errorMessage) {
         m_name = nnc.getName();
         m_annotation = nnc.getNodeAnnotation().toString();
-        NodeContainerState state = nnc.getNodeContainerState();
+        var state = nnc.getNodeContainerState();
+
         if (state.isIdle()) {
             m_state = "idle";
         } else if (state.isConfigured()) {
@@ -103,6 +105,8 @@ public final class NodeInfoEnt {
             m_errorMessage = messageType == Type.ERROR ? message.getMessage() : null;
         }
         m_warningMessage = messageType == Type.WARNING ? message.getMessage() : null;
+        m_canExecute = state.isExecuted() || state.isExecutionInProgress() || state.isExecutingRemotely() ? null
+            : nnc.getParent().canExecuteNode(nnc.getID());
     }
 
     public String getNodeName() {
@@ -123,6 +127,13 @@ public final class NodeInfoEnt {
 
     public String getNodeWarnMessage() {
         return m_warningMessage;
+    }
+
+    /**
+     * @return whether the node can be executed; only present if the node isn't already executed or executing
+     */
+    public Boolean getCanExecute() {
+        return m_canExecute;
     }
 
 }
