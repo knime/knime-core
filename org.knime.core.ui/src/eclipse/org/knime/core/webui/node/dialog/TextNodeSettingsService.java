@@ -76,7 +76,8 @@ public interface TextNodeSettingsService {
      *
      * @param settings the settings to read from; if there are no settings with the node stored, yet, the default node
      *            settings will be supplied (see {@link #getDefaultNodeSettings(Map, PortObjectSpec[])})
-     * @param specs the specs for configuring the settings (includes the flow variable port)
+     * @param specs the specs for configuring the settings (includes the flow variable port). NOTE: can contain
+     *            {@code null}-values, e.g., in case an input port is not connected
      * @return a new text-based settings representation
      */
     String fromNodeSettings(Map<SettingsType, NodeSettingsRO> settings, PortObjectSpec[] specs);
@@ -97,7 +98,8 @@ public interface TextNodeSettingsService {
      * settings).
      *
      * @param settings the settings to write into
-     * @param specs the node's input specs (includes the flow variable port)
+     * @param specs the node's input specs (includes the flow variable port). NOTE: can contain {@code null}-values,
+     *            e.g., in case the input port is not connected
      */
     void getDefaultNodeSettings(Map<SettingsType, NodeSettingsWO> settings, PortObjectSpec[] specs);
 

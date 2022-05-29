@@ -81,10 +81,8 @@ public class NodeDialogNodeModel extends NodeModel {
         return m_loadNodeSettings;
     }
 
-    /**
-     */
-    protected NodeDialogNodeModel() {
-        super(0, 0);
+    NodeDialogNodeModel(final int nrInDataPorts) {
+        super(nrInDataPorts, 0);
     }
 
     /**

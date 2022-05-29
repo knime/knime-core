@@ -48,6 +48,7 @@
  */
 package org.knime.gateway.api.entity;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -74,9 +75,15 @@ public final class FlowVariableSettingsEnt {
 
     FlowVariableSettingsEnt(final NativeNodeContainer nnc) {
         var nodeSettings = nnc.getNodeSettings();
-        var flowVariables = nnc.getFlowObjectStack().getAllAvailableFlowVariables().keySet();
-        m_modelVariables = createSettingsTree(CFG_MODEL_VARIABLES, nodeSettings, flowVariables);
-        m_viewVariables = createSettingsTree(CFG_VIEW_VARIABLES, nodeSettings, flowVariables);
+        var flowObjectStack = nnc.getFlowObjectStack();
+        if (flowObjectStack != null) {
+            var flowVariables = flowObjectStack.getAllAvailableFlowVariables().keySet();
+            m_modelVariables = createSettingsTree(CFG_MODEL_VARIABLES, nodeSettings, flowVariables);
+            m_viewVariables = createSettingsTree(CFG_VIEW_VARIABLES, nodeSettings, flowVariables);
+        } else {
+            m_modelVariables = Collections.emptyMap();
+            m_viewVariables = Collections.emptyMap();
+        }
     }
 
     private static Map<String, Object> createSettingsTree(final String settingsKey, final NodeSettings nodeSettings,

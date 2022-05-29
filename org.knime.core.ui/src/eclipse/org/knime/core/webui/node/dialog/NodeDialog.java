@@ -169,15 +169,20 @@ public abstract class NodeDialog implements DataServiceProvider {
         private void getSettings(final SettingsType settingsType, final PortObjectSpec[] specs,
             final Map<SettingsType, NodeSettingsRO> resultSettings) {
             if (m_settingsTypes.contains(settingsType)) {
-                NodeSettings settings;
+                NodeSettings settings = null;
                 try {
-                    if (settingsType == SettingsType.VIEW) {
-                        settings = m_nnc.getViewSettingsUsingFlowObjectStack()
-                            .orElseThrow(() -> new InvalidSettingsException(""));
-                    } else {
-                        settings = m_nnc.getModelSettingsUsingFlowObjectStack();
+                    if (m_nnc.getFlowObjectStack() != null) {
+                        if (settingsType == SettingsType.VIEW) {
+                            settings = m_nnc.getViewSettingsUsingFlowObjectStack()
+                                .orElseThrow(() -> new InvalidSettingsException(""));
+                        } else {
+                            settings = m_nnc.getModelSettingsUsingFlowObjectStack();
+                        }
                     }
                 } catch (InvalidSettingsException ex) { // NOSONAR
+                    //
+                }
+                if (settings == null) {
                     settings = new NodeSettings("default_settings");
                     // Important assumption here (which is given):
                     // We'll end up here when no (model or view) settings have been stored with the node, yet.

@@ -75,11 +75,24 @@ public class NodeDialogNodeFactory extends NodeFactory<NodeDialogNodeModel>
 
     private final BooleanSupplier m_hasDialog;
 
+    private final int m_nrDataInPorts;
+
     /**
      * @param nodeDialogCreator
      */
     public NodeDialogNodeFactory(final Supplier<NodeDialog> nodeDialogCreator) {
         m_nodeDialogCreator = nodeDialogCreator;
+        m_hasDialog = () -> true;
+        m_nrDataInPorts = 0;
+    }
+
+    /**
+     * @param nodeDialogCreator
+     * @param nrDataInPorts the number of input ports (tables)
+     */
+    public NodeDialogNodeFactory(final Supplier<NodeDialog> nodeDialogCreator, final int nrDataInPorts) {
+        m_nodeDialogCreator = nodeDialogCreator;
+        m_nrDataInPorts = nrDataInPorts;
         m_hasDialog = () -> true;
     }
 
@@ -90,6 +103,7 @@ public class NodeDialogNodeFactory extends NodeFactory<NodeDialogNodeModel>
     public NodeDialogNodeFactory(final Supplier<NodeDialog> nodeDialogCreator, final BooleanSupplier hasDialog) {
         m_nodeDialogCreator = nodeDialogCreator;
         m_hasDialog = hasDialog;
+        m_nrDataInPorts = 0;
     }
 
     /**
@@ -123,7 +137,7 @@ public class NodeDialogNodeFactory extends NodeFactory<NodeDialogNodeModel>
      */
     @Override
     public NodeDialogNodeModel createNodeModel() {
-        return new NodeDialogNodeModel();
+        return new NodeDialogNodeModel(m_nrDataInPorts);
     }
 
     /**

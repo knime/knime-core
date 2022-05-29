@@ -49,6 +49,7 @@
 package org.knime.gateway.api.entity;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 
 import java.io.IOException;
@@ -63,6 +64,7 @@ import org.knime.core.webui.node.dialog.NodeDialog;
 import org.knime.core.webui.node.dialog.NodeDialogManagerTest;
 import org.knime.core.webui.node.dialog.NodeDialogTest;
 import org.knime.core.webui.page.Page;
+import org.knime.testing.node.dialog.NodeDialogNodeFactory;
 import org.knime.testing.util.WorkflowManagerUtil;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -134,6 +136,28 @@ public class NodeDialogEntTest {
             mapper.writer(new DefaultPrettyPrinter().withObjectIndenter(new DefaultIndenter().withLinefeed("\n")));
         var json = writer.writeValueAsString(flowVariableSettingsEnt);
         assertThat(json, is(expectedJson));
+
+        WorkflowManagerUtil.disposeWorkflow(wfm);
+    }
+
+    /**
+     * Tests that {@link NodeDialogEnt}-instances can be created without problems even if the input ports of a node are
+     * not connected.
+     *
+     * @throws IOException
+     */
+    @Test
+    public void testOpenDialogWithoutConnectedInput() throws IOException {
+        var wfm = WorkflowManagerUtil.createEmptyWorkflow();
+        var nc = WorkflowManagerUtil.createAndAddNode(wfm,
+            new NodeDialogNodeFactory(
+                () -> NodeDialogTest.createNodeDialog(Page.builder(() -> "test", "test.html").build(),
+                    NodeDialogTest.createTextSettingsDataService(), null),
+                1));
+
+        var nodeDialogEnt = new NodeDialogEnt(nc);
+        assertThat(nodeDialogEnt.getFlowVariableSettings().getViewVariables().isEmpty(), is(true));
+        assertThat(nodeDialogEnt.getInitialData(), containsString("a default model setting"));
 
         WorkflowManagerUtil.disposeWorkflow(wfm);
     }

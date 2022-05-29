@@ -302,7 +302,12 @@ public class NodeDialogTest {
         return (Container)cont.getComponent(index);
     }
 
-    private static TextNodeSettingsService createTextSettingsDataService() {
+    /**
+     * Helper to create a {@link TextNodeSettingsService}-instance for testing.
+     *
+     * @return a new instance
+     */
+    public static TextNodeSettingsService createTextSettingsDataService() {
         return new TextNodeSettingsService() {
 
             @Override
@@ -319,7 +324,13 @@ public class NodeDialogTest {
             @Override
             public void getDefaultNodeSettings(final Map<SettingsType, NodeSettingsWO> settings,
                 final PortObjectSpec[] specs) {
-                settings.get(SettingsType.VIEW).addString("a default view setting", "a default view setting value");
+                if (settings.containsKey(SettingsType.VIEW)) {
+                    settings.get(SettingsType.VIEW).addString("a default view setting", "a default view setting value");
+                }
+                if (settings.containsKey(SettingsType.MODEL)) {
+                    settings.get(SettingsType.MODEL).addString("a default model setting",
+                        "a default model setting value");
+                }
             }
         };
     }
@@ -373,7 +384,15 @@ public class NodeDialogTest {
         return createNodeDialog(page, settingsMapper, null);
     }
 
-    static NodeDialog createNodeDialog(final Page page, final TextNodeSettingsService settingsDataService,
+    /**
+     * Helper to create {@link NodeDialog}.
+     *
+     * @param page
+     * @param settingsDataService
+     * @param dataService
+     * @return a new dialog instance
+     */
+    public static NodeDialog createNodeDialog(final Page page, final TextNodeSettingsService settingsDataService,
         final DataService dataService) {
         return new NodeDialog(SettingsType.MODEL, SettingsType.VIEW) {
 
