@@ -55,7 +55,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeDialogPane;
@@ -492,7 +491,7 @@ public abstract class NodeDialog implements DataServiceProvider {
         }
 
         @Override
-        protected void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec[] specs)
+        protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
             throws NotConfigurableException {
             m_modelSettings = settings;
         }
