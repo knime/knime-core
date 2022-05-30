@@ -142,6 +142,18 @@ public final class WorkflowSummaryCreator {
 
     private static final String DATE_FORMAT = "yyyy-MM-dd";
 
+    /**
+     * Used as placeholder for
+     * <ul>
+     * <li>system properties with a key that contains "password"</li>
+     * <li>node settings of type {@link ConfigEntries#xpassword}.</li>
+     * </ul>
+     *
+     * @see WorkflowSummaryImpl#createEnvironment()
+     * @see WorkflowSummaryImpl#createSettings(Config)
+     */
+    private static final String REDACTED_PASSWORD = "********";
+
     private WorkflowSummaryCreator() {
         // utility class
     }
@@ -172,10 +184,10 @@ public final class WorkflowSummaryCreator {
         return new WorkflowSummaryImpl(wfm, nodesToIgnore, includeExecutionInfo);
     }
 
-    /** For keys representing passwords, return \"********\", otherwise return value.
-     * Added as part of AP-16774. Logic is inspired by
-     * <code>org.eclipse.e4.core.internal.services.about.PrintedMap</code>, which checks if the key
-     * contains 'password' (ignoring case).
+    /**
+     * For keys representing passwords, return \"********\", otherwise return value. Added as part of AP-16774. Logic is
+     * inspired by <code>org.eclipse.e4.core.internal.services.about.PrintedMap</code>, which checks if the key contains
+     * 'password' (ignoring case).
      *
      * @param key System properties key
      * @param value The original value
@@ -184,7 +196,7 @@ public final class WorkflowSummaryCreator {
      */
     public static String getValueHidePasswords(final String key, final String value) {
         if (StringUtils.containsIgnoreCase(key, "password")) {
-            return "********";
+            return REDACTED_PASSWORD;
         }
         return value;
     }
@@ -480,7 +492,7 @@ public final class WorkflowSummaryCreator {
                 @Override
                 public Boolean isEncrypted() {
                     return isEncrypted;
-                };
+                }
 
                 @Override
                 public String getState() {
@@ -980,8 +992,19 @@ public final class WorkflowSummaryCreator {
                 final String key = iterator.next();
                 final AbstractConfigEntry entry = config.getEntry(key);
                 final ConfigEntries type = entry.getType();
-                final String value = type != ConfigEntries.config ? entry.toStringValue() : null;
-                final List<Setting> settings = type == ConfigEntries.config ? createSettings((Config)entry) : null;
+
+                final String value;
+                final List<Setting> settings;
+                if (type == ConfigEntries.config) {
+                    value = null;
+                    settings = createSettings((Config)entry);
+                } else if (type == ConfigEntries.xpassword) {
+                    value = REDACTED_PASSWORD;
+                    settings = null;
+                } else {
+                    value = entry.toStringValue();
+                    settings = null;
+                }
 
                 res.add(new Setting() {
 
