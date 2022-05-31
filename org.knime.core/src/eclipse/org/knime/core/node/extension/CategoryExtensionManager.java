@@ -139,7 +139,7 @@ public final class CategoryExtensionManager {
         while (it.hasNext()) {
             final var ext = it.next();
             try {
-                final var factory = (CategorySetFactory)it.next().createExecutableExtension("factory-class");
+                final var factory = (CategorySetFactory)ext.createExecutableExtension("factory-class");
                 factory.getCategories().forEach(c -> categoryExtensions.put(c.getCompletePath(), c));
             } catch (final CoreException e) {
                 LOGGER.error(String.format("Failed to create CategorySetFactory from plugin '%s'.",
