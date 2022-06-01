@@ -70,8 +70,6 @@ public final class NodeInfoEnt {
 
     private final String m_warningMessage;
 
-    private final Boolean m_canExecute;
-
     NodeInfoEnt(final NativeNodeContainer nnc) {
         this(nnc, null);
     }
@@ -105,8 +103,6 @@ public final class NodeInfoEnt {
             m_errorMessage = messageType == Type.ERROR ? message.getMessage() : null;
         }
         m_warningMessage = messageType == Type.WARNING ? message.getMessage() : null;
-        m_canExecute = state.isExecuted() || state.isExecutionInProgress() || state.isExecutingRemotely() ? null
-            : nnc.getParent().canExecuteNode(nnc.getID());
     }
 
     public String getNodeName() {
@@ -127,13 +123,6 @@ public final class NodeInfoEnt {
 
     public String getNodeWarnMessage() {
         return m_warningMessage;
-    }
-
-    /**
-     * @return whether the node can be executed; only present if the node isn't already executed or executing
-     */
-    public Boolean getCanExecute() {
-        return m_canExecute;
     }
 
 }

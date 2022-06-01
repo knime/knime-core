@@ -132,7 +132,6 @@ public class NodeViewEntTest {
         var ent = NodeViewEnt.create(nnc, null);
         assertThat(ent.getInitialData(), is(nullValue()));
         assertThat(ent.getNodeInfo().getNodeState(), is("configured"));
-        assertThat(ent.getNodeInfo().getCanExecute(), is(true));
 
         initViewSettingsAndExecute(nnc);
         ent = NodeViewEnt.create(nnc, null);
@@ -162,7 +161,6 @@ public class NodeViewEntTest {
         assertThat(nodeInfo.getNodeState(), is("executed"));
         assertThat(nodeInfo.getNodeWarnMessage(), is("node message"));
         assertThat(nodeInfo.getNodeErrorMessage(), is(nullValue()));
-        assertThat(nodeInfo.getCanExecute(), is(nullValue()));
 
         // a node view as a 'component' without initial data
         nodeViewCreator = m -> {
@@ -177,7 +175,6 @@ public class NodeViewEntTest {
         assertThat(resourceInfo.getType(), is(Resource.ContentType.VUE_COMPONENT_LIB.toString()));
         assertThat(resourceInfo.getUrl(), endsWith("component.umd.min.js"));
         assertThat(resourceInfo.getPath(), is(nullValue()));
-        assertThat(ent.getNodeInfo().getCanExecute(), is(nullValue()));
 
         // test to create a node view entity while running headless (e.g. on the executor)
         NativeNodeContainer nnc2 = nnc;
