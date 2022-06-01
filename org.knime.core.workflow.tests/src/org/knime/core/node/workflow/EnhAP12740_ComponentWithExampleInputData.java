@@ -52,7 +52,9 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
+import org.awaitility.Awaitility;
 import org.junit.Before;
 import org.junit.Test;
 import org.knime.core.node.ExecutionMonitor;
@@ -115,20 +117,22 @@ public class EnhAP12740_ComponentWithExampleInputData extends WorkflowTestCase {
         WorkflowLoadHelper loadHelper = new WorkflowLoadHelper(true, true, null);
         MetaNodeLinkUpdateResult loadResult = loadComponent(componentDir, new ExecutionMonitor(), loadHelper);
         assertComponentLoadingResult(loadResult, 8); //nodes are expected to change state their from IDLE to CONFIGURED on load
-        SubNodeContainer componentProject = (SubNodeContainer)loadResult.getLoadedInstance();
+        final SubNodeContainer componentProject = (SubNodeContainer)loadResult.getLoadedInstance();
         WorkflowManager wfm = componentProject.getWorkflowManager();
         wfm.executeAllAndWaitUntilDone();
-        assertThat(
-            "Execution of shared component failed. Node messages: "
-                + wfm.getNodeMessages(NodeMessage.Type.WARNING, NodeMessage.Type.ERROR),
-            componentProject.getVirtualOutNode().getInternalState(), is(InternalNodeContainerState.EXECUTED));
+		Awaitility.await().atMost(5, TimeUnit.SECONDS).pollInterval(10, TimeUnit.MILLISECONDS)
+		.untilAsserted(() -> assertThat(
+				"Execution of shared component failed. Node messages: "
+						+ wfm.getNodeMessages(NodeMessage.Type.WARNING, NodeMessage.Type.ERROR),
+				componentProject.getVirtualOutNode().getInternalState(),
+				is(InternalNodeContainerState.EXECUTED)));
         
         /* save and open without example input data */
         component.saveAsTemplate(componentDir, new ExecutionMonitor());
         loadResult = loadComponent(componentDir, new ExecutionMonitor(), loadHelper);
         assertComponentLoadingResult(loadResult, 0); //no state changes expected since no example data available
-        componentProject = (SubNodeContainer)loadResult.getLoadedInstance();
-        NativeNodeContainer componentInput = componentProject.getVirtualInNode();
+        final SubNodeContainer componentProject2 = (SubNodeContainer)loadResult.getLoadedInstance();
+        NativeNodeContainer componentInput = componentProject2.getVirtualInNode();
         NodeMessage nodeMessage = componentInput.getNodeMessage();
         assertThat("warning message expected", nodeMessage.getMessageType(), is(NodeMessage.Type.WARNING));
         assertThat("unexpected warning message", nodeMessage.getMessage(),
@@ -162,13 +166,15 @@ public class EnhAP12740_ComponentWithExampleInputData extends WorkflowTestCase {
         //re-load
         loadResult = loadComponent(componentDir2, new ExecutionMonitor(), loadHelper);
         assertComponentLoadingResult(loadResult, 8); //nodes are expected to change their state from IDLE to CONFIGURED on load
-        SubNodeContainer componentProject2 = (SubNodeContainer)loadResult.getLoadedInstance();
+        final SubNodeContainer componentProject2 = (SubNodeContainer)loadResult.getLoadedInstance();
         WorkflowManager wfm = componentProject2.getWorkflowManager();
         wfm.executeAllAndWaitUntilDone();
-        assertThat(
-            "Execution of shared component failed. Node messages: "
-                + wfm.getNodeMessages(NodeMessage.Type.WARNING, NodeMessage.Type.ERROR),
-            componentProject2.getVirtualOutNode().getInternalState(), is(InternalNodeContainerState.EXECUTED));
+		Awaitility.await().atMost(5, TimeUnit.SECONDS).pollInterval(10, TimeUnit.MILLISECONDS)
+				.untilAsserted(() -> assertThat(
+						"Execution of shared component failed. Node messages: "
+								+ wfm.getNodeMessages(NodeMessage.Type.WARNING, NodeMessage.Type.ERROR),
+						componentProject2.getVirtualOutNode().getInternalState(),
+						is(InternalNodeContainerState.EXECUTED)));
     }
 
     /**

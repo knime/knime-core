@@ -145,7 +145,8 @@ public class BugWEBP803_OnlyResetNodesToBeReexecuted extends WorkflowTestCase {
 
 		WorkflowManager parent = page.getParent();
 		SubNodeContainer successorPage = (SubNodeContainer) parent.getNodeContainer(parent.getID().createChild(11));
-		assertThat(successorPage.getInternalState(), is(InternalNodeContainerState.CONFIGURED));
+		Awaitility.await().atMost(5, TimeUnit.SECONDS).pollInterval(10, TimeUnit.MILLISECONDS).untilAsserted(
+				() -> assertThat(successorPage.getInternalState(), is(InternalNodeContainerState.CONFIGURED)));
 
 		String tableViewValue = getWizardNodeViewValue(parent, createNodeIDSuffix(9, 0, 26));
 		assertThat("downstream widget view value expected change", tableViewValue,

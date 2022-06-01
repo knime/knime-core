@@ -48,6 +48,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertTrue;
 
+import java.util.concurrent.TimeUnit;
+
+import org.awaitility.Awaitility;
 import org.junit.After;
 import org.junit.Test;
 
@@ -72,17 +75,20 @@ public class BugWEBP824_IsResetable extends WorkflowTestCase {
 
 		NodeContainer metanode = wfm.getNodeContainer(wfm.getID().createChild(5));
 		assertTrue(metanode instanceof WorkflowManager);
-		assertThat(metanode.getInternalState(), is(InternalNodeContainerState.UNCONFIGURED_MARKEDFOREXEC));
+		Awaitility.await().atMost(5, TimeUnit.SECONDS).pollInterval(10, TimeUnit.MILLISECONDS).untilAsserted(
+				() -> assertThat(metanode.getInternalState(), is(InternalNodeContainerState.UNCONFIGURED_MARKEDFOREXEC)));
 		assertTrue("workflow expected to be resetable if marked for exec", metanode.isResetable());
 
 		NodeContainer component = wfm.getNodeContainer(wfm.getID().createChild(6));
 		assertTrue(component instanceof SubNodeContainer);
-		assertThat(component.getInternalState(), is(InternalNodeContainerState.UNCONFIGURED_MARKEDFOREXEC));
+		Awaitility.await().atMost(5, TimeUnit.SECONDS).pollInterval(10, TimeUnit.MILLISECONDS).untilAsserted(
+				() -> assertThat(component.getInternalState(), is(InternalNodeContainerState.UNCONFIGURED_MARKEDFOREXEC)));
 		assertTrue("workflow expected to be resetable if marked for exec", component.isResetable());
 
 		NodeContainer node = wfm.getNodeContainer(wfm.getID().createChild(4));
 		assertTrue(node instanceof NativeNodeContainer);
-		assertThat(node.getInternalState(), is(InternalNodeContainerState.UNCONFIGURED_MARKEDFOREXEC));
+		Awaitility.await().atMost(5, TimeUnit.SECONDS).pollInterval(10, TimeUnit.MILLISECONDS).untilAsserted(
+				() -> assertThat(node.getInternalState(), is(InternalNodeContainerState.UNCONFIGURED_MARKEDFOREXEC)));
 		assertTrue("workflow expected to be resetable if marked for exec", node.isResetable());
 	}
 

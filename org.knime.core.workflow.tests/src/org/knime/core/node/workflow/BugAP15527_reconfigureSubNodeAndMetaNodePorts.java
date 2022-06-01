@@ -49,6 +49,9 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 
+import java.util.concurrent.TimeUnit;
+
+import org.awaitility.Awaitility;
 import org.junit.Before;
 import org.junit.Test;
 import org.knime.core.node.port.MetaPortInfo;
@@ -115,12 +118,20 @@ public class BugAP15527_reconfigureSubNodeAndMetaNodePorts extends WorkflowTestC
         newOutPorts[0] = MetaPortInfo.builder(outPorts[1]).setNewIndex(0).build();
         newOutPorts[1] = MetaPortInfo.builder(outPorts[0]).setNewIndex(1).build();
         getManager().changeMetaNodeOutputPorts(m_metaNodeGenerate_6, newOutPorts);
-		assertThat("State of metanode output port 0 after port switch", getManager()
-				.getNodeContainer(m_metaNodeGenerate_6, WorkflowManager.class, true).getOutPort(0).getNodeState(),
-				is(InternalNodeContainerState.EXECUTED));
-		assertThat("State of metanode output port 1 after port switch", getManager()
-				.getNodeContainer(m_metaNodeGenerate_6, WorkflowManager.class, true).getOutPort(1).getNodeState(),
-				is(InternalNodeContainerState.EXECUTED));
+		Awaitility
+				.await().atMost(5, TimeUnit.SECONDS).pollInterval(10,
+						TimeUnit.MILLISECONDS)
+				.untilAsserted(() -> assertThat("State of metanode output port 0 after port switch",
+						getManager().getNodeContainer(m_metaNodeGenerate_6, WorkflowManager.class, true).getOutPort(0)
+								.getNodeState(),
+						is(InternalNodeContainerState.EXECUTED)));
+		Awaitility
+				.await().atMost(5, TimeUnit.SECONDS).pollInterval(10,
+						TimeUnit.MILLISECONDS)
+				.untilAsserted(() -> assertThat("State of metanode output port 1 after port switch",
+						getManager().getNodeContainer(m_metaNodeGenerate_6, WorkflowManager.class, true).getOutPort(1)
+								.getNodeState(),
+						is(InternalNodeContainerState.EXECUTED)));
         checkState(m_subNodeTest_12, InternalNodeContainerState.CONFIGURED);
         executeAllAndWait();
         assertAllExecuted();
