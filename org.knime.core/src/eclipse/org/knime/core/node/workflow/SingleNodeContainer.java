@@ -1141,15 +1141,6 @@ public abstract class SingleNodeContainer extends NodeContainer {
      */
     public abstract boolean isModelCompatibleTo(final Class<?> nodeModelClass);
 
-
-
-    /**
-     * @return true if configure or execute were skipped because node is
-     *   part of an inactive branch.
-     * @see Node#isInactive()
-     */
-    public abstract boolean isInactive();
-
     /**
      * Sets the node inactive.
      * @return <code>true</code> if the inactivation was successful

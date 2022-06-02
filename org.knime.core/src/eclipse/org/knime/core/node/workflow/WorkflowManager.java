@@ -6880,7 +6880,8 @@ public final class WorkflowManager extends NodeContainer
                     } else if (nc instanceof WorkflowManager && !nc.getInternalState().isExecuted()) {
                         msg = ((WorkflowManager)nc).getNodeErrorSummary().orElse(null);
                     }
-                    if (msg != null) {
+                    // ignore error message that is inactive (caught by the try catch)
+                    if (msg != null && !nc.isInactive()) {
                         if (!erroredNodes.values().contains(msg)) { // no duplicates of the same message
                             erroredNodes.put(nc, msg);
                         }
@@ -6907,6 +6908,8 @@ public final class WorkflowManager extends NodeContainer
             return errorStringBuilder.length() == 0 ? Optional.empty() : Optional.of(errorStringBuilder.toString());
         }
     }
+
+
 
     /**
      * Similar to {@link #getNodeErrorSummary()} but the same logic applied to node warning messages. Used as
@@ -10892,4 +10895,11 @@ public final class WorkflowManager extends NodeContainer
         notifyNodePropertyChangedListener(NodeProperty.TemplateConnection);
     }
 
+    /**
+     * Only Components and Native Nodes can be inactive.
+     */
+    @Override
+    public boolean isInactive() {
+        return false;
+    }
 }

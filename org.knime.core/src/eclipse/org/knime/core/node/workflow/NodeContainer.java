@@ -59,6 +59,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.DefaultNodeProgressMonitor;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.Node;
 import org.knime.core.node.NodeDialog;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory.NodeType;
@@ -1811,6 +1812,13 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
     public NodeLocks getNodeLocks() {
         return m_nodeLocks;
     }
+
+    /**
+     * @return true if configure or execute were skipped because node is
+     *   part of an inactive branch.
+     * @see Node#isInactive()
+     */
+    public abstract boolean isInactive();
 
     /**
      * Class that represents the lock status of a node, i.e. whether a node has a reset, delete or configure-lock.
