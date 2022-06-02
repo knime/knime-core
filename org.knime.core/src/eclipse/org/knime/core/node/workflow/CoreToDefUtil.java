@@ -413,26 +413,26 @@ public class CoreToDefUtil {
                 .flatMap(offset -> suggestedUiInfo.map(si -> NodeUIInformation.builder(si).translate(offset).build()))//
                 .map(CoreToDefUtil::toNodeUIInfoDef);
             var defaultUiInfo = CoreToDefUtil.toNodeUIInfoDef(nc.getUIInformation());
-            BaseNodeDef node = null;
+            Optional<BaseNodeDef> node = Optional.empty();
             // Virtual in/out nodes are excluded from the copy result if they are selected directly, otherwise
             // pasting would allow users to create virtual nodes. They are included when copied as part of an entire
             // component node (via SubnodeContainerToDefAdapter -> WorkflowManagerToDefAdapter#getNodes).
             if (nc instanceof NativeNodeContainer && NativeNodeContainer.IS_VIRTUAL_IN_OUT_NODE.negate().test(nc)) {
                 var originalNativeNodeDef =
                     new NativeNodeContainerToDefAdapter((NativeNodeContainer)nc, passwordRedactor);
-                node = new NativeNodeDefBuilder(originalNativeNodeDef)//
-                    .setId(defNodeId).setUiInfo(defUiInfo.orElse(defaultUiInfo)).build();
+                node = Optional.ofNullable(new NativeNodeDefBuilder(originalNativeNodeDef)//
+                    .setId(defNodeId).setUiInfo(defUiInfo.orElse(defaultUiInfo)).build());
             } else if (nc instanceof SubNodeContainer) {
                 var originalComponentDef = new SubnodeContainerToDefAdapter((SubNodeContainer)nc, passwordRedactor);
-                node = new ComponentNodeDefBuilder(originalComponentDef)//
-                    .setId(defNodeId).setUiInfo(defUiInfo.orElse(defaultUiInfo)).build();
+                node = Optional.ofNullable(new ComponentNodeDefBuilder(originalComponentDef)//
+                    .setId(defNodeId).setUiInfo(defUiInfo.orElse(defaultUiInfo)).build());
             } else if (nc instanceof WorkflowManager) {
                 var originalMetanodeDef = new MetanodeToDefAdapter((WorkflowManager)nc, passwordRedactor);
-                node = new MetaNodeDefBuilder(originalMetanodeDef)//
-                    .setId(defNodeId).setUiInfo(defUiInfo.orElse(defaultUiInfo)).build();
+                node = Optional.ofNullable(new MetaNodeDefBuilder(originalMetanodeDef)//
+                    .setId(defNodeId).setUiInfo(defUiInfo.orElse(defaultUiInfo)).build());
             }
 
-            workflowBuilder.putToNodes(String.valueOf(defNodeId), node);
+            node.ifPresent(n -> workflowBuilder.putToNodes(String.valueOf(defNodeId), n));
         }
 
         // 2. Connections ------------------------
