@@ -48,6 +48,9 @@
  */
 package org.knime.gateway.api.entity;
 
+import java.util.Arrays;
+import java.util.Objects;
+
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeMessage.Type;
 
@@ -69,6 +72,8 @@ public final class NodeInfoEnt {
     private final String m_errorMessage;
 
     private final String m_warningMessage;
+
+    private final Boolean m_canExecute;
 
     NodeInfoEnt(final NativeNodeContainer nnc) {
         this(nnc, null);
@@ -103,6 +108,25 @@ public final class NodeInfoEnt {
             m_errorMessage = messageType == Type.ERROR ? message.getMessage() : null;
         }
         m_warningMessage = messageType == Type.WARNING ? message.getMessage() : null;
+
+        if (state.isExecuted() || state.isExecutionInProgress() || state.isExecutingRemotely()) {
+            m_canExecute = null;
+        } else {
+            // Strictly speaking there are situations where a node could still be executed even if it's in state 'idle'.
+            // However, since 'idle' often implies that no input spec is available, it will become available upon execution
+            // (because the predecessors nodes are being executed then, too). In case the node dialog (with the
+            // view preview) has been opened without input specs available (e.g. column choices), we actually would need
+            // to update the node dialog settings (i.e. the json schema) after execution (which we don't support, yet).
+            // That's why we decided to not support that to avoid node dialogs which are not in sync with the input specs.
+            // That's why we do not just check 'WorkflowManager.canExecuteNode' here ...
+            m_canExecute = state.isConfigured() || //
+                (state.isIdle() && isInputSpecAvailable(nnc)); // this is the case if 'configure' (i.e. settings validation) failed
+        }
+    }
+
+    private static boolean isInputSpecAvailable(final NativeNodeContainer nnc) {
+        var inputSpecs = nnc.getParent().getNodeInputSpecs(nnc.getID());
+        return Arrays.stream(inputSpecs).skip(1).allMatch(Objects::nonNull);
     }
 
     public String getNodeName() {
@@ -123,6 +147,13 @@ public final class NodeInfoEnt {
 
     public String getNodeWarnMessage() {
         return m_warningMessage;
+    }
+
+    /**
+     * @return whether the node can be executed or {@code null} if executing or already executed
+     */
+    public Boolean isCanExecute() {
+        return m_canExecute;
     }
 
 }

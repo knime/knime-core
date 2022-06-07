@@ -74,6 +74,7 @@ import java.util.function.Function;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowKey;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
@@ -112,7 +113,7 @@ import org.knime.testing.util.WorkflowManagerUtil;
 public class NodeViewEntTest {
 
     /**
-     * Tests {@link NodeViewEnt#NodeViewEnt(NativeNodeContainer)}.
+     * Tests the creation of {@link NodeViewEnt} instances.
      *
      * @throws IOException
      * @throws InvalidSettingsException
@@ -132,6 +133,7 @@ public class NodeViewEntTest {
         var ent = NodeViewEnt.create(nnc, null);
         assertThat(ent.getInitialData(), is(nullValue()));
         assertThat(ent.getNodeInfo().getNodeState(), is("configured"));
+        assertThat(ent.getNodeInfo().isCanExecute(), is(true));
 
         initViewSettingsAndExecute(nnc);
         ent = NodeViewEnt.create(nnc, null);
@@ -161,6 +163,7 @@ public class NodeViewEntTest {
         assertThat(nodeInfo.getNodeState(), is("executed"));
         assertThat(nodeInfo.getNodeWarnMessage(), is("node message"));
         assertThat(nodeInfo.getNodeErrorMessage(), is(nullValue()));
+        assertThat(nodeInfo.isCanExecute(), is(nullValue()));
 
         // a node view as a 'component' without initial data
         nodeViewCreator = m -> {
@@ -185,6 +188,51 @@ public class NodeViewEntTest {
         });
 
         WorkflowManagerUtil.disposeWorkflow(wfm);
+    }
+
+    /**
+     * Extra tests for the {@link NodeViewEnt}'s {@link NodeInfoEnt#isCanExecute()} property.
+     * @throws IOException
+     */
+    @Test
+    public void testCanExecuteNodeViewEnt() throws IOException {
+        var wfm = WorkflowManagerUtil.createEmptyWorkflow();
+
+        // node view node with one unconnected input
+        var nnc = WorkflowManagerUtil.createAndAddNode(wfm, new NodeViewNodeFactory(1, 1));
+        var ent = NodeViewEnt.create(nnc, null);
+        assertThat(ent.getNodeInfo().getNodeState(), is("idle"));
+        assertThat(ent.getNodeInfo().isCanExecute(), is(false));
+
+        // test node view with available input spec
+        var nnc2 = WorkflowManagerUtil.createAndAddNode(wfm, new NodeViewNodeFactory(0, 1));
+        wfm.addConnection(nnc2.getID(), 1, nnc.getID(), 1);
+        ent = NodeViewEnt.create(nnc, null);
+        assertThat(ent.getNodeInfo().getNodeState(), is("configured"));
+        assertThat(ent.getNodeInfo().isCanExecute(), is(true));
+
+        // test node view with available input spec but failing configure-call (i.e. node is idle but input spec available)
+        var nnc3 = WorkflowManagerUtil.createAndAddNode(wfm, new NodeViewNodeFactory(1, 0) {
+
+            @Override
+            public NodeViewNodeModel createNodeModel() {
+                return new NodeViewNodeModel(1, 0) {
+                    @Override
+                    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
+                        throw new InvalidSettingsException("problem");
+                    }
+                };
+            }
+        });
+        wfm.addConnection(nnc2.getID(), 1, nnc3.getID(), 1);
+        ent = NodeViewEnt.create(nnc3, null);
+        assertThat(ent.getNodeInfo().getNodeState(), is("idle"));
+        assertThat(ent.getNodeInfo().isCanExecute(), is(true));
+        assertThat(ent.getNodeInfo().getNodeWarnMessage(), is("problem"));
+
+        WorkflowManagerUtil.disposeWorkflow(wfm);
+
+
     }
 
     private static void initViewSettingsAndExecute(final NativeNodeContainer nnc) throws InvalidSettingsException {
