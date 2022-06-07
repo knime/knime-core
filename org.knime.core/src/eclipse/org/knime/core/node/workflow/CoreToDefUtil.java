@@ -52,7 +52,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.NotImplementedException;
@@ -389,6 +388,7 @@ public class CoreToDefUtil {
         final PasswordRedactor passwordRedactor) {
 
         HashSet<NodeID> nodeIDs = new HashSet<>(Arrays.asList(content.getNodeIDs()));
+        HashSet<NodeID> virtualNodeIDs = new HashSet<>();
         CheckUtils.checkArgumentNotNull(passwordRedactor,
             "No password redactor provided. If passwords should remain unchanged, please specify explicitly by providing an according password redactor.");
         CheckUtils.checkArgument(nodeIDs.size() == content.getNodeIDs().length, "Copy spec contains duplicate nodes.");
@@ -417,11 +417,15 @@ public class CoreToDefUtil {
             // Virtual in/out nodes are excluded from the copy result if they are selected directly, otherwise
             // pasting would allow users to create virtual nodes. They are included when copied as part of an entire
             // component node (via SubnodeContainerToDefAdapter -> WorkflowManagerToDefAdapter#getNodes).
-            if (nc instanceof NativeNodeContainer && NativeNodeContainer.IS_VIRTUAL_IN_OUT_NODE.negate().test(nc)) {
-                var originalNativeNodeDef =
-                    new NativeNodeContainerToDefAdapter((NativeNodeContainer)nc, passwordRedactor);
-                node = Optional.ofNullable(new NativeNodeDefBuilder(originalNativeNodeDef)//
-                    .setId(defNodeId).setUiInfo(defUiInfo.orElse(defaultUiInfo)).build());
+            if (nc instanceof NativeNodeContainer) {
+                if (NativeNodeContainer.IS_VIRTUAL_IN_OUT_NODE.test(nc)) {
+                    virtualNodeIDs.add(nodeID);
+                } else {
+                    var originalNativeNodeDef =
+                        new NativeNodeContainerToDefAdapter((NativeNodeContainer)nc, passwordRedactor);
+                    node = Optional.ofNullable(new NativeNodeDefBuilder(originalNativeNodeDef)//
+                        .setId(defNodeId).setUiInfo(defUiInfo.orElse(defaultUiInfo)).build());
+                }
             } else if (nc instanceof SubNodeContainer) {
                 var originalComponentDef = new SubnodeContainerToDefAdapter((SubNodeContainer)nc, passwordRedactor);
                 node = Optional.ofNullable(new ComponentNodeDefBuilder(originalComponentDef)//
@@ -438,10 +442,12 @@ public class CoreToDefUtil {
         // 2. Connections ------------------------
 
         // connections between selected nodes (and optionally also between included and non-included nodes)
-        Set<ConnectionContainer> inducedConnections =
-            wfm.getWorkflow().getInducedConnections(nodeIDs, content.isIncludeInOutConnections());
-        // apply copy content translation offset to connections, convert to def, and add to workflow
+        var inducedConnections = wfm.getWorkflow().getInducedConnections(nodeIDs, content.isIncludeInOutConnections());
+
         inducedConnections.stream()//
+            // filter out the connection from/to virtual nodes.
+            .filter(cc -> !virtualNodeIDs.contains(cc.getDest())).filter(cc -> !virtualNodeIDs.contains(cc.getSource()))
+            // apply copy content translation offset to connections, convert to def, and add to workflow
             .map(cc -> {
                 var t = new ConnectionContainerTemplate(cc, false);
                 t.fixPostionOffsetIfPresent(content.getPositionOffset());
@@ -449,7 +455,6 @@ public class CoreToDefUtil {
             })//
             .map(CoreToDefUtil::toConnectionDef)//
             .forEach(workflowBuilder::addToConnections);
-
         // 3. Annotations ------------------------
         Arrays.stream(wfm.getWorkflowAnnotations(content.getAnnotationIDs()))//
             .forEach(anno -> workflowBuilder.putToAnnotations(//
