@@ -192,6 +192,8 @@ import org.knime.core.node.workflow.action.ReplaceNodeResult;
 import org.knime.core.node.workflow.action.SubNodeToMetaNodeResult;
 import org.knime.core.node.workflow.capture.WorkflowSegment;
 import org.knime.core.node.workflow.def.DefToCoreUtil;
+import org.knime.core.node.workflow.def.NodeFactoryNotLoadableException;
+import org.knime.core.node.workflow.def.NodeFactoryNotLoadableException.IDAndExceptionTuple;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 import org.knime.core.node.workflow.execresult.WorkflowExecutionResult;
@@ -8580,7 +8582,7 @@ public final class WorkflowManager extends NodeContainer
                 c.getDestPort(), c.isDeletable(), DefToCoreUtil.toConnectionUIInformation(c.getUiSettings()))) //
             .collect(Collectors.toSet());
 
-        Map<Integer, NodeID> translationMap = loadNodes(workflowDef.getNodes(), exec, loadResult);
+        Map<Integer, NodeID> translationMap = loadNodes(workflowDef, exec, loadResult);
         addConnectionsFromTemplates(connections, loadResult, translationMap, true);
 
         return Pair.create(loadedAnnotationIDs, translationMap);
@@ -8977,8 +8979,11 @@ public final class WorkflowManager extends NodeContainer
         return translationMap;
     }
 
-    private Map<Integer, NodeID> loadNodes(final Map<String, ? extends BaseNodeDef> nodesDef,
+    private Map<Integer, NodeID> loadNodes(final WorkflowDef workflowDef,
         final ExecutionMonitor exec, final LoadResult loadResult) throws CanceledExecutionException {
+
+        final Map<String, ? extends BaseNodeDef> nodesDef = workflowDef.getNodes();
+
         // id suffix are made unique by using the entries in this map
         @SuppressWarnings("serial")
         Map<Integer, NodeID> translationMap = new LinkedHashMap<Integer, NodeID>() {
@@ -8993,28 +8998,50 @@ public final class WorkflowManager extends NodeContainer
             }
         };
 
+        ArrayList<IDAndExceptionTuple> failedNodes = new ArrayList<>();
+
         for (Map.Entry<String, ? extends BaseNodeDef> nodeEntry : nodesDef.entrySet()) {
             var node = nodeEntry.getValue();
             var suffix = node.getId();
-            var subNodeId = new NodeID(getID(), suffix);
+            var nodeId = new NodeID(getID(), suffix);
 
             // the mutex may be already held here. It is not held if we load
             // a completely new project (for performance reasons when loading
             // 100+ workflows simultaneously in a cluster environment)
             try (WorkflowLock lock = lock()) {
-                if (m_workflow.containsNodeKey(subNodeId)) {
-                    subNodeId = m_workflow.createUniqueID();
+                if (m_workflow.containsNodeKey(nodeId)) {
+                    nodeId = m_workflow.createUniqueID();
                 }
-                translationMap.put(suffix, subNodeId);
-                var container = createNodeContainer(subNodeId, node);
+                translationMap.put(suffix, nodeId);
+                NodeContainer container;
+                try {
+                    container = createNodeContainer(nodeId, node);
+                } catch (NodeFactoryNotLoadableException ex) {
+                    failedNodes.add(new IDAndExceptionTuple(suffix,  nodeId, ex));
+                    loadResult.addMissingNode(DefToCoreUtil.toNodeAndBundleInformation((NativeNodeDef)node));
+                    container  = NativeNodeContainer.missingNode(this, (NativeNodeDef)node, nodeId, workflowDef);
+                }
                 addNodeContainer(container, false);
                 container.loadContent(node, exec, loadResult);
             }
         }
+        // TODO another iteration to fix the the port types of the nodes in `failedNodes` (derive from WorkflowDef),
+        // replace those nodes via #replaceNode<<<<<
         return translationMap;
     }
 
-    private NodeContainer createNodeContainer(final NodeID nodeId, final BaseNodeDef def) {
+    private void adjustPortsOfMissingNodeAfterLoad(final IDAndExceptionTuple missingNodeInfo, final WorkflowDef workflowDef) {
+        var nativeNodeDef = workflowDef.getNodes().get(Integer.toString(missingNodeInfo.getWorkflowDefSuffix()));
+        var incomingConnections = workflowDef.getConnections().stream().filter(c -> c.getDestID().equals(nativeNodeDef.getId())).collect(Collectors.toList());
+        var outcomingConnections = workflowDef.getConnections().stream().filter(c -> c.getSourceID().equals(nativeNodeDef.getId())).collect(Collectors.toList());
+        PortType[] inPortTypes = new PortType[incomingConnections.size()];
+        PortType[] outPortTypes = new PortType[outcomingConnections.size()];
+        Arrays.fill(inPortTypes, BufferedDataTable.TYPE);
+        Arrays.fill(outPortTypes, BufferedDataTable.TYPE);
+
+    }
+
+    private NodeContainer createNodeContainer(final NodeID nodeId, final BaseNodeDef def) throws NodeFactoryNotLoadableException {
         var nodeType = def.getNodeType();
         switch (nodeType) {
             case METANODE:

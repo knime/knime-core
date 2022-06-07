@@ -48,7 +48,6 @@
  */
 package org.knime.core.node.workflow;
 
-import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
 import org.knime.shared.workflow.def.ConfigMapDef;
 import org.knime.shared.workflow.def.FilestoreDef;
@@ -83,12 +82,7 @@ public class NativeNodeContainerToDefAdapter extends SingleNodeContainerToDefAda
     public ConfigMapDef getFactorySettings() {
         NodeSettings s = new NodeSettings("factory_settings");
         m_nc.getNode().getFactory().saveAdditionalFactorySettings(s);
-        try {
-            return LoaderUtils.toConfigMapDef(s, PasswordRedactor.asNull());
-        } catch (InvalidSettingsException ex) {
-            // TODO
-            throw new RuntimeException(ex);
-        }
+        return LoaderUtils.toConfigMapDef(s, PasswordRedactor.asNull());
     }
 
     /**
@@ -109,13 +103,7 @@ public class NativeNodeContainerToDefAdapter extends SingleNodeContainerToDefAda
             c.saveSettingsTo(s);
             return s;
         }).orElse(null);
-        try {
-            return LoaderUtils.toConfigMapDef(creationConfig, PasswordRedactor.asNull());
-        } catch (InvalidSettingsException ex) {
-            // TODO
-            throw new RuntimeException(ex);
-        }
-
+        return LoaderUtils.toConfigMapDef(creationConfig, PasswordRedactor.asNull());
     }
 
     /**

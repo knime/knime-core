@@ -46,6 +46,7 @@
  */
 package org.knime.core.node.missing;
 
+import org.knime.core.eclipseUtil.OSGIHelper;
 import org.knime.core.node.DynamicNodeFactory;
 import org.knime.core.node.NodeAndBundleInformationPersistor;
 import org.knime.core.node.NodeDialogPane;
@@ -54,6 +55,8 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.config.ConfigWO;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.workflow.CoreToDefUtil;
+import org.knime.core.node.workflow.def.DefToCoreUtil;
 import org.knime.core.util.workflowalizer.NodeAndBundleInformation;
 import org.knime.node2012.FullDescriptionDocument.FullDescription;
 import org.knime.node2012.InPortDocument.InPort;
@@ -63,6 +66,7 @@ import org.knime.node2012.KnimeNodeDocument.KnimeNode;
 import org.knime.node2012.OutPortDocument.OutPort;
 import org.knime.node2012.PDocument.P;
 import org.knime.node2012.PortsDocument.Ports;
+import org.knime.shared.workflow.def.NativeNodeDef;
 
 /**
  * No API. Factory for missing node placeholder node.
@@ -71,25 +75,52 @@ import org.knime.node2012.PortsDocument.Ports;
  */
 public class MissingNodeFactory extends DynamicNodeFactory<MissingNodeModel> {
 
+    /**
+     * TODO remove as part of AP-18953
+     *
+     */
     private final NodeAndBundleInformationPersistor m_nodeInfo;
-    private final PortType[] m_inTypes;
-    private final PortType[] m_outTypes;
+
+    private final NativeNodeDef m_nativeNodeInfo;
+
+    private PortType[] m_inPortTypes;
+    private PortType[] m_outPortTypes;
+
     private final NodeSettingsRO m_additionalFactorySettings;
+
     private boolean m_copyInternDirForWorkflowVersionChange;
 
-    /** Constructs factories. Copies as much as possible from original node settings (provided by persistor).
-     * Args are all non-null.
+    /**
+     * Constructs factories. Copies as much as possible from original node settings (provided by persistor). Args are
+     * all non-null.
+     *
      * @param nodeInfo ...
      * @param additionalFactorySettings ...
-     * @param ins ...
-     * @param outs ...
+     * @param inPortTypes ...
+     * @param outPortTypes ...
      */
-    public MissingNodeFactory(final NodeAndBundleInformationPersistor nodeInfo, final NodeSettingsRO additionalFactorySettings,
-                  final PortType[] ins, final PortType[] outs) {
+    public MissingNodeFactory(final NodeAndBundleInformationPersistor nodeInfo,
+        final NodeSettingsRO additionalFactorySettings, final PortType[] inPortTypes, final PortType[] outPortTypes) {
         m_nodeInfo = nodeInfo;
+        m_nativeNodeInfo = CoreToDefUtil.toNodeInfo(nodeInfo, additionalFactorySettings);
         m_additionalFactorySettings = additionalFactorySettings;
-        m_inTypes = ins;
-        m_outTypes = outs;
+        m_inPortTypes = inPortTypes;
+        m_outPortTypes = outPortTypes;
+    }
+
+    /**
+     * Constructs factories. Copies as much as possible from original node settings (provided by persistor). Args are
+     * all non-null.
+     *
+     * @param nodeInfo ...
+     */
+    public MissingNodeFactory(final NativeNodeDef nativeNodeInfo, final PortType[] inPortTypes,
+        final PortType[] outPortTypes) {
+        m_nativeNodeInfo = nativeNodeInfo;
+        m_nodeInfo = DefToCoreUtil.toNodeAndBundleInformation(nativeNodeInfo);
+        m_additionalFactorySettings = DefToCoreUtil.toNodeSettings(nativeNodeInfo.getFactorySettings());
+        m_inPortTypes = inPortTypes;
+        m_outPortTypes = outPortTypes;
     }
 
     /**
@@ -113,7 +144,8 @@ public class MissingNodeFactory extends DynamicNodeFactory<MissingNodeModel> {
     /** {@inheritDoc} */
     @Override
     public MissingNodeModel createNodeModel() {
-        return new MissingNodeModel(m_nodeInfo, m_inTypes, m_outTypes, m_copyInternDirForWorkflowVersionChange);
+        return new MissingNodeModel(m_nativeNodeInfo, m_inPortTypes, m_outPortTypes,
+            m_copyInternDirForWorkflowVersionChange);
     }
 
     /** {@inheritDoc} */
@@ -158,7 +190,7 @@ public class MissingNodeFactory extends DynamicNodeFactory<MissingNodeModel> {
         node.setType(KnimeNode.Type.UNKNOWN);
         node.setName("MISSING " + m_nodeInfo.getNodeNameNotNull());
 
-        String shortDescription = "Placeholder node for missing \"" + m_nodeInfo.getNodeNameNotNull() + "\".";
+        String shortDescription = "Placeholder node for missing \"" + m_nativeNodeInfo.getNodeName() + "\".";
         node.setShortDescription(shortDescription);
 
         FullDescription fullDesc = node.addNewFullDescription();
@@ -169,13 +201,13 @@ public class MissingNodeFactory extends DynamicNodeFactory<MissingNodeModel> {
         p.newCursor().setTextValue(m_nodeInfo.getErrorMessageWhenNodeIsMissing());
 
         Ports ports = node.addNewPorts();
-        for (int i = 0; i < m_inTypes.length; i++) {
+        for (int i = 0; i < m_inPortTypes.length; i++) {
             InPort inPort = ports.addNewInPort();
             inPort.setIndex(i);
             inPort.setName("Port " + i);
             inPort.newCursor().setTextValue("Port guessed from the workflow connection table.");
         }
-        for (int i = 0; i < m_outTypes.length; i++) {
+        for (int i = 0; i < m_outPortTypes.length; i++) {
             OutPort outPort = ports.addNewOutPort();
             outPort.setIndex(i);
             outPort.setName("Port " + i);
@@ -187,6 +219,41 @@ public class MissingNodeFactory extends DynamicNodeFactory<MissingNodeModel> {
     @Override
     public NodeFactory.NodeType getType() {
         return NodeType.Missing;
+    }
+
+    /**
+     * Returns an error message for reporting that a node implementation is missing. It will show the required
+     * factory class and the feature and plug-in in which the node is expected to be.
+     *
+     * @return an error message
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    private static String getErrorMessageWhenNodeIsMissing(final NativeNodeDef def) {
+        StringBuilder b = new StringBuilder(256);
+        if (!def.getNodeName().isBlank()) {
+            b.append("Node \"").append(def.getNodeName()).append("\" not available");
+        } else {
+            b.append("Unable to load factory class \"");
+            b.append(def.getFactory());
+            b.append("\"");
+        }
+        if (def.getFeature() != null) {
+            b.append(" from extension \"").append(def.getFeature().getName()).append("\"");
+        }
+        if (def.getBundle() != null) {
+            b.append(" (provided by \"").append(def.getBundle().getName()).append("\"");
+            if (def.getBundle().getSymbolicName() != null) {
+                b.append("; plugin \"").append(def.getBundle().getSymbolicName());
+                b.append("\"");
+                if (OSGIHelper.getBundle(def.getBundle().getSymbolicName()) != null) {
+                    b.append(" is installed");
+                } else {
+                    b.append(" is not installed");
+                }
+            }
+            b.append(")");
+        }
+        return b.toString();
     }
 
 }

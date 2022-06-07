@@ -57,6 +57,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.filestore.internal.EmptyFileStoreHandler;
@@ -81,6 +82,7 @@ import org.knime.core.node.Node;
 import org.knime.core.node.NodeAndBundleInformationPersistor;
 import org.knime.core.node.NodeConfigureHelper;
 import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
@@ -91,6 +93,7 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.exec.ThreadNodeExecutionJobManager;
 import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.interactive.ViewContent;
+import org.knime.core.node.missing.MissingNodeFactory;
 import org.knime.core.node.missing.MissingNodeModel;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
@@ -104,6 +107,7 @@ import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.action.InteractiveWebViewsResult;
 import org.knime.core.node.workflow.action.InteractiveWebViewsResult.Builder;
 import org.knime.core.node.workflow.def.DefToCoreUtil;
+import org.knime.core.node.workflow.def.NodeFactoryNotLoadableException;
 import org.knime.core.node.workflow.execresult.NativeNodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
@@ -114,6 +118,7 @@ import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeInputNodeModel
 import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeOutputNodeModel;
 import org.knime.shared.workflow.def.BaseNodeDef;
 import org.knime.shared.workflow.def.NativeNodeDef;
+import org.knime.shared.workflow.def.WorkflowDef;
 import org.w3c.dom.Element;
 
 /**
@@ -153,8 +158,30 @@ public class NativeNodeContainer extends SingleNodeContainer {
         return false;
     };
 
+
     /**
-     * Create new SingleNodeContainer based on existing Node.
+     * @param workflowManager
+     * @param nodeId
+     * @param inPortTypes
+     * @param outPortTypes
+     * @return
+     */
+    static NativeNodeContainer missingNode(final WorkflowManager workflowManager, final NativeNodeDef nativeNodeDef, final NodeID nodeId, final WorkflowDef workflowDef) {
+        var incomingConnections = workflowDef.getConnections().stream().filter(c -> c.getDestID().equals(nativeNodeDef.getId())).collect(Collectors.toList());
+        var outcomingConnections = workflowDef.getConnections().stream().filter(c -> c.getSourceID().equals(nativeNodeDef.getId())).collect(Collectors.toList());
+        PortType[] inPortTypes = new PortType[incomingConnections.size()];
+        PortType[] outPortTypes = new PortType[outcomingConnections.size()];
+        Arrays.fill(inPortTypes, BufferedDataTable.TYPE);
+        Arrays.fill(outPortTypes, BufferedDataTable.TYPE);
+        //TODO Find the corresponding port types in the nativeNodeDef.getNodeCreationConfig and set the proper port types.
+        final var missingNodeFactory = new MissingNodeFactory(nativeNodeDef, inPortTypes, outPortTypes);
+        missingNodeFactory.init();
+        var node = new Node((NodeFactory)missingNodeFactory);
+        return new NativeNodeContainer(workflowManager, node, nodeId);
+    }
+
+    /**
+     * Create new NativeNodeContainer based on existing Node.
      *
      * @param parent the workflow manager holding this node
      * @param n the underlying node
@@ -194,14 +221,16 @@ public class NativeNodeContainer extends SingleNodeContainer {
      * @param id the identifier
      * @param persistor to read from
      */
-    NativeNodeContainer(final WorkflowManager parent, final NodeID id, final NativeNodeDef def) {
+    NativeNodeContainer(final WorkflowManager parent, final NodeID id, final NativeNodeDef def)
+        throws NodeFactoryNotLoadableException {
         super(parent, id, def);
         m_node = DefToCoreUtil.toNode(def);
-        CheckUtils.checkNotNull(m_node, "%s did not provide Node instance for %s with id \"%s\"",
-            def.getNodeName(), getClass().getSimpleName(), id);
+        CheckUtils.checkNotNull(m_node, "%s did not provide Node instance for %s with id \"%s\"", def.getNodeName(),
+            getClass().getSimpleName(), id);
         setPortNames();
         m_node.addMessageListener(new UnderlyingNodeMessageListener());
     }
+
 
     /** The message listener that is added the Node and listens for messages
      * that are set by failing execute methods are by the user

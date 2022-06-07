@@ -61,7 +61,9 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.workflow.def.DefToCoreUtil;
 import org.knime.core.util.FileUtil;
+import org.knime.shared.workflow.def.NativeNodeDef;
 
 /**
  * No API - Model to missing node placeholder node. It fails on configure and execute but provides data etc.
@@ -93,6 +95,19 @@ public final class MissingNodeModel extends NodeModel {
             final PortType[] outPortTypes, final boolean copyInternDirForWorkflowVersionChange) {
         super(inPortTypes, outPortTypes);
         m_nodeAndBundleInformation = nodeInfo;
+        m_copyInternDirForWorkflowVersionChange = copyInternDirForWorkflowVersionChange;
+    }
+
+    /**
+     * @param nativeNodeInfo
+     * @param inPortTypes
+     * @param outPortTypes
+     * @param copyInternDirForWorkflowVersionChange
+     */
+    public MissingNodeModel(final NativeNodeDef nativeNodeInfo, final PortType[] inPortTypes, final PortType[] outPortTypes,
+        final boolean copyInternDirForWorkflowVersionChange) {
+        super(inPortTypes, outPortTypes);
+        m_nodeAndBundleInformation = DefToCoreUtil.toNodeAndBundleInformation(nativeNodeInfo);
         m_copyInternDirForWorkflowVersionChange = copyInternDirForWorkflowVersionChange;
     }
 

@@ -55,9 +55,9 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.NotImplementedException;
-import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeAndBundleInformationPersistor;
 import org.knime.core.node.NodeSettings;
+import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.NodeContainer.NodeLocks;
 import org.knime.core.node.workflow.WorkflowPersistor.ConnectionContainerTemplate;
@@ -73,6 +73,7 @@ import org.knime.shared.workflow.def.ConnectionUISettingsDef;
 import org.knime.shared.workflow.def.CoordinateDef;
 import org.knime.shared.workflow.def.CredentialPlaceholderDef;
 import org.knime.shared.workflow.def.JobManagerDef;
+import org.knime.shared.workflow.def.NativeNodeDef;
 import org.knime.shared.workflow.def.NodeAnnotationDef;
 import org.knime.shared.workflow.def.NodeLocksDef;
 import org.knime.shared.workflow.def.NodeUIInfoDef;
@@ -147,6 +148,43 @@ public class CoreToDefUtil {
             .setUiSettings(uiInfo)//
             .setDeletable(connection.isDeletable())//
             .build();
+    }
+
+    /**
+     * Converter from legacy persistor code to def.
+     *
+     * TODO remove as part of AP-18953
+     *
+     * @param nodeInfo contains feature and bundle information, node name
+     * @param additionalFactorySettings contains settings for the node's factory
+     * @return
+     */
+    public static NativeNodeDef toNodeInfo(final NodeAndBundleInformationPersistor nodeInfo,
+        final NodeSettingsRO additionalFactorySettings) {
+
+        // bundle
+        var bundleDefBuilder = new VendorDefBuilder();
+        nodeInfo.getBundleName().ifPresent(bundleDefBuilder::setName);
+        nodeInfo.getBundleSymbolicName().ifPresent(bundleDefBuilder::setSymbolicName);
+        nodeInfo.getBundleVendor().ifPresent(bundleDefBuilder::setVendor);
+        nodeInfo.getBundleVersion().map(Version::toString).ifPresent(bundleDefBuilder::setVersion);
+
+        // feature
+        var featureDefBuilder = new VendorDefBuilder();
+        nodeInfo.getFeatureName().ifPresent(featureDefBuilder::setName);
+        nodeInfo.getFeatureSymbolicName().ifPresent(featureDefBuilder::setSymbolicName);
+        nodeInfo.getFeatureVendor().ifPresent(featureDefBuilder::setVendor);
+        nodeInfo.getFeatureVersion().map(Version::toString).ifPresent(featureDefBuilder::setVersion);
+
+        // factory class, factory settings, node name
+        var nativeNodeDefBuilder = new NativeNodeDefBuilder()//
+            .setFactory(nodeInfo.getFactoryClassNotNull())//
+            .setFactorySettings(LoaderUtils.toConfigMapDef(additionalFactorySettings))//
+            .setBundle(bundleDefBuilder.build())//
+            .setFeature(featureDefBuilder.build());
+        nodeInfo.getNodeName().ifPresent(nativeNodeDefBuilder::setNodeName);
+
+        return nativeNodeDefBuilder.build();
     }
 
     /**
@@ -326,15 +364,10 @@ public class CoreToDefUtil {
         final NodeSettings ns = new NodeSettings("jobmanager");
         jobManager.save(ns);
 
-        try {
-            return new JobManagerDefBuilder()//
+        return new JobManagerDefBuilder()//
                 .setFactory(jobManager.getID())//
                 .setSettings(LoaderUtils.toConfigMapDef(ns, passwordHandler))//
                 .build();
-        } catch (InvalidSettingsException ex) {
-            // TODO proper exception handling
-            throw new RuntimeException(ex);
-        }
     }
 
 //    /**

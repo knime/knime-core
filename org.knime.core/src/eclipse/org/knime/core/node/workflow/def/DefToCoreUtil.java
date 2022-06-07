@@ -55,6 +55,7 @@ import java.util.function.Supplier;
 import org.knime.core.node.ConfigurableNodeFactory;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
+import org.knime.core.node.NodeAndBundleInformationPersistor;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeFactoryClassMapper;
 import org.knime.core.node.NodeLogger;
@@ -69,6 +70,7 @@ import org.knime.core.node.extension.NodeFactoryExtensionManager;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortTypeRegistry;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.AnnotationData;
 import org.knime.core.node.workflow.AnnotationData.TextAlignment;
@@ -139,24 +141,23 @@ public class DefToCoreUtil {
      *
      * @param def a {@link NativeNodeDef}
      * @return a {@link Node}
+     * @throws NodeFactoryNotLoadableException
      */
-    public static Node toNode(final NativeNodeDef def) {
-        NodeFactory<NodeModel> nodeFactory;
-        NodeSettingsRO nodeCreationSettings;
-        try {
-            NodeSettingsRO additionalFactorySettings = toNodeSettings(def.getFactorySettings());
-            nodeFactory = loadNodeFactory(def.getFactory());
-            nodeCreationSettings = toNodeSettings(def.getNodeCreationConfig());
-            nodeFactory.loadAdditionalFactorySettings(additionalFactorySettings);
-        } catch (InvalidSettingsException | InstantiationException | IllegalAccessException
-                | InvalidNodeFactoryExtensionException e) {
-            // TODO currently not doing any type of error handling (unknown node), done as part of AP-18960
-            throw new RuntimeException(e);
-        }
-        try {
-            return new Node(nodeFactory, loadCreationConfig(nodeCreationSettings, nodeFactory).orElse(null));
-        } catch (InvalidSettingsException e) {
-            throw new RuntimeException(e);
+    public static Node toNode(final NativeNodeDef def) throws NodeFactoryNotLoadableException {
+        CheckUtils.checkNotNull(def, "Cannot create a node from description: null");
+
+        NodeFactory<NodeModel> nodeFactory = loadNodeFactory(def);
+
+        // configurable nodes (e.g., user-defined number of input ports) have additional settings to be loaded
+        if (def.getNodeCreationConfig() != null) {
+            CheckUtils.checkArgument(nodeFactory instanceof ConfigurableNodeFactory<?>,
+                "Node factory is not configurable but node factory configuration options are present.");
+            ConfigurableNodeFactory<?> configurableFactory = (ConfigurableNodeFactory<? extends NodeModel>)nodeFactory;
+            NodeSettingsRO nodeCreationSettings = toNodeSettings(def.getNodeCreationConfig());
+            var nodeCreationConfig = loadCreationConfig(nodeCreationSettings, configurableFactory);
+            return new Node(nodeFactory, nodeCreationConfig.orElse(null));
+        } else {
+            return new Node(nodeFactory);
         }
     }
 
@@ -199,51 +200,76 @@ public class DefToCoreUtil {
      * @return the node creation config or an empty optional of the node factory is not of type
      *         {@link ConfigurableNodeFactory}
      * @throws InvalidSettingsException
-     * @since 4.2
      */
     private static Optional<ModifiableNodeCreationConfiguration> loadCreationConfig(final NodeSettingsRO settings,
-        final NodeFactory<NodeModel> factory) throws InvalidSettingsException {
-        if (factory instanceof ConfigurableNodeFactory) {
-            final ModifiableNodeCreationConfiguration creationConfig =
-                (((ConfigurableNodeFactory<NodeModel>)factory).createNodeCreationConfig());
-            try {
-                creationConfig.loadSettingsFrom(settings);
-            } catch (final InvalidSettingsException e) {
-                throw new InvalidSettingsException("Unable to load creation context", e.getCause());
-            }
+        final ConfigurableNodeFactory<?> factory) {
+
+        final ModifiableNodeCreationConfiguration creationConfig = (factory.createNodeCreationConfig());
+        try {
+            creationConfig.loadSettingsFrom(settings);
             return Optional.of(creationConfig);
+        } catch (final InvalidSettingsException e) {
+            //            throw new InvalidSettingsException("Unable to load creation context", e);
+            return Optional.empty();
         }
-        return Optional.empty();
     }
 
     /**
-     * Creates the node factory instance for the given fully-qualified factory class name.
-     * Otherwise a respective exception will be thrown.
+     * Creates the node factory instance for the given fully-qualified factory class name. Otherwise a respective
+     * exception will be thrown. Returns upgraded factories for deprecated and refactored nodes.
      *
-     * @since 3.5
+     * @throws NodeFactoryNotLoadableException Either
+     *             <ul>
+     *             <li>the {@link NodeFactoryExtensionManager} encounters a problem</li>
+     *             <li>neither the {@link NodeFactoryExtensionManager} nor the {@link NodeFactoryClassMapper} can offer
+     *             a factory for the given class name</li>
+     *             <li>the factory settings {@link NativeNodeDef#getFactorySettings()} cannot be loaded into the created
+     *             factory</li>
+     *             </ul>
      */
     @SuppressWarnings("unchecked")
-    private static final NodeFactory<NodeModel> loadNodeFactory(final String factoryClassName) throws InvalidSettingsException,
-        InstantiationException, IllegalAccessException,  InvalidNodeFactoryExtensionException{
-        Optional<NodeFactory<? extends NodeModel>> facOptional =
-                NodeFactoryExtensionManager.getInstance().createNodeFactory(factoryClassName);
-        if (facOptional.isPresent()) {
-            return (NodeFactory<NodeModel>)facOptional.get();
+    private static final NodeFactory<NodeModel> loadNodeFactory(final NativeNodeDef def)
+        throws NodeFactoryNotLoadableException {
+
+        // return value
+        NodeFactory<NodeModel> nodeFactory;
+
+        // try regular factory
+        try {
+            var extensionManager = NodeFactoryExtensionManager.getInstance();
+            nodeFactory = (NodeFactory<NodeModel>)extensionManager.createNodeFactory(def.getFactory()).orElse(null);
+        } catch (InstantiationException | IllegalAccessException | InvalidNodeFactoryExtensionException ex) {
+            throw new NodeFactoryNotLoadableException("Cannot load the node factory " + def.getFactory(), ex);
         }
-        List<NodeFactoryClassMapper> classMapperList = NodeFactoryClassMapper.getRegisteredMappers();
-        for (NodeFactoryClassMapper mapper : classMapperList) {
-            @SuppressWarnings("rawtypes")
-            NodeFactory factory = mapper.mapFactoryClassName(factoryClassName);
-            if (factory != null) {
-                LOGGER.debug(String.format("Replacing stored factory class name \"%s\" by actual factory "
-                    + "class \"%s\" (defined by class mapper \"%s\")", factoryClassName, factory.getClass().getName(),
-                    mapper.getClass().getName()));
-                return factory;
+
+        // a regular factory is not available: try to find factory for deprecated and refactored nodes
+        if (nodeFactory == null) {
+            var nodeFactoryClassMapper = NodeFactoryClassMapper.findMapper(def.getFactory());
+            if (nodeFactoryClassMapper.isPresent()) {
+                var mapper = nodeFactoryClassMapper.get();
+                nodeFactory = (NodeFactory<NodeModel>)mapper.mapFactoryClassName(def.getFactory());
+                LOGGER.debug(String.format(
+                    "Replacing stored factory class name \"%s\" by actual factory "
+                        + "class \"%s\" (defined by class mapper \"%s\")",
+                    def.getFactory(), nodeFactory.getClass().getName(), mapper.getClass().getName()));
+            } else {
+                // no factory found for given class name
+                throw new NodeFactoryNotLoadableException(String
+                    .format("Unknown factory class \"%s\" -- not registered via extension point", def.getFactory()));
             }
         }
 
-        throw new InvalidSettingsException(String.format(
-            "Unknown factory class \"%s\" -- not registered via extension point", factoryClassName));
+        // load factory settings
+        // at this point nodeFactory is not null (or an exception has been thrown)
+        var factorySettings = def.getFactorySettings();
+        try {
+            nodeFactory.loadAdditionalFactorySettings(DefToCoreUtil.toNodeSettings(factorySettings));
+        } catch (InvalidSettingsException ex) {
+            throw new NodeFactoryNotLoadableException(
+                "Cannot load settings for factory " + nodeFactory.getClass().getName(), ex);
+        }
+
+        return nodeFactory;
     }
 
     /**
@@ -493,7 +519,17 @@ public class DefToCoreUtil {
             .map(pd -> pd.getPortType())//
             .map(DefToCoreUtil::toPortType)//
             .toArray(PortType[]::new);
+    }
 
+
+    /**
+     * TODO remove as part of AP-18953
+     *
+     * @param nativeNodeInfo
+     * @return
+     */
+    public static NodeAndBundleInformationPersistor toNodeAndBundleInformation(final NativeNodeDef nativeNodeInfo) {
+        return new NodeAndBundleInformationPersistor(nativeNodeInfo.getFactory());
     }
 
 }

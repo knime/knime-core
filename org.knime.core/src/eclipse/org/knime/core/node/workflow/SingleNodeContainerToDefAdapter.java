@@ -48,7 +48,6 @@
  */
 package org.knime.core.node.workflow;
 
-import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
@@ -81,12 +80,7 @@ public abstract class SingleNodeContainerToDefAdapter extends NodeContainerToDef
     @Override
     public ConfigMapDef getModelSettings() {
         SingleNodeContainerSettings s = m_nc.getSingleNodeContainerSettings();
-        try {
-            return LoaderUtils.toConfigMapDef(s.getModelSettings(), m_passwordHandler);
-        } catch (InvalidSettingsException ex) {
-            // TODO
-            throw new RuntimeException(ex);
-        }
+        return LoaderUtils.toConfigMapDef(s.getModelSettings(), m_passwordHandler);
     }
 
     /**
@@ -96,12 +90,7 @@ public abstract class SingleNodeContainerToDefAdapter extends NodeContainerToDef
     public ConfigMapDef getInternalNodeSubSettings() {
         var internalSettings = new NodeSettings(Node.CFG_MISC_SETTINGS);
         m_nc.getSingleNodeContainerSettings().save(internalSettings);
-        try {
-            return LoaderUtils.toConfigMapDef(internalSettings, m_passwordHandler);
-        } catch (InvalidSettingsException ex) {
-            // TODO
-            throw new RuntimeException(ex);
-        }
+        return LoaderUtils.toConfigMapDef(internalSettings, m_passwordHandler);
     }
 
     /**
@@ -110,12 +99,7 @@ public abstract class SingleNodeContainerToDefAdapter extends NodeContainerToDef
     @Override
     public ConfigMapDef getVariableSettings() {
         SingleNodeContainerSettings s = m_nc.getSingleNodeContainerSettings();
-        try {
-            return LoaderUtils.toConfigMapDef(s.getVariablesSettings(), PasswordRedactor.asNull());
-        } catch (InvalidSettingsException ex) {
-            // TODO
-            throw new RuntimeException(ex);
-        }
+        return LoaderUtils.toConfigMapDef(s.getVariablesSettings(), PasswordRedactor.asNull());
     }
 
     //    /**

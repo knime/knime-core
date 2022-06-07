@@ -49,6 +49,7 @@ package org.knime.core.node;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionPoint;
@@ -144,5 +145,18 @@ public abstract class NodeFactoryClassMapper {
         return Collections.unmodifiableList(resultList);
 
     }
+
+
+    /**
+     * @param classname the qualified class name of the factory, e.g.,
+     *            com.knime.server.nodes.filehandling.connector.ServerConnectorNodeFactory
+     * @return the first mapper in {@link #getRegisteredMappers()} that does not return null
+     */
+    public static synchronized Optional<NodeFactoryClassMapper> findMapper(final String classname) {
+        return NodeFactoryClassMapper.getRegisteredMappers().stream()//
+            .filter(mapper -> mapper.mapFactoryClassName(classname) != null)//
+            .findFirst();
+    }
+
 
 }
