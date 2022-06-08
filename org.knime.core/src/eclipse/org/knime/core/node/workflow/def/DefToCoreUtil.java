@@ -74,6 +74,7 @@ import org.knime.core.node.workflow.AnnotationData;
 import org.knime.core.node.workflow.AnnotationData.TextAlignment;
 import org.knime.core.node.workflow.ComponentMetadata;
 import org.knime.core.node.workflow.ComponentMetadata.ComponentMetadataBuilder;
+import org.knime.core.node.workflow.ComponentMetadata.ComponentNodeType;
 import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.EditorUIInformation;
 import org.knime.core.node.workflow.FlowVariable;
@@ -274,6 +275,7 @@ public class DefToCoreUtil {
     public static ComponentMetadata toComponentMetadata(final ComponentMetadataDef def) {
         ComponentMetadataBuilder builder = ComponentMetadata.builder()//
             .description(def.getDescription())//
+            .type(toComponentNodeType(def.getComponentType()))
             .icon(def.getIcon());
         if (def.getInPortNames() != null) {
             for (var i = 0; i < def.getInPortNames().size(); i++) {
@@ -286,6 +288,17 @@ public class DefToCoreUtil {
             }
         }
         return builder.build();
+    }
+
+    /**
+     * @param defType nullable
+     * @return equivalent core enum value or null if given null
+     */
+    public static ComponentNodeType toComponentNodeType(final ComponentMetadataDef.ComponentTypeEnum defType) {
+        if(defType == null) {
+            return null;
+        }
+        return ComponentNodeType.valueOf(defType.toString());
     }
 
     /**

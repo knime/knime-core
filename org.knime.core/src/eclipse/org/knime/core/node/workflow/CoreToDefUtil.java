@@ -59,6 +59,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeAndBundleInformationPersistor;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.workflow.ComponentMetadata.ComponentNodeType;
 import org.knime.core.node.workflow.NodeContainer.NodeLocks;
 import org.knime.core.node.workflow.WorkflowPersistor.ConnectionContainerTemplate;
 import org.knime.core.util.Version;
@@ -301,15 +302,24 @@ public class CoreToDefUtil {
     }
 
     public static ComponentMetadataDef toComponentMetadataDef(final ComponentMetadata m) {
-        return new ComponentMetadataDefBuilder()//
+        var builder = new ComponentMetadataDefBuilder();
+        m.getNodeType().map(CoreToDefUtil::toComponentNodeType).ifPresent(builder::setComponentType);
+        return builder//
             .setDescription(m.getDescription().orElse(null))//
             .setIcon(m.getIcon().orElse(null))//
-//            .setNodeType(m.getNodeType().map(ComponentNodeType::toString).orElse(null))//
             .setInPortNames(m.getInPortNames().map(Arrays::asList).orElse(null))//
             .setInPortDescriptions(m.getInPortDescriptions().map(Arrays::asList).orElse(null))//
             .setOutPortNames(m.getOutPortNames().map(Arrays::asList).orElse(null))//
             .setOutPortDescriptions(m.getOutPortDescriptions().map(Arrays::asList).orElse(null))//
             .build();
+    }
+
+    /**
+     * @param coreType not null
+     * @return equivalent enum value
+     */
+    static ComponentMetadataDef.ComponentTypeEnum toComponentNodeType(final ComponentNodeType coreType) {
+        return ComponentMetadataDef.ComponentTypeEnum.valueOf(coreType.toString());
     }
 
     /**
