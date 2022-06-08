@@ -584,13 +584,10 @@ public class Buffer implements KNIMEStreamConstants {
     private int m_version = IVERSION;
 
     /**
-     * Map of blob addresses that were copied into this buffer. It maps the original id to the new id (having m_bufferID
-     * as owner). Copying is necessary if - we copy from or to a buffer with id "-1" or - this buffer is instructed to
-     * copy all blobs (important for loop end nodes). If we didn't use such a map, we wouldn't notice if any one blob
-     * gets copied into this buffer multiple times ... we would copy each time it is added, which is bad. This member is
-     * null if this buffer is not in write-mode or it does not need to copy blobs.
+     * Map of blob addresses that were copied into this buffer, see {@link BlobAddressCopyCache} for details. This
+     * member is null if this buffer is not in write-mode or it does not need to copy blobs.
      */
-    private Map<BlobAddress, BlobAddress> m_copiedBlobsMap;
+    private BlobAddressCopyCache m_copiedBlobsMap;
 
     /** To debug AP-8469 -- leaking Buffer objects when running text processing test workflows. */
     private final String m_fullStackTraceAtConstructionTime = Arrays.stream(Thread.currentThread().getStackTrace())
@@ -940,16 +937,20 @@ public class Buffer implements KNIMEStreamConstants {
             BlobAddress ad;
             final CellClassInfo cl;
             BlobWrapperDataCell wc;
+            // lazy but expensive supplier to read the blob content.
+            Supplier<DataCell> cellSupplier;
 
             // treat Wrapper and BlobDataCell differently
             if (isWrapperCell) {
                 wc = (BlobWrapperDataCell)cell;
                 ad = wc.getAddress();
                 cl = wc.getBlobClassInfo();
+                cellSupplier = () -> ((BlobWrapperDataCell)cell).getCell();
             } else {
                 wc = null;
                 cl = CellClassInfo.get(cell);
                 ad = ((BlobDataCell)cell).getBlobAddress();
+                cellSupplier = () -> cell;
             }
 
             boolean forceCopyOfBlobs = forceCopyOfBlobsArg;
@@ -1012,11 +1013,11 @@ public class Buffer implements KNIMEStreamConstants {
             // don't overwrite the deep-clone
             if (forceCopyOfBlobs && !isToCloneForVersionHop) {
                 if (m_copiedBlobsMap == null) {
-                    m_copiedBlobsMap = new HashMap<BlobAddress, BlobAddress>();
+                    m_copiedBlobsMap = new BlobAddressCopyCache();
                 }
                 // if not previously copied into this buffer
                 if (ad != null) {
-                    BlobAddress previousCopyAddress = m_copiedBlobsMap.get(ad);
+                    BlobAddress previousCopyAddress = m_copiedBlobsMap.get(ad, cellSupplier);
                     if (previousCopyAddress == null) {
                         isToCloneDueToForceCopyOfBlobs = true;
                         if (isWrapperCell && ownerBuffer == null) {
@@ -1050,7 +1051,7 @@ public class Buffer implements KNIMEStreamConstants {
                 Buffer b = null; // to buffer to copy the blob from (if at all)
                 if (isToCloneDueToForceCopyOfBlobs) {
                     b = ownerBuffer;
-                    m_copiedBlobsMap.put(ad, rewrite);
+                    m_copiedBlobsMap.put(ad, cellSupplier, rewrite);
                 } else {
                     ContainerTable tbl = m_localRepository.getTable(ad.getBufferID());
                     b = tbl == null ? null : ((BufferedContainerTable)tbl).getBuffer();
@@ -1058,7 +1059,8 @@ public class Buffer implements KNIMEStreamConstants {
                 if (b != null && !isToCloneForVersionHop) {
                     int indexBlobInCol = m_indicesOfBlobInColumns[col]++;
                     rewrite.setIndexOfBlobInColumn(indexBlobInCol);
-                    File source = b.getBlobFile(ad.getIndexOfBlobInColumn(), ad.getColumn(), false, ad.isUseCompression());
+                    File source =
+                        b.getBlobFile(ad.getIndexOfBlobInColumn(), ad.getColumn(), false, ad.isUseCompression());
                     File dest = getBlobFile(indexBlobInCol, col, true, ad.isUseCompression());
                     FileUtil.copy(source, dest);
                     wc = new BlobWrapperDataCell(this, rewrite, cl);
