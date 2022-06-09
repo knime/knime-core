@@ -1,0 +1,1 @@
+Just an empty file in order to convince to retain the folder structure.
