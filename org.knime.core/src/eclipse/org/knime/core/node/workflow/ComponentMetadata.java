@@ -92,7 +92,9 @@ public final class ComponentMetadata {
         /** A data producing node. */
         SOURCE("Source", NodeFactory.NodeType.Source),
         /** A visualizing node. */
-        VISUALIZER("Visualizer", NodeFactory.NodeType.Visualizer);
+        VISUALIZER("Visualizer", NodeFactory.NodeType.Visualizer),
+        /** Any other node. */
+        OTHER("Other", NodeFactory.NodeType.Other);
 
 
         private static final Map<NodeFactory.NodeType, ComponentNodeType> NODE_TYPE_DISPLAYABLE_MAP = new HashMap<>();
