@@ -58,14 +58,16 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.LoadVersion;
-import org.knime.shared.workflow.def.TemplateInfoDef;
+import org.knime.shared.workflow.def.ComponentNodeDef;
+import org.knime.shared.workflow.def.MetaNodeDef;
+import org.knime.shared.workflow.def.TemplateLinkDef;
+import org.knime.shared.workflow.def.TemplateMetadataDef;
 
 /**
  * Metadata for linked metanodes and linked components (also known as templates).
@@ -419,6 +421,35 @@ public final class MetaNodeTemplateInformation implements Cloneable {
         return new MetaNodeTemplateInformation(Role.Template, type, null, OffsetDateTime.now(), null, null);
     }
 
+    public static MetaNodeTemplateInformation createNewTemplate(final MetaNodeDef def) {
+        return createNewTemplate(def.getTemplateLink(), def.getTemplateMetadata(), TemplateType.MetaNode);
+    }
+
+    public static MetaNodeTemplateInformation createNewTemplate(final ComponentNodeDef def) {
+        return createNewTemplate(def.getTemplateLink(), def.getTemplateMetadata(), TemplateType.SubNode);
+    }
+
+    public static MetaNodeTemplateInformation createNewTemplate(final Optional<TemplateLinkDef> link,
+        final Optional<TemplateMetadataDef> metadata, final TemplateType type) {
+        if (link.isEmpty() && metadata.isEmpty()) {
+            return MetaNodeTemplateInformation.NONE;
+        } else if (link.isPresent()) {
+            return createNewTemplate(link.get(), type);
+        } else {
+            return createNewTemplate(metadata.get(), type);
+        }
+    }
+
+    /**
+     * Creates a new instance of the template information from the template definition.
+     *
+     * @param def contains source URI and version
+     * @param type component or metanode
+     * @return a {@link MetaNodeTemplateInformation} with Role = LINK
+     */
+    public static MetaNodeTemplateInformation createNewTemplate(final TemplateLinkDef def, final TemplateType type) {
+        return new MetaNodeTemplateInformation(Role.Link, type, URI.create(def.getUri()), def.getVersion(), null, null);
+    }
 
     /**
      * Creates a new instance of the template information from the template definition.
@@ -430,13 +461,8 @@ public final class MetaNodeTemplateInformation implements Cloneable {
      * @param type a {@link TemplateType}.
      * @return a {@link MetaNodeTemplateInformation}.
      */
-    public static MetaNodeTemplateInformation createNewTemplate(final TemplateInfoDef def, final TemplateType type) {
-        var uri = StringUtils.isEmpty(def.getUri()) ? null : URI.create(def.getUri());
-        var role = Role.Link;
-        if (uri == null) {
-            role = def.getUpdatedAt() == null ? Role.None : Role.Template;
-        }
-        return new MetaNodeTemplateInformation(role, type, uri, def.getUpdatedAt(), null, null);
+    public static MetaNodeTemplateInformation createNewTemplate(final TemplateMetadataDef def, final TemplateType type) {
+        return new MetaNodeTemplateInformation(Role.Template, type, null, def.getVersion(), null, null);
     }
 
     /**

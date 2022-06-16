@@ -165,10 +165,10 @@ public class AnnotationData implements Cloneable {
         }
         m_styleRanges = styleRanges.stream().map(s -> {
             var styleRange = new StyleRange();
-            styleRange.setFgColor(s.getColor());
-            styleRange.setFontName(s.getFontName());
-            styleRange.setFontSize(s.getFontSize());
-            styleRange.setFontStyle(s.getFontStyle());
+            s.getColor().ifPresent(styleRange::setFgColor);
+            s.getFontName().ifPresent(styleRange::setFontName);
+            s.getFontSize().ifPresent(styleRange::setFontSize);
+            s.getFontStyle().ifPresent(styleRange::setFontStyle);
             styleRange.setLength(s.getLength());
             styleRange.setStart(s.getStart());
             return styleRange;

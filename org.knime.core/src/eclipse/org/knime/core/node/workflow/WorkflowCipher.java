@@ -359,12 +359,12 @@ final class WorkflowCipher implements Cloneable {
         encryptionKey = removeVersionPrefixIfPresent(encryptionKey);
         var hint = def.getPasswordHint();
         var keySpec = new SecretKeySpec(encryptionKey, "AES");
-        return new WorkflowCipher(keySpec, passwordDigest, hint, false);
+        return new WorkflowCipher(keySpec, passwordDigest, hint.orElse(""), false);
     }
 
     CipherDef toDef() {
         if (isNullCipher()) {
-            return new CipherDefBuilder().build();
+            return new CipherDefBuilder().strict().build();
         }
         var passwordDigestHex = HexUtils.bytesToHex(m_passwordDigest);
         byte[] key = m_secretKey.getEncoded();

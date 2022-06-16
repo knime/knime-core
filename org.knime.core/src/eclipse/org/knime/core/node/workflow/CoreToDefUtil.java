@@ -48,6 +48,7 @@
  */
 package org.knime.core.node.workflow;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -78,9 +79,11 @@ import org.knime.shared.workflow.def.NodeAnnotationDef;
 import org.knime.shared.workflow.def.NodeLocksDef;
 import org.knime.shared.workflow.def.NodeUIInfoDef;
 import org.knime.shared.workflow.def.PortDef;
+import org.knime.shared.workflow.def.PortMetadataDef;
 import org.knime.shared.workflow.def.PortTypeDef;
 import org.knime.shared.workflow.def.StyleRangeDef;
-import org.knime.shared.workflow.def.TemplateInfoDef;
+import org.knime.shared.workflow.def.TemplateLinkDef;
+import org.knime.shared.workflow.def.TemplateMetadataDef;
 import org.knime.shared.workflow.def.VendorDef;
 import org.knime.shared.workflow.def.WorkflowDef;
 import org.knime.shared.workflow.def.impl.AnnotationDataDefBuilder;
@@ -98,17 +101,20 @@ import org.knime.shared.workflow.def.impl.NodeAnnotationDefBuilder;
 import org.knime.shared.workflow.def.impl.NodeLocksDefBuilder;
 import org.knime.shared.workflow.def.impl.NodeUIInfoDefBuilder;
 import org.knime.shared.workflow.def.impl.PortDefBuilder;
+import org.knime.shared.workflow.def.impl.PortMetadataDefBuilder;
 import org.knime.shared.workflow.def.impl.PortTypeDefBuilder;
 import org.knime.shared.workflow.def.impl.StyleRangeDefBuilder;
-import org.knime.shared.workflow.def.impl.TemplateInfoDefBuilder;
+import org.knime.shared.workflow.def.impl.TemplateLinkDefBuilder;
+import org.knime.shared.workflow.def.impl.TemplateMetadataDefBuilder;
 import org.knime.shared.workflow.def.impl.VendorDefBuilder;
 import org.knime.shared.workflow.def.impl.WorkflowDefBuilder;
 import org.knime.shared.workflow.storage.multidir.util.LoaderUtils;
 import org.knime.shared.workflow.storage.util.PasswordRedactor;
 
 /**
- *
- * @author hornm
+ * @author Carl Witt, KNIME AG, Zurich, Switzerland
+ * @author Dionysios Stolis, KNIME AG, Zurich, Switzerland
+ * @author Martin Horn, KNIME AG, Zurich, Switzerland
  */
 public class CoreToDefUtil {
 
@@ -199,8 +205,8 @@ public class CoreToDefUtil {
 
         return new NodeUIInfoDefBuilder()//
             .setBounds(boundsDef)//
-            .setHasAbsoluteCoordinates(uiInfoDef.hasAbsoluteCoordinates())//
-            .setSymbolRelative(uiInfoDef.isSymbolRelative())//
+//            .setHasAbsoluteCoordinates(uiInfoDef.hasAbsoluteCoordinates())//
+//            .setSymbolRelative(uiInfoDef.isSymbolRelative())//
             .build();
     }
 
@@ -213,7 +219,6 @@ public class CoreToDefUtil {
     }
 
     public static AnnotationDataDef toAnnotationDataDef(final Annotation na) {
-        // TODO I've seen this in the wfm wrapper too
         List<StyleRangeDef> styles = Arrays.stream(na.getStyleRanges())
             .map(s -> new StyleRangeDefBuilder().setColor(s.getFgColor()).setFontName(s.getFontName())
                 .setFontSize(s.getFontSize()).setFontStyle(s.getFontStyle()).setLength(s.getLength())
@@ -247,19 +252,30 @@ public class CoreToDefUtil {
     }
 
     /**
-     *  Converts the template info to def.
-     *
-     * @param info a {@link MetaNodeTemplateInformation}
-     * @return a {@link TemplateInfoDef}.
+     * @param info contains either template metadata (role = template and uri == null) or a template link (uri != null)
+     * @return non-empty if the given object describes a template
      */
-    public static TemplateInfoDef toTemplateInfoDef(final MetaNodeTemplateInformation info) {
+    public static Optional<TemplateMetadataDef> toTemplateMetadataDef(final MetaNodeTemplateInformation info) {
         if (info.getSourceURI() != null) {
-            return new TemplateInfoDefBuilder() //
-                .setUpdatedAt(info.getTimestamp()) //
-                .setUri(info.getSourceURI().toString()) //
-                .build();
+            return Optional.empty();
         }
-        return new TemplateInfoDefBuilder().setUpdatedAt(info.getTimestamp()).build();
+        return Optional.of(new TemplateMetadataDefBuilder()//
+            .setVersion(info.getTimestamp())//
+            .build());
+    }
+
+    /**
+     * @param info contains either template metadata (role = template and uri == null) or a template link (uri != null)
+     * @return non-empty if the given object describes a link to a template
+     */
+    public static Optional<TemplateLinkDef> toTemplateLinkDef(final MetaNodeTemplateInformation info) {
+        if (info.getSourceURI() == null) {
+            return Optional.empty();
+        }
+        return Optional.of(new TemplateLinkDefBuilder() //
+            .setVersion(info.getTimestamp()) //
+            .setUri(info.getSourceURI().toString()) //
+            .build());
     }
 
     /**
@@ -307,11 +323,28 @@ public class CoreToDefUtil {
         return builder//
             .setDescription(m.getDescription().orElse(null))//
             .setIcon(m.getIcon().orElse(null))//
-            .setInPortNames(m.getInPortNames().map(Arrays::asList).orElse(null))//
-            .setInPortDescriptions(m.getInPortDescriptions().map(Arrays::asList).orElse(null))//
-            .setOutPortNames(m.getOutPortNames().map(Arrays::asList).orElse(null))//
-            .setOutPortDescriptions(m.getOutPortDescriptions().map(Arrays::asList).orElse(null))//
+            .setInPortMetadata(toPortMetadata(m.getInPortNames().orElse(new String[0]),
+                m.getInPortDescriptions().orElse(new String[0])))//
+            .setOutPortMetadata(toPortMetadata(m.getOutPortNames().orElse(new String[0]),
+                m.getOutPortDescriptions().orElse(new String[0])))//
             .build();
+    }
+
+    /**
+     * Combines names and descriptions.
+     *
+     * @param names non-null but possibly empty
+     * @param descriptions non-null but possibly empty
+     * @return null if both arrays are empty
+     */
+    private static List<PortMetadataDef> toPortMetadata(final String[] names, final String[] descriptions) {
+        List<PortMetadataDef> result = new ArrayList<>();
+        for (var i = 0; i < Math.max(names.length, descriptions.length); i++) {
+            var name = i < names.length ? names[i] : null;
+            var description = i < descriptions.length ? descriptions[i] : null;
+            result.add(new PortMetadataDefBuilder().setName(name).setDescription(description).build());
+        }
+        return result.isEmpty() ? null : result;
     }
 
     /**

@@ -153,6 +153,7 @@ import org.knime.core.util.Pair;
 import org.knime.core.util.ThreadPool;
 import org.knime.shared.workflow.def.BaseNodeDef;
 import org.knime.shared.workflow.def.ComponentNodeDef;
+import org.knime.shared.workflow.def.impl.ComponentMetadataDefBuilder;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -336,8 +337,8 @@ public final class SubNodeContainer extends SingleNodeContainer
         m_subnodeScopeContext = new FlowSubnodeScopeContext(this);
         m_wfm = WorkflowManager.newComponentWorkflowManagerInstance(this, new NodeID(id, 0), def);
         m_wfm.setJobManager(null);
-        var inports = def.getInPorts();
-        var outports = def.getOutPorts();
+        var inports = def.getInPorts().orElse(List.of());
+        var outports = def.getOutPorts().orElse(List.of());
         m_outports = new NodeContainerOutPort[outports.size()];
         m_outputs = new Output[outports.size()];
         for (var i = 0; i < outports.size(); i++) {
@@ -351,12 +352,14 @@ public final class SubNodeContainer extends SingleNodeContainer
         m_inHiliteHandler = new HiLiteHandler[inports.size()- 1];
         m_virtualInNodeIDSuffix = def.getVirtualInNodeId();
         m_virtualOutNodeIDSuffix = def.getVirtualOutNodeId();
-        var dialogSettings = def.getDialogSettings();
-        m_subnodeLayoutStringProvider = new SubnodeContainerLayoutStringProvider(dialogSettings.getLayoutJSON());
-        m_subnodeConfigurationStringProvider = new SubnodeContainerConfigurationStringProvider(dialogSettings.getConfigurationLayoutJSON());
-        m_hideInWizard = dialogSettings.isHideInWizard();
-        m_customCSS = dialogSettings.getCssStyles();
-        PortType[] inTypes = new PortType[inports.size()];
+        if(def.getDialogSettings().isPresent()) {
+            var dialogSettings = def.getDialogSettings().get(); //NOSONAR
+            m_subnodeLayoutStringProvider = new SubnodeContainerLayoutStringProvider(dialogSettings.getLayoutJSON().orElse(""));
+            m_subnodeConfigurationStringProvider = new SubnodeContainerConfigurationStringProvider(dialogSettings.getConfigurationLayoutJSON().orElse(""));
+            m_hideInWizard = dialogSettings.isHideInWizard();
+            m_customCSS = dialogSettings.getCssStyles().orElse("");
+        }
+        var inTypes = new PortType[inports.size()];
         for (var i = 0; i < inports.size(); i++) {
             inTypes[i] = DefToCoreUtil.toPortType(inports.get(i).getPortType());
             m_inports[i] = new NodeInPort(i, inTypes[i]);
@@ -365,8 +368,23 @@ public final class SubNodeContainer extends SingleNodeContainer
                 m_inHiliteHandler[i - 1] = new HiLiteHandler();
             }
         }
-        m_metadata = DefToCoreUtil.toComponentMetadata(def.getMetadata());
-        m_templateInformation = MetaNodeTemplateInformation.createNewTemplate(def.getTemplateInfo(), TemplateType.SubNode);
+        m_metadata =
+            DefToCoreUtil.toComponentMetadata(def.getMetadata().orElse(new ComponentMetadataDefBuilder().build()));
+
+        // templates and links
+        if (def.getTemplateMetadata().isEmpty() && def.getTemplateLink().isEmpty()) {
+            // regular component (template metadata is empty, link is empty)
+            m_templateInformation = MetaNodeTemplateInformation.NONE;
+        } else if (def.getTemplateMetadata().isPresent()) {
+            // standalone component (template metadata is present, link is empty)
+            m_templateInformation =
+                MetaNodeTemplateInformation.createNewTemplate(def.getTemplateMetadata().get(), TemplateType.SubNode); // NOSONAR
+        } else {
+            // linked component (link is present, template metadata is empty)
+            m_templateInformation =
+                MetaNodeTemplateInformation.createNewTemplate(def.getTemplateLink().get(), TemplateType.SubNode); // NOSONAR
+        }
+
     }
 
     /**
@@ -3080,8 +3098,8 @@ public final class SubNodeContainer extends SingleNodeContainer
             setInternalState(m_wfm.getInternalState(), false);
         }
 
-        NodeSettingsRO modelSettings = DefToCoreUtil.toNodeSettings(componentNodeDef.getModelSettings());
-        if (modelSettings != null) {
+        if (componentNodeDef.getModelSettings().isPresent()) {
+            NodeSettingsRO modelSettings = DefToCoreUtil.toNodeSettings(componentNodeDef.getModelSettings().get()); // NOSONAR
             try {
                 loadModelSettingsIntoDialogNodes(modelSettings, false);
             } catch (InvalidSettingsException e) {
@@ -3091,6 +3109,7 @@ public final class SubNodeContainer extends SingleNodeContainer
                 setDirty();
             }
         }
+
         // add virtual input/ouput nodes.
         checkInOutNodesAfterLoad(null, loadResult);
         loadLegacyPortNamesAndDescriptionsFromInOutNodes();

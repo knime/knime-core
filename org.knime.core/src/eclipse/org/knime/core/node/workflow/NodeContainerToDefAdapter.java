@@ -48,6 +48,8 @@
  */
 package org.knime.core.node.workflow;
 
+import java.util.Optional;
+
 import org.knime.shared.workflow.def.BaseNodeDef;
 import org.knime.shared.workflow.def.JobManagerDef;
 import org.knime.shared.workflow.def.NodeAnnotationDef;
@@ -79,40 +81,40 @@ public abstract class NodeContainerToDefAdapter implements BaseNodeDef {
      * {@inheritDoc}
      */
     @Override
-    public String getCustomDescription() {
-        return m_nc.getCustomDescription();
+    public Optional<String> getCustomDescription() {
+        return Optional.ofNullable(m_nc.getCustomDescription());
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeAnnotationDef getAnnotation() {
-        return CoreToDefUtil.toNodeAnnotationDef(m_nc.getNodeAnnotation());
+    public Optional<NodeAnnotationDef> getAnnotation() {
+        return Optional.ofNullable(CoreToDefUtil.toNodeAnnotationDef(m_nc.getNodeAnnotation()));
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeUIInfoDef getUiInfo() {
-        return CoreToDefUtil.toNodeUIInfoDef(m_nc.getUIInformation());
+    public Optional<NodeUIInfoDef> getUiInfo() {
+        return Optional.ofNullable(CoreToDefUtil.toNodeUIInfoDef(m_nc.getUIInformation()));
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeLocksDef getLocks() {
-        return CoreToDefUtil.toNodeLocksDef(m_nc.getNodeLocks());
+    public Optional<NodeLocksDef> getLocks() {
+        return Optional.ofNullable(CoreToDefUtil.toNodeLocksDef(m_nc.getNodeLocks()));
     }
 
     /**
      * @return a def if a job manager is present, null otherwise
      */
     @Override
-    public JobManagerDef getJobManager() {
-        return CoreToDefUtil.toJobManager(m_nc.getJobManager(), m_passwordHandler);
+    public Optional<JobManagerDef> getJobManager() {
+        return Optional.ofNullable(CoreToDefUtil.toJobManager(m_nc.getJobManager(), m_passwordHandler));
     }
 
     /**

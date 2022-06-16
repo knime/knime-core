@@ -48,6 +48,8 @@
  */
 package org.knime.core.node.workflow;
 
+import java.util.Optional;
+
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeSettings;
@@ -79,10 +81,10 @@ public abstract class SingleNodeContainerToDefAdapter extends NodeContainerToDef
      * {@inheritDoc}
      */
     @Override
-    public ConfigMapDef getModelSettings() {
+    public Optional<ConfigMapDef> getModelSettings() {
         SingleNodeContainerSettings s = m_nc.getSingleNodeContainerSettings();
         try {
-            return LoaderUtils.toConfigMapDef(s.getModelSettings(), m_passwordHandler);
+            return Optional.of(LoaderUtils.toConfigMapDef(s.getModelSettings(), m_passwordHandler));
         } catch (InvalidSettingsException ex) {
             // TODO
             throw new RuntimeException(ex);
@@ -93,11 +95,11 @@ public abstract class SingleNodeContainerToDefAdapter extends NodeContainerToDef
      * {@inheritDoc}
      */
     @Override
-    public ConfigMapDef getInternalNodeSubSettings() {
+    public Optional<ConfigMapDef> getInternalNodeSubSettings() {
         var internalSettings = new NodeSettings(Node.CFG_MISC_SETTINGS);
         m_nc.getSingleNodeContainerSettings().save(internalSettings);
         try {
-            return LoaderUtils.toConfigMapDef(internalSettings, m_passwordHandler);
+            return Optional.of(LoaderUtils.toConfigMapDef(internalSettings, m_passwordHandler));
         } catch (InvalidSettingsException ex) {
             // TODO
             throw new RuntimeException(ex);
@@ -108,10 +110,10 @@ public abstract class SingleNodeContainerToDefAdapter extends NodeContainerToDef
      * {@inheritDoc}
      */
     @Override
-    public ConfigMapDef getVariableSettings() {
+    public Optional<ConfigMapDef> getVariableSettings() {
         SingleNodeContainerSettings s = m_nc.getSingleNodeContainerSettings();
         try {
-            return LoaderUtils.toConfigMapDef(s.getVariablesSettings(), PasswordRedactor.asNull());
+            return Optional.of(LoaderUtils.toConfigMapDef(s.getVariablesSettings(), PasswordRedactor.asNull()));
         } catch (InvalidSettingsException ex) {
             // TODO
             throw new RuntimeException(ex);

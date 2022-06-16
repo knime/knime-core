@@ -78,54 +78,55 @@ import org.knime.shared.workflow.def.ConfigurableNodeDef;
 import org.w3c.dom.Element;
 
 /**
- * Implementation of {@link NodeContainer} which wraps a node hiding it's
- * internals, such as a node with an underlying implementation or a subnode
- * hiding it's internal workflow.
+ * Implementation of {@link NodeContainer} which wraps a node hiding it's internals, such as a node with an underlying
+ * implementation or a subnode hiding it's internal workflow.
  *
  * @author M. Berthold/B. Wiswedel, University of Konstanz
  */
 public abstract class SingleNodeContainer extends NodeContainer {
 
     /** my logger. */
-    private static final NodeLogger LOGGER =
-        NodeLogger.getLogger(SingleNodeContainer.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(SingleNodeContainer.class);
 
     /**
-     * Available policy how to handle output data. It might be held in memory or
-     * completely on disc. We use an enum here as a boolean may not be
-     * sufficient in the future (possibly adding a third option "try to keep in
-     * memory").
+     * Available policy how to handle output data. It might be held in memory or completely on disc. We use an enum here
+     * as a boolean may not be sufficient in the future (possibly adding a third option "try to keep in memory").
      */
     public static enum MemoryPolicy {
-        /** Hold output in memory. */
-        CacheInMemory,
-        /**
-         * Cache only small tables in memory, i.e. with cell count &lt;= DataContainer.MAX_CELLS_IN_MEMORY.
-         */
-        CacheSmallInMemory,
-        /** Buffer on disc. */
-        CacheOnDisc
+            /** Hold output in memory. */
+            CacheInMemory,
+            /**
+             * Cache only small tables in memory, i.e. with cell count &lt;= DataContainer.MAX_CELLS_IN_MEMORY.
+             */
+            CacheSmallInMemory,
+            /** Buffer on disc. */
+            CacheOnDisc
     }
 
     /** Config key: What memory policy to use for a node outport. */
     static final String CFG_MEMORY_POLICY = "memory_policy";
+
     /** The sub settings entry where the model can save its setup. */
     static final String CFG_MODEL = "model";
-    /** The sub settings entry containing the flow variable settings. These
-     * settings are not available in the derived node model. */
+
+    /**
+     * The sub settings entry containing the flow variable settings. These settings are not available in the derived
+     * node model.
+     */
     static final String CFG_VARIABLES = "variables";
+
     /** Sub settings entry containing the node-view settings. */
     static final String CFG_VIEW = "view";
+
     static final String CFG_VIEW_VARIABLES = "view_variables";
 
-    /** Name of the sub-directory containing node-local files. These files
-     * manually copied by the user and the node will automatically list those
-     * files as node-local flow variables in its configuration dialog.
+    /**
+     * Name of the sub-directory containing node-local files. These files manually copied by the user and the node will
+     * automatically list those files as node-local flow variables in its configuration dialog.
      */
     public static final String DROP_DIR_NAME = "drop";
 
-    private SingleNodeContainerSettings m_settings =
-        new SingleNodeContainerSettings();
+    private SingleNodeContainerSettings m_settings = new SingleNodeContainerSettings();
 
     /**
      * @param parent ...
@@ -135,7 +136,6 @@ public abstract class SingleNodeContainer extends NodeContainer {
         super(parent, id);
     }
 
-
     /**
      * @param parent ...
      * @param id ...
@@ -144,7 +144,6 @@ public abstract class SingleNodeContainer extends NodeContainer {
     SingleNodeContainer(final WorkflowManager parent, final NodeID id, final NodeAnnotation anno) {
         super(parent, id, anno);
     }
-
 
     /**
      * @param parent ...
@@ -163,6 +162,7 @@ public abstract class SingleNodeContainer extends NodeContainer {
 
     /**
      * Set a new HiLiteHandler for an incoming connection.
+     *
      * @param index index of port
      * @param hdl new HiLiteHandler
      */
@@ -196,50 +196,50 @@ public abstract class SingleNodeContainer extends NodeContainer {
             boolean prevInactivity = isInactive();
             // perform action
             switch (getInternalState()) {
-            case IDLE:
-                if (callNodeConfigure(inObjectSpecs, keepNodeMessage)) {
-                    setInternalState(InternalNodeContainerState.CONFIGURED);
-                } else {
-                    setInternalState(InternalNodeContainerState.IDLE);
-                }
-                break;
-            case UNCONFIGURED_MARKEDFOREXEC:
-                if (callNodeConfigure(inObjectSpecs, keepNodeMessage)) {
-                    setInternalState(InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC);
-                } else {
-                    setInternalState(InternalNodeContainerState.UNCONFIGURED_MARKEDFOREXEC);
-                }
-                break;
-            case CONFIGURED:
-                // m_node.reset();
-                boolean success = callNodeConfigure(inObjectSpecs, keepNodeMessage);
-                if (success) {
-                    setInternalState(InternalNodeContainerState.CONFIGURED);
-                } else {
+                case IDLE:
+                    if (callNodeConfigure(inObjectSpecs, keepNodeMessage)) {
+                        setInternalState(InternalNodeContainerState.CONFIGURED);
+                    } else {
+                        setInternalState(InternalNodeContainerState.IDLE);
+                    }
+                    break;
+                case UNCONFIGURED_MARKEDFOREXEC:
+                    if (callNodeConfigure(inObjectSpecs, keepNodeMessage)) {
+                        setInternalState(InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC);
+                    } else {
+                        setInternalState(InternalNodeContainerState.UNCONFIGURED_MARKEDFOREXEC);
+                    }
+                    break;
+                case CONFIGURED:
                     // m_node.reset();
-                    setInternalState(InternalNodeContainerState.IDLE);
-                }
-                break;
-            case CONFIGURED_MARKEDFOREXEC:
-                // these are dangerous - otherwise re-queued loop-ends are
-                // reset!
-                // m_node.reset();
-                success = callNodeConfigure(inObjectSpecs, keepNodeMessage);
-                if (success) {
-                    setInternalState(InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC);
-                } else {
+                    boolean success = callNodeConfigure(inObjectSpecs, keepNodeMessage);
+                    if (success) {
+                        setInternalState(InternalNodeContainerState.CONFIGURED);
+                    } else {
+                        // m_node.reset();
+                        setInternalState(InternalNodeContainerState.IDLE);
+                    }
+                    break;
+                case CONFIGURED_MARKEDFOREXEC:
+                    // these are dangerous - otherwise re-queued loop-ends are
+                    // reset!
                     // m_node.reset();
-                    setInternalState(InternalNodeContainerState.UNCONFIGURED_MARKEDFOREXEC);
-                }
-                break;
-            case EXECUTINGREMOTELY: // this should only happen during load
-                success = callNodeConfigure(inObjectSpecs, keepNodeMessage);
-                if (!success) {
-                    setInternalState(InternalNodeContainerState.IDLE);
-                }
-                break;
-            default:
-                throwIllegalStateException();
+                    success = callNodeConfigure(inObjectSpecs, keepNodeMessage);
+                    if (success) {
+                        setInternalState(InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC);
+                    } else {
+                        // m_node.reset();
+                        setInternalState(InternalNodeContainerState.UNCONFIGURED_MARKEDFOREXEC);
+                    }
+                    break;
+                case EXECUTINGREMOTELY: // this should only happen during load
+                    success = callNodeConfigure(inObjectSpecs, keepNodeMessage);
+                    if (!success) {
+                        setInternalState(InternalNodeContainerState.IDLE);
+                    }
+                    break;
+                default:
+                    throwIllegalStateException();
             }
             if (keepNodeMessage) {
                 setNodeMessage(NodeMessage.merge(oldMessage, getNodeMessage()));
@@ -249,7 +249,7 @@ public abstract class SingleNodeContainer extends NodeContainer {
             if (prevInactivity != isInactive()) {
                 InternalNodeContainerState oldSt = this.getInternalState();
                 setInternalState(InternalNodeContainerState.IDLE.equals(oldSt) ? InternalNodeContainerState.CONFIGURED
-                        : InternalNodeContainerState.IDLE);
+                    : InternalNodeContainerState.IDLE);
                 setInternalState(oldSt);
                 return true;
             }
@@ -270,11 +270,12 @@ public abstract class SingleNodeContainer extends NodeContainer {
 
     /**
      * Calls configure in the node, whereby it also updates the settings in case the node is driven by flow variables.
-     * It also allows the current job manager to modify the output specs according to its  settings
-     * (in case it modifies the node's output).
+     * It also allows the current job manager to modify the output specs according to its settings (in case it modifies
+     * the node's output).
      *
-     * <p>This method is KNIME private API and is called from the framework and the streaming executor (which is why
-     * it has public scope).
+     * <p>
+     * This method is KNIME private API and is called from the framework and the streaming executor (which is why it has
+     * public scope).
      *
      * @param inSpecs the input specs to node configure
      * @param keepNodeMessage see {@link SingleNodeContainer#configure(PortObjectSpec[], boolean)}
@@ -301,7 +302,7 @@ public abstract class SingleNodeContainer extends NodeContainer {
                 if (!m_exportedSettingsVariables.isEmpty()) {
                     FlowObjectStack outgoingFlowObjectStack = getOutgoingFlowObjectStack();
                     ArrayList<FlowVariable> reverseOrder =
-                            new ArrayList<FlowVariable>(m_exportedSettingsVariables.values());
+                        new ArrayList<FlowVariable>(m_exportedSettingsVariables.values());
                     Collections.reverse(reverseOrder);
                     for (FlowVariable v : reverseOrder) {
                         outgoingFlowObjectStack.push(v);
@@ -318,23 +319,24 @@ public abstract class SingleNodeContainer extends NodeContainer {
         }
     }
 
-    /** All preparations done: pass configure down to derived classes.
+    /**
+     * All preparations done: pass configure down to derived classes.
      *
      * @param inSpecs ...
      * @param nch ...
-     * @param keepNodeMessage as per {@link SingleNodeContainer#configure(PortObjectSpec[], boolean)}
-     *        (sub nodes need this to forward the property to the contained wfm).
+     * @param keepNodeMessage as per {@link SingleNodeContainer#configure(PortObjectSpec[], boolean)} (sub nodes need
+     *            this to forward the property to the contained wfm).
      * @return true if configure succeeded.
      */
     abstract boolean performConfigure(final PortObjectSpec[] inSpecs, final NodeConfigureHelper nch,
         final boolean keepNodeMessage);
 
-    /** Used before configure, to apply the variable mask to the nodesettings,
-     * that is to change individual node settings to reflect the current values
-     * of the variables (if any).
-     * @return a map containing the exposed variables (which are visible to
-     * downstream nodes. These variables are put onto the node's
-     * {@link FlowObjectStack}.
+    /**
+     * Used before configure, to apply the variable mask to the nodesettings, that is to change individual node settings
+     * to reflect the current values of the variables (if any).
+     *
+     * @return a map containing the exposed variables (which are visible to downstream nodes. These variables are put
+     *         onto the node's {@link FlowObjectStack}.
      */
     private Map<String, FlowVariable> applySettingsUsingFlowObjectStack() throws InvalidSettingsException {
         NodeSettingsRO viewVariableSettings = m_settings.getViewVariablesSettings();
@@ -447,8 +449,9 @@ public abstract class SingleNodeContainer extends NodeContainer {
         return Optional.of(viewSettings);
     }
 
-    /** Load cleaned and "variable adjusted" into underlying implementation.  Throws exception
-     * if validation of settings fails or other problems occur.
+    /**
+     * Load cleaned and "variable adjusted" into underlying implementation. Throws exception if validation of settings
+     * fails or other problems occur.
      *
      * @param settings ...
      * @throws InvalidSettingsException ...
@@ -487,78 +490,83 @@ public abstract class SingleNodeContainer extends NodeContainer {
         }
     }
 
-    /** Reset underlying node and update state accordingly.
+    /**
+     * Reset underlying node and update state accordingly.
+     *
      * @throws IllegalStateException in case of illegal entry state.
      */
     void rawReset() {
         // TODO move copies into Native/SubNodecontainer?
         synchronized (m_nodeMutex) {
             switch (getInternalState()) {
-            case EXECUTED:
-            case EXECUTED_MARKEDFOREXEC:
-                NodeContext.pushContext(this);
-                try {
-                    performReset();
-                } finally {
-                    NodeContext.removeLastContext();
-                }
-                if (this instanceof NativeNodeContainer) {
-                    ((NativeNodeContainer)this).clearFileStoreHandler();
-                }
-                // After reset we need explicit configure!
-                setInternalState(InternalNodeContainerState.IDLE);
-                return;
-            case CONFIGURED_MARKEDFOREXEC:
-                setInternalState(InternalNodeContainerState.CONFIGURED);
-                return;
-            case UNCONFIGURED_MARKEDFOREXEC:
-                setInternalState(InternalNodeContainerState.IDLE);
-                return;
-            case CONFIGURED:
-                /*
-                 * Also configured nodes must be reset in order to handle
-                 * nodes subsequent to metanodes with through-connections.
-                 */
-                NodeContext.pushContext(this);
-                try {
-                    performReset();
-                } finally {
-                    NodeContext.removeLastContext();
-                }
-                if (this instanceof NativeNodeContainer) {
-                    ((NativeNodeContainer)this).clearFileStoreHandler();
-                }
-                setInternalState(InternalNodeContainerState.IDLE);
-                return;
-            default:
-                if (isResetable()) { // a subnode container is resetable even when IDLE
+                case EXECUTED:
+                case EXECUTED_MARKEDFOREXEC:
                     NodeContext.pushContext(this);
                     try {
                         performReset();
                     } finally {
                         NodeContext.removeLastContext();
                     }
-                } else  {
-                    throwIllegalStateException();
-                }
+                    if (this instanceof NativeNodeContainer) {
+                        ((NativeNodeContainer)this).clearFileStoreHandler();
+                    }
+                    // After reset we need explicit configure!
+                    setInternalState(InternalNodeContainerState.IDLE);
+                    return;
+                case CONFIGURED_MARKEDFOREXEC:
+                    setInternalState(InternalNodeContainerState.CONFIGURED);
+                    return;
+                case UNCONFIGURED_MARKEDFOREXEC:
+                    setInternalState(InternalNodeContainerState.IDLE);
+                    return;
+                case CONFIGURED:
+                    /*
+                     * Also configured nodes must be reset in order to handle
+                     * nodes subsequent to metanodes with through-connections.
+                     */
+                    NodeContext.pushContext(this);
+                    try {
+                        performReset();
+                    } finally {
+                        NodeContext.removeLastContext();
+                    }
+                    if (this instanceof NativeNodeContainer) {
+                        ((NativeNodeContainer)this).clearFileStoreHandler();
+                    }
+                    setInternalState(InternalNodeContainerState.IDLE);
+                    return;
+                default:
+                    if (isResetable()) { // a subnode container is resetable even when IDLE
+                        NodeContext.pushContext(this);
+                        try {
+                            performReset();
+                        } finally {
+                            NodeContext.removeLastContext();
+                        }
+                    } else {
+                        throwIllegalStateException();
+                    }
             }
         }
     }
 
-    /** Reset model in underlying implementation.
+    /**
+     * Reset model in underlying implementation.
      */
     abstract void performReset();
 
-    /** Cleans outports, i.e. sets fields to null, calls clear() on BDT.
-     * Usually happens as part of a reset() (except for loops that have
-     * their body not reset between iterations.
-     * @param isLoopRestart See {@link Node#cleanOutPorts(boolean)}. */
+    /**
+     * Cleans outports, i.e. sets fields to null, calls clear() on BDT. Usually happens as part of a reset() (except for
+     * loops that have their body not reset between iterations.
+     *
+     * @param isLoopRestart See {@link Node#cleanOutPorts(boolean)}.
+     */
     abstract void cleanOutPorts(final boolean isLoopRestart);
 
-    /** Enable (or disable) queuing of underlying node for execution. This
-     * really only changes the state of the node. If flag==true and when all
-     * pre-conditions for execution are fulfilled (e.g. configuration succeeded
-     * and all ingoing objects are available) the node will be actually queued.
+    /**
+     * Enable (or disable) queuing of underlying node for execution. This really only changes the state of the node. If
+     * flag==true and when all pre-conditions for execution are fulfilled (e.g. configuration succeeded and all ingoing
+     * objects are available) the node will be actually queued.
      *
      * @param flag determines if node is marked or unmarked for execution
      * @throws IllegalStateException in case of illegal entry state.
@@ -566,28 +574,28 @@ public abstract class SingleNodeContainer extends NodeContainer {
     @Override
     void markForExecution(final boolean flag) {
         synchronized (m_nodeMutex) {
-            if (flag) {  // we want to mark the node for execution!
+            if (flag) { // we want to mark the node for execution!
                 switch (getInternalState()) {
-                case CONFIGURED:
-                    setInternalState(InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC);
-                    break;
-                case IDLE:
-                    setInternalState(InternalNodeContainerState.UNCONFIGURED_MARKEDFOREXEC);
-                    break;
-                default:
-                    throwIllegalStateException();
+                    case CONFIGURED:
+                        setInternalState(InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC);
+                        break;
+                    case IDLE:
+                        setInternalState(InternalNodeContainerState.UNCONFIGURED_MARKEDFOREXEC);
+                        break;
+                    default:
+                        throwIllegalStateException();
                 }
                 setExecutionEnvironment(new ExecutionEnvironment());
-            } else {  // we want to remove the mark for execution
+            } else { // we want to remove the mark for execution
                 switch (getInternalState()) {
-                case CONFIGURED_MARKEDFOREXEC:
-                    setInternalState(InternalNodeContainerState.CONFIGURED);
-                    break;
-                case UNCONFIGURED_MARKEDFOREXEC:
-                    setInternalState(InternalNodeContainerState.IDLE);
-                    break;
-                default:
-                    throwIllegalStateException();
+                    case CONFIGURED_MARKEDFOREXEC:
+                        setInternalState(InternalNodeContainerState.CONFIGURED);
+                        break;
+                    case UNCONFIGURED_MARKEDFOREXEC:
+                        setInternalState(InternalNodeContainerState.IDLE);
+                        break;
+                    default:
+                        throwIllegalStateException();
                 }
                 setExecutionEnvironment(null);
             }
@@ -595,9 +603,9 @@ public abstract class SingleNodeContainer extends NodeContainer {
     }
 
     /**
-     * Mark underlying, executed node so that it can be re-executed (= update state accordingly).
-     * - Used in loops to execute start more than once and when reset/configure is skipped in loop body.
-     * - Used for re-execution of interactive nodes.
+     * Mark underlying, executed node so that it can be re-executed (= update state accordingly). - Used in loops to
+     * execute start more than once and when reset/configure is skipped in loop body. - Used for re-execution of
+     * interactive nodes.
      *
      * @param exEnv the execution environment
      * @throws IllegalStateException in case of illegal entry state.
@@ -606,11 +614,11 @@ public abstract class SingleNodeContainer extends NodeContainer {
         assert exEnv.reExecute();
         synchronized (m_nodeMutex) {
             switch (getInternalState()) {
-            case EXECUTED:
-                setInternalState(InternalNodeContainerState.EXECUTED_MARKEDFOREXEC);
-                break;
-            default:
-                throwIllegalStateException();
+                case EXECUTED:
+                    setInternalState(InternalNodeContainerState.EXECUTED_MARKEDFOREXEC);
+                    break;
+                default:
+                    throwIllegalStateException();
             }
             setExecutionEnvironment(exEnv);
         }
@@ -621,70 +629,70 @@ public abstract class SingleNodeContainer extends NodeContainer {
     void cancelExecution() {
         synchronized (m_nodeMutex) {
             switch (getInternalState()) {
-            case UNCONFIGURED_MARKEDFOREXEC:
-                setInternalState(InternalNodeContainerState.IDLE);
-                break;
-            case CONFIGURED_MARKEDFOREXEC:
-                setInternalState(InternalNodeContainerState.CONFIGURED);
-                break;
-            case EXECUTED_MARKEDFOREXEC:
-                setInternalState(InternalNodeContainerState.EXECUTED);
-                break;
-            case CONFIGURED_QUEUED:
-            case EXECUTED_QUEUED:
-                // m_executionFuture has not yet started or if it has started,
-                // it will not hand of to node implementation (otherwise it
-                // would be executing)
-                getProgressMonitor().setExecuteCanceled();
-                NodeExecutionJob job = getExecutionJob();
-                assert job != null : "node is queued but no job represents the execution task (is null)";
-                job.cancel();
-                if (InternalNodeContainerState.CONFIGURED_QUEUED.equals(getInternalState())) {
+                case UNCONFIGURED_MARKEDFOREXEC:
+                    setInternalState(InternalNodeContainerState.IDLE);
+                    break;
+                case CONFIGURED_MARKEDFOREXEC:
                     setInternalState(InternalNodeContainerState.CONFIGURED);
-                } else {
+                    break;
+                case EXECUTED_MARKEDFOREXEC:
                     setInternalState(InternalNodeContainerState.EXECUTED);
-                }
-                break;
-            case EXECUTING:
-                // future is running in thread pool, use ordinary cancel policy
-                getProgressMonitor().setExecuteCanceled();
-                job = getExecutionJob();
-                // temporary debug output to diagnose problem on instrumentation server, to be removed (BW - 2018-11-26)
-                Supplier<String> statePrinter = () -> {
-                    WorkflowManager projectWFM = getParent().getProjectWFM();
-                    return projectWFM.printNodeSummary(projectWFM.getID(), 0);
-                };
-                CheckUtils.checkState(job != null,
+                    break;
+                case CONFIGURED_QUEUED:
+                case EXECUTED_QUEUED:
+                    // m_executionFuture has not yet started or if it has started,
+                    // it will not hand of to node implementation (otherwise it
+                    // would be executing)
+                    getProgressMonitor().setExecuteCanceled();
+                    NodeExecutionJob job = getExecutionJob();
+                    assert job != null : "node is queued but no job represents the execution task (is null)";
+                    job.cancel();
+                    if (InternalNodeContainerState.CONFIGURED_QUEUED.equals(getInternalState())) {
+                        setInternalState(InternalNodeContainerState.CONFIGURED);
+                    } else {
+                        setInternalState(InternalNodeContainerState.EXECUTED);
+                    }
+                    break;
+                case EXECUTING:
+                    // future is running in thread pool, use ordinary cancel policy
+                    getProgressMonitor().setExecuteCanceled();
+                    job = getExecutionJob();
+                    // temporary debug output to diagnose problem on instrumentation server, to be removed (BW - 2018-11-26)
+                    Supplier<String> statePrinter = () -> {
+                        WorkflowManager projectWFM = getParent().getProjectWFM();
+                        return projectWFM.printNodeSummary(projectWFM.getID(), 0);
+                    };
+                    CheckUtils.checkState(job != null,
                         "Exec Job on node '%s' is null, job manager on node '%s', on parent '%s'; state of project: ",
                         getNameWithID(), getJobManager(), findJobManager(), statePrinter.get());
-                assert job != null : "node is executing but no job represents the execution task (is null)";
-                job.cancel();
-                break;
-            case PREEXECUTE:   // locally executing nodes are not really in
-            case POSTEXECUTE:  // one of these two states
-            case EXECUTINGREMOTELY:
-                // execute remotely can be both truly executing remotely
-                // (job will be non-null) or marked as executing remotely
-                // (e.g. node is part of metanode which is remote executed
-                // -- the job will be null). We tolerate both cases here.
-                job = getExecutionJob();
-                if (job == null) {
-                    // we can't decide on whether this node is now IDLE or
-                    // CONFIGURED -- we rely on the parent to call configure
-                    // (pessimistic guess here that node was not configured)
-                    setInternalState(InternalNodeContainerState.IDLE);
-                } else {
-                    getProgressMonitor().setExecuteCanceled();
+                    assert job != null : "node is executing but no job represents the execution task (is null)";
                     job.cancel();
-                }
-                break;
-            case EXECUTED:
-                // Too late - do nothing and bail.
-                return;
-            default:
-                // warn, ignore, and bail.
-                LOGGER.warn("Strange state " + getInternalState() + " encountered in cancelExecution().");
-                return;
+                    break;
+                case PREEXECUTE: // locally executing nodes are not really in
+                case POSTEXECUTE: // one of these two states
+                case EXECUTINGREMOTELY:
+                    // execute remotely can be both truly executing remotely
+                    // (job will be non-null) or marked as executing remotely
+                    // (e.g. node is part of metanode which is remote executed
+                    // -- the job will be null). We tolerate both cases here.
+                    job = getExecutionJob();
+                    if (job == null) {
+                        // we can't decide on whether this node is now IDLE or
+                        // CONFIGURED -- we rely on the parent to call configure
+                        // (pessimistic guess here that node was not configured)
+                        setInternalState(InternalNodeContainerState.IDLE);
+                    } else {
+                        getProgressMonitor().setExecuteCanceled();
+                        job.cancel();
+                    }
+                    break;
+                case EXECUTED:
+                    // Too late - do nothing and bail.
+                    return;
+                default:
+                    // warn, ignore, and bail.
+                    LOGGER.warn("Strange state " + getInternalState() + " encountered in cancelExecution().");
+                    return;
             }
             // clean up execution environment.
             setExecutionEnvironment(null);
@@ -706,7 +714,6 @@ public abstract class SingleNodeContainer extends NodeContainer {
         }
     }
 
-
     //////////////////////////////////////
     //  internal state change actions
     //////////////////////////////////////
@@ -717,16 +724,16 @@ public abstract class SingleNodeContainer extends NodeContainer {
         synchronized (m_nodeMutex) {
             getProgressMonitor().reset();
             switch (getInternalState()) {
-            case EXECUTED_MARKEDFOREXEC:
-            case CONFIGURED_MARKEDFOREXEC:
-            case UNCONFIGURED_MARKEDFOREXEC:
-                setInternalState(InternalNodeContainerState.PREEXECUTE);
-                break;
-            case EXECUTED:
-                // ignore executed nodes
-                break;
-            default:
-                throwIllegalStateException();
+                case EXECUTED_MARKEDFOREXEC:
+                case CONFIGURED_MARKEDFOREXEC:
+                case UNCONFIGURED_MARKEDFOREXEC:
+                    setInternalState(InternalNodeContainerState.PREEXECUTE);
+                    break;
+                case EXECUTED:
+                    // ignore executed nodes
+                    break;
+                default:
+                    throwIllegalStateException();
             }
         }
     }
@@ -736,14 +743,14 @@ public abstract class SingleNodeContainer extends NodeContainer {
     void mimicRemoteExecuting() {
         synchronized (m_nodeMutex) {
             switch (getInternalState()) {
-            case PREEXECUTE:
-                setInternalState(InternalNodeContainerState.EXECUTINGREMOTELY);
-                break;
-            case EXECUTED:
-                // ignore executed nodes
-                break;
-            default:
-                throwIllegalStateException();
+                case PREEXECUTE:
+                    setInternalState(InternalNodeContainerState.EXECUTINGREMOTELY);
+                    break;
+                case EXECUTED:
+                    // ignore executed nodes
+                    break;
+                default:
+                    throwIllegalStateException();
             }
         }
     }
@@ -753,16 +760,16 @@ public abstract class SingleNodeContainer extends NodeContainer {
     void mimicRemotePostExecute() {
         synchronized (m_nodeMutex) {
             switch (getInternalState()) {
-            case PREEXECUTE: // in case of errors, e.g. flow stack problems
-                             // encountered during doBeforeExecution
-            case EXECUTINGREMOTELY:
-                setInternalState(InternalNodeContainerState.POSTEXECUTE);
-                break;
-            case EXECUTED:
-                // ignore executed nodes
-                break;
-            default:
-                throwIllegalStateException();
+                case PREEXECUTE: // in case of errors, e.g. flow stack problems
+                                 // encountered during doBeforeExecution
+                case EXECUTINGREMOTELY:
+                    setInternalState(InternalNodeContainerState.POSTEXECUTE);
+                    break;
+                case EXECUTED:
+                    // ignore executed nodes
+                    break;
+                default:
+                    throwIllegalStateException();
             }
         }
     }
@@ -773,22 +780,21 @@ public abstract class SingleNodeContainer extends NodeContainer {
         boolean success = status.isSuccess();
         synchronized (m_nodeMutex) {
             switch (getInternalState()) {
-            case POSTEXECUTE:
-                setInternalState(success ? InternalNodeContainerState.EXECUTED : InternalNodeContainerState.IDLE);
-                break;
-            case EXECUTED:
-                // ignore executed nodes
-                break;
-            default:
-                throwIllegalStateException();
+                case POSTEXECUTE:
+                    setInternalState(success ? InternalNodeContainerState.EXECUTED : InternalNodeContainerState.IDLE);
+                    break;
+                case EXECUTED:
+                    // ignore executed nodes
+                    break;
+                default:
+                    throwIllegalStateException();
             }
         }
     }
 
     /**
-     * Execute underlying Node asynchronously. Make sure to give Workflow-
-     * Manager a chance to call pre- and postExecuteNode() appropriately and
-     * synchronize those parts (since they changes states!).
+     * Execute underlying Node asynchronously. Make sure to give Workflow- Manager a chance to call pre- and
+     * postExecuteNode() appropriately and synchronize those parts (since they changes states!).
      *
      * @param inObjects input data
      * @return whether execution was successful.
@@ -796,15 +802,13 @@ public abstract class SingleNodeContainer extends NodeContainer {
      */
     public abstract NodeContainerExecutionStatus performExecuteNode(final PortObject[] inObjects);
 
-
     // //////////////////////////////////////
     // Save & Load Settings and Content
     // //////////////////////////////////////
 
     /** {@inheritDoc} */
     @Override
-    void loadSettings(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    void loadSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         synchronized (m_nodeMutex) {
             super.loadSettings(settings);
             // assign to temp variable first, then load (which may fail during validation), then assign to class member
@@ -836,16 +840,12 @@ public abstract class SingleNodeContainer extends NodeContainer {
     /** {@inheritDoc} */
     @Override
     WorkflowCopyContent loadContent(final NodeContainerPersistor nodePersistor,
-            final Map<Integer, BufferedDataTable> tblRep,
-            final FlowObjectStack inStack, final ExecutionMonitor exec,
-            final LoadResult loadResult, final boolean preserveNodeMessage)
-            throws CanceledExecutionException {
+        final Map<Integer, BufferedDataTable> tblRep, final FlowObjectStack inStack, final ExecutionMonitor exec,
+        final LoadResult loadResult, final boolean preserveNodeMessage) throws CanceledExecutionException {
         synchronized (m_nodeMutex) {
             if (!(nodePersistor instanceof SingleNodeContainerPersistor)) {
-                throw new IllegalStateException("Expected "
-                        + SingleNodeContainerPersistor.class.getSimpleName()
-                        + " persistor object, got "
-                        + nodePersistor.getClass().getSimpleName());
+                throw new IllegalStateException("Expected " + SingleNodeContainerPersistor.class.getSimpleName()
+                    + " persistor object, got " + nodePersistor.getClass().getSimpleName());
             }
             exec.checkCanceled();
             SingleNodeContainerPersistor persistor = (SingleNodeContainerPersistor)nodePersistor;
@@ -882,25 +882,27 @@ public abstract class SingleNodeContainer extends NodeContainer {
             exec.checkCanceled();
             var singleNodeDef = (ConfigurableNodeDef)nodeDef;
             setInternalState(InternalNodeContainerState.IDLE, false);
-            SingleNodeContainerSettings sncSettings = null;
-            try {
-                var internalSettings = DefToCoreUtil.toNodeSettings(singleNodeDef.getInternalNodeSubSettings());
-                sncSettings = new SingleNodeContainerSettings(internalSettings);
-            } catch (InvalidSettingsException ex) {
-                final String msg = String.format("Can't create the single node container settings: %s", ex.getMessage());
-                LOGGER.error(msg, ex);
-                loadResult.addError(msg);
+
+            if (singleNodeDef.getInternalNodeSubSettings().isPresent()) {
+                try {
+                    var internalSettings =
+                        DefToCoreUtil.toNodeSettings(singleNodeDef.getInternalNodeSubSettings().get()); //NOSONAR
+                    m_settings = new SingleNodeContainerSettings(internalSettings);
+                } catch (InvalidSettingsException ex) {
+                    final var msg =
+                        String.format("Can't create the single node container settings: %s", ex.getMessage());
+                    LOGGER.error(msg, ex);
+                    loadResult.addError(msg);
+                }
             }
-            if (sncSettings == null) {
-                LOGGER.coding("SNC settings from def are null, using default");
-                sncSettings = new SingleNodeContainerSettings();
-            }
-            m_settings = sncSettings;
         }
     }
 
-    /** Called by {@link #loadContent(NodeContainerPersistor, Map, FlowObjectStack, ExecutionMonitor,
-     * LoadResult, boolean)} to allow subclasses to load their content (heavy for subnode).
+    /**
+     * Called by
+     * {@link #loadContent(NodeContainerPersistor, Map, FlowObjectStack, ExecutionMonitor, LoadResult, boolean)} to
+     * allow subclasses to load their content (heavy for subnode).
+     *
      * @param nodePersistor ...
      * @param tblRep ...
      * @param inStack ...
@@ -911,10 +913,8 @@ public abstract class SingleNodeContainer extends NodeContainer {
      * @throws CanceledExecutionException ...
      */
     abstract WorkflowCopyContent performLoadContent(final SingleNodeContainerPersistor nodePersistor,
-            final Map<Integer, BufferedDataTable> tblRep,
-            final FlowObjectStack inStack, final ExecutionMonitor exec,
-            final LoadResult loadResult, final boolean preserveNodeMessage) throws CanceledExecutionException;
-
+        final Map<Integer, BufferedDataTable> tblRep, final FlowObjectStack inStack, final ExecutionMonitor exec,
+        final LoadResult loadResult, final boolean preserveNodeMessage) throws CanceledExecutionException;
 
     /** {@inheritDoc} */
     @Override
@@ -930,10 +930,12 @@ public abstract class SingleNodeContainer extends NodeContainer {
         return settings;
     }
 
-    /** Saves config from super NodeContainer (job manager) and the model settings and the variable settings.
+    /**
+     * Saves config from super NodeContainer (job manager) and the model settings and the variable settings.
+     *
      * @param settings To save to.
      * @param initDefaultModelSettings If true and the model settings are not yet assigned (node freshly dragged onto
-     * workflow) the NodeModel's saveSettings method is called to init fallback settings.
+     *            workflow) the NodeModel's saveSettings method is called to init fallback settings.
      */
     void saveSettings(final NodeSettingsWO settings, final boolean initDefaultModelSettings) {
         super.saveSettings(settings);
@@ -952,7 +954,8 @@ public abstract class SingleNodeContainer extends NodeContainer {
         m_settings.setModelSettings(modelSettings);
     }
 
-    /** Save settings of specific implementation.
+    /**
+     * Save settings of specific implementation.
      *
      * @param modelSettings ...
      */
@@ -960,9 +963,10 @@ public abstract class SingleNodeContainer extends NodeContainer {
 
     /**
      * Saves the {@link SingleNodeContainerSettings}.
+     *
      * @param settings To save to.
      * @param initDefaultModelSettings If true and the model settings are not yet assigned (node freshly dragged onto
-     * workflow) the NodeModel's saveSettings method is called to init fallback settings.
+     *            workflow) the NodeModel's saveSettings method is called to init fallback settings.
      */
     void saveSNCSettings(final NodeSettingsWO settings, final boolean initDefaultModelSettings) {
         SingleNodeContainerSettings sncSettings = m_settings;
@@ -980,8 +984,9 @@ public abstract class SingleNodeContainer extends NodeContainer {
         sncSettings.save(settings);
     }
 
-    /** @return reference to internally used settings (contains information for
-     * memory policy, e.g.) */
+    /**
+     * @return reference to internally used settings (contains information for memory policy, e.g.)
+     */
     SingleNodeContainerSettings getSingleNodeContainerSettings() {
         return m_settings;
     }
@@ -1003,12 +1008,13 @@ public abstract class SingleNodeContainer extends NodeContainer {
         }
     }
 
-    /** Validate settings of specific implementation.
+    /**
+     * Validate settings of specific implementation.
+     *
      * @param modelSettings ...
      * @throws InvalidSettingsException ...
      */
-   abstract void performValidateSettings(final NodeSettingsRO modelSettings) throws InvalidSettingsException;
-
+    abstract void performValidateSettings(final NodeSettingsRO modelSettings) throws InvalidSettingsException;
 
     ////////////////////////////////////
     // Credentials handling
@@ -1032,11 +1038,11 @@ public abstract class SingleNodeContainer extends NodeContainer {
         return dlgSettings.equals(nodeSettings);
     }
 
-
-    /** Set credentials store on this node. It will clear usage history to
-     * previously accessed credentials (client usage in credentials, see
-     * {@link Credentials}) and set a new provider on the underlying node, which
-     * has this node as client.
+    /**
+     * Set credentials store on this node. It will clear usage history to previously accessed credentials (client usage
+     * in credentials, see {@link Credentials}) and set a new provider on the underlying node, which has this node as
+     * client.
+     *
      * @param store The new store to set.
      * @see Node#setCredentialsProvider(CredentialsProvider)
      * @throws NullPointerException If the argument is null.
@@ -1053,7 +1059,8 @@ public abstract class SingleNodeContainer extends NodeContainer {
         performSetCredentialsProvider(new CredentialsProvider(this, store));
     }
 
-    /** Set/overwrite CredentialsStore.
+    /**
+     * Set/overwrite CredentialsStore.
      *
      * @param cp ...
      */
@@ -1072,20 +1079,21 @@ public abstract class SingleNodeContainer extends NodeContainer {
      * Set {@link FlowObjectStack}.
      *
      * @param st new stack
-     * @param outgoingStack a node-local stack containing the items that
-     *        were pushed by the node (this stack will be empty unless this
-     *        node is a loop start node)
+     * @param outgoingStack a node-local stack containing the items that were pushed by the node (this stack will be
+     *            empty unless this node is a loop start node)
      */
     abstract void setFlowObjectStack(final FlowObjectStack st, final FlowObjectStack outgoingStack);
 
-    /** Delegates to node to get flow variables that are added or modified
-     * by the node.
+    /**
+     * Delegates to node to get flow variables that are added or modified by the node.
+     *
      * @return The list of outgoing flow variables.
      * @see org.knime.core.node.Node#getOutgoingFlowObjectStack()
      */
     public abstract FlowObjectStack getOutgoingFlowObjectStack();
 
-    /** Check if the given node is part of a scope (loop, try/catch...).
+    /**
+     * Check if the given node is part of a scope (loop, try/catch...).
      *
      * @return true if node is part of a scope context.
      * @since 2.8
@@ -1107,12 +1115,13 @@ public abstract class SingleNodeContainer extends NodeContainer {
         }
     }
 
-    /** Creates a copy of the stack held by the Node and modifies the copy
-     * by pushing all outgoing flow variables onto it. If the node represents
-     * a scope end node, it will also pop the corresponding scope context
-     * (and thereby all variables added in the scope's body).
+    /**
+     * Creates a copy of the stack held by the Node and modifies the copy by pushing all outgoing flow variables onto
+     * it. If the node represents a scope end node, it will also pop the corresponding scope context (and thereby all
+     * variables added in the scope's body).
      *
-     * @return Such a (new!) stack. */
+     * @return Such a (new!) stack.
+     */
     public FlowObjectStack createOutFlowObjectStack() {
         synchronized (m_nodeMutex) {
             FlowObjectStack st = getFlowObjectStack();
@@ -1143,13 +1152,14 @@ public abstract class SingleNodeContainer extends NodeContainer {
 
     /**
      * Sets the node inactive.
+     *
      * @return <code>true</code> if the inactivation was successful
      */
     abstract boolean setInactive();
 
-    /** @return <code>true</code> if the underlying node is able to consume
-     * inactive objects (implements
-     * {@link org.knime.core.node.port.inactive.InactiveBranchConsumer}).
+    /**
+     * @return <code>true</code> if the underlying node is able to consume inactive objects (implements
+     *         {@link org.knime.core.node.port.inactive.InactiveBranchConsumer}).
      * @see Node#isInactiveBranchConsumer()
      */
     public abstract boolean isInactiveBranchConsumer();
@@ -1165,21 +1175,24 @@ public abstract class SingleNodeContainer extends NodeContainer {
         return false;
     }
 
-
     // /////////////////////////////////////////////////////////////////////
     // Settings loading and saving (single node container settings only)
     // /////////////////////////////////////////////////////////////////////
 
     /**
-     * Handles the settings specific to a SingleNodeContainer. Reads and writes
-     * them from and into a NodeSettings object.
+     * Handles the settings specific to a SingleNodeContainer. Reads and writes them from and into a NodeSettings
+     * object.
      */
     public static final class SingleNodeContainerSettings implements Cloneable {
 
         private MemoryPolicy m_memoryPolicy = MemoryPolicy.CacheSmallInMemory;
+
         private NodeSettingsRO m_modelSettings;
+
         private NodeSettingsRO m_variablesSettings;
+
         private NodeSettingsRO m_viewSettings;
+
         private NodeSettingsRO m_viewVariablesSettings;
 
         /**
@@ -1189,13 +1202,11 @@ public abstract class SingleNodeContainer extends NodeContainer {
         }
 
         /**
-         * Creates a new instance holding the settings contained in the
-         * specified object. The settings object must be one this class has
-         * saved itself into (and not a job manager settings object).
+         * Creates a new instance holding the settings contained in the specified object. The settings object must be
+         * one this class has saved itself into (and not a job manager settings object).
          *
          * @param settings the object with the settings to read
-         * @throws InvalidSettingsException if the settings in the argument are
-         *             invalid
+         * @throws InvalidSettingsException if the settings in the argument are invalid
          */
         public SingleNodeContainerSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
             NodeSettingsRO sncSettings = settings.getNodeSettings(Node.CFG_MISC_SETTINGS);
@@ -1216,8 +1227,8 @@ public abstract class SingleNodeContainer extends NodeContainer {
                 m_variablesSettings = null;
             }
 
-            m_viewVariablesSettings = settings.containsKey(CFG_VIEW_VARIABLES) ?
-                                      settings.getNodeSettings(CFG_VIEW_VARIABLES) : null;
+            m_viewVariablesSettings =
+                settings.containsKey(CFG_VIEW_VARIABLES) ? settings.getNodeSettings(CFG_VIEW_VARIABLES) : null;
 
             m_modelSettings = settings.getNodeSettings(CFG_MODEL);
             m_viewSettings = settings.containsKey(CFG_VIEW) ? settings.getNodeSettings(CFG_VIEW) : null;
@@ -1359,9 +1370,8 @@ public abstract class SingleNodeContainer extends NodeContainer {
     }
 
     /**
-     * Get the policy for the data outports, that is, keep the output in main
-     * memory or write it to disc. This method is used from within the
-     * ExecutionContext when the derived NodeModel is executing.
+     * Get the policy for the data outports, that is, keep the output in main memory or write it to disc. This method is
+     * used from within the ExecutionContext when the derived NodeModel is executing.
      *
      * @return The memory policy to use.
      * @noreference This method is not intended to be referenced by clients.

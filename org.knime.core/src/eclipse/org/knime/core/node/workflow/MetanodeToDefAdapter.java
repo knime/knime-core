@@ -57,7 +57,8 @@ import org.knime.shared.workflow.def.CipherDef;
 import org.knime.shared.workflow.def.MetaNodeDef;
 import org.knime.shared.workflow.def.NodeUIInfoDef;
 import org.knime.shared.workflow.def.PortDef;
-import org.knime.shared.workflow.def.TemplateInfoDef;
+import org.knime.shared.workflow.def.TemplateLinkDef;
+import org.knime.shared.workflow.def.TemplateMetadataDef;
 import org.knime.shared.workflow.def.WorkflowDef;
 import org.knime.shared.workflow.storage.util.PasswordRedactor;
 
@@ -82,44 +83,50 @@ public class MetanodeToDefAdapter extends NodeContainerToDefAdapter implements M
      * {@inheritDoc}
      */
     @Override
-    public List<PortDef> getInPorts() {
-        return IntStream.range(0, m_wfm.getNrInPorts()).mapToObj(m_wfm::getInPort).map(CoreToDefUtil::toPortDef)
-            .collect(Collectors.toList());
+    public Optional<List<PortDef>> getInPorts() {
+        if(m_wfm.getNrInPorts() == 0) {
+            return Optional.empty();
+        }
+        return Optional.of(IntStream.range(0, m_wfm.getNrInPorts()).mapToObj(m_wfm::getInPort)
+            .map(CoreToDefUtil::toPortDef).collect(Collectors.toList()));
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public List<PortDef> getOutPorts() {
-        return IntStream.range(0, m_wfm.getNrOutPorts()).mapToObj(m_wfm::getOutPort).map(CoreToDefUtil::toPortDef)
-            .collect(Collectors.toList());
+    public Optional<List<PortDef>> getOutPorts() {
+        if(m_wfm.getNrOutPorts() == 0) {
+            return Optional.empty();
+        }
+        return Optional.of(IntStream.range(0, m_wfm.getNrOutPorts()).mapToObj(m_wfm::getOutPort).map(CoreToDefUtil::toPortDef)
+            .collect(Collectors.toList()));
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeUIInfoDef getInPortsBarUIInfo() {
+    public Optional<NodeUIInfoDef> getInPortsBarUIInfo() {
         // getInPortsBarUIInfo is null if the inports bar of a metanode was never changed
-        return Optional.ofNullable(m_wfm.getInPortsBarUIInfo()).map(CoreToDefUtil::toNodeUIInfoDef).orElse(null);
+        return Optional.ofNullable(m_wfm.getInPortsBarUIInfo()).map(CoreToDefUtil::toNodeUIInfoDef);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeUIInfoDef getOutPortsBarUIInfo() {
+    public Optional<NodeUIInfoDef> getOutPortsBarUIInfo() {
         // getOutPortsBarUIInfo is null if the inports bar of a metanode was never changed
-        return Optional.ofNullable(m_wfm.getOutPortsBarUIInfo()).map(CoreToDefUtil::toNodeUIInfoDef).orElse(null);
+        return Optional.ofNullable(m_wfm.getOutPortsBarUIInfo()).map(CoreToDefUtil::toNodeUIInfoDef);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public TemplateInfoDef getLink() {
-        return CoreToDefUtil.toTemplateInfoDef(m_wfm.getTemplateInformation());
+    public Optional<TemplateLinkDef> getTemplateLink() {
+        return CoreToDefUtil.toTemplateLinkDef(m_wfm.getTemplateInformation());
     }
 
     /**
@@ -142,8 +149,16 @@ public class MetanodeToDefAdapter extends NodeContainerToDefAdapter implements M
      * {@inheritDoc}
      */
     @Override
-    public CipherDef getCipher() {
-        return m_wfm.getWorkflowCipher().toDef();
+    public Optional<CipherDef> getCipher() {
+        return Optional.ofNullable(m_wfm.getWorkflowCipher().toDef());
+    }
+
+    /**
+     * @return empty - a metanode in a workflow is by definition not standalone.
+     */
+    @Override
+    public Optional<TemplateMetadataDef> getTemplateMetadata() {
+        return Optional.empty();
     }
 
 }

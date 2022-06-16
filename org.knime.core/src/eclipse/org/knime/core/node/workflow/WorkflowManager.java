@@ -633,9 +633,11 @@ public final class WorkflowManager extends NodeContainer
         m_directNCParent = assertParentAssignments(directNCParent, parent);
         m_credentialsStore = new CredentialsStore(this);
         m_workflow = new Workflow(this, id);
-        m_name = workflowDef.getName();
-        m_editorInfo = DefToCoreUtil.toEditorUIInformation(workflowDef.getWorkflowEditorSettings());
-        m_authorInformation = DefToCoreUtil.toAuthorInformation(workflowDef.getAuthorInformation());
+        m_name = workflowDef.getName().orElse(null);
+        m_editorInfo = workflowDef.getWorkflowEditorSettings().map(DefToCoreUtil::toEditorUIInformation)
+            .orElse(EditorUIInformation.builder().build());
+        m_authorInformation =
+            workflowDef.getAuthorInformation().map(DefToCoreUtil::toAuthorInformation).orElse(new AuthorInformation());
         m_wfmListeners = new CopyOnWriteArrayList<>();
         m_dataRepository = new WorkflowDataRepository();
         m_inPorts = new WorkflowInPort[0]; // might be changed/set right after construction (for meta nodes)
@@ -8567,7 +8569,7 @@ public final class WorkflowManager extends NodeContainer
             "ROOT workflow has no connections: " + workflowDef.getConnections());
 
         exec.setMessage("Loading annotations");
-        WorkflowAnnotationID[] loadedAnnotationIDs = workflowDef.getAnnotations().entrySet().stream() //
+        WorkflowAnnotationID[] loadedAnnotationIDs = workflowDef.getAnnotations().orElse(Map.of()).entrySet().stream() //
             .map(e -> {
                 var annoData = DefToCoreUtil.toAnnotationData(e.getValue());
                 int annoId = NumberUtils.toInt(e.getKey(), -1); // accept errors (minor)
@@ -8575,12 +8577,12 @@ public final class WorkflowManager extends NodeContainer
             }).toArray(WorkflowAnnotationID[]::new);
 
         exec.setMessage("Loading node and connection information");
-        var connections = workflowDef.getConnections().stream()
+        var connections = workflowDef.getConnections().orElse(List.of()).stream()
             .map(c -> new ConnectionContainerTemplate(c.getSourceID(), c.getSourcePort(), c.getDestID(),
-                c.getDestPort(), c.isDeletable(), DefToCoreUtil.toConnectionUIInformation(c.getUiSettings()))) //
+                c.getDestPort(), c.isDeletable(), DefToCoreUtil.toConnectionUIInformation(c.getUiSettings().orElse(null)))) //
             .collect(Collectors.toSet());
 
-        Map<Integer, NodeID> translationMap = loadNodes(workflowDef.getNodes(), exec, loadResult);
+        Map<Integer, NodeID> translationMap = loadNodes(workflowDef.getNodes().orElse(Map.of()), exec, loadResult);
         addConnectionsFromTemplates(connections, loadResult, translationMap, true);
 
         return Pair.create(loadedAnnotationIDs, translationMap);
@@ -9041,24 +9043,24 @@ public final class WorkflowManager extends NodeContainer
     static WorkflowManager newMetaNodeInstance(final WorkflowManager parent, final NodeID nodeId,
         final MetaNodeDef def) {
         var wfm = new WorkflowManager(null, parent, nodeId, false, def, def.getWorkflow());
-        wfm.setTemplateInformation(MetaNodeTemplateInformation.createNewTemplate(def.getLink(), TemplateType.MetaNode));
-        wfm.m_cipher = WorkflowCipher.toWorkflowCipher(def.getCipher());
-        var inports = def.getInPorts();
+        wfm.setTemplateInformation(MetaNodeTemplateInformation.createNewTemplate(def));
+        wfm.m_cipher = WorkflowCipher.toWorkflowCipher(def.getCipher().orElse(null));
+        var inports = def.getInPorts().orElse(List.of());
         wfm.m_inPorts = new WorkflowInPort[inports.size()];
         for (var i = 0; i < inports.size(); i++) {
             var portType = DefToCoreUtil.toPortType(inports.get(i).getPortType());
             wfm.m_inPorts[i] = new WorkflowInPort(inports.get(i).getIndex(), portType);
-            wfm.m_inPorts[i].setPortName(inports.get(i).getName());
+            inports.get(i).getName().ifPresent(wfm.m_inPorts[i]::setPortName);
         }
-        var outports = def.getOutPorts();
+        var outports = def.getOutPorts().orElse(List.of());
         wfm.m_outPorts = new WorkflowOutPort[outports.size()];
         for (var i = 0; i < outports.size(); i++) {
             var portType = DefToCoreUtil.toPortType(outports.get(i).getPortType());
             wfm.m_outPorts[i] = new WorkflowOutPort(outports.get(i).getIndex(), portType);
-            wfm.m_outPorts[i].setPortName(outports.get(i).getName());
+            outports.get(i).getName().ifPresent(wfm.m_outPorts[i]::setPortName);
         }
-        wfm.setInPortsBarUIInfo(DefToCoreUtil.toNodeUIInformation(def.getInPortsBarUIInfo()));
-        wfm.setOutPortsBarUIInfo(DefToCoreUtil.toNodeUIInformation(def.getOutPortsBarUIInfo()));
+        wfm.setInPortsBarUIInfo(DefToCoreUtil.toNodeUIInformation(def.getInPortsBarUIInfo().orElse(null)));
+        wfm.setOutPortsBarUIInfo(DefToCoreUtil.toNodeUIInformation(def.getOutPortsBarUIInfo().orElse(null)));
         wfm.setDirty();
         return wfm;
     }
@@ -9079,8 +9081,10 @@ public final class WorkflowManager extends NodeContainer
             .map(DefToCoreUtil::toFlowVariable) //
             .collect(Collectors.toList());
         wfm.m_workflowVariables = new Vector<>(flowVariables);
-        var tableBackendSettings = DefToCoreUtil.toNodeSettings(def.getTableBackendSettings());
-        wfm.m_tableBackendSettings = WorkflowTableBackendSettings.loadSettingsInModel(tableBackendSettings);
+        var tableBackendSettings = def.getTableBackendSettings().map(DefToCoreUtil::toNodeSettings);
+        if(tableBackendSettings.isPresent()){
+            wfm.m_tableBackendSettings = WorkflowTableBackendSettings.loadSettingsInModel(tableBackendSettings.get());
+        }
         if (parent.getNodeContainerDirectory() != null) {
             wfm.m_workflowContext =
                 new WorkflowContext.Factory(parent.getNodeContainerDirectory().getFile()).createContext();
@@ -9099,8 +9103,8 @@ public final class WorkflowManager extends NodeContainer
     static WorkflowManager newComponentWorkflowManagerInstance(final SubNodeContainer directNCParent, final NodeID nodeId,
         final ComponentNodeDef def) {
         var wfm = new WorkflowManager(directNCParent, null, nodeId, false, def, def.getWorkflow());
-        wfm.setTemplateInformation(MetaNodeTemplateInformation.createNewTemplate(def.getTemplateInfo(), TemplateType.SubNode));;
-        wfm.m_cipher = WorkflowCipher.toWorkflowCipher(def.getCipher());
+        wfm.setTemplateInformation(MetaNodeTemplateInformation.createNewTemplate(def));
+        wfm.m_cipher = WorkflowCipher.toWorkflowCipher(def.getCipher().orElse(null));
         return wfm;
     }
 

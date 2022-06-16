@@ -120,9 +120,8 @@ public final class NodeAnnotation extends Annotation implements NodeUIInformatio
     }
 
     static NodeAnnotation copyFrom(final NodeAnnotationDef def) {
-        var annotationData = DefToCoreUtil.toAnnotationData(def.getData());
         var nodeAnnotationData =  new NodeAnnotationData(def.isAnnotationDefault());
-        nodeAnnotationData.copyFrom(annotationData, false);
+        def.getData().ifPresent(d -> nodeAnnotationData.copyFrom(DefToCoreUtil.toAnnotationData(d), false));
         return new NodeAnnotation(nodeAnnotationData);
     }
 
