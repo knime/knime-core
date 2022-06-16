@@ -53,9 +53,9 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.knime.shared.workflow.def.BoundsDef;
 import org.knime.shared.workflow.def.CipherDef;
 import org.knime.shared.workflow.def.MetaNodeDef;
-import org.knime.shared.workflow.def.NodeUIInfoDef;
 import org.knime.shared.workflow.def.PortDef;
 import org.knime.shared.workflow.def.TemplateLinkDef;
 import org.knime.shared.workflow.def.TemplateMetadataDef;
@@ -107,18 +107,18 @@ public class MetanodeToDefAdapter extends NodeContainerToDefAdapter implements M
      * {@inheritDoc}
      */
     @Override
-    public Optional<NodeUIInfoDef> getInPortsBarUIInfo() {
+    public Optional<BoundsDef> getInPortsBarBounds() {
         // getInPortsBarUIInfo is null if the inports bar of a metanode was never changed
-        return Optional.ofNullable(m_wfm.getInPortsBarUIInfo()).map(CoreToDefUtil::toNodeUIInfoDef);
+        return Optional.ofNullable(m_wfm.getInPortsBarUIInfo()).map(CoreToDefUtil::toBoundsDef);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Optional<NodeUIInfoDef> getOutPortsBarUIInfo() {
+    public Optional<BoundsDef> getOutPortsBarBounds() {
         // getOutPortsBarUIInfo is null if the inports bar of a metanode was never changed
-        return Optional.ofNullable(m_wfm.getOutPortsBarUIInfo()).map(CoreToDefUtil::toNodeUIInfoDef);
+        return Optional.ofNullable(m_wfm.getOutPortsBarUIInfo()).map(CoreToDefUtil::toBoundsDef);
     }
 
     /**

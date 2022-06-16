@@ -51,10 +51,10 @@ package org.knime.core.node.workflow;
 import java.util.Optional;
 
 import org.knime.shared.workflow.def.BaseNodeDef;
+import org.knime.shared.workflow.def.BoundsDef;
 import org.knime.shared.workflow.def.JobManagerDef;
 import org.knime.shared.workflow.def.NodeAnnotationDef;
 import org.knime.shared.workflow.def.NodeLocksDef;
-import org.knime.shared.workflow.def.NodeUIInfoDef;
 import org.knime.shared.workflow.storage.util.PasswordRedactor;
 
 /**
@@ -97,8 +97,8 @@ public abstract class NodeContainerToDefAdapter implements BaseNodeDef {
      * {@inheritDoc}
      */
     @Override
-    public Optional<NodeUIInfoDef> getUiInfo() {
-        return Optional.ofNullable(CoreToDefUtil.toNodeUIInfoDef(m_nc.getUIInformation()));
+    public Optional<BoundsDef> getBounds() {
+        return Optional.ofNullable(m_nc.getUIInformation()).map(CoreToDefUtil::toBoundsDef);
     }
 
     /**

@@ -88,6 +88,7 @@ import org.knime.shared.workflow.def.AnnotationDataDef;
 import org.knime.shared.workflow.def.AuthorInformationDef;
 import org.knime.shared.workflow.def.BaseNodeDef;
 import org.knime.shared.workflow.def.BaseNodeDef.NodeTypeEnum;
+import org.knime.shared.workflow.def.BoundsDef;
 import org.knime.shared.workflow.def.ComponentMetadataDef;
 import org.knime.shared.workflow.def.ComponentNodeDef;
 import org.knime.shared.workflow.def.ConfigDef;
@@ -98,7 +99,6 @@ import org.knime.shared.workflow.def.JobManagerDef;
 import org.knime.shared.workflow.def.MetaNodeDef;
 import org.knime.shared.workflow.def.NativeNodeDef;
 import org.knime.shared.workflow.def.NodeLocksDef;
-import org.knime.shared.workflow.def.NodeUIInfoDef;
 import org.knime.shared.workflow.def.PortDef;
 import org.knime.shared.workflow.def.PortTypeDef;
 import org.knime.shared.workflow.def.WorkflowUISettingsDef;
@@ -166,10 +166,10 @@ public class DefToCoreUtil {
     }
 
     /**
-     *  Converts the job manager def to NodeExceution job manager.
+     * Converts the job manager def to NodeExceution job manager.
      *
      * @param def a {@link JobManagerDef}.
-     * @return a {@link NodeExecutionJobManager}.
+     * @return empty if the conversion fails - job manager factory is unknown or its settings cannot be loaded
      */
     public static Optional<NodeExecutionJobManager> toJobManager(final JobManagerDef def) {
         var jobManagerId = def.getFactory();
@@ -352,18 +352,11 @@ public class DefToCoreUtil {
      * Returning null makes sense here, because a metanode's workflow manager expects null in case the position of the
      * in/outport bars should be automatically chosen.
      *
-     * @param uiInfoDef def describing the location and size of a node or metanode in/outport bar
+     * @param boundsDef def describing the location and size of a node or metanode in/outport bar
      * @return null if the given def is null, the converted information otherwise.
      * @see WorkflowManager#setInPortsBarUIInfo(NodeUIInformation)
      */
-    public static NodeUIInformation toNodeUIInformation(final NodeUIInfoDef uiInfoDef) {
-        if (uiInfoDef == null) {
-            // if the node ui information is null on a workflow manager that represents a metanode, the ui will figure
-            // out sensible default values.
-            return null;
-        }
-
-        var boundsDef = uiInfoDef.getBounds();
+    public static NodeUIInformation toNodeUIInformation(final BoundsDef boundsDef) {
         return NodeUIInformation.builder() //
             .setHasAbsoluteCoordinates(true) //
             .setIsDropLocation(false) // is only used to specify the location of a node and the shape of metanode bars

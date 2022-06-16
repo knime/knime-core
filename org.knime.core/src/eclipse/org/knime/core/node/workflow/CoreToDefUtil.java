@@ -77,7 +77,6 @@ import org.knime.shared.workflow.def.CredentialPlaceholderDef;
 import org.knime.shared.workflow.def.JobManagerDef;
 import org.knime.shared.workflow.def.NodeAnnotationDef;
 import org.knime.shared.workflow.def.NodeLocksDef;
-import org.knime.shared.workflow.def.NodeUIInfoDef;
 import org.knime.shared.workflow.def.PortDef;
 import org.knime.shared.workflow.def.PortMetadataDef;
 import org.knime.shared.workflow.def.PortTypeDef;
@@ -99,7 +98,6 @@ import org.knime.shared.workflow.def.impl.MetaNodeDefBuilder;
 import org.knime.shared.workflow.def.impl.NativeNodeDefBuilder;
 import org.knime.shared.workflow.def.impl.NodeAnnotationDefBuilder;
 import org.knime.shared.workflow.def.impl.NodeLocksDefBuilder;
-import org.knime.shared.workflow.def.impl.NodeUIInfoDefBuilder;
 import org.knime.shared.workflow.def.impl.PortDefBuilder;
 import org.knime.shared.workflow.def.impl.PortMetadataDefBuilder;
 import org.knime.shared.workflow.def.impl.PortTypeDefBuilder;
@@ -190,23 +188,12 @@ public class CoreToDefUtil {
             .setBendPoints(bendPoints).build();
     }
 
-    public static NodeUIInfoDef toNodeUIInfoDef(final NodeUIInformation uiInfoDef) {
-
-        if (uiInfoDef == null) {
-            return null;
-        }
-
+    public static BoundsDef toBoundsDef(final NodeUIInformation uiInfoDef) {
         int[] bounds = uiInfoDef.getBounds();
-        BoundsDef boundsDef = new BoundsDefBuilder()//
+        return new BoundsDefBuilder()//
             .setLocation(createCoordinate(bounds[0], bounds[1]))//
             .setWidth(bounds[2])//
             .setHeight(bounds[3])//
-            .build();
-
-        return new NodeUIInfoDefBuilder()//
-            .setBounds(boundsDef)//
-//            .setHasAbsoluteCoordinates(uiInfoDef.hasAbsoluteCoordinates())//
-//            .setSymbolRelative(uiInfoDef.isSymbolRelative())//
             .build();
     }
 
@@ -454,8 +441,8 @@ public class CoreToDefUtil {
             var suggestedUiInfo = Optional.ofNullable(content.getOverwrittenUIInfo(nodeID));
             var defUiInfo = content.getPositionOffset()
                 .flatMap(offset -> suggestedUiInfo.map(si -> NodeUIInformation.builder(si).translate(offset).build()))//
-                .map(CoreToDefUtil::toNodeUIInfoDef);
-            var defaultUiInfo = CoreToDefUtil.toNodeUIInfoDef(nc.getUIInformation());
+                .map(CoreToDefUtil::toBoundsDef);
+            var defaultBounds = CoreToDefUtil.toBoundsDef(nc.getUIInformation());
             Optional<BaseNodeDef> node = Optional.empty();
             // Virtual in/out nodes are excluded from the copy result if they are selected directly, otherwise
             // pasting would allow users to create virtual nodes. They are included when copied as part of an entire
@@ -467,16 +454,16 @@ public class CoreToDefUtil {
                     var originalNativeNodeDef =
                         new NativeNodeContainerToDefAdapter((NativeNodeContainer)nc, passwordRedactor);
                     node = Optional.ofNullable(new NativeNodeDefBuilder(originalNativeNodeDef)//
-                        .setId(defNodeId).setUiInfo(defUiInfo.orElse(defaultUiInfo)).build());
+                        .setId(defNodeId).setBounds(defUiInfo.orElse(defaultBounds)).build());
                 }
             } else if (nc instanceof SubNodeContainer) {
                 var originalComponentDef = new SubnodeContainerToDefAdapter((SubNodeContainer)nc, passwordRedactor);
                 node = Optional.ofNullable(new ComponentNodeDefBuilder(originalComponentDef)//
-                    .setId(defNodeId).setUiInfo(defUiInfo.orElse(defaultUiInfo)).build());
+                    .setId(defNodeId).setBounds(defUiInfo.orElse(defaultBounds)).build());
             } else if (nc instanceof WorkflowManager) {
                 var originalMetanodeDef = new MetanodeToDefAdapter((WorkflowManager)nc, passwordRedactor);
                 node = Optional.ofNullable(new MetaNodeDefBuilder(originalMetanodeDef)//
-                    .setId(defNodeId).setUiInfo(defUiInfo.orElse(defaultUiInfo)).build());
+                    .setId(defNodeId).setBounds(defUiInfo.orElse(defaultBounds)).build());
             }
 
             node.ifPresent(n -> workflowBuilder.putToNodes(String.valueOf(defNodeId), n));

@@ -93,7 +93,6 @@ import org.knime.shared.workflow.def.BaseNodeDef;
 import org.knime.shared.workflow.def.NodeAnnotationDef;
 import org.knime.shared.workflow.def.NodeLocksDef;
 import org.knime.shared.workflow.def.impl.NodeLocksDefBuilder;
-import org.knime.shared.workflow.def.impl.NodeUIInfoDefBuilder;
 
 /**
  * Abstract super class for containers holding node or just structural
@@ -244,9 +243,12 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
         var annoData = new NodeAnnotationData(def.getAnnotation().map(NodeAnnotationDef::isAnnotationDefault).orElse(true));
         m_nodeLocks = DefToCoreUtil.toNodeLocks(def.getLocks().orElse(new NodeLocksDefBuilder().strict().build()));
         m_customDescription = def.getCustomDescription().orElse(null);
-        m_uiInformation = DefToCoreUtil.toNodeUIInformation(def.getUiInfo().orElse(new NodeUIInfoDefBuilder().strict().build()));
-        m_jobManager = def.getJobManager().flatMap(DefToCoreUtil::toJobManager).orElse(null);
-        def.getAnnotation().flatMap(NodeAnnotationDef::getData).ifPresent(data -> DefToCoreUtil.toAnnotationData(annoData, data));
+        m_uiInformation =
+            def.getBounds().map(DefToCoreUtil::toNodeUIInformation).orElse(NodeUIInformation.builder().build());
+        m_jobManager = def.getJobManager().flatMap(DefToCoreUtil::toJobManager)
+            .orElse(NodeExecutionJobManagerPool.getDefaultJobManagerFactory().getInstance());
+        def.getAnnotation().flatMap(NodeAnnotationDef::getData)
+            .ifPresent(data -> DefToCoreUtil.toAnnotationData(annoData, data));
         if (!annoData.isDefault()) {
             m_annotation.getData().copyFrom(annoData, true);
         }

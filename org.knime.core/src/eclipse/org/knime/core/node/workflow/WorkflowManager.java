@@ -9059,8 +9059,9 @@ public final class WorkflowManager extends NodeContainer
             wfm.m_outPorts[i] = new WorkflowOutPort(outports.get(i).getIndex(), portType);
             outports.get(i).getName().ifPresent(wfm.m_outPorts[i]::setPortName);
         }
-        wfm.setInPortsBarUIInfo(DefToCoreUtil.toNodeUIInformation(def.getInPortsBarUIInfo().orElse(null)));
-        wfm.setOutPortsBarUIInfo(DefToCoreUtil.toNodeUIInformation(def.getOutPortsBarUIInfo().orElse(null)));
+        // null is a valid ui info here - by convention the wfm will figure something sensible out when given null
+        wfm.setInPortsBarUIInfo(def.getInPortsBarBounds().map(DefToCoreUtil::toNodeUIInformation).orElse(null));
+        wfm.setOutPortsBarUIInfo(def.getOutPortsBarBounds().map(DefToCoreUtil::toNodeUIInformation).orElse(null));
         wfm.setDirty();
         return wfm;
     }
