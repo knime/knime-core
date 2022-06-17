@@ -114,15 +114,15 @@ public abstract class NodeContainerToDefAdapter implements BaseNodeDef {
      */
     @Override
     public Optional<JobManagerDef> getJobManager() {
-        return Optional.ofNullable(CoreToDefUtil.toJobManager(m_nc.getJobManager(), m_passwordHandler));
+        return CoreToDefUtil.toJobManager(m_nc.getJobManager(), m_passwordHandler);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Integer getId() {
-        return m_nc.getID().getIndex();
+    public Optional<Integer> getId() {
+        return Optional.of(m_nc.getID().getIndex());
     }
 
 }

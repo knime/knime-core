@@ -74,6 +74,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import javax.xml.parsers.ParserConfigurationException;
 
@@ -248,6 +249,10 @@ public final class SubNodeContainer extends SingleNodeContainer
     private NodeStateChangeListener m_wfmStateChangeListener;
     private WorkflowListener m_wfmListener; // to reset this node's NodeMessage on change
 
+    /**
+     * The first element is always an optional flow variable input port, which is implicitly added, e.g.,
+     * when calling {@link #setInPorts(PortType[])}.
+     */
     private NodeInPort[] m_inports;
     private HiLiteHandler[] m_inHiliteHandler;
     private NodeContainerOutPort[] m_outports;
@@ -337,39 +342,26 @@ public final class SubNodeContainer extends SingleNodeContainer
         m_subnodeScopeContext = new FlowSubnodeScopeContext(this);
         m_wfm = WorkflowManager.newComponentWorkflowManagerInstance(this, new NodeID(id, 0), def);
         m_wfm.setJobManager(null);
-        var inports = def.getInPorts().orElse(List.of());
-        var outports = def.getOutPorts().orElse(List.of());
-        m_outports = new NodeContainerOutPort[outports.size()];
-        m_outputs = new Output[outports.size()];
-        for (var i = 0; i < outports.size(); i++) {
-            var portType = DefToCoreUtil.toPortType(outports.get(i).getPortType());
-            m_outputs[i] = new Output(portType);
-            m_outputs[i].setName(portType.getName());
-            m_outports[i] = new NodeContainerOutPort(this, portType, outports.get(i).getIndex());
-            m_outports[i].setPortName(portType.getName());
-        }
-        m_inports = new NodeInPort[inports.size()];
-        m_inHiliteHandler = new HiLiteHandler[inports.size()- 1];
+
         m_virtualInNodeIDSuffix = def.getVirtualInNodeId();
         m_virtualOutNodeIDSuffix = def.getVirtualOutNodeId();
-        if(def.getDialogSettings().isPresent()) {
+
+        // add implicit flow variable ports
+        inPorts(def.getInPorts().map(DefToCoreUtil::toPortTypes).orElse(new PortType[0]));
+        outPorts(def.getOutPorts().map(DefToCoreUtil::toPortTypes).orElse(new PortType[0]));
+
+        m_metadata =
+            DefToCoreUtil.toComponentMetadata(def.getMetadata().orElse(new ComponentMetadataDefBuilder().build()));
+
+        if (def.getDialogSettings().isPresent()) {
             var dialogSettings = def.getDialogSettings().get(); //NOSONAR
-            m_subnodeLayoutStringProvider = new SubnodeContainerLayoutStringProvider(dialogSettings.getLayoutJSON().orElse(""));
-            m_subnodeConfigurationStringProvider = new SubnodeContainerConfigurationStringProvider(dialogSettings.getConfigurationLayoutJSON().orElse(""));
+            m_subnodeLayoutStringProvider =
+                new SubnodeContainerLayoutStringProvider(dialogSettings.getLayoutJSON().orElse(""));
+            m_subnodeConfigurationStringProvider =
+                new SubnodeContainerConfigurationStringProvider(dialogSettings.getConfigurationLayoutJSON().orElse(""));
             m_hideInWizard = dialogSettings.isHideInWizard();
             m_customCSS = dialogSettings.getCssStyles().orElse("");
         }
-        var inTypes = new PortType[inports.size()];
-        for (var i = 0; i < inports.size(); i++) {
-            inTypes[i] = DefToCoreUtil.toPortType(inports.get(i).getPortType());
-            m_inports[i] = new NodeInPort(i, inTypes[i]);
-            if (i > 0) {
-                // ignore optional variable input port
-                m_inHiliteHandler[i - 1] = new HiLiteHandler();
-            }
-        }
-        m_metadata =
-            DefToCoreUtil.toComponentMetadata(def.getMetadata().orElse(new ComponentMetadataDefBuilder().build()));
 
         // templates and links
         if (def.getTemplateMetadata().isEmpty() && def.getTemplateLink().isEmpty()) {
@@ -423,30 +415,16 @@ public final class SubNodeContainer extends SingleNodeContainer
         for (j = 0; j < orgIDs.length; j++) {
             oldIDsHash.put(orgIDs[j], newIDs[j]);
         }
-        // initialize NodeContainer inports
+        // initialize NodeContainer ports
         // (metanodes don't have hidden variable port 0, SingleNodeContainers do!)
-        m_inports = new NodeInPort[content.getNrInPorts() + 1];
-        // but for hilite handler we still ignore optional variable port 0
-        m_inHiliteHandler = new HiLiteHandler[content.getNrInPorts()];
-        PortType[] inTypes = new PortType[content.getNrInPorts()];
-        for (int i = 0; i < content.getNrInPorts(); i++) {
-            inTypes[i] = content.getInPort(i).getPortType();
-            m_inports[i + 1] = new NodeInPort(i + 1, inTypes[i]);
-            m_inHiliteHandler[i] = new HiLiteHandler();
-        }
-        m_inports[0] = new NodeInPort(0, FlowVariablePortObject.TYPE_OPTIONAL);
-        // initialize NodeContainer outports
-        // (metanodes don't have hidden variable port 0, SingleNodeContainers do!)
-        m_outports = new NodeContainerOutPort[content.getNrOutPorts() + 1];
-        PortType[] outTypes = new PortType[content.getNrOutPorts()];
-        m_outputs = new Output[content.getNrOutPorts() + 1];
-        for (int i = 0; i < content.getNrOutPorts(); i++) {
-            outTypes[i] = content.getOutPort(i).getPortType();
-            m_outputs[i + 1] = new Output(content.getOutPort(i).getPortType());
-            m_outports[i + 1] = new NodeContainerOutPort(this, m_outputs[i + 1].getType(), i + 1);
-        }
-        m_outputs[0] = new Output(FlowVariablePortObject.TYPE_OPTIONAL);
-        m_outports[0] = new NodeContainerOutPort(this, FlowVariablePortObject.TYPE_OPTIONAL, 0);
+        // this will be reflected by the workflow manager
+        PortType[] inTypes =
+            IntStream.range(0, content.getNrInPorts()).mapToObj(content::getInPort).toArray(PortType[]::new);
+        inPorts(inTypes);
+        PortType[] outTypes =
+            IntStream.range(0, content.getNrOutPorts()).mapToObj(content::getOutPort).toArray(PortType[]::new);
+        outPorts(outTypes);
+
         Pair<int[], int[]> minMaxCoordinates = getMinMaxCoordinates();
         // add virtual in/out nodes and connect them
         NodeID inNodeID = addVirtualInNode(inTypes, minMaxCoordinates);
@@ -1663,18 +1641,17 @@ public final class SubNodeContainer extends SingleNodeContainer
     }
 
     /**
+     * Replaces the virtual input node with a new one having the requested port types.
+     *
+     * Not suitable for use in constructor because this requires the containing workflow manager to be set up, as the
+     * old virtual output node will be looked up, etc.
+     *
      * @param portTypes Types of the new ports
      * @since 2.10
      */
     public void setInPorts(final PortType[] portTypes) {
-        m_inports = new NodeInPort[portTypes.length + 1];
-        m_inHiliteHandler = new HiLiteHandler[portTypes.length];
-        for (int i = 0; i < portTypes.length; i++) {
-            m_inports[i + 1] = new NodeInPort(i + 1, portTypes[i]);
-            m_inHiliteHandler[i] = new HiLiteHandler();
-        }
+        inPorts(portTypes);
         NodeContainer oldVNode = m_wfm.getNodeContainer(getVirtualInNodeID());
-        m_inports[0] = new NodeInPort(0, FlowVariablePortObject.TYPE_OPTIONAL);
         NodeSettings settings = new NodeSettings("node settings");
         try {
             m_wfm.saveNodeSettings(oldVNode.getID(), settings);
@@ -1693,12 +1670,27 @@ public final class SubNodeContainer extends SingleNodeContainer
         }
         oldVNode.setDeletable(true);
         m_wfm.removeNode(oldVNode.getID());
-        getInPort(0).setPortName("Variable Inport");
         newVNode.addNodeStateChangeListener(new RefreshPortNamesListener());
         refreshPortNames();
         m_wfm.setDirty();
         setDirty();
         notifyNodePropertyChangedListener(NodeProperty.MetaNodePorts);
+    }
+
+    /**
+     * Create inports and input hilite handlers. Add the implicit flow variable port.
+     *
+     * @param portTypes
+     */
+    private void inPorts(final PortType[] portTypes) {
+        m_inports = new NodeInPort[portTypes.length + 1];
+        m_inHiliteHandler = new HiLiteHandler[portTypes.length];
+        for (int i = 0; i < portTypes.length; i++) {
+            m_inports[i + 1] = new NodeInPort(i + 1, portTypes[i]);
+            m_inHiliteHandler[i] = new HiLiteHandler();
+        }
+        m_inports[0] = new NodeInPort(0, FlowVariablePortObject.TYPE_OPTIONAL);
+        getInPort(0).setPortName("Variable Inport");
     }
 
     /**
@@ -1718,18 +1710,17 @@ public final class SubNodeContainer extends SingleNodeContainer
     }
 
     /**
+     * Replaces the virtual output node with a new one having the requested port types.
+     *
+     * Not suitable for use in constructor because this requires the containing workflow manager to be set up, as the
+     * old virtual output node will be looked up, etc.
+     *
      * @param portTypes Types of the new ports
      * @since 2.10
      */
     public void setOutPorts(final PortType[] portTypes) {
-        m_outputs = new Output[portTypes.length + 1];
-        m_outports = new NodeContainerOutPort[portTypes.length + 1];
-        for (int i = 0; i < portTypes.length; i++) {
-            m_outputs[i + 1] = new Output(portTypes[i]);
-            m_outports[i + 1] = new NodeContainerOutPort(this, portTypes[i], i + 1);
-        }
-        m_outputs[0] = new Output(FlowVariablePortObject.TYPE);
-        m_outports[0] = new NodeContainerOutPort(this, FlowVariablePortObject.TYPE, 0);
+        outPorts(portTypes);
+
         NodeContainer oldVNode = m_wfm.getNodeContainer(getVirtualOutNodeID());
         NodeSettings settings = new NodeSettings("node settings");
         try {
@@ -1749,12 +1740,27 @@ public final class SubNodeContainer extends SingleNodeContainer
         }
         oldVNode.setDeletable(true);
         m_wfm.removeNode(oldVNode.getID());
-        getOutPort(0).setPortName("Variable Outport");
         newVNode.addNodeStateChangeListener(new RefreshPortNamesListener());
         refreshPortNames();
         m_wfm.setDirty();
         setDirty();
         notifyNodePropertyChangedListener(NodeProperty.MetaNodePorts);
+    }
+
+    /**
+     * Create outports and outputs. Add the implicit flow variable port.
+     * @param portTypes
+     */
+    private void outPorts(final PortType[] portTypes) {
+        m_outputs = new Output[portTypes.length + 1];
+        m_outports = new NodeContainerOutPort[portTypes.length + 1];
+        for (int i = 0; i < portTypes.length; i++) {
+            m_outputs[i + 1] = new Output(portTypes[i]);
+            m_outports[i + 1] = new NodeContainerOutPort(this, portTypes[i], i + 1);
+        }
+        m_outputs[0] = new Output(FlowVariablePortObject.TYPE);
+        m_outports[0] = new NodeContainerOutPort(this, FlowVariablePortObject.TYPE, 0);
+        getOutPort(0).setPortName("Variable Outport");
     }
 
     /**

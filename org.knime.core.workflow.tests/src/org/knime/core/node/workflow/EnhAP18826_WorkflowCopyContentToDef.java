@@ -112,15 +112,15 @@ public class EnhAP18826_WorkflowCopyContentToDef extends WorkflowTestCase { //NO
 		WorkflowDef workflow = m_wfm.copyToDef(spec, PasswordRedactor.asNull()).getPayload();
 		
 		// copied one node
-		assertThat(workflow.getNodes().size(), is(1));
+		assertThat(workflow.getNodes().get().size(), is(1));
 		
 		// joiner with id = 3
-		NativeNodeDef joinerNode = (NativeNodeDef) workflow.getNodes().get("3");
+		NativeNodeDef joinerNode = (NativeNodeDef) workflow.getNodes().get().get("3");
 		assertThat(joinerNode.getNodeName(), is("Joiner"));
-		assertThat(joinerNode.getId(), is(3));
+		assertThat(joinerNode.getId().get(), is(3));
 
 		// and no connections
-		assertThat(workflow.getConnections().size(), is(0));
+		assertTrue(workflow.getConnections().isEmpty());
 	}	
 		
 	
@@ -137,11 +137,11 @@ public class EnhAP18826_WorkflowCopyContentToDef extends WorkflowTestCase { //NO
 		var workflow = m_wfm.copyToDef(spec, PasswordRedactor.asNull()).getPayload();
 
 		// and four connections
-		assertThat(workflow.getConnections().size(), is(4));
+		assertThat(workflow.getConnections().get().size(), is(4));
 		
 		// somehow doesn't match
 		final DefaultConnectionDef conn23 = new ConnectionDefBuilder().setDeletable(true).setSourceID(2).setSourcePort(1).setDestID(3).setDestPort(2).setUiSettings(new ConnectionUISettingsDefBuilder().build()).build();
-		assertThat(workflow.getConnections(), hasItem(conn23));
+		assertThat(workflow.getConnections().get(), hasItem(conn23));
 	}
 	
 	/**
@@ -157,11 +157,11 @@ public class EnhAP18826_WorkflowCopyContentToDef extends WorkflowTestCase { //NO
 		final var workflow = m_wfm.copyToDef(spec, PasswordRedactor.asNull()).getPayload();
 
 		// both nodes
-		assertThat(workflow.getNodes().size(), is(2)); 
+		assertThat(workflow.getNodes().get().size(), is(2)); 
 		
 		// only one connection
 		final DefaultConnectionDef conn35 = new ConnectionDefBuilder().setDeletable(true).setSourceID(3).setSourcePort(3).setDestID(5).setDestPort(1).setUiSettings(new ConnectionUISettingsDefBuilder().build()).build();
-		assertThat(workflow.getConnections(), contains(conn35));
+		assertThat(workflow.getConnections().get(), contains(conn35));
 	}
 	
 	/**
@@ -183,8 +183,8 @@ public class EnhAP18826_WorkflowCopyContentToDef extends WorkflowTestCase { //NO
 		var joinerWithDangling = m_wfm.copyToDef(joinerWithDanglingSpec, PasswordRedactor.asNull()).getPayload();
 		var twoWithDangling = m_wfm.copyToDef(twoWithDanglingSpec, PasswordRedactor.asNull()).getPayload();
 
-		final List<ConnectionDef> connections1 = joinerWithDangling.getConnections();
-		final List<ConnectionDef> connections2 = twoWithDangling.getConnections();
+		final List<ConnectionDef> connections1 = joinerWithDangling.getConnections().get();
+		final List<ConnectionDef> connections2 = twoWithDangling.getConnections().get();
 		assertTrue(connections1.containsAll(connections2) && connections2.containsAll(connections1));
 	}
 	
@@ -196,7 +196,7 @@ public class EnhAP18826_WorkflowCopyContentToDef extends WorkflowTestCase { //NO
 		
 		WorkflowDef workflow = m_wfm.copyToDef(spec, PasswordRedactor.asNull()).getPayload();
 		
-		assertEquals("Source", workflow.getAnnotations().values().stream().findAny().get().getText());
+		assertEquals("Source", workflow.getAnnotations().get().values().stream().findAny().get().getText().get());
 	}
 	
 }

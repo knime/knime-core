@@ -8997,7 +8997,7 @@ public final class WorkflowManager extends NodeContainer
 
         for (Map.Entry<String, ? extends BaseNodeDef> nodeEntry : nodesDef.entrySet()) {
             var node = nodeEntry.getValue();
-            var suffix = node.getId();
+            var suffix = node.getId().orElseThrow(IllegalArgumentException::new);
             var subNodeId = new NodeID(getID(), suffix);
 
             // the mutex may be already held here. It is not held if we load
@@ -9019,9 +9019,9 @@ public final class WorkflowManager extends NodeContainer
     private NodeContainer createNodeContainer(final NodeID nodeId, final BaseNodeDef def) {
         var nodeType = def.getNodeType();
         switch (nodeType) {
-            case METANODE:
+            case META:
                 return newMetaNodeInstance(this, nodeId, (MetaNodeDef)def);
-            case NATIVENODE:
+            case NATIVE:
                 return new NativeNodeContainer(this, nodeId, (NativeNodeDef)def);
             case COMPONENT:
                 return new SubNodeContainer(this, nodeId, (ComponentNodeDef)def);
@@ -9077,8 +9077,8 @@ public final class WorkflowManager extends NodeContainer
      */
     static WorkflowManager newProjectInstance(final WorkflowManager parent, final NodeID nodeId,
         final RootWorkflowDef def) throws InvalidSettingsException {
-        var wfm = new WorkflowManager(null, parent, nodeId, true, null, def.getWorkflow());
-        var flowVariables = def.getFlowVariables().stream() //
+        var wfm = new WorkflowManager(null, parent, nodeId, true, null, def);
+        var flowVariables = def.getFlowVariables().orElse(List.of()).stream() //
             .map(DefToCoreUtil::toFlowVariable) //
             .collect(Collectors.toList());
         wfm.m_workflowVariables = new Vector<>(flowVariables);
@@ -9105,7 +9105,7 @@ public final class WorkflowManager extends NodeContainer
         final ComponentNodeDef def) {
         var wfm = new WorkflowManager(directNCParent, null, nodeId, false, def, def.getWorkflow());
         wfm.setTemplateInformation(MetaNodeTemplateInformation.createNewTemplate(def));
-        wfm.m_cipher = WorkflowCipher.toWorkflowCipher(def.getCipher().orElse(null));
+        wfm.m_cipher = def.getCipher().map(WorkflowCipher::toWorkflowCipher).orElse(WorkflowCipher.NULL_CIPHER);
         return wfm;
     }
 

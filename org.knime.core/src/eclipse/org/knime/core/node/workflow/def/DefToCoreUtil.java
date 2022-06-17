@@ -48,6 +48,7 @@
  */
 package org.knime.core.node.workflow.def;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -122,17 +123,21 @@ public class DefToCoreUtil {
      * @return an {@link AnnotationData}
      */
     public static <E extends AnnotationData> E toAnnotationData(final E annoData, final AnnotationDataDef def) {
-        annoData.setAlignment(Enum.valueOf(TextAlignment.class, def.getTextAlignment()));
-        annoData.setBgColor(def.getBgcolor());
-        annoData.setBorderColor(def.getBorderColor());
-        annoData.setBorderSize(def.getBorderSize());
-        def.getDefaultFontSize().ifPresent(annoData::setDefaultFontSize);
+        // required
         annoData.setX(def.getLocation().getX());
         annoData.setY(def.getLocation().getY());
         annoData.setWidth(def.getWidth());
         annoData.setHeight(def.getHeight());
-        annoData.setText(def.getText());
+
+        // annotation data has defaults for everything, so not calling the setters is valid
+        def.getTextAlignment().map(TextAlignment::valueOf).ifPresent(annoData::setAlignment);
+        def.getDefaultFontSize().ifPresent(annoData::setDefaultFontSize);
         def.getStyles().ifPresent(annoData::setStyleRanges);
+        def.getBgcolor().ifPresent(annoData::setBgColor);
+        def.getBorderColor().ifPresent(annoData::setBorderColor);
+        def.getBorderSize().ifPresent(annoData::setBorderSize);
+        def.getText().ifPresent(annoData::setText);
+
         return annoData;
     }
 
@@ -247,6 +252,18 @@ public class DefToCoreUtil {
 
         throw new InvalidSettingsException(String.format(
             "Unknown factory class \"%s\" -- not registered via extension point", factoryClassName));
+    }
+
+    /**
+     * @param portDefs the explicitly declared ports, can be empty (but not null)
+     * @return port types in order of ascending port indices
+     */
+    public static PortType[] toPortTypes(final List<PortDef> portDefs) {
+        return portDefs.stream()//
+            .sorted(Comparator.comparing(PortDef::getIndex))
+            .map(PortDef::getPortType)//
+            .map(DefToCoreUtil::toPortType)//
+            .toArray(PortType[]::new);
     }
 
     /**
@@ -458,9 +475,9 @@ public class DefToCoreUtil {
      */
     public static PortType[] extractInPortTypes(final BaseNodeDef baseNodeDef) {
         Supplier<Optional<List<PortDef>>> inPortsGetter = null;
-        if (NodeTypeEnum.METANODE == baseNodeDef.getNodeType()) {
+        if (NodeTypeEnum.META == baseNodeDef.getNodeType()) {
             inPortsGetter = ((MetaNodeDef)baseNodeDef)::getInPorts;
-        } else if (NodeTypeEnum.COMPONENT.equals(baseNodeDef.getNodeType())) {
+        } else if (NodeTypeEnum.COMPONENT == baseNodeDef.getNodeType()) {
             inPortsGetter = ((ComponentNodeDef)baseNodeDef)::getInPorts;
         }
         var inportsListSupplier = Optional.ofNullable(inPortsGetter).orElse(() -> Optional.of(List.of()));
@@ -477,7 +494,7 @@ public class DefToCoreUtil {
      */
     public static PortType[] extractOutPortTypes(final BaseNodeDef baseNodeDef) {
         Supplier<Optional<List<PortDef>>> outPortsGetter = null;
-        if (NodeTypeEnum.METANODE == baseNodeDef.getNodeType()) {
+        if (NodeTypeEnum.META == baseNodeDef.getNodeType()) {
             outPortsGetter = ((MetaNodeDef)baseNodeDef)::getOutPorts;
         } else if (NodeTypeEnum.COMPONENT.equals(baseNodeDef.getNodeType())) {
             outPortsGetter = ((ComponentNodeDef)baseNodeDef)::getOutPorts;

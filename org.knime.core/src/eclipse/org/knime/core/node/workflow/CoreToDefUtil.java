@@ -56,7 +56,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.NotImplementedException;
-import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeAndBundleInformationPersistor;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.util.CheckUtils;
@@ -347,24 +346,19 @@ public class CoreToDefUtil {
      * @param passwordHandler
      * @return
      */
-    public static JobManagerDef toJobManager(final NodeExecutionJobManager jobManager,
+    public static Optional<JobManagerDef> toJobManager(final NodeExecutionJobManager jobManager,
         final PasswordRedactor passwordHandler) {
         if (jobManager == null) {
-            return null;
+            return Optional.empty();
         }
 
         final NodeSettings ns = new NodeSettings("jobmanager");
         jobManager.save(ns);
 
-        try {
-            return new JobManagerDefBuilder()//
-                .setFactory(jobManager.getID())//
-                .setSettings(LoaderUtils.toConfigMapDef(ns, passwordHandler))//
-                .build();
-        } catch (InvalidSettingsException ex) {
-            // TODO proper exception handling
-            throw new RuntimeException(ex);
-        }
+        return Optional.of(new JobManagerDefBuilder()//
+            .setFactory(jobManager.getID())//
+            .setSettings(LoaderUtils.toConfigMapDef(ns, passwordHandler))//
+            .build());
     }
 
 //    /**

@@ -54,6 +54,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.Optional;
 
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
@@ -362,19 +363,19 @@ final class WorkflowCipher implements Cloneable {
         return new WorkflowCipher(keySpec, passwordDigest, hint.orElse(""), false);
     }
 
-    CipherDef toDef() {
+    Optional<CipherDef> toDef() {
         if (isNullCipher()) {
-            return new CipherDefBuilder().strict().build();
+            return Optional.empty();
         }
         var passwordDigestHex = HexUtils.bytesToHex(m_passwordDigest);
         byte[] key = m_secretKey.getEncoded();
         key = ArrayUtils.addAll(PREPEND_TO_KEY, key);
         var encryptionKeyHex = HexUtils.bytesToHex(key);
-        return new CipherDefBuilder() //
+        return Optional.of(new CipherDefBuilder() //
             .setEncryptionKey(encryptionKeyHex) //
             .setPasswordDigest(passwordDigestHex) //
             .setPasswordHint(m_passwordHint) //
-            .build();
+            .build());
     }
 
 }

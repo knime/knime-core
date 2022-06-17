@@ -193,7 +193,7 @@ public class SubnodeContainerToDefAdapter extends SingleNodeContainerToDefAdapte
      */
     @Override
     public Optional<CipherDef> getCipher() {
-        return Optional.of(m_nc.getWorkflowCipher().toDef());
+        return m_nc.getWorkflowCipher().toDef();
     }
 
 }

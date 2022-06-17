@@ -142,7 +142,7 @@ public class MetanodeToDefAdapter extends NodeContainerToDefAdapter implements M
      */
     @Override
     public NodeTypeEnum getNodeType() {
-        return NodeTypeEnum.METANODE;
+        return NodeTypeEnum.META;
     }
 
     /**
@@ -150,7 +150,7 @@ public class MetanodeToDefAdapter extends NodeContainerToDefAdapter implements M
      */
     @Override
     public Optional<CipherDef> getCipher() {
-        return Optional.ofNullable(m_wfm.getWorkflowCipher().toDef());
+        return m_wfm.getWorkflowCipher().toDef();
     }
 
     /**
