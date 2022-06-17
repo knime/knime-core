@@ -432,6 +432,10 @@
                cellClass="org.knime.core.data.vector.bitvector.DenseBitVectorCell"
                serializerClass="org.knime.core.data.vector.bitvector.DenseBitVectorCell$DenseBitVectorSerializer">
          </serializer>
+         <ValueFactory
+               deprecated="false"
+               valueFactoryClass="org.knime.core.data.v2.value.DenseBitVectorValueFactory">
+         </ValueFactory>
       </DataType>
       <DataType
             cellClass="org.knime.core.data.xml.XMLCell"
