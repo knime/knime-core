@@ -48,6 +48,7 @@
  */
 package org.knime.core.node.workflow.def;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -88,6 +89,7 @@ import org.knime.shared.workflow.def.AnnotationDataDef;
 import org.knime.shared.workflow.def.AuthorInformationDef;
 import org.knime.shared.workflow.def.BaseNodeDef;
 import org.knime.shared.workflow.def.BaseNodeDef.NodeTypeEnum;
+import org.knime.shared.workflow.def.BoundsDef;
 import org.knime.shared.workflow.def.ComponentMetadataDef;
 import org.knime.shared.workflow.def.ComponentNodeDef;
 import org.knime.shared.workflow.def.ConfigDef;
@@ -98,7 +100,6 @@ import org.knime.shared.workflow.def.JobManagerDef;
 import org.knime.shared.workflow.def.MetaNodeDef;
 import org.knime.shared.workflow.def.NativeNodeDef;
 import org.knime.shared.workflow.def.NodeLocksDef;
-import org.knime.shared.workflow.def.NodeUIInfoDef;
 import org.knime.shared.workflow.def.PortDef;
 import org.knime.shared.workflow.def.PortTypeDef;
 import org.knime.shared.workflow.def.WorkflowUISettingsDef;
@@ -108,6 +109,7 @@ import org.knime.shared.workflow.storage.util.PasswordRedactor;
 /**
  *
  * @author Dionysios Stolis, KNIME GmbH, Berlin, Germany
+ * @author Carl Witt, KNIME AG, Zurich, Switzerland
  */
 public class DefToCoreUtil {
 
@@ -121,17 +123,21 @@ public class DefToCoreUtil {
      * @return an {@link AnnotationData}
      */
     public static <E extends AnnotationData> E toAnnotationData(final E annoData, final AnnotationDataDef def) {
-        annoData.setAlignment(TextAlignment.valueOf(def.getTextAlignment()));
-        annoData.setBgColor(def.getBgcolor());
-        annoData.setBorderColor(def.getBorderColor());
-        annoData.setBorderSize(def.getBorderSize());
-        annoData.setDefaultFontSize(def.getDefaultFontSize());
+        // required
         annoData.setX(def.getLocation().getX());
         annoData.setY(def.getLocation().getY());
         annoData.setWidth(def.getWidth());
         annoData.setHeight(def.getHeight());
-        annoData.setText(def.getText());
-        annoData.setStyleRanges(def.getStyles());
+
+        // annotation data has defaults for everything, so not calling the setters is valid
+        def.getTextAlignment().map(TextAlignment::valueOf).ifPresent(annoData::setAlignment);
+        def.getDefaultFontSize().ifPresent(annoData::setDefaultFontSize);
+        def.getStyles().ifPresent(annoData::setStyleRanges);
+        def.getBgcolor().ifPresent(annoData::setBgColor);
+        def.getBorderColor().ifPresent(annoData::setBorderColor);
+        def.getBorderSize().ifPresent(annoData::setBorderSize);
+        def.getText().ifPresent(annoData::setText);
+
         return annoData;
     }
 
@@ -145,10 +151,13 @@ public class DefToCoreUtil {
         NodeFactory<NodeModel> nodeFactory;
         NodeSettingsRO nodeCreationSettings;
         try {
-            NodeSettingsRO additionalFactorySettings = toNodeSettings(def.getFactorySettings());
             nodeFactory = loadNodeFactory(def.getFactory());
-            nodeCreationSettings = toNodeSettings(def.getNodeCreationConfig());
-            nodeFactory.loadAdditionalFactorySettings(additionalFactorySettings);
+            if(def.getFactorySettings().isPresent()) {
+                NodeSettingsRO additionalFactorySettings = toNodeSettings(def.getFactorySettings().get()); //NOSONAR
+                nodeFactory.loadAdditionalFactorySettings(additionalFactorySettings);
+            }
+            // if none provided, initialize the factory with empty settings
+            nodeCreationSettings = def.getNodeCreationConfig().map(DefToCoreUtil::toNodeSettings).orElse(new NodeSettings("empty"));
         } catch (InvalidSettingsException | InstantiationException | IllegalAccessException
                 | InvalidNodeFactoryExtensionException e) {
             // TODO currently not doing any type of error handling (unknown node), done as part of AP-18960
@@ -162,40 +171,38 @@ public class DefToCoreUtil {
     }
 
     /**
-     *  Converts the job manager def to NodeExceution job manager.
+     * Converts the job manager def to NodeExceution job manager.
      *
      * @param def a {@link JobManagerDef}.
-     * @return a {@link NodeExecutionJobManager}.
+     * @return empty if the conversion fails - job manager factory is unknown or its settings cannot be loaded
      */
-    public static NodeExecutionJobManager toJobManager(final JobManagerDef def) {
-        if (def == null) {
-            return null;
-        }
+    public static Optional<NodeExecutionJobManager> toJobManager(final JobManagerDef def) {
         var jobManagerId = def.getFactory();
         NodeExecutionJobManagerFactory reference = NodeExecutionJobManagerPool.getJobManagerFactory(jobManagerId);
         if (reference == null) {
             final var msg = String
                 .format("Unknown job manager factory id %s (job manager factory possibly not installed?", jobManagerId);
             LOGGER.error(msg);
-            return null;
+            return Optional.empty();
         }
-        var settings = toNodeSettings(def.getSettings());
 
         NodeExecutionJobManager jobManager = reference.getInstance();
+        var settings = def.getSettings().map(DefToCoreUtil::toNodeSettings).orElse(new NodeSettings("empty"));
         try {
             jobManager.load(settings);
         } catch (InvalidSettingsException ex) {
             final var msg =
                 String.format("Can't load the job manager with factory id %s: %s", jobManagerId, ex.getMessage());
             LOGGER.error(msg, ex);
+            return Optional.empty();
         }
-        return jobManager;
+        return Optional.of(jobManager);
     }
 
     /**
      * Helper to load a nodes {@link NodeCreationConfiguration}.
      *
-     * @param settings the settings the node creation configuration will be initialized with
+     * @param settings optional initial settings for {@link ConfigurableNodeFactory} instances
      * @param factory the node factory get the node creation config from
      * @return the node creation config or an empty optional of the node factory is not of type
      *         {@link ConfigurableNodeFactory}
@@ -248,6 +255,18 @@ public class DefToCoreUtil {
     }
 
     /**
+     * @param portDefs the explicitly declared ports, can be empty (but not null)
+     * @return port types in order of ascending port indices
+     */
+    public static PortType[] toPortTypes(final List<PortDef> portDefs) {
+        return portDefs.stream()//
+            .sorted(Comparator.comparing(PortDef::getIndex))
+            .map(PortDef::getPortType)//
+            .map(DefToCoreUtil::toPortType)//
+            .toArray(PortType[]::new);
+    }
+
+    /**
      * Converts a port type def to PortType.
      *
      * @param portType a {@link PortTypeDef}
@@ -273,20 +292,14 @@ public class DefToCoreUtil {
      * @return a {@link ComponentMetadata}.
      */
     public static ComponentMetadata toComponentMetadata(final ComponentMetadataDef def) {
-        ComponentMetadataBuilder builder = ComponentMetadata.builder()//
-            .description(def.getDescription())//
-            .type(toComponentNodeType(def.getComponentType()))
-            .icon(def.getIcon());
-        if (def.getInPortNames() != null) {
-            for (var i = 0; i < def.getInPortNames().size(); i++) {
-                builder.addInPortNameAndDescription(def.getInPortNames().get(i), def.getInPortDescriptions().get(i));
-            }
-        }
-        if (def.getOutPortNames() != null) {
-            for (var i = 0; i < def.getOutPortNames().size(); i++) {
-                builder.addOutPortNameAndDescription(def.getOutPortNames().get(i), def.getOutPortDescriptions().get(i));
-            }
-        }
+        ComponentMetadataBuilder builder = ComponentMetadata.builder();
+        def.getDescription().ifPresent(builder::description);
+        def.getComponentType().map(DefToCoreUtil::toComponentNodeType).ifPresent(builder::type);
+        def.getIcon().ifPresent(builder::icon);
+        def.getInPortMetadata().ifPresent(ipm -> ipm.stream().forEach(//
+            pmd -> builder.addInPortNameAndDescription(pmd.getName().orElse(""), pmd.getDescription().orElse(""))));
+        def.getOutPortMetadata().ifPresent(opm -> opm.stream().forEach(//
+            pmd -> builder.addOutPortNameAndDescription(pmd.getName().orElse(""), pmd.getDescription().orElse(""))));
         return builder.build();
     }
 
@@ -308,11 +321,6 @@ public class DefToCoreUtil {
      * @return a {@link EditorUIInformation}.
      */
     public static EditorUIInformation toEditorUIInformation(final WorkflowUISettingsDef def) {
-
-        if(def == null) {
-            return EditorUIInformation.builder().build();
-        }
-
         return EditorUIInformation.builder()//
             .setGridX(def.getGridX())//
             .setGridY(def.getGridY())//
@@ -331,11 +339,8 @@ public class DefToCoreUtil {
      * @return a {@link AuthorInformation}.
      */
     public static AuthorInformation toAuthorInformation(final AuthorInformationDef def) {
-        final var lastEdited =
-            Optional.ofNullable(def.getLastEditedWhen());
-        final var authored = Optional.ofNullable(def.getAuthoredWhen());
-        return new AuthorInformation(def.getAuthoredBy(), authored.orElse(null), def.getLastEditedBy(),
-            lastEdited.orElse(null));
+        return new AuthorInformation(def.getAuthoredBy(), def.getAuthoredWhen(),
+            def.getLastEditedBy().orElse(null), def.getLastEditedWhen().orElse(null));
     }
 
     /**
@@ -364,22 +369,15 @@ public class DefToCoreUtil {
      * Returning null makes sense here, because a metanode's workflow manager expects null in case the position of the
      * in/outport bars should be automatically chosen.
      *
-     * @param uiInfoDef def describing the location and size of a node or metanode in/outport bar
+     * @param boundsDef def describing the location and size of a node or metanode in/outport bar
      * @return null if the given def is null, the converted information otherwise.
      * @see WorkflowManager#setInPortsBarUIInfo(NodeUIInformation)
      */
-    public static NodeUIInformation toNodeUIInformation(final NodeUIInfoDef uiInfoDef) {
-        if (uiInfoDef == null) {
-            // if the node ui information is null on a workflow manager that represents a metanode, the ui will figure
-            // out sensible default values.
-            return null;
-        }
-
-        var boundsDef = uiInfoDef.getBounds();
+    public static NodeUIInformation toNodeUIInformation(final BoundsDef boundsDef) {
         return NodeUIInformation.builder() //
-            .setHasAbsoluteCoordinates(uiInfoDef.hasAbsoluteCoordinates()) //
+            .setHasAbsoluteCoordinates(true) //
             .setIsDropLocation(false) // is only used to specify the location of a node and the shape of metanode bars
-            .setIsSymbolRelative(uiInfoDef.isSymbolRelative())//
+            .setIsSymbolRelative(true)//
             .setNodeLocation(//
                 boundsDef.getLocation().getX(), boundsDef.getLocation().getY(), //
                 boundsDef.getWidth(), boundsDef.getHeight()) //
@@ -476,14 +474,14 @@ public class DefToCoreUtil {
      * @return the configured input port types if the node is a component or metanode, an empty array otherwise.
      */
     public static PortType[] extractInPortTypes(final BaseNodeDef baseNodeDef) {
-        Supplier<List<PortDef>> inPortsGetter = null;
-        if (NodeTypeEnum.METANODE.equals(baseNodeDef.getNodeType())) {
+        Supplier<Optional<List<PortDef>>> inPortsGetter = null;
+        if (NodeTypeEnum.META == baseNodeDef.getNodeType()) {
             inPortsGetter = ((MetaNodeDef)baseNodeDef)::getInPorts;
-        } else if (NodeTypeEnum.COMPONENT.equals(baseNodeDef.getNodeType())) {
+        } else if (NodeTypeEnum.COMPONENT == baseNodeDef.getNodeType()) {
             inPortsGetter = ((ComponentNodeDef)baseNodeDef)::getInPorts;
         }
-        var inportsListSupplier = Optional.ofNullable(inPortsGetter).orElse(List::of);
-        return inportsListSupplier.get().stream()//
+        var inportsListSupplier = Optional.ofNullable(inPortsGetter).orElse(() -> Optional.of(List.of()));
+        return inportsListSupplier.get().orElse(List.of()).stream()//
             .map(pd -> pd.getPortType())//
             .map(DefToCoreUtil::toPortType)//
             .toArray(PortType[]::new);
@@ -495,14 +493,14 @@ public class DefToCoreUtil {
      * @return the configured output port types if the node is a component or metanode, an empty array otherwise.
      */
     public static PortType[] extractOutPortTypes(final BaseNodeDef baseNodeDef) {
-        Supplier<List<PortDef>> outPortsGetter = null;
-        if (NodeTypeEnum.METANODE.equals(baseNodeDef.getNodeType())) {
+        Supplier<Optional<List<PortDef>>> outPortsGetter = null;
+        if (NodeTypeEnum.META == baseNodeDef.getNodeType()) {
             outPortsGetter = ((MetaNodeDef)baseNodeDef)::getOutPorts;
         } else if (NodeTypeEnum.COMPONENT.equals(baseNodeDef.getNodeType())) {
             outPortsGetter = ((ComponentNodeDef)baseNodeDef)::getOutPorts;
         }
-        var outportsListSupplier = Optional.ofNullable(outPortsGetter).orElse(List::of);
-        return outportsListSupplier.get().stream()//
+        var outportsListSupplier = Optional.ofNullable(outPortsGetter).orElse(() -> Optional.of(List.of()));
+        return outportsListSupplier.get().orElse(List.of()).stream()//
             .map(pd -> pd.getPortType())//
             .map(DefToCoreUtil::toPortType)//
             .toArray(PortType[]::new);

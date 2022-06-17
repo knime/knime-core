@@ -49,6 +49,7 @@
 package org.knime.core.node.workflow;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -57,7 +58,8 @@ import org.knime.shared.workflow.def.ComponentDialogSettingsDef;
 import org.knime.shared.workflow.def.ComponentMetadataDef;
 import org.knime.shared.workflow.def.ComponentNodeDef;
 import org.knime.shared.workflow.def.PortDef;
-import org.knime.shared.workflow.def.TemplateInfoDef;
+import org.knime.shared.workflow.def.TemplateLinkDef;
+import org.knime.shared.workflow.def.TemplateMetadataDef;
 import org.knime.shared.workflow.def.WorkflowDef;
 import org.knime.shared.workflow.def.impl.ComponentDialogSettingsDefBuilder;
 import org.knime.shared.workflow.def.impl.PortDefBuilder;
@@ -95,7 +97,7 @@ public class SubnodeContainerToDefAdapter extends SingleNodeContainerToDefAdapte
      * {@inheritDoc}
      */
     @Override
-    public List<PortDef> getInPorts() {
+    public Optional<List<PortDef>> getInPorts() {
         var result = IntStream.range(0, m_nc.getNrInPorts())//
             .mapToObj(m_nc::getInPort)//
             .map(CoreToDefUtil::toPortDef)//
@@ -103,14 +105,14 @@ public class SubnodeContainerToDefAdapter extends SingleNodeContainerToDefAdapte
         // Set optional and hidden as true to the first in port type (aka micky mouse)
         var firstInPortDef = CoreToDefUtil.toPortDef(m_nc.getInPort(0));
         result.set(0, modifyToOptional(firstInPortDef));
-        return result;
+        return Optional.ofNullable(result.isEmpty() ? null : result);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public List<PortDef> getOutPorts() {
+    public Optional<List<PortDef>> getOutPorts() {
         var result = IntStream.range(0, m_nc.getNrOutPorts())//
             .mapToObj(m_nc::getOutPort)//
             .map(CoreToDefUtil::toPortDef)//
@@ -118,7 +120,7 @@ public class SubnodeContainerToDefAdapter extends SingleNodeContainerToDefAdapte
         // Set optional and hidden as true to the first out port type (aka micky mouse)
         var firstOutPortDef = CoreToDefUtil.toPortDef(m_nc.getOutPort(0));
         result.set(0, modifyToOptional(firstOutPortDef));
-        return result;
+        return Optional.ofNullable(result.isEmpty() ? null : result);
     }
 
     private static PortDef modifyToOptional(final PortDef def) {
@@ -149,30 +151,33 @@ public class SubnodeContainerToDefAdapter extends SingleNodeContainerToDefAdapte
      * {@inheritDoc}
      */
     @Override
-    public ComponentDialogSettingsDef getDialogSettings() {
-        return new ComponentDialogSettingsDefBuilder()//
+    public Optional<ComponentDialogSettingsDef> getDialogSettings() {
+        return Optional.of(new ComponentDialogSettingsDefBuilder()//
+                .strict()//
                 .setConfigurationLayoutJSON(m_nc.getSubnodeConfigurationLayoutStringProvider().getConfigurationLayoutString())//
                 .setLayoutJSON(m_nc.getSubnodeLayoutStringProvider().getLayoutString())//
                 .setHideInWizard(m_nc.isHideInWizard())//
                 .setCssStyles(m_nc.getCssStyles())//
-                .build();
+                .build());
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public ComponentMetadataDef getMetadata() {
-        return CoreToDefUtil.toComponentMetadataDef(m_nc.getMetadata());
+    public Optional<ComponentMetadataDef> getMetadata() {
+        return Optional.of(CoreToDefUtil.toComponentMetadataDef(m_nc.getMetadata()));
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public TemplateInfoDef getTemplateInfo() {
-        // unclear if this needs to be a link here or a full template information
-        return CoreToDefUtil.toTemplateInfoDef(m_nc.getTemplateInformation());
+    public Optional<TemplateMetadataDef> getTemplateMetadata() {
+        // this is applied only to nodes in a workflow, which are by definition not standalone components
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<TemplateLinkDef> getTemplateLink() {
+        return CoreToDefUtil.toTemplateLinkDef(m_nc.getTemplateInformation());
     }
 
     /**
@@ -187,7 +192,7 @@ public class SubnodeContainerToDefAdapter extends SingleNodeContainerToDefAdapte
      * {@inheritDoc}
      */
     @Override
-    public CipherDef getCipher() {
+    public Optional<CipherDef> getCipher() {
         return m_nc.getWorkflowCipher().toDef();
     }
 

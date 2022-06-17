@@ -48,7 +48,8 @@
  */
 package org.knime.core.node.workflow;
 
-import org.knime.core.node.InvalidSettingsException;
+import java.util.Optional;
+
 import org.knime.core.node.NodeSettings;
 import org.knime.shared.workflow.def.ConfigMapDef;
 import org.knime.shared.workflow.def.FilestoreDef;
@@ -80,15 +81,10 @@ public class NativeNodeContainerToDefAdapter extends SingleNodeContainerToDefAda
      * {@inheritDoc}
      */
     @Override
-    public ConfigMapDef getFactorySettings() {
-        NodeSettings s = new NodeSettings("factory_settings");
+    public Optional<ConfigMapDef> getFactorySettings() {
+        var s = new NodeSettings("factory_settings");
         m_nc.getNode().getFactory().saveAdditionalFactorySettings(s);
-        try {
-            return LoaderUtils.toConfigMapDef(s, PasswordRedactor.asNull());
-        } catch (InvalidSettingsException ex) {
-            // TODO
-            throw new RuntimeException(ex);
-        }
+        return Optional.of(LoaderUtils.toConfigMapDef(s, m_passwordHandler));
     }
 
     /**
@@ -103,19 +99,13 @@ public class NativeNodeContainerToDefAdapter extends SingleNodeContainerToDefAda
      * {@inheritDoc}
      */
     @Override
-    public ConfigMapDef getNodeCreationConfig() {
-        NodeSettings creationConfig = m_nc.getNode().getCopyOfCreationConfig().map(c -> {
-            NodeSettings s = new NodeSettings("creation_config");
-            c.saveSettingsTo(s);
-            return s;
-        }).orElse(null);
-        try {
-            return LoaderUtils.toConfigMapDef(creationConfig, PasswordRedactor.asNull());
-        } catch (InvalidSettingsException ex) {
-            // TODO
-            throw new RuntimeException(ex);
-        }
-
+    public Optional<ConfigMapDef> getNodeCreationConfig() {
+        return m_nc.getNode().getCopyOfCreationConfig()//
+            .map(c -> {
+                var s = new NodeSettings("creation_config");
+                c.saveSettingsTo(s);
+                return s;
+            }).map(settings -> LoaderUtils.toConfigMapDef(settings, m_passwordHandler));
     }
 
     /**
@@ -146,12 +136,8 @@ public class NativeNodeContainerToDefAdapter extends SingleNodeContainerToDefAda
      * {@inheritDoc}
      */
     @Override
-    public FilestoreDef getFilestore() {
-        // TODO implement;
-        return null; //new FilestoreDefBuilder()//
-//                .setId()//
-//                .setLocation()//
-//                .build();
+    public Optional<FilestoreDef> getFilestore() {
+        return Optional.empty();
     }
 
     /**
@@ -159,7 +145,7 @@ public class NativeNodeContainerToDefAdapter extends SingleNodeContainerToDefAda
      */
     @Override
     public NodeTypeEnum getNodeType() {
-        return NodeTypeEnum.NATIVENODE;
+        return NodeTypeEnum.NATIVE;
     }
 
 }

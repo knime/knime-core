@@ -48,10 +48,10 @@
  */
 package org.knime.core.node.workflow;
 
-import org.knime.core.node.InvalidSettingsException;
+import java.util.Optional;
+
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeSettings;
-import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
 import org.knime.shared.workflow.def.ConfigMapDef;
 import org.knime.shared.workflow.def.ConfigurableNodeDef;
 import org.knime.shared.workflow.storage.multidir.util.LoaderUtils;
@@ -79,43 +79,29 @@ public abstract class SingleNodeContainerToDefAdapter extends NodeContainerToDef
      * {@inheritDoc}
      */
     @Override
-    public ConfigMapDef getModelSettings() {
-        SingleNodeContainerSettings s = m_nc.getSingleNodeContainerSettings();
-        try {
-            return LoaderUtils.toConfigMapDef(s.getModelSettings(), m_passwordHandler);
-        } catch (InvalidSettingsException ex) {
-            // TODO
-            throw new RuntimeException(ex);
-        }
+    public Optional<ConfigMapDef> getModelSettings() {
+        var modelSettings = Optional.ofNullable(m_nc.getSingleNodeContainerSettings().getModelSettings());
+        return modelSettings.map(s -> LoaderUtils.toConfigMapDef(s, m_passwordHandler));
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public ConfigMapDef getInternalNodeSubSettings() {
+    public Optional<ConfigMapDef> getInternalNodeSubSettings() {
+        // TODO this includes the variable settings and is thus redundant
         var internalSettings = new NodeSettings(Node.CFG_MISC_SETTINGS);
         m_nc.getSingleNodeContainerSettings().save(internalSettings);
-        try {
-            return LoaderUtils.toConfigMapDef(internalSettings, m_passwordHandler);
-        } catch (InvalidSettingsException ex) {
-            // TODO
-            throw new RuntimeException(ex);
-        }
+        return Optional.of(LoaderUtils.toConfigMapDef(internalSettings, m_passwordHandler));
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public ConfigMapDef getVariableSettings() {
-        SingleNodeContainerSettings s = m_nc.getSingleNodeContainerSettings();
-        try {
-            return LoaderUtils.toConfigMapDef(s.getVariablesSettings(), PasswordRedactor.asNull());
-        } catch (InvalidSettingsException ex) {
-            // TODO
-            throw new RuntimeException(ex);
-        }
+    public Optional<ConfigMapDef> getVariableSettings() {
+        return Optional.ofNullable(m_nc.getSingleNodeContainerSettings().getVariablesSettings())
+            .map(s -> LoaderUtils.toConfigMapDef(s, m_passwordHandler));
     }
 
     //    /**

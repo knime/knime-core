@@ -248,11 +248,11 @@ public final class VirtualSubNodeOutputNodeModel extends ExtendedScopeNodeModel
             throws InvalidSettingsException {
         VirtualSubNodeOutputConfiguration config = new VirtualSubNodeOutputConfiguration(m_numberOfPorts);
         config.loadConfigurationInModel(settings);
-        String[] portNames = config.getPortNames();
 
         //propagate the port names to the containing subnode container
         //(if sub node container has been set)
         if (m_subNodeContainer != null) {
+            String[] portNames = m_subNodeContainer.getMetadata().getOutPortNames().orElse(new String[0]);
             for (int i = 0; i < portNames.length; i++) {
                 m_subNodeContainer.getOutPort(i + 1).setPortName(portNames[i]);
                 m_subNodeContainer.getOutPort(i + 1).stateChanged(new NodeStateEvent(m_subNodeContainer));

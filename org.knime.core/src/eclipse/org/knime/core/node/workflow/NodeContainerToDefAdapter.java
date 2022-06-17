@@ -48,11 +48,13 @@
  */
 package org.knime.core.node.workflow;
 
+import java.util.Optional;
+
 import org.knime.shared.workflow.def.BaseNodeDef;
+import org.knime.shared.workflow.def.BoundsDef;
 import org.knime.shared.workflow.def.JobManagerDef;
 import org.knime.shared.workflow.def.NodeAnnotationDef;
 import org.knime.shared.workflow.def.NodeLocksDef;
-import org.knime.shared.workflow.def.NodeUIInfoDef;
 import org.knime.shared.workflow.storage.util.PasswordRedactor;
 
 /**
@@ -79,39 +81,39 @@ public abstract class NodeContainerToDefAdapter implements BaseNodeDef {
      * {@inheritDoc}
      */
     @Override
-    public String getCustomDescription() {
-        return m_nc.getCustomDescription();
+    public Optional<String> getCustomDescription() {
+        return Optional.ofNullable(m_nc.getCustomDescription());
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeAnnotationDef getAnnotation() {
-        return CoreToDefUtil.toNodeAnnotationDef(m_nc.getNodeAnnotation());
+    public Optional<NodeAnnotationDef> getAnnotation() {
+        return Optional.ofNullable(CoreToDefUtil.toNodeAnnotationDef(m_nc.getNodeAnnotation()));
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeUIInfoDef getUiInfo() {
-        return CoreToDefUtil.toNodeUIInfoDef(m_nc.getUIInformation());
+    public Optional<BoundsDef> getBounds() {
+        return Optional.ofNullable(m_nc.getUIInformation()).map(CoreToDefUtil::toBoundsDef);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeLocksDef getLocks() {
-        return CoreToDefUtil.toNodeLocksDef(m_nc.getNodeLocks());
+    public Optional<NodeLocksDef> getLocks() {
+        return Optional.ofNullable(CoreToDefUtil.toNodeLocksDef(m_nc.getNodeLocks()));
     }
 
     /**
      * @return a def if a job manager is present, null otherwise
      */
     @Override
-    public JobManagerDef getJobManager() {
+    public Optional<JobManagerDef> getJobManager() {
         return CoreToDefUtil.toJobManager(m_nc.getJobManager(), m_passwordHandler);
     }
 
@@ -119,8 +121,8 @@ public abstract class NodeContainerToDefAdapter implements BaseNodeDef {
      * {@inheritDoc}
      */
     @Override
-    public Integer getId() {
-        return m_nc.getID().getIndex();
+    public Optional<Integer> getId() {
+        return Optional.of(m_nc.getID().getIndex());
     }
 
 }

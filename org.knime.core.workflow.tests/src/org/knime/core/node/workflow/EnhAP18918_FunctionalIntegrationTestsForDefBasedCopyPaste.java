@@ -6,13 +6,16 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.startsWith;
+import static org.junit.Assert.assertFalse;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.util.workflow.def.LoadExceptionTreeProvider;
 import org.knime.shared.workflow.def.ConfigMapDef;
 import org.knime.shared.workflow.def.ConfigValuePasswordDef;
 import org.knime.shared.workflow.def.NativeNodeDef;
+import org.knime.shared.workflow.storage.clipboard.DefClipboardContent;
 import org.knime.shared.workflow.storage.util.PasswordRedactor;
 
 /**
@@ -60,7 +63,9 @@ public class EnhAP18918_FunctionalIntegrationTestsForDefBasedCopyPaste extends W
 		var cc = WorkflowCopyContent.builder()
 				.setNodeIDs(id_tableCreator, id_outerComp, id_outerMeta, id_concat, id_shuf, id_pie)
 				.setAnnotationIDs(new WorkflowAnnotationID(id_wf, 0)).setIncludeInOutConnections(false).build();
-		var pasted = getManager().paste(getManager().copyToDef(cc, PasswordRedactor.asNull()));
+		final DefClipboardContent content = getManager().copyToDef(cc, PasswordRedactor.asNull());
+		assertFalse(LoadExceptionTreeProvider.hasExceptions(content.getPayload()));
+		var pasted = getManager().paste(content);
 
 		assertThat(getManager().getNodeContainers(), hasSize(12 + 6));
 		assertThat(getManager().getAnnotationCount(), is(4 + 1));
@@ -226,15 +231,15 @@ public class EnhAP18918_FunctionalIntegrationTestsForDefBasedCopyPaste extends W
 		// looks spooky, but just extracts encrypted password from copied node and
 		// checks its value
 		var copiedUnsafe = getManager().copyToDef(cc, PasswordRedactor.unsafe());
-		assertThat(((ConfigValuePasswordDef) ((ConfigMapDef) ((NativeNodeDef) copiedUnsafe.getPayload().getNodes()
-				.get("15")).getModelSettings().getChildren().get("defaultValue")).getChildren()
+		assertThat(((ConfigValuePasswordDef) ((ConfigMapDef) ((NativeNodeDef) copiedUnsafe.getPayload().getNodes().get()
+				.get("15")).getModelSettings().get().getChildren().get("defaultValue")).getChildren()
 						.get("passwordEncrypted")).getValue(),
 				is("02BAAAAGMq_QxveL1vZ0EBj9UiWy7_u1C6"));
 
 		// same, but here we require the password value to be null
 		var copiedAsNull = getManager().copyToDef(cc, PasswordRedactor.asNull());
-		assertThat(((ConfigValuePasswordDef) ((ConfigMapDef) ((NativeNodeDef) copiedAsNull.getPayload().getNodes()
-				.get("15")).getModelSettings().getChildren().get("defaultValue")).getChildren()
+		assertThat(((ConfigValuePasswordDef) ((ConfigMapDef) ((NativeNodeDef) copiedAsNull.getPayload().getNodes().get()
+				.get("15")).getModelSettings().get().getChildren().get("defaultValue")).getChildren()
 						.get("passwordEncrypted")).getValue(),
 				nullValue());
 
