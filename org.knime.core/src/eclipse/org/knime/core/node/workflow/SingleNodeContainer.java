@@ -74,7 +74,7 @@ import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.def.DefToCoreUtil;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 import org.knime.shared.workflow.def.BaseNodeDef;
-import org.knime.shared.workflow.def.ConfigurableNodeDef;
+import org.knime.shared.workflow.def.SingleNodeDef;
 import org.w3c.dom.Element;
 
 /**
@@ -154,7 +154,7 @@ public abstract class SingleNodeContainer extends NodeContainer {
         super(parent, id, persistor);
     }
 
-    SingleNodeContainer(final WorkflowManager parent, final NodeID id, final ConfigurableNodeDef def) {
+    SingleNodeContainer(final WorkflowManager parent, final NodeID id, final SingleNodeDef def) {
         super(parent, id, def);
     }
 
@@ -875,12 +875,12 @@ public abstract class SingleNodeContainer extends NodeContainer {
     void loadContent(final BaseNodeDef nodeDef, final ExecutionMonitor exec, final LoadResult loadResult)
         throws CanceledExecutionException {
         synchronized (m_nodeMutex) {
-            if (!(nodeDef instanceof ConfigurableNodeDef)) {
-                throw new IllegalStateException("Expected " + ConfigurableNodeDef.class.getSimpleName()
+            if (!(nodeDef instanceof SingleNodeDef)) {
+                throw new IllegalStateException("Expected " + SingleNodeDef.class.getSimpleName()
                     + " persistor object, got " + nodeDef.getClass().getSimpleName());
             }
             exec.checkCanceled();
-            var singleNodeDef = (ConfigurableNodeDef)nodeDef;
+            var singleNodeDef = (SingleNodeDef)nodeDef;
             setInternalState(InternalNodeContainerState.IDLE, false);
 
             if (singleNodeDef.getInternalNodeSubSettings().isPresent()) {

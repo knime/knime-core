@@ -7,6 +7,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -233,15 +234,14 @@ public class EnhAP18918_FunctionalIntegrationTestsForDefBasedCopyPaste extends W
 		var copiedUnsafe = getManager().copyToDef(cc, PasswordRedactor.unsafe());
 		assertThat(((ConfigValuePasswordDef) ((ConfigMapDef) ((NativeNodeDef) copiedUnsafe.getPayload().getNodes().get()
 				.get("15")).getModelSettings().get().getChildren().get("defaultValue")).getChildren()
-						.get("passwordEncrypted")).getValue(),
+						.get("passwordEncrypted")).getValue().get(),
 				is("02BAAAAGMq_QxveL1vZ0EBj9UiWy7_u1C6"));
 
 		// same, but here we require the password value to be null
 		var copiedAsNull = getManager().copyToDef(cc, PasswordRedactor.asNull());
-		assertThat(((ConfigValuePasswordDef) ((ConfigMapDef) ((NativeNodeDef) copiedAsNull.getPayload().getNodes().get()
+		assertTrue(((ConfigValuePasswordDef) ((ConfigMapDef) ((NativeNodeDef) copiedAsNull.getPayload().getNodes().get()
 				.get("15")).getModelSettings().get().getChildren().get("defaultValue")).getChildren()
-						.get("passwordEncrypted")).getValue(),
-				nullValue());
+						.get("passwordEncrypted")).getValue().isEmpty());
 
 		// when pasting the redacted version, the unredacted version should be available and pasted instead
 		var pastedConfig = getManager().paste(copiedAsNull).getNodeIDs()[0];

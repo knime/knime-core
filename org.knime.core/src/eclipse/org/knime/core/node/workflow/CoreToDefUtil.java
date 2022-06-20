@@ -457,7 +457,9 @@ public class CoreToDefUtil {
             } else if (nc instanceof WorkflowManager) {
                 var originalMetanodeDef = new MetanodeToDefAdapter((WorkflowManager)nc, passwordRedactor);
                 node = Optional.ofNullable(new MetaNodeDefBuilder(originalMetanodeDef)//
-                    .setId(defNodeId).setBounds(defUiInfo.orElse(defaultBounds)).build());
+                    .setId(defNodeId)//
+                    .setBounds(defUiInfo.orElse(defaultBounds))//
+                    .build());
             }
 
             node.ifPresent(n -> workflowBuilder.putToNodes(String.valueOf(defNodeId), n));

@@ -53,7 +53,7 @@ import java.util.Optional;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeSettings;
 import org.knime.shared.workflow.def.ConfigMapDef;
-import org.knime.shared.workflow.def.ConfigurableNodeDef;
+import org.knime.shared.workflow.def.SingleNodeDef;
 import org.knime.shared.workflow.storage.multidir.util.LoaderUtils;
 import org.knime.shared.workflow.storage.util.PasswordRedactor;
 
@@ -62,7 +62,7 @@ import org.knime.shared.workflow.storage.util.PasswordRedactor;
  * @author hornm
  *
  */
-public abstract class SingleNodeContainerToDefAdapter extends NodeContainerToDefAdapter implements ConfigurableNodeDef {
+public abstract class SingleNodeContainerToDefAdapter extends NodeContainerToDefAdapter implements SingleNodeDef {
 
     private final SingleNodeContainer m_nc;
 

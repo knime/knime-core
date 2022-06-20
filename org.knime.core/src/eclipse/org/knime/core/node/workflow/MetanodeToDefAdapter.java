@@ -87,8 +87,10 @@ public class MetanodeToDefAdapter extends NodeContainerToDefAdapter implements M
         if(m_wfm.getNrInPorts() == 0) {
             return Optional.empty();
         }
-        return Optional.of(IntStream.range(0, m_wfm.getNrInPorts()).mapToObj(m_wfm::getInPort)
-            .map(CoreToDefUtil::toPortDef).collect(Collectors.toList()));
+        return Optional.of(IntStream.range(0, m_wfm.getNrInPorts())//
+            .mapToObj(m_wfm::getInPort)//
+            .map(CoreToDefUtil::toPortDef)//
+            .collect(Collectors.toList()));
     }
 
     /**
