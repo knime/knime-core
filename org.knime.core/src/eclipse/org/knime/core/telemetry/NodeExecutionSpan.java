@@ -48,11 +48,15 @@
  */
 package org.knime.core.telemetry;
 
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.port.PortObject;
 import org.knime.core.node.workflow.NodeContainer;
 
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.sdk.trace.SpanProcessor;
 
 /**
  *
@@ -61,9 +65,35 @@ import io.opentelemetry.api.trace.StatusCode;
  */
 public class NodeExecutionSpan {
 
-    public static final String KEY_NODE_FACTORY = "node.factory";
+    /**
+     * @see #setNodeId(String)
+     */
+    public static final String SPAN_ATTRIBUTE_NODE_ID = "node.id";
 
-    public static final String KEY_NODE_NAME = "node.name";
+    /**
+     * @see #setNodeContext(String)
+     */
+    public static final String SPAN_ATTRIBUTE_NODE_CONTEXT = "node.context";
+
+    /**
+     * @see #setNodeFactory(String)
+     */
+    public static final String SPAN_ATTRIBUTE_NODE_FACTORY = "node.factory";
+
+    /**
+     * @see #startExecution(PortObject[])
+     */
+    public static final String EVENT_EXECUTION_START = "startExecution";
+
+    /**
+     * @see #startExecution(PortObject[])
+     */
+    public static final String EVENT_EXECUTION_START_ATTRIBUTE_DATA_ROWS = "data.inport%s.rows";
+
+    /**
+     * @see #stopExecution(PortObject[])
+     */
+    public static final String EVENT_EXECUTION_STOP = "stopExecution";
 
     final Span m_span;
 
@@ -79,13 +109,31 @@ public class NodeExecutionSpan {
             .startSpan();
     }
 
-    public NodeExecutionSpan setNodeName(final String nodeName) {
-        m_span.setAttribute(NodeExecutionSpan.KEY_NODE_NAME, nodeName);
+    /**
+     * @param nodeId the identifier of the node in the containing workflow
+     */
+    public void setNodeId(final String nodeId) {
+        m_span.setAttribute(NodeExecutionSpan.SPAN_ATTRIBUTE_NODE_ID, nodeId);
+
+    }
+
+    /**
+     * @param nodeContext identifies the node execution context. This is typically derived from the NodeContainer that
+     *            is used to execute the node but can be also derived from something else, e.g. in case of the remote
+     *            workflow editor.
+     * @return this instance
+     */
+    public NodeExecutionSpan setNodeContext(final String nodeContext) {
+        m_span.setAttribute(NodeExecutionSpan.SPAN_ATTRIBUTE_NODE_CONTEXT, nodeContext);
         return this;
     }
 
+    /**
+     * @param factoryName
+     * @return this instance
+     */
     public NodeExecutionSpan setNodeFactory(final String factoryName) {
-        m_span.setAttribute(NodeExecutionSpan.KEY_NODE_FACTORY, factoryName);
+        m_span.setAttribute(NodeExecutionSpan.SPAN_ATTRIBUTE_NODE_FACTORY, factoryName);
         return this;
     }
 
@@ -101,11 +149,35 @@ public class NodeExecutionSpan {
     }
 
     /**
-     * TODO this "sends" the span, right?
+     * What happens with the span depends on the configured {@link SpanProcessor}(s). It may be sent immediately or
+     * collected to be sent as a batch later.
      */
     public void end() {
         m_span.end();
-        System.err.println("Closed span " + this);
+    }
+
+    /**
+     * Creates an event in the span that marks the beginning of the {@link NodeModel}'s execution.
+     *
+     * @param data the input data for the node model
+     */
+    public void startExecution(final PortObject[] data) {
+        var attributesBuilder = Attributes.builder();
+        for (int i = 0; i < data.length; i++) {
+            var optionalRows = NodeExecutionTracer.numRows(data[i]);
+            optionalRows.ifPresent(
+                rows -> attributesBuilder.put(String.format(EVENT_EXECUTION_START_ATTRIBUTE_DATA_ROWS, "i"), rows));
+        }
+        m_span.addEvent(EVENT_EXECUTION_START, attributesBuilder.build());
+    }
+
+    /**
+     * Creates an event in the span that marks the end of the {@link NodeModel}'s execution
+     *
+     * @param outData the data computed by the node model
+     */
+    public void finishExecution(final PortObject[] outData) {
+        m_span.addEvent(EVENT_EXECUTION_STOP);
     }
 
 }

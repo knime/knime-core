@@ -57,6 +57,8 @@ import java.util.stream.Collectors;
 
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.telemetry.NodeExecutionSpan;
+import org.knime.core.telemetry.NodeExecutionTracer;
 
 /**
  * A {@link NodeContext} holds information about the context in which an operation on a node is executed. This is used
@@ -98,6 +100,11 @@ public final class NodeContext {
 
     private final WeakReference<Object> m_contextObjectRef;
 
+    /**
+     * This is can be used to generate telemetry signals, such as a node start event.
+     */
+    private final NodeExecutionSpan m_nodeExecutionSpan;
+
     // This was originally static final, constructed here - now you should use getNoContext().  See  https://knime-com.atlassian.net/browse/AP-12159
     private static NodeContext NO_CONTEXT = null;
 
@@ -127,6 +134,7 @@ public final class NodeContext {
         if (KNIMEConstants.ASSERTIONS_ENABLED) {
             m_fullStackTraceAtConstructionTime = getStackTrace();
         }
+        m_nodeExecutionSpan = NodeExecutionTracer.start(contextObject);
     }
 
     private static String getStackTrace() {
@@ -407,5 +415,12 @@ public final class NodeContext {
                 return Optional.empty();
             }
         }
+    }
+
+    /**
+     * @return
+     */
+    public org.knime.core.telemetry.NodeExecutionSpan getNodeExecutionSpan() {
+        return m_nodeExecutionSpan;
     }
 }

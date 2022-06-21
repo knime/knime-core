@@ -49,7 +49,10 @@
 package org.knime.core.telemetry;
 
 import java.util.Optional;
+import java.util.OptionalLong;
 
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.port.PortObject;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.SubNodeContainer;
@@ -61,12 +64,26 @@ import org.knime.core.node.workflow.SubNodeContainer;
 public class NodeExecutionTracer {
 
     /**
-     * @param nodeContainer
+     *
+     */
+    public static final String ROOT_CONTEXT = "org.knime.core.NodeContext.ROOT";
+
+    /**
+     * @param contextObject
      * @return
      */
-    public static NodeExecutionSpan start(final NodeContainer nodeContainer) {
-        var nes = new NodeExecutionSpan().setNodeName(getNodeName(nodeContainer));
-        getNodeFactory(nodeContainer).ifPresent(nes::setNodeFactory);
+    public static NodeExecutionSpan start(final Object contextObject) {
+        var nes = new NodeExecutionSpan();
+        if(contextObject instanceof NodeContainer) {
+            NodeContainer nodeContainer = (NodeContainer)contextObject;
+            nes.setNodeContext(getNodeName(nodeContainer));
+            getNodeFactory(nodeContainer).ifPresent(nes::setNodeFactory);
+            nes.setNodeId(nodeContainer.getID().toString());
+        } else if (contextObject != null){
+            nes.setNodeContext(contextObject.toString());
+        } else {
+            nes.setNodeContext(ROOT_CONTEXT);
+        }
         return nes;
     }
 
@@ -86,6 +103,17 @@ public class NodeExecutionTracer {
         } else {
             return "NodeContainer";
         }
+    }
+
+    /**
+     * @param portObject the port object to inspect for number of rows
+     * @return the number of rows in the port object, if it holds a {@link BufferedDataTable}
+     */
+    public static OptionalLong numRows(final PortObject portObject) {
+        if (portObject instanceof BufferedDataTable) {
+            return OptionalLong.of(((BufferedDataTable)portObject).size());
+        }
+        return OptionalLong.empty();
     }
 
 }

@@ -111,6 +111,7 @@ import org.knime.core.node.workflow.VariableType.IntType;
 import org.knime.core.node.workflow.VariableType.StringType;
 import org.knime.core.node.workflow.virtual.parchunk.FlowVirtualScopeContext;
 import org.knime.core.node.workflow.virtual.parchunk.VirtualParallelizedChunkPortObjectInNodeModel;
+import org.knime.core.telemetry.NodeExecutionSpan;
 
 
 /**
@@ -541,12 +542,16 @@ public abstract class NodeModel implements ViewableModel {
 
         executeModelCheckInput(data);
 
+        NodeExecutionSpan telemetry = NodeContext.getContext().getNodeExecutionSpan();
+
         // temporary storage for result of derived model.
         // EXECUTE DERIVED MODEL
         PortObject[] outData;
         try {
             if (!exEnv.reExecute()) {
+                telemetry.startExecution(data);
                 outData = execute(data, exec);
+                telemetry.finishExecution(outData);
             } else {
                 if (this instanceof ReExecutable) {
                     @SuppressWarnings("rawtypes")

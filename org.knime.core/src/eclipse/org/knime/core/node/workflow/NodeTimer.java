@@ -101,7 +101,6 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.telemetry.NodeExecutionSpan;
 import org.knime.core.telemetry.NodeExecutionTracer;
 import org.knime.core.util.EclipseUtil;
 import org.osgi.framework.Bundle;
@@ -111,8 +110,6 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.Version;
 import org.osgi.service.application.ApplicationHandle;
 import org.osgi.service.prefs.Preferences;
-
-import io.opentelemetry.api.trace.Span;
 
 /**
  * Holds execution timing information about a specific node. It also defines a static global
@@ -141,12 +138,6 @@ public final class NodeTimer {
     private long m_executionDurationOverall;
     private int m_numberOfExecutionsSinceReset;
     private int m_numberOfExecutionsOverall;
-
-    /**
-     * This is either empty or a {@link Span} that is currently running. Is created through {@link #startExec()} and
-     * closed in {@link #endExec(boolean)}.
-     */
-    private Optional<NodeExecutionSpan> m_currentSpan = Optional.empty();
 
     /**
      * Container holding stats for the entire instance and all nodes that have been used/timed.
@@ -866,7 +857,6 @@ public final class NodeTimer {
 
     public void startExec() {
         m_startTime = System.currentTimeMillis();
-        m_currentSpan = Optional.of(NodeExecutionTracer.start(m_parent));
     }
 
     public void endExec(final boolean success) {
@@ -880,11 +870,6 @@ public final class NodeTimer {
             m_numberOfExecutionsSinceReset++;
             String cname = getCanonicalName(m_parent);
             GLOBAL_TIMER.addExecutionTime(cname, success, m_lastExecutionDuration);
-        }
-        if (m_currentSpan.isPresent()) {
-            m_currentSpan.get().setSuccess(success);
-            m_currentSpan.get().end();
-            m_currentSpan = Optional.empty();
         }
         m_lastStartTime = m_startTime;
         m_startTime = -1;
