@@ -1172,6 +1172,22 @@ public class NativeNodeContainer extends SingleNodeContainer {
         }
     }
 
+    @Override
+    public NativeNodeContainerExecutionResult createInactiveExecutionResult() {
+        synchronized (m_nodeMutex) {
+            NativeNodeContainerExecutionResult result = new NativeNodeContainerExecutionResult();
+            super.saveExecutionResult(result);
+            result.setSuccess(true);
+            NodeContext.pushContext(this);
+            try {
+                result.setNodeExecutionResult(m_node.createInactiveNodeExecutionResult());
+            } finally {
+                NodeContext.removeLastContext();
+            }
+            return result;
+        }
+    }
+
     /** {@inheritDoc} */
     @Override
     void performSaveModelSettingsTo(final NodeSettings modelSettings) {

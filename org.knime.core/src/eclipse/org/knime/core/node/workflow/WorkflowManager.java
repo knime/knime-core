@@ -4991,7 +4991,7 @@ public final class WorkflowManager extends NodeContainer
     }
 
     /** Reset node and notify listeners. */
-    private void invokeResetOnSingleNodeContainer(final SingleNodeContainer snc) {
+    void invokeResetOnSingleNodeContainer(final SingleNodeContainer snc) {
         assert m_workflowLock.isHeldByCurrentThread();
         snc.rawReset();
         snc.getNodeTimer().resetNode();
@@ -6367,7 +6367,7 @@ public final class WorkflowManager extends NodeContainer
      * @param keepNodeMessage Whether to keep previously set node messages (important during load sometimes)
      * @return true if the configuration did change something.
      */
-    private boolean configureSingleNodeContainer(final SingleNodeContainer snc, final boolean keepNodeMessage) {
+    boolean configureSingleNodeContainer(final SingleNodeContainer snc, final boolean keepNodeMessage) {
         boolean configurationChanged = false;
         try (WorkflowLock lock = lock()) {
             NodeMessage oldMessage = keepNodeMessage ? snc.getNodeMessage() : NodeMessage.NONE;
@@ -8330,6 +8330,18 @@ public final class WorkflowManager extends NodeContainer
                 result.setSuccess(true);
             }
             return result;
+        }
+    }
+
+    @Override
+    public WorkflowExecutionResult createInactiveExecutionResult() {
+        try (WorkflowLock lock = lock()) {
+            WorkflowExecutionResult wResult = new WorkflowExecutionResult(getID());
+            wResult.setSuccess(true);
+            for (NodeContainer innerNode : getNodeContainers()) {
+                wResult.addNodeExecutionResult(innerNode.getID(), innerNode.createInactiveExecutionResult());
+            }
+            return wResult;
         }
     }
 

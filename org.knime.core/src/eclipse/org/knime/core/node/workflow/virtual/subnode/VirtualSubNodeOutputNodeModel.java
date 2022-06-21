@@ -70,6 +70,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.exec.dataexchange.PortObjectRepository;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectHolder;
 import org.knime.core.node.port.PortObjectSpec;
@@ -150,8 +151,19 @@ public final class VirtualSubNodeOutputNodeModel extends ExtendedScopeNodeModel
     @Override
     protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec)
             throws Exception {
-        setNewExchange(new VirtualSubNodeExchange(inObjects, getVisibleFlowVariables()));
+        PortObject[] copies = copyObjects(inObjects, exec);
+        setNewExchange(new VirtualSubNodeExchange(copies, getVisibleFlowVariables()));
         return new PortObject[0];
+    }
+
+    private static PortObject[] copyObjects(final PortObject[] po, final ExecutionContext exec) throws Exception {
+        PortObject[] result = new PortObject[po.length];
+        for (int i = 0; i < result.length; i++) {
+            ExecutionMonitor sub = exec.createSubProgress(1 / po.length);
+            sub.setMessage(String.format("Copying input %d/%d", i + 1, result.length));
+            result[i] = PortObjectRepository.copy(po[i], exec, sub);
+        }
+        return result;
     }
 
     /** {@inheritDoc} */

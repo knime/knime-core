@@ -66,14 +66,14 @@ import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  * @since 3.1
  */
-final class CopyContentIntoTempFlowNodeExecutionJobManager extends AbstractNodeExecutionJobManager {
+public final class CopyContentIntoTempFlowNodeExecutionJobManager extends AbstractNodeExecutionJobManager {
 
     private final NodeContainerExecutionResult m_executionResult;
 
     /** Create new instance given an execution result.
      * @param executionResult To be applied to the node during the (pseudo-)execution.
      */
-    CopyContentIntoTempFlowNodeExecutionJobManager(final NodeContainerExecutionResult executionResult) {
+    public CopyContentIntoTempFlowNodeExecutionJobManager(final NodeContainerExecutionResult executionResult) {
         m_executionResult = CheckUtils.checkArgumentNotNull(executionResult, "Execution result must not be null");
     }
 

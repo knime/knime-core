@@ -105,6 +105,7 @@ import org.knime.core.node.dialog.DialogNodeValue;
 import org.knime.core.node.dialog.EnabledDialogNodeModelFilter;
 import org.knime.core.node.dialog.SubNodeDescriptionProvider;
 import org.knime.core.node.dialog.util.ConfigurationLayoutUtil;
+import org.knime.core.node.exec.CopyContentIntoTempFlowNodeExecutionJobManager;
 import org.knime.core.node.exec.ThreadNodeExecutionJobManager;
 import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.interactive.ViewContent;
@@ -138,6 +139,7 @@ import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
 import org.knime.core.node.workflow.action.InteractiveWebViewsResult;
 import org.knime.core.node.workflow.action.InteractiveWebViewsResult.Builder;
 import org.knime.core.node.workflow.def.DefToCoreUtil;
+import org.knime.core.node.workflow.execresult.NativeNodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 import org.knime.core.node.workflow.execresult.SubnodeContainerExecutionResult;
@@ -1550,6 +1552,68 @@ public final class SubNodeContainer extends SingleNodeContainer
                 }
             }
         }
+        if (publishObjects && m_isPerformingActionCalledFromParent) {
+            // reset all nodes but the output (which copied the result)
+            WorkflowManager wfm = getWorkflowManager();
+            try (WorkflowLock lock = wfm.lock()) {
+//                WorkflowExecutionResult inactiveExecResult = wfm.createInactiveExecutionResult();
+                Set<NodeID> bfsListedSet =
+                    wfm.getWorkflow().createBreadthFirstSortedList(wfm.getWorkflow().getNodeIDs(), true).keySet();
+                NodeID virtualOutNodeID = getVirtualOutNodeID();
+                bfsListedSet.remove(virtualOutNodeID);
+                Map<NodeID, Pair<NodeContainerExecutionResult, NodeExecutionJobManager>> bfsListedNodesMap =
+                    bfsListedSet.stream() //
+                        .map(wfm::getNodeContainer) //
+                        .collect(Collectors.toMap(NodeContainer::getID,
+                            nc -> Pair.create(nc.createInactiveExecutionResult(), nc.getJobManager())));
+                NativeNodeContainerExecutionResult outExecResult;
+                try {
+                    outExecResult = getVirtualOutNode().createExecutionResult(new ExecutionMonitor());
+                } catch (CanceledExecutionException ex1) {
+                    throw new RuntimeException(ex1);
+                }
+                bfsListedNodesMap.put(virtualOutNodeID, Pair.create(outExecResult, getVirtualOutNode().getJobManager()));
+                getVirtualOutNode().setInternalState(InternalNodeContainerState.IDLE);
+                wfm.resetAndConfigureAll();
+//                for (ListIterator<NodeID> listIt = bfsListedNodesList.listIterator(bfsListedNodesList.size()); listIt
+//                    .hasPrevious();) {
+//                    NodeContainer nc = wfm.getNodeContainer(listIt.previous());
+//                    if (nc instanceof SingleNodeContainer) {
+//                        wfm.invokeResetOnSingleNodeContainer((SingleNodeContainer)nc);
+//                    } else {
+//                        ((WorkflowManager)nc).resetAllNodesInWFM();
+//                    }
+//                }
+                for (Map.Entry<NodeID, Pair<NodeContainerExecutionResult, NodeExecutionJobManager>> entry : bfsListedNodesMap.entrySet()) {
+                    NodeContainerExecutionResult nodeExecResult = entry.getValue().getFirst();
+                    CopyContentIntoTempFlowNodeExecutionJobManager copyDataIntoTmpFlow =
+                        new CopyContentIntoTempFlowNodeExecutionJobManager(nodeExecResult);
+                    wfm.setJobManager(entry.getKey(), copyDataIntoTmpFlow);
+                }
+                try {
+                    wfm.executeAllAndWaitUntilDoneInterruptibly();
+                } catch (InterruptedException ex) {
+                    throw new RuntimeException(ex);
+                }
+                for (var entry : bfsListedNodesMap.entrySet()) {
+                    wfm.setJobManager(entry.getKey(), entry.getValue().getSecond());
+                }
+
+
+//                wfm.loadExecutionResult(inactiveExecResult, new ExecutionMonitor(), new LoadResult("Inactive Load Result"));
+//                for (ListIterator<NodeID> listIt = bfsListedNodesList.listIterator(); listIt.hasNext();) {
+//                    NodeContainer nc = wfm.getNodeContainer(listIt.next());
+//                    if (nc instanceof SingleNodeContainer) {
+//                        nc.setInternalState(InternalNodeContainerState.EXECUTED);
+//                    } else {
+//                        ((WorkflowManager)nc).resetAllNodesInWFM();
+//                    }
+//                }
+//                getVirtualOutNode().setInternalState(InternalNodeContainerState.EXECUTED);
+                lock.queueCheckForNodeStateChangeNotification(true);
+            }
+        }
+
         if (changed && !m_isPerformingActionCalledFromParent) {
             notifyStateChangeListeners(new NodeStateEvent(this)); // updates port views
         }
@@ -1596,6 +1660,14 @@ public final class SubNodeContainer extends SingleNodeContainer
             result.setWorkflowExecutionResult(innerResult);
             return result;
         }
+    }
+
+    @Override
+    public SubnodeContainerExecutionResult createInactiveExecutionResult() {
+        SubnodeContainerExecutionResult sResult = new SubnodeContainerExecutionResult(getID());
+        sResult.setSuccess(true);
+        sResult.setWorkflowExecutionResult(m_wfm.createInactiveExecutionResult());
+        return sResult;
     }
 
     /** {@inheritDoc} */
@@ -2437,7 +2509,7 @@ public final class SubNodeContainer extends SingleNodeContainer
     /** {@inheritDoc} */
     @Override
     public boolean isInactive() {
-        return getVirtualInNode().isInactive();
+        return getVirtualInNode().isInactive() && getVirtualOutNode().isInactive();
     }
 
     /**
@@ -3105,4 +3177,6 @@ public final class SubNodeContainer extends SingleNodeContainer
         getVirtualOutNode().addNodeStateChangeListener(new RefreshPortNamesListener());
         refreshPortNames();
     }
+
+
 }

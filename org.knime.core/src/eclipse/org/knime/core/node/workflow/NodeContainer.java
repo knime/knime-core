@@ -1678,6 +1678,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
     public abstract NodeContainerExecutionResult createExecutionResult(
             final ExecutionMonitor exec) throws CanceledExecutionException;
 
+    public abstract NodeContainerExecutionResult createInactiveExecutionResult();
 
     /** Saves all information that is held in this abstract NodeContainer
      * into the argument.
