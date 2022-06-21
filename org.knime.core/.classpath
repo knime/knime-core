@@ -8,6 +8,16 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
-	<classpathentry exported="true" kind="lib" path="lib/schemas.jar"/>
+	<classpathentry kind="lib" path="lib/opentelemetry-api-1.15.0.jar"/>
+	<classpathentry kind="lib" path="lib/opentelemetry-context-1.15.0.jar"/>
+	<classpathentry kind="lib" path="lib/opentelemetry-exporter-logging-1.15.0.jar"/>
+	<classpathentry kind="lib" path="lib/opentelemetry-instrumentation-api-1.15.0-alpha.jar"/>
+	<classpathentry kind="lib" path="lib/opentelemetry-sdk-1.15.0.jar"/>
+	<classpathentry kind="lib" path="lib/opentelemetry-sdk-common-1.15.0.jar"/>
+	<classpathentry kind="lib" path="lib/opentelemetry-sdk-logs-1.15.0-alpha.jar"/>
+	<classpathentry kind="lib" path="lib/opentelemetry-sdk-metrics-1.15.0.jar"/>
+	<classpathentry kind="lib" path="lib/opentelemetry-sdk-trace-1.15.0.jar"/>
+	<classpathentry kind="lib" path="lib/opentelemetry-semconv-1.15.0-alpha.jar"/>
+	<classpathentry kind="lib" path="lib/schemas.jar"/>
 	<classpathentry kind="output" path="bin/eclipse"/>
 </classpath>

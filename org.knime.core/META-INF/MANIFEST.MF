@@ -4,7 +4,17 @@ Bundle-Name: KNIME Core API
 Bundle-SymbolicName: org.knime.core;singleton:=true
 Bundle-Version: 4.6.0.qualifier
 Bundle-ClassPath: knime-core.jar,
- lib/schemas.jar
+ lib/schemas.jar,
+ lib/opentelemetry-api-1.15.0.jar,
+ lib/opentelemetry-context-1.15.0.jar,
+ lib/opentelemetry-exporter-logging-1.15.0.jar,
+ lib/opentelemetry-instrumentation-api-1.15.0-alpha.jar,
+ lib/opentelemetry-sdk-1.15.0.jar,
+ lib/opentelemetry-sdk-common-1.15.0.jar,
+ lib/opentelemetry-sdk-logs-1.15.0-alpha.jar,
+ lib/opentelemetry-sdk-metrics-1.15.0.jar,
+ lib/opentelemetry-sdk-trace-1.15.0.jar,
+ lib/opentelemetry-semconv-1.15.0-alpha.jar
 Bundle-Activator: org.knime.core.internal.CorePlugin
 Bundle-Vendor: KNIME AG, Zurich, Switzerland
 Export-Package: log4j,

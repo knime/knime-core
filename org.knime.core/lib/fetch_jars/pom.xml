@@ -1,0 +1,80 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>org.knime.core</groupId>
+	<artifactId>opentelemetry-local-fetch-jars</artifactId>
+	<version>2.4.6</version>
+	<packaging>pom</packaging>
+
+	<name>Jar fetcher for OpenTelemetry artifacts</name>
+	<description>Running the maven goal &quot;package&quot; on this maven project will fetch all jars required for FTP connector tests and put them into the libs/ directory.</description>
+	
+	
+	<!-- NOTE ABOUT DEALING WITH DEPENDENCIES:
+	
+	For *large* dependencies that are *already* part of KNIME we should avoid duplicating
+	them (for small dependencies it is usually not worth the hassle).
+	
+	*Large* in this context means: They contain a lot of classes (e.g. scala-library) or
+	they have a lot of transitive dependencies (e.g. hadoop), or both.
+	
+	How to avoid duplication?
+	
+	Option (1)
+	  Exclude them via build>plugins>plugin(maven-dependency-plugin)>executions>configuration (see at the bottom
+	  of this file).
+	  Pro: This leaves the maven dependency tree intact (for browsing), but prevents them from being copied to the libs/ directory.
+	  Contra: A lot of work when dependencies have themselves have a lot of transitive dependencies, because you need to
+	          exclude them manually too, then.
+	  
+	Option (2):
+	  Exclude them via dependencies>dependency>exclusions.
+	  Pro: Works well for dependencies that themselves have a lot of transitive dependencies.
+	  Contra: Alters the maven dependency tree, which may be confusing.
+	 -->
+
+     <dependencyManagement>
+        <dependencies>
+          <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-bom</artifactId>
+            <version>1.15.0</version>
+            <type>pom</type>
+            <scope>import</scope>
+          </dependency>
+        </dependencies>
+      </dependencyManagement>
+      <dependencies>
+        <dependency>
+          <groupId>io.opentelemetry</groupId>
+          <artifactId>opentelemetry-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-sdk</artifactId>
+          </dependency>
+      </dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<version>3.1.1</version>
+				<executions>
+					<execution>
+						<configuration>
+							<includeScope>runtime</includeScope>
+							<outputDirectory>../</outputDirectory>
+						</configuration>
+						<phase>package</phase>
+						<goals>
+							<goal>copy-dependencies</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+</project>
