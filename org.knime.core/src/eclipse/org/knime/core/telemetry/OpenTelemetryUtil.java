@@ -65,10 +65,15 @@ import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
  */
 public class OpenTelemetryUtil {
 
-    private static final OpenTelemetry INSTANCE = OpenTelemetryUtil.init();
+    /**
+     * This is passed to {@link OpenTelemetry#getTracer(String)} to identify the library that is responsible for
+     * collecting telemetry signals (the instrumenter). The instrumentee is in this case org.knime.core.
+     */
+    public final static String INSTRUMENTATION_LIBRARY = "org.knime.core.telemetry";
 
-    // OTel Tracing API
-    private final Tracer tracer = INSTANCE.getTracer("io.opentelemetry.example.HelloWorldClient");
+    public final static String INSTRUMENTATION_LIBRARY_VERSION = "1.0.0.";
+
+    private static final OpenTelemetry INSTANCE = OpenTelemetryUtil.init();
 
     // Share context via text headers
     private final TextMapPropagator textFormat = INSTANCE.getPropagators().getTextMapPropagator();
@@ -80,11 +85,16 @@ public class OpenTelemetryUtil {
      */
     private static OpenTelemetry init() {
 
+        // Tracer
+
         // Set to process the spans with the LoggingSpanExporter
         LoggingSpanExporter exporter = LoggingSpanExporter.create();
         final SpanProcessor spanProcessor = SimpleSpanProcessor.create(exporter);
-        SdkTracerProvider sdkTracerProvider =
-            SdkTracerProvider.builder().addSpanProcessor(spanProcessor).build();
+        SdkTracerProvider sdkTracerProvider = SdkTracerProvider.builder().addSpanProcessor(spanProcessor).build();
+
+        // a real SdkTracerProvider would probably look more like this
+//        SdkTracerProvider.builder()
+//                .addSpanProcessor(BatchSpanProcessor.builder(OtlpGrpcSpanExporter.builder().build()).build())
 
         OpenTelemetrySdk openTelemetrySdk = OpenTelemetrySdk.builder().setTracerProvider(sdkTracerProvider)
             // install the W3C Trace Context propagator
@@ -102,7 +112,18 @@ public class OpenTelemetryUtil {
         return openTelemetrySdk;
     }
 
+    /**
+     * @return the singleton instance for custom instrumentation
+     */
     public static OpenTelemetry instance() {
         return INSTANCE;
     }
+
+    /**
+     * @return the singleton instance
+     */
+    public static Tracer tracer() {
+        return INSTANCE.getTracer(OpenTelemetryUtil.INSTRUMENTATION_LIBRARY);
+    }
+
 }

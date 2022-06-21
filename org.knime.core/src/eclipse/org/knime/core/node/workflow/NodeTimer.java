@@ -101,7 +101,8 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.telemetry.OpenTelemetryUtil;
+import org.knime.core.telemetry.NodeExecutionSpan;
+import org.knime.core.telemetry.NodeExecutionTracer;
 import org.knime.core.util.EclipseUtil;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -112,7 +113,6 @@ import org.osgi.service.application.ApplicationHandle;
 import org.osgi.service.prefs.Preferences;
 
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.SpanKind;
 
 /**
  * Holds execution timing information about a specific node. It also defines a static global
@@ -146,7 +146,7 @@ public final class NodeTimer {
      * This is either empty or a {@link Span} that is currently running. Is created through {@link #startExec()} and
      * closed in {@link #endExec(boolean)}.
      */
-    private Optional<Span> m_currentSpan = Optional.empty();
+    private Optional<NodeExecutionSpan> m_currentSpan = Optional.empty();
 
     /**
      * Container holding stats for the entire instance and all nodes that have been used/timed.
@@ -795,7 +795,7 @@ public final class NodeTimer {
 
     public static final GlobalNodeStats GLOBAL_TIMER = new GlobalNodeStats();
 
-    private static String getCanonicalName(final NodeContainer nc) {
+    public static String getCanonicalName(final NodeContainer nc) {
         String cname = "NodeContainer";
         if (nc instanceof NativeNodeContainer) {
             NativeNodeContainer node = (NativeNodeContainer)nc;
@@ -866,22 +866,7 @@ public final class NodeTimer {
 
     public void startExec() {
         m_startTime = System.currentTimeMillis();
-        startOpenTelemetrySpan();
-    }
-
-    /**
-     *
-     */
-    private void startOpenTelemetrySpan() {
-        final String instrumentationScopeName = "";
-        Span span = OpenTelemetryUtil.instance()//
-            .getTracer(instrumentationScopeName)//
-            .spanBuilder("helloworld.Greeter/SayHello")//
-            .setSpanKind(SpanKind.CLIENT)//
-            .startSpan();
-        span.setAttribute("component", "grpc");
-        span.setAttribute("rpc.service", "Greeter");
-        m_currentSpan = Optional.of(span);
+        m_currentSpan = Optional.of(NodeExecutionTracer.start(m_parent));
     }
 
     public void endExec(final boolean success) {
@@ -896,17 +881,13 @@ public final class NodeTimer {
             String cname = getCanonicalName(m_parent);
             GLOBAL_TIMER.addExecutionTime(cname, success, m_lastExecutionDuration);
         }
-        m_currentSpan.ifPresent(this::endOpenTelemetrySpan);
+        if (m_currentSpan.isPresent()) {
+            m_currentSpan.get().setSuccess(success);
+            m_currentSpan.get().end();
+            m_currentSpan = Optional.empty();
+        }
         m_lastStartTime = m_startTime;
         m_startTime = -1;
-    }
-
-    /**
-     * @return
-     */
-    private void endOpenTelemetrySpan(final Span span) {
-        span.end();
-        m_currentSpan = Optional.empty();
     }
 
 }
