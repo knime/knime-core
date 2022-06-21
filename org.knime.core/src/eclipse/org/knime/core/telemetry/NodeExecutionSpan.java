@@ -48,14 +48,19 @@
  */
 package org.knime.core.telemetry;
 
+import java.util.Optional;
+
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.workflow.NodeContainer;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.sdk.trace.SpanProcessor;
 
 /**
@@ -83,30 +88,63 @@ public class NodeExecutionSpan {
     /**
      * @see #startExecution(PortObject[])
      */
-    public static final String EVENT_EXECUTION_START = "startExecution";
+    public static final String SPAN_ATTRIBUTE_DATA_IN_ROWS = "data.inport-%s.rows";
 
     /**
-     * @see #startExecution(PortObject[])
+     * @see #submittedToJobManager(String)
      */
-    public static final String EVENT_EXECUTION_START_ATTRIBUTE_DATA_ROWS = "data.inport%s.rows";
+    public static final String SPAN_EVENT_SUBMITTED_TO_JOB_MANAGER = "submittedToJobManager";
 
     /**
-     * @see #stopExecution(PortObject[])
+     * @see #submittedToJobManager(String)
      */
-    public static final String EVENT_EXECUTION_STOP = "stopExecution";
-
-    final Span m_span;
+    public static final String SPAN_EVENT_SUBMITTED_TO_JOB_MANAGER_ATTRIBUTE_CLASS = "jobManagerClass";
 
     /**
-     * Use {@link NodeExecutionTracer#start(NodeContainer)} for convenience.
+     * This is the span that describes the execution of a node from creation of the node context until popping the
+     * NodeContext from the context stack again.
+     */
+    private final Span m_span;
+
+    /**
+     * This is a subspan of this span and covers the period from the start of the node model execution until completion
+     * or abnormal termination. The span is created when calling {@link #startExecution(PortObject[])}. This is expected
+     * to be always present, but in case of exception prior to node model execution it might not.
+     */
+    private Optional<Span> m_executionSpan = Optional.empty();
+
+    /**
+     * This is a subspan of this span and it follows the {@link #m_executionSpan}. It covers the post-processing of the
+     * node models's output data.
+     */
+    private Optional<Span> m_postProcessingSpan = Optional.empty();
+
+    /**
      *
-     * @param span
      */
     public NodeExecutionSpan() {
-        // TODO span scope
-        m_span = OpenTelemetryUtil.tracer().spanBuilder("")//
-            .setSpanKind(SpanKind.CLIENT)//
+        m_span = spanBuilder().startSpan();
+    }
+
+    /**
+     * Use {@link NodeContextTracer#start(NodeContainer)} for convenience.
+     *
+     * @param parentSpan
+     */
+    public NodeExecutionSpan(final NodeExecutionSpan parentSpan) {
+        m_span = spanBuilder()//
+            .setParent(Context.current().with(parentSpan.m_span))//
             .startSpan();
+    }
+
+    /**
+     * @return
+     */
+    private SpanBuilder spanBuilder() {
+        return OpenTelemetryUtil.tracer()//
+            // TODO span scope
+            .spanBuilder("org.knime.core.telemetry.nodeExecutionSpan")//
+            .setSpanKind(SpanKind.CLIENT);
     }
 
     /**
@@ -153,6 +191,12 @@ public class NodeExecutionSpan {
      * collected to be sent as a batch later.
      */
     public void end() {
+        if (m_executionSpan.map(Span::isRecording).orElse(false)) {
+            m_executionSpan.get().end();
+        }
+        if (m_postProcessingSpan.map(Span::isRecording).orElse(false)) {
+            m_executionSpan.get().end();
+        }
         m_span.end();
     }
 
@@ -162,13 +206,12 @@ public class NodeExecutionSpan {
      * @param data the input data for the node model
      */
     public void startExecution(final PortObject[] data) {
-        var attributesBuilder = Attributes.builder();
-        for (int i = 0; i < data.length; i++) {
-            var optionalRows = NodeExecutionTracer.numRows(data[i]);
-            optionalRows.ifPresent(
-                rows -> attributesBuilder.put(String.format(EVENT_EXECUTION_START_ATTRIBUTE_DATA_ROWS, "i"), rows));
-        }
-        m_span.addEvent(EVENT_EXECUTION_START, attributesBuilder.build());
+        var attributesBuilder = NodeContextTracer.rowCountsToAttributes(data,
+            portIndex -> String.format(SPAN_ATTRIBUTE_DATA_IN_ROWS, portIndex));
+        m_executionSpan = Optional.of(spanBuilder()//
+            .setAllAttributes(attributesBuilder.build())//
+            .setParent(Context.current().with(m_span))//
+            .startSpan());
     }
 
     /**
@@ -177,7 +220,48 @@ public class NodeExecutionSpan {
      * @param outData the data computed by the node model
      */
     public void finishExecution(final PortObject[] outData) {
-        m_span.addEvent(EVENT_EXECUTION_STOP);
+        m_executionSpan
+            .orElseThrow(
+                () -> new IllegalStateException("Cannot record execution finish: Execution start was never recorded."))
+            .end();
+    }
+
+    /**
+     * @param outData
+     */
+    public void startPostProcessing(final PortObject[] outData) {
+        m_executionSpan = Optional.of(spanBuilder().setParent(Context.current().with(m_span)).startSpan());
+    }
+
+    /**
+     * @param outData
+     */
+    public void finishPostProcessing(final PortObject[] outData) {
+        m_postProcessingSpan.orElseThrow(() -> new IllegalStateException(
+            "Cannot record postprocessing finish: Postprocessing start was never recorded.")).end();
+    }
+
+    /**
+     * Signals that the execution of the node was cancelled by the user.
+     */
+    public void executionCanceled() {
+        m_executionSpan.orElseThrow(IllegalStateException::new).setStatus(StatusCode.OK, "Canceled");
+    }
+
+    /**
+     * @param e
+     */
+    public void setExecutionException(final Exception e) {
+        m_executionSpan.orElseThrow(IllegalStateException::new).setStatus(StatusCode.ERROR).setAttribute("Exception",
+            e.toString());
+    }
+
+    /**
+     * @param name
+     */
+    public void submittedToJobManager(final String jobManagerClassName) {
+        m_span.addEvent(SPAN_EVENT_SUBMITTED_TO_JOB_MANAGER, Attributes.of(AttributeKey.stringKey(SPAN_EVENT_SUBMITTED_TO_JOB_MANAGER_ATTRIBUTE_CLASS), jobManagerClassName));
+
     }
 
 }

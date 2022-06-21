@@ -57,8 +57,8 @@ import java.util.stream.Collectors;
 
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.telemetry.NodeContextTracer;
 import org.knime.core.telemetry.NodeExecutionSpan;
-import org.knime.core.telemetry.NodeExecutionTracer;
 
 /**
  * A {@link NodeContext} holds information about the context in which an operation on a node is executed. This is used
@@ -101,7 +101,7 @@ public final class NodeContext {
     private final WeakReference<Object> m_contextObjectRef;
 
     /**
-     * This is can be used to generate telemetry signals, such as a node start event.
+     * This is can be used to generate telemetry signals, such as capturing the time it takes to execute the node model.
      */
     private final NodeExecutionSpan m_nodeExecutionSpan;
 
@@ -134,7 +134,13 @@ public final class NodeContext {
         if (KNIMEConstants.ASSERTIONS_ENABLED) {
             m_fullStackTraceAtConstructionTime = getStackTrace();
         }
-        m_nodeExecutionSpan = NodeExecutionTracer.start(contextObject);
+        var parentContext = Optional.ofNullable(getContextStack().peek());
+        if(parentContext.isEmpty()) {
+            m_nodeExecutionSpan = new NodeExecutionSpan();
+        } else {
+            m_nodeExecutionSpan = new NodeExecutionSpan(parentContext.get().getTelemetry());
+        }
+        NodeContextTracer.addContextInfo(m_nodeExecutionSpan, contextObject);
     }
 
     private static String getStackTrace() {
@@ -292,6 +298,7 @@ public final class NodeContext {
         if (stack.isEmpty()) {
             throw new IllegalStateException("No node context registered with the current thread");
         } else {
+            stack.peek().m_nodeExecutionSpan.end();
             stack.pop();
         }
     }
@@ -420,7 +427,7 @@ public final class NodeContext {
     /**
      * @return
      */
-    public org.knime.core.telemetry.NodeExecutionSpan getNodeExecutionSpan() {
+    public org.knime.core.telemetry.NodeExecutionSpan getTelemetry() {
         return m_nodeExecutionSpan;
     }
 }

@@ -89,6 +89,7 @@ import org.knime.core.node.workflow.changes.TrackedChanges;
 import org.knime.core.node.workflow.def.DefToCoreUtil;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
+import org.knime.core.telemetry.NodeExecutionSpan;
 import org.knime.shared.workflow.def.BaseNodeDef;
 import org.knime.shared.workflow.def.NodeLocksDef;
 
@@ -502,7 +503,11 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
             // queue job if state change was successful
             NodeExecutionJobManager jobManager = findJobManager();
             NodeContext.pushContext(this);
+
+            final NodeExecutionSpan telemetry = NodeContext.getContext().getTelemetry();
+
             try {
+                telemetry.submittedToJobManager(jobManager.getClass().getName());
                 NodeExecutionJob job = jobManager.submitJob(this, inData);
                 setExecutionJob(job);
             } catch (Throwable t) {

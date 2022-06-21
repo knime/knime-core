@@ -542,7 +542,7 @@ public abstract class NodeModel implements ViewableModel {
 
         executeModelCheckInput(data);
 
-        NodeExecutionSpan telemetry = NodeContext.getContext().getNodeExecutionSpan();
+        NodeExecutionSpan telemetry = NodeContext.getContext().getTelemetry();
 
         // temporary storage for result of derived model.
         // EXECUTE DERIVED MODEL
@@ -551,7 +551,6 @@ public abstract class NodeModel implements ViewableModel {
             if (!exEnv.reExecute()) {
                 telemetry.startExecution(data);
                 outData = execute(data, exec);
-                telemetry.finishExecution(outData);
             } else {
                 if (this instanceof ReExecutable) {
                     @SuppressWarnings("rawtypes")
@@ -569,15 +568,20 @@ public abstract class NodeModel implements ViewableModel {
 
             // if execution was canceled without exception flying return false
             if (exec.isCanceled()) {
+                telemetry.executionCanceled();
                 throw new CanceledExecutionException("Result discarded due to user cancel");
             }
         } catch (Exception e) {
             // clear local tables (which otherwise would continue to block resources)
             exec.onCancel();
+            telemetry.setExecutionException(e);
             throw e;
         }
+        telemetry.finishExecution(outData);
 
+        telemetry.startPostProcessing(outData);
         outData = executeModelPostProcessOutput(data, outData, exec);
+        telemetry.finishPostProcessing(outData);
 
         // last iteration in loop end node...
         if (this instanceof LoopEndNode && getLoopContext() == null

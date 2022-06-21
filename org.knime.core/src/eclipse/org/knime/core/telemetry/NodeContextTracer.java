@@ -50,6 +50,7 @@ package org.knime.core.telemetry;
 
 import java.util.Optional;
 import java.util.OptionalLong;
+import java.util.function.Function;
 
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.port.PortObject;
@@ -57,11 +58,14 @@ import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.SubNodeContainer;
 
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.AttributesBuilder;
+
 /**
  *
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  */
-public class NodeExecutionTracer {
+public class NodeContextTracer {
 
     /**
      *
@@ -69,11 +73,11 @@ public class NodeExecutionTracer {
     public static final String ROOT_CONTEXT = "org.knime.core.NodeContext.ROOT";
 
     /**
-     * @param contextObject
-     * @return
+     * Extract info from org.knime.core specific objects and add it to the given span.
+     * @param nes the span to add attributes to
+     * @param contextObject provides, e.g., node name, factory, etc.
      */
-    public static NodeExecutionSpan start(final Object contextObject) {
-        var nes = new NodeExecutionSpan();
+    public static void addContextInfo(final NodeExecutionSpan nes, final Object contextObject) {
         if(contextObject instanceof NodeContainer) {
             NodeContainer nodeContainer = (NodeContainer)contextObject;
             nes.setNodeContext(getNodeName(nodeContainer));
@@ -84,7 +88,6 @@ public class NodeExecutionTracer {
         } else {
             nes.setNodeContext(ROOT_CONTEXT);
         }
-        return nes;
     }
 
     private static Optional<String> getNodeFactory(final NodeContainer nodeContainer) {
@@ -103,6 +106,22 @@ public class NodeExecutionTracer {
         } else {
             return "NodeContainer";
         }
+    }
+
+    /**
+     * @param data
+     * @param keyGenerator
+     * @return
+     */
+    public static AttributesBuilder rowCountsToAttributes(final PortObject[] data,
+        final Function<Integer, String> keyGenerator) {
+        var attributesBuilder = Attributes.builder();
+        for (int i = 0; i < data.length; i++) {
+            final int portIndex = i;
+            var optionalRows = NodeContextTracer.numRows(data[i]);
+            optionalRows.ifPresent(rows -> attributesBuilder.put(keyGenerator.apply(portIndex), rows));
+        }
+        return attributesBuilder;
     }
 
     /**

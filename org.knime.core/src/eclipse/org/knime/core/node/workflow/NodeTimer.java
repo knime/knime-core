@@ -60,7 +60,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Optional;
 
 import javax.json.Json;
 import javax.json.JsonArray;
@@ -101,7 +100,6 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.telemetry.NodeExecutionTracer;
 import org.knime.core.util.EclipseUtil;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -786,7 +784,7 @@ public final class NodeTimer {
 
     public static final GlobalNodeStats GLOBAL_TIMER = new GlobalNodeStats();
 
-    public static String getCanonicalName(final NodeContainer nc) {
+    private static String getCanonicalName(final NodeContainer nc) {
         String cname = "NodeContainer";
         if (nc instanceof NativeNodeContainer) {
             NativeNodeContainer node = (NativeNodeContainer)nc;
