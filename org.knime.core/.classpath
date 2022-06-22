@@ -2,6 +2,14 @@
 <classpath>
 	<classpathentry kind="src" path="src/eclipse"/>
 	<classpathentry kind="src" output="bin/xmlbeans" path="src/xmlbeans"/>
+	<classpathentry exported="true" kind="lib" path="lib/annotations-13.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/kotlin-stdlib-1.4.10.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/kotlin-stdlib-common-1.4.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/okhttp-4.9.3.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/okio-2.8.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/opentelemetry-exporter-otlp-1.15.0.jar" sourcepath="/tmp/.org.sf.feeling.decompiler1655815579100/source/opentelemetry-exporter-otlp-1.15.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/opentelemetry-exporter-otlp-common-1.15.0.jar" sourcepath="/tmp/.org.sf.feeling.decompiler1655815579100/source/opentelemetry-exporter-otlp-common-1.15.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/opentelemetry-sdk-logs-1.15.0-alpha.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-11">
 		<attributes>
 			<attribute name="module" value="true"/>
@@ -10,11 +18,8 @@
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
 	<classpathentry kind="lib" path="lib/opentelemetry-api-1.15.0.jar"/>
 	<classpathentry kind="lib" path="lib/opentelemetry-context-1.15.0.jar"/>
-	<classpathentry kind="lib" path="lib/opentelemetry-exporter-logging-1.15.0.jar"/>
-	<classpathentry kind="lib" path="lib/opentelemetry-instrumentation-api-1.15.0-alpha.jar"/>
 	<classpathentry kind="lib" path="lib/opentelemetry-sdk-1.15.0.jar"/>
 	<classpathentry kind="lib" path="lib/opentelemetry-sdk-common-1.15.0.jar"/>
-	<classpathentry kind="lib" path="lib/opentelemetry-sdk-logs-1.15.0-alpha.jar"/>
 	<classpathentry kind="lib" path="lib/opentelemetry-sdk-metrics-1.15.0.jar"/>
 	<classpathentry kind="lib" path="lib/opentelemetry-sdk-trace-1.15.0.jar"/>
 	<classpathentry kind="lib" path="lib/opentelemetry-semconv-1.15.0-alpha.jar"/>

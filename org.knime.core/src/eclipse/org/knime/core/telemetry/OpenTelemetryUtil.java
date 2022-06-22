@@ -48,15 +48,18 @@
  */
 package org.knime.core.telemetry;
 
+import java.util.concurrent.TimeUnit;
+
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapPropagator;
-import io.opentelemetry.exporter.logging.LoggingSpanExporter;
+import io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporter;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import io.opentelemetry.sdk.trace.SpanProcessor;
+import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 
 /**
@@ -88,25 +91,26 @@ public class OpenTelemetryUtil {
         // Tracer
 
         // Set to process the spans with the LoggingSpanExporter
-        LoggingSpanExporter exporter = LoggingSpanExporter.create();
-        final SpanProcessor spanProcessor = SimpleSpanProcessor.create(exporter);
-        SdkTracerProvider sdkTracerProvider = SdkTracerProvider.builder().addSpanProcessor(spanProcessor).build();
+
+        String url = "http://34.244.92.255:4318/v1/traces";
+        OtlpHttpSpanExporter exporter = OtlpHttpSpanExporter.builder().setEndpoint(url).setTimeout(30, TimeUnit.SECONDS).build();
 
         // a real SdkTracerProvider would probably look more like this
-//        SdkTracerProvider.builder()
-//                .addSpanProcessor(BatchSpanProcessor.builder(OtlpGrpcSpanExporter.builder().build()).build())
+        SpanProcessor batchProcessor = BatchSpanProcessor.builder(exporter).build();
+        SpanProcessor spimpleProc = SimpleSpanProcessor.create(exporter);
+        SdkTracerProvider tracerProvider = SdkTracerProvider.builder().addSpanProcessor(spimpleProc).build();
 
-        OpenTelemetrySdk openTelemetrySdk = OpenTelemetrySdk.builder().setTracerProvider(sdkTracerProvider)
+        OpenTelemetrySdk openTelemetrySdk = OpenTelemetrySdk.builder().setTracerProvider(tracerProvider)
             // install the W3C Trace Context propagator
             .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance())).build();
 
         // it's always a good idea to shutdown the SDK when your process exits.
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             System.err.println("*** forcing the Span Exporter to shutdown and process the remaining spans");
-            sdkTracerProvider.shutdown();
+            tracerProvider.shutdown();
             System.err.println("*** Trace Exporter shut down");
             exporter.close();
-            spanProcessor.close();
+            batchProcessor.close();
         }));
 
         return openTelemetrySdk;
