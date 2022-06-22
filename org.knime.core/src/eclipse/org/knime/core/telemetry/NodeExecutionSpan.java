@@ -230,7 +230,7 @@ public class NodeExecutionSpan {
      * @param outData
      */
     public void startPostProcessing(final PortObject[] outData) {
-        m_executionSpan = Optional.of(spanBuilder().setParent(Context.current().with(m_span)).startSpan());
+        m_postProcessingSpan = Optional.of(spanBuilder().setParent(Context.current().with(m_span)).startSpan());
     }
 
     /**
