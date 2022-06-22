@@ -206,6 +206,8 @@ import org.knime.core.node.workflow.virtual.parchunk.VirtualParallelizedChunkPor
 import org.knime.core.quickform.AbstractQuickFormConfiguration;
 import org.knime.core.quickform.AbstractQuickFormValueInConfiguration;
 import org.knime.core.quickform.in.QuickFormInputNode;
+import org.knime.core.telemetry.OpenTelemetryUtil;
+import org.knime.core.telemetry.WorkflowSessionSpan;
 import org.knime.core.util.CheckedExceptionBiConsumer;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.IEarlyStartup;
@@ -381,6 +383,11 @@ public final class WorkflowManager extends NodeContainer
     private ExecutionController m_executionController;
 
     /**
+     * Handler to generate telemetry signals, such as to report the time it took loading a workflow.
+     */
+    private final WorkflowSessionSpan m_workflowSessionSpan;
+
+    /**
      * The root of everything, a workflow with no in- or outputs. This workflow holds the top level projects.
      */
     public static final WorkflowManager ROOT = new WorkflowManager(null, null, NodeID.ROOTID, new PortType[0],
@@ -418,6 +425,9 @@ public final class WorkflowManager extends NodeContainer
         executeEarlyStartup();
     }
 
+    /**
+     * Run all extensions registered at early start up extension point.
+     */
     private static void executeEarlyStartup() {
         String extPointId = "org.knime.core.EarlyStartup";
         IExtensionRegistry registry = Platform.getExtensionRegistry();
@@ -425,11 +435,14 @@ public final class WorkflowManager extends NodeContainer
         assert point != null : "Invalid extension point id: " + extPointId;
 
         Iterator<IConfigurationElement> it =
-            Stream.of(point.getExtensions()).flatMap(ext -> Stream.of(ext.getConfigurationElements())).iterator();
+            Stream.of(point.getExtensions())//
+            .flatMap(ext -> Stream.of(ext.getConfigurationElements()))//
+            .iterator();
         while (it.hasNext()) {
             IConfigurationElement e = it.next();
             try {
                 ((IEarlyStartup)e.createExecutableExtension("class")).run();
+                OpenTelemetryUtil.getKnimeSessionSpan().earlyStartupFinished(e.getName());
             } catch (CoreException ex) {
                 LOGGER.error("Could not create early startup object od class '" + e.getAttribute("class") + "' "
                     + "from plug-in '" + e.getContributor().getName() + "': " + ex.getMessage(), ex);
@@ -465,6 +478,9 @@ public final class WorkflowManager extends NodeContainer
         final String name, final Optional<WorkflowDataRepository> dataRepositoryOptional,
         final Optional<NodeAnnotation> nodeAnno) {
         super(parent, id, nodeAnno.orElse(null));
+
+        m_workflowSessionSpan = new WorkflowSessionSpan(name);
+
         m_directNCParent = assertParentAssignments(directNCParent, parent);
         m_workflow = new Workflow(this, id);
         m_inPorts = new WorkflowInPort[inTypes.length];
@@ -505,6 +521,7 @@ public final class WorkflowManager extends NodeContainer
             lock.queueCheckForNodeStateChangeNotification(false); // get default state right
         }
         LOGGER.debug("Created subworkflow " + this.getID());
+        Optional.ofNullable(m_workflowContext).ifPresent(m_workflowSessionSpan::setWorkflowContext);
     }
 
     private NodeContainerParent assertParentAssignments(final NodeContainerParent directNCParent,
@@ -547,6 +564,9 @@ public final class WorkflowManager extends NodeContainer
     WorkflowManager(final NodeContainerParent directNCParent, final WorkflowManager parent, final NodeID id,
         final WorkflowPersistor persistor, final WorkflowDataRepository workflowDataRepository) {
         super(parent, id, persistor.getMetaPersistor());
+
+        m_workflowSessionSpan = new WorkflowSessionSpan(persistor.getName());
+
         m_directNCParent = assertParentAssignments(directNCParent, parent);
         ReferencedFile ncDir = super.getNodeContainerDirectory();
         final boolean isProject = persistor.isProject();
@@ -629,6 +649,8 @@ public final class WorkflowManager extends NodeContainer
     WorkflowManager(final NodeContainerParent directNCParent, final WorkflowManager parent, final NodeID id,
         final boolean isProject, final BaseNodeDef baseNodeDef, final WorkflowDef workflowDef) {
         super(parent, id, baseNodeDef);
+
+        m_workflowSessionSpan = new WorkflowSessionSpan(workflowDef.getName());
 
         m_directNCParent = assertParentAssignments(directNCParent, parent);
         m_credentialsStore = new CredentialsStore(this);
@@ -8430,7 +8452,9 @@ public final class WorkflowManager extends NodeContainer
         }
         try {
             FileWorkflowPersistor persistor = createLoadPersistor(directory, loadHelper);
-            return load(persistor, exec, keepNodeMessages);
+            final WorkflowLoadResult loadResult = load(persistor, exec, keepNodeMessages);
+            m_workflowSessionSpan.finishedLoading();
+            return loadResult;
         } finally {
             if (!isTemplate) {
                 rootFile.fileUnlockRootForVM();
@@ -9892,6 +9916,7 @@ public final class WorkflowManager extends NodeContainer
             }
 
             m_dataRepository = null;
+            m_workflowSessionSpan.end();
         }
     }
 
@@ -10901,5 +10926,12 @@ public final class WorkflowManager extends NodeContainer
     @Override
     public boolean isInactive() {
         return false;
+    }
+
+    /**
+     * @return
+     */
+    protected WorkflowSessionSpan getWorkflowSessionSpan(){
+        return m_workflowSessionSpan;
     }
 }

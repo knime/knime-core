@@ -56,6 +56,7 @@ import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.exporter.jaeger.JaegerGrpcSpanExporter;
+import io.opentelemetry.exporter.logging.LoggingSpanExporter;
 import io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporter;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.resources.Resource;
@@ -81,6 +82,8 @@ public class OpenTelemetryUtil {
 
     private static final OpenTelemetry INSTANCE = OpenTelemetryUtil.initLocal();
 
+    private static final KnimeSessionSpan KNIME_SESSION_SPAN = new KnimeSessionSpan(null);
+
     private static OpenTelemetry initLocal() {
         //        final InMemorySpanExporter testExporter = InMemorySpanExporter.create();
 
@@ -89,9 +92,12 @@ public class OpenTelemetryUtil {
             .setTimeout(5, TimeUnit.SECONDS)//
             .build();
 
+        final LoggingSpanExporter loggingSpanExporter = LoggingSpanExporter.create();
+        final var logSpanProcessor = SimpleSpanProcessor.create(loggingSpanExporter);
         final var spanProcessor = BatchSpanProcessor.builder(exporter).build();
         SdkTracerProvider sdkTracerProvider = SdkTracerProvider.builder()//
             .addSpanProcessor(spanProcessor)//
+            .addSpanProcessor(logSpanProcessor)//
             .build();
 
         OpenTelemetrySdk openTelemetrySdk = OpenTelemetrySdk.builder()//
@@ -101,10 +107,15 @@ public class OpenTelemetryUtil {
 
         // it's always a good idea to shutdown the SDK when your process exits.
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+
+            // the KNIME session lasts until the process end.
+            KNIME_SESSION_SPAN.end();
+
             System.err.println("*** forcing the Span Exporter to shutdown and process the remaining spans");
             sdkTracerProvider.shutdown();
             System.err.println("*** Trace Exporter shut down");
             exporter.close();
+            loggingSpanExporter.close();
             spanProcessor.close();
         }));
 
@@ -121,7 +132,8 @@ public class OpenTelemetryUtil {
         // Tracer
 
         String url = "http://34.244.92.255:4318/v1/traces";
-        OtlpHttpSpanExporter exporter = OtlpHttpSpanExporter.builder().setEndpoint(url).setTimeout(30, TimeUnit.SECONDS).build();
+        OtlpHttpSpanExporter exporter =
+            OtlpHttpSpanExporter.builder().setEndpoint(url).setTimeout(30, TimeUnit.SECONDS).build();
 
         SpanProcessor batchProcessor = BatchSpanProcessor.builder(exporter).build();
         SpanProcessor spimpleProc = SimpleSpanProcessor.create(exporter);
@@ -133,19 +145,19 @@ public class OpenTelemetryUtil {
                 .setResource(Resource.create(at)).build();
 
         OpenTelemetrySdk openTelemetrySdk = OpenTelemetrySdk.builder().setTracerProvider(tracerProvider)
-                // install the W3C Trace Context propagator
-                .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance())).build();
+            // install the W3C Trace Context propagator
+            .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance())).build();
 
-            // it's always a good idea to shutdown the SDK when your process exits.
-            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                System.err.println("*** forcing the Span Exporter to shutdown and process the remaining spans");
+        // it's always a good idea to shutdown the SDK when your process exits.
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.err.println("*** forcing the Span Exporter to shutdown and process the remaining spans");
             tracerProvider.shutdown();
-                System.err.println("*** Trace Exporter shut down");
-                exporter.close();
+            System.err.println("*** Trace Exporter shut down");
+            exporter.close();
             batchProcessor.close();
-            }));
+        }));
 
-            return openTelemetrySdk;
+        return openTelemetrySdk;
 
     }
 
@@ -161,6 +173,15 @@ public class OpenTelemetryUtil {
      */
     public static Tracer tracer() {
         return INSTANCE.getTracer(OpenTelemetryUtil.INSTRUMENTATION_LIBRARY);
+    }
+
+    /**
+     * @return the singleton span that covers the lifetime of this analytics platform. This is used as parent span for
+     *         all {@link WorkflowSessionSpan}s.
+     *
+     */
+    public static KnimeSessionSpan getKnimeSessionSpan() {
+        return KNIME_SESSION_SPAN;
     }
 
 }

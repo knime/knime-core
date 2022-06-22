@@ -113,6 +113,9 @@ public abstract class NodeExecutionJob implements Runnable {
         }
 
         NodeContext.pushContext(m_nc);
+        // TODO
+//        NodeContext.getContext().createTelemetry();
+
         try {
            internalRun();
         } finally {

@@ -60,6 +60,7 @@ import org.knime.core.node.workflow.SubNodeContainer;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.trace.Span;
 
 /**
  *
@@ -75,10 +76,10 @@ public class NodeContextTracer {
     /**
      * @param contextObject this is typically a {@link NodeContainer} but can be something else in case of remote
      *            workflow editor
-     * @param parentSpan nullable span that contains this span.
+     * @param parentSpan nullable span that becomes the parent span of the created span
      * @return object that has convenience methods to emit KNIME telemetry events
      */
-    public static NodeExecutionSpan createSpan(final Object contextObject, final NodeExecutionSpan parentSpan) {
+    public static NodeExecutionSpan createSpan(final Object contextObject, final Span parentSpan) {
         NodeExecutionSpan result;
         if (contextObject instanceof NodeContainer) {
             NodeContainer nodeContainer = (NodeContainer)contextObject;
