@@ -57,8 +57,7 @@ import java.util.stream.Collectors;
 
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.telemetry.NodeExecutionSpan;
-import org.knime.core.telemetry.WorkflowSessionSpan;
+import org.knime.core.telemetry.NodeExecutionTelemetry;
 
 /**
  * A {@link NodeContext} holds information about the context in which an operation on a node is executed. This is used
@@ -100,13 +99,6 @@ public final class NodeContext {
 
     private final WeakReference<Object> m_contextObjectRef;
 
-    /**
-     * This is can be used to generate telemetry signals, such as capturing the time it takes to execute the node model.
-     * It is an optional field, because node context is also used during loading nodes. After pushing the node context
-     * for execution, call {@link #createTelemetry(WorkflowSessionSpan)} to create an instance.
-     */
-    private final Optional<NodeExecutionSpan> m_telemetry;
-
     // This was originally static final, constructed here - now you should use getNoContext().  See  https://knime-com.atlassian.net/browse/AP-12159
     private static NodeContext NO_CONTEXT = null;
 
@@ -133,11 +125,6 @@ public final class NodeContext {
 
     private NodeContext(final Object contextObject) {
         m_contextObjectRef = new WeakReference<Object>(contextObject);
-        if(contextObject instanceof NativeNodeContainer) {
-            m_telemetry = Optional.of(((NativeNodeContainer)contextObject).getNodeExecutionSpan());
-        } else {
-            m_telemetry = Optional.empty();
-        }
         if (KNIMEConstants.ASSERTIONS_ENABLED) {
             m_fullStackTraceAtConstructionTime = getStackTrace();
         }
@@ -298,7 +285,6 @@ public final class NodeContext {
         if (stack.isEmpty()) {
             throw new IllegalStateException("No node context registered with the current thread");
         } else {
-            stack.peek().m_telemetry.ifPresent(NodeExecutionSpan::end);
             stack.pop();
         }
     }
@@ -424,29 +410,17 @@ public final class NodeContext {
         }
     }
 
-//    public NodeExecutionSpan createTelemetry() {
-//        return createTelemetry(null);
-//    }
-//
-//    public NodeExecutionSpan createTelemetry(final WorkflowSessionSpan workflowSpan) {
-//        Span parentSpan;
-//        if(workflowSpan == null) {
-//            // if no workflow span is given, take the parent span from the stack
-//            // this means that createTelemetry with non-null workflowSpan has been called before
-//            parentSpan = getContextStack().peek().getTelemetry().get().getSpan();
-//        } else {
-//            parentSpan = workflowSpan.getSpan();
-//        }
-//
-//        m_telemetry = Optional.of(NodeContextTracer.createSpan(getContextObject(), parentSpan));
-//
-//        return m_telemetry.get();
-//    }
-
     /**
-     * @return
+     * @return a telemetry generator if the current context is an instance of a {@link NativeNodeContainer}
      */
-    public Optional<NodeExecutionSpan> getTelemetry() {
-        return m_telemetry;
+    public Optional<NodeExecutionTelemetry> getNativeNodeTelemetry() {
+        var contextObject = Optional.ofNullable(getContextObject());
+        if (contextObject.isPresent()) {
+            if (contextObject.get() instanceof NativeNodeContainer) {
+                return Optional.of(((NativeNodeContainer)contextObject.get()).getTelemetry());
+            }
+        }
+        return Optional.empty();
     }
+
 }

@@ -521,7 +521,13 @@ public final class WorkflowManager extends NodeContainer
             lock.queueCheckForNodeStateChangeNotification(false); // get default state right
         }
         LOGGER.debug("Created subworkflow " + this.getID());
+
+        // Telemetry
         Optional.ofNullable(m_workflowContext).ifPresent(m_workflowSessionSpan::setWorkflowContext);
+        // if this is the root workflow manager, it is not loaded, just created
+        if (parent == null) {
+            m_workflowSessionSpan.finishedLoading();
+        }
     }
 
     private NodeContainerParent assertParentAssignments(final NodeContainerParent directNCParent,
@@ -9916,6 +9922,7 @@ public final class WorkflowManager extends NodeContainer
             }
 
             m_dataRepository = null;
+            // Telemetry
             m_workflowSessionSpan.end();
         }
     }

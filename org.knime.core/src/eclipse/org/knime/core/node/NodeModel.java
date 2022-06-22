@@ -541,14 +541,16 @@ public abstract class NodeModel implements ViewableModel {
 
         executeModelCheckInput(data);
 
-        var telemetry = NodeContext.getContext().getTelemetry().get();
+        var telemetry = NodeContext.getContext().getNativeNodeTelemetry()
+            .orElseThrow(() -> new IllegalStateException("Context is not a native node model"));
+        var nodeExecutionSpan = telemetry.startExecution();
 
         // temporary storage for result of derived model.
         // EXECUTE DERIVED MODEL
         PortObject[] outData;
         try {
             if (!exEnv.reExecute()) {
-                telemetry.startExecution(data);
+                nodeExecutionSpan.startExecution(data);
                 outData = execute(data, exec);
             } else {
                 if (this instanceof ReExecutable) {
@@ -567,20 +569,20 @@ public abstract class NodeModel implements ViewableModel {
 
             // if execution was canceled without exception flying return false
             if (exec.isCanceled()) {
-                telemetry.executionCanceled();
+                nodeExecutionSpan.executionCanceled();
                 throw new CanceledExecutionException("Result discarded due to user cancel");
             }
         } catch (Exception e) {
             // clear local tables (which otherwise would continue to block resources)
             exec.onCancel();
-            telemetry.setExecutionException(e);
+            nodeExecutionSpan.setExecutionException(e);
             throw e;
         }
-        telemetry.finishExecution(outData);
+        nodeExecutionSpan.finishExecution(outData);
 
-        telemetry.startPostProcessing(outData);
+        nodeExecutionSpan.startPostProcessing(outData);
         outData = executeModelPostProcessOutput(data, outData, exec);
-        telemetry.finishPostProcessing(outData);
+        nodeExecutionSpan.finishPostProcessing(outData);
 
         // last iteration in loop end node...
         if (this instanceof LoopEndNode && getLoopContext() == null
@@ -594,6 +596,7 @@ public abstract class NodeModel implements ViewableModel {
         PortObject[] rawOutData = new PortObject[getNrOutPorts() + 1];
         rawOutData[0] = FlowVariablePortObject.INSTANCE;
         System.arraycopy(outData, 0, rawOutData, 1, outData.length);
+        telemetry.stopExecution();
         return rawOutData;
     } // executeModel(PortObject[],ExecutionMonitor)
 

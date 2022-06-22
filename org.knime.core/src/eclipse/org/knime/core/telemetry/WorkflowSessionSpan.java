@@ -106,17 +106,17 @@ public class WorkflowSessionSpan extends OpenTelemetrySpanHolder {
         m_loadSpan = subSpanBuilder(WORKFLOW_LOAD_OPERATION_NAME.apply(m_workflowName)).startSpan();
     }
 
-    /**
-     * Adds an attribute to this workflow session span. This might not be called if no appropriate workflow name is
-     * available.
-     *
-     * @param name the name of the workflow
-     * @return this for fluent API
-     */
-    public WorkflowSessionSpan setWorkflowName(final String name) {
-        getSpan().setAttribute(SPAN_ATTRIBUTE_WORKFLOW_NAME, name);
-        return this;
-    }
+//    /**
+//     * Adds an attribute to this workflow session span. This might not be called if no appropriate workflow name is
+//     * available.
+//     *
+//     * @param name the name of the workflow
+//     * @return this for fluent API
+//     */
+//    public WorkflowSessionSpan setWorkflowName(final String name) {
+//        getSpan().setAttribute(SPAN_ATTRIBUTE_WORKFLOW_NAME, name);
+//        return this;
+//    }
 
     /**
      * Marks the end of the workflow loading process.

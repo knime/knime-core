@@ -113,6 +113,7 @@ import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeInOut;
 import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeInputNodeModel;
 import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeOutputNodeModel;
 import org.knime.core.telemetry.NodeExecutionSpan;
+import org.knime.core.telemetry.NodeExecutionTelemetry;
 import org.knime.shared.workflow.def.BaseNodeDef;
 import org.knime.shared.workflow.def.NativeNodeDef;
 import org.w3c.dom.Element;
@@ -129,7 +130,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
     /** my logger. */
     private static final NodeLogger LOGGER = NodeLogger.getLogger(NativeNodeContainer.class);
 
-    private final NodeExecutionSpan m_nodeExecutionSpan;
+    private final NodeExecutionTelemetry m_telemetry;
 
     /** underlying node. */
     private final Node m_node;
@@ -165,7 +166,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
      */
     NativeNodeContainer(final WorkflowManager parent, final Node n, final NodeID id) {
         super(parent, id);
-        m_nodeExecutionSpan = new NodeExecutionSpan(n.getName(), parent.getWorkflowSessionSpan().getSpan());
+        m_telemetry = new NodeExecutionTelemetry(n.getName(), parent.getWorkflowSessionSpan());
         m_node = n;
         setPortNames();
         m_node.addMessageListener(new UnderlyingNodeMessageListener());
@@ -181,7 +182,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
     NativeNodeContainer(final WorkflowManager parent, final NodeID id, final NativeNodeContainerPersistor persistor) {
         super(parent, id, persistor.getMetaPersistor());
         m_node = persistor.getNode();
-        m_nodeExecutionSpan = new NodeExecutionSpan(m_node.getName(), parent.getWorkflowSessionSpan().getSpan());
+        m_telemetry = new NodeExecutionTelemetry(persistor.getNode().getName(), parent.getWorkflowSessionSpan());
         if (getInternalState().isExecuted()) {
             m_nodeAndBundleInformation = persistor.getNodeAndBundleInformation();
         }
@@ -202,7 +203,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
     NativeNodeContainer(final WorkflowManager parent, final NodeID id, final NativeNodeDef def) {
         super(parent, id, def);
         m_node = DefToCoreUtil.toNode(def);
-        m_nodeExecutionSpan = new NodeExecutionSpan(m_node.getName(), parent.getWorkflowSessionSpan().getSpan());
+        m_telemetry = new NodeExecutionTelemetry(m_node.getName(), parent.getWorkflowSessionSpan());
         CheckUtils.checkNotNull(m_node, "%s did not provide Node instance for %s with id \"%s\"",
             def.getNodeName(), getClass().getSimpleName(), id);
         setPortNames();
@@ -1450,9 +1451,9 @@ public class NativeNodeContainer extends SingleNodeContainer {
     }
 
     /**
-     * @return the nodeExecutionSpan
+     * @return a reusable object that can be used to generate {@link NodeExecutionSpan}s.
      */
-    public NodeExecutionSpan getNodeExecutionSpan() {
-        return m_nodeExecutionSpan;
+    NodeExecutionTelemetry getTelemetry() {
+        return m_telemetry;
     }
 }
