@@ -125,9 +125,12 @@ public class OpenTelemetryUtil {
 
         SpanProcessor batchProcessor = BatchSpanProcessor.builder(exporter).build();
         SpanProcessor spimpleProc = SimpleSpanProcessor.create(exporter);
+        Attributes at = Attributes.of(
+                    ResourceAttributes.SERVICE_NAME, "org.knime.executor",
+                    ResourceAttributes.SERVICE_INSTANCE_ID, UUID.randomUUID() + "@" + System.getProperty("hostname")
+                );
         SdkTracerProvider tracerProvider = SdkTracerProvider.builder().addSpanProcessor(spimpleProc)
-                .setResource(Resource.create(Attributes.of(ResourceAttributes.SERVICE_NAME, "org.knime.node.execution")))
-                . build();
+                .setResource(Resource.create(at)).build();
 
         OpenTelemetrySdk openTelemetrySdk = OpenTelemetrySdk.builder().setTracerProvider(tracerProvider)
                 // install the W3C Trace Context propagator
