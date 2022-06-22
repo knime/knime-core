@@ -134,13 +134,10 @@ public final class NodeContext {
         if (KNIMEConstants.ASSERTIONS_ENABLED) {
             m_fullStackTraceAtConstructionTime = getStackTrace();
         }
-        var parentContext = Optional.ofNullable(getContextStack().peek());
-        if(parentContext.isEmpty()) {
-            m_nodeExecutionSpan = new NodeExecutionSpan();
-        } else {
-            m_nodeExecutionSpan = new NodeExecutionSpan(parentContext.get().getTelemetry());
-        }
-        NodeContextTracer.addContextInfo(m_nodeExecutionSpan, contextObject);
+
+        // init telemetry signal handler
+        var parentSpan = Optional.ofNullable(getContextStack().peek()).map(NodeContext::getTelemetry).orElse(null);
+        m_nodeExecutionSpan = NodeContextTracer.createSpan(contextObject, parentSpan);
     }
 
     private static String getStackTrace() {

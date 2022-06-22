@@ -70,23 +70,39 @@ public class NodeContextTracer {
     /**
      *
      */
-    public static final String ROOT_CONTEXT = "org.knime.core.NodeContext.ROOT";
+    public static final String ROOT_CONTEXT = "Workflow Execution";
+
+    /**
+     * @param contextObject this is typically a {@link NodeContainer} but can be something else in case of remote
+     *            workflow editor
+     * @param parentSpan nullable span that contains this span.
+     * @return object that has convenience methods to emit KNIME telemetry events
+     */
+    public static NodeExecutionSpan createSpan(final Object contextObject, final NodeExecutionSpan parentSpan) {
+        NodeExecutionSpan result;
+        if (contextObject instanceof NodeContainer) {
+            NodeContainer nodeContainer = (NodeContainer)contextObject;
+            result = new NodeExecutionSpan(getNodeName(nodeContainer), parentSpan);
+        } else if (contextObject != null) {
+            result = new NodeExecutionSpan(contextObject.toString(), parentSpan);
+        } else {
+            result = new NodeExecutionSpan(ROOT_CONTEXT, parentSpan);
+        }
+        addContextInfo(result, contextObject);
+        return result;
+    }
 
     /**
      * Extract info from org.knime.core specific objects and add it to the given span.
+     *
      * @param nes the span to add attributes to
      * @param contextObject provides, e.g., node name, factory, etc.
      */
     public static void addContextInfo(final NodeExecutionSpan nes, final Object contextObject) {
-        if(contextObject instanceof NodeContainer) {
+        if (contextObject instanceof NodeContainer) {
             NodeContainer nodeContainer = (NodeContainer)contextObject;
-            nes.setNodeContext(getNodeName(nodeContainer));
             getNodeFactory(nodeContainer).ifPresent(nes::setNodeFactory);
             nes.setNodeId(nodeContainer.getID().toString());
-        } else if (contextObject != null){
-            nes.setNodeContext(contextObject.toString());
-        } else {
-            nes.setNodeContext(ROOT_CONTEXT);
         }
     }
 

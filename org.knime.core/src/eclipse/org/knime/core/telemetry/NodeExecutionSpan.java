@@ -120,30 +120,24 @@ public class NodeExecutionSpan {
     private Optional<Span> m_postProcessingSpan = Optional.empty();
 
     /**
-     *
-     */
-    public NodeExecutionSpan() {
-        m_span = spanBuilder().startSpan();
-    }
-
-    /**
      * Use {@link NodeContextTracer#start(NodeContainer)} for convenience.
      *
      * @param parentSpan
      */
-    public NodeExecutionSpan(final NodeExecutionSpan parentSpan) {
-        m_span = spanBuilder()//
-            .setParent(Context.current().with(parentSpan.m_span))//
-            .startSpan();
+    public NodeExecutionSpan(final String name, final NodeExecutionSpan parentSpan) {
+        var builder = spanBuilder(name);
+        Optional.ofNullable(parentSpan).ifPresent(p -> builder.setParent(Context.current().with(parentSpan.m_span)));
+        m_span = builder.startSpan();
     }
 
     /**
+     * @param name TODO
      * @return
      */
-    private SpanBuilder spanBuilder() {
+    private SpanBuilder spanBuilder(final String name) {
         return OpenTelemetryUtil.tracer()//
             // TODO span scope
-            .spanBuilder("org.knime.core.telemetry.nodeExecutionSpan")//
+            .spanBuilder(name)//
             .setSpanKind(SpanKind.CLIENT);
     }
 
@@ -208,7 +202,7 @@ public class NodeExecutionSpan {
     public void startExecution(final PortObject[] data) {
         var attributesBuilder = NodeContextTracer.rowCountsToAttributes(data,
             portIndex -> String.format(SPAN_ATTRIBUTE_DATA_IN_ROWS, portIndex));
-        m_executionSpan = Optional.of(spanBuilder()//
+        m_executionSpan = Optional.of(spanBuilder("Node Execution")//
             .setAllAttributes(attributesBuilder.build())//
             .setParent(Context.current().with(m_span))//
             .startSpan());
@@ -230,7 +224,9 @@ public class NodeExecutionSpan {
      * @param outData
      */
     public void startPostProcessing(final PortObject[] outData) {
-        m_postProcessingSpan = Optional.of(spanBuilder().setParent(Context.current().with(m_span)).startSpan());
+        m_postProcessingSpan = Optional.of(spanBuilder("Output Postprocessing")//
+            .setParent(Context.current().with(m_span))//
+            .startSpan());
     }
 
     /**
@@ -260,7 +256,8 @@ public class NodeExecutionSpan {
      * @param name
      */
     public void submittedToJobManager(final String jobManagerClassName) {
-        m_span.addEvent(SPAN_EVENT_SUBMITTED_TO_JOB_MANAGER, Attributes.of(AttributeKey.stringKey(SPAN_EVENT_SUBMITTED_TO_JOB_MANAGER_ATTRIBUTE_CLASS), jobManagerClassName));
+        m_span.addEvent(SPAN_EVENT_SUBMITTED_TO_JOB_MANAGER, Attributes
+            .of(AttributeKey.stringKey(SPAN_EVENT_SUBMITTED_TO_JOB_MANAGER_ATTRIBUTE_CLASS), jobManagerClassName));
 
     }
 

@@ -54,13 +54,10 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.propagation.ContextPropagators;
-import io.opentelemetry.context.propagation.TextMapPropagator;
-import io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporter;
+import io.opentelemetry.exporter.jaeger.JaegerGrpcSpanExporter;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
-import io.opentelemetry.sdk.trace.SpanProcessor;
 import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
-import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 
 /**
  *
@@ -78,9 +75,6 @@ public class OpenTelemetryUtil {
 
     private static final OpenTelemetry INSTANCE = OpenTelemetryUtil.init();
 
-    // Share context via text headers
-    private final TextMapPropagator textFormat = INSTANCE.getPropagators().getTextMapPropagator();
-
     /**
      * Initializes the SDK that provides a concrete implementation for the OpenTelemetry API.
      *
@@ -89,28 +83,42 @@ public class OpenTelemetryUtil {
     private static OpenTelemetry init() {
 
         // Tracer
+        //        final InMemorySpanExporter testExporter = InMemorySpanExporter.create();
+
+        var exporter = JaegerGrpcSpanExporter.builder()//
+            //            .setEndpoint("http://54.246.211.154:16686/")//
+            .setEndpoint("http://localhost:14250")//
+            .setTimeout(5, TimeUnit.SECONDS)//
+            .build();
+
+        final var spanProcessor = BatchSpanProcessor.builder(exporter).build();
+        SdkTracerProvider sdkTracerProvider = SdkTracerProvider.builder()//
+            .addSpanProcessor(spanProcessor)//
+            .build();
 
         // Set to process the spans with the LoggingSpanExporter
-
-        String url = "http://34.244.92.255:4318/v1/traces";
-        OtlpHttpSpanExporter exporter = OtlpHttpSpanExporter.builder().setEndpoint(url).setTimeout(30, TimeUnit.SECONDS).build();
+//        var exporter = LoggingSpanExporter.create();
+//        final SpanProcessor spanProcessor = SimpleSpanProcessor.create(exporter);
+//        SdkTracerProvider sdkTracerProvider = SdkTracerProvider.builder()//
+//            .addSpanProcessor(spanProcessor)//
+//            .build();
 
         // a real SdkTracerProvider would probably look more like this
-        SpanProcessor batchProcessor = BatchSpanProcessor.builder(exporter).build();
-        SpanProcessor spimpleProc = SimpleSpanProcessor.create(exporter);
-        SdkTracerProvider tracerProvider = SdkTracerProvider.builder().addSpanProcessor(spimpleProc).build();
+        //        SdkTracerProvider.builder()
+        //                .addSpanProcessor(BatchSpanProcessor.builder(OtlpGrpcSpanExporter.builder().build()).build())
 
-        OpenTelemetrySdk openTelemetrySdk = OpenTelemetrySdk.builder().setTracerProvider(tracerProvider)
+        OpenTelemetrySdk openTelemetrySdk = OpenTelemetrySdk.builder()//
+            .setTracerProvider(sdkTracerProvider)
             // install the W3C Trace Context propagator
             .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance())).build();
 
         // it's always a good idea to shutdown the SDK when your process exits.
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             System.err.println("*** forcing the Span Exporter to shutdown and process the remaining spans");
-            tracerProvider.shutdown();
+            sdkTracerProvider.shutdown();
             System.err.println("*** Trace Exporter shut down");
             exporter.close();
-            batchProcessor.close();
+            spanProcessor.close();
         }));
 
         return openTelemetrySdk;
