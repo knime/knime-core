@@ -76,6 +76,7 @@ import java.util.stream.Stream;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
@@ -424,6 +425,7 @@ public final class WorkflowSummaryCreator {
                 !nc.getNodeAnnotation().getData().isDefault() ? nc.getNodeAnnotation().getText() : null;
             final ExecutionStatistics executionStatistics = includeExecutionInfo && nc instanceof NativeNodeContainer
                 ? createExecutionStatistics(nc.getNodeTimer()) : null;
+            final var storageInformation = createStorageInformation(nc.getNodeContainerDirectory());
             final Boolean isDeprecated =
                 nc instanceof NativeNodeContainer && ((NativeNodeContainer)nc).getNode().getFactory().isDeprecated()
                     ? Boolean.TRUE : null;
@@ -527,6 +529,11 @@ public final class WorkflowSummaryCreator {
                 @Override
                 public ExecutionStatistics getExecutionStatistics() {
                     return executionStatistics;
+                }
+
+                @Override
+                public StorageInformation getStorageInformation() {
+                    return storageInformation;
                 }
 
                 @Override
@@ -660,6 +667,31 @@ public final class WorkflowSummaryCreator {
 
                 };
             }
+        }
+
+        private static StorageInformation createStorageInformation(final ReferencedFile nodeDir) {
+            final var isStored = nodeDir != null;
+            final var path = isStored ? nodeDir.getFile().getAbsolutePath() : null;
+            final var size = isStored ? FileUtils.sizeOfDirectory(nodeDir.getFile()) : null;
+
+            return new StorageInformation() {
+
+                @Override
+                public String getPath() {
+                    return path;
+                }
+
+                @Override
+                public Long getSizeOnDisk() {
+                    return size;
+                }
+
+                @Override
+                public boolean isSavedToDisk() {
+                    return isStored;
+                }
+
+            };
         }
 
         private static JobManager createJobManager(final NodeExecutionJobManager mgr) {
