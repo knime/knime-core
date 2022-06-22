@@ -138,7 +138,7 @@ public class NodeExecutionSpan {
         return OpenTelemetryUtil.tracer()//
             // TODO span scope
             .spanBuilder(name)//
-            .setSpanKind(SpanKind.CLIENT);
+            .setSpanKind(SpanKind.INTERNAL);
     }
 
     /**
