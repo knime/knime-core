@@ -51,6 +51,8 @@ package org.knime.core.telemetry;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import org.knime.core.node.workflow.WorkflowManager;
+
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Tracer;
@@ -159,6 +161,9 @@ public class OpenTelemetryUtil {
 
         // it's always a good idea to shutdown the SDK when your process exits.
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+
+            WorkflowManager.ROOT.getNodeContainers().forEach(nc -> ((WorkflowManager)nc).getWorkflowSessionSpan().end());
+
             System.err.println("*** forcing the Span Exporter to shutdown and process the remaining spans");
             tracerProvider.shutdown();
             System.err.println("*** Trace Exporter shut down");

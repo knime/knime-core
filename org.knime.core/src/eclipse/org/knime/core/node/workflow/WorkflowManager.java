@@ -65,6 +65,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.net.URI;
 import java.net.URL;
 import java.security.NoSuchAlgorithmException;
@@ -227,6 +230,9 @@ import org.knime.shared.workflow.storage.clipboard.DefClipboard;
 import org.knime.shared.workflow.storage.clipboard.DefClipboardContent;
 import org.knime.shared.workflow.storage.util.PasswordRedactor;
 
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
+
 /**
  * Container holding nodes and connections of a (sub) workflow. In contrast to previous implementations, this class will
  * now handle all control, such as transport of data and specs from node to subsequent nodes. That is, nodes do not know
@@ -385,7 +391,7 @@ public final class WorkflowManager extends NodeContainer
     /**
      * Handler to generate telemetry signals, such as to report the time it took loading a workflow.
      */
-    private final WorkflowSessionSpan m_workflowSessionSpan;
+    private final Optional<WorkflowSessionSpan> m_workflowSessionSpan;
 
     /**
      * The root of everything, a workflow with no in- or outputs. This workflow holds the top level projects.
@@ -461,6 +467,8 @@ public final class WorkflowManager extends NodeContainer
      * Constructor - create new child workflow container with a parent, a new ID, and the number and type of in/outports
      * as specified.
      *
+     * Used to create the {@link #ROOT} workflow manager instance.
+     *
      * @param directNCParent the direct parent, i.e. a {@link SubNodeContainer} or null (then <code>parent</code> is
      *            used)
      * @param parent Parent of this workflow manager
@@ -479,7 +487,8 @@ public final class WorkflowManager extends NodeContainer
         final Optional<NodeAnnotation> nodeAnno) {
         super(parent, id, nodeAnno.orElse(null));
 
-        m_workflowSessionSpan = new WorkflowSessionSpan(name);
+        final boolean constructingRoot = ROOT == null;
+        m_workflowSessionSpan = !constructingRoot && parent == ROOT ? Optional.of(new WorkflowSessionSpan(name)) : Optional.empty();
 
         m_directNCParent = assertParentAssignments(directNCParent, parent);
         m_workflow = new Workflow(this, id);
@@ -523,11 +532,7 @@ public final class WorkflowManager extends NodeContainer
         LOGGER.debug("Created subworkflow " + this.getID());
 
         // Telemetry
-        Optional.ofNullable(m_workflowContext).ifPresent(m_workflowSessionSpan::setWorkflowContext);
-        // if this is the root workflow manager, it is not loaded, just created
-        if (parent == null) {
-            m_workflowSessionSpan.finishedLoading();
-        }
+        m_workflowSessionSpan.ifPresent(s -> s.setWorkflowContext(m_workflowContext));
     }
 
     private NodeContainerParent assertParentAssignments(final NodeContainerParent directNCParent,
@@ -561,6 +566,9 @@ public final class WorkflowManager extends NodeContainer
     /**
      * Constructor - create new workflow from persistor.
      *
+     * Used when opening a workflow in the AP, but also to create subworkflows for components (in which case a parent
+     * node container exists) and metanodes (in which case there is no parent node container)
+     *
      * @param directNCParent TODO
      * @param parent The parent of this workflow
      * @param id The ID of this workflow
@@ -571,7 +579,10 @@ public final class WorkflowManager extends NodeContainer
         final WorkflowPersistor persistor, final WorkflowDataRepository workflowDataRepository) {
         super(parent, id, persistor.getMetaPersistor());
 
-        m_workflowSessionSpan = new WorkflowSessionSpan(persistor.getName());
+        // workflow sessions is for a top level workflow (child of ROOT workflowmanager),
+        // TODO components and metanodes should be traced like nodes
+        m_workflowSessionSpan =
+            parent == ROOT ? Optional.of(new WorkflowSessionSpan(super.getNodeContainerDirectory().getFile().getName())) : Optional.empty();
 
         m_directNCParent = assertParentAssignments(directNCParent, parent);
         ReferencedFile ncDir = super.getNodeContainerDirectory();
@@ -637,6 +648,9 @@ public final class WorkflowManager extends NodeContainer
         }
         m_wfmListeners = new CopyOnWriteArrayList<WorkflowListener>();
         LOGGER.debug("Created subworkflow " + this.getID());
+
+        // telemetry
+        m_workflowSessionSpan.ifPresent(s -> s.setWorkflowContext(m_workflowContext));
     }
 
     /**
@@ -656,7 +670,9 @@ public final class WorkflowManager extends NodeContainer
         final boolean isProject, final BaseNodeDef baseNodeDef, final WorkflowDef workflowDef) {
         super(parent, id, baseNodeDef);
 
-        m_workflowSessionSpan = new WorkflowSessionSpan(workflowDef.getName());
+        // this is used in copy & paste, so currently just for components and metanodes
+        // TODO they should be traced like nodes
+        m_workflowSessionSpan = Optional.empty();
 
         m_directNCParent = assertParentAssignments(directNCParent, parent);
         m_credentialsStore = new CredentialsStore(this);
@@ -8304,6 +8320,7 @@ public final class WorkflowManager extends NodeContainer
         final WorkflowLoadHelper loadHelper) throws IOException, InvalidSettingsException, CanceledExecutionException,
         UnsupportedWorkflowVersionException, LockFailedException {
         WorkflowLoadResult result = ROOT.load(directory, exec, loadHelper, false);
+        result.getWorkflowManager().getWorkflowSessionSpan().finishedLoading();
         return result;
     }
 
@@ -8422,7 +8439,9 @@ public final class WorkflowManager extends NodeContainer
 
     /**
      * Loads the workflow contained in the directory as node into this workflow instance. Loading a whole new project is
-     * usually done using {@link WorkflowManager#loadProject(File, ExecutionMonitor, WorkflowLoadHelper)} .
+     * usually done using {@link WorkflowManager#loadProject(File, ExecutionMonitor, WorkflowLoadHelper)}.
+     *
+     * Called by {@link #ROOT} workflow manager to load workflows.
      *
      * @param directory to load from
      * @param exec For progress/cancellation (currently not supported)
@@ -8459,7 +8478,6 @@ public final class WorkflowManager extends NodeContainer
         try {
             FileWorkflowPersistor persistor = createLoadPersistor(directory, loadHelper);
             final WorkflowLoadResult loadResult = load(persistor, exec, keepNodeMessages);
-            m_workflowSessionSpan.finishedLoading();
             return loadResult;
         } finally {
             if (!isTemplate) {
@@ -9923,7 +9941,7 @@ public final class WorkflowManager extends NodeContainer
 
             m_dataRepository = null;
             // Telemetry
-            m_workflowSessionSpan.end();
+            m_workflowSessionSpan.ifPresent(WorkflowSessionSpan::end);
         }
     }
 
@@ -10938,7 +10956,15 @@ public final class WorkflowManager extends NodeContainer
     /**
      * @return
      */
-    protected WorkflowSessionSpan getWorkflowSessionSpan(){
-        return m_workflowSessionSpan;
+    public WorkflowSessionSpan getWorkflowSessionSpan(){
+        if(m_workflowSessionSpan.isPresent()) {
+            return m_workflowSessionSpan.get();
+        } else {
+            if(getParent() != null) {
+                return getParent().getWorkflowSessionSpan();
+            } else {
+                return getDirectNCParent().getProjectWFM().getWorkflowSessionSpan();
+            }
+        }
     }
 }

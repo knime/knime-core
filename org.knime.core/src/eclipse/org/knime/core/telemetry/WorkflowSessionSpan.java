@@ -48,6 +48,7 @@
  */
 package org.knime.core.telemetry;
 
+import java.net.URI;
 import java.util.UUID;
 import java.util.function.UnaryOperator;
 
@@ -74,18 +75,11 @@ public class WorkflowSessionSpan extends OpenTelemetrySpanHolder {
         workflowName -> String.format("workflow/%s", workflowName);
 
     /**
-     * Optional attribute on the span.
-     *
-     * @see #setWorkflowName(String)
-     */
-    public static final String SPAN_ATTRIBUTE_WORKFLOW_NAME = "workflow.name";
-
-    /**
      * The subspan for loading the workflow class/group/type is identified by this string. This should be general enough
      * to generate insights when aggregating over all spans with this operation identifier.
      */
-    public static final UnaryOperator<String> WORKFLOW_LOAD_OPERATION_NAME = workflowName -> String.format("workflow/%s/load", workflowName);
-
+    public static final UnaryOperator<String> WORKFLOW_LOAD_OPERATION_NAME =
+        workflowName -> String.format("workflow/%s/load", workflowName);
 
     /**
      * This is a subspan of this span that covers the time it takes to load the workflow. It is created and started upon
@@ -99,24 +93,12 @@ public class WorkflowSessionSpan extends OpenTelemetrySpanHolder {
      * @param workflowName used to create the span name, see {@link #OPERATION_NAME}
      */
     public WorkflowSessionSpan(final String workflowName) {
-        super(OPERATION_NAME.apply(workflowName), OpenTelemetryUtil.getKnimeSessionSpan().getOtelSpan());
+        super(OPERATION_NAME.apply(workflowName), null);
         m_workflowName = workflowName;
 
         // assume that workflow loading begins immediately on creating the workflow session span
         m_loadSpan = subSpanBuilder(WORKFLOW_LOAD_OPERATION_NAME.apply(m_workflowName)).startSpan();
     }
-
-//    /**
-//     * Adds an attribute to this workflow session span. This might not be called if no appropriate workflow name is
-//     * available.
-//     *
-//     * @param name the name of the workflow
-//     * @return this for fluent API
-//     */
-//    public WorkflowSessionSpan setWorkflowName(final String name) {
-//        getSpan().setAttribute(SPAN_ATTRIBUTE_WORKFLOW_NAME, name);
-//        return this;
-//    }
 
     /**
      * Marks the end of the workflow loading process.
@@ -124,7 +106,6 @@ public class WorkflowSessionSpan extends OpenTelemetrySpanHolder {
     public void finishedLoading() {
         m_loadSpan.end();
     }
-
 
     @Override
     public void end() {
@@ -139,9 +120,14 @@ public class WorkflowSessionSpan extends OpenTelemetrySpanHolder {
      * @param workflowContext
      */
     public void setWorkflowContext(final WorkflowContext workflowContext) {
+        if (workflowContext == null) {
+            return;
+        }
         workflowContext.getJobId().map(UUID::toString)
             .ifPresent(uuidString -> getSpan().setAttribute("workflow.jobid", uuidString));
         getSpan().setAttribute("user.id", workflowContext.getUserid());
+        workflowContext.getMountpointURI().map(URI::toString)
+            .ifPresent(s -> getSpan().setAttribute("mountpoint.uri", s));
     }
 
 }
