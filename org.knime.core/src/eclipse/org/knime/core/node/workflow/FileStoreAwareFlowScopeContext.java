@@ -44,55 +44,23 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Sep 5, 2014 (wiswedel): created
+ *   Jun 23, 2022 (wiswedel): created
  */
 package org.knime.core.node.workflow;
 
 import java.util.Optional;
 
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
-import org.knime.core.node.util.CheckUtils;
 
-/** A scope context used by the subnode to have all contained nodes inherit an inactive flag.
- * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
+/**
+ *
+ * @author wiswedel
  */
-public final class FlowSubnodeScopeContext extends FileStoreAwareFlowScopeContext {
+public abstract class FileStoreAwareFlowScopeContext extends FlowScopeContext {
 
-    private final SubNodeContainer m_snc;
-
-    FlowSubnodeScopeContext(final SubNodeContainer snc) {
-        m_snc = CheckUtils.checkArgumentNotNull(snc, "Owning SNC must not be null");
-        setOwner(snc.getID());
-    }
-
-    /** Get the flow loop context this subnode is part of or null if not in a loop. It also unwraps if this subnode
-     * is nested.
-     * @return flow loop context or null
+    /**
+     * @return an optional file store handler to which file stores should be added (= delegated to).
      */
-    <C extends FlowScopeContext> C getOuterFlowScopeContext(final Class<C> contextClass) {
-        FlowObjectStack flowObjectStack = m_snc.getFlowObjectStack();
-        C flowScopeContext = flowObjectStack.peek(contextClass);
-        if (flowScopeContext != null) {
-            return flowScopeContext;
-        }
-        FlowSubnodeScopeContext outerSubnodeScope = flowObjectStack.peek(FlowSubnodeScopeContext.class);
-        if (outerSubnodeScope != null) {
-            return outerSubnodeScope.getOuterFlowScopeContext(contextClass);
-        }
-        return null;
-    }
+    public abstract Optional<IFileStoreHandler> getFileStoreHandler();
 
-    public SubNodeContainer getSubNodeContainer() {
-        return m_snc;
-    }
-
-    @Override
-    public String toString() {
-        return "Component Context";
-    }
-
-    @Override
-    public Optional<IFileStoreHandler> getFileStoreHandler() {
-        return m_snc.getFileStoreHandler().map(IFileStoreHandler.class::cast);
-    }
 }

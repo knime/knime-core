@@ -712,14 +712,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
         return new ReferenceWriteFileStoreHandler(targetFSHandler, getID());
     }
 
-    /**
-     * Initializes and sets a local {@link IFileStoreHandler} for this node if needed. Local file store handlers write
-     * the respective files into a dedicated local directory associated with this node.
-     *
-     * Needs to be done explicitly, e.g., by an {@link NodeExecutionJob} that takes care of the node execution.
-     *
-     * @since 4.1
-     */
+    @Override
     public void initLocalFileStoreHandler() {
         FlowLoopContext upstreamFLC = getUpstreamFlowLoopContext();
         FlowLoopContext innerFLC = getInnerFlowLoopContext();
@@ -902,27 +895,19 @@ public class NativeNodeContainer extends SingleNodeContainer {
      * @return the file store handler or <code>null</code> if not a virtual scope
      */
     private IWriteFileStoreHandler initVirtualScopeFileStoreHandler() {
-        FlowVirtualScopeContext virtualScope =
-            getFlowScopeContextFromHierarchy(FlowVirtualScopeContext.class, getFlowObjectStack());
-        NativeNodeContainer hostNode = virtualScope != null ? virtualScope.getHostNode().orElse(null) : null;
-        if (hostNode != null) {
-            IFileStoreHandler fsh = hostNode.getNode().getFileStoreHandler();
-            if (fsh instanceof IWriteFileStoreHandler) {
-                return initWriteFileStoreHandlerReference((IWriteFileStoreHandler)fsh);
-            } else if (fsh == null) {
-                // can happen if the node associated with the virtual scope is reset
-                throw new IllegalStateException(
-                    "No file store handler given. Try to re-execute '" + hostNode.getNameWithID() + "'");
-            } else {
-                throw new IllegalStateException("No file store handler given. Most likely an implementation error");
-            }
-        } else {
+        FileStoreAwareFlowScopeContext virtualScope =
+            getFlowScopeContextFromHierarchy(FileStoreAwareFlowScopeContext.class, getFlowObjectStack());
+        IFileStoreHandler fsh = virtualScope != null ? virtualScope.getFileStoreHandler().orElse(null) : null;
+        if (fsh == null) {
             return null;
+        } else if (fsh instanceof IWriteFileStoreHandler) {
+            return initWriteFileStoreHandlerReference((IWriteFileStoreHandler)fsh);
+        } else {
+            throw new IllegalStateException("No file store handler given. Most likely an implementation error");
         }
     }
 
-    /** Disposes file store handler (if set) and sets it to null. Called from reset and cleanup.
-     * @noreference This method is not intended to be referenced by clients. */
+    @Override
     public void clearFileStoreHandler() {
         IFileStoreHandler fileStoreHandler = m_node.getFileStoreHandler();
         if (fileStoreHandler != null) {

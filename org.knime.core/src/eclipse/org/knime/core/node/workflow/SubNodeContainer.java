@@ -81,6 +81,8 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.xmlbeans.XmlException;
+import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
+import org.knime.core.data.filestore.internal.SubNodeContainerWriteFileStoreHandler;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.BufferedDataTable;
@@ -261,6 +263,8 @@ public final class SubNodeContainer extends SingleNodeContainer
     private FlowObjectStack m_outgoingStack;
 
     private final FlowSubnodeScopeContext m_subnodeScopeContext;
+
+    private SubNodeContainerWriteFileStoreHandler m_fileStoreHandler;
 
     /** Helper flag to avoid state transitions as part callbacks from the inner wfm. These are ignored when execution
      * is triggered via {@link #performExecuteNode(PortObject[])} or reset via {@link #performReset()}. */
@@ -577,6 +581,27 @@ public final class SubNodeContainer extends SingleNodeContainer
             }
         }
     }
+
+    @Override
+    public void initLocalFileStoreHandler() {
+        m_fileStoreHandler = new SubNodeContainerWriteFileStoreHandler(this);
+        WorkflowDataRepository dataRepository = getParent().getWorkflowDataRepository();
+        m_fileStoreHandler.addToRepository(dataRepository);
+        m_fileStoreHandler.open(null);
+    }
+
+    @Override
+    public void clearFileStoreHandler() {
+        if (m_fileStoreHandler != null) {
+            m_fileStoreHandler.clearAndDispose();
+            m_fileStoreHandler = null;
+        }
+    }
+
+    public Optional<IWriteFileStoreHandler> getFileStoreHandler() {
+        return Optional.ofNullable(m_fileStoreHandler);
+    }
+
 
     /* -------------------- Virtual node callbacks -------------- */
 
@@ -1626,7 +1651,9 @@ public final class SubNodeContainer extends SingleNodeContainer
     @Override
     void cleanup() {
         super.cleanup();
+        clearFileStoreHandler();
         getVirtualInNodeModel().setSubNodeContainer(null);
+        getVirtualOutNodeModel().setSubNodeContainer(null);
         m_wfm.removeNodeStateChangeListener(m_wfmStateChangeListener);
         m_wfm.removeListener(m_wfmListener);
         m_wfm.cleanup();
@@ -3177,6 +3204,5 @@ public final class SubNodeContainer extends SingleNodeContainer
         getVirtualOutNode().addNodeStateChangeListener(new RefreshPortNamesListener());
         refreshPortNames();
     }
-
 
 }

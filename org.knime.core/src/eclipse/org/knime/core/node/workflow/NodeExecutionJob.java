@@ -294,8 +294,8 @@ public abstract class NodeExecutionJob implements Runnable {
      */
     protected void beforeExecute() {
         // possibly overwritten by sub-classes
-        if (getNodeContainer() instanceof NativeNodeContainer) {
-            ((NativeNodeContainer)getNodeContainer()).initLocalFileStoreHandler();
+        if (getNodeContainer() instanceof SingleNodeContainer) {
+            ((SingleNodeContainer)getNodeContainer()).initLocalFileStoreHandler();
         }
     }
 

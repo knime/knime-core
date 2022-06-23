@@ -43,101 +43,88 @@
  * ------------------------------------------------------------------------
  *
  * History
- *   Jul 11, 2012 (wiswedel): created
+ *   Jul 10, 2012 (wiswedel): created
  */
 package org.knime.core.data.filestore.internal;
 
-import java.io.IOException;
+import java.util.UUID;
 
-import org.knime.core.data.IDataRepository;
-import org.knime.core.data.filestore.FileStore;
 import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.util.CheckUtils;
-import org.knime.core.node.workflow.NodeID;
-import org.knime.core.util.FileUtil;
+import org.knime.core.node.workflow.SubNodeContainer;
 
 /**
- * File store handler used for non-start nodes that are part of a loop body (not the loop end). They forward all calls
- * to the file store handler associated with the loop start.
- *
- * Can also be used to create a file store handler that delegates to another {@link IWriteFileStoreHandler} - see
- * {@link #ReferenceWriteFileStoreHandler(WriteFileStoreHandler, NodeID)}.
  *
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  * @noreference This class is not intended to be referenced by clients.
  */
-public final class ReferenceWriteFileStoreHandler extends AbstractReferenceWriteFileStoreHandler {
+public class SubNodeContainerWriteFileStoreHandler extends AbstractReferenceWriteFileStoreHandler {
 
-    private InternalDuplicateChecker m_duplicateChecker;
-    private NodeID m_nodeId;
+//    private final FlowSubnodeScopeContext m_subNodeContext;
+    private FileStoresInLoopCache m_fileStoresInLoopCache;
+
+    private FileStoresInLoopCache m_endNodeCacheWithKeysToPersist;
 
     /**
-     * @param reference */
-    public ReferenceWriteFileStoreHandler(final ILoopStartWriteFileStoreHandler reference) {
-        super(CheckUtils.checkArgumentNotNull(reference));
+     * If this loop start file store handler just references another one.
+     */
+    private final boolean m_referencesAnotherFileStoreHandler;
+
+    /**
+     * Initializes a new loop start file store handler with the given store id. All file stores in the loop will be
+     * created at the node 'owning' this file store handler.
+     *
+     * @param container owning node
+     */
+    public SubNodeContainerWriteFileStoreHandler(final SubNodeContainer container) {
+        super(new WriteFileStoreHandler(container.getNameWithID(), UUID.randomUUID()));
+        m_referencesAnotherFileStoreHandler = false;
     }
 
     /**
-     * @param reference the file store handler to delegate to
-     * @param nodeId the node id of the node this file store handler belongs to
+     * Initializes a new loop start file store handler that references the provided one. I.e. in that case it is a
+     * 'reference file store handler', {@link IWriteFileStoreHandler#isReference()} returns <code>true</code> and the
+     * actual file stores are created in the by the referenced file store handler.
+     *
+     * @param fsh the file store handler to be referenced (and delegated the most calls to)
+     * @param container owning node
      */
-    public ReferenceWriteFileStoreHandler(final IWriteFileStoreHandler reference, final NodeID nodeId) {
-        super(CheckUtils.checkArgumentNotNull(reference));
-        m_nodeId = CheckUtils.checkArgumentNotNull(nodeId);
+    public SubNodeContainerWriteFileStoreHandler(final IWriteFileStoreHandler fsh,
+        final SubNodeContainer container) {
+        super(fsh);
+        m_referencesAnotherFileStoreHandler = true;
     }
 
     /** {@inheritDoc} */
     @Override
-    public void addToRepository(final IDataRepository repository) {
-        // ignore, handler does not define own file stores (only the start does)
+    public void open(final ExecutionContext exec) {
+        ((WriteFileStoreHandler)getDelegate()).open();
+        m_fileStoresInLoopCache = new FileStoresInLoopCache(exec);
     }
 
-    /** {@inheritDoc} */
+    public void onSubNodeContainerFinished(final FileStoresInLoopCache endNodeCacheWithKeysToPersist) {
+        m_endNodeCacheWithKeysToPersist = endNodeCacheWithKeysToPersist;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void clearAndDispose() {
-        // ignore
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public synchronized FileStore createFileStore(final String name) throws IOException {
-        if (m_duplicateChecker == null) {
-            throw new IOException("File store handler \"" + toString() + "\" is read only/closed");
+        super.clearAndDispose();
+        if (m_endNodeCacheWithKeysToPersist != null) {
+            m_endNodeCacheWithKeysToPersist.dispose();
+            m_endNodeCacheWithKeysToPersist = null;
         }
-        m_duplicateChecker.add(name);
-        if (getDelegate() instanceof ILoopStartWriteFileStoreHandler) {
-            return ((ILoopStartWriteFileStoreHandler)getDelegate()).createFileStoreInLoopBody(name);
-        } else {
-            assert m_nodeId != null;
-            return getDelegate().createFileStore(FileUtil.getValidFileName(name + "#" + m_nodeId, 0));
+        if (m_fileStoresInLoopCache != null) {
+            m_fileStoresInLoopCache.dispose();
+            m_fileStoresInLoopCache = null;
         }
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public synchronized void open(final ExecutionContext exec) {
-        m_duplicateChecker = new InternalDuplicateChecker();
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public synchronized void close() {
-        if (m_duplicateChecker != null) {
-            m_duplicateChecker.close();
-            m_duplicateChecker = null;
-        }
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public String toString() {
-        return "Reference on " + getDelegate().toString();
     }
 
     /** {@inheritDoc} */
     @Override
     public boolean isReference() {
-        return true;
+        return m_referencesAnotherFileStoreHandler;
     }
 
 }

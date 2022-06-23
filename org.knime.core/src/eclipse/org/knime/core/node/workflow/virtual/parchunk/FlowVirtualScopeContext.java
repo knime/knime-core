@@ -52,12 +52,14 @@ import java.io.IOException;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.Node;
 import org.knime.core.node.exec.dataexchange.PortObjectRepository;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.util.CheckUtils;
-import org.knime.core.node.workflow.FlowScopeContext;
+import org.knime.core.node.workflow.FileStoreAwareFlowScopeContext;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowCaptureOperation;
@@ -100,7 +102,7 @@ import org.knime.core.node.workflow.virtual.AbstractPortObjectRepositoryNodeMode
  * @noreference This class is not intended to be referenced by clients.
  * @noinstantiate This class is not intended to be instantiated by clients.
  */
-public final class FlowVirtualScopeContext extends FlowScopeContext {
+public final class FlowVirtualScopeContext extends FileStoreAwareFlowScopeContext {
 
     private NativeNodeContainer m_nc;
     private ExecutionContext m_exec;
@@ -173,6 +175,11 @@ public final class FlowVirtualScopeContext extends FlowScopeContext {
      */
     public Optional<NativeNodeContainer> getHostNode() {
         return Optional.ofNullable(m_nc);
+    }
+
+    @Override
+    public Optional<IFileStoreHandler> getFileStoreHandler() {
+        return getHostNode().map(NativeNodeContainer::getNode).map(Node::getFileStoreHandler);
     }
 
 }

@@ -52,6 +52,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -502,9 +503,7 @@ public abstract class SingleNodeContainer extends NodeContainer {
                 } finally {
                     NodeContext.removeLastContext();
                 }
-                if (this instanceof NativeNodeContainer) {
-                    ((NativeNodeContainer)this).clearFileStoreHandler();
-                }
+                clearFileStoreHandler();
                 // After reset we need explicit configure!
                 setInternalState(InternalNodeContainerState.IDLE);
                 return;
@@ -1165,6 +1164,17 @@ public abstract class SingleNodeContainer extends NodeContainer {
         return false;
     }
 
+    /**
+     * Initializes and sets a local {@link IFileStoreHandler} for this node if needed. Local file store handlers write
+     * the respective files into a dedicated local directory associated with this node.
+     *
+     * Needs to be done explicitly, e.g., by an {@link NodeExecutionJob} that takes care of the node execution.
+     */
+    public abstract void initLocalFileStoreHandler();
+
+    /** Disposes file store handler (if set) and sets it to null. Called from reset and cleanup.
+     * @noreference This method is not intended to be referenced by clients. */
+    protected abstract void clearFileStoreHandler();
 
     // /////////////////////////////////////////////////////////////////////
     // Settings loading and saving (single node container settings only)
