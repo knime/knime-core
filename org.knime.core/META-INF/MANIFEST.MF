@@ -23,8 +23,7 @@ Bundle-ClassPath: knime-core.jar,
  lib/jackson-core-2.13.3.jar,
  lib/jackson-jr-objects-2.13.3.jar,
  lib/opentelemetry-exporter-jaeger-1.15.0.jar,
- lib/opentelemetry-exporter-logging-1.15.0.jar,
- lib/opentelemetry-instrumentation-api-1.15.0-alpha.jar
+ lib/opentelemetry-exporter-logging-1.15.0.jar
 Bundle-Activator: org.knime.core.internal.CorePlugin
 Bundle-Vendor: KNIME AG, Zurich, Switzerland
 Export-Package: log4j,
@@ -143,6 +142,7 @@ Export-Package: log4j,
  org.knime.core.quickform,
  org.knime.core.quickform.in,
  org.knime.core.quickform.out,
+ org.knime.core.telemetry,
  org.knime.core.util,
  org.knime.core.util.asynclose,
  org.knime.core.util.binning.auto,

@@ -48,6 +48,8 @@
  */
 package org.knime.core.telemetry;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -57,7 +59,10 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
+import io.opentelemetry.context.propagation.TextMapGetter;
+import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.exporter.jaeger.JaegerGrpcSpanExporter;
 import io.opentelemetry.exporter.logging.LoggingSpanExporter;
 import io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporter;
@@ -180,6 +185,35 @@ public class OpenTelemetryUtil {
      */
     public static OpenTelemetry instance() {
         return INSTANCE;
+    }
+
+    public static TextMapGetter<Map<String, String>> contextGetter() {
+        return new TextMapGetter<Map<String, String>>() {
+
+            @Override
+            public Iterable<String> keys(final Map<String, String> carrier) {
+                return carrier.keySet();
+            }
+
+            @Override
+            public String get(final Map<String, String> carrier, final String key) {
+                return carrier.get(key);
+            }
+        };
+    }
+
+    public static TextMapSetter<Map<String, String>> contextSetter() {
+        return (carrier, key, value) -> carrier.put(key, value);
+    }
+
+    private void test() {
+        Map<String, String> map = new HashMap<>();
+        // put in
+        INSTANCE.getPropagators().getTextMapPropagator().inject(Context.current(), map, contextSetter());
+
+        // get out
+        var incomming = INSTANCE.getPropagators().getTextMapPropagator().extract(Context.current(), map, contextGetter());
+
     }
 
     /**
