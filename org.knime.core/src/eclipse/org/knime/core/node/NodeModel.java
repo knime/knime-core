@@ -576,6 +576,7 @@ public abstract class NodeModel implements ViewableModel {
             // clear local tables (which otherwise would continue to block resources)
             exec.onCancel();
             nodeExecutionSpan.setExecutionException(e);
+            nodeExecutionSpan.end();
             throw e;
         }
         nodeExecutionSpan.finishExecution(outData);
