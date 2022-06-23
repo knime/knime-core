@@ -105,9 +105,6 @@ public class SubNodeContainerWriteFileStoreHandler extends AbstractReferenceWrit
         m_endNodeCacheWithKeysToPersist = endNodeCacheWithKeysToPersist;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void clearAndDispose() {
         super.clearAndDispose();

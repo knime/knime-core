@@ -108,6 +108,7 @@ import org.knime.core.node.dialog.EnabledDialogNodeModelFilter;
 import org.knime.core.node.dialog.SubNodeDescriptionProvider;
 import org.knime.core.node.dialog.util.ConfigurationLayoutUtil;
 import org.knime.core.node.exec.CopyContentIntoTempFlowNodeExecutionJobManager;
+import org.knime.core.node.exec.LocalNodeExecutionJob;
 import org.knime.core.node.exec.ThreadNodeExecutionJobManager;
 import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.interactive.ViewContent;
@@ -584,6 +585,19 @@ public final class SubNodeContainer extends SingleNodeContainer
 
     @Override
     public void initLocalFileStoreHandler() {
+        // TODO AP-19123: only init one if the all nodes are reset (partially executed components might have file
+        // stores already so these do not belong to SubNodeContainerWriteFileStoreHandler below
+
+        // TODO AP-19123: check if this is part of a virtual context
+        // (see NativeNodeContainer.initVirtualScopeFileStoreHandler())
+        // and instantiate reference store handler if...
+
+        if (getExecutionJob() instanceof LocalNodeExecutionJob) {
+            // TODO AP-19123: @Dionysios -- read the property from the execution job, if false don't run the code below
+        }
+
+
+        // TODO AP-19123 -- add save/load to persistor code to
         m_fileStoreHandler = new SubNodeContainerWriteFileStoreHandler(this);
         WorkflowDataRepository dataRepository = getParent().getWorkflowDataRepository();
         m_fileStoreHandler.addToRepository(dataRepository);
@@ -1577,7 +1591,17 @@ public final class SubNodeContainer extends SingleNodeContainer
                 }
             }
         }
+        // TODO AP-19123: only do this if file store handler was set (might not be set for subnodes which were executed
+        // "from parent" with half of the nodes executed already before
+
+        if (getExecutionJob() instanceof LocalNodeExecutionJob) {
+            // TODO AP-19123: @Dionysios -- read the property from the execution job.
+        }
         if (publishObjects && m_isPerformingActionCalledFromParent) {
+            // TODO AP-19123: call SubNodeContainerWriteFileStoreHandler.onSubNodeContainerFinished
+            // and figure out which file stores are needed/passed into the output node
+
+
             // reset all nodes but the output (which copied the result)
             WorkflowManager wfm = getWorkflowManager();
             try (WorkflowLock lock = wfm.lock()) {
