@@ -73,6 +73,7 @@ import org.knime.core.node.workflow.FlowVariable.Scope;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.def.DefToCoreUtil;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
+import org.knime.core.telemetry.NodeExecutionTelemetry;
 import org.knime.shared.workflow.def.BaseNodeDef;
 import org.knime.shared.workflow.def.ConfigurableNodeDef;
 import org.w3c.dom.Element;
@@ -85,6 +86,11 @@ import org.w3c.dom.Element;
  * @author M. Berthold/B. Wiswedel, University of Konstanz
  */
 public abstract class SingleNodeContainer extends NodeContainer {
+
+    /**
+     * This is never null, initialized either in NativeNodeContainer constructors or in SubNodeContainer constructors.
+     */
+    protected NodeExecutionTelemetry m_telemetry;
 
     /** my logger. */
     private static final NodeLogger LOGGER =

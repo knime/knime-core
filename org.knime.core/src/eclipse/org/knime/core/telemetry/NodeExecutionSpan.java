@@ -71,10 +71,11 @@ public class NodeExecutionSpan extends OpenTelemetrySpanHolder {
 
     public static final UnaryOperator<String> OPERATION_NAME = nodeName -> String.format("node/%s", nodeName);
 
-    public static final UnaryOperator<String> SUB_MODEL_EXECUTE_OPERATION_NAME = nodeName -> String.format("node/%s/model/execute", nodeName);
+    public static final UnaryOperator<String> SUB_MODEL_EXECUTE_OPERATION_NAME =
+        nodeName -> String.format("node/%s/model/execute", nodeName);
 
-    public static final UnaryOperator<String> SUB_MODEL_POSTPROCESS_OPERATION_NAME = nodeName -> String.format("node/%s/model/postprocess", nodeName);
-
+    public static final UnaryOperator<String> SUB_MODEL_POSTPROCESS_OPERATION_NAME =
+        nodeName -> String.format("node/%s/model/postprocess", nodeName);
 
     /**
      * @see #setNodeId(String)
@@ -95,6 +96,11 @@ public class NodeExecutionSpan extends OpenTelemetrySpanHolder {
      * @see #startExecution(PortObject[])
      */
     public static final String SPAN_ATTRIBUTE_DATA_IN_ROWS = "data.inport-%s.rows";
+
+    /**
+     * @see #startExecution(PortObject[])
+     */
+    public static final String SPAN_ATTRIBUTE_DATA_OUT_ROWS = "data.outport-%s.rows";
 
     /**
      * @see #submittedToJobManager(String)
@@ -188,11 +194,11 @@ public class NodeExecutionSpan extends OpenTelemetrySpanHolder {
      * @param data the input data for the node model
      */
     public void startExecution(final PortObject[] data) {
-        var attributesBuilder = NodeContextTracer.rowCountsToAttributes(data,
-            portIndex -> String.format(SPAN_ATTRIBUTE_DATA_IN_ROWS, portIndex));
+        var inRows = NodeContextTracer
+            .rowCountsToAttributes(data, portIndex -> String.format(SPAN_ATTRIBUTE_DATA_IN_ROWS, portIndex)).build();
 
         m_executionSpan = Optional.of(subSpanBuilder(SUB_MODEL_EXECUTE_OPERATION_NAME.apply(m_nodeName))//
-            .setAllAttributes(attributesBuilder.build())//
+            .setAllAttributes(inRows)//
             .startSpan());
     }
 
@@ -202,9 +208,14 @@ public class NodeExecutionSpan extends OpenTelemetrySpanHolder {
      * @param outData the data computed by the node model
      */
     public void finishExecution(final PortObject[] outData) {
+        var outRows = NodeContextTracer
+            .rowCountsToAttributes(outData, portIndex -> String.format(SPAN_ATTRIBUTE_DATA_OUT_ROWS, portIndex))
+            .build();
+
         m_executionSpan
             .orElseThrow(
                 () -> new IllegalStateException("Cannot record execution finish: Execution start was never recorded."))
+            .setAllAttributes(outRows)//
             .end();
     }
 
@@ -212,7 +223,11 @@ public class NodeExecutionSpan extends OpenTelemetrySpanHolder {
      * @param outData
      */
     public void startPostProcessing(final PortObject[] outData) {
+        var inRows = NodeContextTracer
+            .rowCountsToAttributes(outData, portIndex -> String.format(SPAN_ATTRIBUTE_DATA_IN_ROWS, portIndex)).build();
+
         m_postProcessingSpan = Optional.of(subSpanBuilder(SUB_MODEL_POSTPROCESS_OPERATION_NAME.apply(m_nodeName))//
+            .setAllAttributes(inRows)//
             .startSpan());
     }
 
@@ -220,8 +235,15 @@ public class NodeExecutionSpan extends OpenTelemetrySpanHolder {
      * @param outData
      */
     public void finishPostProcessing(final PortObject[] outData) {
-        m_postProcessingSpan.orElseThrow(() -> new IllegalStateException(
-            "Cannot record postprocessing finish: Postprocessing start was never recorded.")).end();
+        var outRows = NodeContextTracer
+            .rowCountsToAttributes(outData, portIndex -> String.format(SPAN_ATTRIBUTE_DATA_OUT_ROWS, portIndex))
+            .build();
+
+        m_postProcessingSpan
+            .orElseThrow(() -> new IllegalStateException(
+                "Cannot record postprocessing finish: Postprocessing start was never recorded."))//
+            .setAllAttributes(outRows)//
+            .end();
     }
 
     /**

@@ -147,6 +147,7 @@ import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeInputNodeFacto
 import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeInputNodeModel;
 import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeOutputNodeFactory;
 import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeOutputNodeModel;
+import org.knime.core.telemetry.NodeExecutionTelemetry;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.LockFailedException;
 import org.knime.core.util.Pair;
@@ -288,6 +289,10 @@ public final class SubNodeContainer extends SingleNodeContainer
      */
     SubNodeContainer(final WorkflowManager parent, final NodeID id, final SubNodeContainerPersistor persistor) {
         super(parent, id, persistor.getMetaPersistor());
+
+        var componentName = Optional.ofNullable(persistor.getTemplateInformation().getSourceURI()).map(URI::toString).orElse("ABC");
+        m_telemetry = new NodeExecutionTelemetry(componentName, parent.getWorkflowSessionSpan(), id.toString());
+
         m_subnodeScopeContext = new FlowSubnodeScopeContext(this);
         WorkflowPersistor workflowPersistor = persistor.getWorkflowPersistor();
         m_wfm = new WorkflowManager(this, null, new NodeID(id, 0), workflowPersistor,
@@ -333,6 +338,9 @@ public final class SubNodeContainer extends SingleNodeContainer
     */
     SubNodeContainer(final WorkflowManager parent, final NodeID id, final ComponentNodeDef def) {
         super(parent, id, def);
+
+        m_telemetry = new NodeExecutionTelemetry(def.getWorkflow().getName(), parent.getWorkflowSessionSpan(), id.toString());
+
         m_subnodeScopeContext = new FlowSubnodeScopeContext(this);
         m_wfm = WorkflowManager.newComponentWorkflowManagerInstance(this, new NodeID(id, 0), def);
         m_wfm.setJobManager(null);
@@ -379,6 +387,9 @@ public final class SubNodeContainer extends SingleNodeContainer
      */
     SubNodeContainer(final WorkflowManager parent, final NodeID id, final WorkflowManager content, final String name) {
         super(parent, id, content.getNodeAnnotation());
+
+        m_telemetry = new NodeExecutionTelemetry(name, parent.getWorkflowSessionSpan(), id.toString());
+
         // Create new, internal workflow manager:
         m_wfm = new WorkflowManager(this, null, new NodeID(id, 0), new PortType[]{}, new PortType[]{}, false,
                 parent.getContext(), name,
