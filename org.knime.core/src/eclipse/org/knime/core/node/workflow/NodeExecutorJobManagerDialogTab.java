@@ -70,6 +70,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.exec.ThreadNodeExecutionJobManagerFactory;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings;
@@ -238,7 +239,7 @@ public class NodeExecutorJobManagerDialogTab extends JPanel {
         String sel = (String)m_jobManagerSelect.getSelectedItem();
         NodeExecutionJobManager selJobMgr;
         if (sel == DEFAULT_ENTRY) {
-            selJobMgr = null;
+            selJobMgr = ThreadNodeExecutionJobManagerFactory.INSTANCE.getInstance();
         } else if (m_panels.containsKey(sel)) {
             selJobMgr = m_panels.get(sel).getFirst();
             m_currentPanel = m_panels.get(sel).getSecond();
@@ -258,7 +259,14 @@ public class NodeExecutorJobManagerDialogTab extends JPanel {
                                     selJobMgr, m_currentPanel));
         }
         if (m_currentPanel == null) {
-            m_currentPanel = EMPTY_PANEL;
+            m_currentPanel =
+                ThreadNodeExecutionJobManagerFactory.INSTANCE.getInstance()
+                .getSettingsPanelComponent(m_nodeSplitType);
+            m_panels
+            .put(
+                    sel,
+                    new Pair<NodeExecutionJobManager, NodeExecutionJobManagerPanel>(
+                            selJobMgr, m_currentPanel));
         }
 
         // update the inspecs on the new panel
@@ -332,13 +340,15 @@ public class NodeExecutorJobManagerDialogTab extends JPanel {
             throws InvalidSettingsException {
         String selected = (String)m_jobManagerSelect.getSelectedItem();
         NodeExecutionJobManager selMgr = null;
-        if (!DEFAULT_ENTRY.equals(selected)) {
+//        if (!DEFAULT_ENTRY.equals(selected)) {
             // any "real" node execution manager was selected
             selMgr = m_panels.get(selected).getFirst();
             NodeSettings panelSets = new NodeSettings("job_manager_settings");
             m_currentPanel.saveSettings(panelSets);
             selMgr.load(panelSets);
-        }
+//        } else {
+//
+//        }
         settings.setJobManager(selMgr);
     }
 

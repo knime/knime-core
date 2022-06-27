@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -43,80 +44,76 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 17, 2008 (wiswedel): created
+ *   23 Jun 2022 (Dionysios Stolis): created
  */
 package org.knime.core.node.exec;
 
-import java.util.concurrent.Future;
+import java.awt.BorderLayout;
 
-import org.knime.core.node.port.PortObject;
-import org.knime.core.node.workflow.NodeExecutionJob;
-import org.knime.core.node.workflow.SingleNodeContainer;
-import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
+import javax.swing.JCheckBox;
+import javax.swing.JLabel;
+
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.workflow.NodeExecutionJobManagerPanel;
+
 
 /**
- * A locally executed node job. It can only execute {@link SingleNodeContainer}.
- * @author Bernd Wiswedel, University of Konstanz
+ *
+ * @author Dionysios Stolis
+ * @since 4.6
  */
-public class LocalNodeExecutionJob extends NodeExecutionJob {
+public class ThreadNodeExecutionJobManagerPanel extends NodeExecutionJobManagerPanel {
 
-    private Future<?> m_future;
-
-    private final ThreadNodeExecutionSettings m_settings;
-
-    /** Creates new local job.
-     * @param snc The node container to execute.
-     * @param data Its input port object.
-     * @param settings TODO
-     * @since 4.6
-     */
-    public LocalNodeExecutionJob(final SingleNodeContainer snc, final PortObject[] data, final ThreadNodeExecutionSettings settings) {
-        super(snc, data);
-        m_settings = settings;
-    }
-
-
-    /** {@inheritDoc} */
-    @Override
-    public boolean cancel() {
-        if (m_future == null) {
-            throw new IllegalStateException("Future that represents the execution has not been set.");
-        }
-        return m_future.cancel(true);
-    }
+    private final JCheckBox m_discardIntermediateData;
 
     /**
-     * Set the future that represents the pending execution.
-     * @param future the future to set
+     *
      */
-    void setFuture(final Future<?> future) {
-        m_future = future;
-    }
+    private static final long serialVersionUID = 1L;
 
-    /** {@inheritDoc} */
-    @Override
-    public NodeContainerExecutionStatus mainExecute() {
-        SingleNodeContainer snc = (SingleNodeContainer)getNodeContainer();
-        return snc.performExecuteNode(getPortObjects());
+    /**
+     *
+     */
+    public ThreadNodeExecutionJobManagerPanel() {
+        setLayout(new BorderLayout());
+        m_discardIntermediateData = new JCheckBox("Discard Intermediate Data");
+        add(m_discardIntermediateData, BorderLayout.NORTH);
+        var descriptionText =
+                "<html><body><p>Discards the intermediate data after Component's execution.</p><body></html>";
+        var description = new JLabel(descriptionText);
+        add(description, BorderLayout.CENTER);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected String getCustomThreadName(final String originalThreadName) {
-        return originalThreadName + "-" + getNodeContainer().getNameWithID();
+    public void saveSettings(final NodeSettingsWO settings) throws InvalidSettingsException {
+        var c = new ThreadNodeExecutionSettings();
+        c.setDiscardIntermediateData(m_discardIntermediateData.isSelected());
+        c.saveSettings(settings);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public boolean isReConnecting() {
-        return false;
+    public void loadSettings(final NodeSettingsRO settings) {
+        var c = new ThreadNodeExecutionSettings();
+        c.loadSettings(settings);
+        m_discardIntermediateData.setSelected(c.isDiscardIntermediateData());
     }
 
-    public ThreadNodeExecutionSettings getThreadNodeExecutionSettings() {
-        return m_settings;
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void updateInputSpecs(final PortObjectSpec[] inSpecs) {
+        // TODO Auto-generated method stub
+
     }
+
 }

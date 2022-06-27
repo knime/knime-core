@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -43,80 +44,41 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 17, 2008 (wiswedel): created
+ *   23 Jun 2022 (Dionysios Stolis): created
  */
 package org.knime.core.node.exec;
 
-import java.util.concurrent.Future;
-
-import org.knime.core.node.port.PortObject;
-import org.knime.core.node.workflow.NodeExecutionJob;
-import org.knime.core.node.workflow.SingleNodeContainer;
-import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
 
 /**
- * A locally executed node job. It can only execute {@link SingleNodeContainer}.
- * @author Bernd Wiswedel, University of Konstanz
+ *
+ * @author Dionysios Stolis
+ * @since 4.6
  */
-public class LocalNodeExecutionJob extends NodeExecutionJob {
+public final class ThreadNodeExecutionSettings {
 
-    private Future<?> m_future;
+    private static boolean DEFAULT_DISCARD_INTERMEDIATE_DATA = false; //NOSONAR
 
-    private final ThreadNodeExecutionSettings m_settings;
+    private boolean m_discardIntermediateData = DEFAULT_DISCARD_INTERMEDIATE_DATA;
 
-    /** Creates new local job.
-     * @param snc The node container to execute.
-     * @param data Its input port object.
-     * @param settings TODO
-     * @since 4.6
-     */
-    public LocalNodeExecutionJob(final SingleNodeContainer snc, final PortObject[] data, final ThreadNodeExecutionSettings settings) {
-        super(snc, data);
-        m_settings = settings;
+    /** @param chunkSize the chunkSize to set */
+    void setDiscardIntermediateData(final boolean discardIntermediateData){
+        m_discardIntermediateData = discardIntermediateData;
     }
 
-
-    /** {@inheritDoc} */
-    @Override
-    public boolean cancel() {
-        if (m_future == null) {
-            throw new IllegalStateException("Future that represents the execution has not been set.");
-        }
-        return m_future.cancel(true);
+    /** @return the chunkSize */
+    public boolean isDiscardIntermediateData() {
+        return m_discardIntermediateData;
     }
 
-    /**
-     * Set the future that represents the pending execution.
-     * @param future the future to set
-     */
-    void setFuture(final Future<?> future) {
-        m_future = future;
+    void saveSettings(final NodeSettingsWO settings) {
+        settings.addBoolean("discard-intermediate-data", m_discardIntermediateData);
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public NodeContainerExecutionStatus mainExecute() {
-        SingleNodeContainer snc = (SingleNodeContainer)getNodeContainer();
-        return snc.performExecuteNode(getPortObjects());
+    void loadSettings(final NodeSettingsRO settings) {
+        var discardIntermediateData = settings.getBoolean("discard-intermediate-data", DEFAULT_DISCARD_INTERMEDIATE_DATA);
+        m_discardIntermediateData = discardIntermediateData;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected String getCustomThreadName(final String originalThreadName) {
-        return originalThreadName + "-" + getNodeContainer().getNameWithID();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean isReConnecting() {
-        return false;
-    }
-
-    public ThreadNodeExecutionSettings getThreadNodeExecutionSettings() {
-        return m_settings;
-    }
 }

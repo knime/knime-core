@@ -593,7 +593,10 @@ public final class SubNodeContainer extends SingleNodeContainer
         // and instantiate reference store handler if...
 
         if (getExecutionJob() instanceof LocalNodeExecutionJob) {
-            // TODO AP-19123: @Dionysios -- read the property from the execution job, if false don't run the code below
+            var isDiscardIntermediateData = ((LocalNodeExecutionJob) getExecutionJob()).getThreadNodeExecutionSettings().isDiscardIntermediateData();
+            if (!isDiscardIntermediateData) {
+                return;
+            }
         }
 
 
@@ -1593,11 +1596,11 @@ public final class SubNodeContainer extends SingleNodeContainer
         }
         // TODO AP-19123: only do this if file store handler was set (might not be set for subnodes which were executed
         // "from parent" with half of the nodes executed already before
-
+        var isDiscardIntermediateData = false;
         if (getExecutionJob() instanceof LocalNodeExecutionJob) {
-            // TODO AP-19123: @Dionysios -- read the property from the execution job.
+            isDiscardIntermediateData = ((LocalNodeExecutionJob) getExecutionJob()).getThreadNodeExecutionSettings().isDiscardIntermediateData();
         }
-        if (publishObjects && m_isPerformingActionCalledFromParent) {
+        if (isDiscardIntermediateData && publishObjects && m_isPerformingActionCalledFromParent) {
             // TODO AP-19123: call SubNodeContainerWriteFileStoreHandler.onSubNodeContainerFinished
             // and figure out which file stores are needed/passed into the output node
 

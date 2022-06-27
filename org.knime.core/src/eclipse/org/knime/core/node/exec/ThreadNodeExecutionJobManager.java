@@ -50,11 +50,16 @@ package org.knime.core.node.exec;
 import java.net.URL;
 import java.util.concurrent.Future;
 
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.workflow.AbstractNodeExecutionJobManager;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
 import org.knime.core.node.workflow.NodeExecutionJob;
+import org.knime.core.node.workflow.NodeExecutionJobManagerPanel;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.util.ThreadPool;
 
@@ -67,16 +72,19 @@ public class ThreadNodeExecutionJobManager extends AbstractNodeExecutionJobManag
     public static final ThreadNodeExecutionJobManager INSTANCE =
             new ThreadNodeExecutionJobManager();
 
+    private final ThreadNodeExecutionSettings m_settings;
+
     private final ThreadPool m_pool;
 
     public ThreadNodeExecutionJobManager() {
-        this(KNIMEConstants.GLOBAL_THREAD_POOL);
+        this(KNIMEConstants.GLOBAL_THREAD_POOL, new ThreadNodeExecutionSettings());
     }
 
-    public ThreadNodeExecutionJobManager(final ThreadPool pool) {
+    public ThreadNodeExecutionJobManager(final ThreadPool pool, final ThreadNodeExecutionSettings settings) {
         if (pool == null) {
             throw new NullPointerException("arg must not be null");
         }
+        m_settings = settings;
         m_pool = pool;
     }
 
@@ -87,7 +95,7 @@ public class ThreadNodeExecutionJobManager extends AbstractNodeExecutionJobManag
             throw new IllegalStateException(getClass().getSimpleName()
                     + " is not able to execute a metanode: " + nc.getNameWithID());
         }
-        LocalNodeExecutionJob job = new LocalNodeExecutionJob((SingleNodeContainer)nc, data);
+        LocalNodeExecutionJob job = new LocalNodeExecutionJob((SingleNodeContainer)nc, data, m_settings);
         Future<?> future = m_pool.enqueue(job);
         job.setFuture(future);
         return job;
@@ -111,4 +119,24 @@ public class ThreadNodeExecutionJobManager extends AbstractNodeExecutionJobManag
         return null;
     }
 
+    @Override
+    public NodeExecutionJobManagerPanel getSettingsPanelComponent(final SplitType nodeSplitType) {
+        return new ThreadNodeExecutionJobManagerPanel();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void load(final NodeSettingsRO settings) throws InvalidSettingsException {
+        m_settings.loadSettings(settings);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void save(final NodeSettingsWO settings) {
+        m_settings.saveSettings(settings);
+    }
 }
