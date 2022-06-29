@@ -223,16 +223,18 @@ public class NodeViewManagerTest {
         NativeNodeContainer nnc2 = createNodeWithNodeView(m_wfm, m -> createNodeView(staticPage));
         NativeNodeContainer nnc3 = createNodeWithNodeView(m_wfm, m -> createNodeView(dynamicPage));
         var nodeViewManager = NodeViewManager.getInstance();
-        String url = nodeViewManager.getPageUrl(nnc).orElse("");
-        String url2 = nodeViewManager.getPageUrl(nnc2).orElse(null);
-        String url3 = nodeViewManager.getPageUrl(nnc3).orElse(null);
-        String url4 = nodeViewManager.getPageUrl(nnc3).orElse(null);
-        assertThat("url of static pages not expected to change", url, is(url2));
-        assertThat("url of dynamic pages expected to change between node instances", url, is(not(url3)));
-        assertThat("url of dynamic pages not expected for same node instance (without node state change)", url3,
-            is(url4));
+        String path = nodeViewManager.getPagePath(nnc);
+        String path2 = nodeViewManager.getPagePath(nnc2);
+        String path3 = nodeViewManager.getPagePath(nnc3);
+        String path4 = nodeViewManager.getPagePath(nnc3);
+        assertThat("path of static pages not expected to change", path, is(path2));
+        assertThat("path of dynamic pages expected to change between node instances", path, is(not(path3)));
+        assertThat("path of dynamic pages not expected for same node instance (without node state change)", path3,
+            is(path4));
+        String baseUrl = nodeViewManager.getBaseUrl().orElse(null);
+        assertThat(baseUrl, is("http://org.knime.core.ui.view/"));
 
-        runOnExecutor(() -> assertThat(nodeViewManager.getPageUrl(nnc2).isEmpty(), is(true)));
+        runOnExecutor(() -> assertThat(nodeViewManager.getBaseUrl().isEmpty(), is(true)));
     }
 
     /**
@@ -247,12 +249,13 @@ public class NodeViewManagerTest {
         var nnc2 = createNodeWithNodeView(m_wfm, m -> createNodeView(dynamicPage));
 
         var nodeViewManager = NodeViewManager.getInstance();
-        assertThat(nodeViewManager.getPagePath(nnc).isEmpty(), is(true));
+        assertThat(nodeViewManager.getPagePath(nnc),
+            is("view_org.knime.testing.node.view.NodeViewNodeFactory/page.html"));
 
         runOnExecutor(() -> { // NOSONAR
-            String path = nodeViewManager.getPagePath(nnc).orElse(null);
+            String path = nodeViewManager.getPagePath(nnc);
             assertThat(nodeViewManager.getPageMapSize(), is(1));
-            String path2 = nodeViewManager.getPagePath(nnc2).orElse(null);
+            String path2 = nodeViewManager.getPagePath(nnc2);
             assertThat(nodeViewManager.getPageMapSize(), is(2));
             var resourcePrefix1 = "view_" + nnc.getNode().getFactory().getClass().getName();
             var resourcePrefix2 = "view_" + nnc2.getID().toString().replace(":", "_");
@@ -301,7 +304,7 @@ public class NodeViewManagerTest {
         var nodeViewManager = NodeViewManager.getInstance();
 
         // remove node
-        nodeViewManager.getPageUrl(nc);
+        nodeViewManager.getPagePath(nc);
         assertThat(nodeViewManager.getNodeViewMapSize(), is(1));
         assertThat(nodeViewManager.getPageMapSize(), is(1));
         m_wfm.removeNode(nc.getID());
@@ -311,7 +314,7 @@ public class NodeViewManagerTest {
         });
 
         // close workflow
-        nodeViewManager.getPageUrl(nc);
+        nodeViewManager.getPagePath(nc);
         assertThat(nodeViewManager.getNodeViewMapSize(), is(1));
         assertThat(nodeViewManager.getPageMapSize(), is(1));
         m_wfm.getParent().removeProject(m_wfm.getID());
@@ -331,13 +334,13 @@ public class NodeViewManagerTest {
         var nodeViewManager = NodeViewManager.getInstance();
 
         // remove node
-        nodeViewManager.getPageUrl(nc);
+        nodeViewManager.getPagePath(nc);
         assertThat(nodeViewManager.getPageMapSize(), is(1));
         m_wfm.removeNode(nc.getID());
         untilAsserted(() -> assertThat(nodeViewManager.getPageMapSize(), is(0)));
 
         // close workflow
-        nodeViewManager.getPageUrl(nc);
+        nodeViewManager.getPagePath(nc);
         assertThat(nodeViewManager.getPageMapSize(), is(1));
         m_wfm.getParent().removeProject(m_wfm.getID());
         untilAsserted(() -> assertThat(nodeViewManager.getPageMapSize(), is(0)));

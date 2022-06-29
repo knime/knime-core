@@ -50,6 +50,8 @@ package org.knime.core.webui.page;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * Represents a web resource used in ui-extensions (such as node view, port view and node dialog).
@@ -64,16 +66,21 @@ public interface Resource {
      * The resource content type.
      */
     enum ContentType {
-            HTML, VUE_COMPONENT_LIB;
+            HTML, VUE_COMPONENT_LIB, SVG, PNG;
+
+        private static final Map<String, ContentType> FILE_EXTENSION_TO_CONTENT_TYPE_MAP = Map.of( //
+            ".js", VUE_COMPONENT_LIB, //
+            ".html", HTML, //
+            ".svg", SVG, //
+            ".png", PNG);
 
         static ContentType determineType(final String path) {
-            if (path.endsWith(".js")) {
-                return VUE_COMPONENT_LIB;
-            } else if (path.endsWith(".html")) {
-                return HTML;
-            } else {
-                throw new IllegalArgumentException("Can't determine resource content type for path " + path);
-            }
+            return FILE_EXTENSION_TO_CONTENT_TYPE_MAP.entrySet().stream() //
+                .filter(e -> path.endsWith(e.getKey()))//
+                .map(Entry::getValue)//
+                .findFirst()//
+                .orElseThrow(
+                    () -> new IllegalArgumentException("Can't determine resource content type for path " + path));
         }
     }
 

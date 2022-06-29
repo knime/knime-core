@@ -52,10 +52,12 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThrows;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.function.Function;
 
-import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.knime.core.webui.page.Resource.ContentType;
 
@@ -104,9 +106,55 @@ public class PageTest {
     @Test
     public void testCreateResourcesFromDir() {
         var page = Page.builder(BUNDLE_ID, "files", "page.html").addResourceDirectory("dir").build();
-        List<String> context =
-            page.getContext().values().stream().map(Resource::getRelativePath).collect(Collectors.toList());
-        assertThat(context, Matchers.containsInAnyOrder("dir/subdir/res.html", "dir/res2.umd.min.js", "dir/res1.html"));
+        assertThat(page.getResource("dir/subdir/res.html").isPresent(), is(true));
+        assertThat(page.getResource("dir/res2.umd.min.js").isPresent(), is(true));
+        assertThat(page.getResource("dir/res1.html").isPresent(), is(true));
+        assertThat(page.getResource("path/to/non/existent/resource.html").isEmpty(), is(true));
+    }
+
+    /**
+     * Tests page resources added via {@link PageBuilder#addResources(Function, String)}.
+     *
+     * @throws IOException
+     */
+    @Test
+    public void testCreateResourcesWithDynamicPaths() throws IOException {
+        Function<String, InputStream> resourceSupplier = relativePath -> {
+            if (relativePath.equals("null")) {
+                return null;
+            } else if (relativePath.equals("path/to/a/resource")) {
+                return stringToInputStream("resource supplier - known path");
+            } else {
+                return stringToInputStream("resource supplier - another path");
+            }
+        };
+        Function<String, InputStream> resourceSupplier2 =
+            relativePath -> stringToInputStream("resource supplier 2 - " + relativePath);
+
+        var page = Page.builder(BUNDLE_ID, "files", "page.html") //
+            .addResources(resourceSupplier, "path/prefix") //
+            .addResources(resourceSupplier2, "path/prefix/2") //
+            .build();
+        assertThat(page.isCompletelyStatic(), is(false));
+
+        assertThat(page.getResource("path/prefix/null").isEmpty(), is(true));
+        assertThat(resourceToString(page.getResource("path/prefix/path/to/a/resource").get()),
+            is("resource supplier - known path"));
+        assertThat(resourceToString(page.getResource("path/prefix/path/to/a/resource2").get()),
+            is("resource supplier - another path"));
+        assertThat(resourceToString(page.getResource("path/prefix/2/path/to/another/resource").get()),
+            is("resource supplier 2 - path/to/another/resource"));
+        assertThat(page.getResource("path/to/nonexisting/resource").isEmpty(), is(true));
+    }
+
+    private static InputStream stringToInputStream(final String s) {
+        return new ByteArrayInputStream((s).getBytes(StandardCharsets.UTF_8));
+    }
+
+    private static String resourceToString(final Resource r) throws IOException {
+        try (var is = r.getInputStream()) {
+            return new String(is.readAllBytes(), StandardCharsets.UTF_8);
+        }
     }
 
 }

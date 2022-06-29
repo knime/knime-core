@@ -53,7 +53,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -67,6 +70,9 @@ public class PageBuilder {
 
     @SuppressWarnings("javadoc")
     protected final List<Resource> m_resources = new ArrayList<>();
+
+    @SuppressWarnings("javadoc")
+    protected Map<String, Function<String, Resource>> m_dynamicResources;
 
     @SuppressWarnings("javadoc")
     protected final Resource m_pageResource;
@@ -139,6 +145,51 @@ public class PageBuilder {
     }
 
     /**
+     * Allows one to add multiple resources add once with a single function which dynamically maps paths to resources.
+     * I.e. no need to define the exact path upfront (apart from a path-prefix).
+     *
+     * @param supplier the mapping function from relative path to resource content
+     * @param relativePathPrefix the path prefix; if there are resources registered with 'overlapping' path prefixes,
+     *            the resources with the 'longest' match are being used
+     * @return this page builder instance
+     */
+    public PageBuilder addResources(final Function<String, InputStream> supplier, final String relativePathPrefix) {
+        if (m_dynamicResources == null) {
+            m_dynamicResources = new HashMap<>();
+        }
+        m_dynamicResources.put(relativePathPrefix, relativePath -> { // NOSONAR
+            var inputStream = supplier.apply(relativePath);
+            if (inputStream == null) {
+                return null;
+            }
+            return new Resource() {
+
+                @Override
+                public String getRelativePath() {
+                    return relativePath;
+                }
+
+                @Override
+                public InputStream getInputStream() throws IOException {
+                    return inputStream;
+                }
+
+                @Override
+                public boolean isStatic() {
+                    return false;
+                }
+
+                @Override
+                public ContentType getContentType() {
+                    return ContentType.determineType(relativePath);
+                }
+
+            };
+        });
+        return this;
+    }
+
+    /**
      * Adds another resource to the 'context' of a page (such js-resource).
      *
      * @param content the actual content of the resource
@@ -154,7 +205,7 @@ public class PageBuilder {
      * @return a new page instance
      */
     public Page build() {
-        return new Page(m_pageResource, m_resources);
+        return new Page(m_pageResource, m_resources, m_dynamicResources);
     }
 
 }

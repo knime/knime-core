@@ -75,22 +75,23 @@ public interface PageResourceManager {
     Page getPage(NativeNodeContainer nnc);
 
     /**
-     * Provides the URL which serves the page. The full URL is usually only available if the AP is run as desktop
-     * application.
+     * The base url for the page and associated resources. It is usually only available if the AP is run as a desktop
+     * application
      *
-     * @param nnc the node which provides the page
-     * @return the page url if available, otherwise an empty optional
+     * It's <b>not</b> available if run within an 'executor' as part of the server infrastructure) - in this case the
+     * base url needs to be determined by the frontend.
+     *
+     * @return the base url or an empty optional if not available
      */
-    Optional<String> getPageUrl(NativeNodeContainer nnc);
+    Optional<String> getBaseUrl();
 
     /**
-     * Provides the relative path for a page, if available. The relative path is usually only available if the AP is
-     * <b>not</b> run as a desktop application (but as an 'executor' as part of the server infrastructure).
+     * Provides the relative path for a page.
      *
      * @param nnc the node which provides the page
      * @return the relative page path
      */
-    Optional<String> getPagePath(NativeNodeContainer nnc);
+    String getPagePath(NativeNodeContainer nnc);
 
     /**
      * Gives access to page resources. NOTE: Only those resources are available that belong to a page whose path has
@@ -103,7 +104,7 @@ public interface PageResourceManager {
 
     /**
      * Gives access to page resources via a full URL. NOTE: Only those resources are available that belong to a page
-     * whose URL has been requested via {@link #getPageUrl(NativeNodeContainer)}.
+     * whose URL has been requested via {@link #getPagePath(NativeNodeContainer)}.
      *
      * @param url the resource url
      * @return the resource or an empty optional if there is no resource available at the given URL

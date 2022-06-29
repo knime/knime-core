@@ -108,11 +108,11 @@ public class NodeUIExtensionEnt {
         }
 
         if (pageResourceManager != null) {
-            var url = pageResourceManager.getPageUrl(nnc).orElse(null);
-            var path = pageResourceManager.getPagePath(nnc).orElse(null);
+            var baseUrl = pageResourceManager.getBaseUrl().orElse(null);
+            var path = pageResourceManager.getPagePath(nnc);
             var page = pageResourceManager.getPage(nnc);
             var id = PageUtil.getPageId(nnc, page.isStatic(), pageType);
-            m_resourceInfo = new ResourceInfoEnt(id, url, path, page.getContentType());
+            m_resourceInfo = new ResourceInfoEnt(id, baseUrl, path, page.getContentType());
         } else {
             m_resourceInfo = null;
         }

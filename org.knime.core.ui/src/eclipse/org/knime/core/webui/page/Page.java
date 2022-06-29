@@ -53,8 +53,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.TreeMap;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -69,23 +74,45 @@ public final class Page implements Resource {
 
     private final Resource m_pageResource;
 
-    private final Map<String, Resource> m_context;
+    private final Map<String, Resource> m_resources;
+
+    private final Map<String, Function<String, Resource>> m_dynamicResources;
 
     private Boolean m_isCompletelyStatic;
 
-    Page(final Resource pageResource, final List<Resource> context) {
+    Page(final Resource pageResource, final List<Resource> resources,
+        final Map<String, Function<String, Resource>> dynamicResources) {
         m_pageResource = pageResource;
-        m_context = context == null ? Collections.emptyMap()
-            : context.stream().collect(Collectors.toMap(Resource::getRelativePath, r -> r));
+        m_resources = resources == null ? Collections.emptyMap()
+            : resources.stream().collect(Collectors.toMap(Resource::getRelativePath, r -> r));
+        if (dynamicResources != null) {
+            m_dynamicResources = new TreeMap<>(Comparator.comparingInt(String::length).reversed());
+            m_dynamicResources.putAll(dynamicResources);
+        } else {
+            m_dynamicResources = Collections.emptyMap();
+        }
     }
 
     /**
      * Additional resources required by the page.
      *
-     * @return map from relative path to resources; or an empty map if there a none - never <code>null</code>
+     * @param relativePath the relative path to get the resource for
+     *
+     * @return the resource for the given relative path or an empty optional if there isn't any
      */
-    public Map<String, Resource> getContext() {
-        return m_context;
+    public Optional<Resource> getResource(final String relativePath) {
+        var resource = m_resources.get(relativePath);
+        if (resource != null) {
+            return Optional.of(resource);
+        }
+        if (m_dynamicResources.isEmpty()) {
+            return Optional.empty();
+        }
+        return m_dynamicResources.entrySet().stream()//
+            .filter(e -> relativePath.startsWith(e.getKey()))//
+            .map(e -> e.getValue().apply(relativePath.substring(e.getKey().length() + 1)))//
+            .filter(Objects::nonNull)//
+            .findFirst();
     }
 
     /**
@@ -119,7 +146,8 @@ public final class Page implements Resource {
      */
     public boolean isCompletelyStatic() {
         if (m_isCompletelyStatic == null) {
-            m_isCompletelyStatic = isStatic() && getContext().values().stream().allMatch(Resource::isStatic);
+            m_isCompletelyStatic = isStatic() && m_dynamicResources.isEmpty()
+                && m_resources.values().stream().allMatch(Resource::isStatic);
         }
         return m_isCompletelyStatic;
     }

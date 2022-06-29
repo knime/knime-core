@@ -153,8 +153,8 @@ public class NodeViewEntTest {
         assertThat(ent.getInitialData(), startsWith("dummy initial data"));
         assertThat(ent.getInitialSelection(), is(nullValue()));
         var resourceInfo = ent.getResourceInfo();
-        assertThat(resourceInfo.getUrl(), endsWith("index.html"));
-        assertThat(resourceInfo.getPath(), is(nullValue()));
+        assertThat(resourceInfo.getPath(), endsWith("index.html"));
+        assertThat(resourceInfo.getBaseUrl(), is("http://org.knime.core.ui.view/"));
         assertThat(resourceInfo.getType(), is(Resource.ContentType.HTML.toString()));
         assertThat(resourceInfo.getId(), is(PageUtil.getPageId(nnc, false, PageType.VIEW)));
         var nodeInfo = ent.getNodeInfo();
@@ -176,15 +176,15 @@ public class NodeViewEntTest {
         resourceInfo = ent.getResourceInfo();
         assertThat(ent.getInitialData(), is(nullValue()));
         assertThat(resourceInfo.getType(), is(Resource.ContentType.VUE_COMPONENT_LIB.toString()));
-        assertThat(resourceInfo.getUrl(), endsWith("component.umd.min.js"));
-        assertThat(resourceInfo.getPath(), is(nullValue()));
+        assertThat(resourceInfo.getPath(), endsWith("component.umd.min.js"));
+        assertThat(resourceInfo.getBaseUrl(), is("http://org.knime.core.ui.view/"));
 
         // test to create a node view entity while running headless (e.g. on the executor)
         NativeNodeContainer nnc2 = nnc;
         runOnExecutor(() -> {
             var ent2 = NodeViewEnt.create(nnc2, null);
             assertThat(ent2.getResourceInfo().getPath(), endsWith("component.umd.min.js"));
-            assertThat(ent2.getResourceInfo().getUrl(), is(nullValue()));
+            assertThat(ent2.getResourceInfo().getBaseUrl(), is(nullValue()));
         });
 
         WorkflowManagerUtil.disposeWorkflow(wfm);

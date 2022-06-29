@@ -145,14 +145,14 @@ public class NodeDialogManagerTest {
         NativeNodeContainer nnc2 = createNodeWithNodeDialog(m_wfm, () -> createNodeDialog(staticPage));
         NativeNodeContainer nnc3 = createNodeWithNodeDialog(m_wfm, () -> createNodeDialog(dynamicPage));
         var nodeDialogManager = NodeDialogManager.getInstance();
-        String url = nodeDialogManager.getPageUrl(nnc).orElse(null);
-        String url2 = nodeDialogManager.getPageUrl(nnc2).orElse(null);
-        String url3 = nodeDialogManager.getPageUrl(nnc3).orElse(null);
-        String url4 = nodeDialogManager.getPageUrl(nnc3).orElse(null);
-        assertThat("url of static pages not expected to change", url, is(url2));
-        assertThat("url of dynamic pages expected to change between node instances", url, is(not(url3)));
-        assertThat("url of dynamic pages not expected for same node instance (without node state change)", url3,
-            is(url4));
+        String path = nodeDialogManager.getPagePath(nnc);
+        String path2 = nodeDialogManager.getPagePath(nnc2);
+        String path3 = nodeDialogManager.getPagePath(nnc3);
+        String path4 = nodeDialogManager.getPagePath(nnc3);
+        assertThat("url of static pages not expected to change", path, is(path2));
+        assertThat("url of dynamic pages expected to change between node instances", path, is(not(path3)));
+        assertThat("url of dynamic pages not expected for same node instance (without node state change)", path3,
+            is(path4));
     }
 
     /**

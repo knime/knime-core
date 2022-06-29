@@ -57,7 +57,7 @@ import org.knime.core.webui.page.Resource;
  */
 public final class ResourceInfoEnt {
 
-    private final String m_url;
+    private final String m_baseUrl;
 
     private final String m_path;
 
@@ -65,8 +65,8 @@ public final class ResourceInfoEnt {
 
     private final String m_id;
 
-    ResourceInfoEnt(final String id, final String url, final String path, final Resource.ContentType resourceContentType) {
-        m_url = url;
+    ResourceInfoEnt(final String id, final String baseUrl, final String path, final Resource.ContentType resourceContentType) {
+        m_baseUrl = baseUrl;
         m_path = path;
         m_contentType = resourceContentType.toString();
         m_id = id;
@@ -84,19 +84,20 @@ public final class ResourceInfoEnt {
     /**
      * The relative path to the resource.
      *
-     * @return the relative path or <code>null</code> if {@link #getUrl()} is given
+     * @return the relative path
      */
     public String getPath() {
         return m_path;
     }
 
     /**
-     * The resource url.
+     * The resource base url. I.e., if the base url is given, then the complete resource url determined by combining the
+     * base url with the path ({@link #getPath()}). Might not be given (needs to be determined on the client-side then).
      *
-     * @return the url or <code>null</code> if {@link #getPath()} is given
+     * @return the url or <code>null</code> if not given
      */
-    public String getUrl() {
-        return m_url;
+    public String getBaseUrl() {
+        return m_baseUrl;
     }
 
     /**

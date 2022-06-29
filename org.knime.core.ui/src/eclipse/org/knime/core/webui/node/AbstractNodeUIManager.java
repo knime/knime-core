@@ -103,7 +103,7 @@ public abstract class AbstractNodeUIManager implements DataServiceManager, PageR
      */
     private final String m_domainName = "org.knime.core.ui." + m_pageKind;
 
-    private final String m_url = "http://" + m_domainName + "/";
+    private final String m_baseUrl = "http://" + m_domainName + "/";
 
     private final String m_nodeDebugPatternProp = "org.knime.ui.dev.node." + m_pageKind + ".url.factory-class";
 
@@ -233,22 +233,6 @@ public abstract class AbstractNodeUIManager implements DataServiceManager, PageR
     }
 
     /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Optional<String> getPageUrl(final NativeNodeContainer nnc) {
-        if (isRunAsDesktopApplication()) {
-            var debugUrl = getDebugUrl(nnc.getNode().getFactory().getClass());
-            if (debugUrl.isPresent()) {
-                return debugUrl;
-            }
-            return Optional.of(m_url + getPagePathInternal(nnc));
-        } else {
-            return Optional.empty();
-        }
-    }
-
-    /**
      * Optionally returns a debug url for a view (dialog etc.) which is controlled by a system property.
      *
      * @param nodeFactoryClass the node factory class to get the debug url for
@@ -279,16 +263,20 @@ public abstract class AbstractNodeUIManager implements DataServiceManager, PageR
      * {@inheritDoc}
      */
     @Override
-    public Optional<String> getPagePath(final NativeNodeContainer nnc) {
-        if (!isRunAsDesktopApplication()) {
-            return Optional.of(getPagePathInternal(nnc));
+    public String getPagePath(final NativeNodeContainer nnc) {
+        return registerPage(nnc, getPage(nnc), getPageType());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Optional<String> getBaseUrl() {
+        if (isRunAsDesktopApplication()) {
+            return Optional.of(m_baseUrl);
         } else {
             return Optional.empty();
         }
-    }
-
-    private String getPagePathInternal(final NativeNodeContainer nnc) {
-        return registerPage(nnc, getPage(nnc), getPageType());
     }
 
     private String registerPage(final NativeNodeContainer nnc, final Page page, final PageType pageKind) {
@@ -316,7 +304,7 @@ public abstract class AbstractNodeUIManager implements DataServiceManager, PageR
         if (page.getRelativePath().equals(relPath)) {
             return Optional.of(page);
         } else {
-            return Optional.ofNullable(page.getContext().get(relPath));
+            return page.getResource(relPath);
         }
     }
 
@@ -329,7 +317,7 @@ public abstract class AbstractNodeUIManager implements DataServiceManager, PageR
     }
 
     private String getResourceIdFromUrl(final String url) {
-        return url.replace(m_url, "");
+        return url.replace(m_baseUrl, "");
     }
 
     private static boolean isRunAsDesktopApplication() {
