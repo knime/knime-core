@@ -105,11 +105,10 @@ public class PNGImageCellFactory implements FromInputStream {
      *
      * @param contents a byte array containing a PNG image
      * @return a new data cell
-     * @throws IOException If reading from the stream fails.
      * @throws IllegalArgumentException If the argument does not represent a valid png byte stream (according to
      *             {@link ImageIO#read(InputStream)}.
      */
-    public static DataCell create(final byte[] contents) throws IOException {
+    public static DataCell create(final byte[] contents) {
         return new PNGImageContent(contents).toImageCell();
     }
 }
