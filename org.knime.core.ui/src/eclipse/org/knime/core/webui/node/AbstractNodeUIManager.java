@@ -232,19 +232,19 @@ public abstract class AbstractNodeUIManager implements DataServiceManager, PageR
         return m_pageMap.size();
     }
 
+
     /**
-     * Optionally returns a debug url for a view (dialog etc.) which is controlled by a system property.
-     *
-     * @param nodeFactoryClass the node factory class to get the debug url for
-     * @return a debug url or an empty optional of none is set
+     * {@inheritDoc}
      */
-    private Optional<String>
-        getDebugUrl(@SuppressWarnings("rawtypes") final Class<? extends NodeFactory> nodeFactoryClass) {
+    @Override
+    public Optional<String> getDebugUrl(final NativeNodeContainer nnc) {
         String pattern = System.getProperty(m_nodeDebugPatternProp);
         String url = System.getProperty(m_nodeDebugUrlProp);
         if (url == null) {
             return Optional.empty();
         }
+        @SuppressWarnings("rawtypes")
+        final Class<? extends NodeFactory> nodeFactoryClass = nnc.getNode().getFactory().getClass();
         if (pattern == null || Pattern.matches(pattern, nodeFactoryClass.getName())) {
             return Optional.of(url);
         }

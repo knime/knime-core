@@ -86,6 +86,14 @@ public interface PageResourceManager {
     Optional<String> getBaseUrl();
 
     /**
+     * Optionally returns a debug url for a view (dialog etc.) which is controlled by a system property.
+     *
+     * @param nnc the node to get the debug url for
+     * @return a debug url or an empty optional of none is set
+     */
+    Optional<String> getDebugUrl(NativeNodeContainer nnc);
+
+    /**
      * Provides the relative path for a page.
      *
      * @param nnc the node which provides the page

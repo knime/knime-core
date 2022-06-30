@@ -59,14 +59,19 @@ public final class ResourceInfoEnt {
 
     private final String m_baseUrl;
 
+    private final String m_debugUrl;
+
     private final String m_path;
 
     private final String m_contentType;
 
     private final String m_id;
 
-    ResourceInfoEnt(final String id, final String baseUrl, final String path, final Resource.ContentType resourceContentType) {
+
+    ResourceInfoEnt(final String id, final String baseUrl, final String debugUrl, final String path,
+        final Resource.ContentType resourceContentType) {
         m_baseUrl = baseUrl;
+        m_debugUrl = debugUrl;
         m_path = path;
         m_contentType = resourceContentType.toString();
         m_id = id;
@@ -98,6 +103,13 @@ public final class ResourceInfoEnt {
      */
     public String getBaseUrl() {
         return m_baseUrl;
+    }
+
+    /**
+     * @return a complete url pointing to the resource; only available for debugging
+     */
+    public String getDebugUrl() {
+        return m_debugUrl;
     }
 
     /**
