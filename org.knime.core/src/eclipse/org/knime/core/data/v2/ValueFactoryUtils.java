@@ -180,15 +180,22 @@ public final class ValueFactoryUtils {
         final JsonNode json = extractLogicalTypeJson(traits);
         final String valueFactoryName = json.get(CFG_VALUE_FACTORY_CLASS).asText();
 
+        ValueFactory<?, ?> valueFactory;
         if (VoidValueFactory.class.getName().equals(valueFactoryName)) {
             return VoidValueFactory.INSTANCE;
         } else if (json.has(CFG_DATA_TYPE)) {
-            return getDataCellValueFactoryFromLogicalTypeString(json, dataRepository);
+            valueFactory = getDataCellValueFactoryFromLogicalTypeString(json);
         } else if (SPECIFIC_COLLECTION_FACTORY_PROVIDER.hasFactoryFor(valueFactoryName)) {
-            return SPECIFIC_COLLECTION_FACTORY_PROVIDER.getFactoryFor(valueFactoryName);
+            valueFactory = SPECIFIC_COLLECTION_FACTORY_PROVIDER.getFactoryFor(valueFactoryName);
         } else {
-            return getValueFactoryFromExtensionPoint(traits, dataRepository, valueFactoryName);
+            valueFactory = getValueFactoryFromExtensionPoint(traits, dataRepository, valueFactoryName);
         }
+
+        if (valueFactory instanceof FileStoreAwareValueFactory) {
+            ((FileStoreAwareValueFactory)valueFactory).initializeForReading(dataRepository);
+        }
+
+        return valueFactory;
     }
 
     /**
@@ -239,11 +246,12 @@ public final class ValueFactoryUtils {
         return valueFactory;
     }
 
-    private static ValueFactory<?, ?> getDataCellValueFactoryFromLogicalTypeString(final JsonNode json,
-        final IDataRepository dataRepo) {
+    /**
+     * Create a DictEncodedDataCellValueFactory that still needs to be initialized to access file stores
+     */
+    private static ValueFactory<?, ?> getDataCellValueFactoryFromLogicalTypeString(final JsonNode json) {
         var dataType = loadDataTypeFromJson((ObjectNode)json.get(CFG_DATA_TYPE));
-        var valueFactory = new DictEncodedDataCellValueFactory();
-        valueFactory.initialize(dataRepo, dataType);
+        var valueFactory = new DictEncodedDataCellValueFactory(dataType);
         return valueFactory;
     }
 
@@ -256,8 +264,14 @@ public final class ValueFactoryUtils {
      */
     public static ValueFactory<?, ?> getValueFactory(final DataType type, //NOSONAR
         final IWriteFileStoreHandler fileStoreHandler) {
-        return getValueFactory(type, t -> new DictEncodedDataCellValueFactory(fileStoreHandler, type),
+        var valueFactory = getValueFactory(type, t -> new DictEncodedDataCellValueFactory(type),
             fileStoreHandler);
+
+        if (valueFactory instanceof FileStoreAwareValueFactory) {
+            ((FileStoreAwareValueFactory)valueFactory).initializeForWriting(fileStoreHandler);
+        }
+
+        return valueFactory;
     }
 
     /**
@@ -298,10 +312,15 @@ public final class ValueFactoryUtils {
             @SuppressWarnings("null")
             final DataType elementType = type.getCollectionElementType();
             final ValueFactory<?, ?> elementFactory = getValueFactory(elementType,
-                t -> new DictEncodedDataCellValueFactory(fileStoreHandler, elementType),
+                t -> new DictEncodedDataCellValueFactory(elementType),
                 fileStoreHandler);
             ((CollectionValueFactory<?, ?>)factory).initialize(elementFactory, elementType);
         }
+
+        if (factory instanceof FileStoreAwareValueFactory) {
+            ((FileStoreAwareValueFactory)factory).initializeForWriting(fileStoreHandler);
+        }
+
         return factory;
     }
 

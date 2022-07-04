@@ -44,31 +44,36 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Nov 18, 2021 (Adrian Nembach, KNIME GmbH, Konstanz, Germany): created
+ *   4 Jul 2022 (Carsten Haubold): created
  */
-package org.knime.core.data.v2.value.cell;
+package org.knime.core.data.v2;
 
-import org.knime.core.data.DataCell;
-import org.knime.core.data.def.StringCell;
-import org.knime.core.data.filestore.internal.NotInWorkflowWriteFileStoreHandler;
-import org.knime.core.data.v2.ValueFactory;
+import org.knime.core.data.IDataRepository;
+import org.knime.core.data.filestore.FileStore;
+import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 
 /**
+ * Interface that declares that a {@link ValueFactory} deals with {@link org.knime.core.data.filestore.FileStore}s,
+ * and thus needs to be initialized accordingly.
  *
- * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
+ * @author Carsten Haubold, KNIME GmbH, Konstanz, Germany
+ * @since 4.6
+ *
+ * @noreference This class is not intended to be referenced by clients.
  */
-public class DictEncodedDataCellValueFactoryTest extends AbstractValueFactoryTest {
+public interface FileStoreAwareValueFactory {
 
-    @Override
-    protected ValueFactory<?, ?> createFactory() {
-        var factory = new DictEncodedDataCellValueFactory(StringCell.TYPE);
-        factory.initializeForWriting(NotInWorkflowWriteFileStoreHandler.create());
-        return factory;
-    }
+    /**
+     * Initialize a {@link FileStoreAwareValueFactory} for reading.
+     *
+     * @param repository to deal with (potentially) written {@link FileStore}s.
+     */
+    void initializeForReading(IDataRepository repository);
 
-    @Override
-    protected DataCell createNewTestCell() {
-        return new StringCell("foobar");
-    }
-
+    /**
+     * Initialize a {@link FileStoreAwareValueFactory} for writing.
+     *
+     * @param fileStoreHandler to create new {@link FileStore}s while writing values
+     */
+    void initializeForWriting(IWriteFileStoreHandler fileStoreHandler);
 }

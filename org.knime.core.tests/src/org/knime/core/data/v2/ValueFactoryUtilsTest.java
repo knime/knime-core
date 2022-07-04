@@ -413,7 +413,9 @@ final class ValueFactoryUtilsTest {
 
     private static DictEncodedDataCellValueFactory createDataCellValueFactory(final DataType type) {
         var fsHandler = NotInWorkflowWriteFileStoreHandler.create();
-        return new DictEncodedDataCellValueFactory(fsHandler, type);
+        var factory = new DictEncodedDataCellValueFactory(type);
+        factory.initializeForWriting(fsHandler);
+        return factory;
     }
 
     private static ListValueFactory createListValueFactory(final ValueFactory<?, ?> elementValueFactory,

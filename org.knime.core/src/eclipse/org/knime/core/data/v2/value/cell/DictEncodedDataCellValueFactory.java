@@ -56,6 +56,7 @@ import org.knime.core.data.DataValue;
 import org.knime.core.data.IDataRepository;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
+import org.knime.core.data.v2.FileStoreAwareValueFactory;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.RowCursor;
 import org.knime.core.data.v2.ValueFactory;
@@ -80,8 +81,8 @@ import org.knime.core.table.schema.traits.DefaultStructDataTraits;
  * corresponding {@link RowIterator} and {@link RowCursor} implementations.
  *
  * Replaces {@link DataCellValueFactory} because dictionary encoding only adds very little overhead but brings a lot of
- * speedup in case e.g. BlobCells are repeated in the table.
- * Furthermore, the DataCellSerializer class name is now stored alongside the data as dictionary encoded string.
+ * speedup in case e.g. BlobCells are repeated in the table. Furthermore, the DataCellSerializer class name is now
+ * stored alongside the data as dictionary encoded string.
  *
  * @author Carsten Haubold, KNIME GmbH, Konstanz, Germany
  * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
@@ -90,7 +91,8 @@ import org.knime.core.table.schema.traits.DefaultStructDataTraits;
  * @noinstantiate This class is not intended to be instantiated by clients.
  * @noreference This class is not intended to be referenced by clients.
  */
-public final class DictEncodedDataCellValueFactory implements ValueFactory<StructReadAccess, StructWriteAccess> {
+public final class DictEncodedDataCellValueFactory
+    implements ValueFactory<StructReadAccess, StructWriteAccess>, FileStoreAwareValueFactory {
 
     private IWriteFileStoreHandler m_fsHandler;
 
@@ -99,33 +101,31 @@ public final class DictEncodedDataCellValueFactory implements ValueFactory<Struc
     private DataType m_type;
 
     /**
-     * Empty framework constructor. Call {@link #initialize(IDataRepository, DataType)} after using this constructor.
+     * Empty framework constructor. Call {@link #initializeForReading(IDataRepository)} or
+     * {@link #initializeForWriting(IWriteFileStoreHandler)} after using this constructor.
      */
     public DictEncodedDataCellValueFactory() {
     }
 
     /**
-     * Create a {@link DictEncodedDataCellValueFactory} for writing.
+     * Create a {@link DictEncodedDataCellValueFactory} for writing. Call {@link #initializeForReading(IDataRepository)} or
+     * {@link #initializeForWriting(IWriteFileStoreHandler)} after using this constructor.
      *
-     * @param fileStoreHandler to deal with file stores.
      * @param type type associated with cells
      */
-    public DictEncodedDataCellValueFactory(final IWriteFileStoreHandler fileStoreHandler, final DataType type) {
+    public DictEncodedDataCellValueFactory(final DataType type) {
         m_type = type;
-        m_fsHandler = fileStoreHandler;
-        m_dataRepository = fileStoreHandler.getDataRepository();
     }
 
-    /**
-     * Create a {@link DataCellValueFactory} for reading.
-     *
-     * @param repository to deal with (potentially) written file stores.
-     * @param type type associated with cells
-     */
-    public void initialize(final IDataRepository repository, final DataType type) {
-        m_type = type;
-        m_fsHandler = null;
+    @Override
+    public void initializeForReading(final IDataRepository repository) {
         m_dataRepository = repository;
+    }
+
+    @Override
+    public void initializeForWriting(final IWriteFileStoreHandler fileStoreHandler) {
+        m_fsHandler = fileStoreHandler;
+        m_dataRepository = fileStoreHandler.getDataRepository();
     }
 
     /**
