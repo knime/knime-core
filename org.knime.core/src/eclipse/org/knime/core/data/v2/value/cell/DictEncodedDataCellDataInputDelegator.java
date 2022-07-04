@@ -68,7 +68,7 @@ import org.knime.core.table.io.ReadableDataInput;
  * @author Carsten Haubold, KNIME GmbH, Konstanz, Germany
  * @since 4.5
  */
-final class DictEncodedDataCellDataInputDelegator extends AbstractDataInputDelegator {
+public final class DictEncodedDataCellDataInputDelegator extends AbstractDataInputDelegator {
 
     private static final DataTypeRegistry REGISTRY = DataTypeRegistry.getInstance();
 
@@ -125,7 +125,6 @@ final class DictEncodedDataCellDataInputDelegator extends AbstractDataInputDeleg
      * @return A string describing the data cell and all the cells that it possibly contains (if it is a
      *         {@link CellCollection}), as needed to construct a {@link DictEncodedDataCellDataInputDelegator}.
      */
-    @SuppressWarnings("javadoc")
     public static String getSerializedCellNames(final DataCell cell) {
         final var cellNamesBuilder = new StringBuilder(cell.getClass().getName());
         if (cell instanceof CellCollection) {

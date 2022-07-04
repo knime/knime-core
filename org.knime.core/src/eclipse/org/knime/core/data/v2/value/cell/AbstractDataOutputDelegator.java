@@ -64,13 +64,13 @@ import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
  * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
  * @author Carsten Haubold, KNIME GmbH, Konstanz, Germany
  */
-abstract class AbstractDataOutputDelegator extends OutputStream implements DataCellDataOutput {
+public abstract class AbstractDataOutputDelegator extends OutputStream implements DataCellDataOutput {
 
     private final IWriteFileStoreHandler m_fsHandler;
 
     private final DataOutput m_delegate;
 
-    AbstractDataOutputDelegator(final IWriteFileStoreHandler fsHandler, final DataOutput output) {
+    protected AbstractDataOutputDelegator(final IWriteFileStoreHandler fsHandler, final DataOutput output) {
         m_delegate = output;
         m_fsHandler = fsHandler;
     }

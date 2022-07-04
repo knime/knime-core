@@ -64,13 +64,13 @@ import org.knime.core.table.io.ReadableDataInput;
  * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
  * @author Carsten Haubold, KNIME GmbH, Konstanz, Germany
  */
-abstract class AbstractDataInputDelegator extends InputStream implements DataCellDataInput {
+public abstract class AbstractDataInputDelegator extends InputStream implements DataCellDataInput {
 
     private final IDataRepository m_dataRepository;
 
     private final ReadableDataInput m_delegate;
 
-    AbstractDataInputDelegator(final IDataRepository dataRepository, final ReadableDataInput input) {
+    protected AbstractDataInputDelegator(final IDataRepository dataRepository, final ReadableDataInput input) {
 
         m_dataRepository = dataRepository;
         m_delegate = input;
