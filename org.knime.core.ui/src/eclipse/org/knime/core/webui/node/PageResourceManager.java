@@ -78,7 +78,7 @@ public interface PageResourceManager {
      * The base url for the page and associated resources. It is usually only available if the AP is run as a desktop
      * application
      *
-     * It's <b>not</b> available if run within an 'executor' as part of the server infrastructure) - in this case the
+     * It's <b>not</b> available if run within an 'executor' as part of the server infrastructure - in this case the
      * base url needs to be determined by the frontend.
      *
      * @return the base url or an empty optional if not available
@@ -89,7 +89,7 @@ public interface PageResourceManager {
      * Optionally returns a debug url for a view (dialog etc.) which is controlled by a system property.
      *
      * @param nnc the node to get the debug url for
-     * @return a debug url or an empty optional of none is set
+     * @return a debug url or an empty optional if none is set
      */
     Optional<String> getDebugUrl(NativeNodeContainer nnc);
 

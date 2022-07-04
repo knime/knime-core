@@ -68,14 +68,11 @@ import java.util.function.Supplier;
  */
 public class PageBuilder {
 
-    @SuppressWarnings("javadoc")
-    protected final List<Resource> m_resources = new ArrayList<>();
+    final List<Resource> m_resources = new ArrayList<>();
 
-    @SuppressWarnings("javadoc")
-    protected Map<String, Function<String, Resource>> m_dynamicResources;
+    Map<String, Function<String, Resource>> m_dynamicResources;
 
-    @SuppressWarnings("javadoc")
-    protected final Resource m_pageResource;
+    final Resource m_pageResource;
 
     PageBuilder(final Supplier<InputStream> content, final String relativePath) {
         m_pageResource = new Resource() {
@@ -145,7 +142,7 @@ public class PageBuilder {
     }
 
     /**
-     * Allows one to add multiple resources add once with a single function which dynamically maps paths to resources.
+     * Allows one to add multiple resources at once with a single function which dynamically maps paths to resources.
      * I.e. no need to define the exact path upfront (apart from a path-prefix).
      *
      * @param supplier the mapping function from relative path to resource content

@@ -86,6 +86,7 @@ public final class Page implements Resource {
         m_resources = resources == null ? Collections.emptyMap()
             : resources.stream().collect(Collectors.toMap(Resource::getRelativePath, r -> r));
         if (dynamicResources != null) {
+            // using this custom comparator, we make sure that the longest pathPrefix always comes first
             m_dynamicResources = new TreeMap<>(Comparator.comparingInt(String::length).reversed());
             m_dynamicResources.putAll(dynamicResources);
         } else {
