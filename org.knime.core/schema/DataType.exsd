@@ -87,6 +87,16 @@ Note that at any point in exactly one ValueFactory must not be deprecated, other
                </documentation>
             </annotation>
          </attribute>
+         <attribute name="cellClass" type="string">
+            <annotation>
+               <documentation>
+                  The concrete cell class, e.g. to provide a specific ValueFactory for SdfAdapterCell. If no cellClass is specified, the ValueFactory will be used for the parent DataType&apos;s cellClass (in that example SdfCell).
+               </documentation>
+               <appInfo>
+                  <meta.attribute kind="java" basedOn="org.knime.core.data.DataCell:"/>
+               </appInfo>
+            </annotation>
+         </attribute>
       </complexType>
    </element>
 

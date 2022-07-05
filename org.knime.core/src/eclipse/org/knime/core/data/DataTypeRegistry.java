@@ -512,24 +512,43 @@ public final class DataTypeRegistry {
     private void collectValueFactoryElements(final IConfigurationElement dataTypeExtension) {
         final var cellClass = dataTypeExtension.getAttribute(CELL_CLASS);
         var valueFactoryChildren = dataTypeExtension.getChildren(VALUE_FACTORY_ELEMENT);
+        var cellClassesWithDeprecatedValueFactories = new ArrayList<String>();
+
         if (valueFactoryChildren.length > 0) {
-            int numUnDeprecated = 0;//NOSONAR int is more informative than var
             for (IConfigurationElement valueFactoryElement : valueFactoryChildren) {
+                var valueFactorySpecificCellClass = cellClass;
+                if (valueFactoryElement.getAttribute(CELL_CLASS) != null) {
+                    valueFactorySpecificCellClass = valueFactoryElement.getAttribute(CELL_CLASS);
+                }
                 final var valueFactoryClass = valueFactoryElement.getAttribute(VALUE_FACTORY_CLASS);
-                m_valueFactoryToCellMap.put(valueFactoryClass, cellClass);
-                if (isNotDeprecated(valueFactoryElement) && numUnDeprecated == 0) {
-                    m_cellToValueFactoryMap.put(cellClass, valueFactoryClass);
-                    numUnDeprecated++;
+                if (m_valueFactoryToCellMap.containsKey(valueFactoryClass)) {
+                    LOGGER.codingWithFormat("Attempting to register ValueFactory " + valueFactoryClass
+                        + " for a second cell class. Was registered for "
+                        + m_valueFactoryToCellMap.get(valueFactoryClass) + " already, ignoring registration for "
+                        + valueFactorySpecificCellClass + ".");
+                } else {
+                    m_valueFactoryToCellMap.put(valueFactoryClass, valueFactorySpecificCellClass);
+                }
+
+                if (isNotDeprecated(valueFactoryElement)) {
+                    if (m_cellToValueFactoryMap.containsKey(valueFactorySpecificCellClass)) {
+                        LOGGER.codingWithFormat(
+                            "More than one ValueFactory for the DataType with cell class '%s' was not marked as deprecated. "
+                                + "Only the first one is used as ValueFactory for this DataType.",
+                            valueFactorySpecificCellClass);
+                    } else {
+                        m_cellToValueFactoryMap.put(valueFactorySpecificCellClass, valueFactoryClass);
+                    }
+                } else {
+                    cellClassesWithDeprecatedValueFactories.add(valueFactorySpecificCellClass);
                 }
             }
-            if (numUnDeprecated == 0) {
+        }
+
+        for (var deprecatedCellClass : cellClassesWithDeprecatedValueFactories) {
+            if (!m_cellToValueFactoryMap.containsKey(deprecatedCellClass)) {
                 LOGGER.codingWithFormat("All ValueFactories for the DataType with cell class '%s' were deprecated.",
-                    cellClass);
-            } else if (numUnDeprecated > 1) {
-                LOGGER.codingWithFormat(
-                    "More than one ValueFactory for the DataType with cell class '%s' was not marked as deprecated. "
-                        + "Only the first one is used as ValueFactory for this DataType.",
-                    cellClass);
+                    deprecatedCellClass);
             }
         }
     }
@@ -587,12 +606,12 @@ public final class DataTypeRegistry {
             @SuppressWarnings("unchecked")
             // Get the class
             final Class<? extends ValueFactory<?, ?>> valueFactoryClass =
-            (Class<? extends ValueFactory<?, ?>>)f.getClass();
+                (Class<? extends ValueFactory<?, ?>>)f.getClass();
             // Put the class into the map
             m_valueFactoryClassMap.put(valueFactoryClassName, valueFactoryClass);
         } catch (final CoreException ex) {
             LOGGER.coding("The value factory class '" + valueFactoryClassName + "' registered at extension point '"
-                    + EXT_POINT_ID + "' could not be created. Ignoring extension.", ex);
+                + EXT_POINT_ID + "' could not be created. Ignoring extension.", ex);
         }
     }
 
