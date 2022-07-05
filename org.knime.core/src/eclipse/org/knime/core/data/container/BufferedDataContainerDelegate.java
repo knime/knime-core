@@ -703,7 +703,7 @@ class BufferedDataContainerDelegate implements DataContainerDelegate {
     }
 
     /**
-     * Returns <code>true</code> if the given argument table has been created by the DataContainer, <code>false</code>
+     * Returns <code>true</code> if the given argument table has been created by a DataContainer, <code>false</code>
      * otherwise.
      *
      * @param table The table to check.

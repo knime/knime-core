@@ -2643,10 +2643,10 @@ public class Buffer implements KNIMEStreamConstants {
     }
 
     /**
-     * An interface that described the lifecycle of a buffer. It is interfaced during multiple stages of a buffer's
+     * An interface that describes the lifecycle of a buffer. It is interfaced during multiple stages of a buffer's
      * existence and is responsible for determining (a) when to evict tables from the cache, (b) when to move tables
      * back into the cache, and (c) when to flush tables to disk. By default (i.e., if this interface is implemented and
-     * all methods have empty buffers), a table will be flushed only (a) if memory becomes critical while adding rows to
+     * all methods have empty bodies), a table will be flushed only (a) if memory becomes critical while adding rows to
      * the buffer, (b) when it is explicitly configured to do so, (c) when it holds more rows than
      * {@link Integer#MAX_VALUE}, or (d) when the workflow is saved. If not flushed, it will remain hard-referenced in
      * the cache. Once flushed, it will never re-enter the cache. See https://knime-com.atlassian.net/browse/AP-10684

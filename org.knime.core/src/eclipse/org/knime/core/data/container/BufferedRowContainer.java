@@ -72,7 +72,7 @@ import org.knime.core.table.access.BufferedAccesses.BufferedAccess;
 import org.knime.core.table.access.ReadAccess;
 
 /**
- * Legacy implementation for CustomKeyRowContainer using {@link DataContainer}s as storage backend.
+ * Legacy implementation for {@link RowContainer} using {@link BufferedDataContainer} as storage backend.
  *
  * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
  * @since 4.3

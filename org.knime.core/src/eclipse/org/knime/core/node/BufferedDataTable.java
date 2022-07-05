@@ -992,7 +992,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
      */
     public static interface KnowsRowCountTable extends DataTable {
         /**
-         * ow count of the table.
+         * Row count of the table.
          * @return The row count.
          * @since 3.0
          * @deprecated use {@link #size()} instead which supports more than {@link Integer#MAX_VALUE} rows
