@@ -119,7 +119,6 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
-import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.AbstractNodeView;
@@ -213,7 +212,6 @@ import org.knime.core.util.LoadVersion;
 import org.knime.core.util.LockFailedException;
 import org.knime.core.util.Pair;
 import org.knime.core.util.VMFileLocker;
-import org.knime.core.util.pathresolve.ResolverUtil;
 import org.knime.core.util.workflowalizer.AuthorInformation;
 import org.knime.shared.workflow.def.BaseNodeDef;
 import org.knime.shared.workflow.def.ComponentNodeDef;
@@ -7346,116 +7344,24 @@ public final class WorkflowManager extends NodeContainer
             return false;
         }
         NodeContainerTemplate tnc = (NodeContainerTemplate)nc;
-        Map<NodeID, NodeContainerTemplate> idsToCheck = new LinkedHashMap<NodeID, NodeContainerTemplate>();
-        if (tnc.getTemplateInformation().getRole().equals(Role.Link)) {
+        Map<NodeID, NodeContainerTemplate> idsToCheck = new LinkedHashMap<>();
+        if (tnc.getTemplateInformation().getRole() == Role.Link) {
             idsToCheck.put(id, tnc);
         }
         if (recurseInto) {
             idsToCheck = tnc.fillLinkedTemplateNodesList(idsToCheck, true, false);
         }
-        boolean hasUpdate = false;
-        for (NodeContainerTemplate linkedMeta : idsToCheck.values()) {
-            MetaNodeTemplateInformation linkInfo = linkedMeta.getTemplateInformation();
-            final URI uri = linkInfo.getSourceURI();
-            NodeContainerTemplate tempLink;
-            if (!visitedTemplateMap.containsKey(uri)) {
-                try {
-                    final LoadResult templateLoadResult = new LoadResult("Template to " + uri);
-                    tempLink = loadMetaNodeTemplate(linkedMeta, loadHelper, templateLoadResult, true);
-                    loadResult.addChildError(templateLoadResult);
-                    visitedTemplateMap.put(uri, tempLink);
-                } catch (Exception e) {
-                    if (linkInfo.setUpdateStatusInternal(UpdateStatus.Error)) {
-                        linkedMeta.notifyTemplateConnectionChangedListener();
-                    }
-                    if (e instanceof IOException) {
-                        throw new IOException("Could not update metanode '" + tnc + "': " + e.getMessage(), e);
-                    } else if (e instanceof CanceledExecutionException) {
-                        throw new IOException("Canceled while loading from template", e);
-                    } else if (e instanceof RuntimeException) {
-                        throw (RuntimeException)e;
-                    } else {
-                        throw new RuntimeException(e);
-                    }
-                }
-            } else {
-                tempLink = visitedTemplateMap.get(uri);
-            }
-            // the template might be null which also means that there is _no_ update available
-            // (see #loadMetaNodeTemplate)
-            boolean hasThisOneAnUpdate = tempLink != null && !tempLink.getTemplateInformation().isEqual(linkInfo);
-            UpdateStatus updateStatus = hasThisOneAnUpdate ? UpdateStatus.HasUpdate : UpdateStatus.UpToDate;
-            hasUpdate = hasUpdate || hasThisOneAnUpdate;
-            if (linkInfo.setUpdateStatusInternal(updateStatus)) {
-                linkedMeta.notifyTemplateConnectionChangedListener();
-            }
-        }
-        return hasUpdate;
-    }
+        var idUpdateStates = TemplateUpdateUtil.fillNodeUpdateStates(idsToCheck.values(), loadHelper, loadResult, visitedTemplateMap);
+        for (Map.Entry<NodeID, UpdateStatus> entry : idUpdateStates.entrySet()) {
+            var nodeId = entry.getKey();
+            var status = entry.getValue();
+            var template = idsToCheck.get(nodeId);
 
-    /**
-     * Reads the template info from the metanode argument and then resolves that URI and returns a workflow manager that
-     * lives as child of {@link #templateWorkflowRoot}. Used to avoid duplicate loading from a remote location. The
-     * returned instance is then copied to the final destination.
-     *
-     * @param meta the template to load the referenced template for
-     * @param loadHelper
-     * @param loadResult
-     * @param loadOnlyIfLocalOrOutdated if <code>true</code> it will only load the template if a local template is
-     *            referenced or the referenced template is newer than this one (i.e. this template is outdated)
-     * @return the referenced template instance or <code>null</code> if <code>loadOnlyIfLocalOrOutdated</code> is set to
-     *         <code>true</code> and there is no update for the template available
-     */
-    private NodeContainerTemplate loadMetaNodeTemplate(final NodeContainerTemplate meta,
-        final WorkflowLoadHelper loadHelper, final LoadResult loadResult, final boolean loadOnlyIfLocalOrOutdated)
-        throws IOException, UnsupportedWorkflowVersionException, CanceledExecutionException {
-        MetaNodeTemplateInformation linkInfo = meta.getTemplateInformation();
-        URI sourceURI = linkInfo.getSourceURI();
-        WorkflowManager tempParent = lazyInitTemplateWorkflowRoot();
-        MetaNodeLinkUpdateResult loadResultChild;
-        NodeContext.pushContext((NodeContainer)meta);
-        try {
-            File localDir = null;
-            if (loadOnlyIfLocalOrOutdated) {
-                localDir = ResolverUtil
-                    .resolveURItoLocalOrTempFileConditional(sourceURI, new NullProgressMonitor(),
-                        linkInfo.getTimestamp().toZonedDateTime())
-                    .orElse(null);
-                if (localDir == null) {
-                    return null;
-                }
-            } else {
-                localDir = ResolverUtil.resolveURItoLocalOrTempFile(sourceURI);
+            if (template.getTemplateInformation().setUpdateStatusInternal(status)) {
+                template.notifyTemplateConnectionChangedListener();
             }
-
-            if (localDir.isFile()) {
-                // looks like a zipped metanode downloaded from a 4.4+ server
-                File unzipped = FileUtil.createTempDir("metanode-template");
-                FileUtil.unzip(localDir, unzipped);
-                localDir = unzipped.listFiles()[0];
-            }
-            TemplateNodeContainerPersistor loadPersistor = loadHelper.createTemplateLoadPersistor(localDir, sourceURI);
-            loadResultChild = new MetaNodeLinkUpdateResult("Template from " + sourceURI.toString());
-            tempParent.load(loadPersistor, loadResultChild, new ExecutionMonitor(), false);
-        } catch (InvalidSettingsException e) {
-            throw new IOException("Unable to read template metanode: " + e.getMessage(), e);
-        } finally {
-            NodeContext.removeLastContext();
         }
-        NodeContainerTemplate linkResult = loadResultChild.getLoadedInstance();
-        MetaNodeTemplateInformation templInfo = linkResult.getTemplateInformation();
-        Role sourceRole = templInfo.getRole();
-        switch (sourceRole) {
-            case Link:
-                // "Template" field in the workflow settings changed to "Link" during preLoadNodeContainer
-                // (this is due to the template information link uri set above)
-                break;
-            default:
-                throw new IOException("The source of the linked instance does "
-                    + "not represent a template but is of role " + sourceRole);
-        }
-        loadResult.addChildError(loadResultChild);
-        return linkResult;
+        return TemplateUpdateUtil.extractTemplateHasUpdate(idUpdateStates);
     }
 
     /**
@@ -7625,6 +7531,11 @@ public final class WorkflowManager extends NodeContainer
                             new NodeContainerTemplateLinkUpdateResult("Update child link \"" + getNameWithID() + "\"");
                         t = updateNodeTemplateLinkInternal(t.getID(), exec, loadHelper, visitedTemplateMap,
                             childResult);
+                        if (t == null) {
+                            var cause = childResult.hasErrors() ? ": \"" + childResult.getChildren()[0].getMessage() + "\"" : "!";
+                            loadRes.addError("Updating node " + id + " failed" + cause);
+                            continue;
+                        }
                     }
                     t.updateMetaNodeLinkInternalRecursively(exec, loadHelper, visitedTemplateMap, loadRes);
                 }
@@ -7649,7 +7560,7 @@ public final class WorkflowManager extends NodeContainer
         NodeContainerTemplate tempLink = visitedTemplateMap.get(sourceURI);
         if (tempLink == null) {
             try {
-                tempLink = loadMetaNodeTemplate(tnc, loadHelper, loadRes, false);
+                tempLink = TemplateUpdateUtil.loadMetaNodeTemplate(tnc, loadHelper, loadRes);
                 visitedTemplateMap.put(sourceURI, tempLink);
             } catch (IOException e) {
                 String error = "Failed to update metanode reference: " + e.getMessage();
