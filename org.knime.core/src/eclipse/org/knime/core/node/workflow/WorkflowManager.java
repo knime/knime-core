@@ -7383,7 +7383,7 @@ public final class WorkflowManager extends NodeContainer
             }
             // the template might be null which also means that there is _no_ update available
             // (see #loadMetaNodeTemplate)
-            boolean hasThisOneAnUpdate = tempLink != null && tempLink.getTemplateInformation().isNewerThan(linkInfo);
+            boolean hasThisOneAnUpdate = tempLink != null && !tempLink.getTemplateInformation().isEqual(linkInfo);
             UpdateStatus updateStatus = hasThisOneAnUpdate ? UpdateStatus.HasUpdate : UpdateStatus.UpToDate;
             hasUpdate = hasUpdate || hasThisOneAnUpdate;
             if (linkInfo.setUpdateStatusInternal(updateStatus)) {
