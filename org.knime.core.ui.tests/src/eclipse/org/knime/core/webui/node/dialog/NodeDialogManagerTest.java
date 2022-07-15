@@ -233,7 +233,7 @@ public class NodeDialogManagerTest {
         String message =
             assertThrows(IOException.class, () -> nodeDialogManager.callTextApplyDataService(nc, "ERROR,invalid"))
                 .getMessage();
-        assertThat(message, is("Invalid node settings"));
+        assertThat(message, is("Invalid node settings: validation expected to fail"));
     }
 
     private static NodeSettingsRO getNodeViewSettings(final NodeContainer nc) {

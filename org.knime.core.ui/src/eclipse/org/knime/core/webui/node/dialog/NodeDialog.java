@@ -300,7 +300,7 @@ public abstract class NodeDialog implements DataServiceProvider {
                 }
 
             } catch (InvalidSettingsException ex) {
-                throw new IOException("Invalid node settings", ex);
+                throw new IOException("Invalid node settings: " + ex.getMessage(), ex);
             }
         }
 
