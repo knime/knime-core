@@ -45,6 +45,7 @@ try {
                 'knime-kerberos',
                 'knime-productivity-oss',
                 'knime-python-legacy',
+                'knime-python',
                 'knime-r',
                 'knime-reporting',
                 'knime-streaming',
