@@ -209,7 +209,11 @@ public class DefaultDataValueRenderer extends DefaultTableCellRenderer implement
         }
     }
 
-    private void setValueCatchingException(final Object value) {
+    /**
+     * @noreference This method is not intended to be referenced by clients.
+     * @param value
+     */
+    public final void setValueCatchingException(final Object value) {
         try {
             setValue(value);
         } catch (Exception e) {
