@@ -10,7 +10,7 @@
 
 	<properties>
 		<surefireArgLine>-Dsun.java2d.d3d=false -Dosgi.classloader.lock=classname \
-		-XX:+UnlockDiagnosticVMOptions -XX:+UnsyncloadClass -XX:+UseG1GC \
+		-XX:+UnlockDiagnosticVMOptions -XX:+UnsyncloadClass \
 		-Dsun.net.client.defaultReadTimeout=0 -Xmx4G \
 		-XX:CompileCommand=exclude,javax/swing/text/GlyphView,getBreakSpot
 		</surefireArgLine>
