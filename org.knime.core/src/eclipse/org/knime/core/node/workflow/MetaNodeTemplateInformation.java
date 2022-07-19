@@ -407,7 +407,8 @@ public final class MetaNodeTemplateInformation implements Cloneable {
         if (other.m_timestamp == null) {
             throw new IllegalStateException("Argument not a template or link: " + this);
         }
-        return getTimestamp().isEqual(other.getTimestamp());
+
+        return getTimestamp().withNano(0).isEqual(other.getTimestamp().withNano(0));
     }
 
     /** @param cl The non-null class (used to derive {@link TemplateType}).
