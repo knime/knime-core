@@ -70,7 +70,11 @@ public final class PageUtil {
             /**
              * A node view
              */
-            VIEW;
+            VIEW,
+            /**
+             * A port view.
+             */
+            PORT;
 
         @Override
         public String toString() {

@@ -97,4 +97,21 @@ public interface JsonRpcDataService extends RpcDataService, TextDataService {
         }
     }
 
+    /**
+     * Helper to create a json rpc request string.
+     *
+     * @param method
+     * @param params
+     * @return the json rpc request as json string
+     */
+    public static String jsonRpcRequest(final String method, final String... params) {
+        var mapper = ObjectMapperUtil.getInstance().getObjectMapper();
+        var paramsArrayNode = mapper.createArrayNode();
+        for (var param : params) {
+            paramsArrayNode.add(param);
+        }
+        return mapper.createObjectNode().put("jsonrpc", "2.0").put("id", 1).put("method", method)
+            .set("params", paramsArrayNode).toPrettyString();
+    }
+
 }

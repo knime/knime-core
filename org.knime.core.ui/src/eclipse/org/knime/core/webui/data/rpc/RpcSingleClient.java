@@ -66,7 +66,10 @@ import java.util.function.Function;
  * @noextend This class is not intended to be subclassed by clients.
  *
  * @since 4.3
+ * @deprecated can be removed since we don't need a java-based RpcClient anymore once the Remote Workflow Editor becomes
+ *             obsolete
  */
+@Deprecated(forRemoval = true)
 public interface RpcSingleClient<S> extends RpcClient {
 
     /**

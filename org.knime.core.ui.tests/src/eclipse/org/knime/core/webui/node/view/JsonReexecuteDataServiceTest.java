@@ -57,6 +57,7 @@ import org.awaitility.Awaitility;
 import org.junit.Test;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.webui.data.json.impl.JsonReExecuteDataServiceImpl;
+import org.knime.core.webui.node.NNCWrapper;
 import org.knime.core.webui.page.Page;
 import org.knime.testing.node.view.NodeViewNodeModel;
 import org.knime.testing.util.WorkflowManagerUtil;
@@ -77,7 +78,7 @@ public class JsonReexecuteDataServiceTest {
             NodeViewManagerTest.createNodeWithNodeView(wfm, m -> NodeViewTest.createNodeView(page, m));
         wfm.executeAllAndWaitUntilDone();
 
-        NodeViewManager.getInstance().callTextApplyDataService(nnc, "data to apply");
+        NodeViewManager.getInstance().callTextApplyDataService(NNCWrapper.of(nnc), "data to apply");
         NodeViewNodeModel model = (NodeViewNodeModel)nnc.getNodeModel();
         Awaitility.await().untilAsserted(() -> {
             assertThat(model.getPreReexecuteData(), is("data to apply"));

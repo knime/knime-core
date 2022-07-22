@@ -53,6 +53,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.knime.core.webui.data.rpc.json.JsonRpcDataService.jsonRpcRequest;
 
 import java.io.IOException;
 
@@ -62,6 +63,7 @@ import org.knime.core.webui.data.DataServiceException;
 import org.knime.core.webui.data.rpc.json.impl.JsonRpcDataServiceImpl;
 import org.knime.core.webui.data.rpc.json.impl.JsonRpcSingleServer;
 import org.knime.core.webui.data.rpc.json.impl.ObjectMapperUtil;
+import org.knime.core.webui.node.NNCWrapper;
 import org.knime.core.webui.node.view.NodeView;
 import org.knime.core.webui.node.view.NodeViewManager;
 import org.knime.core.webui.node.view.NodeViewManagerTest;
@@ -89,8 +91,8 @@ class JsonRpcDataServiceTest {
             null, new JsonRpcDataServiceImpl(new JsonRpcSingleServer<MyService>(new MyService())), null));
         wfm.executeAllAndWaitUntilDone();
 
-        var jsonRpcRequest = "{\"jsonrpc\":\"2.0\", \"id\":1, \"method\":\"myMethod\"}";
-        String response = NodeViewManager.getInstance().callTextDataService(nnc, jsonRpcRequest);
+        var jsonRpcRequest = jsonRpcRequest("myMethod");
+        String response = NodeViewManager.getInstance().callTextDataService(NNCWrapper.of(nnc), jsonRpcRequest);
         assertThat(response, is("{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":\"my service method result\"}\n"));
 
         WorkflowManagerUtil.disposeWorkflow(wfm);
@@ -115,8 +117,8 @@ class JsonRpcDataServiceTest {
                     null));
         wfm.executeAllAndWaitUntilDone();
 
-        var jsonRpcRequest = "{\"jsonrpc\":\"2.0\", \"id\":1, \"method\":\"erroneusMethod\", \"params\": [\"foo\"]}";
-        String response = NodeViewManager.getInstance().callTextDataService(nnc, jsonRpcRequest);
+        var jsonRpcRequest = jsonRpcRequest("erroneusMethod", "foo");
+        String response = NodeViewManager.getInstance().callTextDataService(NNCWrapper.of(nnc), jsonRpcRequest);
         final var root = ObjectMapperUtil.getInstance().getObjectMapper().readTree(response);
         assertTrue(root.has("error"));
         final var error = root.get("error");
@@ -147,9 +149,8 @@ class JsonRpcDataServiceTest {
                 new JsonRpcSingleServer<ServiceThrowingUserError>(new ServiceThrowingUserError())), null));
         wfm.executeAllAndWaitUntilDone();
 
-        var jsonRpcRequest =
-            "{\"jsonrpc\":\"2.0\", \"id\":1, \"method\":\"erroneusMethod\", \"params\": [\"foo\", \"bar\"]}";
-        String response = NodeViewManager.getInstance().callTextDataService(nnc, jsonRpcRequest);
+        var jsonRpcRequest = jsonRpcRequest("erroneusMethod", "foo", "bar");
+        String response = NodeViewManager.getInstance().callTextDataService(NNCWrapper.of(nnc), jsonRpcRequest);
         final var root = ObjectMapperUtil.getInstance().getObjectMapper().readTree(response);
         assertTrue(root.has("error"));
         final var error = root.get("error");

@@ -55,6 +55,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.NativeNodeContainer;
+import org.knime.core.webui.node.NNCWrapper;
 import org.knime.core.webui.node.view.NodeViewManager;
 import org.knime.core.webui.page.PageUtil.PageType;
 
@@ -63,7 +64,7 @@ import org.knime.core.webui.page.PageUtil.PageType;
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
-public final class NodeViewEnt extends NodeUIExtensionEnt {
+public final class NodeViewEnt extends NodeUIExtensionEnt<NNCWrapper> {
 
     private final NodeInfoEnt m_info;
 
@@ -102,7 +103,7 @@ public final class NodeViewEnt extends NodeUIExtensionEnt {
 
     private NodeViewEnt(final NativeNodeContainer nnc, final Supplier<List<String>> initialSelection,
         final NodeViewManager nodeViewManager, final String customErrorMessage) {
-        super(nnc, nodeViewManager, nodeViewManager, PageType.VIEW);
+        super(NNCWrapper.of(nnc), nodeViewManager, nodeViewManager, PageType.VIEW);
         CheckUtils.checkArgument(NodeViewManager.hasNodeView(nnc), "The provided node doesn't have a node view");
         m_initialSelection = initialSelection == null ? null : initialSelection.get();
         m_info = new NodeInfoEnt(nnc, customErrorMessage);

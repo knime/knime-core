@@ -58,6 +58,7 @@ import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.webui.data.text.TextInitialDataService;
 import org.knime.core.webui.data.text.TextReExecuteDataService;
+import org.knime.core.webui.node.NNCWrapper;
 
 /**
  * Implemented by {@link NodeFactory}s to register a node view.
@@ -85,7 +86,7 @@ public interface NodeViewFactory<T extends NodeModel> extends WizardPageContribu
      */
     @Override
     default Optional<String> validateViewValue(final NativeNodeContainer nnc, final String value) throws IOException {
-        var ds = NodeViewManager.getInstance().getDataServiceOfType(nnc, TextReExecuteDataService.class);
+        var ds = NodeViewManager.getInstance().getDataServiceOfType(NNCWrapper.of(nnc), TextReExecuteDataService.class);
         if (ds.isPresent()) {
             return ds.get().validateData(value);
         }
@@ -97,7 +98,7 @@ public interface NodeViewFactory<T extends NodeModel> extends WizardPageContribu
      */
     @Override
     default void loadViewValue(final NativeNodeContainer nnc, final String value) throws IOException {
-        var ds = NodeViewManager.getInstance().getDataServiceOfType(nnc, TextReExecuteDataService.class);
+        var ds = NodeViewManager.getInstance().getDataServiceOfType(NNCWrapper.of(nnc), TextReExecuteDataService.class);
         if (ds.isPresent()) {
             ds.get().applyData(value);
         }
@@ -108,7 +109,7 @@ public interface NodeViewFactory<T extends NodeModel> extends WizardPageContribu
      */
     @Override
     default Optional<String> getInitialViewValue(final NativeNodeContainer nnc) {
-        return NodeViewManager.getInstance().getDataServiceOfType(nnc, TextInitialDataService.class)
+        return NodeViewManager.getInstance().getDataServiceOfType(NNCWrapper.of(nnc), TextInitialDataService.class)
             .map(TextInitialDataService::getInitialData);
     }
 }

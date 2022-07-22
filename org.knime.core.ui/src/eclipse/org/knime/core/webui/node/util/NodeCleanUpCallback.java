@@ -49,32 +49,51 @@
 package org.knime.core.webui.node.util;
 
 import org.knime.core.node.workflow.NativeNodeContainer;
+import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeStateChangeListener;
+import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
 
 /**
- * Helper to clean-up after a node removal or workflow disposal. Once a clean-up has been triggered, all the registered
- * listeners (on the node and the workflow) are removed which renders the NodeCleanUpCallback-instance useless
- * afterwards.
+ * Helper to clean-up after a node removal, workflow disposal or (optionally) node state change. Once a clean-up has
+ * been triggered, all the registered listeners (on the node and the workflow) are removed which renders the
+ * NodeCleanUpCallback-instance useless afterwards.
+ *
+ * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
-public final class NodeCleanUpCallback implements WorkflowListener {
+public final class NodeCleanUpCallback implements WorkflowListener, NodeStateChangeListener {
 
     private Runnable m_onCleanUp;
 
-    private NativeNodeContainer m_nnc;
+    private NodeContainer m_nc;
+
+    private final boolean m_cleanUpOnNodeStateChange;
 
     /**
      * A new callback instance.
      *
-     * @param nnc the node to watch
-     * @param onCleanUp the callback to call when the node is being diposed.
+     * @param nc the node to watch
+     * @param onCleanUp the callback to call when the node is being disposed.
+     * @param cleanUpOnNodeStateChange if the clean-up callback shall be called on node state change or not
      */
-    public NodeCleanUpCallback(final NativeNodeContainer nnc, final Runnable onCleanUp) {
-        WorkflowManager.ROOT.addListener(NodeCleanUpCallback.this);
-        nnc.getParent().addListener(NodeCleanUpCallback.this);
-        m_nnc = nnc;
+    public NodeCleanUpCallback(final NodeContainer nc, final Runnable onCleanUp,
+        final boolean cleanUpOnNodeStateChange) {
+        m_nc = nc;
         m_onCleanUp = onCleanUp;
+        m_cleanUpOnNodeStateChange = cleanUpOnNodeStateChange;
+    }
+
+    /**
+     * Activates the node clean-up callback by registering the respective listeners.
+     */
+    public void activate() {
+        WorkflowManager.ROOT.addListener(this);
+        m_nc.getParent().addListener(this);
+        if (m_cleanUpOnNodeStateChange) {
+            m_nc.addNodeStateChangeListener(this);
+        }
     }
 
     @Override
@@ -85,23 +104,31 @@ public final class NodeCleanUpCallback implements WorkflowListener {
         }
         if (e.getType() == WorkflowEvent.Type.NODE_REMOVED) {
             if (e.getOldValue() instanceof WorkflowManager && ((WorkflowManager)e.getOldValue()).getID()
-                .getIndex() == m_nnc.getParent().getProjectWFM().getID().getIndex()) {
+                .getIndex() == m_nc.getParent().getProjectWFM().getID().getIndex()) {
                 // workflow has been closed
                 cleanUp();
             }
             if (e.getOldValue() instanceof NativeNodeContainer
-                && ((NativeNodeContainer)e.getOldValue()).getID().equals(m_nnc.getID())) {
+                && ((NativeNodeContainer)e.getOldValue()).getID().equals(m_nc.getID())) {
                 // node removed
                 cleanUp();
             }
         }
     }
 
+    @Override
+    public void stateChanged(final NodeStateEvent state) {
+        cleanUp();
+    }
+
     private void cleanUp() {
-        WorkflowManager.ROOT.removeListener(NodeCleanUpCallback.this);
-        m_nnc.getParent().removeListener(NodeCleanUpCallback.this);
+        WorkflowManager.ROOT.removeListener(this);
+        m_nc.getParent().removeListener(this);
+        if (m_cleanUpOnNodeStateChange) {
+            m_nc.removeNodeStateChangeListener(this);
+        }
         m_onCleanUp.run();
-        m_nnc = null;
+        m_nc = null;
         m_onCleanUp = null;
     }
 }

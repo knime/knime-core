@@ -56,7 +56,6 @@ import java.util.WeakHashMap;
 import java.util.regex.Pattern;
 
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.webui.data.ApplyDataService;
 import org.knime.core.webui.data.DataService;
@@ -68,52 +67,55 @@ import org.knime.core.webui.data.text.TextInitialDataService;
 import org.knime.core.webui.data.text.TextReExecuteDataService;
 import org.knime.core.webui.node.util.NodeCleanUpCallback;
 import org.knime.core.webui.page.Page;
-import org.knime.core.webui.page.PageUtil;
 import org.knime.core.webui.page.PageUtil.PageType;
 import org.knime.core.webui.page.Resource;
 
 /**
- * Common logic for classes that manage node ui extensions (e.g. views or dialogs).
+ * Common logic for classes that manage node ui extensions (e.g. views, dialogs or port views).
  *
  * It manages
  * <p>
  * (i) the data services (i.e. {@link InitialDataService}, {@link DataService} and {@link ApplyDataService}). Data
- * service instances are only created once and cached until the respective node is disposed.
+ * service instances are only created once and cached until the respective node is disposed or the node state changes in
+ * case of port views.
  * <p>
- * (ii) the page resources. I.e. keeps track of already accessed pages (to be able to also access resources from a
- * page-context - see {@link Page#getContext()}) and provides methods to determine page urls and paths.
+ * (ii) the page resources. I.e. keeps track of already accessed pages (to be able to also access page-related resources
+ * from a - see {@link Page#getResource(String)}) and provides methods to determine page urls and paths.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
+ *
+ * @param <N> the node wrapper this manager operates on
  */
 @SuppressWarnings("java:S1170")
-public abstract class AbstractNodeUIManager implements DataServiceManager, PageResourceManager {
+public abstract class AbstractNodeUIManager<N extends NodeWrapper<? extends NodeContainer>>
+    implements DataServiceManager<N>, PageResourceManager<N> {
 
-    private final Map<NodeContainer, InitialDataService> m_initialDataServices = new WeakHashMap<>();
+    private final Map<N, InitialDataService> m_initialDataServices = new WeakHashMap<>();
 
-    private final Map<NodeContainer, DataService> m_dataServices = new WeakHashMap<>();
+    private final Map<N, DataService> m_dataServices = new WeakHashMap<>();
 
-    private final Map<NodeContainer, ApplyDataService> m_applyDataServices = new WeakHashMap<>();
+    private final Map<N, ApplyDataService> m_applyDataServices = new WeakHashMap<>();
 
     private final Map<String, Page> m_pageMap = new HashMap<>();
 
-    private final String m_pageKind = getPageType().toString();
+    private final String m_pageType = getPageType().toString();
 
     /*
-     * Domain name used to identify resources requested for a node view.
+     * Domain name used to identify resources requested for a node view, node dialog or node port.
      */
-    private final String m_domainName = "org.knime.core.ui." + m_pageKind;
+    private final String m_domainName = "org.knime.core.ui." + m_pageType;
 
     private final String m_baseUrl = "http://" + m_domainName + "/";
 
-    private final String m_nodeDebugPatternProp = "org.knime.ui.dev.node." + m_pageKind + ".url.factory-class";
+    private final String m_nodeDebugPatternProp = "org.knime.ui.dev.node." + m_pageType + ".url.factory-class";
 
-    private final String m_nodeDebugUrlProp = "org.knime.ui.dev.node." + m_pageKind + ".url";
+    private final String m_nodeDebugUrlProp = "org.knime.ui.dev.node." + m_pageType + ".url";
 
     /**
-     * @param nc
+     * @param nodeWrapper
      * @return the data service provide for the given node
      */
-    protected abstract DataServiceProvider getDataServiceProvider(NodeContainer nc);
+    protected abstract DataServiceProvider getDataServiceProvider(N nodeWrapper);
 
     /**
      * The type of pages the node ui manager implementation manages. E.g. whether these are view-pages or dialog-pages.
@@ -123,18 +125,25 @@ public abstract class AbstractNodeUIManager implements DataServiceManager, PageR
     protected abstract PageType getPageType();
 
     /**
+     * @return whether to clean-up the page- and data-service-instances on node state change
+     */
+    protected boolean cleanUpPageAndDataServicesOnNodeStateChange() {
+        return false;
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
     @SuppressWarnings("unchecked")
-    public <S> Optional<S> getDataServiceOfType(final NodeContainer nc, final Class<S> dataServiceClass) {
+    public <S> Optional<S> getDataServiceOfType(final N nodeWrapper, final Class<S> dataServiceClass) {
         Object ds = null;
         if (InitialDataService.class.isAssignableFrom(dataServiceClass)) {
-            ds = getInitialDataService(nc).orElse(null);
+            ds = getInitialDataService(nodeWrapper).orElse(null);
         } else if (DataService.class.isAssignableFrom(dataServiceClass)) {
-            ds = getDataService(nc).orElse(null);
+            ds = getDataService(nodeWrapper).orElse(null);
         } else if (ApplyDataService.class.isAssignableFrom(dataServiceClass)) {
-            ds = getApplyDataService(nc).orElse(null);
+            ds = getApplyDataService(nodeWrapper).orElse(null);
         }
         if (ds != null && !dataServiceClass.isAssignableFrom(ds.getClass())) {
             ds = null;
@@ -146,8 +155,8 @@ public abstract class AbstractNodeUIManager implements DataServiceManager, PageR
      * {@inheritDoc}
      */
     @Override
-    public String callTextInitialDataService(final NodeContainer nc) {
-        var service = getInitialDataService(nc).filter(TextInitialDataService.class::isInstance).orElse(null);
+    public String callTextInitialDataService(final N nodeWrapper) {
+        var service = getInitialDataService(nodeWrapper).filter(TextInitialDataService.class::isInstance).orElse(null);
         if (service != null) {
             return ((TextInitialDataService)service).getInitialData();
         } else {
@@ -155,13 +164,15 @@ public abstract class AbstractNodeUIManager implements DataServiceManager, PageR
         }
     }
 
-    private Optional<InitialDataService> getInitialDataService(final NodeContainer nc) {
+    private Optional<InitialDataService> getInitialDataService(final N nodeWrapper) {
         InitialDataService ds;
-        if (!m_initialDataServices.containsKey(nc)) {
-            ds = getDataServiceProvider(nc).createInitialDataService().orElse(null);
-            m_initialDataServices.put(nc, ds);
+        if (!m_initialDataServices.containsKey(nodeWrapper)) {
+            ds = getDataServiceProvider(nodeWrapper).createInitialDataService().orElse(null);
+            m_initialDataServices.put(nodeWrapper, ds);
+            new NodeCleanUpCallback(nodeWrapper.get(), () -> m_initialDataServices.remove(nodeWrapper),
+                cleanUpPageAndDataServicesOnNodeStateChange()).activate();
         } else {
-            ds = m_initialDataServices.get(nc);
+            ds = m_initialDataServices.get(nodeWrapper);
         }
         return Optional.ofNullable(ds);
     }
@@ -170,8 +181,8 @@ public abstract class AbstractNodeUIManager implements DataServiceManager, PageR
      * {@inheritDoc}
      */
     @Override
-    public String callTextDataService(final NodeContainer nc, final String request) {
-        var service = getDataService(nc).filter(TextDataService.class::isInstance).orElse(null);
+    public String callTextDataService(final N nodeWrapper, final String request) {
+        var service = getDataService(nodeWrapper).filter(TextDataService.class::isInstance).orElse(null);
         if (service != null) {
             return ((TextDataService)service).handleRequest(request);
         } else {
@@ -179,13 +190,15 @@ public abstract class AbstractNodeUIManager implements DataServiceManager, PageR
         }
     }
 
-    private Optional<DataService> getDataService(final NodeContainer nc) {
+    private Optional<DataService> getDataService(final N nodeWrapper) {
         DataService ds;
-        if (!m_dataServices.containsKey(nc)) {
-            ds = getDataServiceProvider(nc).createDataService().orElse(null);
-            m_dataServices.put(nc, ds);
+        if (!m_dataServices.containsKey(nodeWrapper)) {
+            ds = getDataServiceProvider(nodeWrapper).createDataService().orElse(null);
+            m_dataServices.put(nodeWrapper, ds);
+            new NodeCleanUpCallback(nodeWrapper.get(), () -> m_dataServices.remove(nodeWrapper),
+                cleanUpPageAndDataServicesOnNodeStateChange()).activate();
         } else {
-            ds = m_dataServices.get(nc);
+            ds = m_dataServices.get(nodeWrapper);
         }
         return Optional.ofNullable(ds);
     }
@@ -194,8 +207,8 @@ public abstract class AbstractNodeUIManager implements DataServiceManager, PageR
      * {@inheritDoc}
      */
     @Override
-    public void callTextApplyDataService(final NodeContainer nc, final String request) throws IOException {
-        var service = getApplyDataService(nc).orElse(null);
+    public void callTextApplyDataService(final N nodeWrapper, final String request) throws IOException {
+        var service = getApplyDataService(nodeWrapper).orElse(null);
         if (service instanceof TextReExecuteDataService) {
             ((TextReExecuteDataService)service).reExecute(request);
         } else if (service instanceof TextApplyDataService) {
@@ -205,13 +218,15 @@ public abstract class AbstractNodeUIManager implements DataServiceManager, PageR
         }
     }
 
-    private Optional<ApplyDataService> getApplyDataService(final NodeContainer nc) {
+    private Optional<ApplyDataService> getApplyDataService(final N nodeWrapper) {
         ApplyDataService ds;
-        if (!m_applyDataServices.containsKey(nc)) {
-            ds = getDataServiceProvider(nc).createApplyDataService().orElse(null);
-            m_applyDataServices.put(nc, ds);
+        if (!m_applyDataServices.containsKey(nodeWrapper)) {
+            ds = getDataServiceProvider(nodeWrapper).createApplyDataService().orElse(null);
+            m_applyDataServices.put(nodeWrapper, ds);
+            new NodeCleanUpCallback(nodeWrapper.get(), () -> m_applyDataServices.remove(nodeWrapper),
+                cleanUpPageAndDataServicesOnNodeStateChange()).activate();
         } else {
-            ds = m_applyDataServices.get(nc);
+            ds = m_applyDataServices.get(nodeWrapper);
         }
         return Optional.ofNullable(ds);
     }
@@ -237,16 +252,19 @@ public abstract class AbstractNodeUIManager implements DataServiceManager, PageR
      * {@inheritDoc}
      */
     @Override
-    public Optional<String> getDebugUrl(final NativeNodeContainer nnc) {
+    public Optional<String> getDebugUrl(final N nodeWrapper) {
         String pattern = System.getProperty(m_nodeDebugPatternProp);
         String url = System.getProperty(m_nodeDebugUrlProp);
         if (url == null) {
             return Optional.empty();
         }
-        @SuppressWarnings("rawtypes")
-        final Class<? extends NodeFactory> nodeFactoryClass = nnc.getNode().getFactory().getClass();
-        if (pattern == null || Pattern.matches(pattern, nodeFactoryClass.getName())) {
-            return Optional.of(url);
+        if (nodeWrapper instanceof NNCWrapper) {
+            @SuppressWarnings("rawtypes")
+            final Class<? extends NodeFactory> nodeFactoryClass =
+                ((NNCWrapper)nodeWrapper).get().getNode().getFactory().getClass();
+            if (pattern == null || Pattern.matches(pattern, nodeFactoryClass.getName())) {
+                return Optional.of(url);
+            }
         }
         return Optional.empty();
     }
@@ -263,8 +281,11 @@ public abstract class AbstractNodeUIManager implements DataServiceManager, PageR
      * {@inheritDoc}
      */
     @Override
-    public String getPagePath(final NativeNodeContainer nnc) {
-        return registerPage(nnc, getPage(nnc), getPageType());
+    public String getPagePath(final N nodeWrapper) {
+        var page = getPage(nodeWrapper);
+        var pageId = getPageId(nodeWrapper, page);
+        registerPage(nodeWrapper.get(), pageId, page);
+        return pageId + "/" + page.getRelativePath();
     }
 
     /**
@@ -279,12 +300,11 @@ public abstract class AbstractNodeUIManager implements DataServiceManager, PageR
         }
     }
 
-    private String registerPage(final NativeNodeContainer nnc, final Page page, final PageType pageKind) {
-        var pageId = PageUtil.getPageId(nnc, page.isCompletelyStatic(), pageKind);
-        if (m_pageMap.put(pageId, page) == null) {
-            new NodeCleanUpCallback(nnc, () -> m_pageMap.remove(pageId));
-        }
-        return pageId + "/" + page.getRelativePath();
+    private void registerPage(final NodeContainer nc, final String pageId, final Page page) {
+        m_pageMap.computeIfAbsent(pageId, id -> {
+            new NodeCleanUpCallback(nc, () -> m_pageMap.remove(pageId), cleanUpPageAndDataServicesOnNodeStateChange()).activate();
+            return page;
+        });
     }
 
     @Override

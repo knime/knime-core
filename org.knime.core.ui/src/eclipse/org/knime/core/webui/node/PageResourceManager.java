@@ -50,16 +50,18 @@ package org.knime.core.webui.node;
 
 import java.util.Optional;
 
-import org.knime.core.node.workflow.NativeNodeContainer;
+import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.webui.page.Page;
 import org.knime.core.webui.page.Resource;
 
 /**
- * Gives access to the pages and page resources for nodes (i.e. pages that represent, e.g., node dialogs and views).
+ * Gives access to the pages and page resources for nodes (i.e. pages that represent, e.g., node dialogs and views) and
+ * node-related ui elements (e.g. port view).
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
+ * @param <N> the node wrapper this manager operates on
  */
-public interface PageResourceManager {
+public interface PageResourceManager<N extends NodeWrapper<? extends NodeContainer>> {
 
     /**
      * @return a unique domain name used to identify page resources of this kind
@@ -67,12 +69,20 @@ public interface PageResourceManager {
     String getDomainName();
 
     /**
-     * @param nnc the node to get the page for
+     * @param nodeWrapper the node to get the page for
      *
      * @return the page for the given node
      * @throws IllegalArgumentException if there is no page given for the node
      */
-    Page getPage(NativeNodeContainer nnc);
+    Page getPage(N nodeWrapper);
+
+    /**
+     * @param nodeWrapper the node to get the id for
+     * @param page the page to get the id for
+     *
+     * @return the page for the given node and page
+     */
+    String getPageId(N nodeWrapper, Page page);
 
     /**
      * The base url for the page and associated resources. It is usually only available if the AP is run as a desktop
@@ -88,22 +98,22 @@ public interface PageResourceManager {
     /**
      * Optionally returns a debug url for a view (dialog etc.) which is controlled by a system property.
      *
-     * @param nnc the node to get the debug url for
+     * @param nodeWrapper the node to get the debug url for
      * @return a debug url or an empty optional if none is set
      */
-    Optional<String> getDebugUrl(NativeNodeContainer nnc);
+    Optional<String> getDebugUrl(N nodeWrapper);
 
     /**
      * Provides the relative path for a page.
      *
-     * @param nnc the node which provides the page
+     * @param nodeWrapper the node which provides the page
      * @return the relative page path
      */
-    String getPagePath(NativeNodeContainer nnc);
+    String getPagePath(N nodeWrapper);
 
     /**
      * Gives access to page resources. NOTE: Only those resources are available that belong to a page whose path has
-     * been requested via {@link #getPagePath(NativeNodeContainer)}.
+     * been requested via {@link #getPagePath(NodeWrapper)}.
      *
      * @param resourceId the id of the resource
      * @return the resource or an empty optional if there is no resource for the given id available
@@ -112,7 +122,7 @@ public interface PageResourceManager {
 
     /**
      * Gives access to page resources via a full URL. NOTE: Only those resources are available that belong to a page
-     * whose URL has been requested via {@link #getPagePath(NativeNodeContainer)}.
+     * whose URL has been requested via {@link #getPage(NodeWrapper)}.
      *
      * @param url the resource url
      * @return the resource or an empty optional if there is no resource available at the given URL

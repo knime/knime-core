@@ -44,87 +44,43 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Aug 23, 2021 (hornm): created
+ *   Jul 18, 2022 (hornm): created
  */
-package org.knime.core.webui.page;
+package org.knime.core.webui.node.port;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Map;
-import java.util.Map.Entry;
+import java.util.Optional;
+
+import org.knime.core.webui.data.ApplyDataService;
+import org.knime.core.webui.data.DataServiceProvider;
+import org.knime.core.webui.page.Page;
 
 /**
- * Represents a web resource used in ui-extensions (such as node view, port view and node dialog).
+ * Represents a view of a port.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
- *
- * @since 4.5
  */
-public interface Resource {
+public interface PortView extends DataServiceProvider {
 
     /**
-     * The resource content type.
+     * Returns the (html) page which respresents the view UI.
+     *
+     * @return the page
      */
-    enum ContentType {
-            /**
-             * If the resource is a html file.
-             */
-            HTML,
-            /**
-             * If the resource represents a vue component to be loaded dynamically.
-             */
-            VUE_COMPONENT_LIB,
-            /**
-             * The resource is a svg image.
-             */
-            SVG,
-            /**
-             * The resource is a png image.
-             */
-            PNG,
-            /**
-             * The resource just references a vue component which is already present on the frontend-side (i.e. it does
-             * not provide the vue component itself).
-             */
-            VUE_COMPONENT_REFERENCE;
+    Page getPage();
 
-        private static final Map<String, ContentType> FILE_EXTENSION_TO_CONTENT_TYPE_MAP = Map.of( //
-            ".js", VUE_COMPONENT_LIB, //
-            ".html", HTML, //
-            ".svg", SVG, //
-            ".png", PNG, //
-            "vue_component_reference", VUE_COMPONENT_REFERENCE);
+    /**
+     * Allows one to provide a custom page id (mainly into order to manually specify a page id to map the vue component
+     * to be used on the FE-side). Will need to be created automatically at some point (especially for third party port
+     * views).
+     *
+     * @return the page id
+     */
+    String getPageId();
 
-        static ContentType determineType(final String path) {
-            return FILE_EXTENSION_TO_CONTENT_TYPE_MAP.entrySet().stream() //
-                .filter(e -> path.endsWith(e.getKey()))//
-                .map(Entry::getValue)//
-                .findFirst()//
-                .orElseThrow(
-                    () -> new IllegalArgumentException("Can't determine resource content type for path " + path));
-        }
+    @Override
+    default Optional<ApplyDataService> createApplyDataService() {
+        // not available to port views
+        throw new UnsupportedOperationException();
     }
-
-    /**
-     * @return the resource's relative path (including the resource name itself, too)
-     */
-    String getRelativePath();
-
-    /**
-     * @return the actual resource content as {@link InputStream}
-     * @throws IOException
-     */
-    InputStream getInputStream() throws IOException;
-
-    /**
-     * @return <code>true</code> if the resource is static and won't ever change at runtime, otherwise
-     *         <code>false</code>
-     */
-    boolean isStatic();
-
-    /**
-     * @return the content type of the resource
-     */
-    ContentType getContentType();
 
 }

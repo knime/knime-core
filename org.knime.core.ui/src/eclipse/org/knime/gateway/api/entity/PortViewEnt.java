@@ -43,41 +43,29 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
+ * History
+ *   Jul 18, 2022 (hornm): created
  */
-package org.knime.core.webui.data.rpc;
+package org.knime.gateway.api.entity;
 
-import org.knime.core.node.port.PortObject;
-import org.knime.core.node.port.PortType;
-import org.knime.core.node.workflow.NodeOutPort;
+import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.webui.node.NodePortWrapper;
+import org.knime.core.webui.node.port.PortViewManager;
+import org.knime.core.webui.page.PageUtil.PageType;
 
 /**
- * Provides generic access to data of a port via remote procedure calls.
  *
- * Implementations are currently provided by a temporary extension point. Will need to be provided by the
- * {@link PortObject}-implementation itself (directly or indirectly).
- *
- * @author Martin Horn, KNIME GmbH, Konstanz, Germany
- *
- * @noreference This class is not intended to be referenced by clients.
- * @noextend This class is not intended to be subclassed by clients.
- *
- * @since 4.3
+ * @author hornm
  */
-public interface NodePortRpcServerFactory extends RpcServerFactory<NodeOutPort> {
+public class PortViewEnt extends NodeUIExtensionEnt<NodePortWrapper> {
 
     /**
-     * Determines whether this rpc server factory is compatible with the respective port type.
-     *
-     * @param ptype the port type to check the compatibility for
-     * @return <code>true</code> if compatible otherwise <code>false</code>
+     * @param nc
+     * @param portIdx
      */
-    boolean isCompatible(PortType ptype);
-
-    /**
-     * @return whether the created rpc server can and should be cached or not
-     */
-    default boolean isCachable() {
-        return true;
+    public PortViewEnt(final NodeContainer nc, final int portIdx) {
+        super(NodePortWrapper.of(nc, portIdx), PortViewManager.getInstance(), PortViewManager.getInstance(),
+            PageType.PORT);
     }
 
 }

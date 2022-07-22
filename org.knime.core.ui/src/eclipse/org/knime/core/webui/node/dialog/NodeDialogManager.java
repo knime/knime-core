@@ -56,8 +56,10 @@ import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.webui.data.DataServiceProvider;
 import org.knime.core.webui.node.AbstractNodeUIManager;
+import org.knime.core.webui.node.NNCWrapper;
 import org.knime.core.webui.node.util.NodeCleanUpCallback;
 import org.knime.core.webui.page.Page;
+import org.knime.core.webui.page.PageUtil;
 import org.knime.core.webui.page.PageUtil.PageType;
 
 /**
@@ -67,7 +69,7 @@ import org.knime.core.webui.page.PageUtil.PageType;
  *
  * @since 4.5
  */
-public final class NodeDialogManager extends AbstractNodeUIManager {
+public final class NodeDialogManager extends AbstractNodeUIManager<NNCWrapper> {
 
     private static NodeDialogManager instance;
 
@@ -113,9 +115,9 @@ public final class NodeDialogManager extends AbstractNodeUIManager {
         if (!hasNodeDialog(nc)) {
             throw new IllegalArgumentException("The node " + nc.getNameWithID() + " doesn't provide a node dialog");
         }
-        var nnc = (NativeNodeContainer) nc;
+        var nnc = (NativeNodeContainer)nc;
         return m_nodeDialogMap.computeIfAbsent(nc, id -> {
-            new NodeCleanUpCallback(nnc, () -> m_nodeDialogMap.remove(nnc));
+            new NodeCleanUpCallback(nnc, () -> m_nodeDialogMap.remove(nnc), false).activate();
             return createNodeDialog(nc);
         });
     }
@@ -143,16 +145,16 @@ public final class NodeDialogManager extends AbstractNodeUIManager {
      * {@inheritDoc}
      */
     @Override
-    protected DataServiceProvider getDataServiceProvider(final NodeContainer nc) {
-        return getNodeDialog(nc);
+    protected DataServiceProvider getDataServiceProvider(final NNCWrapper nnc) {
+        return getNodeDialog(nnc.get());
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Page getPage(final NativeNodeContainer nnc) {
-        return getNodeDialog(nnc).getPage();
+    public Page getPage(final NNCWrapper nnc) {
+        return getNodeDialog(nnc.get()).getPage();
     }
 
     /**
@@ -161,6 +163,14 @@ public final class NodeDialogManager extends AbstractNodeUIManager {
     @Override
     protected PageType getPageType() {
         return PageType.DIALOG;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getPageId(final NNCWrapper nnc, final Page p) {
+        return PageUtil.getPageId(nnc.get(), p.isCompletelyStatic(), PageType.DIALOG);
     }
 
 }

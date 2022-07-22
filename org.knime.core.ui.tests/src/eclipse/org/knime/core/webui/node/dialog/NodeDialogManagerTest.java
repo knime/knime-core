@@ -76,6 +76,7 @@ import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeInputNodeFactory;
 import org.knime.core.webui.data.text.TextDataService;
+import org.knime.core.webui.node.NNCWrapper;
 import org.knime.core.webui.node.view.NodeViewManager;
 import org.knime.core.webui.page.Page;
 import org.knime.testing.node.dialog.NodeDialogNodeFactory;
@@ -126,7 +127,7 @@ public class NodeDialogManagerTest {
         var nodeDialog = NodeDialogManager.getInstance().getNodeDialog(nc);
         assertThat(nodeDialog.getPage() == page, is(true));
 
-        assertThat(NodeDialogManager.getInstance().callTextInitialDataService(nc), is("test settings"));
+        assertThat(NodeDialogManager.getInstance().callTextInitialDataService(NNCWrapper.of(nc)), is("test settings"));
         assertThat(nodeDialog.getPage().isCompletelyStatic(), is(false));
 
         hasDialog.set(false);
@@ -141,9 +142,9 @@ public class NodeDialogManagerTest {
         var staticPage = Page.builder(BUNDLE_ID, "files", "page.html").addResourceFile("resource.html").build();
         var dynamicPage = Page.builder(() -> "page content", "page.html")
             .addResourceFromString(() -> "resource content", "resource.html").build();
-        NativeNodeContainer nnc = createNodeWithNodeDialog(m_wfm, () -> createNodeDialog(staticPage));
-        NativeNodeContainer nnc2 = createNodeWithNodeDialog(m_wfm, () -> createNodeDialog(staticPage));
-        NativeNodeContainer nnc3 = createNodeWithNodeDialog(m_wfm, () -> createNodeDialog(dynamicPage));
+        var nnc = NNCWrapper.of(createNodeWithNodeDialog(m_wfm, () -> createNodeDialog(staticPage)));
+        var nnc2 = NNCWrapper.of(createNodeWithNodeDialog(m_wfm, () -> createNodeDialog(staticPage)));
+        var nnc3 = NNCWrapper.of(createNodeWithNodeDialog(m_wfm, () -> createNodeDialog(dynamicPage)));
         var nodeDialogManager = NodeDialogManager.getInstance();
         String path = nodeDialogManager.getPagePath(nnc);
         String path2 = nodeDialogManager.getPagePath(nnc2);
@@ -208,13 +209,14 @@ public class NodeDialogManagerTest {
             }
         });
 
-        NativeNodeContainer nc = NodeDialogManagerTest.createNodeWithNodeDialog(m_wfm, nodeDialogSupplier);
+        var nc = NodeDialogManagerTest.createNodeWithNodeDialog(m_wfm, nodeDialogSupplier);
+        var nncWrapper = NNCWrapper.of(nc);
 
         var nodeDialogManager = NodeDialogManager.getInstance();
-        assertThat(nodeDialogManager.callTextInitialDataService(nc), is("the node settings"));
-        assertThat(nodeDialogManager.callTextDataService(nc, ""), is("general data service"));
+        assertThat(nodeDialogManager.callTextInitialDataService(nncWrapper), is("the node settings"));
+        assertThat(nodeDialogManager.callTextDataService(nncWrapper, ""), is("general data service"));
         // apply data, i.e. settings
-        nodeDialogManager.callTextApplyDataService(nc, "key,node settings value");
+        nodeDialogManager.callTextApplyDataService(nncWrapper, "key,node settings value");
 
         // check node model settings
         var modelSettings = ((NodeDialogNodeModel)nc.getNode().getNodeModel()).getLoadNodeSettings();
@@ -230,9 +232,8 @@ public class NodeDialogManagerTest {
         assertThat(nc.getNodeSettings().getNodeSettings("view").getString("key"), is("node settings value"));
 
         // check error on apply settings
-        String message =
-            assertThrows(IOException.class, () -> nodeDialogManager.callTextApplyDataService(nc, "ERROR,invalid"))
-                .getMessage();
+        String message = assertThrows(IOException.class,
+            () -> nodeDialogManager.callTextApplyDataService(nncWrapper, "ERROR,invalid")).getMessage();
         assertThat(message, is("Invalid node settings: validation expected to fail"));
     }
 

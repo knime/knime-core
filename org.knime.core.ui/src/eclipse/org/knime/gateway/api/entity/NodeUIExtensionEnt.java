@@ -48,22 +48,23 @@
  */
 package org.knime.gateway.api.entity;
 
-import org.knime.core.node.workflow.NativeNodeContainer;
+import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContainerParent;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.webui.data.text.TextInitialDataService;
 import org.knime.core.webui.node.DataServiceManager;
+import org.knime.core.webui.node.NodeWrapper;
 import org.knime.core.webui.node.PageResourceManager;
-import org.knime.core.webui.page.PageUtil;
 import org.knime.core.webui.page.PageUtil.PageType;
 
 /**
  * Super classes for node-ui-extension entities, e.g., node view and node dialog.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
+ * @param <N> TODO
  */
-public class NodeUIExtensionEnt {
+public class NodeUIExtensionEnt<N extends NodeWrapper<? extends NodeContainer>> {
 
     private final String m_nodeId;
 
@@ -78,14 +79,15 @@ public class NodeUIExtensionEnt {
     private final PageType m_pageType;
 
     /**
-     * @param nnc the node to create the entity for
-     * @param pageResourceManager can be {@code null}
-     * @param dataServiceManager can be {@code null}
-     * @param pageType the page type
+     * @param nodeWrapper
+     * @param pageResourceManager
+     * @param dataServiceManager
+     * @param pageType
      */
-    protected NodeUIExtensionEnt(final NativeNodeContainer nnc, final PageResourceManager pageResourceManager,
-        final DataServiceManager dataServiceManager, final PageType pageType) {
-        WorkflowManager wfm = nnc.getParent();
+    protected NodeUIExtensionEnt(final N nodeWrapper, final PageResourceManager<N> pageResourceManager,
+        final DataServiceManager<N> dataServiceManager, final PageType pageType) {
+        var nc = nodeWrapper.get();
+        WorkflowManager wfm = nc.getParent();
         WorkflowManager projectWfm = wfm.getProjectWFM();
 
         m_projectId = projectWfm.getNameWithID();
@@ -98,21 +100,21 @@ public class NodeUIExtensionEnt {
         } else {
             m_workflowId = new NodeIDEnt(wfm.getID(), isComponentProject).toString();
         }
-        m_nodeId = new NodeIDEnt(nnc.getID(), isComponentProject).toString();
+        m_nodeId = new NodeIDEnt(nc.getID(), isComponentProject).toString();
 
         if (dataServiceManager != null
-            && dataServiceManager.getDataServiceOfType(nnc, TextInitialDataService.class).isPresent()) {
-            m_initialData = dataServiceManager.callTextInitialDataService(nnc);
+            && dataServiceManager.getDataServiceOfType(nodeWrapper, TextInitialDataService.class).isPresent()) {
+            m_initialData = dataServiceManager.callTextInitialDataService(nodeWrapper);
         } else {
             m_initialData = null;
         }
 
         if (pageResourceManager != null) {
             var baseUrl = pageResourceManager.getBaseUrl().orElse(null);
-            var debugUrl = pageResourceManager.getDebugUrl(nnc).orElse(null);
-            var path = pageResourceManager.getPagePath(nnc);
-            var page = pageResourceManager.getPage(nnc);
-            var id = PageUtil.getPageId(nnc, page.isStatic(), pageType);
+            var debugUrl = pageResourceManager.getDebugUrl(nodeWrapper).orElse(null);
+            var path = pageResourceManager.getPagePath(nodeWrapper);
+            var page = pageResourceManager.getPage(nodeWrapper);
+            String id = pageResourceManager.getPageId(nodeWrapper, page);
             m_resourceInfo = new ResourceInfoEnt(id, baseUrl, debugUrl, path, page.getContentType());
         } else {
             m_resourceInfo = null;

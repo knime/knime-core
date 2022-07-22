@@ -44,87 +44,27 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Aug 23, 2021 (hornm): created
+ *   Jul 18, 2022 (hornm): created
  */
-package org.knime.core.webui.page;
+package org.knime.core.webui.node;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Map;
-import java.util.Map.Entry;
+import org.knime.core.node.workflow.NodeContainer;
 
 /**
- * Represents a web resource used in ui-extensions (such as node view, port view and node dialog).
+ * Wrapper for a node ({@link NodeContainer}). The only purpose is to be able to represent a node <i>and</i> a port
+ * (i.e. a node and a port idx) at the same time such that the {@link AbstractNodeUIManager} can operate on both (i.e.
+ * node and port).
+ *
+ * Implementations must also implement the {@link #equals(Object)} and {@link #hashCode()} methods.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
- *
- * @since 4.5
+ * @param <N> the node type that is being wrapped
  */
-public interface Resource {
+public interface NodeWrapper<N extends NodeContainer> {
 
     /**
-     * The resource content type.
+     * @return the wrapped node
      */
-    enum ContentType {
-            /**
-             * If the resource is a html file.
-             */
-            HTML,
-            /**
-             * If the resource represents a vue component to be loaded dynamically.
-             */
-            VUE_COMPONENT_LIB,
-            /**
-             * The resource is a svg image.
-             */
-            SVG,
-            /**
-             * The resource is a png image.
-             */
-            PNG,
-            /**
-             * The resource just references a vue component which is already present on the frontend-side (i.e. it does
-             * not provide the vue component itself).
-             */
-            VUE_COMPONENT_REFERENCE;
-
-        private static final Map<String, ContentType> FILE_EXTENSION_TO_CONTENT_TYPE_MAP = Map.of( //
-            ".js", VUE_COMPONENT_LIB, //
-            ".html", HTML, //
-            ".svg", SVG, //
-            ".png", PNG, //
-            "vue_component_reference", VUE_COMPONENT_REFERENCE);
-
-        static ContentType determineType(final String path) {
-            return FILE_EXTENSION_TO_CONTENT_TYPE_MAP.entrySet().stream() //
-                .filter(e -> path.endsWith(e.getKey()))//
-                .map(Entry::getValue)//
-                .findFirst()//
-                .orElseThrow(
-                    () -> new IllegalArgumentException("Can't determine resource content type for path " + path));
-        }
-    }
-
-    /**
-     * @return the resource's relative path (including the resource name itself, too)
-     */
-    String getRelativePath();
-
-    /**
-     * @return the actual resource content as {@link InputStream}
-     * @throws IOException
-     */
-    InputStream getInputStream() throws IOException;
-
-    /**
-     * @return <code>true</code> if the resource is static and won't ever change at runtime, otherwise
-     *         <code>false</code>
-     */
-    boolean isStatic();
-
-    /**
-     * @return the content type of the resource
-     */
-    ContentType getContentType();
+    N get();
 
 }

@@ -52,26 +52,13 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IConfigurationElement;
-import org.eclipse.core.runtime.IExtensionPoint;
-import org.eclipse.core.runtime.IExtensionRegistry;
-import org.eclipse.core.runtime.Platform;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
-import org.knime.core.node.port.PortObject;
-import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.NodeOutPort;
 
 import com.google.common.collect.MapMaker;
 
@@ -82,16 +69,16 @@ import com.google.common.collect.MapMaker;
  *
  * @noreference This class is not intended to be referenced by clients.
  * @since 4.3
+ *
+ * @deprecated rpc services are directly provided by a node view, dialog or port. Only needed for the legacy remote
+ *             workflow editor.
  */
+@Deprecated(forRemoval = true)
 public final class RpcServerManager {
 
     private static final String NODE_PORT_RPC_SERVER_FACTORY_EXT_ID = "org.knime.core.rpc.NodePortRpcServerFactory";
 
-    private static List<NodePortRpcServerFactory> nodePortRpcServerFactories;
-
     private static RpcServerManager instance;
-
-    private final Map<PortObject, RpcServer> m_portRpcServerCache = new MapMaker().weakKeys().weakValues().makeMap();
 
     private final Map<NodeContainer, RpcServer> m_nodeRpcServerCache = new MapMaker().weakKeys().weakValues().makeMap();
 
@@ -124,29 +111,6 @@ public final class RpcServerManager {
      */
     public String doRpc(final NativeNodeContainer nnc, final String remoteProcedureCall) throws IOException {
         return doRpc(getRpcServer(nnc), remoteProcedureCall);
-    }
-
-    /**
-     * Carries out a remote procedure call by calling the rpc server provided by a node port.
-     *
-     * It assumes that there is a {@link NodePortRpcServerFactory}-extension registered for the port type of the given
-     * port.
-     *
-     * @param port the node output port addressed by the rpc
-     * @param remoteProcedureCall the actual remote procedure call encoded in some textual format
-     * @return the rpc response
-     * @throws IllegalStateException thrown if the referenced node port doesn't provide a rpc server
-     * @throws IOException if the rpc server can't process the rpc request properly
-     */
-    public String doRpc(final NodeOutPort port, final String remoteProcedureCall) throws IOException {
-        return doRpc(getRpcServer(port), remoteProcedureCall);
-    }
-
-    private static synchronized Optional<NodePortRpcServerFactory> getRpcServerFactoryForPort(final PortType ptype) {
-        if (nodePortRpcServerFactories == null) {
-            nodePortRpcServerFactories = collectNodePortRpcServerFactoriesFromExtension();
-        }
-        return nodePortRpcServerFactories.stream().filter(f -> f.isCompatible(ptype)).findFirst();
     }
 
     private static Optional<NodeRpcServerFactory> getRpcServerFactoryForNode(final NativeNodeContainer nnc) {
@@ -183,49 +147,6 @@ public final class RpcServerManager {
         NodeRpcServerFactory factory = getRpcServerFactoryForNode(nc).orElseThrow(
             () -> new IllegalStateException("The node with id '" + nc.getID() + "' does not provide a rpc server."));
         return m_nodeRpcServerCache.computeIfAbsent(nc, k -> factory.createRpcServer(nc.getNode().getNodeModel()));
-    }
-
-    private RpcServer getRpcServer(final NodeOutPort port) {
-        NodePortRpcServerFactory factory =
-            getRpcServerFactoryForPort(port.getPortType()).orElseThrow(() -> new IllegalStateException(
-                "The port of type '" + port.getPortType().getName() + "' does not provide a rpc server."));
-        var portObject = port.getPortObject();
-        if (portObject == null || !factory.isCachable()) {
-            return factory.createRpcServer(port);
-        } else {
-            return m_portRpcServerCache.computeIfAbsent(portObject, k -> factory.createRpcServer(port));
-        }
-    }
-
-    private static List<NodePortRpcServerFactory> collectNodePortRpcServerFactoriesFromExtension() {
-        IExtensionRegistry registry = Platform.getExtensionRegistry();
-        IExtensionPoint point = registry.getExtensionPoint(NODE_PORT_RPC_SERVER_FACTORY_EXT_ID);
-        return Stream.of(point.getExtensions()).flatMap(ext -> Stream.of(ext.getConfigurationElements()))
-            .map(RpcServerManager::getNodePortRpcServerFactory).filter(Objects::nonNull).collect(Collectors.toList());
-    }
-
-    private static NodePortRpcServerFactory getNodePortRpcServerFactory(final IConfigurationElement cfe) {
-        try {
-            NodePortRpcServerFactory ext = (NodePortRpcServerFactory)cfe.createExecutableExtension("impl");
-            NodeLogger.getLogger(RpcServerManager.class).debugWithFormat(
-                "Added NodePortRpcServerFactory '%s' from '%s'", ext.getClass().getName(),
-                cfe.getContributor().getName());
-            return ext;
-        } catch (CoreException ex) {
-            NodeLogger.getLogger(RpcServerManager.class)
-                .error(String.format("Looking for an implementation of the NodePortRpcServerFactory extension point,\n"
-                    + "but could not process extension %s: %s", cfe.getContributor().getName(), ex.getMessage()), ex);
-        }
-        return null;
-    }
-
-    /**
-     * For testing purposes only!
-     *
-     * @return the port rpc server cache
-     */
-    public Map<PortObject, RpcServer> getPortRpcServerCache() {
-        return m_portRpcServerCache;
     }
 
     /**

@@ -59,7 +59,10 @@ import org.knime.core.node.NodeModel;
  * @noextend This class is not intended to be subclassed by clients.
  *
  * @since 4.3
+ *
+ * @deprecated rpc services are directly provided by a node's view, dialog or port.
  */
+@Deprecated(forRemoval = true)
 public interface NodeRpcServerFactory<M extends NodeModel> extends RpcServerFactory<M> {
 
 }

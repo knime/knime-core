@@ -64,9 +64,11 @@ import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.webui.data.DataServiceProvider;
 import org.knime.core.webui.node.AbstractNodeUIManager;
+import org.knime.core.webui.node.NNCWrapper;
 import org.knime.core.webui.node.util.NodeCleanUpCallback;
 import org.knime.core.webui.node.view.selection.SelectionTranslationService;
 import org.knime.core.webui.page.Page;
+import org.knime.core.webui.page.PageUtil;
 import org.knime.core.webui.page.PageUtil.PageType;
 
 /**
@@ -77,7 +79,7 @@ import org.knime.core.webui.page.PageUtil.PageType;
  *
  * @since 4.5
  */
-public final class NodeViewManager extends AbstractNodeUIManager {
+public final class NodeViewManager extends AbstractNodeUIManager<NNCWrapper> {
 
     private static NodeViewManager instance;
 
@@ -155,15 +157,15 @@ public final class NodeViewManager extends AbstractNodeUIManager {
     /**
      * Helper to call the {@link SelectionTranslationService#fromRowKeys(Set)}.
      *
-     * @param nc the node to call the data service for
+     * @param nnc the node to call the data service for
      * @param rowKeys the row keys to translate
      * @return the result of the translation, i.e., a text-representation of the selection
      * @throws IOException if the translation failed
      */
-    public List<String> callSelectionTranslationService(final NodeContainer nc, final Set<RowKey> rowKeys)
+    public List<String> callSelectionTranslationService(final NativeNodeContainer nnc, final Set<RowKey> rowKeys)
         throws IOException {
-        var service = getSelectionTranslationService(nc).filter(SelectionTranslationService.class::isInstance)
-            .orElse(null);
+        var service =
+            getSelectionTranslationService(nnc).filter(SelectionTranslationService.class::isInstance).orElse(null);
         if (service != null) {
             return service.fromRowKeys(rowKeys);
         } else {
@@ -187,13 +189,13 @@ public final class NodeViewManager extends AbstractNodeUIManager {
      * NOTE: The settings (values) being passed to the node view are already combined with upstream flow variables (in
      * case settings are overwritten by flow variables).
      *
-     * @param nc the node container to update the node view for
+     * @param nnc the node container to update the node view for
      * @throws InvalidSettingsException if settings couldn't be updated
      * @throws IllegalArgumentException if the passed node container does not provide a node view
      */
-    public void updateNodeViewSettings(final NodeContainer nc) throws InvalidSettingsException {
-        var nodeView = getNodeView(nc);
-        var viewSettings = ((NativeNodeContainer)nc).getViewSettingsUsingFlowObjectStack();
+    public void updateNodeViewSettings(final NativeNodeContainer nnc) throws InvalidSettingsException {
+        var nodeView = getNodeView(nnc);
+        var viewSettings = nnc.getViewSettingsUsingFlowObjectStack();
         if (viewSettings.isPresent()) {
             nodeView.loadValidatedSettingsFrom(viewSettings.get());
         }
@@ -213,9 +215,10 @@ public final class NodeViewManager extends AbstractNodeUIManager {
     }
 
     private void registerNodeView(final NativeNodeContainer nnc, final NodeView nodeView) {
-        if (m_nodeViewMap.put(nnc, nodeView) == null) {
-            new NodeCleanUpCallback(nnc, () -> m_nodeViewMap.remove(nnc));
-        }
+        m_nodeViewMap.computeIfAbsent(nnc, id -> {
+            new NodeCleanUpCallback(nnc, () -> m_nodeViewMap.remove(nnc), false).activate();
+            return nodeView;
+        });
     }
 
     /**
@@ -240,16 +243,16 @@ public final class NodeViewManager extends AbstractNodeUIManager {
      * {@inheritDoc}
      */
     @Override
-    protected DataServiceProvider getDataServiceProvider(final NodeContainer nc) {
-        return getNodeView(nc);
+    protected DataServiceProvider getDataServiceProvider(final NNCWrapper nc) {
+        return getNodeView(nc.get());
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Page getPage(final NativeNodeContainer nnc) {
-        return getNodeView(nnc).getPage();
+    public Page getPage(final NNCWrapper nnc) {
+        return getNodeView(nnc.get()).getPage();
     }
 
     /**
@@ -258,6 +261,14 @@ public final class NodeViewManager extends AbstractNodeUIManager {
     @Override
     protected PageType getPageType() {
         return PageType.VIEW;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getPageId(final NNCWrapper nnc, final Page p) {
+        return PageUtil.getPageId(nnc.get(), p.isCompletelyStatic(), PageType.VIEW);
     }
 
     /**

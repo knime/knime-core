@@ -44,87 +44,54 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Aug 23, 2021 (hornm): created
+ *   Jul 18, 2022 (hornm): created
  */
-package org.knime.core.webui.page;
+package org.knime.core.webui.node;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Map;
-import java.util.Map.Entry;
+import org.knime.core.node.workflow.NativeNodeContainer;
 
 /**
- * Represents a web resource used in ui-extensions (such as node view, port view and node dialog).
+ * {@link NodeWrapper} that wraps a {@link NativeNodeContainer}.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
- *
- * @since 4.5
  */
-public interface Resource {
+public interface NNCWrapper extends NodeWrapper<NativeNodeContainer> {
 
     /**
-     * The resource content type.
+     * Convenience method to create a {@link NNCWrapper}-instance.
+     *
+     * @param nnc
+     * @return a new instance
      */
-    enum ContentType {
-            /**
-             * If the resource is a html file.
-             */
-            HTML,
-            /**
-             * If the resource represents a vue component to be loaded dynamically.
-             */
-            VUE_COMPONENT_LIB,
-            /**
-             * The resource is a svg image.
-             */
-            SVG,
-            /**
-             * The resource is a png image.
-             */
-            PNG,
-            /**
-             * The resource just references a vue component which is already present on the frontend-side (i.e. it does
-             * not provide the vue component itself).
-             */
-            VUE_COMPONENT_REFERENCE;
+    static NNCWrapper of(final NativeNodeContainer nnc) {
+        return new NNCWrapper() { // NOSONAR
 
-        private static final Map<String, ContentType> FILE_EXTENSION_TO_CONTENT_TYPE_MAP = Map.of( //
-            ".js", VUE_COMPONENT_LIB, //
-            ".html", HTML, //
-            ".svg", SVG, //
-            ".png", PNG, //
-            "vue_component_reference", VUE_COMPONENT_REFERENCE);
+            @Override
+            public NativeNodeContainer get() {
+                return nnc;
+            }
 
-        static ContentType determineType(final String path) {
-            return FILE_EXTENSION_TO_CONTENT_TYPE_MAP.entrySet().stream() //
-                .filter(e -> path.endsWith(e.getKey()))//
-                .map(Entry::getValue)//
-                .findFirst()//
-                .orElseThrow(
-                    () -> new IllegalArgumentException("Can't determine resource content type for path " + path));
-        }
+            @Override
+            public boolean equals(final Object o) {
+                if (this == o) {
+                    return true;
+                }
+                if (o == null) {
+                    return false;
+                }
+                if (getClass() != o.getClass()) {
+                    return false;
+                }
+                var w = (NNCWrapper)o;
+                return nnc.equals(w.get());
+            }
+
+            @Override
+            public int hashCode() {
+                return nnc.hashCode();
+            }
+        };
+
     }
-
-    /**
-     * @return the resource's relative path (including the resource name itself, too)
-     */
-    String getRelativePath();
-
-    /**
-     * @return the actual resource content as {@link InputStream}
-     * @throws IOException
-     */
-    InputStream getInputStream() throws IOException;
-
-    /**
-     * @return <code>true</code> if the resource is static and won't ever change at runtime, otherwise
-     *         <code>false</code>
-     */
-    boolean isStatic();
-
-    /**
-     * @return the content type of the resource
-     */
-    ContentType getContentType();
 
 }

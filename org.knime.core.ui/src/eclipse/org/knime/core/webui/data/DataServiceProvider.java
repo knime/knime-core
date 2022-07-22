@@ -51,7 +51,7 @@ package org.knime.core.webui.data;
 import java.util.Optional;
 
 /**
- * Provides different types of data services. Data service instances are only created once per node instance.
+ * Provides different types of data services. Data service instances are only created once per node or port instance!
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
