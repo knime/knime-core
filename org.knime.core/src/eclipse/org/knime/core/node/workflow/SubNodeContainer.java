@@ -1409,7 +1409,9 @@ public final class SubNodeContainer extends SingleNodeContainer
     public NodeContainerExecutionStatus performExecuteNode(final PortObject[] rawInObjects) {
         setNodeMessage(NodeMessage.NONE);
         assert rawInObjects.length == m_inports.length;
-        if (m_subnodeScopeContext.isInactiveScope()) {
+        FlowScopeContext peekfsc = getFlowObjectStack().peekScopeContext(FlowScopeContext.class, true);
+        if (m_subnodeScopeContext.isInactiveScope() || peekfsc != null) {
+            // subnode itself is inactive (received inactive inputs) or is contained in an inactive scope (AP-19271)
             setInactive();
             return NodeContainerExecutionStatus.SUCCESS;
         }
