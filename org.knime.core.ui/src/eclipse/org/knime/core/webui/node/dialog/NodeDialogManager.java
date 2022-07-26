@@ -54,6 +54,7 @@ import java.util.WeakHashMap;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContext;
+import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.webui.data.DataServiceProvider;
 import org.knime.core.webui.node.AbstractNodeUIManager;
 import org.knime.core.webui.node.NodeWrapper;
@@ -99,6 +100,8 @@ public final class NodeDialogManager extends AbstractNodeUIManager<NodeWrapper<?
         if (nc instanceof NativeNodeContainer) {
             var nodeFactory = ((NativeNodeContainer)nc).getNode().getFactory();
             return nodeFactory instanceof NodeDialogFactory && ((NodeDialogFactory)nodeFactory).hasNodeDialog();
+        } else if (nc instanceof SubNodeContainer) {
+            return SubNodeContainerDialogFactory.isSubNodeContainerNodeDialogEnabled();
         } else {
             return false;
         }
@@ -115,19 +118,38 @@ public final class NodeDialogManager extends AbstractNodeUIManager<NodeWrapper<?
         if (!hasNodeDialog(nc)) {
             throw new IllegalArgumentException("The node " + nc.getNameWithID() + " doesn't provide a node dialog");
         }
-        var nnc = (NativeNodeContainer)nc;
-        return m_nodeDialogMap.computeIfAbsent(nc, id -> {
-            NodeCleanUpCallback.builder(nnc, () -> m_nodeDialogMap.remove(nnc)).build();
-            return createNodeDialog(nc);
-        });
+
+        if (nc instanceof NativeNodeContainer) {
+            var nnc = (NativeNodeContainer)nc;
+            return m_nodeDialogMap.computeIfAbsent(nc, id -> {
+                NodeCleanUpCallback.builder(nnc, () -> m_nodeDialogMap.remove(nnc)).build();
+                return createNativeNodeDialog(nnc);
+            });
+        } else if (nc instanceof SubNodeContainer) {
+            var snc = (SubNodeContainer)nc;
+            return m_nodeDialogMap.computeIfAbsent(nc, id -> {
+                NodeCleanUpCallback.builder(nc, () -> m_nodeDialogMap.remove(nc)).build();
+                return createSubNodeContainerDialog(snc);
+            });
+        } else {
+            throw new IllegalArgumentException("The node " + nc.getNameWithID() + " is no supported node container");
+        }
     }
 
-    private static NodeDialog createNodeDialog(final NodeContainer nc) {
-        var nnc = (NativeNodeContainer)nc;
+    private static NodeDialog createNativeNodeDialog(final NativeNodeContainer nnc) {
         NodeDialogFactory fac = (NodeDialogFactory)nnc.getNode().getFactory();
         NodeContext.pushContext(nnc);
         try {
             return fac.createNodeDialog();
+        } finally {
+            NodeContext.removeLastContext();
+        }
+    }
+
+    private static NodeDialog createSubNodeContainerDialog(final SubNodeContainer snc) {
+        NodeContext.pushContext(snc);
+        try {
+            return new SubNodeContainerDialogFactory(snc).create();
         } finally {
             NodeContext.removeLastContext();
         }
