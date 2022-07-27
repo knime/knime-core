@@ -252,7 +252,7 @@ public abstract class AbstractNodeUIManager<N extends NodeWrapper<?>>
      * {@inheritDoc}
      */
     @Override
-    public final Optional<String> getDebugUrl(final N nodeWrapper) {
+    public Optional<String> getDebugUrl(final N nodeWrapper) {
         String pattern = System.getProperty(m_nodeDebugPatternProp);
         String url = System.getProperty(m_nodeDebugUrlProp);
         if (url == null) {
@@ -265,6 +265,8 @@ public abstract class AbstractNodeUIManager<N extends NodeWrapper<?>>
             if (pattern == null || Pattern.matches(pattern, nodeFactoryClass.getName())) {
                 return Optional.of(url);
             }
+        } else {
+            // TODO
         }
         return Optional.empty();
     }

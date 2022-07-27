@@ -44,82 +44,54 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 15, 2021 (hornm): created
+ *   Jul 18, 2022 (hornm): created
  */
-package org.knime.core.webui.page;
+package org.knime.core.webui.node;
 
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.workflow.NativeNodeContainer;
-import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.SubNodeContainer;
 
 /**
- * Utility methods around {@link Page}s.
+ * {@link NodeWrapper} that wraps a {@link SubNodeContainer}.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
- *
- * @since 4.5
  */
-public final class PageUtil {
+public interface SNCWrapper extends NodeWrapper<SubNodeContainer> {
 
     /**
-     * The page kinds, i.e. defines what a page is supposed to represent.
-     */
-    public enum PageType {
-            /**
-             * A node dialog.
-             */
-            DIALOG,
-            /**
-             * A node view
-             */
-            VIEW,
-            /**
-             * A port view.
-             */
-            PORT;
-
-        @Override
-        public String toString() {
-            return super.toString().toLowerCase();
-        }
-
-    }
-
-    /**
-     * Determines the page id. The page id is a valid file name!
+     * Convenience method to create a {@link SNCWrapper}-instance.
      *
-     * @param nc the node providing the node view page
-     * @param isStaticPage whether it's a static page
-     * @param pageType the kind of the page
-     * @return the page id
+     * @param nnc
+     * @return a new instance
      */
-    @SuppressWarnings("java:S2301")
-    public static String getPageId(final NodeContainer nc, final boolean isStaticPage, final PageType pageType) {
-        if (isStaticPage && nc instanceof NativeNodeContainer) {
-            return getStaticPageId(((NativeNodeContainer)nc).getNode().getFactory().getClass(), pageType);
-        } else {
-            return getPageId(nc.getID().toString().replace(":", "_"), pageType);
-        }
-    }
+    static SNCWrapper of(final SubNodeContainer nnc) {
+        return new SNCWrapper() { // NOSONAR
 
-    /**
-     * Determines the page id for a static page.
-     *
-     * @param factoryClass
-     * @param pageType
-     * @return the page id
-     */
-    public static String getStaticPageId(@SuppressWarnings("rawtypes") final Class<? extends NodeFactory> factoryClass,
-        final PageType pageType) {
-        return getPageId(factoryClass.getName(), pageType);
-    }
+            @Override
+            public SubNodeContainer get() {
+                return nnc;
+            }
 
-    private static String getPageId(final String id, final PageType pageType) {
-        return pageType.toString() + "_" + id;
-    }
+            @Override
+            public boolean equals(final Object o) {
+                if (this == o) {
+                    return true;
+                }
+                if (o == null) {
+                    return false;
+                }
+                if (getClass() != o.getClass()) {
+                    return false;
+                }
+                var w = (SNCWrapper)o;
+                return nnc.equals(w.get());
+            }
 
-    private PageUtil() {
-        // utility class
+            @Override
+            public int hashCode() {
+                return nnc.hashCode();
+            }
+        };
+
     }
 
 }

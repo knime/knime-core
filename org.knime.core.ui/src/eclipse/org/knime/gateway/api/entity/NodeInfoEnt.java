@@ -52,6 +52,7 @@ import java.util.Arrays;
 import java.util.Objects;
 
 import org.knime.core.node.workflow.NativeNodeContainer;
+import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeMessage.Type;
 
 /**
@@ -75,19 +76,19 @@ public final class NodeInfoEnt {
 
     private final Boolean m_canExecute;
 
-    NodeInfoEnt(final NativeNodeContainer nnc) {
-        this(nnc, null);
+    NodeInfoEnt(final NodeContainer nc) {
+        this(nc, null);
     }
 
     /**
-     * @param nnc
+     * @param nc
      * @param errorMessage a custom error message (will replace a potentially available error message provided by the
      *            node)
      */
-    NodeInfoEnt(final NativeNodeContainer nnc, final String errorMessage) {
-        m_name = nnc.getName();
-        m_annotation = nnc.getNodeAnnotation().toString();
-        var state = nnc.getNodeContainerState();
+    NodeInfoEnt(final NodeContainer nc, final String errorMessage) {
+        m_name = nc.getName();
+        m_annotation = nc.getNodeAnnotation().toString();
+        var state = nc.getNodeContainerState();
 
         if (state.isIdle()) {
             m_state = "idle";
@@ -100,7 +101,7 @@ public final class NodeInfoEnt {
         } else {
             m_state = "undefined";
         }
-        var message = nnc.getNodeMessage();
+        var message = nc.getNodeMessage();
         var messageType = message.getMessageType();
         if (errorMessage != null) {
             m_errorMessage = errorMessage;
@@ -109,7 +110,7 @@ public final class NodeInfoEnt {
         }
         m_warningMessage = messageType == Type.WARNING ? message.getMessage() : null;
 
-        if (state.isExecuted() || state.isExecutionInProgress() || state.isExecutingRemotely()) {
+        if (state.isExecuted() || state.isExecutionInProgress() || state.isExecutingRemotely() || !(nc instanceof NativeNodeContainer)) {
             m_canExecute = null;
         } else {
             // Strictly speaking there are situations where a node could still be executed even if it's in state 'idle'.
@@ -120,7 +121,7 @@ public final class NodeInfoEnt {
             // That's why we decided to not support that to avoid node dialogs which are not in sync with the input specs.
             // That's why we do not just check 'WorkflowManager.canExecuteNode' here ...
             m_canExecute = state.isConfigured() || //
-                (state.isIdle() && isInputSpecAvailable(nnc)); // this is the case if 'configure' (i.e. settings validation) failed
+                (state.isIdle() && isInputSpecAvailable((NativeNodeContainer)nc)); // this is the case if 'configure' (i.e. settings validation) failed
         }
     }
 

@@ -55,7 +55,11 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.NativeNodeContainer;
+import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.webui.node.NNCWrapper;
+import org.knime.core.webui.node.NodeWrapper;
+import org.knime.core.webui.node.SNCWrapper;
 import org.knime.core.webui.node.view.NodeViewManager;
 import org.knime.core.webui.page.PageUtil.PageType;
 
@@ -64,7 +68,7 @@ import org.knime.core.webui.page.PageUtil.PageType;
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
-public final class NodeViewEnt extends NodeUIExtensionEnt<NNCWrapper> {
+public final class NodeViewEnt extends NodeUIExtensionEnt<NodeWrapper<? extends NodeContainer>> {
 
     private final NodeInfoEnt m_info;
 
@@ -98,15 +102,26 @@ public final class NodeViewEnt extends NodeUIExtensionEnt<NNCWrapper> {
      * @return a new instance
      */
     public static NodeViewEnt create(final NativeNodeContainer nnc) {
-        return create(nnc, null);
+        return create(NNCWrapper.of(nnc), null);
     }
 
-    private NodeViewEnt(final NativeNodeContainer nnc, final Supplier<List<String>> initialSelection,
+    /**
+     * Creates a new instances without a initial selection and without the underlying node being registered with the
+     * selection event source.
+     *
+     * @param snc the sub node container to create the node view entity for
+     * @return a new instance
+     */
+    public static NodeViewEnt create(final SubNodeContainer snc) {
+        return create(SNCWrapper.of(snc), null);
+    }
+
+    private NodeViewEnt(final NodeWrapper<? extends NodeContainer> nw, final Supplier<List<String>> initialSelection,
         final NodeViewManager nodeViewManager, final String customErrorMessage) {
-        super(NNCWrapper.of(nnc), nodeViewManager, nodeViewManager, PageType.VIEW);
-        CheckUtils.checkArgument(NodeViewManager.hasNodeView(nnc), "The provided node doesn't have a node view");
+        super(nw, nodeViewManager, nodeViewManager, PageType.VIEW);
+        CheckUtils.checkArgument(NodeViewManager.hasNodeView(nw.get()), "The provided node doesn't have a node view");
         m_initialSelection = initialSelection == null ? null : initialSelection.get();
-        m_info = new NodeInfoEnt(nnc, customErrorMessage);
+        m_info = new NodeInfoEnt(nw, customErrorMessage);
     }
 
     /**

@@ -55,7 +55,7 @@ import java.util.Set;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
-import org.knime.core.node.workflow.NativeNodeContainer;
+import org.knime.core.node.workflow.NodeContainer;
 
 /**
  * Represents a node dialog's flow variable settings. I.e. which settings are overwritten by flow variables or exposed
@@ -73,9 +73,9 @@ public final class FlowVariableSettingsEnt {
 
     private final Map<String, Object> m_viewVariables;
 
-    FlowVariableSettingsEnt(final NativeNodeContainer nnc) {
-        var nodeSettings = nnc.getNodeSettings();
-        var flowObjectStack = nnc.getFlowObjectStack();
+    FlowVariableSettingsEnt(final NodeContainer nc) {
+        var nodeSettings = nc.getNodeSettings();
+        var flowObjectStack = nc.getFlowObjectStack();
         if (flowObjectStack != null) {
             var flowVariables = flowObjectStack.getAllAvailableFlowVariables().keySet();
             m_modelVariables = createSettingsTree(CFG_MODEL_VARIABLES, nodeSettings, flowVariables);

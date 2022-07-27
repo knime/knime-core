@@ -56,7 +56,7 @@ import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.webui.data.DataServiceProvider;
 import org.knime.core.webui.node.AbstractNodeUIManager;
-import org.knime.core.webui.node.NNCWrapper;
+import org.knime.core.webui.node.NodeWrapper;
 import org.knime.core.webui.node.util.NodeCleanUpCallback;
 import org.knime.core.webui.page.Page;
 import org.knime.core.webui.page.PageUtil;
@@ -69,7 +69,7 @@ import org.knime.core.webui.page.PageUtil.PageType;
  *
  * @since 4.5
  */
-public final class NodeDialogManager extends AbstractNodeUIManager<NNCWrapper> {
+public final class NodeDialogManager extends AbstractNodeUIManager<NodeWrapper<? extends NodeContainer>> {
 
     private static NodeDialogManager instance;
 
@@ -145,7 +145,7 @@ public final class NodeDialogManager extends AbstractNodeUIManager<NNCWrapper> {
      * {@inheritDoc}
      */
     @Override
-    protected DataServiceProvider getDataServiceProvider(final NNCWrapper nnc) {
+    protected DataServiceProvider getDataServiceProvider(final NodeWrapper<? extends NodeContainer> nnc) {
         return getNodeDialog(nnc.get());
     }
 
@@ -153,7 +153,7 @@ public final class NodeDialogManager extends AbstractNodeUIManager<NNCWrapper> {
      * {@inheritDoc}
      */
     @Override
-    public Page getPage(final NNCWrapper nnc) {
+    public Page getPage(final NodeWrapper<? extends NodeContainer> nnc) {
         return getNodeDialog(nnc.get()).getPage();
     }
 
@@ -169,7 +169,7 @@ public final class NodeDialogManager extends AbstractNodeUIManager<NNCWrapper> {
      * {@inheritDoc}
      */
     @Override
-    public String getPageId(final NNCWrapper nnc, final Page p) {
+    public String getPageId(final NodeWrapper<? extends NodeContainer> nnc, final Page p) {
         return PageUtil.getPageId(nnc.get(), p.isCompletelyStatic(), PageType.DIALOG);
     }
 

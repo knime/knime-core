@@ -50,7 +50,11 @@ package org.knime.gateway.api.entity;
 
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.NativeNodeContainer;
+import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.webui.node.NNCWrapper;
+import org.knime.core.webui.node.NodeWrapper;
+import org.knime.core.webui.node.SNCWrapper;
 import org.knime.core.webui.node.dialog.NodeDialogManager;
 import org.knime.core.webui.page.PageUtil.PageType;
 
@@ -59,17 +63,26 @@ import org.knime.core.webui.page.PageUtil.PageType;
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
-public class NodeDialogEnt extends NodeUIExtensionEnt<NNCWrapper> {
+public class NodeDialogEnt extends NodeUIExtensionEnt<NodeWrapper<? extends NodeContainer>> {
 
     private final FlowVariableSettingsEnt m_flowVariableSettings;
 
     /**
-     * @param nnc
+     * @param nc
      */
-    public NodeDialogEnt(final NativeNodeContainer nnc) {
-        super(NNCWrapper.of(nnc), NodeDialogManager.getInstance(), NodeDialogManager.getInstance(), PageType.DIALOG);
-        CheckUtils.checkArgument(NodeDialogManager.hasNodeDialog(nnc), "The provided node doesn't have a node dialog");
-        m_flowVariableSettings = new FlowVariableSettingsEnt(nnc);
+    public NodeDialogEnt(final NativeNodeContainer nc) {
+        super(NNCWrapper.of(nc), NodeDialogManager.getInstance(), NodeDialogManager.getInstance(), PageType.DIALOG);
+        CheckUtils.checkArgument(NodeDialogManager.hasNodeDialog(nc), "The provided node doesn't have a node dialog");
+        m_flowVariableSettings = new FlowVariableSettingsEnt(nc);
+    }
+
+    /**
+     * @param nc
+     */
+    public NodeDialogEnt(final SubNodeContainer nc) {
+        super(SNCWrapper.of(nc), NodeDialogManager.getInstance(), NodeDialogManager.getInstance(), PageType.DIALOG);
+        CheckUtils.checkArgument(NodeDialogManager.hasNodeDialog(nc), "The provided node doesn't have a node dialog");
+        m_flowVariableSettings = new FlowVariableSettingsEnt(nc);
     }
 
     /**
