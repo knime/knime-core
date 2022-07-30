@@ -215,10 +215,9 @@ public final class NodeViewManager extends AbstractNodeUIManager<NNCWrapper> {
     }
 
     private void registerNodeView(final NativeNodeContainer nnc, final NodeView nodeView) {
-        m_nodeViewMap.computeIfAbsent(nnc, id -> {
+        if (m_nodeViewMap.putIfAbsent(nnc, nodeView) == null) {
             new NodeCleanUpCallback(nnc, () -> m_nodeViewMap.remove(nnc), false).activate();
-            return nodeView;
-        });
+        }
     }
 
     /**

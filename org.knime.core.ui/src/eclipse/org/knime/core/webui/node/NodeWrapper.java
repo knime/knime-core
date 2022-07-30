@@ -51,9 +51,9 @@ package org.knime.core.webui.node;
 import org.knime.core.node.workflow.NodeContainer;
 
 /**
- * Wrapper for a node ({@link NodeContainer}). The only purpose is to be able to represent a node <i>and</i> a port
- * (i.e. a node and a port idx) at the same time such that the {@link AbstractNodeUIManager} can operate on both (i.e.
- * node and port).
+ * Wrapper for a node ({@link NodeContainer}). The only purpose is to be able to represent a node <i>and</i> optionally
+ * something else together with that node (e.g. a node and a port idx) at the same time such that the
+ * {@link AbstractNodeUIManager} can operate on both (e.g. node and port).
  *
  * Implementations must also implement the {@link #equals(Object)} and {@link #hashCode()} methods.
  *

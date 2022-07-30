@@ -186,7 +186,7 @@ public final class PortViewManager extends AbstractNodeUIManager<NodePortWrapper
      * {@inheritDoc}
      */
     @Override
-    protected boolean cleanUpPageAndDataServicesOnNodeStateChange() {
+    protected boolean shouldCleanUpPageAndDataServicesOnNodeStateChange() {
         return true;
     }
 

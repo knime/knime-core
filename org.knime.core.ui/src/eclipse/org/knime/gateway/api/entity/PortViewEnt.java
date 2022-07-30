@@ -54,14 +54,15 @@ import org.knime.core.webui.node.port.PortViewManager;
 import org.knime.core.webui.page.PageUtil.PageType;
 
 /**
+ * Port view entity containing the info required by the UI (i.e. frontend) to be able to display a port view.
  *
- * @author hornm
+ * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
 public class PortViewEnt extends NodeUIExtensionEnt<NodePortWrapper> {
 
     /**
-     * @param nc
-     * @param portIdx
+     * @param nc the node the port to display the port view for belongs to
+     * @param portIdx the port index of the port to display
      */
     public PortViewEnt(final NodeContainer nc, final int portIdx) {
         super(NodePortWrapper.of(nc, portIdx), PortViewManager.getInstance(), PortViewManager.getInstance(),

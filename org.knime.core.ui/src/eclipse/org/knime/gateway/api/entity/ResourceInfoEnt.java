@@ -70,7 +70,6 @@ public final class ResourceInfoEnt {
 
     ResourceInfoEnt(final String id, final String baseUrl, final String debugUrl, final String path,
         final Resource.ContentType resourceContentType) {
-        // TODO don't set baseUrl etc. if content type is Resource.ContentType.VUE_COMPONENT_REFERENCE
         m_baseUrl = baseUrl;
         m_debugUrl = debugUrl;
         m_path = path;

@@ -80,14 +80,14 @@ import org.knime.core.webui.page.Resource;
  * case of port views.
  * <p>
  * (ii) the page resources. I.e. keeps track of already accessed pages (to be able to also access page-related resources
- * from a - see {@link Page#getResource(String)}) and provides methods to determine page urls and paths.
+ * - see {@link Page#getResource(String)}) and provides methods to determine page urls and paths.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  *
  * @param <N> the node wrapper this manager operates on
  */
 @SuppressWarnings("java:S1170")
-public abstract class AbstractNodeUIManager<N extends NodeWrapper<? extends NodeContainer>>
+public abstract class AbstractNodeUIManager<N extends NodeWrapper<?>>
     implements DataServiceManager<N>, PageResourceManager<N> {
 
     private final Map<N, InitialDataService> m_initialDataServices = new WeakHashMap<>();
@@ -127,7 +127,7 @@ public abstract class AbstractNodeUIManager<N extends NodeWrapper<? extends Node
     /**
      * @return whether to clean-up the page- and data-service-instances on node state change
      */
-    protected boolean cleanUpPageAndDataServicesOnNodeStateChange() {
+    protected boolean shouldCleanUpPageAndDataServicesOnNodeStateChange() {
         return false;
     }
 
@@ -136,7 +136,7 @@ public abstract class AbstractNodeUIManager<N extends NodeWrapper<? extends Node
      */
     @Override
     @SuppressWarnings("unchecked")
-    public <S> Optional<S> getDataServiceOfType(final N nodeWrapper, final Class<S> dataServiceClass) {
+    public final <S> Optional<S> getDataServiceOfType(final N nodeWrapper, final Class<S> dataServiceClass) {
         Object ds = null;
         if (InitialDataService.class.isAssignableFrom(dataServiceClass)) {
             ds = getInitialDataService(nodeWrapper).orElse(null);
@@ -155,7 +155,7 @@ public abstract class AbstractNodeUIManager<N extends NodeWrapper<? extends Node
      * {@inheritDoc}
      */
     @Override
-    public String callTextInitialDataService(final N nodeWrapper) {
+    public final String callTextInitialDataService(final N nodeWrapper) {
         var service = getInitialDataService(nodeWrapper).filter(TextInitialDataService.class::isInstance).orElse(null);
         if (service != null) {
             return ((TextInitialDataService)service).getInitialData();
@@ -170,7 +170,7 @@ public abstract class AbstractNodeUIManager<N extends NodeWrapper<? extends Node
             ds = getDataServiceProvider(nodeWrapper).createInitialDataService().orElse(null);
             m_initialDataServices.put(nodeWrapper, ds);
             new NodeCleanUpCallback(nodeWrapper.get(), () -> m_initialDataServices.remove(nodeWrapper),
-                cleanUpPageAndDataServicesOnNodeStateChange()).activate();
+                shouldCleanUpPageAndDataServicesOnNodeStateChange()).activate();
         } else {
             ds = m_initialDataServices.get(nodeWrapper);
         }
@@ -181,7 +181,7 @@ public abstract class AbstractNodeUIManager<N extends NodeWrapper<? extends Node
      * {@inheritDoc}
      */
     @Override
-    public String callTextDataService(final N nodeWrapper, final String request) {
+    public final String callTextDataService(final N nodeWrapper, final String request) {
         var service = getDataService(nodeWrapper).filter(TextDataService.class::isInstance).orElse(null);
         if (service != null) {
             return ((TextDataService)service).handleRequest(request);
@@ -196,7 +196,7 @@ public abstract class AbstractNodeUIManager<N extends NodeWrapper<? extends Node
             ds = getDataServiceProvider(nodeWrapper).createDataService().orElse(null);
             m_dataServices.put(nodeWrapper, ds);
             new NodeCleanUpCallback(nodeWrapper.get(), () -> m_dataServices.remove(nodeWrapper),
-                cleanUpPageAndDataServicesOnNodeStateChange()).activate();
+                shouldCleanUpPageAndDataServicesOnNodeStateChange()).activate();
         } else {
             ds = m_dataServices.get(nodeWrapper);
         }
@@ -207,7 +207,7 @@ public abstract class AbstractNodeUIManager<N extends NodeWrapper<? extends Node
      * {@inheritDoc}
      */
     @Override
-    public void callTextApplyDataService(final N nodeWrapper, final String request) throws IOException {
+    public final void callTextApplyDataService(final N nodeWrapper, final String request) throws IOException {
         var service = getApplyDataService(nodeWrapper).orElse(null);
         if (service instanceof TextReExecuteDataService) {
             ((TextReExecuteDataService)service).reExecute(request);
@@ -224,7 +224,7 @@ public abstract class AbstractNodeUIManager<N extends NodeWrapper<? extends Node
             ds = getDataServiceProvider(nodeWrapper).createApplyDataService().orElse(null);
             m_applyDataServices.put(nodeWrapper, ds);
             new NodeCleanUpCallback(nodeWrapper.get(), () -> m_applyDataServices.remove(nodeWrapper),
-                cleanUpPageAndDataServicesOnNodeStateChange()).activate();
+                shouldCleanUpPageAndDataServicesOnNodeStateChange()).activate();
         } else {
             ds = m_applyDataServices.get(nodeWrapper);
         }
@@ -252,7 +252,7 @@ public abstract class AbstractNodeUIManager<N extends NodeWrapper<? extends Node
      * {@inheritDoc}
      */
     @Override
-    public Optional<String> getDebugUrl(final N nodeWrapper) {
+    public final Optional<String> getDebugUrl(final N nodeWrapper) {
         String pattern = System.getProperty(m_nodeDebugPatternProp);
         String url = System.getProperty(m_nodeDebugUrlProp);
         if (url == null) {
@@ -273,7 +273,7 @@ public abstract class AbstractNodeUIManager<N extends NodeWrapper<? extends Node
      * {@inheritDoc}
      */
     @Override
-    public String getDomainName() {
+    public final String getDomainName() {
         return m_domainName;
     }
 
@@ -281,7 +281,7 @@ public abstract class AbstractNodeUIManager<N extends NodeWrapper<? extends Node
      * {@inheritDoc}
      */
     @Override
-    public String getPagePath(final N nodeWrapper) {
+    public final String getPagePath(final N nodeWrapper) {
         var page = getPage(nodeWrapper);
         var pageId = getPageId(nodeWrapper, page);
         registerPage(nodeWrapper.get(), pageId, page);
@@ -292,7 +292,7 @@ public abstract class AbstractNodeUIManager<N extends NodeWrapper<? extends Node
      * {@inheritDoc}
      */
     @Override
-    public Optional<String> getBaseUrl() {
+    public final Optional<String> getBaseUrl() {
         if (isRunAsDesktopApplication()) {
             return Optional.of(m_baseUrl);
         } else {
@@ -302,7 +302,7 @@ public abstract class AbstractNodeUIManager<N extends NodeWrapper<? extends Node
 
     private void registerPage(final NodeContainer nc, final String pageId, final Page page) {
         m_pageMap.computeIfAbsent(pageId, id -> {
-            new NodeCleanUpCallback(nc, () -> m_pageMap.remove(pageId), cleanUpPageAndDataServicesOnNodeStateChange()).activate();
+            new NodeCleanUpCallback(nc, () -> m_pageMap.remove(pageId), shouldCleanUpPageAndDataServicesOnNodeStateChange()).activate();
             return page;
         });
     }
@@ -332,7 +332,7 @@ public abstract class AbstractNodeUIManager<N extends NodeWrapper<? extends Node
      * {@inheritDoc}
      */
     @Override
-    public Optional<Resource> getPageResourceFromUrl(final String url) {
+    public final Optional<Resource> getPageResourceFromUrl(final String url) {
         return getPageResource(getResourceIdFromUrl(url));
     }
 
