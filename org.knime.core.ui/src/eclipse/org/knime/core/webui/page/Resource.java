@@ -117,6 +117,10 @@ public interface Resource {
     InputStream getInputStream() throws IOException;
 
     /**
+     * A static resource will never change at runtime and thus potentially be 're-used' between, e.g., multiple node
+     * instances. I.e. multiple node instances access a static resource at the very same URL which is independent from a
+     * specific node instance.
+     *
      * @return <code>true</code> if the resource is static and won't ever change at runtime, otherwise
      *         <code>false</code>
      */

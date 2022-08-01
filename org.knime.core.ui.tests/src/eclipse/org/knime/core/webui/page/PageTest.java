@@ -132,18 +132,20 @@ public class PageTest {
             relativePath -> stringToInputStream("resource supplier 2 - " + relativePath);
 
         var page = Page.builder(BUNDLE_ID, "files", "page.html") //
-            .addResources(resourceSupplier, "path/prefix") //
-            .addResources(resourceSupplier2, "path/prefix/2") //
+            .addResources(resourceSupplier, "path/prefix", true) //
+            .addResources(resourceSupplier2, "path/prefix/2", false) //
             .build();
         assertThat(page.isCompletelyStatic(), is(false));
 
         assertThat(page.getResource("path/prefix/null").isEmpty(), is(true));
         assertThat(resourceToString(page.getResource("path/prefix/path/to/a/resource").get()),
             is("resource supplier - known path"));
+        assertThat(page.getResource("path/prefix/path/to/a/resource").get().isStatic(), is(true));
         assertThat(resourceToString(page.getResource("path/prefix/path/to/a/resource2").get()),
             is("resource supplier - another path"));
         assertThat(resourceToString(page.getResource("path/prefix/2/path/to/another/resource").get()),
             is("resource supplier 2 - path/to/another/resource"));
+        assertThat(page.getResource("path/prefix/2/path/to/another/resource").get().isStatic(), is(false));
         assertThat(page.getResource("path/to/nonexisting/resource").isEmpty(), is(true));
     }
 

@@ -81,7 +81,7 @@ public final class Page implements Resource {
     private Boolean m_isCompletelyStatic;
 
     Page(final Resource pageResource, final List<Resource> resources,
-        final Map<String, Function<String, Resource>> dynamicResources) {
+        final Map<String, Function<String, Resource>> dynamicResources, final boolean dynamicResourcesAreStatic) {
         m_pageResource = pageResource;
         m_resources = resources == null ? Collections.emptyMap()
             : resources.stream().collect(Collectors.toMap(Resource::getRelativePath, r -> r));
@@ -89,6 +89,10 @@ public final class Page implements Resource {
             // using this custom comparator, we make sure that the longest pathPrefix always comes first
             m_dynamicResources = new TreeMap<>(Comparator.comparingInt(String::length).reversed());
             m_dynamicResources.putAll(dynamicResources);
+            if (!dynamicResourcesAreStatic) {
+                // page can't be completely static if some dynamic resources aren't static
+                m_isCompletelyStatic = false;
+            }
         } else {
             m_dynamicResources = Collections.emptyMap();
         }
@@ -147,8 +151,7 @@ public final class Page implements Resource {
      */
     public boolean isCompletelyStatic() {
         if (m_isCompletelyStatic == null) {
-            m_isCompletelyStatic = isStatic() && m_dynamicResources.isEmpty()
-                && m_resources.values().stream().allMatch(Resource::isStatic);
+            m_isCompletelyStatic = isStatic() && m_resources.values().stream().allMatch(Resource::isStatic);
         }
         return m_isCompletelyStatic;
     }

@@ -175,7 +175,7 @@ public final class FromFilePageBuilder extends PageBuilder {
 
     @Override
     public Page build() {
-        return new Page(m_pageResource, m_resources, m_dynamicResources);
+        return new Page(m_pageResource, m_resources, m_dynamicResources, m_dynamicResourcesAreStatic);
     }
 
     /*

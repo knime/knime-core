@@ -72,6 +72,8 @@ public class PageBuilder {
 
     Map<String, Function<String, Resource>> m_dynamicResources;
 
+    boolean m_dynamicResourcesAreStatic = true;
+
     final Resource m_pageResource;
 
     PageBuilder(final Supplier<InputStream> content, final String relativePath) {
@@ -148,9 +150,11 @@ public class PageBuilder {
      * @param supplier the mapping function from relative path to resource content
      * @param relativePathPrefix the path prefix; if there are resources registered with 'overlapping' path prefixes,
      *            the resources with the 'longest' match are being used
+     * @param areStatic whether the returned resources can be considered static or not - see {@link Resource#isStatic()}
      * @return this page builder instance
      */
-    public PageBuilder addResources(final Function<String, InputStream> supplier, final String relativePathPrefix) {
+    public PageBuilder addResources(final Function<String, InputStream> supplier, final String relativePathPrefix,
+        final boolean areStatic) {
         if (m_dynamicResources == null) {
             m_dynamicResources = new HashMap<>();
         }
@@ -173,7 +177,7 @@ public class PageBuilder {
 
                 @Override
                 public boolean isStatic() {
-                    return false;
+                    return areStatic;
                 }
 
                 @Override
@@ -183,6 +187,9 @@ public class PageBuilder {
 
             };
         });
+        if (!areStatic) {
+            m_dynamicResourcesAreStatic = false;
+        }
         return this;
     }
 
@@ -202,7 +209,7 @@ public class PageBuilder {
      * @return a new page instance
      */
     public Page build() {
-        return new Page(m_pageResource, m_resources, m_dynamicResources);
+        return new Page(m_pageResource, m_resources, m_dynamicResources, m_dynamicResourcesAreStatic);
     }
 
 }
