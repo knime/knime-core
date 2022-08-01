@@ -59,6 +59,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -388,7 +389,13 @@ public final class DataType {
         if (type2.isASuperTypeOf(type1)) {
             return type2;
         }
-        return new DataType(type1, type2);
+
+        final DataType nonNativeCandidate = new DataType(type1, type2);
+        return DataTypeRegistry.getInstance().availableDataTypes() //
+                .stream() //
+                .filter(type -> type.equalsNoPreferredValueClass(nonNativeCandidate)) //
+                .findFirst() //
+                .orElse(nonNativeCandidate);
     }
 
     /**
@@ -923,12 +930,12 @@ public final class DataType {
             return false;
         }
         DataType o = (DataType)other;
+        return equalsNoPreferredValueClass(o) && Objects.equals(m_valueClasses.get(0), o.m_valueClasses.get(0));
+    }
 
-        // check if preferred value classes match
-        Class<? extends DataValue> myPreferred = m_valueClasses.get(0);
-        Class<? extends DataValue> oPreferred = o.m_valueClasses.get(0);
-        if (!myPreferred.equals(oPreferred)) {
-            return false;
+    private boolean equalsNoPreferredValueClass(final DataType o) {
+        if (o == this) {
+            return true;
         }
 
         if (!m_valueClasses.containsAll(o.m_valueClasses)) {
@@ -944,8 +951,7 @@ public final class DataType {
             return false;
         }
 
-        return ConvenienceMethods.areEqual(getCollectionElementType(),
-                o.getCollectionElementType());
+        return Objects.equals(getCollectionElementType(), o.getCollectionElementType());
     }
 
     /**
