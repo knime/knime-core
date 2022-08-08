@@ -1660,11 +1660,8 @@ public final class SubNodeContainer extends SingleNodeContainer
         NodeContainer oldVNode = m_wfm.getNodeContainer(getVirtualInNodeID());
         m_inports[0] = new NodeInPort(0, FlowVariablePortObject.TYPE_OPTIONAL);
         NodeSettings settings = new NodeSettings("node settings");
-        try {
-            m_wfm.saveNodeSettings(oldVNode.getID(), settings);
-        } catch (InvalidSettingsException e) {
-            // no valid settings available, skip
-        }
+        m_wfm.saveNodeSettings(oldVNode.getID(), settings);
+
         m_virtualInNodeIDSuffix = m_wfm.createAndAddNode(new VirtualSubNodeInputNodeFactory(this, portTypes)).getIndex();
         NodeContainer newVNode = m_wfm.getNodeContainer(getVirtualInNodeID());
         newVNode.setUIInformation(oldVNode.getUIInformation());
@@ -1716,11 +1713,8 @@ public final class SubNodeContainer extends SingleNodeContainer
         m_outports[0] = new NodeContainerOutPort(this, FlowVariablePortObject.TYPE, 0);
         NodeContainer oldVNode = m_wfm.getNodeContainer(getVirtualOutNodeID());
         NodeSettings settings = new NodeSettings("node settings");
-        try {
-            m_wfm.saveNodeSettings(oldVNode.getID(), settings);
-        } catch (InvalidSettingsException e) {
-            // no valid settings available, skip
-        }
+        m_wfm.saveNodeSettings(oldVNode.getID(), settings);
+
         m_virtualOutNodeIDSuffix = m_wfm.createAndAddNode(new VirtualSubNodeOutputNodeFactory(portTypes)).getIndex();
         NodeContainer newVNode = m_wfm.getNodeContainer(getVirtualOutNodeID());
         newVNode.setUIInformation(oldVNode.getUIInformation());
@@ -2066,13 +2060,9 @@ public final class SubNodeContainer extends SingleNodeContainer
                     // this is very likely a missing node (placeholder)
                     error = String.format("Virtual output node is not of expected type (expected %s, actual %s)",
                         VirtualSubNodeOutputNodeModel.class.getName(), virtualOutModel.getClass().getName());
-                    try {
-                        NodeSettings temp = new NodeSettings("temp");
-                        m_wfm.saveNodeSettings(virtualOutID, temp);
-                        outputSettings = temp;
-                    } catch (InvalidSettingsException ise) {
-                        // silently ignore; this is minor given that the node is not there.
-                    }
+                    NodeSettings temp = new NodeSettings("temp");
+                    m_wfm.saveNodeSettings(virtualOutID, temp);
+                    outputSettings = temp;
                 }
             } else {
                 error = String.format("Virtual output node with ID %s is not a native node", virtualOutID);
@@ -2108,13 +2098,9 @@ public final class SubNodeContainer extends SingleNodeContainer
                     // this is very likely a missing node (placeholder)
                     error = String.format("Virtual input node is not of expected type (expected %s, actual %s)",
                         VirtualSubNodeInputNodeModel.class.getName(), virtualInModel.getClass().getName());
-                    try {
-                        NodeSettings temp = new NodeSettings("temp");
-                        m_wfm.saveNodeSettings(virtualInID, temp);
-                        inputSettings = temp;
-                    } catch (InvalidSettingsException ise) {
-                        // silently ignore; this is minor given that the node is not there.
-                    }
+                    NodeSettings temp = new NodeSettings("temp");
+                    m_wfm.saveNodeSettings(virtualInID, temp);
+                    inputSettings = temp;
                 }
             } else {
                 error = String.format("Virtual input node with ID %s is not a native node", virtualInID);

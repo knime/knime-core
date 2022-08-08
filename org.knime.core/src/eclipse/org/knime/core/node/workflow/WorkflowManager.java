@@ -915,11 +915,7 @@ public final class WorkflowManager extends NodeContainer
             NativeNodeContainer nnc = (NativeNodeContainer)getNodeContainer(id);
             // keep the node's settings
             final NodeSettings settings = new NodeSettings("node settings");
-            try {
-                saveNodeSettings(id, settings);
-            } catch (InvalidSettingsException e) {
-                // no valid settings available, skip
-            }
+            saveNodeSettings(id, settings);
 
             // keep some node properties to be transfered to the new node
             NodeUIInformation uiInfo = nnc.getUIInformation();
@@ -2089,12 +2085,27 @@ public final class WorkflowManager extends NodeContainer
      *
      * @param id of node
      * @param settings to be saved to
-     * @throws InvalidSettingsException thrown if nonsense is written
      */
-    public void saveNodeSettings(final NodeID id, final NodeSettingsWO settings) throws InvalidSettingsException {
+    public void saveNodeSettings(final NodeID id, final NodeSettingsWO settings) {
+        saveNodeSettings(id, settings, false);
+    }
+
+    /**
+     * write node settings into Settings object.
+     * initializes settings with the defaults ones, if specified.
+     *
+     * @param id of node
+     * @param settings to be saved to
+     * @param initDefaultSettings should default settings be loaded?
+     */
+    private void saveNodeSettings(final NodeID id, final NodeSettingsWO settings, final boolean initDefaultSettings) {
         try (WorkflowLock lock = lock()) {
-            NodeContainer nc = getNodeContainer(id);
-            nc.saveSettings(settings);
+            var nc = getNodeContainer(id);
+            if (nc instanceof SingleNodeContainer) {
+                ((SingleNodeContainer)nc).saveSettings(settings, initDefaultSettings);
+            } else {
+                nc.saveSettings(settings);
+            }
         }
     }
 
@@ -7576,13 +7587,7 @@ public final class WorkflowManager extends NodeContainer
         }
         try (WorkflowLock lock = lock()) {
             NodeSettings ncSettings = new NodeSettings("metanode_settings"); // current settings, re-apply after update
-            try {
-                saveNodeSettings(id, ncSettings);
-            } catch (InvalidSettingsException e1) {
-                String error = "Unable to store metanode settings: " + e1.getMessage();
-                LOGGER.warn(error, e1);
-                loadRes.addError(error);
-            }
+            saveNodeSettings(id, ncSettings, true);
 
             NodeAnnotationData oldAnnoData = oldLinkMN.getNodeAnnotation().getData();
             NodeUIInformation oldUI = oldLinkMN.getUIInformation();
