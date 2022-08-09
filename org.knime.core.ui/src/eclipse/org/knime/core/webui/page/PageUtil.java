@@ -48,6 +48,7 @@
  */
 package org.knime.core.webui.page;
 
+import org.knime.core.node.NodeFactory;
 import org.knime.core.node.workflow.NativeNodeContainer;
 
 /**
@@ -93,12 +94,26 @@ public final class PageUtil {
      */
     @SuppressWarnings("java:S2301")
     public static String getPageId(final NativeNodeContainer nnc, final boolean isStaticPage, final PageType pageType) {
-        String id;
         if (isStaticPage) {
-            id = nnc.getNode().getFactory().getClass().getName();
+            return getStaticPageId(nnc.getNode().getFactory().getClass(), pageType);
         } else {
-            id = nnc.getID().toString().replace(":", "_");
+            return getPageId(nnc.getID().toString().replace(":", "_"), pageType);
         }
+    }
+
+    /**
+     * Determines the page id for a static page.
+     *
+     * @param factoryClass
+     * @param pageType
+     * @return the page id
+     */
+    public static String getStaticPageId(@SuppressWarnings("rawtypes") final Class<? extends NodeFactory> factoryClass,
+        final PageType pageType) {
+        return getPageId(factoryClass.getName(), pageType);
+    }
+
+    private static String getPageId(final String id, final PageType pageType) {
         return pageType.toString() + "_" + id;
     }
 
