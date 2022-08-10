@@ -117,7 +117,7 @@ public final class NodeDialogManager extends AbstractNodeUIManager<NNCWrapper> {
         }
         var nnc = (NativeNodeContainer)nc;
         return m_nodeDialogMap.computeIfAbsent(nc, id -> {
-            new NodeCleanUpCallback(nnc, () -> m_nodeDialogMap.remove(nnc), false).activate();
+            NodeCleanUpCallback.builder(nnc, () -> m_nodeDialogMap.remove(nnc)).build();
             return createNodeDialog(nc);
         });
     }

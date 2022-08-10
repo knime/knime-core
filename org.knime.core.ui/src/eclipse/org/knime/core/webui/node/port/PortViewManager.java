@@ -164,7 +164,8 @@ public final class PortViewManager extends AbstractNodeUIManager<NodePortWrapper
             try {
                 portView = factory.createPortView(outPort.getPortObject());
                 m_portViewMap.put(nodePortWrapper, portView);
-                new NodeCleanUpCallback(nc, () -> m_portViewMap.remove(nodePortWrapper), true).activate();
+                NodeCleanUpCallback.builder(nc, () -> m_portViewMap.remove(nodePortWrapper))
+                    .cleanUpOnNodeStateChange(true).build();
                 return portView;
             } finally {
                 NodeContext.removeLastContext();

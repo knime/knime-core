@@ -216,7 +216,7 @@ public final class NodeViewManager extends AbstractNodeUIManager<NNCWrapper> {
 
     private void registerNodeView(final NativeNodeContainer nnc, final NodeView nodeView) {
         if (m_nodeViewMap.putIfAbsent(nnc, nodeView) == null) {
-            new NodeCleanUpCallback(nnc, () -> m_nodeViewMap.remove(nnc), false).activate();
+            NodeCleanUpCallback.builder(nnc, () -> m_nodeViewMap.remove(nnc)).build();
         }
     }
 

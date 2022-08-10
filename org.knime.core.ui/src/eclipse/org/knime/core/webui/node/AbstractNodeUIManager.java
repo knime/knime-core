@@ -169,8 +169,8 @@ public abstract class AbstractNodeUIManager<N extends NodeWrapper<?>>
         if (!m_initialDataServices.containsKey(nodeWrapper)) {
             ds = getDataServiceProvider(nodeWrapper).createInitialDataService().orElse(null);
             m_initialDataServices.put(nodeWrapper, ds);
-            new NodeCleanUpCallback(nodeWrapper.get(), () -> m_initialDataServices.remove(nodeWrapper),
-                shouldCleanUpPageAndDataServicesOnNodeStateChange()).activate();
+            NodeCleanUpCallback.builder(nodeWrapper.get(), () -> m_initialDataServices.remove(nodeWrapper))
+                .cleanUpOnNodeStateChange(shouldCleanUpPageAndDataServicesOnNodeStateChange()).build();
         } else {
             ds = m_initialDataServices.get(nodeWrapper);
         }
@@ -195,8 +195,8 @@ public abstract class AbstractNodeUIManager<N extends NodeWrapper<?>>
         if (!m_dataServices.containsKey(nodeWrapper)) {
             ds = getDataServiceProvider(nodeWrapper).createDataService().orElse(null);
             m_dataServices.put(nodeWrapper, ds);
-            new NodeCleanUpCallback(nodeWrapper.get(), () -> m_dataServices.remove(nodeWrapper),
-                shouldCleanUpPageAndDataServicesOnNodeStateChange()).activate();
+            NodeCleanUpCallback.builder(nodeWrapper.get(), () -> m_dataServices.remove(nodeWrapper))
+                .cleanUpOnNodeStateChange(shouldCleanUpPageAndDataServicesOnNodeStateChange()).build();
         } else {
             ds = m_dataServices.get(nodeWrapper);
         }
@@ -223,8 +223,8 @@ public abstract class AbstractNodeUIManager<N extends NodeWrapper<?>>
         if (!m_applyDataServices.containsKey(nodeWrapper)) {
             ds = getDataServiceProvider(nodeWrapper).createApplyDataService().orElse(null);
             m_applyDataServices.put(nodeWrapper, ds);
-            new NodeCleanUpCallback(nodeWrapper.get(), () -> m_applyDataServices.remove(nodeWrapper),
-                shouldCleanUpPageAndDataServicesOnNodeStateChange()).activate();
+            NodeCleanUpCallback.builder(nodeWrapper.get(), () -> m_applyDataServices.remove(nodeWrapper))
+                .cleanUpOnNodeStateChange(shouldCleanUpPageAndDataServicesOnNodeStateChange()).build();
         } else {
             ds = m_applyDataServices.get(nodeWrapper);
         }
@@ -302,7 +302,8 @@ public abstract class AbstractNodeUIManager<N extends NodeWrapper<?>>
 
     private void registerPage(final NodeContainer nc, final String pageId, final Page page) {
         m_pageMap.computeIfAbsent(pageId, id -> {
-            new NodeCleanUpCallback(nc, () -> m_pageMap.remove(pageId), shouldCleanUpPageAndDataServicesOnNodeStateChange()).activate();
+            NodeCleanUpCallback.builder(nc, () -> m_pageMap.remove(pageId))
+                .cleanUpOnNodeStateChange(shouldCleanUpPageAndDataServicesOnNodeStateChange()).build();
             return page;
         });
     }

@@ -71,29 +71,32 @@ public final class NodeCleanUpCallback implements WorkflowListener, NodeStateCha
 
     private final boolean m_cleanUpOnNodeStateChange;
 
-    /**
-     * A new callback instance.
-     *
-     * @param nc the node to watch
-     * @param onCleanUp the callback to call when the node is being disposed.
-     * @param cleanUpOnNodeStateChange if the clean-up callback shall be called on node state change or not
-     */
-    public NodeCleanUpCallback(final NodeContainer nc, final Runnable onCleanUp,
-        final boolean cleanUpOnNodeStateChange) {
-        m_nc = nc;
-        m_onCleanUp = onCleanUp;
-        m_cleanUpOnNodeStateChange = cleanUpOnNodeStateChange;
+    private final boolean m_deactivateOnNodeStateChange;
+
+    private NodeCleanUpCallback(final Builder builder) {
+        m_nc = builder.m_nc;
+        m_onCleanUp = builder.m_onCleanUp;
+        m_cleanUpOnNodeStateChange = builder.m_cleanUpOnNodeStateChange;
+        m_deactivateOnNodeStateChange = builder.m_deactivateOnNodeStateChange;
+        activate();
     }
 
-    /**
-     * Activates the node clean-up callback by registering the respective listeners.
-     */
-    public void activate() {
+    private void activate() {
         WorkflowManager.ROOT.addListener(this);
         m_nc.getParent().addListener(this);
         if (m_cleanUpOnNodeStateChange) {
             m_nc.addNodeStateChangeListener(this);
         }
+    }
+
+    private void deactivate() {
+        WorkflowManager.ROOT.removeListener(this);
+        m_nc.getParent().removeListener(this);
+        if (m_cleanUpOnNodeStateChange) {
+            m_nc.removeNodeStateChangeListener(this);
+        }
+        m_nc = null;
+        m_onCleanUp = null;
     }
 
     @Override
@@ -106,29 +109,87 @@ public final class NodeCleanUpCallback implements WorkflowListener, NodeStateCha
             if (e.getOldValue() instanceof WorkflowManager && ((WorkflowManager)e.getOldValue()).getID()
                 .getIndex() == m_nc.getParent().getProjectWFM().getID().getIndex()) {
                 // workflow has been closed
-                cleanUp();
+                deactivateAndRunCleanUp();
             }
             if (e.getOldValue() instanceof NativeNodeContainer
                 && ((NativeNodeContainer)e.getOldValue()).getID().equals(m_nc.getID())) {
                 // node removed
-                cleanUp();
+                deactivateAndRunCleanUp();
             }
         }
     }
 
-    @Override
-    public void stateChanged(final NodeStateEvent state) {
-        cleanUp();
+    /**
+     * @param nc the node to watch
+     * @param onCleanUp the callback to call when the node is being disposed.
+     * @return a new builder instance
+     */
+    public static Builder builder(final NodeContainer nc, final Runnable onCleanUp) {
+        return new Builder(nc, onCleanUp);
     }
 
-    private void cleanUp() {
-        WorkflowManager.ROOT.removeListener(this);
-        m_nc.getParent().removeListener(this);
-        if (m_cleanUpOnNodeStateChange) {
-            m_nc.removeNodeStateChangeListener(this);
+    @Override
+    public void stateChanged(final NodeStateEvent state) {
+        if (m_deactivateOnNodeStateChange) {
+            deactivateAndRunCleanUp();
+        } else {
+            m_onCleanUp.run();
         }
-        m_onCleanUp.run();
-        m_nc = null;
-        m_onCleanUp = null;
+    }
+
+    private void deactivateAndRunCleanUp() {
+        var onCleanUp = m_onCleanUp;
+        deactivate();
+        onCleanUp.run();
+    }
+
+    @SuppressWarnings("javadoc")
+    public static final class Builder {
+
+        private final NodeContainer m_nc;
+
+        private final Runnable m_onCleanUp;
+
+        private boolean m_cleanUpOnNodeStateChange;
+
+        private boolean m_deactivateOnNodeStateChange = true;
+
+
+        private Builder(final NodeContainer nc, final Runnable onCleanUp) {
+            m_nc = nc;
+            m_onCleanUp = onCleanUp;
+        }
+
+        /**
+         * If the clean-up callback shall be called on node state change or not. Default is {@code false}.
+         *
+         * @param cleanUpOnNodeStateChange
+         *
+         * @return this builder
+         */
+        public Builder cleanUpOnNodeStateChange(final boolean cleanUpOnNodeStateChange) {
+            m_cleanUpOnNodeStateChange = cleanUpOnNodeStateChange;
+            return this;
+        }
+
+        /**
+         * Determines whether to deactivate the node clean-up callback on node state change. I.e. whether any subsequent
+         * node state change will still trigger the clean-up. Default is {@code true}, i.e. it will be deactivated.
+         *
+         * @param deactivateOnNodeStateChange
+         * @return
+         */
+        public Builder deactivateOnNodeStateChange(final boolean deactivateOnNodeStateChange) {
+            m_deactivateOnNodeStateChange = deactivateOnNodeStateChange;
+            return this;
+        }
+
+        /**
+         * @return a new {@link NodeCleanUpCallback}-instance
+         */
+        public NodeCleanUpCallback build() {
+            return new NodeCleanUpCallback(this);
+        }
+
     }
 }
