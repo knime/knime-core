@@ -341,7 +341,7 @@ public final class DataContainerSettings {
      *
      * @return maximum number of asynchronous write threads
      */
-    int getMaxContainerThreads() {
+    public int getMaxContainerThreads() {
         return m_maxDataContainerThreads;
     }
 
@@ -359,7 +359,7 @@ public final class DataContainerSettings {
      *
      * @return the row batch size
      */
-    int getRowBatchSize() {
+    public int getRowBatchSize() {
         return m_rowBatchSize;
     }
 
