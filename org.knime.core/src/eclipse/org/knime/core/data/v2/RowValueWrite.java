@@ -67,9 +67,9 @@ public interface RowValueWrite<R extends RowValueRead> {
     void setFrom(final R values);
 
     /**
-     * Get the write value at a certain column index. Not that when used as {@link RowContainer} clients are required to
-     * fetch the <code>WriteValue</code> on a per row basis (the instance may change between rows, e.g. when advancing
-     * to new pages in the underlying storage). Implementations will know what type to expect (see
+     * Get the write value at a certain column index. Note that when used as {@link RowContainer} clients are required
+     * to fetch the <code>WriteValue</code> on a per row basis (the instance may change between rows, e.g. when
+     * advancing to new pages in the underlying storage). Implementations will know what type to expect (see
      * {@link org.knime.core.node.ExecutionContext#createRowContainer(org.knime.core.data.DataTableSpec)
      * ExecutionContext} for an example.)
      *
