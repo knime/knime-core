@@ -115,11 +115,6 @@ import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IConfigurationElement;
-import org.eclipse.core.runtime.IExtensionPoint;
-import org.eclipse.core.runtime.IExtensionRegistry;
-import org.eclipse.core.runtime.Platform;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.BufferedDataTable;
@@ -413,29 +408,7 @@ public final class WorkflowManager extends NodeContainer
     private File m_tmpDir = null;
 
     static {
-        executeEarlyStartup();
-    }
-
-    private static void executeEarlyStartup() {
-        String extPointId = "org.knime.core.EarlyStartup";
-        IExtensionRegistry registry = Platform.getExtensionRegistry();
-        IExtensionPoint point = registry.getExtensionPoint(extPointId);
-        assert point != null : "Invalid extension point id: " + extPointId;
-
-        Iterator<IConfigurationElement> it =
-            Stream.of(point.getExtensions()).flatMap(ext -> Stream.of(ext.getConfigurationElements())).iterator();
-        while (it.hasNext()) {
-            IConfigurationElement e = it.next();
-            try {
-                ((IEarlyStartup)e.createExecutableExtension("class")).run();
-            } catch (CoreException ex) {
-                LOGGER.error("Could not create early startup object od class '" + e.getAttribute("class") + "' "
-                    + "from plug-in '" + e.getContributor().getName() + "': " + ex.getMessage(), ex);
-            } catch (Exception ex) {
-                LOGGER.error("Early startup in '" + e.getAttribute("class") + " from plug-in '"
-                    + e.getContributor().getName() + "' has thrown an uncaught exception: " + ex.getMessage(), ex);
-            }
-        }
+        IEarlyStartup.executeEarlyStartup(false);
     }
 
     ///////////////////////

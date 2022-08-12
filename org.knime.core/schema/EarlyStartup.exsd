@@ -42,6 +42,13 @@
                </appInfo>
             </annotation>
          </attribute>
+         <attribute name="callBeforeKNIMEApplicationStart" type="boolean">
+            <annotation>
+               <documentation>
+                  If &apos;true&apos;, the code will be executed quite early, i.e. right before the KNIME application is being started. If &apos;false&apos; it&apos;s executed once most of the KNIME application has been started already.
+               </documentation>
+            </annotation>
+         </attribute>
       </complexType>
    </element>
 
@@ -60,9 +67,8 @@
       </appInfo>
       <documentation>
          &lt;extension point=&quot;org.knime.core.EarlyStartup&quot;&gt;
-	&lt;provider class=&quot;org.knime.core.util.EarlyStartupTest&quot; /&gt;
+ &lt;provider class=&quot;org.knime.core.util.EarlyStartupTest&quot; /&gt;
 &lt;/extension&gt;
-
       </documentation>
    </annotation>
 

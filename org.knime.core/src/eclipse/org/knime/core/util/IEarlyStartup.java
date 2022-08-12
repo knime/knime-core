@@ -48,6 +48,17 @@
  */
 package org.knime.core.util;
 
+import java.util.Iterator;
+import java.util.stream.Stream;
+
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.IExtensionPoint;
+import org.eclipse.core.runtime.IExtensionRegistry;
+import org.eclipse.core.runtime.Platform;
+import org.eclipse.equinox.app.IApplication;
+import org.knime.core.node.NodeLogger;
+
 /**
  * This interface is used by the extension point <tt>org.knime.core.EarlyStartup</tt>. The {@link #run()} method is
  * executed once before the first workflow is loaded and in the thread that triggered the workflow loading. This can
@@ -63,4 +74,44 @@ public interface IEarlyStartup {
      * Executes the early startup code.
      */
     public void run();
+
+    /**
+     * Helper to execute the code registered at this extension point. Must intentionally be called either before or
+     * after the start of the KNIME Application (i.e. the KNIME-specific implementation of {@link IApplication}).
+     *
+     * @param beforeKNIMEApplicationStart if {@code true} it will only execute the extension points which wish to be
+     *            called right before the start of the KNIME Application; if {code false} it will call the extension
+     *            points which wish to be called later after most of the KNIME Application has been started already
+     *
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public static void executeEarlyStartup(final boolean beforeKNIMEApplicationStart) {
+        var extPointId = "org.knime.core.EarlyStartup";
+        IExtensionRegistry registry = Platform.getExtensionRegistry();
+        IExtensionPoint point = registry.getExtensionPoint(extPointId);
+        assert point != null : "Invalid extension point id: " + extPointId;
+
+        Iterator<IConfigurationElement> it =
+            Stream.of(point.getExtensions()).flatMap(ext -> Stream.of(ext.getConfigurationElements())).iterator();
+        while (it.hasNext()) {
+            IConfigurationElement e = it.next();
+            var callBeforeDisplayCreation = Boolean.parseBoolean(e.getAttribute("callBeforeDisplayCreation"));
+            if (callBeforeDisplayCreation != beforeKNIMEApplicationStart) {
+                continue;
+            }
+            try {
+                ((IEarlyStartup)e.createExecutableExtension("class")).run();
+            } catch (CoreException ex) {
+                NodeLogger.getLogger(IEarlyStartup.class)
+                    .error("Could not create early startup object od class '" + e.getAttribute("class") + "' "
+                        + "from plug-in '" + e.getContributor().getName() + "': " + ex.getMessage(), ex);
+            } catch (Exception ex) {
+                NodeLogger.getLogger(IEarlyStartup.class)
+                    .error(
+                        "Early startup in '" + e.getAttribute("class") + " from plug-in '"
+                            + e.getContributor().getName() + "' has thrown an uncaught exception: " + ex.getMessage(),
+                        ex);
+            }
+        }
+    }
 }
