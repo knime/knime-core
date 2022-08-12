@@ -65,7 +65,7 @@ public class DataContainerException extends RuntimeException {
     /** Creates new exception without specific cause.
      * @param message The message of the exception.
      */
-    DataContainerException(final String message) {
+    public DataContainerException(final String message) {
         super(message);
     }
 
@@ -73,7 +73,7 @@ public class DataContainerException extends RuntimeException {
      * @param message The message of the exception.
      * @param cause The cause of the problem.
      */
-    DataContainerException(final String message, final Throwable cause) {
+    public DataContainerException(final String message, final Throwable cause) {
         super(message, cause);
     }
 
