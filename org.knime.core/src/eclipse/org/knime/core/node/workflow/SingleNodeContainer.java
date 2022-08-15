@@ -1210,16 +1210,12 @@ public abstract class SingleNodeContainer extends NodeContainer {
             // in versions before KNIME 1.2.0, there were no misc settings
             // in the dialog, we must use caution here: if they are not present
             // we use the default.
-            if (settings.containsKey(CFG_VARIABLES)) {
-                m_variablesSettings = settings.getNodeSettings(CFG_VARIABLES);
-            } else {
-                m_variablesSettings = null;
-            }
+            m_variablesSettings = settings.containsKey(CFG_VARIABLES) ? settings.getNodeSettings(CFG_VARIABLES) : null;
 
-            m_viewVariablesSettings = settings.containsKey(CFG_VIEW_VARIABLES) ?
-                                      settings.getNodeSettings(CFG_VIEW_VARIABLES) : null;
-
-            m_modelSettings = settings.getNodeSettings(CFG_MODEL);
+            // viewVariablesSettings, modelSettings and viewSettings are optional fields, as well
+            m_viewVariablesSettings =
+                settings.containsKey(CFG_VIEW_VARIABLES) ? settings.getNodeSettings(CFG_VIEW_VARIABLES) : null;
+            m_modelSettings = settings.containsKey(CFG_MODEL) ? settings.getNodeSettings(CFG_MODEL) : null;
             m_viewSettings = settings.containsKey(CFG_VIEW) ? settings.getNodeSettings(CFG_VIEW) : null;
         }
 
@@ -1250,11 +1246,13 @@ public abstract class SingleNodeContainer extends NodeContainer {
         }
 
         /**
-         * Store a new memory policy in this settings object.
+         * Store a new memory policy in this settings object. The memory policy must not be null.
          *
          * @param memPolicy the new policy to set
          */
         public void setMemoryPolicy(final MemoryPolicy memPolicy) {
+            CheckUtils.checkNotNull(memPolicy,
+                "Could not set MemoryPolicy to model SingleContainerSettings: policy cannot be null!");
             m_memoryPolicy = memPolicy;
         }
 
