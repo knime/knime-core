@@ -137,24 +137,24 @@ public final class NodeDialogManager extends AbstractNodeUIManager<NodeWrapper<?
      * For testing purposes only.
      */
     void clearCaches() {
-       m_nodeDialogMap.clear();
-       clearPageMap();
+        m_nodeDialogMap.clear();
+        clearPageMap();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected DataServiceProvider getDataServiceProvider(final NodeWrapper<? extends NodeContainer> nnc) {
-        return getNodeDialog(nnc.get());
+    protected DataServiceProvider getDataServiceProvider(final NodeWrapper<? extends NodeContainer> nc) {
+        return getNodeDialog(nc.get());
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Page getPage(final NodeWrapper<? extends NodeContainer> nnc) {
-        return getNodeDialog(nnc.get()).getPage();
+    public Page getPage(final NodeWrapper<? extends NodeContainer> nc) {
+        return getNodeDialog(nc.get()).getPage();
     }
 
     /**
@@ -169,8 +169,8 @@ public final class NodeDialogManager extends AbstractNodeUIManager<NodeWrapper<?
      * {@inheritDoc}
      */
     @Override
-    public String getPageId(final NodeWrapper<? extends NodeContainer> nnc, final Page p) {
-        return PageUtil.getPageId(nnc.get(), p.isCompletelyStatic(), PageType.DIALOG);
+    public String getPageId(final NodeWrapper<? extends NodeContainer> nc, final Page p) {
+        return PageUtil.getPageId(nc.get(), p.isCompletelyStatic(), PageType.DIALOG);
     }
 
 }

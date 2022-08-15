@@ -68,6 +68,7 @@ import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.CredentialsProvider;
 import org.knime.core.node.workflow.FlowObjectStack;
 import org.knime.core.node.workflow.NativeNodeContainer;
+import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -90,7 +91,7 @@ import org.knime.core.webui.node.view.NodeViewManager;
  */
 public abstract class NodeDialog implements UIExtension, DataServiceProvider {
 
-    private final NativeNodeContainer m_nnc;
+    private final NodeContainer m_nc;
 
     private final Set<SettingsType> m_settingsTypes;
 
@@ -105,50 +106,50 @@ public abstract class NodeDialog implements UIExtension, DataServiceProvider {
     protected NodeDialog(final SettingsType... settingsTypes) {
         CheckUtils.checkState(settingsTypes.length > 0, "At least one settings type must be provided");
         m_settingsTypes = Set.of(settingsTypes);
-        m_nnc = (NativeNodeContainer)NodeContext.getContext().getNodeContainer();
+        m_nc = NodeContext.getContext().getNodeContainer();
     }
 
     @Override
     public final Optional<InitialDataService> createInitialDataService() {
         var nodeSettingsService = getNodeSettingsService();
         if (nodeSettingsService instanceof JsonNodeSettingsService) {
-            return Optional.of(new JsonInitialDataServiceImpl(m_nnc, m_settingsTypes,
+            return Optional.of(new JsonInitialDataServiceImpl(m_nc, m_settingsTypes,
                 (JsonNodeSettingsService<?>)nodeSettingsService));
         } else {
-            return Optional.of(new TextInitialDataServiceImpl(m_nnc, m_settingsTypes, nodeSettingsService));
+            return Optional.of(new TextInitialDataServiceImpl(m_nc, m_settingsTypes, nodeSettingsService));
         }
     }
 
     @Override
     public final Optional<ApplyDataService> createApplyDataService() {
-        return Optional.of(new TextApplyDataServiceImpl(m_nnc, m_settingsTypes, getNodeSettingsService()));
+        return Optional.of(new TextApplyDataServiceImpl(m_nc, m_settingsTypes, getNodeSettingsService()));
     }
 
     private static class TextInitialDataServiceImpl implements TextInitialDataService {
 
-        private final NativeNodeContainer m_nnc;
+        private final NodeContainer m_nc;
 
         private final Set<SettingsType> m_settingsTypes;
 
         private final TextNodeSettingsService m_textNodeSettingsService;
 
-        protected TextInitialDataServiceImpl(final NativeNodeContainer nnc, final Set<SettingsType> settingsTypes,
+        protected TextInitialDataServiceImpl(final NodeContainer nc, final Set<SettingsType> settingsTypes,
             final TextNodeSettingsService textNodeSettingsService) {
-            m_nnc = nnc;
+            m_nc = nc;
             m_settingsTypes = settingsTypes;
             m_textNodeSettingsService = textNodeSettingsService;
         }
 
         @Override
         public String getInitialData() {
-            final var specs = new PortObjectSpec[m_nnc.getNrInPorts()];
-            final var wfm = m_nnc.getParent();
-            for (var cc : wfm.getIncomingConnectionsFor(m_nnc.getID())) {
+            final var specs = new PortObjectSpec[m_nc.getNrInPorts()];
+            final var wfm = m_nc.getParent();
+            for (var cc : wfm.getIncomingConnectionsFor(m_nc.getID())) {
                 specs[cc.getDestPort()] =
                     wfm.getNodeContainer(cc.getSource()).getOutPort(cc.getSourcePort()).getPortObjectSpec();
             }
 
-            NodeContext.pushContext(m_nnc);
+            NodeContext.pushContext(m_nc);
             try {
                 Map<SettingsType, NodeSettingsRO> settings = new EnumMap<>(SettingsType.class);
                 getSettings(SettingsType.MODEL, specs, settings);
@@ -164,12 +165,13 @@ public abstract class NodeDialog implements UIExtension, DataServiceProvider {
             if (m_settingsTypes.contains(settingsType)) {
                 NodeSettings settings = null;
                 try {
-                    if (m_nnc.getFlowObjectStack() != null) {
+                    if (m_nc.getFlowObjectStack() != null && m_nc instanceof NativeNodeContainer) {
+                        var nnc = (NativeNodeContainer)m_nc;
                         if (settingsType == SettingsType.VIEW) {
-                            settings = m_nnc.getViewSettingsUsingFlowObjectStack()
+                            settings = nnc.getViewSettingsUsingFlowObjectStack()
                                 .orElseThrow(() -> new InvalidSettingsException(""));
                         } else {
-                            settings = m_nnc.getModelSettingsUsingFlowObjectStack();
+                            settings = nnc.getModelSettingsUsingFlowObjectStack();
                         }
                     }
                 } catch (InvalidSettingsException ex) { // NOSONAR
@@ -193,9 +195,9 @@ public abstract class NodeDialog implements UIExtension, DataServiceProvider {
     private static final class JsonInitialDataServiceImpl extends TextInitialDataServiceImpl
         implements JsonInitialDataService<String> {
 
-        private JsonInitialDataServiceImpl(final NativeNodeContainer nnc, final Set<SettingsType> settingsTypes,
+        private JsonInitialDataServiceImpl(final NodeContainer nc, final Set<SettingsType> settingsTypes,
             final JsonNodeSettingsService<?> jsonNodeSettingsService) {
-            super(nnc, settingsTypes, jsonNodeSettingsService);
+            super(nc, settingsTypes, jsonNodeSettingsService);
         }
 
         @Override
@@ -216,15 +218,15 @@ public abstract class NodeDialog implements UIExtension, DataServiceProvider {
 
     private static final class TextApplyDataServiceImpl implements TextApplyDataService {
 
-        private final NativeNodeContainer m_nnc;
+        private final NodeContainer m_nc;
 
         private final Set<SettingsType> m_settingsTypes;
 
         private final TextNodeSettingsService m_textNodeSettingsService;
 
-        private TextApplyDataServiceImpl(final NativeNodeContainer nnc, final Set<SettingsType> settingsTypes,
+        private TextApplyDataServiceImpl(final NodeContainer nc, final Set<SettingsType> settingsTypes,
             final TextNodeSettingsService textNodeSettingsService) {
-            m_nnc = nnc;
+            m_nc = nc;
             m_settingsTypes = settingsTypes;
             m_textNodeSettingsService = textNodeSettingsService;
         }
@@ -240,8 +242,8 @@ public abstract class NodeDialog implements UIExtension, DataServiceProvider {
             // to keep another copy of the settings to be able to tell whether
             // settings have been changed
             var previousNodeSettings = new NodeSettings("previous_settings");
-            var wfm = m_nnc.getParent();
-            var nodeID = m_nnc.getID();
+            var wfm = m_nc.getParent();
+            var nodeID = m_nc.getID();
             try {
                 // write settings into nodeSettings and previousNodeSettings objects
                 wfm.saveNodeSettings(nodeID, nodeSettings);
@@ -271,7 +273,7 @@ public abstract class NodeDialog implements UIExtension, DataServiceProvider {
                     }
 
                     // validate settings
-                    var nodeView = NodeViewManager.getInstance().getNodeView(m_nnc);
+                    var nodeView = NodeViewManager.getInstance().getNodeView(m_nc);
                     nodeView.validateSettings(viewSettings.getFirst());
                 }
 

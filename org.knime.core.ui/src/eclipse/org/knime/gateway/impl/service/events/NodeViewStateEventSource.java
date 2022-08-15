@@ -55,6 +55,7 @@ import java.util.function.Supplier;
 
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeStateChangeListener;
+import org.knime.core.webui.node.NNCWrapper;
 import org.knime.gateway.api.entity.NodeViewEnt;
 
 /**
@@ -103,7 +104,7 @@ public class NodeViewStateEventSource extends EventSource<NativeNodeContainer, N
 
     private static NodeViewStateEvent createEvent(final NativeNodeContainer nnc,
         final Supplier<List<String>> initialSelectionSupplier) {
-        var nodeViewEnt = NodeViewEnt.create(nnc, initialSelectionSupplier);
+        var nodeViewEnt = NodeViewEnt.create(NNCWrapper.of(nnc), initialSelectionSupplier);
         return () -> nodeViewEnt;
     }
 

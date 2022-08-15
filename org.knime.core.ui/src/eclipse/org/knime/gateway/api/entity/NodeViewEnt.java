@@ -75,22 +75,22 @@ public final class NodeViewEnt extends NodeUIExtensionEnt<NodeWrapper<? extends 
     private List<String> m_initialSelection;
 
     /**
-     * @param nnc the node to create the node view entity for
+     * @param nw the node to create the node view entity for
      * @param initialSelection the initial selection (e.g. a list of row keys or something else), supplied lazily (will
      *            not be called, if the node is not executed)
      * @return a new instance
      */
-    public static NodeViewEnt create(final NativeNodeContainer nnc, final Supplier<List<String>> initialSelection) {
-        if (nnc.getNodeContainerState().isExecuted()) {
+    public static NodeViewEnt create(final NodeWrapper<? extends NodeContainer> nw, final Supplier<List<String>> initialSelection) {
+        if (nw.get().getNodeContainerState().isExecuted() && nw instanceof NNCWrapper) {
             try {
-                NodeViewManager.getInstance().updateNodeViewSettings(nnc);
-                return new NodeViewEnt(nnc, initialSelection, NodeViewManager.getInstance(), null);
+                NodeViewManager.getInstance().updateNodeViewSettings((NativeNodeContainer)nw.get());
+                return new NodeViewEnt(nw, initialSelection, NodeViewManager.getInstance(), null);
             } catch (InvalidSettingsException ex) {
                 NodeLogger.getLogger(NodeViewEnt.class).error("Failed to update node view settings", ex);
-                return new NodeViewEnt(nnc, null, null, ex.getMessage());
+                return new NodeViewEnt(nw, null, null, ex.getMessage());
             }
         } else {
-            return new NodeViewEnt(nnc, null, null, null);
+            return new NodeViewEnt(nw, null, null, null);
         }
     }
 
@@ -121,7 +121,7 @@ public final class NodeViewEnt extends NodeUIExtensionEnt<NodeWrapper<? extends 
         super(nw, nodeViewManager, nodeViewManager, PageType.VIEW);
         CheckUtils.checkArgument(NodeViewManager.hasNodeView(nw.get()), "The provided node doesn't have a node view");
         m_initialSelection = initialSelection == null ? null : initialSelection.get();
-        m_info = new NodeInfoEnt(nw, customErrorMessage);
+        m_info = new NodeInfoEnt(nw.get(), customErrorMessage);
     }
 
     /**

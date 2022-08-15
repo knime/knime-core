@@ -51,7 +51,7 @@ package org.knime.gateway.api.entity;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.SubNodeContainer;
+import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.webui.node.NNCWrapper;
 import org.knime.core.webui.node.NodeWrapper;
 import org.knime.core.webui.node.SNCWrapper;
@@ -76,10 +76,11 @@ public class NodeDialogEnt extends NodeUIExtensionEnt<NodeWrapper<? extends Node
         m_flowVariableSettings = new FlowVariableSettingsEnt(nc);
     }
 
+
     /**
      * @param nc
      */
-    public NodeDialogEnt(final SubNodeContainer nc) {
+    public NodeDialogEnt(final SingleNodeContainer nc) {
         super(SNCWrapper.of(nc), NodeDialogManager.getInstance(), NodeDialogManager.getInstance(), PageType.DIALOG);
         CheckUtils.checkArgument(NodeDialogManager.hasNodeDialog(nc), "The provided node doesn't have a node dialog");
         m_flowVariableSettings = new FlowVariableSettingsEnt(nc);

@@ -57,6 +57,7 @@ import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.util.Pair;
+import org.knime.core.webui.node.NNCWrapper;
 import org.knime.gateway.impl.service.events.EventSource;
 import org.knime.gateway.impl.service.events.NodeViewStateEventSource;
 import org.knime.gateway.impl.service.events.SelectionEvent;
@@ -102,7 +103,7 @@ public final class NodeViewEntUtil {
             eventSources = new EventSource[]{selectionEventSource};
         }
 
-        return Pair.create(NodeViewEnt.create(nnc, initialSelectionSupplier), eventSources);
+        return Pair.create(NodeViewEnt.create(NNCWrapper.of(nnc), initialSelectionSupplier), eventSources);
     }
 
     private static class RemoveAllEventListenersOnNodeStateChange implements NodeStateChangeListener {

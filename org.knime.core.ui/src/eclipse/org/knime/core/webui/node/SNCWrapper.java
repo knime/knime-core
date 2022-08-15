@@ -48,14 +48,15 @@
  */
 package org.knime.core.webui.node;
 
-import org.knime.core.node.workflow.SubNodeContainer;
+import org.knime.core.node.workflow.SingleNodeContainer;
 
 /**
- * {@link NodeWrapper} that wraps a {@link SubNodeContainer}.
+ * {@link NodeWrapper} that wraps a {@link SingleNodeContainer}.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
+ * @author Carsten Haubold, KNIME GmbH, Konstanz, Germany
  */
-public interface SNCWrapper extends NodeWrapper<SubNodeContainer> {
+public interface SNCWrapper extends NodeWrapper<SingleNodeContainer> {
 
     /**
      * Convenience method to create a {@link SNCWrapper}-instance.
@@ -63,11 +64,11 @@ public interface SNCWrapper extends NodeWrapper<SubNodeContainer> {
      * @param nnc
      * @return a new instance
      */
-    static SNCWrapper of(final SubNodeContainer nnc) {
+    static SNCWrapper of(final SingleNodeContainer nnc) {
         return new SNCWrapper() { // NOSONAR
 
             @Override
-            public SubNodeContainer get() {
+            public SingleNodeContainer get() {
                 return nnc;
             }
 

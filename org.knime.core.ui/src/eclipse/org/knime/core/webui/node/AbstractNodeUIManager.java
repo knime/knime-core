@@ -264,11 +264,12 @@ public abstract class AbstractNodeUIManager<N extends NodeWrapper<?>>
                 ((NNCWrapper)nodeWrapper).get().getNode().getFactory().getClass();
             if (pattern == null || Pattern.matches(pattern, nodeFactoryClass.getName())) {
                 return Optional.of(url);
+            } else {
+                return Optional.empty();
             }
         } else {
-            // TODO
+            return Optional.of(url);
         }
-        return Optional.empty();
     }
 
     /**
