@@ -123,8 +123,10 @@ public final class TemplateUpdateUtil {
         // Context is used by ResolverUtil, will be removed in loadMetaNodeTemplateInternal
         NodeContext.pushContext((NodeContainer)meta);
 
-        var localDir = ResolverUtil.resolveURItoLocalOrTempFileConditional(sourceURI, new NullProgressMonitor(),
-            linkInfo.getTimestamp().toZonedDateTime()).orElse(null);
+        // "ifModifiedSince" parameter is null -> no checks if the server's modified-timestamp is newer
+        // as a consequence, older timestamps will now also be resolved -- changed as part of AP-17719
+        var localDir = ResolverUtil.resolveURItoLocalOrTempFileConditional(sourceURI, new NullProgressMonitor(), null)
+            .orElse(null);
         if (localDir == null) {
             NodeContext.removeLastContext();
             return null;
