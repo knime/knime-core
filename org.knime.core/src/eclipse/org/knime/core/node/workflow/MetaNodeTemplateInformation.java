@@ -420,6 +420,16 @@ public final class MetaNodeTemplateInformation implements Cloneable {
         return new MetaNodeTemplateInformation(Role.Template, type, null, OffsetDateTime.now(), null, null);
     }
 
+    /**
+     * Creates a new instance of an empty template information.
+     * Used to initialize a newly created WorkflowManager instance which should not have a link.
+     *
+     * @param type the template type
+     * @return empty MetaNodeTemplateInformation
+     */
+    public static MetaNodeTemplateInformation createEmptyTemplate(final TemplateType type) {
+        return new MetaNodeTemplateInformation(Role.None, type, null, null, null, null);
+    }
 
     /**
      * Creates a new instance of the template information from the template definition.
