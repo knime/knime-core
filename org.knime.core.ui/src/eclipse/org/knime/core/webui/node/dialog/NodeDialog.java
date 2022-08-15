@@ -168,6 +168,7 @@ public abstract class NodeDialog implements UIExtension, DataServiceProvider {
                 NodeSettings settings = null;
                 try {
                     if (m_nc.getFlowObjectStack() != null && m_nc instanceof NativeNodeContainer) {
+                        // node is connected and a flow object stack available
                         var nnc = (NativeNodeContainer)m_nc;
                         if (settingsType == SettingsType.VIEW) {
                             settings = nnc.getViewSettingsUsingFlowObjectStack()
@@ -175,10 +176,15 @@ public abstract class NodeDialog implements UIExtension, DataServiceProvider {
                         } else {
                             settings = nnc.getModelSettingsUsingFlowObjectStack();
                         }
+                    } else {
+                        // node is not connected
+                        settings = m_nc.getNodeSettings().getNodeSettings(settingsType.getConfigKey());
                     }
                 } catch (InvalidSettingsException ex) { // NOSONAR
                     //
                 }
+
+                // fallback to default settings
                 if (settings == null) {
                     settings = new NodeSettings("default_settings");
                     // Important assumption here (which is given):
