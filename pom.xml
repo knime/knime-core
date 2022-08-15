@@ -18,6 +18,7 @@
 		<changelist>-SNAPSHOT</changelist>
 		<feature-branch-extension.branchListProperty>git.branch</feature-branch-extension.branchListProperty>
 		<feature-branch-extension.appendArtifactoryProperties>false</feature-branch-extension.appendArtifactoryProperties>
+		<knime.sonar-env>Sonarcloud</knime.sonar-env>
 	</properties>
 
 	<profiles>
