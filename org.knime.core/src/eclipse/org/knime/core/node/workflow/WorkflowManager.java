@@ -2087,26 +2087,8 @@ public final class WorkflowManager extends NodeContainer
      * @param settings to be saved to
      */
     public void saveNodeSettings(final NodeID id, final NodeSettingsWO settings) {
-        saveNodeSettings(id, settings, false);
-    }
-
-    /**
-     * write node settings into Settings object.
-     * initializes settings with the defaults ones, if specified.
-     *
-     * @param id of node
-     * @param settings to be saved to
-     * @param initDefaultSettings should default settings be loaded?
-     */
-    private void saveNodeSettings(final NodeID id, final NodeSettingsWO settings, final boolean initDefaultSettings) {
-        try (WorkflowLock lock = lock()) {
-            var nc = getNodeContainer(id);
-            if (nc instanceof SingleNodeContainer) {
-                ((SingleNodeContainer)nc).saveSettings(settings, initDefaultSettings);
-            } else {
-                nc.saveSettings(settings);
-            }
-        }
+        var nc = getNodeContainer(id);
+        nc.saveSettings(settings);
     }
 
     /**
@@ -7587,7 +7569,7 @@ public final class WorkflowManager extends NodeContainer
         }
         try (WorkflowLock lock = lock()) {
             NodeSettings ncSettings = new NodeSettings("metanode_settings"); // current settings, re-apply after update
-            saveNodeSettings(id, ncSettings, true);
+            saveNodeSettings(id, ncSettings);
 
             NodeAnnotationData oldAnnoData = oldLinkMN.getNodeAnnotation().getData();
             NodeUIInformation oldUI = oldLinkMN.getUIInformation();
