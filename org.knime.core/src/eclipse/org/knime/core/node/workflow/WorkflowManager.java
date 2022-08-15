@@ -9099,7 +9099,8 @@ public final class WorkflowManager extends NodeContainer
     static WorkflowManager newComponentWorkflowManagerInstance(final SubNodeContainer directNCParent, final NodeID nodeId,
         final ComponentNodeDef def) {
         var wfm = new WorkflowManager(directNCParent, null, nodeId, false, def, def.getWorkflow());
-        wfm.setTemplateInformation(MetaNodeTemplateInformation.createNewTemplate(def.getTemplateInfo(), TemplateType.SubNode));;
+        // in case of an subnode, not the WorkflowManager, but the subnode itself holds the template information
+        wfm.setTemplateInformation(MetaNodeTemplateInformation.createEmptyTemplate(TemplateType.SubNode));
         wfm.m_cipher = WorkflowCipher.toWorkflowCipher(def.getCipher());
         return wfm;
     }
