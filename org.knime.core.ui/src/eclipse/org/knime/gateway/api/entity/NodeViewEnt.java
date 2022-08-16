@@ -56,10 +56,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.SubNodeContainer;
-import org.knime.core.webui.node.NNCWrapper;
 import org.knime.core.webui.node.NodeWrapper;
-import org.knime.core.webui.node.SNCWrapper;
 import org.knime.core.webui.node.view.NodeViewManager;
 import org.knime.core.webui.page.PageUtil.PageType;
 
@@ -68,29 +65,29 @@ import org.knime.core.webui.page.PageUtil.PageType;
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
-public final class NodeViewEnt extends NodeUIExtensionEnt<NodeWrapper<? extends NodeContainer>> {
+public final class NodeViewEnt extends NodeUIExtensionEnt<NodeWrapper> {
 
     private final NodeInfoEnt m_info;
 
     private List<String> m_initialSelection;
 
     /**
-     * @param nw the node to create the node view entity for
+     * @param nnc the Native node container to create the node view entity for
      * @param initialSelection the initial selection (e.g. a list of row keys or something else), supplied lazily (will
      *            not be called, if the node is not executed)
      * @return a new instance
      */
-    public static NodeViewEnt create(final NodeWrapper<? extends NodeContainer> nw, final Supplier<List<String>> initialSelection) {
-        if (nw.get().getNodeContainerState().isExecuted() && nw instanceof NNCWrapper) {
+    public static NodeViewEnt create(final NativeNodeContainer nnc, final Supplier<List<String>> initialSelection) {
+        if (nnc.getNodeContainerState().isExecuted()) {
             try {
-                NodeViewManager.getInstance().updateNodeViewSettings((NativeNodeContainer)nw.get());
-                return new NodeViewEnt(nw, initialSelection, NodeViewManager.getInstance(), null);
+                NodeViewManager.getInstance().updateNodeViewSettings(nnc);
+                return new NodeViewEnt(nnc, initialSelection, NodeViewManager.getInstance(), null);
             } catch (InvalidSettingsException ex) {
                 NodeLogger.getLogger(NodeViewEnt.class).error("Failed to update node view settings", ex);
-                return new NodeViewEnt(nw, null, null, ex.getMessage());
+                return new NodeViewEnt(nnc, null, null, ex.getMessage());
             }
         } else {
-            return new NodeViewEnt(nw, null, null, null);
+            return new NodeViewEnt(nnc, null, null, null);
         }
     }
 
@@ -102,26 +99,15 @@ public final class NodeViewEnt extends NodeUIExtensionEnt<NodeWrapper<? extends 
      * @return a new instance
      */
     public static NodeViewEnt create(final NativeNodeContainer nnc) {
-        return create(NNCWrapper.of(nnc), null);
+        return create(nnc, null);
     }
 
-    /**
-     * Creates a new instances without a initial selection and without the underlying node being registered with the
-     * selection event source.
-     *
-     * @param snc the sub node container to create the node view entity for
-     * @return a new instance
-     */
-    public static NodeViewEnt create(final SubNodeContainer snc) {
-        return create(SNCWrapper.of(snc), null);
-    }
-
-    private NodeViewEnt(final NodeWrapper<? extends NodeContainer> nw, final Supplier<List<String>> initialSelection,
+    private NodeViewEnt(final NativeNodeContainer nnc, final Supplier<List<String>> initialSelection,
         final NodeViewManager nodeViewManager, final String customErrorMessage) {
-        super(nw, nodeViewManager, nodeViewManager, PageType.VIEW);
-        CheckUtils.checkArgument(NodeViewManager.hasNodeView(nw.get()), "The provided node doesn't have a node view");
+        super(NodeWrapper.of(nnc), nodeViewManager, nodeViewManager, PageType.VIEW);
+        CheckUtils.checkArgument(NodeViewManager.hasNodeView(nnc), "The provided node doesn't have a node view");
         m_initialSelection = initialSelection == null ? null : initialSelection.get();
-        m_info = new NodeInfoEnt(nw.get(), customErrorMessage);
+        m_info = new NodeInfoEnt(nnc, customErrorMessage);
     }
 
     /**

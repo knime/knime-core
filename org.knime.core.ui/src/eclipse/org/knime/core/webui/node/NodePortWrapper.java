@@ -58,7 +58,7 @@ import com.google.common.base.Objects;
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
-public interface NodePortWrapper extends NodeWrapper<NodeContainer> {
+public interface NodePortWrapper extends NodeWrapper {
 
     /**
      * Convenience method to create a {@link NodePortWrapper}-instance.

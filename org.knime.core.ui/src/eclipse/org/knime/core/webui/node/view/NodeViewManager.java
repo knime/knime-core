@@ -79,7 +79,7 @@ import org.knime.core.webui.page.PageUtil.PageType;
  *
  * @since 4.5
  */
-public final class NodeViewManager extends AbstractNodeUIManager<NodeWrapper<? extends NodeContainer>> {
+public final class NodeViewManager extends AbstractNodeUIManager<NodeWrapper> {
 
     private static NodeViewManager instance;
 
@@ -242,7 +242,7 @@ public final class NodeViewManager extends AbstractNodeUIManager<NodeWrapper<? e
      * {@inheritDoc}
      */
     @Override
-    protected DataServiceProvider getDataServiceProvider(final NodeWrapper<? extends NodeContainer> nc) {
+    protected DataServiceProvider getDataServiceProvider(final NodeWrapper nc) {
         return getNodeView(nc.get());
     }
 
@@ -250,7 +250,7 @@ public final class NodeViewManager extends AbstractNodeUIManager<NodeWrapper<? e
      * {@inheritDoc}
      */
     @Override
-    public Page getPage(final NodeWrapper<? extends NodeContainer> nc) {
+    public Page getPage(final NodeWrapper nc) {
         return getNodeView(nc.get()).getPage();
     }
 
@@ -266,7 +266,7 @@ public final class NodeViewManager extends AbstractNodeUIManager<NodeWrapper<? e
      * {@inheritDoc}
      */
     @Override
-    public String getPageId(final NodeWrapper<? extends NodeContainer> nnc, final Page p) {
+    public String getPageId(final NodeWrapper nnc, final Page p) {
         return PageUtil.getPageId(nnc.get(), p.isCompletelyStatic(), PageType.VIEW);
     }
 

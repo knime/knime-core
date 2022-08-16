@@ -70,7 +70,7 @@ import org.knime.core.webui.page.PageUtil.PageType;
  *
  * @since 4.5
  */
-public final class NodeDialogManager extends AbstractNodeUIManager<NodeWrapper<? extends NodeContainer>> {
+public final class NodeDialogManager extends AbstractNodeUIManager<NodeWrapper> {
 
     private static NodeDialogManager instance;
 
@@ -149,7 +149,7 @@ public final class NodeDialogManager extends AbstractNodeUIManager<NodeWrapper<?
     private static NodeDialog createSubNodeContainerDialog(final SubNodeContainer snc) {
         NodeContext.pushContext(snc);
         try {
-            return new SubNodeContainerDialogFactory(snc).create();
+            return new SubNodeContainerDialogFactory(snc).createNodeDialog();
         } finally {
             NodeContext.removeLastContext();
         }
@@ -167,7 +167,7 @@ public final class NodeDialogManager extends AbstractNodeUIManager<NodeWrapper<?
      * {@inheritDoc}
      */
     @Override
-    protected DataServiceProvider getDataServiceProvider(final NodeWrapper<? extends NodeContainer> nc) {
+    protected DataServiceProvider getDataServiceProvider(final NodeWrapper nc) {
         return getNodeDialog(nc.get());
     }
 
@@ -175,7 +175,7 @@ public final class NodeDialogManager extends AbstractNodeUIManager<NodeWrapper<?
      * {@inheritDoc}
      */
     @Override
-    public Page getPage(final NodeWrapper<? extends NodeContainer> nc) {
+    public Page getPage(final NodeWrapper nc) {
         return getNodeDialog(nc.get()).getPage();
     }
 
@@ -191,7 +191,7 @@ public final class NodeDialogManager extends AbstractNodeUIManager<NodeWrapper<?
      * {@inheritDoc}
      */
     @Override
-    public String getPageId(final NodeWrapper<? extends NodeContainer> nc, final Page p) {
+    public String getPageId(final NodeWrapper nc, final Page p) {
         return PageUtil.getPageId(nc.get(), p.isCompletelyStatic(), PageType.DIALOG);
     }
 

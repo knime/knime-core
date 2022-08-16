@@ -64,7 +64,7 @@ import org.knime.core.webui.page.PageUtil.PageType;
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  * @param <N> TODO
  */
-public class NodeUIExtensionEnt<N extends NodeWrapper<? extends NodeContainer>> {
+public class NodeUIExtensionEnt<N extends NodeWrapper> {
 
     private final String m_nodeId;
 

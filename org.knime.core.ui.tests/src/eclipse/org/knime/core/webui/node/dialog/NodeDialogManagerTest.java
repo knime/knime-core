@@ -76,7 +76,7 @@ import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeInputNodeFactory;
 import org.knime.core.webui.data.text.TextDataService;
-import org.knime.core.webui.node.NNCWrapper;
+import org.knime.core.webui.node.NodeWrapper;
 import org.knime.core.webui.node.view.NodeViewManager;
 import org.knime.core.webui.page.Page;
 import org.knime.testing.node.dialog.NodeDialogNodeFactory;
@@ -127,7 +127,7 @@ public class NodeDialogManagerTest {
         var nodeDialog = NodeDialogManager.getInstance().getNodeDialog(nc);
         assertThat(nodeDialog.getPage() == page, is(true));
 
-        assertThat(NodeDialogManager.getInstance().callTextInitialDataService(NNCWrapper.of(nc)), is("test settings"));
+        assertThat(NodeDialogManager.getInstance().callTextInitialDataService(NodeWrapper.of(nc)), is("test settings"));
         assertThat(nodeDialog.getPage().isCompletelyStatic(), is(false));
 
         hasDialog.set(false);
@@ -142,9 +142,9 @@ public class NodeDialogManagerTest {
         var staticPage = Page.builder(BUNDLE_ID, "files", "page.html").addResourceFile("resource.html").build();
         var dynamicPage = Page.builder(() -> "page content", "page.html")
             .addResourceFromString(() -> "resource content", "resource.html").build();
-        var nnc = NNCWrapper.of(createNodeWithNodeDialog(m_wfm, () -> createNodeDialog(staticPage)));
-        var nnc2 = NNCWrapper.of(createNodeWithNodeDialog(m_wfm, () -> createNodeDialog(staticPage)));
-        var nnc3 = NNCWrapper.of(createNodeWithNodeDialog(m_wfm, () -> createNodeDialog(dynamicPage)));
+        var nnc = NodeWrapper.of(createNodeWithNodeDialog(m_wfm, () -> createNodeDialog(staticPage)));
+        var nnc2 = NodeWrapper.of(createNodeWithNodeDialog(m_wfm, () -> createNodeDialog(staticPage)));
+        var nnc3 = NodeWrapper.of(createNodeWithNodeDialog(m_wfm, () -> createNodeDialog(dynamicPage)));
         var nodeDialogManager = NodeDialogManager.getInstance();
         String path = nodeDialogManager.getPagePath(nnc);
         String path2 = nodeDialogManager.getPagePath(nnc2);
@@ -210,7 +210,7 @@ public class NodeDialogManagerTest {
         });
 
         var nc = NodeDialogManagerTest.createNodeWithNodeDialog(m_wfm, nodeDialogSupplier);
-        var nncWrapper = NNCWrapper.of(nc);
+        var nncWrapper = NodeWrapper.of(nc);
 
         var nodeDialogManager = NodeDialogManager.getInstance();
         assertThat(nodeDialogManager.callTextInitialDataService(nncWrapper), is("the node settings"));

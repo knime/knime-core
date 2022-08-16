@@ -50,7 +50,6 @@ package org.knime.core.webui.node;
 
 import java.util.Optional;
 
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.webui.page.Page;
 import org.knime.core.webui.page.Resource;
 
@@ -61,7 +60,7 @@ import org.knime.core.webui.page.Resource;
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  * @param <N> the node wrapper this manager operates on
  */
-public interface PageResourceManager<N extends NodeWrapper<? extends NodeContainer>> {
+public interface PageResourceManager<N extends NodeWrapper> {
 
     /**
      * @return a unique domain name used to identify page resources of this kind

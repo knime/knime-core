@@ -74,7 +74,7 @@ import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.webui.data.DataService;
-import org.knime.core.webui.node.NNCWrapper;
+import org.knime.core.webui.node.NodeWrapper;
 import org.knime.core.webui.node.dialog.NodeDialog.LegacyFlowVariableNodeDialog;
 import org.knime.core.webui.page.Page;
 import org.knime.testing.node.dialog.NodeDialogNodeFactory;
@@ -99,7 +99,7 @@ public class NodeDialogTest {
         var nnc = WorkflowManagerUtil.createAndAddNode(wfm,
             new NodeDialogNodeFactory(() -> createNodeDialog(Page.builder(() -> "test", "test.html").build(),
                 createTextSettingsDataService(), null)));
-        var nncWrapper = NNCWrapper.of(nnc);
+        var nncWrapper = NodeWrapper.of(nnc);
 
         var modelSettings = new NodeSettings("model");
         var viewSettings = new NodeSettings("view");
@@ -160,7 +160,7 @@ public class NodeDialogTest {
         var nnc = WorkflowManagerUtil.createAndAddNode(wfm,
             new NodeDialogNodeFactory(() -> createNodeDialog(Page.builder(() -> "test", "test.html").build(),
                 createTextSettingsDataService(), null)));
-        var nncWrapper = NNCWrapper.of(nnc);
+        var nncWrapper = NodeWrapper.of(nnc);
 
         var modelSettings = new NodeSettings("model");
         var viewSettings = new NodeSettings("view");
@@ -232,7 +232,7 @@ public class NodeDialogTest {
 
         var newViewSettings = new NodeSettings("new_view_settings");
         newViewSettings.addString("new view setting", "new view setting value");
-        NodeDialogManager.getInstance().callTextApplyDataService(NNCWrapper.of(nnc),
+        NodeDialogManager.getInstance().callTextApplyDataService(NodeWrapper.of(nnc),
             settingsToString(newViewSettings, newViewSettings));
         openLegacyFlowVariableDialogAndCheckViewSettings(nnc, "new view setting value");
     }

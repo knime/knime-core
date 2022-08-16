@@ -90,7 +90,7 @@ import org.knime.core.webui.data.InitialDataService;
 import org.knime.core.webui.data.text.TextDataService;
 import org.knime.core.webui.data.text.TextInitialDataService;
 import org.knime.core.webui.data.text.TextReExecuteDataService;
-import org.knime.core.webui.node.NNCWrapper;
+import org.knime.core.webui.node.NodeWrapper;
 import org.knime.core.webui.node.view.selection.SelectionTranslationService;
 import org.knime.core.webui.page.Page;
 import org.knime.testing.node.view.NodeViewNodeFactory;
@@ -144,7 +144,7 @@ public class NodeViewManagerTest {
         assertThat(nodeView.getPage() == page, is(true));
 
         IllegalStateException ex = assertThrows(IllegalStateException.class,
-            () -> NodeViewManager.getInstance().callTextInitialDataService(NNCWrapper.of(nc)));
+            () -> NodeViewManager.getInstance().callTextInitialDataService(NodeWrapper.of(nc)));
         assertThat(ex.getMessage(), containsString("No text initial data service available"));
         assertThat(nodeView.getPage().isCompletelyStatic(), is(false));
 
@@ -210,16 +210,16 @@ public class NodeViewManagerTest {
     }
 
     /**
-     * Tests {@link NodeViewManager#getPageUrl(NNCWrapper)}.
+     * Tests {@link NodeViewManager#getPagePath(NodeWrapper)}.
      */
     @Test
-    public void testGetNodeViewPageUrl() {
+    public void testGetNodeViewPagePath() {
         var staticPage = Page.builder(BUNDLE_ID, "files", "page.html").addResourceFile("resource.html").build();
         var dynamicPage = Page.builder(() -> "page content", "page.html")
             .addResourceFromString(() -> "resource content", "resource.html").build();
-        var nnc = NNCWrapper.of(createNodeWithNodeView(m_wfm, m -> createNodeView(staticPage)));
-        var nnc2 = NNCWrapper.of(createNodeWithNodeView(m_wfm, m -> createNodeView(staticPage)));
-        var nnc3 = NNCWrapper.of(createNodeWithNodeView(m_wfm, m -> createNodeView(dynamicPage)));
+        var nnc = NodeWrapper.of(createNodeWithNodeView(m_wfm, m -> createNodeView(staticPage)));
+        var nnc2 = NodeWrapper.of(createNodeWithNodeView(m_wfm, m -> createNodeView(staticPage)));
+        var nnc3 = NodeWrapper.of(createNodeWithNodeView(m_wfm, m -> createNodeView(dynamicPage)));
         var nodeViewManager = NodeViewManager.getInstance();
         String path = nodeViewManager.getPagePath(nnc);
         String path2 = nodeViewManager.getPagePath(nnc2);
@@ -236,15 +236,15 @@ public class NodeViewManagerTest {
     }
 
     /**
-     * Tests {@link NodeViewManager#getPagePath(NNCWrapper)}.
+     * Tests {@link NodeViewManager#getPagePath(NodeWrapper)}.
      */
     @Test
-    public void testGetNodeViewPagePath() {
+    public void testGetNodeViewPagePathOnExecutor() {
         var staticPage = Page.builder(BUNDLE_ID, "files", "page.html").addResourceFile("resource.html").build();
         var dynamicPage = Page.builder(() -> "page content", "page.html")
             .addResourceFromString(() -> "resource content", "resource.html").build();
-        var nnc = NNCWrapper.of(createNodeWithNodeView(m_wfm, m -> createNodeView(staticPage)));
-        var nnc2 = NNCWrapper.of(createNodeWithNodeView(m_wfm, m -> createNodeView(dynamicPage)));
+        var nnc = NodeWrapper.of(createNodeWithNodeView(m_wfm, m -> createNodeView(staticPage)));
+        var nnc2 = NodeWrapper.of(createNodeWithNodeView(m_wfm, m -> createNodeView(dynamicPage)));
 
         var nodeViewManager = NodeViewManager.getInstance();
         assertThat(nodeViewManager.getPagePath(nnc),
@@ -255,7 +255,7 @@ public class NodeViewManagerTest {
             assertThat(nodeViewManager.getPageMapSize(), is(1));
             String path2 = nodeViewManager.getPagePath(nnc2);
             assertThat(nodeViewManager.getPageMapSize(), is(2));
-            var resourcePrefix1 = "view_" + nnc.get().getNode().getFactory().getClass().getName();
+            var resourcePrefix1 = "view_" + ((NativeNodeContainer)nnc.get()).getNode().getFactory().getClass().getName();
             var resourcePrefix2 = "view_" + nnc2.get().getID().toString().replace(":", "_");
             assertThat(path, is(resourcePrefix1 + "/page.html"));
             assertThat(path2, is(resourcePrefix2 + "/page.html"));
@@ -298,7 +298,7 @@ public class NodeViewManagerTest {
     @Test
     public void testNodeCleanUpDynamicPage() throws URISyntaxException {
         var page = Page.builder(() -> "test page content", "index.html").build();
-        var nc = NNCWrapper.of(createNodeWithNodeView(m_wfm, m -> createNodeView(page)));
+        var nc = NodeWrapper.of(createNodeWithNodeView(m_wfm, m -> createNodeView(page)));
         var nodeViewManager = NodeViewManager.getInstance();
 
         // remove node
@@ -328,7 +328,7 @@ public class NodeViewManagerTest {
     @Test
     public void testNodeCleanUpStaticPage() {
         var staticPage = Page.builder(BUNDLE_ID, "files", "page.html").build();
-        var nc = NNCWrapper.of(createNodeWithNodeView(m_wfm, m -> createNodeView(staticPage)));
+        var nc = NodeWrapper.of(createNodeWithNodeView(m_wfm, m -> createNodeView(staticPage)));
         var nodeViewManager = NodeViewManager.getInstance();
 
         // remove node
@@ -386,7 +386,7 @@ public class NodeViewManagerTest {
 
             }
         });
-        var nc = NNCWrapper.of(NodeViewManagerTest.createNodeWithNodeView(m_wfm, m -> nodeView));
+        var nc = NodeWrapper.of(NodeViewManagerTest.createNodeWithNodeView(m_wfm, m -> nodeView));
 
         var nodeViewManager = NodeViewManager.getInstance();
         assertThat(nodeViewManager.callTextInitialDataService(nc), is("init service"));

@@ -85,9 +85,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  *
  * @author Carsten Haubold, KNIME GmbH, Konstanz, Germany
  */
-public class SubNodeContainerDialogFactory {
-
-    private SubNodeContainer m_snc;
+public class SubNodeContainerDialogFactory implements NodeDialogFactory {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(SubNodeContainerDialogFactory.class);
 
@@ -98,6 +96,10 @@ public class SubNodeContainerDialogFactory {
     private static final String SUB_NODE_CONTAINER_UI_MODE_JS = "js";
 
     private static final String SUB_NODE_CONTAINER_UI_MODE_DEFAULT = SUB_NODE_CONTAINER_UI_MODE_SWING;
+
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
+    private final SubNodeContainer m_snc;
 
     private static String getSubNodeContainerUiMode() {
         var mode = System.getProperty(SUB_NODE_CONTAINER_UI_MODE_PROPERTY);
@@ -125,8 +127,9 @@ public class SubNodeContainerDialogFactory {
     /**
      * @return Create the dialog containing all the dialog elements that were found in the {@link SubNodeContainer}
      */
+    @Override
     @SuppressWarnings("rawtypes")
-    public NodeDialog create() {
+    public NodeDialog createNodeDialog() {
         var wfm = m_snc.getWorkflowManager();
         Map<NodeID, DialogNode> nodes = wfm.findNodes(DialogNode.class, new NodeModelFilter<DialogNode>() { // NOSONAR
             @Override
@@ -185,8 +188,7 @@ public class SubNodeContainerDialogFactory {
 
     private static JsonNode parseJsonString(final String jsonString)
         throws JsonMappingException, JsonProcessingException {
-        final var om = new ObjectMapper();
-        var root = om.readTree(jsonString);
+        var root = OBJECT_MAPPER.readTree(jsonString);
         return root;
     }
 
@@ -219,7 +221,7 @@ public class SubNodeContainerDialogFactory {
 
     private class SubNodeContainerJsonSettingsService implements JsonNodeSettingsService<String> {
         @SuppressWarnings("rawtypes")
-        private Map<NodeID, DialogNode> m_dialogNodes;
+        private final Map<NodeID, DialogNode> m_dialogNodes;
 
         @SuppressWarnings("rawtypes")
         public SubNodeContainerJsonSettingsService(final Map<NodeID, DialogNode> dialogNodes) {

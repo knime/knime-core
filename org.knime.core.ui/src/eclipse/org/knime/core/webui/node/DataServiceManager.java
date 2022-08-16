@@ -51,7 +51,6 @@ package org.knime.core.webui.node;
 import java.io.IOException;
 import java.util.Optional;
 
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.webui.data.ApplyDataService;
 import org.knime.core.webui.data.DataService;
 import org.knime.core.webui.data.InitialDataService;
@@ -64,7 +63,7 @@ import org.knime.core.webui.data.text.TextInitialDataService;
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  * @param <N> the node wrapper this manager operates on
  */
-public interface DataServiceManager<N extends NodeWrapper<? extends NodeContainer>> {
+public interface DataServiceManager<N extends NodeWrapper> {
 
     /**
      * Returns data service instance of the given type or an empty optional of no data service of that type is

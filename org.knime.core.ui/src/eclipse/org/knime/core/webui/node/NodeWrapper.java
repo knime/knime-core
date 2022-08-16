@@ -60,11 +60,48 @@ import org.knime.core.node.workflow.NodeContainer;
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  * @param <N> the node type that is being wrapped
  */
-public interface NodeWrapper<N extends NodeContainer> {
+public interface NodeWrapper {
 
     /**
      * @return the wrapped node
      */
-    N get();
+    NodeContainer get();
 
+    /**
+     * Convenience method to create a {@link NodeWrapper}-instance.
+     *
+     * @param nc
+     * @return a new instance
+     */
+    static NodeWrapper of(final NodeContainer nc) {
+        return new NodeWrapper() { // NOSONAR
+
+            @Override
+            public NodeContainer get() {
+                return nc;
+            }
+
+            @Override
+            public boolean equals(final Object o) {
+                if (this == o) {
+                    return true;
+                }
+                if (o == null) {
+                    return false;
+                }
+                if (getClass() != o.getClass()) {
+                    return false;
+                }
+
+                var w = (NodeWrapper)o;
+                return nc.equals(w.get());
+            }
+
+            @Override
+            public int hashCode() {
+                return nc.hashCode();
+            }
+        };
+
+    }
 }

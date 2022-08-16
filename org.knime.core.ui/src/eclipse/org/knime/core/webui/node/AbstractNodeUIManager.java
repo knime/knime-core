@@ -56,6 +56,7 @@ import java.util.WeakHashMap;
 import java.util.regex.Pattern;
 
 import org.knime.core.node.NodeFactory;
+import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.webui.data.ApplyDataService;
 import org.knime.core.webui.data.DataService;
@@ -87,7 +88,7 @@ import org.knime.core.webui.page.Resource;
  * @param <N> the node wrapper this manager operates on
  */
 @SuppressWarnings("java:S1170")
-public abstract class AbstractNodeUIManager<N extends NodeWrapper<?>>
+public abstract class AbstractNodeUIManager<N extends NodeWrapper>
     implements DataServiceManager<N>, PageResourceManager<N> {
 
     private final Map<N, InitialDataService> m_initialDataServices = new WeakHashMap<>();
@@ -258,10 +259,11 @@ public abstract class AbstractNodeUIManager<N extends NodeWrapper<?>>
         if (url == null) {
             return Optional.empty();
         }
-        if (nodeWrapper instanceof NNCWrapper) {
+        var nodeContainer = nodeWrapper.get();
+        if (nodeContainer instanceof NativeNodeContainer) {
             @SuppressWarnings("rawtypes")
             final Class<? extends NodeFactory> nodeFactoryClass =
-                ((NNCWrapper)nodeWrapper).get().getNode().getFactory().getClass();
+                ((NativeNodeContainer)nodeContainer).getNode().getFactory().getClass();
             if (pattern == null || Pattern.matches(pattern, nodeFactoryClass.getName())) {
                 return Optional.of(url);
             } else {
