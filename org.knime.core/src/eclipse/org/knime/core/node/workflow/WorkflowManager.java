@@ -7525,7 +7525,8 @@ public final class WorkflowManager extends NodeContainer
                         t = updateNodeTemplateLinkInternal(t.getID(), exec, loadHelper, visitedTemplateMap,
                             childResult);
                         if (t == null) {
-                            var cause = childResult.hasErrors() ? ": \"" + childResult.getChildren()[0].getMessage() + "\"" : "!";
+                            var cause = childResult.hasErrors()
+                                ? (": \"" + childResult.getChildren()[0].getMessage() + "\"") : "!";
                             loadRes.addError("Updating node " + id + " failed" + cause);
                             continue;
                         }
