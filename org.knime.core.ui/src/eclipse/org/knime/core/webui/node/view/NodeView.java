@@ -52,9 +52,9 @@ import java.util.Optional;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.webui.UIExtension;
 import org.knime.core.webui.data.DataServiceProvider;
 import org.knime.core.webui.node.view.selection.SelectionTranslationService;
-import org.knime.core.webui.page.Page;
 
 /**
  * Represents a view of a node.
@@ -64,14 +64,7 @@ import org.knime.core.webui.page.Page;
  *
  * @since 4.5
  */
-public interface NodeView extends DataServiceProvider {
-
-    /**
-     * Returns the (html) page which represents the view UI.
-     *
-     * @return the page
-     */
-    Page getPage();
+public interface NodeView extends UIExtension, DataServiceProvider {
 
     /**
      * Validates the given settings before loading it via {@link #loadValidatedSettingsFrom(NodeSettingsRO)}.

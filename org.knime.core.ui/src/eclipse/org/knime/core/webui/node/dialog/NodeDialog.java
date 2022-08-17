@@ -72,6 +72,7 @@ import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.Pair;
+import org.knime.core.webui.UIExtension;
 import org.knime.core.webui.data.ApplyDataService;
 import org.knime.core.webui.data.DataServiceProvider;
 import org.knime.core.webui.data.InitialDataService;
@@ -79,7 +80,6 @@ import org.knime.core.webui.data.json.JsonInitialDataService;
 import org.knime.core.webui.data.text.TextApplyDataService;
 import org.knime.core.webui.data.text.TextInitialDataService;
 import org.knime.core.webui.node.view.NodeViewManager;
-import org.knime.core.webui.page.Page;
 
 /**
  * Represents a dialog of a node.
@@ -88,7 +88,7 @@ import org.knime.core.webui.page.Page;
  *
  * @since 4.5
  */
-public abstract class NodeDialog implements DataServiceProvider {
+public abstract class NodeDialog implements UIExtension, DataServiceProvider {
 
     private final NativeNodeContainer m_nnc;
 
@@ -107,13 +107,6 @@ public abstract class NodeDialog implements DataServiceProvider {
         m_settingsTypes = Set.of(settingsTypes);
         m_nnc = (NativeNodeContainer)NodeContext.getContext().getNodeContainer();
     }
-
-    /**
-     * Returns the (html) page which represents the view UI.
-     *
-     * @return the page
-     */
-    public abstract Page getPage();
 
     @Override
     public final Optional<InitialDataService> createInitialDataService() {

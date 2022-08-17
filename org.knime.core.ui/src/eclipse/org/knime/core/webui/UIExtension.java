@@ -44,36 +44,24 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Jul 18, 2022 (hornm): created
+ *   Aug 17, 2022 (hornm): created
  */
-package org.knime.core.webui.node.port;
+package org.knime.core.webui;
 
-import java.util.Optional;
-
-import org.knime.core.webui.UIExtension;
-import org.knime.core.webui.data.ApplyDataService;
-import org.knime.core.webui.data.DataServiceProvider;
+import org.knime.core.webui.page.Page;
 
 /**
- * Represents a view of a port.
+ * A UI extension is a custom contribution to the KNIME UI. Such as a node dialog, node view or port view.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
-public interface PortView extends UIExtension, DataServiceProvider {
+public interface UIExtension {
 
     /**
-     * Allows one to provide a custom page id (mainly into order to manually specify a page id to map the vue component
-     * to be used on the FE-side). Will need to be created automatically at some point (especially for third party port
-     * views).
+     * Returns the (html) page which represents the UI.
      *
-     * @return the page id
+     * @return the page
      */
-    String getPageId();
-
-    @Override
-    default Optional<ApplyDataService> createApplyDataService() {
-        // not available to port views
-        throw new UnsupportedOperationException();
-    }
+    Page getPage();
 
 }
