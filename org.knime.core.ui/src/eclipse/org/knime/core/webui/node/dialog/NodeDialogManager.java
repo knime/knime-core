@@ -167,16 +167,16 @@ public final class NodeDialogManager extends AbstractNodeUIManager<NodeWrapper> 
      * {@inheritDoc}
      */
     @Override
-    protected DataServiceProvider getDataServiceProvider(final NodeWrapper nc) {
-        return getNodeDialog(nc.get());
+    protected DataServiceProvider getDataServiceProvider(final NodeWrapper nw) {
+        return getNodeDialog(nw.get());
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Page getPage(final NodeWrapper nc) {
-        return getNodeDialog(nc.get()).getPage();
+    public Page getPage(final NodeWrapper nw) {
+        return getNodeDialog(nw.get()).getPage();
     }
 
     /**
@@ -191,8 +191,13 @@ public final class NodeDialogManager extends AbstractNodeUIManager<NodeWrapper> 
      * {@inheritDoc}
      */
     @Override
-    public String getPageId(final NodeWrapper nc, final Page p) {
-        return PageUtil.getPageId(nc.get(), p.isCompletelyStatic(), PageType.DIALOG);
+    public String getPageId(final NodeWrapper nw, final Page p) {
+        final var nc = nw.get();
+        if (nc instanceof SubNodeContainer) {
+            return "defaultdialog";
+        } else {
+            return PageUtil.getPageId((NativeNodeContainer)nc, p.isCompletelyStatic(), PageType.DIALOG);
+        }
     }
 
 }

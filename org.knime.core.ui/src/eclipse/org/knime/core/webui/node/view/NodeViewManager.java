@@ -266,8 +266,8 @@ public final class NodeViewManager extends AbstractNodeUIManager<NodeWrapper> {
      * {@inheritDoc}
      */
     @Override
-    public String getPageId(final NodeWrapper nnc, final Page p) {
-        return PageUtil.getPageId(nnc.get(), p.isCompletelyStatic(), PageType.VIEW);
+    public String getPageId(final NodeWrapper nw, final Page p) {
+        return PageUtil.getPageId(((NativeNodeContainer)nw.get()), p.isCompletelyStatic(), PageType.VIEW);
     }
 
     /**
