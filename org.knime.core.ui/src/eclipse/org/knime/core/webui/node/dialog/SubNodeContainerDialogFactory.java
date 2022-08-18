@@ -50,6 +50,7 @@ package org.knime.core.webui.node.dialog;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -74,18 +75,17 @@ import org.knime.core.webui.data.DataService;
 import org.knime.core.webui.page.Page;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
- * The {@link SubNodeContainerDialogFactory} creates a {@link NodeDialog} for all the configuration nodes inside
+ * The SubNodeContainerDialogFactory creates a {@link NodeDialog} for all the configuration nodes inside
  * a {@link SubNodeContainer} by parsing the {@link DialogNodeRepresentation}s of those nodes and converting those
  * to jsonforms which is parsed by the NodeDialog page.
  *
  * @author Carsten Haubold, KNIME GmbH, Konstanz, Germany
  */
-public class SubNodeContainerDialogFactory implements NodeDialogFactory {
+final class SubNodeContainerDialogFactory implements NodeDialogFactory {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(SubNodeContainerDialogFactory.class);
 
@@ -115,7 +115,7 @@ public class SubNodeContainerDialogFactory implements NodeDialogFactory {
     }
 
     /**
-     * Initialize a {@link SubNodeContainerDialogFactory} with the {@link SubNodeContainer} for which the dialog should
+     * Initialize a SubNodeContainerDialogFactory with the {@link SubNodeContainer} for which the dialog should
      * be constructed.
      *
      * @param snc The SubNodeContainer for which the dialog will be built
@@ -141,35 +141,6 @@ public class SubNodeContainerDialogFactory implements NodeDialogFactory {
         return new SubNodeContainerNodeDialog(nodes);
     }
 
-    /**
-     * Sort the dialog node IDs according to the user provided preference.
-     *
-     * Note: The ordering is requested each time the dialog is opened. Otherwise, the ordering would stay as it was when
-     * the dialog was first created, because they are cached.
-     */
-    @SuppressWarnings("rawtypes")
-    private List<NodeID> getNodeOrder(final Map<NodeID, DialogNode> nodes) {
-        List<Integer> order = ConfigurationLayoutUtil.getConfigurationOrder(
-            m_snc.getSubnodeConfigurationLayoutStringProvider(), nodes, m_snc.getWorkflowManager());
-
-        // Will contain the nodes in the ordering given by `order`.
-        // Nodes not mentioned in `order` will be placed at the end in arbitrary order.
-        TreeMap<Integer, NodeID> orderedNodeIDs = new TreeMap<>();
-        List<NodeID> unorderedNodeIDs = new ArrayList<>(nodes.size());
-        nodes.forEach((nodeId, node) -> {
-            int targetIndex = order.indexOf(nodeId.getIndex());
-            if (targetIndex == -1) {
-                unorderedNodeIDs.add(nodeId);
-            } else {
-                orderedNodeIDs.put(targetIndex, nodeId);
-            }
-        });
-        List<NodeID> res = new ArrayList<>();
-        res.addAll(orderedNodeIDs.values()); // `values` is ordered
-        res.addAll(unorderedNodeIDs);
-        return res;
-    }
-
     @SuppressWarnings("rawtypes")
     private static String getWorkflowRepresentationJson(final DialogNode node) throws IOException {
         var dialogRepr = node.getDialogRepresentation();
@@ -182,14 +153,8 @@ public class SubNodeContainerDialogFactory implements NodeDialogFactory {
                 throw new IllegalStateException(
                     "Cannot read json dialog representation from stream other than ByteArrayOutputStream");
             }
-            return ((ByteArrayOutputStream)stream).toString("UTF-8");
+            return ((ByteArrayOutputStream)stream).toString(StandardCharsets.UTF_8);
         }
-    }
-
-    private static JsonNode parseJsonString(final String jsonString)
-        throws JsonMappingException, JsonProcessingException {
-        var root = OBJECT_MAPPER.readTree(jsonString);
-        return root;
     }
 
     private class SubNodeContainerNodeDialog extends NodeDialog {
@@ -242,7 +207,7 @@ public class SubNodeContainerDialogFactory implements NodeDialogFactory {
 
             JsonNode newSettingsJson;
             try {
-                newSettingsJson = parseJsonString(jsonSettings);
+                newSettingsJson = OBJECT_MAPPER.readTree(jsonSettings);
             } catch (JsonProcessingException ex) {
                 throw new IllegalStateException("Error occurred when parsing the settings provided by the dialog", ex);
             }
@@ -265,7 +230,7 @@ public class SubNodeContainerDialogFactory implements NodeDialogFactory {
                     if (settingsParameterName == null || settingsParameterName.strip().isEmpty()) {
                         throw new IllegalStateException("Dialog Node has no valid parameter name, can't save settings");
                     }
-                    settingsParameterName += "-" + String.valueOf(dialogNodeId.getIndex());
+                    settingsParameterName += "-" + dialogNodeId.getIndex();
                     value.saveToNodeSettings(modelSettings.addNodeSettings(settingsParameterName));
                 } catch (Exception e) { // We want to catch everything here, or settings won't be saved!
                     LOGGER.error("Could not read dialog node " + dialogNode.toString(), e);
@@ -288,7 +253,7 @@ public class SubNodeContainerDialogFactory implements NodeDialogFactory {
                 var dialogNode = m_dialogNodes.get(dialogNodeId);
                 try {
                     var jsonStr = getWorkflowRepresentationJson(dialogNode);
-                    dialogBuilder.addUiComponent(jsonStr, "param_" + String.valueOf(dialogNodeId.getIndex()));
+                    dialogBuilder.addUiComponent(jsonStr, "param_" + dialogNodeId.getIndex());
                 } catch (IOException | IllegalStateException e) {
                     LOGGER.error("Could not read dialog node " + dialogNode.toString(), e);
                 }
@@ -300,6 +265,35 @@ public class SubNodeContainerDialogFactory implements NodeDialogFactory {
         @Override
         public String toJson(final String obj) {
             return obj;
+        }
+
+        /**
+         * Sort the dialog node IDs according to the user provided preference.
+         *
+         * Note: The ordering is requested each time the dialog is opened. Otherwise, the ordering would stay as it was when
+         * the dialog was first created, because they are cached.
+         */
+        @SuppressWarnings("rawtypes")
+        private List<NodeID> getNodeOrder(final Map<NodeID, DialogNode> nodes) {
+            List<Integer> order = ConfigurationLayoutUtil.getConfigurationOrder(
+                m_snc.getSubnodeConfigurationLayoutStringProvider(), nodes, m_snc.getWorkflowManager());
+
+            // Will contain the nodes in the ordering given by `order`.
+            // Nodes not mentioned in `order` will be placed at the end in arbitrary order.
+            TreeMap<Integer, NodeID> orderedNodeIDs = new TreeMap<>();
+            List<NodeID> unorderedNodeIDs = new ArrayList<>(nodes.size());
+            nodes.forEach((nodeId, node) -> {
+                int targetIndex = order.indexOf(nodeId.getIndex());
+                if (targetIndex == -1) {
+                    unorderedNodeIDs.add(nodeId);
+                } else {
+                    orderedNodeIDs.put(targetIndex, nodeId);
+                }
+            });
+            List<NodeID> res = new ArrayList<>();
+            res.addAll(orderedNodeIDs.values()); // `values` is ordered
+            res.addAll(unorderedNodeIDs);
+            return res;
         }
     }
 }

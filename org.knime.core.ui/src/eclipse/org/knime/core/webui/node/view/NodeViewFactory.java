@@ -86,7 +86,8 @@ public interface NodeViewFactory<T extends NodeModel> extends WizardPageContribu
      */
     @Override
     default Optional<String> validateViewValue(final NativeNodeContainer nnc, final String value) throws IOException {
-        var ds = NodeViewManager.getInstance().getDataServiceOfType(NodeWrapper.of(nnc), TextReExecuteDataService.class);
+        var ds =
+            NodeViewManager.getInstance().getDataServiceOfType(NodeWrapper.of(nnc), TextReExecuteDataService.class);
         if (ds.isPresent()) {
             return ds.get().validateData(value);
         }
@@ -98,7 +99,8 @@ public interface NodeViewFactory<T extends NodeModel> extends WizardPageContribu
      */
     @Override
     default void loadViewValue(final NativeNodeContainer nnc, final String value) throws IOException {
-        var ds = NodeViewManager.getInstance().getDataServiceOfType(NodeWrapper.of(nnc), TextReExecuteDataService.class);
+        var ds =
+            NodeViewManager.getInstance().getDataServiceOfType(NodeWrapper.of(nnc), TextReExecuteDataService.class);
         if (ds.isPresent()) {
             ds.get().applyData(value);
         }

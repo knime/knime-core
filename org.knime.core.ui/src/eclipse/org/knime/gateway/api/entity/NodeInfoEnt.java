@@ -53,6 +53,7 @@ import java.util.Objects;
 
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeContainerState;
 import org.knime.core.node.workflow.NodeMessage.Type;
 
 /**
@@ -88,19 +89,10 @@ public final class NodeInfoEnt {
     NodeInfoEnt(final NodeContainer nc, final String errorMessage) {
         m_name = nc.getName();
         m_annotation = nc.getNodeAnnotation().toString();
-        var state = nc.getNodeContainerState();
 
-        if (state.isIdle()) {
-            m_state = "idle";
-        } else if (state.isConfigured()) {
-            m_state = "configured";
-        } else if (state.isExecutionInProgress() || state.isExecutingRemotely()) {
-            m_state = "executing";
-        } else if (state.isExecuted()) {
-            m_state = "executed";
-        } else {
-            m_state = "undefined";
-        }
+        var state = nc.getNodeContainerState();
+        m_state = stateToString(state);
+
         var message = nc.getNodeMessage();
         var messageType = message.getMessageType();
         if (errorMessage != null) {
@@ -110,7 +102,8 @@ public final class NodeInfoEnt {
         }
         m_warningMessage = messageType == Type.WARNING ? message.getMessage() : null;
 
-        if (state.isExecuted() || state.isExecutionInProgress() || state.isExecutingRemotely() || !(nc instanceof NativeNodeContainer)) {
+        if (state.isExecuted() || state.isExecutionInProgress() || state.isExecutingRemotely()
+            || !(nc instanceof NativeNodeContainer)) {
             m_canExecute = null;
         } else {
             // Strictly speaking there are situations where a node could still be executed even if it's in state 'idle'.
@@ -121,7 +114,21 @@ public final class NodeInfoEnt {
             // That's why we decided to not support that to avoid node dialogs which are not in sync with the input specs.
             // That's why we do not just check 'WorkflowManager.canExecuteNode' here ...
             m_canExecute = state.isConfigured() || //
-                (state.isIdle() && isInputSpecAvailable((NativeNodeContainer)nc)); // this is the case if 'configure' (i.e. settings validation) failed
+                (state.isIdle() && isInputSpecAvailable((NativeNodeContainer)nc)); // = 'configure' (i.e. settings validation) failed
+        }
+    }
+
+    private static String stateToString(final NodeContainerState state) {
+        if (state.isIdle()) {
+            return "idle";
+        } else if (state.isConfigured()) {
+            return "configured";
+        } else if (state.isExecutionInProgress() || state.isExecutingRemotely()) {
+            return "executing";
+        } else if (state.isExecuted()) {
+            return "executed";
+        } else {
+            return "undefined";
         }
     }
 
