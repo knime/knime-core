@@ -142,7 +142,6 @@ import org.knime.core.node.dialog.ExternalNodeData;
 import org.knime.core.node.dialog.InputNode;
 import org.knime.core.node.dialog.MetaNodeDialogNode;
 import org.knime.core.node.dialog.OutputNode;
-import org.knime.core.node.exec.ThreadNodeExecutionJobManager;
 import org.knime.core.node.interactive.InteractiveNode;
 import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.interactive.ReExecutable;
@@ -5542,7 +5541,7 @@ public final class WorkflowManager extends NodeContainer
 
     /** {@inheritDoc} */
     @Override
-    void cancelExecution() {
+    public void cancelExecution() {
         try (WorkflowLock lock = lock()) {
             NodeExecutionJob job = getExecutionJob();
             if (job != null) {
@@ -6958,7 +6957,7 @@ public final class WorkflowManager extends NodeContainer
     public NodeContainer getNodeContainer(final NodeID id) {
         NodeContainer nc = m_workflow.getNode(id);
         if (nc == null) {
-            throw new IllegalArgumentException("No such node ID: " + id);
+            throw new IllegalArgumentException("No such node ID: " + id + " valid " + m_workflow.getNodeIDs());
         }
         return nc;
     }
@@ -9324,7 +9323,8 @@ public final class WorkflowManager extends NodeContainer
      */
     @Override
     protected boolean isLocalWFM() {
-        return findJobManager() instanceof ThreadNodeExecutionJobManager;
+        var mgr = findJobManager();
+        return mgr == null || NodeExecutionJobManagerPool.isThreaded(mgr);
     }
 
     /**

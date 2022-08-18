@@ -105,7 +105,7 @@ import org.knime.core.node.dialog.DialogNodeValue;
 import org.knime.core.node.dialog.EnabledDialogNodeModelFilter;
 import org.knime.core.node.dialog.SubNodeDescriptionProvider;
 import org.knime.core.node.dialog.util.ConfigurationLayoutUtil;
-import org.knime.core.node.exec.ThreadNodeExecutionJobManager;
+import org.knime.core.node.exec.ThreadNodeExecutionJobManagerFactory;
 import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.interactive.ViewContent;
 import org.knime.core.node.port.MetaPortInfo;
@@ -1347,16 +1347,16 @@ public final class SubNodeContainer extends SingleNodeContainer
     void performStateTransitionEXECUTING() {
         synchronized (m_nodeMutex) {
             switch (getInternalState()) {
-            case PREEXECUTE:
-                if (findJobManager() instanceof ThreadNodeExecutionJobManager) {
-                    setInternalState(InternalNodeContainerState.EXECUTING);
-                } else {
-                    runIfInExternalExecutor(() -> m_wfm.mimicRemoteExecuting());
-                    setInternalState(InternalNodeContainerState.EXECUTINGREMOTELY);
-                }
-                break;
-            default:
-                throwIllegalStateException();
+                case PREEXECUTE:
+                    if (NodeExecutionJobManagerPool.isThreaded(findJobManager())) {
+                        setInternalState(InternalNodeContainerState.EXECUTING);
+                    } else {
+                        runIfInExternalExecutor(() -> m_wfm.mimicRemoteExecuting());
+                        setInternalState(InternalNodeContainerState.EXECUTINGREMOTELY);
+                    }
+                    break;
+                default:
+                    throwIllegalStateException();
             }
         }
     }
@@ -1626,6 +1626,21 @@ public final class SubNodeContainer extends SingleNodeContainer
         } finally {
             m_isPerformingActionCalledFromParent = wasFlagSet;
         }
+    }
+
+    /**
+     * Inspector of a {@link NodeStateEvent} that checks if the event will cause the entire component to fail. Added as
+     * part of AP-13583.
+     *
+     * @param e The event to investigate
+     * @return {@code true}, if the component execution will fail after this event, {@code false otherwise}
+     */
+    public boolean isThisEventFatal(final NodeStateEvent e) {
+        var node = m_wfm.getNodeContainer(e.getSource());
+        var isNodeMessageError = node.getNodeMessage().getMessageType() == Type.ERROR;
+        var isNodeExecuting = e.getInternalNCState().isExecutionInProgress();
+        var areErrorsCaught = node.getFlowObjectStack().peek(FlowTryCatchContext.class) != null;
+        return !isNodeExecuting && isNodeMessageError && !areErrorsCaught;
     }
 
     /* ------------- Ports and related stuff --------------- */
@@ -2440,19 +2455,24 @@ public final class SubNodeContainer extends SingleNodeContainer
         m_isPerformingActionCalledFromParent = true;
         try (WorkflowLock lock = m_wfm.lock()) {
             m_subnodeScopeContext.inactiveScope(true);
-            //'execute' inner workflow manager locally
-            //(only to propagate inactive port states)
             m_wfm.cancelExecution();
-            NodeExecutionJobManager jobManager = m_wfm.getJobManager();
-            m_wfm.setJobManager(ThreadNodeExecutionJobManager.INSTANCE);
-            m_wfm.resetAndConfigureAll();
-            executeWorkflowAndWait(m_wfm);
-            if (!m_wfm.getInternalState().isExecuted()) {
-                cancelExecution();
+            //'execute' inner workflow manager locally to propagate inactive port states
+            {
+                // temporarily apply standard job manager
+                NodeExecutionJobManager jobManager = m_wfm.getJobManager();
+                m_wfm.setJobManager(ThreadNodeExecutionJobManagerFactory.INSTANCE.getInstance());
                 m_wfm.resetAndConfigureAll();
+
+                executeWorkflowAndWait(m_wfm);
+
+                if (!m_wfm.getInternalState().isExecuted()) {
+                    cancelExecution();
+                    m_wfm.resetAndConfigureAll();
+                }
+                setVirtualOutputIntoOutport(m_wfm.getInternalState());
+                // restore job manager
+                m_wfm.setJobManager(jobManager);
             }
-            setVirtualOutputIntoOutport(m_wfm.getInternalState());
-            m_wfm.setJobManager(jobManager);
             //set inner node error messages
             innerNodeMessages.entrySet().stream()
                 .forEach(e -> m_wfm.getNodeContainer(e.getKey()).setNodeMessage(e.getValue()));

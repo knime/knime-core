@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -43,69 +44,72 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 10, 2008 (wiswedel): created
+ *   4 Jul 2022 (jasper): created
  */
 package org.knime.core.node.exec;
 
+import java.net.URL;
+
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.port.PortObject;
-import org.knime.core.node.workflow.NativeNodeContainer;
+import org.knime.core.node.workflow.AbstractNodeExecutionJobManager;
 import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.SingleNodeContainer;
+import org.knime.core.node.workflow.NodeExecutionJob;
+import org.knime.core.util.ThreadPool;
 
 /**
- * This job manager is the default for native nodes. For backwards compatibility it can also execute components, but is
- * not selectable in the component dialog (See {@link ThreadNodeExecutionJobManager#canExecute(NodeContainer)}.
+ * This class is parent to the default job managers and manages Job <-> ThreadPool association.
  *
- * @author wiswedel, University of Konstanz
+ * @author Jasper Krauter, KNIME GmbH, Konstanz
  */
-public final class ThreadNodeExecutionJobManager extends AbstractThreadNodeExecutionJobManager {
+public abstract class AbstractThreadNodeExecutionJobManager extends AbstractNodeExecutionJobManager {
+
+    private final ThreadPool m_pool;
 
     /**
-     * Singleton instance of this job manager
+     * Create a new instance using the default global thread pool
      */
-    static final ThreadNodeExecutionJobManager INSTANCE = new ThreadNodeExecutionJobManager();
-
-    // Hide the implicit public constructor
-    private ThreadNodeExecutionJobManager() {
-        super();
+    protected AbstractThreadNodeExecutionJobManager() {
+        this(KNIMEConstants.GLOBAL_THREAD_POOL);
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public LocalNodeExecutionJob createJob(final NodeContainer nc, final PortObject[] data) {
-        if (!(nc instanceof SingleNodeContainer)) {
-            throw new IllegalStateException(
-                getClass().getSimpleName() + " is not able to execute a metanode: " + nc.getNameWithID());
+    private AbstractThreadNodeExecutionJobManager(final ThreadPool pool) {
+        if (pool == null) {
+            throw new IllegalArgumentException("thread pool must not be null");
         }
-        return new LocalNodeExecutionJob((SingleNodeContainer)nc, data);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public String getID() {
-        return ThreadNodeExecutionJobManagerFactory.INSTANCE.getID();
+        m_pool = pool;
     }
 
     /**
-     * For backwards compatibility it can also execute components, but it returns false here in order not to be
-     * selectable in a node's job manager configuration dialog tab (See
-     * {@link ThreadNodeExecutionJobManager#canExecute(NodeContainer)}.
+     * Create a {@link LocalNodeExecutionJob} that wraps the execution of the NC using the provided data
+     *
+     * @param nc The {@link NodeContainer} to execute
+     * @param data The data at the input ports of the executed node
+     * @return The created {@link LocalNodeExecutionJob}
      */
-    @Override
-    public boolean canExecute(final NodeContainer nc) {
-        // This job manager should only be advertised to native nodes.
-        return nc instanceof NativeNodeContainer;
-    }
+    protected abstract LocalNodeExecutionJob createJob(final NodeContainer nc, final PortObject[] data);
 
     /** {@inheritDoc} */
     @Override
-    public String toString() {
-        return ThreadNodeExecutionJobManagerFactory.INSTANCE.getLabel();
+    public NodeExecutionJob submitJob(final NodeContainer nc, final PortObject[] data) {
+        var job = createJob(nc, data);
+        var future = m_pool.enqueue(job);
+        job.setFuture(future);
+        return job;
     }
+
+    /**
+     * Utility method to determine whether the job manager corresponds to the default job manager and can therefore be
+     * omitted when saving the node to disk
+     *
+     * @return {@code false}, if the job manager needs to be saved with its node, {@code true} otherwise
+     */
+    public abstract boolean isDefault();
 
     /** {@inheritDoc} */
     @Override
-    public boolean isDefault() {
-        return true;
+    public URL getIcon() {
+        return null;
     }
+
 }

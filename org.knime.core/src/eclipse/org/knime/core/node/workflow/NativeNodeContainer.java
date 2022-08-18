@@ -88,7 +88,6 @@ import org.knime.core.node.NodeProgressMonitor;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.exec.ThreadNodeExecutionJobManager;
 import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.interactive.ViewContent;
 import org.knime.core.node.missing.MissingNodeModel;
@@ -98,6 +97,7 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.inactive.InactiveBranchConsumer;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.CredentialsStore.CredentialsNode;
 import org.knime.core.node.workflow.FlowVariable.Scope;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
@@ -451,7 +451,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
             switch (getInternalState()) {
             case PREEXECUTE:
                 this.getNode().clearLoopContext();
-                if (findJobManager() instanceof ThreadNodeExecutionJobManager) {
+                if (NodeExecutionJobManagerPool.isThreaded(findJobManager())) {
                     setInternalState(InternalNodeContainerState.EXECUTING);
                 } else {
                     setInternalState(InternalNodeContainerState.EXECUTINGREMOTELY);

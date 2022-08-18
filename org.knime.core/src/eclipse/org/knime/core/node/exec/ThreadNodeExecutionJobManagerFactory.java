@@ -50,34 +50,37 @@ package org.knime.core.node.exec;
 import org.knime.core.node.workflow.NodeExecutionJobManagerFactory;
 
 /**
+ * Factory class of a {@link ThreadNodeExecutionJobManager}
  *
  * @author wiswedel, University of Konstanz
  */
-public class ThreadNodeExecutionJobManagerFactory
-    implements NodeExecutionJobManagerFactory {
-
-    public static final ThreadNodeExecutionJobManagerFactory INSTANCE =
-        new ThreadNodeExecutionJobManagerFactory();
+public final class ThreadNodeExecutionJobManagerFactory implements NodeExecutionJobManagerFactory {
 
     /**
-     * {@inheritDoc}
+     * Singleton instance of the factory
      */
+    public static final ThreadNodeExecutionJobManagerFactory INSTANCE = new ThreadNodeExecutionJobManagerFactory();
+
+    // hide implicit constructor
+    private ThreadNodeExecutionJobManagerFactory() {
+    }
+
+    /** {@inheritDoc} */
     @Override
     public String getID() {
         return getClass().getName();
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public String getLabel() {
-        return "Threaded Job Manager";
+        return "Standard Node";
     }
 
     /** {@inheritDoc} */
     @Override
     public ThreadNodeExecutionJobManager getInstance() {
+        // merely return the singleton instance, no need to create an instance
         return ThreadNodeExecutionJobManager.INSTANCE;
     }
 

@@ -47,65 +47,41 @@
  */
 package org.knime.core.node.exec;
 
-import org.knime.core.node.port.PortObject;
-import org.knime.core.node.workflow.NativeNodeContainer;
-import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.SingleNodeContainer;
+import org.knime.core.node.workflow.NodeExecutionJobManagerFactory;
 
 /**
- * This job manager is the default for native nodes. For backwards compatibility it can also execute components, but is
- * not selectable in the component dialog (See {@link ThreadNodeExecutionJobManager#canExecute(NodeContainer)}.
+ * Factory class for the {@link ThreadComponentExecutionJobManager}
  *
- * @author wiswedel, University of Konstanz
+ * @author Jasper Krauter, KNIME GmbH, Konstanz
  */
-public final class ThreadNodeExecutionJobManager extends AbstractThreadNodeExecutionJobManager {
+public final class ThreadComponentExecutionJobManagerFactory implements NodeExecutionJobManagerFactory {
 
     /**
-     * Singleton instance of this job manager
+     * The singleton instance of this factory
      */
-    static final ThreadNodeExecutionJobManager INSTANCE = new ThreadNodeExecutionJobManager();
+    public static final ThreadComponentExecutionJobManagerFactory INSTANCE =
+        new ThreadComponentExecutionJobManagerFactory();
 
-    // Hide the implicit public constructor
-    private ThreadNodeExecutionJobManager() {
-        super();
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public LocalNodeExecutionJob createJob(final NodeContainer nc, final PortObject[] data) {
-        if (!(nc instanceof SingleNodeContainer)) {
-            throw new IllegalStateException(
-                getClass().getSimpleName() + " is not able to execute a metanode: " + nc.getNameWithID());
-        }
-        return new LocalNodeExecutionJob((SingleNodeContainer)nc, data);
+    // Hide the implicit constructor
+    private ThreadComponentExecutionJobManagerFactory() {
     }
 
     /** {@inheritDoc} */
     @Override
     public String getID() {
-        return ThreadNodeExecutionJobManagerFactory.INSTANCE.getID();
-    }
-
-    /**
-     * For backwards compatibility it can also execute components, but it returns false here in order not to be
-     * selectable in a node's job manager configuration dialog tab (See
-     * {@link ThreadNodeExecutionJobManager#canExecute(NodeContainer)}.
-     */
-    @Override
-    public boolean canExecute(final NodeContainer nc) {
-        // This job manager should only be advertised to native nodes.
-        return nc instanceof NativeNodeContainer;
+        return getClass().getName();
     }
 
     /** {@inheritDoc} */
     @Override
-    public String toString() {
-        return ThreadNodeExecutionJobManagerFactory.INSTANCE.getLabel();
+    public String getLabel() {
+        return "Custom Component";
     }
 
     /** {@inheritDoc} */
     @Override
-    public boolean isDefault() {
-        return true;
+    public ThreadComponentExecutionJobManager getInstance() {
+        return new ThreadComponentExecutionJobManager();
     }
+
 }

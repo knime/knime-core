@@ -83,7 +83,7 @@ public interface NodeExecutionJobManagerFactory {
      * implementing classes to return a new instance or a singleton here,
      * whereby the latter should be returned if the job manager cannot be
      * parameterized.
-     * @return a new instance of a job manager or a singleton.
+     * @return a new instance of a job manager or a singleton, never null.
      */
     NodeExecutionJobManager getInstance();
 

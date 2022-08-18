@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -43,69 +44,70 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 10, 2008 (wiswedel): created
+ *   30 Jun 2022 (jasper): created
  */
 package org.knime.core.node.exec;
 
-import org.knime.core.node.port.PortObject;
-import org.knime.core.node.workflow.NativeNodeContainer;
-import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.SingleNodeContainer;
+import java.awt.BorderLayout;
+
+import javax.swing.JCheckBox;
+import javax.swing.JLabel;
+
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.workflow.NodeExecutionJobManagerPanel;
 
 /**
- * This job manager is the default for native nodes. For backwards compatibility it can also execute components, but is
- * not selectable in the component dialog (See {@link ThreadNodeExecutionJobManager#canExecute(NodeContainer)}.
+ * This panel provides the UI to configure an instance of {@link ThreadComponentExecutionJobManagerSettings}.
  *
- * @author wiswedel, University of Konstanz
+ * @author Jasper Krauter, KNIME GmbH, Konstanz
  */
-public final class ThreadNodeExecutionJobManager extends AbstractThreadNodeExecutionJobManager {
+public final class ThreadComponentExecutionJobManagerPanel extends NodeExecutionJobManagerPanel {
+
+    private static final long serialVersionUID = -3844665009400635814L;
+
+    private static final String CANCEL_ON_FAILURE_TITLE = "Cancel on failure";
+
+    private static final String CANCEL_ON_FAILURE_DESC =
+        "If enabled, a failing node whose error is not handled by a Try node<br/>"
+        + "will cause the cancellation of all running nodes in the component.";
+
+    private final JCheckBox m_cancelOnFailure;
 
     /**
-     * Singleton instance of this job manager
+     * Create a new instance of the configuration panel
      */
-    static final ThreadNodeExecutionJobManager INSTANCE = new ThreadNodeExecutionJobManager();
-
-    // Hide the implicit public constructor
-    private ThreadNodeExecutionJobManager() {
-        super();
+    public ThreadComponentExecutionJobManagerPanel() {
+        setLayout(new BorderLayout());
+        m_cancelOnFailure = new JCheckBox(CANCEL_ON_FAILURE_TITLE);
+        add(m_cancelOnFailure, BorderLayout.NORTH);
+        var descriptionText = "<html><body><p>" + CANCEL_ON_FAILURE_DESC + "</p><body></html>";
+        var description = new JLabel(descriptionText);
+        add(description, BorderLayout.CENTER);
     }
 
     /** {@inheritDoc} */
     @Override
-    public LocalNodeExecutionJob createJob(final NodeContainer nc, final PortObject[] data) {
-        if (!(nc instanceof SingleNodeContainer)) {
-            throw new IllegalStateException(
-                getClass().getSimpleName() + " is not able to execute a metanode: " + nc.getNameWithID());
-        }
-        return new LocalNodeExecutionJob((SingleNodeContainer)nc, data);
+    public void saveSettings(final NodeSettingsWO settings) throws InvalidSettingsException {
+        var s = new ThreadComponentExecutionJobManagerSettings();
+        s.setCancelOnFailure(m_cancelOnFailure.isSelected());
+        s.saveSettingsTo(settings);
     }
 
     /** {@inheritDoc} */
     @Override
-    public String getID() {
-        return ThreadNodeExecutionJobManagerFactory.INSTANCE.getID();
-    }
-
-    /**
-     * For backwards compatibility it can also execute components, but it returns false here in order not to be
-     * selectable in a node's job manager configuration dialog tab (See
-     * {@link ThreadNodeExecutionJobManager#canExecute(NodeContainer)}.
-     */
-    @Override
-    public boolean canExecute(final NodeContainer nc) {
-        // This job manager should only be advertised to native nodes.
-        return nc instanceof NativeNodeContainer;
+    public void loadSettings(final NodeSettingsRO settings) {
+        var s = new ThreadComponentExecutionJobManagerSettings();
+        s.loadSettingsFrom(settings);
+        m_cancelOnFailure.setSelected(s.isCancelOnFailure());
     }
 
     /** {@inheritDoc} */
     @Override
-    public String toString() {
-        return ThreadNodeExecutionJobManagerFactory.INSTANCE.getLabel();
+    public void updateInputSpecs(final PortObjectSpec[] inSpecs) {
+        // nothing to do
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public boolean isDefault() {
-        return true;
-    }
 }

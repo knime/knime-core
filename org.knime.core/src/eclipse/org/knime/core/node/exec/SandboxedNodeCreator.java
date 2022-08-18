@@ -80,7 +80,6 @@ import org.knime.core.node.exec.dataexchange.in.PortObjectInNodeModel;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.CheckUtils;
-import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.ConnectionID;
 import org.knime.core.node.workflow.CredentialsStore;
@@ -316,7 +315,7 @@ public final class SandboxedNodeCreator {
 
             // do not use the cluster executor on the cluster...
             tempWFM.setJobManager(targetNodeID,
-                NodeExecutionJobManagerPool.getDefaultJobManagerFactory().getInstance());
+                ThreadNodeExecutionJobManagerFactory.INSTANCE.getInstance());
 
             if (!m_copyDataIntoNewContext) {
                 copyFileStoreHandlerReference(targetNode, parent, false);

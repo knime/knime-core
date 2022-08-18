@@ -62,23 +62,41 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.exec.AbstractThreadNodeExecutionJobManager;
+import org.knime.core.node.exec.ThreadComponentExecutionJobManagerFactory;
 import org.knime.core.node.exec.ThreadNodeExecutionJobManagerFactory;
+import org.knime.core.node.workflow.NativeNodeContainer;
+import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings;
 import org.knime.core.node.workflow.NodeExecutionJobManager;
 import org.knime.core.node.workflow.NodeExecutionJobManagerFactory;
+import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.util.ThreadPool;
 
 /**
- * Collects all registered JobManager extensions and holds an instance of each
- * in a set.
+ * Collects all registered JobManager extensions and holds an instance of each in a set.
  *
  * @author ohl, University of Konstanz
  */
 public final class NodeExecutionJobManagerPool {
 
-    private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(NodeExecutionJobManagerPool.class);
+    /**
+     * Job manager factories shipped with KNIME.
+     *
+     * Maps a node type to a job manager that is able to execute nodes of the given type.
+     *
+     * @see NodeExecutionJobManagerPool#getStandardJobManagerFactory()
+     * @see NodeExecutionJobManagerPool#getStandardJobManagerFactory(Class)
+     */
+    public static final Map<Class<? extends NodeContainer>, NodeExecutionJobManagerFactory> STANDARD_FACTORIES = Map.of(
+        // when changing this, make sure that the new manager can also execute components (backwards compatibility)
+        NativeNodeContainer.class, ThreadNodeExecutionJobManagerFactory.INSTANCE,
+        // starting with AP-19181, the standard component job manager offers fail fast execution, but it
+        SubNodeContainer.class, ThreadComponentExecutionJobManagerFactory.INSTANCE
+        // metanodes do not use a job manager
+        );
+
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(NodeExecutionJobManagerPool.class);
 
     private static final String EXT_POINT_ID =
             "org.knime.core.NodeExecutionJobManagerFactory";
@@ -86,8 +104,7 @@ public final class NodeExecutionJobManagerPool {
     private static final String EXT_POINT_ATTR_JOBMGR = "JobManagerFactory";
 
     // stores all managers, mapped to their id.
-    private static LinkedHashMap<String, NodeExecutionJobManagerFactory> managerFactories =
-            null;
+    private static LinkedHashMap<String, NodeExecutionJobManagerFactory> managerFactories;
 
     /**
      * It's a utility class. No reason to instantiate it.
@@ -98,7 +115,7 @@ public final class NodeExecutionJobManagerPool {
 
     /**
      * Returns the job manager factory with the specified id - or null if it
-     * doesn't exists. If the job manager factory is provided by an extension
+     * doesn't exist. If the job manager factory is provided by an extension
      * (plug-in) that is currently not installed this returns null, even though
      * in another KNIME installation it may not.
      *
@@ -192,12 +209,53 @@ public final class NodeExecutionJobManagerPool {
     }
 
     /**
-     * There is always at least one job manager factory availably.
+     * There is always at least one job manager factory available.
      *
-     * @return the default job manager
+     * @return a job manager factory that can execute native nodes and components, never null.
      */
-    public static ThreadNodeExecutionJobManagerFactory getDefaultJobManagerFactory() {
-        return ThreadNodeExecutionJobManagerFactory.INSTANCE;
+    public static NodeExecutionJobManagerFactory getStandardJobManagerFactory() {
+        return STANDARD_FACTORIES.get(NativeNodeContainer.class);
+    }
+
+    /**
+     * Returns a job manager factory for local execution of a specific implementation of {@link NodeContainer}
+     *
+     * @param c The class of the {@link NodeContainer} to execute
+     * @return {@code null} if none exists
+     */
+    public static NodeExecutionJobManagerFactory getStandardJobManagerFactory(final Class<? extends NodeContainer> c) {
+        return STANDARD_FACTORIES.get(c);
+    }
+
+    /**
+     * Get a list of the default job managers that handle local node execution.
+     *
+     * @return A {@link Collection} holding all default local job manager factories
+     */
+    public static Collection<NodeExecutionJobManagerFactory> getStandardJobManagerFactories() {
+        return STANDARD_FACTORIES.values();
+    }
+
+    /**
+     * Utility function to check whether a job manager is a {@link AbstractThreadNodeExecutionJobManager}.
+     *
+     * @param mgr The job manager
+     * @return {@code true}, if that manager is an instance of {@link AbstractThreadNodeExecutionJobManager} and not
+     *         {@code null}, {@code false} otherwise
+     */
+    public static boolean isThreaded(final NodeExecutionJobManager mgr) {
+        return mgr instanceof AbstractThreadNodeExecutionJobManager;
+    }
+
+    /**
+     * Determines whether a job manager is a default job manager and cannot be configured, therefore doesn't need to be
+     * saved explicitly alongside the node
+     *
+     * @param mgr The job manager
+     * @return {@code true} if the job manager can be omitted, {@code false} otherwise
+     */
+    public static boolean isDefault(final NodeExecutionJobManager mgr) {
+        return mgr == null || (isThreaded(mgr) && ((AbstractThreadNodeExecutionJobManager)mgr).isDefault());
     }
 
     /**
@@ -283,22 +341,21 @@ public final class NodeExecutionJobManagerPool {
     }
 
     private static void collectJobManagerFactories() {
+        managerFactories = new LinkedHashMap<>();
 
-        managerFactories =
-                new LinkedHashMap<String, NodeExecutionJobManagerFactory>();
+        // Add the default job managers first -- this also ensures that they are first in the list
+        getStandardJobManagerFactories().forEach(f -> managerFactories.put(f.getID(), f));
 
         IExtensionRegistry registry = Platform.getExtensionRegistry();
         IExtensionPoint point = registry.getExtensionPoint(EXT_POINT_ID);
         if (point == null) {
-            // let's throw in the default manager - otherwise things fail badly
-            managerFactories.put(getDefaultJobManagerFactory().getID(),
-                    getDefaultJobManagerFactory());
             LOGGER.error("Invalid extension point: " + EXT_POINT_ID);
             throw new IllegalStateException("ACTIVATION ERROR: "
                     + " --> Invalid extension point: " + EXT_POINT_ID);
         }
 
-        for (IConfigurationElement elem : point.getConfigurationElements()) {
+        // instantiate custom job manager factories (skipping the standard factories)
+        for (IConfigurationElement elem : point.getConfigurationElements()) {//NOSONAR
             String jobMgr = elem.getAttribute(EXT_POINT_ATTR_JOBMGR);
             String decl = elem.getDeclaringExtension().getUniqueIdentifier();
 
@@ -310,33 +367,26 @@ public final class NodeExecutionJobManagerPool {
                 continue;
             }
 
+            if (managerFactories.containsKey(jobMgr)) {
+                continue;
+            }
+
             // try instantiating the job manager.
             NodeExecutionJobManagerFactory instance = null;
             try {
-                // TODO: THE THREADED MANAGER NEEDS TO BE RE-WRITTEN!
-                if (jobMgr.equals(getDefaultJobManagerFactory().getID())) {
-                    instance = getDefaultJobManagerFactory();
-                } else {
-                    instance =
-                            (NodeExecutionJobManagerFactory)elem
-                                    .createExecutableExtension(EXT_POINT_ATTR_JOBMGR);
-                }
+                instance = (NodeExecutionJobManagerFactory)elem.createExecutableExtension(EXT_POINT_ATTR_JOBMGR);
             } catch (UnsatisfiedLinkError ule) {
                 // in case an implementation tries to load an external lib
                 // when the factory class gets loaded
-                LOGGER.error("Unable to load a library required for '" + jobMgr
-                        + "'");
-                LOGGER.error("Either specify it in the -Djava.library.path "
-                        + "option at the program's command line, or");
+                LOGGER.error("Unable to load a library required for '" + jobMgr + "'");
+                LOGGER.error("Either specify it in the -Djava.library.path option at the program's command line, or");
                 LOGGER.error("include it in the LD_LIBRARY_PATH variable.");
-                LOGGER.error("Extension " + jobMgr + " ('" + decl
-                        + "') ignored.", ule);
+                LOGGER.error("Extension " + jobMgr + " ('" + decl + "') ignored.", ule);
             } catch (CoreException ex) {
                 Throwable cause = ex.getStatus().getException();
                 if (cause != null) {
-                    LOGGER.error(
-                        "Problems during initialization of job manager (with id '" + jobMgr + "'): "
-                            + cause.getMessage(), ex);
+                    LOGGER.error("Problems during initialization of job manager (with id '" + jobMgr + "'): "
+                        + cause.getMessage(), ex);
                     if (decl != null) {
                         LOGGER.error("Extension " + decl + " ignored.");
                     }
@@ -354,26 +404,8 @@ public final class NodeExecutionJobManagerPool {
             }
 
             if (instance != null) {
-                /*
-                 * make sure the ThreadedJobManagerFactory is always the first
-                 * in the list
-                 */
-                if ((instance instanceof ThreadPool)
-                        && managerFactories.size() > 0) {
-                    Map<String, NodeExecutionJobManagerFactory> old =
-                            managerFactories;
-                    managerFactories =
-                            new LinkedHashMap<String, NodeExecutionJobManagerFactory>();
-                    managerFactories.put(instance.getID(), instance);
-                    for (Map.Entry<String, NodeExecutionJobManagerFactory> e : old
-                            .entrySet()) {
-                        managerFactories.put(e.getKey(), e.getValue());
-                    }
-                } else {
-                    managerFactories.put(instance.getID(), instance);
-                }
+                managerFactories.put(instance.getID(), instance);
             }
         }
-
     }
 }

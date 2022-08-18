@@ -142,6 +142,19 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
 
     private final WorkflowManager m_parent;
 
+    /**
+     * If null, find the first ancestor node container with an applicable non-null job manager and use this job manager.
+     *
+     * An ancestor with non-null job manager exists, because when constructing a node container with parent = null, the
+     * default job manager is set. In addition, {@link #setJobManager(NodeExecutionJobManager)} does not allow to null
+     * the job manager of a node container with no parent.
+     *
+     * However, if the ancestor's job manager is not applicable, use the default one (e.g., a component job manager is
+     * not applicable to its contained native nodes, but it is applicable to its contained components.)
+     *
+     * @see #NodeContainer(WorkflowManager, NodeID)
+     * @see NodeExecutionJobManagerPool#getStandardJobManagerFactory(Class)
+     */
     private NodeExecutionJobManager m_jobManager;
 
     /** The job representing the pending task of executing the node. */
@@ -217,7 +230,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
         m_parent = parent;
         if (m_parent == null) {
             // make sure at least the top node knows how to execute stuff
-            m_jobManager = NodeExecutionJobManagerPool.getDefaultJobManagerFactory().getInstance();
+            m_jobManager = NodeExecutionJobManagerPool.getStandardJobManagerFactory().getInstance();
         }
         m_id = id;
         m_state = InternalNodeContainerState.IDLE;
@@ -250,7 +263,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
 
         if (m_parent == null && !(m_jobManager instanceof ThreadNodeExecutionJobManager)) {
             // make sure at least the top node knows how to execute stuff
-            m_jobManager = NodeExecutionJobManagerPool.getDefaultJobManagerFactory().getInstance();
+            m_jobManager = NodeExecutionJobManagerPool.getStandardJobManagerFactory().getInstance();
         }
     }
 
@@ -277,7 +290,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
         m_jobManager = persistor.getExecutionJobManager();
         if (m_parent == null && !(m_jobManager instanceof ThreadNodeExecutionJobManager)) {
             // make sure at least the top node knows how to execute stuff
-            m_jobManager = NodeExecutionJobManagerPool.getDefaultJobManagerFactory().getInstance();
+            m_jobManager = NodeExecutionJobManagerPool.getStandardJobManagerFactory().getInstance();
         }
         m_customDescription = persistor.getCustomDescription();
         NodeAnnotationData annoData = persistor.getNodeAnnotationData();
@@ -313,18 +326,25 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
     /* ----------------- Job Manager ------------------ */
 
     /**
-     * Set a new NodeExecutionJobManager for this node. This also includes
-     * all child nodes unless they have their own dedicated job manager.
-     * @param je the new job manager.
+     * Set a new NodeExecutionJobManager for this node. This also includes all child nodes unless they have their own
+     * dedicated job manager.
+     *
+     * @param je the new job manager or null if a default job manager should be used (possibly inherited from the
+     *            parent).
      */
     void setJobManager(final NodeExecutionJobManager je) {
         synchronized (m_nodeMutex) {
-            if (getDirectNCParent() == null && !(je instanceof ThreadNodeExecutionJobManager)) {
-                // ROOT and workflow with no parent (inner wfm of subnode) must have the default job manager set
-                throw new IllegalArgumentException(String.format("Can only set the default job manager (%s) on a "
-                    + "no-parent workflow manager (%s); got %s", ThreadNodeExecutionJobManager.class.getSimpleName(),
-                    this.getNameWithID(), je == null ? "<null>" : je.getClass().getSimpleName()));
+
+            // ensure standard job manager on ROOT and workflow with no parent (inner wfm of subnode)
+            var isStandardFactory =
+                je != null && NodeExecutionJobManagerPool.getStandardJobManagerFactory().getID().equals(je.getID());
+            if (getDirectNCParent() == null && !isStandardFactory) {
+                throw new IllegalArgumentException(String.format(
+                    "Can only set the default job manager (%s) on a no-parent workflow manager (%s); got %s",
+                    NodeExecutionJobManagerPool.getStandardJobManagerFactory(SubNodeContainer.class),
+                    this.getNameWithID(), je == null ? "<null>" : je.getID()));
             }
+
             if (je != m_jobManager) {
                 if (m_jobManager != null) {
                     m_jobManager.closeAllViews();
@@ -346,11 +366,13 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
 
     /** @return NodeExecutionJobManager responsible for this node and all its children. */
     public final NodeExecutionJobManager findJobManager() {
-        if (m_jobManager == null) {
-            assert getDirectNCParent() != null : "Root has no associated job manager";
-            return getDirectNCParent().findJobManager();
+        // if a job manager is explicitly set, use it
+        if (m_jobManager != null) {
+            return m_jobManager;
         }
-        return m_jobManager;
+
+        // we assume every job manager can execute every node type
+        return getDirectNCParent().findJobManager();
     }
 
     /**
@@ -1167,7 +1189,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
         ncSet.setJobManager(getJobManager());
         ncSet.load(settings);
         // the job manager instance will be the same, if settings permit
-        setJobManager(ncSet.getJobManager());
+        setJobManager(ncSet.getJobManager().orElse(null));
         setDirty();
     }
 
@@ -1186,7 +1208,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
         s.save(tempSettings);
         ncSet.load(tempSettings);
         // the job manager instance will be the same, if settings permit
-        setJobManager(ncSet.getJobManager());
+        setJobManager(ncSet.getJobManager().orElse(null));
         setDirty();
     }
 
@@ -1719,15 +1741,17 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
             /** May work... */
             USER
         }
-        private NodeExecutionJobManager m_jobManager;
+
+        /** Nullable */
+        private Optional<NodeExecutionJobManager> m_jobManager = Optional.empty();
 
         /** @param jobManager the jobManager to set */
         public void setJobManager(final NodeExecutionJobManager jobManager) {
-            m_jobManager = jobManager;
+            m_jobManager = Optional.ofNullable(jobManager);
         }
 
         /** @return the jobManager */
-        public NodeExecutionJobManager getJobManager() {
+        public Optional<NodeExecutionJobManager> getJobManager() {
             return m_jobManager;
         }
 
@@ -1735,9 +1759,9 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
          * @param settings To save to.
          */
         public void save(final NodeSettingsWO settings) {
-            if (m_jobManager != null) {
+            if (m_jobManager.isPresent()) {
                 NodeExecutionJobManagerPool.saveJobManager(
-                        m_jobManager, settings.addNodeSettings("job.manager"));
+                        m_jobManager.get(), settings.addNodeSettings("job.manager"));
             }
         }
 
@@ -1748,14 +1772,12 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
          * @param settings To load from.
          * @throws InvalidSettingsException If that's not possible.
          */
-        public void load(final NodeSettingsRO settings)
-                throws InvalidSettingsException {
+        public void load(final NodeSettingsRO settings) throws InvalidSettingsException {
             if (settings.containsKey("job.manager")) {
                 NodeSettingsRO s = settings.getNodeSettings("job.manager");
-                m_jobManager =
-                        NodeExecutionJobManagerPool.load(m_jobManager, s);
+                m_jobManager = Optional.ofNullable(NodeExecutionJobManagerPool.load(m_jobManager.orElse(null), s));
             } else {
-                m_jobManager = null;
+                m_jobManager = Optional.empty();
             }
         }
 

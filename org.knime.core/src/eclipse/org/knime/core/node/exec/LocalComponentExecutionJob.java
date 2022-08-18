@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -43,69 +44,61 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 10, 2008 (wiswedel): created
+ *   1 Jul 2022 (jasper): created
  */
 package org.knime.core.node.exec;
 
 import org.knime.core.node.port.PortObject;
-import org.knime.core.node.workflow.NativeNodeContainer;
-import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.SingleNodeContainer;
+import org.knime.core.node.workflow.NodeStateChangeListener;
+import org.knime.core.node.workflow.SubNodeContainer;
 
 /**
- * This job manager is the default for native nodes. For backwards compatibility it can also execute components, but is
- * not selectable in the component dialog (See {@link ThreadNodeExecutionJobManager#canExecute(NodeContainer)}.
+ * Job that executes a component in a local thread. It can only execute components, and is configurable.
  *
- * @author wiswedel, University of Konstanz
+ * @author Jasper Krauter, KNIME GmbH, Konstanz
  */
-public final class ThreadNodeExecutionJobManager extends AbstractThreadNodeExecutionJobManager {
+public class LocalComponentExecutionJob extends LocalNodeExecutionJob {
+
+    private final SubNodeContainer m_snc;
+
+    private final ThreadComponentExecutionJobManagerSettings m_settings;
+
+    private NodeStateChangeListener m_executionCanceller;
 
     /**
-     * Singleton instance of this job manager
+     * @param snc
+     * @param data
+     * @param settings
      */
-    static final ThreadNodeExecutionJobManager INSTANCE = new ThreadNodeExecutionJobManager();
-
-    // Hide the implicit public constructor
-    private ThreadNodeExecutionJobManager() {
-        super();
+    public LocalComponentExecutionJob(final SubNodeContainer snc, final PortObject[] data,
+        final ThreadComponentExecutionJobManagerSettings settings) {
+        super(snc, data);
+        m_snc = snc;
+        m_settings = settings;
     }
 
-    /** {@inheritDoc} */
     @Override
-    public LocalNodeExecutionJob createJob(final NodeContainer nc, final PortObject[] data) {
-        if (!(nc instanceof SingleNodeContainer)) {
-            throw new IllegalStateException(
-                getClass().getSimpleName() + " is not able to execute a metanode: " + nc.getNameWithID());
+    protected void beforeExecute() {
+        if (m_settings.isCancelOnFailure()) {
+            m_executionCanceller = e -> {
+                if (m_snc.isThisEventFatal(e) && m_snc.getWorkflowManager().canCancelAll()) {
+                    // Cancel execution of the underlying workflow, not the component itself.
+                    // This way, the internal error is propagated to the component.
+                    m_snc.getWorkflowManager().cancelExecution();
+                }
+            };
+            m_snc.getWorkflowManager().getNodeContainers().stream()
+                .forEach(nc -> nc.addNodeStateChangeListener(m_executionCanceller));
+
         }
-        return new LocalNodeExecutionJob((SingleNodeContainer)nc, data);
     }
 
-    /** {@inheritDoc} */
     @Override
-    public String getID() {
-        return ThreadNodeExecutionJobManagerFactory.INSTANCE.getID();
+    protected void afterExecute() {
+        if (m_settings.isCancelOnFailure()) {
+            m_snc.getWorkflowManager().getNodeContainers().stream()
+                .forEach(nc -> nc.removeNodeStateChangeListener(m_executionCanceller));
+        }
     }
 
-    /**
-     * For backwards compatibility it can also execute components, but it returns false here in order not to be
-     * selectable in a node's job manager configuration dialog tab (See
-     * {@link ThreadNodeExecutionJobManager#canExecute(NodeContainer)}.
-     */
-    @Override
-    public boolean canExecute(final NodeContainer nc) {
-        // This job manager should only be advertised to native nodes.
-        return nc instanceof NativeNodeContainer;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public String toString() {
-        return ThreadNodeExecutionJobManagerFactory.INSTANCE.getLabel();
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public boolean isDefault() {
-        return true;
-    }
 }

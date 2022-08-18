@@ -53,9 +53,9 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
-import java.util.Vector;
-import java.util.stream.Collectors;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -74,23 +74,47 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
-import org.knime.core.util.Pair;
 
 /**
- * Implements the tab that appears in the node dialog if a
- * {@link NodeExecutionJobManager} is available (besides the default one) and
- * shows the settings panel of the job manager(s).
+ * An instance provides the tab that appears in node's dialog to select a {@link NodeExecutionJobManager} and configure
+ * the the job manager's settings.
  *
  * @author ohl, University of Konstanz
  */
 public class NodeExecutorJobManagerDialogTab extends JPanel {
 
     private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(NodeExecutorJobManagerDialogTab.class);
+        NodeLogger.getLogger(NodeExecutorJobManagerDialogTab.class);
 
-    private final JComboBox m_jobManagerSelect;
+    /**
+     * Pseudo-factory that returns null - the job manager value that indicates that the parent component's or workflow's
+     * job manager should be used if applicable or otherwise the appropriate standard job manager provided by
+     * {@link NodeExecutionJobManagerPool#getStandardJobManagerFactory(Class)}.
+     *
+     * @author Carl Witt, KNIME AG, Zurich, Switzerland
+     */
+    private static final NodeExecutionJobManagerFactory INHERIT_FACTORY = new NodeExecutionJobManagerFactory() {
+        @Override
+        public String getID() {
+            return getClass().getName();
+        }
 
-    private static final String DEFAULT_ENTRY = "<<default>>";
+        @Override
+        public String getLabel() {
+            return "<<default>>";
+        }
+
+        @Override
+        public NodeExecutionJobManager getInstance() {
+            return null;
+        }
+    };
+
+    /**
+     * The user selects the job manager factory that is used to create the node container's job manager. This will then
+     * display the job manager specific settings components.
+     */
+    private final JComboBox<NodeExecutionJobManagerFactory> m_jobManagerSelect;
 
     private static final NodeExecutionJobManagerPanel EMPTY_PANEL;
     static {
@@ -124,15 +148,15 @@ public class NodeExecutorJobManagerDialogTab extends JPanel {
                 .add(new JLabel("no settings to adjust for this job manager"));
     }
 
-    // its only component is the settings panel from the current selection
+    // its only component is the settings panel from the currently selected job manager
     private JPanel m_settingsPanel;
 
     // the currently displayed panel of the currently selected manager
-    private NodeExecutionJobManagerPanel m_currentPanel;
+    private NodeExecutionJobManagerPanel m_currentPanel = EMPTY_PANEL;
 
+    // maps the selectable factories in the drop down menu to a job manager configuration panel instance
     // we keep previously shown panels in case the manager is re-selected
-    private final HashMap<String, Pair<NodeExecutionJobManager, NodeExecutionJobManagerPanel>> m_panels =
-            new HashMap<String, Pair<NodeExecutionJobManager, NodeExecutionJobManagerPanel>>();
+    private final HashMap<NodeExecutionJobManagerFactory, NodeExecutionJobManagerPanel> m_panels = new HashMap<>();
 
     // if a job manager panel is displayed for the first time we must give it
     // the sport specs
@@ -157,9 +181,9 @@ public class NodeExecutorJobManagerDialogTab extends JPanel {
      * selection.
      *
      * @param splitType indicates the level of splitting this node supports
-     * @param nc the node container this dialog belongs to. It helps to filter those job managers only that can handle
-     *            the given node container (e.g. for those job managers that only work with meta nodes, sub nodes or
-     *            native nodes).
+     * @param nc the node container this dialog belongs to. It helps to filter those job managers only that
+     *            can handle the given node container (e.g. for those job managers that only work with meta nodes, sub
+     *            nodes or native nodes).
      *
      * @since 3.2
      */
@@ -167,31 +191,27 @@ public class NodeExecutorJobManagerDialogTab extends JPanel {
         super(new BorderLayout());
         m_nodeSplitType = splitType;
         // add the selection combo box at the top of the panel
-        Vector<Object> jobManagerChoices = new Vector<Object>();
-        jobManagerChoices.add(DEFAULT_ENTRY);
-        LinkedList<String> execs;
-        if (nc.isPresent()) {
-            execs =
-                new LinkedList<String>(NodeExecutionJobManagerPool.getAllJobManagerFactoryIDs().stream().filter(s -> {
-                    NodeExecutionJobManagerFactory factory = NodeExecutionJobManagerPool.getJobManagerFactory(s);
-                    try {
-                        NodeExecutionJobManager ins = factory.getInstance();
-                        return ins.canExecute(nc.get());
-                    } catch (Throwable e) {
-                        // seen with SGE job manager throwing NoClassDefFoundError
-                        LOGGER.warn(String.format("Failed to load job manager of class \"%s\": (%s) %s",
-                            factory.getClass().getSimpleName(), e.getClass().getSimpleName(), e.getMessage()), e);
-                        return false;
-                    }
-                }).collect(Collectors.toList()));
-        } else {
-            execs = new LinkedList<String>(NodeExecutionJobManagerPool.getAllJobManagerFactoryIDs());
+        List<NodeExecutionJobManagerFactory> jobManagerChoices = new LinkedList<>();
+        // add default factory as first item
+        jobManagerChoices.add(INHERIT_FACTORY);
+
+        // add all applicable job manager factories
+        for (String id : NodeExecutionJobManagerPool.getAllJobManagerFactoryIDs()) {
+            NodeExecutionJobManagerFactory factory = NodeExecutionJobManagerPool.getJobManagerFactory(id);
+            try {
+                var manager = Optional.ofNullable(factory.getInstance());
+                var canExecute = nc.map(c -> manager.map(m -> m.canExecute(c)).orElse(true)).orElse(true);
+                if (canExecute) {
+                    jobManagerChoices.add(factory);
+                }
+            } catch (Throwable e) {
+                // seen with SGE job manager throwing NoClassDefFoundError
+                LOGGER.warn(String.format("Failed to load job manager of class \"%s\": (%s) %s",
+                    factory.getClass().getSimpleName(), e.getClass().getSimpleName(), e.getMessage()), e);
+            }
         }
-        // the default executor is represented by the <<default>> entry
-        execs.remove(NodeExecutionJobManagerPool.getDefaultJobManagerFactory().getID());
-        jobManagerChoices.addAll(execs);
-        m_jobManagerSelect = new JComboBox(jobManagerChoices);
-        m_jobManagerSelect.setRenderer(new ComboRenderer());
+        m_jobManagerSelect = new JComboBox<>(jobManagerChoices.toArray(NodeExecutionJobManagerFactory[]::new));
+        m_jobManagerSelect.setRenderer(new JobManagerFactoryRenderer());
         m_jobManagerSelect.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(final ItemEvent e) {
@@ -229,42 +249,24 @@ public class NodeExecutorJobManagerDialogTab extends JPanel {
      * removes the previous one).
      */
     private void jobManagerSelectionChanged() {
-        assert m_settingsPanel != null;
-        // remove panel from previously selected manager
-        m_settingsPanel.removeAll();
-        m_currentPanel = null; // don't dispose it, we may reuse it
+        var factory = (NodeExecutionJobManagerFactory)m_jobManagerSelect.getSelectedItem();
 
-        // get a new current panel from the newly selected job manager
-        String sel = (String)m_jobManagerSelect.getSelectedItem();
-        NodeExecutionJobManager selJobMgr;
-        if (sel == DEFAULT_ENTRY) {
-            selJobMgr = null;
-        } else if (m_panels.containsKey(sel)) {
-            selJobMgr = m_panels.get(sel).getFirst();
-            m_currentPanel = m_panels.get(sel).getSecond();
-        } else {
-            NodeExecutionJobManagerFactory fac =
-                    NodeExecutionJobManagerPool.getJobManagerFactory(sel);
-            selJobMgr = fac.getInstance();
-            m_currentPanel =
-                    selJobMgr.getSettingsPanelComponent(m_nodeSplitType);
-            if (m_currentPanel != null) {
-                m_currentPanel.loadSettings(new NodeSettings("empty"));
-            }
-            m_panels
-                    .put(
-                            sel,
-                            new Pair<NodeExecutionJobManager, NodeExecutionJobManagerPanel>(
-                                    selJobMgr, m_currentPanel));
-        }
-        if (m_currentPanel == null) {
-            m_currentPanel = EMPTY_PANEL;
-        }
+        m_panels.computeIfAbsent(factory, f -> {
+            var manager = Optional.ofNullable(f.getInstance());
+            var panelOrNull = manager.map(m -> m.getSettingsPanelComponent(m_nodeSplitType)).orElse(EMPTY_PANEL);
+            var panel = Objects.requireNonNullElse(panelOrNull, EMPTY_PANEL);
+            return panel;
+        });
+
+        m_currentPanel = m_panels.get(factory);
 
         // update the inspecs on the new panel
         if (m_lastPortSpecs != null) {
             m_currentPanel.updateInputSpecs(m_lastPortSpecs);
         }
+
+        // remove panel from previously selected manager
+        m_settingsPanel.removeAll();
         m_settingsPanel.add(m_currentPanel);
 
         if (getParent() != null) {
@@ -272,7 +274,6 @@ public class NodeExecutorJobManagerDialogTab extends JPanel {
             getParent().validate();
             getParent().repaint();
         }
-
     }
 
     /**
@@ -296,76 +297,66 @@ public class NodeExecutorJobManagerDialogTab extends JPanel {
         // we must store the port specs in case job manager selection changes
         m_lastPortSpecs = inSpecs;
 
-        // select the job manager in the combo box
-        NodeExecutionJobManager newMgr = settings.getJobManager();
-        String id = newMgr == null ? DEFAULT_ENTRY : newMgr.getID();
-        m_jobManagerSelect.setSelectedItem(id);
-        if (DEFAULT_ENTRY.equals(id)) {
-            // must also have selected this entry
-            assert DEFAULT_ENTRY.equals(m_jobManagerSelect.getSelectedItem());
-        } else if (m_jobManagerSelect.getSelectedItem().equals(id)) {
-            // if the job manager exists in the list apply the settings
-            NodeSettings s = new NodeSettings("job_manager_settings");
-            m_currentPanel.updateInputSpecs(inSpecs);
-            newMgr.save(s);
-            m_currentPanel.loadSettings(s);
-        } else {
-            // seems we got a manager we currently don't have
-            LOGGER.warn("Unable to find job manager '" + id
-                    + "'; using parent manager");
-            m_jobManagerSelect.setSelectedItem(DEFAULT_ENTRY);
-        }
+        // get the stored job manager or use the default factory if none is stored
+        final Optional<NodeExecutionJobManager> jobManager = settings.getJobManager();
+        var factoryId = jobManager.map(NodeExecutionJobManager::getID);
+        var factory = factoryId.map(id -> NodeExecutionJobManagerPool.getJobManagerFactory(id));
 
-        // show the proper panel
-        jobManagerSelectionChanged();
+        // this triggers jobManagerSelectionChanged, which sets m_currentPanel
+
+        // if no factory is available, fall back to the default factory
+        if (factory.isEmpty()) {
+            m_jobManagerSelect.setSelectedIndex(0);
+            // if the job manager was present but its factory ID couldn't be resolved, issue a warning
+            if (factoryId.isPresent()) {
+                LOGGER.warn("Unable to create job manager '" + factoryId + "'; using default manager");
+            }
+        } else {
+            // update m_currentPanel
+            m_jobManagerSelect.setSelectedItem(factory.get());
+            // extract and load settings
+            jobManager.ifPresent(m -> {
+                NodeSettings s = new NodeSettings("job_manager_settings");
+                m_currentPanel.updateInputSpecs(inSpecs);
+                m.save(s);
+                m_currentPanel.loadSettings(s);
+            });
+        }
     }
 
     /**
-     * Writes the current settings of the job manager tab into the provided
-     * settings object.
+     * Writes the current settings of the job manager tab into the provided settings object.
      *
      * @param settings the object to write settings into
-     * @throws InvalidSettingsException if the settings in the pane are
-     *             unacceptable
+     * @throws InvalidSettingsException if the settings in the pane are unacceptable
      */
-    public void saveSettings(final NodeContainerSettings settings)
-            throws InvalidSettingsException {
-        String selected = (String)m_jobManagerSelect.getSelectedItem();
-        NodeExecutionJobManager selMgr = null;
-        if (!DEFAULT_ENTRY.equals(selected)) {
-            // any "real" node execution manager was selected
-            selMgr = m_panels.get(selected).getFirst();
+    public void saveSettings(final NodeContainerSettings settings) throws InvalidSettingsException {
+        NodeExecutionJobManagerFactory factory = (NodeExecutionJobManagerFactory)m_jobManagerSelect.getSelectedItem();
+
+        // null if default setting (inherit job manager factory) is used
+        var manager = Optional.ofNullable(factory.getInstance());
+        if (manager.isPresent()) {
             NodeSettings panelSets = new NodeSettings("job_manager_settings");
             m_currentPanel.saveSettings(panelSets);
-            selMgr.load(panelSets);
+            manager.get().load(panelSets);
         }
-        settings.setJobManager(selMgr);
+        settings.setJobManager(manager.orElse(null));
     }
 
-    private static final class ComboRenderer extends DefaultListCellRenderer {
-
-        /** {@inheritDoc} */
+    /** Displays {@link NodeExecutionJobManagerFactory#getLabel()} as the combo box item. */
+    private static final class JobManagerFactoryRenderer extends DefaultListCellRenderer {
         @Override
-        public Component getListCellRendererComponent(final JList list,
-                final Object value, final int index, final boolean isSelected,
-                final boolean cellHasFocus) {
+        public Component getListCellRendererComponent(final JList<?> list, final Object value, final int index,
+            final boolean isSelected, final boolean cellHasFocus) {
             Object newValue;
-            if (DEFAULT_ENTRY.equals(value)) {
-                newValue = value;
-            } else if (value instanceof String) {
-                String id = (String)value;
-                NodeExecutionJobManagerFactory jobMgrFac =
-                        NodeExecutionJobManagerPool.getJobManagerFactory(id);
-                if (jobMgrFac != null) {
-                    newValue = jobMgrFac.getLabel();
-                } else {
-                    newValue = value;
-                }
+            if (value instanceof NodeExecutionJobManagerFactory) {
+                NodeExecutionJobManagerFactory factory = (NodeExecutionJobManagerFactory)value;
+                newValue = factory.getLabel();
             } else {
                 newValue = value;
             }
-            return super.getListCellRendererComponent(list, newValue, index,
-                    isSelected, cellHasFocus);
+            return super.getListCellRendererComponent(list, newValue, index, isSelected, cellHasFocus);
         }
     }
+
 }

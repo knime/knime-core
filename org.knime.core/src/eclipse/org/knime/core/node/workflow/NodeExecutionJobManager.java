@@ -104,7 +104,7 @@ public interface NodeExecutionJobManager {
      * is the fully qualifying name of its package. <br>
      * For a user readable label, see {@link #toString()}
      *
-     * @return a unique ID of this job manager implementations
+     * @return a unique ID of this job manager implementations, never null
      */
     String getID();
 
@@ -133,13 +133,19 @@ public interface NodeExecutionJobManager {
     public boolean canDisconnect(final NodeExecutionJob job);
 
     /**
-     * Allows one to check whether this job manager can execute a certain type of {@link NodeContainer}, e.g. meta node,
-     * sub node or native node. If a node container CANNOT be executed, the job manager will not be available for
-     * selection in the node's dialog. By default this method returns <code>true</code>.
+     * Whether this job manager should be selectable in the job manager configuration dialog of a node, e.g. meta node,
+     * component or native node.
      *
+     * Note that various job managers can execute node types even though {@link #canExecute(NodeContainer)} returns
+     * <code>false</code>, for instance the SimpleStreaming job manager is inherited to the native nodes in a component
+     * that have <code>job manager = null</code> even though its <code>canExecute</code> method returns false for native
+     * nodes (because it doesn't make sense to configure an individual native node for streaming, only an entire
+     * component).
      *
-     * @param nc the node container to check if it can be executed with this job manager
-     * @return <code>true</code> if the job manager can execute the passed node container, otherwise <code>false</code>
+     * By default this method returns <code>true</code>.
+     *
+     * @param nc the node container to check if to offer this job manager in its job manager configuration dialog
+     * @return <code>true</code> if the job manager should be selectable, otherwise <code>false</code>
      *
      * @since 3.2
      */

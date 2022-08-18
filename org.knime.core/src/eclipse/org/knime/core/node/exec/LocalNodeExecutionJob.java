@@ -56,20 +56,22 @@ import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 
 /**
  * A locally executed node job. It can only execute {@link SingleNodeContainer}.
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class LocalNodeExecutionJob extends NodeExecutionJob {
 
     private Future<?> m_future;
 
-    /** Creates new local job.
+    /**
+     * Creates new local job.
+     *
      * @param snc The node container to execute.
      * @param data Its input port object.
      */
     public LocalNodeExecutionJob(final SingleNodeContainer snc, final PortObject[] data) {
         super(snc, data);
     }
-
 
     /** {@inheritDoc} */
     @Override
@@ -82,6 +84,7 @@ public class LocalNodeExecutionJob extends NodeExecutionJob {
 
     /**
      * Set the future that represents the pending execution.
+     *
      * @param future the future to set
      */
     void setFuture(final Future<?> future) {
@@ -95,17 +98,13 @@ public class LocalNodeExecutionJob extends NodeExecutionJob {
         return snc.performExecuteNode(getPortObjects());
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     protected String getCustomThreadName(final String originalThreadName) {
         return originalThreadName + "-" + getNodeContainer().getNameWithID();
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public boolean isReConnecting() {
         return false;

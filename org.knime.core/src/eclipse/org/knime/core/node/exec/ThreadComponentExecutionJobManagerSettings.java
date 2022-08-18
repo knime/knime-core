@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -43,69 +44,53 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 10, 2008 (wiswedel): created
+ *   30 Jun 2022 (jasper): created
  */
 package org.knime.core.node.exec;
 
-import org.knime.core.node.port.PortObject;
-import org.knime.core.node.workflow.NativeNodeContainer;
-import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.SingleNodeContainer;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
 
 /**
- * This job manager is the default for native nodes. For backwards compatibility it can also execute components, but is
- * not selectable in the component dialog (See {@link ThreadNodeExecutionJobManager#canExecute(NodeContainer)}.
+ * Utility class that holds configuration options for the {@link ThreadComponentExecutionJobManager}.
  *
- * @author wiswedel, University of Konstanz
+ * @author Jasper Krauter, KNIME GmbH, Konstanz
  */
-public final class ThreadNodeExecutionJobManager extends AbstractThreadNodeExecutionJobManager {
+public final class ThreadComponentExecutionJobManagerSettings {
 
-    /**
-     * Singleton instance of this job manager
-     */
-    static final ThreadNodeExecutionJobManager INSTANCE = new ThreadNodeExecutionJobManager();
+    private static final boolean DEFAULT_CANCEL_ON_FAILURE = false;
 
-    // Hide the implicit public constructor
-    private ThreadNodeExecutionJobManager() {
-        super();
+    private boolean m_cancelOnFailure = DEFAULT_CANCEL_ON_FAILURE;
+
+    void saveSettingsTo(final NodeSettingsWO settings) {
+        settings.addBoolean("cancelOnFailure", m_cancelOnFailure);
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public LocalNodeExecutionJob createJob(final NodeContainer nc, final PortObject[] data) {
-        if (!(nc instanceof SingleNodeContainer)) {
-            throw new IllegalStateException(
-                getClass().getSimpleName() + " is not able to execute a metanode: " + nc.getNameWithID());
-        }
-        return new LocalNodeExecutionJob((SingleNodeContainer)nc, data);
+    void loadSettingsFrom(final NodeSettingsRO settings) {
+        m_cancelOnFailure = settings.getBoolean("cancelOnFailure", DEFAULT_CANCEL_ON_FAILURE);
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public String getID() {
-        return ThreadNodeExecutionJobManagerFactory.INSTANCE.getID();
+    void setCancelOnFailure(final boolean value) {
+        m_cancelOnFailure = value;
     }
 
     /**
-     * For backwards compatibility it can also execute components, but it returns false here in order not to be
-     * selectable in a node's job manager configuration dialog tab (See
-     * {@link ThreadNodeExecutionJobManager#canExecute(NodeContainer)}.
+     * Return the configuration value controlling whether the component execution should halt on inner node failure
+     *
+     * @return the configured value, default is {@code false}
      */
-    @Override
-    public boolean canExecute(final NodeContainer nc) {
-        // This job manager should only be advertised to native nodes.
-        return nc instanceof NativeNodeContainer;
+    public boolean isCancelOnFailure() {
+        return m_cancelOnFailure;
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public String toString() {
-        return ThreadNodeExecutionJobManagerFactory.INSTANCE.getLabel();
-    }
-
-    /** {@inheritDoc} */
-    @Override
+    /**
+     * Returns whether the settings have been altered. If not, i.e. the job manager is in its default state, we can use
+     * this information to avoid saving the job manager to disk (again: backwards compatibility).
+     *
+     * @return whether the settings are the default settings
+     */
     public boolean isDefault() {
-        return true;
+        return m_cancelOnFailure == DEFAULT_CANCEL_ON_FAILURE;
     }
+
 }

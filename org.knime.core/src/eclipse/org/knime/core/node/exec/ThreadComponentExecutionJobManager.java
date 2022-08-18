@@ -47,65 +47,89 @@
  */
 package org.knime.core.node.exec;
 
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
-import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
+import org.knime.core.node.workflow.NodeExecutionJobManagerPanel;
 import org.knime.core.node.workflow.SingleNodeContainer;
+import org.knime.core.node.workflow.SubNodeContainer;
 
 /**
- * This job manager is the default for native nodes. For backwards compatibility it can also execute components, but is
- * not selectable in the component dialog (See {@link ThreadNodeExecutionJobManager#canExecute(NodeContainer)}.
+ * Job Manager that handles local execution of components. It is advertised as the default job manager for components.
  *
- * @author wiswedel, University of Konstanz
+ * Introduced as part of AP-19181 to make component execution configurable, e.g., fail fast on unhandled errors.
+ *
+ * @author Jasper Krauter, KNIME GmbH, Konstanz
  */
-public final class ThreadNodeExecutionJobManager extends AbstractThreadNodeExecutionJobManager {
+public class ThreadComponentExecutionJobManager extends AbstractThreadNodeExecutionJobManager {
 
-    /**
-     * Singleton instance of this job manager
-     */
-    static final ThreadNodeExecutionJobManager INSTANCE = new ThreadNodeExecutionJobManager();
-
-    // Hide the implicit public constructor
-    private ThreadNodeExecutionJobManager() {
-        super();
-    }
+    private final ThreadComponentExecutionJobManagerSettings m_settings =
+        new ThreadComponentExecutionJobManagerSettings();
 
     /** {@inheritDoc} */
     @Override
     public LocalNodeExecutionJob createJob(final NodeContainer nc, final PortObject[] data) {
         if (!(nc instanceof SingleNodeContainer)) {
-            throw new IllegalStateException(
-                getClass().getSimpleName() + " is not able to execute a metanode: " + nc.getNameWithID());
+            throw new IllegalStateException(String.format("%s is not able to execute a metanode: %s",
+                getClass().getSimpleName(), nc.getNameWithID()));
         }
-        return new LocalNodeExecutionJob((SingleNodeContainer)nc, data);
+
+        if (nc instanceof SubNodeContainer) {
+            return new LocalComponentExecutionJob((SubNodeContainer)nc, data, m_settings);
+        } else {
+            return new LocalNodeExecutionJob((SingleNodeContainer)nc, data);
+        }
     }
 
     /** {@inheritDoc} */
     @Override
     public String getID() {
-        return ThreadNodeExecutionJobManagerFactory.INSTANCE.getID();
+        return ThreadComponentExecutionJobManagerFactory.INSTANCE.getID();
     }
 
-    /**
-     * For backwards compatibility it can also execute components, but it returns false here in order not to be
-     * selectable in a node's job manager configuration dialog tab (See
-     * {@link ThreadNodeExecutionJobManager#canExecute(NodeContainer)}.
-     */
+    /** {@inheritDoc} */
+    @Override
+    public void load( final NodeSettingsRO settings) {
+        m_settings.loadSettingsFrom(settings);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void save(final NodeSettingsWO settings) {
+        m_settings.saveSettingsTo(settings);
+    }
+
+    /** {@inheritDoc} */
     @Override
     public boolean canExecute(final NodeContainer nc) {
-        // This job manager should only be advertised to native nodes.
-        return nc instanceof NativeNodeContainer;
+        return nc instanceof SubNodeContainer;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public NodeExecutionJobManagerPanel getSettingsPanelComponent(final SplitType nodeSplitType) {
+        return new ThreadComponentExecutionJobManagerPanel();
     }
 
     /** {@inheritDoc} */
     @Override
     public String toString() {
-        return ThreadNodeExecutionJobManagerFactory.INSTANCE.getLabel();
+        return ThreadComponentExecutionJobManagerFactory.INSTANCE.getLabel();
     }
 
     /** {@inheritDoc} */
     @Override
     public boolean isDefault() {
-        return true;
+        return m_settings.isDefault();
     }
+
+    /**
+     * @return whether to cancel all nodes as soon as one of the nodes throws an uncaught error
+     */
+    public boolean isCancelOnFailure() {
+        return m_settings.isCancelOnFailure();
+    }
+
 }

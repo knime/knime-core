@@ -562,7 +562,7 @@ class FileNodeContainerMetaPersistor implements NodeContainerMetaPersistor {
 
     protected static void saveNodeExecutionJobManager(final NodeSettingsWO settings, final NodeContainer nc) {
         NodeExecutionJobManager jobManager = nc.getJobManager();
-        if (jobManager != null) {
+        if (!NodeExecutionJobManagerPool.isDefault(jobManager)) {
             NodeSettingsWO s = settings.addNodeSettings(CFG_JOB_MANAGER_CONFIG);
             NodeExecutionJobManagerPool.saveJobManager(jobManager, s);
         }
