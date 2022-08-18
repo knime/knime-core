@@ -55,6 +55,7 @@ import static org.mockito.Mockito.verify;
 import java.io.IOException;
 import java.util.function.Consumer;
 
+import org.awaitility.Awaitility;
 import org.junit.Test;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.webui.node.util.NodeCleanUpCallback.Builder;
@@ -87,7 +88,7 @@ public class NodeCleanUpCallbackTest {
             verify(callback, never()).run();
 
             wfm.removeNode(nc.getID());
-            verify(callback).run();
+            Awaitility.await().untilAsserted(() -> verify(callback).run());
         });
     }
 
