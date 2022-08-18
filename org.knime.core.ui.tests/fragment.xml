@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<fragment>
+   <extension
+         point="org.knime.workbench.repository.nodes">
+      <node
+            deprecated="false"
+            factory-class="org.knime.core.webui.node.dialog.TestConfigurationNodeFactory"
+            hidden="true">
+      </node>
+   </extension>
+
+</fragment>

@@ -49,6 +49,7 @@
 package org.knime.core.webui.node.dialog;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
@@ -73,6 +74,9 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.SubNodeContainer;
+import org.knime.core.node.workflow.WorkflowAnnotationID;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeInputNodeFactory;
 import org.knime.core.webui.data.text.TextDataService;
@@ -132,6 +136,48 @@ public class NodeDialogManagerTest {
 
         hasDialog.set(false);
         assertThat("node not expected to have a node dialog", NodeDialogManager.hasNodeDialog(nc), is(false));
+    }
+
+    /**
+     * Tests a {@link SubNodeContainer} dialog
+     *
+     * @throws IOException
+     */
+    @Test
+    public void testSubNodeContainerDialog() throws IOException {
+        final var uiModeProperty = "org.knime.component.ui.mode";
+        var componentUiMode = System.setProperty(uiModeProperty, "js");
+        try {
+            // build workflow
+            var wfm = WorkflowManagerUtil.createEmptyWorkflow();
+            var nnc = WorkflowManagerUtil.createAndAddNode(wfm, new TestConfigurationNodeFactory());
+
+            var componentId =
+                wfm.collapseIntoMetaNode(new NodeID[]{nnc.getID()}, new WorkflowAnnotationID[0], "TestComponent")
+                    .getCollapsedMetanodeID();
+            wfm.convertMetaNodeToSubNode(componentId);
+
+            var component = wfm.getNodeContainer(componentId);
+
+            assertThat("node expected to have a node dialog", NodeDialogManager.hasNodeDialog(component), is(true));
+            var nodeDialog = NodeDialogManager.getInstance().getNodeDialog(component);
+            assertThat(nodeDialog.getPage().getRelativePath(), is("NodeDialog.umd.min.js"));
+
+            var pageId = NodeDialogManager.getInstance().getPageId(NodeWrapper.of(component), nodeDialog.getPage());
+            assertThat(pageId, is("defaultdialog"));
+
+            // The jsonforms dialog cannot be built from our test node, because it is no valid/known DialogNodeRepresentation,
+            // So we just check for the error here.
+            var result = NodeDialogManager.getInstance().callTextInitialDataService(NodeWrapper.of(component));
+            assertThat(result, containsString(
+                "Could not read dialog node org.knime.core.webui.node.dialog.TestConfigurationNodeFactory$TestConfigNodeModel"));
+        } finally {
+            if (componentUiMode != null) {
+                System.setProperty(uiModeProperty, componentUiMode);
+            } else {
+                System.clearProperty(uiModeProperty);
+            }
+        }
     }
 
     /**
