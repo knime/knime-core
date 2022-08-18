@@ -72,6 +72,7 @@ import org.knime.core.node.workflow.WorkflowManager.NodeModelFilter;
 import org.knime.core.util.ui.converter.JsonFormsDialogBuilder;
 import org.knime.core.util.ui.converter.UiComponentConverterRegistry;
 import org.knime.core.webui.data.DataService;
+import org.knime.core.webui.data.DataServiceContext;
 import org.knime.core.webui.page.Page;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -233,7 +234,9 @@ final class SubNodeContainerDialogFactory implements NodeDialogFactory {
                     settingsParameterName += "-" + dialogNodeId.getIndex();
                     value.saveToNodeSettings(modelSettings.addNodeSettings(settingsParameterName));
                 } catch (Exception e) { // We want to catch everything here, or settings won't be saved!
-                    LOGGER.error("Could not read dialog node " + dialogNode.toString(), e);
+                    final var msg = "Could not read dialog node " + dialogNode.toString();
+                    LOGGER.error(msg, e);
+                    DataServiceContext.getContext().addWarningMessage(msg);
                 }
             }
         }
@@ -255,7 +258,9 @@ final class SubNodeContainerDialogFactory implements NodeDialogFactory {
                     var jsonStr = getWorkflowRepresentationJson(dialogNode);
                     dialogBuilder.addUiComponent(jsonStr, "param_" + dialogNodeId.getIndex());
                 } catch (IOException | IllegalStateException e) {
-                    LOGGER.error("Could not read dialog node " + dialogNode.toString(), e);
+                    final var msg = "Could not read dialog node " + dialogNode.toString();
+                    LOGGER.error(msg, e);
+                    DataServiceContext.getContext().addWarningMessage(msg);
                 }
             }
 
