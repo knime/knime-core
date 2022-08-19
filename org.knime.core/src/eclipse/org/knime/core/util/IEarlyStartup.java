@@ -95,8 +95,9 @@ public interface IEarlyStartup {
             Stream.of(point.getExtensions()).flatMap(ext -> Stream.of(ext.getConfigurationElements())).iterator();
         while (it.hasNext()) {
             IConfigurationElement e = it.next();
-            var callBeforeDisplayCreation = Boolean.parseBoolean(e.getAttribute("callBeforeDisplayCreation"));
-            if (callBeforeDisplayCreation != beforeKNIMEApplicationStart) {
+            var callBeforeKNIMEApplicationStart =
+                Boolean.parseBoolean(e.getAttribute("callBeforeKNIMEApplicationStart"));
+            if (callBeforeKNIMEApplicationStart != beforeKNIMEApplicationStart) {
                 continue;
             }
             try {
