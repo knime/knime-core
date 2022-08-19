@@ -3,9 +3,10 @@ Bundle-ManifestVersion: 2
 Bundle-Name: KNIME Core UI
 Bundle-SymbolicName: org.knime.core.ui;singleton:=true
 Bundle-Version: 4.7.0.qualifier
-Bundle-ClassPath: .
+Bundle-ClassPath: knime-core-ui.jar
 Bundle-Activator: org.knime.core.ui.CoreUIPlugin
 Bundle-Vendor: KNIME AG, Zurich, Switzerland
+Eclipse-BundleShape: dir
 Export-Package: org.knime.core.ui,
  org.knime.core.ui.node.workflow,
  org.knime.core.ui.node.workflow.async,

@@ -187,7 +187,7 @@ public final class SubNodeContainerDialogFactory implements NodeDialogFactory {
         public Page getPage() {
             // TODO: use the same files as referenced by the DefaultNodeDialog after this ticket has been closed:
             //       https://knime-com.atlassian.net/browse/UIEXT-437
-            return Page.builder(NodeDialogManager.class, "js-src/vue/dist", "NodeDialog.umd.min.js").build();
+            return Page.builder(SubNodeContainerDialogFactory.class, "js-src/vue/dist", "NodeDialog.umd.min.js").build();
         }
 
         @Override
