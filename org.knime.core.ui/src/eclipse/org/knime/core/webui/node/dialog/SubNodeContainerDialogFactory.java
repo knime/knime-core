@@ -80,13 +80,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
- * The SubNodeContainerDialogFactory creates a {@link NodeDialog} for all the configuration nodes inside
- * a {@link SubNodeContainer} by parsing the {@link DialogNodeRepresentation}s of those nodes and converting those
- * to jsonforms which is parsed by the NodeDialog page.
+ * The SubNodeContainerDialogFactory creates a {@link NodeDialog} for all the configuration nodes inside a
+ * {@link SubNodeContainer} by parsing the {@link DialogNodeRepresentation}s of those nodes and converting those to
+ * jsonforms which is parsed by the NodeDialog page.
  *
  * @author Carsten Haubold, KNIME GmbH, Konstanz, Germany
  */
-final class SubNodeContainerDialogFactory implements NodeDialogFactory {
+public final class SubNodeContainerDialogFactory implements NodeDialogFactory {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(SubNodeContainerDialogFactory.class);
 
@@ -111,13 +111,16 @@ final class SubNodeContainerDialogFactory implements NodeDialogFactory {
         return mode;
     }
 
-    static boolean isSubNodeContainerNodeDialogEnabled() {
+    /**
+     * @return true if JS-based {@link SubNodeContainer} {@link NodeDialog}s should be used
+     */
+    public static boolean isSubNodeContainerNodeDialogEnabled() {
         return SUB_NODE_CONTAINER_UI_MODE_JS.equals(getSubNodeContainerUiMode());
     }
 
     /**
-     * Initialize a SubNodeContainerDialogFactory with the {@link SubNodeContainer} for which the dialog should
-     * be constructed.
+     * Initialize a SubNodeContainerDialogFactory with the {@link SubNodeContainer} for which the dialog should be
+     * constructed.
      *
      * @param snc The SubNodeContainer for which the dialog will be built
      */
@@ -125,12 +128,21 @@ final class SubNodeContainerDialogFactory implements NodeDialogFactory {
         m_snc = snc;
     }
 
+    @Override
+    public boolean hasNodeDialog() {
+        return !getConfigurationNodes().isEmpty();
+    }
+
     /**
      * @return Create the dialog containing all the dialog elements that were found in the {@link SubNodeContainer}
      */
     @Override
-    @SuppressWarnings("rawtypes")
     public NodeDialog createNodeDialog() {
+        return new SubNodeContainerNodeDialog(getConfigurationNodes());
+    }
+
+    @SuppressWarnings("rawtypes")
+    private Map<NodeID, DialogNode> getConfigurationNodes() {
         var wfm = m_snc.getWorkflowManager();
         Map<NodeID, DialogNode> nodes = wfm.findNodes(DialogNode.class, new NodeModelFilter<DialogNode>() { // NOSONAR
             @Override
@@ -138,8 +150,7 @@ final class SubNodeContainerDialogFactory implements NodeDialogFactory {
                 return !nodeModel.isHideInDialog();
             }
         }, false);
-
-        return new SubNodeContainerNodeDialog(nodes);
+        return nodes;
     }
 
     @SuppressWarnings("rawtypes")
@@ -275,8 +286,8 @@ final class SubNodeContainerDialogFactory implements NodeDialogFactory {
         /**
          * Sort the dialog node IDs according to the user provided preference.
          *
-         * Note: The ordering is requested each time the dialog is opened. Otherwise, the ordering would stay as it was when
-         * the dialog was first created, because they are cached.
+         * Note: The ordering is requested each time the dialog is opened. Otherwise, the ordering would stay as it was
+         * when the dialog was first created, because they are cached.
          */
         @SuppressWarnings("rawtypes")
         private List<NodeID> getNodeOrder(final Map<NodeID, DialogNode> nodes) {

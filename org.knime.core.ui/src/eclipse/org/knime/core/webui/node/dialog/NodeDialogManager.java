@@ -101,7 +101,7 @@ public final class NodeDialogManager extends AbstractNodeUIManager<NodeWrapper> 
             var nodeFactory = ((NativeNodeContainer)nc).getNode().getFactory();
             return nodeFactory instanceof NodeDialogFactory && ((NodeDialogFactory)nodeFactory).hasNodeDialog();
         } else if (nc instanceof SubNodeContainer) {
-            return SubNodeContainerDialogFactory.isSubNodeContainerNodeDialogEnabled();
+            return new SubNodeContainerDialogFactory((SubNodeContainer)nc).hasNodeDialog();
         } else {
             return false;
         }
