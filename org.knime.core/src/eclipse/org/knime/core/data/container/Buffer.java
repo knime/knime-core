@@ -2041,7 +2041,7 @@ public class Buffer implements KNIMEStreamConstants {
         if (freeSpace < minSpace) {
             throw new IOException("The partition of the temp file \"" + file.getAbsolutePath()
                 + "\" is too low on disc space (" + freeSpace / (1024 * 1024) + "MB available but at least "
-                + MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB * (1024L * 1024L) + "MB are required). "
+                + MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB + "MB are required). "
                 + " You can tweak the limit by changing the \""
                 + KNIMEConstants.PROPERTY_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB + "\" java property.");
         }
