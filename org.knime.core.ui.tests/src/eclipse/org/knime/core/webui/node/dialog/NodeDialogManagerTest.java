@@ -59,6 +59,9 @@ import static org.knime.core.webui.page.PageTest.BUNDLE_ID;
 import static org.knime.testing.util.WorkflowManagerUtil.createAndAddNode;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BooleanSupplier;
@@ -70,12 +73,16 @@ import org.junit.Test;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.dialog.DialogNode;
+import org.knime.core.node.dialog.util.DefaultConfigurationLayoutCreator;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.SubNodeContainer;
+import org.knime.core.node.workflow.SubnodeContainerConfigurationStringProvider;
 import org.knime.core.node.workflow.WorkflowAnnotationID;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeInputNodeFactory;
@@ -87,6 +94,7 @@ import org.knime.testing.node.dialog.NodeDialogNodeFactory;
 import org.knime.testing.node.dialog.NodeDialogNodeModel;
 import org.knime.testing.node.dialog.NodeDialogNodeView;
 import org.knime.testing.util.WorkflowManagerUtil;
+import org.osgi.framework.FrameworkUtil;
 
 /**
  * Tests for {@link NodeDialogManager}.
@@ -147,6 +155,38 @@ public class NodeDialogManagerTest {
     public void testSubNodeContainerDialog() throws IOException {
         final var uiModeProperty = "org.knime.component.ui.mode";
         var componentUiMode = System.setProperty(uiModeProperty, "js");
+        var bundleContext = FrameworkUtil.getBundle(this.getClass()) .getBundleContext();
+        var serviceRegistration = bundleContext.registerService(DefaultConfigurationLayoutCreator.class.getName(),
+            new DefaultConfigurationLayoutCreator() { // NOSONAR
+
+                @Override
+                public String createDefaultConfigurationLayout(final Map<NodeIDSuffix, DialogNode> configurationNodes)
+                    throws IOException {
+                    return null;
+                }
+
+                @Override
+                public void addUnreferencedDialogNodes(
+                    final SubnodeContainerConfigurationStringProvider configurationStringProvider,
+                    final Map<NodeIDSuffix, DialogNode> allNodes) {
+                    //
+                }
+
+                @Override
+                public void updateConfigurationLayout(
+                    final SubnodeContainerConfigurationStringProvider configurationStringProvider) {
+                    //
+                }
+
+                @Override
+                public List<Integer> getConfigurationOrder(
+                    final SubnodeContainerConfigurationStringProvider configurationStringProvider,
+                    final Map<NodeID, DialogNode> nodes, final WorkflowManager wfm) {
+                    return Collections.singletonList(0);
+                }
+
+            }, new Hashtable<>());
+
         try {
             // build workflow
             var wfm = WorkflowManagerUtil.createEmptyWorkflow();
@@ -177,11 +217,12 @@ public class NodeDialogManagerTest {
             } else {
                 System.clearProperty(uiModeProperty);
             }
+            serviceRegistration.unregister();
         }
     }
 
     /**
-     * Tests {@link NodeDialogManager#getPageUrl(NativeNodeContainer)}.
+     * Tests {@link NodeDialogManager#getPagePath(NodeWrapper)}.
      */
     @Test
     public void testGetNodeDialogPageUrl() {
