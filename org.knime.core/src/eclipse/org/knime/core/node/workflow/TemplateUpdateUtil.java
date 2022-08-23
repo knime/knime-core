@@ -95,10 +95,32 @@ public final class TemplateUpdateUtil {
         final WorkflowLoadHelper loadHelper, final LoadResult loadResult)
         throws IOException, UnsupportedWorkflowVersionException, CanceledExecutionException {
         var sourceURI = meta.getTemplateInformation().getSourceURI();
-        // Context is used by ResolverUtil, will be removed in loadMetaNodeTemplateInternal
+        // Context is used by ResolverUtil
         NodeContext.pushContext((NodeContainer)meta);
+        try {
+            return loadMetaNodeTemplateInternal(sourceURI, loadHelper, loadResult,
+                ResolverUtil.resolveURItoLocalOrTempFile(sourceURI));
+        } finally {
+            NodeContext.removeLastContext();
+        }
+    }
 
-        return loadMetaNodeTemplateInternal(meta, loadHelper, loadResult,
+    /**
+     * Resolves the specified URI to a localDir and passes the sourceURI on to the internal template loader. It's
+     * important that the caller ensures a {@link NodeContext} to be set for the current thread.
+     *
+     * @param sourceURI
+     * @param loadHelper
+     * @param loadResult
+     * @return referenced NodeContainerTemplate
+     * @throws IOException
+     * @throws UnsupportedWorkflowVersionException
+     * @throws CanceledExecutionException
+     */
+    public static NodeContainerTemplate loadMetaNodeTemplate(final URI sourceURI, final WorkflowLoadHelper loadHelper,
+        final LoadResult loadResult)
+        throws IOException, UnsupportedWorkflowVersionException, CanceledExecutionException {
+        return loadMetaNodeTemplateInternal(sourceURI, loadHelper, loadResult,
             ResolverUtil.resolveURItoLocalOrTempFile(sourceURI));
     }
 
@@ -120,26 +142,27 @@ public final class TemplateUpdateUtil {
         throws IOException, UnsupportedWorkflowVersionException, CanceledExecutionException {
         var linkInfo = meta.getTemplateInformation();
         var sourceURI = linkInfo.getSourceURI();
-        // Context is used by ResolverUtil, will be removed in loadMetaNodeTemplateInternal
         NodeContext.pushContext((NodeContainer)meta);
-
-        // "ifModifiedSince" parameter is null -> no checks if the server's modified-timestamp is newer
-        // as a consequence, older timestamps will now also be resolved -- changed as part of AP-17719
-        var localDir = ResolverUtil.resolveURItoLocalOrTempFileConditional(sourceURI, new NullProgressMonitor(), null)
-            .orElse(null);
-        if (localDir == null) {
+        try {
+            // "ifModifiedSince" parameter is null -> no checks if the server's modified-timestamp is newer
+            // as a consequence, older timestamps will now also be resolved -- changed as part of AP-17719
+            var localDir = ResolverUtil
+                .resolveURItoLocalOrTempFileConditional(sourceURI, new NullProgressMonitor(), null).orElse(null);
+            if (localDir == null) {
+                return null;
+            }
+            return loadMetaNodeTemplateInternal(sourceURI, loadHelper, loadResult, localDir);
+        } finally {
             NodeContext.removeLastContext();
-            return null;
         }
-        return loadMetaNodeTemplateInternal(meta, loadHelper, loadResult, localDir);
     }
 
     /**
-     * Reads the template info from the metanode argument and then resolves that URI and returns a workflow manager that
-     * lives as child of {@link WorkflowManager#templateWorkflowRoot}. Used to avoid duplicate loading from a remote
-     * location. The returned instance is then copied to the final destination.
+     * Uses the source URI to fetch the template. If the localDir looks like a zipped file that has been downloaded, it
+     * will unzip the contents and load that template. Otherwise, the URI is local and the template at that location
+     * will be loaded.
      *
-     * @param meta the template to load the referenced template for
+     * @param sourceURI the template referenced source URI
      * @param loadHelper
      * @param loadResult
      * @param loadOnlyIfLocalOrOutdated if <code>true</code> it will only load the template if a local template is
@@ -150,11 +173,9 @@ public final class TemplateUpdateUtil {
      * @throws UnsupportedWorkflowVersionException
      * @throws CanceledExecutionException
      */
-    private static NodeContainerTemplate loadMetaNodeTemplateInternal(final NodeContainerTemplate meta,
+    private static NodeContainerTemplate loadMetaNodeTemplateInternal(final URI sourceURI,
         final WorkflowLoadHelper loadHelper, final LoadResult loadResult, File localDir)
         throws IOException, UnsupportedWorkflowVersionException, CanceledExecutionException {
-        MetaNodeTemplateInformation linkInfo = meta.getTemplateInformation();
-        var sourceURI = linkInfo.getSourceURI();
         var tempParent = WorkflowManager.lazyInitTemplateWorkflowRoot();
         MetaNodeLinkUpdateResult loadResultChild;
         try {
@@ -169,8 +190,6 @@ public final class TemplateUpdateUtil {
             tempParent.load(loadPersistor, loadResultChild, new ExecutionMonitor(), false);
         } catch (InvalidSettingsException e) {
             throw new IOException("Unable to read template metanode: " + e.getMessage(), e);
-        } finally {
-            NodeContext.removeLastContext();
         }
         NodeContainerTemplate linkResult = loadResultChild.getLoadedInstance();
         MetaNodeTemplateInformation templInfo = linkResult.getTemplateInformation();
