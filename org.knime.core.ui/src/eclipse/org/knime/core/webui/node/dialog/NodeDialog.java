@@ -52,6 +52,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -113,8 +114,8 @@ public abstract class NodeDialog implements UIExtension, DataServiceProvider {
     public final Optional<InitialDataService> createInitialDataService() {
         var nodeSettingsService = getNodeSettingsService();
         if (nodeSettingsService instanceof JsonNodeSettingsService) {
-            return Optional.of(new JsonInitialDataServiceImpl(m_nc, m_settingsTypes,
-                (JsonNodeSettingsService<?>)nodeSettingsService));
+            return Optional.of(
+                new JsonInitialDataServiceImpl(m_nc, m_settingsTypes, (JsonNodeSettingsService<?>)nodeSettingsService));
         } else {
             return Optional.of(new TextInitialDataServiceImpl(m_nc, m_settingsTypes, nodeSettingsService));
         }
@@ -122,7 +123,8 @@ public abstract class NodeDialog implements UIExtension, DataServiceProvider {
 
     @Override
     public final Optional<ApplyDataService> createApplyDataService() {
-        return Optional.of(new TextApplyDataServiceImpl(m_nc, m_settingsTypes, getNodeSettingsService()));
+        return Optional.of(new TextApplyDataServiceImpl(m_nc, m_settingsTypes, getNodeSettingsService(),
+            getVariableSettingsService()));
     }
 
     private static class TextInitialDataServiceImpl implements TextInitialDataService {
@@ -224,11 +226,15 @@ public abstract class NodeDialog implements UIExtension, DataServiceProvider {
 
         private final TextNodeSettingsService m_textNodeSettingsService;
 
+        private final Optional<TextVariableSettingsService> m_variableSettingsService;
+
         private TextApplyDataServiceImpl(final NodeContainer nc, final Set<SettingsType> settingsTypes,
-            final TextNodeSettingsService textNodeSettingsService) {
+            final TextNodeSettingsService textNodeSettingsService,
+            final Optional<TextVariableSettingsService> variableSettingsService) {
             m_nc = nc;
             m_settingsTypes = settingsTypes;
             m_textNodeSettingsService = textNodeSettingsService;
+            m_variableSettingsService = variableSettingsService;
         }
 
         @Override
@@ -257,9 +263,14 @@ public abstract class NodeDialog implements UIExtension, DataServiceProvider {
                 // transfer data into settings, i.e., apply the data to the settings
                 m_textNodeSettingsService.toNodeSettings(data, settingsMap);
 
+                // transfer the data to the variable settings if applicable
+                applyVariableSettings(data, nodeSettings);
+
                 // determine whether model or view settings changed by comparing against the previousNodeSettings
-                var modelSettingsChanged = settingsChanged(modelSettings);
-                var viewSettingsChanged = settingsChanged(viewSettings);
+                var modelSettingsChanged = settingsChanged(modelSettings)
+                    || variableSettingsChanged(SettingsType.MODEL, nodeSettings, previousNodeSettings);
+                var viewSettingsChanged = settingsChanged(viewSettings)
+                    || variableSettingsChanged(SettingsType.VIEW, nodeSettings, previousNodeSettings);
 
                 NodeSettings viewVariables = null;
                 if (viewSettingsChanged) {
@@ -296,6 +307,24 @@ public abstract class NodeDialog implements UIExtension, DataServiceProvider {
 
             } catch (InvalidSettingsException ex) {
                 throw new IOException("Invalid node settings: " + ex.getMessage(), ex);
+            }
+        }
+
+        /*
+         * Writes the variable settings into the nodeSettings if the m_variableSettingsService is present
+         */
+        private void applyVariableSettings(final String data, final NodeSettings nodeSettings) {
+            if (m_variableSettingsService.isPresent()) {
+                var variableSettingsMap = new EnumMap<SettingsType, VariableSettingsWO>(SettingsType.class);
+                if (hasModelSettings()) {
+                    variableSettingsMap.put(SettingsType.MODEL,
+                        new LazyVariableSettings(nodeSettings, SettingsType.MODEL));
+                }
+                if (hasViewSettings()) {
+                    variableSettingsMap.put(SettingsType.VIEW,
+                        new LazyVariableSettings(nodeSettings, SettingsType.VIEW));
+                }
+                m_variableSettingsService.get().toVariableSettings(data, variableSettingsMap);
             }
         }
 
@@ -397,9 +426,21 @@ public abstract class NodeDialog implements UIExtension, DataServiceProvider {
 
         private static boolean settingsChanged(final Pair<NodeSettings, NodeSettings> settings) {
             if (settings != null) {
-                return !settings.getFirst().equals(settings.getSecond());
+                return !Objects.equals(settings.getFirst(), settings.getSecond());
             }
             return false;
+        }
+
+        private static boolean variableSettingsChanged(final SettingsType type, final NodeSettings nodeSettings,
+            final NodeSettings previousNodeSettings) throws InvalidSettingsException {
+            final String variablesConfigKey = type.getVariablesConfigKey();
+            final var varSettings = nodeSettings.containsKey(variablesConfigKey) //
+                ? nodeSettings.getNodeSettings(variablesConfigKey) //
+                : null;
+            final var previousVarSettings = previousNodeSettings.containsKey(variablesConfigKey) //
+                ? previousNodeSettings.getNodeSettings(variablesConfigKey) //
+                : null;
+            return settingsChanged(Pair.create(varSettings, previousVarSettings));
         }
 
         /*
@@ -461,6 +502,13 @@ public abstract class NodeDialog implements UIExtension, DataServiceProvider {
      * @return a {@link TextNodeSettingsService}-instance
      */
     protected abstract TextNodeSettingsService getNodeSettingsService();
+
+    /**
+     * @return a {@link TextVariableSettingsService}-instance
+     */
+    protected Optional<TextVariableSettingsService> getVariableSettingsService() {
+        return Optional.empty();
+    }
 
     /**
      * @return a legacy flow variable node dialog

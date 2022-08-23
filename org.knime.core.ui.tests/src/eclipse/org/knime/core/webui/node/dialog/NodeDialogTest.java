@@ -51,6 +51,8 @@ package org.knime.core.webui.node.dialog;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.awt.Container;
 import java.io.IOException;
@@ -72,12 +74,16 @@ import org.knime.core.node.config.base.JSONConfig.WriterConfig;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.NativeNodeContainer;
+import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.webui.data.DataService;
 import org.knime.core.webui.node.NodeWrapper;
 import org.knime.core.webui.node.dialog.NodeDialog.LegacyFlowVariableNodeDialog;
+import org.knime.core.webui.node.view.NodeViewManager;
 import org.knime.core.webui.page.Page;
 import org.knime.testing.node.dialog.NodeDialogNodeFactory;
+import org.knime.testing.node.dialog.NodeDialogNodeModel;
+import org.knime.testing.node.dialog.NodeDialogNodeView;
 import org.knime.testing.util.WorkflowManagerUtil;
 
 /**
@@ -214,6 +220,177 @@ public class NodeDialogTest {
     }
 
     /**
+     * Test overwriting and exposing settings with flow variables via the {@link TextVariableSettingsService}.
+     *
+     * @throws IOException
+     * @throws InvalidSettingsException
+     */
+    @Test
+    public void testSettingWithFlowVariables() throws IOException, InvalidSettingsException {
+        TextVariableSettingsService varService = (textSettings, settings) -> { // NOSONAR: The lambda is easy to understand
+            try {
+                // First level settings
+                settings.get(SettingsType.MODEL).addUsedVariable("model_key1", "model_variable");
+                settings.get(SettingsType.MODEL).addExposedVariable("model_key2", "exp_model_variable");
+                settings.get(SettingsType.VIEW).addUsedVariable("view_key1", "view_variable");
+                settings.get(SettingsType.VIEW).addExposedVariable("view_key2", "exp_view_variable");
+
+                // Nested settings
+                settings.get(SettingsType.MODEL) //
+                    .getChild("settings_group") //
+                    .addUsedVariable("child_key1", "child1_variable");
+                settings.get(SettingsType.MODEL) //
+                    .getChild("settings_group") //
+                    .addExposedVariable("child_key2", "exp_child2_variable");
+                settings.get(SettingsType.VIEW) //
+                    .getChild("deep_settings_group") //
+                    .getChild("inner_settings_group") //
+                    .addUsedVariable("child_key3", "child3_variable");
+                settings.get(SettingsType.VIEW) //
+                    .getChild("deep_settings_group") //
+                    .getChild("inner_settings_group") //
+                    .addExposedVariable("child_key4", "exp_child4_variable");
+            } catch (final InvalidSettingsException ex) {
+                throw new IllegalStateException(ex);
+            }
+        };
+
+        var nodeDialogManager = NodeDialogManager.getInstance();
+        var wfm = WorkflowManagerUtil.createEmptyWorkflow();
+        var nnc = WorkflowManagerUtil.createAndAddNode(wfm,
+            new NodeDialogNodeFactory(() -> createNodeDialog(Page.builder(() -> "test", "test.html").build(),
+                createTextSettingsDataService(), varService, null)));
+        var nncWrapper = NodeWrapper.of(nnc);
+
+        var modelSettings = new NodeSettings("model");
+        var viewSettings = new NodeSettings("view");
+        modelSettings.addString("model_key1", "model_setting_value1");
+        modelSettings.addString("model_key2", "model_setting_value2");
+        viewSettings.addString("view_key1", "view_setting_value1");
+        viewSettings.addString("view_key2", "view_setting_value2");
+
+        // Nested settings
+        // 1 level deep
+        var settingsGroup = modelSettings.addNodeSettings("settings_group");
+        settingsGroup.addString("child_key1", "child_setting_value1");
+        settingsGroup.addString("child_key2", "child_setting_value2");
+
+        // 2 levels deep
+        var deepsettingsGroup = viewSettings.addNodeSettings("deep_settings_group");
+        var innerSettingsGroup = deepsettingsGroup.addNodeSettings("inner_settings_group");
+        innerSettingsGroup.addString("child_key3", "child_setting_value3");
+        innerSettingsGroup.addString("child_key4", "child_setting_value4");
+
+        // Set the flow variable
+        wfm.addWorkflowVariables(true, //
+            new FlowVariable("model_variable", "model_variable_value"), //
+            new FlowVariable("view_variable", "view_variable_value"), //
+            new FlowVariable("child1_variable", "child1_variable_value"), //
+            new FlowVariable("child3_variable", "child3_variable_value") //
+        );
+
+        // Apply the settings using the TextApplyDataService
+        nodeDialogManager.callTextApplyDataService(nncWrapper, settingsToString(modelSettings, viewSettings));
+
+        // Assert that the model settings get overwritten
+        var loadedModelSettings = getNodeModelSettings(nnc);
+        assertEquals("model_variable_value", loadedModelSettings.getString("model_key1"));
+        assertEquals("child1_variable_value",
+            loadedModelSettings.getNodeSettings("settings_group").getString("child_key1"));
+
+        // Assert that the view settings get overwritten
+        NodeViewManager.getInstance().updateNodeViewSettings(nnc);
+        var loadedViewSettings = getNodeViewSettings(nnc);
+        assertEquals("view_variable_value", loadedViewSettings.getString("view_key1"));
+        assertEquals("child3_variable_value", loadedViewSettings.getNodeSettings("deep_settings_group")
+            .getNodeSettings("inner_settings_group").getString("child_key3"));
+
+        // Assert that the variables get exposed
+        var outgoingFlowVars = nnc.getOutgoingFlowObjectStack().getAllAvailableFlowVariables();
+        assertEquals("model_setting_value2", outgoingFlowVars.get("exp_model_variable").getStringValue());
+        assertEquals("view_setting_value2", outgoingFlowVars.get("exp_view_variable").getStringValue());
+        assertEquals("child_setting_value2", outgoingFlowVars.get("exp_child2_variable").getStringValue());
+        assertEquals("child_setting_value4", outgoingFlowVars.get("exp_child4_variable").getStringValue());
+    }
+
+    private static NodeSettingsRO getNodeModelSettings(final NativeNodeContainer nnc) {
+        return ((NodeDialogNodeModel)nnc.getNode().getNodeModel()).getLoadNodeSettings();
+    }
+
+    private static NodeSettingsRO getNodeViewSettings(final NodeContainer nc) {
+        return ((NodeDialogNodeView)NodeViewManager.getInstance().getNodeView(nc)).getLoadNodeSettings();
+    }
+
+    /**
+     * Test that overwriting or exposing variables for settings that do not exist fails.
+     *
+     * @throws IOException
+     */
+    @Test
+    public void testFailingSettingWithFlowVariables() throws IOException {
+        TextVariableSettingsService varService = (textSettings, settings) -> { // NOSONAR: The lambda is easy to understand
+            try {
+                settings.get(SettingsType.MODEL).addUsedVariable("key1", "var1");
+            } catch (final InvalidSettingsException ex) { // NOSONAR
+                throw new Key1Exception();
+            }
+            VariableSettingsWO childSettings;
+            try {
+                childSettings = settings.get(SettingsType.MODEL).getChild("child_settings");
+            } catch (final InvalidSettingsException ex) { // NOSONAR
+                throw new ChildKeyException();
+            }
+            try {
+                childSettings.addExposedVariable("key2", "exp_var2");
+            } catch (final InvalidSettingsException ex) { // NOSONAR
+                throw new Key2Exception();
+            }
+        };
+
+        var nodeDialogManager = NodeDialogManager.getInstance();
+        var wfm = WorkflowManagerUtil.createEmptyWorkflow();
+        var nnc = WorkflowManagerUtil.createAndAddNode(wfm,
+            new NodeDialogNodeFactory(() -> createNodeDialog(Page.builder(() -> "test", "test.html").build(),
+                createTextSettingsDataService(), varService, null)));
+        var nncWrapper = NodeWrapper.of(nnc);
+
+        var modelSettings = new NodeSettings("model");
+        var viewSettings = new NodeSettings("view");
+
+        // Setting with key "key1" not available
+        assertThrows(Key1Exception.class, //
+            () -> nodeDialogManager.callTextApplyDataService(nncWrapper,
+                settingsToString(modelSettings, viewSettings)));
+
+        modelSettings.addString("key1", "val1");
+        wfm.addWorkflowVariables(true, new FlowVariable("var1", "var_value1"));
+
+        // Child settings not available
+        assertThrows(ChildKeyException.class, //
+            () -> nodeDialogManager.callTextApplyDataService(nncWrapper,
+                settingsToString(modelSettings, viewSettings)));
+
+        modelSettings.addNodeSettings("child_settings");
+
+        // Settings with key "key2" not available
+        assertThrows(Key2Exception.class, //
+            () -> nodeDialogManager.callTextApplyDataService(nncWrapper,
+                settingsToString(modelSettings, viewSettings)));
+    }
+
+    @SuppressWarnings("serial")
+    private static final class Key1Exception extends RuntimeException {
+    }
+
+    @SuppressWarnings("serial")
+    private static final class ChildKeyException extends RuntimeException {
+    }
+
+    @SuppressWarnings("serial")
+    private static final class Key2Exception extends RuntimeException {
+    }
+
+    /**
      * Tests to create the legacy flow variable node dialog ({@link NodeDialog#createLegacyFlowVariableNodeDialog()})
      * and makes sure the default view settings and applied view settings are available in the flow variable tree
      * (jtree).
@@ -244,14 +421,12 @@ public class NodeDialogTest {
         var tabbedPane = getChild(legacyNodeDialog.getPanel(), 1);
         var flowVariablesTab = getChild(getChild(getChild(tabbedPane, 0), 0), 0);
 
-        var modelSettingsJTree =
-            (ConfigEditJTree)getChild(getChild(getChild(getChild(flowVariablesTab, 0), 0), 0), 0);
+        var modelSettingsJTree = (ConfigEditJTree)getChild(getChild(getChild(getChild(flowVariablesTab, 0), 0), 0), 0);
         var modelRootNode = modelSettingsJTree.getModel().getRoot();
         var firstModelConfigNode = (ConfigEditTreeNode)modelRootNode.getChildAt(0);
         assertThat(firstModelConfigNode.getConfigEntry().toStringValue(), is("default model setting value"));
 
-        var viewSettingsJTree =
-                (ConfigEditJTree)getChild(getChild(getChild(getChild(flowVariablesTab, 0), 0), 0), 1);
+        var viewSettingsJTree = (ConfigEditJTree)getChild(getChild(getChild(getChild(flowVariablesTab, 0), 0), 0), 1);
         var viewRootNode = viewSettingsJTree.getModel().getRoot();
         var firstViewConfigNode = (ConfigEditTreeNode)viewRootNode.getChildAt(0);
         assertThat(firstViewConfigNode.getConfigEntry().toStringValue(), is(viewSettingValue));
@@ -397,6 +572,20 @@ public class NodeDialogTest {
      */
     public static NodeDialog createNodeDialog(final Page page, final TextNodeSettingsService settingsDataService,
         final DataService dataService) {
+        return createNodeDialog(page, settingsDataService, null, dataService);
+    }
+
+    /**
+     * Helper to create {@link NodeDialog}.
+     *
+     * @param page
+     * @param settingsDataService
+     * @param dataService
+     * @param variableSettingsService
+     * @return a new dialog instance
+     */
+    public static NodeDialog createNodeDialog(final Page page, final TextNodeSettingsService settingsDataService,
+        final TextVariableSettingsService variableSettingsService, final DataService dataService) {
         return new NodeDialog(SettingsType.MODEL, SettingsType.VIEW) {
 
             @Override
@@ -410,11 +599,15 @@ public class NodeDialogTest {
             }
 
             @Override
+            protected Optional<TextVariableSettingsService> getVariableSettingsService() {
+                return Optional.ofNullable(variableSettingsService);
+            }
+
+            @Override
             public Page getPage() {
                 return page;
             }
 
         };
     }
-
 }
