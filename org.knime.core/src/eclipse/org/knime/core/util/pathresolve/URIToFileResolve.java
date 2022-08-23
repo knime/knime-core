@@ -116,6 +116,23 @@ public interface URIToFileResolve {
     public File resolveToLocalOrTempFile(final URI uri, IProgressMonitor monitor) throws IOException;
 
     /**
+     * Attempts to extract some information about the argument URI, especially attempts to resolve the full path for
+     * id-based KNIME URIs. For instance, a URL such as "knime://KNIME-Community-Hub/*39189vdd9d" will extract its path
+     * and capture this information in the returned object.
+     *
+     * Non-KNIME URIs (or null) will result in an empty optional. Failures to resolve the URI -- which requires API
+     * calls to be made -- will (currently) return bogus result objects (e.g. the path remains "*39189vdd9d").
+     *
+     * @param uri The argument URI
+     * @param monitor A progress monitor tracking the progress of the (async) call
+     * @return Such a description.
+     * @since 4.7
+     */
+    public default Optional<KNIMEURIDescription> toDescription(final URI uri, final IProgressMonitor monitor) {
+        return Optional.of(new KNIMEURIDescription(uri.getHost(), uri.getPath()));
+    }
+
+    /**
      * Resolves the given URI into a local file. If the URI does not represent a local file (e.g. a remote file on a
      * server) it is downloaded first to a temporary directory and the temporary copy is returned. If a
      * 'ifModifiedSince' date is provided, it will only be downloaded and returned if the file on the server has been
@@ -164,4 +181,29 @@ public interface URIToFileResolve {
      * @since 2.10
      */
     public boolean isNodeRelative(final URI uri);
+
+    /**
+     * Return type of {@link URIToFileResolve#toDescription(URI, IProgressMonitor)}. This class should not be used to
+     * extract information from it except for string representations shown in config/info dialogs.
+     */
+    public static final class KNIMEURIDescription {
+
+        private final String m_path;
+        private final String m_mountpointName;
+
+        /**
+         * @param path
+         * @param mountpointName
+         * @noreference This constructor is not intended to be referenced by clients.
+         */
+        public KNIMEURIDescription(final String mountpointName, final String path) {
+            m_path = path;
+            m_mountpointName = mountpointName;
+        }
+
+        /** @return A string that can be used in labels etc . */
+        public String toDisplayString() {
+            return String.format("%s: %s", m_mountpointName, m_path);
+        }
+    }
 }

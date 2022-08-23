@@ -55,6 +55,8 @@ import java.util.Optional;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.util.pathresolve.URIToFileResolve.KNIMEURIDescription;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.util.tracker.ServiceTracker;
@@ -66,6 +68,8 @@ import org.osgi.util.tracker.ServiceTracker;
  * @since 2.6
  */
 public final class ResolverUtil {
+
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(ResolverUtil.class);
 
 
     /** A location within the workflow directory where some "KNIME native" nodes put temporary data. Currently used by
@@ -258,6 +262,25 @@ public final class ResolverUtil {
             throw new IOException("Can't resolve URI \"" + uri + "\"; no URI resolve service registered");
         }
         return res.isWorkflowRelative(uri);
+    }
+
+    /**
+     * Retrieves the {@link KNIMEURIDescription} for a given URI. The description is useful for displaying the mountpoint and
+     * the actual file path to the user in e.g. config dialogs. Especially with new id-based Hub-URIs, it otherwise
+     * would very difficult for the user to tell where the URI actually points to.
+     *
+     * @param uri the URI to be resolved
+     * @param monitor ProgressMonitor
+     * @return Optional of a KNIMEURLDescription
+     */
+    public static Optional<KNIMEURIDescription> toDescription(final URI uri, final IProgressMonitor monitor) {
+        if (serviceTracker != null) {
+            var resolver = (URIToFileResolve)serviceTracker.getService();
+            if (resolver != null) {
+                return resolver.toDescription(uri, monitor);
+            }
+        }
+        return Optional.empty();
     }
 
 }
