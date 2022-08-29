@@ -279,13 +279,14 @@ public abstract class NodeDialog implements UIExtension, DataServiceProvider {
                         // by the value given by 'previousViewSettings'
                         viewVariables = nodeSettings.getNodeSettings(SettingsType.VIEW.getVariablesConfigKey())
                             .getNodeSettings("tree");
-                        replaceVariableControlledSettingsWithPreviousSettings(viewVariables, viewSettings.getFirst(),
+                        replaceVariableControlledSettingsWithPreviousSettings(viewVariables, //
+                            viewSettings.getFirst(), // NOSONAR: viewSettingsChanged is false if viewSettings is null
                             viewSettings.getSecond());
                     }
 
                     // validate settings
                     var nodeView = NodeViewManager.getInstance().getNodeView(m_nc);
-                    nodeView.validateSettings(viewSettings.getFirst());
+                    nodeView.validateSettings(viewSettings.getFirst()); // NOSONAR: viewSettingsChanged is false if viewSettings are null
                 }
 
                 if (modelSettingsChanged) {
@@ -294,7 +295,8 @@ public abstract class NodeDialog implements UIExtension, DataServiceProvider {
                         // by the value given by 'previousModelSettings'
                         var modelVariables = nodeSettings.getNodeSettings(SettingsType.MODEL.getVariablesConfigKey())
                             .getNodeSettings("tree");
-                        replaceVariableControlledSettingsWithPreviousSettings(modelVariables, modelSettings.getFirst(),
+                        replaceVariableControlledSettingsWithPreviousSettings(modelVariables, //
+                            modelSettings.getFirst(), // NOSONAR: modelSettingsChanged is false if modelSettings is null
                             modelSettings.getSecond());
                     }
 
