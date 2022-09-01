@@ -212,5 +212,12 @@ public interface URIToFileResolve {
         public String getPath() {
             return m_path;
         }
+
+        /**
+         * @return the mountpointName
+         */
+        public String getMountpointName() {
+            return m_mountpointName;
+        }
     }
 }
