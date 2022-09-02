@@ -184,6 +184,7 @@ import org.knime.core.node.workflow.action.MetaNodeToSubNodeResult;
 import org.knime.core.node.workflow.action.ReplaceNodeResult;
 import org.knime.core.node.workflow.action.SubNodeToMetaNodeResult;
 import org.knime.core.node.workflow.capture.WorkflowSegment;
+import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.node.workflow.def.DefToCoreUtil;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
@@ -10728,6 +10729,22 @@ public final class WorkflowManager extends NodeContainer
      */
     public WorkflowContext getContext() {
         return m_workflowContext;
+    }
+
+    /**
+     * Returns the current {@link WorkflowContextV2} or <code>null</code>, if no context is available.
+     *
+     * @return a {@link WorkflowContextV2} or <code>null</code>
+     * @since 4.7
+     */
+    public WorkflowContextV2 getContextV2() {
+        // FIXME: we should properly initialize a WorkflowContextV2. The method
+        // fromLegacyWorkflowContext() only works in some cases
+        if (m_workflowContext == null) {
+            return null;
+        } else {
+            return WorkflowContextV2.fromLegacyWorkflowContext(m_workflowContext);
+        }
     }
 
     void setContext(final WorkflowContext c){
