@@ -88,7 +88,7 @@ public class SubnodeContainerToDefAdapter extends SingleNodeContainerToDefAdapte
      */
     @Override
     public WorkflowDef getWorkflow() {
-        return new WorkflowManagerToDefAdapter(m_nc.getWorkflowManager(), m_passwordHandler);
+        return CoreToDefUtil.copyToDefWithUISettings(m_nc.getWorkflowManager(), m_passwordHandler);
     }
 
     /**
@@ -151,7 +151,8 @@ public class SubnodeContainerToDefAdapter extends SingleNodeContainerToDefAdapte
     @Override
     public ComponentDialogSettingsDef getDialogSettings() {
         return new ComponentDialogSettingsDefBuilder()//
-                .setConfigurationLayoutJSON(m_nc.getSubnodeConfigurationLayoutStringProvider().getConfigurationLayoutString())//
+                .setConfigurationLayoutJSON(//
+                    m_nc.getSubnodeConfigurationLayoutStringProvider().getConfigurationLayoutString())//
                 .setLayoutJSON(m_nc.getSubnodeLayoutStringProvider().getLayoutString())//
                 .setHideInWizard(m_nc.isHideInWizard())//
                 .setCssStyles(m_nc.getCssStyles())//

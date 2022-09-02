@@ -70,8 +70,8 @@ public class MetanodeToDefAdapter extends NodeContainerToDefAdapter implements M
     private WorkflowManager m_wfm;
 
     /**
-     * @param wfm
-     * @param passwordHandler TODO
+     * @param wfm underlying workflow manager
+     * @param passwordHandler handler for passwords during copy/paste
      */
     public MetanodeToDefAdapter(final WorkflowManager wfm, final PasswordRedactor passwordHandler) {
         super(wfm, passwordHandler);
@@ -127,7 +127,7 @@ public class MetanodeToDefAdapter extends NodeContainerToDefAdapter implements M
      */
     @Override
     public WorkflowDef getWorkflow() {
-        return new WorkflowManagerToDefAdapter(m_wfm, m_passwordHandler);
+        return CoreToDefUtil.copyToDefWithUISettings(m_wfm, m_passwordHandler);
     }
 
     /**

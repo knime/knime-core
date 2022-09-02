@@ -59,6 +59,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeAndBundleInformationPersistor;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.workflow.AnnotationData.StyleRange;
 import org.knime.core.node.workflow.ComponentMetadata.ComponentNodeType;
 import org.knime.core.node.workflow.NodeContainer.NodeLocks;
 import org.knime.core.node.workflow.WorkflowPersistor.ConnectionContainerTemplate;
@@ -83,6 +84,7 @@ import org.knime.shared.workflow.def.StyleRangeDef;
 import org.knime.shared.workflow.def.TemplateInfoDef;
 import org.knime.shared.workflow.def.VendorDef;
 import org.knime.shared.workflow.def.WorkflowDef;
+import org.knime.shared.workflow.def.WorkflowUISettingsDef;
 import org.knime.shared.workflow.def.impl.AnnotationDataDefBuilder;
 import org.knime.shared.workflow.def.impl.AuthorInformationDefBuilder;
 import org.knime.shared.workflow.def.impl.BoundsDefBuilder;
@@ -103,6 +105,7 @@ import org.knime.shared.workflow.def.impl.StyleRangeDefBuilder;
 import org.knime.shared.workflow.def.impl.TemplateInfoDefBuilder;
 import org.knime.shared.workflow.def.impl.VendorDefBuilder;
 import org.knime.shared.workflow.def.impl.WorkflowDefBuilder;
+import org.knime.shared.workflow.def.impl.WorkflowUISettingsDefBuilder;
 import org.knime.shared.workflow.storage.multidir.util.LoaderUtils;
 import org.knime.shared.workflow.storage.util.PasswordRedactor;
 
@@ -212,26 +215,33 @@ public class CoreToDefUtil {
             .build();
     }
 
-    public static AnnotationDataDef toAnnotationDataDef(final Annotation na) {
-        // TODO I've seen this in the wfm wrapper too
-        List<StyleRangeDef> styles = Arrays.stream(na.getStyleRanges())
-            .map(s -> new StyleRangeDefBuilder().setColor(s.getFgColor()).setFontName(s.getFontName())
-                .setFontSize(s.getFontSize()).setFontStyle(s.getFontStyle()).setLength(s.getLength())
-                .setStart(s.getStart()).build())
-            .collect(Collectors.toList());
 
-        return new AnnotationDataDefBuilder()//
-            .setText(na.getText())//
-            .setTextAlignment(na.getAlignment().toString())//
-            .setBgcolor(na.getBgColor())//
-            .setBorderColor(na.getBorderColor())//
-            .setBorderSize(na.getBorderSize())//
-            .setDefaultFontSize(na.getDefaultFontSize())//
-            .setHeight(na.getHeight())//
-            .setWidth(na.getWidth())//
-            .setLocation(createCoordinate(na.getX(), na.getY()))//
-            .setStyles(styles)//
-            .build();
+    public static AnnotationDataDef toAnnotationDataDef(final Annotation annotation) {
+        final var builder = new AnnotationDataDefBuilder()//
+            .setLocation(CoreToDefUtil.createCoordinate(annotation.getX(), annotation.getY()))//
+            .setWidth(annotation.getWidth())//
+            .setHeight(annotation.getHeight())//
+            .setDefaultFontSize(annotation.getDefaultFontSize())//
+            .setBorderSize(annotation.getBorderSize())//
+            .setBorderColor(annotation.getBorderColor())//
+            .setBgcolor(annotation.getBgColor())//
+            .setText(annotation.getText())//
+            .setAnnotationVersion(annotation.getVersion())//
+            .setTextAlignment(annotation.getAlignment().toString());
+
+        for (final StyleRange style : annotation.getStyleRanges()) {
+            final StyleRangeDef styleRangeDef = new StyleRangeDefBuilder()//
+                .setStart(style.getStart())//
+                .setLength(style.getLength())//
+                .setFontStyle(style.getFontStyle())//
+                .setFontSize(style.getFontSize())//
+                .setFontName(style.getFontName())//
+                .setColor(style.getFgColor())//
+                .build();
+            builder.addToStyles(styleRangeDef);
+        }
+
+        return builder.build();
     }
 
     public static NodeAnnotationDef toNodeAnnotationDef(final NodeAnnotation na) {
@@ -243,7 +253,6 @@ public class CoreToDefUtil {
 
     public static CoordinateDef createCoordinate(final int x, final int y) {
         return new CoordinateDefBuilder().setX(x).setY(y).build();
-
     }
 
     /**
@@ -375,17 +384,59 @@ public class CoreToDefUtil {
     }
 
     /**
-     * @param authorInformation
-     * @return
+     * Creates a definition for the given author information.
+     *
+     * @param authorInformation author information (may be {@code null})
+     * @return definition of the given author information
      */
     public static AuthorInformationDef toAuthorInformationDef(final AuthorInformation authorInformation) {
-        var builder = new AuthorInformationDefBuilder()//
-            .setAuthoredBy(authorInformation.getAuthor())//
-            .setAuthoredWhen(authorInformation.getAuthoredDate());//
-        authorInformation.getLastEditor().ifPresent(builder::setLastEditedBy);
-        authorInformation.getLastEditDate().ifPresent(builder::setLastEditedWhen);
-
+        var builder = new AuthorInformationDefBuilder();
+        if (authorInformation != null) {
+            builder.setAuthoredBy(authorInformation.getAuthor())
+                .setAuthoredWhen(authorInformation.getAuthoredDate());
+            authorInformation.getLastEditor().ifPresent(builder::setLastEditedBy);
+            authorInformation.getLastEditDate().ifPresent(builder::setLastEditedWhen);
+        }
         return builder.build();
+    }
+
+    /**
+     * Creates a definition for the given editor UI information.
+     *
+     * @param uiInfo editor UI information (may be {@code null})
+     * @return definition of the given editor UI information
+     */
+    public static WorkflowUISettingsDef toWorkflowUISettingsDef(final EditorUIInformation uiInfo) {
+        final EditorUIInformation uiInfoSafe = Optional.ofNullable(uiInfo)
+            .orElse(EditorUIInformation.builder().build());
+        return new WorkflowUISettingsDefBuilder()
+            .setSnapToGrid(uiInfoSafe.getSnapToGrid())
+            .setShowGrid(uiInfoSafe.getShowGrid())
+            .setCurvedConnections(uiInfoSafe.getHasCurvedConnections())
+            .setZoomLevel(uiInfoSafe.getZoomLevel())
+            .setGridX(uiInfoSafe.getGridX())
+            .setGridY(uiInfoSafe.getGridY())
+            .setConnectionLineWidth(uiInfoSafe.getConnectionLineWidth())
+            .build();
+    }
+
+    /**
+     * Creates a {@link BaseNodeDef} from a given {@link NodeContainer}.
+     *
+     * @param nc node container to copy
+     * @param passwordHandler handler for copied passwords
+     * @return definition of the given node container
+     */
+    public static BaseNodeDef toBaseNodeDef(final NodeContainer nc, final PasswordRedactor passwordHandler) {
+        if (nc instanceof WorkflowManager) {
+            return new MetanodeToDefAdapter((WorkflowManager) nc, passwordHandler);
+        } else if (nc instanceof NativeNodeContainer) {
+            return new NativeNodeContainerToDefAdapter((NativeNodeContainer) nc, passwordHandler);
+        } else if (nc instanceof SubNodeContainer) {
+            return new SubnodeContainerToDefAdapter((SubNodeContainer) nc, passwordHandler);
+        } else {
+            throw new IllegalStateException();
+        }
     }
 
     /**
@@ -399,8 +450,7 @@ public class CoreToDefUtil {
 
         HashSet<NodeID> nodeIDs = new HashSet<>(Arrays.asList(content.getNodeIDs()));
         HashSet<NodeID> virtualNodeIDs = new HashSet<>();
-        CheckUtils.checkArgumentNotNull(passwordRedactor,
-            "No password redactor provided. If passwords should remain unchanged, please specify explicitly by providing an according password redactor.");
+        checkPasswordRedactor(passwordRedactor);
         CheckUtils.checkArgument(nodeIDs.size() == content.getNodeIDs().length, "Copy spec contains duplicate nodes.");
 
         // copy contents (nodes, connections, annotations) are stored in a workflow def
@@ -471,6 +521,57 @@ public class CoreToDefUtil {
                 String.valueOf(anno.getID().getIndex()), // key
                 CoreToDefUtil.toAnnotationDataDef(anno))); // value
         return workflowBuilder.build();
+    }
+
+    /**
+     * Creates a workflow definition from the given workflow manager that also contains editor UI settings.
+     *
+     * @param wfm workflow definition to create a definition from
+     * @param passwordHandler password redactor for handling sensitive information
+     * @return immutable workflow definition including UI settings
+     */
+    public static WorkflowDef copyToDefWithUISettings(final WorkflowManager wfm,
+            final PasswordRedactor passwordHandler) {
+
+        checkPasswordRedactor(passwordHandler);
+
+        // copy workflow name
+        final WorkflowDefBuilder builder = new WorkflowDefBuilder().setName(wfm.getName());
+
+        // copy node containers
+        for (final var nc : wfm.getNodeContainers()) {
+            builder.putToNodes(Integer.toString(nc.getID().getIndex()),toBaseNodeDef(nc, passwordHandler));
+        }
+
+        // copy connection containers
+        for (final var cc : wfm.getConnectionContainers()) {
+            builder.addToConnections(connectionContainerToConnectionDef(cc));
+        }
+
+        // copy annotations
+        for (final var annotation : wfm.getWorkflowAnnotations()) {
+            builder.putToAnnotations(String.valueOf(annotation.getID().getIndex()), toAnnotationDataDef(annotation));
+        }
+
+        // copy author information
+        builder.setAuthorInformation(toAuthorInformationDef(wfm.getAuthorInformation()));
+
+        // copy UI settings
+        builder.setWorkflowEditorSettings(toWorkflowUISettingsDef(wfm.getEditorUIInformation()));
+
+        return builder.build();
+    }
+
+    /**
+     * Checks that a non-{@code null} password redactor is supplied.
+     *
+     * @param passwordRedactor redactor to be checked
+     * @throws IllegalArgumentException if the provided redactor is {@code null}
+     */
+    private static void checkPasswordRedactor(final PasswordRedactor passwordRedactor)throws IllegalArgumentException {
+        CheckUtils.checkArgumentNotNull(passwordRedactor,
+            "No password redactor provided. If passwords should remain unchanged, please specify " +
+            "explicitly by providing an according password redactor.");
     }
 
 }
