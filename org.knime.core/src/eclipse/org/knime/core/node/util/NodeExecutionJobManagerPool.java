@@ -85,8 +85,8 @@ public final class NodeExecutionJobManagerPool {
      *
      * Maps a node type to a job manager that is able to execute nodes of the given type.
      *
-     * @see NodeExecutionJobManagerPool#getStandardJobManagerFactory()
-     * @see NodeExecutionJobManagerPool#getStandardJobManagerFactory(Class)
+     * @see NodeExecutionJobManagerPool#getDefaultJobManagerFactory()
+     * @see NodeExecutionJobManagerPool#getDefaultJobManagerFactory(Class)
      */
     public static final Map<Class<? extends NodeContainer>, NodeExecutionJobManagerFactory> STANDARD_FACTORIES = Map.of(
         // when changing this, make sure that the new manager can also execute components (backwards compatibility)
@@ -213,7 +213,7 @@ public final class NodeExecutionJobManagerPool {
      *
      * @return a job manager factory that can execute native nodes and components, never null.
      */
-    public static NodeExecutionJobManagerFactory getStandardJobManagerFactory() {
+    public static NodeExecutionJobManagerFactory getDefaultJobManagerFactory() {
         return STANDARD_FACTORIES.get(NativeNodeContainer.class);
     }
 
@@ -223,7 +223,7 @@ public final class NodeExecutionJobManagerPool {
      * @param c The class of the {@link NodeContainer} to execute
      * @return {@code null} if none exists
      */
-    public static NodeExecutionJobManagerFactory getStandardJobManagerFactory(final Class<? extends NodeContainer> c) {
+    public static NodeExecutionJobManagerFactory getDefaultJobManagerFactory(final Class<? extends NodeContainer> c) {
         return STANDARD_FACTORIES.get(c);
     }
 

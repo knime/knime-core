@@ -89,7 +89,7 @@ public class NodeExecutorJobManagerDialogTab extends JPanel {
     /**
      * Pseudo-factory that returns null - the job manager value that indicates that the parent component's or workflow's
      * job manager should be used if applicable or otherwise the appropriate standard job manager provided by
-     * {@link NodeExecutionJobManagerPool#getStandardJobManagerFactory(Class)}.
+     * {@link NodeExecutionJobManagerPool#getDefaultJobManagerFactory(Class)}.
      *
      * @author Carl Witt, KNIME AG, Zurich, Switzerland
      */

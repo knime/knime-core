@@ -153,7 +153,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
      * not applicable to its contained native nodes, but it is applicable to its contained components.)
      *
      * @see #NodeContainer(WorkflowManager, NodeID)
-     * @see NodeExecutionJobManagerPool#getStandardJobManagerFactory(Class)
+     * @see NodeExecutionJobManagerPool#getDefaultJobManagerFactory(Class)
      */
     private NodeExecutionJobManager m_jobManager;
 
@@ -230,7 +230,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
         m_parent = parent;
         if (m_parent == null) {
             // make sure at least the top node knows how to execute stuff
-            m_jobManager = NodeExecutionJobManagerPool.getStandardJobManagerFactory().getInstance();
+            m_jobManager = NodeExecutionJobManagerPool.getDefaultJobManagerFactory().getInstance();
         }
         m_id = id;
         m_state = InternalNodeContainerState.IDLE;
@@ -263,7 +263,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
 
         if (m_parent == null && !(m_jobManager instanceof ThreadNodeExecutionJobManager)) {
             // make sure at least the top node knows how to execute stuff
-            m_jobManager = NodeExecutionJobManagerPool.getStandardJobManagerFactory().getInstance();
+            m_jobManager = NodeExecutionJobManagerPool.getDefaultJobManagerFactory().getInstance();
         }
     }
 
@@ -290,7 +290,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
         m_jobManager = persistor.getExecutionJobManager();
         if (m_parent == null && !(m_jobManager instanceof ThreadNodeExecutionJobManager)) {
             // make sure at least the top node knows how to execute stuff
-            m_jobManager = NodeExecutionJobManagerPool.getStandardJobManagerFactory().getInstance();
+            m_jobManager = NodeExecutionJobManagerPool.getDefaultJobManagerFactory().getInstance();
         }
         m_customDescription = persistor.getCustomDescription();
         NodeAnnotationData annoData = persistor.getNodeAnnotationData();
@@ -337,11 +337,11 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
 
             // ensure standard job manager on ROOT and workflow with no parent (inner wfm of subnode)
             var isStandardFactory =
-                je != null && NodeExecutionJobManagerPool.getStandardJobManagerFactory().getID().equals(je.getID());
+                je != null && NodeExecutionJobManagerPool.getDefaultJobManagerFactory().getID().equals(je.getID());
             if (getDirectNCParent() == null && !isStandardFactory) {
                 throw new IllegalArgumentException(String.format(
                     "Can only set the default job manager (%s) on a no-parent workflow manager (%s); got %s",
-                    NodeExecutionJobManagerPool.getStandardJobManagerFactory(SubNodeContainer.class),
+                    NodeExecutionJobManagerPool.getDefaultJobManagerFactory(SubNodeContainer.class),
                     this.getNameWithID(), je == null ? "<null>" : je.getID()));
             }
 
