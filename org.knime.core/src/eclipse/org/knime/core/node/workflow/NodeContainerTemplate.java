@@ -123,6 +123,13 @@ public interface NodeContainerTemplate {
 
     public WorkflowManager getParent();
 
+    /**
+     * The name as per {@link WorkflowManager#getName()} or or {@link SubNodeContainer#getName()}.
+     *
+     * @return The name
+     */
+    public String getName();
+
     public String getNameWithID();
 
     public void notifyTemplateConnectionChangedListener();

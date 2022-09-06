@@ -53,6 +53,8 @@ import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.commons.io.FilenameUtils;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
@@ -65,6 +67,8 @@ import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.util.CoreConstants;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.Version;
+import org.knime.core.util.pathresolve.ResolverUtil;
+import org.knime.core.util.pathresolve.URIToFileResolve.KNIMEURIDescription;
 
 /**
  * Callback class that is used during loading of a workflow to read
@@ -413,8 +417,10 @@ public class WorkflowLoadHelper {
             persistor.setOverwriteTemplateInformation(templateInfo.createLink(templateSourceURI, isTemplateProject()));
 
             if (templateSourceURI != null) {
-                final String path = templateSourceURI.getPath();
-                persistor.setNameOverwrite(path.substring(path.lastIndexOf('/') + 1));
+                var path = ResolverUtil.toDescription(templateSourceURI, new NullProgressMonitor())
+                    .map(KNIMEURIDescription::getPath).orElse(templateSourceURI.toString());
+                var name = FilenameUtils.getName(path);
+                persistor.setNameOverwrite(name);
             } else {
                 persistor.setNameOverwrite(directory.getName());
             }

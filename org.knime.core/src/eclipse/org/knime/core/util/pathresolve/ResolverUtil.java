@@ -272,6 +272,7 @@ public final class ResolverUtil {
      * @param uri the URI to be resolved
      * @param monitor ProgressMonitor
      * @return Optional of a KNIMEURLDescription
+     * @since 4.7
      */
     public static Optional<KNIMEURIDescription> toDescription(final URI uri, final IProgressMonitor monitor) {
         if (serviceTracker != null) {

@@ -205,5 +205,12 @@ public interface URIToFileResolve {
         public String toDisplayString() {
             return String.format("%s: %s", m_mountpointName, m_path);
         }
+
+        /**
+         * @return the path
+         */
+        public String getPath() {
+            return m_path;
+        }
     }
 }

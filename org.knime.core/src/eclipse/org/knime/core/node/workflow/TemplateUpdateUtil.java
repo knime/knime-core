@@ -56,7 +56,10 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
+import org.apache.commons.httpclient.URIException;
+import org.apache.commons.httpclient.util.URIUtil;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
@@ -243,13 +246,29 @@ public final class TemplateUpdateUtil {
                 // retrieve already visited template link
                 tempLink = visitedTemplateMap.get(uri);
             }
-            // the template might be null which also means that there is _no_ update available
-            // (see TemplateUpdateUtil#loadMetaNodeTemplateIfLocalOrOutdate)
-            var updateStatus = tempLink != null && !tempLink.getTemplateInformation().isEqual(linkInfo)
-                ? UpdateStatus.HasUpdate : UpdateStatus.UpToDate;
-            nodeIdToUpdateStatus.put(linkedMeta.getID(), updateStatus);
+
+            nodeIdToUpdateStatus.put(linkedMeta.getID(), fillUpdateStatus(linkedMeta, tempLink));
         }
         return nodeIdToUpdateStatus;
+    }
+
+    /**
+     * Returns whether a template has updates, checks if the name and the template information timestamp are different.
+     *
+     * @param thisContainer the local Metanode/Component
+     * @param remoteContainer the remote Metanode/Component
+     * @return an {@link UpdateStatus}
+     * @throws URIException
+     */
+    private static UpdateStatus fillUpdateStatus(final NodeContainerTemplate thisContainer,
+        final NodeContainerTemplate remoteContainer) throws URIException {
+        String thisName = URIUtil.decode(thisContainer.getName());
+        String remoteName = remoteContainer != null ? URIUtil.decode(remoteContainer.getName()) : null;
+        // the template might be null which also means that there is _no_ update available
+        // (see TemplateUpdateUtil#loadMetaNodeTemplateIfLocalOrOutdate)
+        return remoteContainer != null && (!Objects.equals(remoteName, thisName)
+            || !remoteContainer.getTemplateInformation().isEqual(thisContainer.getTemplateInformation()))
+                ? UpdateStatus.HasUpdate : UpdateStatus.UpToDate;
     }
 
     /**
