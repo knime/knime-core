@@ -48,26 +48,26 @@ package org.knime.core.data.v2.value;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
-import org.knime.core.data.vector.bitvector.BitVectorValue;
-import org.knime.core.data.vector.bitvector.DenseBitVector;
-import org.knime.core.data.vector.bitvector.DenseBitVectorCell;
-import org.knime.core.data.vector.bitvector.DenseBitVectorCellFactory;
+import org.knime.core.data.vector.bytevector.ByteVectorValue;
+import org.knime.core.data.vector.bytevector.DenseByteVector;
+import org.knime.core.data.vector.bytevector.DenseByteVectorCell;
+import org.knime.core.data.vector.bytevector.DenseByteVectorCellFactory;
 import org.knime.core.table.access.VarBinaryAccess.VarBinaryReadAccess;
 import org.knime.core.table.access.VarBinaryAccess.VarBinaryWriteAccess;
 import org.knime.core.table.schema.VarBinaryDataSpec;
 
 /**
- * {@link ValueFactory} implementation for {@link DenseBitVectorCell}.
+ * {@link ValueFactory} implementation for {@link DenseByteVectorCell}.
  *
  * @author Carsten Haubold, KNIME GmbH, Konstanz, Germany
  * @since 4.6
  *
  * @noreference This class is not intended to be referenced by clients.
  */
-public class DenseBitVectorValueFactory implements ValueFactory<VarBinaryReadAccess, VarBinaryWriteAccess> {
+public final class DenseByteVectorValueFactory implements ValueFactory<VarBinaryReadAccess, VarBinaryWriteAccess> {
 
     /** Stateless instance of LongValueFactory */
-    public static final DenseBitVectorValueFactory INSTANCE = new DenseBitVectorValueFactory();
+    public static final DenseByteVectorValueFactory INSTANCE = new DenseByteVectorValueFactory();
 
     @Override
     public VarBinaryDataSpec getSpec() {
@@ -76,47 +76,31 @@ public class DenseBitVectorValueFactory implements ValueFactory<VarBinaryReadAcc
 
     @Override
     public ReadValue createReadValue(final VarBinaryReadAccess reader) {
-        return new DenseBitVectorReadValue(reader);
+        return new DenseByteVectorReadValue(reader);
     }
 
     @Override
-    public WriteValue<BitVectorValue> createWriteValue(final VarBinaryWriteAccess writer) {
-        return new DenseBitVectorWriteValue(writer);
+    public WriteValue<ByteVectorValue> createWriteValue(final VarBinaryWriteAccess writer) {
+        return new DenseByteVectorWriteValue(writer);
     }
 
-    private static final class DenseBitVectorReadValue extends AbstractValue<VarBinaryReadAccess>
-        implements ReadValue, BitVectorValue {
+    private static final class DenseByteVectorReadValue extends AbstractValue<VarBinaryReadAccess>
+        implements ReadValue, ByteVectorValue {
 
-        DenseBitVectorReadValue(final VarBinaryReadAccess access) {
+        DenseByteVectorReadValue(final VarBinaryReadAccess access) {
             super(access);
         }
 
         @Override
-        public DenseBitVectorCell getDataCell() {
+        public DenseByteVectorCell getDataCell() {
             // Note that we cannot cache the data cell value here because
             // the underlying access will be moved to the next row and this
-            // DenseBitVectorReadValue will be reused and queried again.
-            // So if someone accesses the BitVectorValue interface of this ReadValue
+            // DenseByteVectorReadValue will be reused and queried again.
+            // So if someone accesses the ByteVectorValue interface of this ReadValue
             // directly, the performance will be bad.
             return m_access.getObject(in -> {
-                final var length = in.readLong();
-                final var v = new DenseBitVector(length);
-                short localBitIdx = 0;
-                byte storage = in.readByte();
-                for (long bitIdx = 0; bitIdx < length; bitIdx++) {
-                    if (localBitIdx == 8) {
-                        localBitIdx = 0;
-                        storage = in.readByte();
-                    }
-
-                    if (0 < (storage & (1 << localBitIdx))) {
-                        v.set(bitIdx);
-                    }
-
-                    localBitIdx++;
-                }
-
-                return new DenseBitVectorCellFactory(v).createDataCell();
+                final var bytes = in.readBytes();
+                return new DenseByteVectorCellFactory(new DenseByteVector(bytes)).createDataCell();
             });
         }
 
@@ -126,12 +110,17 @@ public class DenseBitVectorValueFactory implements ValueFactory<VarBinaryReadAcc
         }
 
         @Override
-        public long cardinality() {
+        public long sumOfAllCounts() {
+            return getDataCell().sumOfAllCounts();
+        }
+
+        @Override
+        public int cardinality() {
             return getDataCell().cardinality();
         }
 
         @Override
-        public boolean get(final long index) {
+        public int get(final long index) {
             return getDataCell().get(index);
         }
 
@@ -141,66 +130,40 @@ public class DenseBitVectorValueFactory implements ValueFactory<VarBinaryReadAcc
         }
 
         @Override
-        public long nextClearBit(final long startIdx) {
-            return getDataCell().nextClearBit(startIdx);
+        public long nextZeroIndex(final long startIdx) {
+            return getDataCell().nextZeroIndex(startIdx);
         }
 
         @Override
-        public long nextSetBit(final long startIdx) {
-            return getDataCell().nextSetBit(startIdx);
+        public long nextCountIndex(final long startIdx) {
+            return getDataCell().nextCountIndex(startIdx);
         }
-
-        @Override
-        public String toHexString() {
-            return getDataCell().toHexString();
-        }
-
-        @Override
-        public String toBinaryString() {
-            return getDataCell().toBinaryString();
-        }
-
     }
 
-    private static final class DenseBitVectorWriteValue extends AbstractValue<VarBinaryWriteAccess>
-        implements WriteValue<BitVectorValue> {
+    private static final class DenseByteVectorWriteValue extends AbstractValue<VarBinaryWriteAccess>
+        implements WriteValue<ByteVectorValue> {
 
-        DenseBitVectorWriteValue(final VarBinaryWriteAccess access) {
+        DenseByteVectorWriteValue(final VarBinaryWriteAccess access) {
             super(access);
         }
 
         @Override
-        public void setValue(final BitVectorValue value) {
-            DenseBitVectorCell cell;
-            if (value instanceof DenseBitVectorReadValue) {
-                cell = ((DenseBitVectorReadValue)value).getDataCell();
-            } else if (value instanceof DenseBitVectorCell) {
-                cell = (DenseBitVectorCell)value;
+        public void setValue(final ByteVectorValue value) {
+            DenseByteVectorCell cell;
+            if (value instanceof DenseByteVectorReadValue) {
+                cell = ((DenseByteVectorReadValue)value).getDataCell();
+            } else if (value instanceof DenseByteVectorCell) {
+                cell = (DenseByteVectorCell)value;
             } else {
-                throw new IllegalStateException("Expected DenseBitVectorCell or DenseBitVectorReadValue, but got "
+                throw new IllegalStateException("Expected a DenseByteVectorCell or DenseByteVectorReadValue, got "
                     + value.getClass().getName() + ". This is an implementation error.");
             }
 
             m_access.setObject(cell, (out, v) -> {
                 final var length = v.length();
-                out.writeLong(length);
 
-                short localBitIdx = 0; // addresses the bit in the storage byte
-                byte storage = 0;
-                for (long bitIdx = 0; bitIdx < length; bitIdx++) {
-                    if (v.get(bitIdx)) {
-                        storage |= (1 << localBitIdx);
-                    }
-                    localBitIdx++;
-                    if (localBitIdx == 8) {
-                        out.writeByte(storage);
-                        localBitIdx = 0;
-                        storage = 0;
-                    }
-                }
-                if (localBitIdx > 0) {
-                    // write the last unfilled byte
-                    out.writeByte(storage);
+                for (long byteIdx = 0; byteIdx < length; byteIdx++) {
+                    out.writeByte(v.get(byteIdx));
                 }
             });
         }

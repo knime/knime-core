@@ -113,7 +113,10 @@ public abstract class AbstractValueFactoryTest {
         assertEquals(createNewTestCell(), bufferedValue.getReadValue().getDataCell());
     }
 
-    private static final class BufferedValue {
+    /**
+     * Class that holds read and write value which are coupled through a buffered access
+     */
+    protected static final class BufferedValue {
         private final WriteValue<DataValue> m_write;
 
         private final ReadValue m_read;

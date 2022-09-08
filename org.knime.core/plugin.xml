@@ -490,6 +490,10 @@
                cellClass="org.knime.core.data.vector.bytevector.DenseByteVectorCell"
                serializerClass="org.knime.core.data.vector.bytevector.DenseByteVectorCell$DenseByteVectorSerializer">
          </serializer>
+         <ValueFactory
+               deprecated="false"
+               valueFactoryClass="org.knime.core.data.v2.value.DenseByteVectorValueFactory">
+         </ValueFactory>
       </DataType>
       <DataType
             cellClass="org.knime.core.data.vector.bytevector.SparseByteVectorCell">
