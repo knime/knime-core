@@ -8087,11 +8087,11 @@ public final class WorkflowManager extends NodeContainer
     }
 
     /**
-     * Returns the redacted content and keeps an unredacted version internally to replace the redacted version on paste
-     * in case their payload identifiers match.
+     * Returns the redacted content and keeps an unredacted version in {@link DefClipboard} to replace the redacted
+     * version on paste in case their payload identifiers match.
      *
      * @param spec specifies the nodes and annotations to copy and additional settings
-     * @param passwordRedactor handler to remove or alter passwords
+     * @param passwordRedactor handler to remove or alter passwords for the external copy
      * @return the copied content in intermediate workflow format with a payload identifier
      */
     public DefClipboardContent copyToDef(final WorkflowCopyContent spec, final PasswordRedactor passwordRedactor) {
