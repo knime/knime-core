@@ -54,6 +54,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.Optional;
 
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
@@ -93,16 +94,110 @@ import org.knime.shared.workflow.def.impl.CipherDefBuilder;
  */
 final class WorkflowCipher implements Cloneable {
 
-    /** AP-16296: append some extra bytes in order to disallow old (KNIME AP <4.4) installations
-     * from loading encrypted components. */
-    private static final byte[] PREPEND_TO_KEY = "version_1".getBytes(StandardCharsets.UTF_8);
+    /**
+     * Version of the locking mechanism, used to prevent older AP versions from
+     * opening newly locked components (potentially circumventing fixes).
+     * Versions are listed in reverse order so that {@code CipherVersion.values()[0]}
+     * returns the current version.
+     */
+    private enum CipherVersion {
+        /** Version 2 is used in KNIME AP 4.6.2--present, see AP-19479. */
+        VERSION_2("version_2") {
+            @Override
+            final Optional<byte[]> extractKey(final byte[] prefix, final byte[] versionedKey) {
+                final var extracted = stripPrefix(prefix, versionedKey);
+                extracted.ifPresent(ArrayUtils::reverse);
+                return extracted;
+            }
 
-    private static final NodeLogger LOGGER =
-        NodeLogger.getLogger(WorkflowCipher.class);
+            @Override
+            byte[] packageKey(final byte[] prefix, final byte[] rawKey) {
+                final byte[] reversed = rawKey.clone();
+                ArrayUtils.reverse(reversed);
+                return ArrayUtils.addAll(prefix, reversed);
+            }
+        },
+
+        /** Version 1 is used in KNIME AP 4.4--4.6.1, see AP-16296. */
+        VERSION_1("version_1") {
+            @Override
+            Optional<byte[]> extractKey(final byte[] prefix, final byte[] versionedKey) {
+                return stripPrefix(prefix, versionedKey);
+            }
+
+            @Override
+            byte[] packageKey(final byte[] prefix, final byte[] rawKey) {
+                return ArrayUtils.addAll(prefix, rawKey);
+            }
+        },
+
+        /** Version 0 is used in KNIME APs <4.4. */
+        VERSION_0("") {
+            @Override
+            Optional<byte[]> extractKey(final byte[] prefix, final byte[] versionedKey) {
+                return Optional.of(versionedKey);
+            }
+
+            @Override
+            byte[] packageKey(final byte[] prefix, final byte[] rawKey) {
+                return rawKey;
+            }
+        };
+
+        /** Prefix for the key. */
+        private final byte[] m_prefix;
+
+        /**
+         * Tries to strip a given prefix from the given byte array.
+         *
+         * @param prefix prefix to strip
+         * @param array array to strip the prefix from
+         * @return remainder of the array after the prefix if found, {@link Optional#empty()} otherwise
+         */
+        private static Optional<byte[]> stripPrefix(final byte[] prefix, final byte[] array) {
+            return Arrays.mismatch(prefix, array) == prefix.length
+                    ? Optional.of(Arrays.copyOfRange(array, prefix.length, array.length)) : Optional.empty();
+        }
+
+        /**
+         * @param prefix version string to prepend to the key
+         */
+        CipherVersion(final String prefix) {
+            m_prefix = prefix.getBytes(StandardCharsets.UTF_8);
+        }
+
+        /**
+         * Tries to extract a raw key from the given string.
+         *
+         * @param encoded
+         * @return raw key if the byte array was packaged with this version, {@link Optional#empty()} otherwise
+         */
+        final Optional<byte[]> extractKey(final String encoded) {
+            return extractKey(m_prefix, HexUtils.hexToBytes(encoded));
+        }
+
+        abstract Optional<byte[]> extractKey(final byte[] prefix, final byte[] versionedKey);
+
+        /**
+         * Packages a raw key according to this version.
+         *
+         * @param rawKey raw key to package
+         * @return packaged key
+         */
+        final String versionedKeyHex(final byte[] rawKey) {
+            return HexUtils.bytesToHex(packageKey(m_prefix, rawKey));
+        }
+
+        abstract byte[] packageKey(final byte[] prefix, final byte[] rawKey);
+    }
+
+    /** Current version of the cipher. */
+    private static final CipherVersion CURRENT_VERSION = CipherVersion.values()[0];
+
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(WorkflowCipher.class);
 
     /** The null cipher, no encryption, always unlocked. */
-    public static final WorkflowCipher NULL_CIPHER =
-        new WorkflowCipher(null, null, null, true);
+    public static final WorkflowCipher NULL_CIPHER = new WorkflowCipher(null, null, null, true);
 
     private boolean m_isUnlocked;
     private final SecretKey m_secretKey;
@@ -112,8 +207,7 @@ final class WorkflowCipher implements Cloneable {
     /**
      * @param passwordBytes
      * @param passwordDigest */
-    private WorkflowCipher(final SecretKey secretKey,
-            final byte[] passwordDigest, final String passwordHint,
+    private WorkflowCipher(final SecretKey secretKey, final byte[] passwordDigest, final String passwordHint,
             final boolean isUnlocked) {
         m_secretKey = secretKey;
         m_passwordDigest = passwordDigest;
@@ -263,10 +357,8 @@ final class WorkflowCipher implements Cloneable {
     /** Save cipher settings.
      * @param cipherSettings to save to. */
     void save(final NodeSettingsWO cipherSettings) {
-        String passwordDigestHex = HexUtils.bytesToHex(m_passwordDigest);
-        byte[] key = m_secretKey.getEncoded();
-        key = ArrayUtils.addAll(PREPEND_TO_KEY, key);
-        String encryptionKeyHex = HexUtils.bytesToHex(key);
+        final String passwordDigestHex = HexUtils.bytesToHex(m_passwordDigest);
+        final String encryptionKeyHex = CURRENT_VERSION.versionedKeyHex(m_secretKey.getEncoded());
         cipherSettings.addString("passwordDigest", passwordDigestHex);
         cipherSettings.addString("encryptionKey", encryptionKeyHex);
         cipherSettings.addString("passwordHint", m_passwordHint);
@@ -277,35 +369,28 @@ final class WorkflowCipher implements Cloneable {
      * @param cipherSettings Settings to load from.
      * @return A new cipher settings object.
      * @throws InvalidSettingsException if that fails. */
-    static WorkflowCipher load(final LoadVersion version,
-            final NodeSettingsRO cipherSettings)
+    static WorkflowCipher load(final LoadVersion version, final NodeSettingsRO cipherSettings)
         throws InvalidSettingsException {
         String passwordDigestHex = cipherSettings.getString("passwordDigest");
         String encryptionKeyHex = cipherSettings.getString("encryptionKey");
         byte[] passwordDigest = HexUtils.hexToBytes(passwordDigestHex);
-        byte[] encryptionKey = HexUtils.hexToBytes(encryptionKeyHex);
-        encryptionKey = removeVersionPrefixIfPresent(encryptionKey);
+        byte[] encryptionKey = extractRawKey(encryptionKeyHex);
         String hint = cipherSettings.getString("passwordHint");
         SecretKeySpec keySpec = new SecretKeySpec(encryptionKey, "AES");
         return new WorkflowCipher(keySpec, passwordDigest, hint, false);
     }
 
     /**
-     * If argument starts with {@link #PREPEND_TO_KEY}, remove it and return it. Otherwise return the argument.
+     * Strips any version prefixes and extracts the raw entryption key.
+     *
+     * @param encryptionKey versioned encryption key
+     * @return raw encryption key
+     * @see CipherVersion#extractKey(byte[])
      */
-    private static byte[] removeVersionPrefixIfPresent(final byte[] encryptionKey) {
-        if (ArrayUtils.getLength(encryptionKey) > PREPEND_TO_KEY.length) {
-            boolean startsWithPrefix = true;
-            for (int i = 0; i < PREPEND_TO_KEY.length; i++) {
-                if (encryptionKey[i] != PREPEND_TO_KEY[i]) {
-                    startsWithPrefix = false;
-                }
-            }
-            if (startsWithPrefix) {
-                return ArrayUtils.subarray(encryptionKey, PREPEND_TO_KEY.length, encryptionKey.length);
-            }
-        }
-        return encryptionKey;
+    private static byte[] extractRawKey(final String encryptionKey) {
+        // Enum#values() enumerates all members in declaration order (JLS 17, Section 8.9.3)
+        return Arrays.stream(CipherVersion.values()).flatMap(v -> v.extractKey(encryptionKey).stream()).findFirst()
+            .orElseThrow(() -> new IllegalStateException("Cipher Version 0 should accept all keys."));
     }
 
     /** {@inheritDoc} */
@@ -340,8 +425,7 @@ final class WorkflowCipher implements Cloneable {
         return new WorkflowCipher(encryptionKey, passwordDigest, hint, true);
     }
 
-    private static byte[] hashPassword(final String password)
-        throws NoSuchAlgorithmException  {
+    private static byte[] hashPassword(final String password) throws NoSuchAlgorithmException  {
         if (password == null) {
             return null;
         }
@@ -355,8 +439,7 @@ final class WorkflowCipher implements Cloneable {
         var passwordDigestHex = def.getPasswordDigest();
         var encryptionKeyHex = def.getEncryptionKey();
         byte[] passwordDigest = HexUtils.hexToBytes(passwordDigestHex);
-        byte[] encryptionKey = HexUtils.hexToBytes(encryptionKeyHex);
-        encryptionKey = removeVersionPrefixIfPresent(encryptionKey);
+        byte[] encryptionKey = extractRawKey(encryptionKeyHex);
         var hint = def.getPasswordHint();
         var keySpec = new SecretKeySpec(encryptionKey, "AES");
         return new WorkflowCipher(keySpec, passwordDigest, hint, false);
@@ -367,9 +450,7 @@ final class WorkflowCipher implements Cloneable {
             return new CipherDefBuilder().build();
         }
         var passwordDigestHex = HexUtils.bytesToHex(m_passwordDigest);
-        byte[] key = m_secretKey.getEncoded();
-        key = ArrayUtils.addAll(PREPEND_TO_KEY, key);
-        var encryptionKeyHex = HexUtils.bytesToHex(key);
+        var encryptionKeyHex = CURRENT_VERSION.versionedKeyHex(m_secretKey.getEncoded());
         return new CipherDefBuilder() //
             .setEncryptionKey(encryptionKeyHex) //
             .setPasswordDigest(passwordDigestHex) //
