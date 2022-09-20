@@ -89,6 +89,7 @@ import org.knime.core.node.streamable.PortObjectOutput;
 import org.knime.core.node.streamable.PortOutput;
 import org.knime.core.node.streamable.StreamableOperator;
 import org.knime.core.node.streamable.StreamableOperatorInternals;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.LoopEndNode;
 import org.knime.core.node.workflow.LoopStartNode;
@@ -305,6 +306,9 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
                 if (localMergeOperator != null) {
                     LOGGER.info("call local: MergeOperator#mergeIntermediate");
                     operatorInternals = localMergeOperator.mergeIntermediate(newInternals);
+                } else {
+                    CheckUtils.checkState(newInternals.length == 1, "Multiple internals without merge.");
+                    operatorInternals = newInternals[0];
                 }
 
                 //re-create port inputs since they were already iterated above
@@ -312,8 +316,7 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
 
             }
 
-            // create the out specs (after all intermediate iterations have been
-            // performed!)
+            // create the out specs (after all intermediate iterations have been performed!)
             LOGGER.info("call local: NodeModel#computeFinalOutputSpecs");
             PortObjectSpec[] outSpecsNoFlowPort = null;
             outSpecsNoFlowPort =
@@ -340,10 +343,9 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
                 //simulates transfer of the internals from the local node to the remote ones
                 operatorInternals = saveAndLoadInternals(operatorInternals);
 
-                if (localMergeOperator != null) {
-                    LOGGER.info("call: StreamableOperator#loadInternals");
-                    streamableOperator.loadInternals(operatorInternals);
-                }
+                LOGGER.info("call: StreamableOperator#loadInternals");
+                streamableOperator.loadInternals(operatorInternals);
+
                 LOGGER.info("call: StreamableOperator#runFinal");
                 try {
                     PortOutput[] tmpPortOutputs = portOutputs.clone();
@@ -530,24 +532,35 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
         final ExecutionContext[] exec, final StreamableOperatorInternals internals,
         final PortObjectSpec[] inSpecsNoFlowPort, final PortInput[][] portInputs, final int numChunks,
         final boolean mergeOpAvailable) throws Exception {
-        StreamableOperatorInternals[] newInternals = new StreamableOperatorInternals[numChunks];
-        for (int i = 0; i < numChunks; i++) {
-            //            LOGGER.info("call remote: NodeModel#createInitialStreamableOperatorInternals");
-            //            StreamableOperatorInternals internals =
-            //                remoteNodeContainers[i].getNodeModel().createInitialStreamableOperatorInternals();
-            //            LOGGER.info("call remote: NodeModel#createStreamableOperator");
-            StreamableOperator streamableOperator = remoteNodeContainers[i].getNodeModel()
+
+        final var newInternals = new StreamableOperatorInternals[numChunks];
+        for (var i = 0; i < numChunks; i++) {
+            var currentInternals = internals;
+//            LOGGER.info("call remote: NodeModel#createInitialStreamableOperatorInternals");
+//            StreamableOperatorInternals internals =
+//                remoteNodeContainers[i].getNodeModel().createInitialStreamableOperatorInternals();
+
+            LOGGER.info("call remote: NodeModel#createStreamableOperator");
+            final var streamableOperator = remoteNodeContainers[i].getNodeModel()
                 .createStreamableOperator(new PartitionInfo(i, numChunks), inSpecsNoFlowPort);
+
+            LOGGER.info("call: StreamableOperator#loadInternals");
             if (mergeOpAvailable) {
-                LOGGER.info("call: StreamableOperator#loadInternals");
-                streamableOperator.loadInternals(saveAndLoadInternals(internals));
+                // transfer internals
+                currentInternals = saveAndLoadInternals(currentInternals);
             }
+            streamableOperator.loadInternals(currentInternals);
+
             LOGGER.info("call: StreamableOperator#runIntermediate");
             streamableOperator.runIntermediate(portInputs[i], exec[i]);
+
+            LOGGER.info("call: StreamableOperator#saveInternals");
+            currentInternals = streamableOperator.saveInternals();
             if (mergeOpAvailable) {
-                LOGGER.info("call: StreamableOperator#saveInternals");
-                newInternals[i] = saveAndLoadInternals(streamableOperator.saveInternals());
+                // transfer internals
+                currentInternals = saveAndLoadInternals(currentInternals);
             }
+            newInternals[i] = currentInternals;
         }
         return newInternals;
     }
@@ -756,15 +769,23 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
      */
     private StreamableOperatorInternals saveAndLoadInternals(final StreamableOperatorInternals internals)
         throws IOException, InstantiationException, IllegalAccessException {
+
         if (internals == null) {
             return null;
         }
-        ByteArrayOutputStream byteArrayOutput = new ByteArrayOutputStream();
-        DataOutputStream out = new DataOutputStream(byteArrayOutput);
-        internals.save(out);
-        DataInputStream in = new DataInputStream(new ByteArrayInputStream(byteArrayOutput.toByteArray()));
-        StreamableOperatorInternals res = internals.getClass().newInstance();
-        res.load(in);
+
+        final byte[] bytes;
+        try (final var byteArrayOutput = new ByteArrayOutputStream()) {
+            try (final var out = new DataOutputStream(byteArrayOutput)) {
+                internals.save(out);
+            }
+            bytes = byteArrayOutput.toByteArray();
+        }
+
+        final var res = internals.getClass().newInstance();
+        try (final var in = new DataInputStream(new ByteArrayInputStream(bytes))) {
+            res.load(in);
+        }
         return res;
     }
 
