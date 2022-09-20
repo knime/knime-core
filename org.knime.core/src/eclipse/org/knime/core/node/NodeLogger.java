@@ -390,7 +390,7 @@ public final class NodeLogger {
             } else if (checkPreviousLog4j(log4j, latestLog4jConfig)) {
                 copyCurrentLog4j(log4j, latestLog4jConfig);
             }
-            DOMConfigurator.configure(log4j.toURI().toURL());
+            DOMConfigurator.configure(log4j.getAbsolutePath());
         } else {
             if (file.endsWith(".xml")) {
                 DOMConfigurator.configure(file);
