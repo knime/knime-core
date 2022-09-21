@@ -465,13 +465,13 @@ public final class KNIMEConstants {
 
 
     static {
-        BUILD_DATE = "September 21, 2022";
+        BUILD_DATE = "Nightly build";
         String versionString;
         Bundle coreBundle = OSGIHelper.getBundle("org.knime.core");
         if (coreBundle != null) {
             versionString = coreBundle.getHeaders().get("Bundle-Version")
                 .toString();
-	} else {
+        } else {
             System.err.println("Can't locate CorePlugin, not an OSGi framework?");
             versionString = "1.0.0.000000";
         }
