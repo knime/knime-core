@@ -147,10 +147,13 @@ public final class TemplateUpdateUtil {
         var sourceURI = linkInfo.getSourceURI();
         NodeContext.pushContext((NodeContainer)meta);
         try {
-            // "ifModifiedSince" parameter is null -> no checks if the server's modified-timestamp is newer
-            // as a consequence, older timestamps will now also be resolved -- changed as part of AP-17719
-            var localDir = ResolverUtil
-                .resolveURItoLocalOrTempFileConditional(sourceURI, new NullProgressMonitor(), null).orElse(null);
+            /**
+             * "ifModifiedSince" parameter is used to make an HTTP pre-check on whether an update is available to reduce
+             * unnecessary downloads. Update is available only when the server version is *newer* then the local
+             * timestamp. This will not fetch updates from an older, restored template snapshot on KS4.
+             */
+            var localDir = ResolverUtil.resolveURItoLocalOrTempFileConditional(sourceURI, new NullProgressMonitor(),
+                linkInfo.getTimestamp().toZonedDateTime()).orElse(null);
             if (localDir == null) {
                 return null;
             }
@@ -267,7 +270,7 @@ public final class TemplateUpdateUtil {
         // the template might be null which also means that there is _no_ update available
         // (see TemplateUpdateUtil#loadMetaNodeTemplateIfLocalOrOutdate)
         return remoteContainer != null && (!Objects.equals(remoteName, thisName)
-            || !remoteContainer.getTemplateInformation().isEqual(thisContainer.getTemplateInformation()))
+            || remoteContainer.getTemplateInformation().isNewerThan(thisContainer.getTemplateInformation()))
                 ? UpdateStatus.HasUpdate : UpdateStatus.UpToDate;
     }
 

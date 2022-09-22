@@ -400,7 +400,7 @@ public final class MetaNodeTemplateInformation implements Cloneable {
      * @return True if newer than argument
      * @throws IllegalStateException If this and/or other is not a link or template.
      */
-    boolean isEqual(final MetaNodeTemplateInformation other) {
+    boolean isNewerThan(final MetaNodeTemplateInformation other) {
         if (m_timestamp == null) {
             throw new IllegalStateException("Not a template or link: " + this);
         }
@@ -408,7 +408,7 @@ public final class MetaNodeTemplateInformation implements Cloneable {
             throw new IllegalStateException("Argument not a template or link: " + this);
         }
 
-        return getTimestamp().withNano(0).isEqual(other.getTimestamp().withNano(0));
+        return getTimestamp().isAfter(other.getTimestamp());
     }
 
     /** @param cl The non-null class (used to derive {@link TemplateType}).
