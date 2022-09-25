@@ -60,7 +60,7 @@ import org.knime.core.table.schema.VarBinaryDataSpec;
  * {@link ValueFactory} implementation for {@link DenseByteVectorCell}.
  *
  * @author Carsten Haubold, KNIME GmbH, Konstanz, Germany
- * @since 4.6
+ * @since 4.7
  *
  * @noreference This class is not intended to be referenced by clients.
  */
@@ -96,8 +96,9 @@ public final class DenseByteVectorValueFactory implements ValueFactory<VarBinary
             // Note that we cannot cache the data cell value here because
             // the underlying access will be moved to the next row and this
             // DenseByteVectorReadValue will be reused and queried again.
-            // So if someone accesses the ByteVectorValue interface of this ReadValue
-            // directly, the performance will be bad.
+            // But thanks to VarBinary data being cached by the ObjectCache,
+            // repeated accesses for the same row should only deserialize the
+            // bytes once.
             return m_access.getObject(in -> {
                 final var bytes = in.readBytes();
                 return new DenseByteVectorCellFactory(new DenseByteVector(bytes)).createDataCell();

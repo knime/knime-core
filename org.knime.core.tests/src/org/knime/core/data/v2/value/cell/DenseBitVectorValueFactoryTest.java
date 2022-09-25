@@ -61,7 +61,7 @@ import org.knime.core.data.vector.bitvector.DenseBitVectorCellFactory;
  *
  * @author Carsten Haubold, KNIME GmbH, Konstanz, Germany
  */
-public class DenseBitVectorValueFactoryTest extends AbstractValueFactoryTest {
+public final class DenseBitVectorValueFactoryTest extends AbstractValueFactoryTest {
     @Override
     protected ValueFactory<?, ?> createFactory() {
         return DenseBitVectorValueFactory.INSTANCE;

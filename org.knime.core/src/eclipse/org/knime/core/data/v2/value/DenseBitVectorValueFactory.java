@@ -45,6 +45,9 @@
  */
 package org.knime.core.data.v2.value;
 
+import java.io.DataOutput;
+import java.io.IOException;
+
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
@@ -54,17 +57,18 @@ import org.knime.core.data.vector.bitvector.DenseBitVectorCell;
 import org.knime.core.data.vector.bitvector.DenseBitVectorCellFactory;
 import org.knime.core.table.access.VarBinaryAccess.VarBinaryReadAccess;
 import org.knime.core.table.access.VarBinaryAccess.VarBinaryWriteAccess;
+import org.knime.core.table.io.ReadableDataInput;
 import org.knime.core.table.schema.VarBinaryDataSpec;
 
 /**
  * {@link ValueFactory} implementation for {@link DenseBitVectorCell}.
  *
  * @author Carsten Haubold, KNIME GmbH, Konstanz, Germany
- * @since 4.6
+ * @since 4.7
  *
  * @noreference This class is not intended to be referenced by clients.
  */
-public class DenseBitVectorValueFactory implements ValueFactory<VarBinaryReadAccess, VarBinaryWriteAccess> {
+public final class DenseBitVectorValueFactory implements ValueFactory<VarBinaryReadAccess, VarBinaryWriteAccess> {
 
     /** Stateless instance of LongValueFactory */
     public static final DenseBitVectorValueFactory INSTANCE = new DenseBitVectorValueFactory();
@@ -91,25 +95,19 @@ public class DenseBitVectorValueFactory implements ValueFactory<VarBinaryReadAcc
             super(access);
         }
 
-        @Override
-        public DenseBitVectorCell getDataCell() {
-            // Note that we cannot cache the data cell value here because
-            // the underlying access will be moved to the next row and this
-            // DenseBitVectorReadValue will be reused and queried again.
-            // So if someone accesses the BitVectorValue interface of this ReadValue
-            // directly, the performance will be bad.
-            return m_access.getObject(in -> {
+        private static DenseBitVectorCell deserialize(final ReadableDataInput in) {
+            try {
                 final var length = in.readLong();
                 final var v = new DenseBitVector(length);
                 short localBitIdx = 0;
                 byte storage = in.readByte();
                 for (long bitIdx = 0; bitIdx < length; bitIdx++) {
-                    if (localBitIdx == 8) {
+                    if (localBitIdx >= 8) {
                         localBitIdx = 0;
                         storage = in.readByte();
                     }
 
-                    if (0 < (storage & (1 << localBitIdx))) {
+                    if (0 < (storage & (1 << localBitIdx))) { // NOSONAR: bit shift cannot go out of the byte range
                         v.set(bitIdx);
                     }
 
@@ -117,7 +115,20 @@ public class DenseBitVectorValueFactory implements ValueFactory<VarBinaryReadAcc
                 }
 
                 return new DenseBitVectorCellFactory(v).createDataCell();
-            });
+            } catch (IOException e) {
+                throw new IllegalStateException("Error when deserializing DenseBitVector", e);
+            }
+        }
+
+        @Override
+        public DenseBitVectorCell getDataCell() {
+            // Note that we cannot cache the data cell value here because
+            // the underlying access will be moved to the next row and this
+            // DenseBitVectorReadValue will be reused and queried again.
+            // But thanks to VarBinary data being cached by the ObjectCache,
+            // repeated accesses for the same row should only call deserialize()
+            // once.
+            return m_access.getObject(DenseBitVectorReadValue::deserialize);
         }
 
         @Override
@@ -169,19 +180,8 @@ public class DenseBitVectorValueFactory implements ValueFactory<VarBinaryReadAcc
             super(access);
         }
 
-        @Override
-        public void setValue(final BitVectorValue value) {
-            DenseBitVectorCell cell;
-            if (value instanceof DenseBitVectorReadValue) {
-                cell = ((DenseBitVectorReadValue)value).getDataCell();
-            } else if (value instanceof DenseBitVectorCell) {
-                cell = (DenseBitVectorCell)value;
-            } else {
-                throw new IllegalStateException("Expected DenseBitVectorCell or DenseBitVectorReadValue, but got "
-                    + value.getClass().getName() + ". This is an implementation error.");
-            }
-
-            m_access.setObject(cell, (out, v) -> {
+        private static void serialize(final DataOutput out, final BitVectorValue v) {
+            try {
                 final var length = v.length();
                 out.writeLong(length);
 
@@ -202,7 +202,24 @@ public class DenseBitVectorValueFactory implements ValueFactory<VarBinaryReadAcc
                     // write the last unfilled byte
                     out.writeByte(storage);
                 }
-            });
+            } catch (IOException e) {
+                throw new IllegalStateException("Value " + v + " could not be serialized", e);
+            }
+        }
+
+        @Override
+        public void setValue(final BitVectorValue value) {
+            DenseBitVectorCell cell;
+            if (value instanceof DenseBitVectorReadValue) {
+                cell = ((DenseBitVectorReadValue)value).getDataCell();
+            } else if (value instanceof DenseBitVectorCell) {
+                cell = (DenseBitVectorCell)value;
+            } else {
+                throw new IllegalStateException("Expected DenseBitVectorCell or DenseBitVectorReadValue, but got "
+                    + value.getClass().getName() + ". This is an implementation error.");
+            }
+
+            m_access.setObject(cell, DenseBitVectorWriteValue::serialize);
         }
 
     }
