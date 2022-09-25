@@ -70,6 +70,7 @@ import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.IDataRepository;
+import org.knime.core.data.MissingValue;
 import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.v2.FileStoreAwareValueFactory;
@@ -145,7 +146,7 @@ public abstract class AbstractAdapterCellValueFactory
      *
      * @param <T> The type of the adapter value that can be written
      */
-    public static abstract class AbstractAdapterCellWriteValue<T extends DataValue & AdapterValue>
+    public abstract static class AbstractAdapterCellWriteValue<T extends DataValue & AdapterValue>
         implements WriteValue<T> {
         private final StructWriteAccess m_access;
 
@@ -165,7 +166,15 @@ public abstract class AbstractAdapterCellValueFactory
 
         @Override
         public final void setValue(final T value) {
+            if (value instanceof AbstractAdapterCellReadValue) {
+                var readValue = (AbstractAdapterCellReadValue)value;
+                m_access.getWriteAccess(0).setFrom(readValue.m_access.getAccess(0));
+                m_access.getWriteAccess(1).setFrom(readValue.m_access.getAccess(1));
+                return;
+            }
+
             setPrimaryValue(value, m_access.getWriteAccess(0));
+
             final var blobAccess = (VarBinaryWriteAccess)m_access.getWriteAccess(1);
 
             ByteArrayOutputStream outStream = new ByteArrayOutputStream();
@@ -219,7 +228,7 @@ public abstract class AbstractAdapterCellValueFactory
      * {@link AdapterValue}s using their deserializers from before-Columnar-Backend times. Derived classes need to
      * implement #getAdapterCell to specify how to construct an {@link AdapterCell} for the primary value.
      */
-    public static abstract class AbstractAdapterCellReadValue implements ReadValue {
+    public abstract static class AbstractAdapterCellReadValue implements ReadValue, AdapterValue {
         private final StructReadAccess m_access;
 
         private final IDataRepository m_dataRepository;
@@ -282,6 +291,26 @@ public abstract class AbstractAdapterCellValueFactory
          * @return The {@link AdapterCell} created from the primary value, still without any {@link AdapterValue}s.
          */
         protected abstract AdapterCell getAdapterCell(ReadAccess readAccess);
+
+        @Override
+        public <V extends DataValue> boolean isAdaptable(final Class<V> valueClass) {
+            return ((AdapterValue)getDataCell()).isAdaptable(valueClass);
+        }
+
+        @Override
+        public <V extends DataValue> V getAdapter(final Class<V> valueClass) {
+            return ((AdapterValue)getDataCell()).getAdapter(valueClass);
+        }
+
+        @Override
+        public <V extends DataValue> MissingValue getAdapterError(final Class<V> valueClass) {
+            return ((AdapterValue)getDataCell()).getAdapterError(valueClass);
+        }
+
+        @Override
+        public Map<Class<? extends DataValue>, DataCell> getAdapterMap() {
+            return ((AdapterValue)getDataCell()).getAdapterMap();
+        }
     }
 
     private static final class AdapterCellDataOutputDelegator extends AbstractDataOutputDelegator {

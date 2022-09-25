@@ -58,13 +58,16 @@ import java.util.Set;
 
 import org.junit.Test;
 import org.knime.core.data.AdapterCell;
+import org.knime.core.data.AdapterValue;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataValue;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IDataRepository;
 import org.knime.core.data.MissingCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.NotInWorkflowWriteFileStoreHandler;
+import org.knime.core.data.v2.WriteValue;
 import org.knime.core.data.v2.value.AbstractAdapterCellValueFactory;
 import org.knime.core.data.xml.XMLCellFactory;
 import org.knime.core.data.xml.XMLValue;
@@ -116,12 +119,12 @@ public class AdapterCellValueFactoryTest {
     public static class MyPrimaryAdapterCellValueFactory extends AbstractAdapterCellValueFactory {
 
         @Override
-        public AbstractAdapterCellReadValue createReadValue(final StructReadAccess access) {
+        public MyPrimaryAdapterCellReadValue createReadValue(final StructReadAccess access) {
             return new MyPrimaryAdapterCellReadValue(access, m_dataRepository);
         }
 
         @Override
-        public AbstractAdapterCellWriteValue<MyPrimaryAdapterCell> createWriteValue(final StructWriteAccess access) {
+        public MyPrimaryAdapterCellWriteValue createWriteValue(final StructWriteAccess access) {
             return new MyPrimaryAdapterCellWriteValue(access, m_writeFileStoreHandler);
         }
 
@@ -130,7 +133,7 @@ public class AdapterCellValueFactoryTest {
             return StringDataSpec.INSTANCE;
         }
 
-        private static final class MyPrimaryAdapterCellWriteValue
+        static final class MyPrimaryAdapterCellWriteValue
             extends AbstractAdapterCellWriteValue<MyPrimaryAdapterCell> {
             private MyPrimaryAdapterCellWriteValue(final StructWriteAccess access,
                 final IWriteFileStoreHandler fsHandler) {
@@ -143,7 +146,7 @@ public class AdapterCellValueFactoryTest {
             }
         }
 
-        private static final class MyPrimaryAdapterCellReadValue extends AbstractAdapterCellReadValue {
+        static final class MyPrimaryAdapterCellReadValue extends AbstractAdapterCellReadValue {
             private MyPrimaryAdapterCellReadValue(final StructReadAccess access, final IDataRepository dataRepository) {
                 super(access, dataRepository);
             }
@@ -226,5 +229,40 @@ public class AdapterCellValueFactoryTest {
         adapterSet.addAll(adapterMap.values());
         assertEquals(2, adapterSet.size());
         assertEquals(c2.getAdapterMap().keySet(), adapterMap.keySet());
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testAdapterCellSetWriteValueFromReadValue() throws Exception {
+        MyPrimaryAdapterCell c1 = new MyPrimaryAdapterCell("Test");
+        var additionalCell = new XMLCellFactory().createCell("<xml><contents>Test</contents></xml>");
+        MyPrimaryAdapterCell c2 = (MyPrimaryAdapterCell)c1.cloneAndAddAdapter(additionalCell, XMLValue.class);
+
+        var factory = new MyPrimaryAdapterCellValueFactory();
+        factory.initializeForWriting(NotInWorkflowWriteFileStoreHandler.create());
+        var bufferedAccess = BufferedAccesses
+            .createBufferedAccess(new StructDataSpec(StringDataSpec.INSTANCE, VarBinaryDataSpec.INSTANCE));
+        var writeValue = factory.createWriteValue((StructWriteAccess)bufferedAccess);
+        writeValue.setValue(c2);
+        var readValue = factory.createReadValue((StructReadAccess)bufferedAccess);
+
+        var bufferedAccess2 = BufferedAccesses
+                .createBufferedAccess(new StructDataSpec(StringDataSpec.INSTANCE, VarBinaryDataSpec.INSTANCE));
+        var writeValue2 = factory.createWriteValue((StructWriteAccess)bufferedAccess2);
+        setValue(writeValue2, readValue);
+        var readValue2 = factory.createReadValue((StructReadAccess)bufferedAccess2);
+
+        DataCell c3 = readValue2.getDataCell();
+        assertTrue(c3 instanceof AdapterCell);
+        assertTrue(c3 instanceof MyPrimaryAdapterCell);
+        MyPrimaryAdapterCell a3 = (MyPrimaryAdapterCell)c3;
+        assertTrue(a3.isAdaptable(XMLValue.class));
+        assertEquals(c1.getValue(), a3.getValue());
+        assertEquals(additionalCell.toString(), a3.getAdapter(XMLValue.class).toString());
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <V extends DataValue & AdapterValue, W extends WriteValue<V>> void setValue(final W writeValue, final MyPrimaryAdapterCellValueFactory.MyPrimaryAdapterCellReadValue value) {
+        writeValue.setValue((V)value);
     }
 }
