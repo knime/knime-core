@@ -53,16 +53,21 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
-import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.context.ModifiableNodeCreationConfiguration;
 import org.knime.core.node.workflow.action.ReplaceNodeResult;
 import org.knime.filehandling.core.port.FileSystemPortObject;
+import org.mockito.ArgumentMatcher;
 
 /**
  * Tests the {@link WorkflowManager#canReplaceNode(NodeID)} and
@@ -72,11 +77,16 @@ import org.knime.filehandling.core.port.FileSystemPortObject;
  */
 public class EnhSRV2696_ReplaceNodePorts extends WorkflowTestCase {
 
-    private NodeID m_datagenerator_1;
+	private NodeID m_datagenerator_1;
 
-    private NodeID m_concatenate_2;
+	private NodeID m_concatenate_2;
 
-    private NodeID m_metanode_4;
+	private NodeID m_metanode_4;
+
+	private final WorkflowListener m_workflowListener = mock(WorkflowListener.class);
+
+	private final ArgumentMatcher<WorkflowEvent> m_workflowEventMatcher = event -> event.getType()
+			.equals(WorkflowEvent.Type.PORT_ADDED);
 
     /**
      * Load workflow.
@@ -89,6 +99,9 @@ public class EnhSRV2696_ReplaceNodePorts extends WorkflowTestCase {
         m_datagenerator_1 = new NodeID(baseID, 1);
         m_concatenate_2 = new NodeID(baseID, 2);
         m_metanode_4 = new NodeID(baseID, 4);
+        var wfm = getManager();
+        wfm.addListener(m_workflowListener);
+        setManager(wfm);
     }
 
     /**
@@ -131,6 +144,9 @@ public class EnhSRV2696_ReplaceNodePorts extends WorkflowTestCase {
         IllegalStateException e =
             assertThrows(IllegalStateException.class, () -> wfm.replaceNode(m_metanode_4, creationConfig));
         assertThat("unexpected exception message", e.getMessage(), is("Node cannot be replaced"));
+        
+        // check that listener noticed exactly one PORT_ADDED event
+        verify(m_workflowListener, times(1)).workflowChanged(argThat(m_workflowEventMatcher));
     }
     
 	/**
@@ -154,12 +170,15 @@ public class EnhSRV2696_ReplaceNodePorts extends WorkflowTestCase {
 		NativeNodeContainer newNC = (NativeNodeContainer) wfm.getNodeContainer(modelwriter_11);
 		assertThat("connection is gone unexpectedly", wfm.getIncomingConnectionFor(modelwriter_11, 2), notNullValue());
 		assertTrue("node annotation expected to be the default one", newNC.getNodeAnnotation().getData().isDefault());
-
+		
 		// try undo
 		replaceRes.undo();
 		newNC = (NativeNodeContainer) wfm.getNodeContainer(modelwriter_11);
 		assertThat("connection is gone unexpectedly", wfm.getIncomingConnectionFor(modelwriter_11, 1), notNullValue());
 		assertTrue("node annotation expected to be the default one", newNC.getNodeAnnotation().getData().isDefault());
+
+        // check that listener noticed exactly one PORT_ADDED event
+        verify(m_workflowListener, times(1)).workflowChanged(argThat(m_workflowEventMatcher));
 	}
 
     /**
@@ -178,7 +197,7 @@ public class EnhSRV2696_ReplaceNodePorts extends WorkflowTestCase {
         ConnectionContainer newCC = wfm.addConnection(m_datagenerator_1, 1, m_concatenate_2, 3);
         NativeNodeContainer newNC = (NativeNodeContainer)wfm.getNodeContainer(m_concatenate_2);
         assertThat("unexpected number of input ports", newNC.getNrInPorts(), is(4));
-
+        
         // remove port again
         ReplaceNodeResult replaceRes =
             wfm.replaceNode(m_concatenate_2, oldNC.getNode().getCopyOfCreationConfig().get());
@@ -186,13 +205,16 @@ public class EnhSRV2696_ReplaceNodePorts extends WorkflowTestCase {
         assertThat("unexpected number of input ports", newNC.getNrInPorts(), is(3));
         assertThat("unexpected connection", wfm.getConnection(newCC.getID()), nullValue());
         assertThat("canUndo expected to be possible", replaceRes.canUndo(), is(true));
-
+        
         // undo remove operation
         replaceRes.undo();
         NativeNodeContainer undoNC = (NativeNodeContainer)wfm.getNodeContainer(m_concatenate_2);
-        assertTrue(undoNC != newNC);
+        assertNotSame(newNC, undoNC);
         assertThat("unexpected number of input ports", undoNC.getNrInPorts(), is(4));
         assertThat("connection missing", wfm.getConnection(newCC.getID()), notNullValue());
+        
+        // check that listener noticed exactly two PORT_ADDED events
+        verify(m_workflowListener, times(2)).workflowChanged(argThat(m_workflowEventMatcher));
     }
 
 }

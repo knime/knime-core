@@ -97,6 +97,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.Predicate;
@@ -885,21 +886,20 @@ public final class WorkflowManager extends NodeContainer
     public ReplaceNodeResult replaceNode(final NodeID id, final ModifiableNodeCreationConfiguration creationConfig) {
         CheckUtils.checkState(canReplaceNode(id), "Node cannot be replaced");
         try (WorkflowLock lock = lock()) {
-            NativeNodeContainer nnc = (NativeNodeContainer)getNodeContainer(id);
+            var nnc = (NativeNodeContainer)getNodeContainer(id);
             // keep the node's settings
-            final NodeSettings settings = new NodeSettings("node settings");
+            final var settings = new NodeSettings("node settings");
             saveNodeSettings(id, settings);
 
             // keep some node properties to be transfered to the new node
-            NodeUIInformation uiInfo = nnc.getUIInformation();
-            NodeFactory<?> factory = nnc.getNode().getFactory();
-            NodeAnnotation nodeAnnotation = nnc.getNodeAnnotation();
+            var uiInfo = nnc.getUIInformation();
+            var factory = nnc.getNode().getFactory();
+            var nodeAnnotation = nnc.getNodeAnnotation();
             Set<ConnectionContainer> incomingConnections = getIncomingConnectionsFor(id);
             Set<ConnectionContainer> outgoingConnections = getOutgoingConnectionsFor(id);
 
             // keep old node creation config
-            ModifiableNodeCreationConfiguration oldNodeCreationConfig =
-                nnc.getNode().getCopyOfCreationConfig().orElse(null);
+            var oldCreationConfig = nnc.getNode().getCopyOfCreationConfig().orElse(null);
 
             // delete the old node
             removeNode(id);
@@ -921,14 +921,41 @@ public final class WorkflowManager extends NodeContainer
                 nnc.getNodeAnnotation().copyFrom(nodeAnnotation.getData(), true);
             }
 
-            // restore connections if possible
-            List<ConnectionContainer> removedConnections = reconnect(id,
-                oldNodeCreationConfig.getPortConfig().get().mapInputPorts(creationConfig.getPortConfig().get()),
-                oldNodeCreationConfig.getPortConfig().get().mapOutputPorts(creationConfig.getPortConfig().get()),
-                incomingConnections, outgoingConnections);
+            List<ConnectionContainer> removedConnections = new ArrayList<>();
+            if (oldCreationConfig != null) {
+                // restore connections if possible
+                if (oldCreationConfig.getPortConfig().isPresent()) {
+                    removedConnections = reconnect(id,
+                        oldCreationConfig.getPortConfig().get().mapInputPorts(creationConfig.getPortConfig().get()), // NOSONAR: Presence checked
+                        oldCreationConfig.getPortConfig().get().mapOutputPorts(creationConfig.getPortConfig().get()), // NOSONAR: Presence checked
+                        incomingConnections, outgoingConnections);
+                }
 
-            return new ReplaceNodeResult(this, id, removedConnections, oldNodeCreationConfig);
+                // notify listeners if ports were added or exchanged
+                if (nodeCreationConfigAddedOrExchangedPort(oldCreationConfig, creationConfig)) {
+                    notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.PORT_ADDED, id, null, null));
+                }
+            }
+
+            return new ReplaceNodeResult(this, id, removedConnections, oldCreationConfig);
         }
+    }
+
+    private static boolean nodeCreationConfigAddedOrExchangedPort(final ModifiableNodeCreationConfiguration oldCreationConfig,
+        final ModifiableNodeCreationConfiguration creationConfig) {
+        if (oldCreationConfig.getPortConfig().isEmpty() || creationConfig.getPortConfig().isEmpty()) {
+            return false; // At least one port config missing, ports couldn't have been changed
+        }
+        var oldPortsConfig = oldCreationConfig.getPortConfig().get(); // NOSONAR: Presence checked
+        var portsConfig = creationConfig.getPortConfig().get(); // NOSONAR: Presence checked
+        BiPredicate<PortType[], PortType[]> wasPortAddedOrExchanged = (oldPts, pts) -> {
+            var oldList = Arrays.asList(oldPts);
+            var newList = Arrays.asList(pts);
+            return !(oldList.equals(newList) || newList.size() < oldList.size());
+        };
+        // True if input or output ports were added or exchanged
+        return wasPortAddedOrExchanged.test(oldPortsConfig.getInputPorts(), portsConfig.getInputPorts())
+            || wasPortAddedOrExchanged.test(oldPortsConfig.getOutputPorts(), portsConfig.getOutputPorts());
     }
 
     private List<ConnectionContainer> reconnect(final NodeID newId, final Map<Integer, Integer> inputPortMapping,
@@ -1770,6 +1797,8 @@ public final class WorkflowManager extends NodeContainer
             if (!haveMetaPortsChanged(newPorts, true, subFlowMgr)) {
                 return;
             }
+            var portsAdded = checkMetaPortsAdded(newPorts, true, subFlowMgr);
+
             List<Pair<ConnectionContainer, ConnectionContainer>> changedConnectionsThisFlow =
                 m_workflow.changeDestinationPortsForMetaNode(subFlowID, newPorts, false);
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsThisFlow) {
@@ -1785,8 +1814,8 @@ public final class WorkflowManager extends NodeContainer
                 subFlowMgr.removeConnection(old);
             }
 
-            WorkflowInPort[] newMNPorts = new WorkflowInPort[newPorts.length];
-            for (int i = 0; i < newPorts.length; i++) {
+            var newMNPorts = new WorkflowInPort[newPorts.length];
+            for (var i = 0; i < newPorts.length; i++) {
                 final int oldIndex = newPorts[i].getOldIndex();
                 if (oldIndex >= 0) {
                     newMNPorts[i] = subFlowMgr.getInPort(oldIndex);
@@ -1810,6 +1839,11 @@ public final class WorkflowManager extends NodeContainer
             }
             subFlowMgr.setDirty();
             setDirty();
+
+            // Notify listeners if ports were added
+            if (portsAdded) {
+                notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.PORT_ADDED, subFlowID, null, null));
+            }
         }
     }
 
@@ -1824,6 +1858,8 @@ public final class WorkflowManager extends NodeContainer
             if (!haveMetaPortsChanged(newPorts, false, subFlowMgr)) {
                 return;
             }
+            var portsAdded = checkMetaPortsAdded(newPorts, false, subFlowMgr);
+
             List<Pair<ConnectionContainer, ConnectionContainer>> changedConnectionsThisFlow =
                 m_workflow.changeSourcePortsForMetaNode(subFlowID, newPorts, false);
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsThisFlow) {
@@ -1839,8 +1875,8 @@ public final class WorkflowManager extends NodeContainer
                 subFlowMgr.removeConnection(old);
             }
 
-            WorkflowOutPort[] newMNPorts = new WorkflowOutPort[newPorts.length];
-            for (int i = 0; i < newPorts.length; i++) {
+            var newMNPorts = new WorkflowOutPort[newPorts.length];
+            for (var i = 0; i < newPorts.length; i++) {
                 final int oldIndex = newPorts[i].getOldIndex();
                 if (oldIndex >= 0) {
                     newMNPorts[i] = subFlowMgr.getOutPort(oldIndex);
@@ -1863,6 +1899,11 @@ public final class WorkflowManager extends NodeContainer
                     newConn.getDestPort());
             }
             subFlowMgr.setDirty();
+
+            // Notify listeners if ports were added
+            if (portsAdded) {
+                notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.PORT_ADDED, subFlowID, null, null));
+            }
         }
     }
 
@@ -1877,6 +1918,7 @@ public final class WorkflowManager extends NodeContainer
             if (!haveSubPortsChanged(newPorts, true, snc)) {
                 return;
             }
+            var portsAdded = checkSubPortsAdded(newPorts, true, snc);
             List<Pair<ConnectionContainer, ConnectionContainer>> changedConnectionsThisFlow =
                 m_workflow.changeDestinationPortsForMetaNode(subFlowID, newPorts, true);
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsThisFlow) {
@@ -1884,14 +1926,14 @@ public final class WorkflowManager extends NodeContainer
                 removeConnection(old);
                 notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.CONNECTION_REMOVED, null, old, null));
             }
-            WorkflowManager subFlow = snc.getWorkflowManager();
+            var subFlow = snc.getWorkflowManager();
             List<Pair<ConnectionContainer, ConnectionContainer>> changedConnectionsSubFlow =
                 subFlow.m_workflow.changeSourcePortsForMetaNode(snc.getVirtualInNodeID(), newPorts, true);
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsSubFlow) {
                 subFlow.removeConnection(p.getFirst());
             }
-            PortType[] portTypes = new PortType[newPorts.length - 1];
-            for (int i = 0; i < newPorts.length - 1; i++) {
+            var portTypes = new PortType[newPorts.length - 1];
+            for (var i = 0; i < newPorts.length - 1; i++) {
                 portTypes[i] = newPorts[i + 1].getType();
             }
             snc.setInPorts(portTypes);
@@ -1906,6 +1948,10 @@ public final class WorkflowManager extends NodeContainer
                     p.getSecond().getDestPort());
             }
             setDirty();
+            // Notify listeners if ports were added
+            if (portsAdded) {
+                notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.PORT_ADDED, subFlowID, null, null));
+            }
         }
     }
 
@@ -1920,6 +1966,7 @@ public final class WorkflowManager extends NodeContainer
             if (!haveSubPortsChanged(newPorts, false, snc)) {
                 return;
             }
+            var portsAdded = checkSubPortsAdded(newPorts, false, snc);
             List<Pair<ConnectionContainer, ConnectionContainer>> changedConnectionsThisFlow =
                 m_workflow.changeSourcePortsForMetaNode(subFlowID, newPorts, true);
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsThisFlow) {
@@ -1927,15 +1974,15 @@ public final class WorkflowManager extends NodeContainer
                 removeConnection(old);
                 notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.CONNECTION_REMOVED, null, old, null));
             }
-            WorkflowManager subFlow = snc.getWorkflowManager();
+            var subFlow = snc.getWorkflowManager();
             List<Pair<ConnectionContainer, ConnectionContainer>> changedConnectionsSubFlow =
                 subFlow.m_workflow.changeDestinationPortsForMetaNode(snc.getVirtualOutNodeID(), newPorts, true);
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsSubFlow) {
                 ConnectionContainer old = p.getFirst();
                 subFlow.removeConnection(old);
             }
-            PortType[] portTypes = new PortType[newPorts.length - 1];
-            for (int i = 0; i < newPorts.length - 1; i++) {
+            var portTypes = new PortType[newPorts.length - 1];
+            for (var i = 0; i < newPorts.length - 1; i++) {
                 portTypes[i] = newPorts[i + 1].getType();
             }
             snc.setOutPorts(portTypes);
@@ -1950,7 +1997,23 @@ public final class WorkflowManager extends NodeContainer
                     snc.getVirtualOutNodeID(), p.getSecond().getDestPort());
             }
             setDirty();
+
+            // Notify listeners if ports were added
+            if (portsAdded) {
+                notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.PORT_ADDED, subFlowID, null, null));
+            }
         }
+    }
+
+    /**
+     * @param newPorts
+     * @param inPorts Check input ports if true, for output ports otherwise
+     * @param subFlowMgr
+     */
+    private static boolean checkMetaPortsAdded(final MetaPortInfo[] newPorts, final boolean inPorts,
+        final WorkflowManager subFlowMgr) {
+        int nrPorts = inPorts ? subFlowMgr.getNrInPorts() : subFlowMgr.getNrOutPorts();
+        return newPorts.length > nrPorts;
     }
 
     /**
@@ -1960,10 +2023,11 @@ public final class WorkflowManager extends NodeContainer
      */
     private static boolean haveMetaPortsChanged(final MetaPortInfo[] newPorts, final boolean inPorts,
         final WorkflowManager subFlowMgr) {
-        if (newPorts.length != (inPorts ? subFlowMgr.getNrInPorts() : subFlowMgr.getNrOutPorts())) {
+        int nrPorts = inPorts ? subFlowMgr.getNrInPorts() : subFlowMgr.getNrOutPorts();
+        if (newPorts.length != nrPorts) {
             return true;
         }
-        for (int i = 0; i < newPorts.length; i++) {
+        for (var i = 0; i < newPorts.length; i++) {
             if (newPorts[i].getOldIndex() != newPorts[i].getNewIndex()) {
                 return true;
             }
@@ -1973,17 +2037,29 @@ public final class WorkflowManager extends NodeContainer
 
     /**
      * @param newPorts
+     * @param inPorts Check input ports if true, for output ports otherwise
+     * @param snc
+     */
+    private static boolean checkSubPortsAdded(final MetaPortInfo[] newPorts, final boolean inPorts,
+        final SubNodeContainer snc) {
+        int nrPorts = inPorts ? snc.getWorkflowManager().getNodeContainer(snc.getVirtualInNodeID()).getNrOutPorts()
+            : snc.getWorkflowManager().getNodeContainer(snc.getVirtualOutNodeID()).getNrInPorts();
+        return newPorts.length > nrPorts;
+    }
+
+    /**
+     * @param newPorts
      * @param inPorts if true, otherwise outports
      * @param subFlowMgr
      */
     private static boolean haveSubPortsChanged(final MetaPortInfo[] newPorts, final boolean inPorts,
         final SubNodeContainer snc) {
-        int ports = inPorts ? snc.getWorkflowManager().getNodeContainer(snc.getVirtualInNodeID()).getNrOutPorts()
+        int nrPorts = inPorts ? snc.getWorkflowManager().getNodeContainer(snc.getVirtualInNodeID()).getNrOutPorts()
             : snc.getWorkflowManager().getNodeContainer(snc.getVirtualOutNodeID()).getNrInPorts();
-        if (newPorts.length != ports) {
+        if (newPorts.length != nrPorts) {
             return true;
         }
-        for (int i = 0; i < newPorts.length; i++) {
+        for (var i = 0; i < newPorts.length; i++) {
             if (newPorts[i].getOldIndex() != newPorts[i].getNewIndex()) {
                 return true;
             }

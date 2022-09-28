@@ -93,7 +93,10 @@ public class WorkflowEvent {
             WORKFLOW_DIRTY,
             /** Workflow is marked as clean (not dirty)
              * @since 4.6 */
-            WORKFLOW_CLEAN
+            WORKFLOW_CLEAN,
+            /** Port added to node on workflow
+             * @since 4.7 */
+            PORT_ADDED
     }
 
     private final NodeID m_id;
