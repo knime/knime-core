@@ -57,11 +57,14 @@ import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.knime.core.data.DataCell;
@@ -71,6 +74,7 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.ColumnRearranger.SpecAndFactoryObject;
+import org.knime.core.data.container.filter.CloseableDataRowIterable;
 import org.knime.core.data.container.filter.TableFilter;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.filestore.FileStoreFactory;
@@ -408,10 +412,14 @@ public final class RearrangeColumnsTable implements KnowsRowCountTable {
                 Node.invokeCreateDataContainer(context, new DataTableSpec(newColSpecs), true, -1, false);
             assert newColumnFactoryList.size() == newColCount;
             try {
+                // allows the columnar backend to only materialize the required columns
+                var filteredTable = table.filter(extractTableFilter(rearranger, table.getSpec().getNumColumns()));
+                var numRows = table.size();
                 if (workerCount <= 0) {
-                    calcNewColsSynchronously(table, subProgress, newColsProducerMapping, container);
+                    calcNewColsSynchronously(filteredTable, numRows, subProgress,
+                        newColsProducerMapping, container);
                 } else {
-                    calcNewColsASynchronously(table, subProgress, newColsProducerMapping, container);
+                    calcNewColsASynchronously(filteredTable, numRows, subProgress, newColsProducerMapping, container);
                 }
             } finally {
                 container.close();
@@ -452,6 +460,27 @@ public final class RearrangeColumnsTable implements KnowsRowCountTable {
         return new RearrangeColumnsTable(table, includesIndex, isFromRefTable, spec, appendTable);
     }
 
+    private static TableFilter extractTableFilter(final ColumnRearranger rearranger, final int numColumns) {
+        var requiredColumns = rearranger.getIncludes().stream()//
+                .map(SpecAndFactoryObject::getFactory)//
+                .filter(Objects::nonNull)//
+                .map(CellFactory::getRequiredColumns)//
+                .collect(Collectors.toList());
+        if (requiredColumns.stream().anyMatch(Optional::isEmpty)) {
+            // all columns must be materialized if any factory doesn't tell us which
+            // columns it needs
+            return TableFilter.materializeCols(IntStream.range(0, numColumns).toArray());
+        } else {
+            return TableFilter.materializeCols(//
+                requiredColumns.stream()//
+                    .map(Optional::get)// NOSONAR save because otherwise the if above would have matched
+                    .flatMapToInt(IntStream::of)//
+                    .distinct()//
+                    .toArray()//
+            );
+        }
+    }
+
     /** Set a file store factory on the {@link AbstractCellFactory}.
      * See {@link AbstractCellFactory#getFileStoreFactory()} for details.
      * @param newColumnFactoryList To work on.
@@ -481,10 +510,9 @@ public final class RearrangeColumnsTable implements KnowsRowCountTable {
     }
 
     /** Processes input sequentially in the caller thread. */
-    private static void calcNewColsSynchronously(final BufferedDataTable table, final ExecutionMonitor subProgress,
-        final NewColumnsProducerMapping newColsProducerMapping, final DataContainer container)
-        throws CanceledExecutionException {
-        long finalRowCount = table.size();
+    private static void calcNewColsSynchronously(final CloseableDataRowIterable table, final long numRows,
+        final ExecutionMonitor subProgress, final NewColumnsProducerMapping newColsProducerMapping,
+        final DataContainer container) throws CanceledExecutionException {
         Set<CellFactory> newColsFactories = newColsProducerMapping.getUniqueCellFactoryMap().keySet();
         final int factoryCount = newColsFactories.size();
         int r = 0;
@@ -498,7 +526,7 @@ public final class RearrangeColumnsTable implements KnowsRowCountTable {
                     // no factory added means at least one columns gets type converted.
                     assert !newColsProducerMapping.getConverterToIndexMap().isEmpty();
                 } else {
-                    facForProgress.setProgress(r + 1, finalRowCount, row.getKey(), subProgress);
+                    facForProgress.setProgress(r + 1, numRows, row.getKey(), subProgress);
                 }
                 subProgress.checkCanceled();
             }
@@ -508,10 +536,9 @@ public final class RearrangeColumnsTable implements KnowsRowCountTable {
     /**
      * Processes input concurrently using a {@link ConcurrentNewColCalculator}.
      */
-    private static void calcNewColsASynchronously(final BufferedDataTable table, final ExecutionMonitor subProgress,
+    private static void calcNewColsASynchronously(final CloseableDataRowIterable table, final long numRows, final ExecutionMonitor subProgress,
         final NewColumnsProducerMapping newColsProducerMapping, final DataContainer container)
         throws CanceledExecutionException {
-        long finalRowCount = table.size();
         CellFactory facForProgress = null;
         int workers = Integer.MAX_VALUE;
         int queueSize = Integer.MAX_VALUE;
@@ -533,7 +560,7 @@ public final class RearrangeColumnsTable implements KnowsRowCountTable {
         assert workers > 0 : "Nr workers <= 0: " + workers;
         assert queueSize > 0 : "queue size <= 0: " + queueSize;
         ConcurrentNewColCalculator calculator =
-            new ConcurrentNewColCalculator(queueSize, workers, container, subProgress, finalRowCount,
+            new ConcurrentNewColCalculator(queueSize, workers, container, subProgress, numRows,
                 newColsProducerMapping, facForProgress);
         try {
             calculator.run(table);
