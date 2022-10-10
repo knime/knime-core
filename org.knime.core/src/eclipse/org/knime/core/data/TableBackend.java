@@ -54,6 +54,7 @@ import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.data.container.ILocalDataRepository;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.v2.RowContainer;
+import org.knime.core.data.v2.RowRead;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -178,5 +179,20 @@ public interface TableBackend {
      */
     KnowsRowCountTable slice(ExecutionContext exec, BufferedDataTable table, Selection slice,
         IntSupplier tableIdSupplier);
+
+    KnowsRowCountTable filter(ExecutionContext context, IntSupplier tableIdSupplier, BufferedDataTable table, RowReadFilterFactory filterFactory);
+
+    interface RowReadFilterFactory {
+
+        RowReadFilter createFilter(final RowRead rowRead);
+
+        boolean requiresRowKey();
+
+        int[] requiredColumns();
+
+        interface RowReadFilter {
+            boolean include(long index);
+        }
+    }
 
 }

@@ -138,7 +138,8 @@ public final class BufferedTableBackend implements TableBackend {
 
     @Override
     public KnowsRowCountTable concatenate(final ExecutionMonitor exec, final IntSupplier tableIdSupplier,
-        final String rowKeyDuplicateSuffix, final boolean duplicatesPreCheck, final BufferedDataTable... tables) throws CanceledExecutionException {
+        final String rowKeyDuplicateSuffix, final boolean duplicatesPreCheck, final BufferedDataTable... tables)
+        throws CanceledExecutionException {
         if (duplicatesPreCheck && rowKeyDuplicateSuffix == null) {
             return ConcatenateTable.create(exec, tables);
         } else {
@@ -149,15 +150,13 @@ public final class BufferedTableBackend implements TableBackend {
 
     @Override
     public KnowsRowCountTable append(final ExecutionMonitor exec, final IntSupplier tableIdSupplier,
-        final BufferedDataTable left, final BufferedDataTable right)
-        throws CanceledExecutionException {
+        final BufferedDataTable left, final BufferedDataTable right) throws CanceledExecutionException {
         return JoinedTable.create(left, right, exec);
     }
 
     @Override
-    public KnowsRowCountTable rearrange(final ExecutionMonitor progressMonitor,
-        final IntSupplier tableIdSupplier, final ColumnRearranger columnRearranger,
-        final BufferedDataTable table, final ExecutionContext context)
+    public KnowsRowCountTable rearrange(final ExecutionMonitor progressMonitor, final IntSupplier tableIdSupplier,
+        final ColumnRearranger columnRearranger, final BufferedDataTable table, final ExecutionContext context)
         throws CanceledExecutionException {
         return RearrangeColumnsTable.create(columnRearranger, table, progressMonitor, context);
     }
@@ -275,6 +274,12 @@ public final class BufferedTableBackend implements TableBackend {
             rearranger.keepOnly(columns);
             return rearranger.createSpec();
         }
+    }
+
+    @Override
+    public KnowsRowCountTable filter(final ExecutionContext context, final IntSupplier tableIdSupplier,
+        final BufferedDataTable table, final RowReadFilterFactory filterFactory) {
+        throw new UnsupportedOperationException();
     }
 
 }

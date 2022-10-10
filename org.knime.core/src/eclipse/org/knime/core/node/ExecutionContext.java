@@ -60,6 +60,7 @@ import org.knime.core.data.IDataRepository;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.TableBackend;
+import org.knime.core.data.TableBackend.RowReadFilterFactory;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainerSettings;
@@ -768,6 +769,16 @@ public class ExecutionContext extends ExecutionMonitor {
         return backend.create(this, spec, DataContainerSettings.getDefault().withInitializedDomain(initDomains),
             getDataRepository(), getFileStoreHandler());
     }
+
+    public final BufferedDataTable filter(final BufferedDataTable table, final RowReadFilterFactory filterFactory) {
+        final TableBackend backend = WorkflowTableBackendSettings.getTableBackendForCurrentContext();
+        var filteredTable = backend.filter(this, m_dataRepository::generateNewID, table, filterFactory);
+        registerAsLocalTableIfContainerTable(filteredTable);
+        var out = BufferedDataTable.wrapTableFromTableBackend(filteredTable, getDataRepository());
+        out.setOwnerRecursively(m_node);
+        return out;
+    }
+
 
     /** @return the fileStoreHandler the handler set at construction time (possibly null if run in 3rd party exec) */
     IWriteFileStoreHandler getFileStoreHandler() {
