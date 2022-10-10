@@ -181,6 +181,16 @@ public interface URIToFileResolve {
      * @since 2.10
      */
     public boolean isNodeRelative(final URI uri);
+    
+    /**
+     * Returns <code>true</code>, if this is a URI that is relative to the space it is used in. It can only be
+     * resolved in the context of a flow. Contains the corresponding keyword as host.
+     *
+     * @param uri to check
+     * @return <code>true</code> if argument URI is space relative, <code>false</code> if not.
+     * @since 4.7
+     */
+    public boolean isSpaceRelative(final URI uri);
 
     /**
      * Return type of {@link URIToFileResolve#toDescription(URI, IProgressMonitor)}. This class should not be used to
