@@ -191,6 +191,9 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
 
         private final LinkedHashMap<String, PortGroupConfiguration> m_portConfigs;
 
+        /** Contains the identifiers of the port groups that cannot be modified via the user interface. */
+        private final HashSet<String> m_nonInteractivePortGroups = new HashSet<>();
+
         /**
          * Constructor.
          */
@@ -205,7 +208,7 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
          * @noreference This method is not intended to be referenced by clients.
          */
         private ModifiablePortsConfiguration build() {
-            return new DefaultModifiablePortsConfiguration(m_portConfigs);
+            return new DefaultModifiablePortsConfiguration(m_portConfigs, m_nonInteractivePortGroups);
         }
 
         /**
@@ -264,6 +267,20 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
         public void addExtendableInputPortGroup(final String pGrpId,
             final Predicate<PortType> supportedTypesPredicate) {
             addExtendableInputPortGroup(pGrpId, new PortType[0], supportedTypesPredicate);
+        }
+
+        /**
+         * Adds an extendable input port group configuration that cannot be modified via the user interface (it can only
+         * be modified internally, e.g., by the implementation of the node dialog).
+         *
+         * @param pGrpId the port group identifier
+         * @param supportedTypesPredicate the predicate that identifies supported {@link PortType PortTypes}
+         * @since 4.7
+         */
+        public void addNonInteractiveExtendableInputPortGroup(final String pGrpId,
+            final Predicate<PortType> supportedTypesPredicate) {
+            addExtendableInputPortGroup(pGrpId, new PortType[0], supportedTypesPredicate);
+            m_nonInteractivePortGroups.add(pGrpId);
         }
 
         /**
@@ -342,6 +359,20 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
         public void addExtendableOutputPortGroup(final String pGrpId,
             final Predicate<PortType> supportedTypesPredicate) {
             addExtendableOutputPortGroup(pGrpId, new PortType[0], supportedTypesPredicate);
+        }
+
+        /**
+         * Adds an extendable output port group configuration that cannot be modified via the user interface (it can
+         * only be modified internally, e.g., by the implementation of the node dialog).
+         *
+         * @param pGrpId the port group identifier
+         * @param supportedTypesPredicate the predicate that identifies supported {@link PortType PortTypes}
+         * @since 4.7
+         */
+        public void addNonInteractiveExtendableOutputPortGroup(final String pGrpId,
+            final Predicate<PortType> supportedTypesPredicate) {
+            addExtendableOutputPortGroup(pGrpId, new PortType[0], supportedTypesPredicate);
+            m_nonInteractivePortGroups.add(pGrpId);
         }
 
         /**

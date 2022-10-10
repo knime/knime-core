@@ -106,4 +106,16 @@ public interface ModifiablePortsConfiguration
      */
     public Map<Integer, Integer> mapOutputPorts(final PortsConfiguration otherConfig);
 
+    /**
+     * @param groupIdentifier name of the port group to test
+     * @return true if the port group can be modified by the user via the user interface. False if the port group can
+     *         only programmatically be modified. For instance, the Call Workflow Service node and the Workflow Executor
+     *         node adjust their input and output ports according to the callee's workflow parameters. The user is not
+     *         allowed to configure the input and output ports manually in order to make sure they are always in sync
+     *         with the callee workflow.
+     */
+    default boolean isInteractive(final String groupIdentifier) {
+        return true;
+    }
+
 }

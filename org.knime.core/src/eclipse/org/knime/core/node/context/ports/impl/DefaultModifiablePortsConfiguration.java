@@ -54,6 +54,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
+import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -76,12 +78,33 @@ public final class DefaultModifiablePortsConfiguration extends DefaultPortsConfi
     implements ModifiablePortsConfiguration {
 
     /**
+     * Contains the identifiers of the port groups that cannot be modified via the user interface.
+     *
+     * Never null. Never contains null elements.
+     */
+    final Set<String> m_nonInteractivePortGroups;
+
+    /**
      * Constructor.
      *
      * @param portGroups the port groups
      */
     public DefaultModifiablePortsConfiguration(final Map<String, PortGroupConfiguration> portGroups) {
         super(portGroups);
+        m_nonInteractivePortGroups = Set.of();
+    }
+
+    /**
+     * @param portGroups the port groups
+     * @param nonInteractivePortGroups the identifiers (keys in portGroups map) of port groups that shall not be
+     *            modifiable via the user interface. If null, all port groups are interactive. Null values are ignored.
+     */
+    public DefaultModifiablePortsConfiguration(final Map<String, PortGroupConfiguration> portGroups,
+        final Set<String> nonInteractivePortGroups) {
+        super(portGroups);
+        // make sure the given set is not null and that it does not contain null elements
+        m_nonInteractivePortGroups = nonInteractivePortGroups == null ? Set.of()
+            : nonInteractivePortGroups.stream().filter(Objects::nonNull).collect(Collectors.toUnmodifiableSet());
     }
 
     @Override
@@ -98,7 +121,7 @@ public final class DefaultModifiablePortsConfiguration extends DefaultPortsConfi
             .filter(v -> v instanceof TypeBoundExtendablePortGroup)//
             .map(v -> (TypeBoundExtendablePortGroup)v)//
             .forEach(v -> v.setLookupTable(map));
-        return new DefaultModifiablePortsConfiguration(map);
+        return new DefaultModifiablePortsConfiguration(map, Set.copyOf(m_nonInteractivePortGroups));
     }
 
     @Override
@@ -196,5 +219,10 @@ public final class DefaultModifiablePortsConfiguration extends DefaultPortsConfi
      */
     private boolean isComplatible(final PortsConfiguration otherConfig) {
         return getPortGroupNames().equals(otherConfig.getPortGroupNames());
+    }
+
+    @Override
+    public boolean isInteractive(final String groupIdentifier) {
+        return !m_nonInteractivePortGroups.contains(groupIdentifier);
     }
 }
