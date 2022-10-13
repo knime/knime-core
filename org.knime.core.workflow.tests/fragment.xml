@@ -24,5 +24,10 @@
             factory-class="org.knime.core.node.workflow.Enh1536_CancelDuringLoad$CheckLoadInternalsNotCalledNodeFactory"
             hidden="true">
       </node>
+      <node
+            deprecated="false"
+            factory-class="org.knime.core.node.workflow.node.configurable.ConfigurableNodeWithoutPortsConfigBuilderNodeFactory"
+            hidden="true">
+      </node>
    </extension>
 </fragment>

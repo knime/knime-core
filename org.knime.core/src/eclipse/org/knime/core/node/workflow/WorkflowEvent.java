@@ -82,6 +82,9 @@ public class WorkflowEvent {
             /** Metanode or component has been expanded
              * @since 4.6 */
             NODE_EXPANDED,
+            /** A node's port configuration has changed
+             * @since 4.7 */
+            NODE_PORTS_CHANGED,
             /** Node setting of a node in the workflow changed
              * @since 4.1 */
             NODE_SETTINGS_CHANGED,
@@ -93,10 +96,7 @@ public class WorkflowEvent {
             WORKFLOW_DIRTY,
             /** Workflow is marked as clean (not dirty)
              * @since 4.6 */
-            WORKFLOW_CLEAN,
-            /** Port added to node on workflow
-             * @since 4.7 */
-            PORT_ADDED
+            WORKFLOW_CLEAN
     }
 
     private final NodeID m_id;

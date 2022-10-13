@@ -97,7 +97,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.Predicate;
@@ -877,13 +876,13 @@ public final class WorkflowManager extends NodeContainer
      * as far as possible (if the respective input and output port is still there and compatible).
      *
      * @param id the id of the node to replace
-     * @param creationConfig node creation configuration to create the new node, can be <code>null</code>
+     * @param newCreationConfig node creation configuration to create the new node, can be <code>null</code>
      * @return a result that contains all information necessary to undo the operation
      * @throws IllegalStateException if the node cannot be replaced (e.g. because there are executing successors)
      * @throws IllegalArgumentException if there is no node for the given id
      * @since 4.2
      */
-    public ReplaceNodeResult replaceNode(final NodeID id, final ModifiableNodeCreationConfiguration creationConfig) {
+    public ReplaceNodeResult replaceNode(final NodeID id, final ModifiableNodeCreationConfiguration newCreationConfig) {
         CheckUtils.checkState(canReplaceNode(id), "Node cannot be replaced");
         try (WorkflowLock lock = lock()) {
             var nnc = (NativeNodeContainer)getNodeContainer(id);
@@ -895,17 +894,19 @@ public final class WorkflowManager extends NodeContainer
             var uiInfo = nnc.getUIInformation();
             var factory = nnc.getNode().getFactory();
             var nodeAnnotation = nnc.getNodeAnnotation();
-            Set<ConnectionContainer> incomingConnections = getIncomingConnectionsFor(id);
-            Set<ConnectionContainer> outgoingConnections = getOutgoingConnectionsFor(id);
+            var incomingConnections = getIncomingConnectionsFor(id);
+            var outgoingConnections = getOutgoingConnectionsFor(id);
 
             // keep old node creation config
-            var oldCreationConfig = nnc.getNode().getCopyOfCreationConfig().orElse(null);
+            var oldCreationConfig =
+                nnc.getNode().getCopyOfCreationConfig().orElseThrow(() -> new IllegalStateException(String.format(
+                    "<%s> cannot be replaced, it doesn't provide a `ModifiableNodeCreationConfiguration`", id)));
 
             // delete the old node
             removeNode(id);
 
             // add new node
-            addNodeAndApplyContext(factory, creationConfig, id.getIndex());
+            addNodeAndApplyContext(factory, newCreationConfig, id.getIndex());
             nnc = (NativeNodeContainer)getNodeContainer(id);
 
             // load the previously stored settings
@@ -921,41 +922,45 @@ public final class WorkflowManager extends NodeContainer
                 nnc.getNodeAnnotation().copyFrom(nodeAnnotation.getData(), true);
             }
 
-            List<ConnectionContainer> removedConnections = new ArrayList<>();
-            if (oldCreationConfig != null) {
-                // restore connections if possible
-                if (oldCreationConfig.getPortConfig().isPresent()) {
-                    removedConnections = reconnect(id,
-                        oldCreationConfig.getPortConfig().get().mapInputPorts(creationConfig.getPortConfig().get()), // NOSONAR: Presence checked
-                        oldCreationConfig.getPortConfig().get().mapOutputPorts(creationConfig.getPortConfig().get()), // NOSONAR: Presence checked
-                        incomingConnections, outgoingConnections);
-                }
+            // restore connections if possible
+            List<ConnectionContainer> removedConnections;
+            if (oldCreationConfig.getPortConfig().isPresent() && newCreationConfig.getPortConfig().isPresent()) {
+                removedConnections = reconnect(id,
+                    oldCreationConfig.getPortConfig().get().mapInputPorts(newCreationConfig.getPortConfig().get()), // NOSONAR: Presence checked
+                    oldCreationConfig.getPortConfig().get().mapOutputPorts(newCreationConfig.getPortConfig().get()), // NOSONAR: Presence checked
+                    incomingConnections, outgoingConnections);
+            } else {
+                removedConnections = Collections.emptyList();
+            }
 
-                // notify listeners if ports were added or exchanged
-                if (nodeCreationConfigAddedOrExchangedPort(oldCreationConfig, creationConfig)) {
-                    notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.PORT_ADDED, id, null, null));
-                }
+            // notify listeners if port config has changed
+            if (nodeCreationConfigHasChangedPorts(oldCreationConfig, newCreationConfig)) {
+                notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.NODE_PORTS_CHANGED, id, null, null));
             }
 
             return new ReplaceNodeResult(this, id, removedConnections, oldCreationConfig);
         }
     }
 
-    private static boolean nodeCreationConfigAddedOrExchangedPort(final ModifiableNodeCreationConfiguration oldCreationConfig,
-        final ModifiableNodeCreationConfiguration creationConfig) {
-        if (oldCreationConfig.getPortConfig().isEmpty() || creationConfig.getPortConfig().isEmpty()) {
-            return false; // At least one port config missing, ports couldn't have been changed
+    /**
+     * Check whether there are changes to the port configuration. If the port config is not present (before or after
+     * update), there is nothing to be changed.
+     *
+     * @param oldCreationConfig The creation config of the node prior to update
+     * @param newCreationConfig The new creation config of the node
+     * @return Whether a port config still exists and there have been changes to it as compared to the old config.
+     */
+    private static boolean nodeCreationConfigHasChangedPorts(
+        final ModifiableNodeCreationConfiguration oldCreationConfig,
+        final ModifiableNodeCreationConfiguration newCreationConfig) {
+        if (oldCreationConfig.getPortConfig().isEmpty() || newCreationConfig.getPortConfig().isEmpty()) {
+            return false;
         }
-        var oldPortsConfig = oldCreationConfig.getPortConfig().get(); // NOSONAR: Presence checked
-        var portsConfig = creationConfig.getPortConfig().get(); // NOSONAR: Presence checked
-        BiPredicate<PortType[], PortType[]> wasPortAddedOrExchanged = (oldPts, pts) -> {
-            var oldList = Arrays.asList(oldPts);
-            var newList = Arrays.asList(pts);
-            return !(oldList.equals(newList) || newList.size() < oldList.size());
-        };
-        // True if input or output ports were added or exchanged
-        return wasPortAddedOrExchanged.test(oldPortsConfig.getInputPorts(), portsConfig.getInputPorts())
-            || wasPortAddedOrExchanged.test(oldPortsConfig.getOutputPorts(), portsConfig.getOutputPorts());
+        var oldPortConfig = oldCreationConfig.getPortConfig().get(); // NOSONAR: Presence checked
+        var newPortConfig = newCreationConfig.getPortConfig().get(); // NOSONAR: Presence checked
+        // If the input or output ports don't match, ports have changed
+        return !(Arrays.equals(oldPortConfig.getInputPorts(), newPortConfig.getInputPorts()))
+            || !(Arrays.equals(oldPortConfig.getOutputPorts(), newPortConfig.getOutputPorts()));
     }
 
     private List<ConnectionContainer> reconnect(final NodeID newId, final Map<Integer, Integer> inputPortMapping,
@@ -1797,7 +1802,6 @@ public final class WorkflowManager extends NodeContainer
             if (!haveMetaPortsChanged(newPorts, true, subFlowMgr)) {
                 return;
             }
-            var portsAdded = checkMetaPortsAdded(newPorts, true, subFlowMgr);
 
             List<Pair<ConnectionContainer, ConnectionContainer>> changedConnectionsThisFlow =
                 m_workflow.changeDestinationPortsForMetaNode(subFlowID, newPorts, false);
@@ -1841,9 +1845,7 @@ public final class WorkflowManager extends NodeContainer
             setDirty();
 
             // Notify listeners if ports were added
-            if (portsAdded) {
-                notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.PORT_ADDED, subFlowID, null, null));
-            }
+            notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.NODE_PORTS_CHANGED, subFlowID, null, null));
         }
     }
 
@@ -1858,7 +1860,6 @@ public final class WorkflowManager extends NodeContainer
             if (!haveMetaPortsChanged(newPorts, false, subFlowMgr)) {
                 return;
             }
-            var portsAdded = checkMetaPortsAdded(newPorts, false, subFlowMgr);
 
             List<Pair<ConnectionContainer, ConnectionContainer>> changedConnectionsThisFlow =
                 m_workflow.changeSourcePortsForMetaNode(subFlowID, newPorts, false);
@@ -1901,9 +1902,7 @@ public final class WorkflowManager extends NodeContainer
             subFlowMgr.setDirty();
 
             // Notify listeners if ports were added
-            if (portsAdded) {
-                notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.PORT_ADDED, subFlowID, null, null));
-            }
+            notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.NODE_PORTS_CHANGED, subFlowID, null, null));
         }
     }
 
@@ -1918,7 +1917,6 @@ public final class WorkflowManager extends NodeContainer
             if (!haveSubPortsChanged(newPorts, true, snc)) {
                 return;
             }
-            var portsAdded = checkSubPortsAdded(newPorts, true, snc);
             List<Pair<ConnectionContainer, ConnectionContainer>> changedConnectionsThisFlow =
                 m_workflow.changeDestinationPortsForMetaNode(subFlowID, newPorts, true);
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsThisFlow) {
@@ -1949,9 +1947,7 @@ public final class WorkflowManager extends NodeContainer
             }
             setDirty();
             // Notify listeners if ports were added
-            if (portsAdded) {
-                notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.PORT_ADDED, subFlowID, null, null));
-            }
+            notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.NODE_PORTS_CHANGED, subFlowID, null, null));
         }
     }
 
@@ -1966,7 +1962,6 @@ public final class WorkflowManager extends NodeContainer
             if (!haveSubPortsChanged(newPorts, false, snc)) {
                 return;
             }
-            var portsAdded = checkSubPortsAdded(newPorts, false, snc);
             List<Pair<ConnectionContainer, ConnectionContainer>> changedConnectionsThisFlow =
                 m_workflow.changeSourcePortsForMetaNode(subFlowID, newPorts, true);
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsThisFlow) {
@@ -1998,22 +1993,9 @@ public final class WorkflowManager extends NodeContainer
             }
             setDirty();
 
-            // Notify listeners if ports were added
-            if (portsAdded) {
-                notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.PORT_ADDED, subFlowID, null, null));
-            }
+            // Notify listeners
+            notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.NODE_PORTS_CHANGED, subFlowID, null, null));
         }
-    }
-
-    /**
-     * @param newPorts
-     * @param inPorts Check input ports if true, for output ports otherwise
-     * @param subFlowMgr
-     */
-    private static boolean checkMetaPortsAdded(final MetaPortInfo[] newPorts, final boolean inPorts,
-        final WorkflowManager subFlowMgr) {
-        int nrPorts = inPorts ? subFlowMgr.getNrInPorts() : subFlowMgr.getNrOutPorts();
-        return newPorts.length > nrPorts;
     }
 
     /**
@@ -2033,18 +2015,6 @@ public final class WorkflowManager extends NodeContainer
             }
         }
         return false;
-    }
-
-    /**
-     * @param newPorts
-     * @param inPorts Check input ports if true, for output ports otherwise
-     * @param snc
-     */
-    private static boolean checkSubPortsAdded(final MetaPortInfo[] newPorts, final boolean inPorts,
-        final SubNodeContainer snc) {
-        int nrPorts = inPorts ? snc.getWorkflowManager().getNodeContainer(snc.getVirtualInNodeID()).getNrOutPorts()
-            : snc.getWorkflowManager().getNodeContainer(snc.getVirtualOutNodeID()).getNrInPorts();
-        return newPorts.length > nrPorts;
     }
 
     /**
