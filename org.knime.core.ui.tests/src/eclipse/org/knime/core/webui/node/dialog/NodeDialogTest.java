@@ -94,6 +94,39 @@ import org.knime.testing.util.WorkflowManagerUtil;
 public class NodeDialogTest {
 
     /**
+     * Tests that even for an unconnected node with input ports, where the flow object stack is null, settings are
+     * loaded correctly (see UIEXT-394)
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testInitialSettingsForUnconnectedNode() throws Exception {
+        var wfm = WorkflowManagerUtil.createEmptyWorkflow();
+        var nnc = WorkflowManagerUtil.createAndAddNode(wfm,
+            new NodeDialogNodeFactory(() -> createNodeDialog(Page.builder(() -> "test", "test.html").build(),
+                createTextSettingsDataService(), null), 1));
+        var nncWrapper = NodeWrapper.of(nnc);
+
+        var modelSettings = new NodeSettings("model");
+        var viewSettings = new NodeSettings("view");
+        modelSettings.addString("model_key1", "model_setting_value");
+        viewSettings.addString("view_key1", "view_setting_value");
+
+        var nodeDialogManager = NodeDialogManager.getInstance();
+        nodeDialogManager.callTextApplyDataService(nncWrapper, settingsToString(modelSettings, viewSettings));
+        var nodeSettings = new NodeSettings("node_settings");
+        wfm.saveNodeSettings(nnc.getID(), nodeSettings);
+
+        // apply node settings that are controlled by a flow variable -> the flow variable must not end up in the settings
+        wfm.loadNodeSettings(nnc.getID(), nodeSettings);
+        var initialSettings = nodeDialogManager.callTextInitialDataService(nncWrapper);
+        assertThat(initialSettings,
+            containsString("\"view_key1\":{\"type\":\"string\",\"value\":\"view_setting_value\"}"));
+        assertThat(initialSettings,
+            containsString("\"model_key1\":{\"type\":\"string\",\"value\":\"model_setting_value\"}"));
+    }
+
+    /**
      * Tests that model- and view-settings a being applied correctly and most importantly that the node is being reset
      * in case of changed model settings but not in case of changed view settings.
      *
