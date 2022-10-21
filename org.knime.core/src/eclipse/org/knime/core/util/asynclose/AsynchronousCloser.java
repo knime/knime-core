@@ -52,6 +52,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.knime.core.node.workflow.NodeContext;
+
 /**
  * Utility class that implements the {@link AsynchronousCloseable} logic.
  *
@@ -64,6 +66,8 @@ final class AsynchronousCloser<X extends Exception> implements AsynchronousClose
 
     private final CloseMethod<X> m_closeMethod;
 
+    private final NodeContext m_context;
+
     /**
      * Constructor for the closer.
      *
@@ -71,6 +75,7 @@ final class AsynchronousCloser<X extends Exception> implements AsynchronousClose
      */
     AsynchronousCloser(final CloseMethod<X> closeMethod) {
         m_closeMethod = closeMethod;
+        m_context = NodeContext.getContext();
     }
 
     @Override
@@ -88,7 +93,12 @@ final class AsynchronousCloser<X extends Exception> implements AsynchronousClose
             // this method is called first, therefore the client intended asynchronous closing
             var executor = Executors.newSingleThreadExecutor();
             Future<Void> future = executor.submit(() -> {
-                m_closeMethod.call();
+                NodeContext.pushContext(m_context);
+                try {
+                    m_closeMethod.call();
+                } finally {
+                    NodeContext.removeLastContext();
+                }
                 return null;
             });
             // shuts down the executor once the close task has been completed
