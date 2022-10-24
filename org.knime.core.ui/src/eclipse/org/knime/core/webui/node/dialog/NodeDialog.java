@@ -166,22 +166,8 @@ public abstract class NodeDialog implements UIExtension, DataServiceProvider {
             final Map<SettingsType, NodeSettingsRO> resultSettings) {
             if (m_settingsTypes.contains(settingsType)) {
                 NodeSettings settings = null;
-                try {
-                    if (m_nc.getFlowObjectStack() != null && m_nc instanceof NativeNodeContainer) {
-                        // node is connected and a flow object stack available
-                        var nnc = (NativeNodeContainer)m_nc;
-                        if (settingsType == SettingsType.VIEW) {
-                            settings = nnc.getViewSettingsUsingFlowObjectStack()
-                                .orElseThrow(() -> new InvalidSettingsException(""));
-                        } else {
-                            settings = nnc.getModelSettingsUsingFlowObjectStack();
-                        }
-                    } else {
-                        // node is not connected
-                        settings = m_nc.getNodeSettings().getNodeSettings(settingsType.getConfigKey());
-                    }
-                } catch (InvalidSettingsException ex) { // NOSONAR
-                    //
+                if (m_nc instanceof NativeNodeContainer) {
+                    settings = getSettingsFromNativeNodeContainer(settingsType, (NativeNodeContainer)m_nc);
                 }
 
                 // fallback to default settings
@@ -196,6 +182,32 @@ public abstract class NodeDialog implements UIExtension, DataServiceProvider {
                     m_textNodeSettingsService.getDefaultNodeSettings(Map.of(settingsType, settings), specs);
                 }
                 resultSettings.put(settingsType, settings);
+            }
+        }
+
+        private static NodeSettings getSettingsFromNativeNodeContainer(final SettingsType settingsType,
+            final NativeNodeContainer nnc) {
+            try {
+                if (nnc.getFlowObjectStack() != null) {
+                    // a flow object stack is available (usually in case the node is connected)
+                    if (settingsType == SettingsType.VIEW) {
+                        return nnc.getViewSettingsUsingFlowObjectStack()
+                            .orElseThrow(() -> new InvalidSettingsException(""));
+                    } else {
+                        return nnc.getModelSettingsUsingFlowObjectStack();
+                    }
+                } else {
+                    // node is not connected
+                    var settings = nnc.getNodeSettings().getNodeSettings(settingsType.getConfigKey());
+                    if (settings.getChildCount() == 0) {
+                        // if no settings are stored, return null in order to fall back to the default settings
+                        return null;
+                    } else {
+                        return settings;
+                    }
+                }
+            } catch (InvalidSettingsException ex) { // NOSONAR
+                return null;
             }
         }
     }
