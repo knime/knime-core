@@ -210,6 +210,8 @@ public final class SubNodeContainerDialogFactory implements NodeDialogFactory {
             final PortObjectSpec[] specs) {
             // Nothing to do, because we initialize the dialog from the workflow representation,
             // not the settings directly.
+            throw new UnsupportedOperationException(
+                "Method not expected to be called by the framework (in case of components).");
         }
 
         @SuppressWarnings("unchecked")

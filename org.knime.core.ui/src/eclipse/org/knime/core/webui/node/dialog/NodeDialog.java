@@ -168,20 +168,22 @@ public abstract class NodeDialog implements UIExtension, DataServiceProvider {
                 NodeSettings settings = null;
                 if (m_nc instanceof NativeNodeContainer) {
                     settings = getSettingsFromNativeNodeContainer(settingsType, (NativeNodeContainer)m_nc);
-                }
 
-                // fallback to default settings
-                if (settings == null) {
-                    settings = new NodeSettings("default_settings");
-                    // Important assumption here (which is given):
-                    // We'll end up here when no (model or view) settings have been stored with the node, yet.
-                    // It's the case when no settings have been applied for the node, yet (via the dialog).
-                    // And if no settings have been applied, yet, there can also be no flow variables configured
-                    // to overwrite a setting.
-                    // Thus, no need to merge the default settings with flow variable values (as done above).
-                    m_textNodeSettingsService.getDefaultNodeSettings(Map.of(settingsType, settings), specs);
+                    // fallback to default settings
+                    if (settings == null) {
+                        settings = new NodeSettings("default_settings");
+                        // Important assumption here (which is given):
+                        // We'll end up here when no (model or view) settings have been stored with the node, yet.
+                        // It's the case when no settings have been applied for the node, yet (via the dialog).
+                        // And if no settings have been applied, yet, there can also be no flow variables configured
+                        // to overwrite a setting.
+                        // Thus, no need to merge the default settings with flow variable values (as done above).
+                        m_textNodeSettingsService.getDefaultNodeSettings(Map.of(settingsType, settings), specs);
+                    }
+                    resultSettings.put(settingsType, settings);
                 }
-                resultSettings.put(settingsType, settings);
+                // else: SubNodeContainers (aka components) are ignored here since those retrieve the settings
+                // from the contained configuration nodes and not from the component settings directly
             }
         }
 
