@@ -112,24 +112,25 @@ public final class NodeRecommendationManager {
 
     private static final String TRIPLE_PROVIDER_EXTENSION_POINT_ID = "org.knime.core.ui.nodetriples";
 
-    private static final NodeRecommendationManager INSTANCE = new NodeRecommendationManager();
-
     private static final String P_COMMUNITY_NODE_TRIPLE_PROVIDER = "community_node_triple_provider";
+
+    private static final NodeRecommendationManager INSTANCE = new NodeRecommendationManager();
 
     private final List<IUpdateListener> m_listeners = new ArrayList<>(1);
 
-    private List<Map<String, List<NodeRecommendation>>> m_recommendations;
+    private static List<Map<String, List<NodeRecommendation>>> cachedRecommendations;
 
-    private Predicate<NodeInfo> m_isSourceNodePredicate;
+    private Predicate<NodeInfo> m_isSourceNode;
 
-    private Predicate<NodeInfo> m_existsInRepositoryPredicate;
+    private Predicate<NodeInfo> m_existsInRepository;
 
     static {
+        // Adds preference change listener for community node triple provider
         IPreferenceChangeListener l = event -> {
             if (P_COMMUNITY_NODE_TRIPLE_PROVIDER.equals(event.getKey())) {
                 try {
                     INSTANCE.loadRecommendations();
-                } catch (Exception ex) { // TODO: Do we want to be general here?
+                } catch (IOException ex) {
                     LOGGER.error("Can't load the requested node recommendations: <" + ex.getMessage() + ">", ex);
                 }
             }
@@ -143,47 +144,45 @@ public final class NodeRecommendationManager {
     }
 
     /**
-     * Setup the the predicates needed
-     *
-     * @param isSourceNodePredicate The predicate to determine if a node is a source node
-     * @param existsInRepositoryPredicate The predicate to determine if a node is known to the node repository
-     */
-    public void setup(final Predicate<NodeInfo> isSourceNodePredicate,
-        final Predicate<NodeInfo> existsInRepositoryPredicate) {
-        if (m_isSourceNodePredicate == null) {
-            m_isSourceNodePredicate = isSourceNodePredicate;
-        } else {
-            LOGGER.debug("No need to reset the `isSourceNodePredicate`");
-        }
-        if (m_existsInRepositoryPredicate == null) {
-            m_existsInRepositoryPredicate = existsInRepositoryPredicate;
-        } else {
-            LOGGER.debug("No need to reset the `existsInRepository`");
-        }
-    }
-
-    /**
-     * Initialize the singleton
-     */
-    public void init() {
-        try {
-            if (m_recommendations == null) {
-                loadRecommendations();
-            } else {
-                LOGGER.debug("No need to reload the node recommendations");
-            }
-        } catch (IOException e) {
-            LOGGER.error("Failed to initially load the node recommendations", e);
-        }
-    }
-
-    /**
      * Returns the singleton instance for this class.
      *
      * @return a singleton instance
      */
     public static NodeRecommendationManager getInstance() {
         return INSTANCE;
+    }
+
+    /**
+     * Initialize the node recommendation manager by setting the predicates necessary to load node recommendations
+     *
+     * @param isSourceNode Checks whether a node is a source node
+     * @param existsInRepository Checks whether a node is present in the node repository
+     * @return True if {@code loadRecommendations()} succeeded, false otherwise
+     */
+    public boolean initialize(final Predicate<NodeInfo> isSourceNode, final Predicate<NodeInfo> existsInRepository) {
+        // Set the predicates
+        if (m_isSourceNode == null) {
+            m_isSourceNode = isSourceNode;
+        } else {
+            LOGGER.debug("No need to reset the `isSourceNode`");
+        }
+        if (m_existsInRepository == null) {
+            m_existsInRepository = existsInRepository;
+        } else {
+            LOGGER.debug("No need to reset the `existsInRepository`");
+        }
+        // Initially load the recommendations
+        try {
+            if (cachedRecommendations == null) {
+                loadRecommendations();
+            } else {
+                LOGGER.debug("No need to reload the node recommendations");
+            }
+            return true;
+        } catch (IOException e) {
+            LOGGER.error("Failed to initially load the node recommendations", e);
+            return false;
+        }
     }
 
     /**
@@ -211,14 +210,14 @@ public final class NodeRecommendationManager {
      * @see #getNodeTripleProviders()
      */
     public void loadRecommendations() throws IOException {
-        // Can't run if node predicate was set, but not worth an exception
-        if (m_isSourceNodePredicate == null) {
-            LOGGER.info("Node recommendations could not be (re-)loaded since not all predicated were set");
+        if (m_isSourceNode == null || m_existsInRepository == null) {
+            LOGGER.debug("Cannot load recommendations yet, sinc not all predicates are set");
             return;
         }
+
         // read from multiple frequency sources
         List<NodeTripleProvider> providers = getNodeTripleProviders();
-        List<Map<String, List<NodeRecommendation>>> recommendations = new ArrayList<>(providers.size());
+        var recommendations = new ArrayList<Map<String, List<NodeRecommendation>>>(providers.size());
 
         for (NodeTripleProvider provider : providers) {
             LOGGER.info(String.format("Loading node recommendations from <%s>", provider.getClass().getName()));
@@ -227,7 +226,7 @@ public final class NodeRecommendationManager {
                 recommendations.add(recommendationMap);
 
                 provider.getNodeTriples().forEach(
-                    nf -> fillRecommendationsMap(recommendationMap, nf, m_isSourceNodePredicate, m_existsInRepositoryPredicate));
+                    nf -> fillRecommendationsMap(recommendationMap, nf, m_isSourceNode, m_existsInRepository));
 
                 // aggregate multiple occurring id's but apply a different aggregation method to source nodes
                 BiConsumer<NodeRecommendation, NodeRecommendation> avgAggr =
@@ -244,9 +243,11 @@ public final class NodeRecommendationManager {
             }
         } //end for
 
-        m_recommendations = recommendations;
-        m_listeners.stream().forEach(IUpdateListener::updated);
-        LOGGER.info("Successfully (re-)loaded all node recommendations available");
+        if (!recommendations.isEmpty()) {
+            cachedRecommendations = recommendations; // NOSONAR
+            m_listeners.stream().forEach(IUpdateListener::updated);
+            LOGGER.info("Successfully (re-)loaded all node recommendations available");
+        }
     }
 
     private static void fillRecommendationsMap(final Map<String, List<NodeRecommendation>> recommendationMap,
@@ -354,16 +355,16 @@ public final class NodeRecommendationManager {
      *         {@link NodeTripleProvider}. It will return <code>null</code> if something went wrong with loading the
      *         node statistics!
      */
-    public List<NodeRecommendation>[] getNodeRecommendationFor(final NativeNodeContainerUI... nnc) {
-        if (m_recommendations == null) {
+    public List<NodeRecommendation>[] getNodeRecommendationFor(final NativeNodeContainerUI... nnc) { // Not static to avoid failing initialization
+        if (cachedRecommendations == null) {
             return null; // NOSONAR: Returning null makes sense here
         }
         @SuppressWarnings("unchecked")
-        List<NodeRecommendation>[] res = new List[m_recommendations.size()]; // NOSONAR: Can't use `var` here
+        List<NodeRecommendation>[] res = new List[cachedRecommendations.size()]; // NOSONAR: Can't use `var` here
         for (var idx = 0; idx < res.length; idx++) {
             if (nnc.length == 0) {
                 // recommendations if no node is given -> source nodes are recommended
-                res[idx] = m_recommendations.get(idx).get(SOURCE_NODES_KEY);
+                res[idx] = cachedRecommendations.get(idx).get(SOURCE_NODES_KEY);
                 if (res[idx] == null) {
                     res[idx] = Collections.emptyList();
                 }
@@ -372,7 +373,7 @@ public final class NodeRecommendationManager {
                 /* recommendations based on the given node and possible predecessors */
                 var set = processNodeRecommendationsForAllPorts(idx, nnc);
                 /* recommendation based on the given node only */
-                List<NodeRecommendation> p1 = m_recommendations.get(idx).get(nodeID);
+                List<NodeRecommendation> p1 = cachedRecommendations.get(idx).get(nodeID);
                 if (p1 != null) {
                     set.addAll(p1);
                 }
@@ -391,7 +392,7 @@ public final class NodeRecommendationManager {
                 // in order to match the nodes [NodeFactory]#[NodeName] needs to be compared,
                 // otherwise it won't work with dynamically generated nodes
                 res[idx] = res[idx].stream()//
-                    .filter(nr -> !nr.getId().equals(getKey(nnc[0])))//
+                    .filter(nr -> !getKey(nr.m_nodeFactoryClassName, nr.m_nodeName).equals(getKey(nnc[0])))//
                     .collect(Collectors.toList());
             }
 
@@ -402,7 +403,7 @@ public final class NodeRecommendationManager {
         return res;
     }
 
-    private Set<NodeRecommendation> processNodeRecommendationsForAllPorts(final int idx, final NativeNodeContainerUI... nnc) {
+    private static Set<NodeRecommendation> processNodeRecommendationsForAllPorts(final int idx, final NativeNodeContainerUI... nnc) {
         Set<NodeRecommendation> set = new HashSet<>();
         for (var i = 0; i < nnc[0].getNrInPorts(); i++) {
             var wfm = nnc[0].getParent();
@@ -413,7 +414,7 @@ public final class NodeRecommendationManager {
             }
             NodeContainerUI predecessor = wfm.getNodeContainer(cc.getSource());
             if (predecessor instanceof NativeNodeContainerUI) {
-                var map = m_recommendations.get(idx);
+                var map = cachedRecommendations.get(idx);
                 var key = getKey((NativeNodeContainerUI)predecessor) + NODE_NAME_SEP + getKey(nnc[0]);
                 if(map.containsKey(key)) {
                     set.addAll(map.get(key));
@@ -428,11 +429,11 @@ public final class NodeRecommendationManager {
      *
      * @return the number of loaded providers
      */
-    public int getNumLoadedProviders() {
-        if (m_recommendations == null) {
+    public static int getNumLoadedProviders() {
+        if (cachedRecommendations == null) {
             return 0;
         } else {
-            return m_recommendations.size();
+            return cachedRecommendations.size();
         }
     }
 
@@ -441,7 +442,7 @@ public final class NodeRecommendationManager {
      * @return the key to be used to look up the node recommendations
      */
     private static String getKey(final NativeNodeContainerUI nnc) {
-        return getNodeTemplateId(nnc.getNodeFactoryClassName(), nnc.getName());
+        return getKey(nnc.getNodeFactoryClassName(), nnc.getName());
     }
 
     /**
@@ -449,18 +450,17 @@ public final class NodeRecommendationManager {
      * @return the key to be used to look up the node recommendations
      */
     private static String getKey(final NodeInfo ni) {
-        return getNodeTemplateId(ni.getFactory(), ni.getName());
+        return getKey(ni.getFactory(), ni.getName());
     }
 
     /**
-     * Generates a unique node template id. This always consists of <node factory-class name><separator><node name> in
-     * this context, for simplicity reasons.
+     * Internal key to map node recommendations in {@link #cachedRecommendations}
      *
-     * @param nodeFactoryClassName The node factory class name
-     * @param nodeName The node name
-     * @return Extended node template id
+     * @param nodeFactoryClassName
+     * @param nodeName
+     * @return The internal node recommendation key
      */
-    public static String getNodeTemplateId(final String nodeFactoryClassName, final String nodeName) {
+    private static String getKey(final String nodeFactoryClassName, final String nodeName) {
         return nodeFactoryClassName + NODE_NAME_SEP + nodeName;
     }
 
@@ -557,15 +557,6 @@ public final class NodeRecommendationManager {
         }
 
         /**
-         * Returns the node template id that always consists of <node factory-class name><separator><node name>
-         *
-         * @return The node template id
-         */
-        public String getId() {
-            return NodeRecommendationManager.getNodeTemplateId(m_nodeFactoryClassName, m_nodeName);
-        }
-
-        /**
          * {@inheritDoc}
          */
         @Override
@@ -588,7 +579,8 @@ public final class NodeRecommendationManager {
         public int hashCode() {
             final var prime = 31;
             var result = 1;
-            result = prime * result + ((m_nodeFactoryClassName == null || m_nodeName == null) ? 0 : getId().hashCode());
+            result = prime * result + ((m_nodeFactoryClassName == null || m_nodeName == null) ? 0
+                : getKey(m_nodeFactoryClassName, m_nodeName).hashCode());
             return result;
         }
 
@@ -607,7 +599,8 @@ public final class NodeRecommendationManager {
                 return false;
             }
             NodeRecommendation other = (NodeRecommendation)obj;
-            return Objects.equals(this.getId(), other.getId());
+            return Objects.equals(this.m_nodeName, other.m_nodeName)
+                && Objects.equals(this.m_nodeFactoryClassName, other.m_nodeFactoryClassName);
         }
     }
 
@@ -723,7 +716,7 @@ public final class NodeRecommendationManager {
      * @return array of same length as <code>ar</code>, with the found elements non-null. <code>null</code> will be
      *         returned if <code>ar</code> only consists of <code>null</code>-entries
      */
-    private static <T> T[] getMaxSameElements(final T[] ar) {
+    private static <T> T[] getMaxSameElements(final T[] ar) { // TODO: Re-factor this to make the linter happy
         T[] res = ar.clone();
         for (var i = ar.length; i > 0; i--) {
             var it = CombinatoricsUtils.combinationsIterator(ar.length, i);
