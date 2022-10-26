@@ -228,7 +228,53 @@ public final class FileStoreKey implements Comparable<FileStoreKey> {
         return b.toString();
     }
 
+    /**
+     * Create a {@link FileStoreKey} from its string representation as returned by {@link FileStoreKey#toString()}.
+     *
+     * @param stringRepresentation
+     * @return The FileStoreKey as described by the string
+     * @throws IllegalArgumentException if the string did not have the expected format
+     */
+    public static FileStoreKey fromString(final String stringRepresentation) {
+        String end = null;
+        int index = 0;
+        int[] nestedLoopPath = null;
+        int iterationIndex = -1;
 
+        String[] parts = stringRepresentation.split("_");
+
+        if (parts.length == 0) {
+            throw new IllegalArgumentException("String representation of FileStoreKey was not valid");
+        }
+
+        if (parts.length == 1) {
+            // we only have a name
+            end = parts[0];
+        } else if (parts.length == 2) {
+            throw new IllegalArgumentException("String representation of FileStoreKey was not valid");
+        } else if (parts.length == 3) {
+            // no nested loop path available, we start directly with the index
+            index = Integer.valueOf(parts[0]);
+            iterationIndex = Integer.valueOf(parts[1]);
+            nestedLoopPath = new int[0];
+            end = parts[2];
+        } else {
+            // parse nested loop path
+            String[] nestedLoopIndices = parts[0].split("-");
+            nestedLoopPath = Arrays.stream(nestedLoopIndices).mapToInt(s -> Integer.valueOf(s).intValue()).toArray();
+            index = Integer.valueOf(parts[1]);
+            iterationIndex = Integer.valueOf(parts[2]);
+            end = parts[3];
+        }
+
+        String[] endParts = end.split("-\\(");
+        if (endParts.length != 2) {
+            throw new IllegalArgumentException("String representation of FileStoreKey was not valid");
+        }
+        String storeUUID = endParts[1].substring(0, endParts[1].length() - 1);
+
+        return new FileStoreKey(UUID.fromString(storeUUID), index, nestedLoopPath, iterationIndex, endParts[0]);
+    }
 
     /** {@inheritDoc} */
     @Override
