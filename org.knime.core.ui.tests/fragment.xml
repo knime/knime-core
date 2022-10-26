@@ -9,5 +9,11 @@
             hidden="true">
       </node>
    </extension>
+   <extension
+         point="org.knime.core.ui.nodetriples">
+      <tripleprovider
+            factory-class="org.knime.core.ui.workflowcoach.TestNodeTripleProviderFactory">
+      </tripleprovider>
+   </extension>
 
 </fragment>

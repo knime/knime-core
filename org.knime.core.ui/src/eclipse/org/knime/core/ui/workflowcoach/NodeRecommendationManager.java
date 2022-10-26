@@ -178,7 +178,7 @@ public final class NodeRecommendationManager {
             } else {
                 LOGGER.debug("No need to reload the node recommendations");
             }
-            return true;
+            return cachedRecommendations != null;
         } catch (IOException e) {
             LOGGER.error("Failed to initially load the node recommendations", e);
             return false;
@@ -244,9 +244,11 @@ public final class NodeRecommendationManager {
         } //end for
 
         if (!recommendations.isEmpty()) {
-            cachedRecommendations = recommendations; // NOSONAR
+            cachedRecommendations = recommendations; // NOSONAR: This has to be static, but the enclosing method can't
             m_listeners.stream().forEach(IUpdateListener::updated);
             LOGGER.info("Successfully (re-)loaded all node recommendations available");
+        } else {
+            cachedRecommendations = null; // NOSONAR: This has to be static, but the enclosing method can't
         }
     }
 
@@ -355,7 +357,8 @@ public final class NodeRecommendationManager {
      *         {@link NodeTripleProvider}. It will return <code>null</code> if something went wrong with loading the
      *         node statistics!
      */
-    public List<NodeRecommendation>[] getNodeRecommendationFor(final NativeNodeContainerUI... nnc) { // Not static to avoid failing initialization
+    @SuppressWarnings("static-method") // Not static to avoid failing initialization
+    public List<NodeRecommendation>[] getNodeRecommendationFor(final NativeNodeContainerUI... nnc) {
         if (cachedRecommendations == null) {
             return null; // NOSONAR: Returning null makes sense here
         }
@@ -687,6 +690,7 @@ public final class NodeRecommendationManager {
      */
     private static List<NodeRecommendation[]> joinRecommendations(final List<NodeRecommendation>[] recommendations,
         final int maxSize) {
+        // TODO: Reduce this complexity
         List<NodeRecommendation[]> recommendationsJoined = new ArrayList<>();
         for (var i = 0; i < maxSize; i++) {
             if (recommendations.length == 1) {
@@ -716,7 +720,8 @@ public final class NodeRecommendationManager {
      * @return array of same length as <code>ar</code>, with the found elements non-null. <code>null</code> will be
      *         returned if <code>ar</code> only consists of <code>null</code>-entries
      */
-    private static <T> T[] getMaxSameElements(final T[] ar) { // TODO: Re-factor this to make the linter happy
+    private static <T> T[] getMaxSameElements(final T[] ar) {
+        // TODO: Reduce this complexity
         T[] res = ar.clone();
         for (var i = ar.length; i > 0; i--) {
             var it = CombinatoricsUtils.combinationsIterator(ar.length, i);
