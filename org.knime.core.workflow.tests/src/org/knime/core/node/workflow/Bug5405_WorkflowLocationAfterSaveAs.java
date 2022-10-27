@@ -53,6 +53,7 @@ import org.junit.Test;
 import org.knime.core.data.container.BufferedContainerTable;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.util.FileUtil;
 
 /**
@@ -101,8 +102,16 @@ public class Bug5405_WorkflowLocationAfterSaveAs extends WorkflowTestCase {
         File saveAsFolder = FileUtil.createTempDir(getClass().getName());
         saveAsFolder.delete();
 
-        WorkflowContext.Factory fac = manager.getContext().createCopy().setCurrentLocation(saveAsFolder);
-        manager.saveAs(fac.createContext(), new ExecutionMonitor());
+        final var oldContext = manager.getContextV2();
+        final var oldExecutorInfo = oldContext.getExecutorInfo();
+        WorkflowContextV2 newContext = WorkflowContextV2.builder()
+                .withAnalyticsPlatformExecutor(exec -> exec
+                        .withUserId(oldExecutorInfo.getUserId())
+                        .withLocalWorkflowPath(saveAsFolder.toPath())
+                        .withTempFolder(oldExecutorInfo.getTempFolder()))
+                .withLocalLocation()
+                .build();
+        manager.saveAs(newContext, new ExecutionMonitor());
         Assert.assertEquals(saveAsFolder, manager.getNodeContainerDirectory().getFile());
         Assert.assertEquals(saveAsFolder, manager.getContext().getCurrentLocation());
 

@@ -50,6 +50,7 @@ package org.knime.core.node.exec;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -92,10 +93,11 @@ import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeInPort;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.SubNodeContainer;
-import org.knime.core.node.workflow.WorkflowContext;
 import org.knime.core.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.WorkflowCreationHelper;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.workflow.contextv2.AnalyticsPlatformExecutorInfo;
+import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.node.workflow.execresult.NativeNodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeExecutionResult;
@@ -203,29 +205,43 @@ public final class SandboxedNodeCreator {
     CanceledExecutionException, LockFailedException, InterruptedException {
         exec.setMessage("Creating virtual workflow");
 
-        final WorkflowManager parent = m_nc.getParent();
         // derive workflow context via NodeContext as the parent could only a be a metanode in a metanode...
-        final WorkflowContext origContext = NodeContext.getContext().getWorkflowManager().getContext();
-        WorkflowContext.Factory ctxFactory;
-        // this if-elseif-etc is OK for both streaming in cluster but not 100% certain for other cases
-        // (specifically reading knime://knime.workflow files)
-        if (!m_copyDataIntoNewContext) {
-            ctxFactory = origContext.createCopy();
-            if (m_localWorkflowDir != null) {
-                ctxFactory.setOriginalLocation(origContext.getCurrentLocation())
-                    .setCurrentLocation(m_localWorkflowDir);
-            }
-        } else if (m_localWorkflowDir != null) {
-            ctxFactory = new WorkflowContext.Factory(m_localWorkflowDir);
-        } else {
-            ctxFactory = new WorkflowContext.Factory(FileUtil.createTempDir("sandbox-" + m_nc.getNameWithID()));
-        }
-        // We have to use the same location for the temporary files
-        ctxFactory.setTempLocation(origContext.getTempLocation());
-        origContext.getMountpointURI().ifPresent(u -> ctxFactory.setMountpointURI(u));
+        WorkflowContextV2 oldContext = NodeContext.getContext().getWorkflowManager().getContextV2();
 
-        WorkflowCreationHelper creationHelper = new WorkflowCreationHelper();
-        creationHelper.setWorkflowContext(ctxFactory.createContext());
+        final WorkflowManager parent = m_nc.getParent();
+        WorkflowContextV2 newContext;
+
+        if (!m_copyDataIntoNewContext) {
+            // this is the classical "Simple Streaming" case: data is shared between different workflows
+            CheckUtils.checkState(m_localWorkflowDir == null,
+                "Can't have custom workflow directory; workflow contexts are shared");
+            newContext = oldContext;
+        } else {
+            // other type of "external" execution -- mostly not used within KNIME (previous SGE cluster execution)
+            final Path workflowDir;
+            if (m_localWorkflowDir != null) {
+                workflowDir = m_localWorkflowDir.toPath();
+            } else {
+                workflowDir = FileUtil.createTempDir("sandbox-" + m_nc.getNameWithID()).toPath();
+            }
+            final var oldExecInfo = oldContext.getExecutorInfo();
+            final var execInfoBuilder = AnalyticsPlatformExecutorInfo.builder()
+                    .withUserId(oldExecInfo.getUserId())
+                    .withLocalWorkflowPath(workflowDir)
+                    .withTempFolder(oldExecInfo.getTempFolder()); // handing over the temp directory here
+            if (oldExecInfo instanceof AnalyticsPlatformExecutorInfo) {
+                final var apExecInfo = (AnalyticsPlatformExecutorInfo) oldExecInfo;
+                execInfoBuilder.withBatchMode(apExecInfo.isBatchMode());
+                apExecInfo.getMountpoint().ifPresent(mp ->
+                        execInfoBuilder.withMountpoint(mp.getFirst().getAuthority(), mp.getSecond()));
+            }
+            newContext = WorkflowContextV2.builder()
+                    .withExecutor(execInfoBuilder.build())
+                    .withLocation(oldContext.getLocationInfo())
+                    .build();
+        }
+
+        final var creationHelper = new WorkflowCreationHelper(newContext);
         if (!m_copyDataIntoNewContext) {
             creationHelper.setWorkflowDataRepository(parent.getWorkflowDataRepository());
         }

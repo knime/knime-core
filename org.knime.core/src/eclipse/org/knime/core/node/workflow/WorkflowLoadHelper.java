@@ -55,6 +55,7 @@ import java.util.Optional;
 
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
@@ -64,6 +65,7 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
+import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.util.CoreConstants;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.Version;
@@ -97,7 +99,9 @@ public class WorkflowLoadHelper {
 
     private final boolean m_isTemplateProject;
 
-    private final WorkflowContext m_workflowContext;
+    private final WorkflowContextV2 m_workflowContext;
+
+    private DataContainerSettings m_dataContainerSettings;
 
     /** How to proceed when a workflow written with a future KNIME version is
      * loaded. */
@@ -120,29 +124,47 @@ public class WorkflowLoadHelper {
      * @param workflowLocation the location of the workflow
      * @since 2.8
      */
+    @Deprecated(since = "4.7.0")
     public WorkflowLoadHelper(final File workflowLocation) {
-        this(false, new WorkflowContext.Factory(workflowLocation).createContext());
+        this(false, WorkflowContextV2.forTemporaryWorkflow(workflowLocation.toPath(), null));
+    }
+
+    @Deprecated(since = "4.7.0")
+    public WorkflowLoadHelper(final File workflowDir, final DataContainerSettings settings) {
+        this(workflowDir);
+        this.m_dataContainerSettings = settings;
     }
 
     /**
      * Creates a new load helper with the given workflow context.
      *
      * @param workflowContext a workflow context
-     * @since 2.8
+     * @since 4.7
      */
-    public WorkflowLoadHelper(final WorkflowContext workflowContext) {
+    public WorkflowLoadHelper(final WorkflowContextV2 workflowContext) {
         this(false, workflowContext);
     }
 
+    /**
+     * Creates a new load helper with the given workflow context and data container settings.
+     *
+     * @param context workflow context
+     * @param settings data container settings
+     * @since 4.7
+     */
+    public WorkflowLoadHelper(final WorkflowContextV2 context, final DataContainerSettings settings) {
+        this(false, context);
+        this.m_dataContainerSettings = settings;
+    }
 
     /**
      * Creates a new load helper with the given workflow context.
      *
      * @param isTemplate whether this is a template loader
      * @param workflowContext a workflow context
-     * @since 3.4
+     * @since 4.7
      */
-    public WorkflowLoadHelper(final boolean isTemplate, final WorkflowContext workflowContext) {
+    public WorkflowLoadHelper(final boolean isTemplate, final WorkflowContextV2 workflowContext) {
         this(isTemplate, false, workflowContext);
     }
 
@@ -153,12 +175,12 @@ public class WorkflowLoadHelper {
      * @param isTemplateProject whether this template is a template project, i.e. not part of a workflow. If
      *            <code>true</code>, <code>isTemplate</code> must be <code>true</code>, too.
      * @param workflowContext a workflow context
-     * @since 4.1
+     * @since 4.7
      * @throws IllegalStateException if <code>isTemplateProject</code> is <code>true</code>, but <code>isTemplate</code>
      *             isn't
      */
     public WorkflowLoadHelper(final boolean isTemplate, final boolean isTemplateProject,
-        final WorkflowContext workflowContext) {
+        final WorkflowContextV2 workflowContext) {
         if (isTemplateProject && !isTemplate) {
             throw new IllegalStateException("A template project is a template, too");
         }
@@ -264,7 +286,7 @@ public class WorkflowLoadHelper {
      * @return a workflow context or <code>null</code>
      * @since 2.8
      */
-    public WorkflowContext getWorkflowContext() {
+    public WorkflowContextV2 getWorkflowContext() {
         return m_workflowContext;
     }
 
@@ -310,7 +332,10 @@ public class WorkflowLoadHelper {
             throw new IOException("No \"" + fileName + "\" file in directory \"" + directory.getAbsolutePath() + "\"");
         }
 
-        NodeSettingsRO settings = NodeSettings.loadFromXML(new BufferedInputStream(new FileInputStream(dotKNIME)));
+        NodeSettingsRO settings;
+        try (var bin = new BufferedInputStream(new FileInputStream(dotKNIME))) {
+            settings = NodeSettings.loadFromXML(bin);
+        }
         // CeBIT 2006 version did not contain a version string.
         String versionString;
         if (settings.containsKey(WorkflowLoadHelper.CFG_VERSION)) {
@@ -440,5 +465,13 @@ public class WorkflowLoadHelper {
      */
     public Optional<Credentials> getSystemDefaultCredentials() {
         return Optional.empty();
+    }
+
+    public final void setDataContainerSettings(final DataContainerSettings settings) {
+        m_dataContainerSettings = settings;
+    }
+
+    public final Optional<DataContainerSettings> getDataContainerSettings() {
+        return Optional.ofNullable(m_dataContainerSettings);
     }
 }

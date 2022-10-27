@@ -67,6 +67,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -115,6 +117,7 @@ import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
+import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.BufferedDataTable;
@@ -255,7 +258,7 @@ public final class WorkflowManager extends NodeContainer
      * queueCheckForNodeStateChangeNotification-Thread is already waiting, additional ones will be discarded.
      */
     private static final Executor PARENT_NOTIFIER =
-        new ThreadPoolExecutor(1, 1, 60, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(2), new ThreadFactory() {
+        new ThreadPoolExecutor(1, 1, 60, TimeUnit.SECONDS, new ArrayBlockingQueue<>(2), new ThreadFactory() {
             /** {@inheritDoc} */
             @Override
             public Thread newThread(final Runnable r) {
@@ -368,7 +371,9 @@ public final class WorkflowManager extends NodeContainer
      */
     private WorkflowCipher m_cipher = WorkflowCipher.NULL_CIPHER;
 
-    private WorkflowContext m_workflowContext;
+    private WorkflowContextV2 m_workflowContext;
+
+    private DataContainerSettings m_dataContainerSettings;
 
     /** Non-null object to check if successor execution is allowed - usually it is except for wizard execution. */
     private ExecutionController m_executionController;
@@ -432,7 +437,7 @@ public final class WorkflowManager extends NodeContainer
      * @param dataRepositoryOptional for blob and table handling, see class member
      */
     WorkflowManager(final NodeContainerParent directNCParent, final WorkflowManager parent, final NodeID id,
-        final PortType[] inTypes, final PortType[] outTypes, final boolean isProject, final WorkflowContext context,
+        final PortType[] inTypes, final PortType[] outTypes, final boolean isProject, final WorkflowContextV2 context,
         final String name, final Optional<WorkflowDataRepository> dataRepositoryOptional,
         final Optional<NodeAnnotation> nodeAnno) {
         super(parent, id, nodeAnno.orElse(null));
@@ -454,11 +459,8 @@ public final class WorkflowManager extends NodeContainer
             // be any dependencies to parent
             // ...and we do not need to synchronize across unconnected workflows
             m_workflowLock = new WorkflowLock(this);
-            if (context != null) {
-                m_workflowContext = createAndSetWorkflowTempDirectory(context);
-            } else {
-                m_workflowContext = null;
-            }
+            m_workflowContext = context; // might be null
+            createAndSetWorkflowTempDirectory(context);
             m_tableBackendSettings = new WorkflowTableBackendSettings();
         } else {
             // ...synchronize across border
@@ -536,16 +538,16 @@ public final class WorkflowManager extends NodeContainer
         m_workflowVariables = new Vector<FlowVariable>(persistor.getWorkflowVariables());
         m_credentialsStore = new CredentialsStore(this, persistor.getCredentials());
         m_cipher = persistor.getWorkflowCipher();
-        WorkflowContext workflowContext;
+        m_dataContainerSettings = persistor.getDataContainerSettings().orElse(null);
+        WorkflowContextV2 workflowContext;
         if (isProject || isComponentProjectWFM()) {
             workflowContext = persistor.getWorkflowContext();
             if (workflowContext == null && getNodeContainerDirectory() != null) { // real projects have a file loc
                 LOGGER.warn("No workflow context available for " + m_name, new Throwable());
-                workflowContext = new WorkflowContext.Factory(getNodeContainerDirectory().getFile()).createContext();
+                workflowContext =
+                        WorkflowContextV2.forTemporaryWorkflow(getNodeContainerDirectory().getFile().toPath(), null);
             }
-            if (workflowContext != null) {
-                workflowContext = createAndSetWorkflowTempDirectory(workflowContext);
-            }
+            createAndSetWorkflowTempDirectory(workflowContext);
         } else {
             workflowContext = null;
         }
@@ -1090,7 +1092,7 @@ public final class WorkflowManager extends NodeContainer
      * @param workflowDataRepository TODO
      */
     private WorkflowManager createAndAddSubWorkflow(final PortType[] inPorts, final PortType[] outPorts,
-        final String name, final boolean isNewProject, final WorkflowContext context,
+        final String name, final boolean isNewProject, final WorkflowContextV2 context,
         final WorkflowDataRepository workflowDataRepository,
         final NodeID idOrNull, final NodeAnnotation nodeAnno) {
         final boolean hasPorts = inPorts.length != 0 || outPorts.length != 0;
@@ -7721,10 +7723,10 @@ public final class WorkflowManager extends NodeContainer
             if (templateWorkflowRoot == null) {
                 NodeContext.pushContext((NodeContext)null);
                 try {
-                    File tmpDir = FileUtil.createTempDir("templateWorkflowRoot");
-                    WorkflowContext wfctx = new WorkflowContext.Factory(tmpDir).createContext();
+                    final var tmpDir = FileUtil.createTempDir("templateWorkflowRoot").toPath();
+                    final var wfctx = WorkflowContextV2.forTemporaryWorkflow(tmpDir, null);
                     templateWorkflowRoot = ROOT.createAndAddProject("Workflow Template Root",
-                        new WorkflowCreationHelper().setWorkflowContext(wfctx));
+                        new WorkflowCreationHelper(wfctx));
                 } catch (IOException e) {
                     LOGGER.warn("Could not create temporary directory for template workflow root.", e);
                     return null;
@@ -8198,28 +8200,29 @@ public final class WorkflowManager extends NodeContainer
     }
 
     /**
-     * Creates a flow private sub dir in the temp folder and returns a new workflow context with the temp directory set.
-     * FileUtil#createTempDir picks it up from there. If the temp file location in the context is already set, this
-     * method does nothing.
+     * Reads the temp folder location from the context and creates the temp folder, if needed. (Only if it's created by this method it will be deleted on
+     * {@link #cleanup()}.
      *
      * @param context the current workflow context
-     * @return a new workflow context with the temp directory set
-     * @throws IllegalStateException if temp folder can't be created.
+     * @throws IllegalStateException if temp folder can't be created or is not a writable directory.
      */
-    private WorkflowContext createAndSetWorkflowTempDirectory(final WorkflowContext context) {
-        if (context.getTempLocation() != null) {
-            return context;
+    private void createAndSetWorkflowTempDirectory(final WorkflowContextV2 context) {
+        if (context == null) {
+            return;
         }
-        File rootDir = new File(KNIMEConstants.getKNIMETempDir());
-        File tempDir;
-        try {
-            tempDir = FileUtil.createTempDir("knime_" + FileUtil.getValidFileName(getName(), 15), rootDir);
-        } catch (IOException e) {
-            throw new IllegalStateException("Can't create temp folder in " + rootDir.getAbsolutePath(), e);
+        Path tempFolder = context.getExecutorInfo().getTempFolder();
+        if (Files.isDirectory(tempFolder)) {
+            // set by the external caller, just use it (but don't delete on clean-up)
+        } else {
+            try {
+                Files.createDirectories(tempFolder);
+            } catch (IOException e) {
+                throw new IllegalStateException("Can't create temp folder in " + tempFolder, e);
+            }
+            m_tmpDir = tempFolder.toFile();
         }
-        // if we created the temp dir we must clean it up when disposing of the workflow
-        m_tmpDir = tempDir;
-        return context.createCopy().setTempLocation(tempDir).createContext();
+        CheckUtils.checkState(Files.isDirectory(tempFolder), "Temp folder %s is not a folder", tempFolder);
+        CheckUtils.checkState(Files.isWritable(tempFolder), "Temp folder %s exists but is not writable", tempFolder);
     }
 
     /** {@inheritDoc} */
@@ -8999,9 +9002,9 @@ public final class WorkflowManager extends NodeContainer
         wfm.m_workflowVariables = new Vector<>(flowVariables);
         var tableBackendSettings = DefToCoreUtil.toNodeSettings(def.getTableBackendSettings());
         wfm.m_tableBackendSettings = WorkflowTableBackendSettings.loadSettingsInModel(tableBackendSettings);
-        if (parent.getNodeContainerDirectory() != null) {
-            wfm.m_workflowContext =
-                new WorkflowContext.Factory(parent.getNodeContainerDirectory().getFile()).createContext();
+        final var containerDir = parent.getNodeContainerDirectory();
+        if (containerDir != null) {
+            wfm.m_workflowContext = WorkflowContextV2.forTemporaryWorkflow(containerDir.getFile().toPath(), null);
         }
         return wfm;
     }
@@ -9079,7 +9082,7 @@ public final class WorkflowManager extends NodeContainer
      * @throws LockFailedException If locking failed
      * @since 3.3
      */
-    public void saveAs(final WorkflowContext newContext, final ExecutionMonitor exec)
+    public void saveAs(final WorkflowContextV2 newContext, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException, LockFailedException {
         if (this == ROOT) {
             throw new IOException("Can't save root workflow");
@@ -9089,7 +9092,7 @@ public final class WorkflowManager extends NodeContainer
             if (!isProject()) {
                 throw new IOException("Cannot call save-as on a non-project workflow");
             }
-            File directory = newContext.getCurrentLocation();
+            File directory = newContext.getExecutorInfo().getLocalWorkflowPath().toFile();
             directory.mkdirs();
             if (!directory.isDirectory() || !directory.canWrite()) {
                 throw new IOException("Cannot write to " + directory);
@@ -10774,7 +10777,7 @@ public final class WorkflowManager extends NodeContainer
      * @since 2.8
      */
     public WorkflowContext getContext() {
-        return m_workflowContext;
+        return m_workflowContext == null ? null : m_workflowContext.toLegacyWorkflowContext();
     }
 
     /**
@@ -10784,22 +10787,19 @@ public final class WorkflowManager extends NodeContainer
      * @since 4.7
      */
     public WorkflowContextV2 getContextV2() {
-        // FIXME: we should properly initialize a WorkflowContextV2. The method
-        // fromLegacyWorkflowContext() only works in some cases
-        if (m_workflowContext == null) {
-            return null;
-        } else {
-            return WorkflowContextV2.fromLegacyWorkflowContext(m_workflowContext);
-        }
-    }
-
-    void setContext(final WorkflowContext c){
-        m_workflowContext = c;
+        return m_workflowContext;
     }
 
     /**
-     * {@inheritDoc}
+     * Optional data container settings, mostly for performance testing.
+     *
+     * @return data container settings
+     * @since 4.7
      */
+    public Optional<DataContainerSettings> getDataContainerSettings() {
+        return Optional.ofNullable(m_dataContainerSettings);
+    }
+
     @Override
     public boolean isInWizardExecution() {
         try (WorkflowLock lock = lock()) {

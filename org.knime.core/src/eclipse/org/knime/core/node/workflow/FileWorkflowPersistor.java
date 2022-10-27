@@ -66,12 +66,14 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.Stack;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import org.knime.core.data.TableBackend;
+import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -89,6 +91,7 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.node.workflow.WorkflowTableBackendSettings.TableBackendUnknownException;
+import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.LockFailedException;
@@ -408,7 +411,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
      * @since 2.8
      */
     @Override
-    public WorkflowContext getWorkflowContext() {
+    public WorkflowContextV2 getWorkflowContext() {
         return isProject() || m_isComponentProject ? getMetaPersistor().getLoadHelper().getWorkflowContext() : null;
     }
 
@@ -505,6 +508,11 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
     @Override
     public void setDirtyAfterLoad() {
         m_isDirtyAfterLoad = true;
+    }
+
+    @Override
+    public Optional<DataContainerSettings> getDataContainerSettings() {
+        return getMetaPersistor().getLoadHelper().getDataContainerSettings();
     }
 
     /** {@inheritDoc} */
@@ -2378,6 +2386,4 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
             settings.addBoolean("isDeletable", false);
         }
     }
-
-
 }

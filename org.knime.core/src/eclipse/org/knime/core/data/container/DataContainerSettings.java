@@ -57,9 +57,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowKey;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.ConfigurableWorkflowContext;
 import org.knime.core.node.workflow.NodeContext;
-import org.knime.core.node.workflow.WorkflowContext;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.DuplicateChecker;
 
@@ -256,7 +254,7 @@ public final class DataContainerSettings {
      */
     private DataContainerSettings() {
         m_duplicateCheckerCreator = () -> new DuplicateChecker(Integer.MAX_VALUE);
-        m_tableDomainCreatorFunction = (spec, initDomain) -> new DataTableDomainCreator(spec, initDomain);
+        m_tableDomainCreatorFunction = DataTableDomainCreator::new;
         m_maxCellsInMemory = initMaxCellsInMemory();
         m_sequentialIO = initSequentialIO();
         m_maxDataContainerThreads = initMaxDataContainerThreads();
@@ -303,16 +301,13 @@ public final class DataContainerSettings {
      * @return the default {@code DataContainerSettings}
      */
     public static DataContainerSettings getDefault() {
-        Optional<WorkflowContext> optContext = Optional.ofNullable(NodeContext.getContext())//
-            .map(NodeContext::getWorkflowManager)//
-            .map(WorkflowManager::getContext);
-        if (optContext.isPresent() && optContext.get() instanceof ConfigurableWorkflowContext) {
-            return ((ConfigurableWorkflowContext)optContext.get()).getContainerSettings();
-        }
         // While it would be tempting to always return the same instance here, it does not make sense, since the
         // default settings can change while KAP is running (e.g., when the user changes which data storage format to
         // use)
-        return new DataContainerSettings();
+        return Optional.ofNullable(NodeContext.getContext())//
+            .map(NodeContext::getWorkflowManager)
+            .flatMap(WorkflowManager::getDataContainerSettings)
+            .orElseGet(DataContainerSettings::new);
     }
 
     /**

@@ -46,30 +46,30 @@
  */
 package org.knime.core.ui.wrapper;
 
-import org.knime.core.node.workflow.WorkflowContext;
+import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.ui.node.workflow.WorkflowContextUI;
 
 /**
- * UI-interface implementation that wraps {@link WorkflowContext}.
+ * UI-interface implementation that wraps {@link WorkflowContextV2}.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
-public class WorkflowContextWrapper extends AbstractWrapper<WorkflowContext> implements WorkflowContextUI {
+public class WorkflowContextWrapper extends AbstractWrapper<WorkflowContextV2> implements WorkflowContextUI {
 
     /**
      * @param wrappedObj
      */
-    protected WorkflowContextWrapper(final WorkflowContext wrappedObj) {
+    protected WorkflowContextWrapper(final WorkflowContextV2 wrappedObj) {
         super(wrappedObj);
     }
 
     /**
-     * Wraps the passed {@link WorkflowContext} by just creating a new {@link WorkflowContextWrapper}-instance.
+     * Wraps the passed {@link WorkflowContextV2} by just creating a new {@link WorkflowContextWrapper}-instance.
      *
      * @param workflowContext object to wrap
      * @return a new wrapper instance
      */
-    public static WorkflowContextWrapper wrap(final WorkflowContext workflowContext) {
+    public static WorkflowContextWrapper wrap(final WorkflowContextV2 workflowContext) {
         if(workflowContext == null) {
             return null;
         }

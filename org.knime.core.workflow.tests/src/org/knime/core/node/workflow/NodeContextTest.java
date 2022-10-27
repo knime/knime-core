@@ -56,6 +56,7 @@ import static org.junit.Assert.fail;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -85,6 +86,7 @@ import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.NodeContext.ContextObjectSupplier;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
+import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.SwingWorkerWithContext;
 import org.knime.core.util.ThreadUtils;
@@ -115,8 +117,10 @@ public class NodeContextTest {
         tmpDir.deleteOnExit();
         FileUtil.unzip(workflowZip, tmpDir);
         File workflowDir = tmpDir.listFiles()[0];
-        WorkflowLoadResult res =
-                WorkflowManager.loadProject(workflowDir, new ExecutionMonitor(), new WorkflowLoadHelper(workflowDir));
+        final var workflowDirPath = workflowDir.toPath();
+        final var loadHelper =
+                new WorkflowLoadHelper(WorkflowContextV2.forTemporaryWorkflow(workflowDirPath, null));
+        WorkflowLoadResult res = WorkflowManager.loadProject(workflowDir, new ExecutionMonitor(), loadHelper);
         if (res.hasErrors()) {
             throw new IOException("Error while loading workflow: " + res.getMessage());
         }

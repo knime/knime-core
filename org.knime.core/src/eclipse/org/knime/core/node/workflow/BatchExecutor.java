@@ -84,6 +84,7 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.util.StringFormat;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
+import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.util.EncryptionKeySupplier;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.FileUtil.ZipFileFilter;
@@ -271,19 +272,20 @@ public class BatchExecutor {
     private static final class BatchExecWorkflowLoadHelper extends WorkflowLoadHelper {
         private final Map<String, Credentials> m_credentialMap;
 
-        private final WorkflowContext m_workflowContext;
+        private final WorkflowContextV2 m_workflowContext;
 
         /**
          * @param credentialMap
          */
-        private BatchExecWorkflowLoadHelper(final Map<String, Credentials> credentialMap, final File workflowDirectory) {
+        private BatchExecWorkflowLoadHelper(final Map<String, Credentials> credentialMap, final File workflowDirectory,
+            final WorkflowContextV2 context) {
             m_credentialMap = credentialMap;
-            m_workflowContext = new WorkflowContext.Factory(workflowDirectory).createContext();
+            m_workflowContext = context;
         }
 
         @Override
         public List<Credentials> loadCredentials(final List<Credentials> credentials) {
-            List<Credentials> newCredentials = new ArrayList<Credentials>();
+            List<Credentials> newCredentials = new ArrayList<>();
             Console cons = null;
             for (Credentials cred : credentials) {
                 String login = null;
@@ -320,7 +322,7 @@ public class BatchExecutor {
          * {@inheritDoc}
          */
         @Override
-        public WorkflowContext getWorkflowContext() {
+        public WorkflowContextV2 getWorkflowContext() {
             return m_workflowContext;
         }
     }
@@ -734,11 +736,19 @@ public class BatchExecutor {
 
         }
 
+        final var context = WorkflowContextV2.builder()
+                .withAnalyticsPlatformExecutor(exec -> exec
+                    .withCurrentUserAsUserId()
+                    .withLocalWorkflowPath(config.workflowLocation.toPath())
+                    .withBatchMode(true))
+                .withLocalLocation()
+                .build();
+
         BatchExecWorkflowLoadHelper batchLH =
-            new BatchExecWorkflowLoadHelper(config.credentials, config.workflowLocation);
+            new BatchExecWorkflowLoadHelper(config.credentials, config.workflowLocation, context);
         WorkflowLoadResult loadResult =
                 WorkflowManager.loadProject(config.workflowLocation, new ExecutionMonitor(), batchLH);
-        WorkflowManager wfm = loadResult.getWorkflowManager();
+        final var wfm = loadResult.getWorkflowManager();
         if (config.failOnLoadError && loadResult.hasErrors()) {
             if (wfm != null) {
                 wfm.getParent().removeProject(wfm.getID());

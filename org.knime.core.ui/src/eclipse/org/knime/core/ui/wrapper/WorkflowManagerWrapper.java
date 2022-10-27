@@ -632,7 +632,7 @@ public final class WorkflowManagerWrapper extends NodeContainerWrapper<WorkflowM
 
     @Override
     public WorkflowContextUI getContext() {
-        return WorkflowContextWrapper.wrap(unwrap().getContext());
+        return WorkflowContextWrapper.wrap(unwrap().getContextV2());
     }
 
     @Override

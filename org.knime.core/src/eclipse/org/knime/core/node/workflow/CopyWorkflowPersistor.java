@@ -54,13 +54,16 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.Pair;
 import org.knime.core.util.workflowalizer.AuthorInformation;
@@ -87,6 +90,7 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
     private final List<Credentials> m_credentials;
     private final List<Pair<AnnotationData, Integer>> m_workflowAnnotations;
     private final boolean m_isProject;
+    private DataContainerSettings m_dataContainerSettings;
 
     /** Create copy persistor.
      * @param original To copy from
@@ -153,6 +157,7 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
             AnnotationData data = w.getData().clone();
             m_workflowAnnotations.add(Pair.create(data, w.getID().getIndex()));
         }
+        m_dataContainerSettings = original.getDataContainerSettings().orElse(null);
     }
 
     /** {@inheritDoc} */
@@ -171,7 +176,7 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
      * {@inheritDoc}
      */
     @Override
-    public WorkflowContext getWorkflowContext() {
+    public WorkflowContextV2 getWorkflowContext() {
         return null; // context is determined by target workflow - in most cases the content is not a project anyway
     }
 
@@ -341,6 +346,14 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
     @Override
     public boolean mustWarnOnDataLoadError() {
         return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Optional<DataContainerSettings> getDataContainerSettings() {
+        return Optional.ofNullable(m_dataContainerSettings);
     }
 
 }

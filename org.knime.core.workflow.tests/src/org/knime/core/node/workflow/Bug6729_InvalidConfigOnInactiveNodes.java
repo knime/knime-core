@@ -53,13 +53,16 @@ import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.IDLE;
 
 import java.io.File;
+import java.net.URI;
 
 import org.apache.commons.lang3.StringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
+import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.util.FileUtil;
 
@@ -82,8 +85,9 @@ public class Bug6729_InvalidConfigOnInactiveNodes extends WorkflowTestCase {
     }
 
     private void init() throws Exception {
-        WorkflowLoadResult loadResult = loadWorkflow(m_workflowDirTemp,
-            new ExecutionMonitor(), new ConfigurableWorkflowLoadHelper(m_workflowDirTemp));
+        final var workflowContext = WorkflowContextV2.forTemporaryWorkflow(m_workflowDirTemp.toPath(), null);
+        WorkflowLoadResult loadResult = loadWorkflow(m_workflowDirTemp, new ExecutionMonitor(),
+            new WorkflowLoadHelper(workflowContext, DataContainerSettings.getDefault()));
         assertThat("Expected non-error/non-warning load result: " + loadResult.getMessage(),
             loadResult.getType(), is(LoadResultEntryType.Ok));
         final WorkflowManager workflowManager = loadResult.getWorkflowManager();

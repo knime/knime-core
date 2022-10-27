@@ -48,12 +48,15 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import java.io.File;
+import java.net.URI;
+import java.nio.file.Path;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.WorkflowPersistor.MetaNodeLinkUpdateResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
+import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.util.FileUtil;
 
 /**
@@ -104,16 +107,14 @@ public class BugAP14611_EnsureWorkflowContextInComponentProject extends Workflow
 		component.saveAsTemplate(componentDir, new ExecutionMonitor());
 
 		/* save and open without example input data */
-		WorkflowLoadHelper loadHelper = new WorkflowLoadHelper(true, true, createWorkflowContext());
+		WorkflowLoadHelper loadHelper = new WorkflowLoadHelper(true, true, 
+				WorkflowContextV2.forTemporaryWorkflow(componentDir.toPath(), null));
 		MetaNodeLinkUpdateResult loadResult = loadComponent(componentDir, new ExecutionMonitor(), loadHelper);
 		SubNodeContainer componentProject = (SubNodeContainer) loadResult.getLoadedInstance();
 
 		/* check workflow context */
-		WorkflowContext context = componentProject.getWorkflowManager().getContext();
+		WorkflowContextV2 context = componentProject.getWorkflowManager().getContextV2();
 		assertNotNull("workflow context expected to be available for component project", context);
 	}
-	
-	private static WorkflowContext createWorkflowContext() {
-		return new WorkflowContext.Factory(new File("")).createContext();
-	}
+
 }

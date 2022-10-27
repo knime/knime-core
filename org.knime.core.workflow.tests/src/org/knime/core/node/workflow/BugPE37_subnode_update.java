@@ -108,7 +108,7 @@ public class BugPE37_subnode_update extends WorkflowTestCase {
     public void testRunAfterUpdate() throws Exception {
         WorkflowManager manager = getManager();
         List<NodeID> linkedMetaNodes = manager.getLinkedMetaNodes(true);
-        WorkflowLoadHelper lH = new WorkflowLoadHelper(true, manager.getContext());
+        WorkflowLoadHelper lH = new WorkflowLoadHelper(true, manager.getContextV2());
         for (NodeID id : linkedMetaNodes) {
             NodeContainerTemplate tnc = (NodeContainerTemplate)manager.findNodeContainer(id);
             WorkflowManager parent = tnc.getParent();

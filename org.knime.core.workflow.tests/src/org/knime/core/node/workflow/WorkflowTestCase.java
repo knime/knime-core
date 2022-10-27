@@ -78,6 +78,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
+import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.node.workflow.WorkflowPersistor.MetaNodeLinkUpdateResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.util.LoadVersion;
@@ -102,7 +103,7 @@ public abstract class WorkflowTestCase {
 
     private WorkflowManager m_manager;
 
-	private List<NodeID> m_loadedComponentNodeIDs = new ArrayList<>(0);
+    private List<NodeID> m_loadedComponentNodeIDs = new ArrayList<>(0);
 
     protected NodeID loadAndSetWorkflow() throws Exception {
         File workflowDir = getDefaultWorkflowDirectory();
@@ -128,10 +129,9 @@ public abstract class WorkflowTestCase {
 
     protected WorkflowLoadResult loadWorkflow(final File workflowDir, final ExecutionMonitor exec,
         final DataContainerSettings settings) throws Exception {
-        return loadWorkflow(workflowDir, exec, new ConfigurableWorkflowLoadHelper(workflowDir, settings) {
-            /**
-             * {@inheritDoc}
-             */
+        final var workflowContext = WorkflowContextV2.forTemporaryWorkflow(workflowDir.toPath(), null);
+        return loadWorkflow(workflowDir, exec, new WorkflowLoadHelper(workflowContext, settings) {
+
             @Override
             public UnknownKNIMEVersionLoadPolicy getUnknownKNIMEVersionLoadPolicy(
                 final LoadVersion workflowKNIMEVersion, final Version createdByKNIMEVersion,
@@ -143,7 +143,7 @@ public abstract class WorkflowTestCase {
 
 
     protected WorkflowLoadResult loadWorkflow(final File workflowDir, final ExecutionMonitor exec,
-        final ConfigurableWorkflowLoadHelper loadHelper) throws Exception {
+        final WorkflowLoadHelper loadHelper) throws Exception {
         WorkflowLoadResult loadResult = WorkflowManager.ROOT.load(workflowDir, exec, loadHelper, false);
         WorkflowManager m = loadResult.getWorkflowManager();
         if (m == null) {
@@ -162,18 +162,18 @@ public abstract class WorkflowTestCase {
         return loadResult;
     }
     
-	protected MetaNodeLinkUpdateResult loadComponent(final File componentDir, final ExecutionMonitor exec,
-			final WorkflowLoadHelper loadHelper) throws IOException, InvalidSettingsException,
-			CanceledExecutionException, UnsupportedWorkflowVersionException {
-		URI componentURI = componentDir.toURI();
-		TemplateNodeContainerPersistor loadPersistor = loadHelper.createTemplateLoadPersistor(componentDir,
-				componentURI);
-		MetaNodeLinkUpdateResult loadResult = new MetaNodeLinkUpdateResult(
-				"Shared instance from \"" + componentURI + "\"");
-		WorkflowManager.ROOT.load(loadPersistor, loadResult, exec, false);
-		m_loadedComponentNodeIDs.add(loadResult.getLoadedInstance().getID());
-		return loadResult;
-	}
+    protected MetaNodeLinkUpdateResult loadComponent(final File componentDir, final ExecutionMonitor exec,
+            final WorkflowLoadHelper loadHelper) throws IOException, InvalidSettingsException,
+            CanceledExecutionException, UnsupportedWorkflowVersionException {
+        URI componentURI = componentDir.toURI();
+        TemplateNodeContainerPersistor loadPersistor = loadHelper.createTemplateLoadPersistor(componentDir,
+                componentURI);
+        MetaNodeLinkUpdateResult loadResult = new MetaNodeLinkUpdateResult(
+                "Shared instance from \"" + componentURI + "\"");
+        WorkflowManager.ROOT.load(loadPersistor, loadResult, exec, false);
+        m_loadedComponentNodeIDs.add(loadResult.getLoadedInstance().getID());
+        return loadResult;
+    }
 
     /**
      * @return
@@ -367,23 +367,23 @@ public abstract class WorkflowTestCase {
     }
 
     protected static int countFilesInDirectory(final File directory) {
-    	return countFilesInDirectory(directory, null);
+        return countFilesInDirectory(directory, null);
     }
     
     /** Recursively counts files in a dir adhering to the given predicte (may be null) */
     protected static int countFilesInDirectory(final File directory, final Predicate<File> matcherPredicate) {
-    	Predicate<File> predicate = matcherPredicate != null ? matcherPredicate : f -> true;
-    	int count = 0;
-    	for (File child : directory.listFiles()) {
-    		if (child.isDirectory()) {
-    			count += countFilesInDirectory(child, predicate);
-    		} else {
-    			if (predicate.test(child)) {
-    				count += 1;
-    			}
-    		}
-    	}
-    	return count;
+        Predicate<File> predicate = matcherPredicate != null ? matcherPredicate : f -> true;
+        int count = 0;
+        for (File child : directory.listFiles()) {
+            if (child.isDirectory()) {
+                count += countFilesInDirectory(child, predicate);
+            } else {
+                if (predicate.test(child)) {
+                    count += 1;
+                }
+            }
+        }
+        return count;
     }
 
     protected static Collection<SingleNodeContainer> iterateSNCs(final WorkflowManager wfm, final boolean recurse) {
@@ -433,8 +433,8 @@ public abstract class WorkflowTestCase {
         }
     }
 
-	protected void executeDontWait(final NodeID... ids) {
-		NodeID prefix = null;
+    protected void executeDontWait(final NodeID... ids) {
+        NodeID prefix = null;
         WorkflowManager parent = null;
         for (NodeID id : ids) {
             if (prefix == null) {
@@ -448,7 +448,7 @@ public abstract class WorkflowTestCase {
         if (parent != null) {
             parent.executeUpToHere(ids);
         }
-	}
+    }
 
     protected void reset(final NodeID... ids) {
         for (NodeID id : ids) {
@@ -488,13 +488,13 @@ public abstract class WorkflowTestCase {
      * @throws Exception
      */
     protected void waitWhile(NodeID nodeID, final Predicate<NodeContainer> hold, int secondsToWaitAtMost) throws Exception {
-    	waitWhile(findNodeContainer(nodeID), hold, secondsToWaitAtMost);
+        waitWhile(findNodeContainer(nodeID), hold, secondsToWaitAtMost);
     }
     
     /**
      * Similar to {@link #waitWhile(NodeID, Predicate, int)}, except that the NodeContainer is passed as argument.
      */
-	protected void waitWhile(NodeContainer nc, final Predicate<NodeContainer> hold, int secondsToWaitAtMost) throws Exception {
+    protected void waitWhile(NodeContainer nc, final Predicate<NodeContainer> hold, int secondsToWaitAtMost) throws Exception {
         if (!hold.test(nc)) {
             return;
         }
@@ -620,25 +620,25 @@ public abstract class WorkflowTestCase {
      */
     protected final class DumpCallStackOnErrorRule extends TestWatcher {
 
-    	private Class<? extends Throwable>[] m_triggeringExceptionClasses;
+        private Class<? extends Throwable>[] m_triggeringExceptionClasses;
 
-		@SafeVarargs
-		DumpCallStackOnErrorRule(final Class<? extends Throwable>... triggeringExceptionClass) {
-			m_triggeringExceptionClasses = triggeringExceptionClass;
-		}
-    	
-		protected void failed(Throwable e, org.junit.runner.Description description) {
-			boolean shouldLog = m_triggeringExceptionClasses.length == 0 ||
-					Arrays.stream(m_triggeringExceptionClasses).anyMatch(t -> t.isAssignableFrom(e.getClass()));
-			if (shouldLog) {
-				String jvmStacktraces = ThreadUtils.getJVMStacktraces();
-				NodeLogger logger = NodeLogger.getLogger(WorkflowTestCase.this.getClass());
-				// logger has a limit of 10k chars -- can't dump all into one
-				logger.errorWithFormat("---- BEGIN Thread Dump On %s ----", e.getClass().getSimpleName());
-				Arrays.stream(jvmStacktraces.split("\n")).forEach(logger::error);
-				logger.errorWithFormat("----- END Thread Dump On %s -----", e.getClass().getSimpleName());
-			}
-		}
+        @SafeVarargs
+        DumpCallStackOnErrorRule(final Class<? extends Throwable>... triggeringExceptionClass) {
+            m_triggeringExceptionClasses = triggeringExceptionClass;
+        }
+
+        protected void failed(Throwable e, org.junit.runner.Description description) {
+            boolean shouldLog = m_triggeringExceptionClasses.length == 0 ||
+                    Arrays.stream(m_triggeringExceptionClasses).anyMatch(t -> t.isAssignableFrom(e.getClass()));
+            if (shouldLog) {
+                String jvmStacktraces = ThreadUtils.getJVMStacktraces();
+                NodeLogger logger = NodeLogger.getLogger(WorkflowTestCase.this.getClass());
+                // logger has a limit of 10k chars -- can't dump all into one
+                logger.errorWithFormat("---- BEGIN Thread Dump On %s ----", e.getClass().getSimpleName());
+                Arrays.stream(jvmStacktraces.split("\n")).forEach(logger::error);
+                logger.errorWithFormat("----- END Thread Dump On %s -----", e.getClass().getSimpleName());
+            }
+        }
     }
 
 }

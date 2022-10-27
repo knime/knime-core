@@ -68,6 +68,7 @@ import org.knime.core.node.extension.NodeFactoryExtensionManager;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.WorkflowPersistor.MetaNodeLinkUpdateResult;
 import org.knime.core.node.workflow.action.MetaNodeToSubNodeResult;
+import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.util.FileUtil;
 
 /**
@@ -150,11 +151,8 @@ public class NodeContainerParentTest {
         File dir = FileUtil.createTempDir("workflow");
         File workflowFile = new File(dir, WorkflowPersistor.WORKFLOW_FILE);
         if (workflowFile.createNewFile()) {
-            WorkflowCreationHelper creationHelper = new WorkflowCreationHelper();
-            WorkflowContext.Factory fac = new WorkflowContext.Factory(workflowFile.getParentFile());
-            creationHelper.setWorkflowContext(fac.createContext());
-
-            return WorkflowManager.ROOT.createAndAddProject("workflow", creationHelper);
+            return WorkflowManager.ROOT.createAndAddProject("workflow", new WorkflowCreationHelper(
+                    WorkflowContextV2.forTemporaryWorkflow(workflowFile.getParentFile().toPath(), null)));
         } else {
             throw new IllegalStateException("Creating empty workflow failed");
         }

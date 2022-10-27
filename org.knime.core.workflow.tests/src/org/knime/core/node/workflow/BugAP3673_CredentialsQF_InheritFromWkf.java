@@ -47,13 +47,18 @@ package org.knime.core.node.workflow;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
+import java.io.File;
+import java.net.URI;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 
 import org.junit.Test;
+import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
+import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 
 /**
  * Test for workaround described as part of AP-5974. Credentials QF nodes should inherit the info from workflow
@@ -90,7 +95,7 @@ public class BugAP3673_CredentialsQF_InheritFromWkf extends WorkflowTestCase {
         checkState(getManager(), InternalNodeContainerState.EXECUTED);
     }
 
-    private class TestWorkflowLoadHelper extends ConfigurableWorkflowLoadHelper {
+    private class TestWorkflowLoadHelper extends WorkflowLoadHelper {
 
         private final String m_password;
 
@@ -98,7 +103,8 @@ public class BugAP3673_CredentialsQF_InheritFromWkf extends WorkflowTestCase {
 
         /** @param workflowLocation */
         TestWorkflowLoadHelper(final String password) throws Exception {
-            super(getDefaultWorkflowDirectory());
+            super(WorkflowContextV2.forTemporaryWorkflow(getDefaultWorkflowDirectory().toPath(), null),
+            		DataContainerSettings.getDefault());
             m_password = password;
         }
 

@@ -140,9 +140,11 @@ public final class WorkflowCaptureOperation {
         try (WorkflowLock lock = m_wfm.lock()) {
             NodeID endNodeID = m_endNode.getID();
 
-            WorkflowCreationHelper workflowCreationHelper = new WorkflowCreationHelper();
-            Optional.ofNullable(NodeContext.getContext()).map(NodeContext::getWorkflowManager)
-                .map(WorkflowManager::getContext).ifPresent(workflowCreationHelper::setWorkflowContext);
+            final var workflowCreationHelper = Optional.ofNullable(NodeContext.getContext())
+                    .map(NodeContext::getWorkflowManager)
+                    .map(WorkflowManager::getContextV2)
+                    .map(WorkflowCreationHelper::new)
+                    .orElseGet(WorkflowCreationHelper::new);
 
             tempParent = WorkflowManager.EXTRACTED_WORKFLOW_ROOT
                 .createAndAddProject("Capture-" + endNodeID, workflowCreationHelper);

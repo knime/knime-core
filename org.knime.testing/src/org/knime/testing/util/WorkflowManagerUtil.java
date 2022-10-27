@@ -60,12 +60,12 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.extension.NodeFactoryExtensionManager;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.UnsupportedWorkflowVersionException;
-import org.knime.core.node.workflow.WorkflowContext;
 import org.knime.core.node.workflow.WorkflowCreationHelper;
 import org.knime.core.node.workflow.WorkflowLoadHelper;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
+import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.LockFailedException;
@@ -102,18 +102,12 @@ public final class WorkflowManagerUtil {
     public static WorkflowManager loadWorkflow(final File workflowDir) throws IOException, InvalidSettingsException,
         CanceledExecutionException, UnsupportedWorkflowVersionException, LockFailedException {
         WorkflowLoadHelper loadHelper = new WorkflowLoadHelper() {
-            /**
-             * {@inheritDoc}
-             */
+
             @Override
-            public WorkflowContext getWorkflowContext() {
-                WorkflowContext.Factory fac = new WorkflowContext.Factory(workflowDir);
-                return fac.createContext();
+            public WorkflowContextV2 getWorkflowContext() {
+                return WorkflowContextV2.forTemporaryWorkflow(workflowDir.toPath(), null);
             }
 
-            /**
-             * {@inheritDoc}
-             */
             @Override
             public UnknownKNIMEVersionLoadPolicy getUnknownKNIMEVersionLoadPolicy(
                 final LoadVersion workflowKNIMEVersion, final Version createdByKNIMEVersion,
@@ -136,11 +130,8 @@ public final class WorkflowManagerUtil {
         var dir = FileUtil.createTempDir("workflow");
         var workflowFile = new File(dir, WorkflowPersistor.WORKFLOW_FILE);
         if (workflowFile.createNewFile()) {
-            var creationHelper = new WorkflowCreationHelper();
-            var fac = new WorkflowContext.Factory(workflowFile.getParentFile());
-            creationHelper.setWorkflowContext(fac.createContext());
-
-            return WorkflowManager.ROOT.createAndAddProject("workflow", creationHelper);
+            return WorkflowManager.ROOT.createAndAddProject("workflow", new WorkflowCreationHelper(
+                WorkflowContextV2.forTemporaryWorkflow(workflowFile.getParentFile().toPath(), null)));
         } else {
             throw new IllegalStateException("Creating empty workflow failed");
         }

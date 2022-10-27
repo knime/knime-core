@@ -381,7 +381,7 @@ public final class SubNodeContainer extends SingleNodeContainer
         super(parent, id, content.getNodeAnnotation());
         // Create new, internal workflow manager:
         m_wfm = new WorkflowManager(this, null, new NodeID(id, 0), new PortType[]{}, new PortType[]{}, false,
-                parent.getContext(), name,
+                parent.getContextV2(), name,
                 Optional.of(parent.getWorkflowDataRepository()), Optional.of(content.getNodeAnnotation()));
         m_wfm.setJobManager(null);
         m_subnodeScopeContext = new FlowSubnodeScopeContext(this);

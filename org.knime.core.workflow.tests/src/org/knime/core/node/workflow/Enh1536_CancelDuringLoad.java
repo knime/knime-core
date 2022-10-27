@@ -49,6 +49,8 @@ import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.nio.file.Path;
 import java.util.Objects;
 
 import org.junit.After;
@@ -57,6 +59,7 @@ import org.junit.Test;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.DefaultNodeProgressMonitor;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.node.workflow.node.adapter.AdapterNodeFactory;
 import org.knime.core.node.workflow.node.adapter.AdapterNodeModel;
 import org.knime.core.util.FileUtil;
@@ -84,8 +87,8 @@ public class Enh1536_CancelDuringLoad extends WorkflowTestCase {
     public void setUp() throws Exception {
         m_workflowDirectory = FileUtil.createTempDir(getClass().getSimpleName());
         NODE_PROGRESS_THREAD_LOCAL.set(new DefaultNodeProgressMonitor());
-        final WorkflowCreationHelper creationHelper = new WorkflowCreationHelper();
-        creationHelper.setWorkflowContext(new WorkflowContext.Factory(m_workflowDirectory).createContext());
+        final WorkflowCreationHelper creationHelper = new WorkflowCreationHelper(
+                WorkflowContextV2.forTemporaryWorkflow(m_workflowDirectory.toPath(), null));
         WorkflowManager wm = WorkflowManager.ROOT.createAndAddProject(
             getClass().getSimpleName(), creationHelper);
         NodeID sourceNode = wm.createAndAddNode(new AdapterNodeFactory(true));
@@ -106,7 +109,8 @@ public class Enh1536_CancelDuringLoad extends WorkflowTestCase {
         LOAD_NODE_STATE_THREAD_LOCAL.set(LoadNodeState.Default);
         DefaultNodeProgressMonitor progMon = NODE_PROGRESS_THREAD_LOCAL.get();
         try {
-            final WorkflowLoadHelper loadHelper = new WorkflowLoadHelper(m_workflowDirectory);
+            final var loadHelper =
+                    new WorkflowLoadHelper(WorkflowContextV2.forTemporaryWorkflow(m_workflowDirectory.toPath(), null));
             WorkflowManager.ROOT.load(m_workflowDirectory, new ExecutionMonitor(progMon), loadHelper, true);
             fail("Workflow should not load as it's canceled");
         } catch (CanceledExecutionException e) {

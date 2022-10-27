@@ -50,8 +50,10 @@ import static org.junit.Assert.assertThat;
 import java.io.File;
 
 import org.junit.Test;
+import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
+import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.Version;
@@ -69,18 +71,18 @@ public class BugAP7982_FutureKNIMEVersion_AllCompatible extends WorkflowTestCase
     @Test
     public void loadWorkflow() throws Exception {
         File wkfDir = getDefaultWorkflowDirectory();
-        WorkflowLoadResult loadWorkflow =
-            loadWorkflow(wkfDir, new ExecutionMonitor(), new ConfigurableWorkflowLoadHelper(wkfDir) {
-                @Override
-                public UnknownKNIMEVersionLoadPolicy getUnknownKNIMEVersionLoadPolicy(
-                    final LoadVersion workflowKNIMEVersion, final Version createdByKNIMEVersion,
-                    final boolean isNightlyBuild) {
-                    throw new AssertionFailedError("Not to be called - workflow is expected to be compatible");
-                }
-            });
+        final WorkflowContextV2 workflowContext = WorkflowContextV2.forTemporaryWorkflow(wkfDir.toPath(), null);
+        WorkflowLoadResult loadWorkflow = loadWorkflow(wkfDir, new ExecutionMonitor(),
+        		new WorkflowLoadHelper(workflowContext, DataContainerSettings.getDefault()) {
+            @Override
+            public UnknownKNIMEVersionLoadPolicy getUnknownKNIMEVersionLoadPolicy(
+                final LoadVersion workflowKNIMEVersion, final Version createdByKNIMEVersion,
+                final boolean isNightlyBuild) {
+                throw new AssertionFailedError("Not to be called - workflow is expected to be compatible");
+            }
+        });
         setManager(loadWorkflow.getWorkflowManager());
         assertThat("Expected to loaded without errors", loadWorkflow.getType(), is(LoadResultEntryType.Ok));
         assertThat("Workflow version incorrect", getManager().getLoadVersion(), is(LoadVersion.V280));
     }
-
 }

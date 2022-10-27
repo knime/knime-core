@@ -33,7 +33,7 @@ public class BugAP18224_UpdateInnerComponentsFails3 extends WorkflowTestCase {
 
 	@Test
 	public void testUpdatingInnerAndOuter() throws Exception {
-		var loadHelper = new WorkflowLoadHelper(true, getManager().getContext());
+		var loadHelper = new WorkflowLoadHelper(true, getManager().getContextV2());
 		
 		assertTrue("Expected meta node update available",
 				getManager().checkUpdateMetaNodeLink(m_outerComponent, loadHelper));

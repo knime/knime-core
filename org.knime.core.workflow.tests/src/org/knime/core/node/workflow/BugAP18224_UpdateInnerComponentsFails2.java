@@ -46,7 +46,7 @@ public class BugAP18224_UpdateInnerComponentsFails2 extends WorkflowTestCase {
 	public void testUpdatingInnerComponentsErrorPersists() throws Exception {
 		executeAndWait(m_tableDiff);
 		checkState(m_tableDiff, InternalNodeContainerState.CONFIGURED); // definitely fails
-		var loadHelper = new WorkflowLoadHelper(true, getManager().getContext());
+		var loadHelper = new WorkflowLoadHelper(true, getManager().getContextV2());
 
 		assertTrue("Expected meta node update available",
 				getManager().checkUpdateMetaNodeLink(m_olderVersionComponent, loadHelper));

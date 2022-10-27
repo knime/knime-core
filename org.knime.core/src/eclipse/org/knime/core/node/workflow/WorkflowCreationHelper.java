@@ -46,6 +46,8 @@
  */
 package org.knime.core.node.workflow;
 
+import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
+
 /**
  * Instances of this class are used during creation of new workflows. They contains meta information that is used to
  * create a workflow manager instance for the new workflow.
@@ -54,15 +56,45 @@ package org.knime.core.node.workflow;
  * @since 2.8
  */
 public class WorkflowCreationHelper {
-    private WorkflowContext m_context;
+    private WorkflowContextV2 m_context;
     private WorkflowDataRepository m_workflowDataRepository;
+
+    /**
+     * Workflow creation helper without a workflow context.
+     */
+    @Deprecated(since = "4.7")
+    public WorkflowCreationHelper() {
+    }
+
+    /**
+     * Workflow creation helper with the given workflow context.
+     *
+     * @param context workflow context
+     * @since 4.7
+     */
+    public WorkflowCreationHelper(final WorkflowContextV2 context) {
+        m_context = context;
+    }
 
     /**
      * Sets the context for the workflow that is being created.
      * @param context a workflow context
      * @return this (method chaining)
      */
+    @Deprecated(since = "4.7")
     public WorkflowCreationHelper setWorkflowContext(final WorkflowContext context) {
+        m_context = WorkflowContextV2.fromLegacyWorkflowContext(context);
+        return this;
+    }
+
+    /**
+     * Sets the context for the workflow that is being created.
+     *
+     * @param context a workflow context
+     * @return this (method chaining)
+     * @since 4.7
+     */
+    public WorkflowCreationHelper setWorkflowContext(final WorkflowContextV2 context) {
         m_context = context;
         return this;
     }
@@ -73,7 +105,7 @@ public class WorkflowCreationHelper {
      *
      * @return a workflow context or <code>null</code>
      */
-    public WorkflowContext getWorkflowContext() {
+    public WorkflowContextV2 getWorkflowContext() {
         return m_context;
     }
 

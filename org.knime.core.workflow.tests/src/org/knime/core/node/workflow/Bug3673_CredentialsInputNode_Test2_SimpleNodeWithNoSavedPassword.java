@@ -58,9 +58,11 @@ import java.util.List;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.action.CollapseIntoMetaNodeResult;
+import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.util.FileUtil;
 
 /**
@@ -249,14 +251,15 @@ public class Bug3673_CredentialsInputNode_Test2_SimpleNodeWithNoSavedPassword ex
         FileUtil.deleteRecursively(m_workflowDirTemp);
     }
 
-    private class TestWorkflowLoadHelper extends ConfigurableWorkflowLoadHelper {
+    private class TestWorkflowLoadHelper extends WorkflowLoadHelper {
 
         private final String m_password;
         private boolean m_hasGottenPrompted;
 
         /** @param workflowLocation */
         TestWorkflowLoadHelper(final String password) {
-            super(m_workflowDirTemp);
+            super(WorkflowContextV2.forTemporaryWorkflow(m_workflowDirTemp.toPath(), null),
+                    DataContainerSettings.getDefault());
             m_password = password;
         }
 

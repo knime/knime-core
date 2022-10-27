@@ -79,11 +79,11 @@ import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.UnsupportedWorkflowVersionException;
-import org.knime.core.node.workflow.WorkflowContext;
 import org.knime.core.node.workflow.WorkflowLoadHelper;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.node.workflow.WorkflowSaveHelper;
+import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.FileUtil.ZipFileFilter;
 import org.knime.core.util.LoadVersion;
@@ -552,8 +552,10 @@ public final class WorkflowSegment {
      */
     public static final WorkflowLoadHelper createWorkflowLoadHelper(final boolean isTemplate, final File wfLocation,
         final Consumer<String> loadWarning) {
-        WorkflowContext wfctx = Optional.ofNullable(NodeContext.getContext()).map(NodeContext::getWorkflowManager)
-            .map(WorkflowManager::getContext).orElse(new WorkflowContext.Factory(wfLocation).createContext());
+        WorkflowContextV2 wfctx = Optional.ofNullable(NodeContext.getContext())
+                .map(NodeContext::getWorkflowManager)
+                .map(WorkflowManager::getContextV2)
+                .orElseGet(() -> WorkflowContextV2.forTemporaryWorkflow(wfLocation.toPath(), null));
 
         return new WorkflowLoadHelper(isTemplate, wfctx) {
             @Override

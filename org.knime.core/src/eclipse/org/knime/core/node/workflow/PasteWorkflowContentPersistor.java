@@ -52,15 +52,18 @@ import java.io.InputStream;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.Pair;
 import org.knime.core.util.workflowalizer.AuthorInformation;
@@ -144,7 +147,7 @@ public class PasteWorkflowContentPersistor implements WorkflowPersistor {
      * @since 2.8
      */
     @Override
-    public WorkflowContext getWorkflowContext() {
+    public WorkflowContextV2 getWorkflowContext() {
         throwUnsupportedOperationException();
         return null;
     }
@@ -324,5 +327,10 @@ public class PasteWorkflowContentPersistor implements WorkflowPersistor {
         }
         throw new UnsupportedOperationException("Calling \"" + methodName
                 + "\" not allowed on \"" + getClass().getSimpleName() + "\"");
+    }
+
+    @Override
+    public Optional<DataContainerSettings> getDataContainerSettings() {
+        return Optional.empty();
     }
 }

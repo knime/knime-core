@@ -95,7 +95,7 @@ public class TestRecursiveMetaNodeUpdate extends WorkflowTestCase {
     }
 
     private WorkflowLoadHelper createTemplateLoadHelper() {
-        return new WorkflowLoadHelper(true, getManager().getContext());
+        return new WorkflowLoadHelper(true, getManager().getContextV2());
     }
 
     @Test

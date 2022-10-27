@@ -50,9 +50,11 @@ import static org.junit.Assert.assertThat;
 import java.io.File;
 
 import org.junit.Test;
+import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
+import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.Version;
 
@@ -90,22 +92,22 @@ public class BugAP7982_FutureKNIMEVersion_FutureVersion extends WorkflowTestCase
 
     private WorkflowLoadResult loadWorkflow(final boolean tryToLoadInsteadOfFail) throws Exception {
         File wkfDir = getDefaultWorkflowDirectory();
-        WorkflowLoadResult loadWorkflow =
-            loadWorkflow(wkfDir, new ExecutionMonitor(), new ConfigurableWorkflowLoadHelper(wkfDir) {
-                @Override
-                public UnknownKNIMEVersionLoadPolicy getUnknownKNIMEVersionLoadPolicy(
-                    final LoadVersion workflowKNIMEVersion, final Version createdByKNIMEVersion,
-                    final boolean isNightlyBuild) {
-                    assertThat("Unexpected KNIME version in file", workflowKNIMEVersion, is(LoadVersion.FUTURE));
-                    assertThat("Nightly flag wrong", isNightlyBuild, is(m_isExpectNightly));
-                    if (tryToLoadInsteadOfFail) {
-                        return UnknownKNIMEVersionLoadPolicy.Try;
-                    } else {
-                        return UnknownKNIMEVersionLoadPolicy.Abort;
-                    }
+        final WorkflowContextV2 workflowContext = WorkflowContextV2.forTemporaryWorkflow(wkfDir.toPath(), null);
+        WorkflowLoadResult loadWorkflow = loadWorkflow(wkfDir, new ExecutionMonitor(),
+        		new WorkflowLoadHelper(workflowContext, DataContainerSettings.getDefault()) {
+            @Override
+            public UnknownKNIMEVersionLoadPolicy getUnknownKNIMEVersionLoadPolicy(
+                final LoadVersion workflowKNIMEVersion, final Version createdByKNIMEVersion,
+                final boolean isNightlyBuild) {
+                assertThat("Unexpected KNIME version in file", workflowKNIMEVersion, is(LoadVersion.FUTURE));
+                assertThat("Nightly flag wrong", isNightlyBuild, is(m_isExpectNightly));
+                if (tryToLoadInsteadOfFail) {
+                    return UnknownKNIMEVersionLoadPolicy.Try;
+                } else {
+                    return UnknownKNIMEVersionLoadPolicy.Abort;
                 }
-            });
+            }
+        });
         return loadWorkflow;
     }
-
 }

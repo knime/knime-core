@@ -56,12 +56,14 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.data.container.storage.TableStoreFormatInformation;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeAndBundleInformationPersistor;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.Pair;
 import org.knime.core.util.workflowalizer.AuthorInformation;
@@ -117,7 +119,7 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
      * @return The workflow context for projects (only reasonable if §{@link #isProject()}).
      * @since 2.8
      */
-    WorkflowContext getWorkflowContext();
+    WorkflowContextV2 getWorkflowContext();
 
     /** The map of node ID suffix to persistor.
      * @return The persistor map. */
@@ -222,14 +224,21 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
      * @return The decipherd input, mostly just the input.
      * @throws IOException If that fails, e.g. crypto init fails
      */
-    public InputStream decipherInput(
-            final InputStream input) throws IOException;
+    public InputStream decipherInput(final InputStream input) throws IOException;
 
     /** Called after all nodes have been instantiated but no configure storm is launched. Used to sneak some more
      * data into some nodes (sub node container to push itself into the virtual in/out)
      * @param wfm The workflow itself, as returned by {@link #getNodeContainer(WorkflowManager, NodeID)}.
      * @param loadResult TODO*/
     void postLoad(WorkflowManager wfm, LoadResult loadResult);
+
+    /**
+     * Data container settings, mostly used for performance testing.
+     *
+     * @return data container settings
+     * @since 4.7
+     */
+    Optional<DataContainerSettings> getDataContainerSettings();
 
     /** Helper class representing a connection. */
     static class ConnectionContainerTemplate {

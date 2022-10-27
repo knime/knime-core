@@ -51,13 +51,16 @@ import java.io.InputStream;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
+import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.Pair;
 import org.knime.core.util.workflowalizer.AuthorInformation;
@@ -89,7 +92,7 @@ final class InsertWorkflowPersistor implements WorkflowPersistor {
      * {@inheritDoc}
      */
     @Override
-    public WorkflowContext getWorkflowContext() {
+    public WorkflowContextV2 getWorkflowContext() {
         throw new IllegalStateException("not to be called");
     }
 
@@ -264,4 +267,11 @@ final class InsertWorkflowPersistor implements WorkflowPersistor {
         throw new IllegalStateException("Method not to be called.");
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Optional<DataContainerSettings> getDataContainerSettings() {
+        return Optional.empty();
+    }
 }
