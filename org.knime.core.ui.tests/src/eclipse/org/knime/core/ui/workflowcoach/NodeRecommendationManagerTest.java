@@ -50,12 +50,12 @@ package org.knime.core.ui.workflowcoach;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.anyOf;
-import static org.hamcrest.Matchers.arrayContaining;
-import static org.hamcrest.Matchers.arrayWithSize;
+import static org.hamcrest.Matchers.emptyArray;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -69,7 +69,6 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.ObjectUtils;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.knime.core.node.NodeInfo;
 import org.knime.core.node.exec.dataexchange.in.PortObjectInNodeFactory;
@@ -92,47 +91,27 @@ public class NodeRecommendationManagerTest {
 
     private IUpdateListener m_updateListener;
 
-    /**
-     * Initialize the node recommendation manager
-     *
-     * @throws IOException
-     */
-    @BeforeClass
-    public static void setup() throws IOException {
-        // Loading recommendations before initializing doesn't do much
-        NodeRecommendationManager.getInstance().loadRecommendations();
+    private final Predicate<NodeInfo> m_isSourceNode =
+        ni -> ni.getFactory().equals("org.knime.core.node.exec.dataexchange.in.PortObjectInNodeFactory");
 
-        // There won't be any recommendations
-        assertNull("There should not be any recommendations",
-            NodeRecommendationManager.getInstance().getNodeRecommendationFor());
-
-        // Define predicates
-        Predicate<NodeInfo> isSourceNode =
-                ni -> ni.getFactory().equals("org.knime.core.node.exec.dataexchange.in.PortObjectInNodeFactory");
-            Predicate<NodeInfo> existsInRepository = ni -> !ni.getFactory().equals("non.existing.factory");
-
-        // Partially initializing doesn't do much either
-        assertFalse("This initialization should return false", NodeRecommendationManager.getInstance().initialize(null, existsInRepository));
-
-        // Properly initialize the node recommendation manager
-        assertTrue("This initialization should return true",
-            NodeRecommendationManager.getInstance().initialize(isSourceNode, existsInRepository));
-    }
+    private final Predicate<NodeInfo> m_existsInRepository =
+        ni -> ni.getFactory().startsWith("test_") || m_isSourceNode.test(ni);
 
     /**
-     * Register an update listener to node recommendation manager
+     * Setup recommendation manager
      */
     @Before
-    public void registerListener() {
+    public void setup() {
+        NodeRecommendationManager.getInstance().initialize(m_isSourceNode, m_existsInRepository);
         m_updateListener = mock(IUpdateListener.class);
         NodeRecommendationManager.getInstance().addUpdateListener(m_updateListener);
     }
 
     /**
-     * Remove the update listener from the node recommendation manager
+     * Tear down recommandation manager
      */
     @After
-    public void removeListener() {
+    public void finsh() {
         NodeRecommendationManager.getInstance().removeUpdateListener(m_updateListener);
         m_updateListener = null;
     }
@@ -153,11 +132,9 @@ public class NodeRecommendationManagerTest {
         assertThat("Response is not a list", recommendations, instanceOf(List.class));
         recommendations.forEach(nr -> {
             assertThat("Item is not a node recommendation", nr, instanceOf(NodeRecommendation.class));
-            assertThat("Node recommendation is not a <Row Filter> or <Row Splitter>", nr.getNodeName(),
-                anyOf(equalTo("Row Filter"), equalTo("Row Splitter")));
+            assertThat("Node recommendation is not a <Test Row Filter> or <Test Row Splitter>", nr.getNodeName(),
+                anyOf(equalTo("Test Row Filter"), equalTo("Test Row Splitter")));
         });
-
-        verify(m_updateListener, times(0)).updated(); // Not invoked during test execution
     }
 
     /**
@@ -186,39 +163,49 @@ public class NodeRecommendationManagerTest {
      * @param nnc The native node container to get recommendations for
      * @return The list of node recommendations
      */
-    @SuppressWarnings("unchecked")
-    private static List<NodeRecommendation> getAndAssertNodeRecommendations(final NativeNodeContainer nnc) {
+    private List<NodeRecommendation> getAndAssertNodeRecommendations(final NativeNodeContainer nnc) {
         var recommendations = nnc == null ? NodeRecommendationManager.getInstance().getNodeRecommendationFor()
             : NodeRecommendationManager.getInstance().getNodeRecommendationFor(NativeNodeContainerWrapper.wrap(nnc));
 
-        // Checks `getNodeRecommendationFor()` result
-        assertThat("Expected an array of size one", recommendations, arrayWithSize(1));
-        assertThat("Expected an array of lists", recommendations, arrayContaining(instanceOf(List.class)));
+        // Checks `getNodeRecommendationFor()` result (maybe add type check)
+        assertThat("Expected a non-empty array", recommendations, not(emptyArray()));
 
         var recommendationsWithoutDups =
             NodeRecommendationManager.joinRecommendationsWithoutDuplications(recommendations);
 
-        // Checks `joinRecommendationsWithoutDuplications()` result
+        // Checks `joinRecommendationsWithoutDuplications()` result (maybe add type check)
         assertThat("Expected a list", recommendationsWithoutDups, instanceOf(List.class));
-        recommendationsWithoutDups.forEach(nra -> assertThat("Expected an array of node recommendations", nra,
-            arrayContaining(instanceOf(NodeRecommendation.class))));
+
+        // Checks update listener, no invocation since listener was registered
+        verify(m_updateListener, times(0)).updated();
 
         return recommendationsWithoutDups.stream().map(ObjectUtils::firstNonNull).collect(Collectors.toList());
     }
 
     /**
-     * This tests the following methods: - {@link NodeRecommendationManager#initialize(Predicate, Predicate)} -
-     * {@link NodeRecommendationManager#loadRecommendations()} -
-     * {@link NodeRecommendationManager#getNumLoadedProviders()} -
-     * {@link NodeRecommendationManager#getNodeTripleProviders()} -
-     * {@link NodeRecommendationManager#getNodeTripleProviderFactories()}
+     * This tests the following methods:
+     * - {@link NodeRecommendationManager#initialize(Predicate, Predicate)}
+     * - {@link NodeRecommendationManager#loadRecommendations()}
+     * - {@link NodeRecommendationManager#getNumLoadedProviders()}
+     * - {@link NodeRecommendationManager#getNodeTripleProviders()}
+     * - {@link NodeRecommendationManager#getNodeTripleProviderFactories()}
      *
      * @throws IOException
      */
     @Test
     public void testRemainingMethods() throws IOException {
         // Cannot initialize again
-        NodeRecommendationManager.getInstance().initialize(ni -> true, ni -> false);
+        assertTrue("This should be true since recommendations were loaded before",
+            NodeRecommendationManager.getInstance().initialize(ni -> true, ni -> false));
+        verify(m_updateListener, times(0)).updated();
+
+        // Will not load recommendations with incomplete predicates
+        assertFalse("This initialization should return false",
+            NodeRecommendationManager.getInstance().initialize(null, ni -> false));
+        assertFalse("This initialization should return false",
+            NodeRecommendationManager.getInstance().initialize(ni -> true, null));
+        assertFalse("This initialization should return false",
+            NodeRecommendationManager.getInstance().initialize(null, null));
         verify(m_updateListener, times(0)).updated();
 
         // Reload the node recommendations two times
@@ -228,7 +215,7 @@ public class NodeRecommendationManagerTest {
 
         // Check number of loaded triple providers
         var numLoadedProviders = NodeRecommendationManager.getNumLoadedProviders();
-        assertThat("Expected one node tripe provider loaded", numLoadedProviders, equalTo(1));
+        assertThat("Expected at least one node tripe provider loaded", numLoadedProviders, greaterThanOrEqualTo(1));
 
         // Check triple providers
         var tripleProviders = NodeRecommendationManager.getNodeTripleProviders();

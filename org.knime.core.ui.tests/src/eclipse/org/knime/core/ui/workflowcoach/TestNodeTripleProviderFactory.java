@@ -50,7 +50,6 @@ package org.knime.core.ui.workflowcoach;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -59,6 +58,7 @@ import org.knime.core.node.NodeInfo;
 import org.knime.core.node.NodeTriple;
 import org.knime.core.ui.workflowcoach.data.NodeTripleProvider;
 import org.knime.core.ui.workflowcoach.data.NodeTripleProviderFactory;
+import org.knime.core.ui.workflowcoach.data.UpdatableNodeTripleProvider;
 
 /**
  * A test node triple provider used in {@link NodeRecommendationManagerTest}. Please note: This must be registered as an
@@ -71,7 +71,7 @@ public class TestNodeTripleProviderFactory implements NodeTripleProviderFactory 
 
     @Override
     public List<NodeTripleProvider> createProviders() {
-        return Collections.singletonList(new TestNodeTripleProvider());
+        return List.of(new TestNodeTripleProvider(), new TestUpdatableNodeTripleProvider());
     }
 
     @Override
@@ -101,12 +101,15 @@ public class TestNodeTripleProviderFactory implements NodeTripleProviderFactory 
             var portObjectIn = new NodeInfo(//
                 "org.knime.core.node.exec.dataexchange.in.PortObjectInNodeFactory", //
                 "PortObject Reference Reader");
-            var rowFilter = new NodeInfo("org.knime.base.node.preproc.filter.row.RowFilterNodeFactory", //
-                "Row Filter");
+            var rowFilter = new NodeInfo(//
+                "test_org.knime.base.node.preproc.filter.row.RowFilterNodeFactory", // Added "test_" to avoid side effects
+                "Test Row Filter");
             var rowSplitter = new NodeInfo(//
-                "org.knime.base.node.preproc.filter.row2.RowSplitterNodeFactory", //
-                "Row Splitter");
-            var nonExisting = new NodeInfo("non.existing.factory", "Non-Existing Node");
+                "test_org.knime.base.node.preproc.filter.row2.RowSplitterNodeFactory", // Added "test_" to avoid side effects
+                "Test Row Splitter");
+            var nonExisting = new NodeInfo(//
+                "non.existing.factory", //
+                "Non-Existing Node");
             return Stream.of(//
                 new NodeTriple(null, portObjectIn, rowFilter), //
                 new NodeTriple(null, portObjectIn, rowSplitter), //
@@ -123,6 +126,46 @@ public class TestNodeTripleProviderFactory implements NodeTripleProviderFactory 
         @Override
         public Optional<LocalDateTime> getLastUpdate() {
             return Optional.empty();
+        }
+    }
+
+    static final class TestUpdatableNodeTripleProvider implements UpdatableNodeTripleProvider {
+
+        private boolean m_updatedRequired = true;
+
+        @Override
+        public String getName() {
+            return "Test updateble node triple provider";
+        }
+
+        @Override
+        public String getDescription() {
+            return "Test updateble node triple provider description";
+        }
+
+        @Override
+        public boolean isEnabled() {
+            return true;
+        }
+
+        @Override
+        public Stream<NodeTriple> getNodeTriples() throws IOException {
+            return Stream.empty();
+        }
+
+        @Override
+        public Optional<LocalDateTime> getLastUpdate() {
+            return Optional.empty();
+        }
+
+        @Override
+        public void update() throws Exception {
+            m_updatedRequired = false;
+        }
+
+        @Override
+        public boolean updateRequired() {
+            return m_updatedRequired;
         }
 
     }

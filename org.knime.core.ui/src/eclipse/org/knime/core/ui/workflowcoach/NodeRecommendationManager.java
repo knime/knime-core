@@ -61,6 +61,7 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.apache.commons.math3.util.CombinatoricsUtils;
 import org.eclipse.core.runtime.CoreException;
@@ -157,9 +158,13 @@ public final class NodeRecommendationManager {
      *
      * @param isSourceNode Checks whether a node is a source node
      * @param existsInRepository Checks whether a node is present in the node repository
-     * @return True if {@code loadRecommendations()} succeeded, false otherwise
+     * @return True if {@code loadRecommendations()} recommendations were loaded, false otherwise
      */
     public boolean initialize(final Predicate<NodeInfo> isSourceNode, final Predicate<NodeInfo> existsInRepository) {
+        if (isSourceNode == null || existsInRepository == null) {
+            LOGGER.error("Cannot inintialize without both predicates");
+            return false;
+        }
         // Set the predicates
         if (m_isSourceNode == null) {
             m_isSourceNode = isSourceNode;
@@ -690,25 +695,30 @@ public final class NodeRecommendationManager {
      */
     private static List<NodeRecommendation[]> joinRecommendations(final List<NodeRecommendation>[] recommendations,
         final int maxSize) {
-        // TODO: Reduce this complexity
-        List<NodeRecommendation[]> recommendationsJoined = new ArrayList<>();
-        for (var i = 0; i < maxSize; i++) {
-            if (recommendations.length == 1) {
-                recommendationsJoined.add(new NodeRecommendation[]{recommendations[0].get(i)});
-            } else {
-                var tuple = new NodeRecommendation[recommendations.length];
-                for (var j = 0; j < tuple.length; j++) {
-                    if (i < recommendations[j].size()) {
-                        tuple[j] = recommendations[j].get(i);
-                    }
+        return IntStream.range(0, maxSize)//
+            .mapToObj(rank -> joinRecommendationsForRank(recommendations, rank))//
+            .flatMap(List::stream)//
+            .collect(Collectors.toList());
+    }
+
+    private static List<NodeRecommendation[]> joinRecommendationsForRank(final List<NodeRecommendation>[] recommendations,
+        final int rank) {
+        List<NodeRecommendation[]> recommendationsForRank = new ArrayList<>();
+        if (recommendations.length == 1) {
+            recommendationsForRank.add(new NodeRecommendation[]{recommendations[0].get(rank)});
+        } else {
+            var tuple = new NodeRecommendation[recommendations.length];
+            IntStream.range(0, tuple.length).forEach(tripleProviderIdx -> {
+                if (rank < recommendations[tripleProviderIdx].size()) {
+                    tuple[tripleProviderIdx] = recommendations[tripleProviderIdx].get(rank);
                 }
-                NodeRecommendation[] same;
-                while ((same = getMaxSameElements(tuple)) != null) {
-                    recommendationsJoined.add(same);
-                }
+            });
+            NodeRecommendation[] same;
+            while ((same = getMaxSameElements(tuple)) != null) {
+                recommendationsForRank.add(same);
             }
         }
-        return recommendationsJoined;
+        return recommendationsForRank;
     }
 
     /**
@@ -720,14 +730,13 @@ public final class NodeRecommendationManager {
      * @return array of same length as <code>ar</code>, with the found elements non-null. <code>null</code> will be
      *         returned if <code>ar</code> only consists of <code>null</code>-entries
      */
-    private static <T> T[] getMaxSameElements(final T[] ar) {
-        // TODO: Reduce this complexity
-        T[] res = ar.clone();
+    private static NodeRecommendation[] getMaxSameElements(final NodeRecommendation[] ar) {
+        NodeRecommendation[] res = ar.clone();
         for (var i = ar.length; i > 0; i--) {
             var it = CombinatoricsUtils.combinationsIterator(ar.length, i);
             while (it.hasNext()) {
                 int[] indices = it.next();
-                T el = ar[indices[0]];
+                NodeRecommendation el = ar[indices[0]];
                 if (el == null) {
                     continue;
                 }
@@ -747,10 +756,10 @@ public final class NodeRecommendationManager {
                 }
             }
         }
-        return null;
+        return null; // NOSONAR: null returned on purpose here
     }
 
-    private static final <T> int getNonNullIdx(final T[] arr) {
+    private static final int getNonNullIdx(final NodeRecommendation[] arr) {
         for (var i = 0; i < arr.length; i++) {
             if (arr[i] != null) {
                 return i;
