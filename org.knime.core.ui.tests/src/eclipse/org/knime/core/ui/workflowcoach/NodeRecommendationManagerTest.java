@@ -111,7 +111,7 @@ public class NodeRecommendationManagerTest {
      * Tear down recommandation manager
      */
     @After
-    public void finsh() {
+    public void finish() {
         NodeRecommendationManager.getInstance().removeUpdateListener(m_updateListener);
         m_updateListener = null;
     }

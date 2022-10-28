@@ -69,7 +69,7 @@ public interface NodeTripleProvider {
     /**
      * A common date format for the last update timestamp.
      */
-    public static final DateTimeFormatter LAST_UPDATE_FORMAT =
+    DateTimeFormatter LAST_UPDATE_FORMAT =
         DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM);
 
     /**
@@ -87,7 +87,8 @@ public interface NodeTripleProvider {
     String getDescription();
 
     /**
-     * @return whether the triple provider is enabled. This is usually configured by the user via the provider's preference page
+     * @return whether the triple provider is enabled. This is usually configured by the user via the provider's
+     *         preference page
      */
     boolean isEnabled();
 
@@ -98,13 +99,13 @@ public interface NodeTripleProvider {
      * @throws IOException a possible exception thrown usually when something went wrong to access the underlying source
      *             of the node triples (e.g. a corrupt file)
      */
-     Stream<NodeTriple> getNodeTriples() throws IOException;
+    Stream<NodeTriple> getNodeTriples() throws IOException;
 
-     /**
-      * Returns the time when this provider was last updated. If the provider hasn't been updated at all (i.e. its
-      * data is missing) then an empty optional is returned.
-      *
-      * @return the last update time or an empty optional
-      */
-     Optional<LocalDateTime> getLastUpdate();
+    /**
+     * Returns the time when this provider was last updated. If the provider hasn't been updated at all (i.e. its data
+     * is missing) then an empty optional is returned.
+     *
+     * @return the last update time or an empty optional
+     */
+    Optional<LocalDateTime> getLastUpdate();
 }

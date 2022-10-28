@@ -62,7 +62,7 @@ public interface UpdatableNodeTripleProvider extends NodeTripleProvider {
      * @throws Exception exception if something went wrong with the update
      *
      */
-    void update() throws Exception;
+    void update() throws Exception; // NOSONAR
 
     /**
      * Tells whether an update is required before the {@link NodeTripleProvider} can be used. If it returns

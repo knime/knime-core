@@ -71,7 +71,7 @@ public class TestNodeTripleProviderFactory implements NodeTripleProviderFactory 
 
     @Override
     public List<NodeTripleProvider> createProviders() {
-        return List.of(new TestNodeTripleProvider(), new TestUpdatableNodeTripleProvider());
+        return List.of(new TestNodeTripleProvider(), new TestUpdatableNodeTripleProvider(), new TestNodeTripleProvider2());
     }
 
     @Override
@@ -79,7 +79,7 @@ public class TestNodeTripleProviderFactory implements NodeTripleProviderFactory 
         return "";
     }
 
-    static final class TestNodeTripleProvider implements NodeTripleProvider {
+    private static final class TestNodeTripleProvider implements NodeTripleProvider {
 
         @Override
         public String getName() {
@@ -129,7 +129,57 @@ public class TestNodeTripleProviderFactory implements NodeTripleProviderFactory 
         }
     }
 
-    static final class TestUpdatableNodeTripleProvider implements UpdatableNodeTripleProvider {
+    private static final class TestNodeTripleProvider2 implements NodeTripleProvider {
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getName() {
+            return "Test node triple provider 2";
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getDescription() {
+            return "Test node triple provider 2 description";
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean isEnabled() {
+            return true;
+        }
+
+        @Override
+        public Stream<NodeTriple> getNodeTriples() throws IOException {
+            var portObjectIn = new NodeInfo(//
+                "org.knime.core.node.exec.dataexchange.in.PortObjectInNodeFactory", //
+                "PortObject Reference Reader");
+            var rowFilter = new NodeInfo(//
+                "test_org.knime.base.node.preproc.filter.row.RowFilterNodeFactory", // Added "test_" to avoid side effects
+                "Test Row Filter");
+            return Stream.of(//
+                new NodeTriple(null, portObjectIn, rowFilter), //
+                new NodeTriple(null, null, rowFilter), //
+                new NodeTriple(null, null, portObjectIn));
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public Optional<LocalDateTime> getLastUpdate() {
+            return Optional.empty();
+        }
+
+    }
+
+    private static final class TestUpdatableNodeTripleProvider implements UpdatableNodeTripleProvider {
 
         private boolean m_updatedRequired = true;
 

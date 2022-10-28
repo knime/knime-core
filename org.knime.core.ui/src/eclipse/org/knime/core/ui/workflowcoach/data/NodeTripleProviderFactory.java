@@ -64,7 +64,8 @@ public interface NodeTripleProviderFactory {
     List<NodeTripleProvider> createProviders();
 
     /**
-     * The ID of the preference page used to configure the particular node provider factory. If null, no preference page exists.
+     * The ID of the preference page used to configure the particular node provider factory. If null, no preference page
+     * exists.
      *
      * @return the preference page id
      */

@@ -209,14 +209,15 @@ public final class NodeRecommendationManager {
     }
 
     /**
-     * (Re-)Loads the recommendations for the node recommendation engine from the currently active node triple providers.
+     * (Re-)Loads the recommendations for the node recommendation engine from the currently active node triple
+     * providers.
      *
      * @throws IOException if something went wrong while loading the statistics (e.g. a corrupt file)
      * @see #getNodeTripleProviders()
      */
     public void loadRecommendations() throws IOException {
         if (m_isSourceNode == null || m_existsInRepository == null) {
-            LOGGER.debug("Cannot load recommendations yet, sinc not all predicates are set");
+            LOGGER.debug("Cannot load recommendations yet, since not all predicates are set");
             return;
         }
 
@@ -411,12 +412,14 @@ public final class NodeRecommendationManager {
         return res;
     }
 
-    private static Set<NodeRecommendation> processNodeRecommendationsForAllPorts(final int idx, final NativeNodeContainerUI... nnc) {
+    private static Set<NodeRecommendation> processNodeRecommendationsForAllPorts(final int idx,
+        final NativeNodeContainerUI... nnc) {
         Set<NodeRecommendation> set = new HashSet<>();
         for (var i = 0; i < nnc[0].getNrInPorts(); i++) {
             var wfm = nnc[0].getParent();
             var cc = wfm.getIncomingConnectionFor(nnc[0].getID(), i);
-            // only take the predecessor if its not leaving the workflow (e.g. the actual predecessor is outside of a metanode)
+            // only take the predecessor if its not leaving the workflow
+            // (e.g. the actual predecessor is outside of a metanode)
             if (cc == null || cc.getType() == ConnectionType.WFMIN) {
                 return set;
             }
@@ -658,7 +661,8 @@ public final class NodeRecommendationManager {
      * @param recommendations The original recommendations
      * @return The joined list without recommendations
      */
-    public static List<NodeRecommendation[]> joinRecommendationsWithoutDuplications(final List<NodeRecommendation>[] recommendations) {
+    public static List<NodeRecommendation[]>
+        joinRecommendationsWithoutDuplications(final List<NodeRecommendation>[] recommendations) {
         var maxSize = 0;
         for (var l : recommendations) {
             maxSize = Math.max(maxSize, l.size());
@@ -759,7 +763,7 @@ public final class NodeRecommendationManager {
         return null; // NOSONAR: null returned on purpose here
     }
 
-    private static final int getNonNullIdx(final NodeRecommendation[] arr) {
+    private static int getNonNullIdx(final NodeRecommendation[] arr) {
         for (var i = 0; i < arr.length; i++) {
             if (arr[i] != null) {
                 return i;
