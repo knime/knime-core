@@ -44,79 +44,28 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 15, 2021 (hornm): created
+ *   Jul 14, 2022 (hornm): created
  */
-package org.knime.core.webui.page;
+package org.knime.core.webui.node.view.table.data.render;
 
-import org.knime.core.node.workflow.NativeNodeContainer;
+import org.knime.core.data.DataValue;
 
 /**
- * Utility methods around {@link Page}s.
+ * A text renderer.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
- *
- * @since 4.5
  */
-public final class PageUtil {
+public interface DataValueTextRenderer extends DataValueRenderer {
 
-    /**
-     * The page kinds, i.e. defines what a page is supposed to represent.
-     */
-    public enum PageType {
-            /**
-             * A node dialog.
-             */
-            DIALOG,
-            /**
-             * A node view
-             */
-            VIEW,
-            /**
-             * A port view.
-             */
-            PORT;
-
-        @Override
-        public String toString() {
-            return super.toString().toLowerCase();
-        }
-
+    @Override
+    default DataCellContentType getContentType() {
+        return DataCellContentType.TXT;
     }
 
     /**
-     * Determines the page id. The page id is a valid file name!
-     *
-     * @param nnc the node providing the node view page
-     * @param isStaticPage whether it's a static page
-     * @param pageType the kind of the page
-     * @return the page id
+     * @param value the value to render
+     * @return the text representation of the value
      */
-    @SuppressWarnings("java:S2301")
-    public static String getPageId(final NativeNodeContainer nnc, final boolean isStaticPage, final PageType pageType) {
-        if (isStaticPage) {
-            return getStaticPageId(nnc.getNode().getFactory().getClass(), pageType);
-        } else {
-            return getPageId(nnc.getID().toString().replace(":", "_"), pageType);
-        }
-    }
-
-    /**
-     * Determines the page id for a static page.
-     *
-     * @param clazz
-     * @param pageType
-     * @return the page id
-     */
-    public static String getStaticPageId(final Class<?> clazz, final PageType pageType) {
-        return getPageId(clazz.getName(), pageType);
-    }
-
-    private static String getPageId(final String id, final PageType pageType) {
-        return pageType.toString() + "_" + id;
-    }
-
-    private PageUtil() {
-        // utility class
-    }
+    String renderText(DataValue value);
 
 }

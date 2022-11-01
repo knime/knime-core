@@ -44,79 +44,45 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 15, 2021 (hornm): created
+ *   Dec 1, 2021 (konrad-amtenbrink): created
  */
-package org.knime.core.webui.page;
+package org.knime.core.webui.node.view.table.data;
 
-import org.knime.core.node.workflow.NativeNodeContainer;
+import java.util.Map;
+
+import org.knime.core.webui.node.view.table.TableViewViewSettings;
+
 
 /**
- * Utility methods around {@link Page}s.
- *
- * @author Martin Horn, KNIME GmbH, Konstanz, Germany
- *
- * @since 4.5
+ * @author Konrad Amtenbrink, KNIME GmbH, Berlin, Germany
+ * @author Marc Bux, KNIME GmbH, Berlin, Germany
  */
-public final class PageUtil {
+public interface TableViewInitialData {
 
     /**
-     * The page kinds, i.e. defines what a page is supposed to represent.
+     * @return the table to be shown initially
      */
-    public enum PageType {
-            /**
-             * A node dialog.
-             */
-            DIALOG,
-            /**
-             * A node view
-             */
-            VIEW,
-            /**
-             * A port view.
-             */
-            PORT;
-
-        @Override
-        public String toString() {
-            return super.toString().toLowerCase();
-        }
-
-    }
+    Table getTable();
 
     /**
-     * Determines the page id. The page id is a valid file name!
-     *
-     * @param nnc the node providing the node view page
-     * @param isStaticPage whether it's a static page
-     * @param pageType the kind of the page
-     * @return the page id
+     * @return a map from data type id to data type (for all data types that are possibly part of the table)
      */
-    @SuppressWarnings("java:S2301")
-    public static String getPageId(final NativeNodeContainer nnc, final boolean isStaticPage, final PageType pageType) {
-        if (isStaticPage) {
-            return getStaticPageId(nnc.getNode().getFactory().getClass(), pageType);
-        } else {
-            return getPageId(nnc.getID().toString().replace(":", "_"), pageType);
-        }
-    }
+    Map<String, DataType> getDataTypes();
 
     /**
-     * Determines the page id for a static page.
-     *
-     * @param clazz
-     * @param pageType
-     * @return the page id
+     * @return a map from column name to column domain values; map entries can be {@code null} because the respective
+     *         column doesn't have a nominal domain or there are too many possible values
      */
-    public static String getStaticPageId(final Class<?> clazz, final PageType pageType) {
-        return getPageId(clazz.getName(), pageType);
-    }
+    Map<String, String[]> getColumnDomainValues();
 
-    private static String getPageId(final String id, final PageType pageType) {
-        return pageType.toString() + "_" + id;
-    }
+    /**
+     * @return the total number of columns contained by the table
+     */
+    long getColumnCount();
 
-    private PageUtil() {
-        // utility class
-    }
+    /**
+     * @return the initial settings
+     */
+    TableViewViewSettings getSettings();
 
 }

@@ -44,79 +44,32 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 15, 2021 (hornm): created
+ *   Jul 14, 2022 (hornm): created
  */
-package org.knime.core.webui.page;
+package org.knime.core.webui.node.view.table.data.render;
 
-import org.knime.core.node.workflow.NativeNodeContainer;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.webui.node.view.table.data.TableViewDataService;
 
 /**
- * Utility methods around {@link Page}s.
+ * Factory for {@link DataValueRenderer DataValueRenderers} as required by the {@link TableViewDataService}.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
- *
- * @since 4.5
  */
-public final class PageUtil {
+public interface DataValueRendererFactory {
 
     /**
-     * The page kinds, i.e. defines what a page is supposed to represent.
+     * @param colSpec sometimes required to create the renderer
+     * @param rendererId the renderer id; if {@code null} or unknown, the default renderer will be returned
+     * @return a new instance, never {@code null}
      */
-    public enum PageType {
-            /**
-             * A node dialog.
-             */
-            DIALOG,
-            /**
-             * A node view
-             */
-            VIEW,
-            /**
-             * A port view.
-             */
-            PORT;
-
-        @Override
-        public String toString() {
-            return super.toString().toLowerCase();
-        }
-
-    }
+    DataValueRenderer createDataValueRenderer(DataColumnSpec colSpec, String rendererId);
 
     /**
-     * Determines the page id. The page id is a valid file name!
-     *
-     * @param nnc the node providing the node view page
-     * @param isStaticPage whether it's a static page
-     * @param pageType the kind of the page
-     * @return the page id
+     * @param dataType the data type to get the available renderer ids for
+     * @return the available renderer ids for the given data type
      */
-    @SuppressWarnings("java:S2301")
-    public static String getPageId(final NativeNodeContainer nnc, final boolean isStaticPage, final PageType pageType) {
-        if (isStaticPage) {
-            return getStaticPageId(nnc.getNode().getFactory().getClass(), pageType);
-        } else {
-            return getPageId(nnc.getID().toString().replace(":", "_"), pageType);
-        }
-    }
-
-    /**
-     * Determines the page id for a static page.
-     *
-     * @param clazz
-     * @param pageType
-     * @return the page id
-     */
-    public static String getStaticPageId(final Class<?> clazz, final PageType pageType) {
-        return getPageId(clazz.getName(), pageType);
-    }
-
-    private static String getPageId(final String id, final PageType pageType) {
-        return pageType.toString() + "_" + id;
-    }
-
-    private PageUtil() {
-        // utility class
-    }
+    String[] getDataValueRendererIds(DataType dataType);
 
 }

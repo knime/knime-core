@@ -44,79 +44,32 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 15, 2021 (hornm): created
+ *   Jun 17, 2022 (hornm): created
  */
-package org.knime.core.webui.page;
+package org.knime.core.webui.node.view.table.data.render;
 
-import org.knime.core.node.workflow.NativeNodeContainer;
+import org.knime.core.data.DataCell;
 
 /**
- * Utility methods around {@link Page}s.
+ * Describes how {@link DataCell} are supposed to be rendered in the table on the frontend side.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
- *
- * @since 4.5
  */
-public final class PageUtil {
+public enum DataCellContentType {
 
-    /**
-     * The page kinds, i.e. defines what a page is supposed to represent.
-     */
-    public enum PageType {
-            /**
-             * A node dialog.
-             */
-            DIALOG,
-            /**
-             * A node view
-             */
-            VIEW,
-            /**
-             * A port view.
-             */
-            PORT;
+        /**
+         * If a {@link DataCell} shall be represented as text.
+         */
+        TXT,
 
-        @Override
-        public String toString() {
-            return super.toString().toLowerCase();
-        }
+        /**
+         * If a {@link DataCell} shall be represented as an image which is given by a relative path.
+         */
+        IMG_PATH;
 
-    }
-
-    /**
-     * Determines the page id. The page id is a valid file name!
-     *
-     * @param nnc the node providing the node view page
-     * @param isStaticPage whether it's a static page
-     * @param pageType the kind of the page
-     * @return the page id
-     */
-    @SuppressWarnings("java:S2301")
-    public static String getPageId(final NativeNodeContainer nnc, final boolean isStaticPage, final PageType pageType) {
-        if (isStaticPage) {
-            return getStaticPageId(nnc.getNode().getFactory().getClass(), pageType);
-        } else {
-            return getPageId(nnc.getID().toString().replace(":", "_"), pageType);
-        }
-    }
-
-    /**
-     * Determines the page id for a static page.
-     *
-     * @param clazz
-     * @param pageType
-     * @return the page id
-     */
-    public static String getStaticPageId(final Class<?> clazz, final PageType pageType) {
-        return getPageId(clazz.getName(), pageType);
-    }
-
-    private static String getPageId(final String id, final PageType pageType) {
-        return pageType.toString() + "_" + id;
-    }
-
-    private PageUtil() {
-        // utility class
+    @Override
+    public String toString() {
+        return name().toLowerCase();
     }
 
 }

@@ -44,79 +44,49 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 15, 2021 (hornm): created
+ *   Jul 15, 2022 (hornm): created
  */
-package org.knime.core.webui.page;
-
-import org.knime.core.node.workflow.NativeNodeContainer;
+package org.knime.core.webui.node.view.table.data;
 
 /**
- * Utility methods around {@link Page}s.
+ * Holds information related to a {@link org.knime.core.data.DataType}.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
- *
- * @since 4.5
  */
-public final class PageUtil {
+public interface DataType {
 
     /**
-     * The page kinds, i.e. defines what a page is supposed to represent.
+     * @return a human-readable name for the data type
      */
-    public enum PageType {
-            /**
-             * A node dialog.
-             */
-            DIALOG,
-            /**
-             * A node view
-             */
-            VIEW,
-            /**
-             * A port view.
-             */
-            PORT;
-
-        @Override
-        public String toString() {
-            return super.toString().toLowerCase();
-        }
-
-    }
+    String getName();
 
     /**
-     * Determines the page id. The page id is a valid file name!
+     * @return the renderers offered by the data type
+     */
+    Renderer[] getRenderers();
+
+    /**
+     * Helper to create a data type instance.
      *
-     * @param nnc the node providing the node view page
-     * @param isStaticPage whether it's a static page
-     * @param pageType the kind of the page
-     * @return the page id
+     * @param dataType the core-data-type to create the instance from
+     * @return a new instance
      */
-    @SuppressWarnings("java:S2301")
-    public static String getPageId(final NativeNodeContainer nnc, final boolean isStaticPage, final PageType pageType) {
-        if (isStaticPage) {
-            return getStaticPageId(nnc.getNode().getFactory().getClass(), pageType);
-        } else {
-            return getPageId(nnc.getID().toString().replace(":", "_"), pageType);
-        }
-    }
+    static DataType create(final org.knime.core.data.DataType dataType) {
+        return new DataType() {
 
-    /**
-     * Determines the page id for a static page.
-     *
-     * @param clazz
-     * @param pageType
-     * @return the page id
-     */
-    public static String getStaticPageId(final Class<?> clazz, final PageType pageType) {
-        return getPageId(clazz.getName(), pageType);
-    }
+            @Override
+            public String getName() {
+                return dataType.getName();
+            }
 
-    private static String getPageId(final String id, final PageType pageType) {
-        return pageType.toString() + "_" + id;
-    }
+            @Override
+            public Renderer[] getRenderers() {
+                return dataType.getRendererFactories().stream().map(f -> Renderer.create(f.getId(), f.getDescription()))
+                    .toArray(Renderer[]::new);
+            }
 
-    private PageUtil() {
-        // utility class
+        };
+
     }
 
 }

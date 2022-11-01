@@ -3,7 +3,12 @@ Bundle-ManifestVersion: 2
 Bundle-Name: KNIME Core UI Tests
 Bundle-SymbolicName: org.knime.core.ui.tests;singleton:=true
 Bundle-Version: 4.7.0.qualifier
-Bundle-ClassPath: .
+Bundle-ClassPath: .,
+ lib/byte-buddy-1.11.12.jar,
+ lib/byte-buddy-agent-1.11.12.jar,
+ lib/mockito-core-3.12.0.jar,
+ lib/mockito-inline-3.12.0.jar,
+ lib/objenesis-3.2.jar
 Bundle-Vendor: KNIME AG, Zurich, Switzerland
 Fragment-Host: org.knime.core.ui;bundle-version="4.3.0.qualifier"
 Bundle-RequiredExecutionEnvironment: JavaSE-11
@@ -12,7 +17,6 @@ Require-Bundle: org.junit;bundle-version="[4.13.0,5.0.0)",
  org.eclipse.jetty.servlet-api;bundle-version="[4.0.6,5.0.0)",
  org.awaitility;bundle-version="[3.0.0,4.0.0)",
  org.knime.testing;bundle-version="[4.5.0,5.0.0)",
- org.mockito.mockito-core;bundle-version="[2.28.2,3.0.0)",
  org.junit.jupiter.api;bundle-version="[5.7.1,6.0.0)",
  assertj-core;bundle-version="[3.19.0,4.0.0)",
  net.javacrumbs.json-unit.json-unit-assertj;bundle-version="[2.26.0,3.0.0)"

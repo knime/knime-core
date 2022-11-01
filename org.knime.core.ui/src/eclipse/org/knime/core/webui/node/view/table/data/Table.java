@@ -44,79 +44,44 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 15, 2021 (hornm): created
+ *   Jul 15, 2022 (hornm): created
  */
-package org.knime.core.webui.page;
-
-import org.knime.core.node.workflow.NativeNodeContainer;
+package org.knime.core.webui.node.view.table.data;
 
 /**
- * Utility methods around {@link Page}s.
- *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
- *
- * @since 4.5
  */
-public final class PageUtil {
+public interface Table {
 
     /**
-     * The page kinds, i.e. defines what a page is supposed to represent.
+     * @return the displayed columns which remain after missing columns are filtered out.
      */
-    public enum PageType {
-            /**
-             * A node dialog.
-             */
-            DIALOG,
-            /**
-             * A node view
-             */
-            VIEW,
-            /**
-             * A port view.
-             */
-            PORT;
-
-        @Override
-        public String toString() {
-            return super.toString().toLowerCase();
-        }
-
-    }
+    String[] getDisplayedColumns();
 
     /**
-     * Determines the page id. The page id is a valid file name!
-     *
-     * @param nnc the node providing the node view page
-     * @param isStaticPage whether it's a static page
-     * @param pageType the kind of the page
-     * @return the page id
+     * @return the content type per column (which depends on the selected renderer per column)
      */
-    @SuppressWarnings("java:S2301")
-    public static String getPageId(final NativeNodeContainer nnc, final boolean isStaticPage, final PageType pageType) {
-        if (isStaticPage) {
-            return getStaticPageId(nnc.getNode().getFactory().getClass(), pageType);
-        } else {
-            return getPageId(nnc.getID().toString().replace(":", "_"), pageType);
-        }
-    }
+    String[] getColumnContentTypes();
 
     /**
-     * Determines the page id for a static page.
-     *
-     * @param clazz
-     * @param pageType
-     * @return the page id
+     * @return the data type ids per column; can be used to access the actual data type via
+     *         {@link TableViewInitialData#getDataTypes()}
      */
-    public static String getStaticPageId(final Class<?> clazz, final PageType pageType) {
-        return getPageId(clazz.getName(), pageType);
-    }
+    String[] getColumnDataTypeIds();
 
-    private static String getPageId(final String id, final PageType pageType) {
-        return pageType.toString() + "_" + id;
-    }
+    /**
+     * @return the requested rows; can contain {@code null}s in case of missing values
+     */
+    String[][] getRows();
 
-    private PageUtil() {
-        // utility class
-    }
+    /**
+     * @return the row count of the table in use
+     */
+    long getRowCount();
+
+    /**
+     * @return the row keys of the table in use
+     */
+    String[] getRowKeys();
 
 }
