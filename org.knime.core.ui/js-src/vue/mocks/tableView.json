@@ -1,0 +1,280 @@
+{
+  "result": {
+    "name": "Scatter Plot Dialog",
+    "data": {
+      "view": {
+        "pageSize": 100,
+        "displayedColumns": [
+          "Universe_0_0",
+          "Universe_0_1",
+          "Universe_0_2",
+          "Universe_0_3",
+          "Universe_1_0",
+          "Universe_1_1",
+          "Universe_1_2",
+          "Universe_1_3",
+          "Cluster Membership"
+        ],
+        "showRowKeys": true,
+        "showTitle": true,
+        "showColumnDataType": true,
+        "showRowIndices": false,
+        "enableSortingByHeader": true,
+        "title": "Table View",
+        "enablePagination": true,
+        "enableGlobalSearch": true,
+        "enableColumnSearch": true,
+        "publishSelection": true,
+        "subscribeToSelection": true
+      }
+    },
+    "schema": {
+      "type": "object",
+      "properties": {
+        "view": {
+          "type": "object",
+          "properties": {
+            "displayedColumns": {
+              "anyOf": [
+                {
+                  "const": "Universe_0_0",
+                  "title": "Universe_0_0"
+                },
+                {
+                  "const": "Universe_0_1",
+                  "title": "Universe_0_1"
+                },
+                {
+                  "const": "Universe_0_2",
+                  "title": "Universe_0_2"
+                },
+                {
+                  "const": "Universe_0_3",
+                  "title": "Universe_0_3"
+                },
+                {
+                  "const": "Universe_1_0",
+                  "title": "Universe_1_0"
+                },
+                {
+                  "const": "Universe_1_1",
+                  "title": "Universe_1_1"
+                },
+                {
+                  "const": "Universe_1_2",
+                  "title": "Universe_1_2"
+                },
+                {
+                  "const": "Universe_1_3",
+                  "title": "Universe_1_3"
+                },
+                {
+                  "const": "Cluster Membership",
+                  "title": "Cluster Membership"
+                }
+              ],
+              "title": "Displayed columns",
+              "default": [
+                "Universe_0_0",
+                "Universe_0_1",
+                "Universe_0_2",
+                "Universe_0_3",
+                "Universe_1_0",
+                "Universe_1_1",
+                "Universe_1_2",
+                "Universe_1_3",
+                "Cluster Membership"
+              ]
+            },
+            "pageSize": {
+              "type": "integer",
+              "format": "int32",
+              "title": "Page size",
+              "default": 10
+            },
+            "showRowKeys": {
+              "type": "boolean",
+              "title": "Show row keys",
+              "description": "Whether to display the row keys or not",
+              "default": true
+            },
+            "showColumnDataType": {
+              "type": "boolean",
+              "title": "Show column data type in header",
+              "description": "Whether to display the data type of the columns in the header or not",
+              "default": true
+            },
+            "showTitle": {
+              "type": "boolean"
+            },
+            "showRowIndices": {
+              "type": "boolean",
+              "title": "Show row indices",
+              "description": "Whether to display the row indices or not",
+              "default": false
+            },
+            "enableSortingByHeader": {
+              "type": "boolean",
+              "title": "Enable sorting by header",
+              "description": "Enables or disables the ability to sort the table by clicking on the column headers",
+              "default": true
+            },
+            "title": {
+              "type": "string",
+              "title": "Title",
+              "description": "The title of the table shown above the generated image. If left blank, no title will be shown.",
+              "default": "Table View"
+            },
+            "enablePagination": {
+              "type": "boolean",
+              "title": "Pagination",
+              "description": "Enables or disables the ability to only show a certain number of rows.",
+              "default": true
+            },
+            "enableGlobalSearch": {
+              "type": "boolean",
+              "title": "Enable global search",
+              "description": "Enables or disables the ability to perform a global search inside the table.",
+              "default": true
+            },
+            "enableColumnSearch": {
+              "type": "boolean",
+              "title": "Enable column search",
+              "description": "Enables or disables the ability to perform a column search inside the table.",
+              "default": true
+            },
+            "publishSelection": {
+              "type": "boolean",
+              "title": "Publish Selection",
+              "description": "When checked, the view notifies other interactive views when the user changes the selection in the current view.",
+              "default": true
+            },
+            "subscribeToSelection": {
+              "type": "boolean",
+              "title": "Subscribe to Selection",
+              "description": "When checked, the view reacts on notifications from other interactive views that the selection has been changed.",
+              "default": true
+            }
+          }
+        }
+      }
+    },
+    "ui_schema": {
+      "type": "VerticalLayout",
+      "elements": [
+        {
+          "type": "Section",
+          "label": "Data",
+          "elements": [
+            {
+              "type": "Control",
+              "scope": "#/properties/view/properties/displayedColumns",
+              "options": {
+                "format": "columnFilter"
+              }
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/view/properties/showRowKeys",
+              "options": {
+                "format": "checkbox"
+              }
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/view/properties/showColumnDataType",
+              "options": {
+                "format": "checkbox"
+              }
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/view/properties/showRowIndices",
+              "options": {
+                "format": "checkbox"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Section",
+          "label": "View",
+          "elements": [
+            {
+              "type": "Control",
+              "scope": "#/properties/view/properties/title"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/view/properties/showTitle",
+              "options": {
+                "format": "checkbox"
+              }
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/view/properties/enablePagination",
+              "options": {
+                "format": "checkbox"
+              }
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/view/properties/pageSize",
+              "rule": {
+                "effect": "DISABLE",
+                "condition": {
+                  "scope": "#/properties/view/properties/enablePagination",
+                  "schema": {
+                    "const": false
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "Section",
+          "label": "Interactivity",
+          "elements": [
+            {
+              "type": "Control",
+              "scope": "#/properties/view/properties/enableGlobalSearch",
+              "options": {
+                "format": "checkbox"
+              }
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/view/properties/enableColumnSearch",
+              "options": {
+                "format": "checkbox"
+              }
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/view/properties/enableSortingByHeader",
+              "options": {
+                "format": "checkbox"
+              }
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/view/properties/publishSelection",
+              "options": {
+                "format": "checkbox"
+              }
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/view/properties/subscribeToSelection",
+              "options": {
+                "format": "checkbox"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

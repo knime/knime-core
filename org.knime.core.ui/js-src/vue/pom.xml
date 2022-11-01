@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="https://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.knime</groupId>
+		<artifactId>knime-core</artifactId>
+		<version>${revision}${changelist}</version>
+		<relativePath>../../../pom.xml</relativePath>
+	</parent>
+
+	<artifactId>org.knime.core.ui-vue</artifactId>
+	<name>KNIME Core UI - Vue</name>
+	<description>Frontend components of the KNIME Views</description>
+	<packaging>pom</packaging>
+
+	<properties>
+		<sonar.sources>src</sonar.sources>
+		<sonar.tests>test</sonar.tests>
+		<sonar.javascript.lcov.reportPaths>coverage/lcov.info</sonar.javascript.lcov.reportPaths>
+		<sonar.exclusions>node_modules/**/*,dist/**/*,src/dev/**/*,.nyc_output/**/*,coverage/**/*,*.log,config/**/*,**/config.js,**/*.config.js,buildtools/**,webapps-common/**</sonar.exclusions>
+		<sonar.css.stylelint.reportPaths>target/stylelint.json</sonar.css.stylelint.reportPaths>
+		<sonar.eslint.reportPaths>target/eslint.json</sonar.eslint.reportPaths>
+		<node.version>v18.10.0</node.version>
+		<npm.version>8.19.2</npm.version>
+	</properties>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>com.github.eirslett</groupId>
+				<artifactId>frontend-maven-plugin</artifactId>
+				<configuration>
+					<installDirectory>${project.build.directory}</installDirectory>
+				</configuration>
+				<executions>
+					<execution>
+						<id>install node and npm</id>
+						<phase>initialize</phase>
+						<goals>
+							<goal>install-node-and-npm</goal>
+						</goals>
+						<configuration>
+							<nodeVersion>${node.version}</nodeVersion>
+							<npmVersion>${npm.version}</npmVersion>
+						</configuration>
+					</execution>
+
+					<execution>
+						<id>npm ci</id>
+						<phase>initialize</phase>
+						<goals>
+							<goal>npm</goal>
+						</goals>
+						<configuration>
+							<arguments>ci</arguments>
+						</configuration>
+					</execution>
+
+					<execution>
+						<id>npm run build</id>
+						<phase>compile</phase>
+						<goals>
+							<goal>npm</goal>
+						</goals>
+						<configuration>
+							<arguments>run build</arguments>
+						</configuration>
+					</execution>
+
+					<execution>
+						<id>npm run coverage</id>
+						<phase>test</phase>
+						<goals>
+							<goal>npm</goal>
+						</goals>
+						<configuration>
+							<arguments>run coverage -- --ci</arguments>
+						</configuration>
+					</execution>
+
+					<execution>
+						<id>npm run jenkins:audit</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>npm</goal>
+						</goals>
+						<configuration>
+							<arguments>run jenkins:audit</arguments>
+						</configuration>
+					</execution>
+
+					<execution>
+						<id>npm run jenkins:lint</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>npm</goal>
+						</goals>
+						<configuration>
+							<arguments>run jenkins:lint</arguments>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<artifactId>maven-clean-plugin</artifactId>
+				<version>3.0.0</version>
+				<configuration>
+					<filesets>
+						<fileset>
+							<directory>dist</directory>
+						</fileset>
+					</filesets>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+</project>
