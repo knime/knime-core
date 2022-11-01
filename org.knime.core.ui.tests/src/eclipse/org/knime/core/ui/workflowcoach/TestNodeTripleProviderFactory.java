@@ -71,7 +71,8 @@ public class TestNodeTripleProviderFactory implements NodeTripleProviderFactory 
 
     @Override
     public List<NodeTripleProvider> createProviders() {
-        return List.of(new TestNodeTripleProvider(), new TestUpdatableNodeTripleProvider(), new TestNodeTripleProvider2());
+        return List.of(new TestNodeTripleProvider(), new TestNodeTripleProvider2(),
+            new TestUpdatableNodeTripleProvider(), new TestUpdatableNodeTripleProvider2());
     }
 
     @Override
@@ -191,6 +192,47 @@ public class TestNodeTripleProviderFactory implements NodeTripleProviderFactory 
         @Override
         public String getDescription() {
             return "Test updateble node triple provider description";
+        }
+
+        @Override
+        public boolean isEnabled() {
+            return true;
+        }
+
+        @Override
+        public Stream<NodeTriple> getNodeTriples() throws IOException {
+            return Stream.empty();
+        }
+
+        @Override
+        public Optional<LocalDateTime> getLastUpdate() {
+            return Optional.empty();
+        }
+
+        @Override
+        public void update() throws Exception {
+            m_updatedRequired = false;
+        }
+
+        @Override
+        public boolean updateRequired() {
+            return m_updatedRequired;
+        }
+
+    }
+
+    private static final class TestUpdatableNodeTripleProvider2 implements UpdatableNodeTripleProvider {
+
+        private boolean m_updatedRequired = false;
+
+        @Override
+        public String getName() {
+            return "Test updateble node triple provider 2";
+        }
+
+        @Override
+        public String getDescription() {
+            return "Test updateble node triple provider description 2";
         }
 
         @Override

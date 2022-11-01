@@ -54,8 +54,10 @@ import static org.hamcrest.Matchers.emptyArray;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -132,9 +134,16 @@ public class NodeRecommendationManagerTest {
         assertThat("Response is not a list", recommendations, instanceOf(List.class));
         recommendations.forEach(nr -> {
             assertThat("Item is not a node recommendation", nr, instanceOf(NodeRecommendation.class));
+            assertThat("Could not retrieve the total frequency", nr.getTotalFrequency(), greaterThanOrEqualTo(0));
+            assertThat("Could not retrieve factory class name", nr.getNodeFactoryClassName(), not(isEmptyOrNullString()));
             assertThat("Node recommendation is not a <Test Row Filter> or <Test Row Splitter>", nr.getNodeName(),
                 anyOf(equalTo("Test Row Filter"), equalTo("Test Row Splitter")));
         });
+
+        // No recommendations for more than one node
+        assertThrows("Recommendations for more than one node are not supported, yet.",
+            UnsupportedOperationException.class, () -> NodeRecommendationManager.getInstance()
+                .getNodeRecommendationFor(NativeNodeContainerWrapper.wrap(nnc), NativeNodeContainerWrapper.wrap(nnc)));
     }
 
     /**
