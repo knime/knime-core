@@ -63,8 +63,6 @@ import org.knime.core.webui.node.view.table.data.TableViewInitialDataImpl;
 import org.knime.core.webui.node.view.table.data.render.DataValueImageRendererRegistry;
 import org.knime.core.webui.node.view.table.data.render.SwingBasedRendererFactory;
 import org.knime.core.webui.page.Page;
-import org.knime.core.webui.page.PageUtil;
-import org.knime.core.webui.page.PageUtil.PageType;
 
 /**
  * @author Konrad Amtenbrink, KNIME GmbH, Berlin, Germany
@@ -79,7 +77,7 @@ public class TableViewUtil {
     // For more details see the class' javadoc.
     // It's static because it's registered and kept with the page which in turn is assumed to be static
     // (i.e. doesn't change between node instances and, hence, won't be re-created for each node instance).
-    private static final DataValueImageRendererRegistry m_rendererRegistry =
+    static final DataValueImageRendererRegistry RENDERER_REGISTRY =
         new DataValueImageRendererRegistry(createPageIdSupplier());
 
     private TableViewUtil() {
@@ -98,15 +96,16 @@ public class TableViewUtil {
         // because the page, represented by a vue component, is just a file (won't change at runtime)
         // And the image resources associated with a page of an individual table view instance are
         // served with a globally unique 'table id' in the path.
-        return PageUtil.getStaticPageId(TableViewUtil.class, PageType.VIEW);
+        // TODO should not be named after node factory; see followup ticket
+        return "view_org.knime.base.views.node.tableview.TableViewNodeFactory";
     }
 
     /**
      * @param rendererRegistry required for images in the table
      * @return the page representing the table view
      */
-    public static Page createPage(final Class<?> clazz) {
-        return Page.builder(clazz, "js-src/vue/dist", "TableView.umd.min.js")
+    public static Page createPage() {
+        return Page.builder(TableViewUtil.class, "js-src/vue/dist", "TableView.umd.min.js")
             .addResources(createTableCellImageResourceSupplier(),
                 DataValueImageRendererRegistry.RENDERED_CELL_IMAGES_PATH_PREFIX, true)
             .build();
@@ -114,7 +113,7 @@ public class TableViewUtil {
 
     private static Function<String, InputStream> createTableCellImageResourceSupplier() {
         return relativePath -> {
-            var bytes = m_rendererRegistry.renderAndRemove(relativePath);
+            var bytes = RENDERER_REGISTRY.renderAndRemove(relativePath);
             return new ByteArrayInputStream(bytes);
         };
     }
@@ -131,7 +130,7 @@ public class TableViewUtil {
     public static TableViewDataService createDataService(final Supplier<BufferedDataTable> tableSupplier,
         final String tableId) {
         return new TableViewDataServiceImpl(tableSupplier, tableId, new SwingBasedRendererFactory(),
-            m_rendererRegistry);
+            RENDERER_REGISTRY);
     }
 
     /**
@@ -144,18 +143,18 @@ public class TableViewUtil {
     public static TableViewInitialData createInitialData(final TableViewViewSettings settings,
         final BufferedDataTable table, final String tableId) {
         return new TableViewInitialDataImpl(settings, () -> table, tableId, new SwingBasedRendererFactory(),
-            m_rendererRegistry);
+            RENDERER_REGISTRY);
     }
 
     public static TableViewInitialData createInitialData(final TableViewViewSettings settings,
         final Supplier<BufferedDataTable> tableSupplier, final String tableId) {
         return new TableViewInitialDataImpl(settings, tableSupplier, tableId, new SwingBasedRendererFactory(),
-            m_rendererRegistry);
+            RENDERER_REGISTRY);
     }
 
     public static void onCreateNodeView(final String tableId) {
         var nc = NodeContext.getContext().getNodeContainer();
-        NodeCleanUpCallback.builder(nc, () -> m_rendererRegistry.clear(tableId)) //
+        NodeCleanUpCallback.builder(nc, () -> RENDERER_REGISTRY.clear(tableId)) //
             .cleanUpOnNodeStateChange(true) //
             .deactivateOnNodeStateChange(false).build();
     }

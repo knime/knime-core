@@ -55,6 +55,7 @@ import java.util.Arrays;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.BufferedDataTableHolder;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
@@ -70,11 +71,13 @@ import org.knime.core.webui.node.view.NodeView;
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
-public class NodeViewNodeModel extends NodeModel implements ReExecutable<String> {
+public class NodeViewNodeModel extends NodeModel implements ReExecutable<String>, BufferedDataTableHolder {
 
     private String m_preReexecuteData;
 
     private int m_executeCount = 0;
+
+    private BufferedDataTable[] m_tables;
 
     /**
      * Allows test to check the data set at {@link #preReExecute(String, boolean)}.
@@ -182,6 +185,22 @@ public class NodeViewNodeModel extends NodeModel implements ReExecutable<String>
     @Override
     protected void reset() {
         //
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public BufferedDataTable[] getInternalTables() {
+        return m_tables;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setInternalTables(final BufferedDataTable[] tables) {
+        m_tables = tables;
     }
 
 

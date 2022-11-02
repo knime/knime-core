@@ -62,11 +62,6 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.webui.node.dialog.SettingsType;
-import org.knime.core.webui.node.dialog.impl.DefaultNodeSettings;
-import org.knime.core.webui.node.dialog.impl.DefaultNodeSettingsService;
-import org.knime.core.webui.node.dialog.impl.JsonFormsDataUtil;
-import org.knime.core.webui.node.dialog.impl.JsonFormsSchemaUtil;
-import org.knime.core.webui.node.dialog.impl.JsonNodeSettingsMapperUtil;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;

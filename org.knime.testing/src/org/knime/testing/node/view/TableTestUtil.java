@@ -50,9 +50,6 @@ package org.knime.testing.node.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -79,9 +76,6 @@ import org.knime.core.data.def.StringCell;
 import org.knime.core.data.filestore.internal.NotInWorkflowDataRepository;
 import org.knime.core.data.image.png.PNGImageCell;
 import org.knime.core.data.image.png.PNGImageCellFactory;
-import org.knime.core.data.time.localdate.LocalDateCellFactory;
-import org.knime.core.data.time.localdatetime.LocalDateTimeCellFactory;
-import org.knime.core.data.time.zoneddatetime.ZonedDateTimeCellFactory;
 import org.knime.core.data.vector.bitvector.SparseBitVectorCell;
 import org.knime.core.data.vector.bitvector.SparseBitVectorCellFactory;
 import org.knime.core.node.BufferedDataContainer;
@@ -404,12 +398,6 @@ public final class TableTestUtil {
             return new StringCell((String)obj);
         } else if (obj instanceof Boolean) {
             return BooleanCellFactory.create(((Boolean)obj).booleanValue());
-        } else if (obj instanceof LocalDateTime) {
-            return LocalDateTimeCellFactory.create((LocalDateTime)obj);
-        } else if (obj instanceof LocalDate) {
-            return LocalDateCellFactory.create((LocalDate)obj);
-        } else if (obj instanceof ZonedDateTime) {
-            return ZonedDateTimeCellFactory.create((ZonedDateTime)obj);
         } else {
             throw new UnsupportedOperationException("not yet implemented");
         }
@@ -430,7 +418,6 @@ public final class TableTestUtil {
             .addColumn("bitvector", SparseBitVectorCell.TYPE)//
             .addColumn("boolean", BooleanCell.TYPE)//
             .addColumn("image", new PNGImageCellFactory().getDataType())//
-            .addColumn("date", LocalDateCellFactory.TYPE)//
             .build();
     }
 
@@ -464,7 +451,7 @@ public final class TableTestUtil {
             new DoubleCell(i), //
             new SparseBitVectorCellFactory(Integer.toHexString(i)).createDataCell(), //
             i % 2 == 1 ? BooleanCell.TRUE : BooleanCell.FALSE, //
-            createPNGImageCell(i), LocalDateCellFactory.create(LocalDate.of(2022, 8, (i % 31) + 1))})
+            createPNGImageCell(i)})
             .forEach(builder::addRow);
         return builder.build();
     }

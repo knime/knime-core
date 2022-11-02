@@ -52,30 +52,44 @@ package org.knime.core.webui.node.view.table;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatNullPointerException;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.knime.testing.node.view.TableTestUtil.createDefaultTestTable;
 import static org.knime.testing.node.view.TableTestUtil.createTableFromColumns;
 import static org.knime.testing.node.view.TableTestUtil.getDefaultTestSpec;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.NoSuchElementException;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import javax.imageio.ImageIO;
+
+import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Test;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataTable;
-import org.knime.core.webui.node.view.table.TableViewViewSettings;
+import org.knime.core.node.workflow.FileNativeNodeContainerPersistor;
+import org.knime.core.webui.node.NodeWrapper;
+import org.knime.core.webui.node.view.NodeViewManager;
 import org.knime.core.webui.node.view.table.data.Renderer;
 import org.knime.core.webui.node.view.table.data.TableViewDataService;
 import org.knime.core.webui.node.view.table.data.TableViewDataServiceImpl;
 import org.knime.core.webui.node.view.table.data.TableViewInitialDataImpl;
 import org.knime.core.webui.node.view.table.data.render.DataValueImageRendererRegistry;
 import org.knime.core.webui.node.view.table.data.render.SwingBasedRendererFactory;
+import org.knime.testing.node.view.NodeViewNodeFactory;
+import org.knime.testing.node.view.NodeViewNodeModel;
 import org.knime.testing.node.view.TableTestUtil.ObjectColumn;
 import org.knime.testing.node.view.WarningMessageAsserterUtil.DataServiceContextWarningMessagesAsserter;
+import org.knime.testing.util.WorkflowManagerUtil;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * @author Konrad Amtenbrink, KNIME GmbH, Berlin, Germany
@@ -87,7 +101,7 @@ class TableViewTest {
     @Test
     void testDataServiceGetData() {
         final var expectedResult = new String[][]{{"1", "1", "1", "1", "pageId/images/tableId/1072693248.png", "0001",
-            "true", "pageId/images/tableId/-131459926.png", "2022-08-02"}};
+            "true", "pageId/images/tableId/-131459926.png"}};
         var rendererRegistry = new DataValueImageRendererRegistry(() -> "pageId");
         var rendererIds = new String[expectedResult[0].length];
         rendererIds[3] = "org.knime.core.data.renderer.DoubleBarRenderer$Factory";
@@ -103,7 +117,7 @@ class TableViewTest {
 
         // check content types
         assertThat(table.getColumnContentTypes())
-            .isEqualTo(new String[]{"txt", "txt", "txt", "img_path", "txt", "txt", "img_path", "txt"});
+            .isEqualTo(new String[]{"txt", "txt", "txt", "img_path", "txt", "txt", "img_path"});
 
         // try out 'cell renderer'
         var cellImg = rendererRegistry.renderAndRemove("tableId/-131459926.png?w=1&h=2");
@@ -113,97 +127,96 @@ class TableViewTest {
         assertThat(table.getRowCount()).isEqualTo(2);
     }
 
-//    @Test
-//    void testTableViewNodeFactoryImageResources() throws IOException {
-//        var wfm = WorkflowManagerUtil.createEmptyWorkflow();
-//        var nnc = WorkflowManagerUtil.createAndAddNode(wfm, new TableViewNodeFactory());
-//        ((BaseViewsNodeModel)nnc.getNodeModel()).setInternalTables(createDefaultTestTable(2).getTables());
-//
-//        var nodeViewManager = NodeViewManager.getInstance();
-//        var mapper = new ObjectMapper();
-//
-//        // request rows to create the 'image renderers' whose images are later access as 'page resources'
-//        JsonNode initialData = mapper.readTree(nodeViewManager.callTextInitialDataService(NodeWrapper.of(nnc)));
-//        var imgPath = initialData.get("result").get("table").get("rows").get(0).get(7).asText();
-//        var imgPath2 = initialData.get("result").get("table").get("rows").get(1).get(7).asText();
-//        assertThat(
-//            TableViewNodeFactory.RENDERER_REGISTRY.numRegisteredRenderers(TableViewNodeFactory.getTableId(nnc.getID())))
-//                .isEqualTo(2);
-//
-//        // get page path to 'register' the page
-//        nodeViewManager.getPagePath(NodeWrapper.of(nnc));
-//
-//        // request a cell image resource
-//        var img =
-//            IOUtils.toString(nodeViewManager.getPageResource(imgPath).get().getInputStream(), StandardCharsets.UTF_8);
-//        assertThat(img).startsWith("�PNG");
-//        // request same image again (won't work, because it isn't kept)
-//        var ex = assertThrows(NoSuchElementException.class, () -> nodeViewManager.getPageResource(imgPath));
-//        assertThat(ex).hasMessageContaining("There is no image");
-//        assertThat(
-//            TableViewNodeFactory.RENDERER_REGISTRY.numRegisteredRenderers(TableViewNodeFactory.getTableId(nnc.getID())))
-//                .isEqualTo(1);
-//
-//        // request cell image resource with custom dimension
-//        try (final var is = nodeViewManager.getPageResource(imgPath2 + "?w=12&h=13").get().getInputStream()) {
-//            var bufferedImage = ImageIO.read(is);
-//            assertThat(bufferedImage.getWidth()).isEqualTo(12);
-//            assertThat(bufferedImage.getHeight()).isEqualTo(13);
-//        }
-//
-//        // request an image through an invalid path
-//        var invalidImgPath = imgPath.substring(0, imgPath.lastIndexOf("/") + 1) + "0.png";
-//        var ex2 = assertThrows(NoSuchElementException.class, () -> nodeViewManager.getPageResource(invalidImgPath));
-//        assertThat(ex2).hasMessageContaining("There is no image");
-//
-//        WorkflowManagerUtil.disposeWorkflow(wfm);
-//    }
+    @Test
+    void testTableViewNodeFactoryImageResources() throws IOException {
+        var wfm = WorkflowManagerUtil.createEmptyWorkflow();
+        var nnc = WorkflowManagerUtil.createAndAddNode(wfm,
+            new NodeViewNodeFactory(nodeModel -> new TableNodeView("tableId", () -> nodeModel.getInternalTables()[0])));
+        ((NodeViewNodeModel)nnc.getNodeModel())
+            .setInternalTables(new BufferedDataTable[]{createDefaultTestTable(2).get()});
 
-//    /**
-//     * Makes sure that the renderes registered with {@link DataValueImageRendererRegistry} are properly cleaned up,
-//     * e.g., on node state change.
-//     *
-//     * @throws Exception
-//     */
-//    @Test
-//    void testTableViewNodeFactoryRendererRegistryCleanUp() throws Exception {
-//        var wfm = WorkflowManagerUtil.createEmptyWorkflow();
-//        var nnc = WorkflowManagerUtil.createAndAddNode(wfm, new TableViewNodeFactory());
-//        final var dataGeneratorNodeFactory = FileNativeNodeContainerPersistor
-//            .loadNodeFactory("org.knime.base.node.util.sampledata.SampleDataNodeFactory");
-//        final var dataGeneratorNode = WorkflowManagerUtil.createAndAddNode(wfm, dataGeneratorNodeFactory);
-//        wfm.addConnection(dataGeneratorNode.getID(), 1, nnc.getID(), 1);
-//
-//        var tableId = TableViewNodeFactory.getTableId(nnc.getID());
-//        wfm.executeAllAndWaitUntilDone();
-//        var table = createDefaultTestTable(2).getTables();
-//        ((BaseViewsNodeModel)nnc.getNodeModel()).setInternalTables(table);
-//
-//        var nodeViewManager = NodeViewManager.getInstance();
-//
-//        // call initial data service to register renderers
-//        nodeViewManager.callTextInitialDataService(NodeWrapper.of(nnc));
-//        assertThat(TableViewNodeFactory.RENDERER_REGISTRY.numRegisteredRenderers(tableId)).isEqualTo(2);
-//
-//        // must clear the registry for the given 'table id' (i.e. node id here)
-//        wfm.resetAndConfigureNode(nnc.getID());
-//        assertThat(TableViewNodeFactory.RENDERER_REGISTRY.numRegisteredRenderers(tableId)).isZero();
-//
-//        // make sure that the a 2nd node state change still clears the registry
-//        wfm.executeAllAndWaitUntilDone();
-//        ((BaseViewsNodeModel)nnc.getNodeModel()).setInternalTables(table);
-//        nodeViewManager.callTextInitialDataService(NodeWrapper.of(nnc));
-//        assertThat(TableViewNodeFactory.RENDERER_REGISTRY.numRegisteredRenderers(tableId)).isEqualTo(2);
-//        wfm.resetAndConfigureNode(nnc.getID());
-//        assertThat(TableViewNodeFactory.RENDERER_REGISTRY.numRegisteredRenderers(tableId)).isZero();
-//
-//        // assert that registry is cleared on delete
-//        ((BaseViewsNodeModel)nnc.getNodeModel()).setInternalTables(table);
-//        nodeViewManager.callTextInitialDataService(NodeWrapper.of(nnc));
-//        assertThat(TableViewNodeFactory.RENDERER_REGISTRY.numRegisteredRenderers(tableId)).isEqualTo(2);
-//        wfm.removeNode(nnc.getID());
-//        assertThat(TableViewNodeFactory.RENDERER_REGISTRY.numRegisteredRenderers(tableId)).isZero();
-//    }
+        var nodeViewManager = NodeViewManager.getInstance();
+        var mapper = new ObjectMapper();
+
+        // request rows to create the 'image renderers' whose images are later access as 'page resources'
+        JsonNode initialData = mapper.readTree(nodeViewManager.callTextInitialDataService(NodeWrapper.of(nnc)));
+        var imgPath = initialData.get("result").get("table").get("rows").get(0).get(7).asText();
+        var imgPath2 = initialData.get("result").get("table").get("rows").get(1).get(7).asText();
+        assertThat(TableViewUtil.RENDERER_REGISTRY.numRegisteredRenderers(nnc.getID().toString())).isEqualTo(2);
+
+        // get page path to 'register' the page
+        nodeViewManager.getPagePath(NodeWrapper.of(nnc));
+
+        // request a cell image resource
+        var img =
+            IOUtils.toString(nodeViewManager.getPageResource(imgPath).get().getInputStream(), StandardCharsets.UTF_8);
+        assertThat(img).startsWith("�PNG");
+        // request same image again (won't work, because it isn't kept)
+        var ex = assertThrows(NoSuchElementException.class, () -> nodeViewManager.getPageResource(imgPath));
+        assertThat(ex).hasMessageContaining("There is no image");
+        assertThat(TableViewUtil.RENDERER_REGISTRY.numRegisteredRenderers(nnc.getID().toString())).isEqualTo(1);
+
+        // request cell image resource with custom dimension
+        try (final var is = nodeViewManager.getPageResource(imgPath2 + "?w=12&h=13").get().getInputStream()) {
+            var bufferedImage = ImageIO.read(is);
+            assertThat(bufferedImage.getWidth()).isEqualTo(12);
+            assertThat(bufferedImage.getHeight()).isEqualTo(13);
+        }
+
+        // request an image through an invalid path
+        var invalidImgPath = imgPath.substring(0, imgPath.lastIndexOf("/") + 1) + "0.png";
+        var ex2 = assertThrows(NoSuchElementException.class, () -> nodeViewManager.getPageResource(invalidImgPath));
+        assertThat(ex2).hasMessageContaining("There is no image");
+
+        WorkflowManagerUtil.disposeWorkflow(wfm);
+    }
+
+    /**
+     * Makes sure that the renderes registered with {@link DataValueImageRendererRegistry} are properly cleaned up,
+     * e.g., on node state change.
+     *
+     * @throws Exception
+     */
+    @Test
+    void testTableViewNodeFactoryRendererRegistryCleanUp() throws Exception {
+        var wfm = WorkflowManagerUtil.createEmptyWorkflow();
+        var nnc = WorkflowManagerUtil.createAndAddNode(wfm, new NodeViewNodeFactory(1, 0,
+            nodeModel -> new TableNodeView("tableId", () -> nodeModel.getInternalTables()[0])));
+        final var dataGeneratorNodeFactory = FileNativeNodeContainerPersistor
+            .loadNodeFactory("org.knime.base.node.util.sampledata.SampleDataNodeFactory");
+        final var dataGeneratorNode = WorkflowManagerUtil.createAndAddNode(wfm, dataGeneratorNodeFactory);
+        wfm.addConnection(dataGeneratorNode.getID(), 1, nnc.getID(), 1);
+
+        var tableId = nnc.getID().toString();
+        wfm.executeAllAndWaitUntilDone();
+        var tables = new BufferedDataTable[]{createDefaultTestTable(2).get()};
+        ((NodeViewNodeModel)nnc.getNodeModel()).setInternalTables(tables);
+
+        var nodeViewManager = NodeViewManager.getInstance();
+
+        // call initial data service to register renderers
+        nodeViewManager.callTextInitialDataService(NodeWrapper.of(nnc));
+        assertThat(TableViewUtil.RENDERER_REGISTRY.numRegisteredRenderers(tableId)).isEqualTo(2);
+
+        // must clear the registry for the given 'table id' (i.e. node id here)
+        wfm.resetAndConfigureNode(nnc.getID());
+        assertThat(TableViewUtil.RENDERER_REGISTRY.numRegisteredRenderers(tableId)).isZero();
+
+        // make sure that the a 2nd node state change still clears the registry
+        wfm.executeAllAndWaitUntilDone();
+        ((NodeViewNodeModel)nnc.getNodeModel()).setInternalTables(tables);
+        nodeViewManager.callTextInitialDataService(NodeWrapper.of(nnc));
+        assertThat(TableViewUtil.RENDERER_REGISTRY.numRegisteredRenderers(tableId)).isEqualTo(2);
+        wfm.resetAndConfigureNode(nnc.getID());
+        assertThat(TableViewUtil.RENDERER_REGISTRY.numRegisteredRenderers(tableId)).isZero();
+
+        // assert that registry is cleared on delete
+        ((NodeViewNodeModel)nnc.getNodeModel()).setInternalTables(tables);
+        nodeViewManager.callTextInitialDataService(NodeWrapper.of(nnc));
+        assertThat(TableViewUtil.RENDERER_REGISTRY.numRegisteredRenderers(tableId)).isEqualTo(2);
+        wfm.removeNode(nnc.getID());
+        assertThat(TableViewUtil.RENDERER_REGISTRY.numRegisteredRenderers(tableId)).isZero();
+    }
 
     @Test
     void testDataServiceGetSortedData() {

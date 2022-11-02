@@ -48,7 +48,6 @@
  */
 package org.knime.testing.node.view;
 
-import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Collections;
@@ -112,7 +111,7 @@ public final class NodeTestUtil {
         if (dataServiceType != null) {
             assertThat(rpcDataService).isNotEmpty();
             assertThat(rpcDataService.get().getRpcServer().getHandler(dataServiceType)).isNotNull();
-            assertThatJson(nodeViewManager.callTextInitialDataService(NodeWrapper.of(node))).isPresent();
+            assertThat(nodeViewManager.callTextInitialDataService(NodeWrapper.of(node))).isNotNull();
         } else {
             assertThat(rpcDataService).isEmpty();
         }

@@ -115,7 +115,8 @@ public class NodeViewNodeFactory extends NodeFactory<NodeViewNodeModel> implemen
      * @param nodeViewCreator
      * @param hasView allows one to control the {@link #hasNodeView()} return value
      */
-    public NodeViewNodeFactory(final Function<NodeViewNodeModel, NodeView> nodeViewCreator, final BooleanSupplier hasView) {
+    public NodeViewNodeFactory(final Function<NodeViewNodeModel, NodeView> nodeViewCreator,
+        final BooleanSupplier hasView) {
         m_nodeViewCreator = nodeViewCreator;
         m_numInputs = 0;
         m_numOutputs = 0;
@@ -130,8 +131,9 @@ public class NodeViewNodeFactory extends NodeFactory<NodeViewNodeModel> implemen
         m_numInputs = numInputs;
         m_numOutputs = numOutputs;
         m_nodeViewCreator = m -> { // NOSONAR
-            return createNodeView(Page.builder(() -> "foo", "index.html")
-                .addResourceFromString(() -> "bar", "resource.html").build(), new TextInitialDataService() {
+            return createNodeView(
+                Page.builder(() -> "foo", "index.html").addResourceFromString(() -> "bar", "resource.html").build(),
+                new TextInitialDataService() {
                     @Override
                     public String getInitialData() {
                         return m_initialData;
@@ -143,6 +145,14 @@ public class NodeViewNodeFactory extends NodeFactory<NodeViewNodeModel> implemen
                     }
                 }, createReExecuteDataService());
         };
+        m_hasView = () -> true;
+    }
+
+    public NodeViewNodeFactory(final int numInputs,
+        final int numOutputs, final Function<NodeViewNodeModel, NodeView> nodeViewCreator) {
+        m_numInputs = numInputs;
+        m_numOutputs = numOutputs;
+        m_nodeViewCreator = nodeViewCreator;
         m_hasView = () -> true;
     }
 
@@ -230,8 +240,8 @@ public class NodeViewNodeFactory extends NodeFactory<NodeViewNodeModel> implemen
     }
 
     @SuppressWarnings("javadoc")
-    public static NodeView createNodeView(final Page page, final InitialDataService initDataService, final DataService dataService,
-        final ApplyDataService applyDataService) {
+    public static NodeView createNodeView(final Page page, final InitialDataService initDataService,
+        final DataService dataService, final ApplyDataService applyDataService) {
         return new NodeView() { // NOSONAR
 
             @Override

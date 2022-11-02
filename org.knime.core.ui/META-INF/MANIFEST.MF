@@ -5,7 +5,8 @@ Bundle-SymbolicName: org.knime.core.ui;singleton:=true
 Bundle-Version: 4.7.0.qualifier
 Bundle-ClassPath: knime-core-ui.jar,
  lib/jsonschema-generator-4.20.0.jar,
- lib/classmate-1.5.1.jar
+ lib/classmate-1.5.1.jar,
+ lib/slf4j-api-1.7.32.jar
 Bundle-Activator: org.knime.core.ui.CoreUIPlugin
 Bundle-Vendor: KNIME AG, Zurich, Switzerland
 Eclipse-BundleShape: dir
@@ -41,7 +42,6 @@ Require-Bundle: org.knime.shared.workflow.def;bundle-version="[4.6.0,5.0.0)",
  org.apache.commons.lang3;bundle-version="[3.2.1,4.0.0)",
  org.apache.commons.math3;bundle-version="[3.4.1,4.0.0)",
  org.knime.core.util;bundle-version="[5.19.0,6.0.0)",
- org.junit;bundle-version="[4.12.0,5.0.0)",
  org.eclipse.core.runtime;bundle-version="[3.12.0,4.0.0)",
  org.apache.log4j;bundle-version="[1.2.15,2.0.0)",
  org.knime.core;bundle-version="[4.0.0,5.0.0)",
@@ -52,8 +52,7 @@ Require-Bundle: org.knime.shared.workflow.def;bundle-version="[4.6.0,5.0.0)",
  com.fasterxml.jackson.core.jackson-core;bundle-version="[2.13.2,3.0.0)",
  com.fasterxml.jackson.datatype.jackson-datatype-jdk8;bundle-version="[2.13.2,3.0.0)",
  com.fasterxml.jackson.core.jackson-annotations;bundle-version="[2.13.2,3.0.0)",
- com.github.briandilley.jsonrpc4j;bundle-version="[1.5.2,2.0.0)",
- org.slf4j.api;bundle-version="[1.7.30,2.0.0)"
+ com.github.briandilley.jsonrpc4j;bundle-version="[1.5.2,2.0.0)"
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Automatic-Module-Name: org.knime.core.ui
