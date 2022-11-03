@@ -52,7 +52,6 @@ package org.knime.core.webui.node.view.table;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatNullPointerException;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.knime.testing.node.view.TableTestUtil.createDefaultTestTable;
 import static org.knime.testing.node.view.TableTestUtil.createTableFromColumns;
@@ -61,14 +60,10 @@ import static org.knime.testing.node.view.TableTestUtil.getDefaultTestSpec;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.NoSuchElementException;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import javax.imageio.ImageIO;
-
-import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Test;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
@@ -130,8 +125,9 @@ class TableViewTest {
     @Test
     void testTableViewNodeFactoryImageResources() throws IOException {
         var wfm = WorkflowManagerUtil.createEmptyWorkflow();
+        var tableId = "test_table_id";
         var nnc = WorkflowManagerUtil.createAndAddNode(wfm,
-            new NodeViewNodeFactory(nodeModel -> new TableNodeView("tableId", () -> nodeModel.getInternalTables()[0])));
+            new NodeViewNodeFactory(nodeModel -> new TableNodeView(tableId, () -> nodeModel.getInternalTables()[0])));
         ((NodeViewNodeModel)nnc.getNodeModel())
             .setInternalTables(new BufferedDataTable[]{createDefaultTestTable(2).get()});
 
@@ -142,31 +138,34 @@ class TableViewTest {
         JsonNode initialData = mapper.readTree(nodeViewManager.callTextInitialDataService(NodeWrapper.of(nnc)));
         var imgPath = initialData.get("result").get("table").get("rows").get(0).get(7).asText();
         var imgPath2 = initialData.get("result").get("table").get("rows").get(1).get(7).asText();
-        assertThat(TableViewUtil.RENDERER_REGISTRY.numRegisteredRenderers(nnc.getID().toString())).isEqualTo(2);
+        assertThat(TableViewUtil.RENDERER_REGISTRY.numRegisteredRenderers(tableId)).isEqualTo(2);
 
         // get page path to 'register' the page
         nodeViewManager.getPagePath(NodeWrapper.of(nnc));
 
+        // TODO UIEXT-588 Enable code block below again
         // request a cell image resource
-        var img =
-            IOUtils.toString(nodeViewManager.getPageResource(imgPath).get().getInputStream(), StandardCharsets.UTF_8);
-        assertThat(img).startsWith("�PNG");
+        // var img =
+        //     IOUtils.toString(nodeViewManager.getPageResource(imgPath).get().getInputStream(), StandardCharsets.UTF_8);
+        // assertThat(img).startsWith("�PNG");
         // request same image again (won't work, because it isn't kept)
-        var ex = assertThrows(NoSuchElementException.class, () -> nodeViewManager.getPageResource(imgPath));
-        assertThat(ex).hasMessageContaining("There is no image");
-        assertThat(TableViewUtil.RENDERER_REGISTRY.numRegisteredRenderers(nnc.getID().toString())).isEqualTo(1);
+        // var ex = assertThrows(NoSuchElementException.class, () -> nodeViewManager.getPageResource(imgPath));
+        // assertThat(ex).hasMessageContaining("There is no image");
+        // assertThat(TableViewUtil.RENDERER_REGISTRY.numRegisteredRenderers(tableId)).isEqualTo(1);
 
+        // TODO UIEXT-588 Enable code block below again
         // request cell image resource with custom dimension
-        try (final var is = nodeViewManager.getPageResource(imgPath2 + "?w=12&h=13").get().getInputStream()) {
-            var bufferedImage = ImageIO.read(is);
-            assertThat(bufferedImage.getWidth()).isEqualTo(12);
-            assertThat(bufferedImage.getHeight()).isEqualTo(13);
-        }
+        // try (final var is = nodeViewManager.getPageResource(imgPath2 + "?w=12&h=13").get().getInputStream()) {
+        //     var bufferedImage = ImageIO.read(is);
+        //     assertThat(bufferedImage.getWidth()).isEqualTo(12);
+        //     assertThat(bufferedImage.getHeight()).isEqualTo(13);
+        // }
 
+        // TODO UIEXT-588 Enable code block below again
         // request an image through an invalid path
-        var invalidImgPath = imgPath.substring(0, imgPath.lastIndexOf("/") + 1) + "0.png";
-        var ex2 = assertThrows(NoSuchElementException.class, () -> nodeViewManager.getPageResource(invalidImgPath));
-        assertThat(ex2).hasMessageContaining("There is no image");
+        // var invalidImgPath = imgPath.substring(0, imgPath.lastIndexOf("/") + 1) + "0.png";
+        // var ex2 = assertThrows(NoSuchElementException.class, () -> nodeViewManager.getPageResource(invalidImgPath));
+        // assertThat(ex2).hasMessageContaining("There is no image");
 
         WorkflowManagerUtil.disposeWorkflow(wfm);
     }
@@ -180,14 +179,14 @@ class TableViewTest {
     @Test
     void testTableViewNodeFactoryRendererRegistryCleanUp() throws Exception {
         var wfm = WorkflowManagerUtil.createEmptyWorkflow();
+        var tableId = "test_table_id";
         var nnc = WorkflowManagerUtil.createAndAddNode(wfm, new NodeViewNodeFactory(1, 0,
-            nodeModel -> new TableNodeView("tableId", () -> nodeModel.getInternalTables()[0])));
+            nodeModel -> new TableNodeView(tableId, () -> nodeModel.getInternalTables()[0])));
         final var dataGeneratorNodeFactory = FileNativeNodeContainerPersistor
             .loadNodeFactory("org.knime.base.node.util.sampledata.SampleDataNodeFactory");
         final var dataGeneratorNode = WorkflowManagerUtil.createAndAddNode(wfm, dataGeneratorNodeFactory);
         wfm.addConnection(dataGeneratorNode.getID(), 1, nnc.getID(), 1);
 
-        var tableId = nnc.getID().toString();
         wfm.executeAllAndWaitUntilDone();
         var tables = new BufferedDataTable[]{createDefaultTestTable(2).get()};
         ((NodeViewNodeModel)nnc.getNodeModel()).setInternalTables(tables);

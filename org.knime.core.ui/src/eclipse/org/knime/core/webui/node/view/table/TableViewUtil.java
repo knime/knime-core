@@ -97,6 +97,7 @@ public class TableViewUtil {
         // And the image resources associated with a page of an individual table view instance are
         // served with a globally unique 'table id' in the path.
         // TODO should not be named after node factory; see followup ticket
+        // TODO UIEXT-588
         return "view_org.knime.base.views.node.tableview.TableViewNodeFactory";
     }
 
