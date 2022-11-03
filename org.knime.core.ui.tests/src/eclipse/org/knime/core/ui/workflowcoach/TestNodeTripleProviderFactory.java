@@ -71,8 +71,11 @@ public class TestNodeTripleProviderFactory implements NodeTripleProviderFactory 
 
     @Override
     public List<NodeTripleProvider> createProviders() {
-        return List.of(new TestNodeTripleProvider(), new TestNodeTripleProvider2(),
-            new TestUpdatableNodeTripleProvider(), new TestUpdatableNodeTripleProvider2());
+        return List.of(//
+            new TestNodeTripleProvider(), //
+            new TestNodeTripleProvider2(), //
+            new TestUpdatableNodeTripleProvider(), //
+            new TestUpdatableNodeTripleProvider2());
     }
 
     @Override
@@ -182,7 +185,7 @@ public class TestNodeTripleProviderFactory implements NodeTripleProviderFactory 
 
     private static final class TestUpdatableNodeTripleProvider implements UpdatableNodeTripleProvider {
 
-        private boolean m_updatedRequired = true;
+        private static boolean updateRequired = true;
 
         @Override
         public String getName() {
@@ -211,19 +214,17 @@ public class TestNodeTripleProviderFactory implements NodeTripleProviderFactory 
 
         @Override
         public void update() throws Exception {
-            m_updatedRequired = false;
+            updateRequired = false; // Property `updateRequired` must be static to persist
         }
 
         @Override
         public boolean updateRequired() {
-            return m_updatedRequired;
+            return updateRequired;
         }
 
     }
 
     private static final class TestUpdatableNodeTripleProvider2 implements UpdatableNodeTripleProvider {
-
-        private boolean m_updatedRequired = false;
 
         @Override
         public String getName() {
@@ -252,12 +253,12 @@ public class TestNodeTripleProviderFactory implements NodeTripleProviderFactory 
 
         @Override
         public void update() throws Exception {
-            m_updatedRequired = false;
+            // Do nothing
         }
 
         @Override
         public boolean updateRequired() {
-            return m_updatedRequired;
+            return false;
         }
 
     }
