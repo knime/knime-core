@@ -48,17 +48,7 @@
  */
 package org.knime.core.ui.workflowcoach;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.anyOf;
-import static org.hamcrest.Matchers.emptyArray;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
-import static org.hamcrest.Matchers.instanceOf;
-import static org.hamcrest.Matchers.isEmptyOrNullString;
-import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -69,9 +59,10 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.ObjectUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.NodeInfo;
 import org.knime.core.node.exec.dataexchange.in.PortObjectInNodeFactory;
 import org.knime.core.node.workflow.NativeNodeContainer;
@@ -102,7 +93,7 @@ public class NodeRecommendationManagerTest {
     /**
      * Setup recommendation manager
      */
-    @Before
+    @BeforeEach
     public void setup() {
         NodeRecommendationManager.getInstance().initialize(m_isSourceNode, m_existsInRepository);
         m_updateListener = mock(IUpdateListener.class);
@@ -112,7 +103,7 @@ public class NodeRecommendationManagerTest {
     /**
      * Tear down recommandation manager
      */
-    @After
+    @AfterEach
     public void finish() {
         NodeRecommendationManager.getInstance().removeUpdateListener(m_updateListener);
         m_updateListener = null;
@@ -130,20 +121,23 @@ public class NodeRecommendationManagerTest {
         var nnc = WorkflowManagerUtil.createAndAddNode(wfm, new PortObjectInNodeFactory());
         var recommendations = getAndAssertNodeRecommendations(nnc);
 
-        assertThat("Expected exactly 2 recommendations", recommendations.size(), equalTo(2));
-        assertThat("Response is not a list", recommendations, instanceOf(List.class));
+        assertThat(recommendations.size()).as("Expected exactly 2 recommendations").isEqualTo(2);
+        assertThat(recommendations).as("Response is not a list").isInstanceOf(List.class);
         recommendations.forEach(nr -> {
-            assertThat("Item is not a node recommendation", nr, instanceOf(NodeRecommendation.class));
-            assertThat("Could not retrieve the total frequency", nr.getTotalFrequency(), greaterThanOrEqualTo(0));
-            assertThat("Could not retrieve factory class name", nr.getNodeFactoryClassName(), not(isEmptyOrNullString()));
-            assertThat("Node recommendation is not a <Test Row Filter> or <Test Row Splitter>", nr.getNodeName(),
-                anyOf(equalTo("Test Row Filter"), equalTo("Test Row Splitter")));
+            assertThat(nr).as("Item is not a node recommendation").isInstanceOf(NodeRecommendation.class);
+            assertThat(nr.getTotalFrequency()).as("Could not retrieve the total frequency").isGreaterThanOrEqualTo(0);
+            assertThat(nr.getNodeFactoryClassName()).as("Could not retrieve factory class name").isNotEmpty()
+                .isNotNull();
+            assertThat(nr.getNodeName()).as("Node recommendation is not a <Test Row Filter> or <Test Row Splitter>")
+                .contains("Test Row");
         });
 
         // No recommendations for more than one node
-        assertThrows("Recommendations for more than one node are not supported, yet.",
-            UnsupportedOperationException.class, () -> NodeRecommendationManager.getInstance()
-                .getNodeRecommendationFor(NativeNodeContainerWrapper.wrap(nnc), NativeNodeContainerWrapper.wrap(nnc)));
+        Assertions
+            .assertThatThrownBy(() -> NodeRecommendationManager.getInstance()
+                .getNodeRecommendationFor(NativeNodeContainerWrapper.wrap(nnc), NativeNodeContainerWrapper.wrap(nnc)))
+            .isInstanceOf(UnsupportedOperationException.class)
+            .hasMessage("Recommendations for more than one node are not supported, yet.");
     }
 
     /**
@@ -156,12 +150,12 @@ public class NodeRecommendationManagerTest {
     public void testGetNodeRecommendationForNoneAndUpdateListener() throws IOException {
         var recommendations = getAndAssertNodeRecommendations(null);
 
-        assertThat("Expected exactly 1 recommendation", recommendations.size(), equalTo(1));
-        assertThat("Response is not a list", recommendations, instanceOf(List.class));
+        assertThat(recommendations.size()).as("Expected exactly 1 recommendation").isEqualTo(1);
+        assertThat(recommendations).as("Response is not a list").isInstanceOf(List.class);
         recommendations.forEach(nr -> {
-            assertThat("Item is not a node recommendation", nr, instanceOf(NodeRecommendation.class));
-            assertThat("Node recommendation is not a <PortObject Reference Reader>", nr.getNodeName(),
-                equalTo("PortObject Reference Reader"));
+            assertThat(nr).as("Item is not a node recommendation").isInstanceOf(NodeRecommendation.class);
+            assertThat(nr.getNodeName()).as("Node recommendation is not a <PortObject Reference Reader>")
+                .isEqualTo("PortObject Reference Reader");
         });
 
         NodeRecommendationManager.getInstance().loadRecommendations();
@@ -177,13 +171,13 @@ public class NodeRecommendationManagerTest {
             : NodeRecommendationManager.getInstance().getNodeRecommendationFor(NativeNodeContainerWrapper.wrap(nnc));
 
         // Checks `getNodeRecommendationFor()` result (maybe add type check)
-        assertThat("Expected a non-empty array", recommendations, not(emptyArray()));
+        assertThat(recommendations).as("Expected a non-empty array").isNotEmpty();
 
         var recommendationsWithoutDups =
             NodeRecommendationManager.joinRecommendationsWithoutDuplications(recommendations);
 
         // Checks `joinRecommendationsWithoutDuplications()` result (maybe add type check)
-        assertThat("Expected a list", recommendationsWithoutDups, instanceOf(List.class));
+        assertThat(recommendationsWithoutDups).as("Expected a list").isInstanceOf(List.class);
 
         // Checks update listener, no invocation since listener was registered
         verify(m_updateListener, times(0)).updated();
@@ -204,17 +198,17 @@ public class NodeRecommendationManagerTest {
     @Test
     public void testRemainingMethods() throws IOException {
         // Cannot initialize again
-        assertTrue("This should be true since recommendations were loaded before",
-            NodeRecommendationManager.getInstance().initialize(ni -> true, ni -> false));
+        assertThat(NodeRecommendationManager.getInstance().initialize(ni -> true, ni -> false))
+            .as("This should be true since recommendations were loaded before").isTrue();
         verify(m_updateListener, times(0)).updated();
 
         // Will not load recommendations with incomplete predicates
-        assertFalse("This initialization should return false",
-            NodeRecommendationManager.getInstance().initialize(null, ni -> false));
-        assertFalse("This initialization should return false",
-            NodeRecommendationManager.getInstance().initialize(ni -> true, null));
-        assertFalse("This initialization should return false",
-            NodeRecommendationManager.getInstance().initialize(null, null));
+        assertThat(NodeRecommendationManager.getInstance().initialize(null, ni -> false))
+            .as("This initialization should return false").isFalse();
+        assertThat(NodeRecommendationManager.getInstance().initialize(ni -> true, null))
+            .as("This initialization should return false").isFalse();
+        assertThat(NodeRecommendationManager.getInstance().initialize(null, null))
+            .as("This initialization should return false").isFalse();
         verify(m_updateListener, times(0)).updated();
 
         // Reload the node recommendations two times
@@ -224,17 +218,17 @@ public class NodeRecommendationManagerTest {
 
         // Check number of loaded triple providers
         var numLoadedProviders = NodeRecommendationManager.getNumLoadedProviders();
-        assertThat("Expected at least one node tripe provider loaded", numLoadedProviders, greaterThanOrEqualTo(1));
+        assertThat(numLoadedProviders).as("Expected at least one node tripe provider loaded").isGreaterThanOrEqualTo(1);
 
         // Check triple providers
         var tripleProviders = NodeRecommendationManager.getNodeTripleProviders();
         tripleProviders
-            .forEach(tp -> assertThat("This is not a triple provider", tp, instanceOf(NodeTripleProvider.class)));
+            .forEach(tp -> assertThat(tp).as("This is not a triple provider").isInstanceOf(NodeTripleProvider.class));
 
         // Check triple provider factories
         var tripleProviderFactory = NodeRecommendationManager.getNodeTripleProviderFactories();
         tripleProviderFactory.forEach(
-            tpf -> assertThat("This is not a triple provider", tpf, instanceOf(NodeTripleProviderFactory.class)));
+            tpf -> assertThat(tpf).as("This is not a triple provider").isInstanceOf(NodeTripleProviderFactory.class));
     }
 
 }

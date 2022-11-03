@@ -48,11 +48,9 @@
  */
 package org.knime.core.webui.data.rpc.json;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -60,7 +58,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.junit.Test;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.knime.core.util.Pair;
 import org.knime.core.webui.data.rpc.RpcClient;
 import org.knime.core.webui.data.rpc.RpcSingleClient;
@@ -94,8 +93,8 @@ public class JsonRpcDeSerializationTest {
         assertNotNull(service.optionalReturn().get()); //NOSONAR
         assertFalse(service.optionalReturnEmpty().isPresent());
         ObjectWithGettersAndSetters obj = service.getObjectWithGettersAndSetters();
-        assertThat(obj.getProp1(), is("test"));
-        assertThat(obj.getProp2(), is(123.321));
+        assertThat(obj.getProp1()).isEqualTo("test");
+        assertThat(obj.getProp2()).isEqualTo(123.321);
     }
 
     /**
@@ -120,27 +119,27 @@ public class JsonRpcDeSerializationTest {
             assertNotNull(serviceImpl.optionalReturn().get()); //NOSONAR
             assertFalse(serviceImpl.optionalReturnEmpty().isPresent());
             ObjectWithGettersAndSetters obj = serviceImpl.getObjectWithGettersAndSetters();
-            assertThat(obj.getProp1(), is("test"));
-            assertThat(obj.getProp2(), is(123.321));
+            assertThat(obj.getProp1()).isEqualTo("test");
+            assertThat(obj.getProp2()).isEqualTo(123.321);
         }
 
         // the the OtherService instance
         OtherService otherServiceImpl = client.getService(OtherService.class, "Service2");
         Map<String, ObjectWithGettersAndSetters> map = otherServiceImpl.map();
         assertNotNull(map);
-        assertThat(map.size(), equalTo(1));
+        assertThat(map.size()).isEqualTo(1);
     }
 
     /**
      * Tests correct conversion of an exception thrown in a service method into the same re-thrown exception (parsed
      * from a JSON-RPC error).
      */
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testJsonRpcSingleClientServerError() {
         RpcSingleClient<Service> client =
             JsonRpcTestUtil.createRpcSingleClientInstanceForTesting(Service.class, new ServiceImpl(), null);
         Service service = client.getService();
-        service.throwsRuntimeException();
+        Assertions.assertThatThrownBy(() -> service.throwsRuntimeException()).isInstanceOf(IllegalStateException.class);
     }
 
     @SuppressWarnings("javadoc")

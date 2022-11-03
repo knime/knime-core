@@ -48,14 +48,10 @@
  */
 package org.knime.gateway.impl.service.events;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.awaitility.Duration.FIVE_SECONDS;
 import static org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
@@ -75,9 +71,9 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.awaitility.Awaitility;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.data.RowKey;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.InvalidSettingsException;
@@ -123,14 +119,14 @@ public class SelectionEventSourceTest {
 
     private HiLiteHandler m_hlh;
 
-    @Before
+    @BeforeEach
     public void setup() throws IOException {
         m_wfm = WorkflowManagerUtil.createEmptyWorkflow();
         m_nnc = WorkflowManagerUtil.createAndAddNode(m_wfm, new NodeViewNodeFactory());
         m_hlh = m_nnc.getNodeModel().getInHiLiteHandler(0);
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         m_wfm.getParent().removeProject(m_wfm.getID());
     }
@@ -149,7 +145,7 @@ public class SelectionEventSourceTest {
             .untilAsserted(() -> verify(consumerMock, times(1)).accept(eq("SelectionEvent"),
                 argThat(se -> verifySelectionEvent(se, "root", "root:1"))));
 
-        assertEquals(m_hlh.getHiLitKeys(), stringListToRowKeySet(ROWKEYS_1_2));
+        assertThat(m_hlh.getHiLitKeys()).isEqualTo(stringListToRowKeySet(ROWKEYS_1_2));
         m_hlh.fireClearHiLiteEvent();
     }
 
@@ -169,7 +165,7 @@ public class SelectionEventSourceTest {
             .untilAsserted(() -> verify(consumerMock, times(1)).accept(eq("SelectionEvent"),
                 argThat(se -> se.getSelection().equals(ROWKEYS_1) && se.getMode() == SelectionEventMode.REMOVE)));
 
-        assertEquals(m_hlh.getHiLitKeys(), stringListToRowKeySet(ROWKEYS_2));
+        assertThat(m_hlh.getHiLitKeys()).isEqualTo(stringListToRowKeySet(ROWKEYS_2));
         m_hlh.fireClearHiLiteEvent();
     }
 
@@ -189,7 +185,7 @@ public class SelectionEventSourceTest {
             .untilAsserted(() -> verify(consumerMock, times(1)).accept(eq("SelectionEvent"),
                 argThat(se -> se.getSelection().equals(ROWKEYS_2) && se.getMode() == SelectionEventMode.REPLACE)));
 
-        assertEquals(m_hlh.getHiLitKeys(), stringListToRowKeySet(ROWKEYS_2));
+        assertThat(m_hlh.getHiLitKeys()).isEqualTo(stringListToRowKeySet(ROWKEYS_2));
         m_hlh.fireClearHiLiteEvent();
     }
 
@@ -209,9 +205,9 @@ public class SelectionEventSourceTest {
         SelectionEventSource.processSelectionEvent(m_nnc, SelectionEventMode.REMOVE, true, rowKeys);
         SelectionEventSource.processSelectionEvent(m_nnc, SelectionEventMode.REPLACE, true, rowKeys);
         Awaitility.await().atMost(5, TimeUnit.SECONDS).pollInterval(200, TimeUnit.MILLISECONDS)
-            .untilAsserted(() -> assertThat(hiLiteListener.m_callerThreadName, notNullValue()));
-        assertThat(hiLiteListener.m_callerThreadName, is(not("INVALID")));
-        assertThat(hiLiteListener.m_callerThreadName, is(not(Thread.currentThread().getName())));
+            .untilAsserted(() -> assertThat(hiLiteListener.m_callerThreadName).isNotNull());
+        assertThat(hiLiteListener.m_callerThreadName).isNotEqualTo("INVALID");
+        assertThat(hiLiteListener.m_callerThreadName).isNotEqualTo(Thread.currentThread().getName());
         hiLiteListener.m_callerThreadName = null;
 
         // sync call
@@ -219,7 +215,7 @@ public class SelectionEventSourceTest {
         SelectionEventSource.processSelectionEvent(m_nnc, SelectionEventMode.ADD, false, rowKeys);
         SelectionEventSource.processSelectionEvent(m_nnc, SelectionEventMode.REMOVE, false, rowKeys);
         SelectionEventSource.processSelectionEvent(m_nnc, SelectionEventMode.REPLACE, false, rowKeys);
-        assertThat(hiLiteListener.m_callerThreadName, is(Thread.currentThread().getName()));
+        assertThat(hiLiteListener.m_callerThreadName).isEqualTo(Thread.currentThread().getName());
     }
 
     /**

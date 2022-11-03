@@ -56,7 +56,7 @@ import java.io.IOException;
 import java.util.function.Consumer;
 
 import org.awaitility.Awaitility;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.webui.node.util.NodeCleanUpCallback.Builder;
 import org.knime.testing.node.view.NodeViewNodeFactory;

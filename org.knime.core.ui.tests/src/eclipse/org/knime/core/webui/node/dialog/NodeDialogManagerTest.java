@@ -48,12 +48,7 @@
  */
 package org.knime.core.webui.node.dialog;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
-import static org.hamcrest.Matchers.nullValue;
-import static org.junit.Assert.assertThrows;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.knime.core.webui.node.dialog.NodeDialogTest.createNodeDialog;
 import static org.knime.core.webui.page.PageTest.BUNDLE_ID;
 import static org.knime.testing.util.WorkflowManagerUtil.createAndAddNode;
@@ -67,9 +62,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -108,20 +104,20 @@ public class NodeDialogManagerTest {
     /**
      * Clears the caches and files of the {@link NodeDialogManager}.
      */
-    @Before
-    @After
+    @BeforeEach
+    @AfterEach
     public void clearNodeDialogManagerCachesAndFiles() {
         NodeDialogManager.getInstance().clearCaches();
     }
 
     @SuppressWarnings("javadoc")
-    @Before
+    @BeforeEach
     public void createEmptyWorkflow() throws IOException {
         m_wfm = WorkflowManagerUtil.createEmptyWorkflow();
     }
 
     @SuppressWarnings("javadoc")
-    @After
+    @AfterEach
     public void disposeWorkflow() {
         WorkflowManagerUtil.disposeWorkflow(m_wfm);
     }
@@ -135,15 +131,15 @@ public class NodeDialogManagerTest {
         var hasDialog = new AtomicBoolean(true);
         NativeNodeContainer nc = createNodeWithNodeDialog(m_wfm, () -> createNodeDialog(page), hasDialog::get);
 
-        assertThat("node expected to have a node dialog", NodeDialogManager.hasNodeDialog(nc), is(true));
+        assertThat(NodeDialogManager.hasNodeDialog(nc)).as("node expected to have a node dialog").isTrue();
         var nodeDialog = NodeDialogManager.getInstance().getNodeDialog(nc);
-        assertThat(nodeDialog.getPage() == page, is(true));
+        assertThat(nodeDialog.getPage() == page).isTrue();
 
-        assertThat(NodeDialogManager.getInstance().callTextInitialDataService(NodeWrapper.of(nc)), is("test settings"));
-        assertThat(nodeDialog.getPage().isCompletelyStatic(), is(false));
+        assertThat(NodeDialogManager.getInstance().callTextInitialDataService(NodeWrapper.of(nc))).isEqualTo("test settings");
+        assertThat(nodeDialog.getPage().isCompletelyStatic()).isFalse();
 
         hasDialog.set(false);
-        assertThat("node not expected to have a node dialog", NodeDialogManager.hasNodeDialog(nc), is(false));
+        assertThat(NodeDialogManager.hasNodeDialog(nc)).as("node not expected to have a node dialog").isFalse();
     }
 
     /**
@@ -199,18 +195,18 @@ public class NodeDialogManagerTest {
 
             var component = wfm.getNodeContainer(componentId);
 
-            assertThat("node expected to have a node dialog", NodeDialogManager.hasNodeDialog(component), is(true));
+            assertThat(NodeDialogManager.hasNodeDialog(component)).as("node expected to have a node dialog").isTrue();
             var nodeDialog = NodeDialogManager.getInstance().getNodeDialog(component);
-            assertThat(nodeDialog.getPage().getRelativePath(), is("NodeDialog.umd.min.js"));
+            assertThat(nodeDialog.getPage().getRelativePath()).isEqualTo("NodeDialog.umd.min.js");
 
             var pageId = NodeDialogManager.getInstance().getPageId(NodeWrapper.of(component), nodeDialog.getPage());
-            assertThat(pageId, is("defaultdialog"));
+            assertThat(pageId).isEqualTo("defaultdialog");
 
             // The jsonforms dialog cannot be built from our test node, because it is no valid/known DialogNodeRepresentation,
             // So we just check for the error here.
             var result = NodeDialogManager.getInstance().callTextInitialDataService(NodeWrapper.of(component));
-            assertThat(result, containsString(
-                "Could not read dialog node org.knime.core.webui.node.dialog.TestConfigurationNodeFactory$TestConfigNodeModel"));
+            assertThat(result).contains(
+                "Could not read dialog node org.knime.core.webui.node.dialog.TestConfigurationNodeFactory$TestConfigNodeModel");
         } finally {
             if (componentUiMode != null) {
                 System.setProperty(uiModeProperty, componentUiMode);
@@ -237,10 +233,10 @@ public class NodeDialogManagerTest {
         String path2 = nodeDialogManager.getPagePath(nnc2);
         String path3 = nodeDialogManager.getPagePath(nnc3);
         String path4 = nodeDialogManager.getPagePath(nnc3);
-        assertThat("url of static pages not expected to change", path, is(path2));
-        assertThat("url of dynamic pages expected to change between node instances", path, is(not(path3)));
-        assertThat("url of dynamic pages not expected for same node instance (without node state change)", path3,
-            is(path4));
+        assertThat(path).as("url of static pages not expected to change").isEqualTo(path2);
+        assertThat(path).as("url of dynamic pages expected to change between node instances").isNotEqualTo(path3);
+        assertThat(path3).as("url of dynamic pages not expected for same node instance (without node state change)")
+            .isEqualTo(path4);
     }
 
     /**
@@ -251,8 +247,9 @@ public class NodeDialogManagerTest {
     @Test
     public void testNodeWithoutNodeDialog() {
         NativeNodeContainer nc = createAndAddNode(m_wfm, new VirtualSubNodeInputNodeFactory(null, new PortType[0]));
-        assertThat("node not expected to have a node dialog", NodeDialogManager.hasNodeDialog(nc), is(false));
-        assertThrows(IllegalArgumentException.class, () -> NodeDialogManager.getInstance().getNodeDialog(nc));
+        assertThat(NodeDialogManager.hasNodeDialog(nc)).as("node not expected to have a node dialog").isFalse();
+        Assertions.assertThatThrownBy(() -> NodeDialogManager.getInstance().getNodeDialog(nc))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     /**
@@ -278,7 +275,7 @@ public class NodeDialogManagerTest {
             @Override
             public String fromNodeSettings(final Map<SettingsType, NodeSettingsRO> settings,
                 final PortObjectSpec[] specs) {
-                assertThat(settings.size(), is(2));
+                assertThat(settings.size()).isEqualTo(2);
                 return "the node settings";
             }
 
@@ -300,28 +297,27 @@ public class NodeDialogManagerTest {
         var nncWrapper = NodeWrapper.of(nc);
 
         var nodeDialogManager = NodeDialogManager.getInstance();
-        assertThat(nodeDialogManager.callTextInitialDataService(nncWrapper), is("the node settings"));
-        assertThat(nodeDialogManager.callTextDataService(nncWrapper, ""), is("general data service"));
+        assertThat(nodeDialogManager.callTextInitialDataService(nncWrapper)).isEqualTo("the node settings");
+        assertThat(nodeDialogManager.callTextDataService(nncWrapper, "")).isEqualTo("general data service");
         // apply data, i.e. settings
         nodeDialogManager.callTextApplyDataService(nncWrapper, "key,node settings value");
 
         // check node model settings
         var modelSettings = ((NodeDialogNodeModel)nc.getNode().getNodeModel()).getLoadNodeSettings();
-        assertThat(modelSettings.getString("key"), is("node settings value"));
-        assertThat(nc.getNodeSettings().getNodeSettings("model").getString("key"), is("node settings value"));
+        assertThat(modelSettings.getString("key")).isEqualTo("node settings value");
+        assertThat(nc.getNodeSettings().getNodeSettings("model").getString("key")).isEqualTo("node settings value");
 
         // check view settings
         var viewSettings = getNodeViewSettings(nc);
-        assertThat(viewSettings, is(nullValue())); // no view settings available without updating the node view
+        assertThat(viewSettings).isNull(); // no view settings available without updating the node view
         NodeViewManager.getInstance().updateNodeViewSettings(nc);
         viewSettings = getNodeViewSettings(nc);
-        assertThat(viewSettings.getString("key"), is("node settings value"));
-        assertThat(nc.getNodeSettings().getNodeSettings("view").getString("key"), is("node settings value"));
+        assertThat(viewSettings.getString("key")).isEqualTo("node settings value");
+        assertThat(nc.getNodeSettings().getNodeSettings("view").getString("key")).isEqualTo("node settings value");
 
         // check error on apply settings
-        String message = assertThrows(IOException.class,
-            () -> nodeDialogManager.callTextApplyDataService(nncWrapper, "ERROR,invalid")).getMessage();
-        assertThat(message, is("Invalid node settings: validation expected to fail"));
+        Assertions.assertThatThrownBy(() -> nodeDialogManager.callTextApplyDataService(nncWrapper, "ERROR,invalid"))
+            .isInstanceOf(IOException.class).hasMessage("Invalid node settings: validation expected to fail");
     }
 
     private static NodeSettingsRO getNodeViewSettings(final NodeContainer nc) {

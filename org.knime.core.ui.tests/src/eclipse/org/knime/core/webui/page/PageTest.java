@@ -48,9 +48,7 @@
  */
 package org.knime.core.webui.page;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThrows;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -58,7 +56,8 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.function.Function;
 
-import org.junit.Test;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.knime.core.webui.page.Resource.ContentType;
 
 /**
@@ -80,9 +79,9 @@ public class PageTest {
     public void testIsCompletelyStaticPage() {
         var page = Page.builder(BUNDLE_ID, "files", "page.html")
             .addResourceFromString(() -> "resource content", "resource.html").build();
-        assertThat(page.isCompletelyStatic(), is(false));
+        assertThat(page.isCompletelyStatic()).isFalse();
         page = Page.builder(BUNDLE_ID, "files", "page.html").addResourceFile("resource.html").build();
-        assertThat(page.isCompletelyStatic(), is(true));
+        assertThat(page.isCompletelyStatic()).isTrue();
     }
 
     /**
@@ -91,13 +90,13 @@ public class PageTest {
     @Test
     public void testIsComponent() {
         var page = Page.builder(BUNDLE_ID, "files", "page.html").build();
-        assertThat(page.getContentType(), is(ContentType.HTML));
+        assertThat(page.getContentType()).isEqualTo(ContentType.HTML);
 
         page = Page.builder(BUNDLE_ID, "files", "component.umd.min.js").build();
-        assertThat(page.getContentType(), is(ContentType.VUE_COMPONENT_LIB));
+        assertThat(page.getContentType()).isEqualTo(ContentType.VUE_COMPONENT_LIB);
 
         var page2 = Page.builder(() -> "content", "component.blub").build();
-        assertThrows(IllegalArgumentException.class, page2::getContentType);
+        Assertions.assertThatThrownBy(page2::getContentType).isInstanceOf(IllegalArgumentException.class);
     }
 
     /**
@@ -106,10 +105,10 @@ public class PageTest {
     @Test
     public void testCreateResourcesFromDir() {
         var page = Page.builder(BUNDLE_ID, "files", "page.html").addResourceDirectory("dir").build();
-        assertThat(page.getResource("dir/subdir/res.html").isPresent(), is(true));
-        assertThat(page.getResource("dir/res2.umd.min.js").isPresent(), is(true));
-        assertThat(page.getResource("dir/res1.html").isPresent(), is(true));
-        assertThat(page.getResource("path/to/non/existent/resource.html").isEmpty(), is(true));
+        assertThat(page.getResource("dir/subdir/res.html")).isPresent();
+        assertThat(page.getResource("dir/res2.umd.min.js")).isPresent();
+        assertThat(page.getResource("dir/res1.html")).isPresent();
+        assertThat(page.getResource("path/to/non/existent/resource.html")).isEmpty();
     }
 
     /**
@@ -135,18 +134,18 @@ public class PageTest {
             .addResources(resourceSupplier, "path/prefix", true) //
             .addResources(resourceSupplier2, "path/prefix/2", false) //
             .build();
-        assertThat(page.isCompletelyStatic(), is(false));
+        assertThat(page.isCompletelyStatic()).isFalse();
 
-        assertThat(page.getResource("path/prefix/null").isEmpty(), is(true));
-        assertThat(resourceToString(page.getResource("path/prefix/path/to/a/resource").get()),
-            is("resource supplier - known path"));
-        assertThat(page.getResource("path/prefix/path/to/a/resource").get().isStatic(), is(true));
-        assertThat(resourceToString(page.getResource("path/prefix/path/to/a/resource2").get()),
-            is("resource supplier - another path"));
-        assertThat(resourceToString(page.getResource("path/prefix/2/path/to/another/resource").get()),
-            is("resource supplier 2 - path/to/another/resource"));
-        assertThat(page.getResource("path/prefix/2/path/to/another/resource").get().isStatic(), is(false));
-        assertThat(page.getResource("path/to/nonexisting/resource").isEmpty(), is(true));
+        assertThat(page.getResource("path/prefix/null")).isEmpty();
+        assertThat(resourceToString(page.getResource("path/prefix/path/to/a/resource").get()))
+            .isEqualTo("resource supplier - known path");
+        assertThat(page.getResource("path/prefix/path/to/a/resource").get().isStatic()).isTrue();
+        assertThat(resourceToString(page.getResource("path/prefix/path/to/a/resource2").get()))
+            .isEqualTo("resource supplier - another path");
+        assertThat(resourceToString(page.getResource("path/prefix/2/path/to/another/resource").get()))
+            .isEqualTo("resource supplier 2 - path/to/another/resource");
+        assertThat(page.getResource("path/prefix/2/path/to/another/resource").get().isStatic()).isFalse();
+        assertThat(page.getResource("path/to/nonexisting/resource")).isEmpty();
     }
 
     private static InputStream stringToInputStream(final String s) {

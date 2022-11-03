@@ -48,9 +48,7 @@
  */
 package org.knime.core.webui.node.dialog;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.is;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -60,7 +58,7 @@ import java.io.StringReader;
 import java.util.Map;
 import java.util.Optional;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
@@ -110,8 +108,8 @@ public class NodeDialogTest {
 
         // make sure that the default settings are properly provided with the initial settings
         var initalDefaultSettings = nodeDialogManager.callTextInitialDataService(nncWrapper);
-        assertThat(initalDefaultSettings, containsString("a default model setting"));
-        assertThat(initalDefaultSettings, containsString("a default view setting"));
+        assertThat(initalDefaultSettings).contains("a default model setting");
+        assertThat(initalDefaultSettings).contains("a default view setting");
 
         // make sure that new settings (i.e. default settings are changed) are properly provided with
         // the initial settings
@@ -121,10 +119,8 @@ public class NodeDialogTest {
         viewSettings.addString("view_key1", "view_setting_value");
         nodeDialogManager.callTextApplyDataService(nncWrapper, settingsToString(modelSettings, viewSettings));
         var initialSettings = nodeDialogManager.callTextInitialDataService(nncWrapper);
-        assertThat(initialSettings,
-            containsString("\"view_key1\":{\"type\":\"string\",\"value\":\"view_setting_value\"}"));
-        assertThat(initialSettings,
-            containsString("\"model_key1\":{\"type\":\"string\",\"value\":\"model_setting_value\"}"));
+        assertThat(initialSettings).contains("\"view_key1\":{\"type\":\"string\",\"value\":\"view_setting_value\"}");
+        assertThat(initialSettings).contains("\"model_key1\":{\"type\":\"string\",\"value\":\"model_setting_value\"}");
     }
 
     /**
@@ -149,25 +145,25 @@ public class NodeDialogTest {
         var nodeDialogManager = NodeDialogManager.getInstance();
         nodeDialogManager.callTextApplyDataService(nncWrapper, settingsToString(modelSettings, viewSettings));
         wfm.executeAllAndWaitUntilDone();
-        assertThat(nnc.getNodeContainerState().isExecuted(), is(true));
+        assertThat(nnc.getNodeContainerState().isExecuted()).isTrue();
         wfm.save(wfm.getContext().getCurrentLocation(), new ExecutionMonitor(), false);
-        assertThat(wfm.isDirty(), is(false));
+        assertThat(wfm.isDirty()).isFalse();
 
         // change view settings and apply -> node is not being reset
         viewSettings.addInt("view_key2", 2);
         nodeDialogManager.callTextApplyDataService(nncWrapper, settingsToString(modelSettings, viewSettings));
-        assertThat(nnc.getNodeContainerState().isExecuted(), is(true));
+        assertThat(nnc.getNodeContainerState().isExecuted()).isTrue();
         var newSettings = new NodeSettings("node_settings");
         wfm.saveNodeSettings(nnc.getID(), newSettings);
-        assertThat(newSettings.getNodeSettings(SettingsType.VIEW.getConfigKey()), is(viewSettings));
-        assertThat(nnc.isDirty(), is(true));
+        assertThat(newSettings.getNodeSettings(SettingsType.VIEW.getConfigKey())).isEqualTo(viewSettings);
+        assertThat(nnc.isDirty()).isTrue();
 
         // change model settings and apply -> node is expected to be reset
         modelSettings.addInt("model_key2", 2);
         nodeDialogManager.callTextApplyDataService(nncWrapper, settingsToString(modelSettings, viewSettings));
-        assertThat(nnc.getNodeContainerState().isExecuted(), is(false));
+        assertThat(nnc.getNodeContainerState().isExecuted()).isFalse();
         wfm.saveNodeSettings(nnc.getID(), newSettings);
-        assertThat(newSettings.getNodeSettings(SettingsType.MODEL.getConfigKey()), is(modelSettings));
+        assertThat(newSettings.getNodeSettings(SettingsType.MODEL.getConfigKey())).isEqualTo(modelSettings);
 
         // change view settings and expose as flow variable -> node is expected to reset
         var variablesTree =
@@ -176,12 +172,12 @@ public class NodeDialogTest {
         variablesTree.addString("exposed_variable", "foo");
         wfm.loadNodeSettings(nnc.getID(), newSettings);
         wfm.executeAllAndWaitUntilDone();
-        assertThat(nnc.getNodeContainerState().isExecuted(), is(true));
+        assertThat(nnc.getNodeContainerState().isExecuted()).isTrue();
         viewSettings.addInt("view_key2", 3);
         nodeDialogManager.callTextApplyDataService(nncWrapper, settingsToString(modelSettings, viewSettings));
-        assertThat(nnc.getNodeContainerState().isExecuted(), is(false));
+        assertThat(nnc.getNodeContainerState().isExecuted()).isFalse();
         wfm.saveNodeSettings(nnc.getID(), newSettings);
-        assertThat(newSettings.getNodeSettings(SettingsType.VIEW.getConfigKey()), is(viewSettings));
+        assertThat(newSettings.getNodeSettings(SettingsType.VIEW.getConfigKey())).isEqualTo(viewSettings);
 
         WorkflowManagerUtil.disposeWorkflow(wfm);
     }
@@ -215,10 +211,8 @@ public class NodeDialogTest {
         // apply node settings that are controlled by a flow variable -> the flow variable must not end up in the settings
         wfm.loadNodeSettings(nnc.getID(), nodeSettings);
         var initialSettings = nodeDialogManager.callTextInitialDataService(nncWrapper);
-        assertThat(initialSettings,
-            containsString("\"view_key1\":{\"type\":\"string\",\"value\":\"view_setting_value\"}"));
-        assertThat(initialSettings,
-            containsString("\"model_key1\":{\"type\":\"string\",\"value\":\"model_setting_value\"}"));
+        assertThat(initialSettings).contains("\"view_key1\":{\"type\":\"string\",\"value\":\"view_setting_value\"}");
+        assertThat(initialSettings).contains("\"model_key1\":{\"type\":\"string\",\"value\":\"model_setting_value\"}");
 
         var viewVariables = nodeSettings.addNodeSettings("view_variables");
         viewVariables.addString("version", "V_2019_09_13");
@@ -236,10 +230,8 @@ public class NodeDialogTest {
 
         // make sure that the flow variable value is part of the initial data
         initialSettings = nodeDialogManager.callTextInitialDataService(nncWrapper);
-        assertThat(initialSettings,
-            containsString("\"view_key1\":{\"type\":\"string\",\"value\":\"view_variable_value\"}"));
-        assertThat(initialSettings,
-            containsString("\"model_key1\":{\"type\":\"string\",\"value\":\"model_variable_value\"}"));
+        assertThat(initialSettings).contains("\"view_key1\":{\"type\":\"string\",\"value\":\"view_variable_value\"}");
+        assertThat(initialSettings).contains("\"model_key1\":{\"type\":\"string\",\"value\":\"model_variable_value\"}");
 
         // make sure that any applied settings that are controlled by a flow variable, are ignored
         // (i.e. aren't 'persisted' with the node settings)
@@ -247,8 +239,8 @@ public class NodeDialogTest {
         modelSettings.addString("model_key1", "new_value_to_be_ignored_on_apply");
         nodeDialogManager.callTextApplyDataService(nncWrapper, settingsToString(modelSettings, viewSettings));
         wfm.saveNodeSettings(nnc.getID(), nodeSettings);
-        assertThat(nodeSettings.getNodeSettings("view").getString("view_key1"), is("view_setting_value"));
-        assertThat(nodeSettings.getNodeSettings("model").getString("model_key1"), is("model_setting_value"));
+        assertThat(nodeSettings.getNodeSettings("view").getString("view_key1")).isEqualTo("view_setting_value");
+        assertThat(nodeSettings.getNodeSettings("model").getString("model_key1")).isEqualTo("model_setting_value");
 
         WorkflowManagerUtil.disposeWorkflow(wfm);
     }
@@ -458,12 +450,12 @@ public class NodeDialogTest {
         var modelSettingsJTree = (ConfigEditJTree)getChild(getChild(getChild(getChild(flowVariablesTab, 0), 0), 0), 0);
         var modelRootNode = modelSettingsJTree.getModel().getRoot();
         var firstModelConfigNode = (ConfigEditTreeNode)modelRootNode.getChildAt(0);
-        assertThat(firstModelConfigNode.getConfigEntry().toStringValue(), is("default model setting value"));
+        assertThat(firstModelConfigNode.getConfigEntry().toStringValue()).isEqualTo("default model setting value");
 
         var viewSettingsJTree = (ConfigEditJTree)getChild(getChild(getChild(getChild(flowVariablesTab, 0), 0), 0), 1);
         var viewRootNode = viewSettingsJTree.getModel().getRoot();
         var firstViewConfigNode = (ConfigEditTreeNode)viewRootNode.getChildAt(0);
-        assertThat(firstViewConfigNode.getConfigEntry().toStringValue(), is(viewSettingValue));
+        assertThat(firstViewConfigNode.getConfigEntry().toStringValue()).isEqualTo(viewSettingValue);
     }
 
     private static LegacyFlowVariableNodeDialog initLegacyFlowVariableDialog(final NativeNodeContainer nc)
@@ -504,8 +496,8 @@ public class NodeDialogTest {
 
         var settings = new NodeSettings("test");
         legacyNodeDialog.finishEditingAndSaveSettingsTo(settings);
-        assertThat(settings.getNodeSettings("model").getString("default model setting"),
-            is("default model setting value"));
+        assertThat(settings.getNodeSettings("model").getString("default model setting"))
+            .isEqualTo("default model setting value");
 
         WorkflowManagerUtil.disposeWorkflow(wfm);
     }

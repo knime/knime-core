@@ -48,17 +48,14 @@
  */
 package org.knime.core.webui.node.port;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import java.io.IOException;
 import java.util.Optional;
 
 import org.awaitility.Awaitility;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.webui.data.DataService;
@@ -98,27 +95,27 @@ public class PortViewManagerTest {
         var portViewManager = PortViewManager.getInstance();
         PortViewManager.registerPortViewFactory(FlowVariablePortObject.TYPE, portViewFactory0);
         PortViewManager.registerPortViewFactory(BufferedDataTable.TYPE, portViewFactory1);
-        assertThat(portViewManager.getBaseUrl().orElse(null), is("http://org.knime.core.ui.port/"));
-        assertThat(portViewManager.getPagePath(NodePortWrapper.of(nnc, 0)), is("blub/page.html"));
+        assertThat(portViewManager.getBaseUrl().orElse(null)).isEqualTo("http://org.knime.core.ui.port/");
+        assertThat(portViewManager.getPagePath(NodePortWrapper.of(nnc, 0))).isEqualTo("blub/page.html");
 
         var portView = portViewManager.getPortView(NodePortWrapper.of(nnc, 0));
-        assertThat(portView, notNullValue());
+        assertThat(portView).isNotNull();
         var portView2 = portViewManager.getPortView(NodePortWrapper.of(nnc, 0));
-        assertTrue(portView == portView2);
+        assertThat(portView == portView2).isTrue();
 
         portView = portViewManager.getPortView(NodePortWrapper.of(nnc, 1));
-        assertThat(portView, notNullValue());
+        assertThat(portView).isNotNull();
 
         // check that the port view cache is cleared on node reset
-        assertThat(portViewManager.getPortViewMapSize(), is(2));
+        assertThat(portViewManager.getPortViewMapSize()).isEqualTo(2);
         wfm.resetAndConfigureAll();
-        assertThat(portViewManager.getPortViewMapSize(), is(0));
+        assertThat(portViewManager.getPortViewMapSize()).isEqualTo(0);
 
         // check that the port view cache is cleared when the node is being removed
         portViewManager.getPortView(NodePortWrapper.of(nnc, 1));
-        assertThat(portViewManager.getPortViewMapSize(), is(1));
+        assertThat(portViewManager.getPortViewMapSize()).isEqualTo(1);
         wfm.removeNode(nnc.getID());
-        Awaitility.await().untilAsserted(() -> assertThat(portViewManager.getPortViewMapSize(), is(0)));
+        Awaitility.await().untilAsserted(() -> assertThat(portViewManager.getPortViewMapSize()).isEqualTo(0));
 
         WorkflowManagerUtil.disposeWorkflow(wfm);
     }

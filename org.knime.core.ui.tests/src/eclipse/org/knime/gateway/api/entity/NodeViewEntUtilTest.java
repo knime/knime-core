@@ -62,7 +62,7 @@ import java.util.Objects;
 import java.util.function.BiConsumer;
 
 import org.awaitility.core.ThrowingRunnable;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.knime.core.data.RowKey;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.KeyEvent;

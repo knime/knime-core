@@ -54,7 +54,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.function.UnaryOperator;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.NodeAndBundleInformationPersistor;
 import org.knime.core.node.exec.dataexchange.in.BDTInNodeFactory;
 import org.knime.core.node.missing.MissingNodeFactory;

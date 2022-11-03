@@ -49,8 +49,7 @@
 package org.knime.core.webui.data.rpc.json;
 
 import static com.googlecode.jsonrpc4j.ErrorResolver.JsonError.CUSTOM_SERVER_ERROR_UPPER;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.knime.core.webui.data.rpc.json.JsonRpcDataService.jsonRpcRequest;
@@ -93,7 +92,7 @@ class JsonRpcDataServiceTest {
 
         var jsonRpcRequest = jsonRpcRequest("myMethod");
         String response = NodeViewManager.getInstance().callTextDataService(NodeWrapper.of(nnc), jsonRpcRequest);
-        assertThat(response, is("{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":\"my service method result\"}\n"));
+        assertThat(response).isEqualTo("{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":\"my service method result\"}\n");
 
         WorkflowManagerUtil.disposeWorkflow(wfm);
     }

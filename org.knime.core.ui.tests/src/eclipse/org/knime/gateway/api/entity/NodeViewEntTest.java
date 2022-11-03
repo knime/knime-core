@@ -48,15 +48,10 @@
  */
 package org.knime.gateway.api.entity;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.awaitility.Duration.FIVE_SECONDS;
 import static org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.endsWith;
-import static org.hamcrest.Matchers.hasKey;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.nullValue;
-import static org.hamcrest.Matchers.startsWith;
 import static org.knime.core.webui.node.view.NodeViewManagerTest.runOnExecutor;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
@@ -72,8 +67,8 @@ import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowKey;
 import org.knime.core.node.InvalidSettingsException;
@@ -124,16 +119,17 @@ public class NodeViewEntTest {
 
         NativeNodeContainer nncWithoutNodeView =
             WorkflowManagerUtil.createAndAddNode(wfm, new VirtualSubNodeInputNodeFactory(null, new PortType[0]));
-        Assert.assertThrows(IllegalArgumentException.class, () -> NodeViewEnt.create(nncWithoutNodeView));
+        Assertions.assertThatThrownBy(() -> NodeViewEnt.create(nncWithoutNodeView))
+            .isInstanceOf(IllegalArgumentException.class);
 
         Function<NodeViewNodeModel, NodeView> nodeViewCreator = m -> new TestNodeView();
         NativeNodeContainer nnc = WorkflowManagerUtil.createAndAddNode(wfm, new NodeViewNodeFactory(nodeViewCreator));
 
         // test entity  when node is _not_ executed
         var ent = NodeViewEnt.create(nnc, null);
-        assertThat(ent.getInitialData(), is(nullValue()));
-        assertThat(ent.getNodeInfo().getNodeState(), is("configured"));
-        assertThat(ent.getNodeInfo().isCanExecute(), is(true));
+        assertThat(ent.getInitialData()).isNull();
+        assertThat(ent.getNodeInfo().getNodeState()).isEqualTo("configured");
+        assertThat(ent.getNodeInfo().isCanExecute()).isTrue();
 
         initViewSettingsAndExecute(nnc);
         ent = NodeViewEnt.create(nnc, null);
@@ -147,23 +143,23 @@ public class NodeViewEntTest {
         nnc.setNodeMessage(NodeMessage.newWarning("node message"));
         nnc.getNodeAnnotation().getData().setText("node annotation");
         ent = NodeViewEnt.create(nnc, null);
-        assertThat(ent.getProjectId(), startsWith("workflow"));
-        assertThat(ent.getWorkflowId(), is("root"));
-        assertThat(ent.getNodeId(), is("root:2"));
-        assertThat(ent.getInitialData(), startsWith("dummy initial data"));
-        assertThat(ent.getInitialSelection(), is(nullValue()));
+        assertThat(ent.getProjectId()).startsWith("workflow");
+        assertThat(ent.getWorkflowId()).isEqualTo("root");
+        assertThat(ent.getNodeId()).isEqualTo("root:2");
+        assertThat(ent.getInitialData()).startsWith("dummy initial data");
+        assertThat(ent.getInitialSelection()).isNull();
         var resourceInfo = ent.getResourceInfo();
-        assertThat(resourceInfo.getPath(), endsWith("index.html"));
-        assertThat(resourceInfo.getBaseUrl(), is("http://org.knime.core.ui.view/"));
-        assertThat(resourceInfo.getType(), is(Resource.ContentType.HTML.toString()));
-        assertThat(resourceInfo.getId(), is(PageUtil.getPageId(nnc, false, PageType.VIEW)));
+        assertThat(resourceInfo.getPath()).endsWith("index.html");
+        assertThat(resourceInfo.getBaseUrl()).isEqualTo("http://org.knime.core.ui.view/");
+        assertThat(resourceInfo.getType()).isEqualTo(Resource.ContentType.HTML.toString());
+        assertThat(resourceInfo.getId()).isEqualTo(PageUtil.getPageId(nnc, false, PageType.VIEW));
         var nodeInfo = ent.getNodeInfo();
-        assertThat(nodeInfo.getNodeName(), is("NodeView"));
-        assertThat(nodeInfo.getNodeAnnotation(), is("node annotation"));
-        assertThat(nodeInfo.getNodeState(), is("executed"));
-        assertThat(nodeInfo.getNodeWarnMessage(), is("node message"));
-        assertThat(nodeInfo.getNodeErrorMessage(), is(nullValue()));
-        assertThat(nodeInfo.isCanExecute(), is(nullValue()));
+        assertThat(nodeInfo.getNodeName()).isEqualTo("NodeView");
+        assertThat(nodeInfo.getNodeAnnotation()).isEqualTo("node annotation");
+        assertThat(nodeInfo.getNodeState()).isEqualTo("executed");
+        assertThat(nodeInfo.getNodeWarnMessage()).isEqualTo("node message");
+        assertThat(nodeInfo.getNodeErrorMessage()).isNull();
+        assertThat(nodeInfo.isCanExecute()).isNull();
 
         // a node view as a 'component' without initial data
         nodeViewCreator = m -> {
@@ -174,17 +170,17 @@ public class NodeViewEntTest {
         wfm.executeAllAndWaitUntilDone();
         ent = NodeViewEnt.create(nnc, null);
         resourceInfo = ent.getResourceInfo();
-        assertThat(ent.getInitialData(), is(nullValue()));
-        assertThat(resourceInfo.getType(), is(Resource.ContentType.VUE_COMPONENT_LIB.toString()));
-        assertThat(resourceInfo.getPath(), endsWith("component.umd.min.js"));
-        assertThat(resourceInfo.getBaseUrl(), is("http://org.knime.core.ui.view/"));
+        assertThat(ent.getInitialData()).isNull();
+        assertThat(resourceInfo.getType()).isEqualTo(Resource.ContentType.VUE_COMPONENT_LIB.toString());
+        assertThat(resourceInfo.getPath()).endsWith("component.umd.min.js");
+        assertThat(resourceInfo.getBaseUrl()).isEqualTo("http://org.knime.core.ui.view/");
 
         // test to create a node view entity while running headless (e.g. on the executor)
         NativeNodeContainer nnc2 = nnc;
         runOnExecutor(() -> {
             var ent2 = NodeViewEnt.create(nnc2, null);
-            assertThat(ent2.getResourceInfo().getPath(), endsWith("component.umd.min.js"));
-            assertThat(ent2.getResourceInfo().getBaseUrl(), is(nullValue()));
+            assertThat(ent2.getResourceInfo().getPath()).endsWith("component.umd.min.js");
+            assertThat(ent2.getResourceInfo().getBaseUrl()).isNull();
         });
 
         WorkflowManagerUtil.disposeWorkflow(wfm);
@@ -201,15 +197,15 @@ public class NodeViewEntTest {
         // node view node with one unconnected input
         var nnc = WorkflowManagerUtil.createAndAddNode(wfm, new NodeViewNodeFactory(1, 1));
         var ent = NodeViewEnt.create(nnc, null);
-        assertThat(ent.getNodeInfo().getNodeState(), is("idle"));
-        assertThat(ent.getNodeInfo().isCanExecute(), is(false));
+        assertThat(ent.getNodeInfo().getNodeState()).isEqualTo("idle");
+        assertThat(ent.getNodeInfo().isCanExecute()).isFalse();
 
         // test node view with available input spec
         var nnc2 = WorkflowManagerUtil.createAndAddNode(wfm, new NodeViewNodeFactory(0, 1));
         wfm.addConnection(nnc2.getID(), 1, nnc.getID(), 1);
         ent = NodeViewEnt.create(nnc, null);
-        assertThat(ent.getNodeInfo().getNodeState(), is("configured"));
-        assertThat(ent.getNodeInfo().isCanExecute(), is(true));
+        assertThat(ent.getNodeInfo().getNodeState()).isEqualTo("configured");
+        assertThat(ent.getNodeInfo().isCanExecute()).isTrue();
 
         // test node view with available input spec but failing configure-call (i.e. node is idle but input spec available)
         var nnc3 = WorkflowManagerUtil.createAndAddNode(wfm, new NodeViewNodeFactory(1, 0) {
@@ -226,9 +222,9 @@ public class NodeViewEntTest {
         });
         wfm.addConnection(nnc2.getID(), 1, nnc3.getID(), 1);
         ent = NodeViewEnt.create(nnc3, null);
-        assertThat(ent.getNodeInfo().getNodeState(), is("idle"));
-        assertThat(ent.getNodeInfo().isCanExecute(), is(true));
-        assertThat(ent.getNodeInfo().getNodeWarnMessage(), is("problem"));
+        assertThat(ent.getNodeInfo().getNodeState()).isEqualTo("idle");
+        assertThat(ent.getNodeInfo().isCanExecute()).isTrue();
+        assertThat(ent.getNodeInfo().getNodeWarnMessage()).isEqualTo("problem");
 
         WorkflowManagerUtil.disposeWorkflow(wfm);
 
@@ -280,13 +276,13 @@ public class NodeViewEntTest {
         var settingsWithOverwrittenFlowVariable = new NodeSettings("");
         JSONConfig.readJSON(settingsWithOverwrittenFlowVariable,
             new StringReader(ent.getInitialData().replace("dummy initial data", "")));
-        assertThat(settingsWithOverwrittenFlowVariable.getString("view setting key"), is(expectedSettingValue));
+        assertThat(settingsWithOverwrittenFlowVariable.getString("view setting key")).isEqualTo(expectedSettingValue);
     }
 
     private static void checkOutgoingFlowVariable(final NativeNodeContainer nnc, final String key, final String value) {
         var outgoingFlowVariables = nnc.getOutgoingFlowObjectStack().getAllAvailableFlowVariables();
-        assertThat(outgoingFlowVariables, hasKey(key));
-        assertThat(outgoingFlowVariables.get(key).getValueAsString(), is(value));
+        assertThat(outgoingFlowVariables).containsKey(key);
+        assertThat(outgoingFlowVariables.get(key).getValueAsString()).isEqualTo(value);
     }
 
     /**
@@ -313,7 +309,7 @@ public class NodeViewEntTest {
             .map(SelectionEvent::getSelection).orElse(Collections.emptyList());
         var nodeViewEnt = NodeViewEnt.create(nnc, () -> initialSelection);
 
-        assertThat(nodeViewEnt.getInitialSelection(), is(List.of("k1", "k2")));
+        assertThat(nodeViewEnt.getInitialSelection()).isEqualTo(List.of("k1", "k2"));
 
         hiLiteHandler.fireHiLiteEvent(new RowKey("k3"));
         await().pollDelay(ONE_HUNDRED_MILLISECONDS).timeout(FIVE_SECONDS)

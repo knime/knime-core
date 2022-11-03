@@ -48,14 +48,12 @@
  */
 package org.knime.gateway.api.entity;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.is;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.util.function.Supplier;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.workflow.FlowVariable;
@@ -135,7 +133,7 @@ public class NodeDialogEntTest {
         ObjectWriter writer =
             mapper.writer(new DefaultPrettyPrinter().withObjectIndenter(new DefaultIndenter().withLinefeed("\n")));
         var json = writer.writeValueAsString(flowVariableSettingsEnt);
-        assertThat(json, is(expectedJson));
+        assertThat(json).isEqualTo(expectedJson);
 
         WorkflowManagerUtil.disposeWorkflow(wfm);
     }
@@ -156,8 +154,8 @@ public class NodeDialogEntTest {
                 1));
 
         var nodeDialogEnt = new NodeDialogEnt(nc);
-        assertThat(nodeDialogEnt.getFlowVariableSettings().getViewVariables().isEmpty(), is(true));
-        assertThat(nodeDialogEnt.getInitialData(), containsString("a default model setting"));
+        assertThat(nodeDialogEnt.getFlowVariableSettings().getViewVariables()).isEmpty();
+        assertThat(nodeDialogEnt.getInitialData()).containsSequence("a default model setting");
 
         WorkflowManagerUtil.disposeWorkflow(wfm);
     }

@@ -48,12 +48,8 @@
  */
 package org.knime.core.webui.node.view;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.knime.core.webui.node.view.NodeViewTest.createNodeView;
 import static org.knime.core.webui.page.PageTest.BUNDLE_ID;
 import static org.knime.testing.util.WorkflowManagerUtil.createAndAddNode;
@@ -70,11 +66,12 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 
+import org.assertj.core.api.Assertions;
 import org.awaitility.Awaitility;
 import org.awaitility.core.ThrowingRunnable;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.data.RowKey;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
@@ -112,20 +109,20 @@ public class NodeViewManagerTest {
     /**
      * Clears the caches and files of the {@link NodeViewManager}.
      */
-    @Before
-    @After
+    @BeforeEach
+    @AfterEach
     public void clearNodeViewManagerCachesAndFiles() {
         NodeViewManager.getInstance().clearCaches();
     }
 
     @SuppressWarnings("javadoc")
-    @Before
+    @BeforeEach
     public void createEmptyWorkflow() throws IOException {
         m_wfm = WorkflowManagerUtil.createEmptyWorkflow();
     }
 
     @SuppressWarnings("javadoc")
-    @After
+    @AfterEach
     public void disposeWorkflow() {
         WorkflowManagerUtil.disposeWorkflow(m_wfm);
     }
@@ -139,17 +136,17 @@ public class NodeViewManagerTest {
         var hasView = new AtomicBoolean(true);
         NativeNodeContainer nc = createNodeWithNodeView(m_wfm, m -> createNodeView(page), hasView::get);
 
-        assertThat("node expected to have a node view", NodeViewManager.hasNodeView(nc), is(true));
+        assertThat(NodeViewManager.hasNodeView(nc)).as("node expected to have a node view").isTrue();
         var nodeView = NodeViewManager.getInstance().getNodeView(nc);
-        assertThat(nodeView.getPage() == page, is(true));
+        assertThat(nodeView.getPage() == page).isTrue();
 
-        IllegalStateException ex = assertThrows(IllegalStateException.class,
-            () -> NodeViewManager.getInstance().callTextInitialDataService(NodeWrapper.of(nc)));
-        assertThat(ex.getMessage(), containsString("No text initial data service available"));
-        assertThat(nodeView.getPage().isCompletelyStatic(), is(false));
+        Assertions
+            .assertThatThrownBy(() -> NodeViewManager.getInstance().callTextInitialDataService(NodeWrapper.of(nc)))
+            .isInstanceOf(IllegalStateException.class).hasMessageContaining("No text initial data service available");
+        assertThat(nodeView.getPage().isCompletelyStatic()).isFalse();
 
         hasView.set(false);
-        assertThat("node not expected to have a node view", NodeViewManager.hasNodeView(nc), is(false));
+        assertThat(NodeViewManager.hasNodeView(nc)).as("node not expected to have a node view").isFalse();
     }
 
     /**
@@ -206,7 +203,7 @@ public class NodeViewManagerTest {
 
         // test
         NodeViewManager.getInstance().updateNodeViewSettings(nc);
-        assertTrue(loadedNodeSettings.get().containsKey("view setting key"));
+        assertThat(loadedNodeSettings.get().containsKey("view setting key")).isTrue();
     }
 
     /**
@@ -225,14 +222,14 @@ public class NodeViewManagerTest {
         String path2 = nodeViewManager.getPagePath(nnc2);
         String path3 = nodeViewManager.getPagePath(nnc3);
         String path4 = nodeViewManager.getPagePath(nnc3);
-        assertThat("path of static pages not expected to change", path, is(path2));
-        assertThat("path of dynamic pages expected to change between node instances", path, is(not(path3)));
-        assertThat("path of dynamic pages not expected for same node instance (without node state change)", path3,
-            is(path4));
+        assertThat(path).as("path of static pages not expected to change").isEqualTo(path2);
+        assertThat(path).as("path of dynamic pages expected to change between node instances").isNotEqualTo(path4);
+        assertThat(path3).as("path of dynamic pages not expected for same node instance (without node state change)")
+            .isEqualTo(path4);
         String baseUrl = nodeViewManager.getBaseUrl().orElse(null);
-        assertThat(baseUrl, is("http://org.knime.core.ui.view/"));
+        assertThat(baseUrl).isEqualTo("http://org.knime.core.ui.view/");
 
-        runOnExecutor(() -> assertThat(nodeViewManager.getBaseUrl().isEmpty(), is(true)));
+        runOnExecutor(() -> assertThat(nodeViewManager.getBaseUrl()).isEmpty());
     }
 
     /**
@@ -247,18 +244,18 @@ public class NodeViewManagerTest {
         var nnc2 = NodeWrapper.of(createNodeWithNodeView(m_wfm, m -> createNodeView(dynamicPage)));
 
         var nodeViewManager = NodeViewManager.getInstance();
-        assertThat(nodeViewManager.getPagePath(nnc),
-            is("view_org.knime.testing.node.view.NodeViewNodeFactory/page.html"));
+        assertThat(nodeViewManager.getPagePath(nnc))
+            .isEqualTo("view_org.knime.testing.node.view.NodeViewNodeFactory/page.html");
 
         runOnExecutor(() -> { // NOSONAR
             String path = nodeViewManager.getPagePath(nnc);
-            assertThat(nodeViewManager.getPageMapSize(), is(1));
+            assertThat(nodeViewManager.getPageMapSize()).isEqualTo(1);
             String path2 = nodeViewManager.getPagePath(nnc2);
-            assertThat(nodeViewManager.getPageMapSize(), is(2));
+            assertThat(nodeViewManager.getPageMapSize()).isEqualTo(2);
             var resourcePrefix1 = "view_" + ((NativeNodeContainer)nnc.get()).getNode().getFactory().getClass().getName();
             var resourcePrefix2 = "view_" + nnc2.get().getID().toString().replace(":", "_");
-            assertThat(path, is(resourcePrefix1 + "/page.html"));
-            assertThat(path2, is(resourcePrefix2 + "/page.html"));
+            assertThat(path).isEqualTo(resourcePrefix1 + "/page.html");
+            assertThat(path2).isEqualTo(resourcePrefix2 + "/page.html");
 
             testGetNodeViewPageResource(resourcePrefix1, resourcePrefix2);
         });
@@ -266,17 +263,17 @@ public class NodeViewManagerTest {
         m_wfm.removeNode(nnc.get().getID());
         // make sure that the pages are removed from the cache after the node has been deleted)
         Awaitility.await().pollInterval(1, TimeUnit.SECONDS).atMost(5, TimeUnit.SECONDS)
-            .untilAsserted(() -> assertThat(nodeViewManager.getPageMapSize(), is(1)));
+            .untilAsserted(() -> assertThat(nodeViewManager.getPageMapSize()).isEqualTo(1));
     }
 
     private static void testGetNodeViewPageResource(final String resourcePrefix1, final String resourcePrefix2) {
         var nodeViewManager = NodeViewManager.getInstance();
-        assertThat(nodeViewManager.getPageResource(resourcePrefix1 + "/page.html").isPresent(), is(true));
-        assertThat(nodeViewManager.getPageResource(resourcePrefix1 + "/resource.html").isPresent(), is(true));
-        assertThat(nodeViewManager.getPageResource(resourcePrefix2 + "/resource.html").isPresent(), is(true));
-        assertThat(nodeViewManager.getPageResource("/test").isEmpty(), is(true));
-        assertThat(nodeViewManager.getPageResource("test").isEmpty(), is(true));
-        assertThat(nodeViewManager.getPageResource("test/test").isEmpty(), is(true));
+        assertThat(nodeViewManager.getPageResource(resourcePrefix1 + "/page.html")).isPresent();
+        assertThat(nodeViewManager.getPageResource(resourcePrefix1 + "/resource.html")).isPresent();
+        assertThat(nodeViewManager.getPageResource(resourcePrefix2 + "/resource.html")).isPresent();
+        assertThat(nodeViewManager.getPageResource("/test")).isEmpty();
+        assertThat(nodeViewManager.getPageResource("test")).isEmpty();
+        assertThat(nodeViewManager.getPageResource("test/test")).isEmpty();
     }
 
     /**
@@ -286,8 +283,9 @@ public class NodeViewManagerTest {
     @Test
     public void testNodeWithoutNodeView() {
         NativeNodeContainer nc = createAndAddNode(m_wfm, new VirtualSubNodeInputNodeFactory(null, new PortType[0]));
-        assertThat("node not expected to have a node view", NodeViewManager.hasNodeView(nc), is(false));
-        assertThrows(IllegalArgumentException.class, () -> NodeViewManager.getInstance().getNodeView(nc));
+        assertThat(NodeViewManager.hasNodeView(nc)).as("node not expected to have a node view").isFalse();
+        Assertions.assertThatThrownBy(() -> NodeViewManager.getInstance().getNodeView(nc))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     /**
@@ -303,22 +301,22 @@ public class NodeViewManagerTest {
 
         // remove node
         nodeViewManager.getPagePath(nc);
-        assertThat(nodeViewManager.getNodeViewMapSize(), is(1));
-        assertThat(nodeViewManager.getPageMapSize(), is(1));
+        assertThat(nodeViewManager.getNodeViewMapSize()).isEqualTo(1);
+        assertThat(nodeViewManager.getPageMapSize()).isEqualTo(1);
         m_wfm.removeNode(nc.get().getID());
         untilAsserted(() -> {
-            assertThat(nodeViewManager.getNodeViewMapSize(), is(0));
-            assertThat(nodeViewManager.getPageMapSize(), is(0));
+            assertThat(nodeViewManager.getNodeViewMapSize()).isEqualTo(0);
+            assertThat(nodeViewManager.getPageMapSize()).isEqualTo(0);
         });
 
         // close workflow
         nodeViewManager.getPagePath(nc);
-        assertThat(nodeViewManager.getNodeViewMapSize(), is(1));
-        assertThat(nodeViewManager.getPageMapSize(), is(1));
+        assertThat(nodeViewManager.getNodeViewMapSize()).isEqualTo(1);
+        assertThat(nodeViewManager.getPageMapSize()).isEqualTo(1);
         m_wfm.getParent().removeProject(m_wfm.getID());
         untilAsserted(() -> {
-            assertThat(nodeViewManager.getNodeViewMapSize(), is(0));
-            assertThat(nodeViewManager.getPageMapSize(), is(0));
+            assertThat(nodeViewManager.getNodeViewMapSize()).isEqualTo(0);
+            assertThat(nodeViewManager.getPageMapSize()).isEqualTo(0);
         });
     }
 
@@ -333,15 +331,15 @@ public class NodeViewManagerTest {
 
         // remove node
         nodeViewManager.getPagePath(nc);
-        assertThat(nodeViewManager.getPageMapSize(), is(1));
+        assertThat(nodeViewManager.getPageMapSize()).isEqualTo(1);
         m_wfm.removeNode(nc.get().getID());
-        untilAsserted(() -> assertThat(nodeViewManager.getPageMapSize(), is(0)));
+        untilAsserted(() -> assertThat(nodeViewManager.getPageMapSize()).isEqualTo(0));
 
         // close workflow
         nodeViewManager.getPagePath(nc);
-        assertThat(nodeViewManager.getPageMapSize(), is(1));
+        assertThat(nodeViewManager.getPageMapSize()).isEqualTo(1);
         m_wfm.getParent().removeProject(m_wfm.getID());
-        untilAsserted(() -> assertThat(nodeViewManager.getPageMapSize(), is(0)));
+        untilAsserted(() -> assertThat(nodeViewManager.getPageMapSize()).isEqualTo(0));
     }
 
     private static void untilAsserted(final ThrowingRunnable assertion) {
@@ -389,12 +387,10 @@ public class NodeViewManagerTest {
         var nc = NodeWrapper.of(NodeViewManagerTest.createNodeWithNodeView(m_wfm, m -> nodeView));
 
         var nodeViewManager = NodeViewManager.getInstance();
-        assertThat(nodeViewManager.callTextInitialDataService(nc), is("init service"));
-        assertThat(nodeViewManager.callTextDataService(nc, ""), is("general data service"));
-        String message =
-            assertThrows(IOException.class, () -> nodeViewManager.callTextApplyDataService(nc, "ERROR,test"))
-                .getMessage();
-        assertThat(message, is("re-execute data service"));
+        assertThat(nodeViewManager.callTextInitialDataService(nc)).isEqualTo("init service");
+        assertThat(nodeViewManager.callTextDataService(nc, "")).isEqualTo("general data service");
+        Assertions.assertThatThrownBy(() -> nodeViewManager.callTextApplyDataService(nc, "ERROR,test"))
+            .isInstanceOf(IOException.class).hasMessage("re-execute data service");
     }
 
     /**
@@ -417,15 +413,12 @@ public class NodeViewManagerTest {
         });
         var nc = NodeViewManagerTest.createNodeWithNodeView(m_wfm, m -> nodeView);
 
-        var message = assertThrows(IOException.class,
+        assertThatThrownBy(
             () -> NodeViewManager.getInstance().callSelectionTranslationService(nc, Collections.singletonList("foo")))
-                .getMessage();
-        assertThat(message, is("[foo]"));
-
-        message = assertThrows(IOException.class,
+                .isInstanceOf(IOException.class).hasMessage("[foo]");
+        assertThatThrownBy(
             () -> NodeViewManager.getInstance().callSelectionTranslationService(nc, Set.of(new RowKey("bar"))))
-                .getMessage();
-        assertThat(message, is("[bar]"));
+                .isInstanceOf(IOException.class).hasMessage("[bar]");
 
     }
 
