@@ -246,7 +246,6 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
             result.addError(error);
             getLogger().debug(error, e);
             setDirtyAfterLoad();
-            return;
         }
         NodeSettingsRO modelSettings = null;
         try {
