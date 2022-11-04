@@ -49,17 +49,24 @@
 package org.knime.core.util;
 
 import static org.hamcrest.CoreMatchers.anyOf;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.nullValue;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 import org.eclipse.core.runtime.Platform;
+import org.junit.Assert;
 import org.junit.Test;
 
 /**
@@ -311,8 +318,62 @@ public class FileUtilTest {
 
         URL uncUrlHash = new URL("file:\\\\HOST\\foo\\bar%23baz");
         assertThat("Unexpected URL", FileUtil.getFileFromURL(uncUrlHash).toString(), is("\\\\HOST\\foo\\bar#baz"));
+    }
 
 
+    /**
+     * Checks that absolute paths in ZIP archives are turned into relative paths when unzipping. See AP-19699.
+     *
+     * @throws Exception if an error occurs
+     */
+    @Test
+    public void testZipSlipAbsolutePath() throws Exception {
+        Path zipFile = PathUtils.createTempFile(getClass().getSimpleName(), ".zip");
+        try (ZipOutputStream zout = new ZipOutputStream(Files.newOutputStream(zipFile))) {
+            zout.putNextEntry(new ZipEntry("/tmp/foo.txt"));
+            zout.write("Test".getBytes(StandardCharsets.UTF_8));
+            zout.closeEntry();
+        }
 
+        Path destDir = PathUtils.createTempDir(getClass().getSimpleName());
+        try (ZipInputStream zin = new ZipInputStream(Files.newInputStream(zipFile))) {
+            FileUtil.unzip(zin, destDir.toFile(), 0);
+        }
+
+        Path expectedFile = destDir.resolve("tmp/foo.txt");
+        assertThat("Zip slip not detected when unzipping stream", Files.exists(expectedFile), is(true));
+
+        destDir = PathUtils.createTempDir(getClass().getSimpleName());
+        FileUtil.unzip(zipFile.toFile(), destDir.toFile());
+
+        expectedFile = destDir.resolve("tmp/foo.txt");
+        assertThat("Zip slip not detected when unzipping file", Files.exists(expectedFile), is(true));
+    }
+
+    /**
+     * Checks that directory traversals in ZIP archives are prevented. See AP-19699.
+     *
+     * @throws Exception if an error occurs
+     */
+    @Test
+    public void testZipSlipDirectoryTraversal() throws Exception {
+        Path zipFile = PathUtils.createTempFile(getClass().getSimpleName(), ".zip");
+        try (ZipOutputStream zout = new ZipOutputStream(Files.newOutputStream(zipFile))) {
+            zout.putNextEntry(new ZipEntry("../foo.txt"));
+            zout.write("Test".getBytes(StandardCharsets.UTF_8));
+            zout.closeEntry();
+        }
+
+        Assert.assertThrows("Zip slip not detected when unzipping stream", IOException.class, () -> {
+            Path destDir = PathUtils.createTempDir(getClass().getSimpleName());
+            try (ZipInputStream zin = new ZipInputStream(Files.newInputStream(zipFile))) {
+                FileUtil.unzip(zin, destDir.toFile(), 0);
+            }
+        });
+
+        Assert.assertThrows("Zip slip not detected when unzipping file", IOException.class, () -> {
+            Path destDir = PathUtils.createTempDir(getClass().getSimpleName());
+            FileUtil.unzip(zipFile.toFile(), destDir.toFile());
+        });
     }
 }
