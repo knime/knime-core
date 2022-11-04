@@ -81,33 +81,33 @@ public class TableViewViewSettings implements DefaultNodeSettings {
      * If the rows keys should be displayed
      */
     @Schema(title = "Show row keys", description = "Whether to display the row keys or not")
-    protected boolean m_showRowKeys = true;
+    public boolean m_showRowKeys = true;
 
     /**
      * Whether to show the data type of every column in the header or not
      */
     @Schema(title = "Show column data type in header",
         description = "Whether to display the data type of the " + "columns in the header or not")
-    protected boolean m_showColumnDataType = true;
+    public boolean m_showColumnDataType = true;
 
     /**
      * If the row indices should be displayed
      */
     @Schema(title = "Show row indices", description = "Whether to display the row indices or not")
-    protected boolean m_showRowIndices;
+    public boolean m_showRowIndices;
 
     /**
      * The title of the table
      */
     @Schema(title = "Title",
         description = "The title of the table shown above the generated image. If left blank, no title will be shown.")
-    protected String m_title = "Table View";
+    public String m_title = "Table View";
 
     /**
      * whether to display the title or not
      */
     @Schema(title = "Show title", description = "Whether to display the title or not.")
-    protected boolean m_showTitle = true;
+    public boolean m_showTitle = true;
 
     /**
      * If true only a certain number of rows is shown
@@ -122,29 +122,32 @@ public class TableViewViewSettings implements DefaultNodeSettings {
     @Schema(title = "Page size", description = "Select the amount of rows shown per page", min = 1)
     public int m_pageSize = 10;
 
+    /**
+     * See annotation.
+     */
     @Schema(title = "Compact rows", description = "Whether to display the rows in a more compact form or not")
-    boolean m_compactMode;
+    public boolean m_compactMode;
 
     /**
      * If global search is enabled
      */
     @Schema(title = "Enable global search",
         description = "Enables or disables the ability to perform a global search inside the table.")
-    protected boolean m_enableGlobalSearch = true;
+    public boolean m_enableGlobalSearch = true;
 
     /**
      * If column search is enabled
      */
     @Schema(title = "Enable column search",
         description = "Enables or disables the ability to perform a column search inside the table.")
-    protected boolean m_enableColumnSearch = true;
+    public boolean m_enableColumnSearch = true;
 
     /**
      * If sorting should be enabled
      */
     @Schema(title = "Enable sorting by header",
         description = "Enables or disables the ability to sort the table by clicking on the column headers")
-    protected boolean m_enableSortingByHeader = true;
+    public boolean m_enableSortingByHeader = true;
 
     /**
      * If this view notifies other views when the users do a selection action
@@ -152,7 +155,7 @@ public class TableViewViewSettings implements DefaultNodeSettings {
     @Schema(title = "Publish Selection",
         description = "When checked, the view notifies other interactive views when the user changes the selection in"
             + " the current view.")
-    protected boolean m_publishSelection = true;
+    public boolean m_publishSelection = true;
 
     /**
      * If this view should react on selection events from other views
@@ -160,7 +163,7 @@ public class TableViewViewSettings implements DefaultNodeSettings {
     @Schema(title = "Subscribe to Selection",
         description = "When checked, the view reacts on notifications from other interactive views that the selection"
             + " has been changed.")
-    protected boolean m_subscribeToSelection = true;
+    public boolean m_subscribeToSelection = true;
 
     /**
      *  Create a new {@link TableViewViewSettings} with default values
