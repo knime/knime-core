@@ -49,17 +49,24 @@
 package org.knime.core.util;
 
 import static org.hamcrest.CoreMatchers.anyOf;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.nullValue;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 import org.eclipse.core.runtime.Platform;
+import org.junit.Assert;
 import org.junit.Test;
 
 /**
@@ -229,5 +236,148 @@ public class FileUtilTest {
         assumeThat(Platform.getOS(), is(Platform.OS_WIN32)); // UNC paths only work under Windows
         File resolvedFile = FileUtil.getFileFromURL(new URL("file://HOST/path"));
         assertThat("Resolved file does not have a correct UNC path", resolvedFile.getAbsolutePath(), is("\\\\HOST\\path"));
+    }
+
+    /**
+     * Tests for {@link FileUtil#getFileFromURL(URL)}.
+     * @throws Exception
+     */
+    @Test
+    public void testGetFileFromURLUnix() throws Exception {
+        assumeThat(Platform.getOS(), is(Platform.OS_LINUX));
+
+        URL url = new URL("file:///tmp/with%20space");
+        assertThat("Unexpected path", FileUtil.getFileFromURL(url).toString(), is("/tmp/with space"));
+
+        url = new URL("file:///tmp/with space");
+        assertThat("Unexpected path", FileUtil.getFileFromURL(url).toString(), is("/tmp/with space"));
+
+        // 2022-07-11: NOT backported to 4.4
+        // see AP-17103: Component links with `+` in name could not be updated because path was not decoded properly.
+        // url = new URL("file:///tmp/with+plus");
+        // assertThat("Unexpected path", FileUtil.getFileFromURL(url).toString(), is("/tmp/with+plus"));
+
+        url = new URL("file:///tmp/with%23hash");
+        assertThat("Unexpected path", FileUtil.getFileFromURL(url).toString(), is("/tmp/with#hash"));
+
+        url = new URL("file:///tmp/with%25percent");
+        assertThat("Unexpected path", FileUtil.getFileFromURL(url).toString(), is("/tmp/with%percent"));
+
+    }
+
+
+
+    /**
+     * Tests for {@link FileUtil#getFileFromURL(URL)}.
+     * @throws Exception
+     */
+    @Test
+    public void testGetFileFromURLWindows() throws Exception {
+        assumeThat(Platform.getOS(), is(Platform.OS_WIN32));
+
+        URL percentEncoded = new URL("file:/C:/tmp/with%20space");
+        assertThat("Unexpected URL", FileUtil.getFileFromURL(percentEncoded).toString(), is("C:\\tmp\\with space"));
+
+        URL withSpace = new URL("file:/C:/tmp/with space");
+        assertThat("Unexpected URL", FileUtil.getFileFromURL(withSpace).toString(), is("C:\\tmp\\with space"));
+
+        // 2022-07-11: NOT backported to 4.4
+        // URL withPlus = new URL("file:/C:/tmp/with+plus");
+        // assertThat("Unexpected URL", FileUtil.getFileFromURL(withPlus).toString(), is("C:\\tmp\\with+plus"));
+
+        URL withHash = new URL("file:/C:/tmp/with%23hash");
+        assertThat("Unexpected URL", FileUtil.getFileFromURL(withHash).toString(), is("C:\\tmp\\with#hash"));
+
+        URL withPercent = new URL("file:/C:/tmp/with%25percent");
+        assertThat("Unexpected URL", FileUtil.getFileFromURL(withPercent).toString(), is("C:\\tmp\\with%percent"));
+
+        URL uncUrlForwardSlashes = new URL("file://HOST/foo/bar");
+        assertThat("Unexpected URL", FileUtil.getFileFromURL(uncUrlForwardSlashes).toString(), is("\\\\HOST\\foo\\bar"));
+
+        // 2022-07-11: NOT backported to 4.4
+        // URL authorityWithUserInfoAndHost = new URL("file:\\\\user@host.com:1234\\foo\\bar");
+        // assertThat("Unexpected URL", FileUtil.getFileFromURL(authorityWithUserInfoAndHost).toString(), is("\\\\user@host.com:1234\\foo\\bar"));
+
+        URL regNameWithSpace = new URL("file:\\\\HOST%20NAME\\foo\\bar");
+        assertThat("Unexpected URL", FileUtil.getFileFromURL(regNameWithSpace).toString(), is("\\\\HOST NAME\\foo\\bar"));
+
+        URL uncUrlDecodeHostname = new URL("file://HOST%20NAME/foo/bar");
+        assertThat("Unexpected URL", FileUtil.getFileFromURL(uncUrlDecodeHostname).toString(), is("\\\\HOST NAME\\foo\\bar"));
+
+        URL uncUrlDecodeHostnameBackslashes = new URL("file:\\\\HOST%20NAME\\foo%20baz\\bar");
+        assertThat("Unexpected URL", FileUtil.getFileFromURL(uncUrlDecodeHostnameBackslashes).toString(), is("\\\\HOST NAME\\foo baz\\bar"));
+
+        URL uncUrlBackwardSlashes = new URL("file:\\\\HOST\\foo\\bar");
+        assertThat("Unexpected URL", FileUtil.getFileFromURL(uncUrlBackwardSlashes).toString(), is("\\\\HOST\\foo\\bar"));
+
+        URL uncUrlPercentSpace = new URL("file:\\\\HOST\\foo\\bar%20baz");
+        assertThat("Unexpected URL", FileUtil.getFileFromURL(uncUrlPercentSpace).toString(), is("\\\\HOST\\foo\\bar baz"));
+
+        URL uncUrlSpace = new URL("file:\\\\HOST\\foo\\bar baz");
+        assertThat("Unexpected URL", FileUtil.getFileFromURL(uncUrlSpace).toString(), is("\\\\HOST\\foo\\bar baz"));
+
+        // 2022-07-11: NOT backported to 4.4
+        // URL uncUrlPlus = new URL("file:\\\\HOST\\foo\\bar+baz");
+        // assertThat("Unexpected URL", FileUtil.getFileFromURL(uncUrlPlus).toString(), is("\\\\HOST\\foo\\bar+baz"));
+
+        URL uncUrlHash = new URL("file:\\\\HOST\\foo\\bar%23baz");
+        assertThat("Unexpected URL", FileUtil.getFileFromURL(uncUrlHash).toString(), is("\\\\HOST\\foo\\bar#baz"));
+    }
+
+
+    /**
+     * Checks that absolute paths in ZIP archives are turned into relative paths when unzipping. See AP-19699.
+     *
+     * @throws Exception if an error occurs
+     */
+    @Test
+    public void testZipSlipAbsolutePath() throws Exception {
+        Path zipFile = PathUtils.createTempFile(getClass().getSimpleName(), ".zip");
+        try (ZipOutputStream zout = new ZipOutputStream(Files.newOutputStream(zipFile))) {
+            zout.putNextEntry(new ZipEntry("/tmp/foo.txt"));
+            zout.write("Test".getBytes(StandardCharsets.UTF_8));
+            zout.closeEntry();
+        }
+
+        Path destDir = PathUtils.createTempDir(getClass().getSimpleName());
+        try (ZipInputStream zin = new ZipInputStream(Files.newInputStream(zipFile))) {
+            FileUtil.unzip(zin, destDir.toFile(), 0);
+        }
+
+        Path expectedFile = destDir.resolve("tmp/foo.txt");
+        assertThat("Zip slip not detected when unzipping stream", Files.exists(expectedFile), is(true));
+
+        destDir = PathUtils.createTempDir(getClass().getSimpleName());
+        FileUtil.unzip(zipFile.toFile(), destDir.toFile());
+
+        expectedFile = destDir.resolve("tmp/foo.txt");
+        assertThat("Zip slip not detected when unzipping file", Files.exists(expectedFile), is(true));
+    }
+
+    /**
+     * Checks that directory traversals in ZIP archives are prevented. See AP-19699.
+     *
+     * @throws Exception if an error occurs
+     */
+    @Test
+    public void testZipSlipDirectoryTraversal() throws Exception {
+        Path zipFile = PathUtils.createTempFile(getClass().getSimpleName(), ".zip");
+        try (ZipOutputStream zout = new ZipOutputStream(Files.newOutputStream(zipFile))) {
+            zout.putNextEntry(new ZipEntry("../foo.txt"));
+            zout.write("Test".getBytes(StandardCharsets.UTF_8));
+            zout.closeEntry();
+        }
+
+        Assert.assertThrows("Zip slip not detected when unzipping stream", IOException.class, () -> {
+            Path destDir = PathUtils.createTempDir(getClass().getSimpleName());
+            try (ZipInputStream zin = new ZipInputStream(Files.newInputStream(zipFile))) {
+                FileUtil.unzip(zin, destDir.toFile(), 0);
+            }
+        });
+
+        Assert.assertThrows("Zip slip not detected when unzipping file", IOException.class, () -> {
+            Path destDir = PathUtils.createTempDir(getClass().getSimpleName());
+            FileUtil.unzip(zipFile.toFile(), destDir.toFile());
+        });
     }
 }

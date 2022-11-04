@@ -849,6 +849,7 @@ public final class FileUtil {
             final int stripLevel) throws IOException {
         ZipEntry e;
         byte[] buf = new byte[BUFF_SIZE];
+        String canonicalDestPath = dir.getCanonicalPath();
         while ((e = zipStream.getNextEntry()) != null) {
 
             String name = e.getName().replace('\\', '/');
@@ -857,6 +858,11 @@ public final class FileUtil {
             if (e.isDirectory()) {
                 if (!name.isEmpty() && !name.equals("/")) {
                     File d = new File(dir, name);
+                    if (!d.getCanonicalPath().startsWith(canonicalDestPath)) {
+                        throw new IOException(
+                            "Path traversal attack detected, entry " + name + " will leave the destination directory");
+                    }
+
                     if (!d.mkdirs() && !d.exists()) {
                         throw new IOException("Could not create directory '"
                                 + d.getAbsolutePath() + "'.");
@@ -864,6 +870,11 @@ public final class FileUtil {
                 }
             } else {
                 File f = new File(dir, name);
+                if (!f.getCanonicalPath().startsWith(canonicalDestPath)) {
+                    throw new IOException(
+                        "Path traversal attack detected, entry " + name + " will leave the destination directory");
+                }
+
                 File parentDir = f.getParentFile();
                 if (!parentDir.exists() && !parentDir.mkdirs()) {
                     throw new IOException("Could not create directory '"
