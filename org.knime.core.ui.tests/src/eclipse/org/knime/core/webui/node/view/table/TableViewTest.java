@@ -60,6 +60,7 @@ import static org.knime.testing.node.view.TableTestUtil.getDefaultTestSpec;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -68,7 +69,11 @@ import org.junit.jupiter.api.Test;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.workflow.FileNativeNodeContainerPersistor;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortType;
+import org.knime.core.node.workflow.virtual.DefaultVirtualPortObjectInNodeFactory;
+import org.knime.core.node.workflow.virtual.DefaultVirtualPortObjectInNodeModel;
+import org.knime.core.node.workflow.virtual.VirtualNodeInput;
 import org.knime.core.webui.node.NodeWrapper;
 import org.knime.core.webui.node.view.NodeViewManager;
 import org.knime.core.webui.node.view.table.data.Renderer;
@@ -182,13 +187,15 @@ class TableViewTest {
         var tableId = "test_table_id";
         var nnc = WorkflowManagerUtil.createAndAddNode(wfm, new NodeViewNodeFactory(1, 0,
             nodeModel -> new TableNodeView(tableId, () -> nodeModel.getInternalTables()[0])));
-        final var dataGeneratorNodeFactory = FileNativeNodeContainerPersistor
-            .loadNodeFactory("org.knime.base.node.util.sampledata.SampleDataNodeFactory");
-        final var dataGeneratorNode = WorkflowManagerUtil.createAndAddNode(wfm, dataGeneratorNodeFactory);
-        wfm.addConnection(dataGeneratorNode.getID(), 1, nnc.getID(), 1);
+        final var sourceNodeFactory = new DefaultVirtualPortObjectInNodeFactory(new PortType[]{BufferedDataTable.TYPE});
+        final var sourceNode = WorkflowManagerUtil.createAndAddNode(wfm, sourceNodeFactory);
+        var testTable = createDefaultTestTable(2).get();
+        ((DefaultVirtualPortObjectInNodeModel)sourceNode.getNodeModel())
+            .setVirtualNodeInput(new VirtualNodeInput(new PortObject[]{testTable}, Collections.emptyList()));
+        wfm.addConnection(sourceNode.getID(), 1, nnc.getID(), 1);
 
         wfm.executeAllAndWaitUntilDone();
-        var tables = new BufferedDataTable[]{createDefaultTestTable(2).get()};
+        var tables = new BufferedDataTable[]{testTable};
         ((NodeViewNodeModel)nnc.getNodeModel()).setInternalTables(tables);
 
         var nodeViewManager = NodeViewManager.getInstance();
