@@ -73,7 +73,7 @@ public interface URIToFileResolve {
      * @return the local file represented by the URI or <code>null</code>
      * @throws IOException If the URI can't be resolved
      */
-    public File resolveToFile(final URI uri) throws IOException;
+    File resolveToFile(URI uri) throws IOException;
 
     /**
      * Resolves the given URI into a local file. If the URI doesn't denote a local file, <code>null</code> is returned.
@@ -84,7 +84,7 @@ public interface URIToFileResolve {
      * @throws IOException If the URI can't be resolved
      * @since 2.6
      */
-    public File resolveToFile(final URI uri, IProgressMonitor monitor) throws IOException;
+    File resolveToFile(URI uri, IProgressMonitor monitor) throws IOException;
 
     /**
      * Resolves the given URI into a local file. If the URI does not represent a local file (e.g. a remote file on a
@@ -95,7 +95,7 @@ public interface URIToFileResolve {
      * @return the file represented by the URI or a temporary copy of that file if it represents a remote file
      * @throws IOException If the URI can't be resolved
      */
-    public File resolveToLocalOrTempFile(final URI uri) throws IOException;
+    File resolveToLocalOrTempFile(URI uri) throws IOException;
 
     /**
      * Resolves the given URI into a local file. If the URI does not represent a local file (e.g. a remote file on a
@@ -108,7 +108,7 @@ public interface URIToFileResolve {
      * @throws IOException If the URI can't be resolved
      * @since 2.6
      */
-    public File resolveToLocalOrTempFile(final URI uri, IProgressMonitor monitor) throws IOException;
+    File resolveToLocalOrTempFile(URI uri, IProgressMonitor monitor) throws IOException;
 
     /**
      * Attempts to extract some information about the argument URI, especially attempts to resolve the full path for
@@ -123,7 +123,7 @@ public interface URIToFileResolve {
      * @return Such a description.
      * @since 4.7
      */
-    public default Optional<KNIMEURIDescription> toDescription(final URI uri, final IProgressMonitor monitor) {
+    default Optional<KNIMEURIDescription> toDescription(final URI uri, final IProgressMonitor monitor) {
         return Optional.of(new KNIMEURIDescription(uri.getHost(), uri.getPath()));
     }
 
@@ -154,8 +154,8 @@ public interface URIToFileResolve {
      * @throws IOException
      * @since 4.3
      */
-    public Optional<File> resolveToLocalOrTempFileConditional(final URI uri, IProgressMonitor monitor,
-        ZonedDateTime ifModifiedSince) throws IOException;
+    Optional<File> resolveToLocalOrTempFileConditional(URI uri, IProgressMonitor monitor, ZonedDateTime ifModifiedSince)
+            throws IOException;
 
     /**
      * Returns <code>true</code>, if this is a URI that is relative to the current mountpoint (of the flow it is used
@@ -165,7 +165,7 @@ public interface URIToFileResolve {
      * @return <code>true</code> if argument URI is mount point relative, <code>false</code> if not.
      * @since 2.8
      */
-    public boolean isMountpointRelative(final URI uri);
+    boolean isMountpointRelative(URI uri);
 
     /**
      * Returns <code>true</code>, if this is a URI that is relative to the workflow it is used in. It can only be
@@ -175,7 +175,7 @@ public interface URIToFileResolve {
      * @return <code>true</code> if argument URI is workflow relative, <code>false</code> if not.
      * @since 2.8
      */
-    public boolean isWorkflowRelative(final URI uri);
+    boolean isWorkflowRelative(URI uri);
 
     /**
      * Returns <code>true</code>, if this is a URI that is relative to the node it is used in. It can only be resolved
@@ -185,8 +185,8 @@ public interface URIToFileResolve {
      * @return <code>true</code> if argument URI is node relative, <code>false</code> if not.
      * @since 2.10
      */
-    public boolean isNodeRelative(final URI uri);
-    
+     boolean isNodeRelative(URI uri);
+
     /**
      * Returns <code>true</code>, if this is a URI that is relative to the space it is used in. It can only be
      * resolved in the context of a flow. Contains the corresponding keyword as host.
@@ -195,7 +195,7 @@ public interface URIToFileResolve {
      * @return <code>true</code> if argument URI is space relative, <code>false</code> if not.
      * @since 4.7
      */
-    public boolean isSpaceRelative(final URI uri);
+    boolean isSpaceRelative(URI uri);
 
     /**
      * Return type of {@link URIToFileResolve#toDescription(URI, IProgressMonitor)}. This class should not be used to

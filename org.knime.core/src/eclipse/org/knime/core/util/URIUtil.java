@@ -85,12 +85,12 @@ public final class URIUtil {
         }
         URI uri;
         try {
-            if (isURLEncoded(urlWithoutQueryParams.toString())) {
+            if (isURLEncoded(urlWithoutQueryParams)) {
                 //URL is already encoded
                 uri = new URI(urlWithoutQueryParams);
             } else {
                 //URL is not yet encoded!
-                uri = createAndEncodeURI(urlWithoutQueryParams.toString());
+                uri = createAndEncodeURI(urlWithoutQueryParams);
             }
         } catch (URISyntaxException | URIException | UnsupportedEncodingException e) {
             LOGGER.error("The URL '" + urlWithoutQueryParams + "' couldn't be turned into an URI", e);
