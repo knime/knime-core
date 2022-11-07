@@ -53,6 +53,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
@@ -148,6 +149,8 @@ public final class TableTestUtil {
 
         private final BufferedDataContainer m_container;
 
+        private final Function<Object, DataCell> m_cellify;
+
         private int runningRowId = 0;
 
         /**
@@ -155,8 +158,19 @@ public final class TableTestUtil {
          *
          * @param spec the spec of the to-be-assembled table
          */
-        public TableBuilder(final DataTableSpec spec) {
+        TableBuilder(final DataTableSpec spec) {
+            this(spec, TableTestUtil::cellify);
+        }
+
+        /**
+         * Creates a new instance of a table builder.
+         *
+         * @param spec the spec of the to-be-assembled table
+         * @param cellify function for converting {@link Object objects} into {@link DataCell data cells}.
+         */
+        public TableBuilder(final DataTableSpec spec, final Function<Object, DataCell> cellify) {
             m_container = EXEC.createDataContainer(spec, false, 0);
+            m_cellify = cellify;
         }
 
         /**
@@ -181,8 +195,8 @@ public final class TableTestUtil {
          * @return this builder
          */
         public TableBuilder addRowWithId(final String rowId, final Object... cells) {
-            m_container.addRowToTable(new DefaultRow(new RowKey(rowId),
-                Arrays.stream(cells).map(TableTestUtil::cellify).toArray(DataCell[]::new)));
+            m_container.addRowToTable(
+                new DefaultRow(new RowKey(rowId), Arrays.stream(cells).map(m_cellify).toArray(DataCell[]::new)));
             return this;
         }
 
@@ -205,63 +219,6 @@ public final class TableTestUtil {
             m_container.close();
             return m_container.getTable();
         }
-    }
-
-    /**
-     * A class containing necessary column information to build a BufferedDataTable from multiple of its instances.
-     *
-     * @author BaernreutherPaul
-     */
-    public static final class ObjectColumn {
-
-        /**
-         * the name of the column
-         */
-        private final String m_name;
-
-        /**
-         * the {@link DataType} of the column
-         */
-        private final DataType m_type;
-
-        /**
-         * the source of the row values of the column
-         */
-        private final Object[] m_data;
-
-        /**
-         * @param name the name of the column
-         * @param type the {@link DataType} of the column
-         * @param data the source of the row values of the column
-         */
-        public ObjectColumn(final String name, final DataType type, final Object[] data) {
-            m_name = name;
-            m_type = type;
-            m_data = data;
-        }
-    }
-
-    /**
-     * @param objectColumns an array of columns of equal length
-     * @return a {@link BufferedDataTable} consisting of the given columns
-     */
-    public static BufferedDataTable createTableFromColumns(final ObjectColumn... objectColumns) {
-        final var columnList = new ArrayList<ObjectColumn>(Arrays.asList(objectColumns));
-        final var specBuilder = new SpecBuilder();
-        columnList.forEach(col -> specBuilder.addColumn(col.m_name, col.m_type));
-        final var spec = specBuilder.build();
-        final var builder = new TableBuilder(spec);
-        if (!columnList.isEmpty()) {
-            Integer nRows = columnList.get(0).m_data.length;
-            columnList.stream().forEach(col -> {
-                if (col.m_data.length != nRows) {
-                    throw new IllegalArgumentException("Columns need to be of the same length");
-                }
-            });
-            IntStream.range(0, nRows).mapToObj(i -> columnList.stream().map(col -> col.m_data[i]).toArray())
-                .forEach(builder::addRow);
-        }
-        return builder.build().get();
     }
 
     private static final Object[][] convertToObjectArray(final BufferedDataTable table, final String[] parseAs) {
@@ -394,7 +351,13 @@ public final class TableTestUtil {
         return rk.toArray(RowKey[]::new);
     }
 
-    private static DataCell cellify(final Object obj) {
+    /**
+     * Converts {@link Object objects} into {@link DataCell data cells}.
+     *
+     * @param obj the object to convert
+     * @return the data cell resulting from the conversion
+     */
+    public static DataCell cellify(final Object obj) {
         if (obj instanceof DataCell) {
             return (DataCell)obj;
         } else if (obj == null) {
@@ -447,8 +410,8 @@ public final class TableTestUtil {
     }
 
     /**
-     * Creates a {@link Supplier}, given a number of rows to create, which can be used for unit testing
-     * implementations of view nodes.
+     * Creates a {@link Supplier}, given a number of rows to create, which can be used for unit testing implementations
+     * of view nodes.
      *
      * @param rowCount the number of rows to create which should be contained in the test table
      * @return a {@link Supplier} object containing the created table
@@ -462,8 +425,7 @@ public final class TableTestUtil {
             new DoubleCell(i), //
             new SparseBitVectorCellFactory(Integer.toHexString(i)).createDataCell(), //
             i % 2 == 1 ? BooleanCell.TRUE : BooleanCell.FALSE, //
-            createPNGImageCell(i)})
-            .forEach(builder::addRow);
+            createPNGImageCell(i)}).forEach(builder::addRow);
         return builder.build();
     }
 
@@ -476,7 +438,8 @@ public final class TableTestUtil {
      *            table and multiple tables are returned.
      * @return a {@link Supplier} object containing the created table
      */
-    public static Supplier<BufferedDataTable[]> createIdenticalSpecTable(final DataTableSpec spec, final DataCell[][][] rows) {
+    public static Supplier<BufferedDataTable[]> createIdenticalSpecTable(final DataTableSpec spec,
+        final DataCell[][][] rows) {
         BufferedDataTable[] result = new BufferedDataTable[rows.length];
         for (int i = 0; i < rows.length; i++) {
             var newTable = new TableBuilder(spec);
@@ -508,5 +471,72 @@ public final class TableTestUtil {
     private static final byte[] PNG_IMG2 = {-119, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1,
         0, 0, 0, 2, 8, 2, 0, 0, 0, 22, -29, 33, 112, 0, 0, 0, 16, 73, 68, 65, 84, 8, -41, 99, 104, 108, 108, 100, 56,
         125, -6, 52, 0, 13, -36, 3, -27, 89, 6, 27, 25, 0, 0, 0, 0, 73, 69, 78, 68, -82, 66, 96, -126};
+
+    /**
+     * A class containing necessary column information to build a BufferedDataTable from multiple of its instances.
+     *
+     * @author BaernreutherPaul
+     */
+    public static final class ObjectColumn {
+
+        /**
+         * the name of the column
+         */
+        private final String m_name;
+
+        /**
+         * the {@link DataType} of the column
+         */
+        private final DataType m_type;
+
+        /**
+         * the source of the row values of the column
+         */
+        private final Object[] m_data;
+
+        /**
+         * @param name the name of the column
+         * @param type the {@link DataType} of the column
+         * @param data the source of the row values of the column
+         */
+        public ObjectColumn(final String name, final DataType type, final Object[] data) {
+            m_name = name;
+            m_type = type;
+            m_data = data;
+        }
+    }
+
+    /**
+     * @param objectColumns an array of columns of equal length
+     * @return a {@link BufferedDataTable} consisting of the given columns
+     */
+    public static BufferedDataTable createTableFromColumns(final ObjectColumn... objectColumns) {
+        return createTableFromColumns(TableTestUtil::cellify, objectColumns);
+    }
+
+    /**
+     * @param cellify function for converting {@link Object objects} into {@link DataCell data cells}.
+     * @param objectColumns an array of columns of equal length
+     * @return a {@link BufferedDataTable} consisting of the given columns
+     */
+    public static BufferedDataTable createTableFromColumns(final Function<Object, DataCell> cellify,
+        final ObjectColumn... objectColumns) {
+        final var columnList = new ArrayList<ObjectColumn>(Arrays.asList(objectColumns));
+        final var specBuilder = new SpecBuilder();
+        columnList.forEach(col -> specBuilder.addColumn(col.m_name, col.m_type));
+        final var spec = specBuilder.build();
+        final var builder = new TableBuilder(spec, cellify);
+        if (!columnList.isEmpty()) {
+            Integer nRows = columnList.get(0).m_data.length;
+            columnList.stream().forEach(col -> {
+                if (col.m_data.length != nRows) {
+                    throw new IllegalArgumentException("Columns need to be of the same length");
+                }
+            });
+            IntStream.range(0, nRows).mapToObj(i -> columnList.stream().map(col -> col.m_data[i]).toArray())
+                .forEach(builder::addRow);
+        }
+        return builder.build().get();
+    }
 
 }
