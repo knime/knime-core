@@ -68,6 +68,7 @@ import org.knime.core.data.container.ILocalDataRepository;
 import org.knime.core.data.container.TableSpecReplacerTable;
 import org.knime.core.data.container.VoidTable;
 import org.knime.core.data.container.WrappedTable;
+import org.knime.core.data.container.filter.TableFilter;
 import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.filestore.FileStoreCell;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
@@ -82,6 +83,7 @@ import org.knime.core.node.workflow.LoopEndNode;
 import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
 import org.knime.core.node.workflow.WorkflowTableBackendSettings;
 import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeOutputNodeModel;
+import org.knime.core.table.row.Selection;
 import org.knime.core.util.DuplicateKeyException;
 
 /**
@@ -521,10 +523,7 @@ public class ExecutionContext extends ExecutionMonitor {
         throws CanceledExecutionException {
         final KnowsRowCountTable table =
             getTableBackend().concatenate(exec, m_dataRepository::generateNewID, null, true, tables);
-        registerAsLocalTableIfContainerTable(table);
-        final var out = BufferedDataTable.wrapTableFromTableBackend(table, getDataRepository());
-        out.setOwnerRecursively(m_node);
-        return out;
+        return wrapTableFromBackend(table);
     }
 
     /**
@@ -566,10 +565,7 @@ public class ExecutionContext extends ExecutionMonitor {
         final BufferedDataTable... tables) throws CanceledExecutionException {
         final KnowsRowCountTable concatenated = getTableBackend().concatenate(exec, m_dataRepository::generateNewID,
             rowKeyDuplicateSuffix.orElse(null), duplicatesPreCheck, tables);
-        registerAsLocalTableIfContainerTable(concatenated);
-        var out = BufferedDataTable.wrapTableFromTableBackend(concatenated, m_dataRepository);
-        out.setOwnerRecursively(m_node);
-        return out;
+        return wrapTableFromBackend(concatenated);
     }
 
     /**
@@ -609,8 +605,27 @@ public class ExecutionContext extends ExecutionMonitor {
     public BufferedDataTable createJoinedTable(final BufferedDataTable left, final BufferedDataTable right,
         final ExecutionMonitor exec) throws CanceledExecutionException {
         KnowsRowCountTable jt = getTableBackend().append(exec, m_dataRepository::generateNewID, left, right);
-        registerAsLocalTableIfContainerTable(jt);
-        var out = BufferedDataTable.wrapTableFromTableBackend(jt, getDataRepository());
+        return wrapTableFromBackend(jt);
+    }
+
+    /**
+     * Creates a sliced table according to the provided {@link TableFilter slice}. This {@link ExecutionContext} will be
+     * used for progress reporting. Use {@code exec.createSubExecutionContext(0.2).createSlicedTable(table, slice)} if
+     * only a part of the nodes progress should be covered by this operation.
+     *
+     * @param table to slice
+     * @param slice the slice to extract from the provided table
+     * @return the sliced table
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    BufferedDataTable createSlicedTable(final BufferedDataTable table, final Selection slice) {
+        var slicedTable = getTableBackend().slice(this, table, slice, m_dataRepository::generateNewID);
+        return wrapTableFromBackend(slicedTable);
+    }
+
+    private BufferedDataTable wrapTableFromBackend(final KnowsRowCountTable table) {
+        registerAsLocalTableIfContainerTable(table);
+        var out = BufferedDataTable.wrapTableFromTableBackend(table, getDataRepository());
         out.setOwnerRecursively(m_node);
         return out;
     }

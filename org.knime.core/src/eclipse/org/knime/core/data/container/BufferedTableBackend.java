@@ -50,14 +50,19 @@ package org.knime.core.data.container;
 
 import java.util.Optional;
 import java.util.function.IntSupplier;
+import java.util.function.IntUnaryOperator;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.IDataRepository;
 import org.knime.core.data.TableBackend;
+import org.knime.core.data.container.filter.TableFilter;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.NotInWorkflowWriteFileStoreHandler;
 import org.knime.core.data.v2.RowContainer;
 import org.knime.core.data.v2.RowKeyType;
+import org.knime.core.data.v2.RowRead;
+import org.knime.core.data.v2.RowWrite;
+import org.knime.core.data.v2.RowWriteCursor;
 import org.knime.core.data.v2.schema.ValueSchema;
 import org.knime.core.data.v2.schema.ValueSchemaUtils;
 import org.knime.core.node.BufferedDataContainer;
@@ -66,6 +71,9 @@ import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.Node;
+import org.knime.core.table.row.Selection;
+import org.knime.core.table.row.Selection.RowRangeSelection;
 
 /**
  * Default implementation of {@link TableBackend} using {@link DataContainer} and {@link DataContainerDelegate}s.
@@ -151,6 +159,94 @@ public final class BufferedTableBackend implements TableBackend {
         final BufferedDataTable table, final ExecutionContext context)
         throws CanceledExecutionException {
         return RearrangeColumnsTable.create(columnRearranger, table, progressMonitor, context);
+    }
+
+    @Override
+    public KnowsRowCountTable slice(final ExecutionContext exec, final BufferedDataTable table, final Selection slice,
+        final IntSupplier tableIdSupplier) {
+        var inputSpec = table.getDataTableSpec();
+        var slicer = new TableSlicer(inputSpec, slice);
+        return slicer.slice(exec, table);
+    }
+
+    private static final class TableSlicer {
+
+        private final Selection m_slice;
+
+        private final IntUnaryOperator m_indexMap;
+
+        private final DataTableSpec m_slicedSpec;
+
+        TableSlicer(final DataTableSpec spec, final Selection slice) {
+            m_slice = slice;
+            var filterColumns = slice.columns();
+            if (!filterColumns.allSelected()) {
+                var cols = filterColumns.getSelected();
+                m_indexMap = i -> cols[i];
+                m_slicedSpec = sliceSpec(spec, cols);
+            } else {
+                m_indexMap = i -> i;
+                m_slicedSpec = spec;
+            }
+        }
+
+        KnowsRowCountTable slice(final ExecutionContext exec, final BufferedDataTable table) {
+            long numRows = slicedSize(table.size(), m_slice.rows());
+
+            try (//
+                    var container = exec.createRowContainer(m_slicedSpec, true); //
+                    var writeCursor = container.createCursor() //
+            ) {
+                if (numRows == 0) {
+                    exec.setProgress(1);
+                } else {
+                    copySlice(exec, table, numRows, writeCursor);
+                }
+                return Node.invokeGetDelegate(container.finish());
+            } catch (Exception ex) {
+                throw new IllegalStateException("Failed to create the sliced table.", ex);
+            }
+        }
+
+        private void copySlice(final ExecutionContext exec, final BufferedDataTable table, final double numRows,
+            final RowWriteCursor writeCursor) {
+            try (var readCursor = table.cursor(TableFilter.fromSelection(m_slice))) {
+                for (long r = 1; readCursor.canForward(); r++) {
+                    var rowWrite = writeCursor.forward();
+                    var rowRead = readCursor.forward();
+                    copyRow(rowWrite, rowRead);
+                    exec.setProgress(r / numRows);
+                }
+            }
+        }
+
+        private void copyRow(final RowWrite rowWrite, final RowRead rowRead) {
+            rowWrite.setRowKey(rowRead.getRowKey());
+            for (int i = 0; i < m_slicedSpec.getNumColumns(); i++) { //NOSONAR
+                var oldIndex = m_indexMap.applyAsInt(i);
+                if (rowRead.isMissing(oldIndex)) {
+                    rowWrite.setMissing(i);
+                } else {
+                    rowWrite.getWriteValue(i).setValue(rowRead.getValue(oldIndex));
+                }
+            }
+        }
+
+        private static long slicedSize(final long fullSize, final RowRangeSelection slice) {
+            if (slice.allSelected(0, fullSize)) {
+                return fullSize;
+            } else {
+                var from = Math.max(0, slice.fromIndex());
+                var to = Math.min(slice.toIndex(), fullSize);
+                return to - from;
+            }
+        }
+
+        private static DataTableSpec sliceSpec(final DataTableSpec fullSpec, final int[] columns) {
+            var rearranger = new ColumnRearranger(fullSpec);
+            rearranger.keepOnly(columns);
+            return rearranger.createSpec();
+        }
     }
 
 }

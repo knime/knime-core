@@ -59,6 +59,7 @@ import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.table.row.Selection;
 
 /**
  * TableBackends are used to read and write tables within KNIME AP nodes.
@@ -162,5 +163,19 @@ public interface TableBackend {
     KnowsRowCountTable rearrange(ExecutionMonitor progressMonitor, IntSupplier tableIdSupplier,
         final ColumnRearranger columnRearranger, BufferedDataTable table, ExecutionContext context)
         throws CanceledExecutionException;
+
+    /**
+     * Slices the input table according to the provided TableFilter.
+     * Example: The table filter defines a column selection of 2, 5 and 7 and defines a row range from 1000 to 1005,
+     * then the sliced table will have 3 columns and 6 rows (the to index in TableFilter is inclusive).
+     *
+     * @param exec for reporting progress and the potential creation of tables
+     * @param table to slice
+     * @param slice the definition of the slice
+     * @param tableIdSupplier provides IDs for potentially created ContainerTables
+     * @return the sliced table
+     */
+    KnowsRowCountTable slice(ExecutionContext exec, BufferedDataTable table, Selection slice,
+        IntSupplier tableIdSupplier);
 
 }
