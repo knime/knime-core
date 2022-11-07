@@ -54,6 +54,7 @@ import java.util.function.Supplier;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.webui.data.ApplyDataService;
 import org.knime.core.webui.data.DataService;
 import org.knime.core.webui.data.InitialDataService;
@@ -78,14 +79,16 @@ public final class TableNodeView implements NodeView {
     private TableViewViewSettings m_settings;
 
     /**
-     * @param tableId a globally unique id to be able to uniquely identify the images belonging to the table which this
-     *            view visualizes
      * @param tableSupplier supplier of the table which this view visualizes
      */
-    public TableNodeView(final String tableId, final Supplier<BufferedDataTable> tableSupplier) {
+    public TableNodeView(final Supplier<BufferedDataTable> tableSupplier) {
+        this(TableViewUtil.toTableId(NodeContext.getContext().getNodeContainer().getID()), tableSupplier);
+    }
+
+    TableNodeView(final String tableId, final Supplier<BufferedDataTable> tableSupplier) {
         m_tableId = tableId;
         m_tableSupplier = tableSupplier;
-        TableViewUtil.onCreateNodeView(tableId);
+        TableViewUtil.registerRendererRegistryCleanup(tableId);
     }
 
     @Override

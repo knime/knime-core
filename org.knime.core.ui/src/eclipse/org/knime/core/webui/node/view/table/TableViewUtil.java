@@ -55,6 +55,7 @@ import java.util.function.Supplier;
 
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.workflow.NodeContext;
+import org.knime.core.node.workflow.NodeID;
 import org.knime.core.webui.node.util.NodeCleanUpCallback;
 import org.knime.core.webui.node.view.table.data.TableViewDataService;
 import org.knime.core.webui.node.view.table.data.TableViewDataServiceImpl;
@@ -166,11 +167,21 @@ public final class TableViewUtil {
      *
      * @param tableId a globally unique id to be able to uniquely identify the images belonging to the table used here
      */
-    public static void onCreateNodeView(final String tableId) {
+    public static void registerRendererRegistryCleanup(final String tableId) {
         var nc = NodeContext.getContext().getNodeContainer();
         NodeCleanUpCallback.builder(nc, () -> RENDERER_REGISTRY.clear(tableId)) //
             .cleanUpOnNodeStateChange(true) //
             .deactivateOnNodeStateChange(false).build();
+    }
+
+    /**
+     * Helper to return a proper table id from a node id.
+     *
+     * @param nodeID
+     * @return a table id (which is globally unique, because the node id is)
+     */
+    public static String toTableId(final NodeID nodeID) {
+        return nodeID.toString().replace(":", "_");
     }
 
 }
