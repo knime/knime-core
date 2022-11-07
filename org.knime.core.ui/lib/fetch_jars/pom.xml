@@ -15,7 +15,7 @@ xsi:schemaLocation="https://maven.apache.org/POM/4.0.0 https://maven.apache.org/
     </description>
 
     <properties>
-        <revision>4.5.0</revision>
+        <revision>4.7.0</revision>
         <changelist>-SNAPSHOT</changelist>
     </properties>
 

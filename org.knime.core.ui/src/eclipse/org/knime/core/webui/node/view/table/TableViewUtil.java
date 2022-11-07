@@ -70,8 +70,7 @@ import org.knime.core.webui.page.Page;
  * @author Marc Bux, KNIME GmbH, Berlin, Germany
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
-@SuppressWarnings("javadoc")
-public class TableViewUtil {
+public final class TableViewUtil {
 
     // This is workaround/hack for the lack of proper random-access functionality for a (BufferedData)Table.
     // For more details see the class' javadoc.
@@ -102,7 +101,6 @@ public class TableViewUtil {
     }
 
     /**
-     * @param rendererRegistry required for images in the table
      * @return the page representing the table view
      */
     public static Page createPage() {
@@ -128,17 +126,20 @@ public class TableViewUtil {
         return createDataService(() -> table, tableId);
     }
 
+    /**
+     * @param tableSupplier the supplier for the table to create the data service for
+     * @param tableId a globally unique id to be able to uniquely identify the images belong to the table used here
+     * @return a new table view data service instance
+     */
     public static TableViewDataService createDataService(final Supplier<BufferedDataTable> tableSupplier,
         final String tableId) {
-        return new TableViewDataServiceImpl(tableSupplier, tableId, new SwingBasedRendererFactory(),
-            RENDERER_REGISTRY);
+        return new TableViewDataServiceImpl(tableSupplier, tableId, new SwingBasedRendererFactory(), RENDERER_REGISTRY);
     }
 
     /**
      * @param settings table view view settings
      * @param table the table to create the initial data for
      * @param tableId a globally unique id to be able to uniquely identify the images belonging to the table used here
-     * @param rendererRegistry required for images in the table
      * @return the table view's initial data object
      */
     public static TableViewInitialData createInitialData(final TableViewViewSettings settings,
@@ -147,12 +148,24 @@ public class TableViewUtil {
             RENDERER_REGISTRY);
     }
 
+    /**
+     * @param settings table view view settings
+     * @param tableSupplier the supplier for the table to create the data service for
+     * @param tableId a globally unique id to be able to uniquely identify the images belonging to the table used here
+     * @return the table view's initial data object
+     */
     public static TableViewInitialData createInitialData(final TableViewViewSettings settings,
         final Supplier<BufferedDataTable> tableSupplier, final String tableId) {
         return new TableViewInitialDataImpl(settings, tableSupplier, tableId, new SwingBasedRendererFactory(),
             RENDERER_REGISTRY);
     }
 
+    /**
+     * Method that is to be called when creating a {@link TableNodeView} and that registers the to-be-visualized table's
+     * unique id with the global {@link DataValueImageRendererRegistry}.
+     *
+     * @param tableId a globally unique id to be able to uniquely identify the images belonging to the table used here
+     */
     public static void onCreateNodeView(final String tableId) {
         var nc = NodeContext.getContext().getNodeContainer();
         NodeCleanUpCallback.builder(nc, () -> RENDERER_REGISTRY.clear(tableId)) //

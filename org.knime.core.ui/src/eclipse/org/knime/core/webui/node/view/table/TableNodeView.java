@@ -65,21 +65,26 @@ import org.knime.core.webui.node.view.NodeView;
 import org.knime.core.webui.page.Page;
 
 /**
+ * A {@link NodeView} implementation for displaying tables.
  *
- * @author marcbux
+ * @author Marc Bux, KNIME GmbH, Berlin, Germany
  */
-public class TableNodeView implements NodeView {
-    //    .withDataService(t -> TableViewUtil.createDataService(() -> t.getTable(), m_nodeID))//
-    //    .withInitialData((s, t) -> TableViewUtil.createInitialData(s, () -> t.getTable(), m_nodeID))//
+public final class TableNodeView implements NodeView {
+
     private final String m_tableId;
 
-    private final Supplier<BufferedDataTable> m_table;
+    private final Supplier<BufferedDataTable> m_tableSupplier;
 
     private TableViewViewSettings m_settings;
 
-    public TableNodeView(final String tableId, final Supplier<BufferedDataTable> table) {
+    /**
+     * @param tableId a globally unique id to be able to uniquely identify the images belonging to the table which this
+     *            view visualizes
+     * @param tableSupplier supplier of the table which this view visualizes
+     */
+    public TableNodeView(final String tableId, final Supplier<BufferedDataTable> tableSupplier) {
         m_tableId = tableId;
-        m_table = table;
+        m_tableSupplier = tableSupplier;
         TableViewUtil.onCreateNodeView(tableId);
     }
 
@@ -91,16 +96,16 @@ public class TableNodeView implements NodeView {
     @Override
     public Optional<InitialDataService> createInitialDataService() {
         if (m_settings == null) {
-            m_settings = new TableViewViewSettings(m_table.get().getSpec());
+            m_settings = new TableViewViewSettings(m_tableSupplier.get().getSpec());
         }
         return Optional.of(new DefaultInitialDataServiceImpl<>(
-            () -> TableViewUtil.createInitialData(m_settings, m_table.get(), m_tableId)));
+            () -> TableViewUtil.createInitialData(m_settings, m_tableSupplier.get(), m_tableId)));
     }
 
     @Override
     public Optional<DataService> createDataService() {
         return Optional.of(new JsonRpcDataServiceImpl(
-            new JsonRpcSingleServer<>(TableViewUtil.createDataService(m_table.get(), m_tableId))));
+            new JsonRpcSingleServer<>(TableViewUtil.createDataService(m_tableSupplier.get(), m_tableId))));
     }
 
     @Override

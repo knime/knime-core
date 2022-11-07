@@ -27,10 +27,10 @@ and then use the following commands. For detailed explanations see [Vue CLI docs
 ### View development in KNIME Analytics Platform
 
 First, depending on which view you want to develop, start the according dev command (see [package.json](package.json)) which
-starts a web server and re-builds the library on source file change. E.g. for the ScatterPlot it would be:
+starts a web server and re-builds the library on source file change. E.g. for the TableView it would be:
 
 ```sh
-npm run dev:ScatterPlot
+npm run dev:TableView
 ```
 
 Second, please add following to the run configuration in Eclipse and start KNIME Analytics Platform:
@@ -40,7 +40,7 @@ Second, please add following to the run configuration in Eclipse and start KNIME
 ```
 
 `<ComponentName>` needs to be filled with the component you want to develop, e.g.:
-`-Dorg.knime.ui.dev.node.view.url=http://localhost:4000/ScatterPlot.umd.min.js`
+`-Dorg.knime.ui.dev.node.view.url=http://localhost:4000/TableView.umd.min.js`
 
 When opening a view in KNIME Analytics Platform the above JS file will be loaded instead of the bundled one.
 Hot-code reloading is not supported yet, so you need to refresh the browser window manually for now.
@@ -115,7 +115,7 @@ npm run build
 To build a single item, use e.g. the following command:
 
 ```sh
-npm run build:ScatterPlot
+npm run build:TableView
 ```
 
 Results are saved to `/dist`.
@@ -142,7 +142,7 @@ The views expect that the embedding app provides the following:
 ### Usage example
 
 ```
-<ScatterPlot>
+<TableView>
 ```
 
 
