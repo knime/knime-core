@@ -185,7 +185,7 @@ public interface URIToFileResolve {
      * @return <code>true</code> if argument URI is node relative, <code>false</code> if not.
      * @since 2.10
      */
-     boolean isNodeRelative(URI uri);
+    boolean isNodeRelative(URI uri);
 
     /**
      * Returns <code>true</code>, if this is a URI that is relative to the space it is used in. It can only be
