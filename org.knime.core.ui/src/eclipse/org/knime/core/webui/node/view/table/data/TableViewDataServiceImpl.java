@@ -245,8 +245,10 @@ public class TableViewDataServiceImpl implements TableViewDataService {
             m_cachedFilteredAndSortedTable = null;
             return m_cachedSortedTable;
         } else {
+            if (m_cachedSortedTable != null) {
+                m_cachedFilteredAndSortedTable = null;
+            }
             m_cachedSortedTable = null;
-            m_cachedFilteredAndSortedTable = null;
             return table;
         }
     }
