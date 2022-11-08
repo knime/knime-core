@@ -25,7 +25,7 @@
 		<profile>
 			<id>build</id>
 			<modules>
-				<module>org.knime.core.ui/js-src/vue</module>
+				<module>org.knime.core.ui/js-src</module>
 				<module>org.knime.core.ui/lib/fetch_jars</module>
 				<module>org.knime.core.data.uritype</module>
 				<module>org.knime.core.pmml</module>
@@ -45,7 +45,7 @@
 		<profile>
 			<id>test</id>
 			<modules>
-			    <module>org.knime.core.ui/js-src/vue</module>
+			    <module>org.knime.core.ui/js-src</module>
 			    <module>org.knime.core.ui/lib/fetch_jars</module>
 			    <module>org.knime.core.ui.tests/lib/fetch_jars</module>
 			    <module>org.knime.testing</module>

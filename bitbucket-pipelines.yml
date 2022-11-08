@@ -8,14 +8,14 @@ definitions:
           - node
         script:
           - git submodule update --init
-          - cd org.knime.core.ui/js-src/vue
+          - cd org.knime.core.ui/js-src
           - npm ci
           - npm run ci:lint
           - npm run coverage -- --ci
           - npm run build
           - npm run ci:audit
         artifacts:
-          - org.knime.core.ui/js-src/vue/dist/**
+          - org.knime.core.ui/js-src/dist/**
 
 pipelines:
   pull-requests:

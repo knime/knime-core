@@ -105,7 +105,7 @@ public final class TableViewUtil {
      * @return the page representing the table view
      */
     public static Page createPage() {
-        return Page.builder(TableViewUtil.class, "js-src/vue/dist", "TableView.umd.min.js")
+        return Page.builder(TableViewUtil.class, "js-src/dist", "TableView.umd.min.js")
             .addResources(createTableCellImageResourceSupplier(),
                 DataValueImageRendererRegistry.RENDERED_CELL_IMAGES_PATH_PREFIX, true)
             .build();

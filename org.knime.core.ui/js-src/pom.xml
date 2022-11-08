@@ -8,7 +8,7 @@
 		<groupId>org.knime</groupId>
 		<artifactId>knime-core</artifactId>
 		<version>${revision}${changelist}</version>
-		<relativePath>../../../pom.xml</relativePath>
+		<relativePath>../../pom.xml</relativePath>
 	</parent>
 
 	<artifactId>org.knime.core.ui-vue</artifactId>

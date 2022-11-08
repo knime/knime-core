@@ -70,7 +70,7 @@ public final class DefaultNodeDialog extends NodeDialog {
      * @return the {@link Page} used by this dialog
      */
     public static Page buildPage() {
-        return Page.builder(DefaultNodeDialog.class, "js-src/vue/dist", "NodeDialog.umd.min.js").build();
+        return Page.builder(DefaultNodeDialog.class, "js-src/dist", "NodeDialog.umd.min.js").build();
     }
 
     private final DefaultNodeSettingsService m_settingsDataService;
