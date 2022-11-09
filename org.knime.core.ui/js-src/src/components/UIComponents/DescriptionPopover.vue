@@ -156,6 +156,7 @@ export default {
     & .content {
       max-height: 300px;
       overflow: auto;
+      pointer-events: auto;
       padding: 15px;
       font-size: 13px;
       line-height: 18.78px; /* Description component line-height-to-font-size-ratio of 26/18 times font size of 13 */

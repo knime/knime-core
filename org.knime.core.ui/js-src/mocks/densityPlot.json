@@ -69,7 +69,7 @@
               "type": "number",
               "format": "double",
               "title": "Adjustment factor",
-              "description": "TODO",
+              "description": "The kernel bandwidth computed by the rule of thumb is multiplied by this adjustment factor.",
               "default": 1,
               "minimum": 0.01
             },
@@ -91,14 +91,14 @@
                 }
               ],
               "title": "Kernel bandwidth",
-              "description": "TODO",
+              "description": "The bandwidth of the gaussian kernel used for the density estimation can be configured here. If “Rule of thumb” is selected, the bandwidth is computed with \"<a href=\"https://onlinelibrary.wiley.com/doi/book/10.1002/9780470316849\" target=\"_blank\" rel=\"noopener noreferrer\">Scott's rule of thumb</a>:\" bw = 1.06 * min(std, IQR/1.34) * n^(-1/5), where std is the sample standard deviation, IQR is the interquartile range and n is the number of observations (see also R's \"<a href =\"https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/bandwidth\">bw.nrd</a>).",
               "default": "RULE"
             },
             "customBandwidth": {
               "type": "number",
               "format": "double",
               "title": "Custom bandwidth",
-              "description": "TODO",
+              "description": "Choose the bandwidth of the gaussian kernel.",
               "default": 1,
               "minimum": 0
             },
