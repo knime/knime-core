@@ -2,7 +2,10 @@
 import Vue from 'vue';
 import { JsonDataService, SelectionService } from '@knime/ui-extension-service';
 import { TableUI } from '@knime/knime-ui-table';
-import { createDefaultFilterConfig, arrayEquals, isImage } from '@/utils/tableViewUtils';
+import {
+    createDefaultFilterConfig, arrayEquals, isImage, calculateNewPage,
+    getPageInitialIndex
+} from '@/utils/tableViewUtils';
 import throttle from 'raf-throttle';
 import { MIN_COLUMN_SIZE, SPECIAL_COLUMNS_SIZE, DATA_COLUMNS_MARGIN } from '@knime/knime-ui-table/util/constants';
 
@@ -21,6 +24,7 @@ export default {
             dataLoaded: false,
             currentIndex: 0,
             currentPage: 1,
+            currentRowKeys: [],
             columnSortIndex: null,
             columnSortDirection: null,
             columnSortColumnName: null,
@@ -30,7 +34,8 @@ export default {
             dataTypes: {},
             columnDomainValues: {},
             currentSelectedRowKeys: new Set(),
-            rowCount: 0,
+            totalRowCount: 0,
+            currentRowCount: 0,
             columnCount: 0,
             settings: {},
             displayedColumns: [],
@@ -83,15 +88,16 @@ export default {
         },
         tableConfig() {
             const { enableSortingByHeader, enableGlobalSearch, enableColumnSearch,
-                publishSelection, subscribeToSelection, pageSize } = this.settings;
+                publishSelection, subscribeToSelection, pageSize, enablePagination } = this.settings;
             return {
                 subMenuItems: false,
                 showSelection: publishSelection || subscribeToSelection,
                 showColumnFilters: enableColumnSearch,
                 pageConfig: {
-                    currentSize: this.rowCount,
-                    tableSize: this.rowCount,
-                    pageSize,
+                    currentSize: this.currentRowCount,
+                    tableSize: this.totalRowCount,
+                    visibleSize: pageSize,
+                    pageSize: enablePagination ? pageSize : this.currentRowCount,
                     currentPage: this.currentPage,
                     columnCount: this.columnCount
                 },
@@ -136,7 +142,7 @@ export default {
                 columnSizes.push(this.columnSizeOverrides[columnName] || defaultColumnSize);
                 return columnSizes;
             }, [this.columnSizeOverrides[INDEX_SYMBOL] || defaultColumnSize,
-                this.columnSizeOverrides[ROW_KEY_SYMBOL] || defaultColumnSize]);
+            this.columnSizeOverrides[ROW_KEY_SYMBOL] || defaultColumnSize]);
             const lastColumnMinSize = this.lastColumnMinSize(dataColumnsSizeTotal, currentColumnSizes);
             currentColumnSizes[currentColumnSizes.length - 1] = Math.max(lastColumnMinSize,
                 currentColumnSizes[currentColumnSizes.length - 1]);
@@ -215,6 +221,8 @@ export default {
             this.displayedColumns = table.displayedColumns;
             this.dataTypes = dataTypes;
             this.columnDomainValues = columnDomainValues;
+            this.totalRowCount = this.rowCount;
+            this.currentRowCount = this.rowCount;
             this.columnCount = columnCount;
             this.settings = settings;
             if (this.useLazyLoading) {
@@ -246,9 +254,11 @@ export default {
             const numRows = Math.min(this.scopeSize, this.rowCount);
             this.currentScopeStartIndex = 0;
             this.currentScopeEndIndex = numRows;
-            await this.updateData({ lazyLoad: { loadFromIndex: 0, numRows, newScopeStart: 0 },
+            await this.updateData({
+                lazyLoad: { loadFromIndex: 0, numRows, newScopeStart: 0 },
                 updateDisplayedColumns,
-                requestRowKeys: true });
+                requestRowKeys: true
+            });
         },
 
         onScroll({ direction, startIndex, endIndex }) {
@@ -284,14 +294,16 @@ export default {
             if (numRows > 0) {
                 this.currentScopeStartIndex = newScopeStart;
                 this.currentScopeEndIndex = newScopeStart + (bufferEnd - bufferStart) + numRows;
-                this.updateData({ lazyLoad: {
-                    loadFromIndex,
-                    numRows,
-                    bufferStart,
-                    bufferEnd,
-                    direction,
-                    newScopeStart
-                } });
+                this.updateData({
+                    lazyLoad: {
+                        loadFromIndex,
+                        numRows,
+                        bufferStart,
+                        bufferEnd,
+                        direction,
+                        newScopeStart
+                    }
+                });
             }
         },
 
@@ -322,10 +334,12 @@ export default {
                     this.table = { ...receivedTable, rows };
                 } else {
                     this.table.rows = rows;
+                    this.table.rowCount = receivedTable.rowCount;
                 }
             } else {
                 this.table = receivedTable;
             }
+            this.currentRowCount = this.table.rowCount;
             this.transformSelection();
         },
 
@@ -339,7 +353,7 @@ export default {
                     updateDisplayedColumns, requestRowKeys);
             }
         },
-        
+
         // eslint-disable-next-line max-params
         requestFilteredAndSortedTable(startIndex, numRows, displayedColumns, updateDisplayedColumns, requestRowKeys) {
             const columnSortIsAscending = this.columnSortDirection === 1;
@@ -350,7 +364,7 @@ export default {
             return this.requestNewData('getFilteredAndSortedTable',
                 [
                     displayedColumns,
-                    Math.min(this.rowCount - 1, Math.max(0, startIndex)),
+                    Math.min(this.totalRowCount - 1, Math.max(0, startIndex)),
                     numRows,
                     this.columnSortColumnName,
                     columnSortIsAscending,
@@ -377,7 +391,7 @@ export default {
         requestNewData(method, options) {
             return this.jsonDataService.data({ method, options });
         },
-        
+
         fillWithEmptyRows(nonEmptyRows, startIndex, rowCount) {
             const result = Array(rowCount).fill([]);
             result.splice(startIndex, nonEmptyRows.length, ...nonEmptyRows);
@@ -397,10 +411,14 @@ export default {
         },
 
         refreshTable(params) {
-            const { updateDisplayedColumns = false, requestRowKeys = false } = params || {};
+            let { updateDisplayedColumns = false, resetPage = false, requestRowKeys = resetPage } = params || {};
             const tableUI = this.$refs.tableUI;
             if (tableUI) {
                 tableUI.refreshScroller();
+            }
+            if (resetPage) {
+                this.currentPage = 1;
+                this.currentIndex = 0;
             }
             if (this.useLazyLoading) {
                 this.initializeLazyLoading(updateDisplayedColumns);
@@ -416,18 +434,9 @@ export default {
             this.refreshTable();
         },
 
-        resetPage() {
-            this.currentPage = 1;
-            this.currentIndex = 0;
-            this.refreshTable({ requestRowKeys: true });
-        },
-
         onViewSettingsChange(event) {
             const newSettings = event.data.data.view;
             const enablePaginationChanged = newSettings.enablePagination !== this.settings.enablePagination;
-            if (enablePaginationChanged) {
-                this.currentIndex = 0;
-            }
             const displayedColumnsChanged =
                 !arrayEquals(newSettings.displayedColumns, this.settings.displayedColumns);
             const showRowKeysChanged = newSettings.showRowKeys !== this.settings.showRowKeys;
@@ -435,7 +444,7 @@ export default {
             const pageSizeChanged = newSettings.pageSize !== this.settings.pageSize;
             const compactModeChangeInducesRefresh = this.useLazyLoading &&
                 (newSettings.compactMode !== this.settings.compactMode);
-            
+
             this.settings = newSettings;
 
             const numberOfDisplayedColsChanged = displayedColumnsChanged || showRowKeysChanged || showRowIndicesChanged;
@@ -444,11 +453,14 @@ export default {
                 sortingParamsReseted = this.updateSortingParams(newSettings, displayedColumnsChanged,
                     showRowKeysChanged, showRowIndicesChanged);
             }
-            if (displayedColumnsChanged) {
-                this.refreshTable({ updateDisplayedColumns: true });
-            } else if (pageSizeChanged || enablePaginationChanged || compactModeChangeInducesRefresh ||
-                sortingParamsReseted) {
+            if (compactModeChangeInducesRefresh) {
                 this.refreshTable();
+            } else if (displayedColumnsChanged) {
+                this.refreshTable({ updateDisplayedColumns: true });
+            } else if (sortingParamsReseted) {
+                this.refreshTable({ requestRowKeys: true });
+            } else if (pageSizeChanged || enablePaginationChanged) {
+                this.refreshTable({ resetPage: true });
             }
             this.selectionService.onSettingsChange(() => Array.from(this.currentSelectedRowKeys), this.clearSelection,
                 newSettings.publishSelection, newSettings.subscribeToSelection);
@@ -485,15 +497,15 @@ export default {
         },
         onSearch(input) {
             this.searchTerm = input;
-            this.resetPage();
+            this.refreshTable({ resetPage: true });
         },
         onColumnFilter(colInd, value) {
             this.columnFilters[this.columnIndexMap.get(colInd)].value = value;
-            this.resetPage();
+            this.refreshTable({ resetPage: true });
         },
         onClearFilter() {
             this.columnFilters = this.getDefaultFilterConfigs(this.displayedColumns);
-            this.resetPage();
+            this.refreshTable({ resetPage: true });
         },
         onColumnResize(columnIndex, newColumnSize) {
             const colName = this.dataConfig.columnConfigs[columnIndex].header;
@@ -523,7 +535,7 @@ export default {
             /* eslint-disable no-invalid-this */
             const updatedClientWidth = this.$el.getBoundingClientRect().width;
             if (updatedClientWidth) {
-            // also update all overridden column widths according to the relative change in client width
+                // also update all overridden column widths according to the relative change in client width
                 const ratio = updatedClientWidth / this.clientWidth;
                 Object.keys(this.columnSizeOverrides).forEach(key => {
                     this.columnSizeOverrides[key] *= ratio;
@@ -608,14 +620,14 @@ export default {
                     }
                 }
                 // no change when sorting the rowKey column and adding/removing columns behind the rowKey column
-            // current sorting is on rowKey column which is removed
+                // current sorting is on rowKey column which is removed
             } else if (this.columnSortColumnName === ROW_KEYS_SORT_COL_NAME && !showRowKeys) {
                 this.resetSorting();
                 return true;
-            // rowKey or rowIndex column is added
+                // rowKey or rowIndex column is added
             } else if ((showRowKeys && showRowKeysChanged) || (showRowIndices && showRowIndicesChanged)) {
                 this.columnSortIndex += 1;
-            // rowKey or rowIndex column is removed
+                // rowKey or rowIndex column is removed
             } else {
                 this.columnSortIndex -= 1;
             }
