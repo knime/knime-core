@@ -49,8 +49,10 @@
 package org.knime.core.webui.node.view.table;
 
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Supplier;
 
+import org.knime.core.data.RowKey;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
@@ -76,18 +78,36 @@ public final class TableNodeView implements NodeView {
 
     private final Supplier<BufferedDataTable> m_tableSupplier;
 
+    private final Supplier<Set<RowKey>> m_selectionSupplier;
+
     private TableViewViewSettings m_settings;
+
+    /**
+     * @param tableSupplier supplier of the table which this view visualizes
+     * @param selectionSupplier supplier of currently selected rowKeys
+     */
+    public TableNodeView(final Supplier<BufferedDataTable> tableSupplier,
+        final Supplier<Set<RowKey>> selectionSupplier) {
+        this(TableViewUtil.toTableId(NodeContext.getContext().getNodeContainer().getID()), tableSupplier,
+            selectionSupplier);
+    }
 
     /**
      * @param tableSupplier supplier of the table which this view visualizes
      */
     public TableNodeView(final Supplier<BufferedDataTable> tableSupplier) {
-        this(TableViewUtil.toTableId(NodeContext.getContext().getNodeContainer().getID()), tableSupplier);
+        this(tableSupplier, null);
     }
 
     TableNodeView(final String tableId, final Supplier<BufferedDataTable> tableSupplier) {
+        this(tableId, tableSupplier, null);
+    }
+
+    TableNodeView(final String tableId, final Supplier<BufferedDataTable> tableSupplier,
+        final Supplier<Set<RowKey>> selectionSupplier) {
         m_tableId = tableId;
         m_tableSupplier = tableSupplier;
+        m_selectionSupplier = selectionSupplier;
         TableViewUtil.registerRendererRegistryCleanup(tableId);
     }
 
@@ -107,8 +127,8 @@ public final class TableNodeView implements NodeView {
 
     @Override
     public Optional<DataService> createDataService() {
-        return Optional.of(new JsonRpcDataServiceImpl(
-            new JsonRpcSingleServer<>(TableViewUtil.createDataService(m_tableSupplier.get(), m_tableId))));
+        return Optional.of(new JsonRpcDataServiceImpl(new JsonRpcSingleServer<>(
+            TableViewUtil.createDataService(m_tableSupplier, m_selectionSupplier, m_tableId))));
     }
 
     @Override

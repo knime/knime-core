@@ -55,6 +55,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -64,6 +65,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.RowKey;
 import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainer;
@@ -120,6 +122,8 @@ public class TableViewDataServiceImpl implements TableViewDataService {
 
     private final String m_tableId;
 
+    private final Supplier<Set<RowKey>> m_selectionSupplier;
+
     /**
      * @param tableSupplier supplier for the table from which to obtain data
      * @param tableId TODO
@@ -135,20 +139,41 @@ public class TableViewDataServiceImpl implements TableViewDataService {
         m_tableId = tableId;
         m_rendererFactory = rendererFactory;
         m_rendererRegistry = rendererRegistry;
+        m_selectionSupplier = null;
+    }
+
+    /**
+     * @param tableSupplier supplier for the table from which to obtain data
+     * @param selectionSupplier TODO can be {@code null}
+     * @param tableId TODO
+     * @param rendererFactory required to turn data values into text or images
+     * @param rendererRegistry lazily supplied image content for cells that are rendered into images (cleared and filled
+     *            whenever new rows are being requested, e.g., via
+     *            {@link #getTable(String[], long, int, String[], boolean, boolean)})
+     */
+    public TableViewDataServiceImpl(final Supplier<BufferedDataTable> tableSupplier,
+        final Supplier<Set<RowKey>> selectionSupplier, final String tableId,
+        final DataValueRendererFactory rendererFactory, final DataValueImageRendererRegistry rendererRegistry) {
+        m_selectionSupplier = selectionSupplier;
+        Objects.requireNonNull(tableSupplier, () -> "Table supplier must not be null.");
+        m_tableSupplier = tableSupplier;
+        m_tableId = tableId;
+        m_rendererFactory = rendererFactory;
+        m_rendererRegistry = rendererRegistry;
     }
 
     @Override
     public Table getTable(final String[] columns, final long fromIndex, final int numRows, final String[] rendererIds,
-        final boolean updateDisplayedColumns, final boolean withAllRowKeys) {
+        final boolean updateDisplayedColumns) {
         return getFilteredAndSortedTable(columns, fromIndex, numRows, null, false, null, null, false, rendererIds,
-            updateDisplayedColumns, withAllRowKeys);
+            updateDisplayedColumns, false);
     }
 
     @Override
     public Table getFilteredAndSortedTable(final String[] columns, final long fromIndex, final int numRows,
         final String sortColumn, final boolean sortAscending, final String globalSearchTerm,
         final String[][] columnFilterValue, final boolean filterRowKeys, final String[] rendererIdsParam,
-        final boolean updateDisplayedColumns, final boolean withAllRowKeys) {
+        final boolean updateDisplayedColumns, final boolean updateTotalSelected) {
         var bufferedDataTable = m_tableSupplier.get();
         if (bufferedDataTable == null) {
             return createEmptyTable();
@@ -160,8 +185,10 @@ public class TableViewDataServiceImpl implements TableViewDataService {
         // we sort first (even though it is more expensive) because filtering happens more frequently
         // and therefore we do not have to re-sort every time we filter
         DataTable sortedTable = getOrCreateSortedTable(bufferedDataTable, sortColumn, sortAscending);
-        DataTable filteredAndSortedTable =
-            getOrCreateFilteredTable(sortedTable, displayedColumns, globalSearchTerm, columnFilterValue, filterRowKeys);
+        final var pair = getOrCreateFilteredTable(sortedTable, displayedColumns, globalSearchTerm, columnFilterValue,
+            filterRowKeys, updateTotalSelected);
+        final var filteredAndSortedTable = pair.getFirst();
+        final var totalSelected = pair.getSecond();
 
         final var spec = bufferedDataTable.getSpec();
         final var colIndices = spec.columnsToIndices(displayedColumns);
@@ -172,13 +199,7 @@ public class TableViewDataServiceImpl implements TableViewDataService {
             : rendererIdsParam;
         updateRenderersMap(spec, displayedColumns, rendererIds);
 
-        // TODO remove this and use execution context, if UIEXT-243 is implemented
-        long tableSize;
-        if (filteredAndSortedTable instanceof ContainerTable) {
-            tableSize = ((ContainerTable)filteredAndSortedTable).size();
-        } else {
-            tableSize = ((BufferedDataTable)filteredAndSortedTable).size();
-        }
+        final var tableSize = getTableSize(filteredAndSortedTable);
         final var toIndex = Math.min(fromIndex + numRows, tableSize) - 1;
         final var size = (int)(toIndex - fromIndex + 1);
 
@@ -194,11 +215,17 @@ public class TableViewDataServiceImpl implements TableViewDataService {
         } else {
             rows = new String[0][];
         }
-        final var rowKeys = withAllRowKeys ? getAllRowKeys(filteredAndSortedTable, (int)tableSize) : null;
         final var tableSpec = bufferedDataTable.getDataTableSpec();
         final var contentTypes = getColumnContentTypes(displayedColumns, rendererIds, m_renderersMap);
         final var dataTypeIds = getColumnDataTypeIds(displayedColumns, tableSpec);
-        return createTable(displayedColumns, contentTypes, dataTypeIds, rows, tableSize, rowKeys);
+        return createTable(displayedColumns, contentTypes, dataTypeIds, rows, tableSize, totalSelected);
+    }
+
+    @Override
+    public Long getTotalSelected() {
+        final var pair = getOrCreateFilteredTable(m_tableSupplier.get(), m_cachedColumns, m_cachedGlobalSearchTerm,
+            m_cachedColumnFilterValue, false, true);
+        return pair.getSecond();
     }
 
     private static String[] filterInvalids(final String[] columns, final DataTableSpec spec) {
@@ -253,8 +280,9 @@ public class TableViewDataServiceImpl implements TableViewDataService {
         }
     }
 
-    private DataTable getOrCreateFilteredTable(final DataTable table, final String[] columns,
-        final String globalSearchTerm, final String[][] columnFilterValue, final boolean filterRowKeys) {
+    private Pair<DataTable, Long> getOrCreateFilteredTable(final DataTable table, final String[] columns,
+        final String globalSearchTerm, final String[][] columnFilterValue, final boolean filterRowKeys,
+        final boolean updateTotalSelected) {
         final var globalSearchTermsEqual =
             globalSearchTerm != null && globalSearchTerm.equals(m_cachedGlobalSearchTerm);
 
@@ -265,7 +293,8 @@ public class TableViewDataServiceImpl implements TableViewDataService {
 
         if (globalSearchTermsEqual && columnFilterValuesEqual && columnsEqual
             && m_cachedFilteredAndSortedTable != null) {
-            return m_cachedFilteredAndSortedTable;
+            final Long totalSelected = updateTotalSelected ? countSelectedRows(m_cachedFilteredAndSortedTable) : null;
+            return new Pair<>(m_cachedFilteredAndSortedTable, totalSelected);
         }
 
         m_cachedGlobalSearchTerm = globalSearchTerm;
@@ -273,7 +302,8 @@ public class TableViewDataServiceImpl implements TableViewDataService {
         m_cachedColumns = columns;
 
         if (globalSearchTerm == null && columnFilterValue == null) {
-            return table;
+            m_cachedFilteredAndSortedTable = null;
+            return new Pair<>(table, null);
         }
 
         final var spec = table.getDataTableSpec();
@@ -285,30 +315,47 @@ public class TableViewDataServiceImpl implements TableViewDataService {
         final var columnOffset = 1;
         final var numColumns = columns.length + columnOffset;
 
+        final var currentSelection = getCurrentSelection();
+        long totalSelected = 0;
+
         try (final var iterator = (CloseableRowIterator)table.iterator()) {
             while (iterator.hasNext()) {
                 final var row = iterator.next();
                 if (filtersMatch(row, spec, globalSearchTerm, columnFilterValue, colIndices, numColumns, columnOffset,
                     filterRowKeys)) {
                     resultContainer.addRowToTable(row);
+                    if (updateTotalSelected && currentSelection.contains(row.getKey())) {
+                        totalSelected += 1;
+                    }
                 }
             }
         }
 
         resultContainer.close();
         m_cachedFilteredAndSortedTable = (ContainerTable)resultContainer.getTable();
-        return m_cachedFilteredAndSortedTable;
+        return new Pair<>(m_cachedFilteredAndSortedTable, totalSelected);
     }
 
-    private static String[] getAllRowKeys(final DataTable table, final int size) {
-        final var rowKeys = new String[size];
-        try (final var iterator = (CloseableRowIterator)table.iterator()) {
-            for (int i = 0; i < size; i++) {
+    /**
+     * @param table
+     * @return the number of selected rows in the given table
+     */
+    private Long countSelectedRows(final ContainerTable table) {
+        var totalSelected = 0l;
+        final var currentSelection = getCurrentSelection();
+        try (final var iterator = createRowIteratorSupplier(table, createRowKeysFilter()).get()) {
+            while (iterator.hasNext()) {
                 final var row = iterator.next();
-                rowKeys[i] = row.getKey().toString();
+                if (currentSelection.contains(row.getKey())) {
+                    totalSelected += 1;
+                }
             }
         }
-        return rowKeys;
+        return totalSelected;
+    }
+
+    private Set<RowKey> getCurrentSelection() {
+        return m_selectionSupplier == null ? Set.of() : m_selectionSupplier.get();
     }
 
     @SuppressWarnings("java:S107") // accept the large number of parameters
@@ -352,6 +399,15 @@ public class TableViewDataServiceImpl implements TableViewDataService {
             }
         }
         return colFilterMatch && globalMatch;
+    }
+
+    private static long getTableSize(final DataTable table) {
+        // TODO remove this and use execution context, if UIEXT-243 is implemented
+        if (table instanceof ContainerTable) {
+            return ((ContainerTable)table).size();
+        } else {
+            return ((BufferedDataTable)table).size();
+        }
     }
 
     private static String[][] renderRows(final String[] columns, final int[] colIndices, final String[] rendererIds,
@@ -409,11 +465,11 @@ public class TableViewDataServiceImpl implements TableViewDataService {
     }
 
     private static Table createEmptyTable() {
-        return createTable(new String[0], new String[0], new String[0], new String[0][], 0, new String[0]);
+        return createTable(new String[0], new String[0], new String[0], new String[0][], 0, 0l);
     }
 
     private static Table createTable(final String[] displayedColumns, final String[] contentTypes,
-        final String[] columnDataTypeIds, final String[][] rows, final long rowCount, final String[] rowKeys) {
+        final String[] columnDataTypeIds, final String[][] rows, final long rowCount, final Long totalSelected) {
         return new Table() {
 
             @Override
@@ -442,8 +498,8 @@ public class TableViewDataServiceImpl implements TableViewDataService {
             }
 
             @Override
-            public String[] getRowKeys() {
-                return rowKeys;
+            public Long getTotalSelected() {
+                return totalSelected;
             }
 
         };
@@ -459,6 +515,29 @@ public class TableViewDataServiceImpl implements TableViewDataService {
             rowIteratorSupplier = () -> ((BufferedDataTable)table).filter(filter).iterator();
         }
         return rowIteratorSupplier;
+    }
+
+    @Override
+    public String[] getCurrentRowKeys() {
+        final var filteredAndSortedTable =
+            m_cachedFilteredAndSortedTable == null ? m_tableSupplier.get() : m_cachedFilteredAndSortedTable;
+        final var size = (int)getTableSize(filteredAndSortedTable);
+        final var rowKeys = new String[size];
+        final var filter = new TableFilter.Builder();
+        filter.withMaterializeColumnIndices(new int[0]);
+        try (final var iterator = createRowIteratorSupplier(filteredAndSortedTable, filter.build()).get()) {
+            IntStream.range(0, size).forEach(index -> {
+                final var row = iterator.next();
+                rowKeys[index] = row.getKey().toString();
+            });
+        }
+        return rowKeys;
+    }
+
+    private static TableFilter createRowKeysFilter() {
+        final var filter = new TableFilter.Builder();
+        filter.withMaterializeColumnIndices(new int[0]);
+        return filter.build();
     }
 
 }

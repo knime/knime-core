@@ -67,8 +67,6 @@ import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.data.image.png.PNGImageCellFactory;
 import org.knime.core.node.BufferedDataTable;
-import org.knime.core.webui.node.view.table.TableViewUtil;
-import org.knime.core.webui.node.view.table.TableViewViewSettings;
 import org.knime.core.webui.node.view.table.data.Renderer;
 import org.knime.core.webui.node.view.table.data.TableViewDataServiceImpl;
 import org.knime.core.webui.node.view.table.data.TableViewInitialDataImpl;
@@ -111,7 +109,7 @@ class TableViewInitialDataTest {
         final var initialData = TableViewUtil.createInitialData(settings, table, nodeId);
         initialData.getTable();
         verify(dataServiceMock.constructed().get(0)).getTable(aryEq(displayedColumns), eq(0L), eq(settings.m_pageSize),
-            any(String[].class), eq(true), eq(true));
+            any(String[].class), eq(true));
     }
 
     @Test
@@ -122,7 +120,7 @@ class TableViewInitialDataTest {
         final var initialData = TableViewUtil.createInitialData(settings, table, nodeId);
         initialData.getTable();
         verify(dataServiceMock.constructed().get(0)).getTable(aryEq(displayedColumns), eq(0L), eq(0),
-            any(String[].class), eq(true), eq(true));
+            any(String[].class), eq(true));
     }
 
     @Test

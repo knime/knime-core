@@ -22,7 +22,6 @@ export default {
             dataLoaded: false,
             currentIndex: 0,
             currentPage: 1,
-            currentRowKeys: [],
             columnSortIndex: null,
             columnSortDirection: null,
             columnSortColumnName: null,
@@ -44,7 +43,8 @@ export default {
             columnIndexMap: null,
             baseUrl: null,
             clientWidth: 0,
-            columnSizeOverrides: {}
+            columnSizeOverrides: {},
+            numRowsAbove: 0
         };
     },
     computed: {
@@ -187,14 +187,6 @@ export default {
         },
         useLazyLoading() {
             return !this.settings.enablePagination;
-        },
-        rowKeysOnPage() {
-            if (!this.settings.enablePagination) {
-                return this.currentRowKeys;
-            }
-            const start = this.currentIndex;
-            const end = Math.min(start + this.settings.pageSize, this.rowCount);
-            return [...this.currentRowKeys].slice(start, end);
         }
     },
     async mounted() {
@@ -227,7 +219,6 @@ export default {
                 await this.initializeLazyLoading();
             } else {
                 this.table = table;
-                this.currentRowKeys = table.rowKeys;
             }
             await this.handleInitialSelection();
             const { publishSelection, subscribeToSelection } = settings;
@@ -248,14 +239,15 @@ export default {
                 currentColumnSizes.slice(2, currentColumnSizes.length - 1).reduce((sum, size) => sum + size, 0);
         },
 
-        async initializeLazyLoading(updateDisplayedColumns) {
+        async initializeLazyLoading(params) {
+            const { updateDisplayedColumns = false, updateTotalSelected = true } = params || {};
             const numRows = Math.min(this.scopeSize, this.rowCount);
             this.currentScopeStartIndex = 0;
             this.currentScopeEndIndex = numRows;
             await this.updateData({
                 lazyLoad: { loadFromIndex: 0, numRows, newScopeStart: 0 },
                 updateDisplayedColumns,
-                requestRowKeys: true
+                updateTotalSelected
             });
         },
 
@@ -300,13 +292,14 @@ export default {
                         bufferEnd,
                         direction,
                         newScopeStart
-                    }
+                    },
+                    updateTotalSelected: false
                 });
             }
         },
 
         async updateData(params) {
-            const { lazyLoad, updateDisplayedColumns = false, requestRowKeys = false } = params;
+            const { lazyLoad, updateTotalSelected, updateDisplayedColumns = false } = params;
             let loadFromIndex, numRows;
             if (lazyLoad) {
                 ({ loadFromIndex, numRows } = lazyLoad);
@@ -316,13 +309,10 @@ export default {
             }
             const displayedColumns = this.getColumnsForRequest(updateDisplayedColumns);
             const receivedTable = await this.requestTable(loadFromIndex, numRows, displayedColumns,
-                updateDisplayedColumns, requestRowKeys);
+                updateDisplayedColumns, updateTotalSelected);
             if (updateDisplayedColumns) {
                 this.columnFilters = this.getDefaultFilterConfigs(receivedTable.displayedColumns);
                 this.displayedColumns = receivedTable.displayedColumns;
-            }
-            if (receivedTable.rowKeys) {
-                this.currentRowKeys = receivedTable.rowKeys;
             }
             if (lazyLoad) {
                 const { newScopeStart, direction, bufferStart, bufferEnd } = lazyLoad;
@@ -339,26 +329,31 @@ export default {
             }
             this.currentRowCount = this.table.rowCount;
             this.transformSelection();
+            this.numRowsAbove = lazyLoad ? lazyLoad.newScopeStart : 0;
         },
 
-        requestTable(startIndex, numRows, displayedColumns, updateDisplayedColumns, requestRowKeys) {
+        async requestTable(startIndex, numRows, displayedColumns, updateDisplayedColumns, updateTotalSelected) {
+            let receivedTable;
             // if columnSortColumnName is present a sorting is active
             if (this.columnSortColumnName || this.searchTerm || this.colFilterActive) {
-                return this.requestFilteredAndSortedTable(startIndex, numRows, displayedColumns,
-                    updateDisplayedColumns, requestRowKeys);
+                receivedTable = await this.requestFilteredAndSortedTable(startIndex, numRows, displayedColumns,
+                    updateDisplayedColumns, updateTotalSelected);
+                if (updateTotalSelected) {
+                    this.totalSelected = receivedTable.totalSelected;
+                }
             } else {
-                return this.requestUnfilteredAndUnsortedTable(startIndex, numRows, displayedColumns,
-                    updateDisplayedColumns, requestRowKeys);
+                receivedTable = await this.requestUnfilteredAndUnsortedTable(startIndex, numRows, displayedColumns,
+                    updateDisplayedColumns);
+                if (updateTotalSelected) {
+                    this.totalSelected = this.currentSelectedRowKeys.size;
+                }
             }
+            return receivedTable;
         },
 
         // eslint-disable-next-line max-params
-        requestFilteredAndSortedTable(startIndex, numRows, displayedColumns, updateDisplayedColumns, requestRowKeys) {
+        requestFilteredAndSortedTable(startIndex, numRows, displayedColumns, updateDisplayedColumns, updateTotalSelected) {
             const columnSortIsAscending = this.columnSortDirection === 1;
-            if (updateDisplayedColumns) {
-                // since filters are cleared, we need to request new row keys
-                requestRowKeys = true;
-            }
             return this.requestNewData('getFilteredAndSortedTable',
                 [
                     displayedColumns,
@@ -371,15 +366,14 @@ export default {
                     this.settings.showRowKeys,
                     null,
                     updateDisplayedColumns,
-                    requestRowKeys
+                    updateTotalSelected
                 ]);
         },
 
         // eslint-disable-next-line max-params
-        requestUnfilteredAndUnsortedTable(startIndex, numRows, displayedColumns, updateDisplayedColumns,
-            requestRowKeys) {
+        requestUnfilteredAndUnsortedTable(startIndex, numRows, displayedColumns, updateDisplayedColumns) {
             return this.requestNewData('getTable',
-                [displayedColumns, startIndex, numRows, null, updateDisplayedColumns, requestRowKeys]);
+                [displayedColumns, startIndex, numRows, null, updateDisplayedColumns]);
         },
 
         getColumnsForRequest(updateDisplayedColumns) {
@@ -409,7 +403,7 @@ export default {
         },
 
         refreshTable(params) {
-            let { updateDisplayedColumns = false, resetPage = false, requestRowKeys = resetPage } = params || {};
+            let { updateDisplayedColumns = false, resetPage = false, updateTotalSelected = true } = params || {};
             const tableUI = this.$refs.tableUI;
             if (tableUI) {
                 tableUI.refreshScroller();
@@ -419,9 +413,9 @@ export default {
                 this.currentIndex = 0;
             }
             if (this.useLazyLoading) {
-                this.initializeLazyLoading(updateDisplayedColumns);
+                this.initializeLazyLoading({ updateDisplayedColumns, updateTotalSelected });
             } else {
-                this.updateData({ updateDisplayedColumns, requestRowKeys });
+                this.updateData({ updateDisplayedColumns, updateTotalSelected });
             }
         },
 
@@ -429,7 +423,7 @@ export default {
             const { pageSize } = this.settings;
             this.currentPage += pageDirection;
             this.currentIndex += pageDirection * pageSize;
-            this.refreshTable();
+            this.refreshTable({ updateTotalSelected: false });
         },
 
         onViewSettingsChange(event) {
@@ -451,14 +445,12 @@ export default {
                 sortingParamsReseted = this.updateSortingParams(newSettings, displayedColumnsChanged,
                     showRowKeysChanged, showRowIndicesChanged);
             }
-            if (compactModeChangeInducesRefresh) {
-                this.refreshTable();
+            if (compactModeChangeInducesRefresh || sortingParamsReseted) {
+                this.refreshTable({ updateTotalSelected: false });
             } else if (displayedColumnsChanged) {
                 this.refreshTable({ updateDisplayedColumns: true });
-            } else if (sortingParamsReseted) {
-                this.refreshTable({ requestRowKeys: true });
             } else if (pageSizeChanged || enablePaginationChanged) {
-                this.refreshTable({ resetPage: true });
+                this.refreshTable({ resetPage: true, updateTotalSelected: false });
             }
             this.selectionService.onSettingsChange(() => Array.from(this.currentSelectedRowKeys), this.clearSelection,
                 newSettings.publishSelection, newSettings.subscribeToSelection);
@@ -473,25 +465,51 @@ export default {
             this.columnSortIndex = newColumnSortIndex;
 
             this.columnSortColumnName = mappedDisplayedColumns[this.columnIndexMap.get(this.columnSortIndex)];
-            this.refreshTable({ requestRowKeys: true });
+            this.refreshTable({ updateTotalSelected: false });
         },
-        onSelectionChange(rawEvent) {
+        async onSelectionChange(rawEvent) {
             const { selection, mode } = rawEvent;
             if (mode === 'REPLACE') {
                 this.currentSelectedRowKeys = new Set(selection);
-                this.transformSelection();
             } else {
                 const addOrDelete = mode === 'ADD' ? 'add' : 'delete';
                 this.updateCurrentSelectedRowKeys(addOrDelete, selection);
-                this.transformSelection();
+            }
+            this.transformSelection();
+            this.totalSelected = await this.requestTotalSelected();
+        },
+        requestTotalSelected() {
+            if (this.searchTerm || this.colFilterActive) {
+                return this.requestNewData('getTotalSelected');
+            } else {
+                return this.currentSelectedRowKeys.size;
             }
         },
         onRowSelect(selected, rowInd) {
             const rowKey = this.table.rows[rowInd][0];
+            this.totalSelected += selected ? 1 : -1;
             this.updateSelection(selected, [rowKey]);
         },
-        onSelectAll(selected) {
-            this.updateSelection(selected, this.rowKeysOnPage);
+        async onSelectAll(selected) {
+            const filterActive = this.currentRowCount !== this.totalRowCount;
+            if (selected) {
+                const currentRowKeys = await this.requestNewData('getCurrentRowKeys', []);
+                if (filterActive) {
+                    this.updateCurrentSelectedRowKeys('add', currentRowKeys);
+                } else {
+                    this.currentSelectedRowKeys = new Set(currentRowKeys);
+                }
+                this.selectionService.publishOnSelectionChange('add', currentRowKeys);
+            } else if (filterActive) {
+                const currentRowKeys = await this.requestNewData('getCurrentRowKeys', []);
+                this.updateCurrentSelectedRowKeys('delete', currentRowKeys);
+                this.selectionService.publishOnSelectionChange('remove', currentRowKeys);
+            } else {
+                this.currentSelectedRowKeys = new Set();
+                this.selectionService.publishOnSelectionChange('replace', []);
+            }
+            this.transformSelection();
+            this.totalSelected = selected ? this.currentRowCount : 0;
         },
         onSearch(input) {
             this.searchTerm = input;
@@ -557,21 +575,25 @@ export default {
             selectedRowKeys.forEach(selectedRowKey => this.currentSelectedRowKeys[addOrDelete](selectedRowKey));
         },
         transformSelection() {
-            this.currentSelection = this.rowKeysOnPage.map(rowKey => this.currentSelectedRowKeys.has(rowKey));
-            this.totalSelected = this.currentSelection.filter(Boolean).length;
+            if (typeof this.table.rows === 'undefined') {
+                return;
+            }
+            const rowKeys = this.table.rows.map(row => row[0]).filter(x => typeof x !== 'undefined');
+            this.currentSelection = rowKeys.map(rowKey => this.currentSelectedRowKeys.has(rowKey));
         },
         clearSelection() {
-            this.currentSelection = new Array(this.table.rows.length).fill(false);
             this.currentSelectedRowKeys = new Set();
             this.totalSelected = 0;
+            this.transformSelection();
         },
         async handleInitialSelection() {
             if (this.settings.subscribeToSelection) {
                 const initialSelection = await this.selectionService.initialSelection();
                 this.currentSelectedRowKeys = new Set(initialSelection);
+                this.totalSelected = initialSelection.length;
                 this.transformSelection();
             } else {
-                this.currentSelection = new Array(this.table.rows.length).fill(false);
+                this.clearSelection();
             }
         },
         createColumnConfig(columnInformation) {
@@ -657,9 +679,7 @@ export default {
 </script>
 
 <template>
-  <div
-    class="table-view-wrapper"
-  >
+  <div class="table-view-wrapper">
     <h4
       v-if="showTitle"
       class="table-title"
@@ -674,6 +694,7 @@ export default {
       :total-selected="totalSelected"
       :data-config="dataConfig"
       :table-config="tableConfig"
+      :num-rows-above="numRowsAbove"
       @pageChange="onPageChange"
       @columnSort="onColumnSort"
       @rowSelect="onRowSelect"
@@ -708,36 +729,36 @@ export default {
 </template>
 
 <style lang="postcss" scoped>
-  .table-view-wrapper {
+.table-view-wrapper {
     height: 100%;
     display: flex;
     flex-direction: column;
 
-    & >>> .table-header {
-      background-color: var(--knime-porcelain);
+    &>>>.table-header {
+        background-color: var(--knime-porcelain);
     }
 
-    & >>> .row {
-      border-bottom: 1px solid var(--knime-porcelain);
-      align-content: center;
+    &>>>.row {
+        border-bottom: 1px solid var(--knime-porcelain);
+        align-content: center;
 
-      & img {
-        object-fit: contain;
-        max-width: 100%;
-        max-height: 100%;
-        vertical-align: middle;
-      }
+        & img {
+            object-fit: contain;
+            max-width: 100%;
+            max-height: 100%;
+            vertical-align: middle;
+        }
     }
-  }
+}
 
-  .table-title {
+.table-title {
     margin: 0;
     padding: 15px 0, 5px 5px;
     color: rgb(70 70 70);
     font-size: 20px;
-  }
+}
 
-  .no-columns {
+.no-columns {
     height: 100%;
     width: 100%;
     display: flex;
@@ -745,9 +766,8 @@ export default {
     justify-content: center;
 
     & h4 {
-      color: rgb(70 70 70);
-      font-size: 16px;
+        color: rgb(70 70 70);
+        font-size: 16px;
     }
-  }
-
+}
 </style>

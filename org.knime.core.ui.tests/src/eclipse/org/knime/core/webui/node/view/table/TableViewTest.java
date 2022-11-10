@@ -61,11 +61,13 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
+import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataTable;
@@ -107,7 +109,7 @@ class TableViewTest {
         rendererIds[3] = "org.knime.core.data.renderer.DoubleBarRenderer$Factory";
         final var table =
             new TableViewDataServiceImpl(createDefaultTestTable(2), "tableId", new SwingBasedRendererFactory(),
-                rendererRegistry).getTable(getDefaultTestSpec().getColumnNames(), 1, 1, rendererIds, false, false);
+                rendererRegistry).getTable(getDefaultTestSpec().getColumnNames(), 1, 1, rendererIds, false);
         var rows = table.getRows();
         assertThat(rows).as("check that the first row has the correct test values")
             .overridingErrorMessage("The values of the first row should be %s, not %s.", rows[0].toString(),
@@ -269,7 +271,7 @@ class TableViewTest {
         final var testTable = createTableViewDataServiceInstance(createDefaultTestTable(1));
         final var rows = testTable
             .getTable(Stream.concat(Arrays.asList(getDefaultTestSpec().getColumnNames()).stream(), Stream.of("foo"))
-                .toArray(String[]::new), 0, 1, null, true, false)
+                .toArray(String[]::new), 0, 1, null, true)
             .getRows();
         assertThat(rows[0]).as("The output table has the correct amount of columns")
             .hasSize(getDefaultTestSpec().getNumColumns() + 1);
@@ -278,15 +280,30 @@ class TableViewTest {
     }
 
     @Test
-    void testDataServiceSetsGetTableRowKeys() {
+    void testDataServiceGetCurrentRowKeys() {
         final var size = 3;
         final var dataService = createTableViewDataServiceInstance(createDefaultTestTable(size));
-        final var noRowKeys =
-            dataService.getTable(getDefaultTestSpec().getColumnNames(), 0, 1, null, false, false).getRowKeys();
-        assertThat(noRowKeys).isNull();
-        final var rowKeys =
-            dataService.getTable(getDefaultTestSpec().getColumnNames(), 0, 1, null, false, true).getRowKeys();
-        assertThat(rowKeys).hasSize(size);
+        assertThat(dataService.getCurrentRowKeys()).hasSize(size);
+
+        final var filterTestTable = createTestTableFiltering();
+        final var filterDataService = createTableViewDataServiceInstance(() -> filterTestTable);
+        final var columnFilterValue = new String[][]{new String[0], new String[0], new String[]{"1"}};
+        filterDataService.getFilteredAndSortedTable(filterTestTable.getDataTableSpec().getColumnNames(), 0, 2, "string",
+            true, "STRING1", columnFilterValue, false, null, false, false);
+        assertThat(filterDataService.getCurrentRowKeys()).hasSize(1);
+    }
+
+    @Test
+    void testDataServiceGetTotalSelected() {
+        final var table = createTestTableFiltering();
+        final var globalSearchTerm = "STRING1";
+        final var columnFilterValue = new String[][]{new String[0], new String[0], new String[]{"1"}};
+        final var filterRowKeys = false;
+        final var selection = Set.of(new RowKey("0"));
+        final var dataService = TableViewUtil.createDataService(() -> table, () -> selection, null);
+        dataService.getFilteredAndSortedTable(table.getDataTableSpec().getColumnNames(), 0, 2, "string",
+            true, globalSearchTerm, columnFilterValue, filterRowKeys, null, false, false);
+        assertThat(dataService.getTotalSelected()).isEqualTo(1);
     }
 
     @Test
@@ -297,7 +314,7 @@ class TableViewTest {
         final var rows = testTable.getTable(
             Stream.concat(Arrays.asList(getDefaultTestSpec().getColumnNames()).stream(), Stream.of("foo", "bar"))
                 .toArray(String[]::new),
-            0, 1, null, true, false).getRows();
+            0, 1, null, true).getRows();
         assertThat(rows[0]).as("The output table has the correct amount of columns")
             .hasSize(getDefaultTestSpec().getNumColumns() + 1);
         assertTrue(warningMessageAsserter.allRegisteredMessagesCalled(),
@@ -315,12 +332,7 @@ class TableViewTest {
     @Test
     void testDataServiceGetFilteredAndSortedData() {
         final var filterTestTable = createTestTableFiltering();
-        final var testTable = createTableViewDataServiceInstance(new Supplier<BufferedDataTable>() {
-            @Override
-            public BufferedDataTable get() {
-                return filterTestTable;
-            }
-        });
+        final var testTable = createTableViewDataServiceInstance(() -> filterTestTable);
         final var sortColumnName = "string";
         final var columnFilterValue = new String[][]{new String[0], new String[0], new String[]{"1"}};
         final var emptyTable = testTable.getFilteredAndSortedTable(filterTestTable.getDataTableSpec().getColumnNames(),
@@ -398,27 +410,27 @@ class TableViewTest {
         final var dataService = createTableViewDataServiceInstance(createDefaultTestTable(2));
         final var colNames = getDefaultTestSpec().getColumnNames();
         assertThatExceptionOfType(IndexOutOfBoundsException.class)
-            .isThrownBy(() -> dataService.getTable(colNames, -1, 2, null, false, false));
+            .isThrownBy(() -> dataService.getTable(colNames, -1, 2, null, false));
     }
 
     @Test
     void testDataServiceGetDataNullSupplier() {
         assertThatNullPointerException()
             .isThrownBy(() -> createTableViewDataServiceInstance((Supplier<BufferedDataTable>)null)
-                .getTable(getDefaultTestSpec().getColumnNames(), 0, 0, null, false, false));
+                .getTable(getDefaultTestSpec().getColumnNames(), 0, 0, null, false));
     }
 
     @Test
     void testDataServiceGetDataNullTable() {
         final var rows = createTableViewDataServiceInstance(() -> null)
-            .getTable(getDefaultTestSpec().getColumnNames(), 0, 2, null, false, false).getRows();
+            .getTable(getDefaultTestSpec().getColumnNames(), 0, 2, null, false).getRows();
         assertThat(rows).hasDimensions(0, 0);
     }
 
     @Test
     void testDataServiceGetDataZeroRows() {
         final var rows = createTableViewDataServiceInstance(() -> null)
-            .getTable(getDefaultTestSpec().getColumnNames(), 0, 0, null, false, false).getRows();
+            .getTable(getDefaultTestSpec().getColumnNames(), 0, 0, null, false).getRows();
         assertThat(rows).hasDimensions(0, 0);
     }
 
@@ -427,5 +439,4 @@ class TableViewTest {
         return new TableViewDataServiceImpl(tableSupplier, "tableId", new SwingBasedRendererFactory(),
             new DataValueImageRendererRegistry(() -> "pageId"));
     }
-
 }

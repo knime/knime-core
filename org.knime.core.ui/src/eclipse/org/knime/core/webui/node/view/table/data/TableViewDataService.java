@@ -63,12 +63,9 @@ public interface TableViewDataService {
      * @param updateDisplayedColumns if true, the given columns will be partitioned by being columns in the table. The
      *            missing ones are filtered out and yield a warning. An exception is only thrown if all columns are
      *            missing.
-     * @param withAllRowKeys if true, the rowKeys of the rows which are selected by the currently active filters are
-     *            supplied
      * @return the table
      */
-    Table getTable(String[] columns, long fromIndex, int numRows, String[] rendererIds, boolean updateDisplayedColumns,
-        boolean withAllRowKeys);
+    Table getTable(String[] columns, long fromIndex, int numRows, String[] rendererIds, boolean updateDisplayedColumns);
 
     /**
      * @param columns the names of the columns that are to be displayed
@@ -84,13 +81,23 @@ public interface TableViewDataService {
      * @param updateDisplayedColumns if true, the given columns will be partitioned by being columns in the table. The
      *            missing ones are filtered out and yield a warning. An exception is only thrown if all columns are
      *            missing.
-     * @param withAllRowKeys if true, the rowKeys of the rows which are selected by the currently active filters are
-     *            supplied
+     * @param updateTotalSelected if true, the current selected rows are loaded and the number of rows in the returned
+     *            total table which are selected is returned
      * @return the table
      */
     @SuppressWarnings("java:S107") // accept the large number of parameters
     Table getFilteredAndSortedTable(String[] columns, long fromIndex, int numRows, String sortColumn,
         boolean sortAscending, String globalSearchTerm, String[][] columnFilterValue, boolean filterRowKeys,
-        String[] rendererIds, boolean updateDisplayedColumns, boolean withAllRowKeys);
+        String[] rendererIds, boolean updateDisplayedColumns, boolean updateTotalSelected);
+
+    /**
+     * @return the row keys of the currently cached sorted and filtered table or the input table
+     */
+    String[] getCurrentRowKeys();
+
+    /**
+     * @return the current number of selected rows in the last cached filtered table
+     */
+    Long getTotalSelected();
 
 }

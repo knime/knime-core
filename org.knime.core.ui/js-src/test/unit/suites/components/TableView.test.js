@@ -24,7 +24,9 @@ describe('TableView.vue', () => {
     let context,
         initialDataMock,
         dataRequestResult,
-        getData;
+        getData,
+        getTotalSelectedResult,
+        getCurrentRowKeysResult;
 
     const rowCount = 4;
 
@@ -39,7 +41,7 @@ describe('TableView.vue', () => {
                 columnDataTypeIds: ['datatype1', 'datatype1', 'datatype2', 'datatype3'],
                 rowCount,
                 displayedColumns: ['col1', 'col2', 'col3', 'col4'],
-                rowKeys: ['row1', 'row2', 'row3', 'row4']
+                totalSelected: 0
             },
             dataTypes: {
                 datatype1: {
@@ -80,11 +82,21 @@ describe('TableView.vue', () => {
 
         // eslint-disable-next-line no-magic-numbers
         dataRequestResult = { ...initialDataMock.table, rows: initialDataMock.table.rows.slice(1, 3) };
-
+        getTotalSelectedResult = 2;
+        getCurrentRowKeysResult = ['row1', 'row3'];
         getData = jest.fn();
         JsonDataService.mockImplementation(() => ({
             initialData: jest.fn().mockResolvedValue(initialDataMock),
-            data: getData.mockImplementation((obj) => Promise.resolve(dataRequestResult)),
+            data: getData.mockImplementation((obj) => {
+                switch (obj.method) {
+                    case 'getTotalSelected':
+                        return Promise.resolve(getTotalSelectedResult);
+                    case 'getCurrentRowKeys':
+                        return Promise.resolve(getCurrentRowKeysResult);
+                    default:
+                        return Promise.resolve(dataRequestResult);
+                }
+            }),
             addOnDataChangeCallback: jest.fn(),
             knimeService: {}
         }));
@@ -188,7 +200,7 @@ describe('TableView.vue', () => {
 
             expect(wrapper.getComponent(TableUI).exists()).toBe(true);
             expect(data).toEqual([initialDataMock.table.rows.map((row, index) => [index, ...row])]);
-            expect(currentSelection).toEqual(Array(1).fill(Array(initialDataMock.settings.pageSize).fill(false)));
+            expect(currentSelection).toEqual(Array(1).fill(Array(rowCount).fill(false)));
             expect(totalSelected).toStrictEqual(0);
             expect(tableConfig).toMatchObject({
                 subMenuItems: false,
@@ -302,9 +314,8 @@ describe('TableView.vue', () => {
                     expect(wrapper.vm.currentScopeStartIndex).toBe(0);
                     expect(wrapper.vm.currentScopeEndIndex).toBe(rowCount);
                     expect(updateDataSpy).toHaveBeenCalledWith(expect.objectContaining(
-                        { lazyLoad: { loadFromIndex: 0, newScopeStart: 0, numRows: rowCount }, requestRowKeys: true }
+                        { lazyLoad: { loadFromIndex: 0, newScopeStart: 0, numRows: rowCount } }
                     ));
-                    expect(wrapper.vm.currentRowKeys).toStrictEqual(dataRequestResult.rowKeys);
                 });
 
                 
@@ -370,6 +381,7 @@ describe('TableView.vue', () => {
                         newScopeStart: 0,
                         numRows: 2
                     } });
+                    await wrapper.vm.$nextTick();
                     await wrapper.vm.$nextTick();
                     expect(wrapper.vm.table.rows.length).toBe(rowCount);
                     expect(wrapper.vm.table.rows).toStrictEqual([
@@ -579,7 +591,7 @@ describe('TableView.vue', () => {
             });
             expect(dataSpy).toHaveBeenCalledWith({
                 method: 'getTable',
-                options: [settings.displayedColumns, 0, 2, null, true, false]
+                options: [settings.displayedColumns, 0, 2, null, true]
             });
             expect(wrapper.vm.displayedColumns).toStrictEqual(initialDataMock.table.displayedColumns);
         });
@@ -667,7 +679,7 @@ describe('TableView.vue', () => {
                 wrapper.vm.onPageChange(1);
                 expect(dataSpy).toBeCalledWith({
                     method: 'getTable',
-                    options: [initialDataMock.table.displayedColumns, 2, 2, null, false, false] // eslint-disable-line no-magic-numbers
+                    options: [initialDataMock.table.displayedColumns, 2, 2, null, false] // eslint-disable-line no-magic-numbers
                 });
                 expect(wrapper.vm.currentPage).toStrictEqual(2);
             });
@@ -678,7 +690,7 @@ describe('TableView.vue', () => {
 
             expect(dataSpy).toHaveBeenNthCalledWith(2, {
                 method: 'getTable',
-                options: [initialDataMock.table.displayedColumns, 0, 2, null, false, false] // eslint-disable-line no-magic-numbers
+                options: [initialDataMock.table.displayedColumns, 0, 2, null, false] // eslint-disable-line no-magic-numbers
             });
             expect(wrapper.vm.currentPage).toStrictEqual(1);
         });
@@ -708,7 +720,7 @@ describe('TableView.vue', () => {
             expect(dataSpy).toBeCalledWith({
                 method: 'getFilteredAndSortedTable',
                 options: [initialDataMock.table.displayedColumns,
-                    0, 2, 'col1', false, '', emptyColumnFilterValues, false, null, false, true] // eslint-disable-line no-magic-numbers
+                    0, 2, 'col1', false, '', emptyColumnFilterValues, false, null, false, false] // eslint-disable-line no-magic-numbers
             });
             expect(wrapper.vm.currentPage).toStrictEqual(1);
         });
@@ -721,7 +733,7 @@ describe('TableView.vue', () => {
             expect(dataSpyDesc).toBeCalledWith({
                 method: 'getFilteredAndSortedTable',
                 options: [initialDataMock.table.displayedColumns,
-                    0, 2, 'col1', true, '', emptyColumnFilterValues, false, null, false, true] // eslint-disable-line no-magic-numbers
+                    0, 2, 'col1', true, '', emptyColumnFilterValues, false, null, false, false] // eslint-disable-line no-magic-numbers
             });
             expect(wrapper.vm.currentPage).toStrictEqual(1);
 
@@ -730,7 +742,7 @@ describe('TableView.vue', () => {
             expect(dataSpyAsc).toBeCalledWith({
                 method: 'getFilteredAndSortedTable',
                 options: [initialDataMock.table.displayedColumns,
-                    0, 2, 'col1', false, '', emptyColumnFilterValues, false, null, false, true] // eslint-disable-line no-magic-numbers
+                    0, 2, 'col1', false, '', emptyColumnFilterValues, false, null, false, false] // eslint-disable-line no-magic-numbers
             });
         });
 
@@ -755,7 +767,7 @@ describe('TableView.vue', () => {
             expect(dataSpy).toHaveBeenCalledWith({
                 method: 'getFilteredAndSortedTable',
                 options: [initialDataMock.table.displayedColumns, 0, 2, '-1', false, '', emptyColumnFilterValues,
-                    true, null, false, true] // eslint-disable-line no-magic-numbers
+                    true, null, false, false] // eslint-disable-line no-magic-numbers
             });
         });
     });
@@ -808,42 +820,80 @@ describe('TableView.vue', () => {
                     expect(rowSelectSpy).toHaveBeenCalledWith(true, 1, 0);
 
                     expect(publishOnSelectionChangeSpy).toHaveBeenCalledWith('add', ['row2']);
-                    expect(wrapper.vm.currentSelection).toEqual([false, true]);
+                    expect(wrapper.vm.currentSelection).toEqual([false, true, false, false]);
                     expect(wrapper.vm.totalSelected).toEqual(1);
 
                     // unselect row
                     checkboxInput.setChecked(false);
                     expect(rowSelectSpy).toHaveBeenCalledWith(false, 1, 0);
                     expect(publishOnSelectionChangeSpy).toHaveBeenCalledWith('remove', ['row2']);
-                    expect(wrapper.vm.currentSelection).toEqual([false, false]);
+                    expect(wrapper.vm.currentSelection).toEqual([false, false, false, false]);
                     expect(wrapper.vm.totalSelected).toEqual(0);
                 });
 
-            it('calls the selection service and updates local selection on selectAll rows',
+            describe('onSelectAll', () => {
+                it('calls the selection service and updates local selection on selectAll rows',
+                    async () => {
+                        wrapper.vm.settings.publishSelection = true;
+                        const currentRowCount = 2;
+                        wrapper.vm.currentRowCount = currentRowCount;
+    
+                        const tableRows = wrapper.findAll('table .table-header');
+                        const checkboxInput = tableRows.wrappers[0].find('input[type="checkbox"]');
+    
+                        // select row
+                        checkboxInput.setChecked();
+                        expect(selectAllSpy).toHaveBeenCalledWith(true);
+                        await wrapper.vm.$nextTick();
+                        expect(publishOnSelectionChangeSpy).toHaveBeenCalledWith(
+                            'add', getCurrentRowKeysResult
+                        );
+                        expect(wrapper.vm.currentSelection).toEqual([true, false, true, false]);
+                        expect(wrapper.vm.totalSelected).toEqual(currentRowCount);
+    
+                        await wrapper.vm.$nextTick();
+    
+                        // unselect row
+                        checkboxInput.setChecked(false);
+                        expect(selectAllSpy).toHaveBeenNthCalledWith(2, false);
+                        await wrapper.vm.$nextTick();
+                        expect(publishOnSelectionChangeSpy).toHaveBeenNthCalledWith(2,
+                            'remove', getCurrentRowKeysResult);
+                        expect(wrapper.vm.currentSelection).toEqual([false, false, false, false]);
+                        expect(wrapper.vm.totalSelected).toEqual(0);
+                    });
+            });
+
+            it('calls the selection service and updates local selection on selectAll rows with no filters',
                 async () => {
                     wrapper.vm.settings.publishSelection = true;
-
+                    const currentRowCount = dataRequestResult.rowCount;
+                    getCurrentRowKeysResult = ['row1', 'row2', 'row3', 'row4'];
+                    wrapper.vm.currentRowCount = currentRowCount;
+                    wrapper.vm.totalRowCount = currentRowCount;
+    
                     const tableRows = wrapper.findAll('table .table-header');
                     const checkboxInput = tableRows.wrappers[0].find('input[type="checkbox"]');
-
+    
                     // select row
                     checkboxInput.setChecked();
                     expect(selectAllSpy).toHaveBeenCalledWith(true);
-                    expect(publishOnSelectionChangeSpy).toHaveBeenCalledWith(
-                        'add', ['row1', 'row2']
-                    );
-                    expect(wrapper.vm.currentSelection).toEqual([true, true]);
-                    expect(wrapper.vm.totalSelected).toEqual(initialDataMock.settings.pageSize);
-
                     await wrapper.vm.$nextTick();
-
+                    expect(publishOnSelectionChangeSpy).toHaveBeenCalledWith(
+                        'add', getCurrentRowKeysResult
+                    );
+                    expect(wrapper.vm.currentSelection).toEqual([true, true, true, true]);
+                    expect(wrapper.vm.totalSelected).toEqual(currentRowCount);
+    
+                    await wrapper.vm.$nextTick();
+    
                     // unselect row
                     checkboxInput.setChecked(false);
                     expect(selectAllSpy).toHaveBeenNthCalledWith(2, false);
-                    expect(publishOnSelectionChangeSpy).toHaveBeenCalledWith(
-                        'remove', ['row1', 'row2']
-                    );
-                    expect(wrapper.vm.currentSelection).toEqual([false, false]);
+                    await wrapper.vm.$nextTick();
+                    expect(publishOnSelectionChangeSpy).toHaveBeenNthCalledWith(2,
+                        'replace', []);
+                    expect(wrapper.vm.currentSelection).toEqual([false, false, false, false]);
                     expect(wrapper.vm.totalSelected).toEqual(0);
                 });
         });
@@ -861,28 +911,31 @@ describe('TableView.vue', () => {
                 wrapper.vm.onSelectionChange({ mode: 'ADD', selection: [rowKey2] });
 
                 await wrapper.vm.$nextTick();
+                await wrapper.vm.$nextTick();
 
-                expect(wrapper.vm.currentSelection).toEqual([false, true]);
+                expect(wrapper.vm.currentSelection).toEqual([false, true, false, false]);
                 expect(wrapper.vm.totalSelected).toEqual(1);
                 expect(wrapper.vm.currentSelectedRowKeys).toEqual(new Set([rowKey2]));
             });
 
-            it('updates the local selection on removeSelection', () => {
+            it('updates the local selection on removeSelection', async () => {
                 wrapper.vm.onSelectionChange({ mode: 'ADD', selection: [rowKey1, rowKey2] });
                 wrapper.vm.onSelectionChange({ mode: 'REMOVE', selection: [rowKey2] });
 
-                expect(wrapper.vm.currentSelection).toEqual([true, false]);
-                expect(wrapper.vm.totalSelected).toEqual(1);
+                expect(wrapper.vm.currentSelection).toEqual([true, false, false, false]);
                 expect(wrapper.vm.currentSelectedRowKeys).toEqual(new Set([rowKey1]));
+                await wrapper.vm.$nextTick();
+                expect(wrapper.vm.totalSelected).toEqual(1);
             });
 
-            it('updates the local selection on replace with subscribe to selection', () => {
+            it('updates the local selection on replace with subscribe to selection', async () => {
                 wrapper.vm.onSelectionChange({ mode: 'ADD', selection: [rowKey1] });
                 wrapper.vm.onSelectionChange({ mode: 'REPLACE', selection: [rowKey2] });
 
-                expect(wrapper.vm.currentSelection).toEqual([false, true]);
-                expect(wrapper.vm.totalSelected).toEqual(1);
+                expect(wrapper.vm.currentSelection).toEqual([false, true, false, false]);
                 expect(wrapper.vm.currentSelectedRowKeys).toEqual(new Set([rowKey2]));
+                await wrapper.vm.$nextTick();
+                expect(wrapper.vm.totalSelected).toEqual(1);
             });
 
             it('calls selectionService.onSettingsChange with the correct parameters on settings change', () => {
@@ -955,7 +1008,7 @@ describe('TableView.vue', () => {
             wrapper.vm.onClearFilter();
             expect(dataSpy).toHaveBeenNthCalledWith(2, {
                 method: 'getTable',
-                options: [initialDataMock.table.displayedColumns, 0, 2, null, false, true] // eslint-disable-line no-magic-numbers
+                options: [initialDataMock.table.displayedColumns, 0, 2, null, false] // eslint-disable-line no-magic-numbers
             });
         });
 
@@ -981,6 +1034,7 @@ describe('TableView.vue', () => {
                     true,
                     true]
             });
+            await wrapper.vm.$nextTick();
             await wrapper.vm.$nextTick();
             expect(wrapper.vm.columnFilters).toStrictEqual(
                 wrapper.vm.getDefaultFilterConfigs(initialDataMock.table.displayedColumns)
@@ -1022,12 +1076,11 @@ describe('TableView.vue', () => {
         it('uses the correct image source url for image slots', async () => {
             const { wrapper } = await asyncMountTableView(context);
             await wrapper.vm.$nextTick();
-            const tableRows = wrapper.vm.$refs.tableUI.$refs.dynamicScroller[0].$refs.scroller.$children
-                .map(item => item.$children[0]).slice(1);
+            await wrapper.vm.$nextTick();
 
-            expect(tableRows[0].$refs.dataCell[3].innerHTML).toContain('src="http://localhost:8080/base.url/view_x_y/datacell/hash1.png"');
-            expect(tableRows[1].$refs.dataCell[3].innerHTML).toContain('src="http://localhost:8080/base.url/view_x_y/datacell/hash2.png"');
-            expect(tableRows[2].$refs.dataCell[3].innerHTML).toContain('src="http://localhost:8080/base.url/view_x_y/datacell/hash3.png"');
+            expect(wrapper.vm.$refs.tableUI.$refs['row-0'][0].$refs.dataCell[3].innerHTML).toContain('src="http://localhost:8080/base.url/view_x_y/datacell/hash1.png"');
+            expect(wrapper.vm.$refs.tableUI.$refs['row-1'][0].$refs.dataCell[3].innerHTML).toContain('src="http://localhost:8080/base.url/view_x_y/datacell/hash2.png"');
+            expect(wrapper.vm.$refs.tableUI.$refs['row-2'][0].$refs.dataCell[3].innerHTML).toContain('src="http://localhost:8080/base.url/view_x_y/datacell/hash3.png"');
         });
     });
 

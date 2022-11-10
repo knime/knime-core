@@ -80,8 +80,8 @@ public interface Table {
     long getRowCount();
 
     /**
-     * @return the row keys of the table in use
+     * @return the number of selected rows of the table in use
      */
-    String[] getRowKeys();
+    Long getTotalSelected();
 
 }

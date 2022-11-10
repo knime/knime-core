@@ -50,9 +50,11 @@ package org.knime.core.webui.node.view.table;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import org.knime.core.data.RowKey;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.NodeID;
@@ -135,6 +137,18 @@ public final class TableViewUtil {
     public static TableViewDataService createDataService(final Supplier<BufferedDataTable> tableSupplier,
         final String tableId) {
         return new TableViewDataServiceImpl(tableSupplier, tableId, new SwingBasedRendererFactory(), RENDERER_REGISTRY);
+    }
+
+    /**
+     * @param tableSupplier supplying the input table
+     * @param selectionSupplier supplying the currently selected row keys (for update of totalSelected when filtering)
+     * @param tableId
+     * @return the {@link TableViewDataService} associated to the node
+     */
+    public static TableViewDataService createDataService(final Supplier<BufferedDataTable> tableSupplier,
+        final Supplier<Set<RowKey>> selectionSupplier, final String tableId) {
+        return new TableViewDataServiceImpl(tableSupplier, selectionSupplier, tableId, new SwingBasedRendererFactory(),
+            RENDERER_REGISTRY);
     }
 
     /**
