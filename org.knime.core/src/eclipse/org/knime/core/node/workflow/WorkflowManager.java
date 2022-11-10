@@ -7930,6 +7930,10 @@ public final class WorkflowManager extends NodeContainer
     }
 
     /**
+     * This doesn't do anything except prompt for a password and report whether the entered password was correct. This
+     * is used in various places to return from methods prematurely (e.g., before executing an action such as expanding
+     * a component) in case a wrong password was entered.
+     *
      * @param prompt The prompt
      * @return see {@link WorkflowCipher#unlock(WorkflowCipherPrompt)}.
      */
