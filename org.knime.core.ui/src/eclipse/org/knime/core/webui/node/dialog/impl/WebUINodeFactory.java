@@ -96,8 +96,6 @@ public abstract class WebUINodeFactory<M extends WebUINodeModel<? extends Defaul
     @Override
     protected final NodeDescription createNodeDescription() throws SAXException, IOException, XmlException {
         var fac = NodeDescription.getDocumentBuilderFactory();
-        var inPortDescriptions = m_configuration.getInPortDescriptions();
-        var outPortDescriptions = m_configuration.getOutPortDescriptions();
         DocumentBuilder docBuilder;
         try {
             docBuilder = fac.newDocumentBuilder();
@@ -109,6 +107,8 @@ public abstract class WebUINodeFactory<M extends WebUINodeModel<? extends Defaul
         var node = doc.createElement("knimeNode");
 
         node.setAttribute("icon", m_configuration.getIcon());
+        var inPortDescriptions = m_configuration.getInPortDescriptions();
+        var outPortDescriptions = m_configuration.getOutPortDescriptions();
         if (inPortDescriptions.length == 0) {
             node.setAttribute("type", NodeFactory.NodeType.Source.toString());
         } else if (outPortDescriptions.length == 0) {

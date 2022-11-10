@@ -48,9 +48,6 @@
  */
 package org.knime.core.webui.node.dialog.impl;
 
-import org.knime.core.webui.node.dialog.impl.DefaultNodeSettings;
-import org.knime.core.webui.node.dialog.impl.Schema;
-
 /**
  * @author Marc Bux, KNIME GmbH, Berlin, Germany
  */

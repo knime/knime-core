@@ -51,8 +51,6 @@ package org.knime.core.webui.node.dialog.impl;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
-import org.knime.core.webui.node.dialog.impl.WebUINodeConfiguration;
-import org.knime.core.webui.node.dialog.impl.WebUINodeModel;
 
 /**
  * @author Marc Bux, KNIME GmbH, Berlin, Germany

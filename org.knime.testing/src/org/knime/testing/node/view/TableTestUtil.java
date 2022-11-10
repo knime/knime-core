@@ -165,7 +165,7 @@ public final class TableTestUtil {
          *
          * @param spec the spec of the to-be-assembled table
          */
-        TableBuilder(final DataTableSpec spec) {
+        public TableBuilder(final DataTableSpec spec) {
             this(spec, TableTestUtil::cellify);
         }
 
@@ -242,6 +242,7 @@ public final class TableTestUtil {
                     switch (parseAs[j]) {
                         case "Integer":
                             out[j][i] = ((IntValue)value).getIntValue();
+                            break;
                         case "Double":
                             out[j][i] = ((DoubleValue)value).getDoubleValue();
                             break;

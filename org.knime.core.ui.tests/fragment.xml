@@ -8,6 +8,11 @@
             factory-class="org.knime.core.webui.node.dialog.TestConfigurationNodeFactory"
             hidden="true">
       </node>
+      <node
+            deprecated="false"
+            factory-class="org.knime.core.webui.node.dialog.impl.TestWebUINodeFactory"
+            hidden="true">
+      </node>
    </extension>
    <extension
          point="org.knime.core.ui.nodetriples">

@@ -75,7 +75,6 @@ import org.junit.jupiter.api.Test;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.webui.data.rpc.json.impl.ObjectMapperUtil;
-import org.knime.core.webui.node.dialog.impl.JsonNodeSettingsMapperUtil;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;

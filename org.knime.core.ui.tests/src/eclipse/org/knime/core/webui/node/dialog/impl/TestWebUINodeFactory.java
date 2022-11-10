@@ -45,9 +45,6 @@
  */
 package org.knime.core.webui.node.dialog.impl;
 
-import org.knime.core.webui.node.dialog.impl.WebUINodeConfiguration;
-import org.knime.core.webui.node.dialog.impl.WebUINodeFactory;
-
 /**
  * @author Marc Bux, KNIME GmbH, Berlin, Germany
  */

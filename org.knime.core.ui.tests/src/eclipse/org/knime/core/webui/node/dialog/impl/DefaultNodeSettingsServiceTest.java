@@ -51,7 +51,6 @@ package org.knime.core.webui.node.dialog.impl;
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.knime.core.webui.node.dialog.impl.DefaultNodeSettingsService.FIELD_NAME_DATA;
 import static org.knime.core.webui.node.dialog.impl.DefaultNodeSettingsService.FIELD_NAME_SCHEMA;
-import static org.knime.core.webui.node.dialog.impl.DefaultNodeSettingsService.FIELD_NAME_UI_SCHEMA;
 
 import java.util.Map;
 
@@ -66,7 +65,6 @@ import org.knime.core.webui.node.dialog.SettingsType;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
@@ -132,9 +130,6 @@ class DefaultNodeSettingsServiceTest {
         final var wrappedSchema = MAPPER.createObjectNode();
         wrappedSchema.put("type", "object").putObject("properties").set(SettingsType.VIEW.getConfigKey(), schema);
         assertThatJson(initialData.get(FIELD_NAME_SCHEMA)).isEqualTo(wrappedSchema);
-
-        // assert that returned ui schema is null
-        assertThatJson(initialData.get(FIELD_NAME_UI_SCHEMA)).isEqualTo(NullNode.getInstance());
     }
 
     @Test

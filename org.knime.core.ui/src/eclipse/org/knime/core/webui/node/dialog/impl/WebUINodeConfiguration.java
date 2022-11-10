@@ -130,7 +130,7 @@ public class WebUINodeConfiguration {
      * The build stage that requires an icon.
      */
     @FunctionalInterface
-    public interface RequireIcon {
+    public interface RequireIcon { // NOSONAR
         /**
          * @param icon relative path to the node icon
          * @return the subsequent build stage
@@ -142,7 +142,7 @@ public class WebUINodeConfiguration {
      * The build stage that requires a short description.
      */
     @FunctionalInterface
-    public interface RequireShortDescription {
+    public interface RequireShortDescription { // NOSONAR
         /**
          * @param shortDescription the short node description
          * @return the subsequent build stage
@@ -154,7 +154,7 @@ public class WebUINodeConfiguration {
      * The build stage that requires a full description.
      */
     @FunctionalInterface
-    public interface RequireFullDescription {
+    public interface RequireFullDescription { // NOSONAR
         /**
          * @param fullDescription the full node description
          * @return the subsequent build stage
@@ -166,7 +166,7 @@ public class WebUINodeConfiguration {
      * The build stage that requires the model settings.
      */
     @FunctionalInterface
-    public interface RequireModelSettingsClass {
+    public interface RequireModelSettingsClass { // NOSONAR
         /**
          * @param modelSettingsClass the type of the model settings
          * @return the subsequent build stage
