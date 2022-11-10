@@ -72,7 +72,8 @@ import org.xml.sax.SAXException;
 
 /**
  * A convenience class for simple WebUI nodes, i.e., nodes making use of the {@link DefaultNodeSettings} and
- * {@link DefaultNodeDialog} classes.
+ * {@link DefaultNodeDialog} classes. For an aexemplary implementation, see
+ * org.knime.core.webui.node.dialog.impl.TestWebUINodeFactory in org.knime.core.ui.tests.
  *
  * @param <M> the type of the {@link WebUINodeModel} created by this factory
  *

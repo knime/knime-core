@@ -1,0 +1,17 @@
+{
+    "elements": [
+    {
+            "type": "Section",
+            "label": "Data",
+            "elements": [
+                {
+                    "type": "Control",
+                    "scope": "#/properties/model/properties/someModelSetting",
+                    "options": {
+                        "format": "integer"
+                    }
+                }
+            ]
+        }
+    ]
+}
