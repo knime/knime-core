@@ -48,8 +48,8 @@ describe('ColumnFilter.vue', () => {
 
     it('passes default props', () => {
         const twinListProps = wrapper.getComponent(TwinlistInput).props();
-        expect(twinListProps.twinlistLabelLeft).toBe('Excludes');
-        expect(twinListProps.twinlistLabelRight).toBe('Includes');
+        expect(twinListProps.twinlistLeftLabel).toBe('Excludes');
+        expect(twinListProps.twinlistRightLabel).toBe('Includes');
     });
 
     it('initializes jsonforms on pass-through component', () => {

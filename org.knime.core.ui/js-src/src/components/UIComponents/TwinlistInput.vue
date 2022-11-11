@@ -6,8 +6,8 @@ import Twinlist from '~/webapps-common/ui/components/forms/Twinlist.vue';
 import LabeledInput from './LabeledInput.vue';
 
 const defaultTwinlistSize = 7;
-const defaultTwinlistLabelLeft = 'Excluded Values';
-const defaultTwinlistLabelRight = 'Included Values';
+const defaultTwinlistLeftLabel = 'Excluded Values';
+const defaultTwinlistRightLabel = 'Included Values';
 
 const TwinlistInput = defineComponent({
     name: 'TwinListInput',
@@ -22,15 +22,15 @@ const TwinlistInput = defineComponent({
             required: false,
             default: defaultTwinlistSize
         },
-        twinlistLabelLeft: {
+        twinlistLeftLabel: {
             type: String,
             required: false,
-            default: defaultTwinlistLabelLeft
+            default: defaultTwinlistLeftLabel
         },
-        twinlistLabelRight: {
+        twinlistRightLabel: {
             type: String,
             required: false,
-            default: defaultTwinlistLabelRight
+            default: defaultTwinlistRightLabel
         }
     },
     setup(props) {
@@ -81,8 +81,8 @@ export default TwinlistInput;
       :value="control.data"
       :possible-values="possibleValues"
       :size="twinlistSize"
-      :label-left="twinlistLabelLeft"
-      :label-right="twinlistLabelRight"
+      :left-label="twinlistLeftLabel"
+      :right-label="twinlistRightLabel"
       @input="onChange"
     />
   </LabeledInput>
