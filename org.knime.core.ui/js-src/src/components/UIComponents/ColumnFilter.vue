@@ -3,8 +3,8 @@ import { defineComponent } from '@vue/composition-api';
 import TwinlistInput from './TwinlistInput.vue';
 
 const defaultTwinlistSize = 7;
-const defaultTwinlistLabelLeft = 'Excludes';
-const defaultTwinlistLabelRight = 'Includes';
+const defaultTwinlistLeftLabel = 'Excludes';
+const defaultTwinlistRightLabel = 'Includes';
 
 const ColumnFilter = defineComponent({
     name: 'ColumnFilter',
@@ -18,15 +18,15 @@ const ColumnFilter = defineComponent({
             required: false,
             default: defaultTwinlistSize
         },
-        twinlistLabelLeft: {
+        twinlistLeftLabel: {
             type: String,
             required: false,
-            default: defaultTwinlistLabelLeft
+            default: defaultTwinlistLeftLabel
         },
-        twinlistLabelRight: {
+        twinlistRightLabel: {
             type: String,
             required: false,
-            default: defaultTwinlistLabelRight
+            default: defaultTwinlistRightLabel
         }
     }
 });
@@ -37,7 +37,7 @@ export default ColumnFilter;
   <TwinlistInput
     v-bind="$attrs"
     :twinlist-size="twinlistSize"
-    :twinlist-label-left="twinlistLabelLeft"
-    :twinlist-label-right="twinlistLabelRight"
+    :twinlist-left-label="twinlistLeftLabel"
+    :twinlist-right-label="twinlistRightLabel"
   />
 </template>

@@ -250,9 +250,9 @@ export const dialogInitialData = {
                         options: {
                             format: 'columnFilter',
                             allowEmptyInclude: true,
-                            twinListSize: 7,
-                            twinListLabelLeft: 'Excluded Columns',
-                            twinListLabelRight: 'Included Columns'
+                            twinlistSize: 7,
+                            twinlistLeftLabel: 'Excluded Columns',
+                            twinlistRightLabel: 'Included Columns'
                         },
                         rule: {
                             effect: 'DISABLE',
