@@ -1,11 +1,9 @@
+<!-- eslint-disable max-lines -->
 <script>
 import Vue from 'vue';
 import { JsonDataService, SelectionService } from '@knime/ui-extension-service';
 import { TableUI } from '@knime/knime-ui-table';
-import {
-    createDefaultFilterConfig, arrayEquals, isImage, calculateNewPage,
-    getPageInitialIndex
-} from '@/utils/tableViewUtils';
+import { createDefaultFilterConfig, arrayEquals, isImage } from '@/utils/tableViewUtils';
 import throttle from 'raf-throttle';
 import { MIN_COLUMN_SIZE, SPECIAL_COLUMNS_SIZE, DATA_COLUMNS_MARGIN } from '@knime/knime-ui-table/util/constants';
 
@@ -142,7 +140,7 @@ export default {
                 columnSizes.push(this.columnSizeOverrides[columnName] || defaultColumnSize);
                 return columnSizes;
             }, [this.columnSizeOverrides[INDEX_SYMBOL] || defaultColumnSize,
-            this.columnSizeOverrides[ROW_KEY_SYMBOL] || defaultColumnSize]);
+                this.columnSizeOverrides[ROW_KEY_SYMBOL] || defaultColumnSize]);
             const lastColumnMinSize = this.lastColumnMinSize(dataColumnsSizeTotal, currentColumnSizes);
             currentColumnSizes[currentColumnSizes.length - 1] = Math.max(lastColumnMinSize,
                 currentColumnSizes[currentColumnSizes.length - 1]);
