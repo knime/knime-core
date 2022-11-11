@@ -109,7 +109,7 @@ class TableViewInitialDataTest {
         final var initialData = TableViewUtil.createInitialData(settings, table, nodeId);
         initialData.getTable();
         verify(dataServiceMock.constructed().get(0)).getTable(aryEq(displayedColumns), eq(0L), eq(settings.m_pageSize),
-            any(String[].class), eq(true));
+            any(String[].class), eq(true), eq(true));
     }
 
     @Test
@@ -120,7 +120,7 @@ class TableViewInitialDataTest {
         final var initialData = TableViewUtil.createInitialData(settings, table, nodeId);
         initialData.getTable();
         verify(dataServiceMock.constructed().get(0)).getTable(aryEq(displayedColumns), eq(0L), eq(0),
-            any(String[].class), eq(true));
+            any(String[].class), eq(true), eq(true));
     }
 
     @Test

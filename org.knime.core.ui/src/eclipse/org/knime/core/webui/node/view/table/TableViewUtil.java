@@ -58,6 +58,9 @@ import org.knime.core.data.RowKey;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.webui.data.DataService;
+import org.knime.core.webui.data.rpc.json.impl.JsonRpcDataServiceImpl;
+import org.knime.core.webui.data.rpc.json.impl.JsonRpcSingleServer;
 import org.knime.core.webui.node.util.NodeCleanUpCallback;
 import org.knime.core.webui.node.view.table.data.TableViewDataService;
 import org.knime.core.webui.node.view.table.data.TableViewDataServiceImpl;
@@ -115,7 +118,7 @@ public final class TableViewUtil {
 
     private static Function<String, InputStream> createTableCellImageResourceSupplier() {
         return relativePath -> {
-            var bytes = RENDERER_REGISTRY.renderAndRemove(relativePath);
+            var bytes = RENDERER_REGISTRY.renderImage(relativePath);
             return new ByteArrayInputStream(bytes);
         };
     }
@@ -125,8 +128,15 @@ public final class TableViewUtil {
      * @param tableId a globally unique id to be able to uniquely identify the images belong to the table used here
      * @return a new table view data service instance
      */
-    public static TableViewDataService createDataService(final BufferedDataTable table, final String tableId) {
-        return createDataService(() -> table, tableId);
+    public static DataService createDataService(final Supplier<BufferedDataTable> table, final String tableId) {
+        var tableService = createTableViewDataService(table, tableId);
+        return new JsonRpcDataServiceImpl(new JsonRpcSingleServer<>(tableService)) {
+            @Override
+            public void cleanUp() {
+                tableService.clearCache();
+                TableViewUtil.RENDERER_REGISTRY.clearImageDataCache(tableId);
+            }
+        };
     }
 
     /**
@@ -134,7 +144,7 @@ public final class TableViewUtil {
      * @param tableId a globally unique id to be able to uniquely identify the images belong to the table used here
      * @return a new table view data service instance
      */
-    public static TableViewDataService createDataService(final Supplier<BufferedDataTable> tableSupplier,
+    public static TableViewDataService createTableViewDataService(final Supplier<BufferedDataTable> tableSupplier,
         final String tableId) {
         return new TableViewDataServiceImpl(tableSupplier, tableId, new SwingBasedRendererFactory(), RENDERER_REGISTRY);
     }
@@ -183,7 +193,7 @@ public final class TableViewUtil {
      */
     public static void registerRendererRegistryCleanup(final String tableId) {
         var nc = NodeContext.getContext().getNodeContainer();
-        NodeCleanUpCallback.builder(nc, () -> RENDERER_REGISTRY.clear(tableId)) //
+        NodeCleanUpCallback.builder(nc, () -> RENDERER_REGISTRY.clearImageDataCache(tableId)) //
             .cleanUpOnNodeStateChange(true) //
             .deactivateOnNodeStateChange(false).build();
     }

@@ -94,7 +94,7 @@ public final class TableViewInitialDataImpl implements TableViewInitialData {
     public Table getTable() {
         final var displayedColumns = m_settings.getDisplayedColumns();
         final var pageSize = m_settings.m_enablePagination ? m_settings.m_pageSize : 0;
-        return m_dataService.getTable(displayedColumns, 0, pageSize, new String[displayedColumns.length], true);
+        return m_dataService.getTable(displayedColumns, 0, pageSize, new String[displayedColumns.length], true, true);
     }
 
     @Override

@@ -603,7 +603,7 @@ describe('TableView.vue', () => {
             });
             expect(dataSpy).toHaveBeenCalledWith({
                 method: 'getTable',
-                options: [settings.displayedColumns, 0, 2, [null, null, null, null, null], true]
+                options: [settings.displayedColumns, 0, 2, [null, null, null, null, null], true, true]
             });
             expect(wrapper.vm.displayedColumns).toStrictEqual(initialDataMock.table.displayedColumns);
         });
@@ -691,7 +691,7 @@ describe('TableView.vue', () => {
                 wrapper.vm.onPageChange(1);
                 expect(dataSpy).toBeCalledWith({
                     method: 'getTable',
-                    options: [initialDataMock.table.displayedColumns, 2, 2, emptyRenderers, false] // eslint-disable-line no-magic-numbers
+                    options: [initialDataMock.table.displayedColumns, 2, 2, emptyRenderers, false, true] // eslint-disable-line no-magic-numbers
                 });
                 expect(wrapper.vm.currentPage).toStrictEqual(2);
             });
@@ -702,7 +702,7 @@ describe('TableView.vue', () => {
 
             expect(dataSpy).toHaveBeenNthCalledWith(2, {
                 method: 'getTable',
-                options: [initialDataMock.table.displayedColumns, 0, 2, emptyRenderers, false] // eslint-disable-line no-magic-numbers
+                options: [initialDataMock.table.displayedColumns, 0, 2, emptyRenderers, false, true] // eslint-disable-line no-magic-numbers
             });
             expect(wrapper.vm.currentPage).toStrictEqual(1);
         });
@@ -732,7 +732,7 @@ describe('TableView.vue', () => {
             expect(dataSpy).toBeCalledWith({
                 method: 'getFilteredAndSortedTable',
                 options: [initialDataMock.table.displayedColumns,
-                    0, 2, 'col1', false, '', emptyColumnFilterValues, false, emptyRenderers, false, false] // eslint-disable-line no-magic-numbers
+                    0, 2, 'col1', false, '', emptyColumnFilterValues, false, emptyRenderers, false, false, true] // eslint-disable-line no-magic-numbers
             });
             expect(wrapper.vm.currentPage).toStrictEqual(1);
         });
@@ -745,7 +745,7 @@ describe('TableView.vue', () => {
             expect(dataSpyDesc).toBeCalledWith({
                 method: 'getFilteredAndSortedTable',
                 options: [initialDataMock.table.displayedColumns,
-                    0, 2, 'col1', true, '', emptyColumnFilterValues, false, emptyRenderers, false, false] // eslint-disable-line no-magic-numbers
+                    0, 2, 'col1', true, '', emptyColumnFilterValues, false, emptyRenderers, false, false, true] // eslint-disable-line no-magic-numbers
             });
             expect(wrapper.vm.currentPage).toStrictEqual(1);
 
@@ -754,7 +754,7 @@ describe('TableView.vue', () => {
             expect(dataSpyAsc).toBeCalledWith({
                 method: 'getFilteredAndSortedTable',
                 options: [initialDataMock.table.displayedColumns,
-                    0, 2, 'col1', false, '', emptyColumnFilterValues, false, emptyRenderers, false, false] // eslint-disable-line no-magic-numbers
+                    0, 2, 'col1', false, '', emptyColumnFilterValues, false, emptyRenderers, false, false, true] // eslint-disable-line no-magic-numbers
             });
         });
 
@@ -765,7 +765,7 @@ describe('TableView.vue', () => {
             expect(dataSpy).toHaveBeenNthCalledWith(2, {
                 method: 'getFilteredAndSortedTable',
                 options: [initialDataMock.table.displayedColumns,
-                    2, 2, 'col1', false, '', emptyColumnFilterValues, false, emptyRenderers, false, false] // eslint-disable-line no-magic-numbers
+                    2, 2, 'col1', false, '', emptyColumnFilterValues, false, emptyRenderers, false, false, true] // eslint-disable-line no-magic-numbers
             });
             expect(wrapper.vm.currentPage).toStrictEqual(2);
         });
@@ -779,7 +779,7 @@ describe('TableView.vue', () => {
             expect(dataSpy).toHaveBeenCalledWith({
                 method: 'getFilteredAndSortedTable',
                 options: [initialDataMock.table.displayedColumns, 0, 2, '-1', false, '', emptyColumnFilterValues,
-                    true, emptyRenderers, false, false] // eslint-disable-line no-magic-numbers
+                    true, emptyRenderers, false, false, true] // eslint-disable-line no-magic-numbers
             });
         });
     });
@@ -991,6 +991,7 @@ describe('TableView.vue', () => {
                     initialDataMock.settings.showRowKeys,
                     emptyRenderers,
                     false,
+                    true,
                     true]
             });
         });
@@ -1010,6 +1011,7 @@ describe('TableView.vue', () => {
                     initialDataMock.settings.showRowKeys,
                     emptyRenderers,
                     false,
+                    true,
                     true]
             });
         });
@@ -1020,7 +1022,7 @@ describe('TableView.vue', () => {
             wrapper.vm.onClearFilter();
             expect(dataSpy).toHaveBeenNthCalledWith(2, {
                 method: 'getTable',
-                options: [initialDataMock.table.displayedColumns, 0, 2, emptyRenderers, false] // eslint-disable-line no-magic-numbers
+                options: [initialDataMock.table.displayedColumns, 0, 2, emptyRenderers, false, true] // eslint-disable-line no-magic-numbers
             });
         });
 
@@ -1043,6 +1045,7 @@ describe('TableView.vue', () => {
                     null,
                     initialDataMock.settings.showRowKeys,
                     [null, null, null, null, null],
+                    true,
                     true,
                     true]
             });
@@ -1071,7 +1074,7 @@ describe('TableView.vue', () => {
                     0,
                     2, // eslint-disable-line no-magic-numbers
                     [null, null, renderer.id, null],
-                    false]
+                    false, true]
             });
         });
 
@@ -1112,7 +1115,7 @@ describe('TableView.vue', () => {
 
                 expect(dataSpy).toHaveBeenNthCalledWith(2, {
                     method: 'getTable',
-                    options: [['col3', 'col4'], 0, 2, ['t2r1', null], true]
+                    options: [['col3', 'col4'], 0, 2, ['t2r1', null], true, true]
                 });
             });
     });

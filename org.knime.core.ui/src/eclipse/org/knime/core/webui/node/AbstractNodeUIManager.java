@@ -153,6 +153,17 @@ public abstract class AbstractNodeUIManager<N extends NodeWrapper>
     }
 
     /**
+     * Calls {@link DataService#cleanUp()} if there is a data service instance available for the given node (wrapper).
+     *
+     * @param nodeWrapper
+     */
+    public final void cleanUpDataService(final N nodeWrapper) {
+        if (m_dataServices.containsKey(nodeWrapper)) {
+            m_dataServices.get(nodeWrapper).cleanUp();
+        }
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -196,8 +207,12 @@ public abstract class AbstractNodeUIManager<N extends NodeWrapper>
         if (!m_dataServices.containsKey(nodeWrapper)) {
             ds = getDataServiceProvider(nodeWrapper).createDataService().orElse(null);
             m_dataServices.put(nodeWrapper, ds);
-            NodeCleanUpCallback.builder(nodeWrapper.get(), () -> m_dataServices.remove(nodeWrapper))
-                .cleanUpOnNodeStateChange(shouldCleanUpPageAndDataServicesOnNodeStateChange()).build();
+            NodeCleanUpCallback.builder(nodeWrapper.get(), () -> {
+                var dataService = m_dataServices.remove(nodeWrapper);
+                if (dataService != null) {
+                    dataService.cleanUp();
+                }
+            }).cleanUpOnNodeStateChange(shouldCleanUpPageAndDataServicesOnNodeStateChange()).build();
         } else {
             ds = m_dataServices.get(nodeWrapper);
         }

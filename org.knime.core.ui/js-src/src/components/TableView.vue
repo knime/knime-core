@@ -322,7 +322,7 @@ export default {
             }
             const displayedColumns = this.getColumnsForRequest(updateDisplayedColumns);
             const receivedTable = await this.requestTable(loadFromIndex, numRows, displayedColumns,
-                updateDisplayedColumns, updateTotalSelected);
+                updateDisplayedColumns, updateTotalSelected, this.settings.enablePagination);
             if (updateDisplayedColumns) {
                 this.columnFilters = this.getDefaultFilterConfigs(receivedTable.displayedColumns);
                 this.displayedColumns = receivedTable.displayedColumns;
@@ -352,7 +352,8 @@ export default {
         },
 
         // eslint-disable-next-line max-params
-        async requestTable(startIndex, numRows, displayedColumns, updateDisplayedColumns, updateTotalSelected) {
+        async requestTable(startIndex, numRows, displayedColumns, updateDisplayedColumns, updateTotalSelected,
+            clearImageDataCache) {
             const selectedRendererIds = updateDisplayedColumns
                 ? this.getCurrentSelectedRenderers(this.settings.displayedColumns)
                 : this.selectedRendererIds;
@@ -360,13 +361,13 @@ export default {
             // if columnSortColumnName is present a sorting is active
             if (this.columnSortColumnName || this.searchTerm || this.colFilterActive) {
                 receivedTable = await this.requestFilteredAndSortedTable(startIndex, numRows, displayedColumns,
-                    updateDisplayedColumns, updateTotalSelected, selectedRendererIds);
+                    updateDisplayedColumns, updateTotalSelected, selectedRendererIds, clearImageDataCache);
                 if (updateTotalSelected) {
                     this.totalSelected = receivedTable.totalSelected;
                 }
             } else {
                 receivedTable = await this.requestUnfilteredAndUnsortedTable(startIndex, numRows, displayedColumns,
-                    updateDisplayedColumns, selectedRendererIds);
+                    updateDisplayedColumns, selectedRendererIds, clearImageDataCache);
                 if (updateTotalSelected) {
                     this.totalSelected = this.currentSelectedRowKeys.size;
                 }
@@ -376,7 +377,7 @@ export default {
 
         // eslint-disable-next-line max-params
         requestFilteredAndSortedTable(startIndex, numRows, displayedColumns, updateDisplayedColumns,
-            updateTotalSelected, selectedRendererIds) {
+            updateTotalSelected, selectedRendererIds, clearImageDataCache) {
             const columnSortIsAscending = this.columnSortDirection === 1;
             return this.requestNewData('getFilteredAndSortedTable',
                 [
@@ -390,15 +391,16 @@ export default {
                     this.settings.showRowKeys,
                     selectedRendererIds,
                     updateDisplayedColumns,
-                    updateTotalSelected
+                    updateTotalSelected,
+                    clearImageDataCache
                 ]);
         },
 
         // eslint-disable-next-line max-params
         requestUnfilteredAndUnsortedTable(startIndex, numRows, displayedColumns, updateDisplayedColumns,
-            selectedRendererIds) {
+            selectedRendererIds, clearImageDataCache) {
             return this.requestNewData('getTable', [displayedColumns, startIndex, numRows, selectedRendererIds,
-                updateDisplayedColumns]);
+                updateDisplayedColumns, clearImageDataCache]);
         },
 
         getColumnsForRequest(updateDisplayedColumns) {

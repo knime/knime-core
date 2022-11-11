@@ -60,8 +60,6 @@ import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.webui.data.ApplyDataService;
 import org.knime.core.webui.data.DataService;
 import org.knime.core.webui.data.InitialDataService;
-import org.knime.core.webui.data.rpc.json.impl.JsonRpcDataServiceImpl;
-import org.knime.core.webui.data.rpc.json.impl.JsonRpcSingleServer;
 import org.knime.core.webui.node.dialog.impl.DefaultInitialDataServiceImpl;
 import org.knime.core.webui.node.dialog.impl.DefaultNodeSettings;
 import org.knime.core.webui.node.view.NodeView;
@@ -127,8 +125,7 @@ public final class TableNodeView implements NodeView {
 
     @Override
     public Optional<DataService> createDataService() {
-        return Optional.of(new JsonRpcDataServiceImpl(new JsonRpcSingleServer<>(
-            TableViewUtil.createDataService(m_tableSupplier, m_selectionSupplier, m_tableId))));
+        return Optional.of(TableViewUtil.createDataService(m_tableSupplier, m_selectionSupplier, m_tableId));
     }
 
     @Override
@@ -138,6 +135,7 @@ public final class TableNodeView implements NodeView {
 
     @Override
     public void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+        //
     }
 
     @Override

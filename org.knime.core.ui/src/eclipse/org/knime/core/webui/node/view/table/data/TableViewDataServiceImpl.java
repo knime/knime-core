@@ -164,16 +164,17 @@ public class TableViewDataServiceImpl implements TableViewDataService {
 
     @Override
     public Table getTable(final String[] columns, final long fromIndex, final int numRows, final String[] rendererIds,
-        final boolean updateDisplayedColumns) {
+        final boolean updateDisplayedColumns, final boolean forceClearImageDataCache) {
         return getFilteredAndSortedTable(columns, fromIndex, numRows, null, false, null, null, false, rendererIds,
-            updateDisplayedColumns, false);
+            updateDisplayedColumns, false, forceClearImageDataCache);
     }
 
     @Override
     public Table getFilteredAndSortedTable(final String[] columns, final long fromIndex, final int numRows,
         final String sortColumn, final boolean sortAscending, final String globalSearchTerm,
         final String[][] columnFilterValue, final boolean filterRowKeys, final String[] rendererIdsParam,
-        final boolean updateDisplayedColumns, final boolean updateTotalSelected) {
+        final boolean updateDisplayedColumns, final boolean updateTotalSelected,
+        final boolean forceClearImageDataCache) {
         var bufferedDataTable = m_tableSupplier.get();
         if (bufferedDataTable == null) {
             return createEmptyTable();
@@ -193,7 +194,14 @@ public class TableViewDataServiceImpl implements TableViewDataService {
         final var spec = bufferedDataTable.getSpec();
         final var colIndices = spec.columnsToIndices(displayedColumns);
         if (m_rendererRegistry != null) {
-            m_rendererRegistry.clear(m_tableId);
+            // TODO clear image cache if search terms, filter, sorting or renderer changes but _not_ if only the fromIndex changes (and lazy-loading is enabled, i.e. no paging)
+            // i.e. whenever the table cache has been updated
+            if (forceClearImageDataCache) {
+                m_rendererRegistry.clearImageDataCache(m_tableId);
+            }
+            if (numRows > 0) {
+                m_rendererRegistry.startNewBatchOfTableRows(m_tableId);
+            }
         }
         String[] rendererIds;
         if (rendererIdsParam == null || rendererIdsParam.length == 0) {
@@ -218,8 +226,8 @@ public class TableViewDataServiceImpl implements TableViewDataService {
             filter.withToRowIndex(toIndex); // will throw exception when toIndex < fromIndex
             filter.withMaterializeColumnIndices(colIndices);
             rows = renderRows(displayedColumns, colIndices, rendererIds, size,
-                createRowIteratorSupplier(filteredAndSortedTable, filter.build()), m_rendererRegistry, m_renderersMap,
-                m_tableId);
+                createRowIteratorSupplier(filteredAndSortedTable, filter.build()), fromIndex, m_rendererRegistry,
+                m_renderersMap, m_tableId);
         } else {
             rows = new String[0][];
         }
@@ -241,6 +249,22 @@ public class TableViewDataServiceImpl implements TableViewDataService {
         return IntStream.range(0, columns.length).filter(i -> spec.containsName(columns[i]))
             .mapToObj(i -> rendererIds[i]).collect(Collectors.toList()).toArray(String[]::new);
 
+    }
+
+    @Override
+    public void clearCache() {
+        m_cachedColumnFilterValue = null;
+        m_cachedColumns = null;
+        if (m_cachedFilteredAndSortedTable != null) {
+            m_cachedFilteredAndSortedTable.close();
+            m_cachedFilteredAndSortedTable = null;
+        }
+        m_cachedGlobalSearchTerm = null;
+        if (m_cachedSortedTable != null) {
+            m_cachedSortedTable.close();
+            m_cachedSortedTable = null;
+        }
+        m_cachedTableSortColumnName = null;
     }
 
     private static String[] filterInvalids(final String[] columns, final DataTableSpec spec) {
@@ -283,6 +307,7 @@ public class TableViewDataServiceImpl implements TableViewDataService {
             } catch (CanceledExecutionException e) {
                 throw new DataServiceException("Table sorting has been cancelled", e);
             }
+            // TODO shouldn't be the m_cachedFilteredAndSortedTable be closed, too?
             m_cleanable = CLEANER.register(this, m_cachedSortedTable::close);
             m_cachedFilteredAndSortedTable = null;
             return m_cachedSortedTable;
@@ -426,7 +451,7 @@ public class TableViewDataServiceImpl implements TableViewDataService {
     }
 
     private static String[][] renderRows(final String[] columns, final int[] colIndices, final String[] rendererIds,
-        final int size, final Supplier<CloseableRowIterator> rowIteratorSupplier,
+        final int size, final Supplier<CloseableRowIterator> rowIteratorSupplier, final long rowOffset,
         final DataValueImageRendererRegistry rendererRegistry,
         final Map<Pair<String, String>, DataValueRenderer> renderersMap, final String tableId) {
         var renderers = IntStream.range(0, columns.length)
@@ -439,7 +464,8 @@ public class TableViewDataServiceImpl implements TableViewDataService {
                     IntStream.range(0, columns.length) //
                         .mapToObj(i -> {
                             var cell = row.getCell(colIndices[i]);
-                            return cell.isMissing() ? null : renderCell(cell, renderers[i], rendererRegistry, tableId);
+                            return cell.isMissing() ? null
+                                : renderCell(cell, renderers[i], rendererRegistry, tableId, rowOffset + index);
                         }))
                     .toArray(String[]::new);
             });
@@ -448,11 +474,11 @@ public class TableViewDataServiceImpl implements TableViewDataService {
     }
 
     private static String renderCell(final DataCell cell, final DataValueRenderer renderer,
-        final DataValueImageRendererRegistry rendererRegistry, final String tableId) {
+        final DataValueImageRendererRegistry rendererRegistry, final String tableId, final long rowIndex) {
         if (renderer instanceof DataValueTextRenderer) {
             return ((DataValueTextRenderer)renderer).renderText(cell);
         } else if (renderer instanceof DataValueImageRenderer) {
-            return rendererRegistry.addRendererAndGetImgPath(tableId, cell, (DataValueImageRenderer)renderer);
+            return rendererRegistry.addRendererAndGetImgPath(tableId, cell, (DataValueImageRenderer)renderer, rowIndex);
         } else {
             throw new UnsupportedOperationException(
                 "Unsupported data value renderer: " + renderer.getClass().getName());
