@@ -308,7 +308,7 @@ export default {
             }
             const displayedColumns = this.getColumnsForRequest(updateDisplayedColumns);
             const receivedTable = await this.requestTable(loadFromIndex, numRows, displayedColumns,
-                updateDisplayedColumns, updateTotalSelected);
+                updateDisplayedColumns, updateTotalSelected, this.settings.enablePagination);
             if (updateDisplayedColumns) {
                 this.columnFilters = this.getDefaultFilterConfigs(receivedTable.displayedColumns);
                 this.displayedColumns = receivedTable.displayedColumns;
@@ -332,18 +332,19 @@ export default {
         },
 
         // eslint-disable-next-line max-params
-        async requestTable(startIndex, numRows, displayedColumns, updateDisplayedColumns, updateTotalSelected) {
+        async requestTable(startIndex, numRows, displayedColumns, updateDisplayedColumns, updateTotalSelected,
+            clearImageDataCache) {
             let receivedTable;
             // if columnSortColumnName is present a sorting is active
             if (this.columnSortColumnName || this.searchTerm || this.colFilterActive) {
                 receivedTable = await this.requestFilteredAndSortedTable(startIndex, numRows, displayedColumns,
-                    updateDisplayedColumns, updateTotalSelected);
+                    updateDisplayedColumns, updateTotalSelected, clearImageDataCache);
                 if (updateTotalSelected) {
                     this.totalSelected = receivedTable.totalSelected;
                 }
             } else {
                 receivedTable = await this.requestUnfilteredAndUnsortedTable(startIndex, numRows, displayedColumns,
-                    updateDisplayedColumns);
+                    updateDisplayedColumns, clearImageDataCache);
                 if (updateTotalSelected) {
                     this.totalSelected = this.currentSelectedRowKeys.size;
                 }
@@ -353,7 +354,7 @@ export default {
 
         // eslint-disable-next-line max-params
         requestFilteredAndSortedTable(startIndex, numRows, displayedColumns, updateDisplayedColumns,
-            updateTotalSelected) {
+            updateTotalSelected, clearImageDataCache) {
             const columnSortIsAscending = this.columnSortDirection === 1;
             return this.requestNewData('getFilteredAndSortedTable',
                 [
@@ -367,14 +368,16 @@ export default {
                     this.settings.showRowKeys,
                     null,
                     updateDisplayedColumns,
-                    updateTotalSelected
+                    updateTotalSelected,
+                    clearImageDataCache
                 ]);
         },
 
         // eslint-disable-next-line max-params
-        requestUnfilteredAndUnsortedTable(startIndex, numRows, displayedColumns, updateDisplayedColumns) {
+        requestUnfilteredAndUnsortedTable(startIndex, numRows, displayedColumns, updateDisplayedColumns,
+            clearImageDataCache) {
             return this.requestNewData('getTable',
-                [displayedColumns, startIndex, numRows, null, updateDisplayedColumns]);
+                [displayedColumns, startIndex, numRows, null, updateDisplayedColumns, clearImageDataCache]);
         },
 
         getColumnsForRequest(updateDisplayedColumns) {

@@ -50,12 +50,19 @@ package org.knime.testing.node.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 import java.util.function.Function;
+import java.util.function.LongFunction;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
+
+import javax.imageio.ImageIO;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomainCreator;
@@ -417,6 +424,19 @@ public final class TableTestUtil {
      * @return a {@link Supplier} object containing the created table
      */
     public static Supplier<BufferedDataTable> createDefaultTestTable(final int rowCount) {
+        return createDefaultTestTable(rowCount, idx -> idx);
+    }
+
+    /**
+     * Creates a {@link Supplier}, given a number of rows to create, which can be used for unit testing implementations
+     * of view nodes.
+     *
+     * @param rowCount the number of rows to create which should be contained in the test table
+     * @param rowIndexToRandomImageSeedMap the random number generator seed to be used per row for the image column
+     * @return a {@link Supplier} object containing the created table
+     */
+    public static Supplier<BufferedDataTable> createDefaultTestTable(final int rowCount,
+        final LongFunction<Long> rowIndexToRandomImageSeedMap) {
         final var builder = new TableBuilder(DEFAULT_SPEC);
         IntStream.range(0, rowCount).mapToObj(i -> new Object[]{//
             new IntCell(i), //
@@ -425,7 +445,7 @@ public final class TableTestUtil {
             new DoubleCell(i), //
             new SparseBitVectorCellFactory(Integer.toHexString(i)).createDataCell(), //
             i % 2 == 1 ? BooleanCell.TRUE : BooleanCell.FALSE, //
-            createPNGImageCell(i)}).forEach(builder::addRow);
+            createPNGImageCell(rowIndexToRandomImageSeedMap.apply(i))}).forEach(builder::addRow);
         return builder.build();
     }
 
@@ -456,21 +476,28 @@ public final class TableTestUtil {
     }
 
     /**
-     * @param rowIdx the row index to return the image for (at the moment there are only different images for odd- or
-     *            even row indices)
+     * @param seed the initial seed for the random number generator (for deterministic random images)
      * @return a {@link PNGImageCell} containing a small png image
      */
-    public static DataCell createPNGImageCell(final int rowIdx) {
-        return PNGImageCellFactory.create(rowIdx % 2 == 0 ? PNG_IMG1 : PNG_IMG2);
+    public static DataCell createPNGImageCell(final long seed)  {
+        var img = new BufferedImage(10, 10, BufferedImage.TYPE_INT_ARGB);
+        var rand = new Random(seed);
+        for (var x = 0; x < img.getHeight(); x++) {
+            for (var y = 0; y < img.getWidth(); y++) {
+                var val = rand.nextInt(256);
+                int p = (0 << 24) | (val << 16) | (val << 8) | val;
+                img.setRGB(x, y, p);
+            }
+        }
+
+        var out = new ByteArrayOutputStream();
+        try {
+            ImageIO.write(img, "png", out);
+            return PNGImageCellFactory.create(out.toByteArray());
+        } catch (IOException e) {
+            throw new RuntimeException(e); // NOSONAR
+        }
     }
-
-    private static final byte[] PNG_IMG1 = {-119, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1,
-        0, 0, 0, 2, 8, 2, 0, 0, 0, 22, -29, 33, 112, 0, 0, 0, 16, 73, 68, 65, 84, 120, 94, 99, -32, 98, -30, 103, -8,
-        -1, -1, 63, 0, 6, -97, 3, 25, -29, -99, -101, 14, 0, 0, 0, 0, 73, 69, 78, 68, -82, 66, 96, -126};
-
-    private static final byte[] PNG_IMG2 = {-119, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1,
-        0, 0, 0, 2, 8, 2, 0, 0, 0, 22, -29, 33, 112, 0, 0, 0, 16, 73, 68, 65, 84, 8, -41, 99, 104, 108, 108, 100, 56,
-        125, -6, 52, 0, 13, -36, 3, -27, 89, 6, 27, 25, 0, 0, 0, 0, 73, 69, 78, 68, -82, 66, 96, -126};
 
     /**
      * A class containing necessary column information to build a BufferedDataTable from multiple of its instances.

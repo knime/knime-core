@@ -48,17 +48,24 @@
  */
 package org.knime.core.webui.node.view.table.data.render;
 
-import java.util.Collections;
+import static java.util.stream.LongStream.of;
+
+import java.util.Arrays;
+import java.util.Deque;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.Map;
-import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataValue;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NativeNodeContainer;
-import org.knime.core.util.Pair;
 import org.knime.core.webui.node.view.table.data.TableViewDataService;
 import org.knime.core.webui.page.PageUtil;
 import org.knime.core.webui.page.PageUtil.PageType;
@@ -70,8 +77,8 @@ import org.knime.core.webui.page.PageUtil.PageType;
  * Required because the {@link TableViewDataService} doesn't return the rendered images directly but just a relative
  * image path. The image is only rendered once the browser uses the provided path to render the image. And this class is
  * intended to serve as the interchange between the place where the image path is returned via
- * {@link #addRendererAndGetImgPath(String, DataCell, DataValueImageRenderer)} (while iterating the data table) and the place
- * where the image is finally rendered {@link #renderAndRemove(String)} (the data value is accessed again to finally
+ * {@link #addRendererAndGetImgPath(String, DataCell, DataValueImageRenderer, long)} (while iterating the data table) and the
+ * place where the image is finally rendered {@link #renderImage(String)} (the data value is accessed again to finally
  * render it for real).
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
@@ -87,16 +94,18 @@ public final class DataValueImageRendererRegistry {
 
     private static final int DEFAULT_CELL_IMAGE_HEIGHT = 100;
 
-    private static final Pattern WIDTH_AND_HEIGHT_PATTERN =
-        Pattern.compile("w=(\\d+)&h=(\\d+)");
+    private static final Pattern WIDTH_AND_HEIGHT_PATTERN = Pattern.compile("w=(\\d+)&h=(\\d+)");
+
+    // The number of rows we need to keep images in the cache for.
+    // I.e. the number of images the are ultimately kept in the cache
+    // depends on how many images there are per row.
+    private static final int MAX_NUM_ROWS_WITH_IMAGES = 500;
+
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(DataValueImageRendererRegistry.class);
 
     private final Supplier<String> m_pageIdSupplier;
 
-    // map from table-id to (map from cell hash code to pair of data-cell and renderer)
-    private final Map<String, Map<String, Pair<DataCell, DataValueImageRenderer>>> m_cellAndRendererMapsPerTableId =
-        Collections.synchronizedMap(new HashMap<>());
-
-    private int m_hashCollisionCount = 0;
+    private final Map<String, Images> m_imagesPerTable = new HashMap<>();
 
     /**
      * @param pageIdSupplier the page id of the view (see, e.g.,
@@ -115,22 +124,17 @@ public final class DataValueImageRendererRegistry {
      * @param tableId the table to add the renderer for; must be globally unique
      * @param cell the data cell to add and to get the image path for
      * @param renderer the renderer to add
+     * @param rowIndex the index of the row the image to render is part of
      *
      * @return the relative path where the image can be accessed
      */
     public String addRendererAndGetImgPath(final String tableId, final DataCell cell,
-        final DataValueImageRenderer renderer) {
-        var key = Integer.toString(cell.hashCode());
-        var cellAndRendererMap = m_cellAndRendererMapsPerTableId.computeIfAbsent(tableId, id -> new HashMap<>());
-        if (cellAndRendererMap.containsKey(key)) {
-            var existingCell = cellAndRendererMap.get(key).getFirst();
-            if (!cell.equals(existingCell)) {
-                // hash collision
-                key += "_" + m_hashCollisionCount;
-                m_hashCollisionCount++; // NOSONAR
-            }
+        final DataValueImageRenderer renderer, final long rowIndex) {
+        var images = m_imagesPerTable.get(tableId);
+        if (images == null) {
+            throw new IllegalStateException("'startNewBatchOfTableRows' needs to be called at least once before");
         }
-        cellAndRendererMap.put(key, Pair.create(cell, renderer));
+        var key = images.addImage(cell, renderer, rowIndex);
         return String.format("%s/%s/%s/%s.png", m_pageIdSupplier.get(), RENDERED_CELL_IMAGES_PATH_PREFIX, tableId, key);
     }
 
@@ -139,10 +143,9 @@ public final class DataValueImageRendererRegistry {
      * registry.
      *
      * @param imgPath the relative image path
-     * @return the image data
-     * @throws NoSuchElementException if there is no image available for the given path (anymore)
+     * @return the image data or an empty array if the image data can't be accessed (anymore)
      */
-    public byte[] renderAndRemove(final String imgPath) {
+    public byte[] renderImage(final String imgPath) {
         var split = imgPath.split("\\?", 2);
         int width = DEFAULT_CELL_IMAGE_WIDTH;
         int height = DEFAULT_CELL_IMAGE_HEIGHT;
@@ -157,23 +160,64 @@ public final class DataValueImageRendererRegistry {
         var tableIdAndKey = split[0].replace(".png", "").split("/");
         var tableId = tableIdAndKey[0];
         var key = tableIdAndKey[1];
-        var valueAndRenderer = m_cellAndRendererMapsPerTableId.get(tableId).get(key);
-        if (valueAndRenderer == null) {
-            throw new NoSuchElementException("There is no image '" + split[0] + "' available (anymore)");
+        var images = m_imagesPerTable.get(tableId);
+        if (images == null) {
+            LOGGER.debugWithFormat("There is no image data available anymore for table '%s'.", tableId);
+            return new byte[0];
         }
-
-        m_cellAndRendererMapsPerTableId.get(tableId).remove(key);
-        return valueAndRenderer.getSecond().renderImage(valueAndRenderer.getFirst(), width, height);
+        var image = images.getImage(key);
+        if (image == null) {
+            LOGGER.debugWithFormat("There is no image '%s' available (anymore)", split[0]);
+            return new byte[0];
+        }
+        return image.getData(width, height);
     }
 
     /**
-     * Removes all the renderers for the given table.
+     * Signals that a new batch of table row is being requested. By that, this registry knows to what batch of rows
+     * certain images belong which latter helps to partially clear the cache (e.g. only removing images from the oldest
+     * batch).
+     *
+     * @param tableId the table to strat the new batch for
+     */
+    public void startNewBatchOfTableRows(final String tableId) {
+        m_imagesPerTable.computeIfAbsent(tableId, id -> new Images()).startNewBatch();
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debugWithFormat("New batch of to-be-rendered images started for table with id '%s'.", tableId);
+            logStatisticsMessages(tableId);
+        }
+    }
+
+    private void logStatisticsMessages(final String tableId) {
+        var images = m_imagesPerTable.get(tableId);
+        if (images != null) {
+            var stats = images.getStats();
+            var batchSizes = stats.batchSizes();
+            var numImages = stats.numImages();
+            var numRenderedImages = stats.numRenderedImages();
+            if (numImages == 0) {
+                return;
+            }
+            LOGGER.debugWithFormat("  The registry for table '%s' currently contains:", tableId);
+            LOGGER.debugWithFormat("  %d batches of size: %s, (sum: %d)", batchSizes.length,
+                Arrays.toString(batchSizes), Arrays.stream(batchSizes).sum());
+            LOGGER.debugWithFormat("  %d images in total; %d rendered, %d un-rendered", numImages, numRenderedImages,
+                (numImages - numRenderedImages));
+            LOGGER.debugWithFormat("  %d of table rows covered", stats.totalNumTableRowsCovered());
+        }
+    }
+
+    /**
+     * Removes all cached resources for the given table.
      *
      * @param tableId the id of the table to clear all stored cells and renderers for
      */
-    public void clear(final String tableId) {
-        if (m_cellAndRendererMapsPerTableId.containsKey(tableId)) {
-            m_cellAndRendererMapsPerTableId.get(tableId).clear();
+    public void clearImageDataCache(final String tableId) {
+        m_imagesPerTable.remove(tableId);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(String.format(
+                "Cached image data cleared for table with id '%s'. There is stil image data cached for %d tables",
+                tableId, m_imagesPerTable.size()));
         }
     }
 
@@ -182,10 +226,150 @@ public final class DataValueImageRendererRegistry {
      * @return the number of renderers registered
      */
     public int numRegisteredRenderers(final String tableId) {
-        if (m_cellAndRendererMapsPerTableId.containsKey(tableId)) {
-            return m_cellAndRendererMapsPerTableId.get(tableId).size();
+        if (m_imagesPerTable.containsKey(tableId)) {
+            return m_imagesPerTable.get(tableId).getStats().numImages();
         } else {
             return 0;
+        }
+
+    }
+
+    StatsPerTable getStatsPerTable(final String tableId) {
+        return m_imagesPerTable.get(tableId).getStats();
+    }
+
+    interface StatsPerTable {
+
+        int totalNumTableRowsCovered();
+
+        int numImages();
+
+        int numRenderedImages();
+
+        int[] batchSizes();
+
+    }
+
+    private static class Images {
+
+        private Map<String, Image> m_images = new HashMap<>();
+
+        private Deque<Set<String>> m_batches = new LinkedList<>();
+
+        private int m_hashCollisionCount = 0;
+
+        private long[] m_minRowIndexPerBatch = new long[0];
+
+        private long[] m_maxRowIndexPerBatch = new long[0];
+
+        private StatsPerTable m_stats;
+
+        String addImage(final DataCell cell, final DataValueImageRenderer renderer, final long rowIndex) {
+            var key = Integer.toString(cell.hashCode());
+            if (m_images.containsKey(key)) {
+                var existingCell = m_images.get(key).getDataCell();
+                if (!cell.equals(existingCell)) {
+                    // hash collision
+                    key += "_" + m_hashCollisionCount;
+                    m_hashCollisionCount++; // NOSONAR
+                    m_images.put(key, new Image(cell, renderer));
+                }
+            } else {
+                m_images.put(key, new Image(cell, renderer));
+            }
+            m_batches.getFirst().add(key);
+            m_minRowIndexPerBatch[0] = Math.min(m_minRowIndexPerBatch[0], rowIndex);
+            m_maxRowIndexPerBatch[0] = Math.max(m_maxRowIndexPerBatch[0], rowIndex);
+            return key;
+        }
+
+        Image getImage(final String imageId) {
+            return m_images.get(imageId);
+        }
+
+        void startNewBatch() {
+            if (!m_batches.isEmpty() && m_batches.getFirst().isEmpty()) {
+                return;
+            }
+            while (getStats().totalNumTableRowsCovered() >= MAX_NUM_ROWS_WITH_IMAGES) {
+                var removedBatch = m_batches.removeLast();
+                m_minRowIndexPerBatch = ArrayUtils.remove(m_minRowIndexPerBatch, m_minRowIndexPerBatch.length - 1);
+                m_maxRowIndexPerBatch = ArrayUtils.remove(m_maxRowIndexPerBatch, m_maxRowIndexPerBatch.length - 1);
+                // only remove the images which are NOT part of the existing batches
+                var imagesToKeep = m_batches.stream().flatMap(Set::stream).collect(Collectors.toSet());
+                removedBatch.forEach(id -> {
+                    if (!imagesToKeep.contains(id)) {
+                        m_images.remove(id);
+                    }
+                });
+            }
+            m_batches.addFirst(new HashSet<>());
+            m_minRowIndexPerBatch = ArrayUtils.insert(0, m_minRowIndexPerBatch, Long.MAX_VALUE );
+            m_maxRowIndexPerBatch = ArrayUtils.insert(0, m_maxRowIndexPerBatch, - Long.MAX_VALUE);
+        }
+
+        StatsPerTable getStats() {
+            if (m_stats == null) {
+                m_stats = new StatsPerTable() { // NOSONAR
+                    @Override
+                    public int totalNumTableRowsCovered() {
+                        if (numImages() == 0) {
+                            return 0;
+                        }
+                        return (int)(of(m_maxRowIndexPerBatch).max().orElse(0)
+                            - of(m_minRowIndexPerBatch).min().orElse(0)) + 1;
+                    }
+
+                    @Override
+                    public int numImages() {
+                        return m_images.size();
+                    }
+
+                    @Override
+                    public int numRenderedImages() {
+                        return (int)m_images.values().stream().filter(Image::isRendered).count();
+                    }
+
+                    @Override
+                    public int[] batchSizes() {
+                        return m_batches.stream().mapToInt(Set::size).toArray();
+                    }
+
+                };
+            }
+            return m_stats;
+        }
+
+    }
+
+    private static class Image {
+
+        private DataCell m_cell;
+
+        private DataValueImageRenderer m_renderer;
+
+        private byte[] m_data;
+
+        Image(final DataCell cell, final DataValueImageRenderer renderer) {
+            m_cell = cell;
+            m_renderer = renderer;
+        }
+
+        byte[] getData(final int width, final int height) {
+            if (m_data == null) {
+                m_data = m_renderer.renderImage(m_cell, width, height);
+                m_renderer = null;
+                m_cell = null;
+            }
+            return m_data;
+        }
+
+        DataCell getDataCell() {
+            return m_cell;
+        }
+
+        boolean isRendered() {
+            return m_data != null;
         }
 
     }
