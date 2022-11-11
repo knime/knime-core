@@ -91,6 +91,7 @@ import org.knime.core.ui.workflowcoach.data.UpdatableNodeTripleProvider;
  * @author Kai Franze, KNIME GmbH
  */
 public final class NodeRecommendationManager {
+
     /**
      * Interface for a listener that gets notified when the recommendations are updated (via
      * {@link NodeRecommendationManager#loadRecommendations()}.
@@ -99,6 +100,7 @@ public final class NodeRecommendationManager {
      */
     @FunctionalInterface
     public interface IUpdateListener {
+
         /**
          * Called when the recommendations are updated.
          */
@@ -251,16 +253,17 @@ public final class NodeRecommendationManager {
 
         if (!recommendations.isEmpty()) {
             cachedRecommendations = recommendations; // NOSONAR: This has to be static, but the enclosing method can't
-            m_listeners.stream().forEach(IUpdateListener::updated);
             LOGGER.info("Successfully (re-)loaded all node recommendations available");
         } else {
             cachedRecommendations = null; // NOSONAR: This has to be static, but the enclosing method can't
         }
+        m_listeners.stream().forEach(IUpdateListener::updated); // Notify all update listeners after (un-)loading node recommendations
     }
 
     private static void fillRecommendationsMap(final Map<String, List<NodeRecommendation>> recommendationMap,
         final NodeTriple nt, final Predicate<NodeInfo> isSourceNodePredicate,
         final Predicate<NodeInfo> existsInRepositoryPredicate) {
+
         /* considering the successor only, i.e. for all entries where the predecessor and the node
          * itself is not present
          */
@@ -277,7 +280,7 @@ public final class NodeRecommendationManager {
             add(recommendationMap, SOURCE_NODES_KEY, nt.getNode().get(), nt.getCount(), existsInRepositoryPredicate); // NOSONAR: Presence is checked
         }
 
-        /* without predecessor but with the node, if given*/
+        /* without predecessor but with the node, if given */
         if (nt.getNode().isPresent()) {
             add(recommendationMap, getKey(nt.getNode().get()), nt.getSuccessor(), nt.getCount(), // NOSONAR: Presence is checked
                 existsInRepositoryPredicate); // NOSONAR: Presence is checked
@@ -446,6 +449,15 @@ public final class NodeRecommendationManager {
         } else {
             return cachedRecommendations.size();
         }
+    }
+
+    /**
+     * Checks whether node recommendations can be considered enabled or not.
+     *
+     * @return True if there are cached recommendations from at least one triple provider loaded, false otherwise.
+     */
+    public static boolean isEnabled() {
+        return getNumLoadedProviders() > 0;
     }
 
     /**
