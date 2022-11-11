@@ -98,6 +98,7 @@ public class NodeRecommendationManagerTest {
         NodeRecommendationManager.getInstance().initialize(m_isSourceNode, m_existsInRepository);
         m_updateListener = mock(IUpdateListener.class);
         NodeRecommendationManager.getInstance().addUpdateListener(m_updateListener);
+        assertThat(NodeRecommendationManager.isEnabled()).as("Node recommendation manager not enabled").isTrue();
     }
 
     /**
