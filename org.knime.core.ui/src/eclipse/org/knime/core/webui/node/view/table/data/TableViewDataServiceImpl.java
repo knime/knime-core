@@ -49,7 +49,6 @@
 package org.knime.core.webui.node.view.table.data;
 
 import java.lang.ref.Cleaner;
-import java.lang.ref.Cleaner.Cleanable;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -87,28 +86,17 @@ import org.knime.core.webui.node.view.table.data.render.DataValueTextRenderer;
 /**
  * @author Konrad Amtenbrink, KNIME GmbH, Berlin, Germany
  * @author Marc Bux, KNIME GmbH, Berlin, Germany
+ * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
 public class TableViewDataServiceImpl implements TableViewDataService {
 
     private final Supplier<BufferedDataTable> m_tableSupplier;
 
-    private ContainerTable m_cachedFilteredAndSortedTable;
+    private final TableCache m_sortedTableCache = new TableCache();
 
-    private String m_cachedGlobalSearchTerm;
-
-    private String[] m_cachedColumns;
-
-    private String[][] m_cachedColumnFilterValue;
-
-    private ContainerTable m_cachedSortedTable;
-
-    private boolean m_cachedTableSortAscending;
-
-    private String m_cachedTableSortColumnName;
+    private final TableCache m_filteredAndSortedTableCache = new TableCache();
 
     private static final Cleaner CLEANER = Cleaner.create();
-
-    private Cleanable m_cleanable;
 
     private final DataValueImageRendererRegistry m_rendererRegistry;
 
@@ -126,11 +114,12 @@ public class TableViewDataServiceImpl implements TableViewDataService {
 
     /**
      * @param tableSupplier supplier for the table from which to obtain data
-     * @param tableId TODO
+     * @param tableId a globally unique id; used to uniquely identify images in the renderer-registry which belong to
+     *            the table supplied here
      * @param rendererFactory required to turn data values into text or images
      * @param rendererRegistry lazily supplied image content for cells that are rendered into images (cleared and filled
      *            whenever new rows are being requested, e.g., via
-     *            {@link #getTable(String[], long, int, String[], boolean, boolean)})
+     *            {@link #getTable(String[], long, int, String[], boolean, boolean)}
      */
     public TableViewDataServiceImpl(final Supplier<BufferedDataTable> tableSupplier, final String tableId,
         final DataValueRendererFactory rendererFactory, final DataValueImageRendererRegistry rendererRegistry) {
@@ -140,12 +129,17 @@ public class TableViewDataServiceImpl implements TableViewDataService {
         m_rendererFactory = rendererFactory;
         m_rendererRegistry = rendererRegistry;
         m_selectionSupplier = null;
+        CLEANER.register(this, () -> { // NOSONAR exposing a partially constructed instance is no problem here
+            m_sortedTableCache.clear();             // because it's not really used (just to determine whether 'this' is phantom-reachable)
+            m_filteredAndSortedTableCache.clear();
+        });
     }
 
     /**
      * @param tableSupplier supplier for the table from which to obtain data
-     * @param selectionSupplier TODO can be {@code null}
-     * @param tableId TODO
+     * @param selectionSupplier provides the currently selected rows, can be {@code null}
+     * @param tableId a globally unique id; used to uniquely identify images in the renderer-registry which belong to
+     *            the table supplied here
      * @param rendererFactory required to turn data values into text or images
      * @param rendererRegistry lazily supplied image content for cells that are rendered into images (cleared and filled
      *            whenever new rows are being requested, e.g., via
@@ -160,6 +154,10 @@ public class TableViewDataServiceImpl implements TableViewDataService {
         m_tableId = tableId;
         m_rendererFactory = rendererFactory;
         m_rendererRegistry = rendererRegistry;
+        CLEANER.register(this, () -> { // NOSONAR exposing a partially constructed instance is no problem here
+            m_sortedTableCache.clear();             // because it's not really used (just to determine whether 'this' is phantom-reachable)
+            m_filteredAndSortedTableCache.clear();
+        });
     }
 
     @Override
@@ -185,18 +183,27 @@ public class TableViewDataServiceImpl implements TableViewDataService {
 
         // we sort first (even though it is more expensive) because filtering happens more frequently
         // and therefore we do not have to re-sort every time we filter
-        DataTable sortedTable = getOrCreateSortedTable(bufferedDataTable, sortColumn, sortAscending);
-        final var pair = getOrCreateFilteredTable(sortedTable, displayedColumns, globalSearchTerm, columnFilterValue,
-            filterRowKeys, updateTotalSelected);
-        final var filteredAndSortedTable = pair.getFirst();
-        final var totalSelected = pair.getSecond();
+        m_sortedTableCache.conditionallyUpdateCachedTable(() -> sortTable(bufferedDataTable, sortColumn, sortAscending),
+            sortColumn == null || bufferedDataTable.size() <= 1, sortColumn, sortAscending);
+        final var sortedTable = m_sortedTableCache.getCachedTableOrElse(() -> bufferedDataTable);
+        m_filteredAndSortedTableCache.conditionallyUpdateCachedTable(
+            () -> filterTable(sortedTable, columns, globalSearchTerm, columnFilterValue, filterRowKeys),
+            globalSearchTerm == null && columnFilterValue == null, globalSearchTerm, columnFilterValue, columns);
+        final var filteredAndSortedTable = m_filteredAndSortedTableCache.getCachedTableOrElse(() -> sortedTable);
 
         final var spec = bufferedDataTable.getSpec();
         final var colIndices = spec.columnsToIndices(displayedColumns);
         if (m_rendererRegistry != null) {
-            // TODO clear image cache if search terms, filter, sorting or renderer changes but _not_ if only the fromIndex changes (and lazy-loading is enabled, i.e. no paging)
-            // i.e. whenever the table cache has been updated
-            if (forceClearImageDataCache) {
+            if (forceClearImageDataCache || m_sortedTableCache.wasUpdated() || m_filteredAndSortedTableCache.wasUpdated()) {
+                // Clears the image data cache if it's forced to be cleared. That's usually done when 'pagination' is enabled because in that
+                // case a new batch of rows is request with every page change and the is no need to keep the older one.
+                // If, however, 'pagination' is disabled (i.e. 'infinite scrolling' is used instead), then it's almost certain
+                // that images of two different 'row-batches' are being requested at the same time. I.e. we must _not_ clear
+                // previous row-batches too early.
+                // However, we _can_ clear the image data cache if 'pagination' is disabled _and_ if the entire table is being
+                // updated/replaced (e.g. because it's sorted or filtered). Because images of row-batches of different tables
+                // won't be requested at the same time (e.g. a row-batch of the sorted table won't be displayed together with a
+                // row-batch of the un-sorted table).
                 m_rendererRegistry.clearImageDataCache(m_tableId);
             }
             if (numRows > 0) {
@@ -226,30 +233,21 @@ public class TableViewDataServiceImpl implements TableViewDataService {
         final var tableSpec = bufferedDataTable.getDataTableSpec();
         final var contentTypes = getColumnContentTypes(displayedColumns, rendererIds, m_renderersMap);
         final var dataTypeIds = getColumnDataTypeIds(displayedColumns, tableSpec);
-        return createTable(displayedColumns, contentTypes, dataTypeIds, rows, tableSize, totalSelected);
+        var currentSelection = getCurrentSelection();
+        return createTable(displayedColumns, contentTypes, dataTypeIds, rows, tableSize,
+            countSelectedRows(filteredAndSortedTable, currentSelection));
     }
 
     @Override
     public Long getTotalSelected() {
-        final var pair = getOrCreateFilteredTable(m_tableSupplier.get(), m_cachedColumns, m_cachedGlobalSearchTerm,
-            m_cachedColumnFilterValue, false, true);
-        return pair.getSecond();
+        var filteredTable = m_filteredAndSortedTableCache.getCachedTableOrElse(m_tableSupplier::get);
+        return countSelectedRows(filteredTable, getCurrentSelection());
     }
 
     @Override
     public void clearCache() {
-        m_cachedColumnFilterValue = null;
-        m_cachedColumns = null;
-        if (m_cachedFilteredAndSortedTable != null) {
-            m_cachedFilteredAndSortedTable.close();
-            m_cachedFilteredAndSortedTable = null;
-        }
-        m_cachedGlobalSearchTerm = null;
-        if (m_cachedSortedTable != null) {
-            m_cachedSortedTable.close();
-            m_cachedSortedTable = null;
-        }
-        m_cachedTableSortColumnName = null;
+        m_sortedTableCache.clear();
+        m_filteredAndSortedTableCache.clear();
     }
 
     private static String[] filterInvalids(final String[] columns, final DataTableSpec spec) {
@@ -266,71 +264,20 @@ public class TableViewDataServiceImpl implements TableViewDataService {
         return partition.get(true).stream().toArray(String[]::new);
     }
 
-    private DataTable getOrCreateSortedTable(final BufferedDataTable table, final String sortColumn,
+    private static ContainerTable sortTable(final BufferedDataTable table, final String sortColumn,
         final boolean sortAscending) {
-        if ((sortColumn != null && sortColumn.equals(m_cachedTableSortColumnName)) //
-            && sortAscending == m_cachedTableSortAscending && m_cachedSortedTable != null) {
-            return m_cachedSortedTable;
-        }
-        if (table.size() <= 1) {
-            return table;
-        }
-
-        if (m_cleanable != null) {
-            m_cleanable.clean();
-            m_cleanable = null;
-        }
-        m_cachedTableSortColumnName = sortColumn;
-        m_cachedTableSortAscending = sortAscending;
-        if (sortColumn != null) {
-            final var sortColIndex = table.getSpec().findColumnIndex(sortColumn);
-            final Comparator<DataRow> comp =
-                new RowComparator(new int[]{sortColIndex}, new boolean[]{sortAscending}, false, table.getSpec());
-            try {
-                m_cachedSortedTable =
-                    (ContainerTable)new DataTableSorter(table, table.size(), comp).sort(new ExecutionMonitor());
-            } catch (CanceledExecutionException e) {
-                throw new DataServiceException("Table sorting has been cancelled", e);
-            }
-            // TODO shouldn't be the m_cachedFilteredAndSortedTable be closed, too?
-            m_cleanable = CLEANER.register(this, m_cachedSortedTable::close);
-            m_cachedFilteredAndSortedTable = null;
-            return m_cachedSortedTable;
-        } else {
-            if (m_cachedSortedTable != null) {
-                m_cachedFilteredAndSortedTable = null;
-            }
-            m_cachedSortedTable = null;
-            return table;
+        final var sortColIndex = table.getSpec().findColumnIndex(sortColumn);
+        final Comparator<DataRow> comp =
+            new RowComparator(new int[]{sortColIndex}, new boolean[]{sortAscending}, false, table.getSpec());
+        try {
+            return (ContainerTable)new DataTableSorter(table, table.size(), comp).sort(new ExecutionMonitor());
+        } catch (CanceledExecutionException e) {
+            throw new DataServiceException("Table sorting has been cancelled", e);
         }
     }
 
-    private Pair<DataTable, Long> getOrCreateFilteredTable(final DataTable table, final String[] columns,
-        final String globalSearchTerm, final String[][] columnFilterValue, final boolean filterRowKeys,
-        final boolean updateTotalSelected) {
-        final var globalSearchTermsEqual =
-            globalSearchTerm != null && globalSearchTerm.equals(m_cachedGlobalSearchTerm);
-
-        final var columnFilterValuesEqual =
-            columnFilterValue != null && Arrays.deepEquals(m_cachedColumnFilterValue, columnFilterValue);
-
-        final var columnsEqual = Arrays.deepEquals(m_cachedColumns, columns);
-
-        if (globalSearchTermsEqual && columnFilterValuesEqual && columnsEqual
-            && m_cachedFilteredAndSortedTable != null) {
-            final Long totalSelected = updateTotalSelected ? countSelectedRows(m_cachedFilteredAndSortedTable) : null;
-            return new Pair<>(m_cachedFilteredAndSortedTable, totalSelected);
-        }
-
-        m_cachedGlobalSearchTerm = globalSearchTerm;
-        m_cachedColumnFilterValue = columnFilterValue;
-        m_cachedColumns = columns;
-
-        if (globalSearchTerm == null && columnFilterValue == null) {
-            m_cachedFilteredAndSortedTable = null;
-            return new Pair<>(table, null);
-        }
-
+    private static ContainerTable filterTable(final DataTable table, final String[] columns,
+        final String globalSearchTerm, final String[][] columnFilterValue, final boolean filterRowKeys) {
         final var spec = table.getDataTableSpec();
         final var colIndices = spec.columnsToIndices(columns);
 
@@ -340,34 +287,29 @@ public class TableViewDataServiceImpl implements TableViewDataService {
         final var columnOffset = 1;
         final var numColumns = columns.length + columnOffset;
 
-        final var currentSelection = getCurrentSelection();
-        long totalSelected = 0;
-
         try (final var iterator = (CloseableRowIterator)table.iterator()) {
             while (iterator.hasNext()) {
                 final var row = iterator.next();
                 if (filtersMatch(row, spec, globalSearchTerm, columnFilterValue, colIndices, numColumns, columnOffset,
                     filterRowKeys)) {
                     resultContainer.addRowToTable(row);
-                    if (updateTotalSelected && currentSelection.contains(row.getKey())) {
-                        totalSelected += 1;
-                    }
                 }
             }
         }
 
         resultContainer.close();
-        m_cachedFilteredAndSortedTable = (ContainerTable)resultContainer.getTable();
-        return new Pair<>(m_cachedFilteredAndSortedTable, totalSelected);
+        return (ContainerTable)resultContainer.getTable();
     }
 
     /**
      * @param table
      * @return the number of selected rows in the given table
      */
-    private Long countSelectedRows(final ContainerTable table) {
+    private static Long countSelectedRows(final DataTable table, final Set<RowKey> currentSelection) {
+        if (currentSelection.isEmpty()) {
+            return 0l;
+        }
         var totalSelected = 0l;
-        final var currentSelection = getCurrentSelection();
         try (final var iterator = createRowIteratorSupplier(table, createRowKeysFilter()).get()) {
             while (iterator.hasNext()) {
                 final var row = iterator.next();
@@ -545,8 +487,8 @@ public class TableViewDataServiceImpl implements TableViewDataService {
 
     @Override
     public String[] getCurrentRowKeys() {
-        final var filteredAndSortedTable =
-            m_cachedFilteredAndSortedTable == null ? m_tableSupplier.get() : m_cachedFilteredAndSortedTable;
+        final var filteredAndSortedTable = m_filteredAndSortedTableCache
+            .getCachedTableOrElse(() -> m_filteredAndSortedTableCache.getCachedTableOrElse(m_tableSupplier::get));
         final var size = (int)getTableSize(filteredAndSortedTable);
         final var rowKeys = new String[size];
         final var filter = new TableFilter.Builder();
