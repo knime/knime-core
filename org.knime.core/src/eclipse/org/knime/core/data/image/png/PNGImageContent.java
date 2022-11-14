@@ -280,4 +280,22 @@ public class PNGImageContent implements ImageContent {
     public int hashCode() {
         return Arrays.hashCode(m_imageBytes);
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null) {
+            return false;
+        }
+        if (getClass() != o.getClass()) {
+            return false;
+        }
+        PNGImageContent c = (PNGImageContent)o;
+        return Arrays.equals(m_imageBytes, c.m_imageBytes);
+    }
 }
