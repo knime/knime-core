@@ -321,17 +321,23 @@ abstract class AbstractTableSorter {
                 throw new IllegalArgumentException("Argument collection must " + "not contain duplicates: " + inclList);
             }
         }
-        int[] indices = new int[sortAscending.length];
         final DataTableSpec spec = m_inputTable.getDataTableSpec();
-        int curIndex = 0;
-        for (String name : inclList) {
-            int index = spec.findColumnIndex(name);
-            if (index == -1 && !name.equals(ROWKEY_SORT_SPEC.getName())) {
-                throw new IllegalArgumentException("Could not find column name:" + name.toString());
+        final var rc = RowComparator.on(spec);
+        int i = 0;
+        for (final String name : inclList) {
+            final int index = spec.findColumnIndex(name);
+            final boolean ascending = sortAscending[i];
+            if (index == -1) {
+                if (!ROWKEY_SORT_SPEC.getName().equals(name)) {
+                    throw new IllegalArgumentException("Could not find column name:" + name);
+                }
+                rc.thenComparingRowKey(ascending, sortMissingsToEnd);
+            } else {
+                rc.thenComparingColumn(index, ascending, false, sortMissingsToEnd);
             }
-            indices[curIndex++] = index;
+            i++;
         }
-        setRowComparator(new RowComparator(indices, sortAscending, sortMissingsToEnd, spec));
+        setRowComparator(rc.build());
     }
 
     /**
