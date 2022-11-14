@@ -446,6 +446,9 @@
                cellClass="org.knime.core.data.xml.XMLBlobCell"
                serializerClass="org.knime.core.data.xml.XMLBlobCell$XMLSerializer">
          </serializer>
+         <ValueFactory
+               valueFactoryClass="org.knime.core.data.xml.XMLValueFactory">
+         </ValueFactory>
       </DataType>
       <DataType
             cellClass="org.knime.core.data.image.png.PNGImageCell"
