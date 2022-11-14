@@ -102,8 +102,8 @@ class TableViewTest {
 
     @Test
     void testDataServiceGetData() {
-        final var expectedResult = new String[][]{{"1", "1", "1", "1", "pageId/images/tableId/1072693248.png", "0001",
-            "true", "pageId/images/tableId/-131459926.png"}};
+        final var expectedResult = new String[][]{{"1", "1", "1", "1", "pageId/images/tableId/2018748495.png", "0001",
+            "true", "pageId/images/tableId/-362292659.png"}};
         var rendererRegistry = new DataValueImageRendererRegistry(() -> "pageId");
         var rendererIds = new String[expectedResult[0].length];
         rendererIds[3] = "org.knime.core.data.renderer.DoubleBarRenderer$Factory";
@@ -122,9 +122,9 @@ class TableViewTest {
             .isEqualTo(new String[]{"txt", "txt", "txt", "img_path", "txt", "txt", "img_path"});
 
         // try out 'cell renderer'
-        var cellImg = rendererRegistry.renderAndRemove("tableId/-131459926.png?w=1&h=2");
+        var cellImg = rendererRegistry.renderAndRemove("tableId/-362292659.png?w=1&h=2");
         assertThat(new String(cellImg, StandardCharsets.UTF_8)).startsWith("�PNG");
-        var cellImg2 = rendererRegistry.renderAndRemove("tableId/1072693248.png?w=1&h=2");
+        var cellImg2 = rendererRegistry.renderAndRemove("tableId/2018748495.png?w=1&h=2");
         assertThat(new String(cellImg2, StandardCharsets.UTF_8)).startsWith("�PNG");
         assertThat(table.getRowCount()).isEqualTo(2);
     }

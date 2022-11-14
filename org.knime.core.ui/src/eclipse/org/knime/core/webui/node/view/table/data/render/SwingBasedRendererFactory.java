@@ -79,10 +79,10 @@ public final class SwingBasedRendererFactory implements DataValueRendererFactory
         var dataType = colSpec.getType();
         if (rendererId == null) {
             var it = dataType.getRendererFactories().iterator();
-            return createRenderer(it.next().createRenderer(colSpec));
+            return createRenderer(it.next(), colSpec);
         } else {
             return dataType.getRendererFactories().stream().filter(f -> f.getId().equals(rendererId))
-                .map(f -> createRenderer(f.createRenderer(colSpec))).findFirst().orElseGet(() -> {
+                .map(f -> createRenderer(f, colSpec)).findFirst().orElseGet(() -> {
                     NodeLogger.getLogger(getClass())
                         .warn("No renderer found for id " + rendererId + ". Falling back to default renderer.");
                     return createDataValueRenderer(colSpec, null);
@@ -96,18 +96,21 @@ public final class SwingBasedRendererFactory implements DataValueRendererFactory
             .map(org.knime.core.data.renderer.DataValueRendererFactory::getId).toArray(String[]::new);
     }
 
-    private static DataValueRenderer createRenderer(final org.knime.core.data.renderer.DataValueRenderer renderer) {
+    private static DataValueRenderer createRenderer(
+        final org.knime.core.data.renderer.DataValueRendererFactory rendererFactory, final DataColumnSpec colSpec) {
+        var renderer = rendererFactory.createRenderer(colSpec);
+        var id = rendererFactory.getId();
         if (renderer instanceof AbstractPainterDataValueRenderer) {
-            return new SwingBasedImageRenderer((AbstractPainterDataValueRenderer)renderer);
+            return new SwingBasedImageRenderer((AbstractPainterDataValueRenderer)renderer, id);
         } else if (renderer instanceof DefaultDataValueRenderer) {
             var defaultRenderer = (DefaultDataValueRenderer)renderer;
             if (defaultRenderer.getIcon() != null) {
-                return new SwingBasedImageRenderer(defaultRenderer);
+                return new SwingBasedImageRenderer(defaultRenderer, id);
             } else {
                 return new SwingBasedTextRenderer(defaultRenderer);
             }
         } else if (renderer instanceof ImageValueRenderer) {
-            return new SwingBasedImageRenderer((ImageValueRenderer)renderer);
+            return new SwingBasedImageRenderer((ImageValueRenderer)renderer, id);
         } else {
             throw new UnsupportedOperationException(
                 "The renderer of type '" + renderer.getClass().getName() + "' is currently not supported.");
@@ -133,17 +136,21 @@ public final class SwingBasedRendererFactory implements DataValueRendererFactory
     static class SwingBasedImageRenderer implements DataValueImageRenderer {
 
         private final org.knime.core.data.renderer.DataValueRenderer m_renderer;
+        private final String m_id;
 
-        SwingBasedImageRenderer(final AbstractPainterDataValueRenderer swingBasedPainterRenderer) {
+        SwingBasedImageRenderer(final AbstractPainterDataValueRenderer swingBasedPainterRenderer, final String id) {
             m_renderer = swingBasedPainterRenderer;
+            m_id = id;
         }
 
-        SwingBasedImageRenderer(final DefaultDataValueRenderer swingBasedDefaultRenderer) {
+        SwingBasedImageRenderer(final DefaultDataValueRenderer swingBasedDefaultRenderer, final String id) {
             m_renderer = swingBasedDefaultRenderer;
+            m_id = id;
         }
 
-        SwingBasedImageRenderer(final ImageValueRenderer swingBasedImageValueRenderer) {
+        SwingBasedImageRenderer(final ImageValueRenderer swingBasedImageValueRenderer, final String id) {
             m_renderer = swingBasedImageValueRenderer;
+            m_id = id;
         }
 
         @Override
@@ -181,6 +188,11 @@ public final class SwingBasedRendererFactory implements DataValueRendererFactory
                 // should never happen
                 throw new IllegalStateException("Unsupported renderer " + renderer.getClass().getName());
             }
+        }
+
+        @Override
+        public String getId() {
+            return m_id;
         }
 
     }

@@ -28,6 +28,7 @@ export default {
             currentSelection: null,
             totalSelected: 0,
             table: {},
+            selectedRendererIds: [],
             dataTypes: {},
             columnDomainValues: {},
             currentSelectedRowKeys: new Set(),
@@ -66,13 +67,16 @@ export default {
             this.displayedColumns.forEach((columnName, index) => {
                 // + 2: offset for the index and rowKey, because the first column
                 // (index 0) always contains the indices and the second one the row keys
-                const { showColumnDataType } = this.settings;
+                const { showColumnDataType, enableRendererSelection } = this.settings;
                 const columnInformation = {
                     index: index + 2,
                     columnName,
                     contentType: this.table.columnContentTypes?.[index],
                     ...showColumnDataType && {
                         columnTypeName: this.dataTypes[this.table.columnDataTypeIds?.[index]]?.name
+                    },
+                    ...enableRendererSelection && {
+                        columnTypeRenderers: this.dataTypes[this.table.columnDataTypeIds?.[index]]?.renderers
                     },
                     isSortable: true
                 };
@@ -221,7 +225,8 @@ export default {
                 this.table = table;
             }
             await this.handleInitialSelection();
-            const { publishSelection, subscribeToSelection } = settings;
+            const { displayedColumns, publishSelection, subscribeToSelection } = settings;
+            this.selectedRendererIds = new Array(displayedColumns.length).fill(null);
             this.selectionService.onInit(this.onSelectionChange, publishSelection, subscribeToSelection);
             this.dataLoaded = true;
             this.columnFilters = this.getDefaultFilterConfigs(this.displayedColumns);
@@ -244,8 +249,9 @@ export default {
             const numRows = Math.min(this.scopeSize, this.rowCount);
             this.currentScopeStartIndex = 0;
             this.currentScopeEndIndex = numRows;
+            this.lazyLoadSettings = { loadFromIndex: 0, numRows, newScopeStart: 0 };
             await this.updateData({
-                lazyLoad: { loadFromIndex: 0, numRows, newScopeStart: 0 },
+                lazyLoad: this.lazyLoadSettings,
                 updateDisplayedColumns,
                 updateTotalSelected
             });
@@ -284,21 +290,21 @@ export default {
             if (numRows > 0) {
                 this.currentScopeStartIndex = newScopeStart;
                 this.currentScopeEndIndex = newScopeStart + (bufferEnd - bufferStart) + numRows;
-                this.updateData({
-                    lazyLoad: {
-                        loadFromIndex,
-                        numRows,
-                        bufferStart,
-                        bufferEnd,
-                        direction,
-                        newScopeStart
-                    }
-                });
+                this.lazyLoadSettings = {
+                    loadFromIndex,
+                    numRows,
+                    bufferStart,
+                    bufferEnd,
+                    direction,
+                    newScopeStart
+                };
+                this.updateData({ lazyLoad: this.lazyLoadSettings });
             }
         },
 
         async updateData(params) {
-            const { lazyLoad, updateTotalSelected = false, updateDisplayedColumns = false } = params;
+            const { lazyLoad, updateTotalSelected = false, updateDisplayedColumns = false,
+                updateColumnContentTypes = false } = params;
             let loadFromIndex, numRows;
             if (lazyLoad) {
                 ({ loadFromIndex, numRows } = lazyLoad);
@@ -312,6 +318,12 @@ export default {
             if (updateDisplayedColumns) {
                 this.columnFilters = this.getDefaultFilterConfigs(receivedTable.displayedColumns);
                 this.displayedColumns = receivedTable.displayedColumns;
+            }
+            if (receivedTable.rowKeys) {
+                this.currentRowKeys = receivedTable.rowKeys;
+            }
+            if (updateColumnContentTypes) {
+                this.table.columnContentTypes = receivedTable.columnContentTypes;
             }
             if (lazyLoad) {
                 const { newScopeStart, direction, bufferStart, bufferEnd } = lazyLoad;
@@ -365,7 +377,7 @@ export default {
                     this.searchTerm,
                     updateDisplayedColumns ? null : this.columnFilterValues,
                     this.settings.showRowKeys,
-                    null,
+                    this.selectedRendererIds,
                     updateDisplayedColumns,
                     updateTotalSelected
                 ]);
@@ -373,8 +385,8 @@ export default {
 
         // eslint-disable-next-line max-params
         requestUnfilteredAndUnsortedTable(startIndex, numRows, displayedColumns, updateDisplayedColumns) {
-            return this.requestNewData('getTable',
-                [displayedColumns, startIndex, numRows, null, updateDisplayedColumns]);
+            return this.requestNewData('getTable', [displayedColumns, startIndex, numRows, this.selectedRendererIds,
+                updateDisplayedColumns]);
         },
 
         getColumnsForRequest(updateDisplayedColumns) {
@@ -567,6 +579,15 @@ export default {
             }
             /* eslint-enable no-invalid-this */
         }),
+        onHeaderSubMenuItemSelection(item, colInd) {
+            if (item.section === 'dataRendering') {
+                this.selectedRendererIds[colInd - this.numberOfDisplayedIdColumns] = item.id;
+            }
+            this.updateData({
+                ...this.useLazyLoading && { lazyLoad: this.calculateLazyLoadSettingsWithoutScrollOnDataChange() },
+                updateColumnContentTypes: true
+            });
+        },
         updateSelection(selected, rowKeys) {
             this.selectionService.publishOnSelectionChange(selected ? 'add' : 'remove', rowKeys);
             this.updateCurrentSelectedRowKeys(selected ? 'add' : 'delete', rowKeys);
@@ -597,8 +618,24 @@ export default {
                 this.clearSelection();
             }
         },
+        createHeaderSubMenuItems(index, renderers) {
+            const headerSubMenuItems = [];
+            headerSubMenuItems.push({ text: 'Data renderer', separator: true, sectionHeadline: true });
+            renderers.forEach(renderer => {
+                headerSubMenuItems.push({
+                    text: renderer.name,
+                    title: renderer.name,
+                    id: renderer.id,
+                    section: 'dataRendering',
+                    // selectedRendererIds does not contain row indices/keys but offset of 2s is added in dataConfig
+                    selected: this.selectedRendererIds[index - 2] === renderer.id
+                });
+            });
+            return headerSubMenuItems;
+        },
         createColumnConfig(columnInformation) {
-            const { index, columnName, columnTypeName, contentType, isSortable } = columnInformation;
+            const { index, columnName, columnTypeName, contentType, isSortable, columnTypeRenderers } =
+                columnInformation;
             return {
                 key: index,
                 header: columnName,
@@ -606,6 +643,9 @@ export default {
                 hasSlotContent: isImage(contentType),
                 size: this.columnSizes[index],
                 filterConfig: this.columnFilters[index],
+                ...columnTypeRenderers && {
+                    headerSubMenuItems: this.createHeaderSubMenuItems(index, columnTypeRenderers)
+                },
                 formatter: val => val,
                 isSortable
             };
@@ -668,12 +708,33 @@ export default {
                 }
             });
         },
+        adjustCachedColumnRendererIndices(oldDisplayedColumns, newDisplayedColumns) {
+            const columnNameRendererMap = new Map();
+            oldDisplayedColumns.forEach((columnName, index) => {
+                columnNameRendererMap.set(columnName, this.selectedRendererIds[index]);
+            });
+            this.selectedRendererIds = newDisplayedColumns.map(
+                columnName => columnNameRendererMap.get(columnName) || null
+            );
+        },
         resetSorting() {
             this.columnSortColumnName = null;
             this.columnSortIndex = null;
             this.columnSortDirection = null;
             this.currentPage = 1;
             this.currentIndex = 0;
+        },
+        calculateLazyLoadSettingsWithoutScrollOnDataChange() {
+            const { bufferStart, bufferEnd, direction, loadFromIndex, numRows, newScopeStart } = this.lazyLoadSettings;
+            // if not at the start of table reload the whole buffer
+            if (loadFromIndex === 0) {
+                return this.lazyLoadSettings;
+            }
+            return {
+                newScopeStart,
+                loadFromIndex: bufferStart,
+                numRows: direction === 1 ? loadFromIndex + numRows - bufferStart : bufferEnd
+            };
         }
     }
 };
@@ -704,6 +765,7 @@ export default {
       @columnFilter="onColumnFilter"
       @clearFilter="onClearFilter"
       @columnResize="onColumnResize"
+      @headerSubMenuItemSelection="onHeaderSubMenuItemSelection"
       @lazyload="onScroll"
     >
       <template

@@ -120,7 +120,7 @@ public final class DataValueImageRendererRegistry {
      */
     public String addRendererAndGetImgPath(final String tableId, final DataCell cell,
         final DataValueImageRenderer renderer) {
-        var key = Integer.toString(cell.hashCode());
+        var key = Integer.toString(31 * cell.hashCode() + renderer.getId().hashCode());
         var cellAndRendererMap = m_cellAndRendererMapsPerTableId.computeIfAbsent(tableId, id -> new HashMap<>());
         if (cellAndRendererMap.containsKey(key)) {
             var existingCell = cellAndRendererMap.get(key).getFirst();

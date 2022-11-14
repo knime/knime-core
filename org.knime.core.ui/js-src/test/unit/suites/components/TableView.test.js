@@ -20,6 +20,7 @@ jest.mock('raf-throttle', () => function (func) {
 
 describe('TableView.vue', () => {
     const emptyColumnFilterValues = [[''], [], [], [''], ['']];
+    const emptyRenderers = new Array(4).fill(null); // eslint-disable-line no-magic-numbers
 
     let context,
         initialDataMock,
@@ -45,13 +46,18 @@ describe('TableView.vue', () => {
             },
             dataTypes: {
                 datatype1: {
-                    name: 'col1And2TypeName'
+                    name: 'col1And2TypeName',
+                    renderers: [{ name: 'type1renderer1', id: 't1r1' }, { name: 'type1renderer2', id: 't1r2' },
+                        { name: 'type1renderer3', id: 't1r3' }, { name: 'type1renderer4', id: 't1r4' }]
                 },
                 datatype2: {
-                    name: 'col3TypeName'
+                    name: 'col3TypeName',
+                    renderers: [{ name: 'type2renderer1', id: 't2r1' }, { name: 'type2renderer2', id: 't2r2' }]
                 },
                 datatype3: {
-                    name: 'col4TypeName'
+                    name: 'col4TypeName',
+                    renderers: [{ name: 'type3renderer1', id: 't3r1' }, { name: 'type3renderer2', id: 't3r2' },
+                        { name: 'type3renderer3', id: 't2r3' }]
                 }
             },
             columnDomainValues: {
@@ -66,6 +72,7 @@ describe('TableView.vue', () => {
             settings: {
                 pageSize: 2,
                 displayedColumns: ['col1', 'col2', 'col3', 'col4'],
+                enableRendererSelection: true,
                 showRowKeys: false,
                 showColumnDataType: false,
                 showRowIndices: false,
@@ -216,10 +223,15 @@ describe('TableView.vue', () => {
                 }
             });
             const expectedColumnSize = MIN_COLUMN_SIZE;
+            const headerSubMenuItems = [{ sectionHeadline: true, separator: true, text: 'Data renderer' },
+                { id: 't1r1', section: 'dataRendering', selected: false, text: 'type1renderer1' },
+                { id: 't1r2', section: 'dataRendering', selected: false, text: 'type1renderer2' },
+                { id: 't1r3', section: 'dataRendering', selected: false, text: 'type1renderer3' },
+                { id: 't1r4', section: 'dataRendering', selected: false, text: 'type1renderer4' }];
             expect(dataConfig).toMatchObject({
                 columnConfigs: [
-                    { key: 2, header: 'col1', size: expectedColumnSize, hasSlotContent: false },
-                    { key: 3, header: 'col2', size: expectedColumnSize, hasSlotContent: false },
+                    { key: 2, header: 'col1', size: expectedColumnSize, hasSlotContent: false, headerSubMenuItems },
+                    { key: 3, header: 'col2', size: expectedColumnSize, hasSlotContent: false, headerSubMenuItems },
                     { key: 4, header: 'col3', size: expectedColumnSize, hasSlotContent: false },
                     { key: 5, header: 'col4', size: expectedColumnSize, hasSlotContent: true }
                 ],
@@ -591,7 +603,7 @@ describe('TableView.vue', () => {
             });
             expect(dataSpy).toHaveBeenCalledWith({
                 method: 'getTable',
-                options: [settings.displayedColumns, 0, 2, null, true]
+                options: [settings.displayedColumns, 0, 2, [null, null, null, null, null], true]
             });
             expect(wrapper.vm.displayedColumns).toStrictEqual(initialDataMock.table.displayedColumns);
         });
@@ -679,7 +691,7 @@ describe('TableView.vue', () => {
                 wrapper.vm.onPageChange(1);
                 expect(dataSpy).toBeCalledWith({
                     method: 'getTable',
-                    options: [initialDataMock.table.displayedColumns, 2, 2, null, false] // eslint-disable-line no-magic-numbers
+                    options: [initialDataMock.table.displayedColumns, 2, 2, emptyRenderers, false] // eslint-disable-line no-magic-numbers
                 });
                 expect(wrapper.vm.currentPage).toStrictEqual(2);
             });
@@ -690,7 +702,7 @@ describe('TableView.vue', () => {
 
             expect(dataSpy).toHaveBeenNthCalledWith(2, {
                 method: 'getTable',
-                options: [initialDataMock.table.displayedColumns, 0, 2, null, false] // eslint-disable-line no-magic-numbers
+                options: [initialDataMock.table.displayedColumns, 0, 2, emptyRenderers, false] // eslint-disable-line no-magic-numbers
             });
             expect(wrapper.vm.currentPage).toStrictEqual(1);
         });
@@ -720,7 +732,7 @@ describe('TableView.vue', () => {
             expect(dataSpy).toBeCalledWith({
                 method: 'getFilteredAndSortedTable',
                 options: [initialDataMock.table.displayedColumns,
-                    0, 2, 'col1', false, '', emptyColumnFilterValues, false, null, false, false] // eslint-disable-line no-magic-numbers
+                    0, 2, 'col1', false, '', emptyColumnFilterValues, false, emptyRenderers, false, false] // eslint-disable-line no-magic-numbers
             });
             expect(wrapper.vm.currentPage).toStrictEqual(1);
         });
@@ -733,7 +745,7 @@ describe('TableView.vue', () => {
             expect(dataSpyDesc).toBeCalledWith({
                 method: 'getFilteredAndSortedTable',
                 options: [initialDataMock.table.displayedColumns,
-                    0, 2, 'col1', true, '', emptyColumnFilterValues, false, null, false, false] // eslint-disable-line no-magic-numbers
+                    0, 2, 'col1', true, '', emptyColumnFilterValues, false, emptyRenderers, false, false] // eslint-disable-line no-magic-numbers
             });
             expect(wrapper.vm.currentPage).toStrictEqual(1);
 
@@ -742,7 +754,7 @@ describe('TableView.vue', () => {
             expect(dataSpyAsc).toBeCalledWith({
                 method: 'getFilteredAndSortedTable',
                 options: [initialDataMock.table.displayedColumns,
-                    0, 2, 'col1', false, '', emptyColumnFilterValues, false, null, false, false] // eslint-disable-line no-magic-numbers
+                    0, 2, 'col1', false, '', emptyColumnFilterValues, false, emptyRenderers, false, false] // eslint-disable-line no-magic-numbers
             });
         });
 
@@ -753,7 +765,7 @@ describe('TableView.vue', () => {
             expect(dataSpy).toHaveBeenNthCalledWith(2, {
                 method: 'getFilteredAndSortedTable',
                 options: [initialDataMock.table.displayedColumns,
-                    2, 2, 'col1', false, '', emptyColumnFilterValues, false, null, false, false] // eslint-disable-line no-magic-numbers
+                    2, 2, 'col1', false, '', emptyColumnFilterValues, false, emptyRenderers, false, false] // eslint-disable-line no-magic-numbers
             });
             expect(wrapper.vm.currentPage).toStrictEqual(2);
         });
@@ -767,7 +779,7 @@ describe('TableView.vue', () => {
             expect(dataSpy).toHaveBeenCalledWith({
                 method: 'getFilteredAndSortedTable',
                 options: [initialDataMock.table.displayedColumns, 0, 2, '-1', false, '', emptyColumnFilterValues,
-                    true, null, false, false] // eslint-disable-line no-magic-numbers
+                    true, emptyRenderers, false, false] // eslint-disable-line no-magic-numbers
             });
         });
     });
@@ -977,7 +989,7 @@ describe('TableView.vue', () => {
                     '',
                     columnFilterValues,
                     initialDataMock.settings.showRowKeys,
-                    null,
+                    emptyRenderers,
                     false,
                     true]
             });
@@ -996,7 +1008,7 @@ describe('TableView.vue', () => {
                     globalSearchTerm,
                     emptyColumnFilterValues,
                     initialDataMock.settings.showRowKeys,
-                    null,
+                    emptyRenderers,
                     false,
                     true]
             });
@@ -1008,7 +1020,7 @@ describe('TableView.vue', () => {
             wrapper.vm.onClearFilter();
             expect(dataSpy).toHaveBeenNthCalledWith(2, {
                 method: 'getTable',
-                options: [initialDataMock.table.displayedColumns, 0, 2, null, false] // eslint-disable-line no-magic-numbers
+                options: [initialDataMock.table.displayedColumns, 0, 2, null, false, true] // eslint-disable-line no-magic-numbers
             });
         });
 
@@ -1030,7 +1042,7 @@ describe('TableView.vue', () => {
                     '',
                     null,
                     initialDataMock.settings.showRowKeys,
-                    null,
+                    [null, null, null, null, null],
                     true,
                     true]
             });
@@ -1039,6 +1051,71 @@ describe('TableView.vue', () => {
             expect(wrapper.vm.columnFilters).toStrictEqual(
                 wrapper.vm.getDefaultFilterConfigs(initialDataMock.table.displayedColumns)
             );
+        });
+    });
+
+    describe('column renderer selection', () => {
+        it('requests new data on renderer change', async () => {
+            const { wrapper, dataSpy } = await asyncMountTableView(context);
+            const renderer = {
+                text: 'renderer1',
+                id: 'renderer1',
+                section: 'dataRendering'
+            };
+            expect(wrapper.vm.selectedRendererIds).toEqual([null, null, null, null]);
+            wrapper.vm.onHeaderSubMenuItemSelection(renderer, 2);
+            expect(wrapper.vm.selectedRendererIds).toEqual([null, null, renderer.id, null]);
+            expect(dataSpy).toBeCalledWith({
+                method: 'getTable',
+                options: [initialDataMock.settings.displayedColumns,
+                    0,
+                    2, // eslint-disable-line no-magic-numbers
+                    [null, null, renderer.id, null],
+                    false,
+                    false]
+            });
+        });
+
+        it('sets the selected renderer in selectedRendererIds on headerSubMenuSelectionChange', async () => {
+            const { wrapper } = await asyncMountTableView(context);
+            wrapper.vm.onHeaderSubMenuItemSelection(
+                { id: 't1r4', section: 'dataRendering', selected: false, text: 'type1renderer4' },
+                0
+            );
+            expect(wrapper.vm.selectedRendererIds).toEqual(['t1r4', null, null, null]);
+            wrapper.vm.onHeaderSubMenuItemSelection(
+                { id: 't3r2', section: 'dataRendering', selected: false, text: 'type3renderer2' },
+                3 // eslint-disable-line no-magic-numbers
+            );
+            expect(wrapper.vm.selectedRendererIds).toEqual(['t1r4', null, null, 't3r2']);
+        });
+
+        it('adds a null renderer / removes the selected renderer on displayedColumns change', async () => {
+            const { wrapper } = await asyncMountTableView(context);
+            // remove a column => selectedRendererIds removes the selected renderer
+            wrapper.vm.onHeaderSubMenuItemSelection(
+                { id: 't2r1', section: 'dataRendering', selected: false, text: 'type2renderer1' },
+                2 // eslint-disable-line no-magic-numbers
+            );
+            wrapper.vm.onViewSettingsChange({
+                data: { data: { view: { ...wrapper.vm.$data.settings, displayedColumns: ['col1', 'col3', 'col4'] } } }
+            });
+            expect(wrapper.vm.selectedRendererIds).toEqual([null, 't2r1', null]);
+            // add a new column => selectedRendererIds add a null renderer
+            wrapper.vm.onViewSettingsChange({
+                data: { data: { view: { ...wrapper.vm.$data.settings,
+                    displayedColumns: ['col1', 'col2', 'col3', 'col4'] } } }
+            });
+            expect(wrapper.vm.selectedRendererIds).toEqual([null, null, 't2r1', null]);
+        });
+
+        it('does not update the selectedRendererIds when the section is not dataRendering', async () => {
+            const { wrapper } = await asyncMountTableView(context);
+            wrapper.vm.onHeaderSubMenuItemSelection(
+                { id: 'loremId', section: 'dataSection', selected: false, text: 'lorem' },
+                2
+            );
+            expect(wrapper.vm.selectedRendererIds).toEqual([null, null, null, null]);
         });
     });
 
@@ -1076,11 +1153,12 @@ describe('TableView.vue', () => {
         it('uses the correct image source url for image slots', async () => {
             const { wrapper } = await asyncMountTableView(context);
             await wrapper.vm.$nextTick();
-            await wrapper.vm.$nextTick();
+            const tableRows = wrapper.vm.$refs.tableUI.$refs.dynamicScroller[0].$refs.scroller.$children
+                .map(item => item.$children[0]).slice(1);
 
-            expect(wrapper.vm.$refs.tableUI.$refs['row-0'][0].$refs.dataCell[3].innerHTML).toContain('src="http://localhost:8080/base.url/view_x_y/datacell/hash1.png"');
-            expect(wrapper.vm.$refs.tableUI.$refs['row-1'][0].$refs.dataCell[3].innerHTML).toContain('src="http://localhost:8080/base.url/view_x_y/datacell/hash2.png"');
-            expect(wrapper.vm.$refs.tableUI.$refs['row-2'][0].$refs.dataCell[3].innerHTML).toContain('src="http://localhost:8080/base.url/view_x_y/datacell/hash3.png"');
+            expect(tableRows[0].$refs.dataCell[3].innerHTML).toContain('src="http://localhost:8080/base.url/view_x_y/datacell/hash1.png"');
+            expect(tableRows[1].$refs.dataCell[3].innerHTML).toContain('src="http://localhost:8080/base.url/view_x_y/datacell/hash2.png"');
+            expect(tableRows[2].$refs.dataCell[3].innerHTML).toContain('src="http://localhost:8080/base.url/view_x_y/datacell/hash3.png"');
         });
     });
 

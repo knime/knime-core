@@ -28,6 +28,13 @@
                 },
                 {
                     "type": "Control",
+                    "scope": "#/properties/view/properties/enableRendererSelection",
+                    "options": {
+                        "format": "checkbox"
+                    }
+                },
+                {
+                    "type": "Control",
                     "scope": "#/properties/view/properties/showRowIndices",
                     "options": {
                         "format": "checkbox"

@@ -90,6 +90,10 @@ public class TableViewViewSettings implements DefaultNodeSettings {
         description = "Whether to display the data type of the " + "columns in the header or not")
     public boolean m_showColumnDataType = true;
 
+    @Schema(title = "Enable selection of column renderer",
+        description = "Whether to enable the selection of a column renderer in the header or not")
+    boolean m_enableRendererSelection;
+
     /**
      * If the row indices should be displayed
      */

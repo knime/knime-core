@@ -71,4 +71,9 @@ public interface DataValueImageRenderer extends DataValueRenderer {
      */
     byte[] renderImage(DataValue value, int width, int height);
 
+    /**
+     * @return the id of the renderer
+     */
+    String getId();
+
 }
