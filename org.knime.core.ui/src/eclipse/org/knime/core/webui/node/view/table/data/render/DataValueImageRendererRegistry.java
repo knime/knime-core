@@ -213,11 +213,13 @@ public final class DataValueImageRendererRegistry {
      * @param tableId the id of the table to clear all stored cells and renderers for
      */
     public void clearImageDataCache(final String tableId) {
-        m_imagesPerTable.remove(tableId);
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug(String.format(
-                "Cached image data cleared for table with id '%s'. There is stil image data cached for %d tables",
-                tableId, m_imagesPerTable.size()));
+        if (m_imagesPerTable.containsKey(tableId)) {
+            m_imagesPerTable.remove(tableId);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug(String.format(
+                    "Cached image data cleared for table with id '%s'. There is still image data cached for %d tables",
+                    tableId, m_imagesPerTable.size()));
+            }
         }
     }
 
