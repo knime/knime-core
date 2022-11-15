@@ -59,8 +59,10 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.webui.data.DataService;
+import org.knime.core.webui.data.InitialDataService;
 import org.knime.core.webui.data.rpc.json.impl.JsonRpcDataServiceImpl;
 import org.knime.core.webui.data.rpc.json.impl.JsonRpcSingleServer;
+import org.knime.core.webui.node.dialog.impl.DefaultInitialDataServiceImpl;
 import org.knime.core.webui.node.util.NodeCleanUpCallback;
 import org.knime.core.webui.node.view.table.data.TableViewDataService;
 import org.knime.core.webui.node.view.table.data.TableViewDataServiceImpl;
@@ -183,6 +185,23 @@ public final class TableViewUtil {
         final Supplier<BufferedDataTable> tableSupplier, final String tableId) {
         return new TableViewInitialDataImpl(settings, tableSupplier, tableId, new SwingBasedRendererFactory(),
             RENDERER_REGISTRY);
+    }
+
+    /**
+     * @param settings
+     * @param tableSupplier
+     * @param tableId
+     * @return the table view initial data service
+     */
+    public static InitialDataService createInitialDataService(final TableViewViewSettings settings,
+        final Supplier<BufferedDataTable> tableSupplier, final String tableId) {
+        return new DefaultInitialDataServiceImpl<TableViewInitialData>(
+            () -> createInitialData(settings, tableSupplier.get(), tableId)) {
+            @Override
+            public void cleanUp() {
+                TableViewUtil.RENDERER_REGISTRY.clearImageDataCache(tableId);
+            }
+        };
     }
 
     /**

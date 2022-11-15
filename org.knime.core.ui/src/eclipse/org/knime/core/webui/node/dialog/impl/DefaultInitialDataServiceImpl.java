@@ -61,7 +61,7 @@ import org.knime.core.webui.data.json.impl.JsonInitialDataServiceImpl;
  * @author Marc Bux, KNIME GmbH, Berlin, Germany
  * @param <D>
  */
-public final class DefaultInitialDataServiceImpl<D> extends JsonInitialDataServiceImpl<D> {
+public class DefaultInitialDataServiceImpl<D> extends JsonInitialDataServiceImpl<D> {
 
     /**
      * @param dataSupplier

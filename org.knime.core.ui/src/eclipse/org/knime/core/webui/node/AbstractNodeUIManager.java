@@ -157,7 +157,10 @@ public abstract class AbstractNodeUIManager<N extends NodeWrapper>
      *
      * @param nodeWrapper
      */
-    public final void cleanUpDataService(final N nodeWrapper) {
+    public final void cleanUpDataServices(final N nodeWrapper) {
+        if (m_initialDataServices.containsKey(nodeWrapper)) {
+            m_initialDataServices.get(nodeWrapper).cleanUp();
+        }
         if (m_dataServices.containsKey(nodeWrapper)) {
             m_dataServices.get(nodeWrapper).cleanUp();
         }

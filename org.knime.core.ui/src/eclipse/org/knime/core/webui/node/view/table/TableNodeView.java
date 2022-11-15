@@ -60,7 +60,6 @@ import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.webui.data.ApplyDataService;
 import org.knime.core.webui.data.DataService;
 import org.knime.core.webui.data.InitialDataService;
-import org.knime.core.webui.node.dialog.impl.DefaultInitialDataServiceImpl;
 import org.knime.core.webui.node.dialog.impl.DefaultNodeSettings;
 import org.knime.core.webui.node.view.NodeView;
 import org.knime.core.webui.page.Page;
@@ -119,8 +118,7 @@ public final class TableNodeView implements NodeView {
         if (m_settings == null) {
             m_settings = new TableViewViewSettings(m_tableSupplier.get().getSpec());
         }
-        return Optional.of(new DefaultInitialDataServiceImpl<>(
-            () -> TableViewUtil.createInitialData(m_settings, m_tableSupplier.get(), m_tableId)));
+        return Optional.of(TableViewUtil.createInitialDataService(m_settings, m_tableSupplier, m_tableId));
     }
 
     @Override
