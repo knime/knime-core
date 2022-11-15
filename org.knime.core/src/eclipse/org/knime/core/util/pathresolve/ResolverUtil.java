@@ -51,6 +51,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -284,4 +285,13 @@ public final class ResolverUtil {
         return Optional.empty();
     }
 
+    public static Optional<List<SpaceVersion>> getSpaceVersions(final URI uri, final IProgressMonitor monitor) throws Exception {
+        if (serviceTracker != null) {
+            var resolver = (URIToFileResolve)serviceTracker.getService();
+            if (resolver != null) {
+                return resolver.getSpaceVersions(uri);
+            }
+        }
+        return Optional.empty();
+    }
 }

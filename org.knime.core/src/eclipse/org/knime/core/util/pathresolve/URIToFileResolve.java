@@ -49,18 +49,18 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 
 /**
- * A service interface to convert a URI into a local file. The URI is usually
- * (always?) either a file URI or a URI pointing into the KNIME TeamSpace (also file
- * based), e.g. "knime:/MOUNT_ID/some/path/workflow.knime".
+ * A service interface to convert a URI into a local file. The URI is usually (always?) either a file URI or a URI
+ * pointing into the KNIME TeamSpace (also file based), e.g. "knime:/MOUNT_ID/some/path/workflow.knime".
  *
  * <p>
- * This interface is used to resolve URIs that are stored as part of referenced
- * metanode templates. It is not meant to be implemented by third-party plug-ins.
+ * This interface is used to resolve URIs that are stored as part of referenced metanode templates. It is not meant to
+ * be implemented by third-party plug-ins.
  *
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  * @noimplement
@@ -77,6 +77,7 @@ public interface URIToFileResolve {
 
     /**
      * Resolves the given URI into a local file. If the URI doesn't denote a local file, <code>null</code> is returned.
+     *
      * @param uri The URI, e.g. "knime:/MOUNT_ID/some/path/workflow.knime"
      * @param monitor a progress monitor, must not be <code>null</code>
      * @return the local file represented by the URI or <code>null</code>
@@ -86,30 +87,24 @@ public interface URIToFileResolve {
     public File resolveToFile(final URI uri, IProgressMonitor monitor) throws IOException;
 
     /**
-     * Resolves the given URI into a local file. If the URI does not represent a
-     * local file (e.g. a remote file on a server) it is downloaded first to a
-     * temporary directory and the the temporary copy is returned. If it
-     * represents a local file the behavior is the same as in
-     * {@link #resolveToFile(URI)}.
+     * Resolves the given URI into a local file. If the URI does not represent a local file (e.g. a remote file on a
+     * server) it is downloaded first to a temporary directory and the the temporary copy is returned. If it represents
+     * a local file the behavior is the same as in {@link #resolveToFile(URI)}.
      *
      * @param uri The URI, e.g. "knime:/MOUNT_ID/some/path/workflow.knime"
-     * @return the file represented by the URI or a temporary copy of that file
-     *         if it represents a remote file
+     * @return the file represented by the URI or a temporary copy of that file if it represents a remote file
      * @throws IOException If the URI can't be resolved
      */
     public File resolveToLocalOrTempFile(final URI uri) throws IOException;
 
     /**
-     * Resolves the given URI into a local file. If the URI does not represent a
-     * local file (e.g. a remote file on a server) it is downloaded first to a
-     * temporary directory and the the temporary copy is returned. If it
-     * represents a local file the behavior is the same as in
-     * {@link #resolveToFile(URI)}.
+     * Resolves the given URI into a local file. If the URI does not represent a local file (e.g. a remote file on a
+     * server) it is downloaded first to a temporary directory and the the temporary copy is returned. If it represents
+     * a local file the behavior is the same as in {@link #resolveToFile(URI)}.
      *
      * @param uri The URI, e.g. "knime:/MOUNT_ID/some/path/workflow.knime"
      * @param monitor a progress monitor, must not be <code>null</code>
-     * @return the file represented by the URI or a temporary copy of that file
-     *         if it represents a remote file
+     * @return the file represented by the URI or a temporary copy of that file if it represents a remote file
      * @throws IOException If the URI can't be resolved
      * @since 2.6
      */
@@ -130,6 +125,16 @@ public interface URIToFileResolve {
      */
     public default Optional<KNIMEURIDescription> toDescription(final URI uri, final IProgressMonitor monitor) {
         return Optional.of(new KNIMEURIDescription(uri.getHost(), uri.getPath()));
+    }
+
+    /**
+     * TODO
+     * @param uri
+     * @return
+     * @throws Exception
+     */
+    public default Optional<List<SpaceVersion>> getSpaceVersions(final URI uri) throws Exception {
+        return Optional.empty();
     }
 
     /**
@@ -173,8 +178,8 @@ public interface URIToFileResolve {
     public boolean isWorkflowRelative(final URI uri);
 
     /**
-     * Returns <code>true</code>, if this is a URI that is relative to the node it is used in. It can only be
-     * resolved in the context of a flow. Contains the corresponding keyword as host.
+     * Returns <code>true</code>, if this is a URI that is relative to the node it is used in. It can only be resolved
+     * in the context of a flow. Contains the corresponding keyword as host.
      *
      * @param uri to check
      * @return <code>true</code> if argument URI is node relative, <code>false</code> if not.
@@ -189,6 +194,7 @@ public interface URIToFileResolve {
     public static final class KNIMEURIDescription {
 
         private final String m_path;
+
         private final String m_mountpointName;
 
         /**
