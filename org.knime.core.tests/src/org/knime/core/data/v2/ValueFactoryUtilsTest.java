@@ -53,8 +53,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.IOException;
+
 import org.junit.jupiter.api.Test;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataCellDataInput;
+import org.knime.core.data.DataCellDataOutput;
+import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.collection.ListCell;
@@ -100,6 +105,46 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @SuppressWarnings("static-method")
 final class ValueFactoryUtilsTest {
 
+    @SuppressWarnings({"javadoc", "serial"})
+    public static class DataCellWithoutValueFactory extends DataCell {
+        public static final DataType TYPE = DataType.getType(DataCellWithoutValueFactory.class);
+
+        public DataCellWithoutValueFactory() {
+
+        }
+
+        @Override
+        public String toString() {
+            return this.getClass().getName();
+        }
+
+        @Override
+        protected boolean equalsDataCell(final DataCell dc) {
+            return (dc instanceof DataCellWithoutValueFactory);
+        }
+
+        @Override
+        public int hashCode() {
+            return 42;
+        }
+
+    }
+
+    @SuppressWarnings("javadoc")
+    public static class DataCellWithoutValueFactorySerializer implements DataCellSerializer<DataCellWithoutValueFactory> {
+
+        @Override
+        public void serialize(final DataCellWithoutValueFactory cell, final DataCellDataOutput output) throws IOException {
+            //
+        }
+
+        @Override
+        public DataCellWithoutValueFactory deserialize(final DataCellDataInput input) throws IOException {
+            return new DataCellWithoutValueFactory();
+        }
+
+    }
+
     @Test
     void testAreEqual() {
         // both null
@@ -128,8 +173,8 @@ final class ValueFactoryUtilsTest {
             createDataCellValueFactory(PNGImageCellFactory.TYPE))).isFalse();
 
         // legacy data cell value factory same type
-        assertThat(ValueFactoryUtils.areEqual(createLegacyDataCellValueFactory(XMLCell.TYPE),
-            createLegacyDataCellValueFactory(XMLCell.TYPE))).isTrue();
+        assertThat(ValueFactoryUtils.areEqual(createLegacyDataCellValueFactory(DataCellWithoutValueFactory.TYPE),
+            createLegacyDataCellValueFactory(DataCellWithoutValueFactory.TYPE))).isTrue();
 
         // legacy dta cell value factory different type
         assertThat(ValueFactoryUtils.areEqual(createLegacyDataCellValueFactory(XMLCell.TYPE),
@@ -187,7 +232,7 @@ final class ValueFactoryUtilsTest {
             .isEqualTo(DictEncodedDataCellValueFactory.class.getName());
         var dataTypeJson = logicalTypeJson.get("data_type");
         assertThat(dataTypeJson.get("cell_class").asText())//
-            .isEqualTo(XMLCell.TYPE.getCellClass().getName());
+            .isEqualTo(DataCellWithoutValueFactory.TYPE.getCellClass().getName());
         var structTraits = (StructDataTraits)traits;
         assertTrue(structTraits.getDataTraits(0).hasTrait(DictEncodingTrait.class));
         assertTrue(structTraits.getDataTraits(1).hasTrait(DictEncodingTrait.class));
@@ -207,7 +252,7 @@ final class ValueFactoryUtilsTest {
             .isEqualTo(IntValueFactory.class.getName());
 
         // collection of data cell value factories
-        var listOfDataCells = createListValueFactory(createDataCellValueFactory(), XMLCell.TYPE);
+        var listOfDataCells = createListValueFactory(createDataCellValueFactory(), DataCellWithoutValueFactory.TYPE);
         assertThat(ValueFactoryUtils.getTraits(listOfDataCells))//
             .isInstanceOf(ListDataTraits.class)//
             .matches(this::hasLogicalTypeTrait)//
@@ -218,7 +263,7 @@ final class ValueFactoryUtilsTest {
             .matches(j -> j.get("value_factory_class").asText().equals(DictEncodedDataCellValueFactory.class.getName()))
             .extracting(j -> j.get("data_type"))//
             .extracting(j -> j.get("cell_class").asText())//
-            .isEqualTo(XMLCell.class.getName());
+            .isEqualTo(DataCellWithoutValueFactory.class.getName());
 
         // nested collection
         var nestedCollection = createListValueFactory(createListValueFactory(IntValueFactory.INSTANCE, IntCell.TYPE),
@@ -283,7 +328,7 @@ final class ValueFactoryUtilsTest {
 
         // dict encoded data cell value factory
         assertThat(ValueFactoryUtils.getDataTypeForValueFactory(createDataCellValueFactory()))//
-            .isEqualTo(XMLCell.TYPE);
+            .isEqualTo(DataCellWithoutValueFactory.TYPE);
 
         // legacy data cell value factory
         @SuppressWarnings("deprecation")
@@ -327,11 +372,11 @@ final class ValueFactoryUtilsTest {
             .isInstanceOf(IntValueFactory.class);
 
         // data cell value factory
-        assertThat(ValueFactoryUtils.getValueFactory(XMLCell.TYPE, fsHandler))//
+        assertThat(ValueFactoryUtils.getValueFactory(DataCellWithoutValueFactory.TYPE, fsHandler))//
             .isInstanceOf(DictEncodedDataCellValueFactory.class)//
             .extracting(DictEncodedDataCellValueFactory.class::cast)//
             .extracting(DictEncodedDataCellValueFactory::getType)//
-            .isEqualTo(XMLCell.TYPE);
+            .isEqualTo(DataCellWithoutValueFactory.TYPE);
 
         // specific collection
         var intList = DataType.getType(ListCell.class, IntCell.TYPE);
@@ -386,7 +431,7 @@ final class ValueFactoryUtilsTest {
             .isInstanceOf(DictEncodedDataCellValueFactory.class)//
             .extracting(DictEncodedDataCellValueFactory.class::cast)//
             .extracting(DictEncodedDataCellValueFactory::getType)//
-            .isEqualTo(XMLCell.TYPE);
+            .isEqualTo(DataCellWithoutValueFactory.TYPE);
 
         // try to load an unregistered value factory
         final var finalTraits = createSimpleTypeTraits(DummyDataValueFactory.class.getName());
@@ -467,7 +512,7 @@ final class ValueFactoryUtilsTest {
     }
 
     private static DictEncodedDataCellValueFactory createDataCellValueFactory() {
-        return createDataCellValueFactory(XMLCell.TYPE);
+        return createDataCellValueFactory(DataCellWithoutValueFactory.TYPE);
     }
 
     private static DictEncodedDataCellValueFactory createDataCellValueFactory(final DataType type) {
