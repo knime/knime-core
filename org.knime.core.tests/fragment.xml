@@ -52,5 +52,12 @@
                serializerClass="org.knime.core.node.NodeSettingsTest$UnknownCellSerializer">
          </serializer>
       </DataType>
+      <DataType
+            cellClass="org.knime.core.data.v2.ValueFactoryUtilsTest$DataCellWithoutValueFactory">
+         <serializer
+               cellClass="org.knime.core.data.v2.ValueFactoryUtilsTest$DataCellWithoutValueFactory"
+               serializerClass="org.knime.core.data.v2.ValueFactoryUtilsTest$DataCellWithoutValueFactorySerializer">
+         </serializer>
+      </DataType>
    </extension>
 </fragment>
