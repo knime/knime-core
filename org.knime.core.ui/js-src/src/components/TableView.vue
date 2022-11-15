@@ -46,9 +46,10 @@ export default {
             baseUrl: null,
             clientWidth: 0,
             columnSizeOverrides: {},
-            numRowsAbove: 0,
             scopeSize: MIN_SCOPE_SIZE,
-            bufferSize: MIN_BUFFER_SIZE
+            bufferSize: MIN_BUFFER_SIZE,
+            numRowsAbove: 0,
+            numRowsBelow: 0
         };
     },
     computed: {
@@ -154,7 +155,7 @@ export default {
             return currentColumnSizes;
         },
         rowData() {
-            return this.table.rows.map((row, index) => [index, ...row]);
+            return this.table.rows.map((row, index) => [index + this.numRowsAbove, ...row]);
         },
         columnFilterValues() {
             const columnFilterValues = [];
@@ -257,6 +258,9 @@ export default {
         },
 
         onScroll({ direction, startIndex, endIndex }) {
+            if (!this.useLazyLoading) {
+                return;
+            }
             const prevScopeStart = this.currentScopeStartIndex;
             const prevScopeEnd = this.currentScopeEndIndex;
             const prevScopeSize = this.scopeSize;
@@ -276,7 +280,7 @@ export default {
                 // update is due to a change in scope size
                 bufferStart = scopeSizeChanged ? prevScopeStart : Math.max(startIndex - this.bufferSize, 0);
                 // keep the already loaded elements below the current last visible.
-                bufferEnd = Math.max(bufferStart, prevScopeEnd);
+                bufferEnd = bufferStart;
                 // The next scope consist of numRows newly loaded rows and the buffer.
                 // the size of the next scope should be this.scopeSize again (or less at the bottom of the table).
                 numRows = Math.min(this.scopeSize - (bufferEnd - bufferStart), this.rowCount - bufferEnd);
@@ -290,7 +294,7 @@ export default {
                 // update is due to a change in scope size
                 bufferEnd = scopeSizeChanged ? prevScopeEnd : Math.min(endIndex + this.bufferSize, this.rowCount);
                 // keep already loaded elements above the current first visible.
-                bufferStart = Math.min(bufferEnd, prevScopeStart);
+                bufferStart = bufferEnd;
                 // The next scope consist of numRows newly loaded rows and the buffer.
                 // the size of the next scope should be this.scopeSize again (or less at the top of the table).
                 numRows = Math.min(bufferStart, this.scopeSize - (bufferEnd - bufferStart));
@@ -299,14 +303,16 @@ export default {
             if (numRows > 0) {
                 this.currentScopeStartIndex = newScopeStart;
                 this.currentScopeEndIndex = newScopeStart + (bufferEnd - bufferStart) + numRows;
-                this.updateData({ lazyLoad: {
-                    loadFromIndex,
-                    numRows,
-                    bufferStart,
-                    bufferEnd,
-                    direction,
-                    newScopeStart
-                } });
+                this.updateData({
+                    lazyLoad: {
+                        loadFromIndex,
+                        numRows,
+                        bufferStart: bufferStart - prevScopeStart,
+                        bufferEnd: bufferEnd - prevScopeStart,
+                        direction,
+                        newScopeStart
+                    }
+                });
             }
         },
 
@@ -339,8 +345,10 @@ export default {
             }
             if (lazyLoad) {
                 const { newScopeStart, direction, bufferStart, bufferEnd } = lazyLoad;
-                const newScope = this.combineWithPrevious(receivedTable.rows, bufferStart, bufferEnd, direction);
-                const rows = this.fillWithEmptyRows(newScope, newScopeStart, receivedTable.rowCount);
+                if (this.currentScopeStartIndex !== newScopeStart) {
+                    return;
+                }
+                const rows = this.combineWithPrevious(receivedTable.rows, bufferStart, bufferEnd, direction);
                 if (typeof this.table.rows === 'undefined') {
                     this.table = { ...receivedTable, rows };
                 } else {
@@ -353,6 +361,7 @@ export default {
             this.currentRowCount = this.table.rowCount;
             this.transformSelection();
             this.numRowsAbove = lazyLoad ? lazyLoad.newScopeStart : 0;
+            this.numRowsBelow = lazyLoad ? this.currentRowCount - (lazyLoad.newScopeStart + this.table.rows.length) : 0;
         },
 
         // eslint-disable-next-line max-params
@@ -413,12 +422,6 @@ export default {
 
         requestNewData(method, options) {
             return this.jsonDataService.data({ method, options });
-        },
-
-        fillWithEmptyRows(nonEmptyRows, startIndex, rowCount) {
-            const result = Array(rowCount).fill([]);
-            result.splice(startIndex, nonEmptyRows.length, ...nonEmptyRows);
-            return result;
         },
 
         combineWithPrevious(newRows, bufferStart, bufferEnd, direction) {
@@ -759,6 +762,7 @@ export default {
       :data-config="dataConfig"
       :table-config="tableConfig"
       :num-rows-above="numRowsAbove"
+      :num-rows-below="numRowsBelow"
       @pageChange="onPageChange"
       @columnSort="onColumnSort"
       @rowSelect="onRowSelect"
