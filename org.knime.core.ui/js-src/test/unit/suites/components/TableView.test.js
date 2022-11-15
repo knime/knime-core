@@ -333,8 +333,9 @@ describe('TableView.vue', () => {
 
                 
                 it('requests pageSize rows as initial data for lazy loading', async () => {
-                    wrapper.vm.rowCount = 300;
+                    wrapper.vm.currentRowCount = 300;
                     wrapper.vm.refreshTable();
+                    await wrapper.vm.$nextTick();
                     await wrapper.vm.$nextTick();
                     expect(wrapper.vm.currentScopeStartIndex).toBe(0);
                     expect(wrapper.vm.currentScopeEndIndex).toBe(wrapper.vm.scopeSize);
@@ -359,30 +360,6 @@ describe('TableView.vue', () => {
                         }
                     });
                 });
-
-                it('requests window of data and fills the rest with dummy rows', async () => {
-                    const loadFromIndex = 1;
-                    const numRows = 2;
-                    wrapper.vm.updateData({ lazyLoad: {
-                        loadFromIndex,
-                        newScopeStart: loadFromIndex,
-                        numRows
-                    } });
-                    await wrapper.vm.$nextTick();
-                    expect(wrapper.vm.table.rows.length).toBe(rowCount);
-                    // eslint-disable-next-line no-magic-numbers
-                    expect(getData).toHaveBeenNthCalledWith(2, expect.objectContaining({
-                        options: expect.arrayStartingWith(
-                            [wrapper.vm.settings.displayedColumns, loadFromIndex, numRows]
-                        )
-                    }));
-                    expect(wrapper.vm.table.rows).toStrictEqual([
-                        [],
-                        dataRequestResult.rows[0],
-                        dataRequestResult.rows[1],
-                        []
-                    ]);
-                });
     
                 it('appends buffer from previously fetched rows', async () => {
                     wrapper.vm.table.rows = [['previousRow1'], ['previousRow2'], ['previousRow3'], ['previousRow4']];
@@ -396,12 +373,11 @@ describe('TableView.vue', () => {
                     } });
                     await wrapper.vm.$nextTick();
                     await wrapper.vm.$nextTick();
-                    expect(wrapper.vm.table.rows.length).toBe(rowCount);
+                    expect(wrapper.vm.table.rows.length).toBe(3);
                     expect(wrapper.vm.table.rows).toStrictEqual([
                         ['previousRow1'],
                         dataRequestResult.rows[0],
-                        dataRequestResult.rows[1],
-                        []
+                        dataRequestResult.rows[1]
                     ]);
                 });
             });
@@ -429,31 +405,36 @@ describe('TableView.vue', () => {
                         () => {
                             wrapper.vm.currentScopeStartIndex = 0;
                             wrapper.vm.currentScopeEndIndex = 200;
-                            wrapper.vm.rowCount = 1000;
+                            wrapper.vm.currentRowCount = 1000;
                             wrapper.vm.onScroll({ direction: 1, startIndex: 130, endIndex: 140 }); // eslint-disable-line no-magic-numbers
                             expect(updateDataSpy).toHaveBeenCalledTimes(0);
                         });
     
                     it('keeps a buffer of buffer size in the opposite direction and adjusts the number of loaded rows',
-                        () => {
+                        async () => {
                             wrapper.vm.currentScopeStartIndex = 200;
                             wrapper.vm.currentScopeEndIndex = 400;
-                            wrapper.vm.rowCount = 1000;
+                            const currentRowCount = 1000;
+                            wrapper.vm.currentRowCount = currentRowCount;
+                            dataRequestResult.rowCount = currentRowCount;
                             wrapper.vm.onScroll({ direction: 1, startIndex: 440, endIndex: 480 }); // eslint-disable-line no-magic-numbers
-                            expect(updateDataSpy).toHaveBeenCalledWith(expect.objectContaining(
-                                { lazyLoad: {
-                                    direction: 1,
-                                    loadFromIndex: 400,
-                                    newScopeStart: 390,
-                                    bufferStart: 390,
-                                    bufferEnd: 400,
-                                    numRows: 190
-                                } }
-                            ));
-                            // eslint-disable-next-line no-magic-numbers
-                            expect(wrapper.vm.currentScopeStartIndex).toBe(390);
-                            // eslint-disable-next-line no-magic-numbers
-                            expect(wrapper.vm.currentScopeEndIndex).toBe(590);
+                            const lazyLoad = {
+                                direction: 1,
+                                loadFromIndex: 400,
+                                newScopeStart: 390,
+                                bufferStart: 190,
+                                bufferEnd: 200,
+                                numRows: 190
+                            };
+                            expect(updateDataSpy).toHaveBeenCalledWith(expect.objectContaining({ lazyLoad }));
+                            await wrapper.vm.$nextTick();
+                            await wrapper.vm.$nextTick();
+                            
+                            expect(wrapper.vm.currentScopeStartIndex).toBe(lazyLoad.newScopeStart);
+                            expect(wrapper.vm.numRowsAbove).toBe(lazyLoad.newScopeStart);
+                            const endIndex = 590;
+                            expect(wrapper.vm.currentScopeEndIndex).toBe(endIndex);
+                            expect(wrapper.vm.numRowsBelow).toBe(currentRowCount - endIndex);
                         });
     
 
@@ -496,8 +477,8 @@ describe('TableView.vue', () => {
                                 direction: -1,
                                 loadFromIndex: 0,
                                 newScopeStart: 0,
-                                bufferStart: 1,
-                                bufferEnd: 4,
+                                bufferStart: 0,
+                                bufferEnd: 3,
                                 numRows: 1
                             } }
                         ));
@@ -514,25 +495,31 @@ describe('TableView.vue', () => {
                     });
     
                     it('keeps a buffer of buffer size in the opposite direction and adjusts the number of loaded rows',
-                        () => {
+                        async () => {
                             wrapper.vm.currentScopeStartIndex = 200;
                             wrapper.vm.currentScopeEndIndex = 400;
-                            wrapper.vm.rowCount = 1000;
+                            const currentRowCount = 1000;
+                            wrapper.vm.currentRowCount = currentRowCount;
+                            dataRequestResult.rowCount = currentRowCount;
                             wrapper.vm.onScroll({ direction: -1, startIndex: 160, endIndex: 170 }); // eslint-disable-line no-magic-numbers
+                            const lazyLoad = {
+                                direction: -1,
+                                loadFromIndex: 20,
+                                newScopeStart: 20,
+                                bufferStart: 0,
+                                bufferEnd: 20,
+                                numRows: 180
+                            };
                             expect(updateDataSpy).toHaveBeenCalledWith(expect.objectContaining(
-                                { lazyLoad: {
-                                    direction: -1,
-                                    loadFromIndex: 20,
-                                    newScopeStart: 20,
-                                    bufferStart: 200,
-                                    bufferEnd: 220,
-                                    numRows: 180
-                                } }
+                                { lazyLoad }
                             ));
-                            // eslint-disable-next-line no-magic-numbers
-                            expect(wrapper.vm.currentScopeStartIndex).toBe(20);
-                            // eslint-disable-next-line no-magic-numbers
-                            expect(wrapper.vm.currentScopeEndIndex).toBe(220);
+                            await wrapper.vm.$nextTick();
+                            await wrapper.vm.$nextTick();
+                            expect(wrapper.vm.currentScopeStartIndex).toBe(lazyLoad.newScopeStart);
+                            expect(wrapper.vm.numRowsAbove).toBe(lazyLoad.newScopeStart);
+                            const endIndex = 220;
+                            expect(wrapper.vm.currentScopeEndIndex).toBe(endIndex);
+                            expect(wrapper.vm.numRowsBelow).toBe(currentRowCount - endIndex);
                         });
         
                     it('adjusts the scopeSize if necessary',

@@ -24,6 +24,9 @@ export default {
             dataLoaded: false,
             currentIndex: 0,
             currentPage: 1,
+            currentScopeStartIndex: null,
+            currentScopeEndIndex: null,
+            lastRequestScopeStartIndex: null,
             columnSortIndex: null,
             columnSortDirection: null,
             columnSortColumnName: null,
@@ -206,12 +209,11 @@ export default {
 
         if (initialData) {
             const { table, dataTypes, columnDomainValues, settings } = initialData;
-            this.rowCount = table.rowCount;
             this.displayedColumns = table.displayedColumns;
             this.dataTypes = dataTypes;
             this.columnDomainValues = columnDomainValues;
-            this.totalRowCount = this.rowCount;
-            this.currentRowCount = this.rowCount;
+            this.totalRowCount = table.rowCount;
+            this.currentRowCount = table.rowCount;
             this.settings = settings;
             if (this.useLazyLoading) {
                 await this.initializeLazyLoading();
@@ -240,6 +242,8 @@ export default {
         async initializeLazyLoading(params) {
             const { updateDisplayedColumns = false, updateTotalSelected = true } = params || {};
             this.currentScopeStartIndex = 0;
+            this.currentScopeEndIndex = Math.min(this.scopeSize, this.currentRowCount);
+            this.lastRequestScopeStartIndex = 0;
             await this.updateData({
                 lazyLoad: this.getLazyLoadParamsForCurrentScope(),
                 updateDisplayedColumns,
@@ -248,8 +252,7 @@ export default {
         },
 
         getLazyLoadParamsForCurrentScope() {
-            const numRows = Math.min(this.scopeSize, this.rowCount);
-            this.currentScopeEndIndex = numRows;
+            const numRows = this.currentScopeEndIndex - this.currentScopeStartIndex;
             return {
                 loadFromIndex: this.currentScopeStartIndex,
                 newScopeStart: this.currentScopeStartIndex,
@@ -280,10 +283,10 @@ export default {
                 // update is due to a change in scope size
                 bufferStart = scopeSizeChanged ? prevScopeStart : Math.max(startIndex - this.bufferSize, 0);
                 // keep the already loaded elements below the current last visible.
-                bufferEnd = bufferStart;
+                bufferEnd = Math.max(bufferStart, prevScopeEnd);
                 // The next scope consist of numRows newly loaded rows and the buffer.
                 // the size of the next scope should be this.scopeSize again (or less at the bottom of the table).
-                numRows = Math.min(this.scopeSize - (bufferEnd - bufferStart), this.rowCount - bufferEnd);
+                numRows = Math.min(this.scopeSize - (bufferEnd - bufferStart), this.currentRowCount - bufferEnd);
                 newScopeStart = bufferStart;
                 loadFromIndex = bufferEnd;
             } else {
@@ -292,17 +295,16 @@ export default {
                 }
                 // keep bufferSize elements below the current last visible or keep all previous rows if the
                 // update is due to a change in scope size
-                bufferEnd = scopeSizeChanged ? prevScopeEnd : Math.min(endIndex + this.bufferSize, this.rowCount);
+                bufferEnd = scopeSizeChanged ? prevScopeEnd : Math.min(endIndex + this.bufferSize, this.currentRowCount);
                 // keep already loaded elements above the current first visible.
-                bufferStart = bufferEnd;
+                bufferStart = Math.min(bufferEnd, prevScopeStart);
                 // The next scope consist of numRows newly loaded rows and the buffer.
                 // the size of the next scope should be this.scopeSize again (or less at the top of the table).
                 numRows = Math.min(bufferStart, this.scopeSize - (bufferEnd - bufferStart));
                 newScopeStart = loadFromIndex = bufferStart - numRows;
             }
             if (numRows > 0) {
-                this.currentScopeStartIndex = newScopeStart;
-                this.currentScopeEndIndex = newScopeStart + (bufferEnd - bufferStart) + numRows;
+                this.lastRequestScopeStartIndex = newScopeStart;
                 this.updateData({
                     lazyLoad: {
                         loadFromIndex,
@@ -344,10 +346,12 @@ export default {
                 this.table.columnContentTypes = receivedTable.columnContentTypes;
             }
             if (lazyLoad) {
-                const { newScopeStart, direction, bufferStart, bufferEnd } = lazyLoad;
-                if (this.currentScopeStartIndex !== newScopeStart) {
+                const { newScopeStart, direction, bufferStart = 0, bufferEnd = bufferStart } = lazyLoad;
+                if (this.lastRequestScopeStartIndex !== newScopeStart) {
                     return;
                 }
+                this.currentScopeStartIndex = newScopeStart;
+                this.currentScopeEndIndex = newScopeStart + (bufferEnd - bufferStart) + numRows;
                 const rows = this.combineWithPrevious(receivedTable.rows, bufferStart, bufferEnd, direction);
                 if (typeof this.table.rows === 'undefined') {
                     this.table = { ...receivedTable, rows };
@@ -360,8 +364,9 @@ export default {
             }
             this.currentRowCount = this.table.rowCount;
             this.transformSelection();
-            this.numRowsAbove = lazyLoad ? lazyLoad.newScopeStart : 0;
-            this.numRowsBelow = lazyLoad ? this.currentRowCount - (lazyLoad.newScopeStart + this.table.rows.length) : 0;
+            
+            this.numRowsAbove = lazyLoad ? this.currentScopeStartIndex : 0;
+            this.numRowsBelow = lazyLoad ? this.currentRowCount - this.currentScopeEndIndex : 0;
         },
 
         // eslint-disable-next-line max-params
