@@ -446,6 +446,10 @@
                cellClass="org.knime.core.data.xml.XMLBlobCell"
                serializerClass="org.knime.core.data.xml.XMLBlobCell$XMLSerializer">
          </serializer>
+         <serializer
+               cellClass="org.knime.core.data.xml.XMLFileStoreCell"
+               serializerClass="org.knime.core.data.xml.XMLFileStoreCell$XMLSerializer">
+         </serializer>
          <ValueFactory
                valueFactoryClass="org.knime.core.data.xml.XMLValueFactory">
          </ValueFactory>

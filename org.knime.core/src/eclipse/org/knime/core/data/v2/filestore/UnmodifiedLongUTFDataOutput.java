@@ -67,9 +67,9 @@ import org.knime.core.table.util.StringEncoder;
  * {@link ByteOrder#LITTLE_ENDIAN}.
  *
  * @author Carsten Haubold, KNIME GmbH, Konstanz, Germany
- * @since 4.7
+ * @since 5.1
  */
-final class UnmodifiedLongUTFDataOutput implements DataOutput {
+public final class UnmodifiedLongUTFDataOutput implements DataOutput {
     private final DataOutput m_output;
 
     private final StringEncoder m_encoder;
@@ -78,13 +78,13 @@ final class UnmodifiedLongUTFDataOutput implements DataOutput {
 
     private ByteBuffer m_byteBuffer;
 
-    UnmodifiedLongUTFDataOutput(final DataOutput output, final ByteOrder order) {
+    public UnmodifiedLongUTFDataOutput(final DataOutput output, final ByteOrder order) {
         m_output = output;
         m_encoder = new StringEncoder();
         m_byteOrder = order;
     }
 
-    UnmodifiedLongUTFDataOutput(final DataOutput output) {
+    public UnmodifiedLongUTFDataOutput(final DataOutput output) {
         this(output, ByteOrder.LITTLE_ENDIAN);
     }
 
