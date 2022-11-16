@@ -39,6 +39,8 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 │           └── Table Creator #1, outputs single row with one String cell with value "secret" 
 └── KNIME Server Connector #6, uses "secret" as password
  * </pre>
+ * 
+ * @author Carl Witt, KNIME AG, Zurich, Switzerland
  */
 public class BugAP19479_Component_Encryption extends WorkflowTestCase {
 
