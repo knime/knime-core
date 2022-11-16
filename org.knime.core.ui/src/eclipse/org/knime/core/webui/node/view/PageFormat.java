@@ -44,60 +44,41 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Aug 23, 2021 (hornm): created
+ *   Nov 16, 2022 (hornm): created
  */
 package org.knime.core.webui.node.view;
 
 import java.util.Optional;
 
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.webui.UIExtension;
-import org.knime.core.webui.data.DataServiceProvider;
-import org.knime.core.webui.node.view.selection.SelectionTranslationService;
-
 /**
- * Represents a view of a node.
- *
- * @author Martin Horn, KNIME GmbH, Konstanz, Germany
- * @author Marc Bux, KNIME GmbH, Berlin, Germany
- *
- * @since 4.5
+ * Helps to determined the size of a page if it's composed with other pages (e.g. a composite view).
  */
-public interface NodeView extends UIExtension, DataServiceProvider {
+public final class PageFormat {
 
     /**
-     * Validates the given settings before loading it via {@link #loadValidatedSettingsFrom(NodeSettingsRO)}.
-     *
-     * @param settings settings to validate
-     * @throws InvalidSettingsException if the validation failed
+     * The default page format.
      */
-    void validateSettings(NodeSettingsRO settings) throws InvalidSettingsException;
+    public static final PageFormat DEFAULT = new PageFormat();
 
-    /**
-     * Loads validated settings.
-     *
-     * @param settings settings to load
-     */
-    void loadValidatedSettingsFrom(NodeSettingsRO settings);
+    private AspectRatio m_aspectRatio = AspectRatio.RATIO_4BY3;
 
-    /**
-     * @return optional service to translate selection requests
-     *
-     * @since 4.6
-     */
-    default Optional<? extends SelectionTranslationService> createSelectionTranslationService() {
-        return Optional.empty();
+    private PageFormat() {
+        // TODO to be instantiated with a 'page format builder'
     }
 
     /**
-     * The default page format is being used to determine the size of the page if it's being displayed together with
-     * other pages (aka composite view).
-     *
-     * @return the page format
+     * Available aspect ratios.
      */
-    default PageFormat getDefaultPageFormat() {
-        return PageFormat.DEFAULT;
+    @SuppressWarnings("javadoc")
+    public enum AspectRatio {
+            RATIO_4BY3
+    }
+
+    /**
+     * @return the aspect ratio or an empty optional if the page format is not determined by an aspect ratio
+     */
+    public Optional<AspectRatio> getAspectRatio() {
+        return Optional.ofNullable(m_aspectRatio);
     }
 
 }
