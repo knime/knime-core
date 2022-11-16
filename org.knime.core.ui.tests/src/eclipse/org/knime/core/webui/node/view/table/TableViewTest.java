@@ -78,6 +78,7 @@ import org.knime.core.node.workflow.virtual.DefaultVirtualPortObjectInNodeModel;
 import org.knime.core.node.workflow.virtual.VirtualNodeInput;
 import org.knime.core.webui.node.NodeWrapper;
 import org.knime.core.webui.node.view.NodeViewManager;
+import org.knime.core.webui.node.view.PageFormat.AspectRatio;
 import org.knime.core.webui.node.view.table.data.Renderer;
 import org.knime.core.webui.node.view.table.data.TableViewDataService;
 import org.knime.core.webui.node.view.table.data.TableViewDataServiceImpl;
@@ -448,6 +449,22 @@ class TableViewTest {
         final var rows = createTableViewDataServiceInstance(() -> null)
             .getTable(getDefaultTestSpec().getColumnNames(), 0, 0, null, false, true).getRows();
         assertThat(rows).hasDimensions(0, 0);
+    }
+
+    @Test
+    void testPageFormat() throws IOException {
+        var wfm = WorkflowManagerUtil.createEmptyWorkflow();
+        var tableId = "test_table_id";
+        var nnc = WorkflowManagerUtil.createAndAddNode(wfm,
+            new NodeViewNodeFactory(nodeModel -> new TableNodeView(tableId, () -> nodeModel.getInternalTables()[0])));
+        ((NodeViewNodeModel)nnc.getNodeModel())
+            .setInternalTables(new BufferedDataTable[]{createDefaultTestTable(2).get()});
+
+        var nodeView = NodeViewManager.getInstance().getNodeView(nnc);
+        var pageFormat = nodeView.getDefaultPageFormat();
+        assertThat(pageFormat.getAspectRatio().get()).isEqualTo(AspectRatio.RATIO_4BY3);
+
+        WorkflowManagerUtil.disposeWorkflow(wfm);
     }
 
     private static TableViewDataService
