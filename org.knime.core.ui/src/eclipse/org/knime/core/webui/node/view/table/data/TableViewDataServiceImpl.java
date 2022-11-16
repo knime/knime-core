@@ -188,7 +188,8 @@ public class TableViewDataServiceImpl implements TableViewDataService {
         final var sortedTable = m_sortedTableCache.getCachedTableOrElse(() -> bufferedDataTable);
         m_filteredAndSortedTableCache.conditionallyUpdateCachedTable(
             () -> filterTable(sortedTable, columns, globalSearchTerm, columnFilterValue, filterRowKeys),
-            globalSearchTerm == null && columnFilterValue == null, globalSearchTerm, columnFilterValue, columns);
+            globalSearchTerm == null && columnFilterValue == null, globalSearchTerm, columnFilterValue, columns,
+            sortColumn, sortAscending);
         final var filteredAndSortedTable = m_filteredAndSortedTableCache.getCachedTableOrElse(() -> sortedTable);
 
         final var spec = bufferedDataTable.getSpec();
@@ -198,9 +199,9 @@ public class TableViewDataServiceImpl implements TableViewDataService {
                 // Clears the image data cache if it's forced to be cleared. That's usually done when 'pagination' is enabled because in that
                 // case a new batch of rows is request with every page change and the is no need to keep the older one.
                 // If, however, 'pagination' is disabled (i.e. 'infinite scrolling' is used instead), then it's almost certain
-                // that images of two different 'row-batches' are being requested at the same time. I.e. we must _not_ clear
-                // previous row-batches too early.
-                // However, we _can_ clear the image data cache if 'pagination' is disabled _and_ if the entire table is being
+                // that images of two different consecutive(!) 'row-batches' are being requested at the same time. I.e. we must
+                // _not_ clear previous row-batches too early.
+                // However, we _can_ clear the image data cache if 'pagination' is disabled or if the entire table is being
                 // updated/replaced (e.g. because it's sorted or filtered). Because images of row-batches of different tables
                 // won't be requested at the same time (e.g. a row-batch of the sorted table won't be displayed together with a
                 // row-batch of the un-sorted table).
