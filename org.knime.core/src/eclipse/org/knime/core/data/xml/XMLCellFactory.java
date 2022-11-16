@@ -49,6 +49,7 @@ package org.knime.core.data.xml;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.UUID;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.stream.XMLStreamException;
@@ -59,6 +60,7 @@ import org.knime.core.data.DataCellFactory.FromInputStream;
 import org.knime.core.data.DataType;
 import org.knime.core.data.container.BlobDataCell;
 import org.knime.core.data.convert.DataCellFactoryMethod;
+import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.node.NodeLogger;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
@@ -132,16 +134,21 @@ public class XMLCellFactory implements FromComplexString, FromInputStream {
     public static DataCell create(final String xml) throws IOException,
     // the XMLStreamException can't be removed because it would change the signature of this public API method
             ParserConfigurationException, SAXException, XMLStreamException {//NOSONAR
+        return create(xml, null); // FIXME: this will crash for blobs...
+    }
+
+    public static DataCell create(final String xml, final IWriteFileStoreHandler fsHandler) throws IOException,
+            ParserConfigurationException, SAXException, XMLStreamException {//NOSONAR
         if (xml == null) {
             throw new NullPointerException("XML must not be null");
         }
         XMLCellContent content = new XMLCellContent(xml, true);
         if (xml.length() >= MIN_BLOB_SIZE_IN_BYTES) {
-            return new XMLBlobCell(content);
+            return new XMLFileStoreCell(fsHandler.createFileStore(UUID.randomUUID().toString()), content);
         } else {
             return new XMLCell(content);
         }
-    }
+     }
 
     /**
      * Factory method to create {@link DataCell} representing
@@ -209,6 +216,11 @@ public class XMLCellFactory implements FromComplexString, FromInputStream {
      * @throws NullPointerException if argument is null
      */
     public static DataCell create(final XMLValue<Document> xml) {
+       return create(xml, null); // FIXME: THIS WILL CRASH FOR BLOBS
+    }
+
+
+    public static DataCell create(final XMLValue<Document> xml, final IWriteFileStoreHandler fsHandler) {
         if (xml == null) {
             throw new NullPointerException("XMLValue must not be null");
         }
@@ -217,7 +229,13 @@ public class XMLCellFactory implements FromComplexString, FromInputStream {
     	} else {
     		XMLCellContent content = new XMLCellContent(xml.getDocumentSupplier());
             if (content.getStringValue().length() >= MIN_BLOB_SIZE_IN_BYTES) {
-                return new XMLBlobCell(content);
+//                return new XMLBlobCell(content);
+                try {
+                    return new XMLFileStoreCell(fsHandler.createFileStore(UUID.randomUUID().toString()), content);
+                } catch (IOException ex) {
+                    throw new IllegalStateException(
+                        "Could not create file store for XMLFileStoreCell. This is weird...", ex);
+                }
             } else {
                 return new XMLCell(content);
             }

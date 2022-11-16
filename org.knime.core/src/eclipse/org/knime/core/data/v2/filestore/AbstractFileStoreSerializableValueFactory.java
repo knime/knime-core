@@ -48,30 +48,38 @@
  */
 package org.knime.core.data.v2.filestore;
 
+import java.io.DataInputStream;
+import java.io.DataOutput;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.IDataRepository;
+import org.knime.core.data.container.BlobDataCell;
 import org.knime.core.data.filestore.FileStore;
+import org.knime.core.data.filestore.FileStoreCell;
 import org.knime.core.data.filestore.FileStoreKey;
+import org.knime.core.data.filestore.FileStoreUtil;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.NotInWorkflowWriteFileStoreHandler;
 import org.knime.core.data.v2.FileStoreAwareValueFactory;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.table.access.StringAccess.StringReadAccess;
 import org.knime.core.table.access.StringAccess.StringWriteAccess;
 import org.knime.core.table.access.StructAccess.StructReadAccess;
 import org.knime.core.table.access.StructAccess.StructWriteAccess;
 import org.knime.core.table.access.VarBinaryAccess.VarBinaryReadAccess;
 import org.knime.core.table.access.VarBinaryAccess.VarBinaryWriteAccess;
+import org.knime.core.table.io.ReadableDataInput;
 import org.knime.core.table.io.ReadableDataInputStream;
 import org.knime.core.table.schema.DataSpec;
 import org.knime.core.table.schema.StringDataSpec;
@@ -95,22 +103,19 @@ import org.knime.core.table.schema.VarBinaryDataSpec.ObjectSerializer;
  *
  * @author Carsten Haubold, KNIME GmbH, Konstanz, Germany
  * @param <V> The type of {@link DataValue} read and written by this {@link ValueFactory}
- * @since 4.7
+ * @since 5.1
  * @noreference This class is not intended to be referenced by clients.
  */
 public abstract class AbstractFileStoreSerializableValueFactory<V extends DataValue>
     implements FileStoreAwareValueFactory, ValueFactory<StructReadAccess, StructWriteAccess> {
 
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(AbstractFileStoreSerializableValueFactory.class);
+    private IDataRepository m_dataRepository;
 
-    private IDataRepository m_dataRepository = null;
-
-    private IWriteFileStoreHandler m_fileStoreHandler = null;
+    private IWriteFileStoreHandler m_fileStoreHandler;
 
     /** used to write the data either into a binary blob or a file **/
     private final ObjectSerializer<V> m_serializer;
 
-    /** used to load the data either from a binary blob or a file **/
     private final ObjectDeserializer<V> m_deserializer;
 
     /**
@@ -143,14 +148,19 @@ public abstract class AbstractFileStoreSerializableValueFactory<V extends DataVa
      *
      * Derived classes should also implement the respective DataValue.
      */
-    protected class FileStoreSerializableReadValue implements ReadValue {
+    protected abstract class FileStoreSerializableReadValue implements ReadValue {
         private final StructReadAccess m_access;
 
+        //////////////////////////////////////////////////////////////////////////////////////
+        // TODO: improve this caching from the single last cell to a LRU cache that is connected to the MemoryAlertSystem
+        // TODO: later: make this cache global/static so it works across columns
+
         // Used to check whether the cached DataCell needs to be updated
-        private String m_lastFileStoreKey;
+        private String m_lastFileStoreKeyString;
 
         // Cache the data cell if it was stored in a fileStore to make subsequent accesses fast
         private DataCell m_lastDataCell;
+        //////////////////////////////////////////////////////////////////////////////////////
 
         /**
          * Create a {@link FileStoreSerializableReadValue}
@@ -161,33 +171,38 @@ public abstract class AbstractFileStoreSerializableValueFactory<V extends DataVa
             m_access = access;
         }
 
+        protected abstract DataCell createCell(V value);
+
+        protected abstract FileStoreCell createFileStoreCell();
+
         @Override
         public DataCell getDataCell() {
             StringReadAccess fileStoreAccess = m_access.getAccess(0);
-            final String fileStoreKey = fileStoreAccess.getStringValue();
+            final var fileStoreKeyString = fileStoreAccess.getStringValue();
 
-            if (fileStoreKey != null && !fileStoreKey.isEmpty()) {
-                if (m_lastFileStoreKey != null && m_lastFileStoreKey.equals(fileStoreKey)) {
-                    // the FSKey has not changed since the last access, we can return the cached data cell
-                    return m_lastDataCell;
+            if (fileStoreKeyString != null && !fileStoreKeyString.isEmpty()) {
+                if (m_lastFileStoreKeyString == null || !m_lastFileStoreKeyString.equals(fileStoreKeyString)) {
+                    var fileStoreKeys = Arrays.stream(fileStoreKeyString.split(";")).map(FileStoreKey::fromString)
+                        .toArray(FileStoreKey[]::new);
+                    // the FSKeys have changed since the last access, so we cannot reuse the cached data cell
+
+                    m_lastDataCell = createFileStoreCell();
+                    try {
+                        FileStoreUtil.retrieveFileStoreHandlersFrom((FileStoreCell)m_lastDataCell, fileStoreKeys,
+                            m_dataRepository);
+                    } catch (IOException ex) {
+                        throw new IllegalStateException("Could not read cell from fileStores: ", ex);
+                    }
                 }
-                FileStoreKey key = FileStoreKey.fromString(fileStoreKey);
-                final var fsHandler = m_dataRepository.getHandlerNotNull(key.getStoreUUID());
-                final var fs = fsHandler.getFileStore(key);
-                try (final var stream = new FileInputStream(fs.getFile());
-                        final var dataInStream = new ReadableDataInputStream(stream)) {
-                    m_lastDataCell = (DataCell)m_deserializer.deserialize(dataInStream);
-                    m_lastFileStoreKey = fileStoreKey;
-                    return m_lastDataCell;
-                } catch (IOException | IllegalStateException ex) { // IllegalStateException can be thrown by ArrowBufIO
-                    LOGGER.warn("Could not read cell value from filestore, retrying from binary blob", ex);
-                }
+
+                return m_lastDataCell;
             }
 
             // We either came here because no fileStore was given or reading from the fileStore failed,
             // then we can try as fallback to read from the binary blob
             VarBinaryReadAccess blobAccess = m_access.getAccess(1);
-            return (DataCell)blobAccess.getObject(m_deserializer);
+
+            return createCell(blobAccess.getObject(m_deserializer));
         }
     }
 
@@ -195,7 +210,7 @@ public abstract class AbstractFileStoreSerializableValueFactory<V extends DataVa
      * A {@link FileStoreSerializableWriteValue} writes the provided value V either into a {@link FileStore} or into a
      * VarBinary blob
      */
-    protected class FileStoreSerializableWriteValue implements WriteValue<V> {
+    protected abstract class FileStoreSerializableWriteValue implements WriteValue<V> {
         private final StructWriteAccess m_access;
 
         /**
@@ -207,7 +222,7 @@ public abstract class AbstractFileStoreSerializableValueFactory<V extends DataVa
             m_access = access;
         }
 
-        private FileStore createFileStore() throws IOException {
+        protected FileStore createFileStore() throws IOException {
             final var uuid = UUID.randomUUID().toString();
 
             if (m_fileStoreHandler instanceof NotInWorkflowWriteFileStoreHandler) {
@@ -226,38 +241,83 @@ public abstract class AbstractFileStoreSerializableValueFactory<V extends DataVa
                 @SuppressWarnings("rawtypes")
                 var fsReadVal = (AbstractFileStoreSerializableValueFactory.FileStoreSerializableReadValue)value;
                 m_access.getWriteAccess(0).setFrom(fsReadVal.m_access.getAccess(0));
-                m_access.getWriteAccess(1).setFrom(fsReadVal.m_access.getAccess(1));
+                m_access.getWriteAccess(1).setFrom(fsReadVal.m_access.getAccess(1)); // TODO: cached var binary read access was not serialized but we want the bytes...
                 return;
             }
 
             StringWriteAccess fileStoreAccess = m_access.getWriteAccess(0);
-            VarBinaryWriteAccess blobAccess = m_access.getWriteAccess(1);
 
             final boolean storeInFS = shouldBeStoredInFileStore(value);
 
             if (storeInFS) {
-                try {
-                    final var fs = createFileStore();
-                    try (final var stream = new FileOutputStream(fs.getFile());
-                            final var dataOutStream = new DataOutputStream(stream)) {
-                        m_serializer.serialize(dataOutStream, value);
-                    }
-                    fileStoreAccess.setStringValue(fs.toString());
-                    return;
-                } catch (IOException ex) {
-                    LOGGER.warn("Could not write value " + value + " to fileStore, serializing to binary blob instead",
-                        ex);
+                FileStoreCell fsCell;
+                if (value instanceof BlobDataCell blobCell) {
+                    fsCell = blobToFileStore(blobCell);
+                } else {
+                    fsCell = (FileStoreCell)value;
                 }
+
+                try {
+                    FileStoreUtil.invokeFlush(fsCell);
+                } catch (IOException ex) {
+                    throw new IllegalStateException("Couldn't flush to file store", ex);
+                }
+
+                var fileStoreKeys = FileStoreUtil.getFileStoreKeys(fsCell);
+                var fileStoreKeyString = Arrays.stream(fileStoreKeys)//
+                    .map(FileStoreKey::toString)//
+                    .collect(Collectors.joining(";"));
+                fileStoreAccess.setStringValue(fileStoreKeyString);
+                return;
             }
 
             // We either came here because writing to a fileStore was not requested or failed.
+            VarBinaryWriteAccess blobAccess = m_access.getWriteAccess(1);
             blobAccess.setObject(value, m_serializer);
+        }
+
+        protected abstract FileStoreCell createFileStoreCell(V content);
+
+        @SuppressWarnings("unchecked")
+        private FileStoreCell blobToFileStore(final BlobDataCell blobCell) {
+            return createFileStoreCell((V)blobCell);
         }
     }
 
-    @Override
-    public WriteValue<?> createWriteValue(final StructWriteAccess access) {
-        return new FileStoreSerializableWriteValue(access);
+    public abstract static class AbstractFileStoreSerializableCell extends FileStoreCell {
+        protected abstract void serialize(DataOutput output);
+
+        protected abstract void deserialize(ReadableDataInput input);
+
+        protected AbstractFileStoreSerializableCell(final FileStore fs) {
+            super(fs);
+        }
+
+        protected AbstractFileStoreSerializableCell() {
+            super();
+        }
+
+        @Override
+        protected final void flushToFileStore() throws IOException {
+            final File file = getFileStores()[0].getFile();
+            synchronized (file) {
+                if (!file.exists()) {
+                    try (final var outputStream = new DataOutputStream(new FileOutputStream(file))) {
+                        serialize(new UnmodifiedLongUTFDataOutput(outputStream));
+                    }
+                }
+            }
+        }
+
+        @Override
+        protected void postConstruct() throws IOException {
+            try (final var inputStream =
+                new ReadableDataInputStream(new DataInputStream(new FileInputStream(getFileStores()[0].getFile())))) {
+                deserialize(new UnmodifiedLongUTFReadableDataInput(inputStream));
+            } catch (IOException ex) {
+                throw new IllegalStateException("Could not open the FileStore", ex);
+            }
+        }
     }
 
     @Override

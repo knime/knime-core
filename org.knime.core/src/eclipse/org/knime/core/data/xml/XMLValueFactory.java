@@ -45,15 +45,20 @@
  */
 package org.knime.core.data.xml;
 
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.stream.XMLStreamException;
+import java.io.IOException;
 
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.knime.core.data.DataCell;
 import org.knime.core.data.filestore.FileStore;
+import org.knime.core.data.filestore.FileStoreCell;
 import org.knime.core.data.util.LockedSupplier;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
+import org.knime.core.data.v2.WriteValue;
 import org.knime.core.data.v2.filestore.AbstractFileStoreSerializableValueFactory;
 import org.knime.core.table.access.StructAccess.StructReadAccess;
+import org.knime.core.table.access.StructAccess.StructWriteAccess;
 import org.knime.core.table.schema.VarBinaryDataSpec.ObjectDeserializer;
 import org.knime.core.table.schema.VarBinaryDataSpec.ObjectSerializer;
 import org.w3c.dom.Document;
@@ -72,18 +77,16 @@ import org.xml.sax.SAXException;
  */
 public class XMLValueFactory extends AbstractFileStoreSerializableValueFactory<XMLValue<Document>> {
 
-    private static ObjectSerializer<XMLValue<Document>> SERIALIZER = (in, value) -> {
-        in.writeUTF(value.toString());
+    static ObjectSerializer<XMLValue<Document>> SERIALIZER = (out, value) -> {
+        out.writeUTF(value.toString());
     };
 
-    private static ObjectDeserializer<XMLValue<Document>> DESERIALIZER = (out) -> {
+    static ObjectDeserializer<XMLValue<Document>> DESERIALIZER = (in) -> {
         try {
-            return (XMLCell)XMLCellFactory.create(out.readUTF());
+            return new XMLCellContent(in.readUTF(), true);
         } catch (ParserConfigurationException ex) {
             return null;
         } catch (SAXException ex) {
-            return null;
-        } catch (XMLStreamException ex) {
             return null;
         }
     };
@@ -105,11 +108,42 @@ public class XMLValueFactory extends AbstractFileStoreSerializableValueFactory<X
             return ((XMLValue<Document>)getDataCell()).getDocumentSupplier();
         }
 
+        @Override
+        protected DataCell createCell(final XMLValue<Document> data) {
+            try (var docSupplier = data.getDocumentSupplier()) {
+                return new XMLCell(new XMLCellContent(docSupplier));
+            }
+        }
+
+        @Override
+        protected FileStoreCell createFileStoreCell() {
+            return new XMLFileStoreCell();
+        }
+    }
+
+    private class XMLWriteValue extends FileStoreSerializableWriteValue {
+        protected XMLWriteValue(final StructWriteAccess access) {
+            super(access);
+        }
+
+        @Override
+        protected FileStoreCell createFileStoreCell(final XMLValue<Document> content) {
+            try {
+                return new XMLFileStoreCell(createFileStore(), content);
+            } catch (IOException ex) {
+                throw new IllegalStateException("Could not create file store for XMLFileStoreCell", ex);
+            }
+        }
     }
 
     @Override
     public ReadValue createReadValue(final StructReadAccess access) {
         return new XMLReadValue(access);
+    }
+
+    @Override
+    public WriteValue<XMLValue<Document>> createWriteValue(final StructWriteAccess access) {
+        return new XMLWriteValue(access);
     }
 
     /**
@@ -121,7 +155,7 @@ public class XMLValueFactory extends AbstractFileStoreSerializableValueFactory<X
 
     @Override
     protected boolean shouldBeStoredInFileStore(final XMLValue<Document> value) {
-        return (value instanceof XMLBlobCell);
+        return (value instanceof XMLBlobCell) || (value instanceof XMLFileStoreCell);
     }
 
 }
