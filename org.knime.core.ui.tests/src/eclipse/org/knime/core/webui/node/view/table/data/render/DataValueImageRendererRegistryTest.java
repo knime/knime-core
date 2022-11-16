@@ -116,7 +116,7 @@ public class DataValueImageRendererRegistryTest {
      */
     @Test
     void testImageDataStats() {
-        var tableSupplier = createDefaultTestTable(700);
+        var tableSupplier = createDefaultTestTable(300);
         var imgReg = new DataValueImageRendererRegistry(() -> "test_page_id");
         var tableId = "test_table_id";
         var dataService = new TableViewDataServiceImpl(tableSupplier, tableId, new SwingBasedRendererFactory(), imgReg);
@@ -126,7 +126,7 @@ public class DataValueImageRendererRegistryTest {
 
         var rendererIds = new String[]{"org.knime.core.data.renderer.DoubleBarRenderer$Factory", null};
         var columns = new String[]{"double", "image"};
-        for (var i = 0; i <= 4; i++) {
+        for (var i = 0; i <= 1; i++) {
             var table = dataService.getTable(columns, i * 100l, 100, rendererIds, false, false, false);
             Arrays.stream(table.getRows()).forEach(r -> imgPaths.add(r[1]));
             var stats = imgReg.getStatsPerTable(tableId);
@@ -134,29 +134,27 @@ public class DataValueImageRendererRegistryTest {
             var batchSizes = new int[i + 1];
             Arrays.fill(batchSizes, 100 * 2);
             assertThat(stats.batchSizes()).isEqualTo(batchSizes);
-            assertThat(stats.totalNumTableRowsCovered()).isEqualTo((i + 1) * 100);
             imgReg.renderImage(table.getRows()[0][1].replace(pathPrefix, ""));
             imgReg.renderImage(table.getRows()[50][1].replace(pathPrefix, ""));
             assertThat(stats.numRenderedImages()).isEqualTo(2 * (i + 1));
         }
+        assertThat(imgReg.getStatsPerTable(tableId).batchSizes()).isEqualTo(new int[]{200, 200});
 
-        // the image data cache has it's limit at 500 'total num table rows covered' -> the first batch is removed
-        var table = dataService.getTable(columns, 600, 80, rendererIds, false, false, false);
+        // the image data cache has it's limit at 2 row batches -> if exceed, the oldest batch is removed
+        var table = dataService.getTable(columns, 200, 80, rendererIds, false, false, false);
         Arrays.stream(table.getRows()).forEach(r -> imgPaths.add(r[1]));
         var stats = imgReg.getStatsPerTable(tableId);
-        assertThat(stats.numImages()).isEqualTo(960); // there are two images per row
-        var batchSizes = new int[]{160, 200, 200, 200, 200};
+        assertThat(stats.numImages()).isEqualTo(360); // there are two images per row
+        var batchSizes = new int[]{160, 200};
         assertThat(stats.batchSizes()).isEqualTo(batchSizes);
-        assertThat(stats.totalNumTableRowsCovered()).isEqualTo(580);
 
         // assure that all img-paths in the image-column are unique (test pre-condition)
-        assertThat(imgPaths).hasSize(580);
+        assertThat(imgPaths).hasSize(280);
 
         // makes sure that the image data cache is cleared, when the respective parameter is passed to the data service
         dataService.getTable(new String[]{"image"}, 200, 10, null, false, false, true);
         stats = imgReg.getStatsPerTable(tableId);
         assertThat(stats.numImages()).isEqualTo(10);
-        assertThat(stats.totalNumTableRowsCovered()).isEqualTo(10);
         assertThat(stats.batchSizes()).isEqualTo(new int[]{10});
 
         // clear again directly
@@ -164,7 +162,6 @@ public class DataValueImageRendererRegistryTest {
         imgReg.startNewBatchOfTableRows(tableId);
         stats = imgReg.getStatsPerTable(tableId);
         assertThat(stats.numImages()).isZero();
-        assertThat(stats.totalNumTableRowsCovered()).isEqualTo(0);
         assertThat(stats.batchSizes()).isEqualTo(new int[1]);
     }
 

@@ -48,9 +48,8 @@
  */
 package org.knime.core.webui.node.view.table.data.render;
 
-import static java.util.stream.LongStream.of;
-
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -61,7 +60,6 @@ import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataValue;
 import org.knime.core.node.NodeLogger;
@@ -96,16 +94,14 @@ public final class DataValueImageRendererRegistry {
 
     private static final Pattern WIDTH_AND_HEIGHT_PATTERN = Pattern.compile("w=(\\d+)&h=(\\d+)");
 
-    // The number of rows we need to keep images in the cache for.
-    // I.e. the number of images the are ultimately kept in the cache
-    // depends on how many images there are per row.
-    private static final int MAX_NUM_ROWS_WITH_IMAGES = 500;
-
     private static final NodeLogger LOGGER = NodeLogger.getLogger(DataValueImageRendererRegistry.class);
+
+    private static final int MAX_NUM_ROW_BATCHES_IN_CACHE = 2;
 
     private final Supplier<String> m_pageIdSupplier;
 
-    private final Map<String, Images> m_imagesPerTable = new HashMap<>();
+    private final Map<String, Images> m_imagesPerTable = Collections.synchronizedMap(new HashMap<>());
+
 
     /**
      * @param pageIdSupplier the page id of the view (see, e.g.,
@@ -203,7 +199,6 @@ public final class DataValueImageRendererRegistry {
                 Arrays.toString(batchSizes), Arrays.stream(batchSizes).sum());
             LOGGER.debugWithFormat("  %d images in total; %d rendered, %d un-rendered", numImages, numRenderedImages,
                 (numImages - numRenderedImages));
-            LOGGER.debugWithFormat("  %d of table rows covered", stats.totalNumTableRowsCovered());
         }
     }
 
@@ -213,13 +208,10 @@ public final class DataValueImageRendererRegistry {
      * @param tableId the id of the table to clear all stored cells and renderers for
      */
     public void clearImageDataCache(final String tableId) {
-        if (m_imagesPerTable.containsKey(tableId)) {
-            m_imagesPerTable.remove(tableId);
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(String.format(
-                    "Cached image data cleared for table with id '%s'. There is still image data cached for %d tables",
-                    tableId, m_imagesPerTable.size()));
-            }
+        if (m_imagesPerTable.remove(tableId) != null && LOGGER.isDebugEnabled()) {
+            LOGGER.debug(String.format(
+                "Cached image data cleared for table with id '%s'. There is still image data cached for %d tables",
+                tableId, m_imagesPerTable.size()));
         }
     }
 
@@ -242,8 +234,6 @@ public final class DataValueImageRendererRegistry {
 
     interface StatsPerTable {
 
-        int totalNumTableRowsCovered();
-
         int numImages();
 
         int numRenderedImages();
@@ -259,10 +249,6 @@ public final class DataValueImageRendererRegistry {
         private Deque<Set<String>> m_batches = new LinkedList<>();
 
         private int m_hashCollisionCount = 0;
-
-        private long[] m_minRowIndexPerBatch = new long[0];
-
-        private long[] m_maxRowIndexPerBatch = new long[0];
 
         private StatsPerTable m_stats;
 
@@ -280,8 +266,6 @@ public final class DataValueImageRendererRegistry {
                 m_images.put(key, new Image(cell, renderer));
             }
             m_batches.getFirst().add(key);
-            m_minRowIndexPerBatch[0] = Math.min(m_minRowIndexPerBatch[0], rowIndex);
-            m_maxRowIndexPerBatch[0] = Math.max(m_maxRowIndexPerBatch[0], rowIndex);
             return key;
         }
 
@@ -293,10 +277,8 @@ public final class DataValueImageRendererRegistry {
             if (!m_batches.isEmpty() && m_batches.getFirst().isEmpty()) {
                 return;
             }
-            while (getStats().totalNumTableRowsCovered() >= MAX_NUM_ROWS_WITH_IMAGES) {
+            while (m_batches.size() >= MAX_NUM_ROW_BATCHES_IN_CACHE) {
                 var removedBatch = m_batches.removeLast();
-                m_minRowIndexPerBatch = ArrayUtils.remove(m_minRowIndexPerBatch, m_minRowIndexPerBatch.length - 1);
-                m_maxRowIndexPerBatch = ArrayUtils.remove(m_maxRowIndexPerBatch, m_maxRowIndexPerBatch.length - 1);
                 // only remove the images which are NOT part of the existing batches
                 var imagesToKeep = m_batches.stream().flatMap(Set::stream).collect(Collectors.toSet());
                 removedBatch.forEach(id -> {
@@ -306,21 +288,11 @@ public final class DataValueImageRendererRegistry {
                 });
             }
             m_batches.addFirst(new HashSet<>());
-            m_minRowIndexPerBatch = ArrayUtils.insert(0, m_minRowIndexPerBatch, Long.MAX_VALUE );
-            m_maxRowIndexPerBatch = ArrayUtils.insert(0, m_maxRowIndexPerBatch, - Long.MAX_VALUE);
         }
 
         StatsPerTable getStats() {
             if (m_stats == null) {
                 m_stats = new StatsPerTable() { // NOSONAR
-                    @Override
-                    public int totalNumTableRowsCovered() {
-                        if (numImages() == 0) {
-                            return 0;
-                        }
-                        return (int)(of(m_maxRowIndexPerBatch).max().orElse(0)
-                            - of(m_minRowIndexPerBatch).min().orElse(0)) + 1;
-                    }
 
                     @Override
                     public int numImages() {
