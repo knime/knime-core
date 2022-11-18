@@ -347,7 +347,8 @@ public class TableViewDataServiceImpl implements TableViewDataService {
                 cellStringValue = cell.toString().toLowerCase();
             }
 
-            if (globalSearchTerm == null || cellStringValue.contains(globalSearchTerm.toLowerCase())) {
+            if (globalSearchTerm == null || globalSearchTerm.isEmpty()
+                || cellStringValue.contains(globalSearchTerm.toLowerCase())) {
                 globalMatch = true;
             }
             if (columnFilterValue == null || columnFilterValue.length < 1) {
@@ -358,11 +359,11 @@ public class TableViewDataServiceImpl implements TableViewDataService {
 
             // if the domain values exists we want an exact match, otherwise we
             // just check if the cell value matches the search term
-            final var needsExactMatch =
-                isRowKey ? false : (spec.getColumnSpec(currentIndex - columnOffset).getDomain().getValues() != null);
+            final var needsExactMatch = isRowKey ? false
+                : (spec.getColumnSpec(colIndices[currentIndex - columnOffset]).getDomain().getValues() != null);
 
-            final var currentFilterMatch =
-                currentColumnFilters.length == 0 || Arrays.stream(currentColumnFilters).map(String::toLowerCase)
+            final var currentFilterMatch = currentColumnFilters.length == 0 || currentColumnFilters[0].isEmpty()
+                || Arrays.stream(currentColumnFilters).map(String::toLowerCase)
                     .anyMatch(needsExactMatch ? cellStringValue::equals : cellStringValue::contains);
             if (!currentFilterMatch) {
                 colFilterMatch = false;

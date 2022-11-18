@@ -441,7 +441,7 @@ public final class TableTestUtil {
         IntStream.range(0, rowCount).mapToObj(i -> new Object[]{//
             new IntCell(i), //
             new StringCell(Integer.toString(i)), //
-            new LongCell(i), //
+            new LongCell(i * 11), // multiply by 11 to get 2-digit repdigit
             new DoubleCell(i), //
             new SparseBitVectorCellFactory(Integer.toHexString(i)).createDataCell(), //
             i % 2 == 1 ? BooleanCell.TRUE : BooleanCell.FALSE, //
