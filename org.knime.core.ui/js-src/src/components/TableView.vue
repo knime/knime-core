@@ -292,14 +292,13 @@ export default {
                         bufferEnd,
                         direction,
                         newScopeStart
-                    },
-                    updateTotalSelected: false
+                    }
                 });
             }
         },
 
         async updateData(params) {
-            const { lazyLoad, updateTotalSelected, updateDisplayedColumns = false } = params;
+            const { lazyLoad, updateTotalSelected = false, updateDisplayedColumns = false } = params;
             let loadFromIndex, numRows;
             if (lazyLoad) {
                 ({ loadFromIndex, numRows } = lazyLoad);
@@ -332,6 +331,7 @@ export default {
             this.numRowsAbove = lazyLoad ? lazyLoad.newScopeStart : 0;
         },
 
+        // eslint-disable-next-line max-params
         async requestTable(startIndex, numRows, displayedColumns, updateDisplayedColumns, updateTotalSelected) {
             let receivedTable;
             // if columnSortColumnName is present a sorting is active
@@ -352,7 +352,8 @@ export default {
         },
 
         // eslint-disable-next-line max-params
-        requestFilteredAndSortedTable(startIndex, numRows, displayedColumns, updateDisplayedColumns, updateTotalSelected) {
+        requestFilteredAndSortedTable(startIndex, numRows, displayedColumns, updateDisplayedColumns,
+            updateTotalSelected) {
             const columnSortIsAscending = this.columnSortDirection === 1;
             return this.requestNewData('getFilteredAndSortedTable',
                 [
@@ -403,7 +404,7 @@ export default {
         },
 
         refreshTable(params) {
-            let { updateDisplayedColumns = false, resetPage = false, updateTotalSelected = true } = params || {};
+            let { updateDisplayedColumns = false, resetPage = false, updateTotalSelected = false } = params || {};
             const tableUI = this.$refs.tableUI;
             if (tableUI) {
                 tableUI.refreshScroller();
@@ -423,7 +424,7 @@ export default {
             const { pageSize } = this.settings;
             this.currentPage += pageDirection;
             this.currentIndex += pageDirection * pageSize;
-            this.refreshTable({ updateTotalSelected: false });
+            this.refreshTable();
         },
 
         onViewSettingsChange(event) {
@@ -446,11 +447,11 @@ export default {
                     showRowKeysChanged, showRowIndicesChanged);
             }
             if (compactModeChangeInducesRefresh || sortingParamsReseted) {
-                this.refreshTable({ updateTotalSelected: false });
+                this.refreshTable();
             } else if (displayedColumnsChanged) {
-                this.refreshTable({ updateDisplayedColumns: true });
+                this.refreshTable({ updateDisplayedColumns: true, updateTotalSelected: true });
             } else if (pageSizeChanged || enablePaginationChanged) {
-                this.refreshTable({ resetPage: true, updateTotalSelected: false });
+                this.refreshTable({ resetPage: true });
             }
             this.selectionService.onSettingsChange(() => Array.from(this.currentSelectedRowKeys), this.clearSelection,
                 newSettings.publishSelection, newSettings.subscribeToSelection);
@@ -465,7 +466,7 @@ export default {
             this.columnSortIndex = newColumnSortIndex;
 
             this.columnSortColumnName = mappedDisplayedColumns[this.columnIndexMap.get(this.columnSortIndex)];
-            this.refreshTable({ updateTotalSelected: false });
+            this.refreshTable();
         },
         async onSelectionChange(rawEvent) {
             const { selection, mode } = rawEvent;
@@ -513,15 +514,15 @@ export default {
         },
         onSearch(input) {
             this.searchTerm = input;
-            this.refreshTable({ resetPage: true });
+            this.refreshTable({ resetPage: true, updateTotalSelected: true });
         },
         onColumnFilter(colInd, value) {
             this.columnFilters[this.columnIndexMap.get(colInd)].value = value;
-            this.refreshTable({ resetPage: true });
+            this.refreshTable({ resetPage: true, updateTotalSelected: true });
         },
         onClearFilter() {
             this.columnFilters = this.getDefaultFilterConfigs(this.displayedColumns);
-            this.refreshTable({ resetPage: true });
+            this.refreshTable({ resetPage: true, updateTotalSelected: true });
         },
         onColumnResize(columnIndex, newColumnSize) {
             const colName = this.dataConfig.columnConfigs[columnIndex].header;
