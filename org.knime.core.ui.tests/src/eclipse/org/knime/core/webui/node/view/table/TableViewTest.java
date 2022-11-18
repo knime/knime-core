@@ -102,7 +102,7 @@ class TableViewTest {
 
     @Test
     void testDataServiceGetData() {
-        final var expectedResult = new String[][]{{"1", "1", "1", "1", "pageId/images/tableId/2018748495.png", "0001",
+        final var expectedResult = new String[][]{{"1", "1", "1", "11", "pageId/images/tableId/2018748495.png", "0001",
             "true", "pageId/images/tableId/-1084641940.png"}};
         var rendererRegistry = new DataValueImageRendererRegistry(() -> "pageId");
         var rendererIds = new String[expectedResult[0].length];
@@ -365,6 +365,20 @@ class TableViewTest {
         final var cachedTable = testTable.getFilteredAndSortedTable(getDefaultTestSpec().getColumnNames(), 0, 5,
             sortColumnName, true, globalSearchTerm, columnFilterValue, true, null, false, false, true).getRows();
         assertThat(cachedTable).isDeepEqualTo(tableSortedAscending);
+    }
+
+    @Test
+    void testDataServiceGetFilteredAndSortedDataWithExcludedColumns() {
+        final var testTable = createTableViewDataServiceInstance(createDefaultTestTable(10));
+        final var columnNames = new String[]{"string", "long"};
+        final var sortColumnName = "long";
+        final var columnFilterValues = new String[][]{new String[0], new String[0], new String[]{"1"}};
+
+        testTable.getTable(columnNames, 0, 10, null, true, true);
+        final var tableRemColSortCol = testTable.getFilteredAndSortedTable(columnNames, 0, 10, sortColumnName, false,
+            null, columnFilterValues, false, null, false, false, true);
+        assertThat(tableRemColSortCol.getRowCount()).as("filters correctly after removing the first column")
+            .isEqualTo(1);
     }
 
     @Test
