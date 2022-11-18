@@ -48,6 +48,7 @@
  */
 package org.knime.core.util;
 
+import java.net.URI;
 import java.net.URL;
 import java.util.Optional;
 
@@ -81,13 +82,13 @@ public enum KnimeUrlType {
     WORKFLOW_RELATIVE("knime.workflow"),
 
     /**
-     * A URLthat locates resources relative to the current Hub space, e.g.
+     * A URL that locates resources relative to the current Hub space, e.g.
      * {@code knime://knime.space/some_group/workflow17}.
      */
     HUB_SPACE_RELATIVE("knime.space"),
 
     /**
-     * A URI that locates resources relative to the current mountpoint, e.g.
+     * A URL that locates resources relative to the current mountpoint, e.g.
      * {@code knime://knime.mountpoint/some_group/workflow17}.
      */
     MOUNTPOINT_RELATIVE("knime.mountpoint"),
@@ -100,20 +101,43 @@ public enum KnimeUrlType {
     MOUNTPOINT_ABSOLUTE(null);
 
     /**
-     * Checks whether or not the given URL is a KNIME URI (under the {@code knime:} scheme) and returns the URI type
+     * Checks whether or not the given URL is a KNIME URL (under the {@code knime:} scheme) and returns the URL type
      * if it is.
      *
      * @param url URL to get the type of
      * @return KNIME URL type if applicable, {@code null} otherwise
      * @throws IllegalArgumentException if the KNIME URL is malformed (missing {@link URL#getAuthority()
-     * authority component})
+     *         authority component})
      */
     public static Optional<KnimeUrlType> getType(final URL url) {
         if (!SCHEME.equalsIgnoreCase(url.getProtocol())) {
             return Optional.empty();
         }
         final var authority = CheckUtils.checkArgumentNotNull(url.getAuthority(),
-            "KNIME URIs must contain an Authority, fount '%s'", url);
+            "KNIME URLs must contain an Authority, fount '%s'", url);
+        for (final KnimeUrlType type : values()) {
+            if (type.m_authority == null || type.m_authority.equalsIgnoreCase(authority)) {
+                return Optional.of(type);
+            }
+        }
+        throw new IllegalStateException(MOUNTPOINT_ABSOLUTE.name() + " should be the fallback.");
+    }
+
+    /**
+     * Checks whether or not the URL represented by the given URI is a KNIME URL (under the {@code knime:} scheme) and
+     * returns the URL type if it is.
+     *
+     * @param uri URI to get the type of
+     * @return KNIME URL type if applicable, {@code null} otherwise
+     * @throws IllegalArgumentException if the KNIME URL is malformed (missing {@link URI#getAuthority()
+     *         authority component})
+     */
+    public static Optional<KnimeUrlType> getType(final URI uri) {
+        if (!SCHEME.equalsIgnoreCase(uri.getScheme())) {
+            return Optional.empty();
+        }
+        final var authority = CheckUtils.checkArgumentNotNull(uri.getAuthority(),
+            "KNIME URIs must contain an Authority, fount '%s'", uri);
         for (final KnimeUrlType type : values()) {
             if (type.m_authority == null || type.m_authority.equalsIgnoreCase(authority)) {
                 return Optional.of(type);
