@@ -1978,7 +1978,9 @@ public final class SubNodeContainer extends SingleNodeContainer
         SubNodeContainerPersistor subNodePersistor = (SubNodeContainerPersistor)nodePersistor;
         WorkflowPersistor workflowPersistor = subNodePersistor.getWorkflowPersistor();
         // TODO pass in a filter input stack
-        m_wfm.loadContent(workflowPersistor, tblRep, inStack, exec, loadResult, preserveNodeMessage);
+        try (WorkflowLock lock = m_wfm.lock()) {
+            m_wfm.loadContent(workflowPersistor, tblRep, inStack, exec, loadResult, preserveNodeMessage);
+        }
         if (workflowPersistor.isDirtyAfterLoad() || m_wfm.isDirty()) {
             setDirty();
         }
