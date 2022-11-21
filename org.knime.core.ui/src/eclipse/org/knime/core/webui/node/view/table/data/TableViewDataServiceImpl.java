@@ -238,11 +238,8 @@ public class TableViewDataServiceImpl implements TableViewDataService {
 
     private static String[] adjustColumnRenderers(final String[] columns, final DataTableSpec spec,
         final String[] rendererIds) {
-        return IntStream.range(0, columns.length)
-            .filter(i -> spec.containsName(columns[i]))
-            .mapToObj(i -> rendererIds[i])
-            .collect(Collectors.toList())
-            .toArray(String[]::new);
+        return IntStream.range(0, columns.length).filter(i -> spec.containsName(columns[i]))
+            .mapToObj(i -> rendererIds[i]).collect(Collectors.toList()).toArray(String[]::new);
 
     }
 

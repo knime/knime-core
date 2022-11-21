@@ -193,9 +193,7 @@ export default {
             return !this.settings.enablePagination;
         },
         selectedRendererIds() {
-            return this.settings.displayedColumns.map(
-                columnName => this.colNameSelectedRendererId[columnName] || null
-            );
+            return this.getCurrentSelectedRenderers(this.displayedColumns);
         }
     },
     async mounted() {
@@ -250,16 +248,15 @@ export default {
 
         async initializeLazyLoading(params) {
             const { updateDisplayedColumns = false, updateTotalSelected = true } = params || {};
-            const numRows = Math.min(this.scopeSize, this.rowCount);
             this.currentScopeStartIndex = 0;
             await this.updateData({
-                lazyLoad: this.calculateLazyLoadParams(),
+                lazyLoad: this.getLazyLoadParamsForCurrentScope(),
                 updateDisplayedColumns,
                 updateTotalSelected
             });
         },
 
-        calculateLazyLoadParams() {
+        getLazyLoadParamsForCurrentScope() {
             const numRows = Math.min(this.scopeSize, this.rowCount);
             this.currentScopeEndIndex = numRows;
             return {
@@ -356,17 +353,20 @@ export default {
 
         // eslint-disable-next-line max-params
         async requestTable(startIndex, numRows, displayedColumns, updateDisplayedColumns, updateTotalSelected) {
+            const selectedRendererIds = updateDisplayedColumns
+                ? this.getCurrentSelectedRenderers(this.settings.displayedColumns)
+                : this.selectedRendererIds;
             let receivedTable;
             // if columnSortColumnName is present a sorting is active
             if (this.columnSortColumnName || this.searchTerm || this.colFilterActive) {
                 receivedTable = await this.requestFilteredAndSortedTable(startIndex, numRows, displayedColumns,
-                    updateDisplayedColumns, updateTotalSelected);
+                    updateDisplayedColumns, updateTotalSelected, selectedRendererIds);
                 if (updateTotalSelected) {
                     this.totalSelected = receivedTable.totalSelected;
                 }
             } else {
                 receivedTable = await this.requestUnfilteredAndUnsortedTable(startIndex, numRows, displayedColumns,
-                    updateDisplayedColumns);
+                    updateDisplayedColumns, selectedRendererIds);
                 if (updateTotalSelected) {
                     this.totalSelected = this.currentSelectedRowKeys.size;
                 }
@@ -376,7 +376,7 @@ export default {
 
         // eslint-disable-next-line max-params
         requestFilteredAndSortedTable(startIndex, numRows, displayedColumns, updateDisplayedColumns,
-            updateTotalSelected) {
+            updateTotalSelected, selectedRendererIds) {
             const columnSortIsAscending = this.columnSortDirection === 1;
             return this.requestNewData('getFilteredAndSortedTable',
                 [
@@ -388,15 +388,16 @@ export default {
                     this.searchTerm,
                     updateDisplayedColumns ? null : this.columnFilterValues,
                     this.settings.showRowKeys,
-                    this.selectedRendererIds,
+                    selectedRendererIds,
                     updateDisplayedColumns,
                     updateTotalSelected
                 ]);
         },
 
         // eslint-disable-next-line max-params
-        requestUnfilteredAndUnsortedTable(startIndex, numRows, displayedColumns, updateDisplayedColumns) {
-            return this.requestNewData('getTable', [displayedColumns, startIndex, numRows, this.selectedRendererIds,
+        requestUnfilteredAndUnsortedTable(startIndex, numRows, displayedColumns, updateDisplayedColumns,
+            selectedRendererIds) {
+            return this.requestNewData('getTable', [displayedColumns, startIndex, numRows, selectedRendererIds,
                 updateDisplayedColumns]);
         },
 
@@ -596,7 +597,7 @@ export default {
                     this.displayedColumns[colInd - this.numberOfDisplayedIdColumns], item.id);
             }
             this.updateData({
-                ...this.useLazyLoading && { lazyLoad: this.calculateLazyLoadParams() },
+                ...this.useLazyLoading && { lazyLoad: this.getLazyLoadParamsForCurrentScope() },
                 updateColumnContentTypes: true
             });
         },
@@ -725,6 +726,11 @@ export default {
             this.columnSortDirection = null;
             this.currentPage = 1;
             this.currentIndex = 0;
+        },
+        getCurrentSelectedRenderers(displayedColumns) {
+            return displayedColumns.map(
+                columnName => this.colNameSelectedRendererId[columnName] || null
+            );
         }
     }
 };

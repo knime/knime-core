@@ -1020,7 +1020,7 @@ describe('TableView.vue', () => {
             wrapper.vm.onClearFilter();
             expect(dataSpy).toHaveBeenNthCalledWith(2, {
                 method: 'getTable',
-                options: [initialDataMock.table.displayedColumns, 0, 2, null, false, true] // eslint-disable-line no-magic-numbers
+                options: [initialDataMock.table.displayedColumns, 0, 2, emptyRenderers, false] // eslint-disable-line no-magic-numbers
             });
         });
 
@@ -1062,61 +1062,59 @@ describe('TableView.vue', () => {
                 id: 'renderer1',
                 section: 'dataRendering'
             };
-            expect(wrapper.vm.selectedRendererIds).toEqual([null, null, null, null]);
+            expect(Object.keys(wrapper.vm.colNameSelectedRendererId).length).toEqual(0);
             wrapper.vm.onHeaderSubMenuItemSelection(renderer, 2);
-            expect(wrapper.vm.selectedRendererIds).toEqual([null, null, renderer.id, null]);
+            expect(wrapper.vm.colNameSelectedRendererId).toEqual({ col3: 'renderer1' });
             expect(dataSpy).toBeCalledWith({
                 method: 'getTable',
-                options: [initialDataMock.settings.displayedColumns,
+                options: [initialDataMock.table.displayedColumns,
                     0,
                     2, // eslint-disable-line no-magic-numbers
                     [null, null, renderer.id, null],
-                    false,
                     false]
             });
         });
 
-        it('sets the selected renderer in selectedRendererIds on headerSubMenuSelectionChange', async () => {
+        it('sets the selected renderer in colNameSelectedRendererId on headerSubMenuSelectionChange', async () => {
             const { wrapper } = await asyncMountTableView(context);
             wrapper.vm.onHeaderSubMenuItemSelection(
                 { id: 't1r4', section: 'dataRendering', selected: false, text: 'type1renderer4' },
                 0
             );
-            expect(wrapper.vm.selectedRendererIds).toEqual(['t1r4', null, null, null]);
+            expect(wrapper.vm.colNameSelectedRendererId).toEqual({ col1: 't1r4' });
             wrapper.vm.onHeaderSubMenuItemSelection(
                 { id: 't3r2', section: 'dataRendering', selected: false, text: 'type3renderer2' },
                 3 // eslint-disable-line no-magic-numbers
             );
-            expect(wrapper.vm.selectedRendererIds).toEqual(['t1r4', null, null, 't3r2']);
+            expect(wrapper.vm.colNameSelectedRendererId).toEqual({ col1: 't1r4', col4: 't3r2' });
         });
 
-        it('adds a null renderer / removes the selected renderer on displayedColumns change', async () => {
-            const { wrapper } = await asyncMountTableView(context);
-            // remove a column => selectedRendererIds removes the selected renderer
-            wrapper.vm.onHeaderSubMenuItemSelection(
-                { id: 't2r1', section: 'dataRendering', selected: false, text: 'type2renderer1' },
-                2 // eslint-disable-line no-magic-numbers
-            );
-            wrapper.vm.onViewSettingsChange({
-                data: { data: { view: { ...wrapper.vm.$data.settings, displayedColumns: ['col1', 'col3', 'col4'] } } }
-            });
-            expect(wrapper.vm.selectedRendererIds).toEqual([null, 't2r1', null]);
-            // add a new column => selectedRendererIds add a null renderer
-            wrapper.vm.onViewSettingsChange({
-                data: { data: { view: { ...wrapper.vm.$data.settings,
-                    displayedColumns: ['col1', 'col2', 'col3', 'col4'] } } }
-            });
-            expect(wrapper.vm.selectedRendererIds).toEqual([null, null, 't2r1', null]);
-        });
-
-        it('does not update the selectedRendererIds when the section is not dataRendering', async () => {
+        it('does not update the colNameSelectedRendererId when the section is not dataRendering', async () => {
             const { wrapper } = await asyncMountTableView(context);
             wrapper.vm.onHeaderSubMenuItemSelection(
                 { id: 'loremId', section: 'dataSection', selected: false, text: 'lorem' },
                 2
             );
-            expect(wrapper.vm.selectedRendererIds).toEqual([null, null, null, null]);
+            expect(Object.keys(wrapper.vm.colNameSelectedRendererId).length).toEqual(0);
         });
+
+        it('uses settings.displayedColumns instead of displayedColumns to adjust renderers on displayedColumns change',
+            async () => {
+                const { wrapper, dataSpy } = await asyncMountTableView(context);
+                wrapper.vm.onHeaderSubMenuItemSelection(
+                    { id: 't2r1', section: 'dataRendering', selected: false, text: 'type2renderer1' },
+                    2 // eslint-disable-line no-magic-numbers
+                );
+                wrapper.vm.onViewSettingsChange({
+                    data: { data: { view: { ...wrapper.vm.$data.settings,
+                        displayedColumns: ['col3', 'col4'] } } }
+                });
+
+                expect(dataSpy).toHaveBeenNthCalledWith(2, {
+                    method: 'getTable',
+                    options: [['col3', 'col4'], 0, 2, ['t2r1', null], true]
+                });
+            });
     });
 
     describe('image rendering', () => {
@@ -1153,12 +1151,11 @@ describe('TableView.vue', () => {
         it('uses the correct image source url for image slots', async () => {
             const { wrapper } = await asyncMountTableView(context);
             await wrapper.vm.$nextTick();
-            const tableRows = wrapper.vm.$refs.tableUI.$refs.dynamicScroller[0].$refs.scroller.$children
-                .map(item => item.$children[0]).slice(1);
+            await wrapper.vm.$nextTick();
 
-            expect(tableRows[0].$refs.dataCell[3].innerHTML).toContain('src="http://localhost:8080/base.url/view_x_y/datacell/hash1.png"');
-            expect(tableRows[1].$refs.dataCell[3].innerHTML).toContain('src="http://localhost:8080/base.url/view_x_y/datacell/hash2.png"');
-            expect(tableRows[2].$refs.dataCell[3].innerHTML).toContain('src="http://localhost:8080/base.url/view_x_y/datacell/hash3.png"');
+            expect(wrapper.vm.$refs.tableUI.$refs['row-0'][0].$refs.dataCell[3].innerHTML).toContain('src="http://localhost:8080/base.url/view_x_y/datacell/hash1.png"');
+            expect(wrapper.vm.$refs.tableUI.$refs['row-1'][0].$refs.dataCell[3].innerHTML).toContain('src="http://localhost:8080/base.url/view_x_y/datacell/hash2.png"');
+            expect(wrapper.vm.$refs.tableUI.$refs['row-2'][0].$refs.dataCell[3].innerHTML).toContain('src="http://localhost:8080/base.url/view_x_y/datacell/hash3.png"');
         });
     });
 

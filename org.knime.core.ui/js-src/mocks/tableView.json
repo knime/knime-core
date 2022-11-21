@@ -248,7 +248,7 @@
               "type": "Control",
               "scope": "#/properties/view/properties/compactMode",
               "options": {
-                  "format": "checkbox"
+                "format": "checkbox"
               }
             }
           ]
