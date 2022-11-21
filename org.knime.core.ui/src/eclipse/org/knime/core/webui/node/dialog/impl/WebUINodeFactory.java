@@ -95,6 +95,30 @@ public abstract class WebUINodeFactory<M extends NodeModel> extends NodeFactory<
 
     @Override
     protected final NodeDescription createNodeDescription() throws SAXException, IOException, XmlException {
+        return createNodeDescription(m_configuration.getName(), m_configuration.getIcon(),
+            m_configuration.getInPortDescriptions(), m_configuration.getOutPortDescriptions(),
+            m_configuration.getShortDescription(), m_configuration.getFullDescription(),
+            m_configuration.getModelSettingsClass(), null, null, null);
+    }
+
+    /**
+     * @param name the name of the node
+     * @param icon relative path to the node icon
+     * @param inPortDescriptions the descriptions of the node's input ports
+     * @param outPortDescriptions the descriptions of the node's output ports
+     * @param shortDescription the short node description
+     * @param fullDescription the full node description
+     * @param modelSettingsClass the type of the model settings, or null, if the node has no model settings
+     * @param viewSettingsClass the type of the view settings, or null, if the node has no view settings
+     * @param viewDescription the view description, or null, if the node has no view
+     * @param type the type of the node, or null, if it should be determined automatically
+     * @return a description for this node
+     */
+    public static NodeDescription createNodeDescription(final String name, final String icon,
+        final String[] inPortDescriptions, final String[] outPortDescriptions, final String shortDescription,
+        final String fullDescription, final Class<? extends DefaultNodeSettings> modelSettingsClass,
+        final Class<? extends DefaultNodeSettings> viewSettingsClass, final String viewDescription,
+        final NodeType type) {
         var fac = NodeDescription.getDocumentBuilderFactory();
         DocumentBuilder docBuilder;
         try {
@@ -106,25 +130,27 @@ public abstract class WebUINodeFactory<M extends NodeModel> extends NodeFactory<
         var doc = docBuilder.newDocument();
         var node = doc.createElement("knimeNode");
 
-        node.setAttribute("icon", m_configuration.getIcon());
-        var inPortDescriptions = m_configuration.getInPortDescriptions();
-        var outPortDescriptions = m_configuration.getOutPortDescriptions();
-        if (inPortDescriptions.length == 0) {
-            node.setAttribute("type", NodeFactory.NodeType.Source.toString());
+        node.setAttribute("icon", icon);
+        final NodeType nodeType;
+        if (type != null) {
+            nodeType = type;
+        } else if (inPortDescriptions.length == 0) {
+            nodeType = NodeFactory.NodeType.Source;
         } else if (outPortDescriptions.length == 0) {
-            node.setAttribute("type", NodeFactory.NodeType.Sink.toString());
+            nodeType = NodeFactory.NodeType.Sink;
         } else {
-            node.setAttribute("type", NodeFactory.NodeType.Manipulator.toString());
+            nodeType = NodeFactory.NodeType.Manipulator;
         }
-        var name = doc.createElement("name");
-        name.setTextContent(m_configuration.getName());
-        node.appendChild(name);
+        node.setAttribute("type", nodeType.toString());
+        var nodeName = doc.createElement("name");
+        nodeName.setTextContent(name);
+        node.appendChild(nodeName);
 
         var shortDesc = doc.createElement("shortDescription");
-        shortDesc.appendChild(parseDocumentFragment(m_configuration.getShortDescription(), docBuilder, doc));
+        shortDesc.appendChild(parseDocumentFragment(shortDescription, docBuilder, doc));
         var fullDesc = doc.createElement("fullDescription");
         var intro = doc.createElement("intro");
-        intro.appendChild(parseDocumentFragment(m_configuration.getFullDescription(), docBuilder, doc));
+        intro.appendChild(parseDocumentFragment(fullDescription, docBuilder, doc));
         fullDesc.appendChild(intro);
         node.appendChild(shortDesc);
         node.appendChild(fullDesc);
@@ -132,7 +158,12 @@ public abstract class WebUINodeFactory<M extends NodeModel> extends NodeFactory<
         // create options tab
         var tab = doc.createElement("tab");
         tab.setAttribute("name", "Options");
-        createOptions(m_configuration.getModelSettingsClass().getDeclaredFields(), tab, docBuilder, doc);
+        if (modelSettingsClass != null) {
+            createOptions(modelSettingsClass.getDeclaredFields(), tab, docBuilder, doc);
+        }
+        if (viewSettingsClass != null) {
+            createOptions(viewSettingsClass.getDeclaredFields(), tab, docBuilder, doc);
+        }
         fullDesc.appendChild(tab);
 
         // create ports
@@ -152,6 +183,15 @@ public abstract class WebUINodeFactory<M extends NodeModel> extends NodeFactory<
             ports.appendChild(outPort);
         }
         node.appendChild(ports);
+
+        // create view
+        final var views = doc.createElement("views");
+        var view = doc.createElement("view");
+        view.setAttribute("index", "0");
+        view.setAttribute("name", name);
+        view.appendChild(parseDocumentFragment(viewDescription, docBuilder, doc));
+        views.appendChild(view);
+        node.appendChild(views);
 
         doc.appendChild(node);
         try {
