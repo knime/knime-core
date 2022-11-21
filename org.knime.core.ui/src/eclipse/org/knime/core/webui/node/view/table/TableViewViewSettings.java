@@ -90,10 +90,6 @@ public class TableViewViewSettings implements DefaultNodeSettings {
         description = "Whether to display the data type of the " + "columns in the header or not")
     public boolean m_showColumnDataType = true;
 
-    @Schema(title = "Enable selection of column renderer",
-        description = "Whether to enable the selection of a column renderer in the header or not")
-    boolean m_enableRendererSelection;
-
     /**
      * If the row indices should be displayed
      */
@@ -152,6 +148,10 @@ public class TableViewViewSettings implements DefaultNodeSettings {
     @Schema(title = "Enable sorting by header",
         description = "Enables or disables the ability to sort the table by clicking on the column headers")
     public boolean m_enableSortingByHeader = true;
+
+    @Schema(title = "Enable selection of column renderer",
+        description = "Whether to enable the selection of a column renderer in the header or not")
+    boolean m_enableRendererSelection = true;
 
     /**
      * If this view notifies other views when the users do a selection action

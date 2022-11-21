@@ -195,8 +195,16 @@ public class TableViewDataServiceImpl implements TableViewDataService {
         if (m_rendererRegistry != null) {
             m_rendererRegistry.clear(m_tableId);
         }
-        var rendererIds = rendererIdsParam == null || rendererIdsParam.length == 0 ? new String[displayedColumns.length]
-            : rendererIdsParam;
+        String[] rendererIds;
+        if (rendererIdsParam == null || rendererIdsParam.length == 0) {
+            rendererIds = new String[displayedColumns.length];
+        } else {
+            if (updateDisplayedColumns) {
+                rendererIds = adjustColumnRenderers(columns, bufferedDataTable.getSpec(), rendererIdsParam);
+            } else {
+                rendererIds = rendererIdsParam;
+            }
+        }
         updateRenderersMap(spec, displayedColumns, rendererIds);
 
         final var tableSize = getTableSize(filteredAndSortedTable);
@@ -226,6 +234,16 @@ public class TableViewDataServiceImpl implements TableViewDataService {
         final var pair = getOrCreateFilteredTable(m_tableSupplier.get(), m_cachedColumns, m_cachedGlobalSearchTerm,
             m_cachedColumnFilterValue, false, true);
         return pair.getSecond();
+    }
+
+    private static String[] adjustColumnRenderers(final String[] columns, final DataTableSpec spec,
+        final String[] rendererIds) {
+        return IntStream.range(0, columns.length)
+            .filter(i -> spec.containsName(columns[i]))
+            .mapToObj(i -> rendererIds[i])
+            .collect(Collectors.toList())
+            .toArray(String[]::new);
+
     }
 
     private static String[] filterInvalids(final String[] columns, final DataTableSpec spec) {

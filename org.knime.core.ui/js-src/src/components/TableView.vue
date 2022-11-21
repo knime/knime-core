@@ -28,7 +28,7 @@ export default {
             currentSelection: null,
             totalSelected: 0,
             table: {},
-            selectedRendererIds: [],
+            colNameSelectedRendererId: {},
             dataTypes: {},
             columnDomainValues: {},
             currentSelectedRowKeys: new Set(),
@@ -191,6 +191,11 @@ export default {
         },
         useLazyLoading() {
             return !this.settings.enablePagination;
+        },
+        selectedRendererIds() {
+            return this.settings.displayedColumns.map(
+                columnName => this.colNameSelectedRendererId[columnName] || null
+            );
         }
     },
     async mounted() {
@@ -225,8 +230,7 @@ export default {
                 this.table = table;
             }
             await this.handleInitialSelection();
-            const { displayedColumns, publishSelection, subscribeToSelection } = settings;
-            this.selectedRendererIds = new Array(displayedColumns.length).fill(null);
+            const { publishSelection, subscribeToSelection } = settings;
             this.selectionService.onInit(this.onSelectionChange, publishSelection, subscribeToSelection);
             this.dataLoaded = true;
             this.columnFilters = this.getDefaultFilterConfigs(this.displayedColumns);
@@ -248,13 +252,21 @@ export default {
             const { updateDisplayedColumns = false, updateTotalSelected = true } = params || {};
             const numRows = Math.min(this.scopeSize, this.rowCount);
             this.currentScopeStartIndex = 0;
-            this.currentScopeEndIndex = numRows;
-            this.lazyLoadSettings = { loadFromIndex: 0, numRows, newScopeStart: 0 };
             await this.updateData({
-                lazyLoad: this.lazyLoadSettings,
+                lazyLoad: this.calculateLazyLoadParams(),
                 updateDisplayedColumns,
                 updateTotalSelected
             });
+        },
+
+        calculateLazyLoadParams() {
+            const numRows = Math.min(this.scopeSize, this.rowCount);
+            this.currentScopeEndIndex = numRows;
+            return {
+                loadFromIndex: this.currentScopeStartIndex,
+                newScopeStart: this.currentScopeStartIndex,
+                numRows
+            };
         },
 
         onScroll({ direction, startIndex, endIndex }) {
@@ -290,15 +302,14 @@ export default {
             if (numRows > 0) {
                 this.currentScopeStartIndex = newScopeStart;
                 this.currentScopeEndIndex = newScopeStart + (bufferEnd - bufferStart) + numRows;
-                this.lazyLoadSettings = {
+                this.updateData({ lazyLoad: {
                     loadFromIndex,
                     numRows,
                     bufferStart,
                     bufferEnd,
                     direction,
                     newScopeStart
-                };
-                this.updateData({ lazyLoad: this.lazyLoadSettings });
+                } });
             }
         },
 
@@ -581,10 +592,11 @@ export default {
         }),
         onHeaderSubMenuItemSelection(item, colInd) {
             if (item.section === 'dataRendering') {
-                this.selectedRendererIds[colInd - this.numberOfDisplayedIdColumns] = item.id;
+                this.$set(this.colNameSelectedRendererId,
+                    this.displayedColumns[colInd - this.numberOfDisplayedIdColumns], item.id);
             }
             this.updateData({
-                ...this.useLazyLoading && { lazyLoad: this.calculateLazyLoadSettingsWithoutScrollOnDataChange() },
+                ...this.useLazyLoading && { lazyLoad: this.calculateLazyLoadParams() },
                 updateColumnContentTypes: true
             });
         },
@@ -618,7 +630,7 @@ export default {
                 this.clearSelection();
             }
         },
-        createHeaderSubMenuItems(index, renderers) {
+        createHeaderSubMenuItems(columnName, renderers) {
             const headerSubMenuItems = [];
             headerSubMenuItems.push({ text: 'Data renderer', separator: true, sectionHeadline: true });
             renderers.forEach(renderer => {
@@ -627,8 +639,7 @@ export default {
                     title: renderer.name,
                     id: renderer.id,
                     section: 'dataRendering',
-                    // selectedRendererIds does not contain row indices/keys but offset of 2s is added in dataConfig
-                    selected: this.selectedRendererIds[index - 2] === renderer.id
+                    selected: this.colNameSelectedRendererId[columnName] === renderer.id
                 });
             });
             return headerSubMenuItems;
@@ -644,7 +655,7 @@ export default {
                 size: this.columnSizes[index],
                 filterConfig: this.columnFilters[index],
                 ...columnTypeRenderers && {
-                    headerSubMenuItems: this.createHeaderSubMenuItems(index, columnTypeRenderers)
+                    headerSubMenuItems: this.createHeaderSubMenuItems(columnName, columnTypeRenderers)
                 },
                 formatter: val => val,
                 isSortable
@@ -708,33 +719,12 @@ export default {
                 }
             });
         },
-        adjustCachedColumnRendererIndices(oldDisplayedColumns, newDisplayedColumns) {
-            const columnNameRendererMap = new Map();
-            oldDisplayedColumns.forEach((columnName, index) => {
-                columnNameRendererMap.set(columnName, this.selectedRendererIds[index]);
-            });
-            this.selectedRendererIds = newDisplayedColumns.map(
-                columnName => columnNameRendererMap.get(columnName) || null
-            );
-        },
         resetSorting() {
             this.columnSortColumnName = null;
             this.columnSortIndex = null;
             this.columnSortDirection = null;
             this.currentPage = 1;
             this.currentIndex = 0;
-        },
-        calculateLazyLoadSettingsWithoutScrollOnDataChange() {
-            const { bufferStart, bufferEnd, direction, loadFromIndex, numRows, newScopeStart } = this.lazyLoadSettings;
-            // if not at the start of table reload the whole buffer
-            if (loadFromIndex === 0) {
-                return this.lazyLoadSettings;
-            }
-            return {
-                newScopeStart,
-                loadFromIndex: bufferStart,
-                numRows: direction === 1 ? loadFromIndex + numRows - bufferStart : bufferEnd
-            };
         }
     }
 };
