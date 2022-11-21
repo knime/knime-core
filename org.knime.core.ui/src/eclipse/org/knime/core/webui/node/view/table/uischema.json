@@ -59,7 +59,14 @@
                 },
                 {
                     "type": "Control",
-                    "scope": "#/properties/view/properties/pageSize"
+                    "scope": "#/properties/view/properties/pageSize",
+                    "rule": {
+                        "effect": "HIDE",
+                        "condition": {
+                          "scope": "#/properties/view/properties/enablePagination",
+                          "schema": { "const": false }
+                        }
+                    }
                 },
                 {
                     "type": "Control",

@@ -94,7 +94,6 @@ export default {
                 pageConfig: {
                     currentSize: this.currentRowCount,
                     tableSize: this.totalRowCount,
-                    visibleSize: pageSize,
                     pageSize: enablePagination ? pageSize : this.currentRowCount,
                     currentPage: this.currentPage,
                     columnCount: this.columnCount
