@@ -56,7 +56,14 @@ import java.util.List;
  *
  * @author Marc Bux, KNIME GmbH, Berlin, Germany
  */
-public class WebUINodeConfiguration {
+public final class WebUINodeConfiguration {
+
+    /**
+     * @return a new builder for assembly of {@link WebUINodeConfiguration WebUINodeConfigurations}
+     */
+    public static Builder builder() {
+        return new Builder();
+    }
 
     private final String m_name;
 
@@ -115,11 +122,16 @@ public class WebUINodeConfiguration {
     /**
      * A builder for assembly of {@link WebUINodeConfiguration WebUINodeConfigurations}
      */
-    public static class Builder {
+    public static final class Builder {
+
+        private Builder() {
+        }
+
         /**
          * @param name the name of the node, as shown in the node repository and description
          * @return the subsequent build stage
          */
+        @SuppressWarnings("static-method")
         public RequireIcon name(final String name) {
             return icon -> shortDescription -> fullDescription -> modelSettingsClass -> new RequirePorts(name, icon,
                 shortDescription, fullDescription, modelSettingsClass);

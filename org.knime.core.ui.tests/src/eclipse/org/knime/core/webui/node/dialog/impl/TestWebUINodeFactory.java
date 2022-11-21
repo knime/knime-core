@@ -50,7 +50,7 @@ package org.knime.core.webui.node.dialog.impl;
  */
 public final class TestWebUINodeFactory extends WebUINodeFactory<TestWebUINodeModel> {
 
-    private static WebUINodeConfiguration CONFIGURATION = new WebUINodeConfiguration.Builder()//
+    private static WebUINodeConfiguration CONFIGURATION = WebUINodeConfiguration.builder()//
         .name("Template")//
         .icon("./Template.png")//
         .shortDescription("Short Description")//

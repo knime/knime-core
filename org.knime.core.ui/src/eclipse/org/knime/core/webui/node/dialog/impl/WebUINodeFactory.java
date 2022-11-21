@@ -60,6 +60,7 @@ import org.knime.core.node.NodeDescription;
 import org.knime.core.node.NodeDescription41Proxy;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 import org.knime.core.webui.node.dialog.NodeDialog;
 import org.knime.core.webui.node.dialog.NodeDialogFactory;
@@ -72,15 +73,14 @@ import org.xml.sax.SAXException;
 
 /**
  * A convenience class for simple WebUI nodes, i.e., nodes making use of the {@link DefaultNodeSettings} and
- * {@link DefaultNodeDialog} classes. For an aexemplary implementation, see
+ * {@link DefaultNodeDialog} classes. For an exemplary implementation, see
  * org.knime.core.webui.node.dialog.impl.TestWebUINodeFactory in org.knime.core.ui.tests.
  *
  * @param <M> the type of the {@link WebUINodeModel} created by this factory
  *
  * @author Marc Bux, KNIME GmbH, Berlin, Germany
  */
-public abstract class WebUINodeFactory<M extends WebUINodeModel<? extends DefaultNodeSettings>> extends NodeFactory<M>
-    implements NodeDialogFactory {
+public abstract class WebUINodeFactory<M extends NodeModel> extends NodeFactory<M> implements NodeDialogFactory {
 
     private final WebUINodeConfiguration m_configuration;
 
