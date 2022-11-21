@@ -731,44 +731,44 @@ export default {
 
 <style lang="postcss" scoped>
 .table-view-wrapper {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 
-    &>>>.table-header {
-        background-color: var(--knime-porcelain);
+  & >>> .table-header {
+    background-color: var(--knime-porcelain);
+  }
+
+  & >>> .row {
+    border-bottom: 1px solid var(--knime-porcelain);
+    align-content: center;
+
+    & img {
+      object-fit: contain;
+      max-width: 100%;
+      max-height: 100%;
+      vertical-align: middle;
     }
-
-    &>>>.row {
-        border-bottom: 1px solid var(--knime-porcelain);
-        align-content: center;
-
-        & img {
-            object-fit: contain;
-            max-width: 100%;
-            max-height: 100%;
-            vertical-align: middle;
-        }
-    }
+  }
 }
 
 .table-title {
-    margin: 0;
-    padding: 15px 0, 5px 5px;
-    color: rgb(70 70 70);
-    font-size: 20px;
+  margin: 0;
+  padding: 15px 0, 5px 5px;
+  color: rgb(70 70 70);
+  font-size: 20px;
 }
 
 .no-columns {
-    height: 100%;
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-    & h4 {
-        color: rgb(70 70 70);
-        font-size: 16px;
-    }
+  & h4 {
+    color: rgb(70 70 70);
+    font-size: 16px;
+  }
 }
 </style>
