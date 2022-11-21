@@ -45,7 +45,9 @@
  */
 package org.knime.core.node.workflow;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.net.URLDecoder;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -54,12 +56,15 @@ import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoField;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -279,18 +284,51 @@ public final class MetaNodeTemplateInformation implements Cloneable {
     public MetaNodeTemplateInformation createLinkWithUpdatedSource(final URI newSource)
         throws InvalidSettingsException {
         if (newSource == null) {
-            throw new NullPointerException("Can't create link to null URI");
+            throw new InvalidSettingsException("New source URI is not present.");
         }
-        switch (getRole()) {
-        case Link:
-            MetaNodeTemplateInformation newInfo
-                = new MetaNodeTemplateInformation(Role.Link, null, newSource, m_timestamp, null, null);
+        if (getRole() == Role.Link) {
+            var newInfo = buildTemplateInformation(newSource);
             newInfo.m_updateStatus = m_updateStatus;
             return newInfo;
-        default:
-            throw new InvalidSettingsException("Can't link to metanode of role"
-                    + " \"" + getRole() + "\" (URI: \"" + m_sourceURI + "\")");
         }
+        throw new InvalidSettingsException(
+            "Can't link to metanode of role" + " \"" + getRole() + "\" (URI: \"" + m_sourceURI + "\")");
+    }
+
+    private MetaNodeTemplateInformation buildTemplateInformation(final URI newSource) throws InvalidSettingsException {
+        if (getSpaceVersion(newSource).isPresent()) {
+            // ifModifiedSince is set to null because always perform a download for components with a space version.
+            return new MetaNodeTemplateInformation(Role.Link, null, newSource, OffsetDateTime.parse("1970-01-01T00:00:00+00:00"), null, null);
+        } else {
+            return new MetaNodeTemplateInformation(Role.Link, null, newSource, m_timestamp, null, null);
+        }
+    }
+
+    private static Optional<String> getSpaceVersion(final URI sourceUri) {
+        Map<String, String> queries;
+        try {
+            queries = parseQueries(sourceUri);
+        } catch (UnsupportedEncodingException ex) {
+           NodeLogger.getLogger(MetaNodeTemplateInformation.class).error(ex);
+           return Optional.empty();
+        }
+        return queries.containsKey("spaceVersion") ? Optional.ofNullable(queries.get("spaceVersion"))
+            : Optional.empty();
+    }
+
+    private static Map<String, String> parseQueries(final URI url) throws UnsupportedEncodingException {
+        Map<String, String> queries = new LinkedHashMap<>();
+        String query = url.getQuery();
+        if (StringUtils.isEmpty(query)) {
+            return Map.of();
+        }
+        String[] pairs = query.split("&");
+        for (String pair : pairs) {
+            int idx = pair.indexOf("=");
+            queries.put(URLDecoder.decode(pair.substring(0, idx), "UTF-8"),
+                URLDecoder.decode(pair.substring(idx + 1), "UTF-8"));
+        }
+        return queries;
     }
 
     /**
@@ -395,12 +433,15 @@ public final class MetaNodeTemplateInformation implements Cloneable {
         return b.toString();
     }
 
-    /** Checks if this template or link has a newer timestamp than the argument.
+    /**
+     * Checks if a template or link without version has a newer timestamp than the argument. Checks if a template or
+     * link with version has a different timestamp than the argument.
+     *
      * @param other Other to check.
      * @return True if newer than argument
      * @throws IllegalStateException If this and/or other is not a link or template.
      */
-    boolean isNewerThan(final MetaNodeTemplateInformation other) {
+    boolean isNewerOrNotEqualThan(final MetaNodeTemplateInformation other) {
         if (m_timestamp == null) {
             throw new IllegalStateException("Not a template or link: " + this);
         }
@@ -408,7 +449,11 @@ public final class MetaNodeTemplateInformation implements Cloneable {
             throw new IllegalStateException("Argument not a template or link: " + this);
         }
 
-        return getTimestamp().isAfter(other.getTimestamp());
+        if (getSpaceVersion(m_sourceURI).isPresent()) {
+            return !getTimestamp().isEqual(other.getTimestamp());
+        } else {
+            return getTimestamp().isAfter(other.getTimestamp());
+        }
     }
 
     /** @param cl The non-null class (used to derive {@link TemplateType}).
