@@ -185,12 +185,12 @@ public class TableViewDataServiceImpl implements TableViewDataService {
         // and therefore we do not have to re-sort every time we filter
         m_sortedTableCache.conditionallyUpdateCachedTable(() -> sortTable(bufferedDataTable, sortColumn, sortAscending),
             sortColumn == null || bufferedDataTable.size() <= 1, sortColumn, sortAscending);
-        final var sortedTable = m_sortedTableCache.getCachedTableOrElse(() -> bufferedDataTable);
+        final var sortedTable = m_sortedTableCache.getCachedTable().orElseGet(() -> bufferedDataTable);
         m_filteredAndSortedTableCache.conditionallyUpdateCachedTable(
             () -> filterTable(sortedTable, columns, globalSearchTerm, columnFilterValue, filterRowKeys),
             globalSearchTerm == null && columnFilterValue == null, globalSearchTerm, columnFilterValue, columns,
             sortColumn, sortAscending);
-        final var filteredAndSortedTable = m_filteredAndSortedTableCache.getCachedTableOrElse(() -> sortedTable);
+        final var filteredAndSortedTable = m_filteredAndSortedTableCache.getCachedTable().orElseGet(() -> sortedTable);
 
         final var spec = bufferedDataTable.getSpec();
         final var colIndices = spec.columnsToIndices(displayedColumns);
@@ -235,14 +235,16 @@ public class TableViewDataServiceImpl implements TableViewDataService {
         final var contentTypes = getColumnContentTypes(displayedColumns, rendererIds, m_renderersMap);
         final var dataTypeIds = getColumnDataTypeIds(displayedColumns, tableSpec);
         var currentSelection = getCurrentSelection();
-        return createTable(displayedColumns, contentTypes, dataTypeIds, rows, tableSize,
-            countSelectedRows(filteredAndSortedTable, currentSelection));
+        var totalSelected = m_filteredAndSortedTableCache.getCachedTable().isEmpty() ? currentSelection.size()
+            : countSelectedRows(filteredAndSortedTable, currentSelection);
+        return createTable(displayedColumns, contentTypes, dataTypeIds, rows, tableSize, totalSelected);
     }
 
     @Override
     public Long getTotalSelected() {
-        var filteredTable = m_filteredAndSortedTableCache.getCachedTableOrElse(m_tableSupplier::get);
-        return countSelectedRows(filteredTable, getCurrentSelection());
+        var filteredTable = m_filteredAndSortedTableCache.getCachedTable().orElse(null);
+        var currentSelection = getCurrentSelection();
+        return filteredTable == null ? currentSelection.size() : countSelectedRows(filteredTable, currentSelection);
     }
 
     @Override
@@ -488,8 +490,8 @@ public class TableViewDataServiceImpl implements TableViewDataService {
 
     @Override
     public String[] getCurrentRowKeys() {
-        final var filteredAndSortedTable = m_filteredAndSortedTableCache
-            .getCachedTableOrElse(() -> m_filteredAndSortedTableCache.getCachedTableOrElse(m_tableSupplier::get));
+        final var filteredAndSortedTable = m_filteredAndSortedTableCache.getCachedTable()
+            .orElseGet(() -> m_filteredAndSortedTableCache.getCachedTable().orElseGet(m_tableSupplier::get));
         final var size = (int)getTableSize(filteredAndSortedTable);
         final var rowKeys = new String[size];
         final var filter = new TableFilter.Builder();

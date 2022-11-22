@@ -75,30 +75,28 @@ public class TableCacheTest {
             tablesToCache[i] = Mockito.mock(ContainerTable.class);
             final var final_i = i;
             tableCache.conditionallyUpdateCachedTable(() -> tablesToCache[final_i], false, keyValueVariants[i]);
-            assertThat(tableCache.getCachedTableOrElse(null) == tablesToCache[i]).isTrue();
+            assertThat(tableCache.getCachedTable().orElse(null) == tablesToCache[i]).isTrue();
             assertThat(tableCache.wasUpdated()).isTrue();
         }
 
         // make sure the cache is NOT updated when no key-value changes
         tableCache.conditionallyUpdateCachedTable(() -> tablesToCache[0], false,
             keyValueVariants[tablesToCache.length - 1]);
-        assertThat(tableCache.getCachedTableOrElse(null) == tablesToCache[0]).isFalse();
+        assertThat(tableCache.getCachedTable().orElse(null) == tablesToCache[0]).isFalse();
         assertThat(tableCache.wasUpdated()).isFalse();
-
-        var fallbackTable = Mockito.mock(ContainerTable.class);
 
         // make sure the table cache is cleared
         tableCache.conditionallyUpdateCachedTable(null, true, null);
         assertThat(tableCache.wasUpdated()).isTrue();
-        assertThat(tableCache.getCachedTableOrElse(() -> fallbackTable) == fallbackTable).isTrue();
+        assertThat(tableCache.getCachedTable()).isEmpty();
 
         // make sure the table cache is cleared if the clear-method is called directly)
         tableCache.conditionallyUpdateCachedTable(() -> tablesToCache[0], false, keyValueVariants[0]);
         assertThat(tableCache.wasUpdated()).isTrue();
-        assertThat(tableCache.getCachedTableOrElse(null) == tablesToCache[0]).isTrue();
+        assertThat(tableCache.getCachedTable().orElse(null) == tablesToCache[0]).isTrue();
         tableCache.clear();
         assertThat(tableCache.wasUpdated()).isTrue();
-        assertThat(tableCache.getCachedTableOrElse(() -> fallbackTable) == fallbackTable).isTrue();
+        assertThat(tableCache.getCachedTable()).isEmpty();
 
     }
 
