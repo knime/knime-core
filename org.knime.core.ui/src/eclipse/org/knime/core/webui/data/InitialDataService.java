@@ -72,6 +72,8 @@ public interface InitialDataService {
      * Called whenever the data service can free-up resources. E.g. clearing caches or shutting down external processes
      * etc. Though, it does <b>not</b> necessarily mean, that the data service instance is not used anymore some time
      * later.
+     *
+     * TODO: this could also be turned into two suspend/resume life-cycle methods?
      */
     default void cleanUp() {
         //

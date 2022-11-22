@@ -234,8 +234,8 @@ public class TableViewDataServiceImpl implements TableViewDataService {
             filter.withToRowIndex(toIndex); // will throw exception when toIndex < fromIndex
             filter.withMaterializeColumnIndices(colIndices);
             rows = renderRows(displayedColumns, colIndices, rendererIds, size,
-                createRowIteratorSupplier(filteredAndSortedTable, filter.build()), fromIndex, m_rendererRegistry,
-                m_renderersMap, m_tableId);
+                createRowIteratorSupplier(filteredAndSortedTable, filter.build()), m_rendererRegistry, m_renderersMap,
+                m_tableId);
         } else {
             rows = new String[0][];
         }
@@ -396,7 +396,7 @@ public class TableViewDataServiceImpl implements TableViewDataService {
     }
 
     private static String[][] renderRows(final String[] columns, final int[] colIndices, final String[] rendererIds,
-        final int size, final Supplier<CloseableRowIterator> rowIteratorSupplier, final long rowOffset,
+        final int size, final Supplier<CloseableRowIterator> rowIteratorSupplier,
         final DataValueImageRendererRegistry rendererRegistry,
         final Map<Pair<String, String>, DataValueRenderer> renderersMap, final String tableId) {
         var renderers = IntStream.range(0, columns.length)
@@ -410,7 +410,7 @@ public class TableViewDataServiceImpl implements TableViewDataService {
                         .mapToObj(i -> {
                             var cell = row.getCell(colIndices[i]);
                             return cell.isMissing() ? null
-                                : renderCell(cell, renderers[i], rendererRegistry, tableId, rowOffset + index);
+                                : renderCell(cell, renderers[i], rendererRegistry, tableId);
                         }))
                     .toArray(String[]::new);
             });
@@ -419,11 +419,11 @@ public class TableViewDataServiceImpl implements TableViewDataService {
     }
 
     private static String renderCell(final DataCell cell, final DataValueRenderer renderer,
-        final DataValueImageRendererRegistry rendererRegistry, final String tableId, final long rowIndex) {
+        final DataValueImageRendererRegistry rendererRegistry, final String tableId) {
         if (renderer instanceof DataValueTextRenderer) {
             return ((DataValueTextRenderer)renderer).renderText(cell);
         } else if (renderer instanceof DataValueImageRenderer) {
-            return rendererRegistry.addRendererAndGetImgPath(tableId, cell, (DataValueImageRenderer)renderer, rowIndex);
+            return rendererRegistry.addRendererAndGetImgPath(tableId, cell, (DataValueImageRenderer)renderer);
         } else {
             throw new UnsupportedOperationException(
                 "Unsupported data value renderer: " + renderer.getClass().getName());
@@ -505,8 +505,8 @@ public class TableViewDataServiceImpl implements TableViewDataService {
 
     @Override
     public String[] getCurrentRowKeys() {
-        final var filteredAndSortedTable = m_filteredAndSortedTableCache.getCachedTable()
-            .orElseGet(() -> m_filteredAndSortedTableCache.getCachedTable().orElseGet(m_tableSupplier::get));
+        final var filteredAndSortedTable =
+            m_filteredAndSortedTableCache.getCachedTable().orElseGet(m_tableSupplier::get);
         final var size = (int)getTableSize(filteredAndSortedTable);
         final var rowKeys = new String[size];
         final var filter = new TableFilter.Builder();

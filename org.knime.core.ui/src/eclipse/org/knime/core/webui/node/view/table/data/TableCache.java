@@ -56,7 +56,7 @@ import org.knime.core.data.DataTable;
 import org.knime.core.data.container.ContainerTable;
 
 /**
- * TODO
+ * Helper class to cache a table and update the cache.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
