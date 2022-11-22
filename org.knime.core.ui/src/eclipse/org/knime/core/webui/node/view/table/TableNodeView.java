@@ -123,7 +123,8 @@ public final class TableNodeView implements NodeView {
 
     @Override
     public Optional<DataService> createDataService() {
-        return Optional.of(TableViewUtil.createDataService(m_tableSupplier, m_selectionSupplier, m_tableId));
+        return Optional.of(TableViewUtil.createDataService(
+            TableViewUtil.createTableViewDataService(m_tableSupplier, m_selectionSupplier, m_tableId), m_tableId));
     }
 
     @Override
