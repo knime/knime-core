@@ -120,17 +120,16 @@ public final class DataValueImageRendererRegistry {
      * @param tableId the table to add the renderer for; must be globally unique
      * @param cell the data cell to add and to get the image path for
      * @param renderer the renderer to add
-     * @param rowIndex the index of the row the image to render is part of
      *
      * @return the relative path where the image can be accessed
      */
     public String addRendererAndGetImgPath(final String tableId, final DataCell cell,
-        final DataValueImageRenderer renderer, final long rowIndex) {
+        final DataValueImageRenderer renderer) {
         var images = m_imagesPerTable.get(tableId);
         if (images == null) {
             throw new IllegalStateException("'startNewBatchOfTableRows' needs to be called at least once before");
         }
-        var key = images.addImage(cell, renderer, rowIndex);
+        var key = images.addImage(cell, renderer);
         return String.format("%s/%s/%s/%s.png", m_pageIdSupplier.get(), RENDERED_CELL_IMAGES_PATH_PREFIX, tableId, key);
     }
 
@@ -244,7 +243,7 @@ public final class DataValueImageRendererRegistry {
 
     private static class Images {
 
-        private Map<String, Image> m_images = new HashMap<>();
+        private Map<String, Image> m_images = Collections.synchronizedMap(new HashMap<>());
 
         private Deque<Set<String>> m_batches = new LinkedList<>();
 
@@ -252,7 +251,7 @@ public final class DataValueImageRendererRegistry {
 
         private StatsPerTable m_stats;
 
-        String addImage(final DataCell cell, final DataValueImageRenderer renderer, final long rowIndex) {
+        String addImage(final DataCell cell, final DataValueImageRenderer renderer) {
             var key = Integer.toString(cell.hashCode());
             if (m_images.containsKey(key)) {
                 var existingCell = m_images.get(key).getDataCell();
