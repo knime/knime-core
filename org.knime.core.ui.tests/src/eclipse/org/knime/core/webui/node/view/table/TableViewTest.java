@@ -302,7 +302,7 @@ class TableViewTest {
         final var columnFilterValue = new String[][]{new String[0], new String[0], new String[]{"1"}};
         final var filterRowKeys = false;
         final var selection = Set.of(new RowKey("0"));
-        final var dataService = TableViewUtil.createDataService(() -> table, () -> selection, null);
+        final var dataService = TableViewUtil.createTableViewDataService(() -> table, () -> selection, null);
         dataService.getFilteredAndSortedTable(table.getDataTableSpec().getColumnNames(), 0, 2, "string",
             true, globalSearchTerm, columnFilterValue, filterRowKeys, null, false, false, true);
         assertThat(dataService.getTotalSelected()).isEqualTo(1);

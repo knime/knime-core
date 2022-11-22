@@ -126,16 +126,15 @@ public final class TableViewUtil {
     }
 
     /**
-     * @param table the table to create the data service for
-     * @param tableId a globally unique id to be able to uniquely identify the images belong to the table used here
+     * @param tableViewDataService
+     * @param tableId
      * @return a new table view data service instance
      */
-    public static DataService createDataService(final Supplier<BufferedDataTable> table, final String tableId) {
-        var tableService = createTableViewDataService(table, tableId);
-        return new JsonRpcDataServiceImpl(new JsonRpcSingleServer<>(tableService)) {
+    public static DataService createDataService(final TableViewDataService tableViewDataService, final String tableId) {
+        return new JsonRpcDataServiceImpl(new JsonRpcSingleServer<>(tableViewDataService)) {
             @Override
             public void cleanUp() {
-                tableService.clearCache();
+                tableViewDataService.clearCache();
                 TableViewUtil.RENDERER_REGISTRY.clearImageDataCache(tableId);
             }
         };
@@ -157,7 +156,7 @@ public final class TableViewUtil {
      * @param tableId
      * @return the {@link TableViewDataService} associated to the node
      */
-    public static TableViewDataService createDataService(final Supplier<BufferedDataTable> tableSupplier,
+    public static TableViewDataService createTableViewDataService(final Supplier<BufferedDataTable> tableSupplier,
         final Supplier<Set<RowKey>> selectionSupplier, final String tableId) {
         return new TableViewDataServiceImpl(tableSupplier, selectionSupplier, tableId, new SwingBasedRendererFactory(),
             RENDERER_REGISTRY);
