@@ -49,6 +49,7 @@
 package org.knime.core.webui.node.view.table.data;
 
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 import org.knime.core.data.DataTable;
@@ -100,11 +101,10 @@ class TableCache {
     }
 
     /**
-     * @param elseTable returned in case there is no table cached
-     * @return the cached table if there is any, otherwise the 'elseTable'
+     * @return the cached table if there is any, otherwise an empty optional
      */
-    DataTable getCachedTableOrElse(final Supplier<DataTable> elseTable) {
-        return m_cachedTable == null ? elseTable.get() : m_cachedTable;
+    Optional<DataTable> getCachedTable() {
+        return Optional.ofNullable(m_cachedTable);
     }
 
     void clear() {
