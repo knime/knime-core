@@ -114,7 +114,7 @@ public abstract class WebUINodeFactory<M extends NodeModel> extends NodeFactory<
      * @param type the type of the node, or null, if it should be determined automatically
      * @return a description for this node
      */
-    public static NodeDescription createNodeDescription(final String name, final String icon,
+    public static NodeDescription createNodeDescription(final String name, final String icon, // NOSONAR
         final String[] inPortDescriptions, final String[] outPortDescriptions, final String shortDescription,
         final String fullDescription, final Class<? extends DefaultNodeSettings> modelSettingsClass,
         final Class<? extends DefaultNodeSettings> viewSettingsClass, final String viewDescription,

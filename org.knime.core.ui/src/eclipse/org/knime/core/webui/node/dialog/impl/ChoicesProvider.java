@@ -48,22 +48,22 @@
  */
 package org.knime.core.webui.node.dialog.impl;
 
-import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.webui.node.dialog.impl.DefaultNodeSettings.SettingsCreationContext;
 
 /**
- * A class that provides an array of possible values based on the current input port object specs.
+ * A class that provides an array of possible values based on the current {@link SettingsCreationContext}.
  *
  * @author Marc Bux, KNIME GmbH, Berlin, Germany
  */
 public interface ChoicesProvider {
 
     /**
-     * Computes the array of possible values based on the current input port object specs.
+     * Computes the array of possible values based on the {@link SettingsCreationContext}.
      *
-     * @param specs input port object specs. NOTE: can contain {@code null}-values, e.g., if the input port is not
-     *            connected
+     * @param context the context that holds any available information that might be relevant for determining available
+     *            choices
      * @return array of possible values, never {@code null}
      */
-    String[] choices(PortObjectSpec[] specs);
+    String[] choices(SettingsCreationContext context);
 
 }

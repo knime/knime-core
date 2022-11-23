@@ -56,8 +56,8 @@ import java.util.Map;
 import org.apache.commons.io.IOUtils;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.webui.node.dialog.SettingsType;
+import org.knime.core.webui.node.dialog.impl.DefaultNodeSettings.SettingsCreationContext;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.util.RawValue;
@@ -84,18 +84,18 @@ final class JsonFormsSettingsImpl implements JsonFormsSettings {
 
     private final DefaultNodeSettings m_viewSettings;
 
-    private final PortObjectSpec[] m_specs;
+    private final SettingsCreationContext m_context;
 
     /**
      * @param data the settings POJO from which to derive the schema and data contents
      */
     JsonFormsSettingsImpl(final Map<SettingsType, Class<? extends DefaultNodeSettings>> settingsClasses,
-        final Map<SettingsType, NodeSettingsRO> settings, final PortObjectSpec[] specs) {
+        final Map<SettingsType, NodeSettingsRO> settings, final SettingsCreationContext context) {
         m_modelSettingsClass = settingsClasses.get(SettingsType.MODEL); // can be null
         m_modelSettings = fromNodeSettings(m_modelSettingsClass, settings.get(SettingsType.MODEL));
         m_viewSettingsClass = settingsClasses.get(SettingsType.VIEW); // can be null
         m_viewSettings = fromNodeSettings(m_viewSettingsClass, settings.get(SettingsType.VIEW));
-        m_specs = specs;
+        m_context = context;
     }
 
     private static DefaultNodeSettings fromNodeSettings(final Class<? extends DefaultNodeSettings> clazz,
@@ -116,7 +116,7 @@ final class JsonFormsSettingsImpl implements JsonFormsSettings {
     public final JsonNode getSchema() {
         var settingsClasses = createSettingsTypeMap(m_modelSettingsClass, m_viewSettingsClass);
         var settings = createSettingsTypeMap(m_modelSettings, m_viewSettings);
-        return JsonFormsSchemaUtil.buildCombinedSchema(settingsClasses, settings, m_specs);
+        return JsonFormsSchemaUtil.buildCombinedSchema(settingsClasses, settings, m_context);
     }
 
     @Override

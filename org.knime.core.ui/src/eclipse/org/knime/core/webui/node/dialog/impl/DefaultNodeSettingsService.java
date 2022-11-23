@@ -114,7 +114,8 @@ final class DefaultNodeSettingsService implements JsonNodeSettingsService<String
     public String fromNodeSettingsToObject(final Map<SettingsType, NodeSettingsRO> settings,
         final PortObjectSpec[] specs) {
         final var root = JsonFormsDataUtil.getMapper().createObjectNode();
-        final var jsonFormsSettings = new JsonFormsSettingsImpl(m_settingsClasses, settings, specs);
+        final var jsonFormsSettings = new JsonFormsSettingsImpl(m_settingsClasses, settings,
+            DefaultNodeSettings.createSettingsCreationContext(specs));
         root.set(FIELD_NAME_DATA, jsonFormsSettings.getData());
         root.set(FIELD_NAME_SCHEMA, jsonFormsSettings.getSchema());
         root.putRawValue(FIELD_NAME_UI_SCHEMA, jsonFormsSettings.getUiSchema());

@@ -56,6 +56,7 @@ import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.webui.node.dialog.impl.DefaultNodeSettings.SettingsCreationContext;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -130,8 +131,8 @@ class JsonFormsSchemaUtilTest {
 
     private static class TestChoices implements ChoicesProvider {
         @Override
-        public String[] choices(final PortObjectSpec[] specs) {
-            return new String[]{((DataTableSpec)specs[0]).getColumnSpec(0).getName()};
+        public String[] choices(final SettingsCreationContext context) {
+            return new String[]{context.getDataTableSpecs()[0].getColumnSpec(0).getName()};
         }
     }
 
@@ -284,7 +285,8 @@ class JsonFormsSchemaUtilTest {
     }
 
     private static JsonNode getProperties(final Class<?> clazz, final PortObjectSpec... specs) {
-        return JsonFormsSchemaUtil.buildSchema(clazz, specs).get("properties");
+        return JsonFormsSchemaUtil.buildSchema(clazz, DefaultNodeSettings.createSettingsCreationContext(specs))
+            .get("properties");
     }
 
 }

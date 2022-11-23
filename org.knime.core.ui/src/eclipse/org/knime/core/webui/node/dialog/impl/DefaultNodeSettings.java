@@ -48,10 +48,21 @@
  */
 package org.knime.core.webui.node.dialog.impl;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.workflow.FlowObjectStack;
+import org.knime.core.node.workflow.FlowVariable;
+import org.knime.core.node.workflow.NodeContext;
+import org.knime.core.node.workflow.VariableType;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -61,8 +72,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  *
  * The implementations must follow the following conventions:
  * <ol>
- * <li>It must provide an empty constructor and optionally a constructor that receives an array of {@link PortObjectSpec
- * PortObjectSpecs}. NOTE: array of specs can contain {@code null} values, e.g., if input port is not connected!
+ * <li>It must provide an empty constructor and optionally a constructor that receives a
+ * {@link SettingsCreationContext}.
  * <li>Fields must be of any of the following supported types:
  * <ul>
  * <li>boolean, int, long, double, float, String, Character, char, CharSequence, Byte, or byte
@@ -77,6 +88,65 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  * @author Marc Bux, KNIME GmbH, Berlin, Germany
  */
 public interface DefaultNodeSettings {
+
+    /**
+     * A context that holds any available information that might be relevant for creating a new instance of
+     * {@link DefaultNodeSettings}.
+     */
+    final class SettingsCreationContext {
+
+        private final PortObjectSpec[] m_specs;
+
+        private final FlowObjectStack m_stack;
+
+        private SettingsCreationContext(final PortObjectSpec[] specs, final FlowObjectStack stack) {
+            m_specs = specs;
+            m_stack = stack;
+        }
+
+        /**
+         * @return the input {@link PortObjectSpec PortObjectSpecs} of the node; NOTE: array of specs can contain
+         *         {@code null} values, e.g., if input port is not connected!
+         */
+        public PortObjectSpec[] getPortObjectSpecs() {
+            return m_specs;
+        }
+
+        /**
+         * @return the input {@link DataTableSpec DataTableSpecs} of the node; NOTE: array of specs can contain
+         *         {@code null} values, e.g., if input port is not connected!
+         * @throws ClassCastException if any of the node's input ports does not hold a {@link DataTableSpec}
+         */
+        public DataTableSpec[] getDataTableSpecs() {
+            return Arrays.stream(m_specs).map(DataTableSpec.class::cast).toArray(DataTableSpec[]::new);
+        }
+
+        /**
+         * @param name the name of the variable
+         * @param type the {@link VariableType} of the variable
+         * @param <T> the simple value type of the variable
+         * @return the simple non-null value of the top-most variable with the argument name and type, if present,
+         *         otherwise an empty {@link Optional}
+         * @throws NullPointerException if any argument is null
+         * @see FlowObjectStack#peekFlowVariable(String, VariableType)
+         */
+        public <T> Optional<T> peekFlowVariable(final String name, final VariableType<T> type) {
+            return m_stack.peekFlowVariable(name, type).map(flowVariable -> flowVariable.getValue(type));
+        }
+
+        /**
+         * @param types the {@link VariableType VariableTypes} of the requested {@link FlowVariable FlowVariables}
+         * @return the non-null read-only map of flow variable name -&gt; {@link FlowVariable}
+         * @throws NullPointerException if the argument is null
+         * @see FlowObjectStack#getAvailableFlowVariables(VariableType[])
+         */
+        public Map<String, FlowVariable> getAvailableInputFlowVariables(final VariableType<?>... types) {
+            Objects.requireNonNull(types, () -> "Variable types must not be null.");
+            return Collections.unmodifiableMap(Optional.ofNullable(m_stack)
+                .map(stack -> stack.getAvailableFlowVariables(types)).orElse(Collections.emptyMap()));
+        }
+
+    }
 
     /**
      * Verifies a given node settings implementation, making sure that it follows the contract of
@@ -123,7 +193,7 @@ public interface DefaultNodeSettings {
      * @return a new {@link DefaultNodeSettings}-instance
      */
     static <S extends DefaultNodeSettings> S createSettings(final Class<S> clazz, final PortObjectSpec[] specs) {
-        return JsonFormsDataUtil.createDefaultNodeSettings(clazz, specs);
+        return JsonFormsDataUtil.createDefaultNodeSettings(clazz, createSettingsCreationContext(specs));
     }
 
     /**
@@ -138,8 +208,22 @@ public interface DefaultNodeSettings {
     static void saveSettings(final Class<? extends DefaultNodeSettings> settingsClass,
         final DefaultNodeSettings settingsObject, final PortObjectSpec[] specs, final NodeSettingsWO settings) {
         var objectNode = (ObjectNode)JsonFormsDataUtil.toJsonData(settingsObject);
-        var schemaNode = JsonFormsSchemaUtil.buildSchema(settingsClass, specs);
+        var schemaNode = JsonFormsSchemaUtil.buildSchema(settingsClass, createSettingsCreationContext(specs));
         JsonNodeSettingsMapperUtil.jsonObjectToNodeSettings(objectNode, schemaNode, settings);
+    }
+
+    /**
+     * Method to create a new {@link SettingsCreationContext} from input {@link PortObjectSpec PortObjectSpecs}.
+     *
+     * @param specs the non-null specs with which to create the schema
+     * @return the newly created context
+     * @throws NullPointerException if the argument is null
+     */
+    static SettingsCreationContext createSettingsCreationContext(final PortObjectSpec[] specs) {
+        Objects.requireNonNull(specs, () -> "Port object specs must not be null.");
+        final var nodeContext = NodeContext.getContext();
+        return new SettingsCreationContext(specs,
+            nodeContext == null ? null : nodeContext.getNodeContainer().getFlowObjectStack());
     }
 
 }

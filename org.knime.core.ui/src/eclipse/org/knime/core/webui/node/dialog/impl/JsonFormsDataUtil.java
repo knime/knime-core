@@ -55,7 +55,7 @@ import java.math.BigDecimal;
 import java.util.Map;
 
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.webui.node.dialog.impl.DefaultNodeSettings.SettingsCreationContext;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -145,15 +145,15 @@ final class JsonFormsDataUtil {
     }
 
     static <T extends DefaultNodeSettings> T createDefaultNodeSettings(final Class<T> clazz,
-        final PortObjectSpec[] specs) {
+        final SettingsCreationContext context) {
         @SuppressWarnings("unchecked")
-        final var settings = (T)createInstanceWithSpecs(clazz, specs);
+        final var settings = (T)createInstanceWithContext(clazz, context);
         return settings;
     }
 
-    static Object createInstanceWithSpecs(final Class<?> clazz, final PortObjectSpec[] specs) {
+    static Object createInstanceWithContext(final Class<?> clazz, final SettingsCreationContext context) {
         try {
-            return createInstance(clazz.getDeclaredConstructor(PortObjectSpec[].class), (Object)specs);
+            return createInstance(clazz.getDeclaredConstructor(SettingsCreationContext.class), context);
         } catch (NoSuchMethodException ex) { // NOSONAR
         }
         return createInstance(clazz);

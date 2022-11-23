@@ -87,8 +87,8 @@ class DefaultNodeSettingsServiceTest {
             m_value = value;
         }
 
-        TestSettings(final PortObjectSpec[] specs) {
-            m_value = ((DataTableSpec)specs[0]).getColumnSpec(0).getName();
+        TestSettings(final SettingsCreationContext context) {
+            m_value = (context.getDataTableSpecs()[0]).getColumnSpec(0).getName();
         }
     }
 
@@ -97,7 +97,9 @@ class DefaultNodeSettingsServiceTest {
         final var nodeSettings = new NodeSettings("node_settings");
 
         // try to obtain initial data using empty node settings
-        Assertions.assertThatThrownBy(() -> obtainAndCheckInitialData(null, nodeSettings, null))
+        Assertions
+            .assertThatThrownBy(
+                () -> obtainAndCheckInitialData(null, nodeSettings, new PortObjectSpec[]{new DataTableSpec()}))
             .isInstanceOf(IllegalStateException.class);
     }
 
@@ -105,7 +107,8 @@ class DefaultNodeSettingsServiceTest {
     void testGetInitialData() throws JsonProcessingException {
         final var viewData = (ObjectNode)JsonFormsDataUtil.toJsonData(new TestSettings("foo"));
         final var specs = JsonFormsDataUtilTest.createSpecs("bar");
-        final var viewDataSchema = JsonFormsSchemaUtil.buildSchema(TestSettings.class, specs);
+        final var viewDataSchema = JsonFormsSchemaUtil.buildSchema(TestSettings.class,
+            DefaultNodeSettings.createSettingsCreationContext(specs));
         final var nodeSettings = new NodeSettings("node_settings");
         JsonNodeSettingsMapperUtil.jsonObjectToNodeSettings(viewData, viewDataSchema, nodeSettings);
 
@@ -126,7 +129,8 @@ class DefaultNodeSettingsServiceTest {
         assertThatJson(initialData.get(FIELD_NAME_DATA)).isEqualTo(wrappedViewData);
 
         // assert that returned schema is equal to wrapped schema created via JsonFormsSchemaUtil
-        final var schema = JsonFormsSchemaUtil.buildSchema(TestSettings.class, specs);
+        final var schema = JsonFormsSchemaUtil.buildSchema(TestSettings.class,
+            DefaultNodeSettings.createSettingsCreationContext(specs));
         final var wrappedSchema = MAPPER.createObjectNode();
         wrappedSchema.put("type", "object").putObject("properties").set(SettingsType.VIEW.getConfigKey(), schema);
         assertThatJson(initialData.get(FIELD_NAME_SCHEMA)).isEqualTo(wrappedSchema);

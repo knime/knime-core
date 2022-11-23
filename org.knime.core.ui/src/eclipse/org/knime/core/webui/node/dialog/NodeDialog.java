@@ -49,6 +49,7 @@
 package org.knime.core.webui.node.dialog;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.Map;
@@ -144,12 +145,14 @@ public abstract class NodeDialog implements UIExtension, DataServiceProvider {
 
         @Override
         public String getInitialData() {
-            final var specs = new PortObjectSpec[m_nc.getNrInPorts()];
+            final var rawSpecs = new PortObjectSpec[m_nc.getNrInPorts()];
             final var wfm = m_nc.getParent();
             for (var cc : wfm.getIncomingConnectionsFor(m_nc.getID())) {
-                specs[cc.getDestPort()] =
+                rawSpecs[cc.getDestPort()] =
                     wfm.getNodeContainer(cc.getSource()).getOutPort(cc.getSourcePort()).getPortObjectSpec();
             }
+            // copy input port object specs, ignoring the 0-variable port:
+            final var specs = Arrays.copyOfRange(rawSpecs, 1, rawSpecs.length);
 
             NodeContext.pushContext(m_nc);
             try {

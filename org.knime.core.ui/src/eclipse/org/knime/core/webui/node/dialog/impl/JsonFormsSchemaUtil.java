@@ -56,7 +56,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.webui.node.dialog.impl.DefaultNodeSettings.SettingsCreationContext;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -125,12 +125,12 @@ final class JsonFormsSchemaUtil {
     }
 
     static JsonNode buildCombinedSchema(final Map<String, Class<? extends DefaultNodeSettings>> settingsClasses,
-        final Map<String, DefaultNodeSettings> settings, final PortObjectSpec[] specs) {
+        final Map<String, DefaultNodeSettings> settings, final SettingsCreationContext context) {
         final var root = JsonFormsDataUtil.getMapper().createObjectNode();
         root.put(TAG_TYPE, TAG_TYPE_OBJECT);
         final var properties = root.putObject(TAG_PROPERTIES);
         settingsClasses.entrySet().stream()
-            .forEach(e -> properties.set(e.getKey(), buildSchema(e.getValue(), settings.get(e.getKey()), specs)));
+            .forEach(e -> properties.set(e.getKey(), buildSchema(e.getValue(), settings.get(e.getKey()), context)));
         return root;
     }
 
@@ -145,12 +145,12 @@ final class JsonFormsSchemaUtil {
         return buildSchema(settingsClass, null, null);
     }
 
-    static synchronized ObjectNode buildSchema(final Class<?> settingsClass, final PortObjectSpec[] specs) {
-        return buildSchema(settingsClass, null, specs);
+    static synchronized ObjectNode buildSchema(final Class<?> settingsClass, final SettingsCreationContext context) {
+        return buildSchema(settingsClass, null, context);
     }
 
     static synchronized ObjectNode buildSchema(final Class<?> settingsClass, final DefaultNodeSettings settings,
-        final PortObjectSpec[] specs) {
+        final SettingsCreationContext context) {
         final var builder = new SchemaGeneratorConfigBuilder(JsonFormsDataUtil.getMapper(), VERSION, new OptionPreset(//
             Option.FLATTENED_ENUMS, //
             Option.EXTRA_OPEN_API_FORMAT_VALUES, //
@@ -162,9 +162,9 @@ final class JsonFormsSchemaUtil {
 
         builder.forFields().withIgnoreCheck(f -> PROHIBITED_TYPES.contains(f.getType().getErasedType()));
 
-        builder.forFields().withCustomDefinitionProvider(new ChoicesAndEnumDefinitionProvider(specs, settings));
+        builder.forFields().withCustomDefinitionProvider(new ChoicesAndEnumDefinitionProvider(context, settings));
 
-        builder.forFields().withDefaultResolver(new DefaultResolver(specs));
+        builder.forFields().withDefaultResolver(new DefaultResolver(context));
 
         builder.forFields()
             .withTitleResolver(field -> Optional.ofNullable(field.getAnnotationConsideringFieldAndGetter(Schema.class))

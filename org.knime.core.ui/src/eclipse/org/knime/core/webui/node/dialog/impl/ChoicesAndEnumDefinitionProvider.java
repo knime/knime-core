@@ -57,7 +57,7 @@ import java.util.function.Supplier;
 
 import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.webui.node.dialog.impl.DefaultNodeSettings.SettingsCreationContext;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.github.victools.jsonschema.generator.CustomPropertyDefinition;
@@ -71,12 +71,12 @@ import com.github.victools.jsonschema.generator.SchemaGeneratorConfig;
  */
 final class ChoicesAndEnumDefinitionProvider implements CustomPropertyDefinitionProvider<FieldScope> {
 
-    private final PortObjectSpec[] m_specs;
+    private final SettingsCreationContext m_context;
 
     private final DefaultNodeSettings m_settings;
 
-    ChoicesAndEnumDefinitionProvider(final PortObjectSpec[] specs, final DefaultNodeSettings settings) {
-        m_specs = specs;
+    ChoicesAndEnumDefinitionProvider(final SettingsCreationContext context, final DefaultNodeSettings settings) {
+        m_context = context;
         m_settings = settings;
     }
 
@@ -110,7 +110,7 @@ final class ChoicesAndEnumDefinitionProvider implements CustomPropertyDefinition
         Supplier<String[]> savedChoicesSupplier =
             m_settings == null ? null : (() -> getSavedChoices(field, m_settings));
         arrayNode =
-            determineChoiceValues(context.getGeneratorConfig(), schema.choices(), m_specs, savedChoicesSupplier);
+            determineChoiceValues(context.getGeneratorConfig(), schema.choices(), m_context, savedChoicesSupplier);
         return arrayNode;
     }
 
@@ -131,12 +131,12 @@ final class ChoicesAndEnumDefinitionProvider implements CustomPropertyDefinition
     }
 
     private static ArrayNode determineChoiceValues(final SchemaGeneratorConfig config,
-        final Class<? extends ChoicesProvider> choicesProviderClass, final PortObjectSpec[] specs,
+        final Class<? extends ChoicesProvider> choicesProviderClass, final SettingsCreationContext context,
         final Supplier<String[]> savedChoicesSupplier) {
-        if (specs != null) {
+        if (context != null) {
             final ChoicesProvider choicesProvider = JsonFormsDataUtil.createInstance(choicesProviderClass);
             if (choicesProvider != null) {
-                var choices = choicesProvider.choices(specs);
+                var choices = choicesProvider.choices(context);
                 if (choices.length != 0) {
                     return createArrayNodeWithChoices(config, choices);
                 }

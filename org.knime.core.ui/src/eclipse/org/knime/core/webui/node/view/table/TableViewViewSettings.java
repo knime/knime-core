@@ -49,7 +49,6 @@
 package org.knime.core.webui.node.view.table;
 
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.webui.node.dialog.impl.ChoicesProvider;
 import org.knime.core.webui.node.dialog.impl.DefaultNodeSettings;
 import org.knime.core.webui.node.dialog.impl.Schema;
@@ -62,11 +61,9 @@ public class TableViewViewSettings implements DefaultNodeSettings {
 
     static final class ColumnChoices implements ChoicesProvider {
         @Override
-        public String[] choices(final PortObjectSpec[] specs) {
-            if (specs[1] == null) {
-                return new String[0];
-            }
-            return ((DataTableSpec)specs[1]).getColumnNames();
+        public String[] choices(final SettingsCreationContext context) {
+            final var spec = context.getDataTableSpecs()[0];
+            return spec == null ? new String[0] : spec.getColumnNames();
         }
     }
 
@@ -170,24 +167,20 @@ public class TableViewViewSettings implements DefaultNodeSettings {
     public boolean m_subscribeToSelection = true;
 
     /**
-     *  Create a new {@link TableViewViewSettings} with default values
+     * Create a new {@link TableViewViewSettings} with default values
      */
     protected TableViewViewSettings() {
     }
 
-    TableViewViewSettings(final PortObjectSpec[] specs) {
-        this((DataTableSpec)specs[1]);
+    TableViewViewSettings(final SettingsCreationContext context) {
+        this(context.getDataTableSpecs()[0]);
     }
 
     /**
      * @param spec table spec to determine the selected column from
      */
     public TableViewViewSettings(final DataTableSpec spec) {
-        if (spec == null) {
-            m_displayedColumns = new String[0];
-        } else {
-            m_displayedColumns = spec.getColumnNames();
-        }
+        m_displayedColumns = spec == null ? new String[0] : spec.getColumnNames();
     }
 
     /**

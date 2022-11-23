@@ -49,11 +49,11 @@
 package org.knime.core.webui.node.dialog.impl;
 
 import static org.knime.core.webui.node.dialog.impl.JsonFormsDataUtil.createInstance;
-import static org.knime.core.webui.node.dialog.impl.JsonFormsDataUtil.createInstanceWithSpecs;
+import static org.knime.core.webui.node.dialog.impl.JsonFormsDataUtil.createInstanceWithContext;
 
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.util.LRUCache;
+import org.knime.core.webui.node.dialog.impl.DefaultNodeSettings.SettingsCreationContext;
 
 import com.github.victools.jsonschema.generator.ConfigFunction;
 import com.github.victools.jsonschema.generator.FieldScope;
@@ -63,12 +63,12 @@ import com.github.victools.jsonschema.generator.FieldScope;
  */
 final class DefaultResolver implements ConfigFunction<FieldScope, Object> {
 
-    private final PortObjectSpec[] m_specs;
+    private final SettingsCreationContext m_context;
 
     private final LRUCache<Class<?>, Object> m_defaultObjects = new LRUCache<>(4);
 
-    DefaultResolver(final PortObjectSpec[] specs) {
-        m_specs = specs;
+    DefaultResolver(final SettingsCreationContext context) {
+        m_context = context;
     }
 
     @Override
@@ -80,7 +80,7 @@ final class DefaultResolver implements ConfigFunction<FieldScope, Object> {
         final var declaringClass = field.getDeclaringType().getErasedType();
         try {
             final var defaultObject = m_defaultObjects.computeIfAbsent(declaringClass,
-                c -> m_specs == null ? createInstance(c) : createInstanceWithSpecs(c, m_specs));
+                c -> m_context == null ? createInstance(c) : createInstanceWithContext(c, m_context));
             if (defaultObject == null) {
                 return null;
             }
