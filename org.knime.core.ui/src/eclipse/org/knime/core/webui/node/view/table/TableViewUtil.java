@@ -187,15 +187,15 @@ public final class TableViewUtil {
     }
 
     /**
-     * @param settings
+     * @param settingsSupplier
      * @param tableSupplier
      * @param tableId
      * @return the table view initial data service
      */
-    public static InitialDataService createInitialDataService(final TableViewViewSettings settings,
+    public static InitialDataService createInitialDataService(final Supplier<TableViewViewSettings> settingsSupplier,
         final Supplier<BufferedDataTable> tableSupplier, final String tableId) {
         return new DefaultInitialDataServiceImpl<TableViewInitialData>(
-            () -> createInitialData(settings, tableSupplier.get(), tableId)) {
+            () -> createInitialData(settingsSupplier.get(), tableSupplier.get(), tableId)) {
             @Override
             public void cleanUp() {
                 TableViewUtil.RENDERER_REGISTRY.clearImageDataCache(tableId);
