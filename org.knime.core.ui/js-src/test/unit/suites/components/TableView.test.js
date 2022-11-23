@@ -455,6 +455,28 @@ describe('TableView.vue', () => {
                             expect(wrapper.vm.currentScopeEndIndex).toBe(590);
                         });
     
+
+                    it('adjusts the scopeSize if necessary',
+                        () => {
+                            wrapper.vm.currentScopeStartIndex = 200;
+                            wrapper.vm.currentScopeEndIndex = 400;
+                            wrapper.vm.rowCount = 1000;
+                            const startIndex = 220;
+                            const endIndex = 340;
+                            wrapper.vm.onScroll({ direction: 1, startIndex, endIndex });
+                            expect(wrapper.vm.scopeSize).toBe(endIndex - startIndex + 100);
+                            expect(updateDataSpy).toHaveBeenCalledWith(expect.objectContaining(
+                                { lazyLoad: {
+                                    direction: 1,
+                                    loadFromIndex: 400,
+                                    newScopeStart: 200,
+                                    bufferStart: 200,
+                                    bufferEnd: 400,
+                                    numRows: 20
+                                } }
+                            ));
+                        });
+
                     it('does not update data on upwards scroll on the top of the table', () => {
                         wrapper.vm.currentScopeStartIndex = 1;
                         wrapper.vm.currentScopeEndIndex = 4;
@@ -512,6 +534,27 @@ describe('TableView.vue', () => {
                             expect(wrapper.vm.currentScopeEndIndex).toBe(220);
                         });
         
+                    it('adjusts the scopeSize if necessary',
+                        () => {
+                            wrapper.vm.currentScopeStartIndex = 200;
+                            wrapper.vm.currentScopeEndIndex = 400;
+                            wrapper.vm.rowCount = 1000;
+                            const startIndex = 260;
+                            const endIndex = 380;
+                            wrapper.vm.onScroll({ direction: -1, startIndex, endIndex });
+                            expect(wrapper.vm.scopeSize).toBe(endIndex - startIndex + 100);
+                            expect(updateDataSpy).toHaveBeenCalledWith(expect.objectContaining(
+                                { lazyLoad: {
+                                    direction: -1,
+                                    loadFromIndex: 180,
+                                    newScopeStart: 180,
+                                    bufferStart: 200,
+                                    bufferEnd: 400,
+                                    numRows: 20
+                                } }
+                            ));
+                        });
+
                     it('does not update data on downwards scroll on the bottom of the table', () => {
                         wrapper.vm.currentScopeStartIndex = 0;
                         wrapper.vm.currentScopeEndIndex = 2;
@@ -811,6 +854,10 @@ describe('TableView.vue', () => {
             let wrapper, rowSelectSpy, selectAllSpy, publishOnSelectionChangeSpy;
 
             beforeEach(async () => {
+                window.ResizeObserver = jest.fn(() => ({
+                    observe: jest.fn(),
+                    unobserve: jest.fn()
+                }));
                 wrapper = await mount(TableView, context);
                 rowSelectSpy = jest.spyOn(wrapper.vm, 'onRowSelect');
                 selectAllSpy = jest.spyOn(wrapper.vm, 'onSelectAll');
@@ -1121,6 +1168,13 @@ describe('TableView.vue', () => {
     });
 
     describe('image rendering', () => {
+        beforeEach(() => {
+            window.ResizeObserver = jest.fn(() => ({
+                observe: jest.fn(),
+                unobserve: jest.fn()
+            }));
+        });
+
         it('creates the correct source urls', async () => {
             const { getImageUrlSpy } = await asyncMountTableView(context);
 

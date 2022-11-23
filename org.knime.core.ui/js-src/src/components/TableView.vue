@@ -11,6 +11,8 @@ const INDEX_SYMBOL = Symbol('Index');
 const ROW_KEY_SYMBOL = Symbol('Row Key');
 // -1 is the backend representation (columnName) for sorting the table by rowKeys
 const ROW_KEYS_SORT_COL_NAME = '-1';
+const MIN_SCOPE_SIZE = 200;
+const MIN_BUFFER_SIZE = 50;
 
 export default {
     components: {
@@ -45,7 +47,9 @@ export default {
             baseUrl: null,
             clientWidth: 0,
             columnSizeOverrides: {},
-            numRowsAbove: 0
+            numRowsAbove: 0,
+            scopeSize: MIN_SCOPE_SIZE,
+            bufferSize: MIN_BUFFER_SIZE
         };
     },
     computed: {
@@ -103,6 +107,7 @@ export default {
                     columnCount: this.columnCount
                 },
                 enableVirtualScrolling: true,
+                fitToContainer: true,
                 ...enableSortingByHeader && {
                     sortConfig: {
                         sortColumn: this.columnSortIndex,
@@ -151,18 +156,6 @@ export default {
         },
         rowData() {
             return this.table.rows.map((row, index) => [index, ...row]);
-        },
-        scopeSize() {
-            const bothBuffersSize = this.bufferSize * 2;
-            return bothBuffersSize * 2;
-        },
-        bufferSize() {
-            // the number of items the scrollers renders outside the displayed area has to be smaller than the
-            // buffer size. Otherwise empty rows are displayed. The scroller displayes no more then half the items
-            // fitting on the screen outside the displayed ones (i.e. the pageSize).
-            const { pageSize } = this.settings;
-            const minBufferSize = 50;
-            return Math.max(minBufferSize, pageSize / 2);
         },
         columnFilterValues() {
             const columnFilterValues = [];
@@ -268,13 +261,22 @@ export default {
         onScroll({ direction, startIndex, endIndex }) {
             const prevScopeStart = this.currentScopeStartIndex;
             const prevScopeEnd = this.currentScopeEndIndex;
+            const prevScopeSize = this.scopeSize;
+            this.scopeSize = this.computeScopeSize(startIndex, endIndex);
+            /** we only force an update on a scope size change if it is significant
+             * (since startIndex and endIndex do not have a fixed distance even if the
+             * height of the scroller is not changed)
+             */
+            const scopeChangeThreshold = 10;
+            const scopeSizeChanged = Math.abs(prevScopeSize - this.scopeSize) > scopeChangeThreshold;
             let bufferStart, bufferEnd, newScopeStart, loadFromIndex, numRows;
             if (direction > 0) {
-                if (prevScopeEnd - endIndex > this.bufferSize) {
+                if (prevScopeEnd - endIndex > this.bufferSize && !scopeSizeChanged) {
                     return;
                 }
-                // keep bufferSize elements above the current first visible element
-                bufferStart = Math.max(startIndex - this.bufferSize, 0);
+                // keep bufferSize elements above the current first visible element or keep all previous rows if the
+                // update is due to a change in scope size
+                bufferStart = scopeSizeChanged ? prevScopeStart : Math.max(startIndex - this.bufferSize, 0);
                 // keep the already loaded elements below the current last visible.
                 bufferEnd = Math.max(bufferStart, prevScopeEnd);
                 // The next scope consist of numRows newly loaded rows and the buffer.
@@ -283,11 +285,12 @@ export default {
                 newScopeStart = bufferStart;
                 loadFromIndex = bufferEnd;
             } else {
-                if (startIndex - prevScopeStart > this.bufferSize) {
+                if (startIndex - prevScopeStart > this.bufferSize && !scopeSizeChanged) {
                     return;
                 }
-                // keep bufferSize elements below the current last visible
-                bufferEnd = Math.min(endIndex + this.bufferSize, this.rowCount);
+                // keep bufferSize elements below the current last visible or keep all previous rows if the
+                // update is due to a change in scope size
+                bufferEnd = scopeSizeChanged ? prevScopeEnd : Math.min(endIndex + this.bufferSize, this.rowCount);
                 // keep already loaded elements above the current first visible.
                 bufferStart = Math.min(bufferEnd, prevScopeStart);
                 // The next scope consist of numRows newly loaded rows and the buffer.
@@ -307,6 +310,10 @@ export default {
                     newScopeStart
                 } });
             }
+        },
+
+        computeScopeSize(startIndex, endIndex) {
+            return Math.max(endIndex - startIndex + 2 * this.bufferSize, MIN_SCOPE_SIZE);
         },
 
         async updateData(params) {
