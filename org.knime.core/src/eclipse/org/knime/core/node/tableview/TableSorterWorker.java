@@ -71,9 +71,10 @@ import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 
 import org.knime.core.data.DataTable;
-import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.StringValue;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.sort.DataTableSorter;
+import org.knime.core.data.sort.RowComparator;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.DefaultNodeProgressMonitor;
@@ -82,7 +83,6 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.StringFormat;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.NodeProgress;
-import org.knime.core.node.workflow.NodeProgressEvent;
 import org.knime.core.node.workflow.NodeProgressListener;
 import org.knime.core.util.SwingWorkerWithContext;
 
@@ -159,33 +159,37 @@ final class TableSorterWorker extends SwingWorkerWithContext<DataTable, NodeProg
             rowCount = -1; // unknown, no progress
         }
         publish(new NodeProgress(0.0, "Starting table sort..."));
-        Collection<String> sortColNames = new ArrayList<String>(2);
-        DataTableSpec spec = m_inputTable.getDataTableSpec();
-        for (int i : m_sortOrder.getSortColumnIndices()) {
+
+        Collection<String> sortColNames = new ArrayList<>(2);
+        final int[] indices = m_sortOrder.getSortColumnIndices();
+        final boolean[] sortOrders = m_sortOrder.getSortColumnOrder();
+        final var spec = m_inputTable.getDataTableSpec();
+        // alphanum as default visual sort order (AP-19767)
+        final var rc = RowComparator.on(spec);
+        for (var pos = 0; pos < indices.length; pos++) {
+            final int colIndex = indices[pos];
+            final var descending = !sortOrders[pos];
             String name;
-            if (i < 0) { // row id
+            if (colIndex < 0) { // row id
                 name = DataTableSorter.ROWKEY_SORT_SPEC.getName();
+                rc.thenComparingRowKey(rk -> rk.withDescendingSortOrder(descending).withAlphanumericComparison());
             } else {
-                name = spec.getColumnSpec(i).getName();
+                final var colSpec = spec.getColumnSpec(colIndex);
+                rc.thenComparingColumn(colIndex, col -> col.withDescendingSortOrder(descending)
+                    .withAlphanumericComparison(colSpec.getType().isCompatible(StringValue.class)));
+                name = colSpec.getName();
             }
             sortColNames.add(name);
         }
         long start = System.currentTimeMillis();
         LOGGER.debug("Starting interactive table sorting on column(s) "
                 + sortColNames);
-        boolean[] sortOrders = m_sortOrder.getSortColumnOrder();
+
         // it DOES NOT respect blobs -- they will be copied (expensive)
-        DataTableSorter sorter =
-                new DataTableSorter(m_inputTable, rowCount, sortColNames,
-                        sortOrders, false);
-        NodeProgressListener progLis = new NodeProgressListener() {
-            @Override
-            public void progressChanged(final NodeProgressEvent pe) {
-                publish(pe.getNodeProgress());
-            }
-        };
+        final var sorter = new DataTableSorter(m_inputTable, rowCount, rc.build());
+        final NodeProgressListener progLis = pe -> publish(pe.getNodeProgress());
         m_nodeProgressMonitor = new DefaultNodeProgressMonitor();
-        ExecutionMonitor exec = new ExecutionMonitor(m_nodeProgressMonitor);
+        final var exec = new ExecutionMonitor(m_nodeProgressMonitor);
         m_nodeProgressMonitor.addProgressListener(progLis);
         try {
             DataTable result = sorter.sort(exec);

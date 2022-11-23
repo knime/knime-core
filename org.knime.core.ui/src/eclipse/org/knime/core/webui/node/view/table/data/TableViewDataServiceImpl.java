@@ -65,6 +65,7 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.StringValue;
 import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainer;
@@ -269,9 +270,18 @@ public class TableViewDataServiceImpl implements TableViewDataService {
 
     private static ContainerTable sortTable(final BufferedDataTable table, final String sortColumn,
         final boolean sortAscending) {
-        final var sortColIndex = table.getSpec().findColumnIndex(sortColumn);
-        final Comparator<DataRow> comp =
-            new RowComparator(new int[]{sortColIndex}, new boolean[]{sortAscending}, false, table.getSpec());
+        final var dts = table.getSpec();
+        final var sortColIndex = dts.findColumnIndex(sortColumn);
+        final var colType = dts.getColumnSpec(sortColIndex).getType();
+        final var rc = RowComparator.on(dts);
+        if (sortColIndex < 0) {
+            rc.thenComparingRowKey(rk -> rk.withAlphanumericComparison().withDescendingSortOrder(!sortAscending));
+        } else {
+            rc.thenComparingColumn(sortColIndex, col -> col
+                .withAlphanumericComparison(colType.isCompatible(StringValue.class))
+                .withDescendingSortOrder(!sortAscending));
+        }
+        final Comparator<DataRow> comp = rc.build();
         try {
             return (ContainerTable)new DataTableSorter(table, table.size(), comp).sort(new ExecutionMonitor());
         } catch (CanceledExecutionException e) {

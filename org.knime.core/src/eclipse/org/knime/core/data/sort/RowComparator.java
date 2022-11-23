@@ -52,10 +52,12 @@ package org.knime.core.data.sort;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.OptionalInt;
+import java.util.function.UnaryOperator;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
 import org.knime.core.data.MissingDataCellComparator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.StringValue;
@@ -90,13 +92,16 @@ public final class RowComparator implements Comparator<DataRow> {
     public RowComparator(final int[] indices, final boolean[] sortAscending, final boolean sortMissingsToEnd,
         final DataTableSpec spec) {
         final var rc = RowComparator.on(spec);
-        for (int i = 0; i < indices.length; i++) {
+        for (var i = 0; i < indices.length; i++) {
             final int index = indices[i];
-            final boolean ascending = sortAscending[i];
+            final boolean descending = !sortAscending[i];
             if (isRowKey(index)) {
-                rc.thenComparingRowKey(ascending, false);
+                rc.thenComparingRowKey(k -> k
+                    .withDescendingSortOrder(descending));
             } else {
-                rc.thenComparingColumn(index, ascending, false, sortMissingsToEnd);
+                rc.thenComparingColumn(index, c -> c
+                    .withDescendingSortOrder(descending)
+                    .withMissingsLast(sortMissingsToEnd));
             }
         }
         m_colComparators = rc.build().m_colComparators;
@@ -104,6 +109,172 @@ public final class RowComparator implements Comparator<DataRow> {
 
     private static boolean isRowKey(final int index) {
         return index == -1;
+    }
+
+    /**
+     * Builder to configure a column comparator.
+     *
+     * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
+     */
+    public static final class ColumnComparatorBuilder {
+
+        private final int m_index;
+        private final DataType m_type;
+
+        private boolean m_alphanum = false;
+        private boolean m_descending = false;
+        private boolean m_missingsLast = false;
+
+        private ColumnComparatorBuilder(final int columnIndex, final DataType type) {
+            if (columnIndex < 0) {
+                throw new IllegalArgumentException("Expected non-negative column index.");
+            }
+            m_type = type;
+            m_index = columnIndex;
+        }
+
+        /**
+         * Enable alphanumeric comparison. Make sure that the data type is string-compatible, otherwise an
+         * exception is thrown.
+         * @return builder with alphanumeric comparison enabled
+         */
+        public ColumnComparatorBuilder withAlphanumericComparison() {
+            return withAlphanumericComparison(true);
+        }
+
+        /**
+         * Configure alphanumeric comparison. Make sure that the data type is string-compatible, otherwise an
+         * exception is thrown.
+         * @param alphanum {@code true} if enabled, {@code false} otherwise
+         * @return builder with alphanumeric comparison configured or exception if column datatype is not
+         *           string-compatible
+         */
+        public ColumnComparatorBuilder withAlphanumericComparison(final boolean alphanum) {
+            if (alphanum) {
+                CheckUtils.checkState(m_type.isCompatible(StringValue.class), "Only string-compatible columns can"
+                    + " be sorted alphanumerically. Column at %d of type %s is not string-compatible.", m_index,
+                    m_type);
+            }
+            m_alphanum = alphanum;
+            return this;
+        }
+
+        /**
+         * Enable descending sort order.
+         * @return builder with descending sort order
+         */
+        public ColumnComparatorBuilder withDescendingSortOrder() {
+            return withDescendingSortOrder(true);
+        }
+
+        /**
+         * Configure descending sort order.
+         * @param descending {@code true} to enable descending sort order, {@code false} otherwise
+         * @return builder with descending sort order configured
+         */
+        public ColumnComparatorBuilder withDescendingSortOrder(final boolean descending) {
+            m_descending = descending;
+            return this;
+        }
+
+        /**
+         * Enable sorting of missing cells to end of table.
+         * @return builder which sorts missing cells to the end of the table
+         */
+        public ColumnComparatorBuilder withMissingsLast() {
+            return withMissingsLast(true);
+        }
+
+        /**
+         * Configure handling of missing cells.
+         * @param missingsLast {@code true} to sort missing cells to the end of the table, {@code false} otherwise
+         * @return builder configured to sort missing cells to end of table
+         */
+        public ColumnComparatorBuilder withMissingsLast(final boolean missingsLast) {
+            m_missingsLast = missingsLast;
+            return this;
+        }
+
+        private RowComparatorBuilder build(final RowComparatorBuilder rowComparatorBuilder) {
+            Comparator<DataCell> cellComp;
+            if (this.m_alphanum) {
+                // compares column on string representation in alphanumerical order
+                cellComp = Comparator.comparing(dc -> CheckUtils.checkStateType(dc, StringValue.class,
+                    "Comparing non-string compatible column").getStringValue(),
+                    new AlphanumericComparator(Comparator.naturalOrder()));
+            } else {
+                cellComp = m_type.getComparator();
+            }
+            // the condition is such that missing cells never get sorted to the top of a table if sorted in DESC order
+            cellComp = new MissingDataCellComparator<>(cellComp, m_missingsLast && !m_descending);
+            if (m_descending) {
+                cellComp = cellComp.reversed();
+            }
+            return rowComparatorBuilder.thenComparingColumn(m_index, cellComp);
+        }
+    }
+
+    /**
+     * Builder to configure the row key comparator. There can be at most one, adding a second one will lead to a
+     * runtime exception.
+     *
+     * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
+     */
+    public static final class RowKeyComparatorBuilder {
+
+        private boolean m_alphanum = false;
+        private boolean m_descending = false;
+
+        private RowKeyComparatorBuilder() {
+        }
+
+        /**
+         * Enable alphanumeric comparison.
+         * @return builder with alphanumeric comparison enabled
+         */
+        public RowKeyComparatorBuilder withAlphanumericComparison() {
+            return withAlphanumericComparison(true);
+        }
+
+        /**
+         * Configure alphanumeric comparison.
+         * @param alphanum {@code true} if enabled, {@code false} otherwise
+         * @return builder with alphanumeric comparison configured
+         */
+        public RowKeyComparatorBuilder withAlphanumericComparison(final boolean alphanum) {
+            m_alphanum = alphanum;
+            return this;
+        }
+
+        /**
+         * Enable descending sort order.
+         * @return builder with descending sort order
+         */
+        public RowKeyComparatorBuilder withDescendingSortOrder() {
+            return withDescendingSortOrder(true);
+        }
+
+        /**
+         * Configure descending sort order.
+         * @param descending {@code true} to enable descending sort order, {@code false} otherwise
+         * @return builder with descending sort order configured
+         */
+        public RowKeyComparatorBuilder withDescendingSortOrder(final boolean descending) {
+            m_descending = descending;
+            return this;
+        }
+
+        private RowComparatorBuilder build(final RowComparatorBuilder rowComparatorBuilder) {
+            Comparator<String> comp = Comparator.naturalOrder();
+            if (m_alphanum) {
+                // since row keys are compared as strings, they are always string-compatible
+                comp = new AlphanumericComparator(comp);
+            }
+            if (m_descending) {
+                comp = comp.reversed();
+            }
+            return rowComparatorBuilder.thenComparingRowKey(comp);
+        }
     }
 
     /**
@@ -123,41 +294,20 @@ public final class RowComparator implements Comparator<DataRow> {
         /**
          * Adds the given column to the columns compared by the row comparator using the column type's comparator.
          * @param columnIndex column to compare
-         * @param ascending ascending sort order
-         * @param alphaNum alphanumeric instead of lexicographic order for string-compatible types, if {@code true}
-         *          the given column has to actually be string-compatible
-         * @param missingsLast {@code true} if missing cells should be sorted to end,
-         *          {@code false} otherwise
-         * @return the builder instance
+         * @param comp operator to configure the builder for a column comparator
+         * @return the row comparator builder instance
          */
-        public RowComparatorBuilder thenComparingColumn(final int columnIndex, final boolean ascending,
-            final boolean alphaNum, final boolean missingsLast) {
-            final var type = m_spec.getColumnSpec(columnIndex).getType();
-            Comparator<DataCell> cellComp;
-            if (alphaNum) {
-                // compares column on string representation in alphanumerical order
-                CheckUtils.checkState(type.isCompatible(StringValue.class), "Only string-compatible columns can "
-                        + "be sorted alphanumerically. Column at position %d is not string-compatible.", columnIndex);
-                cellComp = Comparator.comparing(dc -> CheckUtils.checkStateType(dc, StringValue.class,
-                    "Comparing non-string compatible column").getStringValue(),
-                    new AlphanumericComparator(Comparator.naturalOrder()));
-            } else {
-                cellComp = type.getComparator();
-            }
-            if (!ascending) {
-                cellComp = cellComp.reversed();
-            }
-            if (missingsLast) {
-                cellComp = new MissingDataCellComparator<>(cellComp, true);
-            }
-            return thenComparingColumn(columnIndex, cellComp);
+        public RowComparatorBuilder thenComparingColumn(final int columnIndex,
+            final UnaryOperator<ColumnComparatorBuilder> comp) {
+            return comp.apply(new ColumnComparatorBuilder(columnIndex, m_spec.getColumnSpec(columnIndex).getType()))
+                    .build(this);
         }
 
         /**
          * Adds the given column to the columns compared by the row comparator using the given cell comparator.
          * @param columnIndex column to compare
          * @param cellComp comparator to use for comparison of the column values
-         * @return the builder instance
+         * @return the row comparator builder instance
          */
         public RowComparatorBuilder thenComparingColumn(final int columnIndex, final Comparator<DataCell> cellComp) {
             final var colIdx = OptionalInt.of(columnIndex);
@@ -170,26 +320,26 @@ public final class RowComparator implements Comparator<DataRow> {
         }
 
         /**
-         * Adds the row key to the row comparator using the natural order.
-         * @param ascending ascending sort order if {@code true}, descending if {@code false}
-         * @param alphaNum use alphanumerical comparisons instead of lexicographical
-         * @return the builder instance
+         * Adds the row key to the builder using the given configuration.
+         * @param comp configuration builder for row key comparator
+         * @return the row comparator builder instance
          */
-        public RowComparatorBuilder thenComparingRowKey(final boolean ascending, final boolean alphaNum) {
-            Comparator<String> comp = Comparator.naturalOrder();
-            if (alphaNum) {
-                comp = new AlphanumericComparator(comp);
-            }
-            if (!ascending) {
-                comp = comp.reversed();
-            }
-            return thenComparingRowKey(comp);
+        public RowComparatorBuilder thenComparingRowKey(final UnaryOperator<RowKeyComparatorBuilder> comp) {
+            return comp.apply(new RowKeyComparatorBuilder()).build(this);
+        }
+
+        /**
+         * Adds the row key to the row comparator using its natural order.
+         * @return the row comparator builder instance
+         */
+        public RowComparatorBuilder thenComparingRowKey() {
+            return new RowKeyComparatorBuilder().build(this);
         }
 
         /**
          * Adds the row key to the row comparator using the given string comparator.
          * @param comp string comparator to use
-         * @return the builder instance
+         * @return the row comparator builder instance
          */
         public RowComparatorBuilder thenComparingRowKey(final Comparator<String> comp) {
             final var rowKeyIdx = OptionalInt.empty();
