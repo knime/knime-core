@@ -50,8 +50,6 @@
 package org.knime.core.webui.node.view.table;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.knime.testing.node.view.TableTestUtil.createDefaultTestTable;
-import static org.knime.testing.node.view.TableTestUtil.getDefaultTestSpec;
 import static org.mockito.AdditionalMatchers.aryEq;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -69,7 +67,6 @@ import org.knime.core.data.image.png.PNGImageCellFactory;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.webui.node.view.table.data.Renderer;
 import org.knime.core.webui.node.view.table.data.TableViewDataServiceImpl;
-import org.knime.core.webui.node.view.table.data.TableViewInitialDataImpl;
 import org.knime.testing.node.view.TableTestUtil;
 import org.mockito.MockedConstruction;
 import org.mockito.Mockito;
@@ -128,13 +125,6 @@ class TableViewInitialDataTest {
         final var settings = new TableViewViewSettings();
         final var initialData = TableViewUtil.createInitialData(settings, table, nodeId);
         assertThat(initialData.getSettings()).isEqualTo(initialData.getSettings());
-    }
-
-    @Test
-    void testInitialDataGetColumnCount() {
-        final var res = new TableViewInitialDataImpl(new TableViewViewSettings(getDefaultTestSpec()),
-            createDefaultTestTable(11), "tableId", null, null).getColumnCount();
-        assertThat(res).isEqualTo(getDefaultTestSpec().getNumColumns());
     }
 
     @Test

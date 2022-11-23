@@ -383,13 +383,6 @@ class TableViewTest {
     }
 
     @Test
-    void testInitialDataGetColumnCount() {
-        final var res = new TableViewInitialDataImpl(new TableViewViewSettings(getDefaultTestSpec()),
-            createDefaultTestTable(11), "tableId", null, null).getColumnCount();
-        assertThat(res).isEqualTo(getDefaultTestSpec().getNumColumns());
-    }
-
-    @Test
     void testInitialDataGetDataTypes() {
         final var initData =
             new TableViewInitialDataImpl(new TableViewViewSettings(getDefaultTestSpec()), createDefaultTestTable(11),

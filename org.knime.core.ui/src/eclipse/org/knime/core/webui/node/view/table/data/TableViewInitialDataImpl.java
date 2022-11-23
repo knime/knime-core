@@ -127,9 +127,4 @@ public final class TableViewInitialDataImpl implements TableViewInitialData {
     public TableViewViewSettings getSettings() {
         return m_settings;
     }
-
-    @Override
-    public long getColumnCount() {
-        return m_table.get().getDataTableSpec().getNumColumns();
-    }
 }
