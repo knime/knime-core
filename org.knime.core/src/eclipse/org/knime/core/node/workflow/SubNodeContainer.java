@@ -3079,7 +3079,7 @@ public final class SubNodeContainer extends SingleNodeContainer
 
         var componentNodeDef = (ComponentNodeDef) nodeDef;
         NodeContext.pushContext(this);
-        try {
+        try (WorkflowLock lock = m_wfm.lock()) { // locking added as part of AP-19761
             m_wfm.loadContent(componentNodeDef.getWorkflow(), exec, loadResult);
         } finally {
             NodeContext.removeLastContext();
