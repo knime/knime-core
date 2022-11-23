@@ -215,7 +215,8 @@ describe('TableView.vue', () => {
                     currentSize: 4,
                     tableSize: 4,
                     pageSize: 2,
-                    currentPage: 1
+                    currentPage: 1,
+                    columnCount: 4
                 },
                 sortConfig: {
                     sortColumn: null,
@@ -650,7 +651,7 @@ describe('TableView.vue', () => {
             });
             expect(wrapper.vm.displayedColumns).toStrictEqual(initialDataMock.table.displayedColumns);
         });
-        
+
         describe('sort parameter update', () => {
             it('updates the sort parameters when a sorting is active and columns are changed',
                 () => {

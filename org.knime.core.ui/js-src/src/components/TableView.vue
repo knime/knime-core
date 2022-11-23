@@ -36,7 +36,6 @@ export default {
             currentSelectedRowKeys: new Set(),
             totalRowCount: 0,
             currentRowCount: 0,
-            columnCount: 0,
             settings: {},
             displayedColumns: [],
             jsonDataService: null,
@@ -104,7 +103,7 @@ export default {
                     tableSize: this.totalRowCount,
                     pageSize: enablePagination ? pageSize : this.currentRowCount,
                     currentPage: this.currentPage,
-                    columnCount: this.columnCount
+                    columnCount: this.displayedColumns.length
                 },
                 enableVirtualScrolling: true,
                 fitToContainer: true,
@@ -205,14 +204,13 @@ export default {
         this.baseUrl = this.knimeService?.extensionConfig?.resourceInfo?.baseUrl;
 
         if (initialData) {
-            const { table, dataTypes, columnDomainValues, columnCount, settings } = initialData;
+            const { table, dataTypes, columnDomainValues, settings } = initialData;
             this.rowCount = table.rowCount;
             this.displayedColumns = table.displayedColumns;
             this.dataTypes = dataTypes;
             this.columnDomainValues = columnDomainValues;
             this.totalRowCount = this.rowCount;
             this.currentRowCount = this.rowCount;
-            this.columnCount = columnCount;
             this.settings = settings;
             if (this.useLazyLoading) {
                 await this.initializeLazyLoading();

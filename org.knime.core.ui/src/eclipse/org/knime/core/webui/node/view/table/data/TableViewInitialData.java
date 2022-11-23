@@ -76,11 +76,6 @@ public interface TableViewInitialData {
     Map<String, String[]> getColumnDomainValues();
 
     /**
-     * @return the total number of columns contained by the table
-     */
-    long getColumnCount();
-
-    /**
      * @return the initial settings
      */
     TableViewViewSettings getSettings();
