@@ -306,7 +306,7 @@ abstract class AbstractTableSorter {
     public void setSortColumns(final Collection<String> inclList, final boolean[] sortAscending,
         final boolean sortMissingsToEnd) {
         if (sortAscending == null || inclList == null) {
-            throw new NullPointerException("Argument must not be null.");
+            throw new IllegalArgumentException("Argument must not be null.");
         }
         if (inclList.size() != sortAscending.length) {
             throw new IllegalArgumentException("Length of arguments vary: " + inclList.size() + " vs. "
@@ -321,9 +321,9 @@ abstract class AbstractTableSorter {
                 throw new IllegalArgumentException("Argument collection must " + "not contain duplicates: " + inclList);
             }
         }
-        final DataTableSpec spec = m_inputTable.getDataTableSpec();
+        final var spec = m_inputTable.getDataTableSpec();
         final var rc = RowComparator.on(spec);
-        int i = 0;
+        var i = 0;
         for (final String name : inclList) {
             final int index = spec.findColumnIndex(name);
             final boolean ascending = sortAscending[i];
@@ -331,9 +331,9 @@ abstract class AbstractTableSorter {
                 if (!ROWKEY_SORT_SPEC.getName().equals(name)) {
                     throw new IllegalArgumentException("Could not find column name:" + name);
                 }
-                rc.thenComparingRowKey(ascending, sortMissingsToEnd);
+                rc.thenComparingRowKey(rk -> rk.withDescendingSortOrder(!ascending));
             } else {
-                rc.thenComparingColumn(index, ascending, false, sortMissingsToEnd);
+                rc.thenComparingColumn(index, col -> col.withDescendingSortOrder(!ascending).withMissingsLast(sortMissingsToEnd));
             }
             i++;
         }

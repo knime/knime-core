@@ -100,7 +100,8 @@ public class RowComparatorTest {
     @Before
     public void setUp() throws InterruptedException {
         @SuppressWarnings({"unchecked", "rawtypes"})
-        final NodeFactory<NodeModel> dummyFactory = (NodeFactory) new VirtualParallelizedChunkPortObjectInNodeFactory(new PortType[0]);
+        final NodeFactory<NodeModel> dummyFactory =
+            (NodeFactory) new VirtualParallelizedChunkPortObjectInNodeFactory(new PortType[0]);
         m_exec = new ExecutionContext(new DefaultNodeProgressMonitor(), new Node(dummyFactory),
                 SingleNodeContainer.MemoryPolicy.CacheInMemory, NotInWorkflowDataRepository.newInstance());
         m_spec = new DataTableSpec(
@@ -130,7 +131,8 @@ public class RowComparatorTest {
             try (final var shuffler = new ClosableShuffler(m_table, m_exec, 42)) {
                 final var shuffledTable = shuffler.getShuffled();
 
-                final var rc = RowComparator.on(m_spec).thenComparingRowKey(ascending, false).build();
+                final var rc = RowComparator.on(m_spec).thenComparingRowKey(
+                    rk -> rk.withDescendingSortOrder(!ascending)).build();
                 final var sorter = new BufferedDataTableSorter(shuffledTable, rc);
                 final var sorted = sorter.sort(m_exec);
 
@@ -161,7 +163,8 @@ public class RowComparatorTest {
         try (final var shuffler = new ClosableShuffler(m_table, m_exec, 42)) {
             final var shuffledTable = shuffler.getShuffled();
 
-            final var comp = RowComparator.on(m_spec).thenComparingRowKey(true, true).build();
+            final var comp = RowComparator.on(m_spec).thenComparingRowKey(
+                rk -> rk.withAlphanumericComparison()).build();
             final var sorter = new BufferedDataTableSorter(shuffledTable, comp);
             final var sorted = sorter.sort(m_exec);
             final var lex = Comparator.comparing(StringCell::getStringValue, Comparator.naturalOrder());
@@ -186,9 +189,9 @@ public class RowComparatorTest {
     @Test
     public void testRowKeyTwiceThrows() {
         final RowComparatorBuilder cmp = assertDoesNotThrow(
-            () -> RowComparator.on(m_spec).thenComparingRowKey(false, false));
+            () -> RowComparator.on(m_spec).thenComparingRowKey(rk -> rk.withDescendingSortOrder()));
         assertThrows(IllegalArgumentException.class,
-            () -> cmp.thenComparingRowKey(false, false));
+            () -> cmp.thenComparingRowKey(rk -> rk.withDescendingSortOrder()));
     }
 
     /**
@@ -201,7 +204,8 @@ public class RowComparatorTest {
             try (final var shuffler = new ClosableShuffler(m_table, m_exec, 42)) {
                 final var shuffledTable = shuffler.getShuffled();
 
-                final var rc = RowComparator.on(m_spec).thenComparingColumn(1, ascending, false, false).build();
+                final var rc = RowComparator.on(m_spec).thenComparingColumn(1,
+                    col -> col.withDescendingSortOrder(!ascending)).build();
                 final var sorter = new BufferedDataTableSorter(shuffledTable, rc);
                 final var sorted = sorter.sort(m_exec);
 
@@ -233,7 +237,8 @@ public class RowComparatorTest {
 
             // column at index 3 is string rep of row key value with leading zeros, thus can be compared
             // lexicographically easily
-            final var comp = RowComparator.on(m_spec).thenComparingColumn(3, true, true, false).build();
+            final var comp = RowComparator.on(m_spec)
+                    .thenComparingColumn(3, col -> col.withAlphanumericComparison()).build();
             final var sorter = new BufferedDataTableSorter(shuffledTable, comp);
             final var sorted = sorter.sort(m_exec);
             final var lex = Comparator.comparing(StringCell::getStringValue, Comparator.naturalOrder());
@@ -258,9 +263,9 @@ public class RowComparatorTest {
     @Test
     public void testColumnTwiceThrows() {
         final RowComparatorBuilder comp = assertDoesNotThrow(
-            () -> RowComparator.on(m_spec).thenComparingColumn(0, false, false, false));
+            () -> RowComparator.on(m_spec).thenComparingColumn(0, c -> c));
         assertThrows(IllegalArgumentException.class,
-            () -> comp.thenComparingColumn(0, false, false, false));
+            () -> comp.thenComparingColumn(0, c -> c));
     }
 
     /**
@@ -270,7 +275,8 @@ public class RowComparatorTest {
     public void testIncompatibleThrows() {
         // Double is not string-compatible
         final var comp = RowComparator.on(m_spec);
-        assertThrows(IllegalStateException.class, () -> comp.thenComparingColumn(0, true, true, false));
+        assertThrows(IllegalStateException.class, () -> comp.thenComparingColumn(0,
+            c -> c.withAlphanumericComparison()));
     }
 
     /**
@@ -280,13 +286,10 @@ public class RowComparatorTest {
     @Test
     public void testComparatorShortcuts() {
         // increase code coverage
-        final boolean ascending = true;
-        final boolean alphanum = false;
-        final boolean missingsLast = false;
         final var row1 = createRow(0L, 0, 0, "First", "A");
         final var row2 = createRow(1L, 0, 1, "Second", "B");
         final var cb = RowComparator.on(m_spec);
-        IntStream.range(0, 3).forEach(i -> cb.thenComparingColumn(i, ascending, alphanum, missingsLast));
+        IntStream.range(0, 3).forEach(i -> cb.thenComparingColumn(i, c -> c));
         final var comp = cb.build();
 
         assertTrue(comp.compare(row1, row2) < 0);
@@ -297,7 +300,7 @@ public class RowComparatorTest {
      */
     @Test
     public void testMissingsOrder() {
-        for (final var ascending : new boolean[] { true, false }) {
+        for (final var descending : new boolean[] { false, true }) {
             final var alphanum = false;
             final var spec = new DataTableSpec(new DataColumnSpecCreator("MyDouble", DoubleCell.TYPE).createSpec());
 
@@ -305,12 +308,15 @@ public class RowComparatorTest {
             final var missing = new DefaultRow(RowKey.createRowKey(1L), DataType.getMissingCell());
 
             // if the flag is not set, choose order based on type's comparator
-            final var missingsDefault = RowComparator.on(spec).thenComparingColumn(0, ascending, alphanum, false).build();
+            final var missingsDefault = RowComparator.on(spec).thenComparingColumn(0,
+                c -> c.withDescendingSortOrder(descending).withAlphanumericComparison(alphanum)).build();
             final var md = missingsDefault.compare(missing, row);
-            assertTrue(ascending ? md < 0 : md > 0);
+            assertTrue(!descending ? md < 0 : md > 0);
 
             // if flag is set, hard-code missings at the end of the list
-            final var missingsLast = RowComparator.on(spec).thenComparingColumn(0, ascending, alphanum, true).build();
+            final var missingsLast = RowComparator.on(spec).thenComparingColumn(0,
+                c -> c.withDescendingSortOrder(descending).withAlphanumericComparison(alphanum).withMissingsLast())
+                    .build();
             final var lst = missingsLast.compare(missing, row);
             assertTrue(lst > 0);
         }
@@ -323,7 +329,7 @@ public class RowComparatorTest {
     public void testCompareIdentity() {
         final var spec = new DataTableSpec(new DataColumnSpecCreator("MyDouble", DoubleCell.TYPE).createSpec());
         final var row = new DefaultRow(RowKey.createRowKey(0L), new DoubleCell(0));
-        final var comp = RowComparator.on(spec).thenComparingColumn(0, false, false, false).build();
+        final var comp = RowComparator.on(spec).thenComparingColumn(0, c -> c.withDescendingSortOrder()).build();
         assertEquals(0, comp.compare(row, row));
         assertTrue(comp.compare(row, null) < 0);
         assertTrue(comp.compare(null, row) > 0);
@@ -340,9 +346,9 @@ public class RowComparatorTest {
             final var shuffledTable = shuffler.getShuffled();
 
             final var newComp = RowComparator.on(m_spec)
-                    .thenComparingRowKey(true, false)
-                    .thenComparingColumn(0, false, false, true)
-                    .thenComparingColumn(1, true, false, true)
+                    .thenComparingRowKey(k -> k)
+                    .thenComparingColumn(0, c -> c.withDescendingSortOrder().withMissingsLast())
+                    .thenComparingColumn(1, c -> c.withMissingsLast())
                     .build();
 
             @SuppressWarnings("deprecation")
