@@ -58,6 +58,12 @@ import org.knime.core.node.NodeLogger;
  */
 public final class WebUIUtil {
 
+    /**
+     * System property that controls whether external requests from within CEF browser instances are to be blocked or
+     * not.
+     */
+    public static final String BLOCK_ALL_EXTERNAL_REQUESTS_SYS_PROP = "chromium.block_all_external_requests";
+
     private WebUIUtil() {
         // utility class
     }
