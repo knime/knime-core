@@ -31,6 +31,7 @@ export default {
             columnSortDirection: null,
             columnSortColumnName: null,
             currentSelection: null,
+            currentBottomSelection: null,
             totalSelected: 0,
             table: {},
             colNameSelectedRendererId: {},
@@ -52,7 +53,9 @@ export default {
             scopeSize: MIN_SCOPE_SIZE,
             bufferSize: MIN_BUFFER_SIZE,
             numRowsAbove: 0,
-            numRowsBelow: 0
+            numRowsBelow: 0,
+            maxNumRows: 200000,
+            bottomRows: []
         };
     },
     computed: {
@@ -160,6 +163,14 @@ export default {
         rowData() {
             return this.table.rows.map((row, index) => [index + this.numRowsAbove, ...row]);
         },
+        bottomRowData() {
+            if (typeof this.bottomRows === 'undefined') {
+                return [];
+            }
+            const bottomRowsLength = this.bottomRows.length;
+            const bottomRowsEnd = this.currentPageEnd - this.numRowsBelow;
+            return this.bottomRows.map((row, index) => [index + bottomRowsEnd - bottomRowsLength, ...row]);
+        },
         columnFilterValues() {
             const columnFilterValues = [];
             this.columnFilters.forEach((filter, index) => {
@@ -189,6 +200,30 @@ export default {
         },
         selectedRendererIds() {
             return this.getCurrentSelectedRenderers(this.displayedColumns);
+        },
+        currentPageStart() {
+            return this.settings.enablePagination ? this.settings.pageSize * (this.currentPage - 1) : 0;
+        },
+        currentPageEnd() {
+            return this.settings.enablePagination
+                ? Math.min(this.currentRowCount, this.settings.pageSize * this.currentPage)
+                : this.currentRowCount;
+        },
+        currentNumRowsOnPage() {
+            return this.currentPageEnd - this.currentPageStart;
+        },
+        bottomRowsMode() {
+            return this.currentNumRowsOnPage > this.maxNumRows;
+        },
+        numRowsBottom() {
+            return this.bottomRowsMode ? 1000 : 0;
+        },
+        numRowsTop() {
+            // minus 1 due to the additional "…" row
+            return this.bottomRowsMode ? this.maxNumRows - this.numRowsBottom - 1 : this.currentNumRowsOnPage;
+        },
+        numRowsTotal() {
+            return this.bottomRowsMode ? this.maxNumRows : this.currentNumRowsOnPage;
         }
     },
     async mounted() {
@@ -243,7 +278,6 @@ export default {
             const { updateDisplayedColumns = false, updateTotalSelected = true } = params || {};
             this.currentScopeStartIndex = 0;
             this.currentScopeEndIndex = Math.min(this.scopeSize, this.currentRowCount);
-            this.lastRequestScopeStartIndex = 0;
             await this.updateData({
                 lazyLoad: this.getLazyLoadParamsForCurrentScope(),
                 updateDisplayedColumns,
@@ -286,7 +320,7 @@ export default {
                 bufferEnd = Math.max(bufferStart, prevScopeEnd);
                 // The next scope consist of numRows newly loaded rows and the buffer.
                 // the size of the next scope should be this.scopeSize again (or less at the bottom of the table).
-                numRows = Math.min(this.scopeSize - (bufferEnd - bufferStart), this.currentRowCount - bufferEnd);
+                numRows = Math.min(this.scopeSize - (bufferEnd - bufferStart), this.numRowsTotal - bufferEnd);
                 newScopeStart = bufferStart;
                 loadFromIndex = bufferEnd;
             } else {
@@ -295,7 +329,7 @@ export default {
                 }
                 // keep bufferSize elements below the current last visible or keep all previous rows if the
                 // update is due to a change in scope size
-                bufferEnd = scopeSizeChanged ? prevScopeEnd : Math.min(endIndex + this.bufferSize, this.currentRowCount);
+                bufferEnd = scopeSizeChanged ? prevScopeEnd : Math.min(endIndex + this.bufferSize, this.numRowsTotal);
                 // keep already loaded elements above the current first visible.
                 bufferStart = Math.min(bufferEnd, prevScopeStart);
                 // The next scope consist of numRows newly loaded rows and the buffer.
@@ -304,13 +338,12 @@ export default {
                 newScopeStart = loadFromIndex = bufferStart - numRows;
             }
             if (numRows > 0) {
-                this.lastRequestScopeStartIndex = newScopeStart;
                 this.updateData({
                     lazyLoad: {
                         loadFromIndex,
                         numRows,
-                        bufferStart: bufferStart - prevScopeStart,
-                        bufferEnd: bufferEnd - prevScopeStart,
+                        bufferStart,
+                        bufferEnd,
                         direction,
                         newScopeStart
                     }
@@ -322,75 +355,129 @@ export default {
             return Math.max(endIndex - startIndex + 2 * this.bufferSize, MIN_SCOPE_SIZE);
         },
 
+        // eslint-disable-next-line complexity
         async updateData(params) {
             const { lazyLoad, updateTotalSelected = false, updateDisplayedColumns = false,
                 updateColumnContentTypes = false } = params;
+            const displayedColumns = this.getColumnsForRequest(updateDisplayedColumns);
+
             let loadFromIndex, numRows;
             if (lazyLoad) {
+                this.lastRequestScopeStartIndex = lazyLoad.newScopeStart;
                 ({ loadFromIndex, numRows } = lazyLoad);
             } else {
                 loadFromIndex = this.currentIndex;
-                numRows = this.settings.pageSize;
+                numRows = this.currentNumRowsOnPage;
             }
-            const displayedColumns = this.getColumnsForRequest(updateDisplayedColumns);
-            const receivedTable = await this.requestTable(loadFromIndex, numRows, displayedColumns,
-                updateDisplayedColumns, updateTotalSelected, this.settings.enablePagination);
+            const loadToIndex = loadFromIndex + numRows;
+
+            const { topLoadFromIndex, topNumRows, bottomLoadFromIndex, bottomNumRows } = this.settings.enablePagination
+                ? this.getTopAndBottomIndicesOnPagination(loadFromIndex, numRows)
+                : {
+                    ...this.getTopIndices(loadFromIndex, loadToIndex),
+                    ...this.getBottomIndices(loadFromIndex, loadToIndex)
+                };
+
+            const fetchTopTable = topNumRows !== 0 || bottomNumRows === 0;
+            const fetchBottomTable = bottomNumRows !== 0;
+
+            const topTablePromise = fetchTopTable
+                ? this.requestTable(topLoadFromIndex, topNumRows, displayedColumns,
+                    updateDisplayedColumns, updateTotalSelected, this.settings.enablePagination)
+                : null;
+
+            let bottomTablePromise = fetchBottomTable
+                ? this.requestTable(bottomLoadFromIndex, bottomNumRows, displayedColumns,
+                    updateDisplayedColumns, updateTotalSelected, this.settings.enablePagination)
+                : null;
+            const topTable = fetchTopTable ? await topTablePromise : null;
+            const bottomTable = fetchBottomTable ? await bottomTablePromise : null;
+            const getFromTopOrBottom = (key) => topTable ? topTable[key] : bottomTable[key];
             if (updateDisplayedColumns) {
-                this.columnFilters = this.getDefaultFilterConfigs(receivedTable.displayedColumns);
-                this.displayedColumns = receivedTable.displayedColumns;
+                this.columnFilters = this.getDefaultFilterConfigs(getFromTopOrBottom('displayedColumns'));
+                this.displayedColumns = getFromTopOrBottom('displayedColumns');
             }
-            if (receivedTable.rowKeys) {
-                this.currentRowKeys = receivedTable.rowKeys;
+            if (updateTotalSelected) {
+                if (this.columnSortColumnName || this.searchTerm || this.colFilterActive) {
+                    this.totalSelected = getFromTopOrBottom('totalSelected');
+                } else {
+                    this.totalSelected = this.currentSelectedRowKeys.size;
+                }
             }
             if (updateColumnContentTypes) {
-                this.table.columnContentTypes = receivedTable.columnContentTypes;
+                this.table.columnContentTypes = getFromTopOrBottom('columnContentTypes');
             }
+            
             if (lazyLoad) {
                 const { newScopeStart, direction, bufferStart = 0, bufferEnd = bufferStart } = lazyLoad;
                 if (this.lastRequestScopeStartIndex !== newScopeStart) {
                     return;
                 }
-                this.currentScopeStartIndex = newScopeStart;
-                this.currentScopeEndIndex = newScopeStart + (bufferEnd - bufferStart) + numRows;
-                const rows = this.combineWithPrevious(receivedTable.rows, bufferStart, bufferEnd, direction);
+                const topPreviousDataLength = this.table?.rows?.length || 0;
+                const rows = this.getCombinedTopRows(
+                    { topTable, bufferStart, bufferEnd, direction, topPreviousDataLength }
+                );
                 if (typeof this.table.rows === 'undefined') {
-                    this.table = { ...receivedTable, rows };
+                    this.table = { ...topTable, rows };
                 } else {
                     this.table.rows = rows;
-                    this.table.rowCount = receivedTable.rowCount;
+                    this.table.rowCount = getFromTopOrBottom('rowCount');
                 }
+                this.bottomRows = this.getCombinedBottomRows(
+                    { bottomTable, bufferStart, bufferEnd, direction, topPreviousDataLength }
+                );
+                this.currentScopeStartIndex = newScopeStart;
+                this.currentScopeEndIndex = newScopeStart + (bufferEnd - bufferStart) + numRows;
             } else {
-                this.table = receivedTable;
+                this.table = topTable;
+                this.bottomRows = bottomTable ? bottomTable.rows : [];
             }
             this.currentRowCount = this.table.rowCount;
             this.transformSelection();
-            
+                
             this.numRowsAbove = lazyLoad ? this.currentScopeStartIndex : 0;
-            this.numRowsBelow = lazyLoad ? this.currentRowCount - this.currentScopeEndIndex : 0;
+            this.numRowsBelow = lazyLoad
+                ? this.numRowsTop + (this.bottomRowsMode && this.numRowsBottom + 1) - this.currentScopeEndIndex
+                : 0;
         },
-
+        getTopAndBottomIndicesOnPagination(loadFromIndex, numRows) {
+            const currentPageEnd = loadFromIndex + numRows;
+            const topLoadFromIndex = loadFromIndex;
+            const topNumRows = this.numRowsTop;
+            const bottomLoadFromIndex = currentPageEnd - this.numRowsBottom;
+            const bottomNumRows = this.numRowsBottom;
+            return { topLoadFromIndex, topNumRows, bottomLoadFromIndex, bottomNumRows };
+        },
+        getTopIndices(loadFromIndex, loadToIndex) {
+            const topLoadFromIndex = Math.min(loadFromIndex, this.numRowsTop);
+            const topLoadToIndex = Math.min(loadToIndex, this.numRowsTop);
+            const topNumRows = topLoadToIndex - topLoadFromIndex;
+            return { topLoadFromIndex, topNumRows };
+        },
+        getBottomIndices(loadFromIndex, loadToIndex) {
+            const bottomLoadFromIndex = this.currentRowCount - Math.min(
+                this.numRowsBottom, this.numRowsTotal - loadFromIndex
+            );
+            const bottomLoadToIndex = this.currentRowCount - Math.min(
+                this.numRowsBottom, this.numRowsTotal - loadToIndex
+            );
+            const bottomNumRows = bottomLoadToIndex - bottomLoadFromIndex;
+            return { bottomLoadFromIndex, bottomNumRows };
+        },
         // eslint-disable-next-line max-params
-        async requestTable(startIndex, numRows, displayedColumns, updateDisplayedColumns, updateTotalSelected,
+        requestTable(startIndex, numRows, displayedColumns, updateDisplayedColumns, updateTotalSelected,
             clearImageDataCache) {
             const selectedRendererIds = updateDisplayedColumns
                 ? this.getCurrentSelectedRenderers(this.settings.displayedColumns)
                 : this.selectedRendererIds;
-            let receivedTable;
             // if columnSortColumnName is present a sorting is active
             if (this.columnSortColumnName || this.searchTerm || this.colFilterActive) {
-                receivedTable = await this.requestFilteredAndSortedTable(startIndex, numRows, displayedColumns,
+                return this.requestFilteredAndSortedTable(startIndex, numRows, displayedColumns,
                     updateDisplayedColumns, updateTotalSelected, selectedRendererIds, clearImageDataCache);
-                if (updateTotalSelected) {
-                    this.totalSelected = receivedTable.totalSelected;
-                }
             } else {
-                receivedTable = await this.requestUnfilteredAndUnsortedTable(startIndex, numRows, displayedColumns,
+                return this.requestUnfilteredAndUnsortedTable(startIndex, numRows, displayedColumns,
                     updateDisplayedColumns, selectedRendererIds, clearImageDataCache);
-                if (updateTotalSelected) {
-                    this.totalSelected = this.currentSelectedRowKeys.size;
-                }
             }
-            return receivedTable;
         },
 
         // eslint-disable-next-line max-params
@@ -429,15 +516,41 @@ export default {
             return this.jsonDataService.data({ method, options });
         },
 
-        combineWithPrevious(newRows, bufferStart, bufferEnd, direction) {
+        getCombinedTopRows({ topTable, bufferStart, bufferEnd, direction, topPreviousDataLength }) {
+            const previousStartIndex = this.currentScopeStartIndex;
+            const topBufferStart = Math.min(bufferStart - previousStartIndex, topPreviousDataLength);
+            const topBufferEnd = Math.min(bufferEnd - previousStartIndex, topPreviousDataLength);
+            return this.combineWithPrevious({
+                newRows: topTable?.rows,
+                bufferStart: topBufferStart,
+                bufferEnd: topBufferEnd,
+                direction
+            });
+        },
+        getCombinedBottomRows({ bottomTable, bufferStart, bufferEnd, direction, topPreviousDataLength }) {
+            // plus 1 because of the additional "…" row
+            const previousBottomStartIndex = Math.max(this.numRowsTop + 1, this.currentScopeStartIndex);
+            const bottomBufferStart = Math.max(bufferStart - previousBottomStartIndex, 0);
+            const bottomBufferEnd = Math.max(bufferEnd - previousBottomStartIndex, 0);
+            return this.combineWithPrevious({
+                newRows: bottomTable?.rows,
+                bufferStart: bottomBufferStart,
+                bufferEnd: bottomBufferEnd,
+                direction,
+                bottom: true
+            });
+        },
+        combineWithPrevious({ newRows, bufferStart, bufferEnd, direction, bottom = false }) {
+            const rows = newRows || [];
             if (bufferStart === bufferEnd) {
-                return newRows;
+                return rows;
             }
-            const buffer = this.table.rows.slice(bufferStart, bufferEnd);
+            const previousRows = bottom ? this.bottomRows : this.table.rows;
+            const buffer = previousRows?.slice(bufferStart, bufferEnd) || [];
             if (direction > 0) {
-                return [...buffer, ...newRows];
+                return [...buffer, ...rows];
             } else {
-                return [...newRows, ...buffer];
+                return [...rows, ...buffer];
             }
         },
 
@@ -524,8 +637,8 @@ export default {
                 return this.currentSelectedRowKeys.size;
             }
         },
-        onRowSelect(selected, rowInd) {
-            const rowKey = this.table.rows[rowInd][0];
+        onRowSelect(selected, rowInd, _groupInd, isTop) {
+            const rowKey = isTop ? this.table.rows[rowInd][0] : this.bottomRows[rowInd][0];
             this.totalSelected += selected ? 1 : -1;
             this.updateSelection(selected, [rowKey]);
         },
@@ -627,8 +740,10 @@ export default {
             if (typeof this.table.rows === 'undefined') {
                 return;
             }
-            const rowKeys = this.table.rows.map(row => row[0]).filter(x => typeof x !== 'undefined');
-            this.currentSelection = rowKeys.map(rowKey => this.currentSelectedRowKeys.has(rowKey));
+            const rowKeysTop = this.table.rows.map(row => row[0]).filter(x => typeof x !== 'undefined');
+            const rowKeysBottom = this.bottomRows.map(row => row[0]);
+            this.currentSelection = rowKeysTop.map(rowKey => this.currentSelectedRowKeys.has(rowKey));
+            this.currentBottomSelection = rowKeysBottom.map(rowKey => this.currentSelectedRowKeys.has(rowKey));
         },
         clearSelection() {
             this.currentSelectedRowKeys = new Set();
@@ -762,7 +877,9 @@ export default {
       v-if="dataLoaded && numberOfDisplayedColumns > 0"
       ref="tableUI"
       :data="[rowData]"
+      :bottom-data="bottomRowData"
       :current-selection="[currentSelection]"
+      :current-bottom-selection="currentBottomSelection"
       :total-selected="totalSelected"
       :data-config="dataConfig"
       :table-config="tableConfig"
