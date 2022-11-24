@@ -132,6 +132,11 @@ describe('TableView.vue', () => {
         };
     });
 
+    window.ResizeObserver = jest.fn(() => ({
+        observe: jest.fn(),
+        unobserve: jest.fn()
+    }));
+
     window.IntersectionObserver = jest.fn(() => ({
         observe: () => null,
         unobserve: () => null,
@@ -430,7 +435,7 @@ describe('TableView.vue', () => {
                         () => {
                             wrapper.vm.currentScopeStartIndex = 200;
                             wrapper.vm.currentScopeEndIndex = 400;
-                            wrapper.vm.rowCount = 1000;
+                            wrapper.vm.currentRowCount = 1000;
                             const startIndex = 220;
                             const endIndex = 340;
                             wrapper.vm.onScroll({ direction: 1, startIndex, endIndex });
@@ -440,8 +445,8 @@ describe('TableView.vue', () => {
                                     direction: 1,
                                     loadFromIndex: 400,
                                     newScopeStart: 200,
-                                    bufferStart: 200,
-                                    bufferEnd: 400,
+                                    bufferStart: 0,
+                                    bufferEnd: 200,
                                     numRows: 20
                                 } }
                             ));
@@ -514,7 +519,7 @@ describe('TableView.vue', () => {
                         () => {
                             wrapper.vm.currentScopeStartIndex = 200;
                             wrapper.vm.currentScopeEndIndex = 400;
-                            wrapper.vm.rowCount = 1000;
+                            wrapper.vm.currentRowCount = 1000;
                             const startIndex = 260;
                             const endIndex = 380;
                             wrapper.vm.onScroll({ direction: -1, startIndex, endIndex });
@@ -524,8 +529,8 @@ describe('TableView.vue', () => {
                                     direction: -1,
                                     loadFromIndex: 180,
                                     newScopeStart: 180,
-                                    bufferStart: 200,
-                                    bufferEnd: 400,
+                                    bufferStart: 0,
+                                    bufferEnd: 200,
                                     numRows: 20
                                 } }
                             ));
@@ -830,10 +835,6 @@ describe('TableView.vue', () => {
             let wrapper, rowSelectSpy, selectAllSpy, publishOnSelectionChangeSpy;
 
             beforeEach(async () => {
-                window.ResizeObserver = jest.fn(() => ({
-                    observe: jest.fn(),
-                    unobserve: jest.fn()
-                }));
                 wrapper = await mount(TableView, context);
                 rowSelectSpy = jest.spyOn(wrapper.vm, 'onRowSelect');
                 selectAllSpy = jest.spyOn(wrapper.vm, 'onSelectAll');
@@ -1081,13 +1082,6 @@ describe('TableView.vue', () => {
     });
 
     describe('image rendering', () => {
-        beforeEach(() => {
-            window.ResizeObserver = jest.fn(() => ({
-                observe: jest.fn(),
-                unobserve: jest.fn()
-            }));
-        });
-
         it('creates the correct source urls', async () => {
             const { getImageUrlSpy } = await asyncMountTableView(context);
 
