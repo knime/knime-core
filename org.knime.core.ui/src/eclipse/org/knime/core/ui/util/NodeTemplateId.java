@@ -48,6 +48,8 @@
  */
 package org.knime.core.ui.util;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 import java.util.function.Function;
 
@@ -96,8 +98,20 @@ public final class NodeTemplateId {
      * @return The node template ID string
      */
     public static String of(final NodeFactory<? extends NodeModel> nodeFactory) {
+        return of(nodeFactory, false);
+    }
+
+    /**
+     * Creates a node template ID based on the node type
+     *
+     * @param nodeFactory The node factory class
+     * @param encodeNodeNameWithURLEscapeCodes whether to escape the node names with URL escape codes (only relevant in
+     *            case of dynamic node factories)
+     * @return The node template ID string
+     */
+    public static String of(final NodeFactory<? extends NodeModel> nodeFactory,
+        final boolean encodeNodeNameWithURLEscapeCodes) {
         String nodeFactoryClassName;
-        String nodeName = null;
         if (nodeFactory instanceof MissingNodeFactory) {
             NodeAndBundleInformation nodeInfo = ((MissingNodeFactory)nodeFactory).getNodeAndBundleInfo();
             nodeFactoryClassName =
@@ -107,14 +121,15 @@ public final class NodeTemplateId {
         }
 
         if (nodeFactory instanceof DynamicNodeFactory) {
-            nodeName = nodeFactory.getNodeName();
+            var nodeName = nodeFactory.getNodeName();
+            if (encodeNodeNameWithURLEscapeCodes) {
+                nodeName = URLEncoder.encode(nodeName, StandardCharsets.UTF_8);
+            }
+            return ofDynamicNodeFactory(nodeFactoryClassName, nodeName);
+        } else {
+            return nodeFactoryClassName;
         }
 
-        if (nodeName == null) {
-            return nodeFactoryClassName;
-        } else {
-            return ofDynamicNodeFactory(nodeFactoryClassName, nodeName);
-        }
     }
 
     /**
