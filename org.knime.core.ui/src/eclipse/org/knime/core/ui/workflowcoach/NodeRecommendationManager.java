@@ -123,6 +123,8 @@ public final class NodeRecommendationManager {
 
     private static List<Map<String, List<NodeRecommendation>>> cachedRecommendations;
 
+    private static List<NodeTripleProvider> nodeTripleProviders;
+
     private Predicate<NodeInfo> m_isSourceNode;
 
     private Predicate<NodeInfo> m_existsInRepository;
@@ -457,7 +459,7 @@ public final class NodeRecommendationManager {
      * @return True if there are cached recommendations from at least one triple provider loaded, false otherwise.
      */
     public static boolean isEnabled() {
-        return getNumLoadedProviders() > 0;
+        return getNodeTripleProviders().stream().anyMatch(NodeTripleProvider::isEnabled);
     }
 
     /**
@@ -664,8 +666,11 @@ public final class NodeRecommendationManager {
      * @return a list of all available node triple providers
      */
     public static List<NodeTripleProvider> getNodeTripleProviders() {
-        return getNodeTripleProviderFactories().stream().flatMap(f -> f.createProviders().stream())
-            .collect(Collectors.toList());
+        if (nodeTripleProviders == null) {
+            nodeTripleProviders = getNodeTripleProviderFactories().stream().flatMap(f -> f.createProviders().stream())
+                .collect(Collectors.toList());
+        }
+        return nodeTripleProviders;
     }
 
     /**
