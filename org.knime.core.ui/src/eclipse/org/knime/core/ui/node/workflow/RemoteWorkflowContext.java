@@ -47,8 +47,9 @@
 package org.knime.core.ui.node.workflow;
 
 import java.net.URI;
+import java.util.Optional;
 
-import org.knime.core.node.workflow.WorkflowContext;
+import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.util.Version;
 import org.knime.core.util.auth.Authenticator;
 import org.knime.core.util.auth.SimpleTokenAuthenticator;
@@ -57,7 +58,7 @@ import org.knime.core.util.auth.SimpleTokenAuthenticator;
  * This class holds information about the context in which a remote workflow (e.g. a workflow on a KNIME server)
  * currently resides. It includes information such as the server URL and the workflow path.
  *
- * See also {@link WorkflowContext}.
+ * See also {@link WorkflowContextV2}.
  *
  * <b>This class is not intended to be used by clients.</b>
  *
@@ -81,6 +82,8 @@ public final class RemoteWorkflowContext implements WorkflowContextUI {
 
     private Authenticator m_authenticator;
 
+    private final WorkflowContextV2 m_workflowContext;
+
     /**
      * Creates a new context for purely remote workflows (i.e. workflows running on a server).
      *
@@ -91,18 +94,19 @@ public final class RemoteWorkflowContext implements WorkflowContextUI {
      * @param mountpointURI the uri of the workflow inside the mount point
      * @param clientVersion the version of the client talking to the 'workflow' server
      * @param serverVersion the version of the server hosting the remote workflow
-     * @deprecated use {@link #RemoteWorkflowContext(URI, String, Authenticator, String, URI, Version, Version)} instead
+     * @deprecated use {@link #RemoteWorkflowContext(WorkflowContextV2, URI, String, Authenticator, String, URI,
+     * Version, Version)} instead
      */
     @Deprecated(since = "4.5.0")
     public RemoteWorkflowContext(final URI repositoryAddress, final String relativePath, final String authToken,
-        final String mountId, final URI mountpointURI, final Version clientVersion, final Version serverVersion) {
+            final String mountId, final URI mountpointURI, final Version clientVersion, final Version serverVersion) {
         this(repositoryAddress, relativePath, new SimpleTokenAuthenticator(authToken), mountId, mountpointURI,
             clientVersion, serverVersion);
         m_authToken = authToken;
     }
 
     /**
-     * Creates a new context for purely remote workflows (i.e. workflows running on a server).
+     * Creates a new context for purely remote workflows (i.e. workflows running on a server or Hub).
      *
      * @param repositoryAddress the base address of the server repository (the REST endpoint)
      * @param relativePath the path of the workflow relative to the repository root
@@ -112,9 +116,33 @@ public final class RemoteWorkflowContext implements WorkflowContextUI {
      * @param clientVersion the version of the client talking to the 'workflow' server
      * @param serverVersion the version of the server hosting the remote workflow
      * @since 4.5.0
+     * @deprecated use {@link #RemoteWorkflowContext(WorkflowContextV2, URI, String, Authenticator, String, URI,
+     * Version, Version)} instead
      */
-    public RemoteWorkflowContext(final URI repositoryAddress, final String relativePath, final Authenticator authenticator,
-        final String mountId, final URI mountpointURI, final Version clientVersion, final Version serverVersion) {
+    @Deprecated(since = "4.7.0")
+    public RemoteWorkflowContext(final URI repositoryAddress, final String relativePath,
+            final Authenticator authenticator, final String mountId, final URI mountpointURI,
+            final Version clientVersion, final Version serverVersion) {
+        this(null, repositoryAddress, relativePath, authenticator, mountId, mountpointURI, clientVersion,
+            serverVersion);
+    }
+
+    /**
+     * Creates a new context for purely remote workflows (i.e. workflows running on a server or Hub).
+     *
+     * @param workflowContext the full workflow context
+     * @param repositoryAddress the base address of the server repository (the REST endpoint)
+     * @param relativePath the path of the workflow relative to the repository root
+     * @param authenticator the authenticator
+     * @param mountId the (default) mount id of the server
+     * @param mountpointURI the uri of the workflow inside the mount point
+     * @param clientVersion the version of the client talking to the 'workflow' server
+     * @param serverVersion the version of the server hosting the remote workflow
+     * @since 4.7.0
+     */
+    public RemoteWorkflowContext(final WorkflowContextV2 workflowContext, final URI repositoryAddress,
+            final String relativePath, final Authenticator authenticator, final String mountId, final URI mountpointURI,
+            final Version clientVersion, final Version serverVersion) {
         m_repositoryAddress = repositoryAddress;
         m_relativePath = relativePath;
         m_authenticator = authenticator;
@@ -122,6 +150,7 @@ public final class RemoteWorkflowContext implements WorkflowContextUI {
         m_mountpointURI = mountpointURI;
         m_clientVersion = clientVersion;
         m_serverVersion = serverVersion;
+        m_workflowContext = workflowContext;
     }
 
     /**
@@ -174,7 +203,7 @@ public final class RemoteWorkflowContext implements WorkflowContextUI {
     }
 
     /**
-     * Returns the URI of the worklfow inside the mount point.
+     * Returns the URI of the workflow inside the mount point.
      *
      * @return the workflow URI
      */
@@ -194,5 +223,13 @@ public final class RemoteWorkflowContext implements WorkflowContextUI {
      */
     public Version getServerVersion() {
         return m_serverVersion;
+    }
+
+    /**
+     * @return the full {@link WorkflowContextV2} if available, {@link Optional#empty()} otherwise
+     * @since 4.7.0
+     */
+    public Optional<WorkflowContextV2> getWorkflowContextV2() {
+        return Optional.ofNullable(m_workflowContext);
     }
 }

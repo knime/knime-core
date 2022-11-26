@@ -46,7 +46,12 @@
  */
 package org.knime.core.ui.node.workflow;
 
+import java.util.Optional;
+
+import org.knime.core.node.workflow.NodeContext;
+import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.ui.UI;
+import org.knime.core.ui.wrapper.WorkflowContextWrapper;
 
 /**
  * Workflow context information that should be available to the UI.
@@ -54,5 +59,20 @@ import org.knime.core.ui.UI;
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
 public interface WorkflowContextUI extends UI {
+
+    /**
+     * Gets the {@link WorkflowContextV2} via the {@link NodeContext}'s {@link WorkflowContextUI} context object.
+     *
+     * @return {@link WorkflowContextV2} instance if available, {@link Optional#empty()} otherwise
+     * @since 4.7.0
+     */
+    public static Optional<WorkflowContextV2> getWorkflowContextFromNodeContext() {
+        return Optional.ofNullable(NodeContext.getContext())
+                .flatMap(nc -> nc.getContextObjectForClass(WorkflowManagerUI.class))
+                .map(WorkflowManagerUI::getContext)
+                .map(contextUI -> contextUI instanceof WorkflowContextWrapper
+                            ? ((WorkflowContextWrapper)contextUI).unwrap()
+                            : ((RemoteWorkflowContext)contextUI).getWorkflowContextV2().orElse(null));
+    }
 
 }
