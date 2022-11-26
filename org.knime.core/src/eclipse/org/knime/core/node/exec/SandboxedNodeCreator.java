@@ -232,8 +232,6 @@ public final class SandboxedNodeCreator {
             if (oldExecInfo instanceof AnalyticsPlatformExecutorInfo) {
                 final var apExecInfo = (AnalyticsPlatformExecutorInfo) oldExecInfo;
                 execInfoBuilder.withBatchMode(apExecInfo.isBatchMode());
-                apExecInfo.getMountpoint().ifPresent(mp ->
-                        execInfoBuilder.withMountpoint(mp.getFirst().getAuthority(), mp.getSecond()));
             }
             newContext = WorkflowContextV2.builder()
                     .withExecutor(execInfoBuilder.build())
