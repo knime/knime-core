@@ -272,11 +272,11 @@ public class TableViewDataServiceImpl implements TableViewDataService {
         final boolean sortAscending) {
         final var dts = table.getSpec();
         final var sortColIndex = dts.findColumnIndex(sortColumn);
-        final var colType = dts.getColumnSpec(sortColIndex).getType();
         final var rc = RowComparator.on(dts);
         if (sortColIndex < 0) {
             rc.thenComparingRowKey(rk -> rk.withAlphanumericComparison().withDescendingSortOrder(!sortAscending));
         } else {
+            final var colType = dts.getColumnSpec(sortColIndex).getType();
             rc.thenComparingColumn(sortColIndex, col -> col
                 .withAlphanumericComparison(colType.isCompatible(StringValue.class))
                 .withDescendingSortOrder(!sortAscending));
