@@ -44,7 +44,7 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   10 Nov 2022 ("Manuel Hotz &lt;manuel.hotz@knime.com&gt;"): created
+ *   10 Nov 2022 (manuelhotz): created
  */
 package org.knime.core.data.sort;
 
@@ -61,7 +61,7 @@ import org.junit.Test;
 /**
  * Tests the alphanumeric comparator.
  *
- * @author "Manuel Hotz &lt;manuel.hotz@knime.com&gt;"
+ * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
  */
 public class AlphanumericComparatorTest {
 

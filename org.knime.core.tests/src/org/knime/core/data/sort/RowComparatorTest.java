@@ -44,7 +44,7 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   14 Nov 2022 ("Manuel Hotz &lt;manuel.hotz@knime.com&gt;"): created
+ *   14 Nov 2022 (manuelhotz): created
  */
 package org.knime.core.data.sort;
 
@@ -53,6 +53,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.stream.IntStream;
 
@@ -85,7 +86,7 @@ import org.knime.core.node.workflow.virtual.parchunk.VirtualParallelizedChunkPor
 /**
  * Tests the row comparator used for sorting rows in data tables.
  *
- * @author "Manuel Hotz &lt;manuel.hotz@knime.com&gt;"
+ * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
  */
 public class RowComparatorTest {
 
@@ -383,6 +384,43 @@ public class RowComparatorTest {
                         assertTrue(cmp > 0);
                     }
                     last = rkv;
+                }
+            }
+        }
+    }
+
+    /**
+     * Tests that the old API of AbstractTableSorter by giving sort columns agrees with the Row Comparator constructed
+     * by the builder.
+     * @throws CanceledExecutionException if shuffle is canceled
+     */
+    @Test
+    public void testOldVsNewAPISorter() throws CanceledExecutionException {
+
+        try (final var shuffler = new ClosableShuffler(m_table, m_exec, 42)) {
+            final var shuffledTable = shuffler.getShuffled();
+
+            final var newComp = RowComparator.on(m_spec)
+                    .thenComparingRowKey(k -> k)
+                    .thenComparingColumn(0, c -> c.withDescendingSortOrder().withMissingsLast())
+                    .thenComparingColumn(1, c -> c.withMissingsLast())
+                    .build();
+
+            final var sorter = new BufferedDataTableSorter(shuffledTable,
+                Arrays.asList("-ROWKEY -", "MyDouble", "MyInt"),
+                new boolean[] {true, false, true},
+                false);
+
+            final var sorted = sorter.sort(m_exec);
+
+            try (final var it = sorted.iterator()) {
+                DataRow last = null;
+                while (it.hasNext()) {
+                    final var next = it.next();
+                    if (last != null) {
+                        assertTrue(newComp.compare(last, next) < 0);
+                    }
+                    last = next;
                 }
             }
         }

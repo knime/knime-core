@@ -121,9 +121,9 @@ public final class RowComparator implements Comparator<DataRow> {
         private final int m_index;
         private final DataType m_type;
 
-        private boolean m_alphanum = false;
-        private boolean m_descending = false;
-        private boolean m_missingsLast = false;
+        private boolean m_alphanum;
+        private boolean m_descending;
+        private boolean m_missingsLast;
 
         private ColumnComparatorBuilder(final int columnIndex, final DataType type) {
             if (columnIndex < 0) {
@@ -222,8 +222,8 @@ public final class RowComparator implements Comparator<DataRow> {
      */
     public static final class RowKeyComparatorBuilder {
 
-        private boolean m_alphanum = false;
-        private boolean m_descending = false;
+        private boolean m_alphanum;
+        private boolean m_descending;
 
         private RowKeyComparatorBuilder() {
         }
@@ -280,7 +280,7 @@ public final class RowComparator implements Comparator<DataRow> {
     /**
      * Builder to construct a row comparator.
      *
-     * @author "Manuel Hotz &lt;manuel.hotz@knime.com&gt;"
+     * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
      */
     public static final class RowComparatorBuilder {
 

@@ -55,7 +55,7 @@ import java.util.Comparator;
  *
  * @param <T> type to be compared
  *
- * @author Manuel Hotz &lt;manuel.hotz@knime.com&gt;
+ * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
  */
 public class MissingDataCellComparator<T extends DataCell> implements Comparator<T> {
 

@@ -316,7 +316,7 @@ abstract class AbstractTableSorter {
             throw new IllegalArgumentException("Argument array must not contain null: " + inclList);
         }
         if (!(inclList instanceof Set)) {
-            Set<String> noDuplicatesSet = new HashSet<String>(inclList);
+            Set<String> noDuplicatesSet = new HashSet<>(inclList);
             if (noDuplicatesSet.size() != inclList.size()) {
                 throw new IllegalArgumentException("Argument collection must " + "not contain duplicates: " + inclList);
             }
@@ -333,7 +333,8 @@ abstract class AbstractTableSorter {
                 }
                 rc.thenComparingRowKey(rk -> rk.withDescendingSortOrder(!ascending));
             } else {
-                rc.thenComparingColumn(index, col -> col.withDescendingSortOrder(!ascending).withMissingsLast(sortMissingsToEnd));
+                rc.thenComparingColumn(index,
+                    col -> col.withDescendingSortOrder(!ascending).withMissingsLast(sortMissingsToEnd));
             }
             i++;
         }

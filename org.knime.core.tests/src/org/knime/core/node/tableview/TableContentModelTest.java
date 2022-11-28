@@ -81,10 +81,12 @@ import org.knime.core.data.def.DefaultRowIterator;
 import org.knime.core.data.def.DefaultTable;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.data.sort.RowComparator;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.KeyEvent;
 import org.knime.core.node.tableview.TableContentModel.TableContentFilter;
+import org.knime.core.node.tableview.TableSortOrder.TableSortKey;
 import org.knime.core.node.util.ViewUtils;
 import org.mockito.ArgumentMatcher;
 
@@ -334,6 +336,69 @@ public class TableContentModelTest extends TestCase {
         m.setDataTable(null);
         m.setDataTable(null);
         assertNull(m.getDataTable());
+    }
+
+    /**
+     * Test sorting used in TableContentModel.
+     * @throws Exception while sorting
+     */
+    public final void testSortTable() throws Exception {
+        final var dts = new DataTableSpec(
+            new String[] {"double", "alphanum"},
+            new DataType[] {DoubleCell.TYPE, StringCell.TYPE}
+            );
+
+        final DataTable data = new DefaultTable(new DataRow[] {
+            new DefaultRow(RowKey.createRowKey(1L), new DoubleCell(1.0d), new StringCell("AlphaRow1_Row1") ),
+            new DefaultRow(RowKey.createRowKey(2L), new DoubleCell(2.0d), new StringCell("AlphaRow2_Row1") ),
+            new DefaultRow(RowKey.createRowKey(10L), new DoubleCell(10.0d), new StringCell("AlphaRow10_Row1") ),
+        }, dts);
+
+        final var rowKeysDescending = RowComparator.on(dts).thenComparingRowKey(
+            rk -> rk.withAlphanumericComparison().withDescendingSortOrder()).build();
+        final var m = new TableContentModel();
+        final var rkSorter = new TableSorterWorker(data,
+            new TableSortOrder(-1).nextSortOrder(-1, TableSortKey.PRIMARY_DESCENDING),new JTable(m), m);
+        final var sortedByKey = rkSorter.doInBackgroundWithContext();
+        DataRow previousRow = null;
+        for (var row : sortedByKey) {
+            if (previousRow != null) {
+                assertTrue(String.format("Row Keys not sorted in descending order: %s , %s", previousRow, row),
+                    rowKeysDescending.compare(previousRow, row) < 0);
+            }
+            previousRow = row;
+        }
+
+        final var alphaCol = dts.findColumnIndex("alphanum");
+        final var alphanumStringsDescending = RowComparator.on(dts).thenComparingColumn(alphaCol,
+            c -> c.withAlphanumericComparison().withDescendingSortOrder()).build();
+        final var sSorter = new TableSorterWorker(data,
+            new TableSortOrder(alphaCol).nextSortOrder(alphaCol, TableSortKey.PRIMARY_DESCENDING), new JTable(m), m);
+        final var sortedByString = sSorter.doInBackgroundWithContext();
+        DataRow previous = null;
+        for (var row : sortedByString) {
+            if (previous != null) {
+                assertTrue(String.format("String cell not sorted in descending order alphanumerically: '%s' , '%s'",
+                    previous.getCell(1), row.getCell(1)),
+                    alphanumStringsDescending.compare(previous, row) < 0);
+            }
+            previous = row;
+        }
+
+        final var alphanumStringsAscending = RowComparator.on(dts).thenComparingColumn(alphaCol,
+            c -> c.withAlphanumericComparison()).build();
+        final var sAscendingSorter = new TableSorterWorker(sortedByString,
+            new TableSortOrder(alphaCol).nextSortOrder(alphaCol, TableSortKey.PRIMARY_ASCENDING), new JTable(m), m);
+        final var sortedByStringAsc = sAscendingSorter.doInBackgroundWithContext();
+        DataRow previousAsc = null;
+        for (var row : sortedByStringAsc) {
+            if (previousAsc != null) {
+                assertTrue(String.format("String cell not sorted in ascending order alphanumerically: '%s' , '%s'",
+                    previousAsc.getCell(1), row.getCell(1)),
+                    alphanumStringsAscending.compare(previousAsc, row) < 0);
+            }
+            previousAsc = row;
+        }
     }
 
     /**

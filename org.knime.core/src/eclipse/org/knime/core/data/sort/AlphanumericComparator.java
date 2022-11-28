@@ -57,7 +57,7 @@ import java.util.Comparator;
  * "<a href="https://en.wikipedia.org/wiki/Natural_sort_order">natural sort order</a>". However, in order to not
  * confuse this order with Java's natural order, we use the term "alpha-numerical" sort order.
  *
- * @author "Manuel Hotz &lt;manuel.hotz@knime.com&gt;"
+ * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
  */
 public class AlphanumericComparator implements Comparator<String> {
 
