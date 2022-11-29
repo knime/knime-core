@@ -12,7 +12,7 @@ export default {
         optionsGenerator(control) {
             return [
                 ...control.uischema.options.showNoneColumn ? [{ id: '<none>', text: 'None' }] : [],
-                ...control.uischema.options.showRowKeys ? [{ id: '<row-keys>', text: 'Row keys' }] : [],
+                ...control.uischema.options.showRowKeys ? [{ id: '<row-keys>', text: 'RowIDs' }] : [],
                 ...control.schema.oneOf.map(optionsMapper)
             ];
         }

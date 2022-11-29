@@ -94,8 +94,8 @@
             },
             "showRowKeys": {
               "type": "boolean",
-              "title": "Show row keys",
-              "description": "Whether to display the row keys or not",
+              "title": "Show RowIDs",
+              "description": "Whether to display the RowIDs or not",
               "default": true
             },
             "showColumnDataType": {

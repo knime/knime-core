@@ -80,7 +80,7 @@ public class TableViewViewSettings implements DefaultNodeSettings {
     /**
      * If the rows keys should be displayed
      */
-    @Schema(title = "Show row keys", description = "Whether to display the row keys or not")
+    @Schema(title = "Show RowIDs", description = "Whether to display the RowIDs or not")
     public boolean m_showRowKeys = true;
 
     /**
