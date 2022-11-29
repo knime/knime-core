@@ -2,7 +2,7 @@
 /* eslint-disable max-lines */
 import TableView from '@/components/TableView';
 import { JsonDataService, SelectionService } from '@knime/ui-extension-service';
-import { mount, createLocalVue } from '@vue/test-utils';
+import { mount, createLocalVue, shallowMount } from '@vue/test-utils';
 import { TableUI } from '@knime/knime-ui-table';
 import { asyncMountTableView, changeViewSetting } from '../utils/tableViewTestUtils';
 import Vuex from 'vuex';
@@ -306,11 +306,11 @@ describe('TableView.vue', () => {
         });
 
         describe('lazyloading and scrolling', () => {
-            let wrapper, updateDataSpy;
+            let wrapper, updateDataSpy, dataSpy;
     
             beforeEach(async () => {
                 initialDataMock.settings.enablePagination = false;
-                ({ wrapper, updateDataSpy } = await asyncMountTableView(context));
+                ({ wrapper, updateDataSpy, dataSpy } = await asyncMountTableView(context));
             });
 
             describe('initialization', () => {
@@ -347,7 +347,7 @@ describe('TableView.vue', () => {
                                 return { pass: false, message };
                             }
                             for (let i = 0; i < params.length; i++) {
-                                expect(params[i]).toStrictEqual(received[i]);
+                                expect(received[i]).toStrictEqual(params[i]);
                             }
                             return { pass: true };
                         }
@@ -372,6 +372,277 @@ describe('TableView.vue', () => {
                         dataRequestResult.rows[0],
                         dataRequestResult.rows[1]
                     ]);
+                });
+
+                describe('bottomRowsMode', () => {
+                    it('determines the number of top and bottom rows', () => {
+                        wrapper.vm.maxNumRows = 5000;
+                        expect(wrapper.vm.numRowsTotal).toBe(dataRequestResult.rowCount);
+                        expect(wrapper.vm.numRowsBottom).toBe(0);
+                        expect(wrapper.vm.numRowsTop).toBe(dataRequestResult.rowCount);
+                        wrapper.vm.currentRowCount = wrapper.vm.maxNumRows + 1;
+                        expect(wrapper.vm.numRowsTotal).toBe(wrapper.vm.maxNumRows);
+                        expect(wrapper.vm.numRowsBottom).toBe(1000);
+                        expect(wrapper.vm.numRowsTop).toBe(wrapper.vm.maxNumRows - 1000 - 1);
+                    });
+
+                    it('requests only top table if no bottom rows are required', () => {
+                        wrapper.vm.maxNumRows = 5000;
+                        wrapper.vm.currentRowCount = wrapper.vm.maxNumRows + 1;
+                        jest.clearAllMocks();
+                        const loadFromIndex = 0;
+                        const numRows = 200;
+                        wrapper.vm.updateData({ lazyLoad: {
+                            direction: 1,
+                            bufferStart: 0,
+                            bufferEnd: 0,
+                            loadFromIndex,
+                            newScopeStart: 0,
+                            numRows
+                        } });
+                        expect(dataSpy).toHaveBeenCalledTimes(1);
+                        expect(dataSpy).toHaveBeenCalledWith(expect.objectContaining({
+                            options: expect.arrayStartingWith([expect.anything(), loadFromIndex, numRows])
+                        }));
+                    });
+
+                    it('requests only bottom table if no top rows are required', () => {
+                        wrapper.vm.maxNumRows = 5000;
+                        wrapper.vm.currentRowCount = wrapper.vm.maxNumRows + 1;
+                        jest.clearAllMocks();
+                        wrapper.vm.updateData({ lazyLoad: {
+                            direction: 1,
+                            bufferStart: 0,
+                            bufferEnd: 0,
+                            loadFromIndex: 4500,
+                            newScopeStart: 0,
+                            numRows: 200
+                        } });
+                        expect(dataSpy).toHaveBeenCalledTimes(1);
+                        const expectedLoadFromIndex = 4501;
+                        const expectedNumRows = 200;
+                        expect(dataSpy).toHaveBeenCalledWith(expect.objectContaining({
+                            options: expect.arrayStartingWith(
+                                [expect.anything(), expectedLoadFromIndex, expectedNumRows]
+                            )
+                        }));
+                    });
+
+                    it('requests both top and bottom table if required', () => {
+                        wrapper.vm.maxNumRows = 5000;
+                        wrapper.vm.currentRowCount = wrapper.vm.maxNumRows + 1;
+                        jest.clearAllMocks();
+                        wrapper.vm.updateData({ lazyLoad: {
+                            direction: 1,
+                            bufferStart: 0,
+                            bufferEnd: 0,
+                            loadFromIndex: 3900,
+                            newScopeStart: 0,
+                            numRows: 200
+                        } });
+                        expect(dataSpy).toHaveBeenCalledTimes(2);
+                        const expectedLoadFromIndexTop = 3900;
+                        const expectedNumRowsTop = 99;
+                        expect(dataSpy).toHaveBeenNthCalledWith(1, expect.objectContaining({
+                            options: expect.arrayStartingWith(
+                                [expect.anything(), expectedLoadFromIndexTop, expectedNumRowsTop]
+                            )
+                        }));
+                        const expectedLoadFromIndexBottom = 4001;
+                        const expectedNumRowsBottom = 100;
+                        expect(dataSpy).toHaveBeenNthCalledWith(2, expect.objectContaining({
+                            options: expect.arrayStartingWith(
+                                [expect.anything(), expectedLoadFromIndexBottom, expectedNumRowsBottom]
+                            )
+                        }));
+                    });
+                    
+                    it('requests top table if zero rows are to be fetched', () => {
+                        wrapper.vm.maxNumRows = 5000;
+                        wrapper.vm.currentRowCount = wrapper.vm.maxNumRows + 1;
+                        jest.clearAllMocks();
+                        wrapper.vm.updateData({ lazyLoad: {
+                            loadFromIndex: 0,
+                            newScopeStart: 0,
+                            numRows: 0
+                        } });
+                        expect(dataSpy).toHaveBeenCalledTimes(1);
+                        expect(dataSpy).toHaveBeenNthCalledWith(1, expect.objectContaining({
+                            options: expect.arrayStartingWith(
+                                [expect.anything(), 0, 0]
+                            )
+                        }));
+                    });
+
+                    it('appends buffer from previously fetched bottom rows', async () => {
+                        const wrapper = await shallowMount(TableView, context);
+                        await wrapper.vm.$nextTick();
+                        await wrapper.vm.$nextTick();
+                        wrapper.vm.maxNumRows = 5000;
+
+                        // scrolling down at the intersection of top and bottom
+                        wrapper.vm.currentRowCount = wrapper.vm.maxNumRows + 1;
+                        wrapper.vm.table.rows = [['previousRow1'], ['previousRow2'], ['previousRow3']];
+                        wrapper.vm.bottomRows = [['previousBottomRow1'], ['previousBottomRow2']];
+                        wrapper.vm.currentScopeStartIndex = 3996;
+                        await wrapper.vm.updateData({ lazyLoad: {
+                            direction: 1,
+                            bufferStart: 3997,
+                            bufferEnd: 4003,
+                            loadFromIndex: 4003,
+                            newScopeStart: 3996,
+                            numRows: 100
+                        } });
+                        expect(wrapper.vm.table.rows).toStrictEqual([
+                            ['previousRow2'],
+                            ['previousRow3']
+                            
+                        ]);
+                        expect(wrapper.vm.bottomRows).toStrictEqual([
+                            ['previousBottomRow1'],
+                            ['previousBottomRow2'],
+                            ...dataRequestResult.rows
+                        ]);
+
+                        // scrolling up at the intersection of top and bottom
+                        wrapper.vm.table.rows = [['previousRow1'], ['previousRow2'], ['previousRow3']];
+                        wrapper.vm.bottomRows = [['previousBottomRow1'], ['previousBottomRow2']];
+                        wrapper.vm.currentRowCount = wrapper.vm.maxNumRows + 1;
+                        wrapper.vm.currentScopeStartIndex = 3996;
+                        await wrapper.vm.updateData({ lazyLoad: {
+                            direction: -1,
+                            bufferStart: 3996,
+                            bufferEnd: 4001,
+                            loadFromIndex: 3994,
+                            newScopeStart: 3994,
+                            numRows: 2
+                        } });
+                        expect(wrapper.vm.table.rows).toStrictEqual([
+                            ...dataRequestResult.rows,
+                            ['previousRow1'],
+                            ['previousRow2'],
+                            ['previousRow3']
+                        ]);
+                        expect(wrapper.vm.bottomRows).toStrictEqual([
+                            ['previousBottomRow1']
+                        ]);
+
+                        // no previous top rows
+                        wrapper.vm.table.rows = [];
+                        wrapper.vm.bottomRows = [['previousBottomRow1'], ['previousBottomRow2']];
+                        wrapper.vm.currentRowCount = wrapper.vm.maxNumRows + 1;
+                        wrapper.vm.currentScopeStartIndex = 4498;
+                        await wrapper.vm.updateData({ lazyLoad: {
+                            direction: 1,
+                            bufferStart: 4499,
+                            bufferEnd: 4500,
+                            loadFromIndex: 4500,
+                            newScopeStart: 4499,
+                            numRows: 200
+                        } });
+                        expect(wrapper.vm.table.rows).toStrictEqual([]);
+                        expect(wrapper.vm.bottomRows).toStrictEqual([
+                            ['previousBottomRow2'],
+                            ...dataRequestResult.rows
+                        ]);
+                    });
+
+                    describe('with pagination', () => {
+                        beforeEach(() => {
+                            wrapper.vm.settings.enablePagination = true;
+                            wrapper.vm.currentRowCount = 11000;
+                            wrapper.vm.maxNumRows = 5000;
+                        });
+
+                        it('determines the number of top and bottom rows', () => {
+                            const smallPageSize = 4000;
+                            wrapper.vm.settings.pageSize = smallPageSize;
+                            expect(wrapper.vm.numRowsTotal).toBe(smallPageSize);
+                            expect(wrapper.vm.numRowsBottom).toBe(0);
+                            expect(wrapper.vm.numRowsTop).toBe(smallPageSize);
+
+                            const largePageSize = 6000;
+                            wrapper.vm.settings.pageSize = largePageSize;
+                            expect(wrapper.vm.numRowsTotal).toBe(wrapper.vm.maxNumRows);
+                            expect(wrapper.vm.numRowsBottom).toBe(1000);
+                            expect(wrapper.vm.numRowsTop).toBe(wrapper.vm.maxNumRows - 1000 - 1);
+                        });
+    
+                        it('requests only top table if no bottom rows are required', () => {
+                            const pageSize = 30;
+                            wrapper.vm.settings.pageSize = pageSize;
+                            jest.clearAllMocks();
+                            wrapper.vm.updateData({});
+                            expect(dataSpy).toHaveBeenCalledTimes(1);
+                            expect(dataSpy).toHaveBeenCalledWith(expect.objectContaining({
+                                options: expect.arrayStartingWith([expect.anything(), 0, pageSize])
+                            }));
+                        });
+                        
+    
+                        it('requests only top table if no bottom rows are required on last page', () => {
+                            const pageSize = 6000;
+                            wrapper.vm.settings.pageSize = pageSize;
+                            wrapper.vm.currentPage = 2;
+                            const currentIndex = pageSize;
+                            wrapper.vm.currentIndex = currentIndex;
+                            jest.clearAllMocks();
+                            wrapper.vm.updateData({});
+                            expect(dataSpy).toHaveBeenCalledTimes(1);
+                            expect(dataSpy).toHaveBeenCalledWith(expect.objectContaining({
+                                options: expect.arrayStartingWith(
+                                    [expect.anything(), pageSize, wrapper.vm.currentRowCount - currentIndex]
+                                )
+                            }));
+                        });
+    
+                        it('requests both top and bottom table if required', () => {
+                            const pageSize = 6000;
+                            wrapper.vm.settings.pageSize = pageSize;
+                            jest.clearAllMocks();
+                            wrapper.vm.updateData({});
+                            expect(dataSpy).toHaveBeenCalledTimes(2);
+                            const expectedLoadFromIndexTop = 0;
+                            const expectedNumRowsTop = 3999;
+                            expect(dataSpy).toHaveBeenNthCalledWith(1, expect.objectContaining({
+                                options: expect.arrayStartingWith(
+                                    [expect.anything(), expectedLoadFromIndexTop, expectedNumRowsTop]
+                                )
+                            }));
+                            const expectedLoadFromIndexBottom = 5000;
+                            const expectedNumRowsBottom = 1000;
+                            expect(dataSpy).toHaveBeenNthCalledWith(2, expect.objectContaining({
+                                options: expect.arrayStartingWith(
+                                    [expect.anything(), expectedLoadFromIndexBottom, expectedNumRowsBottom]
+                                )
+                            }));
+                        });
+
+                        it('requests both top and bottom table if required on any page', () => {
+                            const pageSize = 5001;
+                            wrapper.vm.settings.pageSize = pageSize;
+                            wrapper.vm.currentPage = 2;
+                            const currentIndex = pageSize;
+                            wrapper.vm.currentIndex = currentIndex;
+                            jest.clearAllMocks();
+                            wrapper.vm.updateData({});
+                            expect(dataSpy).toHaveBeenCalledTimes(2);
+                            const expectedLoadFromIndexTop = currentIndex;
+                            const expectedNumRowsTop = 3999;
+                            expect(dataSpy).toHaveBeenNthCalledWith(1, expect.objectContaining({
+                                options: expect.arrayStartingWith(
+                                    [expect.anything(), expectedLoadFromIndexTop, expectedNumRowsTop]
+                                )
+                            }));
+                            const expectedLoadFromIndexBottom = currentIndex + pageSize - 1000;
+                            const expectedNumRowsBottom = 1000;
+                            expect(dataSpy).toHaveBeenNthCalledWith(2, expect.objectContaining({
+                                options: expect.arrayStartingWith(
+                                    [expect.anything(), expectedLoadFromIndexBottom, expectedNumRowsBottom]
+                                )
+                            }));
+                        });
+                    });
                 });
             });
     
@@ -415,8 +686,8 @@ describe('TableView.vue', () => {
                                 direction: 1,
                                 loadFromIndex: 400,
                                 newScopeStart: 390,
-                                bufferStart: 190,
-                                bufferEnd: 200,
+                                bufferStart: 390,
+                                bufferEnd: 400,
                                 numRows: 190
                             };
                             expect(updateDataSpy).toHaveBeenCalledWith(expect.objectContaining({ lazyLoad }));
@@ -445,8 +716,8 @@ describe('TableView.vue', () => {
                                     direction: 1,
                                     loadFromIndex: 400,
                                     newScopeStart: 200,
-                                    bufferStart: 0,
-                                    bufferEnd: 200,
+                                    bufferStart: 200,
+                                    bufferEnd: 400,
                                     numRows: 20
                                 } }
                             ));
@@ -470,22 +741,21 @@ describe('TableView.vue', () => {
                                 direction: -1,
                                 loadFromIndex: 0,
                                 newScopeStart: 0,
-                                bufferStart: 0,
-                                bufferEnd: 3,
+                                bufferStart: 1,
+                                bufferEnd: 4,
                                 numRows: 1
                             } }
                         ));
                     });
     
-                    it('does not update data if the distance to the start of the previous window exceeds the ' +
-                    'buffer size',
-                    () => {
-                        wrapper.vm.currentScopeStartIndex = 0;
-                        wrapper.vm.currentScopeEndIndex = 200;
-                        wrapper.vm.rowCount = 1000;
-                        wrapper.vm.onScroll({ direction: -1, startIndex: 60, endIndex: 70 }); // eslint-disable-line no-magic-numbers
-                        expect(updateDataSpy).toHaveBeenCalledTimes(0);
-                    });
+                    it('does not update data if the distance to the start of the previous window exceeds buffer size',
+                        () => {
+                            wrapper.vm.currentScopeStartIndex = 0;
+                            wrapper.vm.currentScopeEndIndex = 200;
+                            wrapper.vm.rowCount = 1000;
+                            wrapper.vm.onScroll({ direction: -1, startIndex: 60, endIndex: 70 }); // eslint-disable-line no-magic-numbers
+                            expect(updateDataSpy).toHaveBeenCalledTimes(0);
+                        });
     
                     it('keeps a buffer of buffer size in the opposite direction and adjusts the number of loaded rows',
                         async () => {
@@ -499,8 +769,8 @@ describe('TableView.vue', () => {
                                 direction: -1,
                                 loadFromIndex: 20,
                                 newScopeStart: 20,
-                                bufferStart: 0,
-                                bufferEnd: 20,
+                                bufferStart: 200,
+                                bufferEnd: 220,
                                 numRows: 180
                             };
                             expect(updateDataSpy).toHaveBeenCalledWith(expect.objectContaining(
@@ -529,8 +799,8 @@ describe('TableView.vue', () => {
                                     direction: -1,
                                     loadFromIndex: 180,
                                     newScopeStart: 180,
-                                    bufferStart: 0,
-                                    bufferEnd: 200,
+                                    bufferStart: 200,
+                                    bufferEnd: 400,
                                     numRows: 20
                                 } }
                             ));
@@ -853,17 +1123,41 @@ describe('TableView.vue', () => {
 
                     // select row
                     checkboxInput.setChecked();
-                    expect(rowSelectSpy).toHaveBeenCalledWith(true, 1, 0);
+                    expect(rowSelectSpy).toHaveBeenCalledWith(true, 1, 0, true);
 
                     expect(publishOnSelectionChangeSpy).toHaveBeenCalledWith('add', ['row2']);
                     expect(wrapper.vm.currentSelection).toEqual([false, true, false, false]);
+                    expect(wrapper.vm.currentBottomSelection).toEqual([]);
                     expect(wrapper.vm.totalSelected).toEqual(1);
 
                     // unselect row
                     checkboxInput.setChecked(false);
-                    expect(rowSelectSpy).toHaveBeenCalledWith(false, 1, 0);
+                    expect(rowSelectSpy).toHaveBeenCalledWith(false, 1, 0, true);
                     expect(publishOnSelectionChangeSpy).toHaveBeenCalledWith('remove', ['row2']);
                     expect(wrapper.vm.currentSelection).toEqual([false, false, false, false]);
+                    expect(wrapper.vm.currentBottomSelection).toEqual([]);
+                    expect(wrapper.vm.totalSelected).toEqual(0);
+                });
+
+
+            it('calls the selection service and updates local selection on select single row',
+                () => {
+                    wrapper.vm.settings.publishSelection = true;
+                    wrapper.vm.bottomRows = [['bottomRow1'], ['bottomRow2']];
+
+                    // select row
+                    wrapper.vm.onRowSelect(true, 1, 0, false);
+
+                    expect(publishOnSelectionChangeSpy).toHaveBeenCalledWith('add', ['bottomRow2']);
+                    expect(wrapper.vm.currentSelection).toEqual([false, false, false, false]);
+                    expect(wrapper.vm.currentBottomSelection).toEqual([false, true]);
+                    expect(wrapper.vm.totalSelected).toEqual(1);
+
+                    // unselect row
+                    wrapper.vm.onRowSelect(false, 1, 0, false);
+                    expect(publishOnSelectionChangeSpy).toHaveBeenCalledWith('remove', ['bottomRow2']);
+                    expect(wrapper.vm.currentSelection).toEqual([false, false, false, false]);
+                    expect(wrapper.vm.currentBottomSelection).toEqual([false, false]);
                     expect(wrapper.vm.totalSelected).toEqual(0);
                 });
 
