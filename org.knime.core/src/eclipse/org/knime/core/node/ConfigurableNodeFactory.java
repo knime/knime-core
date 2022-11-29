@@ -119,7 +119,10 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
      *
      * @return <code>true</code> (overwritten in sub-classes)
      * @since 4.5
+     * @deprecated Please use {@link ModifiablePortsConfiguration#isInteractive(String)} instead. This property is set
+     *             on port group level instead of node level and thus allows for more fine-grained control.
      */
+    @Deprecated(since = "4.8", forRemoval = true)
     public boolean isPortConfigurableViaMenu() {
         return createPortsConfigBuilder().isPresent();
     }
