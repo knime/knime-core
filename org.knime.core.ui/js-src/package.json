@@ -30,7 +30,7 @@
     "@jsonforms/core": "2.5.2",
     "@jsonforms/vue2": "2.5.2",
     "@jsonforms/vue2-vanilla": "2.5.2",
-    "@knime/knime-ui-table": "0.2.15",
+    "@knime/knime-ui-table": "0.2.16",
     "@knime/ui-extension-service": "0.3.0",
     "consola": "2.10.1",
     "raf-throttle": "2.0.5",
