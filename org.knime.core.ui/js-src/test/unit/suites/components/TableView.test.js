@@ -263,7 +263,7 @@ describe('TableView.vue', () => {
             expect(wrapper.getComponent(TableUI).exists()).toBe(true);
             expect(dataConfig).toMatchObject({
                 columnConfigs: [
-                    { key: 1, header: 'Row Key', size: expectedColumnSize },
+                    { key: 1, header: 'RowID', size: expectedColumnSize },
                     { key: 2, header: 'col1', size: expectedColumnSize },
                     { key: 3, header: 'col2', size: expectedColumnSize },
                     { key: 4, header: 'col3', size: expectedColumnSize },

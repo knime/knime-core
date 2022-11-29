@@ -101,7 +101,7 @@ describe('ColumnSelect.vue', () => {
             },
             {
                 id: '<row-keys>',
-                text: 'Row keys'
+                text: 'RowIDs'
             },
             {
                 id: 'Universe_0_0',

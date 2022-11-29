@@ -8,7 +8,7 @@ import throttle from 'raf-throttle';
 import { MIN_COLUMN_SIZE, SPECIAL_COLUMNS_SIZE, DATA_COLUMNS_MARGIN } from '@knime/knime-ui-table/util/constants';
 
 const INDEX_SYMBOL = Symbol('Index');
-const ROW_KEY_SYMBOL = Symbol('Row Key');
+const ROW_KEY_SYMBOL = Symbol('RowID');
 // -1 is the backend representation (columnName) for sorting the table by rowKeys
 const ROW_KEYS_SORT_COL_NAME = '-1';
 const MIN_SCOPE_SIZE = 200;
@@ -69,7 +69,7 @@ export default {
                 columnConfigs.push(this.createColumnConfig({ index: 0, columnName: 'Index', isSortable: false }));
             }
             if (showRowKeys) {
-                columnConfigs.push(this.createColumnConfig({ index: 1, columnName: 'Row Key', isSortable: true }));
+                columnConfigs.push(this.createColumnConfig({ index: 1, columnName: 'RowID', isSortable: true }));
             }
             this.displayedColumns.forEach((columnName, index) => {
                 // + 2: offset for the index and rowKey, because the first column
