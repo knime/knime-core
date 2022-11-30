@@ -1682,12 +1682,18 @@ public final class FileUtil {
         }
     }
 
-    private static boolean isRelativeKnimeURL(final URL url) {
+    /**
+     * Checks if the given KNIME URL leaves the current workflow.
+     *
+     * @param url URL to check
+     * @return {@code true} if the target is outside the workflow, {@code false} otherwise
+     */
+    public static boolean isRelativeKnimeURL(final URL url) {
         // either a workflow-relative URL that leaves the workflow or a mountpoint-relative URL
         final String host = url.getHost();
         final String path = url.getPath();
         return (("knime.workflow".equals(host)) && (path.startsWith("/../") || path.equals("/..")))
-            || "knime.mountpoint".equals(host);
+                || "knime.mountpoint".equals(host) || "knime.space".equals(host);
     }
 
     private static final class ZipWrapper extends ZipOutputStream {
