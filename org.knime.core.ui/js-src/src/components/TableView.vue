@@ -194,9 +194,6 @@ export default {
         useLazyLoading() {
             return !this.settings.enablePagination;
         },
-        selectedRendererIds() {
-            return this.getCurrentSelectedRenderers(this.displayedColumns);
-        },
         currentPageStart() {
             return this.settings.enablePagination ? this.settings.pageSize * (this.currentPage - 1) : 0;
         },
@@ -272,7 +269,7 @@ export default {
 
         async initializeLazyLoading(params) {
             const { updateDisplayedColumns = false, updateTotalSelected = true } = params || {};
-            const numRows = Math.min(this.scopeSize, this.rowCount);
+            const numRows = Math.min(this.scopeSize, this.currentRowCount);
             this.currentScopeStartIndex = 0;
             this.currentScopeEndIndex = Math.min(this.scopeSize, this.currentRowCount);
             await this.updateData({
@@ -464,16 +461,13 @@ export default {
         // eslint-disable-next-line max-params
         requestTable(startIndex, numRows, displayedColumns, updateDisplayedColumns, updateTotalSelected,
             clearImageDataCache) {
-            const selectedRendererIds = updateDisplayedColumns
-                ? this.getCurrentSelectedRenderers(this.settings.displayedColumns)
-                : this.selectedRendererIds;
             // if columnSortColumnName is present a sorting is active
             if (this.columnSortColumnName || this.searchTerm || this.colFilterActive) {
                 return this.requestFilteredAndSortedTable(startIndex, numRows, displayedColumns,
-                    updateDisplayedColumns, updateTotalSelected, selectedRendererIds, clearImageDataCache);
+                    updateDisplayedColumns, updateTotalSelected, clearImageDataCache);
             } else {
                 return this.requestUnfilteredAndUnsortedTable(startIndex, numRows, displayedColumns,
-                    updateDisplayedColumns, selectedRendererIds, clearImageDataCache);
+                    updateDisplayedColumns, clearImageDataCache);
             }
         },
 
