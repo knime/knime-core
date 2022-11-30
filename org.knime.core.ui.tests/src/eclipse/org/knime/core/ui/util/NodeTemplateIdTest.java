@@ -55,6 +55,8 @@ import static org.mockito.Mockito.when;
 import java.util.function.UnaryOperator;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.knime.core.node.NodeAndBundleInformationPersistor;
 import org.knime.core.node.exec.dataexchange.in.BDTInNodeFactory;
 import org.knime.core.node.missing.MissingNodeFactory;
@@ -90,6 +92,7 @@ public class NodeTemplateIdTest {
      * Tests {@link NodeTemplateId#of(org.knime.core.node.NodeFactory)}
      */
     @Test
+    @DisabledOnOs({OS.MAC}) // see UIEXT-647
     public void testOf() {
         var dynamicNodeFactory = new DefaultVirtualPortObjectInNodeFactory();
         dynamicNodeFactory.init();
