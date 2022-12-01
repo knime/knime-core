@@ -28,9 +28,14 @@ public class UriCellFactory implements FromSimpleString, FromComplexString {
      * @return a new data cell
      * @throws IllegalArgumentException if the string does not denote a valid URI
      */
+    @SuppressWarnings("deprecation")
     public static DataCell create(final String s) {
-        final String ext = FilenameUtils.getExtension(s);
         final URI uri = URI.create(s);
+
+        var ext = "";
+        if (uri.getPath() != null && !uri.getPath().isBlank()) {
+            ext = FilenameUtils.getExtension(uri.getPath());
+        }
         return new URIDataCell(new URIContent(uri, ext));
     }
 
