@@ -92,7 +92,7 @@ public class NodeTemplateIdTest {
      * Tests {@link NodeTemplateId#of(org.knime.core.node.NodeFactory)}
      */
     @Test
-    @DisabledOnOs({OS.MAC}) // see UIEXT-647
+    @DisabledOnOs({OS.MAC, OS.WINDOWS}) // see UIEXT-647
     public void testOf() {
         var dynamicNodeFactory = new DefaultVirtualPortObjectInNodeFactory();
         dynamicNodeFactory.init();
