@@ -29,6 +29,7 @@ describe('TwinlistInput.vue', () => {
             },
             uischema: {},
             rootSchema: {
+                hasNodeView: true,
                 flowVariablesMap: {}
             }
         }

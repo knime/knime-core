@@ -34,6 +34,7 @@ export default {
         const settings = await this.jsonDataService.initialData();
 
         settings.schema.flowVariablesMap = await this.dialogService.getFlowVariableSettings();
+        settings.schema.hasNodeView = this.dialogService.hasNodeView();
         this.settings = settings;
 
         this.originalSettingsData = JSON.stringify(this.settings?.data || {});

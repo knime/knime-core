@@ -1,7 +1,7 @@
 <script>
 import { defineComponent } from '@vue/composition-api';
 import { rendererProps, useJsonFormsControl } from '@jsonforms/vue2';
-import { optionsMapper, getFlowVariablesMap, checkIsModelSetting } from '@/utils/nodeDialogUtils';
+import { optionsMapper, getFlowVariablesMap, isModelSettingAndHasNodeView } from '@/utils/nodeDialogUtils';
 import RadioButtons from '~/webapps-common/ui/components/forms/RadioButtons.vue';
 import ValueSwitch from '~/webapps-common/ui/components/forms/ValueSwitch.vue';
 import LabeledInput from './LabeledInput.vue';
@@ -30,8 +30,8 @@ const RadioInputBase = defineComponent({
         };
     },
     computed: {
-        isModelSetting() {
-            return checkIsModelSetting(this.control);
+        isModelSettingAndHasNodeView() {
+            return isModelSettingAndHasNodeView(this.control);
         },
         flowSettings() {
             return getFlowVariablesMap(this.control);
@@ -56,7 +56,7 @@ const RadioInputBase = defineComponent({
     methods: {
         onChange(event) {
             this.handleChange(this.control.path, event);
-            if (this.isModelSetting) {
+            if (this.isModelSettingAndHasNodeView) {
                 this.$store.dispatch('pagebuilder/dialog/dirtySettings', true);
             }
         }
@@ -69,7 +69,7 @@ export default RadioInputBase;
   <LabeledInput
     v-if="control.visible"
     :text="control.label"
-    :is-model-setting="isModelSetting"
+    :show-reexecution-icon="isModelSettingAndHasNodeView"
     :scope="control.uischema.scope"
     :flow-settings="flowSettings"
     :description="control.description"

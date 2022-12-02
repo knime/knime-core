@@ -34,6 +34,7 @@ describe('ValueSwitchInput.vue', () => {
                 }
             },
             rootSchema: {
+                hasNodeView: true,
                 flowVariablesMap: {}
             }
         }

@@ -1,4 +1,4 @@
-import { optionsMapper, createFlowVariablesMap } from '@/utils/nodeDialogUtils';
+import { optionsMapper, createFlowVariablesMap, isModelSettingAndHasNodeView } from '@/utils/nodeDialogUtils';
 
 describe('Utils', () => {
     it('optionsMapper maps Knime row data presentation to echarts index value', () => {
@@ -11,6 +11,27 @@ describe('Utils', () => {
             { id: 'rowName', text: 'Row Name' },
             { id: 'columName', text: 'Colum Name' }
         ]);
+    });
+
+    test('isModelSettingsAndhasNodeView', () => {
+        const control = {
+            rootSchema: {
+                hasNodeView: true
+            },
+            uischema: {
+                scope: '#/properties/model/blub'
+            }
+
+
+        };
+        expect(isModelSettingAndHasNodeView(control)).toBeTruthy();
+
+        control.rootSchema.hasNodeView = false;
+        expect(isModelSettingAndHasNodeView(control)).toBeFalsy();
+
+        control.rootSchema.hasNodeView = true;
+        control.uischema.scope = '#/properties/view/blub';
+        expect(isModelSettingAndHasNodeView(control)).toBeFalsy();
     });
 
     it('createFlowVariablesMap maps flowVariables correctly', () => {

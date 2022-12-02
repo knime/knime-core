@@ -1,7 +1,7 @@
 <script>
 import { defineComponent } from '@vue/composition-api';
 import { rendererProps, useJsonFormsControl } from '@jsonforms/vue2';
-import { checkIsModelSetting, getFlowVariablesMap } from '@/utils/nodeDialogUtils';
+import { isModelSettingAndHasNodeView, getFlowVariablesMap } from '@/utils/nodeDialogUtils';
 import InputField from '~/webapps-common/ui/components/forms/InputField.vue';
 import LabeledInput from './LabeledInput.vue';
 
@@ -18,8 +18,8 @@ const TextInput = defineComponent({
         return useJsonFormsControl(props);
     },
     computed: {
-        isModelSetting() {
-            return checkIsModelSetting(this.control);
+        isModelSettingAndHasNodeView() {
+            return isModelSettingAndHasNodeView(this.control);
         },
         flowSettings() {
             return getFlowVariablesMap(this.control);
@@ -32,7 +32,7 @@ const TextInput = defineComponent({
     methods: {
         onChange(event) {
             this.handleChange(this.control.path, event);
-            if (this.isModelSetting) {
+            if (this.isModelSettingAndHasNodeView) {
                 this.$store.dispatch('pagebuilder/dialog/dirtySettings', true);
             }
         }
@@ -48,7 +48,7 @@ export default TextInput;
     :text="control.label"
     :description="control.description"
     :errors="[control.errors]"
-    :is-model-setting="isModelSetting"
+    :show-reexecution-icon="isModelSettingAndHasNodeView"
     :scope="control.uischema.scope"
     :flow-settings="flowSettings"
   >

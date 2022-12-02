@@ -49,10 +49,10 @@
 package org.knime.gateway.api.entity;
 
 import org.knime.core.node.util.CheckUtils;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.webui.node.NodeWrapper;
 import org.knime.core.webui.node.dialog.NodeDialogManager;
+import org.knime.core.webui.node.view.NodeViewManager;
 import org.knime.core.webui.page.PageUtil.PageType;
 
 /**
@@ -64,6 +64,8 @@ public class NodeDialogEnt extends NodeUIExtensionEnt<NodeWrapper> {
 
     private final FlowVariableSettingsEnt m_flowVariableSettings;
 
+    private final boolean m_hasNodeView;
+
     /**
      * @param nc
      */
@@ -71,6 +73,8 @@ public class NodeDialogEnt extends NodeUIExtensionEnt<NodeWrapper> {
         super(NodeWrapper.of(nc), NodeDialogManager.getInstance(), NodeDialogManager.getInstance(), PageType.DIALOG);
         CheckUtils.checkArgument(NodeDialogManager.hasNodeDialog(nc), "The provided node doesn't have a node dialog");
         m_flowVariableSettings = new FlowVariableSettingsEnt(nc);
+        NodeViewManager.getInstance();
+        m_hasNodeView = NodeViewManager.hasNodeView(nc);
     }
 
     /**
@@ -78,6 +82,13 @@ public class NodeDialogEnt extends NodeUIExtensionEnt<NodeWrapper> {
      */
     public FlowVariableSettingsEnt getFlowVariableSettings() {
         return m_flowVariableSettings;
+    }
+
+    /**
+     * @return {@code true} if the node this dialog belongs to also has a node view, otherwise {@code false}
+     */
+    public boolean getHasNodeView() { // NOSONAR won't be serialized otherwise
+        return m_hasNodeView;
     }
 
 }

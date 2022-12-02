@@ -1,7 +1,7 @@
 <script>
 import { defineComponent } from '@vue/composition-api';
 import { rendererProps, useJsonFormsControl } from '@jsonforms/vue2';
-import { checkIsModelSetting, getFlowVariablesMap } from '@/utils/nodeDialogUtils';
+import { isModelSettingAndHasNodeView, getFlowVariablesMap } from '@/utils/nodeDialogUtils';
 import Checkbox from '~/webapps-common/ui/components/forms/Checkbox.vue';
 import ReexecutionIcon from '~/webapps-common/ui/assets/img/icons/reexecution.svg?inline';
 import FlowVariableIcon from './FlowVariableIcon.vue';
@@ -29,8 +29,8 @@ const CheckboxInput = defineComponent({
         };
     },
     computed: {
-        isModelSetting() {
-            return checkIsModelSetting(this.control);
+        isModelSettingAndHasNodeView() {
+            return isModelSettingAndHasNodeView(this.control);
         },
         flowSettings() {
             return getFlowVariablesMap(this.control);
@@ -42,7 +42,7 @@ const CheckboxInput = defineComponent({
     methods: {
         onChange(event) {
             this.handleChange(this.control.path, event);
-            if (this.isModelSetting) {
+            if (this.isModelSettingAndHasNodeView) {
                 this.$store.dispatch('pagebuilder/dialog/dirtySettings', true);
             }
         }
@@ -66,7 +66,7 @@ export default CheckboxInput;
     >
       {{ control.label }}
       <ReexecutionIcon
-        v-if="isModelSetting"
+        v-if="isModelSettingAndHasNodeView"
         class="reexecution-icon"
       />
       <FlowVariableIcon
