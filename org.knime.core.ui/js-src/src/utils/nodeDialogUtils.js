@@ -1,6 +1,7 @@
 export const optionsMapper = ({ const: id, title: text }) => ({ id, text });
 
-export const checkIsModelSetting = (control) => control?.uischema?.scope?.includes('model');
+export const isModelSettingAndHasNodeView = (control) => control?.rootSchema?.hasNodeView &&
+    control?.uischema?.scope?.startsWith('#/properties/model');
 
 // creates an object which maps the path of each element to their flow variable object
 export const createFlowVariablesMap = ({ viewVariables, modelVariables } = {}) => {

@@ -26,6 +26,7 @@ describe('TextInput.vue', () => {
                 scope: '#/properties/view/properties/xAxisLabel'
             },
             rootSchema: {
+                hasNodeView: true,
                 flowVariablesMap: {}
             }
         }

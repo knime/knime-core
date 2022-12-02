@@ -50,6 +50,7 @@ describe('DropdownInput.vue', () => {
                     }
                 },
                 rootSchema: {
+                    hasNodeView: true,
                     flowVariablesMap: {
                         test: {
                             controllingFlowVariableAvailable: true,

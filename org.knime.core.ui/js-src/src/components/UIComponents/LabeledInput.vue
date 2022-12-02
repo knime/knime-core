@@ -36,7 +36,7 @@ const LabeledInput = {
             default: true,
             type: Boolean
         },
-        isModelSetting: {
+        showReexecutionIcon: {
             default: false,
             type: Boolean
         },
@@ -64,7 +64,7 @@ export default LabeledInput;
       :compact="true"
     >
       <ReexecutionIcon
-        v-if="isModelSetting"
+        v-if="showReexecutionIcon"
         class="reexecution-icon"
       />
       <FlowVariableIcon

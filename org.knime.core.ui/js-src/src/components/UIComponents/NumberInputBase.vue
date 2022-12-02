@@ -1,7 +1,7 @@
 <script>
 import { defineComponent } from '@vue/composition-api';
 import { rendererProps, useJsonFormsControl } from '@jsonforms/vue2';
-import { checkIsModelSetting, getFlowVariablesMap } from '@/utils/nodeDialogUtils';
+import { isModelSettingAndHasNodeView, getFlowVariablesMap } from '@/utils/nodeDialogUtils';
 import NumberInput from '~/webapps-common/ui/components/forms/NumberInput.vue';
 import LabeledInput from './LabeledInput.vue';
 
@@ -23,8 +23,8 @@ const NumberInputBase = defineComponent({
         return useJsonFormsControl(props);
     },
     computed: {
-        isModelSetting() {
-            return checkIsModelSetting(this.control);
+        isModelSettingAndHasNodeView() {
+            return isModelSettingAndHasNodeView(this.control);
         },
         flowSettings() {
             return getFlowVariablesMap(this.control);
@@ -36,7 +36,7 @@ const NumberInputBase = defineComponent({
     methods: {
         onChange(event) {
             this.handleChange(this.control.path, event);
-            if (this.isModelSetting) {
+            if (this.isModelSettingAndHasNodeView) {
                 this.$store.dispatch('pagebuilder/dialog/dirtySettings', true);
             }
         }
@@ -51,7 +51,7 @@ export default NumberInputBase;
     :text="control.label"
     :description="control.description"
     :errors="[control.errors]"
-    :is-model-setting="isModelSetting"
+    :show-reexecution-icon="isModelSettingAndHasNodeView"
     :scope="control.uischema.scope"
     :flow-settings="flowSettings"
   >

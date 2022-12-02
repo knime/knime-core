@@ -27,6 +27,7 @@ describe('NumberInput.vue', () => {
                 }
             },
             rootSchema: {
+                hasNodeView: true,
                 flowVariablesMap: {}
             }
         }

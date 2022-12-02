@@ -42,6 +42,7 @@ describe('CheckboxInput.vue', () => {
                     }
                 },
                 rootSchema: {
+                    hasNodeView: true,
                     flowVariablesMap: {}
                 }
             }

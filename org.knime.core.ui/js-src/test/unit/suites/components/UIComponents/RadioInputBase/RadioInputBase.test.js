@@ -39,6 +39,7 @@ describe('RadioInputBase.vue', () => {
                 }
             },
             rootSchema: {
+                hasNodeView: true,
                 flowVariablesMap: {}
             }
         }

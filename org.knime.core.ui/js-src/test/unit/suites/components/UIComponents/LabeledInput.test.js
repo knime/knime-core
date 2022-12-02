@@ -19,8 +19,8 @@ describe('LabeledInput.vue', () => {
     });
 
     it('visually displays model settings', () => {
-        const wrapper = mount(LabeledInput, { propsData: { isModelSetting: true } });
-        expect(wrapper.vm.isModelSetting).toBe(true);
+        const wrapper = mount(LabeledInput, { propsData: { showReexecutionIcon: true } });
+        expect(wrapper.vm.showReexecutionIcon).toBe(true);
         const icon = wrapper.findComponent(ReexecutionIcon);
         expect(icon.exists()).toBe(true);
     });
