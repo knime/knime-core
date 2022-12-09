@@ -49,6 +49,7 @@ import java.beans.PropertyChangeSupport;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 import javax.swing.JComponent;
@@ -61,6 +62,7 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.CloseableRowIterator;
@@ -133,6 +135,29 @@ public class TableContentModel extends AbstractTableModel
             }
         }
     }
+
+    /** A data row that can be used instead of a real data row if the real row could not be loaded */
+    private static final DataRow ERROR_DATA_ROW = new DataRow() {
+        @Override
+        public Iterator<DataCell> iterator() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public int getNumCells() {
+            return 0;
+        }
+
+        @Override
+        public RowKey getKey() {
+            return new RowKey("ERROR");
+        }
+
+        @Override
+        public DataCell getCell(final int index) {
+            return DataType.getMissingCell();
+        }
+    };
 
     private static final long serialVersionUID = 8413295641103391635L;
 
@@ -1141,7 +1166,16 @@ public class TableContentModel extends AbstractTableModel
                 m_isRowCountOfInterestFinal = true;
                 return false;
             }
-            currentRow = m_iterator.next();
+            try {
+                currentRow = m_iterator.next();
+            } catch (final Exception ex) { // NOSONAR
+                // AP-19803: If the data is broken #next might throw an exception.
+                // In this case we want to log the exception. Also, the table view shouldn't break completely.
+                // Therefore, we show a special row that indicates that an error has happened.
+                NodeLogger.getLogger(getClass())
+                    .error("Caching the next row to display failed. This is an implementation error.", ex);
+                currentRow = ERROR_DATA_ROW;
+            }
             m_rowCountInIterator++;
             if (!m_isMaxRowCountFinal) {
                 m_maxRowCount = Math.max(m_maxRowCount, m_rowCountInIterator);
