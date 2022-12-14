@@ -295,10 +295,11 @@ public final class MetaNodeTemplateInformation implements Cloneable {
             "Can't link to metanode of role" + " \"" + getRole() + "\" (URI: \"" + m_sourceURI + "\")");
     }
 
-    private MetaNodeTemplateInformation buildTemplateInformation(final URI newSource) throws InvalidSettingsException {
+    private MetaNodeTemplateInformation buildTemplateInformation(final URI newSource) {
         if (getSpaceVersion(newSource).isPresent()) {
             // ifModifiedSince is set to null because always perform a download for components with a space version.
-            return new MetaNodeTemplateInformation(Role.Link, null, newSource, OffsetDateTime.parse("1970-01-01T00:00:00+00:00"), null, null);
+            return new MetaNodeTemplateInformation(Role.Link, null, newSource,
+                OffsetDateTime.parse("1970-01-01T00:00:00+00:00"), null, null);
         } else {
             return new MetaNodeTemplateInformation(Role.Link, null, newSource, m_timestamp, null, null);
         }
