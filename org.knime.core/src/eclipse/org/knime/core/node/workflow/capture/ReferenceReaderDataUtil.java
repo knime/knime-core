@@ -173,8 +173,8 @@ public final class ReferenceReaderDataUtil {
      *
      * @param wfm <T> The specific PortObject class of interest.
      * @param exec a {@link ExecutionContext}
-     * @param portObjRepoNodeModel special node model that receives the port objects and makes them available through the
-     *            {@link PortObjectRepository}
+     * @param portObjRepoNodeModel special node model that receives the port objects and makes them available through
+     *            the {@link PortObjectRepository}
      * @return a set of {@link NodeIDSuffix}.
      * @throws IOException
      * @throws CanceledExecutionException
@@ -183,7 +183,14 @@ public final class ReferenceReaderDataUtil {
     public static Set<NodeIDSuffix> copyReferenceReaderData(final WorkflowManager wfm, final ExecutionContext exec,
         final AbstractPortObjectRepositoryNodeModel portObjRepoNodeModel)
         throws InvalidSettingsException, CanceledExecutionException, IOException {
-        Set<NodeIDSuffix> res = new HashSet<>();
+        var nodeIDSuffixes = new HashSet<NodeIDSuffix>();
+        copyReferenceReaderDataRecursive(wfm, exec, portObjRepoNodeModel, nodeIDSuffixes);
+        return nodeIDSuffixes;
+    }
+
+    private static void copyReferenceReaderDataRecursive(final WorkflowManager wfm, final ExecutionContext exec,
+        final AbstractPortObjectRepositoryNodeModel portObjRepoNodeModel, final Set<NodeIDSuffix> nodeIDSuffixes)
+        throws InvalidSettingsException, CanceledExecutionException, IOException {
         for (var nc : wfm.getNodeContainers()) {
             if (nc instanceof NativeNodeContainer
                 && ((NativeNodeContainer)nc).getNodeModel() instanceof PortObjectInNodeModel) {
@@ -197,7 +204,7 @@ public final class ReferenceReaderDataUtil {
                             + poSettings.getReferenceType());
                 }
                 var uri = poSettings.getUri();
-                var wfFile = wfm.getNodeContainerDirectory().getFile();
+                var wfFile = wfm.getProjectWFM().getNodeContainerDirectory().getFile();
                 var absoluteDataFile = new File(wfFile, uri.toString().replace("knime://knime.workflow", ""));
                 if (!absoluteDataFile.getCanonicalPath().startsWith(wfFile.getCanonicalPath())) {
                     throw new IllegalStateException(
@@ -208,10 +215,11 @@ public final class ReferenceReaderDataUtil {
                 portObjRepoNodeModel.addPortObject(uuid, po);
                 PortObjectRepository.add(uuid, po);
                 updatePortObjectReferenceReaderReference(wfm, nc.getID(), poSettings, uuid);
-                res.add(NodeIDSuffix.create(wfm.getID(), nc.getID()));
+                nodeIDSuffixes.add(NodeIDSuffix.create(wfm.getProjectWFM().getID(), nc.getID()));
+            } else if (nc instanceof WorkflowManager) {
+                copyReferenceReaderDataRecursive((WorkflowManager)nc, exec, portObjRepoNodeModel, nodeIDSuffixes);
             }
         }
-        return res;
     }
 
     private static PortObject readPortObjectFromFile(final File absoluteDataFile, final ExecutionContext exec,
