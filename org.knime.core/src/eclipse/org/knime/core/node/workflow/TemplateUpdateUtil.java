@@ -57,6 +57,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 
 import org.apache.commons.httpclient.URIException;
 import org.apache.commons.httpclient.util.URIUtil;
@@ -81,6 +82,44 @@ import org.knime.core.util.pathresolve.URIToFileResolve.KNIMEURIDescription;
  * @since 4.7
  */
 public final class TemplateUpdateUtil {
+
+    /**
+     * A link to a template on Hub can contain three different kinds of version information through a query parameter.
+     * <ul>
+     *   <li>A specific space version can be referenced: {@code spaceVersion=42}</li>
+     *   <li>The link can point to the <i>latest</i> (i.e., most current) version: {@code spaceVersion=latest}</li>
+     *   <li>If no {@code spaceVersion} query parameter is given, the <i>latest state</i> (i.e., the staging area)
+     *       of the space is referenced.</li>
+     * </ul>
+     *
+     * @since 5.0
+     */
+    public enum LinkType {
+        /** Specific version is selected, no updates will be available. */
+        FIXED_VERSION(Object::toString),
+
+        /** <i>Latest version</i> is selected. */
+        LATEST_VERSION(v -> "latest"),
+
+        /** <i>Latest state</i> is selected, which is the latest version and all unversioned changes. */
+        LATEST_STATE(v -> null);
+
+        private final Function<Integer, String> m_paramString;
+
+        LinkType(final Function<Integer, String> paramString) {
+            m_paramString = paramString;
+        }
+
+        /**
+         * Creates the value for the {@code spaceVersion="..."} query parameter.
+         *
+         * @param version space version number, only used for {@link #FIXED_VERSION}
+         * @return parameter value, e.g. {@code "latest"}, {@code "-1"} or {@code "123"}
+         */
+        public String getParameterString(final Integer version) {
+            return m_paramString.apply(version);
+        }
+    }
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(TemplateUpdateUtil.class);
 
@@ -142,21 +181,21 @@ public final class TemplateUpdateUtil {
      * @throws UnsupportedWorkflowVersionException
      * @throws CanceledExecutionException
      */
-    private static NodeContainerTemplate loadMetaNodeTemplateIfLocalOrOutdate(final NodeContainerTemplate meta,
-        final WorkflowLoadHelper loadHelper, final LoadResult loadResult)
-        throws IOException, UnsupportedWorkflowVersionException, CanceledExecutionException {
-        var linkInfo = meta.getTemplateInformation();
-        var sourceURI = linkInfo.getSourceURI();
+    private static NodeContainerTemplate loadMetaNodeTemplateIfLocalOrOutdated(final NodeContainerTemplate meta,
+            final WorkflowLoadHelper loadHelper, final LoadResult loadResult)
+                    throws IOException, UnsupportedWorkflowVersionException, CanceledExecutionException {
+        final var linkInfo = meta.getTemplateInformation();
+        final var sourceURI = linkInfo.getSourceURI();
         NodeContext.pushContext((NodeContainer)meta);
         try {
             /**
              * "ifModifiedSince" parameter is used to make an HTTP pre-check on whether an update is available to reduce
-             * unnecessary downloads. Update is available only when the server version is *newer* then the local
+             * unnecessary downloads. Update is available only when the server version is *newer* than the local
              * timestamp. This will not fetch updates from an older, restored template snapshot on KS4.
              */
-            var ifModifiedSince = linkInfo.getTimestamp() != null ? linkInfo.getTimestamp().toZonedDateTime() : null;
-            var localDir = ResolverUtil.resolveURItoLocalOrTempFileConditional(sourceURI, new NullProgressMonitor(),
-                ifModifiedSince).orElse(null);
+            final var timestamp = linkInfo.getTimestamp() != null ? linkInfo.getTimestamp().toZonedDateTime() : null;
+            final var localDir = ResolverUtil.resolveURItoLocalOrTempFileConditional(sourceURI,
+                new NullProgressMonitor(), timestamp).orElse(null);
             if (localDir == null) {
                 return null;
             }
@@ -238,7 +277,7 @@ public final class TemplateUpdateUtil {
                 // visit new template and try to load it
                 try {
                     final var templateLoadResult = new LoadResult("Template to " + uri);
-                    tempLink = loadMetaNodeTemplateIfLocalOrOutdate(linkedMeta, loadHelper, templateLoadResult);
+                    tempLink = loadMetaNodeTemplateIfLocalOrOutdated(linkedMeta, loadHelper, templateLoadResult);
                     loadResult.addChildError(templateLoadResult);
                     visitedTemplateMap.put(uri, tempLink);
                 } catch (IOException e) {
