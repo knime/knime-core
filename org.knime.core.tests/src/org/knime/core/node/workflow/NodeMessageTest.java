@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -43,26 +44,42 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Apr 10, 2008 (mb): created
+ *   Feb 2, 2017 (bjoern): created
  */
-package org.knime.core.node;
+package org.knime.core.node.workflow;
 
-import java.util.EventListener;
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertThat;
 
-import org.knime.core.node.message.Message;
+import java.io.IOException;
+
+import org.junit.Test;
+import org.knime.core.node.workflow.NodeMessage.Type;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 
 /**
  *
- * @author M .Berthold, University of Konstanz
+ * @author Bjoern Lohrmann, KNIME.com GmbH
  */
-public interface NodeModelWarningListener extends EventListener {
+public class NodeMessageTest {
 
     /**
-     * Called when the NodeModel warning changes.
+     * Tests the JSON (de)serialization of node messages.
      *
-     * @param warning new warning, possibly null.
-     * @since 5.0
+     * @throws IOException
      */
-    public void warningChanged(final Message warning);
+    @Test
+    public void testNodeMessageJsonSerialization() throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new Jdk8Module()); // new in 5.0 due to AP-19914
+
+        NodeMessage orig = new NodeMessage(Type.WARNING, "a warning text");
+
+        String serialized = mapper.writeValueAsString(orig);
+        NodeMessage deserialized = mapper.readValue(serialized, NodeMessage.class);
+        assertThat("Message is equal", deserialized, is(orig));
+    }
 
 }

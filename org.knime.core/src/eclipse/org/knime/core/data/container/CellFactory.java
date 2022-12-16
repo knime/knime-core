@@ -73,7 +73,8 @@ public interface CellFactory {
      *
      * @param row The row of interest.
      * @return The new cells to that row.
-     * @throws IllegalArgumentException If there is no mapping available.
+     * @throws org.knime.core.node.KNIMEException.KNIMERuntimeException If there is no mapping available (unchecked to
+     *             be API compatible)
      */
     DataCell[] getCells(final DataRow row);
 

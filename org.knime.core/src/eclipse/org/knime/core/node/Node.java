@@ -81,6 +81,7 @@ import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
+import org.knime.core.node.KNIMEException.KNIMERuntimeException;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.context.ModifiableNodeCreationConfiguration;
 import org.knime.core.node.context.NodeCreationConfiguration;
@@ -91,6 +92,7 @@ import org.knime.core.node.interactive.InteractiveNodeFactoryExtension;
 import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.interactive.ViewContent;
 import org.knime.core.node.interrupt.InterruptibleNodeModel;
+import org.knime.core.node.message.Message;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectHolder;
 import org.knime.core.node.port.PortObjectSpec;
@@ -939,18 +941,6 @@ public final class Node implements NodeModelWarningListener {
         return false;
     }
 
-   /**
-    * @param rawData the data from the predecessor.
-    * @param exec The execution monitor.
-    * @return <code>true</code> if execution was successful otherwise
-    *         <code>false</code>.
-    * @see Node#execute(PortObject[], ExecutionEnvironment, ExecutionContext)
-    */
-    @Deprecated
-    public boolean execute(final PortObject[] rawData, final ExecutionContext exec) {
-        return execute(rawData, new ExecutionEnvironment(), exec);
-    }
-
     /**
      * Starts executing this node. If the node has been executed already, it
      * does nothing - just returns <code>true</code>.
@@ -1011,7 +1001,8 @@ public final class Node implements NodeModelWarningListener {
             // check for existence of all input tables
             for (int i = 1; i < rawInData.length; i++) {
                 if (rawInData[i] == null && !m_inputs[i].getType().isOptional()) {
-                    createErrorMessageAndNotify("Couldn't get data from predecessor (Port No." + i + ").");
+                    createErrorMessageAndNotify(Message.fromSummary( //
+                        String.format("Couldn't get data from predecessor (Port No.%d).", i)));
                     return false;
                 }
                 if (rawInData[i] == null) { // optional input
@@ -1024,11 +1015,13 @@ public final class Node implements NodeModelWarningListener {
                     try {
                         newInData[i] = copyPortObject(rawInData[i], subExec);
                     } catch (CanceledExecutionException e) {
-                        createWarningMessageAndNotify("Execution canceled");
+                        createWarningMessageAndNotify(Message.fromSummary("Execution canceled"));
                         return false;
                     } catch (Throwable e) {
-                        createErrorMessageAndNotify("Unable to clone input data at port " + i + " ("
-                                + m_inputs[i].getName() + "): " + e.getMessage(), e);
+                        createErrorMessageAndNotify(Message.fromSummary( //
+                            String.format("Unable to clone input data at port %d (%s): %s", //
+                                i, m_inputs[i].getName(), e.getMessage())),
+                            e);
                         return false;
                     }
                 }
@@ -1054,7 +1047,7 @@ public final class Node implements NodeModelWarningListener {
                     Thread.interrupted();
 
                     reset();
-                    createWarningMessageAndNotify("Execution canceled");
+                    createWarningMessageAndNotify(Message.fromSummary("Execution canceled"));
                     return false;
                 } else {
                     // check if we are inside a try-catch block (only if it was a real
@@ -1068,7 +1061,8 @@ public final class Node implements NodeModelWarningListener {
                         PortObject[] outs = new PortObject[getNrOutPorts()];
                         Arrays.fill(outs, InactiveBranchPortObject.INSTANCE);
                         setOutPortObjects(outs, false, false);
-                        createErrorMessageAndNotify("Execution failed in Try-Catch block: " + th.getMessage());
+                        createErrorMessageAndNotify(
+                            Message.fromSummary("Execution failed in Try-Catch block: " + th.getMessage()));
                         // and store information catch-node can report it
                         FlowObjectStack fos = getNodeModel().getOutgoingFlowObjectStack();
                         fos.push(new FlowVariable(FlowTryCatchContext.ERROR_FLAG, 1));
@@ -1081,12 +1075,18 @@ public final class Node implements NodeModelWarningListener {
                         return true;
                     }
                 }
-                String message = EXECUTE_FAILED_PREFIX;
-                if (th.getMessage() != null && th.getMessage().length() >= 5) {
-                    message = message.concat(th.getMessage());
+                Message message;
+                if (th instanceof MessageAwareException) {
+                    var rawMessage = ((MessageAwareException)th).getKNIMEMessage();
+                    message = rawMessage.fillIssues(ArrayUtils.remove(newInData, 0));
                 } else {
-                    message = message.concat("(\"" + th.getClass().getSimpleName()
-                            + "\"): " + th.getMessage());
+                    String m = EXECUTE_FAILED_PREFIX;
+                    if (th.getMessage() != null && th.getMessage().length() >= 5) {
+                        m = m.concat(th.getMessage());
+                    } else {
+                        m = m.concat("(\"" + th.getClass().getSimpleName() + "\"): " + th.getMessage());
+                    }
+                    message = Message.fromSummary(m);
                 }
                 reset();
                 createErrorMessageAndNotify(message, th);
@@ -1112,14 +1112,15 @@ public final class Node implements NodeModelWarningListener {
                 // scope end nodes can be inactive if and only if their scope start node is
                 // inactive as well (which we should see in the scope context object).
                 if (peekfsc == null) {
-                    createErrorMessageAndNotify("Missing Scope Start Node in inactive branch.");
+                    createErrorMessageAndNotify(Message.fromSummary("Missing Scope Start Node in inactive branch."));
                     return false;
                 }
                 if (!peekfsc.isInactiveScope()) {
                     // we cannot handle this case: the End scope node needs
                     // to trigger re-execution which it won't in an inactive
                     // branch
-                    createErrorMessageAndNotify("Active Scope End node in inactive branch not allowed.");
+                    createErrorMessageAndNotify(
+                        Message.fromSummary("Active Scope End node in inactive branch not allowed."));
                     return false;
                 } else {
                     // also the scope start node is inactive, so the entire
@@ -1337,7 +1338,7 @@ public final class Node implements NodeModelWarningListener {
     /**
      * Obtain the node description via the node factory.
      * @return the node description
-     * 
+     *
      * @since 4.6
      */
     public NodeDescription invokeGetNodeDescription() {
@@ -1363,7 +1364,7 @@ public final class Node implements NodeModelWarningListener {
         for (int i = 0; i < newOutData.length; i++) {
             PortType thisType = m_outputs[i].type;
             if (newOutData[i] == null && !tolerateNullOutports) {
-                createErrorMessageAndNotify("Output at port " + i + " is null");
+                createErrorMessageAndNotify(Message.fromSummary("Output at port " + i + " is null"));
                 return false;
             }
             if (newOutData[i] != null) {
@@ -1371,23 +1372,25 @@ public final class Node implements NodeModelWarningListener {
                     // allow PO coming from inactive branch
                     // TODO ensure model was skipped during configure?
                 } else if (!thisType.getPortObjectClass().isInstance(newOutData[i])) {
-                    createErrorMessageAndNotify("Invalid output port object at port " + i);
-                    LOGGER.error("  (Wanted: " + thisType.getPortObjectClass().getName() + ", "
-                    + "actual: " + newOutData[i].getClass().getName() + ")");
+                    createErrorMessageAndNotify(Message.fromSummary("Invalid output port object at port " + i));
+                    LOGGER.error("  (Wanted: " + thisType.getPortObjectClass().getName() + ", " + "actual: "
+                        + newOutData[i].getClass().getName() + ")");
                     return false;
                 }
                 PortObjectSpec spec;
                 try {
                     spec = newOutData[i].getSpec();
                 } catch (Throwable t) {
-                    createErrorMessageAndNotify("PortObject \"" + newOutData[i].getClass().getName()
-                            + "\" threw " + t.getClass().getSimpleName() + " on #getSpec() ", t);
+                    createErrorMessageAndNotify(Message.fromSummary( //
+                        String.format("PortObject \"%s\" threw %s on #getSpec()", //
+                            newOutData[i].getClass().getName(), t.getClass().getSimpleName())),
+                        t);
                     return false;
                 }
                 if (spec == null) {
-                    createErrorMessageAndNotify("Implementation Error: PortObject \""
+                    createErrorMessageAndNotify(Message.fromSummary("Implementation Error: PortObject \""
                             + newOutData[i].getClass().getName() + "\" must not"
-                            + " have null spec (output port " + i + ").");
+                            + " have null spec (output port " + i + ")."));
                     return false;
                 }
             }
@@ -1404,7 +1407,7 @@ public final class Node implements NodeModelWarningListener {
                         final String warningMsg =
                             "DataSpec generated by configure does not match spec after execution.";
                         LOGGER.coding(warningMsg);
-                        createWarningMessageAndNotify(warningMsg);
+                        createWarningMessageAndNotify(Message.fromSummary(warningMsg));
                     }
                 }
                 BufferedDataTable t = thisTable;
@@ -1529,7 +1532,7 @@ public final class Node implements NodeModelWarningListener {
      *
      * @param warningMessage the new warning message
      */
-    private void createWarningMessageAndNotify(final String warningMessage) {
+    private void createWarningMessageAndNotify(final Message warningMessage) {
         createWarningMessageAndNotify(warningMessage, null);
     }
 
@@ -1539,17 +1542,18 @@ public final class Node implements NodeModelWarningListener {
      * If a throwable is provided its stacktrace is logged at debug level.
      *
      * @noreference This method is not intended to be referenced by clients.
-     * @param warningMessage the new warning message
+     * @param message the new warning message
      * @param t its stacktrace is logged at debug level.
+     * @since 5.0
      */
-    public void createWarningMessageAndNotify(final String warningMessage,
+    public void createWarningMessageAndNotify(final Message message,
             final Throwable t) {
+        String warningMessage = Message.getSummaryFrom(message);
         LOGGER.warn(warningMessage);
         if (t != null) {
             LOGGER.debug(warningMessage, t);
         }
-        notifyMessageListeners(new NodeMessage(NodeMessage.Type.WARNING,
-                warningMessage));
+        notifyMessageListeners(message.toNodeMessage(NodeMessage.Type.WARNING));
     }
 
     /**
@@ -1558,7 +1562,7 @@ public final class Node implements NodeModelWarningListener {
      *
      * @param errorMessage the new error message
      */
-    private void createErrorMessageAndNotify(final String errorMessage) {
+    private void createErrorMessageAndNotify(final Message errorMessage) {
         createErrorMessageAndNotify(errorMessage, null);
     }
 
@@ -1567,15 +1571,14 @@ public final class Node implements NodeModelWarningListener {
      * registered {@link NodeMessageListener}s. Also logs an error message.
      * If a throwable is provided its stacktrace is logged at debug level.
      *
-     * @noreference This method is not intended to be referenced by clients.
      * @param errorMessage the new error message
      * @param t its stacktrace is logged at debug level.
+     * @noreference This method is not intended to be referenced by clients.
+     * @since 5.0
      */
-    public void createErrorMessageAndNotify(final String errorMessage, final
-            Throwable t) {
-        LOGGER.error(errorMessage, t);
-        notifyMessageListeners(new NodeMessage(NodeMessage.Type.ERROR,
-                errorMessage));
+    public void createErrorMessageAndNotify(final Message errorMessage, final Throwable t) {
+        LOGGER.error(Message.getSummaryFrom(errorMessage), t);
+        notifyMessageListeners(errorMessage.toNodeMessage(NodeMessage.Type.ERROR));
     }
 
     /**
@@ -1590,26 +1593,17 @@ public final class Node implements NodeModelWarningListener {
      * Is called, when a warning message is set in the {@link NodeModel}.
      * Forwards it to registered {@link NodeMessageListener}s.
      *
-     * @param warningMessage the new message in the node model.
+     * @param warning the new message in the node model.
      */
     @Override
-    public void warningChanged(final String warningMessage) {
-
+    public void warningChanged(final Message warning) {
         // get the warning message if available and create a message object
         // also notify all listeners
-        if (warningMessage != null) {
-            createWarningMessageAndNotify(warningMessage);
+        if (warning != null) {
+            createWarningMessageAndNotify(warning);
         } else {
             clearNodeMessageAndNotify();
         }
-    }
-
-    /** Getter for the currently set node warning message in the corresponding
-     * NodeModel.
-     * @return The currently set warning message (may be null).
-     */
-    public String getWarningMessageFromModel() {
-        return m_model.getWarningMessage();
     }
 
     /**
@@ -1980,14 +1974,13 @@ public final class Node implements NodeModelWarningListener {
             } catch (InvalidSettingsException ise) {
                 Throwable cause = ise.getCause();
                 if (cause == null) {
-                    createWarningMessageAndNotify(ise.getMessage());
+                    createWarningMessageAndNotify(Message.fromSummary(ise.getMessage()));
                 } else {
-                    createWarningMessageAndNotify(ise.getMessage(), ise);
+                    createWarningMessageAndNotify(Message.fromSummary(ise.getMessage()), ise);
                 }
             } catch (Throwable t) {
-                String error = "Configure failed (" + t.getClass().getSimpleName() + "): "
-                    + t.getMessage();
-                createErrorMessageAndNotify(error, t);
+                var error = String.format("Configure failed (%s): %s", t.getClass().getSimpleName(), t.getMessage());
+                createErrorMessageAndNotify(Message.fromSummary(error), t);
             }
         }
         if (success) {
@@ -2450,15 +2443,13 @@ public final class Node implements NodeModelWarningListener {
                     errMsg = "I/O error while saving internals: " + details;
                 } else {
                     errMsg = "Unable to save internals: " + details;
-                    LOGGER.coding("saveInternals() "
-                            + "should only cause IOException.", t);
+                    LOGGER.coding("saveInternals() should only cause IOException.", t);
                 }
-                createErrorMessageAndNotify(errMsg, t);
+                createErrorMessageAndNotify(Message.fromSummary(errMsg), t);
             }
         } else {
-            String errorMessage =
-                    "Unable to write directory: " + internDir.getAbsolutePath();
-            createErrorMessageAndNotify(errorMessage);
+            String errorMessage = "Unable to write directory: " + internDir.getAbsolutePath();
+            createErrorMessageAndNotify(Message.fromSummary(errorMessage));
         }
     }
 
@@ -2485,11 +2476,9 @@ public final class Node implements NodeModelWarningListener {
                 if (e.getMessage() != null && e.getMessage().length() > 0) {
                     details = e.getMessage();
                 }
-                createErrorMessageAndNotify("Unable to load internals: "
-                        + details, e);
+                createErrorMessageAndNotify(Message.fromSummary("Unable to load internals: " + details), e);
                 if (!(e instanceof IOException)) {
-                    LOGGER.coding("loadInternals() "
-                            + "should only cause IOException.", e);
+                    LOGGER.coding("loadInternals() should only cause IOException.", e);
                 }
             }
         }
@@ -2874,7 +2863,6 @@ public final class Node implements NodeModelWarningListener {
         return result;
     }
 
-
     // ////////////////////////
     // Credentials handling
     // ////////////////////////
@@ -2891,5 +2879,16 @@ public final class Node implements NodeModelWarningListener {
         return m_model.getCredentialsProvider();
     }
 
+    /**
+     * Implemented by {@link KNIMEException} and {@link KNIMERuntimeException} to have a comment getter...
+     */
+    interface MessageAwareException {
+
+        /**
+         * @return the {@link Message} this exception was instantiated with (or which got created from the exception
+         *         details).
+         */
+        Message getKNIMEMessage();
+    }
 
 }

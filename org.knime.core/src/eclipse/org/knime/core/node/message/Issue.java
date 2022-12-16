@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -43,26 +44,72 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Apr 10, 2008 (mb): created
+ *   Dec 14, 2022 (wiswedel): created
  */
-package org.knime.core.node;
+package org.knime.core.node.message;
 
-import java.util.EventListener;
+import java.util.Arrays;
 
-import org.knime.core.node.message.Message;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.config.base.ConfigBaseRO;
+import org.knime.core.node.config.base.ConfigBaseWO;
 
 /**
+ * An Issue is part of a {@link Message} and describes a single error or warning, along with its location. For nodes
+ * processing data tables, this location is the row/column and the concrete implementation is {@link RowIssue}. More
+ * generic "issues" are represented by {@link DefaultIssue}.
  *
- * @author M .Berthold, University of Konstanz
+ * <p>
+ * Issues can be added to a {@link MessageBuilder}, e.g. via {@link MessageBuilder#newRowIssueCollector(int)}.
+ *
+ * @author Bernd Wiswedel, KNIME, Konstanz, Germany
+ * @since 5.0
  */
-public interface NodeModelWarningListener extends EventListener {
+@SuppressWarnings("javadoc")
+interface Issue {
 
     /**
-     * Called when the NodeModel warning changes.
-     *
-     * @param warning new warning, possibly null.
-     * @since 5.0
+     * Type used internally to be able to restore issues in a saved workflow.
      */
-    public void warningChanged(final Message warning);
+    enum Type {
+        TABLE_ROW,
+        TEXT;
+
+        @SuppressWarnings("unchecked")
+        <T extends Issue> T loadIssue(final ConfigBaseRO config) throws InvalidSettingsException {
+            switch (this) {
+                case TABLE_ROW:
+                    return (T)RowIssue.load(config);
+                case TEXT:
+                    return (T)DefaultIssue.load(config);
+                default:
+                    throw new IllegalStateException("Unknown type " + this);
+            }
+        }
+
+        void saveType(final ConfigBaseWO config) {
+            config.addString("type", name());
+        }
+
+        static Type loadType(final ConfigBaseRO config) throws InvalidSettingsException {
+            var typeS = config.getString("type");
+            return Arrays.stream(values()) //
+                    .filter(t -> t.name().equals(typeS)) //
+                    .findFirst() //
+                    .orElseThrow(() -> new InvalidSettingsException("Invalid type: " + typeS));
+        }
+
+    }
+
+    /**
+     * The string that sufficienctly describes this issue. In the UI it's shown in fixed font.
+     *
+     * @return That string, not <code>null</code>.
+     */
+    String toPreformatted();
+
+    Type getType();
+
+    void saveTo(ConfigBaseWO config);
 
 }

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<component id="org.knime.core" version="2">
+    <resource path="src/eclipse/org/knime/core/node/message/Message.java" type="org.knime.core.node.message.Message">
+        <filter id="640708718">
+            <message_arguments>
+                <message_argument value="NodeMessage(NodeMessageType, String, String, List&lt;String&gt;)"/>
+                <message_argument value="Message"/>
+            </message_arguments>
+        </filter>
+    </resource>
+</component>

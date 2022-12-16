@@ -46,6 +46,8 @@ package org.knime.core.node.workflow;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.FileNodePersistor;
@@ -512,7 +514,9 @@ class FileNodeContainerMetaPersistor implements NodeContainerMetaPersistor {
                     throw new InvalidSettingsException("Invalid message type: " + typeS, iae);
                 }
                 String message = sub.getString("message");
-                return new NodeMessage(type, message);
+                String issue = sub.getString("issue", null); // added in 4.8/5.0 (Dec '22)
+                String[] resolutions = sub.getStringArray("resolutions", (String[])null); // same
+                return new NodeMessage(type, message, issue, resolutions == null ? null : Arrays.asList(resolutions));
             }
             return null;
         }
@@ -660,6 +664,13 @@ class FileNodeContainerMetaPersistor implements NodeContainerMetaPersistor {
             NodeSettingsWO sub = settings.addNodeSettings("nodecontainer_message");
             sub.addString("type", message.getMessageType().name());
             sub.addString("message", message.getMessage());
+            // added in 4.8/5.0 (Dec '22)
+            message.getIssue().ifPresent(c -> sub.addString("issue", c));
+            List<String> resolutions = message.getResolutions();
+            if (!resolutions.isEmpty()) {
+                sub.addStringArray("resolutions", resolutions.toArray(String[]::new));
+            }
+
         }
     }
 

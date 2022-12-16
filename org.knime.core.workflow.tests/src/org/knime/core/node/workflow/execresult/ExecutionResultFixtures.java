@@ -62,6 +62,7 @@ import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.NodeMessage.Type;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 
 /**
  * Test fixtures and assert methods for execution results, specifically relating to Json (de)serialization.
@@ -161,6 +162,7 @@ public class ExecutionResultFixtures {
      */
     public static ObjectMapper createObjectMapper() {
         ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new Jdk8Module()); // added in 5.0 due to AP-19914
         mapper.setTypeFactory(mapper.getTypeFactory().withClassLoader(ExecutionResultFixtures.class.getClassLoader()));
         return mapper;
     }

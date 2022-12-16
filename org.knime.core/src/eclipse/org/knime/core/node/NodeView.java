@@ -70,6 +70,8 @@ import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 
+import org.apache.commons.lang3.StringUtils;
+import org.knime.core.node.message.Message;
 import org.knime.core.node.util.SharedIcons;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.NodeContext;
@@ -345,7 +347,7 @@ public abstract class NodeView<T extends NodeModel> extends AbstractNodeView<T>
                 public void run() {
                     onOpen();
                     callModelChanged();
-                    warningChanged(getNodeModel().getWarningMessage());
+                    warningChanged(getNodeModel().getWarning());
                     m_frame.setName(title);
                     setTitle(title);
                     if (m_comp != null) {
@@ -603,8 +605,9 @@ public abstract class NodeView<T extends NodeModel> extends AbstractNodeView<T>
 
     /** {@inheritDoc} */
     @Override
-    public void warningChanged(final String warning) {
-        if (warning != null && warning.trim().length() > 0) {
+    public void warningChanged(final Message message) {
+        String warning = Message.getSummaryFrom(message);
+        if (StringUtils.isNotBlank(warning)) {
             m_warningLabel.setIcon(WARNING_ICON);
             m_warningLabel.setText(warning.trim());
             m_warningLabel.setToolTipText(warning.trim());

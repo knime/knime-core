@@ -73,6 +73,7 @@ import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.exec.SandboxedNodeCreator;
+import org.knime.core.node.message.Message;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
@@ -181,7 +182,7 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
 
         localNodeContainer.getNodeModel().addWarningListener(w -> {
             if (w != null) {
-                m_warningMessages.add(w);
+                m_warningMessages.add(w.getSummary());
             }
         });
 
@@ -477,7 +478,8 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
                 localNodeContainer.setNodeMessage(NodeMessage.newWarning("Execution canceled"));
                 return NodeContainerExecutionStatus.FAILURE;
             }
-            localNodeContainer.getNode().createErrorMessageAndNotify("Execute failed: " + e.getMessage(), e);
+            localNodeContainer.getNode()
+                .createErrorMessageAndNotify(Message.fromSummary("Execute failed: " + e.getMessage()), e);
             return NodeContainerExecutionStatus.FAILURE;
         } finally {
             //remove virtual nodes from workflow

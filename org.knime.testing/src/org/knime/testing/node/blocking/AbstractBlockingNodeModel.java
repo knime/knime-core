@@ -63,15 +63,18 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.CheckUtils;
+import org.knime.core.util.Pointer;
 import org.knime.testing.node.blocking.BlockingRepository.LockedMethod;
 
 /**
  *
  * @author wiswedel, University of Konstanz
  */
-abstract class AbstractBlockingNodeModel extends NodeModel {
+public abstract class AbstractBlockingNodeModel extends NodeModel {
 
     private final SettingsModelString m_lockIDModel;
+
+    private Pointer<ExecutionContext> m_execContextPointer;
 
     /**
      * One data input, one data output.
@@ -79,16 +82,41 @@ abstract class AbstractBlockingNodeModel extends NodeModel {
     AbstractBlockingNodeModel(final PortType input, final PortType output) {
         super(new PortType[]{input}, new PortType[]{output});
         m_lockIDModel = createLockIDModel();
+        m_execContextPointer = Pointer.newInstance(null);
     }
 
     @Override
     protected final PortObject[] execute(final PortObject[] inData, final ExecutionContext exec) throws Exception {
+        synchronized (m_execContextPointer) {
+            m_execContextPointer.set(exec);
+            m_execContextPointer.notifyAll();
+        }
         Lock lock = getLock(LockedMethod.EXECUTE).orElseGet(ReentrantLock::new);
         lock.lockInterruptibly();
         try {
             return new PortObject[]{executeImplementation(inData[0])};
         } finally {
+            synchronized (m_execContextPointer) {
+                m_execContextPointer.set(null);
+                m_execContextPointer.notifyAll();
+            }
             lock.unlock();
+        }
+    }
+
+    /**
+     * @return the context provide during node execution, only non-null when currently in execution. Waits at most 2s
+     *         for it to appear (otherwise returns an empty Optional)
+     */
+    public final Optional<ExecutionContext> fetchExecutionContext() throws InterruptedException {
+        synchronized (m_execContextPointer) {
+            // this really should be done in a loop etc (but eh...)
+            var res = m_execContextPointer.get();
+            if (res != null) {
+                return Optional.of(res);
+            }
+            m_execContextPointer.wait(2000, 0);
+            return Optional.ofNullable(m_execContextPointer.get());
         }
     }
 
@@ -114,7 +142,7 @@ abstract class AbstractBlockingNodeModel extends NodeModel {
     }
 
     @Override
-    protected final void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
+    public final void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_lockIDModel.loadSettingsFrom(settings);
     }
 
@@ -151,7 +179,7 @@ abstract class AbstractBlockingNodeModel extends NodeModel {
      *
      * @return a new model used in dialog and model.
      */
-    static final SettingsModelString createLockIDModel() {
+    public static final SettingsModelString createLockIDModel() {
         return new SettingsModelString("lock_id", null);
     }
 

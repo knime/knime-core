@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -43,26 +44,73 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Apr 10, 2008 (mb): created
+ *   Jan 1, 2023 (wiswedel): created
  */
-package org.knime.core.node;
+package org.knime.core.node.message;
 
-import java.util.EventListener;
+import java.util.Objects;
 
-import org.knime.core.node.message.Message;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.config.base.ConfigBaseRO;
+import org.knime.core.node.config.base.ConfigBaseWO;
+import org.knime.core.node.util.CheckUtils;
 
 /**
+ * An {@link Issue} just wrapping some text.
  *
- * @author M .Berthold, University of Konstanz
+ * @since 5.0
  */
-public interface NodeModelWarningListener extends EventListener {
+@SuppressWarnings("javadoc")
+final class DefaultIssue implements Issue {
 
-    /**
-     * Called when the NodeModel warning changes.
-     *
-     * @param warning new warning, possibly null.
-     * @since 5.0
-     */
-    public void warningChanged(final Message warning);
+    private final String m_preformatted;
 
+    DefaultIssue(final String preformatted) {
+        m_preformatted = CheckUtils.checkArgumentNotNull(preformatted);
+    }
+
+    @Override
+    public String toPreformatted() {
+        return m_preformatted;
+    }
+
+    @Override
+    public Type getType() {
+        return Type.TEXT;
+    }
+
+    @Override
+    public void saveTo(final ConfigBaseWO config) {
+        config.addString("preformatted", m_preformatted);
+    }
+
+
+    @Override
+    public boolean equals(final Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (!(obj instanceof DefaultIssue)) {
+            return false;
+        }
+        var m = (DefaultIssue)obj;
+        return Objects.equals(m_preformatted, m.m_preformatted);
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder().append(m_preformatted).toHashCode();
+    }
+
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this).append("preformatted", m_preformatted).toString();
+    }
+
+    static DefaultIssue load(final ConfigBaseRO config) throws InvalidSettingsException {
+        var preformatted = config.getString("preformatted");
+        return new DefaultIssue(preformatted);
+    }
 }

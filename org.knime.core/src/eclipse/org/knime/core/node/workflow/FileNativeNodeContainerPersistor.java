@@ -78,6 +78,7 @@ import org.knime.core.node.context.ModifiableNodeCreationConfiguration;
 import org.knime.core.node.context.NodeCreationConfiguration;
 import org.knime.core.node.extension.InvalidNodeFactoryExtensionException;
 import org.knime.core.node.extension.NodeFactoryExtensionManager;
+import org.knime.core.node.message.Message;
 import org.knime.core.node.missing.MissingNodeFactory;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
@@ -239,11 +240,11 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
                     break;
                 case FAIL:
                     result.addError(error);
-                    m_node.createErrorMessageAndNotify(error, e);
+                    m_node.createErrorMessageAndNotify(Message.fromSummary(error), e);
                     setNeedsResetAfterLoad();
                     break;
                 case WARN:
-                    m_node.createWarningMessageAndNotify(error, e);
+                    m_node.createWarningMessageAndNotify(Message.fromSummary(error), e);
                     result.addWarning(error);
                     setDirtyAfterLoad();
                     break;

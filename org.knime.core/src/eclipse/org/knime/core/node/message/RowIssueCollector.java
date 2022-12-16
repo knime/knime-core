@@ -44,40 +44,39 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Feb 2, 2017 (bjoern): created
+ *   Jan 11, 2023 (wiswedel): created
  */
-package org.knime.core.node.workflow;
+package org.knime.core.node.message;
 
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
-
-import java.io.IOException;
-
-import org.junit.Test;
-import org.knime.core.node.workflow.NodeMessage.Type;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.knime.core.node.util.CheckUtils;
 
 /**
+ * An issue collector is used to collect issue that are encountered while processing rows. They add issues to a
+ * {@link Message} via its {@link MessageBuilder}. See {@link MessageBuilder#newRowIssueCollector(int)}
+ * for details.
  *
- * @author Bjoern Lohrmann, KNIME.com GmbH
+ * @author Bernd Wiswedel, KNIME GmbH
+ * @since 5.0
  */
-public class NodeMessageTest {
+public final class RowIssueCollector {
 
-    /**
-     * Tests the JSON (de)serialization of node messages.
-     *
-     * @throws IOException
-     */
-    @Test
-    public void testNodeMessageJsonSerialization() throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
+    final int m_portIndex;
+    private final MessageBuilder m_messageBuilder;
 
-        NodeMessage orig = new NodeMessage(Type.WARNING, "a warning text");
-
-        String serialized = mapper.writeValueAsString(orig);
-        NodeMessage deserialized = mapper.readValue(serialized, NodeMessage.class);
-        assertThat("Message is equal", deserialized, is(orig));
+    RowIssueCollector(final MessageBuilder messageBuilder, final int portIndex) {
+        CheckUtils.checkArgument(portIndex >= 0, "port index must be >= 0: %d", portIndex);
+        m_portIndex = portIndex;
+        m_messageBuilder = messageBuilder;
     }
 
+    /**
+     * Collects a new issue.
+     * @param columnIndex The column where the issue occured (will be used to highlight it in some UI later)
+     * @param rowIndex The row where the issue occured (cell will be underlined)
+     * @param message The actual error
+     */
+    public void collect(final int columnIndex, final long rowIndex, final String message) {
+        var res = new RowIssue(this, columnIndex, rowIndex, message);
+        m_messageBuilder.addIssue(res);
+    }
 }

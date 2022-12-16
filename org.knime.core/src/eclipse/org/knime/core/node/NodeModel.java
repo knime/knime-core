@@ -59,7 +59,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.IDataRepository;
 import org.knime.core.data.filestore.FileStorePortObject;
@@ -69,6 +68,8 @@ import org.knime.core.node.AbstractNodeView.ViewableModel;
 import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.interactive.ReExecutable;
 import org.knime.core.node.interactive.ViewContent;
+import org.knime.core.node.message.Message;
+import org.knime.core.node.message.MessageBuilder;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
@@ -111,6 +112,7 @@ import org.knime.core.node.workflow.VariableType.IntType;
 import org.knime.core.node.workflow.VariableType.StringType;
 import org.knime.core.node.workflow.virtual.parchunk.FlowVirtualScopeContext;
 import org.knime.core.node.workflow.virtual.parchunk.VirtualParallelizedChunkPortObjectInNodeModel;
+import org.knime.core.util.Pointer;
 
 
 /**
@@ -236,11 +238,18 @@ public abstract class NodeModel implements ViewableModel {
      * Optional warning message to be set during / after execution. Enables
      * higher levels to display the given message.
      */
-    private String m_warningMessage = null;
+    private Message m_warningMessage;
+
+    /**
+     * Pointer to remember the latest {@link Message} set by the derived class <i>during execution</i>; This member is
+     * non-<code>null</code> only during execution (but often pointing to <code>null</code>). Such a message needs to be
+     * post-processed after execution, which is expensive since it may involve iterating the table (in order to fill the
+     * error context).
+     */
+    private Pointer<Message> m_warningMessageDuringExecution;
 
     /** The listeners that are interested in changes of the model warning. */
-    private final CopyOnWriteArraySet<NodeModelWarningListener>
-                                                         m_warningListeners;
+    private final CopyOnWriteArraySet<NodeModelWarningListener> m_warningListeners;
 
     /**
      * Creates a new model with the given number of input and
@@ -273,8 +282,7 @@ public abstract class NodeModel implements ViewableModel {
         m_logger = NodeLogger.getLogger(this.getClass());
 
         // init message listener array
-        m_warningListeners =
-                       new CopyOnWriteArraySet<NodeModelWarningListener>();
+        m_warningListeners = new CopyOnWriteArraySet<NodeModelWarningListener>();
 
         // check port types of validity and store them
         if (inPortTypes == null) {
@@ -541,6 +549,7 @@ public abstract class NodeModel implements ViewableModel {
 
         executeModelCheckInput(data);
 
+        m_warningMessageDuringExecution = Pointer.newInstance(null);
         // temporary storage for result of derived model.
         // EXECUTE DERIVED MODEL
         PortObject[] outData;
@@ -566,10 +575,13 @@ public abstract class NodeModel implements ViewableModel {
             if (exec.isCanceled()) {
                 throw new CanceledExecutionException("Result discarded due to user cancel");
             }
+            executeModelPostProcessWarning(data);
         } catch (Exception e) {
             // clear local tables (which otherwise would continue to block resources)
             exec.onCancel();
             throw e;
+        } finally {
+            m_warningMessageDuringExecution = null;
         }
 
         outData = executeModelPostProcessOutput(data, outData, exec);
@@ -672,7 +684,7 @@ public abstract class NodeModel implements ViewableModel {
      * @param outData result data of #execute
      */
     private void executeModelCheckTableWarnings(final PortObject[] outData) {
-        if (StringUtils.isNotBlank(m_warningMessage)) {
+        if (m_warningMessage != null) {
             // existing warnings on the node take priority
             return;
         }
@@ -697,6 +709,16 @@ public abstract class NodeModel implements ViewableModel {
                 setWarningMessage("Node created empty data tables on all out-ports.");
             }
         }
+    }
+
+    private void executeModelPostProcessWarning(final PortObject[] input) {
+        final Message message = m_warningMessageDuringExecution.get();
+        if (message == null || message.equals(m_warningMessage)) {
+            return;
+        }
+        Message fullMessage = message.fillIssues(input);
+        m_warningMessageDuringExecution = null;
+        setWarning(fullMessage);
     }
 
     /**
@@ -905,7 +927,6 @@ public abstract class NodeModel implements ViewableModel {
     protected void setInHiLiteHandler(final int inIndex,
             final HiLiteHandler hiLiteHdl) {
         assert inIndex >= 0;
-        assert hiLiteHdl == hiLiteHdl;
     }
 
     /**
@@ -1171,22 +1192,32 @@ public abstract class NodeModel implements ViewableModel {
     // Warning handling
     /////////////////////////
 
-    /** Method being called when node is restored. It does not notify listeners.
-     * @param warningMessage The message as written to the workflow file
+    /**
+     * Creates a message builder used during a node's execution to collect messages, which are then shown in the UI
+     * to the user. Code examples live in {@link MessageBuilder}.
+     *
+     * @return a new message builder, customized for this node.
+     * @since 5.0
      */
-    final void restoreWarningMessage(final String warningMessage) {
-        m_warningMessage = warningMessage;
+    @SuppressWarnings("static-method")
+    protected final MessageBuilder createMessageBuilder() {
+        return Message.builder();
+    }
+
+    /** Method being called when node is restored. It does not notify listeners.
+     * @param message The message as written to the workflow file
+     */
+    final void restoreWarningMessage(final String message) {
+        m_warningMessage = Message.builder().withSummary(message).build().orElse(null);
     }
 
     /**
      * Sets an optional warning message by the implementing node model.
      *
-     * @param warningMessage the warning message to set
+     * @param warningMessage the warning message to set (might be null)
      */
     protected final void setWarningMessage(final String warningMessage) {
-        // message changed, set new one and notify listeners.
-        m_warningMessage = warningMessage;
-        notifyWarningListeners(m_warningMessage);
+        setWarning(Message.builder().withSummary(warningMessage).build().orElse(null));
     }
 
     /**
@@ -1194,6 +1225,36 @@ public abstract class NodeModel implements ViewableModel {
      * @return the warningMessage that is currently set (or null)
      */
     protected final String getWarningMessage() {
+        return m_warningMessage != null ? m_warningMessage.getSummary() : null;
+    }
+
+    /**
+     * Sets an warning message by the implementing node model. Argument may be null, in which case this
+     * method will reset any previously set warning.
+     * @since 5.0
+     */
+    protected final void setWarning(final Message message) {
+        Message msg = message;
+        if (m_warningMessageDuringExecution != null) {
+            m_warningMessageDuringExecution.set(message);
+            if (message != null) {
+                msg = Message.builder().withSummary(message.getSummary()).build().orElse(null);
+            }
+        }
+
+        var oldMessage = m_warningMessage;
+        m_warningMessage = msg;
+        if (!Objects.equals(msg, oldMessage)) {
+            notifyWarningListeners(m_warningMessage);
+        }
+    }
+
+    /**
+     * Get the most recently set warning message.
+     * @return the warningMessage that is currently set (or null)
+     * @since 5.0
+     */
+    protected final Message getWarning() {
         return m_warningMessage;
     }
 
@@ -1228,13 +1289,12 @@ public abstract class NodeModel implements ViewableModel {
      * Notifies all listeners that the warning of this node has changed.
      * @param warning message
      */
-    public void notifyWarningListeners(final String warning) {
+    private void notifyWarningListeners(final Message warning) {
         for (NodeModelWarningListener listener : m_warningListeners) {
             try {
                 listener.warningChanged(warning);
             } catch (Throwable t) {
-                m_logger.error("Exception while notifying NodeModel listeners",
-                        t);
+                m_logger.error("Exception while notifying NodeModel listeners", t);
             }
         }
     }
