@@ -48,7 +48,6 @@
 package org.knime.core.util.pathresolve;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URI;
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -57,6 +56,7 @@ import java.util.Optional;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.util.exception.ResourceAccessException;
 import org.knime.core.util.pathresolve.URIToFileResolve.KNIMEURIDescription;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
@@ -103,10 +103,10 @@ public final class ResolverUtil {
      *
      * @param uri The URI to resolve
      * @return The local file underlying the URI (if any)
-     * @throws IOException If no service is registered or the URI can't be
+     * @throws ResourceAccessException If no service is registered or the URI can't be
      *             resolved.
      */
-    public static File resolveURItoLocalFile(final URI uri) throws IOException {
+    public static File resolveURItoLocalFile(final URI uri) throws ResourceAccessException {
         return resolveURItoLocalFile(uri, new NullProgressMonitor());
     }
 
@@ -117,31 +117,32 @@ public final class ResolverUtil {
      * @param uri The URI to resolve
      * @param monitor a progress monitor, must not be <code>null</code>
      * @return The local file underlying the URI (if any), or <code>null</code> if the URI does not denote a local file
-     * @throws IOException If no service is registered or the URI can't be
+     * @throws ResourceAccessException If no service is registered or the URI can't be
      *             resolved.
      */
-    public static File resolveURItoLocalFile(final URI uri, final IProgressMonitor monitor) throws IOException {
+    public static File resolveURItoLocalFile(final URI uri, final IProgressMonitor monitor)
+        throws ResourceAccessException {
         if (uri == null) {
-            throw new IOException("Can't resolve null URI to file");
+            throw new ResourceAccessException("Can't resolve null URI to file");
         }
         // try resolving file-URIs without helper
         String scheme = uri.getScheme();
         if (scheme == null) {
-            throw new IOException("Can't resolve URI \"" + uri + "\": it does not have a scheme");
+            throw new ResourceAccessException("Can't resolve URI \"" + uri + "\": it does not have a scheme");
         }
         if (scheme.equalsIgnoreCase("file")) {
             try {
                 return new File(uri);
             } catch (IllegalArgumentException e) {
-                throw new IOException("Can't resolve file URI \"" + uri + "\" to file", e);
+                throw new ResourceAccessException("Can't resolve file URI \"" + uri + "\" to file", e);
             }
         }
         if (serviceTracker == null) {
-            throw new IOException("Core bundle is not active, can't resolve URI \"" + uri + "\"");
+            throw new ResourceAccessException("Core bundle is not active, can't resolve URI \"" + uri + "\"");
         }
         URIToFileResolve res = (URIToFileResolve)serviceTracker.getService();
         if (res == null) {
-            throw new IOException("Can't resolve URI \"" + uri + "\"; no URI resolve service registered");
+            throw new ResourceAccessException("Can't resolve URI \"" + uri + "\"; no URI resolve service registered");
         }
         return res.resolveToFile(uri);
     }
@@ -153,10 +154,10 @@ public final class ResolverUtil {
      * @param uri The URI to resolve
      * @return The local file or temporary copy of a remote file underlying the
      *         URI (if any)
-     * @throws IOException If no service is registered or the URI can't be
+     * @throws ResourceAccessException If no service is registered or the URI can't be
      *             resolved.
      */
-    public static File resolveURItoLocalOrTempFile(final URI uri) throws IOException {
+    public static File resolveURItoLocalOrTempFile(final URI uri) throws ResourceAccessException {
         return resolveURItoLocalOrTempFile(uri, new NullProgressMonitor());
     }
 
@@ -168,17 +169,18 @@ public final class ResolverUtil {
      * @param monitor a progress monitor, must not be <code>null</code>
      * @return The local file or temporary copy of a remote file underlying the
      *         URI (if any)
-     * @throws IOException If no service is registered or the URI can't be
+     * @throws ResourceAccessException If no service is registered or the URI can't be
      *             resolved.
      */
-    public static File resolveURItoLocalOrTempFile(final URI uri, final IProgressMonitor monitor) throws IOException {
+    public static File resolveURItoLocalOrTempFile(final URI uri, final IProgressMonitor monitor)
+        throws ResourceAccessException {
         File localFile = resolveURItoLocalFile(uri, monitor);
         if (localFile != null) {
             return localFile;
         }
         URIToFileResolve res = (URIToFileResolve)serviceTracker.getService();
         if (res == null) {
-            throw new IOException("Can't resolve URI \"" + uri + "\"; no URI resolve service registered");
+            throw new ResourceAccessException("Can't resolve URI \"" + uri + "\"; no URI resolve service registered");
         }
         return res.resolveToLocalOrTempFile(uri, monitor);
     }
@@ -192,19 +194,19 @@ public final class ResolverUtil {
      * @param ifModifiedSince the if-modified-since date for a conditional request; can be <code>null</code>
      * @return The local file or temporary copy of a remote file underlying the
      *         URI (if any)
-     * @throws IOException If no service is registered or the URI can't be
+     * @throws ResourceAccessException If no service is registered or the URI can't be
      *             resolved.
      * @since 4.3
      */
     public static Optional<File> resolveURItoLocalOrTempFileConditional(final URI uri, final IProgressMonitor monitor,
-        final ZonedDateTime ifModifiedSince) throws IOException {
+        final ZonedDateTime ifModifiedSince) throws ResourceAccessException {
         File localFile = resolveURItoLocalFile(uri, monitor);
         if (localFile != null) {
             return Optional.of(localFile);
         }
         URIToFileResolve res = (URIToFileResolve)serviceTracker.getService();
         if (res == null) {
-            throw new IOException("Can't resolve URI \"" + uri + "\"; no URI resolve service registered");
+            throw new ResourceAccessException("Can't resolve URI \"" + uri + "\"; no URI resolve service registered");
         }
         return res.resolveToLocalOrTempFileConditional(uri, monitor, ifModifiedSince);
     }
@@ -213,26 +215,26 @@ public final class ResolverUtil {
      * Checks whether the passed URI is a mountpoint relative URI.
      * @param uri to check
      * @return true, if URI has KNIME FS scheme and is a mount point relative URI
-     * @throws IOException if things went bad.
+     * @throws ResourceAccessException if things went bad.
      * @since 2.8
      */
-    public static boolean isMountpointRelativeURL(final URI uri) throws IOException {
+    public static boolean isMountpointRelativeURL(final URI uri) throws ResourceAccessException {
         if (uri == null) {
-            throw new IOException("Can't check null URI");
+            throw new ResourceAccessException("Can't check null URI");
         }
         String scheme = uri.getScheme();
         if (scheme == null) {
-            throw new IOException("Can't check URI \"" + uri + "\": it does not have a scheme");
+            throw new ResourceAccessException("Can't check URI \"" + uri + "\": it does not have a scheme");
         }
         if (scheme.equalsIgnoreCase("file")) {
             return false;
         }
         if (serviceTracker == null) {
-            throw new IOException("Core bundle is not active, can't resolve URI \"" + uri + "\"");
+            throw new ResourceAccessException("Core bundle is not active, can't resolve URI \"" + uri + "\"");
         }
         URIToFileResolve res = (URIToFileResolve)serviceTracker.getService();
         if (res == null) {
-            throw new IOException("Can't resolve URI \"" + uri + "\"; no URI resolve service registered");
+            throw new ResourceAccessException("Can't resolve URI \"" + uri + "\"; no URI resolve service registered");
         }
         return res.isMountpointRelative(uri);
     }
@@ -241,26 +243,26 @@ public final class ResolverUtil {
      * Checks whether the passed URI is a workflow relative URI.
      * @param uri to check
      * @return true, if URI has KNIME FS scheme and is a workflow relative URI
-     * @throws IOException if things went bad.
+     * @throws ResourceAccessException if things went bad.
      * @since 2.8
      */
-    public static boolean isWorkflowRelativeURL(final URI uri) throws IOException {
+    public static boolean isWorkflowRelativeURL(final URI uri) throws ResourceAccessException {
         if (uri == null) {
-            throw new IOException("Can't check null URI");
+            throw new ResourceAccessException("Can't check null URI");
         }
         String scheme = uri.getScheme();
         if (scheme == null) {
-            throw new IOException("Can't check URI \"" + uri + "\": it does not have a scheme");
+            throw new ResourceAccessException("Can't check URI \"" + uri + "\": it does not have a scheme");
         }
         if (scheme.equalsIgnoreCase("file")) {
             return false;
         }
         if (serviceTracker == null) {
-            throw new IOException("Core bundle is not active, can't resolve URI \"" + uri + "\"");
+            throw new ResourceAccessException("Core bundle is not active, can't resolve URI \"" + uri + "\"");
         }
         URIToFileResolve res = (URIToFileResolve)serviceTracker.getService();
         if (res == null) {
-            throw new IOException("Can't resolve URI \"" + uri + "\"; no URI resolve service registered");
+            throw new ResourceAccessException("Can't resolve URI \"" + uri + "\"; no URI resolve service registered");
         }
         return res.isWorkflowRelative(uri);
     }

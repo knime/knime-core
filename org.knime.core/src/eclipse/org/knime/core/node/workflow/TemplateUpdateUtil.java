@@ -240,6 +240,13 @@ public final class TemplateUpdateUtil {
                     loadResult.addChildError(templateLoadResult);
                     visitedTemplateMap.put(uri, tempLink);
                 } catch (IOException e) {
+                    /**
+                     * Remark: we introduced the {@link ResourceAccessException} as an exception for non-resolvable
+                     * resources (here: templates). However, we still want to catch IOExceptions here since there can
+                     * also occur standard IOExceptions on the way: unzipping the downloaded template, the template
+                     * having an inconsistent TemplateInformation#Role, and now, a ResourceAccessException from fetching
+                     * the template.
+                     */
                     LOGGER.debug(String.format("Could not load metanode template for %s", linkedMeta.getID()), e);
                     nodeIdToUpdateStatus.put(linkedMeta.getID(), UpdateStatus.Error);
                     continue;

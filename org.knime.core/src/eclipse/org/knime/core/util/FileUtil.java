@@ -109,6 +109,7 @@ import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.WorkflowContext;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.util.exception.ResourceAccessException;
 import org.knime.core.util.pathresolve.ResolverUtil;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
@@ -1212,7 +1213,7 @@ public final class FileUtil {
         } else if (fileUrl.getProtocol().equalsIgnoreCase("knime")) {
             try {
                 return ResolverUtil.resolveURItoLocalFile(fileUrl.toURI());
-            } catch (IOException | URISyntaxException e) {
+            } catch (ResourceAccessException | URISyntaxException e) {
                 throw new IllegalArgumentException(e.getMessage(), e);
             }
         } else {

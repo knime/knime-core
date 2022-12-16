@@ -46,13 +46,13 @@
 package org.knime.core.util.pathresolve;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URI;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.knime.core.util.exception.ResourceAccessException;
 
 /**
  * A service interface to convert a URI into a local file. The URI is usually (always?) either a file URI or a URI
@@ -71,9 +71,9 @@ public interface URIToFileResolve {
      *
      * @param uri The URI, e.g. "knime:/MOUNT_ID/some/path/workflow.knime"
      * @return the local file represented by the URI or <code>null</code>
-     * @throws IOException If the URI can't be resolved
+     * @throws ResourceAccessException If the URI can't be resolved
      */
-    File resolveToFile(URI uri) throws IOException;
+    File resolveToFile(URI uri) throws ResourceAccessException;
 
     /**
      * Resolves the given URI into a local file. If the URI doesn't denote a local file, <code>null</code> is returned.
@@ -81,10 +81,10 @@ public interface URIToFileResolve {
      * @param uri The URI, e.g. "knime:/MOUNT_ID/some/path/workflow.knime"
      * @param monitor a progress monitor, must not be <code>null</code>
      * @return the local file represented by the URI or <code>null</code>
-     * @throws IOException If the URI can't be resolved
+     * @throws ResourceAccessException If the URI can't be resolved
      * @since 2.6
      */
-    File resolveToFile(URI uri, IProgressMonitor monitor) throws IOException;
+    File resolveToFile(URI uri, IProgressMonitor monitor) throws ResourceAccessException;
 
     /**
      * Resolves the given URI into a local file. If the URI does not represent a local file (e.g. a remote file on a
@@ -93,9 +93,9 @@ public interface URIToFileResolve {
      *
      * @param uri The URI, e.g. "knime:/MOUNT_ID/some/path/workflow.knime"
      * @return the file represented by the URI or a temporary copy of that file if it represents a remote file
-     * @throws IOException If the URI can't be resolved
+     * @throws ResourceAccessException If the URI can't be resolved
      */
-    File resolveToLocalOrTempFile(URI uri) throws IOException;
+    File resolveToLocalOrTempFile(URI uri) throws ResourceAccessException;
 
     /**
      * Resolves the given URI into a local file. If the URI does not represent a local file (e.g. a remote file on a
@@ -105,10 +105,10 @@ public interface URIToFileResolve {
      * @param uri The URI, e.g. "knime:/MOUNT_ID/some/path/workflow.knime"
      * @param monitor a progress monitor, must not be <code>null</code>
      * @return the file represented by the URI or a temporary copy of that file if it represents a remote file
-     * @throws IOException If the URI can't be resolved
+     * @throws ResourceAccessException If the URI can't be resolved
      * @since 2.6
      */
-    File resolveToLocalOrTempFile(URI uri, IProgressMonitor monitor) throws IOException;
+    File resolveToLocalOrTempFile(URI uri, IProgressMonitor monitor) throws ResourceAccessException;
 
     /**
      * Attempts to extract some information about the argument URI, especially attempts to resolve the full path for
@@ -151,11 +151,11 @@ public interface URIToFileResolve {
      *            request it conditionally
      * @return the file represented by the URI or a temporary copy of that file if it represents a remote file; or an
      *         empty optional if the file hasn't been modified after the provided date
-     * @throws IOException
+     * @throws ResourceAccessException
      * @since 4.3
      */
     Optional<File> resolveToLocalOrTempFileConditional(URI uri, IProgressMonitor monitor, ZonedDateTime ifModifiedSince)
-            throws IOException;
+            throws ResourceAccessException;
 
     /**
      * Returns <code>true</code>, if this is a URI that is relative to the current mountpoint (of the flow it is used
