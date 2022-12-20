@@ -208,7 +208,7 @@ public final class TableFilter {
                 .toArray());
         }
         if (!selection.rows().allSelected()) {
-            builder.withFromRowIndex(selection.rows().fromIndex()).withToRowIndex(selection.rows().toIndex() + 1);
+            builder.withFromRowIndex(selection.rows().fromIndex()).withToRowIndex(selection.rows().toIndex() - 1);
         }
         return builder.build();
     }
