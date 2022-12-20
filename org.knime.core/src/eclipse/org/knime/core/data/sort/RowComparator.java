@@ -199,8 +199,9 @@ public final class RowComparator implements Comparator<DataRow> {
             Comparator<DataCell> cellComp;
             if (this.m_alphanum) {
                 // compares column on string representation in alphanumerical order
-                cellComp = Comparator.comparing(dc -> CheckUtils.checkStateType(dc, StringValue.class,
-                    "Comparing non-string compatible column").getStringValue(),
+                cellComp = Comparator.comparing(
+                    dc -> CheckUtils.checkCast(dc, StringValue.class, IllegalStateException::new,
+                        "Comparing non-string compatible column").getStringValue(),
                     new AlphanumericComparator(Comparator.naturalOrder()));
             } else {
                 cellComp = m_type.getComparator();
