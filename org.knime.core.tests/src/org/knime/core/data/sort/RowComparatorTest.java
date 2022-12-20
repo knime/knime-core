@@ -173,8 +173,8 @@ public class RowComparatorTest {
                 StringCell last = null;
                 while (it.hasNext()) {
                     final var next = it.next();
-                    final var rowKeyLeadingZeros = CheckUtils.checkStateType(next.getCell(3), StringCell.class,
-                        "Expected string in last column of test data.");
+                    final var rowKeyLeadingZeros = CheckUtils.checkCast(next.getCell(3), StringCell.class,
+                        IllegalStateException::new, "Expected string in last column of test data.");
                     if (last != null) {
                         assertTrue(lex.compare(rowKeyLeadingZeros, last) > 0);
                     }
@@ -247,8 +247,8 @@ public class RowComparatorTest {
                 StringCell last = null;
                 while (it.hasNext()) {
                     final var next = it.next();
-                    final var rowKeyLeadingZeros = CheckUtils.checkStateType(next.getCell(3), StringCell.class,
-                        "Expected string in last column of test data.");
+                    final var rowKeyLeadingZeros = CheckUtils.checkCast(next.getCell(3), StringCell.class,
+                        IllegalStateException::new, "Expected string in last column of test data.");
                     if (last != null) {
                         assertTrue(lex.compare(rowKeyLeadingZeros, last) > 0);
                     }
