@@ -70,7 +70,9 @@ import org.knime.core.node.workflow.MetaNodeTemplateInformation.UpdateStatus;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.MetaNodeLinkUpdateResult;
 import org.knime.core.util.FileUtil;
+import org.knime.core.util.exception.ResourceAccessException;
 import org.knime.core.util.pathresolve.ResolverUtil;
+import org.knime.core.util.pathresolve.URIToFileResolve.KNIMEURIDescription;
 
 /**
  * Encapsulates util functionality for updating template links (a.k.a Components, Metanodes).
@@ -196,7 +198,7 @@ public final class TemplateUpdateUtil {
             loadResultChild = new MetaNodeLinkUpdateResult("Template from " + sourceURI.toString());
             tempParent.load(loadPersistor, loadResultChild, new ExecutionMonitor(), false);
         } catch (InvalidSettingsException e) {
-            throw new IOException("Unable to read template metanode: " + e.getMessage(), e);
+            throw new IOException("Unable to read template: " + e.getMessage(), e);
         }
         NodeContainerTemplate linkResult = loadResultChild.getLoadedInstance();
         MetaNodeTemplateInformation templInfo = linkResult.getTemplateInformation();
@@ -205,7 +207,7 @@ public final class TemplateUpdateUtil {
             // "Template" field in the workflow settings should have changed to "Link" during preLoadNodeContainer
             // (this is due to the template information link uri set above), otherwise throw an exception
             throw new IOException(
-                "The source of the linked instance does " + "not represent a template but is of role " + sourceRole);
+                "The source of the linked instance does not represent a template but is of role " + sourceRole);
         }
         loadResult.addChildError(loadResultChild);
         return linkResult;
@@ -247,7 +249,13 @@ public final class TemplateUpdateUtil {
                      * having an inconsistent TemplateInformation#Role, and now, a ResourceAccessException from fetching
                      * the template.
                      */
-                    LOGGER.debug(String.format("Could not load metanode template for %s", linkedMeta.getID()), e);
+                    var uriString = ResolverUtil.toDescription(uri, null) //
+                            .map(KNIMEURIDescription::toDisplayString) //
+                            .orElseGet(uri::toString);
+                    var verb = e instanceof ResourceAccessException ? "accessed" : "read";
+                    LOGGER.warn(String.format(
+                        "Could not load template for \"%s\" - it links to \"%s\" but it could not be %s: %s", //
+                        linkedMeta.getNameWithID(), uriString, verb, e.getMessage()), e);
                     nodeIdToUpdateStatus.put(linkedMeta.getID(), UpdateStatus.Error);
                     continue;
                 } catch (CanceledExecutionException | UnsupportedWorkflowVersionException e) {
@@ -323,8 +331,7 @@ public final class TemplateUpdateUtil {
         }
         // in case of an error, throw an IOException
         if (totalStatus == UpdateStatus.Error) {
-            throw new IOException(
-                "Could not update metanode: \"Unable to read template metanode: " + erroneousNode + "\"");
+            throw new IOException("Unable to read template: \"" + erroneousNode + "\"");
         }
         return totalStatus == UpdateStatus.HasUpdate;
     }
