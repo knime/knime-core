@@ -175,7 +175,7 @@ public interface TableBackend {
      * @param tableIdSupplier provides IDs for potentially created ContainerTables
      * @return the sliced table
      */
-    KnowsRowCountTable slice(ExecutionContext exec, BufferedDataTable table, Selection slice,
+    KnowsRowCountTable[] slice(ExecutionContext exec, BufferedDataTable table, Selection[] slices,
         IntSupplier tableIdSupplier);
 
 }

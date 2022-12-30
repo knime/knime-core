@@ -51,8 +51,7 @@ package org.knime.core.node;
 import org.knime.core.table.row.Selection;
 
 /**
- * Provides internal API for manipulating tables.
- * May change at any point in time.
+ * Provides internal API for manipulating tables. May change at any point in time.
  *
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  * @noreference This class is not intended to be referenced by clients.
@@ -73,6 +72,19 @@ public final class InternalTableAPI {
      */
     public static BufferedDataTable slice(final ExecutionContext exec, final BufferedDataTable table,
         final Selection slice) {
-        return exec.createSlicedTable(table, slice);
+        return exec.createSlicedTables(table, slice)[0];
+    }
+
+    /**
+     * Creates multiple slices of the provided input table.
+     *
+     * @param exec for creating the tables
+     * @param table that is sliced
+     * @param slices to extract from the table
+     * @return the table slices
+     */
+    public static BufferedDataTable[] multiSlice(final ExecutionContext exec, final BufferedDataTable table,
+        final Selection... slices) {
+        return exec.createSlicedTables(table, slices);
     }
 }
