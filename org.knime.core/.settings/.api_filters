@@ -1,5 +1,27 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <component id="org.knime.core" version="2">
+    <resource path="src/eclipse/org/knime/core/data/TableBackend.java" type="org.knime.core.data.TableBackend">
+        <filter comment="`TableBackend` is not meant to be implemented by anyone but us" id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.TableBackend"/>
+                <message_argument value="slice(ExecutionContext, BufferedDataTable, Selection[], IntSupplier)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="`TableBackend` is not meant to be implemented by anyone but us" id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.TableBackend"/>
+                <message_argument value="slice(ExecutionContext, BufferedDataTable, Selection, IntSupplier)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/container/BufferedTableBackend.java" type="org.knime.core.data.container.BufferedTableBackend">
+        <filter comment="`TableBackend` is not meant to be implemented by anyone but us" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.BufferedTableBackend"/>
+                <message_argument value="slice(ExecutionContext, BufferedDataTable, Selection, IntSupplier)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/data/container/BufferSettings.java" type="org.knime.core.data.container.BufferSettings">
         <filter comment="internal api (also tagged as such in 5.2 and before)" id="338792546">
             <message_arguments>

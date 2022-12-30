@@ -77,7 +77,21 @@ public final class InternalTableAPI {
      */
     public static BufferedDataTable slice(final ExecutionContext exec, final BufferedDataTable table,
         final Selection slice) {
-        return exec.createSlicedTable(table, slice);
+        return exec.createSlicedTables(table, slice)[0];
+    }
+
+    /**
+     * Creates multiple slices of the provided input table.
+     *
+     * @param exec for creating the tables
+     * @param table that is sliced
+     * @param slices to extract from the table
+     * @return the table slices
+     * @since 5.3
+     */
+    public static BufferedDataTable[] multiSlice(final ExecutionContext exec, final BufferedDataTable table,
+        final Selection... slices) {
+        return exec.createSlicedTables(table, slices);
     }
 
     /**

@@ -53,6 +53,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
+import java.util.stream.Stream;
 
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
@@ -649,18 +650,21 @@ public class ExecutionContext extends ExecutionMonitor {
     }
 
     /**
-     * Creates a sliced table according to the provided {@link TableFilter slice}. This {@link ExecutionContext} will be
-     * used for progress reporting. Use {@code exec.createSubExecutionContext(0.2).createSlicedTable(table, slice)} if
-     * only a part of the nodes progress should be covered by this operation.
+     * Creates a slices of a table according to the provided {@link TableFilter slices}. This {@link ExecutionContext}
+     * will be used for progress reporting. Use
+     * {@code exec.createSubExecutionContext(0.2).createSlicedTable(table, slice)} if only a part of the nodes progress
+     * should be covered by this operation.
      *
      * @param table to slice
-     * @param slice the slice to extract from the provided table
-     * @return the sliced table
+     * @param slices the slices to extract from the provided table
+     * @return the table slices
      * @noreference This method is not intended to be referenced by clients.
      */
-    BufferedDataTable createSlicedTable(final BufferedDataTable table, final Selection slice) {
-        var slicedTable = getTableBackend().slice(this, table, slice, m_dataRepository::generateNewID);
-        return wrapTableFromBackend(slicedTable);
+    BufferedDataTable[] createSlicedTables(final BufferedDataTable table, final Selection ... slices) {
+        var tableSlices = getTableBackend().slice(this, table, slices, m_dataRepository::generateNewID);
+        return Stream.of(tableSlices)//
+                .map(this::wrapTableFromBackend)
+                .toArray(BufferedDataTable[]::new);
     }
 
     private BufferedDataTable wrapTableFromBackend(final KnowsRowCountTable table) {
