@@ -101,7 +101,7 @@ import org.knime.core.util.FileUtil;
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
  * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
  */
-public class DataContainer implements RowAppender {
+public class DataContainer implements RowAppender, RowFlushable {
 
     /**
      * ID for buffers, which are not part of the workflow (no BufferedDataTable).
@@ -305,6 +305,11 @@ public class DataContainer implements RowAppender {
     @Override
     public void addRowToTable(final DataRow row) {
         m_delegate.addRowToTable(row);
+    }
+
+    @Override
+    public void flushRows() {
+        m_delegate.flushRows();
     }
 
     /**

@@ -415,6 +415,24 @@ class BufferedDataContainerDelegate implements DataContainerDelegate {
         return m_table == null;
     }
 
+    @Override
+    public void flushRows() {
+        if (m_table != null) {
+            return;
+        }
+        if (!m_forceSequentialRowHandling) {
+            try {
+                if (m_writeThrowable.get() == null && !m_curBatch.isEmpty()) {
+                    submit();
+                }
+                waitForRunnableTermination();
+            } catch (final InterruptedException ie) {//NOSONAR
+                m_writeThrowable.compareAndSet(null, ie);
+            }
+            checkAsyncWriteThrowable();
+        }
+    }
+
     /**
      * Closes container and creates table that can be accessed by <code>getTable()</code>. Successive calls of
      * <code>addRowToTable</code> will fail with an exception.
@@ -433,15 +451,7 @@ class BufferedDataContainerDelegate implements DataContainerDelegate {
                 m_localRepository, m_fileStoreHandler);
         }
         if (!m_forceSequentialRowHandling) {
-            try {
-                if (m_writeThrowable.get() == null && !m_curBatch.isEmpty()) {
-                    submit();
-                }
-                waitForRunnableTermination();
-            } catch (final InterruptedException ie) {
-                m_writeThrowable.compareAndSet(null, ie);
-            }
-            checkAsyncWriteThrowable();
+            flushRows();
             for (final DataTableDomainCreator domainCreator : m_domainUpdaterPool) {
                 m_domainCreator.merge(domainCreator);
             }

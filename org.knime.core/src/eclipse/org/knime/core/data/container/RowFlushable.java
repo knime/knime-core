@@ -44,60 +44,22 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Apr 30, 2020 (dietzc): created
+ *   Dec 30, 2022 (Adrian Nembach, KNIME GmbH, Konstanz, Germany): created
  */
 package org.knime.core.data.container;
 
-import org.knime.core.data.DataRow;
-import org.knime.core.data.DataTableSpec;
-
 /**
- * DataContainerDelegates store {@link DataRow}s and are able to provide a {@link ContainerTable} after
- * {@link DataContainerDelegate}#close()' was called.
+ * Implementing classes allow to flush rows that have been added to them.
  *
- * NB: {@link DataContainerDelegate} abstracts from previous implementations of {@link DataContainer}.
- *
- * @author Christian Dietz, KNIME GmbH
- * @since 4.2.2
- *
- * @noextend This class is not intended to be subclassed by clients. Experimental API.
- * @noreference This class is not intended to be referenced by clients. Experimental API.
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
+ * @since 5.0
  */
-public interface DataContainerDelegate extends RowAppender, AutoCloseable, RowFlushable {
-
-    // TODO rename to "finishWriting"?
-    @Override
-    void close();
+public interface RowFlushable {
 
     /**
-     * Can only be called after RowContainer#close() has been called.
-     *
-     * @return the underlying {@link ContainerTable}.
+     * Implementations may create batches of rows that are written out asynchronously. This method guarantees that upon
+     * return all rows that have been added to this container have been written out.
+     * Flushing an already closed container (if it is closable) has no effect and especially raises no exception.
      */
-    ContainerTable getTable();
-
-    /**
-     * Clears the RowContainer, i.e. all associated temporary data and memory will be removed.
-     */
-    // TODO rename to close()
-    void clear();
-
-    /**
-     * @return size of the RowContainer. Can increase until RowContainer is closed.
-     */
-    long size();
-
-    /**
-     * @return the underlying {@link DataTableSpec}. On close, the {@link DataTableSpec} will comprise domain
-     *         information for each column.
-     */
-    DataTableSpec getTableSpec();
-
-    /**
-     * Set the maximum number of possible values for a nominal domain
-     *
-     * @param maxPossibleValues the maximum number of parameters for a nominal domain.
-     */
-    @Deprecated
-    void setMaxPossibleValues(int maxPossibleValues);
+    void flushRows();
 }

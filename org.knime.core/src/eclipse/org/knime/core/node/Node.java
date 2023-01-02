@@ -76,6 +76,7 @@ import org.knime.core.data.IDataRepository;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainerException;
+import org.knime.core.data.container.RowFlushable;
 import org.knime.core.data.filestore.FileStorePortObject;
 import org.knime.core.data.filestore.FileStoreUtil;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
@@ -1033,6 +1034,10 @@ public final class Node {
                 // INVOKE MODEL'S EXECUTE
                 // (warnings will now be processed "automatically" - we listen)
                 rawOutData = invokeFullyNodeModelExecute(exec, exEnv, newInData);
+                // e.g. flushes any open containers if the node is a LoopEnd node
+                if (isModelCompatibleTo(RowFlushable.class)) {
+                    ((RowFlushable)m_model).flushRows();
+                }
             } catch (Throwable th) {
                 boolean isCanceled = th instanceof CanceledExecutionException;
                 isCanceled = isCanceled || th instanceof InterruptedException;
@@ -1791,17 +1796,18 @@ public final class Node {
 
     /**
      * Force any tables created by the associated execution context to be handled sequentially, i.e. one row after
-     * another. This will be the default for loop end nodes (they always write synchronously) but can also be forced by
-     * calling this method. Handling a row encompasses (1) validation against a given table spec, (2) updating the
-     * table's domain, (3) checking for duplicates among row keys, and (4) handling of blob and file store cells.
-     * Calling this method with value = false doesn't mean tables are written nonsequentially. Independent of this
-     * setting, rows are always written to disk sequentially, yet potentially asynchronously.
+     * another. This will be the default for loop end nodes that don't implement RowFlushable. Handling a row
+     * encompasses (1) validation against a given table spec, (2) updating the table's domain, (3) checking for
+     * duplicates among row keys, and (4) handling of blob and file store cells. Calling this method with value = false
+     * doesn't mean tables are written nonsequentially. Independent of this setting, rows are always written to disk
+     * sequentially, yet potentially asynchronously.
      *
      * @param value whether to force created tables to be handled sequentially
      * @since 2.6
      */
     public void setForceSynchronousIO(final boolean value) {
-        m_forceSychronousIO = value || this.isModelCompatibleTo(LoopEndNode.class);
+        m_forceSychronousIO =
+            value || (isModelCompatibleTo(LoopEndNode.class) && !isModelCompatibleTo(RowFlushable.class));
     }
 
     /**
@@ -2612,6 +2618,7 @@ public final class Node {
         final DataTableSpec spec, final boolean initDomain, final int maxCellsInMemory, final boolean rowKeys) {
         return context.createDataContainer(spec, initDomain, maxCellsInMemory, rowKeys);
     }
+
     /** Widens scope of {@link AbstractNodeView#openView(String, Rectangle)} method so it
      * can be called from UI framework components. This method is not meant for
      * public use and may change in future versions.

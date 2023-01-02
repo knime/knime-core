@@ -401,9 +401,10 @@ public class ExecutionContext extends ExecutionMonitor {
                 || m_node.isModelCompatibleTo(VirtualSubNodeOutputNodeModel.class);
         final TableBackend backend = getTableBackend();
 
-        return new BufferedDataContainer(spec, initDomain, m_node,
+        var container = new BufferedDataContainer(spec, initDomain, m_node,
                 m_memoryPolicy, forceCopyOfBlobs, maxCellsInMemory, m_dataRepository,
                 m_localTableRepository, m_fileStoreHandler, rowKeys, backend);
+        return container;
     }
 
     private static TableBackend getTableBackend() {
