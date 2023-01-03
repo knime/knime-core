@@ -59,6 +59,7 @@ import org.knime.core.data.container.filter.TableFilter;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.NotInWorkflowWriteFileStoreHandler;
 import org.knime.core.data.v2.RowContainer;
+import org.knime.core.data.v2.RowCursor;
 import org.knime.core.data.v2.RowKeyType;
 import org.knime.core.data.v2.RowRead;
 import org.knime.core.data.v2.RowWrite;
@@ -191,16 +192,16 @@ public final class BufferedTableBackend implements TableBackend {
         }
 
         KnowsRowCountTable slice(final ExecutionContext exec, final BufferedDataTable table) {
-            long numRows = slicedSize(table.size(), m_slice.rows());
+            long numRowsToIterate = getNumRowsToIterate(table.size(), m_slice.rows());
 
             try (//
                     var container = exec.createRowContainer(m_slicedSpec, true); //
                     var writeCursor = container.createCursor() //
             ) {
-                if (numRows == 0) {
+                if (numRowsToIterate == 0) {
                     exec.setProgress(1);
                 } else {
-                    copySlice(exec, table, numRows, writeCursor);
+                    copySlice(exec, table, numRowsToIterate, writeCursor);
                 }
                 return Node.invokeGetDelegate(container.finish());
             } catch (Exception ex) {
@@ -210,14 +211,34 @@ public final class BufferedTableBackend implements TableBackend {
 
         private void copySlice(final ExecutionContext exec, final BufferedDataTable table, final double numRows,
             final RowWriteCursor writeCursor) {
-            try (var readCursor = table.cursor(TableFilter.fromSelection(m_slice))) {
-                for (long r = 1; readCursor.canForward(); r++) {
+            var sliceFromFirstRow = Selection.all()
+                    .retainColumns(m_slice.columns());
+            if (!m_slice.rows().allSelected()) {
+                sliceFromFirstRow = sliceFromFirstRow.retainRows(0, m_slice.rows().toIndex());
+            }
+            try (var readCursor = table.cursor(TableFilter.fromSelection(sliceFromFirstRow))) {
+                long r = moveToSlice(readCursor, exec, numRows);
+                for (; readCursor.canForward(); r++) {
                     var rowWrite = writeCursor.forward();
                     var rowRead = readCursor.forward();
                     copyRow(rowWrite, rowRead);
                     exec.setProgress(r / numRows);
                 }
             }
+        }
+
+        private long moveToSlice(final RowCursor cursor, final ExecutionMonitor progress, final double numRows) {
+            var rows = m_slice.rows();
+            if (rows.allSelected() || rows.fromIndex() == 0) {
+                return 0;
+            }
+            var firstRow = rows.fromIndex();
+            long r = 1;
+            for (; r <= firstRow && cursor.canForward(); r++) {
+                cursor.forward();
+                progress.setProgress(r / numRows);
+            }
+            return r;
         }
 
         private void copyRow(final RowWrite rowWrite, final RowRead rowRead) {
@@ -232,13 +253,20 @@ public final class BufferedTableBackend implements TableBackend {
             }
         }
 
-        private static long slicedSize(final long fullSize, final RowRangeSelection slice) {
+        private static long getNumRowsToIterate(final long fullSize, final RowRangeSelection slice) {
             if (slice.allSelected(0, fullSize)) {
                 return fullSize;
             } else {
                 var from = Math.max(0, slice.fromIndex());
                 var to = Math.min(slice.toIndex(), fullSize);
-                return to - from;
+                if (to - from == 0) {
+                    // the slice is empty, so no iteration is necessary
+                    return 0;
+                } else {
+                    // the old iterators don't allow directly jumping to a row in the table
+                    // so we always need to iterate from the 0 until to
+                    return to;
+                }
             }
         }
 
