@@ -166,22 +166,27 @@ public abstract class NodeFactory<T extends NodeModel> {
 
     private boolean m_initialized = false;
 
+    private final boolean m_lazilyInitialized;
 
     /**
      * Creates a new <code>NodeFactory</code> and initializes the node description.
      */
     protected NodeFactory() {
-       this(false);
+        this(false);
     }
 
     /**
-     * Creates a new <code>NodeFactory</code> optionally without initializing the node description.
+     * Creates a new <code>NodeFactory</code> optionally with lazy initialization. In the case of lazy initialization,
+     * the full initialization and, thus, the creation of the node description, is delayed until the {@link #init()}
+     * method is called by the framework. Delaying the initialization of the factory makes sense if the node description
+     * is to be generated programmatically by overriding the {@link #createNodeDescription()} method.
      *
      * @param lazyInitialization if set to <code>true</code> the full initialization is postponed until the
      *            {@link #init()} method is called.
      * @since 2.6
      */
     protected NodeFactory(final boolean lazyInitialization) {
+        m_lazilyInitialized = lazyInitialization;
         if (!lazyInitialization) {
             init();
         }
@@ -768,5 +773,14 @@ public abstract class NodeFactory<T extends NodeModel> {
      */
     boolean isDeprecatedInternal() {
         return m_nodeDescription.isDeprecated();
+    }
+
+    /**
+     * @return whether this factory is lazily initialized
+     * @see NodeFactory#NodeFactory(boolean)
+     * @since 5.0
+     */
+    public final boolean isLazilyInitialized() {
+        return m_lazilyInitialized;
     }
 }

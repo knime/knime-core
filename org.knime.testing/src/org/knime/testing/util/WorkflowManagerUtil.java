@@ -52,7 +52,6 @@ import java.io.File;
 import java.io.IOException;
 
 import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.DynamicNodeFactory;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeFactory;
@@ -158,7 +157,7 @@ public final class WorkflowManagerUtil {
      */
     public static NativeNodeContainer createAndAddNode(final WorkflowManager wfm,
         final NodeFactory<? extends NodeModel> factory) {
-        if (factory instanceof DynamicNodeFactory) {
+        if (factory.isLazilyInitialized()) {
             factory.init();
         }
         final var nodeId = wfm.createAndAddNode(factory);
