@@ -9,7 +9,7 @@
 	<packaging>eclipse-test-plugin</packaging>
 
 	<properties>
-		<revision>4.7.0</revision>
+		<revision>5.0.0</revision>
 	</properties>
 
 	<build>
