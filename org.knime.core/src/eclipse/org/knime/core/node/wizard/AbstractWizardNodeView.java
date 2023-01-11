@@ -58,6 +58,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -232,6 +233,19 @@ public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNod
             return new File(viewPath);
         }
         return null;
+    }
+
+    /**
+     * @return the URL of the page to display in the wizard node view
+     *
+     * @since 5.0
+     */
+    protected Optional<String> getViewURL() {
+        var file = getViewSource();
+        if (file.exists()) {
+            return Optional.of("file://" + file.getAbsolutePath());
+        }
+        return Optional.empty();
     }
 
     /**
