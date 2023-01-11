@@ -60,7 +60,7 @@ import org.apache.commons.lang3.StringUtils;
  *
  * @author Leon Wenzler, KNIME AG, Konstanz, Germany
  * @author Dionysios Stolis, KNIME GmbH, Berlin, Germany
- * @since 4.8
+ * @since 5.0
  */
 public final class HttpExceptionUtils {
 

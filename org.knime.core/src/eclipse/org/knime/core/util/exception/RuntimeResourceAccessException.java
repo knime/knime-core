@@ -54,7 +54,7 @@ package org.knime.core.util.exception;
  *
  * @author Leon Wenzler, KNIME AG, Konstanz, Germany
  * @noreference This class is not intended to be referenced by clients.
- * @since 4.8
+ * @since 5.0
  */
 public final class RuntimeResourceAccessException extends RuntimeException {
     private static final long serialVersionUID = -3308423860509022641L;

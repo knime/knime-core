@@ -61,7 +61,7 @@ import org.knime.core.util.pathresolve.ResolverUtil;
  *
  * @author Leon Wenzler, KNIME AG, Konstanz, Germany
  * @noreference This class is not intended to be referenced by clients.
- * @since 4.8
+ * @since 5.0
  */
 public class ResourceAccessException extends IOException {
     private static final long serialVersionUID = 3257990814463234776L;

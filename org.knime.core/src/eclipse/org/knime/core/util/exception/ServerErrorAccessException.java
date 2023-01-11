@@ -55,7 +55,7 @@ import org.knime.core.node.util.CheckUtils;
  *
  * @author Leon Wenzler, KNIME AG, Konstanz, Germany
  * @noreference This class is not intended to be referenced by clients.
- * @since 4.8
+ * @since 5.0
  */
 public class ServerErrorAccessException extends HttpResourceAccessException { // NOSONAR
     private static final long serialVersionUID = -4967431437259925173L;
