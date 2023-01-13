@@ -283,4 +283,12 @@ public interface AsyncWorkflowManagerUI extends WorkflowManagerUI, AsyncNodeCont
      * @param listener the listener to be removed and to not be called anymore
      */
     void removeWriteProtectionChangedListener(final Runnable listener);
+
+    /**
+     * Sets the UI to read only.
+     *
+     * @param readOnly <code>true</code> if it is read only, <code>false</code> otherwise
+     * @since 4.7
+     */
+    void setReadOnly(final boolean readOnly);
 }
