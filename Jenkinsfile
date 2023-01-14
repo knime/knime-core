@@ -39,6 +39,7 @@ try {
                 'knime-distance',
                 'knime-ensembles',
                 'knime-filehandling',
+                'knime-gateway',
                 'knime-jep',
                 'knime-js-base',
                 'knime-json',
@@ -48,9 +49,11 @@ try {
                 'knime-python',
                 'knime-r',
                 'knime-reporting',
+                'knime-rest',
                 'knime-streaming',
                 'knime-textprocessing',
-                'knime-virtual'
+                'knime-virtual',
+                'knime-workbench'
             ],
             ius: [ 
                 'com.knime.enterprise.client.filehandling',
