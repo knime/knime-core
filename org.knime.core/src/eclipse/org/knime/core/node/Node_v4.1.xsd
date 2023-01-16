@@ -80,6 +80,7 @@
           <xs:field    xpath="@index" />
         </xs:unique>
       </xs:element>
+      <xs:element name="keywords" minOccurs="0" maxOccurs="1" type="Keywords" />
     </xs:sequence>
     <xs:attribute name="icon" type="xs:string" />
     <xs:attribute name="type" type="NodeType" default="Unknown" />
@@ -208,6 +209,12 @@
 	    <xs:attribute name="name" type="nonEmptyString" use="required" />
       </xs:extension>
     </xs:complexContent>
+  </xs:complexType>
+  
+  <xs:complexType name="Keywords">
+    <xs:sequence>
+      <xs:element maxOccurs="unbounded" name="keyword" type="nonEmptyString" />
+    </xs:sequence>
   </xs:complexType>
   
   <!-- Inline HTML elements -->

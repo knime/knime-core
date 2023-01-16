@@ -59,6 +59,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.xmlbeans.XmlError;
 import org.apache.xmlbeans.XmlException;
 import org.apache.xmlbeans.XmlOptions;
@@ -71,6 +72,7 @@ import org.knime.node.v41.AbstractView;
 import org.knime.node.v41.DynPort;
 import org.knime.node.v41.InPort;
 import org.knime.node.v41.Intro;
+import org.knime.node.v41.Keywords;
 import org.knime.node.v41.KnimeNode;
 import org.knime.node.v41.KnimeNodeDocument;
 import org.knime.node.v41.Option;
@@ -390,6 +392,16 @@ public final class NodeDescription41Proxy extends NodeDescription {
             }
         }
         return null;
+    }
+
+    /**
+     * @since 5.0
+     */
+    @Override
+    public String[] getKeywords() {
+        return Optional.ofNullable(m_document.getKnimeNode().getKeywords()) //
+                .map(Keywords::getKeywordArray) //
+                .orElse(ArrayUtils.EMPTY_STRING_ARRAY);
     }
 
     @Override

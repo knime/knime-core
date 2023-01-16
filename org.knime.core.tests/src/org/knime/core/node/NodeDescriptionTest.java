@@ -194,6 +194,11 @@ public class NodeDescriptionTest {
         Assert.assertEquals("Unexpected interactive view description",
             description.getInteractiveViewDescription().get(), "interactive view description");
 
+        // node keywords - added as part of AP-20016
+        Assert.assertArrayEquals("Node Keywords", description.getKeywords(), new String[]{"Keyword 1", "Keyword 2"});
+        Assert.assertEquals("Unexpected interactive view description",
+            description.getInteractiveViewDescription().get(), "interactive view description");
+
         // dynamic port group descriptions
         Assert.assertEquals("Unexpected dynamic port group description",
             description.getDynamicInPortGroups().get(1).getGroupDescription().strip(), "dyn in port two description");

@@ -8,4 +8,31 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/xmlbeans/org/knime/node/v41/KnimeNode.java" type="org.knime.node.v41.KnimeNode">
+        <filter id="1211105284">
+            <message_arguments>
+                <message_argument value="addNewKeywords()"/>
+            </message_arguments>
+        </filter>
+        <filter id="1211105284">
+            <message_arguments>
+                <message_argument value="getKeywords()"/>
+            </message_arguments>
+        </filter>
+        <filter id="1211105284">
+            <message_arguments>
+                <message_argument value="isSetKeywords()"/>
+            </message_arguments>
+        </filter>
+        <filter id="1211105284">
+            <message_arguments>
+                <message_argument value="setKeywords(Keywords)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1211105284">
+            <message_arguments>
+                <message_argument value="unsetKeywords()"/>
+            </message_arguments>
+        </filter>
+    </resource>
 </component>

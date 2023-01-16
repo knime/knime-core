@@ -52,6 +52,7 @@ import java.util.Optional;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.concurrent.ConcurrentException;
 import org.apache.commons.lang3.concurrent.LazyInitializer;
 import org.apache.xmlbeans.XmlObject;
@@ -250,6 +251,16 @@ public abstract class NodeDescription {
      * @return XML description of this node
      */
     public abstract Element getXMLDescription();
+
+    /**
+     * A list of keywords of the node, used to improve search by node name.
+     *
+     * @return The non-null list of keywords, often an empty array.
+     * @since 5.0
+     */
+    public String[] getKeywords() {
+        return ArrayUtils.EMPTY_STRING_ARRAY;
+    }
 
     /**
      * Utility function which strips the <tt>&lt;xml-fragment&gt;</tt> start and end tags from the strings returned by

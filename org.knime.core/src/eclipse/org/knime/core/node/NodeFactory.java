@@ -451,6 +451,18 @@ public abstract class NodeFactory<T extends NodeModel> {
     }
 
     /**
+     * No API. The list of keywords defined in the node's description. It's used by the framework to find other similar
+     * nodes (similarity search includes keywords).
+     *
+     * @return The non-null list of keywords (often empty, though).
+     * @noreference This method is not intended to be referenced by clients.
+     * @since 5.0
+     */
+    public final String[] getKeywords() {
+        return m_nodeDescription.getKeywords();
+    }
+
+    /**
      * Returns a description for a view.
      *
      * @param index the index of the view, starting at 0

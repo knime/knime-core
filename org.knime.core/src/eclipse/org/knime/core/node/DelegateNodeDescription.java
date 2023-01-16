@@ -178,6 +178,11 @@ public class DelegateNodeDescription extends NodeDescription {
         return m_delegate.getViewName(index);
     }
 
+    @Override
+    public String[] getKeywords() {
+        return m_delegate.getKeywords();
+    }
+
     /** {@inheritDoc} */
     @Override
     public Element getXMLDescription() {
