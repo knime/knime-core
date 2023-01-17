@@ -102,7 +102,7 @@ interface Issue {
     }
 
     /**
-     * The string that sufficienctly describes this issue. In the UI it's shown in fixed font.
+     * The string that sufficiently describes this issue. In the UI it's shown in fixed font.
      *
      * @return That string, not <code>null</code>.
      */

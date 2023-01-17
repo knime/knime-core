@@ -67,15 +67,15 @@ import org.knime.core.node.util.CheckUtils;
  * A <i>warning {@link Message message}</i> is usually composed as follows, here an example processing a data table:
  *
  * <pre>
- * BufferedDataTable table = (BufferedDataTable)input[0];
+ * int port = 0;
+ * BufferedDataTable table = (BufferedDataTable)input[port];
  * MessageBuilder messageBuilder = createMessageBuilder();
- * RowIssueCollector rowIssueCollector = messageBuilder.newRowIssueCollector(table.getSpec(), 0);
  * long row = 0L;
  * try (RowCursor cursor = table.cursor()) {
  *     while (cursor.canForward()) {
  *         RowRead read = cursor.forward();
  *         if (hasProblem(read.getValue(someColumn))) {
- *             rowIssueCollector.collect(someColumn, row, "Some problem here");
+ *             messageBuilder.addRowIssue(port, someColumn, row, "Some problem here");
  *         }
  *         row += 1;
  *     }
@@ -121,7 +121,7 @@ public final class MessageBuilder {
 
     /**
      * Sets a summary and returns <code>this</code>. Setting a <code>null</code> summary (which is the default at
-     * constrution time) will cause an empty default message to be built ({@link #build()}, ignoring any potential
+     * construction time) will cause an empty default message to be built ({@link #build()}, ignoring any potential
      * issues or resolutions been set.
      *
      * @param summary That summary.
@@ -133,25 +133,28 @@ public final class MessageBuilder {
     }
 
     /**
-     * A new collector for row issues, as per example above.
+     * Add/set a simple text based issue.
      *
-     * @param portIndex The index of the port where the the table came in (needed for post-processing the data and
-     *            filling out context infos, e.g. previous 3 rows of an error row).
-     *
-     * @return A new issue collector. Adding issues to it will cause this message builder to be updated.
+     * @param description The description of the issue (must not be null)
+     * @return this
      */
-    public RowIssueCollector newRowIssueCollector(final int portIndex) {
-        return new RowIssueCollector(this, portIndex);
+    public MessageBuilder addTextIssue(final String description) {
+        return addIssue(new DefaultIssue(description));
     }
 
     /**
-     * Add/set a simple text based issue.
+     * A row issue represents a problem with an individual table row. It offers functionality to fill it with context
+     * after execution, e.g. show the previous 2 rows of an error row.
      *
-     * @param preformatted The text of the issue.
+     * @param portIndex The port where the data is coming from (at the node)
+     * @param columnIndex The column index of the problematic cell (cell will be underlined)
+     * @param rowIndex The row where the issue occurred.
+     * @param description The optional description detail
      * @return this
      */
-    public MessageBuilder addIssue(final String preformatted) {
-        return addIssue(new DefaultIssue(preformatted));
+    public MessageBuilder addRowIssue(final int portIndex, final int columnIndex, final long rowIndex,
+        final String description) {
+        return addIssue(new RowIssue(portIndex, columnIndex, rowIndex, description));
     }
 
     MessageBuilder addIssue(final Issue issue) {
@@ -176,7 +179,7 @@ public final class MessageBuilder {
     }
 
     /**
-     * Get the first issue that was added to the message collector, useful in case the message count is 1 and the
+     * Get the first issue that was added to this builder, useful in case the message count is 1 and the
      * first (and only) issue should be used to define the main summary.
      *
      * @return first issue, if any, or empty.
@@ -186,8 +189,8 @@ public final class MessageBuilder {
     }
 
     /**
-     * @return the number of issues added to the message builder. Useful to have a resonable summary ("13 rows with
-     *         problems"
+     * @return the number of issues added to the message builder. Useful to have a reasonable summary ("13 rows with
+     *         problems")
      */
     public long getIssueCount() {
         return m_issueCount;

@@ -62,7 +62,7 @@ import org.knime.core.node.util.CheckUtils;
 @SuppressWarnings("serial")
 public final class KNIMEException extends Exception implements Node.MessageAwareException {
 
-    private final Message m_message;
+    private final Message m_message; // NOSONAR non-transient string
 
     /**
      * Generic exception declaration. Clients should prefer to create an exception via one of the
@@ -140,7 +140,7 @@ public final class KNIMEException extends Exception implements Node.MessageAware
      * should really not exist but is a compromise to changing 500+ nodes.
      * @return An unchecked exception with <code>this</code> as cause.
      */
-    public final KNIMERuntimeException toUnchecked() {
+    public KNIMERuntimeException toUnchecked() {
         return new KNIMERuntimeException();
     }
 

@@ -53,37 +53,13 @@ import static org.assertj.core.api.InstanceOfAssertFactories.type;
 
 import org.assertj.core.api.ThrowingConsumer;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataType;
-import org.knime.core.data.RowKey;
-import org.knime.core.data.def.DefaultRow;
-import org.knime.core.data.def.StringCell;
-import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ModelContent;
-import org.knime.testing.core.ExecutionContextExtension;
 
 /**
- *
- * @author wiswedel
+ * Tests basic functionality to class {@link Message}.
+ * @author Bernd Wiswedel, KNIME GmbH
  */
 class MessageTest {
-
-    @RegisterExtension
-    static ExecutionContextExtension executionContextExtension = ExecutionContextExtension.create();
-
-    private static BufferedDataTable createTable(final int rows) {
-        var exec = executionContextExtension.getExecutionContext();
-        var container =
-            exec.createDataContainer(new DataTableSpec(new String[]{"column"}, new DataType[]{StringCell.TYPE}));
-        for (var i = 0L; i < rows; i++) {
-            final var row = new DefaultRow(RowKey.createRowKey(i), new DataCell[]{new StringCell("Line-" + i)});
-            container.addRowToTable(row);
-        }
-        container.close();
-        return container.getTable();
-    }
 
     /**
      * Test method for {@link org.knime.core.node.message.Message#Message(org.knime.core.node.message.MessageBuilder)}.
@@ -91,17 +67,14 @@ class MessageTest {
     @Test
     void testMessage() {
         var messageBuilder = Message.builder();
-        var table = createTable(5000);
-        var issueCollector = messageBuilder.newRowIssueCollector(0);
-        final var issueMsg = "Some Message in Row with Index 10";
-        issueCollector.collect(0, 10, issueMsg);
-        issueCollector.collect(0, 550, "Some Message in Row with Index 550");
+        final var issueDesc = "Some Message in Row with Index 10";
+        messageBuilder.addRowIssue(0, 0, 10, issueDesc);
+        messageBuilder.addRowIssue(0, 0, 550, "Some Message in Row with Index 550");
         ThrowingConsumer<RowIssue> rowIssueCondition = issue -> {
-            assertThat(issue.getMessage()).contains("Index 10");
-            assertThat(issue.toPreformatted()).isEqualTo(issueMsg);
+            assertThat(issue.toPreformatted()).contains(issueDesc);
         };
         assertThat(messageBuilder.getIssueCount()).isEqualTo(2);
-        assertThat(messageBuilder.getFirstIssue()).get().isEqualTo(issueMsg);
+        assertThat(messageBuilder.getFirstIssue()).get().asString().contains(issueDesc);
         final var summary = "Some Summary";
         messageBuilder.withSummary(summary);
         var messageOptional = messageBuilder.build();
@@ -127,35 +100,33 @@ class MessageTest {
     void testSaveAndLoad_RowIssues() throws Exception {
         var messageBuilder = Message.builder();
         messageBuilder.addResolutions("Resolution 1", "Resolution 2");
-        messageBuilder
-            .newRowIssueCollector(0)
-            .collect(0, 1, "Error in Row 1, Column 0");
+        messageBuilder.addRowIssue(0, 0, 1, "Error in Row 1, Column 0");
         messageBuilder.withSummary("Some Summary Message");
         var message = messageBuilder.build().orElseThrow();
 
         // for coverage
-        assertThat(message).isNotEqualTo(new Object());
-        assertThat(message).isEqualTo(message);
-        assertThat(message).extracting(m -> m.toString()).isNotNull();
+        assertThat(message).isNotEqualTo(new Object()) //
+            .isEqualTo(message) //
+            .extracting(m -> m.toString()).isNotNull();
 
         var config = new ModelContent("temp");
         message.saveTo(config);
         var clone = Message.load(config).orElseThrow();
-        assertThat(message).isEqualTo(clone);
-        assertThat(message).hasSameHashCodeAs(clone);
-        assertThat(message).isNotSameAs(clone);
+        assertThat(message).isEqualTo(clone) //
+            .hasSameHashCodeAs(clone) //
+            .isNotSameAs(clone);
 
         var messageFirstIssue = message.getIssue().orElseThrow();
         var cloneFirstIssue = clone.getIssue().orElseThrow();
 
         // for coverage
-        assertThat(messageFirstIssue).isNotEqualTo(new Object());
-        assertThat(messageFirstIssue).isEqualTo(messageFirstIssue);
-        assertThat(messageFirstIssue).extracting(m -> m.toString()).isNotNull();
+        assertThat(messageFirstIssue).isNotEqualTo(new Object()) //
+            .isEqualTo(messageFirstIssue) //
+            .extracting(m -> m.toString()).isNotNull();
 
-        assertThat(messageFirstIssue).isEqualTo(cloneFirstIssue);
-        assertThat(messageFirstIssue).hasSameHashCodeAs(cloneFirstIssue);
-        assertThat(messageFirstIssue).isNotSameAs(cloneFirstIssue);
+        assertThat(messageFirstIssue).isEqualTo(cloneFirstIssue) //
+            .hasSameHashCodeAs(cloneFirstIssue) //
+            .isNotSameAs(cloneFirstIssue);
     }
 
     @Test
@@ -163,33 +134,33 @@ class MessageTest {
         var messageBuilder = Message.builder();
         messageBuilder.addResolutions("Resolution 1", "Resolution 2");
         var issueText = "Issue Details XYZ";
-        messageBuilder.addIssue(issueText);
+        messageBuilder.addTextIssue(issueText);
         messageBuilder.withSummary("Some Summary Message");
         var message = messageBuilder.build().orElseThrow();
 
         // for coverage
-        assertThat(message).isNotEqualTo(new Object());
-        assertThat(message).isEqualTo(message);
-        assertThat(message).extracting(m -> m.toString()).isNotNull();
+        assertThat(message).isNotEqualTo(new Object()) //
+            .isEqualTo(message) //
+            .extracting(m -> m.toString()).isNotNull();
 
         var config = new ModelContent("temp");
         message.saveTo(config);
         var clone = Message.load(config).orElseThrow();
-        assertThat(message).isEqualTo(clone);
-        assertThat(message).hasSameHashCodeAs(clone);
-        assertThat(message).isNotSameAs(clone);
+        assertThat(message).isEqualTo(clone) //
+            .hasSameHashCodeAs(clone) //
+            .isNotSameAs(clone);
 
         var messageFirstIssue = message.getIssue().orElseThrow();
         var cloneFirstIssue = clone.getIssue().orElseThrow();
 
         // for coverage
-        assertThat(messageFirstIssue).isNotEqualTo(new Object());
-        assertThat(messageFirstIssue).isEqualTo(messageFirstIssue);
-        assertThat(messageFirstIssue).extracting(m -> m.toPreformatted()).isEqualTo(issueText);
-        assertThat(messageFirstIssue).extracting(m -> m.toString()).isNotNull();
+        assertThat(messageFirstIssue).isNotEqualTo(new Object()) //
+            .isEqualTo(messageFirstIssue) //
+            .extracting(m -> m.toPreformatted()).isEqualTo(issueText) //
+            .extracting(m -> m.toString()).isNotNull();
 
-        assertThat(messageFirstIssue).isEqualTo(cloneFirstIssue);
-        assertThat(messageFirstIssue).hasSameHashCodeAs(cloneFirstIssue);
-        assertThat(messageFirstIssue).isNotSameAs(cloneFirstIssue);
+        assertThat(messageFirstIssue).isEqualTo(cloneFirstIssue) //
+            .hasSameHashCodeAs(cloneFirstIssue) //
+            .isNotSameAs(cloneFirstIssue);
     }
 }

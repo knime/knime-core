@@ -514,7 +514,7 @@ class FileNodeContainerMetaPersistor implements NodeContainerMetaPersistor {
                     throw new InvalidSettingsException("Invalid message type: " + typeS, iae);
                 }
                 String message = sub.getString("message");
-                String issue = sub.getString("issue", null); // added in 4.8/5.0 (Dec '22)
+                String issue = sub.getString("issue", null); // added in 5.0
                 String[] resolutions = sub.getStringArray("resolutions", (String[])null); // same
                 return new NodeMessage(type, message, issue, resolutions == null ? null : Arrays.asList(resolutions));
             }
@@ -664,7 +664,7 @@ class FileNodeContainerMetaPersistor implements NodeContainerMetaPersistor {
             NodeSettingsWO sub = settings.addNodeSettings("nodecontainer_message");
             sub.addString("type", message.getMessageType().name());
             sub.addString("message", message.getMessage());
-            // added in 4.8/5.0 (Dec '22)
+            // added in 5.0
             message.getIssue().ifPresent(c -> sub.addString("issue", c));
             List<String> resolutions = message.getResolutions();
             if (!resolutions.isEmpty()) {

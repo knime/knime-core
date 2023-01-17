@@ -1078,7 +1078,7 @@ public final class Node implements NodeModelWarningListener {
                 Message message;
                 if (th instanceof MessageAwareException) {
                     var rawMessage = ((MessageAwareException)th).getKNIMEMessage();
-                    message = rawMessage.fillIssues(ArrayUtils.remove(newInData, 0));
+                    message = rawMessage.renderIssueDetails(ArrayUtils.remove(newInData, 0));
                 } else {
                     String m = EXECUTE_FAILED_PREFIX;
                     if (th.getMessage() != null && th.getMessage().length() >= 5) {

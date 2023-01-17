@@ -65,6 +65,8 @@ import org.knime.core.node.util.CheckUtils;
 @SuppressWarnings("javadoc")
 final class DefaultIssue implements Issue {
 
+    private static final String CFG_PREFORMATTED = "preformatted";
+
     private final String m_preformatted;
 
     DefaultIssue(final String preformatted) {
@@ -83,7 +85,7 @@ final class DefaultIssue implements Issue {
 
     @Override
     public void saveTo(final ConfigBaseWO config) {
-        config.addString("preformatted", m_preformatted);
+        config.addString(CFG_PREFORMATTED, m_preformatted);
     }
 
 
@@ -106,11 +108,11 @@ final class DefaultIssue implements Issue {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("preformatted", m_preformatted).toString();
+        return new ToStringBuilder(this).append(CFG_PREFORMATTED, m_preformatted).toString();
     }
 
     static DefaultIssue load(final ConfigBaseRO config) throws InvalidSettingsException {
-        var preformatted = config.getString("preformatted");
+        var preformatted = config.getString(CFG_PREFORMATTED);
         return new DefaultIssue(preformatted);
     }
 }

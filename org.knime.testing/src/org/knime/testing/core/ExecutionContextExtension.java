@@ -59,11 +59,11 @@ import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.NativeNodeContainer;
-import org.knime.core.node.workflow.NodeContainerState;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowCreationHelper;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -75,8 +75,9 @@ import org.knime.testing.node.blocking.BlockingRepository.LockedMethod;
 import org.knime.testing.node.blocking.BlockingVariableNodeFactory;
 
 /**
+ * Extension used with {@link RegisterExtension} in JUnit5 unit tests to get an {@link ExecutionContext}.
  *
- * @author wiswedel
+ * @author Bernd Wiswedel, KNIME GmbH
  */
 public final class ExecutionContextExtension
     implements BeforeAllCallback, BeforeEachCallback, AfterEachCallback, AfterAllCallback {
@@ -127,7 +128,7 @@ public final class ExecutionContextExtension
         nodeModel.loadValidatedSettingsFrom(nodeSettings);
         m_manager.resetAndConfigureAll();
         final var lock = BlockingRepository.get(m_blockID, LockedMethod.EXECUTE).orElseThrow();
-        lock.lock();
+        lock.lock(); // NOSONAR - released in #afterEach
         m_manager.executeUpToHere(m_lastAddedNodeID);
         m_executionContext = nodeModel.fetchExecutionContext().orElseThrow();
     }
@@ -139,10 +140,6 @@ public final class ExecutionContextExtension
         return m_executionContext;
     }
 
-    private static boolean isInExecution(final NodeContainerState state) {
-        return state.isExecutionInProgress() && !state.isWaitingToBeExecuted();
-    }
-
     @Override
     public void afterEach(final ExtensionContext context) throws Exception {
         ReentrantLock lock = BlockingRepository.get(m_blockID, LockedMethod.EXECUTE).orElseThrow();
@@ -152,6 +149,16 @@ public final class ExecutionContextExtension
         m_lastAddedNodeID = null;
     }
 
+    /**
+     * Method used in a static context, e.g.
+     *
+     * <pre>
+     * @RegisterExtension
+     * static ExecutionContextExtension executionContextExtension = ExecutionContextExtension.create();
+     * </pre>
+     *
+     * @return That new context.
+     */
     public static ExecutionContextExtension create() {
         return new ExecutionContextExtension();
     }

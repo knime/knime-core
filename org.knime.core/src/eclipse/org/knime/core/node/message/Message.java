@@ -95,6 +95,10 @@ import org.knime.core.node.workflow.NodeMessage;
  */
 public final class Message {
 
+    private static final String CFG_SUMMARY = "summary";
+    private static final String CFG_ISSUE = "issue";
+    private static final String CFG_RESOLUTIONS = "resolutions";
+
     private final String m_summary;
     private final Issue m_issue;
     private final List<String> m_resolutions;
@@ -134,8 +138,9 @@ public final class Message {
      *
      * @param inputs The original data that is passed to the node that is produced this message
      * @return A new message with better details.
+     * @noreference This method is not intended to be referenced by clients.
      */
-    public Message fillIssues(final PortObject[] inputs) {
+    public Message renderIssueDetails(final PortObject[] inputs) {
         MessageBuilder builder = builder() //
                 .withSummary(m_summary) //
                 .addResolutions(m_resolutions.toArray(String[]::new));
@@ -175,42 +180,42 @@ public final class Message {
      * @param config to save to.
      */
     public void saveTo(final ConfigBaseWO config) {
-        config.addString("summary", m_summary);
+        config.addString(CFG_SUMMARY, m_summary);
         if (m_issue != null) {
-            var issueConfig = config.addConfigBase("issue");
+            var issueConfig = config.addConfigBase(CFG_ISSUE);
             m_issue.getType().saveType(issueConfig);
             m_issue.saveTo(issueConfig);
         }
-        config.addStringArray("resolutions", m_resolutions.toArray(String[]::new));
+        config.addStringArray(CFG_RESOLUTIONS, m_resolutions.toArray(String[]::new));
     }
 
     /**
-     * Load a message previously writting using {@link #saveTo(ConfigBaseWO)}.
+     * Load a message previously written using {@link #saveTo(ConfigBaseWO)}.
      *
      * @param config To load from.
      * @return a message or an empty message if none was stored (summary is null)
      * @throws InvalidSettingsException ....
      */
     public static Optional<Message> load(final ConfigBaseRO config) throws InvalidSettingsException {
-        if (!config.containsKey("summary")) {
+        if (!config.containsKey(CFG_SUMMARY)) {
             return Optional.empty();
         }
-        MessageBuilder builder = builder().withSummary(config.getString("summary"));
-        if (config.containsKey("issue")) {
-            final var issueConfig = config.getConfigBase("issue");
+        MessageBuilder builder = builder().withSummary(config.getString(CFG_SUMMARY));
+        if (config.containsKey(CFG_ISSUE)) {
+            final var issueConfig = config.getConfigBase(CFG_ISSUE);
             final var type = Type.loadType(issueConfig);
-            final Issue issue = type.loadIssue(issueConfig);
+            final var issue = type.loadIssue(issueConfig);
             builder.addIssue(issue);
         }
-        return builder.addResolutions(config.getStringArray("resolutions")).build();
+        return builder.addResolutions(config.getStringArray(CFG_RESOLUTIONS)).build();
     }
 
     @Override
     public String toString() {
         return new ToStringBuilder(this) //
-            .append("summary", m_summary) //
-            .append("issues", m_issue) //
-            .append("resolution", m_resolutions) //
+            .append(CFG_SUMMARY, m_summary) //
+            .append(CFG_ISSUE, m_issue) //
+            .append(CFG_RESOLUTIONS, m_resolutions) //
             .build();
     }
 
@@ -277,14 +282,16 @@ public final class Message {
      * @param portIndex Port index where the table with issues is connected to.
      * @param row Index of row causing the issue.
      * @param column Index of column causing the issue.
-     * @param message The message associated with the issue (not null).
+     * @param description The description of the problem. <code>null</code> is OK but discouraged.
      * @return Such a message.
      */
     public static Message fromRowIssue(final String summary, final int portIndex, final long row, final int column,
-        final String message) {
-        var builder = builder().withSummary(summary);
-        builder.newRowIssueCollector(portIndex).collect(column, row, message);
-        return builder.build().orElseThrow(() -> new IllegalArgumentException("argument must not be null"));
+        final String description) {
+        return builder() //
+            .withSummary(summary) //
+            .addRowIssue(portIndex, column, row, description) //
+            .build() //
+            .orElseThrow(() -> new IllegalArgumentException("argument must not be null"));
     }
 
 }

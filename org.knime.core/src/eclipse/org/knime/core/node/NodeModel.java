@@ -716,7 +716,7 @@ public abstract class NodeModel implements ViewableModel {
         if (message == null || message.equals(m_warningMessage)) {
             return;
         }
-        Message fullMessage = message.fillIssues(input);
+        Message fullMessage = message.renderIssueDetails(input);
         m_warningMessageDuringExecution = null;
         setWarning(fullMessage);
     }

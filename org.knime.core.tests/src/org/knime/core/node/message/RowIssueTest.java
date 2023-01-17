@@ -51,6 +51,8 @@ package org.knime.core.node.message;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.InstanceOfAssertFactories.OPTIONAL;
 import static org.assertj.core.api.InstanceOfAssertFactories.type;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 
 import java.util.function.BiFunction;
@@ -118,13 +120,14 @@ final class RowIssueTest {
     @SuppressWarnings("static-method")
     @Test
     void testPreformattingSingleColumn() {
-        var messageBuilder = Message.builder().withSummary("ignored");
         var table = createTable(10, 1);
-        var collector = messageBuilder.newRowIssueCollector(0);
-        collector.collect(0, 5, "some error");
+        var messageBuilder = Message.builder() //
+            .withSummary("ignored") //
+            .addRowIssue(0, 0, 5, "some error");
+
         var message = messageBuilder.build().orElseThrow();
         assertThat(message.getIssue()).get().isInstanceOf(RowIssue.class);
-        var message2 = message.fillIssues(new PortObject[] {table});
+        var message2 = message.renderIssueDetails(new PortObject[] {table});
         assertThat(message2.getIssue()).get().isInstanceOf(DefaultIssue.class);
         var defaultIssue = (DefaultIssue)message2.getIssue().orElseThrow();
         assertThat(defaultIssue).extracting(d -> d.toPreformatted()).isEqualTo(
@@ -136,14 +139,25 @@ final class RowIssueTest {
             + "        ^^^^^^^^^^^^^^^\n");
     }
 
+    /** Test invalid arguments of issue */
+    @SuppressWarnings("static-method")
+    @Test
+    void testInvalidArguments() {
+        var builder = Message.builder();
+        assertThrows(IllegalArgumentException.class, () -> builder.addRowIssue(-1, 0, 5, "some error"));
+        assertThrows(IllegalArgumentException.class, () -> builder.addRowIssue(0, -1, 5, "some error"));
+        assertThrows(IllegalArgumentException.class, () -> builder.addRowIssue(0, -1, -5, "some error"));
+
+        assertDoesNotThrow(() -> builder.addRowIssue(0, 0, 0, null));
+    }
+
     /** Table with multiple columns, last column has an error. */
     @SuppressWarnings("static-method")
     @Test
     void testPreformattingInLastColumn() {
-        var messageBuilder = Message.builder().withSummary("ignored");
         var table = createTable(10, 5);
-        var collector = messageBuilder.newRowIssueCollector(0);
-        collector.collect(4, 5, "some error");
+        var messageBuilder = Message.builder().withSummary("ignored") //
+            .addRowIssue(0, 4, 5, "some error");
         var message = messageBuilder.build().orElseThrow();
         assertThat(message.getIssue()).isPresent();
         var rowIssue = (RowIssue)message.getIssue().orElseThrow();
@@ -161,10 +175,9 @@ final class RowIssueTest {
     @SuppressWarnings("static-method")
     @Test
     void testPreformattingMiddleColumn() {
-        var messageBuilder = Message.builder().withSummary("ignored");
         var table = createTable(10, 5);
-        var collector = messageBuilder.newRowIssueCollector(0);
-        collector.collect(2, 5, "some error");
+        var messageBuilder = Message.builder().withSummary("ignored") //
+            .addRowIssue(0, 2, 5, "some error");
         var message = messageBuilder.build().orElseThrow();
         assertThat(message.getIssue()).isPresent();
         var rowIssue = (RowIssue)message.getIssue().orElseThrow();
@@ -182,10 +195,9 @@ final class RowIssueTest {
     @SuppressWarnings("static-method")
     @Test
     void testPreformattingMiddleColumnLargeTable() {
-        var messageBuilder = Message.builder().withSummary("ignored");
         var table = createTable(2000, 5);
-        var collector = messageBuilder.newRowIssueCollector(0);
-        collector.collect(2, 1500, "some error");
+        var messageBuilder = Message.builder().withSummary("ignored") //
+            .addRowIssue(0, 2, 1500, "some error");
         var message = messageBuilder.build().orElseThrow();
         assertThat(message.getIssue()).isPresent();
         var rowIssue = (RowIssue)message.getIssue().orElseThrow();
@@ -199,9 +211,9 @@ final class RowIssueTest {
     void testMessageFactoryMethod() {
         var table = createTable(10, 5);
         assertThrowsExactly(IllegalArgumentException.class, () -> Message.fromRowIssue(null, 0, 0, 0, "non-null"));
-        assertThrowsExactly(IllegalArgumentException.class, () -> Message.fromRowIssue("non-null", 0, 0, 0, null));
+        assertDoesNotThrow(() -> Message.fromRowIssue("non-null", 0, 0, 0, null));
         var message = Message.fromRowIssue("Some Summary", 1, 4, 1, "unknown message");
-        message = message.fillIssues(new PortObject[] {null, table});
+        message = message.renderIssueDetails(new PortObject[] {null, table});
         assertThat(message).extracting(m -> m.getIssue()) //
             .asInstanceOf(OPTIONAL).get() //
             .asInstanceOf(type(DefaultIssue.class)) //

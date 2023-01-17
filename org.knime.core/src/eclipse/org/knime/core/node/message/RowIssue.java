@@ -71,39 +71,31 @@ import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.WorkflowTableBackendSettings;
 
 /**
- * A row issue represent an issue with an individual table row. It offers functionality to fill it with context, e.g.
- * show the previous 2 rows to an error row.
+ * Represents an issue as described by {@link MessageBuilder#addRowIssue(int, int, long, String)} (error row + context).
  *
  * @author Bernd Wiswedel, KNIME GmbH
  * @since 5.0
  */
 final class RowIssue implements Issue {
 
+    private static final String CFG_MESSAGE = "message";
+    private static final String CFG_ROW_INDEX = "rowIndex";
+    private static final String CFG_COLUMN_INDEX = "columnIndex";
+    private static final String CFG_PORT_INDEX = "portIndex";
+
     private final int m_portIndex;
     private final int m_columnIndex;
     private final long m_rowIndex;
-    private final String m_message;
+    private final String m_description;
 
-    RowIssue(final RowIssueCollector builder, final int columnIndex,
-        final long rowIndex, final String message) {
-        m_portIndex = builder.m_portIndex;
-        CheckUtils.checkArgumentNotNull(columnIndex >= 0, "Invalid column index must be >= 0: %d", columnIndex);
+    RowIssue(final int portIndex, final int columnIndex, final long rowIndex, final String description) {
+        CheckUtils.checkArgument(portIndex >= 0, "Invalid port index must be >= 0: %d", portIndex);
+        m_portIndex = portIndex;
+        CheckUtils.checkArgument(columnIndex >= 0, "Invalid column index must be >= 0: %d", columnIndex);
         m_columnIndex = columnIndex;
         CheckUtils.checkArgument(rowIndex >= 0, "Row index >=0: %d", rowIndex);
         m_rowIndex = rowIndex;
-        m_message = CheckUtils.checkArgumentNotNull(message);
-    }
-
-    private RowIssue(final int portIndex, final int columnIndex,
-        final long rowIndex, final String message) {
-        m_portIndex = portIndex;
-        m_columnIndex = columnIndex;
-        m_rowIndex = rowIndex;
-        m_message = CheckUtils.checkArgumentNotNull(message);
-    }
-
-    public String getMessage() {
-        return m_message;
+        m_description = description;
     }
 
     /**
@@ -114,8 +106,7 @@ final class RowIssue implements Issue {
      * @param inputs The original input data to a node.
      * @return a representation of this as {@link DefaultIssue}, not null.
      */
-    @SuppressWarnings("javadoc")
-    public DefaultIssue toDefaultIssue(final PortObject[] inputs) {
+    DefaultIssue toDefaultIssue(final PortObject[] inputs) {
         BufferedDataTable table = (BufferedDataTable)inputs[m_portIndex];
         boolean hasColumnsBefore = m_columnIndex > 1;
         final DataTableSpec spec = table.getSpec();
@@ -144,7 +135,7 @@ final class RowIssue implements Issue {
 
         var iterable = jumpToIf(table, Math.max(0, m_rowIndex - 2), 3, colIndices).orElse(null);
         if (iterable == null) {
-            return new DefaultIssue(m_message);
+            return new DefaultIssue(m_description);
         }
         List<String> rowHeaders = new ArrayList<>();
         List<List<String>> data = new ArrayList<>();
@@ -173,7 +164,16 @@ final class RowIssue implements Issue {
 
     @Override
     public String toPreformatted() {
-        return m_message;
+        // this code is not used in "normal" scenarios
+        // instead the issue is filled with context via Message#renderIssueDetails
+        var strBuilder = new StringBuilder();
+        // "spreadsheet user compatible lingo": errors to users should use "number", not index
+        strBuilder.append("row number ").append(m_rowIndex + 1);
+        strBuilder.append(", column ").append(m_columnIndex);
+        if (m_description != null) {
+            strBuilder.append(": ").append(m_description);
+        }
+        return strBuilder.toString();
     }
 
     @Override
@@ -183,17 +183,17 @@ final class RowIssue implements Issue {
 
     @Override
     public void saveTo(final ConfigBaseWO config) {
-        config.addInt("portIndex", m_portIndex);
-        config.addInt("columnIndex", m_columnIndex);
-        config.addLong("rowIndex", m_rowIndex);
-        config.addString("message", m_message);
+        config.addInt(CFG_PORT_INDEX, m_portIndex);
+        config.addInt(CFG_COLUMN_INDEX, m_columnIndex);
+        config.addLong(CFG_ROW_INDEX, m_rowIndex);
+        config.addString(CFG_MESSAGE, m_description);
     }
 
     static RowIssue load(final ConfigBaseRO config) throws InvalidSettingsException {
-        var portIndex = config.getInt("portIndex");
-        var columnIndex = config.getInt("columnIndex");
-        var rowIndex = config.getLong("rowIndex");
-        var message = config.getString("message");
+        var portIndex = config.getInt(CFG_PORT_INDEX);
+        var columnIndex = config.getInt(CFG_COLUMN_INDEX);
+        var rowIndex = config.getLong(CFG_ROW_INDEX);
+        var message = config.getString(CFG_MESSAGE);
         return new RowIssue(portIndex, columnIndex, rowIndex, message);
     }
 
@@ -210,7 +210,7 @@ final class RowIssue implements Issue {
             .append(m_portIndex, m.m_portIndex) //
             .append(m_columnIndex, m.m_columnIndex) //
             .append(m_rowIndex, m.m_rowIndex) //
-            .append(m_message, m.m_message) //
+            .append(m_description, m.m_description) //
             .isEquals();
     }
 
@@ -220,17 +220,17 @@ final class RowIssue implements Issue {
             .append(m_portIndex) //
             .append(m_columnIndex) //
             .append(m_rowIndex) //
-            .append(m_message) //
+            .append(m_description) //
             .toHashCode();
     }
 
     @Override
     public String toString() {
         return new ToStringBuilder(this) //
-            .append("portIndex", m_portIndex) //
-            .append("columnIndex", m_columnIndex) //
-            .append("rowIndex", m_rowIndex) //
-            .append("message", m_message) //
+            .append(CFG_PORT_INDEX, m_portIndex) //
+            .append(CFG_COLUMN_INDEX, m_columnIndex) //
+            .append(CFG_ROW_INDEX, m_rowIndex) //
+            .append(CFG_MESSAGE, m_description) //
             .toString();
     }
 
