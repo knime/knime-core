@@ -131,11 +131,13 @@ describe('DropdownInput.vue', () => {
 
     it('disables dropdown when controlled by a flow variable', () => {
         expect(wrapper.vm.disabled).toBeTruthy();
+        expect(wrapper.findComponent(Dropdown).vm.disabled).toBeTruthy();
     });
 
-    it('does not disable dropdown when not controlled by a flow variable', () => {
-        defaultPropsData.control.rootSchema
-            .flowVariablesMap[defaultPropsData.control.path] = {};
+    it('does not disable dropdown when not controlled by a flow variable', async () => {
+        delete defaultPropsData.control.rootSchema.flowVariablesMap;
+        wrapper = await mountJsonFormsComponent(DropdownInput, defaultPropsData);
         expect(wrapper.vm.disabled).toBeFalsy();
+        expect(wrapper.findComponent(Dropdown).vm.disabled).toBeFalsy();
     });
 });
