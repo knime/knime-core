@@ -107,8 +107,11 @@ public final class MessageBuilder {
         m_resolutions = new ArrayList<>();
     }
 
-    String getSummary() {
-        return m_summary;
+    /**
+     * @return the currently set summary (or an empty Optional).
+     */
+    public Optional<String> getSummary() {
+        return Optional.ofNullable(m_summary);
     }
 
     Optional<Issue> getIssue() {

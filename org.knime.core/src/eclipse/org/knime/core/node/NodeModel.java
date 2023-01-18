@@ -1208,7 +1208,7 @@ public abstract class NodeModel implements ViewableModel {
      * @param message The message as written to the workflow file
      */
     final void restoreWarningMessage(final String message) {
-        m_warningMessage = Message.builder().withSummary(message).build().orElse(null);
+        setWarningMessage(message);
     }
 
     /**

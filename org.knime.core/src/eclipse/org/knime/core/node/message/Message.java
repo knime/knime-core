@@ -59,7 +59,6 @@ import org.knime.core.node.config.base.ConfigBaseRO;
 import org.knime.core.node.config.base.ConfigBaseWO;
 import org.knime.core.node.message.Issue.Type;
 import org.knime.core.node.port.PortObject;
-import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.NodeMessage;
 
 /**
@@ -104,7 +103,7 @@ public final class Message {
     private final List<String> m_resolutions;
 
     Message(final MessageBuilder builder) {
-        m_summary = CheckUtils.checkArgumentNotNull(builder.getSummary());
+        m_summary = builder.getSummary().orElseThrow(() -> new IllegalArgumentException("Summary must not be null"));
         m_issue = builder.getIssue().orElse(null);
         m_resolutions = builder.getResolutions();
     }

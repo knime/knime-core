@@ -136,7 +136,8 @@ final class RowIssueTest {
             + "Row3   | Cell in row...\n"
             + "Row4   | Cell in row...\n"
             + "Row5   | Cell in row...\n"
-            + "        ^^^^^^^^^^^^^^^\n");
+            + "        ^^^^^^^^^^^^^^^\n"
+            + "some error\n");
     }
 
     /** Test invalid arguments of issue */
@@ -168,7 +169,8 @@ final class RowIssueTest {
             + "Row3   | ..     | Cell in row... | 12    \n"
             + "Row4   | ..     | Cell in row... | 16    \n"
             + "Row5   | ..     | Cell in row... | 20    \n"
-            + "                                  ^^^^^^^\n");
+            + "                                  ^^^^^^^\n"
+            + "some error\n");
     }
 
     /** Table with multiple columns, error somewhere in between. */
@@ -188,7 +190,8 @@ final class RowIssueTest {
             + "Row3   | ..     | 3      | 1.5    | Cell in row...\n"
             + "Row4   | ..     | 4      | 2.0    | Cell in row...\n"
             + "Row5   | ..     | 5      | 2.5    | Cell in row...\n"
-            + "                          ^^^^^^^\n");
+            + "                          ^^^^^^^\n"
+            + "some error\n");
     }
 
     /** Table with multiple columns, many rows (details will be skipped until default backend is changed). */
@@ -224,7 +227,8 @@ final class RowIssueTest {
                 + "Row2   | Cell in row... | 2      | 1.0   \n"
                 + "Row3   | Cell in row... | 3      | 1.5   \n"
                 + "Row4   | Cell in row... | 4      | 2.0   \n"
-                + "                         ^^^^^^^\n");
+                + "                         ^^^^^^^\n"
+                + "unknown message\n");
     }
 
 }

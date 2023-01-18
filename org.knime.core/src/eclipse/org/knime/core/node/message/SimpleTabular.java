@@ -82,17 +82,19 @@ final class SimpleTabular {
     private final String[] m_rowHeaders;
     private final String[][] m_data;
     private final int m_underlineColumn;
+    private final String m_description;
 
     private SimpleTabular(final String[] colHeaders, final String[] rowHeaders, final String[][] data,
-        final int underlineColumn) {
+        final int underlineColumn, final String description) {
         m_colHeaders = colHeaders;
         m_rowHeaders = rowHeaders;
         m_data = data;
         m_underlineColumn = underlineColumn;
+        m_description = description;
     }
 
     static SimpleTabular from(final List<String> colHeaders, final List<String> rowHeaders,
-        final List<List<String>> data, final int underlineColumn) {
+        final List<List<String>> data, final int underlineColumn, final String description) {
         var fixedWidthColHeaders = new String[colHeaders.size()];
         var fixedWidthRowHeaders = new String[rowHeaders.size()];
         var fixedWidthData = new String[rowHeaders.size()][colHeaders.size()];
@@ -115,7 +117,8 @@ final class SimpleTabular {
                 fixedWidthData[r][i] = rightPad(abbreviate(data.get(r).get(i), colWidth), colWidth);
             }
         }
-        return new SimpleTabular(fixedWidthColHeaders, fixedWidthRowHeaders, fixedWidthData, underlineColumn);
+        return new SimpleTabular(fixedWidthColHeaders, fixedWidthRowHeaders, fixedWidthData, underlineColumn,
+            description);
     }
 
     @Override
@@ -152,6 +155,9 @@ final class SimpleTabular {
             strB.append(repeat(' ', underlineStartIndex));
             strB.append(repeat('^', underlineEndIndex - underlineStartIndex));
             strB.append('\n');
+        }
+        if (m_description != null) {
+            strB.append(m_description).append('\n');
         }
         return strB.toString();
     }

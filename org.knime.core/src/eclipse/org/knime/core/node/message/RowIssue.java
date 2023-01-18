@@ -54,6 +54,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -159,23 +160,14 @@ final class RowIssue implements Issue {
                 }
                 data.add(datalist);
             }
-            var tab = SimpleTabular.from(colHeaders, rowHeaders, data, underlineColumn);
+            var tab = SimpleTabular.from(colHeaders, rowHeaders, data, underlineColumn, m_description);
             return new DefaultIssue(tab.toAsciiString());
         }
     }
 
     @Override
     public String toPreformatted() {
-        // this code is not used in "normal" scenarios
-        // instead the issue is filled with context via Message#renderIssueDetails
-        var strBuilder = new StringBuilder();
-        // "spreadsheet user compatible lingo": errors to users should use "number", not index
-        strBuilder.append("row number ").append(m_rowIndex + 1);
-        strBuilder.append(", column ").append(m_columnIndex);
-        if (m_description != null) {
-            strBuilder.append(": ").append(m_description);
-        }
-        return strBuilder.toString();
+        return StringUtils.defaultString(m_description, "");
     }
 
     @Override
