@@ -133,7 +133,9 @@ final class RowIssue implements Issue {
             .map(DataColumnSpec::getName) //
             .collect(Collectors.toCollection(() -> colHeaders));
 
-        var iterable = jumpToIf(table, Math.max(0, m_rowIndex - 2), 3, colIndices).orElse(null);
+        final var start = Math.max(0, m_rowIndex - 2);
+        final var end = (int)Math.min(m_rowIndex, table.size() - 1);
+        var iterable = jumpToIf(table, start, end, colIndices).orElse(null);
         if (iterable == null) {
             return new DefaultIssue(m_description);
         }
@@ -235,13 +237,13 @@ final class RowIssue implements Issue {
     }
 
     private static Optional<CloseableDataRowIterable> jumpToIf(final BufferedDataTable table,
-        final long rowStart, final int length, final int... columns) {
+        final long rowStart, final long rowEnd, final int... columns) {
         if (rowStart < 1000
                 // using columnar backend (supporting almost random access to rows)
             || !(WorkflowTableBackendSettings.getTableBackendForCurrentContext() instanceof BufferedTableBackend)) {
             final var filter = new TableFilter.Builder() //
                 .withFromRowIndex(rowStart) //
-                .withToRowIndex(rowStart + length - 1) //
+                .withToRowIndex(rowEnd) //
                 .withMaterializeColumnIndices(columns).build();
             return Optional.of(table.filter(filter));
         }
