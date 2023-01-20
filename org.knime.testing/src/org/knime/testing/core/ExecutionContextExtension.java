@@ -59,6 +59,9 @@ import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.ParameterContext;
+import org.junit.jupiter.api.extension.ParameterResolutionException;
+import org.junit.jupiter.api.extension.ParameterResolver;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.NodeSettings;
@@ -75,12 +78,13 @@ import org.knime.testing.node.blocking.BlockingRepository.LockedMethod;
 import org.knime.testing.node.blocking.BlockingVariableNodeFactory;
 
 /**
- * Extension used with {@link RegisterExtension} in JUnit5 unit tests to get an {@link ExecutionContext}.
+ * Extension used with {@link RegisterExtension} in JUnit5 unit tests to get an {@link ExecutionContext} injected as
+ * a parameter in your test method.
  *
  * @author Bernd Wiswedel, KNIME GmbH
  */
 public final class ExecutionContextExtension
-    implements BeforeAllCallback, BeforeEachCallback, AfterEachCallback, AfterAllCallback {
+    implements BeforeAllCallback, BeforeEachCallback, AfterEachCallback, AfterAllCallback, ParameterResolver {
 
     private final String m_blockID =
         ExecutionContextExtension.class.getSimpleName() + "-" + UUID.randomUUID().toString();
@@ -163,4 +167,15 @@ public final class ExecutionContextExtension
         return new ExecutionContextExtension();
     }
 
+    @Override
+    public boolean supportsParameter(final ParameterContext parameterContext, final ExtensionContext extensionContext)
+        throws ParameterResolutionException {
+        return ExecutionContext.class.equals(parameterContext.getParameter().getType());
+    }
+
+    @Override
+    public Object resolveParameter(final ParameterContext parameterContext, final ExtensionContext extensionContext)
+        throws ParameterResolutionException {
+        return getExecutionContext();
+    }
 }
