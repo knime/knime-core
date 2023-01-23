@@ -125,7 +125,8 @@ public final class NodeFactoryExtension {
                 try {
                     isDeprecated = getFactory().isDeprecated();
                 } catch (InvalidNodeFactoryExtensionException e) { // NOSONAR
-                    // ignore -- someone will call #createFactory later and get the same error
+                    // more or less ignore -- someone will call #createFactory later and get the same error
+                    LOGGER.debug("Failed to create node factory instance", e);
                 }
                 if (isDeprecated) {
                     LOGGER.codingWithFormat(
