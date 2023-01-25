@@ -51,6 +51,7 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.commons.io.FilenameUtils;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.knime.core.util.exception.ResourceAccessException;
 
@@ -124,7 +125,7 @@ public interface URIToFileResolve {
      * @since 4.7
      */
     default Optional<KNIMEURIDescription> toDescription(final URI uri, final IProgressMonitor monitor) {
-        return Optional.of(new KNIMEURIDescription(uri.getHost(), uri.getPath()));
+        return Optional.of(new KNIMEURIDescription(uri.getHost(), uri.getPath(), FilenameUtils.getName(uri.getPath())));
     }
 
     /**
@@ -203,30 +204,43 @@ public interface URIToFileResolve {
      */
     public static final class KNIMEURIDescription {
 
-        private final String m_path;
+        private final String m_pathOrId;
 
         private final String m_mountpointName;
 
+        private final String m_name;
+
         /**
-         * @param path
          * @param mountpointName
+         * @param pathOrId
+         * @param name
          * @noreference This constructor is not intended to be referenced by clients.
          */
-        public KNIMEURIDescription(final String mountpointName, final String path) {
-            m_path = path;
+        public KNIMEURIDescription(final String mountpointName, final String pathOrId, final String name) {
+            m_pathOrId = pathOrId;
             m_mountpointName = mountpointName;
+            m_name = name;
         }
 
         /** @return A string that can be used in labels etc . */
         public String toDisplayString() {
-            return String.format("%s: %s", m_mountpointName, m_path);
+            return String.format("%s: %s (%s)", m_mountpointName, m_name, m_pathOrId);
         }
 
         /**
          * @return the path
+         * @since 5.0
          */
-        public String getPath() {
-            return m_path;
+        public String getPathOrId() {
+            return m_pathOrId;
+        }
+
+        /**
+         * @return the name
+         * @since 5.0
+         */
+        public String getName() {
+            return m_name;
         }
 
         /**

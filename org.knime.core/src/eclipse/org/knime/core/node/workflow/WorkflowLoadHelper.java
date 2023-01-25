@@ -440,15 +440,9 @@ public class WorkflowLoadHelper {
         }
         if (templateInfo != null) {
             persistor.setOverwriteTemplateInformation(templateInfo.createLink(templateSourceURI, isTemplateProject()));
-
-            if (templateSourceURI != null) {
-                var path = ResolverUtil.toDescription(templateSourceURI, new NullProgressMonitor())
-                    .map(KNIMEURIDescription::getPath).orElse(templateSourceURI.toString());
-                var name = FilenameUtils.getName(path);
-                persistor.setNameOverwrite(name);
-            } else {
-                persistor.setNameOverwrite(directory.getName());
-            }
+            final var name = ResolverUtil.toDescription(templateSourceURI, new NullProgressMonitor())
+                    .map(KNIMEURIDescription::getName).orElse(FilenameUtils.getName(templateSourceURI.toString()));
+            persistor.setNameOverwrite(name);
         }
         if (isSetDirtyAfterLoad) {
             persistor.setDirtyAfterLoad();
