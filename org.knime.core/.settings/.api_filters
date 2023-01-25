@@ -2329,4 +2329,32 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/util/pathresolve/URIToFileResolve.java" type="org.knime.core.util.pathresolve.URIToFileResolve$KNIMEURIDescription">
+        <filter comment="backport 5.0 fix" id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.core.util.pathresolve.URIToFileResolve.KNIMEURIDescription"/>
+                <message_argument value="KNIMEURIDescription(String, String)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.util.pathresolve.URIToFileResolve.KNIMEURIDescription"/>
+                <message_argument value="getPath()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="backport 5.0 fix" id="1141899266">
+            <message_arguments>
+                <message_argument value="5.0"/>
+                <message_argument value="4.7"/>
+                <message_argument value="getName()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="backport 5.0 fix" id="1141899266">
+            <message_arguments>
+                <message_argument value="5.0"/>
+                <message_argument value="4.7"/>
+                <message_argument value="getPathOrId()"/>
+            </message_arguments>
+        </filter>
+    </resource>
 </component>
