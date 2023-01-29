@@ -57,6 +57,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.function.BiPredicate;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import java.util.zip.ZipEntry;
@@ -630,6 +631,22 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
     public boolean containsName(final String columnName) {
         return findColumnIndex(columnName) >= 0;
     }
+    /**
+     * Returns <code>true</code> if the {@link DataTableSpec} of this instance is compatible to the given
+     * {@link DataTableSpec}. The {@link DataTableSpec}s are compatible if they have the same column
+     * names and the column types of this instance are compatible with the corresponding type of the given spec.
+     * That implies that the order of the columns has to be the same and that the types are compatible.
+     * The domains, properties, and handlers of the column specs are not included into the comparison.
+     *
+     * @param spec the <code>DataTableSpec</code> to compare this with
+     * @return <code>true</code> if the two specs have the same column names,
+     *         and compatible types, otherwise <code>false</code>
+     *  @since 5.0
+     */
+    public boolean isCompatibleWith(final DataTableSpec spec) {
+        return compareStructure(this, spec, DataColumnSpec::isCompatibleWith);
+    }
+
 
     /**
      * Returns <code>true</code> if <code>spec</code> has the same column
@@ -644,22 +661,36 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
      *         and types, otherwise <code>false</code>
      */
     public boolean equalStructure(final DataTableSpec spec) {
-        if (spec == this) {
+        return compareStructure(this, spec, DataColumnSpec::equalStructure);
+    }
+
+
+    /**
+     * Compares the structure of the two given {@link DataTableSpec}s. The method checks that they have the same number
+     * of columns and that each corresponding column fulfills the criteria of the given column comparator.
+     * @param thisSpec the first spec to compare
+     * @param otherSpec the second spec to compare
+     * @param columnComparator the comparator to use
+     * @return <code>true</code> if the two specs have the same structure, otherwise <code>false</code>
+     */
+    private static boolean compareStructure(final DataTableSpec thisSpec, final DataTableSpec otherSpec,
+        final BiPredicate<DataColumnSpec, DataColumnSpec> columnComparator) {
+        if (otherSpec == thisSpec) {
             return true;
         }
-        if (spec == null) {
+        if (thisSpec == null || otherSpec == null) {
             return false;
         }
-        final int colCount = this.getNumColumns();
+        final int colCount = thisSpec.getNumColumns();
         // must have same number of columns to be identical
-        if (spec.getNumColumns() != colCount) {
+        if (otherSpec.getNumColumns() != colCount) {
             return false;
         }
-        // all column types and names must match
+        // compare the corresponding columns from both specs with each other
         for (int i = 0; i < colCount; i++) {
-            DataColumnSpec thisColumn = getColumnSpec(i);
-            DataColumnSpec otherColumn = spec.getColumnSpec(i);
-            if (!thisColumn.equalStructure(otherColumn)) {
+            DataColumnSpec thisColumn = thisSpec.getColumnSpec(i);
+            DataColumnSpec otherColumn = otherSpec.getColumnSpec(i);
+            if (!columnComparator.test(thisColumn, otherColumn)) {
                 return false;
             }
         }

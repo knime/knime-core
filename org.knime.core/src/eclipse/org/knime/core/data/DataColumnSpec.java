@@ -289,6 +289,30 @@ public final class DataColumnSpec {
         return m_metaDataManager.getMetaDataOfType(metaDataClass);
     }
 
+
+    /**
+     * The <code>DataColumnSpec</code> of this instance is compatible with the given spec if it has the same column name
+     * and the {@link DataType} of the given type is a super type of the instance type.
+     * Domain info, properties, and handlers are not considered during the comparison.
+     *
+     *
+     * @param cspec another <code>DataColumnSpec</code> to compare this column to
+     * @return <code>true</code> if both have the same column name and compatible types, otherwise <code>false</code>
+     *
+     * @see DataType#isASuperTypeOf(DataType)
+     * @since 5.0
+     */
+    public boolean isCompatibleWith(final DataColumnSpec cspec) {
+        if (cspec == this) {
+            return true;
+        }
+        if (cspec == null) {
+            return false;
+        }
+        return getName().equals(cspec.getName())
+                && cspec.getType().isASuperTypeOf(getType());
+    }
+
     /**
      * Two <code>DataColumnSpec</code>s are equal if they have the same
      * column name and type. Domain info, properties, and handlers are not

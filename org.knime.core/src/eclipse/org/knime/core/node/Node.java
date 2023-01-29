@@ -1401,7 +1401,7 @@ public final class Node implements NodeModelWarningListener {
                 DataTableSpec portSpec = (DataTableSpec)(m_outputs[p].spec);
                 DataTableSpec newPortSpec = thisTable.getDataTableSpec();
                 if ((portSpec != null) && !tolerateDifferentSpecs) {
-                    if (!portSpec.equalStructure(newPortSpec)) {
+                    if (!newPortSpec.isCompatibleWith(portSpec)) {
                         // this used to be an ERROR but is now more frequently encountered due to file reader nodes
                         // caching their output spec to avoid in I/O in #configure
                         final String warningMsg =
