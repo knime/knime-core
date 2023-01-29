@@ -53,6 +53,7 @@ import static org.hamcrest.core.IsNot.not;
 import static org.hamcrest.core.IsSame.sameInstance;
 import static org.junit.Assert.assertThat;
 
+import org.knime.core.node.message.Message;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.inactive.InactiveBranchPortObject;
@@ -80,7 +81,7 @@ public class ExecutionResultFixtures {
         toReturn.setPortObjectSpecs(
             new PortObjectSpec[]{InactiveBranchPortObjectSpec.INSTANCE, InactiveBranchPortObjectSpec.INSTANCE});
         toReturn.setInternalHeldPortObjects(new PortObject[]{InactiveBranchPortObject.INSTANCE});
-        toReturn.setWarningMessage("a warning");
+        toReturn.setWarning(Message.fromSummary("a warning"));
         toReturn.setNeedsResetAfterLoad();
         return toReturn;
     }

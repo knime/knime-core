@@ -1207,8 +1207,8 @@ public abstract class NodeModel implements ViewableModel {
     /** Method being called when node is restored. It does not notify listeners.
      * @param message The message as written to the workflow file
      */
-    final void restoreWarningMessage(final String message) {
-        setWarningMessage(message);
+    final void restoreWarningMessage(final Message message) {
+        setWarning(message);
     }
 
     /**

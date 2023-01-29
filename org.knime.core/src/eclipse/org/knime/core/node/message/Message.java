@@ -59,7 +59,11 @@ import org.knime.core.node.config.base.ConfigBaseRO;
 import org.knime.core.node.config.base.ConfigBaseWO;
 import org.knime.core.node.message.Issue.Type;
 import org.knime.core.node.port.PortObject;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.NodeMessage;
+
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 /**
  * Read-only objects that capture the details of exceptions and warnings issued by node implementations. It comprises a
@@ -92,6 +96,8 @@ import org.knime.core.node.workflow.NodeMessage;
  * @author Bernd Wiswedel, KNIME, Konstanz, Germany
  * @since 5.0
  */
+@JsonSerialize(using = JsonMessageSerializer.class)
+@JsonDeserialize(using = JsonMessageDeserializer.class)
 public final class Message {
 
     private static final String CFG_SUMMARY = "summary";
@@ -162,6 +168,25 @@ public final class Message {
         return new NodeMessage(type, m_summary, issue, m_resolutions);
     }
 
+    /**
+     * Converts a {@link NodeMessage} into a {@link Message}. The argument must not be a RESET message; it's type is
+     * ignored.
+     *
+     * @param nodeMessage to read from
+     * @return A non-null message object
+     * @throws IllegalArgumentException null argument or of type
+     * {@link org.knime.core.node.workflow.NodeMessage.Type#RESET}
+     */
+    public static Message fromNodeMessage(final NodeMessage nodeMessage) {
+        CheckUtils.checkArgumentNotNull(nodeMessage);
+        CheckUtils.checkArgument(nodeMessage.getMessageType() != NodeMessage.Type.RESET, "Invalid type: %s",
+            NodeMessage.Type.RESET);
+        CheckUtils.checkArgumentNotNull(nodeMessage.getMessage(), "message text must not be null");
+        var builder = builder().withSummary(nodeMessage.getMessage());
+        nodeMessage.getIssue().ifPresent(builder::addTextIssue);
+        builder.addResolutions(nodeMessage.getResolutions().toArray(String[]::new));
+        return builder.build().orElseThrow(() -> new IllegalArgumentException("NodeMessage has null 'message' field"));
+    }
 
     /**
      * Convenience method to extract the summary, taking <code>null</code> into account.

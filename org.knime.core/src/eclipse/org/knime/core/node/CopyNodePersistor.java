@@ -49,6 +49,7 @@ package org.knime.core.node;
 
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.internal.ReferencedFile;
+import org.knime.core.node.message.Message;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
@@ -127,7 +128,7 @@ public class CopyNodePersistor implements NodePersistor {
 
     /** {@inheritDoc} */
     @Override
-    public String getWarningMessage() {
+    public Message getWarningMessage() {
         return null;
     }
 

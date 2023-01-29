@@ -55,6 +55,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.NodeContentPersistor;
+import org.knime.core.node.message.Message;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.inactive.InactiveBranchPortObject;
@@ -75,7 +76,7 @@ public class NodeExecutionResult implements NodeContentPersistor {
     private ReferencedFile m_nodeInternDir;
     private PortObject[] m_portObjects;
     private PortObjectSpec[] m_portObjectSpecs;
-    private String m_warningMessage;
+    private Message m_warningMessage;
     private boolean m_needsResetAfterLoad;
     private List<FlowVariable> m_flowVariables;
 
@@ -177,7 +178,7 @@ public class NodeExecutionResult implements NodeContentPersistor {
     /** {@inheritDoc} */
     @Override
     @JsonProperty("warningMsg")
-    public String getWarningMessage() {
+    public Message getWarningMessage() {
         return m_warningMessage;
     }
 
@@ -223,10 +224,10 @@ public class NodeExecutionResult implements NodeContentPersistor {
     }
 
     /**
-     * @param warningMessage the warningMessage to set
+     * @param message the warningMessage to set
      */
-    public void setWarningMessage(final String warningMessage) {
-        m_warningMessage = warningMessage;
+    public void setWarning(final Message message) {
+        m_warningMessage = message;
     }
 
     /**
@@ -294,7 +295,7 @@ public class NodeExecutionResult implements NodeContentPersistor {
         @JsonProperty("nrPortObjects") final int nrOfPortObjects,
         @JsonProperty("nrInternalPortObjects") final int nrOfInternalPortObjects,
         @JsonProperty("needsResetAfterLoad") final boolean needsResetAfterLoad,
-        @JsonProperty("warningMsg") final String warningMessage) {
+        @JsonProperty("warningMsg") final Message warningMessage) {
 
         final NodeExecutionResult toReturn = new NodeExecutionResult();
         toReturn.setPortObjects(new PortObject[nrOfPortObjects]);
@@ -303,7 +304,7 @@ public class NodeExecutionResult implements NodeContentPersistor {
         if (needsResetAfterLoad) {
             toReturn.setNeedsResetAfterLoad();
         }
-        toReturn.setWarningMessage(warningMessage);
+        toReturn.setWarning(warningMessage);
         return toReturn;
     }
 

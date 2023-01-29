@@ -50,10 +50,15 @@ package org.knime.core.node.message;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.InstanceOfAssertFactories.type;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.assertj.core.api.ThrowingConsumer;
 import org.junit.jupiter.api.Test;
 import org.knime.core.node.ModelContent;
+import org.knime.core.node.workflow.NodeMessage;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 
 /**
  * Tests basic functionality to class {@link Message}.
@@ -162,5 +167,57 @@ class MessageTest {
         assertThat(messageFirstIssue).isEqualTo(cloneFirstIssue) //
             .hasSameHashCodeAs(cloneFirstIssue) //
             .isNotSameAs(cloneFirstIssue);
+    }
+
+    @Test
+    void testToAndFromNodeMessage() throws Exception {
+        var messageBuilder = Message.builder();
+        messageBuilder.addResolutions("Resolution 1", "Resolution 2");
+        var issueText = "Issue Details XYZ";
+        messageBuilder.addTextIssue(issueText);
+        messageBuilder.withSummary("Some Summary Message");
+        var message = messageBuilder.build().orElseThrow();
+
+        var nodeMessage = message.toNodeMessage(NodeMessage.Type.ERROR);
+        var message2 = Message.fromNodeMessage(nodeMessage);
+
+        assertThat(message2).isNotSameAs(message).isEqualTo(message);
+
+        assertThrows(IllegalArgumentException.class, () -> Message.fromNodeMessage(NodeMessage.NONE));
+    }
+
+    /** Jackson serialization/deserialization, incl. issue and resolution. */
+    @Test
+    void testJsonSer_FullDetails() throws Exception {
+        var messageBuilder = Message.builder();
+        messageBuilder.addResolutions("Resolution 1", "Resolution 2");
+        var issueText = "Issue Details XYZ";
+        messageBuilder.addTextIssue(issueText);
+        messageBuilder.withSummary("Some Summary Message");
+        var message = messageBuilder.build().orElseThrow();
+
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new Jdk8Module());
+        var bytes = mapper.writeValueAsBytes(message);
+
+        var message2 = mapper.readValue(bytes, Message.class);
+
+        assertThat(message2).isNotSameAs(message).isEqualTo(message);
+    }
+
+    /** Jackson serialization/deserialization, incl. issue and resolution. */
+    @Test
+    void testJsonSer_Simple() throws Exception {
+        var messageBuilder = Message.builder();
+        messageBuilder.withSummary("Some Summary Message");
+        var message = messageBuilder.build().orElseThrow();
+
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new Jdk8Module());
+        var bytes = mapper.writeValueAsBytes(message);
+
+        var message2 = mapper.readValue(bytes, Message.class);
+
+        assertThat(message2).isNotSameAs(message).isEqualTo(message);
     }
 }

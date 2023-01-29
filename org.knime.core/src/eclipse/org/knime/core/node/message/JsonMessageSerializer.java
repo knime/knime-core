@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -43,37 +44,50 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 20, 2008 (wiswedel): created
+ *   Jan 29, 2023 (wiswedel): created
  */
-package org.knime.core.node;
+package org.knime.core.node.message;
 
-import org.knime.core.data.filestore.internal.IFileStoreHandler;
-import org.knime.core.internal.ReferencedFile;
-import org.knime.core.node.message.Message;
-import org.knime.core.node.port.PortObject;
-import org.knime.core.node.port.PortObjectSpec;
+import java.io.IOException;
+
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
 /**
+ * Custom jackson serializer for {@link Message}. Preferring this over custom jackson annotation because:
+ * <ol>
+ *   <li> the message builder has an addtional state (build() can return null)
+ *   <li> the contained issue can have different classes but for persistance we only keep the text
+ * </ol>
  *
- * @author wiswedel, University of Konstanz
- * @noextend This interface is not intended to be extended by clients.
- * @noimplement This interface is not intended to be implemented by clients.
+ * @author wiswedel
  */
-public interface NodeContentPersistor {
+@SuppressWarnings({"serial", "javadoc"})
+final class JsonMessageSerializer extends StdSerializer<Message> {
 
-    boolean needsResetAfterLoad();
-    /** Indicate an error and that this node should better be reset after load.
-     */
-    void setNeedsResetAfterLoad();
-    boolean mustWarnOnDataLoadError();
+    protected JsonMessageSerializer() {
+        super(Message.class);
+    }
 
-    boolean hasContent();
-    ReferencedFile getNodeInternDirectory();
-    PortObjectSpec getPortObjectSpec(final int outportIndex);
-    PortObject getPortObject(final int outportIndex);
-    String getPortObjectSummary(final int outportIndex);
-    PortObject[] getInternalHeldPortObjects();
-    /** @since 2.6 */
-    IFileStoreHandler getFileStoreHandler();
-    Message getWarningMessage();
+    @Override
+    public void serialize(final Message value, final JsonGenerator gen, final SerializerProvider provider)
+        throws IOException {
+        gen.writeStartObject();
+        gen.writeStringField("summary", value.getSummary());
+        final var issue = value.getIssue();
+        if (issue.isPresent()) {
+            gen.writeStringField("issue", issue.get().toPreformatted());
+        }
+        var resolutions = value.getResolutions();
+        if (!resolutions.isEmpty()) {
+            gen.writeArrayFieldStart("resolutions");
+            for (String s : resolutions) {
+                gen.writeString(s);
+            }
+            gen.writeEndArray();
+        }
+        gen.writeEndObject();
+    }
+
 }

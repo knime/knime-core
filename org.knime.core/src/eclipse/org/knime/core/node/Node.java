@@ -374,7 +374,7 @@ public final class Node implements NodeModelWarningListener {
     public NodeExecutionResult createNodeExecutionResult(
             final ExecutionMonitor exec) throws CanceledExecutionException {
         NodeExecutionResult result = new NodeExecutionResult();
-        result.setWarningMessage(m_model.getWarningMessage());
+        result.setWarning(m_model.getWarning());
         if (hasContent()) {
             File internTempDir;
             try {

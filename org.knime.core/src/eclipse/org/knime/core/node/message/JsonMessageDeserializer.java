@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -43,37 +44,47 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 20, 2008 (wiswedel): created
+ *   Jan 29, 2023 (wiswedel): created
  */
-package org.knime.core.node;
+package org.knime.core.node.message;
 
-import org.knime.core.data.filestore.internal.IFileStoreHandler;
-import org.knime.core.internal.ReferencedFile;
-import org.knime.core.node.message.Message;
-import org.knime.core.node.port.PortObject;
-import org.knime.core.node.port.PortObjectSpec;
+import java.io.IOException;
+import java.util.Optional;
+
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.ObjectCodec;
+import com.fasterxml.jackson.core.TreeNode;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 
 /**
+ * Custom deserializer for {@link Message}. For details see {@link JsonMessageSerializer}.
  *
- * @author wiswedel, University of Konstanz
- * @noextend This interface is not intended to be extended by clients.
- * @noimplement This interface is not intended to be implemented by clients.
+ * @author wiswedel
  */
-public interface NodeContentPersistor {
+@SuppressWarnings("serial")
+final class JsonMessageDeserializer extends StdDeserializer<Message> {
 
-    boolean needsResetAfterLoad();
-    /** Indicate an error and that this node should better be reset after load.
-     */
-    void setNeedsResetAfterLoad();
-    boolean mustWarnOnDataLoadError();
+    protected JsonMessageDeserializer() {
+        super(Message.class);
+    }
 
-    boolean hasContent();
-    ReferencedFile getNodeInternDirectory();
-    PortObjectSpec getPortObjectSpec(final int outportIndex);
-    PortObject getPortObject(final int outportIndex);
-    String getPortObjectSummary(final int outportIndex);
-    PortObject[] getInternalHeldPortObjects();
-    /** @since 2.6 */
-    IFileStoreHandler getFileStoreHandler();
-    Message getWarningMessage();
+    @Override
+    public Message deserialize(final JsonParser p, final DeserializationContext ctxt) throws IOException {
+        var builder = Message.builder();
+        ObjectCodec oc = p.getCodec();
+        TreeNode node = oc.readTree(p);
+        final var summaryNode = (JsonNode)node.get("summary");
+        builder.withSummary(summaryNode.asText());
+        final var issueNode = (JsonNode)node.get("issue");
+        var issue = Optional.ofNullable(issueNode).map(JsonNode::asText);
+        issue.ifPresent(builder::addTextIssue);
+        final var resolutionsNode = (JsonNode)node.get("resolutions");
+        if (resolutionsNode != null) {
+            var resolutions = ctxt.readTreeAsValue(resolutionsNode, String[].class);
+            builder.addResolutions(resolutions);
+        }
+        return builder.build().orElse(null);
+    }
 }

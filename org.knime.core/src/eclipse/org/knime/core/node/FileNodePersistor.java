@@ -72,6 +72,7 @@ import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.WriteFileStoreHandler;
 import org.knime.core.internal.ReferencedFile;
+import org.knime.core.node.message.Message;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObject.PortObjectSerializer;
 import org.knime.core.node.port.PortObjectSpec;
@@ -1049,7 +1050,7 @@ public class FileNodePersistor implements NodePersistor {
 
     /** {@inheritDoc} */
     @Override
-    public String getWarningMessage() {
+    public Message getWarningMessage() {
         return getNativeNodeContainerPersistor().getNodeMessage();
     }
 

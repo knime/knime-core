@@ -120,10 +120,10 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
     /** Called by {@link Node} to update the message field in the {@link NodeModel} class.
      * @return the msg or null.
      */
-    public String getNodeMessage() {
+    public Message getNodeMessage() {
         NodeMessage nodeMessage = getMetaPersistor().getNodeMessage();
         if (nodeMessage != null && !nodeMessage.getMessageType().equals(NodeMessage.Type.RESET)) {
-            return nodeMessage.getMessage();
+            return Message.fromNodeMessage(nodeMessage);
         }
         return null;
     }
