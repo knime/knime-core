@@ -60,6 +60,7 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -159,7 +160,7 @@ import org.w3c.dom.Element;
  *
  * @author Thomas Gabriel, University of Konstanz
  */
-public final class Node implements NodeModelWarningListener {
+public final class Node {
 
     /** Text prepended to message on node execution failure.
      * @noreference This field is not intended to be referenced by clients.
@@ -307,7 +308,7 @@ public final class Node implements NodeModelWarningListener {
         m_name = m_adaptedNodeDescription != null ? m_adaptedNodeDescription.getNodeName().intern()
             : m_factory.getNodeName().intern();
         m_model = m_factory.callCreateNodeModel(m_creationConfig, m_adaptedNodeDescription);
-        m_model.addWarningListener(this);
+        m_model.addWarningListener(new MyNodeModelWarningMessageListener());
         m_messageListeners = new CopyOnWriteArraySet<NodeMessageListener>();
         // create an extra input port (index: 0) for the optional variables.
         m_inputs = new Input[m_model.getNrInPorts() + 1];
@@ -1587,23 +1588,6 @@ public final class Node implements NodeModelWarningListener {
      */
     private void clearNodeMessageAndNotify() {
         notifyMessageListeners(NodeMessage.NONE);
-    }
-
-    /**
-     * Is called, when a warning message is set in the {@link NodeModel}.
-     * Forwards it to registered {@link NodeMessageListener}s.
-     *
-     * @param warning the new message in the node model.
-     */
-    @Override
-    public void warningChanged(final Message warning) {
-        // get the warning message if available and create a message object
-        // also notify all listeners
-        if (warning != null) {
-            createWarningMessageAndNotify(warning);
-        } else {
-            clearNodeMessageAndNotify();
-        }
     }
 
     /**
@@ -2889,6 +2873,36 @@ public final class Node implements NodeModelWarningListener {
          *         details).
          */
         Message getKNIMEMessage();
+    }
+
+    /**
+     * Listener called when a warning message is set in the {@link NodeModel}.
+     * Forwards it to registered {@link NodeMessageListener}s.
+     */
+    private final class MyNodeModelWarningMessageListener implements NodeModelWarningListener {
+
+        private String m_lastWarning;
+
+        @Override
+        public void warningChanged(final Message warning) {
+            // get the warning message if available and create a message object
+            // also notify all listeners
+            if (warning != null) {
+                String warningMessage = Message.getSummaryFrom(warning);
+                if (!Objects.equals(m_lastWarning, warningMessage)) {
+                    // consecutive warnings may be the same (see Message#renderIssueDetails)
+                    m_lastWarning = warningMessage;
+                    LOGGER.warn(warningMessage);
+                }
+                // while the summary of the message might not be changed, the Message object itself has (details, etc)
+                // (otherwise this method here would not be called)
+                notifyMessageListeners(warning.toNodeMessage(NodeMessage.Type.WARNING));
+            } else {
+                m_lastWarning = null;
+                clearNodeMessageAndNotify();
+            }
+        }
+
     }
 
 }
