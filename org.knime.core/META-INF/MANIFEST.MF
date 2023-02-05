@@ -180,6 +180,6 @@ Require-Bundle: org.eclipse.osgi;bundle-version="[3.16.0,4.0.0)";visibility:=ree
  org.eclipse.jdt.annotation;bundle-version="[2.2.600,3.0.0)"
 Eclipse-RegisterBuddy: org.apache.log4j
 Bundle-ActivationPolicy: lazy
-Bundle-RequiredExecutionEnvironment: JavaSE-11
+Bundle-RequiredExecutionEnvironment: JavaSE-17
 Eclipse-BundleShape: dir
 Automatic-Module-Name: org.knime.core
