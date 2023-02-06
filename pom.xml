@@ -60,6 +60,7 @@
 				<module>org.knime.slf4j.binding.tests</module>
 				<module>org.knime.core.ui</module>
 				<module>org.knime.core.ui.tests</module>
+				<module>org.knime.log4j2.tests</module>
 			</modules>
 
 			<repositories>
