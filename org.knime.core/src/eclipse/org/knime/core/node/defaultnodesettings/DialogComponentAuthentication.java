@@ -102,8 +102,6 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
 
     private static final Insets NEUTRAL_INSET = new Insets(0, 0, 0, 0);
 
-    private static final int LEFT_INSET = 23;
-
     private final ButtonGroup m_authenticationType = new ButtonGroup();
 
     private final JRadioButton m_typeNone;
@@ -128,13 +126,13 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
 
     private final JLabel m_passwordOnlyLabel = new JLabel("Password:", SwingConstants.LEFT);
 
-    private final Component m_credentialPanel = getCredentialPanel();
+    private final Component m_credentialPanel;
 
-    private final Component m_userPanel = getUserPanel();
+    private final Component m_userPanel;
 
-    private final Component m_userPwdPanel = getUserPwdPanel();
+    private final Component m_userPwdPanel;
 
-    private final Component m_pwdPanel = getPwdPanel();
+    private final Component m_pwdPanel;
 
     private final String m_label;
 
@@ -200,6 +198,7 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
         this(authModel, label, Arrays.asList(supportedTypes), namingMap);
     }
 
+
     /** Constructor for this dialog component
      *
      * @param authModel The {@link SettingsModel}
@@ -210,7 +209,24 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
      * @since 4.0
      */
     public DialogComponentAuthentication(final SettingsModelAuthentication authModel, final String label,
-        final Collection<AuthenticationType> supportedTypes, final Map<AuthenticationType, Pair<String, String>> namingMap) {
+        final Collection<AuthenticationType> supportedTypes,
+        final Map<AuthenticationType, Pair<String, String>> namingMap) {
+        this(authModel, label, supportedTypes, namingMap, false);
+    }
+
+    /** Constructor for this dialog component
+     *
+     * @param authModel The {@link SettingsModel}
+     * @param label The label.
+     * @param namingMap The map containing the {@link AuthenticationType} as key and a pair
+     *          consisting of the label and the tooltip String for the radio buttons for authentication types
+     * @param supportedTypes the authentication {@link AuthenticationType}s to display
+     * @param horizontal <code>true</code> if the different options should be placed horizontal otherwise vertical
+     * @since 5.0
+     */
+    public DialogComponentAuthentication(final SettingsModelAuthentication authModel, final String label,
+        final Collection<AuthenticationType> supportedTypes,
+        final Map<AuthenticationType, Pair<String, String>> namingMap, final boolean horizontal) {
         super(authModel);
         m_supportedTypes = new HashSet<>(supportedTypes);
         m_label = label;
@@ -225,7 +241,22 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
         m_typeCredential = createAuthenticationTypeButton(SettingsModelAuthentication.AuthenticationType.CREDENTIALS, m_authenticationType, this);
         m_typeKerberos = createAuthenticationTypeButton(SettingsModelAuthentication.AuthenticationType.KERBEROS, m_authenticationType, this);
 
-        m_rootPanel = getRootPanel();
+        final int leftInset;
+        if (horizontal) {
+            leftInset = 0;
+        } else {
+            leftInset = 23;
+        }
+        m_credentialPanel = getCredentialPanel(leftInset);
+        m_userPanel = getUserPanel(leftInset);
+        m_userPwdPanel = getUserPwdPanel(leftInset);
+        m_pwdPanel = getPwdPanel(leftInset);
+
+        if (horizontal) {
+            m_rootPanel = getHorizontalRootPanel();
+        } else {
+            m_rootPanel = getRootPanel();
+        }
         getComponentPanel().setLayout(new GridBagLayout());
 
         final GridBagConstraints gbc = new GridBagConstraints();
@@ -396,6 +427,75 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
         return authBox;
     }
 
+    private JPanel getHorizontalRootPanel() {
+        final JPanel authBox = new JPanel(new GridBagLayout());
+        final GridBagConstraints gbc = new GridBagConstraints();
+        gbc.anchor = GridBagConstraints.LINE_START;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 1;
+        gbc.weighty = 1;
+        gbc.insets = NEUTRAL_INSET;
+        if (m_label != null) {
+            authBox.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), " " + m_label + " "));
+        }
+
+        if (m_supportedTypes.contains(AuthenticationType.NONE)) {
+            authBox.add(m_typeNone, gbc);
+        }
+
+        if (m_supportedTypes.contains(AuthenticationType.CREDENTIALS)) {
+            gbc.gridx++;
+            if (m_supportedTypes.size() > 1) {
+                authBox.add(m_typeCredential, gbc);
+            }
+            gbc.gridx++;
+            authBox.add(m_credentialPanel, gbc);
+        }
+
+        if (m_supportedTypes.contains(AuthenticationType.USER)) {
+            gbc.gridx++;
+            if (m_supportedTypes.size() > 1) {
+                authBox.add(m_typeUser, gbc);
+            }
+            gbc.gridx++;
+            gbc.insets = new Insets(0,23,0,0);
+            authBox.add(m_userPanel, gbc);
+            gbc.insets = NEUTRAL_INSET;
+        }
+
+        if (m_supportedTypes.contains(AuthenticationType.USER_PWD)) {
+            if (m_supportedTypes.size() > 1) {
+                gbc.gridx++;
+                authBox.add(m_typeUserPwd, gbc);
+            }
+            gbc.gridx++;
+            authBox.add(m_userPwdPanel, gbc);
+        }
+
+        if (m_supportedTypes.contains(AuthenticationType.PWD)) {
+            if (m_supportedTypes.size() > 1) {
+                gbc.gridx++;
+                authBox.add(m_typePwd, gbc);
+            }
+            gbc.gridx++;
+            authBox.add(m_pwdPanel, gbc);
+        }
+
+        if (m_supportedTypes.contains(AuthenticationType.KERBEROS)) {
+            gbc.gridx++;
+            authBox.add(m_typeKerberos, gbc);
+        }
+        final Dimension origSize = authBox.getPreferredSize();
+        Dimension preferredSize = getMaxDim(m_credentialPanel.getPreferredSize(), m_userPwdPanel.getPreferredSize());
+        preferredSize = getMaxDim(preferredSize, m_userPanel.getPreferredSize());
+        final Dimension maxSize = getMaxDim(preferredSize, origSize);
+        authBox.setMinimumSize(maxSize);
+        authBox.setPreferredSize(maxSize);
+        return authBox;
+    }
+
     /**
      * @param preferredSize
      * @param preferredSize2
@@ -405,7 +505,7 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
         return new Dimension(Math.max(d1.width, d2.width), Math.max(d1.height, d2.height));
     }
 
-    private JPanel getUserPanel() {
+    private JPanel getUserPanel(final int leftInset) {
         final JPanel panel = new JPanel(new GridBagLayout());
         final GridBagConstraints gbc = new GridBagConstraints();
         gbc.anchor = GridBagConstraints.LINE_START;
@@ -414,7 +514,7 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
         gbc.gridy = 0;
         gbc.gridwidth = 1;
         gbc.weightx = 1;
-        gbc.insets = new Insets(0, LEFT_INSET, 0, 5);
+        gbc.insets = new Insets(0, leftInset, 0, 5);
         panel.add(m_usernameLabel, gbc);
         gbc.gridx = 1;
         gbc.insets = NEUTRAL_INSET;
@@ -423,7 +523,7 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
         return panel;
     }
 
-    private JPanel getUserPwdPanel() {
+    private JPanel getUserPwdPanel(final int leftInset) {
         final JPanel panel = new JPanel(new GridBagLayout());
         final GridBagConstraints gbc = new GridBagConstraints();
         gbc.anchor = GridBagConstraints.LINE_START;
@@ -432,7 +532,7 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
         gbc.gridy = 0;
         gbc.gridwidth = 1;
         gbc.weightx = 0;
-        gbc.insets = new Insets(0, LEFT_INSET, 0, 5);
+        gbc.insets = new Insets(0, leftInset, 0, 5);
         panel.add(m_usernameLabel, gbc);
         gbc.gridx = 1;
         gbc.insets = NEUTRAL_INSET;
@@ -443,7 +543,7 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
         gbc.gridx = 0;
         gbc.gridy++;
         gbc.weightx = 0;
-        gbc.insets = new Insets(0, LEFT_INSET, 0, 5);
+        gbc.insets = new Insets(0, leftInset, 0, 5);
         panel.add(m_passwordLabel, gbc);
         gbc.gridx = 1;
         gbc.weightx = 1;
@@ -452,7 +552,7 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
         return panel;
     }
 
-    private JPanel getPwdPanel() {
+    private JPanel getPwdPanel(final int leftInset) {
         final JPanel panel = new JPanel(new GridBagLayout());
         final GridBagConstraints gbc = new GridBagConstraints();
         gbc.anchor = GridBagConstraints.LINE_START;
@@ -461,7 +561,7 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
         gbc.gridy = 0;
         gbc.gridwidth = 1;
         gbc.weightx = 0;
-        gbc.insets = new Insets(0, LEFT_INSET, 0, 5);
+        gbc.insets = new Insets(0, leftInset, 0, 5);
         panel.add(m_passwordOnlyLabel, gbc);
         gbc.gridx = 1;
         gbc.weightx = 1;
@@ -471,7 +571,7 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
         return panel;
     }
 
-    private Component getCredentialPanel() {
+    private Component getCredentialPanel(final int leftInset) {
         final JPanel panel = new JPanel(new GridBagLayout());
         final GridBagConstraints gbc = new GridBagConstraints();
         gbc.anchor = GridBagConstraints.LINE_START;
@@ -480,7 +580,7 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.gridwidth = 1;
-        gbc.insets = new Insets(0, LEFT_INSET, 0, 0);
+        gbc.insets = new Insets(0, leftInset, 0, 0);
         panel.add(m_credentialField, gbc);
         return panel;
     }
