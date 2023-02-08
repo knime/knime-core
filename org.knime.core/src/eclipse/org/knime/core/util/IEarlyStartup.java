@@ -81,7 +81,9 @@ public interface IEarlyStartup {
      *
      * @param beforeKNIMEApplicationStart if {@code true} it will only execute the extension points which wish to be
      *            called right before the start of the KNIME Application; if {code false} it will call the extension
-     *            points which wish to be called later after most of the KNIME Application has been started already
+     *            points which wish to be called later after most of the KNIME Application has been started already.
+     *            NOTE: if {@code true}, the {@link IEarlyStartup}-implementation must not use the {@link NodeLogger} -
+     *            because its initialization prevents the workspace-selection-prompt from being shown.
      *
      * @noreference This method is not intended to be referenced by clients.
      */
