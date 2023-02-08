@@ -79,6 +79,8 @@ import org.knime.core.node.workflow.WorkflowTableBackendSettings;
  */
 final class RowIssue implements Issue {
 
+    private static final int UNKNOWN = -1;
+
     private static final String CFG_MESSAGE = "message";
     private static final String CFG_ROW_INDEX = "rowIndex";
     private static final String CFG_COLUMN_INDEX = "columnIndex";
@@ -89,25 +91,38 @@ final class RowIssue implements Issue {
     private final long m_rowIndex;
     private final String m_description;
 
-    RowIssue(final int portIndex, final int columnIndex, final long rowIndex, final String description) {
+    static RowIssue create(final int portIndex, final int columnIndex, final long rowIndex, final String description) {
         CheckUtils.checkArgument(portIndex >= 0, "Invalid port index must be >= 0: %d", portIndex);
-        m_portIndex = portIndex;
         CheckUtils.checkArgument(columnIndex >= 0, "Invalid column index must be >= 0: %d", columnIndex);
-        m_columnIndex = columnIndex;
         CheckUtils.checkArgument(rowIndex >= 0, "Row index >=0: %d", rowIndex);
+        return new RowIssue(portIndex, columnIndex, rowIndex, description);
+    }
+
+    static RowIssue create(final int portIndex, final long rowIndex, final String description) {
+        CheckUtils.checkArgument(portIndex >= 0, "Invalid port index must be >= 0: %d", portIndex);
+        CheckUtils.checkArgument(rowIndex >= 0, "Row index >=0: %d", rowIndex);
+        return new RowIssue(portIndex, UNKNOWN, rowIndex, description);
+    }
+
+    private RowIssue(final int portIndex, final int columnIndex, final long rowIndex, final String description) {
+        m_portIndex = portIndex;
+        m_columnIndex = columnIndex;
         m_rowIndex = rowIndex;
         m_description = description;
     }
 
     /**
-     * Attempts to convert this issue to a {@link DefaultIssue} but iterating over the corresponding table and
-     * include the previous table rows into the issue context. This may be skipped in case the table is too large or
+     * Attempts to convert this issue to a {@link DefaultIssue} by iterating over the corresponding table and
+     * including the previous table rows into the issue context. This may be skipped in case the table is too large or
      * doesn't allow random access (fast table vs. old style KNIME tables), in which case only the message is returned.
      *
      * @param inputs The original input data to a node.
      * @return a representation of this as {@link DefaultIssue}, not null.
      */
     DefaultIssue toDefaultIssue(final PortObject[] inputs) {
+        if (m_columnIndex == UNKNOWN) {
+            return new DefaultIssue(m_description);
+        }
         BufferedDataTable table = (BufferedDataTable)inputs[m_portIndex];
         boolean hasColumnsBefore = m_columnIndex > 1;
         final DataTableSpec spec = table.getSpec();

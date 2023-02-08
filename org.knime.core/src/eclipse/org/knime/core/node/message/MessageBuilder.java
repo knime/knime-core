@@ -157,7 +157,11 @@ public final class MessageBuilder {
      */
     public MessageBuilder addRowIssue(final int portIndex, final int columnIndex, final long rowIndex,
         final String description) {
-        return addIssue(new RowIssue(portIndex, columnIndex, rowIndex, description));
+        return addIssue(RowIssue.create(portIndex, columnIndex, rowIndex, description));
+    }
+
+    public MessageBuilder addRowIssue(final int portIndex, final long rowIndex, final String description) {
+        return addIssue(RowIssue.create(portIndex, rowIndex, description));
     }
 
     MessageBuilder addIssue(final Issue issue) {
