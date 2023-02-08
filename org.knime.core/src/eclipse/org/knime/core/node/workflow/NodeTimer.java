@@ -180,6 +180,8 @@ public final class NodeTimer {
         private int m_webUIPerspectiveSwitches = 0;
         //Reported since 5.0 -- number of times the user switched to the Java-UI (classic) perspective.
         private int m_javaUIPerspectiveSwitches = 0;
+        //Reported since 5.0 -- Stores the edition name.
+        private String m_edition = "";
 
         private int m_workflowsImported = 0;
         private int m_workflowsExported = 0;
@@ -334,7 +336,6 @@ public final class NodeTimer {
             m_webUIPerspectiveSwitches++;
         }
 
-
         /**
          * Called by KNIME AP when the user switches to the Java-UI (classic) perspective
          * @since 5.0
@@ -344,6 +345,18 @@ public final class NodeTimer {
                 return;
             }
             m_javaUIPerspectiveSwitches++;
+        }
+
+        /**
+         * Called by KNIME AP when the user switches the edition (e.g. all nodes/restricted)
+         * @param edition the name of the edition
+         * @since 5.0
+         */
+        public void setEdition(final String edition) {
+            if (DISABLE_GLOBAL_TIMER) {
+                return;
+            }
+            m_edition = edition;
         }
 
         private void processStatChanges() {
@@ -484,6 +497,7 @@ public final class NodeTimer {
             job.add("workflowsExported", m_workflowsExported);
             job.add("webUIPerspectiveSwitches", m_webUIPerspectiveSwitches);
             job.add("javaUIPerspectiveSwitches", m_javaUIPerspectiveSwitches);
+            job.add("edition", m_edition);
             job.add("launches", getNrLaunches());
             job.add("lastApplicationID", getApplicationID()); // batch, standard KNIME AP, ...
             job.add("timeSinceLastStart", getCurrentInstanceUpTime());
@@ -759,6 +773,9 @@ public final class NodeTimer {
                             break;
                         case "javaUIPerspectiveSwitches":
                             m_javaUIPerspectiveSwitches = jo.getInt(key);
+                            break;
+                        case "edition":
+                            m_edition = jo.getString(key);
                             break;
                         case "uptime":
                             m_avgUpTime = jo.getJsonNumber(key).longValue();
