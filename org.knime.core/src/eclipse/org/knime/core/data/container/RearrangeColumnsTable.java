@@ -487,12 +487,11 @@ public final class RearrangeColumnsTable implements KnowsRowCountTable {
         long finalRowCount = table.size();
         Set<CellFactory> newColsFactories = newColsProducerMapping.getUniqueCellFactoryMap().keySet();
         final int factoryCount = newColsFactories.size();
-        int r = 0;
         CellFactory facForProgress = factoryCount > 0 ? newColsFactories.iterator().next() : null;
         try (CloseableRowIterator it = table.iterator()) {
-            for (; it.hasNext(); r++) {
+            for (long r = 0; it.hasNext(); r++) {
                 DataRow row = it.next();
-                DataRow append = calcNewCellsForRow(row, newColsProducerMapping);
+                DataRow append = calcNewCellsForRow(row, newColsProducerMapping, r);
                 container.addRowToTable(append);
                 if (facForProgress == null) {
                     // no factory added means at least one columns gets type converted.
@@ -563,7 +562,8 @@ public final class RearrangeColumnsTable implements KnowsRowCountTable {
      * @param producerMap For each new (or replaced) column the factory.
      * @return The output row.
      */
-    static DataRow calcNewCellsForRow(final DataRow unconvertedRow, final NewColumnsProducerMapping producerMap) {
+    static DataRow calcNewCellsForRow(final DataRow unconvertedRow, final NewColumnsProducerMapping producerMap,
+        final long rowIndex) {
         final int newColCount = producerMap.getAllNewColumnsList().size();
         DataCell[] newCells = new DataCell[newColCount];
         DataRow row = applyDataTypeConverters(unconvertedRow, producerMap, newCells);
@@ -572,7 +572,7 @@ public final class RearrangeColumnsTable implements KnowsRowCountTable {
         for (Map.Entry<CellFactory, List<Pair<Integer, Integer>>> e : uniqueCellFactoryMap.entrySet()) {
             CellFactory factory = e.getKey();
             List<Pair<Integer, Integer>> list = e.getValue();
-            DataCell[] fromFac = factory.getCells(row);
+            DataCell[] fromFac = factory.getCells(row, rowIndex);
             if (fromFac.length != list.size()) {
                 String error = String.format("New cells array length conflict: expected %d, actual %d (class %s)",
                     list.size(), fromFac.length, factory.getClass().getName());
@@ -791,7 +791,7 @@ public final class RearrangeColumnsTable implements KnowsRowCountTable {
         /** {@inheritDoc} */
         @Override
         protected DataRow compute(final DataRow in, final long index) throws Exception {
-            return calcNewCellsForRow(in, m_reducedList);
+            return calcNewCellsForRow(in, m_reducedList, index);
         }
 
         /** {@inheritDoc} */

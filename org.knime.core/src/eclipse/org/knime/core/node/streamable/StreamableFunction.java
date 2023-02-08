@@ -47,6 +47,7 @@
  */
 package org.knime.core.node.streamable;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.knime.core.data.DataRow;
 import org.knime.core.node.ExecutionContext;
 
@@ -106,10 +107,9 @@ public abstract class StreamableFunction extends StreamableOperator {
         init(ctx);
         try {
             DataRow inputRow;
-            long index = 0;
-            while ((inputRow = rowInput.poll()) != null) {
-                rowOutput.push(compute(inputRow));
-                final long i = ++index;
+            for (var index = 0L; (inputRow = rowInput.poll()) != null; index++) {
+                rowOutput.push(compute(inputRow, index));
+                final long i = index;
                 final DataRow r = inputRow;
                 ctx.setMessage(() -> String.format("Row %d (\"%s\"))", i, r.getKey()));
             }
@@ -129,11 +129,32 @@ public abstract class StreamableFunction extends StreamableOperator {
         // no op
     }
 
-    /** Single row computation.
+    /**
+     * Single row computation.
+     *
      * @param input The input row.
      * @return The computed output row.
-     * @throws Exception if that fails. */
-    public abstract DataRow compute(final DataRow input) throws Exception;
+     * @throws Exception if that fails.
+     * @noreference This method is not intended to be referenced by clients. Instead call
+     *              {@link #compute(DataRow, long)}
+     */
+    public DataRow compute(final DataRow input) throws Exception {
+        throw new NotImplementedException(
+            "No implementation provided for either of the StreamableFunction#compute methods.");
+    }
+
+    /**
+     * Single row computation.
+     *
+     * @param input the input row
+     * @param rowIndex the index of the input row
+     * @return the computed output row
+     * @throws Exception if the computation fails
+     * @since 5.0
+     */
+    public DataRow compute(final DataRow input, final long rowIndex) throws Exception {
+        return compute(input);
+    }
 
     /** Called after all rows have been processed (normally or abnormally). */
     public void finish() {
@@ -158,12 +179,11 @@ public abstract class StreamableFunction extends StreamableOperator {
         func2.init(exec);
         try {
             DataRow inputRow;
-            long index = 0;
-            while ((inputRow = input.poll()) != null) {
-                output1.push(func1.compute(inputRow));
-                output2.push(func2.compute(inputRow));
+            for (var index = 0L; (inputRow = input.poll()) != null; index++) {
+                output1.push(func1.compute(inputRow, index));
+                output2.push(func2.compute(inputRow, index));
                 exec.setMessage(String.format("Row %d (\"%s\"))",
-                        ++index, inputRow.getKey()));
+                        index + 1, inputRow.getKey()));
             }
             input.close();
             output1.close();

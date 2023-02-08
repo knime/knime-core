@@ -117,9 +117,19 @@ final class ColumnRearrangerFunction extends StreamableFunction {
 
     /** {@inheritDoc} */
     @Override
-    public DataRow compute(final DataRow inputRow) {
-        DataRow appendRow = RearrangeColumnsTable.calcNewCellsForRow(inputRow, m_newColumnsMapping);
+    public DataRow compute(final DataRow inputRow, final long rowIndex) {
+        DataRow appendRow = RearrangeColumnsTable.calcNewCellsForRow(inputRow, m_newColumnsMapping, rowIndex);
         return JoinTableIterator.createOutputRow(inputRow, appendRow, m_includesIndices, m_isFromRefTables);
+    }
+
+    /**
+     * {@inheritDoc}
+     * @deprecated call {@link #compute(DataRow, long)} instead
+     */
+    @Deprecated
+    @Override
+    public DataRow compute(final DataRow input) throws Exception {
+        return compute(input, 0);
     }
 
     /** {@inheritDoc} */

@@ -45,6 +45,7 @@
  */
 package org.knime.core.data.container;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -75,8 +76,27 @@ public interface CellFactory {
      * @return The new cells to that row.
      * @throws org.knime.core.node.KNIMEException.KNIMERuntimeException If there is no mapping available (unchecked to
      *             be API compatible)
+     * @noreference This method is not intended to be referenced by clients, instead call
+     *              {@link #getCells(DataRow, long)}
      */
-    DataCell[] getCells(final DataRow row);
+    default DataCell[] getCells(final DataRow row) {
+        throw new NotImplementedException("No implementation for either of the CellFactory#getCells method provided.");
+    }
+
+    /**
+     * Get the new cells for a given row. These cells are incorporated into the existing row. The way it is done is
+     * defined through the ColumnRearranger using this object.
+     *
+     * @param row The row of interest.
+     * @param rowIndex the index of the row of interest
+     * @return The new cells to that row.
+     * @throws org.knime.core.node.KNIMEException.KNIMERuntimeException If there is no mapping available (unchecked to
+     *             be API compatible)
+     * @since 5.0
+     */
+    default DataCell[] getCells(final DataRow row, final long rowIndex) {
+        return getCells(row);
+    }
 
     /**
      * The column specs for the cells that are generated in the getCells() method. This method is only called once,

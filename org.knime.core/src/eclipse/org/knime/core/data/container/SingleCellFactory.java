@@ -48,6 +48,7 @@
  */
 package org.knime.core.data.container;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -99,10 +100,9 @@ public abstract class SingleCellFactory extends AbstractCellFactory {
         super(processConcurrently, workerCount, maxQueueSize, newColSpec);
     }
 
-    /** {@inheritDoc} */
     @Override
-    public DataCell[] getCells(final DataRow row) {
-        return new DataCell[]{getCell(row)};
+    public DataCell[] getCells(final DataRow row, final long rowIndex) {
+        return new DataCell[] { getCell(row, rowIndex) };
     }
 
     /**
@@ -110,6 +110,22 @@ public abstract class SingleCellFactory extends AbstractCellFactory {
      * @param row The reference row.
      * @return The new cell.
      */
-    public abstract DataCell getCell(final DataRow row);
+    public DataCell getCell(final DataRow row) {
+        throw new NotImplementedException(
+            "No implementation for either of the SingleCellFactory#getCell methods provided.");
+    }
+
+    /**
+     * Called from {@link #getCells(DataRow, long)}.
+     * Overwrite this method if you need access to the row index, otherwise overwrite {@link #getCell(DataRow)}
+     *
+     * @param row the input row
+     * @param rowIndex the index of input row
+     * @return the new cell
+     * @since 5.0
+     */
+    public DataCell getCell(final DataRow row, final long rowIndex) {
+        return getCell(row);
+    }
 
 }
