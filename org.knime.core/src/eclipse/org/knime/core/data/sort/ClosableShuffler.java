@@ -158,9 +158,6 @@ public final class ClosableShuffler implements Closeable {
         /** Shuffled row number array. */
         private int[] m_shuffle;
 
-        /** Position in array. */
-        private int m_pos = 0;
-
         /** Constructor. */
         private RandomNumberAppendFactory(final Long seed, final int rowCount, final DataColumnSpec appendSpec) {
             super(appendSpec);
@@ -189,10 +186,9 @@ public final class ClosableShuffler implements Closeable {
 
         /** {@inheritDoc} */
         @Override
-        public DataCell getCell(final DataRow row) {
-            assert (m_pos <= m_shuffle.length);
-            DataCell nextRandomNumberCell = new IntCell(m_shuffle[m_pos]);
-            m_pos++;
+        public DataCell getCell(final DataRow row, final long rowIndex) {
+            assert (rowIndex <= m_shuffle.length);
+            DataCell nextRandomNumberCell = new IntCell(m_shuffle[(int)rowIndex]);
             return nextRandomNumberCell;
         }
 
