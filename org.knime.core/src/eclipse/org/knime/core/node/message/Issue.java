@@ -72,19 +72,22 @@ interface Issue {
      * Type used internally to be able to restore issues in a saved workflow.
      */
     enum Type {
-        TABLE_ROW,
-        TEXT;
+        TABLE_ROW(RowIssue::load),
+        TEXT(DefaultIssue::load);
+
+        private interface IssueLoader {
+            Issue load(ConfigBaseRO config) throws InvalidSettingsException;
+        }
+
+        private final IssueLoader m_loader;
+
+        Type(final IssueLoader loader) {
+            m_loader = loader;
+        }
 
         @SuppressWarnings("unchecked")
         <T extends Issue> T loadIssue(final ConfigBaseRO config) throws InvalidSettingsException {
-            switch (this) {
-                case TABLE_ROW:
-                    return (T)RowIssue.load(config);
-                case TEXT:
-                    return (T)DefaultIssue.load(config);
-                default:
-                    throw new IllegalStateException("Unknown type " + this);
-            }
+            return (T)m_loader.load(config);
         }
 
         void saveType(final ConfigBaseWO config) {
