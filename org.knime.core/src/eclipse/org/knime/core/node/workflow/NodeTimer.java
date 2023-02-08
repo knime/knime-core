@@ -178,6 +178,8 @@ public final class NodeTimer {
         private int m_columnarStorageWorkflowsOpened = 0;
         // Reported since 4.6 -- number of times the user switched to the Web-UI perspective.
         private int m_webUIPerspectiveSwitches = 0;
+        //Reported since 5.0 -- number of times the user switched to the Java-UI (classic) perspective.
+        private int m_javaUIPerspectiveSwitches = 0;
 
         private int m_workflowsImported = 0;
         private int m_workflowsExported = 0;
@@ -332,6 +334,18 @@ public final class NodeTimer {
             m_webUIPerspectiveSwitches++;
         }
 
+
+        /**
+         * Called by KNIME AP when the user switches to the Java-UI (classic) perspective
+         * @since 5.0
+         */
+        public void incJavaUIPerspectiveSwitch() {
+            if (DISABLE_GLOBAL_TIMER) {
+                return;
+            }
+            m_javaUIPerspectiveSwitches++;
+        }
+
         private void processStatChanges() {
             if (System.currentTimeMillis() > m_timeOfLastSave + SAVEINTERVAL) {
                 asyncWriteToFile(false);
@@ -469,6 +483,7 @@ public final class NodeTimer {
             job.add("workflowsImported", m_workflowsImported);
             job.add("workflowsExported", m_workflowsExported);
             job.add("webUIPerspectiveSwitches", m_webUIPerspectiveSwitches);
+            job.add("javaUIPerspectiveSwitches", m_javaUIPerspectiveSwitches);
             job.add("launches", getNrLaunches());
             job.add("lastApplicationID", getApplicationID()); // batch, standard KNIME AP, ...
             job.add("timeSinceLastStart", getCurrentInstanceUpTime());
@@ -741,6 +756,10 @@ public final class NodeTimer {
                             break;
                         case "webUIPerspectiveSwitches":
                             m_webUIPerspectiveSwitches = jo.getInt(key);
+                            break;
+                        case "javaUIPerspectiveSwitches":
+                            m_javaUIPerspectiveSwitches = jo.getInt(key);
+                            break;
                         case "uptime":
                             m_avgUpTime = jo.getJsonNumber(key).longValue();
                             break;
@@ -779,6 +798,7 @@ public final class NodeTimer {
             Version v2 = new Version(str2);
             return Integer.signum(v1.compareTo(v2));
         }
+
     }
 
 
