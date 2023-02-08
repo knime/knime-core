@@ -280,7 +280,7 @@ public final class TemplateUpdateUtil {
                     tempLink = loadMetaNodeTemplateIfLocalOrOutdated(linkedMeta, loadHelper, templateLoadResult);
                     loadResult.addChildError(templateLoadResult);
                     visitedTemplateMap.put(uri, tempLink);
-                } catch (IOException e) {
+                } catch (IOException | UnsupportedWorkflowVersionException e) {
                     /**
                      * Remark: we introduced the {@link ResourceAccessException} as an exception for non-resolvable
                      * resources (here: templates). However, we still want to catch IOExceptions here since there can
@@ -297,8 +297,8 @@ public final class TemplateUpdateUtil {
                         linkedMeta.getNameWithID(), uriString, verb, e.getMessage()), e);
                     nodeIdToUpdateStatus.put(linkedMeta.getID(), UpdateStatus.Error);
                     continue;
-                } catch (CanceledExecutionException | UnsupportedWorkflowVersionException e) {
-                    throw new IOException("Could not load template", e);
+                } catch (CanceledExecutionException e) {
+                    throw new IOException("Could not load template, the execution was cancelled", e);
                 }
             } else {
                 // retrieve already visited template link
