@@ -60,6 +60,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.json.Json;
 import javax.json.JsonArray;
@@ -101,6 +102,7 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.util.EclipseUtil;
+import org.knime.core.util.MutableInteger;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
@@ -154,6 +156,22 @@ public final class NodeTimer {
             REMOTE;
         }
 
+        /**
+         * The different ways a new node can be created.
+         * @author Tobias Koetter, KNIME GmbH, Konstanz, Germany
+         * @since 4.5
+         */
+        public enum NodeCreationType {
+            /**Inserted via Java (classic) node repository.*/
+            JAVA_REPO,
+            /**Inserted via web (modern) node repository.*/
+            WEB_REPO,
+            /**Inserted via quick insertion function in modern UI.*/
+            QUICK_INSERTION,
+            /**Inserted via drag and drop from KNIME Hub.*/
+            HUB;
+        }
+
         private static final String N_A = "n/a";
         private static final String NODE_NAME_SEP = "#";
 
@@ -182,6 +200,8 @@ public final class NodeTimer {
         private int m_javaUIPerspectiveSwitches = 0;
         //Reported since 5.0 -- Stores the edition name.
         private String m_edition = "";
+        //Reported since 5.0 -- Stores the number of nodes added via different means in KNIME UI
+        private LinkedHashMap<NodeCreationType, MutableInteger> m_nodesCreatedVia = new LinkedHashMap<>();
 
         private int m_workflowsImported = 0;
         private int m_workflowsExported = 0;
@@ -359,6 +379,18 @@ public final class NodeTimer {
             m_edition = edition;
         }
 
+        /**
+         * Called by KNIME AP when the created a node by dragging it from the Java (classic) node repository
+         * @param type the {@link NodeCreationType} e.g. via Hub, (classic/modern) node repository or quick insertion
+         * @since 5.0
+         */
+        public void incNodeCreatedVia(final NodeCreationType type) {
+            if (DISABLE_GLOBAL_TIMER) {
+                return;
+            }
+            m_nodesCreatedVia.computeIfAbsent(type, t -> new MutableInteger(0)).inc();
+        }
+
         private void processStatChanges() {
             if (System.currentTimeMillis() > m_timeOfLastSave + SAVEINTERVAL) {
                 asyncWriteToFile(false);
@@ -487,6 +519,13 @@ public final class NodeTimer {
                         jobSub.add("nrcreated", ns.creationCount);
                     }
                     job2.add("wrappedNodes", jobSub);
+
+                    //created information
+                    final JsonObjectBuilder jobNodesCreated = Json.createObjectBuilder();
+                    for (Entry<NodeCreationType, MutableInteger> e : m_nodesCreatedVia.entrySet()) {
+                        jobNodesCreated.add(e.getKey().name(), e.getValue().intValue());
+                    }
+                    job2.add("createdVia", jobNodesCreated);
             }
             job.add("nodestats", job2);
             job.add("uptime", getAvgUpTime());
@@ -752,6 +791,14 @@ public final class NodeTimer {
                                 m_globalNodeStats.put(SubNodeContainer.class.getName(), ns);
                             }
 
+                            //created information
+                            final JsonObject joNodesCreated = jo2.getJsonObject("createdVia");
+                            if (joNodesCreated != null) {
+                                for(String nodeKey : joNodesCreated.keySet()) {
+                                    m_nodesCreatedVia.put(NodeCreationType.valueOf(nodeKey),
+                                        new MutableInteger(joNodesCreated.getInt(nodeKey)));
+                                }
+                            }
                             break;
                         case "workflowsOpened":
                             m_workflowsOpened = jo.getInt(key);
