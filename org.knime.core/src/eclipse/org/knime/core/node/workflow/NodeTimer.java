@@ -199,7 +199,7 @@ public final class NodeTimer {
         //Reported since 5.0 -- number of times the user switched to the Java-UI (classic) perspective.
         private int m_javaUIPerspectiveSwitches = 0;
         //Reported since 5.0 -- number of times the user clicked on the show more button in the node repository
-        private int m_showMoreNodesClicked = 0;
+        private int m_showMoreButtonClicked = 0;
         //Reported since 5.0 -- Stores the edition name.
         private String m_lastUsedEdition = "";
         //Reported since 5.0 -- Stores the number of nodes added via different means in KNIME UI
@@ -373,11 +373,11 @@ public final class NodeTimer {
          * Called by KNIME AP when the user clicks on the show more button in the node repository
          * @since 5.0
          */
-        public void incShowMoreNodesClicked() {
+        public void incShowMoreButtonClicked() {
             if (DISABLE_GLOBAL_TIMER) {
                 return;
             }
-            m_showMoreNodesClicked++;
+            m_showMoreButtonClicked++;
         }
 
         /**
@@ -549,7 +549,7 @@ public final class NodeTimer {
             job.add("workflowsExported", m_workflowsExported);
             job.add("webUIPerspectiveSwitches", m_webUIPerspectiveSwitches);
             job.add("javaUIPerspectiveSwitches", m_javaUIPerspectiveSwitches);
-            job.add("showMoreNodesClicked", m_showMoreNodesClicked);
+            job.add("showMoreButtonClicked", m_showMoreButtonClicked);
             job.add("lastUsedEdition", m_lastUsedEdition);
             job.add("launches", getNrLaunches());
             job.add("lastApplicationID", getApplicationID()); // batch, standard KNIME AP, ...
@@ -835,8 +835,8 @@ public final class NodeTimer {
                         case "javaUIPerspectiveSwitches":
                             m_javaUIPerspectiveSwitches = jo.getInt(key);
                             break;
-                        case "showMoreNodesClicked":
-                            m_showMoreNodesClicked = jo.getInt(key);
+                        case "showMoreButtonClicked":
+                            m_showMoreButtonClicked = jo.getInt(key);
                             break;
                         case "lastUsedEdition":
                             m_lastUsedEdition = jo.getString(key);
