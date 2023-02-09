@@ -198,6 +198,8 @@ public final class NodeTimer {
         private int m_webUIPerspectiveSwitches = 0;
         //Reported since 5.0 -- number of times the user switched to the Java-UI (classic) perspective.
         private int m_javaUIPerspectiveSwitches = 0;
+        //Reported since 5.0 -- number of times the user clicked on the show more button in the node repository
+        private int m_showMoreNodesClicked = 0;
         //Reported since 5.0 -- Stores the edition name.
         private String m_edition = "";
         //Reported since 5.0 -- Stores the number of nodes added via different means in KNIME UI
@@ -365,6 +367,17 @@ public final class NodeTimer {
                 return;
             }
             m_javaUIPerspectiveSwitches++;
+        }
+
+        /**
+         * Called by KNIME AP when the user clicks on the show more button in the node repository
+         * @since 5.0
+         */
+        public void incShowMoreNodesClicked() {
+            if (DISABLE_GLOBAL_TIMER) {
+                return;
+            }
+            m_showMoreNodesClicked++;
         }
 
         /**
@@ -536,6 +549,7 @@ public final class NodeTimer {
             job.add("workflowsExported", m_workflowsExported);
             job.add("webUIPerspectiveSwitches", m_webUIPerspectiveSwitches);
             job.add("javaUIPerspectiveSwitches", m_javaUIPerspectiveSwitches);
+            job.add("showMoreNodesClicked", m_showMoreNodesClicked);
             job.add("edition", m_edition);
             job.add("launches", getNrLaunches());
             job.add("lastApplicationID", getApplicationID()); // batch, standard KNIME AP, ...
@@ -820,6 +834,9 @@ public final class NodeTimer {
                             break;
                         case "javaUIPerspectiveSwitches":
                             m_javaUIPerspectiveSwitches = jo.getInt(key);
+                            break;
+                        case "showMoreNodesClicked":
+                            m_showMoreNodesClicked = jo.getInt(key);
                             break;
                         case "edition":
                             m_edition = jo.getString(key);
