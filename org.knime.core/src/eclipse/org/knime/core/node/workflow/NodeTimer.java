@@ -201,7 +201,7 @@ public final class NodeTimer {
         //Reported since 5.0 -- number of times the user clicked on the show more button in the node repository
         private int m_showMoreNodesClicked = 0;
         //Reported since 5.0 -- Stores the edition name.
-        private String m_edition = "";
+        private String m_lastUsedEdition = "";
         //Reported since 5.0 -- Stores the number of nodes added via different means in KNIME UI
         private LinkedHashMap<NodeCreationType, MutableInteger> m_nodesCreatedVia = new LinkedHashMap<>();
 
@@ -385,11 +385,11 @@ public final class NodeTimer {
          * @param edition the name of the edition
          * @since 5.0
          */
-        public void setEdition(final String edition) {
+        public void setLastUsedEdition(final String edition) {
             if (DISABLE_GLOBAL_TIMER) {
                 return;
             }
-            m_edition = edition;
+            m_lastUsedEdition = edition;
         }
 
         /**
@@ -550,7 +550,7 @@ public final class NodeTimer {
             job.add("webUIPerspectiveSwitches", m_webUIPerspectiveSwitches);
             job.add("javaUIPerspectiveSwitches", m_javaUIPerspectiveSwitches);
             job.add("showMoreNodesClicked", m_showMoreNodesClicked);
-            job.add("edition", m_edition);
+            job.add("lastUsedEdition", m_lastUsedEdition);
             job.add("launches", getNrLaunches());
             job.add("lastApplicationID", getApplicationID()); // batch, standard KNIME AP, ...
             job.add("timeSinceLastStart", getCurrentInstanceUpTime());
@@ -838,8 +838,8 @@ public final class NodeTimer {
                         case "showMoreNodesClicked":
                             m_showMoreNodesClicked = jo.getInt(key);
                             break;
-                        case "edition":
-                            m_edition = jo.getString(key);
+                        case "lastUsedEdition":
+                            m_lastUsedEdition = jo.getString(key);
                             break;
                         case "uptime":
                             m_avgUpTime = jo.getJsonNumber(key).longValue();
