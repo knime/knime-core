@@ -159,7 +159,7 @@ public final class NodeTimer {
         /**
          * The different ways a new node can be created.
          * @author Tobias Koetter, KNIME GmbH, Konstanz, Germany
-         * @since 4.5
+         * @since 5.0
          */
         public enum NodeCreationType {
             /**Inserted via Java (classic) node repository.*/
