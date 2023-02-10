@@ -237,8 +237,8 @@ public class DoubleBarRenderer extends DefaultDataValueRenderer {
                 final int y) {
             int iconWidth = getIconWidth();
             int width = (int)(m_value * iconWidth);
-            GradientPaint redtogreen = new GradientPaint(x, y, Color.red,
-                    iconWidth, y, Color.green);
+            GradientPaint redtogreen = new GradientPaint(x, y, Color.black,
+                    iconWidth, y, Color.black);
             ((Graphics2D)g).setPaint(redtogreen);
             g.draw3DRect(x, y + (getIconHeight() / 4), width,
                     getIconHeight() / 2, true);
