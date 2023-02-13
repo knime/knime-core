@@ -60,7 +60,7 @@ export default CheckboxInput;
     <Checkbox
       v-if="control.visible"
       class="checkbox"
-      :disabled="!control.enabled"
+      :disabled="disabled"
       :value="control.data"
       @input="onChange"
     >
