@@ -200,8 +200,8 @@ public final class NodeTimer {
         private int m_javaUIPerspectiveSwitches = 0;
         //Reported since 5.0 -- number of times the user clicked on the show more button in the node repository
         private int m_showMoreButtonClicked = 0;
-        //Reported since 5.0 -- Stores the edition name.
-        private String m_lastUsedEdition = "";
+        //Reported since 5.0 -- Stores the last used perspective name e.g. none or starter
+        private String m_lastUsedPerspective = "";
         //Reported since 5.0 -- Stores the number of nodes added via different means in KNIME UI
         private LinkedHashMap<NodeCreationType, MutableInteger> m_nodesCreatedVia = new LinkedHashMap<>();
 
@@ -381,15 +381,15 @@ public final class NodeTimer {
         }
 
         /**
-         * Called by KNIME AP when the user switches the edition (e.g. all nodes/restricted)
-         * @param edition the name of the edition
+         * Called by KNIME AP when the user switches the perspective (e.g. all nodes/restricted).
+         * @param perspective the name of the perspective
          * @since 5.0
          */
-        public void setLastUsedEdition(final String edition) {
+        public void setLastUsedPerspective(final String perspective) {
             if (DISABLE_GLOBAL_TIMER) {
                 return;
             }
-            m_lastUsedEdition = edition;
+            m_lastUsedPerspective = perspective;
         }
 
         /**
@@ -550,7 +550,7 @@ public final class NodeTimer {
             job.add("webUIPerspectiveSwitches", m_webUIPerspectiveSwitches);
             job.add("javaUIPerspectiveSwitches", m_javaUIPerspectiveSwitches);
             job.add("showMoreButtonClicked", m_showMoreButtonClicked);
-            job.add("lastUsedEdition", m_lastUsedEdition);
+            job.add("lastUsedPerspective", m_lastUsedPerspective);
             job.add("launches", getNrLaunches());
             job.add("lastApplicationID", getApplicationID()); // batch, standard KNIME AP, ...
             job.add("timeSinceLastStart", getCurrentInstanceUpTime());
@@ -838,8 +838,8 @@ public final class NodeTimer {
                         case "showMoreButtonClicked":
                             m_showMoreButtonClicked = jo.getInt(key);
                             break;
-                        case "lastUsedEdition":
-                            m_lastUsedEdition = jo.getString(key);
+                        case "lastUsedPerspective":
+                            m_lastUsedPerspective = jo.getString(key);
                             break;
                         case "uptime":
                             m_avgUpTime = jo.getJsonNumber(key).longValue();
