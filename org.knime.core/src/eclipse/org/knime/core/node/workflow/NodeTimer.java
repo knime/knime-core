@@ -162,14 +162,16 @@ public final class NodeTimer {
          * @since 5.0
          */
         public enum NodeCreationType {
-            /**Inserted via Java (classic) node repository.*/
+            /**Inserted via node repository in classic (Java) UI.*/
             JAVA_REPO,
-            /**Inserted via web (modern) node repository.*/
+            /**Inserted via node repository in modern (Web) UI.*/
             WEB_REPO,
-            /**Inserted via quick insertion function in modern UI.*/
-            QUICK_INSERTION,
-            /**Inserted via drag and drop from KNIME Hub.*/
-            HUB;
+            /**Inserted via drag and drop from KNIME Hub in classic (Java) UI.*/
+            JAVA_HUB,
+            /**Inserted via drag and drop from KNIME Hub in modern (Web) UI.*/
+            WEB_HUB,
+            /**Inserted via quick insertion function in modern (Web) UI.*/
+            QUICK_INSERTION_RECOMMENDED;
         }
 
         private static final String N_A = "n/a";
