@@ -162,16 +162,16 @@ public final class NodeTimer {
          * @since 5.0
          */
         public enum NodeCreationType {
-            /**Inserted via node repository in classic (Java) UI.*/
-            JAVA_REPO,
-            /**Inserted via node repository in modern (Web) UI.*/
-            WEB_REPO,
+            /**Inserted via classic (Java) UI (any source - node repo, hub, favorites, etc.)*/
+            JAVA_UI,
+            /**Inserted via modern (Web) UI (any source - node repo, hub, quick insertion, etc.)*/
+            WEB_UI,
             /**Inserted via drag and drop from KNIME Hub in classic (Java) UI.*/
-            JAVA_HUB,
+            JAVA_UI_HUB,
             /**Inserted via drag and drop from KNIME Hub in modern (Web) UI.*/
-            WEB_HUB,
+            WEB_UI_HUB,
             /**Inserted via quick insertion function in modern (Web) UI.*/
-            QUICK_INSERTION_RECOMMENDED;
+            WEB_UI_QUICK_INSERTION_RECOMMENDED;
         }
 
         private static final String N_A = "n/a";
@@ -248,6 +248,7 @@ public final class NodeTimer {
                 processStatChanges();
             }
         }
+
         public void addNodeCreation(final NodeContainer nc) {
             if (DISABLE_GLOBAL_TIMER) {
                 return;
@@ -263,6 +264,7 @@ public final class NodeTimer {
                 processStatChanges();
             }
         }
+
         public void addConnectionCreation(final NodeContainer source, final NodeContainer dest) {
             if (DISABLE_GLOBAL_TIMER) {
                 return;
