@@ -200,8 +200,6 @@ public final class NodeTimer {
         private int m_webUIPerspectiveSwitches = 0;
         //Reported since 5.0 -- number of times the user switched to the Java-UI (classic) perspective.
         private int m_javaUIPerspectiveSwitches = 0;
-        //Reported since 5.0 -- number of times the user clicked on the show more button in the node repository
-        private int m_showMoreButtonClicked = 0;
         //Reported since 5.0 -- Stores the last used perspective name e.g. none or starter
         private String m_lastUsedPerspective = "";
         //Reported since 5.0 -- Stores the number of nodes added via different means in KNIME UI
@@ -374,17 +372,6 @@ public final class NodeTimer {
         }
 
         /**
-         * Called by KNIME AP when the user clicks on the show more button in the node repository
-         * @since 5.0
-         */
-        public void incShowMoreButtonClicked() {
-            if (DISABLE_GLOBAL_TIMER) {
-                return;
-            }
-            m_showMoreButtonClicked++;
-        }
-
-        /**
          * Called by KNIME AP when the user switches the perspective (e.g. all nodes/restricted).
          * @param perspective the name of the perspective
          * @since 5.0
@@ -553,7 +540,6 @@ public final class NodeTimer {
             job.add("workflowsExported", m_workflowsExported);
             job.add("webUIPerspectiveSwitches", m_webUIPerspectiveSwitches);
             job.add("javaUIPerspectiveSwitches", m_javaUIPerspectiveSwitches);
-            job.add("showMoreButtonClicked", m_showMoreButtonClicked);
             job.add("lastUsedPerspective", m_lastUsedPerspective);
             job.add("launches", getNrLaunches());
             job.add("lastApplicationID", getApplicationID()); // batch, standard KNIME AP, ...
@@ -838,9 +824,6 @@ public final class NodeTimer {
                             break;
                         case "javaUIPerspectiveSwitches":
                             m_javaUIPerspectiveSwitches = jo.getInt(key);
-                            break;
-                        case "showMoreButtonClicked":
-                            m_showMoreButtonClicked = jo.getInt(key);
                             break;
                         case "lastUsedPerspective":
                             m_lastUsedPerspective = jo.getString(key);
