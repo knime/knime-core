@@ -144,6 +144,13 @@ public final class NodeTimer {
      */
     public static final class GlobalNodeStats {
 
+        /**Placeholder to use for {@link GlobalNodeStats#setLastUsedPerspective(String)} whenever the user switches
+         * to the classic (Java) UI.
+         * @since 5.0
+         * @see #setLastUsedPerspective(String)
+         */
+        public static final String CLASSIC_PERSPECTIVE_PLACEHOLDER = "none (classic)";
+
         /**
          * The type of workflow.
          * @author Tobias Koetter, KNIME GmbH, Konstanz, Germany
@@ -200,8 +207,8 @@ public final class NodeTimer {
         private int m_webUIPerspectiveSwitches = 0;
         //Reported since 5.0 -- number of times the user switched to the Java-UI (classic) perspective.
         private int m_javaUIPerspectiveSwitches = 0;
-        //Reported since 5.0 -- Stores the last used perspective name e.g. none or starter
-        private String m_lastUsedPerspective = "";
+        //Reported since 5.0 -- PLACEHOLDER is default since this field is not initialized if we are in the classic UI
+        private String m_lastUsedPerspective = CLASSIC_PERSPECTIVE_PLACEHOLDER;
         //Reported since 5.0 -- Stores the number of nodes added via different means in KNIME UI
         private LinkedHashMap<NodeCreationType, MutableInteger> m_nodesCreatedVia = new LinkedHashMap<>();
 
@@ -375,6 +382,7 @@ public final class NodeTimer {
          * Called by KNIME AP when the user switches the perspective (e.g. all nodes/restricted).
          * @param perspective the name of the perspective
          * @since 5.0
+         * @see NodeTimer.GlobalNodeStats#CLASSIC_PERSPECTIVE_PLACEHOLDER
          */
         public void setLastUsedPerspective(final String perspective) {
             if (DISABLE_GLOBAL_TIMER) {
