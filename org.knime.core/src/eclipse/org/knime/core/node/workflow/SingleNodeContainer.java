@@ -347,8 +347,20 @@ public abstract class SingleNodeContainer extends NodeContainer {
 
         if (viewVariableSettings != null) {
             NodeSettings fromViewModel = m_settings.getViewSettingsClone();
-            List<FlowVariable> newViewVariableList =
-                overwriteSettingsWithFlowVariables(fromViewModel, viewVariableSettings, null);
+            /*
+             * View settings should not affect the node model life cycle. We therefore theoretically should not throw an
+             * exception here when a flow variable overriding a view setting is no longer present. Instead, such an
+             * exception (or warning) should be shown only in the view when opening said view. However, if image
+             * generation is enabled for a node, view settings do in fact have an effect on the node output (i.e. image
+             * output port) and therefore in that case view settings should affect the node model life cycle. By
+             * extension this means that if image generation is enabled and a flow variable overriding a view setting is
+             * no longer present, we should throw an exception here. Since the framework currently can't differentiate
+             * the image generation settings from any other model setting, we throw an exception here independent of
+             * whether image generation is enabled or not.
+             */
+            // TODO revisit in UIEXT-782
+            List<FlowVariable> newViewVariableList = overwriteSettingsWithFlowVariables(fromViewModel,
+                viewVariableSettings, getFlowObjectStack().getAvailableFlowVariables(VariableType.getAllTypes()));
             newVariableList.addAll(newViewVariableList);
         }
 
