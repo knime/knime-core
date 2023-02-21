@@ -56,6 +56,7 @@ import org.knime.core.table.row.Selection;
  *
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  * @noreference This class is not intended to be referenced by clients.
+ * @since 5.0
  */
 public final class InternalTableAPI {
 

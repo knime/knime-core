@@ -178,6 +178,9 @@ public class DelegateNodeDescription extends NodeDescription {
         return m_delegate.getViewName(index);
     }
 
+    /**
+     * @since 5.0
+     */
     @Override
     public String[] getKeywords() {
         return m_delegate.getKeywords();
