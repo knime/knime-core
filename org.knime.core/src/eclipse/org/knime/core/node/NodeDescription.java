@@ -61,6 +61,7 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.knime.core.internal.NodeDescriptionUtil;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.context.ports.ModifiablePortsConfiguration;
+import org.knime.core.util.Version;
 import org.w3c.dom.Element;
 
 /**
@@ -260,6 +261,17 @@ public abstract class NodeDescription {
      */
     public String[] getKeywords() {
         return ArrayUtils.EMPTY_STRING_ARRAY;
+    }
+
+    /**
+     * Returns the KNIME AP version in which this node was first available.
+     * If this information is not available, returns an empty {@link Optional}.
+     *
+     * @return The KNIME AP version since which this node is available
+     * @since 5.0
+     */
+    public Optional<Version> getSinceVersion() {
+        return Optional.empty();
     }
 
     /**

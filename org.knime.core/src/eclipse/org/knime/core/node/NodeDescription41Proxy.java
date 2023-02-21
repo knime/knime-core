@@ -68,6 +68,7 @@ import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.context.ports.ExtendablePortGroup;
 import org.knime.core.node.context.ports.ModifiablePortsConfiguration;
 import org.knime.core.util.Pair;
+import org.knime.core.util.Version;
 import org.knime.node.v41.AbstractView;
 import org.knime.node.v41.DynPort;
 import org.knime.node.v41.InPort;
@@ -115,6 +116,8 @@ public final class NodeDescription41Proxy extends NodeDescription {
 
     private final KnimeNodeDocument m_document;
 
+    private final Version m_sinceVersion;
+
     /**
      * Creates a new proxy object using the given XML document. If assertions are enabled (see
      * {@link KNIMEConstants#ASSERTIONS_ENABLED} it also checks the contents of the XML for against the XML schema and
@@ -127,6 +130,25 @@ public final class NodeDescription41Proxy extends NodeDescription {
         m_document = KnimeNodeDocument.Factory.parse(doc.getDocumentElement(), OPTIONS);
         setIsDeprecated(m_document.getKnimeNode().getDeprecated());
         validate();
+        m_sinceVersion = null;
+    }
+
+    /**
+     * Creates a new proxy object using the given XML document. If assertions are enabled (see
+     * {@link KNIMEConstants#ASSERTIONS_ENABLED} it also checks the contents of the XML for against the XML schema and
+     * reports errors via the logger.
+     *
+     * @param doc the XML document of the node description XML file
+     * @param sinceVersion The version since which this node is available in the KNIME AP
+     *
+     * @throws XmlException if something goes wrong while analyzing the XML structure
+     * @noreference This constructor is not intended to be referenced by clients.
+     */
+    public NodeDescription41Proxy(final Document doc, final Version sinceVersion) throws XmlException {
+        m_document = KnimeNodeDocument.Factory.parse(doc.getDocumentElement(), OPTIONS);
+        setIsDeprecated(m_document.getKnimeNode().getDeprecated());
+        validate();
+        m_sinceVersion = sinceVersion;
     }
 
     /**
@@ -154,6 +176,7 @@ public final class NodeDescription41Proxy extends NodeDescription {
         if (validate) {
             validate();
         }
+        m_sinceVersion = null;
     }
 
     /**
@@ -402,6 +425,14 @@ public final class NodeDescription41Proxy extends NodeDescription {
         return Optional.ofNullable(m_document.getKnimeNode().getKeywords()) //
                 .map(Keywords::getKeywordArray) //
                 .orElse(ArrayUtils.EMPTY_STRING_ARRAY);
+    }
+
+    /**
+     * @since 5.0
+     */
+    @Override
+    public Optional<Version> getSinceVersion() {
+        return Optional.ofNullable(m_sinceVersion);
     }
 
     @Override
