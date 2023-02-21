@@ -96,7 +96,11 @@ public class WorkflowEvent {
             WORKFLOW_DIRTY,
             /** Workflow is marked as clean (not dirty)
              * @since 4.6 */
-            WORKFLOW_CLEAN
+            WORKFLOW_CLEAN,
+            /** Workflow context changed (e.g. through {@link WorkflowManager#saveAs(
+             * org.knime.core.node.workflow.contextv2.WorkflowContextV2, org.knime.core.node.ExecutionMonitor)}.
+             * @since 5.0 */
+            CONTEXT_CHANGED
     }
 
     private final NodeID m_id;

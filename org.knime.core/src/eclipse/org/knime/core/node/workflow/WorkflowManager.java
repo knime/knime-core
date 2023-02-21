@@ -9091,6 +9091,7 @@ public final class WorkflowManager extends NodeContainer
         if (this == ROOT) {
             throw new IOException("Can't save root workflow");
         }
+        final var oldContext = getContextV2();
         try (WorkflowLock lock = lock()) {
             ReferencedFile ncDirRef = getNodeContainerDirectory();
             if (!isProject()) {
@@ -9152,6 +9153,7 @@ public final class WorkflowManager extends NodeContainer
             }
             save(directory, saveExec, true);
         }
+        notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.CONTEXT_CHANGED, getID(), oldContext, newContext));
     }
 
     /**
