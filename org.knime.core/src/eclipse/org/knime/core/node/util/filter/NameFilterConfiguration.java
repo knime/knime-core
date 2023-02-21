@@ -44,6 +44,9 @@
  */
 package org.knime.core.node.util.filter;
 
+import static java.util.Objects.requireNonNullElse;
+import static org.apache.commons.lang3.ArrayUtils.EMPTY_STRING_ARRAY;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -282,8 +285,9 @@ public class NameFilterConfiguration implements Cloneable {
         }
         m_type = type;
         m_enforceOption = EnforceOption.parse(subSettings.getString(KEY_ENFORCE_OPTION));
-        m_includeList = subSettings.getStringArray(KEY_INCLUDED_NAMES);
-        m_excludeList = subSettings.getStringArray(KEY_EXCLUDED_NAMES);
+        // addresses AP-20185 - this field should never be null (but let call deliberately fail if not present)
+        m_includeList = requireNonNullElse(subSettings.getStringArray(KEY_INCLUDED_NAMES), EMPTY_STRING_ARRAY);
+        m_excludeList = requireNonNullElse(subSettings.getStringArray(KEY_EXCLUDED_NAMES), EMPTY_STRING_ARRAY);
         try {
             NodeSettingsRO configSettings = subSettings.getNodeSettings(PatternFilterConfiguration.TYPE);
             m_patternConfig.loadConfigurationInModel(configSettings);
@@ -504,8 +508,10 @@ public class NameFilterConfiguration implements Cloneable {
         if (m_type == null || !verifyType(m_type)) {
             m_type = TYPE;
         }
-        m_includeList = subSettings.getStringArray(KEY_INCLUDED_NAMES, new String[0]);
-        m_excludeList = subSettings.getStringArray(KEY_EXCLUDED_NAMES, new String[0]);
+        m_includeList =
+            requireNonNullElse(subSettings.getStringArray(KEY_INCLUDED_NAMES, EMPTY_STRING_ARRAY), EMPTY_STRING_ARRAY);
+        m_excludeList =
+            requireNonNullElse(subSettings.getStringArray(KEY_EXCLUDED_NAMES, EMPTY_STRING_ARRAY), EMPTY_STRING_ARRAY);
         try {
             m_enforceOption = EnforceOption.parse(subSettings.getString(KEY_ENFORCE_OPTION));
         } catch (InvalidSettingsException ise) {
