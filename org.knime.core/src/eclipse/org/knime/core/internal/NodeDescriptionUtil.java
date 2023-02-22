@@ -37,6 +37,8 @@ import org.knime.core.node.NodeLogger;
  */
 public final class NodeDescriptionUtil {
 
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(NodeDescriptionUtil.class);
+
     private static final Pattern CRLF = Pattern.compile("\\r\\n");
 
     private NodeDescriptionUtil() {
@@ -44,7 +46,7 @@ public final class NodeDescriptionUtil {
     }
 
     /**
-     * Lazily initialization for XSLT transformer.
+     * Lazy initialization for XSLT transformer, which is NOT THREAD-SAFE!
      *
      * @see #getPrettyXmlText(XmlObject)
      */
@@ -57,9 +59,7 @@ public final class NodeDescriptionUtil {
                 transformer.setOutputProperty(OutputKeys.INDENT, "no");
                 return transformer;
             } catch (IOException | TransformerConfigurationException e) {
-                NodeLogger.getLogger(NodeDescriptionUtil.class)
-                    .error("Could not format text, reason: " + e.getMessage(), e);
-                e.printStackTrace();
+                LOGGER.error("Could not format text, reason: " + e.getMessage(), e);
                 return null;
             }
         }
@@ -69,7 +69,7 @@ public final class NodeDescriptionUtil {
      * If the given String is wrapped by an XML tag, return the String without that tag. Example: {@code <foo>bar</foo>}
      * yields {@code bar}.
      *
-     * @param contents a String that is the serialisation of some XML object
+     * @param contents a String that is the serialization of some XML object
      * @return the String without surrounding XML tags.
      */
     public static String stripXmlFragment(final String contents) {
@@ -94,25 +94,25 @@ public final class NodeDescriptionUtil {
      * nodes that resemble HTML-formatted text. Strip comments, namespace prefixes and namespace attributes.
      * If the given String is {@code null}, the method returns {@code null}.
      *
+     * This method has to be synchronized because the shared XSLT transformer is not thread-safe.
+     *
      * @param obj the XML object whose child nodes should be printed to a String
      * @return a string representation of the nodes children, or null if {@code obj} is null.
      */
-    public static String getPrettyXmlText(final XmlObject obj) {
+    public static synchronized String getPrettyXmlText(final XmlObject obj) {
         if (obj == null) {
             return null;
         }
 
-        var xmlOptions = new XmlOptions().setLoadStripComments() // strip comments
-            .setLoadStripProcinsts(); // strip processing instructions
+        // strip comments and processing instructions
+        final var xmlOptions = new XmlOptions().setLoadStripComments().setLoadStripProcinsts();
 
-        var writer = new StringWriter();
-        try {
-            REMOVE_NAMESPACES_TRANSFORMER.get().transform(new StreamSource(obj.newReader(xmlOptions)),
-                new StreamResult(writer));
-        } catch (TransformerException | ConcurrentException e) {
-            NodeLogger.getLogger(NodeDescriptionUtil.class).error("Could not format text, reason: " + e.getMessage(),
-                e);
-            e.printStackTrace();
+        final var writer = new StringWriter();
+        try (final var reader = obj.newReader(xmlOptions)) {
+            REMOVE_NAMESPACES_TRANSFORMER.get().transform(new StreamSource(reader), new StreamResult(writer));
+        } catch (TransformerException | ConcurrentException | IOException e) {
+            // `IOException` is only possible here if `reader.close()` actually does I/O
+            LOGGER.error("Could not format text, reason: " + e.getMessage(), e);
         }
 
         var s = writer.toString();
