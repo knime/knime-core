@@ -108,7 +108,6 @@ import org.knime.core.node.defaultnodesettings.SettingsModelFlowVariableCompatib
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.util.SharedIcons;
 import org.knime.core.node.util.ViewUtils;
@@ -1559,8 +1558,7 @@ public abstract class NodeDialogPane {
         try {
             return nodeContainer.getNodeSettings().getNodeSettings("view");
         } catch (InvalidSettingsException e) { // NOSONAR
-            var specsWithFlowVariablePort = ArrayUtils.insert(0, m_specs, FlowVariablePortObjectSpec.INSTANCE);
-            return getDefaultViewSettings(specsWithFlowVariablePort);
+            return getDefaultViewSettings(m_specs);
         }
     }
 
