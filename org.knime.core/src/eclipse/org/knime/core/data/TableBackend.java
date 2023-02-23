@@ -45,7 +45,10 @@
  */
 package org.knime.core.data;
 
+import java.util.List;
+import java.util.function.BiConsumer;
 import java.util.function.IntSupplier;
+import java.util.stream.Stream;
 
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.DataContainer;
@@ -59,6 +62,7 @@ import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.table.row.Selection;
 
 /**
@@ -149,6 +153,129 @@ public interface TableBackend {
         final BufferedDataTable left, BufferedDataTable right) throws CanceledExecutionException;
 
     /**
+     * Appends the provided tables in the column dimension. Note that the tables must have the same number of rows.
+     *
+     * @param exec used to report progress
+     * @param tableIdSupplier provides IDs for potentially created ContainerTables
+     * @param config for the append operation
+     * @param left the left table
+     * @param right the right table
+     * @return the appended table
+     * @throws CanceledExecutionException if execution is canceled by the user
+     * @since 5.0
+     */
+    KnowsRowCountTable append(ExecutionContext exec, IntSupplier tableIdSupplier, AppendConfig config,
+        BufferedDataTable left, BufferedDataTable right) throws CanceledExecutionException;
+
+    /**
+     * Config for appending tables.
+     *
+     * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
+     * @since 5.0
+     */
+    final class AppendConfig {
+
+        /**
+         * Determines which table provides the RowIDs.
+         *
+         * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
+         */
+        public enum RowIDMode {
+                /**
+                 * All tables have matching RowIDs, hence the RowIDs of the first table are used. The backend will also
+                 * check that the RowIDs actually match.
+                 */
+                MATCHING(false, RowIDMode::checkEqualNumRows),
+                /**
+                 * The RowIDs of a user specified table are used.
+                 */
+                FROM_TABLE(true, distribute(List.of(RowIDMode::checkEqualNumRows, RowIDMode::checkTableIndex)));
+
+            private final boolean m_usesTableIndex;
+
+            private final BiConsumer<AppendConfig, BufferedDataTable[]> m_inputTableValidator;
+
+            private static void checkEqualNumRows(final AppendConfig config, final BufferedDataTable[] tables) {
+                CheckUtils.checkArgument(Stream.of(tables)//
+                    .mapToLong(BufferedDataTable::size)//
+                    .distinct()//
+                    .count() == 1, "All input tables must have the same number of rows for RowIDMode '%s'.",
+                    config.getRowIDMode());
+            }
+
+            private static void checkTableIndex(final AppendConfig config, final BufferedDataTable[] tables) {
+                CheckUtils.checkArgument(config.getRowIDTableIndex() < tables.length,
+                    "The table index (%s) exceeds the number of tables (%s).", config.getRowIDTableIndex(),
+                    tables.length);
+            }
+
+            private static <S, T> BiConsumer<S, T> distribute(final List<BiConsumer<S, T>> consumers) {
+                return (s, t) -> consumers.forEach(c -> c.accept(s, t));
+            }
+
+            RowIDMode(final boolean usesTableIndex,
+                final BiConsumer<AppendConfig, BufferedDataTable[]> inputTableValidator) {
+                m_usesTableIndex = usesTableIndex;
+                m_inputTableValidator = inputTableValidator;
+            }
+
+            private void validateInputTables(final AppendConfig config, final BufferedDataTable... tables) {
+                m_inputTableValidator.accept(config, tables);
+            }
+        }
+
+        private final RowIDMode m_idMode;
+
+        private final int m_tableIdx;
+
+        private AppendConfig(final RowIDMode idMode, final int tableIndex) {
+            m_idMode = idMode;
+            m_tableIdx = tableIndex;
+        }
+
+        /**
+         * @return an AppendConfig for appending with matching RowIDs
+         */
+        public static AppendConfig matchingRowIDs() {
+            return new AppendConfig(RowIDMode.MATCHING, -1);
+        }
+
+        /**
+         * @param tableIndex the index of the table whose RowIDs should be used for the output table
+         * @return an AppendConfig with the user provided RowIDs
+         */
+        public static AppendConfig rowIDsFromTable(final int tableIndex) {
+            CheckUtils.checkArgument(tableIndex >= 0, "The tableIdx must be non-negative.");
+            return new AppendConfig(RowIDMode.FROM_TABLE, tableIndex);
+        }
+
+        /**
+         * Performs preliminary validation e.g. that the tables have the same number of rows.
+         *
+         * @param tables to validate
+         */
+        public void validateInputTables(final BufferedDataTable... tables) {
+            m_idMode.validateInputTables(this, tables);
+        }
+
+        /**
+         * @return the RowIDMode
+         */
+        public RowIDMode getRowIDMode() {
+            return m_idMode;
+        }
+
+        /**
+         * @return the index of the table whose RowIDs should be used
+         */
+        public int getRowIDTableIndex() {
+            CheckUtils.checkState(m_idMode.m_usesTableIndex, "The RowIDMode '%s' does not use the table index.");
+            return m_tableIdx;
+        }
+
+    }
+
+    /**
      * Applies the provided ColumnRearranger on the provided table.
      *
      * @param progressMonitor for reporting progress
@@ -165,9 +292,9 @@ public interface TableBackend {
         throws CanceledExecutionException;
 
     /**
-     * Slices the input table according to the provided TableFilter.
-     * Example: The table filter defines a column selection of 2, 5 and 7 and defines a row range from 1000 to 1005,
-     * then the sliced table will have 3 columns and 6 rows (the to index in TableFilter is inclusive).
+     * Slices the input table according to the provided TableFilter. Example: The table filter defines a column
+     * selection of 2, 5 and 7 and defines a row range from 1000 to 1005, then the sliced table will have 3 columns and
+     * 6 rows (the to index in TableFilter is inclusive).
      *
      * @param exec for reporting progress and the potential creation of tables
      * @param table to slice

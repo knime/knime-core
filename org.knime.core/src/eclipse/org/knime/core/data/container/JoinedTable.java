@@ -278,6 +278,26 @@ public final class JoinedTable implements KnowsRowCountTable {
     public static JoinedTable create(final BufferedDataTable left,
             final BufferedDataTable right, final ExecutionMonitor prog)
             throws CanceledExecutionException {
+        return create(left, right, prog, true);
+    }
+
+    /**
+     * Creates new join table, does the sanity checks. Called from the
+     * {@link org.knime.core.node.ExecutionContext#createJoinedTable(
+     * BufferedDataTable, BufferedDataTable, ExecutionMonitor)} method.
+     * @param left The left table.
+     * @param right The right table.
+     * @param prog For progress/cancel.
+     * @param checkRowIDs whether to check the RowIDs
+     * @return A joined table.
+     * @throws CanceledExecutionException When canceled.
+     * @throws IllegalArgumentException If row keys don't match or there are
+     * duplicate columns.
+     * @since 5.0 TODO potentially update since-tag
+     */
+    public static JoinedTable create(final BufferedDataTable left,
+            final BufferedDataTable right, final ExecutionMonitor prog, final boolean checkRowIDs)
+            throws CanceledExecutionException {
         long cnt = left.size();
         if (cnt != right.size()) {
             throw new IllegalArgumentException("Tables can't be joined, non "
@@ -287,9 +307,14 @@ public final class JoinedTable implements KnowsRowCountTable {
         // throws exception when duplicates encountered.
         DataTableSpec joinSpec = new DataTableSpec(
                 left.getDataTableSpec(), right.getDataTableSpec());
-        checkRowKeysMatch(left, right, prog, cnt);
+        if (checkRowIDs) {
+            checkRowKeysMatch(left, right, prog, cnt);
+        } else {
+            prog.setProgress(1);
+        }
         return new JoinedTable(left, right, joinSpec);
     }
+
 
     private static void checkRowKeysMatch(final BufferedDataTable left, final BufferedDataTable right,
         final ExecutionMonitor prog, final long cnt) throws CanceledExecutionException {

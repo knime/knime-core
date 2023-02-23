@@ -48,6 +48,7 @@
  */
 package org.knime.core.node;
 
+import org.knime.core.data.TableBackend;
 import org.knime.core.table.row.Selection;
 
 /**
@@ -76,4 +77,21 @@ public final class InternalTableAPI {
         final Selection slice) {
         return exec.createSlicedTable(table, slice);
     }
+
+    /**
+     * Appends the two tables column-wise according to the provided config.
+     *
+     * @param exec for creating the table and providing progress
+     * @param config for the appending
+     * @param left table
+     * @param right table
+     * @return the appended table
+     * @throws CanceledExecutionException if execution is cancelled by the user
+     */
+    public static BufferedDataTable append(final ExecutionContext exec, final TableBackend.AppendConfig config,
+        final BufferedDataTable left, final BufferedDataTable right) throws CanceledExecutionException {
+        config.validateInputTables(left, right);
+        return exec.appendTables(config, left, right);
+    }
+
 }

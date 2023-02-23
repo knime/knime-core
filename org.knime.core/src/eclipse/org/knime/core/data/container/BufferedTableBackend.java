@@ -51,6 +51,7 @@ package org.knime.core.data.container;
 import java.util.Optional;
 import java.util.function.IntSupplier;
 import java.util.function.IntUnaryOperator;
+import java.util.stream.IntStream;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.IDataRepository;
@@ -72,6 +73,7 @@ import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InternalTableAPI;
 import org.knime.core.node.Node;
 import org.knime.core.table.row.Selection;
 import org.knime.core.table.row.Selection.RowRangeSelection;
@@ -152,6 +154,42 @@ public final class BufferedTableBackend implements TableBackend {
         final BufferedDataTable left, final BufferedDataTable right)
         throws CanceledExecutionException {
         return JoinedTable.create(left, right, exec);
+    }
+
+    @Override
+    public KnowsRowCountTable append(final ExecutionContext exec, final IntSupplier tableIdSupplier,
+        final AppendConfig config, final BufferedDataTable left, final BufferedDataTable right)
+        throws CanceledExecutionException {
+        switch (config.getRowIDMode()) {
+            case FROM_TABLE:
+                return appendWithIDFromTable(exec, config.getRowIDTableIndex(), left, right);
+            case MATCHING:
+                return JoinedTable.create(left, right, exec);
+            default:
+                throw new UnsupportedOperationException("Unsupported RowIDMode: " + config.getRowIDMode());
+        }
+    }
+
+    private static KnowsRowCountTable appendWithIDFromTable(final ExecutionContext exec, final int tableId,
+        final BufferedDataTable left, final BufferedDataTable right) throws CanceledExecutionException {
+        if (tableId == 0) {
+            return JoinedTable.create(left, right, exec, false);
+        } else if (tableId == 1) {
+            var joinedTable = InternalTableAPI.append(exec.createSubExecutionContext(0.5),
+                AppendConfig.rowIDsFromTable(0), right, left);
+            var rearranger = new ColumnRearranger(joinedTable.getDataTableSpec());
+            var numColsLeft = left.getDataTableSpec().getNumColumns();
+            var numColsRight = right.getDataTableSpec().getNumColumns();
+            // move the columns of the left table (which are currently right) left again
+            rearranger.permute(IntStream.concat(//
+                IntStream.range(0, numColsLeft).map(i -> i + numColsRight), //
+                IntStream.range(0, numColsRight)).toArray());
+            joinedTable = exec.createColumnRearrangeTable(joinedTable, rearranger, exec.createSubExecutionContext(0.5));
+            return Node.invokeGetDelegate(joinedTable);
+        } else {
+            // shouldn't happen because the framework checks the validity of the table index further up
+            throw new IllegalStateException("The index of the table providing the RowIDs must be either 0 or 1.");
+        }
     }
 
     @Override

@@ -609,6 +609,12 @@ public class ExecutionContext extends ExecutionMonitor {
         return wrapTableFromBackend(jt);
     }
 
+    BufferedDataTable appendTables(final TableBackend.AppendConfig config, final BufferedDataTable left,
+        final BufferedDataTable right) throws CanceledExecutionException {
+        var appendedTable = getTableBackend().append(this, m_dataRepository::generateNewID, config, left, right);
+        return wrapTableFromBackend(appendedTable);
+    }
+
     /**
      * Creates a sliced table according to the provided {@link TableFilter slice}. This {@link ExecutionContext} will be
      * used for progress reporting. Use {@code exec.createSubExecutionContext(0.2).createSlicedTable(table, slice)} if
