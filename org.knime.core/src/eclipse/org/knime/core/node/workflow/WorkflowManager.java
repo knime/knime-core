@@ -9562,7 +9562,7 @@ public final class WorkflowManager extends NodeContainer
      */
     @Override
     public String getName() {
-        if (m_name != null) {
+        if (StringUtils.isNotBlank(m_name)) {
             return m_name;
         }
         ReferencedFile refFile = getNodeContainerDirectory();
