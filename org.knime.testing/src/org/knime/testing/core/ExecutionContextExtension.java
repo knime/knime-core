@@ -63,6 +63,8 @@ import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.knime.core.data.TableBackend;
+import org.knime.core.data.TableBackendRegistry;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.util.CheckUtils;
@@ -93,6 +95,24 @@ public final class ExecutionContextExtension
     private WorkflowManager m_manager;
     private ExecutionContext m_executionContext;
     private NodeID m_lastAddedNodeID;
+
+
+    /**
+     * Constructor that uses the default TableBackend.
+     */
+    public ExecutionContextExtension() {
+        // don't alter table backend
+    }
+
+    /**
+     * Constructor that uses the provided TableBackend.
+     *
+     * @param tableBackend to use in the ExecutionContext
+     */
+    public ExecutionContextExtension(final TableBackend tableBackend) {
+        System.setProperty(TableBackendRegistry.PROPERTY_TABLE_BACKEND_IMPLEMENTATION,
+            tableBackend.getClass().getName());
+    }
 
 
     @Override
@@ -166,6 +186,8 @@ public final class ExecutionContextExtension
     public static ExecutionContextExtension create() {
         return new ExecutionContextExtension();
     }
+
+
 
     @Override
     public boolean supportsParameter(final ParameterContext parameterContext, final ExtensionContext extensionContext)
