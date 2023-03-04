@@ -186,6 +186,28 @@ class MessageTest {
         assertThrows(IllegalArgumentException.class, () -> Message.fromNodeMessage(NodeMessage.NONE));
     }
 
+    @Test
+    void testToLogPrintable() throws Exception {
+        var messageBuilder1 = Message.builder();
+        messageBuilder1.addResolutions("Resolution 1", "Resolution 2");
+        var issueText1 = "Issue Details XYZ";
+        messageBuilder1.addTextIssue(issueText1);
+        messageBuilder1.withSummary("Some Summary Message");
+        var message1 = messageBuilder1.build().orElseThrow();
+
+        assertThat(message1.toLogPrintable()).isEqualTo(
+            """
+            Some Summary Message
+            Issue Details XYZ""");
+
+        var messageBuilder2 = Message.builder();
+        messageBuilder2.addResolutions("Resolution 1", "Resolution 2");
+        messageBuilder2.withSummary("Some Summary Message");
+        var message2 = messageBuilder2.build().orElseThrow();
+
+        assertThat(message2.toLogPrintable()).isEqualTo("Some Summary Message");
+    }
+
     /** Jackson serialization/deserialization, incl. issue and resolution. */
     @Test
     void testJsonSer_FullDetails() throws Exception {

@@ -50,6 +50,7 @@ package org.knime.core.node.message;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -136,8 +137,8 @@ public final class Message {
     }
 
     /**
-     * API method used by the framework to post-process messages and amend their issues by some data. That is show the
-     * context (i.e. the previous rows) as to where the problem occured. This method then decides whether it's worth the
+     * API method used by the framework to post-process messages and amend their issues by some data. It will render the
+     * context (i.e. the previous rows) in which the problem occured. This method then decides whether it's worth the
      * effort to resolve the details, e.g. in streaming mode or for extremely large data it will not do the expensive
      * table scan.
      *
@@ -146,13 +147,31 @@ public final class Message {
      * @noreference This method is not intended to be referenced by clients.
      */
     public Message renderIssueDetails(final PortObject[] inputs) {
-        MessageBuilder builder = builder() //
+        if (m_issue instanceof RowIssue ri) {
+            return builder() //
                 .withSummary(m_summary) //
-                .addResolutions(m_resolutions.toArray(String[]::new));
-        if (m_issue instanceof RowIssue) {
-            builder.addIssue(((RowIssue)m_issue).toDefaultIssue(inputs));
+                .addIssue(ri.toDefaultIssue(inputs)) //
+                .addResolutions(m_resolutions.toArray(String[]::new)) //
+                .build().orElseThrow();
         }
-        return builder.build().orElseThrow();
+        return this;
+    }
+
+    /**
+     * This <code>Message</code> as a string that can be printed to the logger ({@link org.knime.core.node.NodeLogger}).
+     * It will include the summary and the (first) issue, if present.
+     * @return that (non-null) string.
+     */
+    public String toLogPrintable() {
+        var strBuilder = new StringBuilder(getSummary());
+        getIssue() //
+            .map(Issue::toPreformatted) //
+            .map(String::lines) //
+            .stream() //
+            .flatMap(Function.identity()) //
+            .map("\n"::concat) //
+            .forEach(strBuilder::append);
+        return strBuilder.toString();
     }
 
     /**

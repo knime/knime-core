@@ -1554,10 +1554,9 @@ public final class Node {
      */
     public void createWarningMessageAndNotify(final Message message,
             final Throwable t) {
-        String warningMessage = Message.getSummaryFrom(message);
-        LOGGER.warn(warningMessage);
+        LOGGER.warn(message.toLogPrintable());
         if (t != null) {
-            LOGGER.debug(warningMessage, t);
+            LOGGER.debug(t);
         }
         notifyMessageListeners(message.toNodeMessage(NodeMessage.Type.WARNING));
     }
@@ -1583,7 +1582,7 @@ public final class Node {
      * @since 5.0
      */
     public void createErrorMessageAndNotify(final Message errorMessage, final Throwable t) {
-        LOGGER.error(Message.getSummaryFrom(errorMessage), t);
+        LOGGER.error(errorMessage.toLogPrintable(), t);
         notifyMessageListeners(errorMessage.toNodeMessage(NodeMessage.Type.ERROR));
     }
 
@@ -2895,11 +2894,11 @@ public final class Node {
             // get the warning message if available and create a message object
             // also notify all listeners
             if (warning != null) {
-                String warningMessage = Message.getSummaryFrom(warning);
-                if (!Objects.equals(m_lastWarning, warningMessage)) {
+                var warningString = warning.toLogPrintable();
+                if (!Objects.equals(m_lastWarning, warningString)) {
                     // consecutive warnings may be the same (see Message#renderIssueDetails)
-                    m_lastWarning = warningMessage;
-                    LOGGER.warn(warningMessage);
+                    m_lastWarning = warningString;
+                    LOGGER.warn(warningString);
                 }
                 // while the summary of the message might not be changed, the Message object itself has (details, etc)
                 // (otherwise this method here would not be called)
