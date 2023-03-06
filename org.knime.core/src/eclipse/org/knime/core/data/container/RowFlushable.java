@@ -52,7 +52,7 @@ package org.knime.core.data.container;
  * Implementing classes allow to flush rows that have been added to them.
  *
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
- * @since 5.0
+ * @since 5.1
  */
 public interface RowFlushable {
 

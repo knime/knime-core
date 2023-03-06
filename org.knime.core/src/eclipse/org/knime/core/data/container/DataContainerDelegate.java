@@ -62,6 +62,7 @@ import org.knime.core.data.DataTableSpec;
  *
  * @noextend This class is not intended to be subclassed by clients. Experimental API.
  * @noreference This class is not intended to be referenced by clients. Experimental API.
+ * @noimplement This interface is not intended to be implemented by clients. Experimental API.
  */
 public interface DataContainerDelegate extends RowAppender, AutoCloseable, RowFlushable {
 

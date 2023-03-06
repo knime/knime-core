@@ -293,7 +293,7 @@ public final class JoinedTable implements KnowsRowCountTable {
      * @throws CanceledExecutionException When canceled.
      * @throws IllegalArgumentException If row keys don't match or there are
      * duplicate columns.
-     * @since 5.0 TODO potentially update since-tag
+     * @since 5.1
      */
     public static JoinedTable create(final BufferedDataTable left, // NOSONAR
             final BufferedDataTable right, final ExecutionMonitor prog, final boolean checkRowIDs)

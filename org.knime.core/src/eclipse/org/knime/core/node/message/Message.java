@@ -160,6 +160,7 @@ public final class Message {
     /**
      * This <code>Message</code> as a string that can be printed to the logger ({@link org.knime.core.node.NodeLogger}).
      * It will include the summary and the (first) issue, if present.
+     * @since 5.1
      * @return that (non-null) string.
      */
     public String toLogPrintable() {

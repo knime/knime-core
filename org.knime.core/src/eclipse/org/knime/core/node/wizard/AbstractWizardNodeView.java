@@ -238,7 +238,7 @@ public abstract class AbstractWizardNodeView<T extends ViewableModel & WizardNod
     /**
      * @return the URL of the page to display in the wizard node view
      *
-     * @since 5.0
+     * @since 5.1
      */
     protected Optional<String> getViewURL() {
         var file = getViewSource();

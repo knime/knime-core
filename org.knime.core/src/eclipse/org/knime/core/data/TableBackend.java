@@ -162,7 +162,7 @@ public interface TableBackend {
      * @param right the right table
      * @return the appended table
      * @throws CanceledExecutionException if execution is canceled by the user
-     * @since 5.0
+     * @since 5.1
      */
     KnowsRowCountTable append(ExecutionContext exec, IntSupplier tableIdSupplier, AppendConfig config,
         BufferedDataTable left, BufferedDataTable right) throws CanceledExecutionException;
@@ -171,7 +171,7 @@ public interface TableBackend {
      * Config for appending tables.
      *
      * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
-     * @since 5.0
+     * @since 5.1
      */
     final class AppendConfig {
 

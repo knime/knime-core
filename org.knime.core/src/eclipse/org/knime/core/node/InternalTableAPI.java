@@ -57,7 +57,7 @@ import org.knime.core.table.row.Selection;
  *
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  * @noreference This class is not intended to be referenced by clients.
- * @since 5.0
+ * @since 5.1
  */
 public final class InternalTableAPI {
 
@@ -87,6 +87,7 @@ public final class InternalTableAPI {
      * @param right table
      * @return the appended table
      * @throws CanceledExecutionException if execution is cancelled by the user
+     * @since 5.1
      */
     public static BufferedDataTable append(final ExecutionContext exec, final TableBackend.AppendConfig config,
         final BufferedDataTable left, final BufferedDataTable right) throws CanceledExecutionException {
