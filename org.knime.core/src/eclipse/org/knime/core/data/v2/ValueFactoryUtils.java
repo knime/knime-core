@@ -264,14 +264,8 @@ public final class ValueFactoryUtils {
      */
     public static ValueFactory<?, ?> getValueFactory(final DataType type, //NOSONAR
         final IWriteFileStoreHandler fileStoreHandler) {
-        var valueFactory = getValueFactory(type, t -> new DictEncodedDataCellValueFactory(type),
+        return getValueFactory(type, t -> new DictEncodedDataCellValueFactory(t),
             fileStoreHandler);
-
-        if (valueFactory instanceof FileStoreAwareValueFactory) {
-            ((FileStoreAwareValueFactory)valueFactory).initializeForWriting(fileStoreHandler);
-        }
-
-        return valueFactory;
     }
 
     /**
@@ -311,9 +305,8 @@ public final class ValueFactoryUtils {
         if (factory instanceof CollectionValueFactory) {
             @SuppressWarnings("null")
             final DataType elementType = type.getCollectionElementType();
-            final ValueFactory<?, ?> elementFactory = getValueFactory(elementType,
-                t -> new DictEncodedDataCellValueFactory(elementType),
-                fileStoreHandler);
+            final ValueFactory<?, ?> elementFactory =
+                getValueFactory(elementType, fallbackFactoryProvider, fileStoreHandler);
             ((CollectionValueFactory<?, ?>)factory).initialize(elementFactory, elementType);
         }
 
