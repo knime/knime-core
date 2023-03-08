@@ -295,7 +295,7 @@ public final class JoinedTable implements KnowsRowCountTable {
      * duplicate columns.
      * @since 5.0 TODO potentially update since-tag
      */
-    public static JoinedTable create(final BufferedDataTable left,
+    public static JoinedTable create(final BufferedDataTable left, // NOSONAR
             final BufferedDataTable right, final ExecutionMonitor prog, final boolean checkRowIDs)
             throws CanceledExecutionException {
         long cnt = left.size();
