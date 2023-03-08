@@ -56,6 +56,7 @@ import java.lang.reflect.Modifier;
 import java.net.Authenticator;
 import java.net.PasswordAuthentication;
 
+import org.apache.commons.lang3.mutable.MutableInt;
 import org.knime.core.node.NodeLogger;
 
 /**
@@ -73,7 +74,7 @@ import org.knime.core.node.NodeLogger;
 public class ThreadLocalHTTPAuthenticator extends Authenticator {
     private final Authenticator m_delegate;
 
-    private static final ThreadLocal<Boolean> SUPPRESS_POPUP = new ThreadLocal<>();
+    private static final ThreadLocal<MutableInt> SUPPRESS_POPUP = ThreadLocal.withInitial(MutableInt::new);
 
     /**
      * Install a thread local authenticator as the default authenticator. Calls will be delegated to any existing
@@ -113,8 +114,8 @@ public class ThreadLocalHTTPAuthenticator extends Authenticator {
      */
     public static AuthenticationCloseable suppressAuthenticationPopups() {
         installAuthenticator();
-        SUPPRESS_POPUP.set(Boolean.TRUE);
-        return () -> SUPPRESS_POPUP.set(Boolean.FALSE);
+        SUPPRESS_POPUP.get().increment();
+        return () -> SUPPRESS_POPUP.get().decrement();
     }
 
     private ThreadLocalHTTPAuthenticator(final Authenticator delegate) {
@@ -126,7 +127,7 @@ public class ThreadLocalHTTPAuthenticator extends Authenticator {
      */
     @Override
     protected PasswordAuthentication getPasswordAuthentication() {
-        if (SUPPRESS_POPUP.get() == Boolean.TRUE) {
+        if (SUPPRESS_POPUP.get().intValue() > 0) {
             return null;
         }
 
