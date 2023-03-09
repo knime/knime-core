@@ -48,28 +48,25 @@
  */
 package org.knime.core.node;
 
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.knime.core.data.container.BufferedTableBackend;
 import org.knime.testing.core.ExecutionContextExtension;
-import org.knime.testing.core.InternalTableAPITester;
+import org.knime.testing.data.AbstractTableBackendTest;
 
 /**
  * Tests the {@link InternalTableAPI} using the {@link BufferedTableBackend}.
  *
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
-final class BufferedInternalTableAPITest {
+final class BufferedTableBackendTest extends AbstractTableBackendTest {
 
     @RegisterExtension
     private static final ExecutionContextExtension EXEC_EXTENSION =
         new ExecutionContextExtension(new BufferedTableBackend());
 
-
-    @SuppressWarnings("static-method")
-    @Test
-    void testAppend() throws Exception {
-        new InternalTableAPITester(EXEC_EXTENSION.getExecutionContext()).testAppend();
+    @Override
+    protected ExecutionContext getExecutionContext() {
+        return EXEC_EXTENSION.getExecutionContext();
     }
 
 }
