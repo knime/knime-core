@@ -180,18 +180,22 @@ public abstract class AbstractTableBackendTest {
      *
      * @throws Exception if the tests fail
      */
+    @Test
     void testAppendRightIDs() throws Exception {
         m_appendTester.testAppendRightIDs();
     }
 
+    @Test
     void testAppendLeftIDs() throws Exception {
         m_appendTester.testAppendLeftIDs();
     }
 
+    @Test
     void testAppendMatchingIDsWithMatchingIDs() throws Exception {
         m_appendTester.testAppendMatchingIDsWithMatchingIDs();
     }
 
+    @Test
     void testAppendMatchingIDsWithNonMatchingIDs() throws Exception {
         m_appendTester.testAppendMatchingIDsWithNonMatchingIDs();
     }

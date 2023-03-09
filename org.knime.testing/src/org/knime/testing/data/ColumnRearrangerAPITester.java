@@ -93,7 +93,6 @@ final class ColumnRearrangerAPITester extends AbstractTableBackendAPITester {
 
     /*====================== Reorder ================*/
 
-    @Test
     void testReorderingOnlyExisting() throws Exception {
         var inputTable = createTable(FOO, BAR, BAZ);
         var rearranger = new ColumnRearranger(inputTable.getDataTableSpec());
@@ -106,7 +105,6 @@ final class ColumnRearrangerAPITester extends AbstractTableBackendAPITester {
 
     /*====================== Filter =================*/
 
-    @Test
     void testFilteringOnlyExisting() throws Exception {
         var inputTable = createTable(FOO, BAR, BAZ);
         var rearranger = new ColumnRearranger(inputTable.getDataTableSpec());
@@ -118,7 +116,6 @@ final class ColumnRearrangerAPITester extends AbstractTableBackendAPITester {
 
     /*====================== Append =================*/
 
-    @Test
     void testAppendSingleFactorySingleColumn() throws Exception {
         var inputTable = createTable(FOO, BAR, BAZ);
         var tableSpec = inputTable.getDataTableSpec();
@@ -130,7 +127,6 @@ final class ColumnRearrangerAPITester extends AbstractTableBackendAPITester {
         assertTableEquals(expectedTable, rearrangedTable);
     }
 
-    @Test
     void testAppendSingleFactoryMultipleColumns() throws Exception {
         var inputTable = createTable(FOO, BAR, BAZ);
         var rearranger = new ColumnRearranger(inputTable.getDataTableSpec());
@@ -143,7 +139,6 @@ final class ColumnRearrangerAPITester extends AbstractTableBackendAPITester {
         assertTableEquals(expectedTable, rearrangedTable);
     }
 
-    @Test
     void testAppendMultipleFactoriesOneColumnEach() throws Exception {
         var inputTable = createTable(FOO, BAR, BAZ);
         var rearranger = new ColumnRearranger(inputTable.getDataTableSpec());
@@ -158,7 +153,6 @@ final class ColumnRearrangerAPITester extends AbstractTableBackendAPITester {
 
     /* ======================== Replace ============================*/
 
-    @Test
     void testReplaceSingleFactorySingleColumn() throws Exception {
         var inputTable = createTable(FOO, BAR, BAZ);
         var tableSpec = inputTable.getDataTableSpec();
@@ -170,7 +164,6 @@ final class ColumnRearrangerAPITester extends AbstractTableBackendAPITester {
         assertTableEquals(expectedTable, rearrangedTable);
     }
 
-    @Test
     void testReplaceSingleFactoryMultipleColumns() throws Exception {
         var inputTable = createTable(FOO, BAR, BAZ);
         var tableSpec = inputTable.getDataTableSpec();
@@ -183,7 +176,6 @@ final class ColumnRearrangerAPITester extends AbstractTableBackendAPITester {
         assertTableEquals(expectedTable, rearrangedTable);
     }
 
-    @Test
     void testReplaceMultipleFactoriesOneColumnEach() throws Exception {
         var inputTable = createTable(FOO, BAR, BAZ);
         var tableSpec = inputTable.getDataTableSpec();
@@ -197,9 +189,6 @@ final class ColumnRearrangerAPITester extends AbstractTableBackendAPITester {
         assertTableEquals(expectedTable, rearrangedTable);
     }
 
-    // TODO test what happens in the old backend if multiple cell factories replace the same column
-
-    @Test
     void testReplaceMultipleCellFactoriesMultipleColumnsEach() throws Exception {
         var bli = new Column("bli", intFactory(4, 5, 6));
         var bla = new Column("bla", doubleFactory(4.5, 5.5, 6.5));
@@ -219,7 +208,6 @@ final class ColumnRearrangerAPITester extends AbstractTableBackendAPITester {
 
     /*====================== Type Conversion ==================*/
 
-    @Test
     void testSingleTypeConverter() throws Exception {
         var inputTable = createTable(FOO, BAR, BAZ);
         var rearranger = new ColumnRearranger(inputTable.getDataTableSpec());
@@ -230,7 +218,6 @@ final class ColumnRearrangerAPITester extends AbstractTableBackendAPITester {
         assertTableEquals(expectedTable, rearrangedTable);
     }
 
-    @Test
     void testMultipleTypeConverters() throws Exception {
         var inputTable = createTable(FOO, BAR, BAZ);
         var rearranger = new ColumnRearranger(inputTable.getDataTableSpec());
@@ -243,7 +230,6 @@ final class ColumnRearrangerAPITester extends AbstractTableBackendAPITester {
         assertTableEquals(expectedTable, rearrangedTable);
     }
 
-    @Test
     void testMultipleConvertersPerColumn() throws Exception {
         var inputTable = createTable(FOO, BAR, BAZ);
         var rearranger = new ColumnRearranger(inputTable.getDataTableSpec());
@@ -257,7 +243,6 @@ final class ColumnRearrangerAPITester extends AbstractTableBackendAPITester {
 
     /*======================= Combinations ======================*/
 
-    @Test
     void testAppendConvertedColumn() throws Exception {
         var inputTable = createTable(FOO, BAR, BAZ);
         var tableSpec = inputTable.getDataTableSpec();
@@ -271,19 +256,8 @@ final class ColumnRearrangerAPITester extends AbstractTableBackendAPITester {
         assertTableEquals(expectedTable, rearrangedTable);
     }
 
-    //  @Test replacing a converted column is not possible because the CellFactory and the DataCellTypeConverter replace each other
-    void testReplaceConvertedColumn() throws Exception {
-        var inputTable = createTable(FOO, BAR, BAZ);
-        var tableSpec = inputTable.getDataTableSpec();
-        var rearranger = new ColumnRearranger(tableSpec);
-        var expectedAppendedColumn = new Column(FOO.name() + "_", stringFactory("?_", "2_", "3_"));
-        rearranger.ensureColumnIsConverted(new ToStringTypeConverter(), 0);
-        rearranger.replace(new AppendSuffixCellFactory("_", createColumnSpecs(expectedAppendedColumn), 0), FOO.name());
-        var rearrangedTable = rearrange(inputTable, rearranger);
-        var expectedConvertedColumn = new Column(FOO.name(), stringFactory("?", "2", "3"));
-        var expectedTable = createTable(expectedConvertedColumn, BAR, BAZ, expectedAppendedColumn);
-        assertTableEquals(expectedTable, rearrangedTable);
-    }
+    //  replacing a converted column is not possible because the CellFactory and the DataCellTypeConverter
+    // replace each other
 
     @Test
     void testFilterThenReorder() throws Exception {
