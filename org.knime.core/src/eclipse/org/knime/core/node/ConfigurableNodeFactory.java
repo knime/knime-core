@@ -48,9 +48,11 @@
  */
 package org.knime.core.node;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -548,6 +550,31 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
         }
 
         /**
+         * @param clientTypes port types to find subtypes for
+         * @return non-hidden port types from the port type registry that are a subtype of one of the given
+         *         client types and have no other registered subtypes (most special subtypes)
+         */
+        private static PortType[] getRegisteredPortTypes(final PortType[] clientTypes) {
+            final var availablePortTypes = PortTypeRegistry.getInstance().availablePortTypes();
+            final var candidateList = new ArrayList<PortType>();
+            // find all port types that are a subtype of a client type and not hidden
+            for (PortType clientType : clientTypes) {
+                availablePortTypes.stream().filter(type -> !type.isHidden())
+                    .filter(clientType::isSuperTypeOf).forEach(candidateList::add);
+            }
+            final var finalList = new LinkedHashSet<>();
+            // retain only the most special subtypes in the inheritance hierarchy
+            for (PortType candidate : candidateList) {
+                // none of the other candidates should be a subtype of this candidate
+                if (candidateList.stream().filter(c -> !c.equals(candidate))
+                    .noneMatch(otherCandidate -> otherCandidate.isSuperTypeOf(candidate))) {
+                    finalList.add(candidate);
+                }
+            }
+            return finalList.toArray(PortType[]::new);
+        }
+
+        /**
          * Adds an optional input port group configuration.
          *
          * @param pGrpId the port group identifier
@@ -697,8 +724,8 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
         private void addOptionalPortGroup(final String pGrpId, final PortType defaultPort,
             final PortType[] optionalPorts, final boolean definesInputPorts, final boolean definesOutputPorts) {
             validateOptionalPortGroupArguments(pGrpId, defaultPort, optionalPorts);
-            final ExtendablePortGroup group = new DefaultExtendablePortGroup(new PortType[0], optionalPorts,
-                definesInputPorts, definesOutputPorts, 1);
+            final ExtendablePortGroup group = new DefaultExtendablePortGroup(new PortType[0],
+                getRegisteredPortTypes(optionalPorts), definesInputPorts, definesOutputPorts, 1);
             if (defaultPort != null) {
                 group.addPort(defaultPort);
             }
