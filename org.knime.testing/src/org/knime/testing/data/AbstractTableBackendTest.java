@@ -76,11 +76,14 @@ public abstract class AbstractTableBackendTest {
 
     private AppendAPITester m_appendTester;
 
+    private SpecReplacerAPITester m_specReplacerTester;
+
 
     @BeforeEach
     void before() {
         m_rearrangerTester = new ColumnRearrangerAPITester(getExecutionContext());
         m_appendTester = new AppendAPITester(getExecutionContext());
+        m_specReplacerTester = new SpecReplacerAPITester(getExecutionContext());
     }
 
     //////////////////////////////// ColumnRearranger ////////////////////////////////
@@ -203,5 +206,17 @@ public abstract class AbstractTableBackendTest {
     @Test
     void testAppendMatchingIDsWithNonMatchingIDs() throws Exception {
         m_appendTester.testAppendMatchingIDsWithNonMatchingIDs();
+    }
+
+    ////////////////////// Spec Replacement //////////////////////////
+
+    @Test
+    void testReplaceNames() throws Exception {
+        m_specReplacerTester.testReplaceNames();
+    }
+
+    @Test
+    void testUpcast() throws Exception {
+        m_specReplacerTester.testUpcast();
     }
 }

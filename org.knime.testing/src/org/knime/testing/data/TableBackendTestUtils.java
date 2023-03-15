@@ -59,11 +59,13 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.DoubleValue;
 import org.knime.core.data.TableBackend;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
@@ -103,8 +105,16 @@ final class TableBackendTestUtils {
         assertEquals(referenceRow.getNumCells(), actualRow.getNumCells(),
             "The number of cells differ in row %s.".formatted(rowIndex));
         for (int c = 0; c < referenceRow.getNumCells(); c++) {//NOSONAR
-            assertEquals(referenceRow.getCell(c), actualRow.getCell(c),
+            assertTrue(cellEquals(referenceRow.getCell(c), actualRow.getCell(c)),
                 "The rows differ in column %s of row %s.".formatted(c, rowIndex));
+        }
+    }
+
+    static boolean cellEquals(final DataCell referenceCell, final DataCell actualCell) {
+        if (referenceCell instanceof DoubleValue referenceValue && actualCell instanceof DoubleValue actualValue) {
+            return  referenceValue.getDoubleValue() == actualValue.getDoubleValue();
+        } else {
+            return referenceCell.equals(actualCell);
         }
     }
 

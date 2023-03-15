@@ -306,4 +306,17 @@ public interface TableBackend {
     KnowsRowCountTable slice(ExecutionContext exec, BufferedDataTable table, Selection slice,
         IntSupplier tableIdSupplier);
 
+    /**
+     * Replaces the spec of the input table.
+     *
+     * @param exec for reporting progress and potential creation of tables
+     * @param table to replace the spec of
+     * @param newSpec the new spec
+     * @param tableIDSupplier provides IDs for potentially created tables
+     * @return the table with the new spec
+     * @since 5.1
+     */
+    KnowsRowCountTable replaceSpec(ExecutionContext exec, final BufferedDataTable table,
+        final DataTableSpec newSpec, IntSupplier tableIDSupplier);
+
 }

@@ -315,4 +315,10 @@ public final class BufferedTableBackend implements TableBackend {
         }
     }
 
+    @Override
+    public KnowsRowCountTable replaceSpec(ExecutionContext exec, final BufferedDataTable table,
+        final DataTableSpec newSpec, final IntSupplier tableIDSupplier) {
+        return new TableSpecReplacerTable(table, newSpec);
+    }
+
 }

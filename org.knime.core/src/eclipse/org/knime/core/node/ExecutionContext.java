@@ -65,7 +65,6 @@ import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.data.container.DefaultLocalDataRepository;
 import org.knime.core.data.container.ILocalDataRepository;
-import org.knime.core.data.container.TableSpecReplacerTable;
 import org.knime.core.data.container.VoidTable;
 import org.knime.core.data.container.WrappedTable;
 import org.knime.core.data.container.filter.TableFilter;
@@ -433,10 +432,7 @@ public class ExecutionContext extends ExecutionMonitor {
             final ExecutionMonitor subProgressMon)
             throws CanceledExecutionException {
         var t = getTableBackend().rearrange(subProgressMon, m_dataRepository::generateNewID, rearranger, in, this);
-        registerAsLocalTableIfContainerTable(t);
-        var out = BufferedDataTable.wrapTableFromTableBackend(t, m_dataRepository);
-        out.setOwnerRecursively(m_node);
-        return out;
+        return wrapTableFromBackend(t);
     }
 
     /**
@@ -450,10 +446,8 @@ public class ExecutionContext extends ExecutionMonitor {
      */
     public BufferedDataTable createSpecReplacerTable(
             final BufferedDataTable in, final DataTableSpec newSpec) {
-        TableSpecReplacerTable t = new TableSpecReplacerTable(in, newSpec);
-        BufferedDataTable out = new BufferedDataTable(t, getDataRepository());
-        out.setOwnerRecursively(m_node);
-        return out;
+        var t = getTableBackend().replaceSpec(this, in, newSpec, m_dataRepository::generateNewID);
+        return wrapTableFromBackend(t);
     }
 
    /**
