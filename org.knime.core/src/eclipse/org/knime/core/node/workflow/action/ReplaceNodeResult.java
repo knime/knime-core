@@ -50,6 +50,7 @@ package org.knime.core.node.workflow.action;
 
 import java.util.List;
 
+import org.knime.core.node.NodeFactory;
 import org.knime.core.node.context.ModifiableNodeCreationConfiguration;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.ConnectionContainer;
@@ -76,24 +77,30 @@ public final class ReplaceNodeResult {
 
     private final ModifiableNodeCreationConfiguration m_nodeCreationConfig;
 
+    private final NodeFactory<?> m_originalNodeFactory;
+
     /**
      * New instance.
      *
      * @param wfm the host workflow manager
-     * @param replacedNodeID the id of the node that has been replaced
+     * @param replacedNodeID the id of the newly created node
      * @param removedConnections the connections that couldn't be restored after the replacement
      * @param originalNodeCreationConfig the original creation config of the old node (for the undo)
+     * @param originalNodeFactory factory of the deleted node
      */
     public ReplaceNodeResult(final WorkflowManager wfm, final NodeID replacedNodeID,
         final List<ConnectionContainer> removedConnections,
-        final ModifiableNodeCreationConfiguration originalNodeCreationConfig) {
+        final ModifiableNodeCreationConfiguration originalNodeCreationConfig,
+        final NodeFactory<?> originalNodeFactory) {
         CheckUtils.checkNotNull(wfm);
         CheckUtils.checkNotNull(replacedNodeID);
+        CheckUtils.checkNotNull(removedConnections);
         CheckUtils.checkNotNull(removedConnections);
         m_wfm = wfm;
         m_replacedNodeID = replacedNodeID;
         m_removedConnections = removedConnections;
         m_nodeCreationConfig = originalNodeCreationConfig;
+        m_originalNodeFactory = originalNodeFactory;
     }
 
     /**
@@ -107,12 +114,17 @@ public final class ReplaceNodeResult {
      * Performs the undo.
      */
     public void undo() {
-        m_wfm.replaceNode(m_replacedNodeID, m_nodeCreationConfig);
-        for (ConnectionContainer cc : m_removedConnections) {
-            if (m_wfm.canAddConnection(cc.getSource(), cc.getSourcePort(), cc.getDest(), cc.getDestPort())) {
-                m_wfm.addConnection(cc.getSource(), cc.getSourcePort(), cc.getDest(), cc.getDestPort());
-            }
-        }
+        m_wfm.replaceNode(m_replacedNodeID, m_nodeCreationConfig, m_originalNodeFactory);
+        m_removedConnections.stream()
+            .filter(c -> m_wfm.canAddConnection(c.getSource(), c.getSourcePort(), c.getDest(), c.getDestPort()))
+            .forEach(c -> m_wfm.addConnection(c.getSource(), c.getSourcePort(), c.getDest(), c.getDestPort()));
+    }
+
+    /**
+     * @return the replacedNodeID
+     */
+    public NodeID getReplacedNodeID() {
+        return m_replacedNodeID;
     }
 
 }

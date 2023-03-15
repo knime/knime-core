@@ -296,10 +296,10 @@ public final class WorkflowManager extends NodeContainer
      */
     private boolean m_hideInUI = false;
 
-    /** A scope context that, if set, is pushed first onto the flow variable stack of any new source node.
-     * Field was added as part of AP-18320 (integrated deployment, workflow executor unable to properly capture
-     * information).
-     * This field will be <code>null</code> for the most part. It must be null for workflow projects.
+    /**
+     * A scope context that, if set, is pushed first onto the flow variable stack of any new source node. Field was
+     * added as part of AP-18320 (integrated deployment, workflow executor unable to properly capture information). This
+     * field will be <code>null</code> for the most part. It must be null for workflow projects.
      */
     private FlowScopeContext m_initalScopeContext;
 
@@ -545,7 +545,7 @@ public final class WorkflowManager extends NodeContainer
             if (workflowContext == null && getNodeContainerDirectory() != null) { // real projects have a file loc
                 LOGGER.warn("No workflow context available for " + m_name, new Throwable());
                 workflowContext =
-                        WorkflowContextV2.forTemporaryWorkflow(getNodeContainerDirectory().getFile().toPath(), null);
+                    WorkflowContextV2.forTemporaryWorkflow(getNodeContainerDirectory().getFile().toPath(), null);
             }
             createAndSetWorkflowTempDirectory(workflowContext);
         } else {
@@ -773,9 +773,8 @@ public final class WorkflowManager extends NodeContainer
      * @since 2.8
      */
     public WorkflowManager createAndAddProject(final String name, final WorkflowCreationHelper creationHelper) {
-        WorkflowManager wfm =
-            createAndAddSubWorkflow(new PortType[0], new PortType[0], name, true, creationHelper.getWorkflowContext(),
-                creationHelper.getWorkflowDataRepository(), null, null);
+        WorkflowManager wfm = createAndAddSubWorkflow(new PortType[0], new PortType[0], name, true,
+            creationHelper.getWorkflowContext(), creationHelper.getWorkflowDataRepository(), null, null);
         LOGGER.debug("Created project " + ((NodeContainer)wfm).getID());
         return wfm;
     }
@@ -871,8 +870,8 @@ public final class WorkflowManager extends NodeContainer
      * Replaces a node with same type of node but another {@link NodeCreationConfiguration}, e.g. in order to change the
      * ports.
      *
-     * Operation is only applicable for {@link NativeNodeContainer}s. Otherwise an {@link IllegalStateException} will
-     * be thrown.
+     * Operation is only applicable for {@link NativeNodeContainer}s. Otherwise an {@link IllegalStateException} will be
+     * thrown.
      *
      * Node settings and annotation will be transfered to the new node. Incoming and outgoing connections will be kept
      * as far as possible (if the respective input and output port is still there and compatible).
@@ -886,6 +885,36 @@ public final class WorkflowManager extends NodeContainer
      */
     public ReplaceNodeResult replaceNode(final NodeID id, final ModifiableNodeCreationConfiguration newCreationConfig) {
         CheckUtils.checkState(canReplaceNode(id), "Node cannot be replaced");
+        return replaceNodeInternal(id, newCreationConfig,
+            ((NativeNodeContainer)getNodeContainer(id)).getNode().getFactory());
+    }
+
+    /**
+     * Replaces a node with same type of node but another {@link NodeCreationConfiguration}, e.g. in order to change the
+     * ports.
+     *
+     * Operation is only applicable for {@link NativeNodeContainer}s. Otherwise an {@link IllegalStateException} will be
+     * thrown.
+     *
+     * Node settings and annotation will be transfered to the new node. Incoming and outgoing connections will be kept
+     * as far as possible (if the respective input and output port is still there and compatible).
+     *
+     * @param id the id of the node to replace
+     * @param newCreationConfig node creation configuration to create the new node, can be <code>null</code>
+     * @param factory node factory of the new node
+     * @return a result that contains all information necessary to undo the operation
+     * @throws IllegalStateException if the node cannot be replaced (e.g. because there are executing successors)
+     * @throws IllegalArgumentException if there is no node for the given id
+     * @since 5.1
+     */
+    public ReplaceNodeResult replaceNode(final NodeID id, final ModifiableNodeCreationConfiguration newCreationConfig,
+        final NodeFactory<?> factory) {
+        CheckUtils.checkState(canReplaceNode(id), "Node cannot be replaced");
+        return replaceNodeInternal(id, newCreationConfig, factory);
+    }
+
+    private ReplaceNodeResult replaceNodeInternal(final NodeID id,
+        final ModifiableNodeCreationConfiguration newCreationConfig, final NodeFactory<?> factory) {
         try (WorkflowLock lock = lock()) {
             var nnc = (NativeNodeContainer)getNodeContainer(id);
             // keep the node's settings
@@ -894,15 +923,20 @@ public final class WorkflowManager extends NodeContainer
 
             // keep some node properties to be transfered to the new node
             var uiInfo = nnc.getUIInformation();
-            var factory = nnc.getNode().getFactory();
             var nodeAnnotation = nnc.getNodeAnnotation();
             var incomingConnections = getIncomingConnectionsFor(id);
             var outgoingConnections = getOutgoingConnectionsFor(id);
 
             // keep old node creation config
-            var oldCreationConfig =
-                nnc.getNode().getCopyOfCreationConfig().orElseThrow(() -> new IllegalStateException(String.format(
-                    "<%s> cannot be replaced, it doesn't provide a `ModifiableNodeCreationConfiguration`", id)));
+            ModifiableNodeCreationConfiguration oldCreationConfig = null;
+            if (newCreationConfig != null) {
+                oldCreationConfig =
+                    nnc.getNode().getCopyOfCreationConfig()
+                        .orElseThrow(() -> new IllegalStateException(String.format(
+                            "<%s> cannot be replaced, it doesn't provide a `ModifiableNodeCreationConfiguration`",
+                            id)));
+            }
+            var oldNodeFactory = ((NativeNodeContainer)getNodeContainer(id)).getNode().getFactory();
 
             // delete the old node
             removeNode(id);
@@ -925,22 +959,16 @@ public final class WorkflowManager extends NodeContainer
             }
 
             // restore connections if possible
-            List<ConnectionContainer> removedConnections;
-            if (oldCreationConfig.getPortConfig().isPresent() && newCreationConfig.getPortConfig().isPresent()) {
-                removedConnections = reconnect(id,
-                    oldCreationConfig.getPortConfig().get().mapInputPorts(newCreationConfig.getPortConfig().get()), // NOSONAR: Presence checked
-                    oldCreationConfig.getPortConfig().get().mapOutputPorts(newCreationConfig.getPortConfig().get()), // NOSONAR: Presence checked
-                    incomingConnections, outgoingConnections);
-            } else {
-                removedConnections = Collections.emptyList();
-            }
+            var removedConnections =
+                reconnect(id, oldCreationConfig, newCreationConfig, incomingConnections, outgoingConnections);
 
             // notify listeners if port config has changed
-            if (nodeCreationConfigHasChangedPorts(oldCreationConfig, newCreationConfig)) {
+            if (nnc.getNode().getFactory().getClass().equals(factory.getClass()) && oldCreationConfig != null
+                && nodeCreationConfigHasChangedPorts(oldCreationConfig, newCreationConfig)) {
                 notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.NODE_PORTS_CHANGED, id, null, null));
             }
 
-            return new ReplaceNodeResult(this, id, removedConnections, oldCreationConfig);
+            return new ReplaceNodeResult(this, id, removedConnections, oldCreationConfig, oldNodeFactory);
         }
     }
 
@@ -951,6 +979,7 @@ public final class WorkflowManager extends NodeContainer
      * @param oldCreationConfig The creation config of the node prior to update
      * @param newCreationConfig The new creation config of the node
      * @return Whether a port config still exists and there have been changes to it as compared to the old config.
+     *
      */
     private static boolean nodeCreationConfigHasChangedPorts(
         final ModifiableNodeCreationConfiguration oldCreationConfig,
@@ -965,17 +994,38 @@ public final class WorkflowManager extends NodeContainer
             || !(Arrays.equals(oldPortConfig.getOutputPorts(), newPortConfig.getOutputPorts()));
     }
 
-    private List<ConnectionContainer> reconnect(final NodeID newId, final Map<Integer, Integer> inputPortMapping,
-        final Map<Integer, Integer> outputPortMapping, final Set<ConnectionContainer> incomingConnections,
+    private static Pair<Map<Integer, Integer>, Map<Integer, Integer>> getPortConfigMapping(
+        final ModifiableNodeCreationConfiguration oldCreationConfig,
+        final ModifiableNodeCreationConfiguration newCreationConfig) {
+        Map<Integer, Integer> inputPortMapping = null;
+        Map<Integer, Integer> outputPortMapping = null;
+        if (oldCreationConfig != null && newCreationConfig != null) {
+            var oldPortConfig = oldCreationConfig.getPortConfig();
+            var newPortConfig = newCreationConfig.getPortConfig();
+            if (oldPortConfig.isPresent() && newPortConfig.isPresent()) {
+                inputPortMapping = oldPortConfig.get().mapInputPorts(newPortConfig.get());
+                outputPortMapping = oldPortConfig.get().mapOutputPorts(newPortConfig.get());
+            }
+        }
+        return new Pair<>(inputPortMapping, outputPortMapping);
+    }
+
+    private List<ConnectionContainer> reconnect(final NodeID newId,
+        final ModifiableNodeCreationConfiguration oldCreationConfig,
+        final ModifiableNodeCreationConfiguration newCreationConfig, final Set<ConnectionContainer> incomingConnections,
         final Set<ConnectionContainer> outgoingConnections) {
 
         List<ConnectionContainer> removedConnections = new ArrayList<>();
 
         // set incoming connections
+        var portMappings = getPortConfigMapping(oldCreationConfig, newCreationConfig);
+        Map<Integer, Integer> inputPortMapping = portMappings.getFirst();
+        Map<Integer, Integer> outputPortMapping = portMappings.getSecond();
+
         for (final ConnectionContainer c : incomingConnections) {
-            if (canAddConnection(c.getSource(), c.getSourcePort(), newId, inputPortMapping.get(c.getDestPort()))) {
-                final ConnectionContainer newcc =
-                    addConnection(c.getSource(), c.getSourcePort(), newId, inputPortMapping.get(c.getDestPort()));
+            int destPort = inputPortMapping != null ? inputPortMapping.get(c.getDestPort()) : c.getDestPort();
+            if (canAddConnection(c.getSource(), c.getSourcePort(), newId, destPort)) {
+                final ConnectionContainer newcc = addConnection(c.getSource(), c.getSourcePort(), newId, destPort);
                 newcc.setUIInfo(c.getUIInfo());
             } else {
                 removedConnections.add(c);
@@ -984,9 +1034,9 @@ public final class WorkflowManager extends NodeContainer
 
         // set outgoing connections
         for (final ConnectionContainer c : outgoingConnections) {
-            if (canAddConnection(newId, outputPortMapping.get(c.getSourcePort()), c.getDest(), c.getDestPort())) {
-                final ConnectionContainer newcc =
-                    addConnection(newId, outputPortMapping.get(c.getSourcePort()), c.getDest(), c.getDestPort());
+            int sourcePort = outputPortMapping != null ? outputPortMapping.get(c.getDestPort()) : c.getDestPort();
+            if (canAddConnection(newId, sourcePort, c.getDest(), c.getDestPort())) {
+                final ConnectionContainer newcc = addConnection(newId, sourcePort, c.getDest(), c.getDestPort());
                 newcc.setUIInfo(c.getUIInfo());
             } else {
                 removedConnections.add(c);
@@ -1089,12 +1139,12 @@ public final class WorkflowManager extends NodeContainer
 
     /**
      * Adds new empty metanode to this WFM.
+     *
      * @param workflowDataRepository TODO
      */
     private WorkflowManager createAndAddSubWorkflow(final PortType[] inPorts, final PortType[] outPorts,
         final String name, final boolean isNewProject, final WorkflowContextV2 context,
-        final WorkflowDataRepository workflowDataRepository,
-        final NodeID idOrNull, final NodeAnnotation nodeAnno) {
+        final WorkflowDataRepository workflowDataRepository, final NodeID idOrNull, final NodeAnnotation nodeAnno) {
         final boolean hasPorts = inPorts.length != 0 || outPorts.length != 0;
         if (this == ROOT) {
             CheckUtils.checkState(!hasPorts,
@@ -1317,8 +1367,10 @@ public final class WorkflowManager extends NodeContainer
         return newConn;
     }
 
-    /** Implementation of {@link #addConnection(NodeID, int, NodeID, int, boolean)} -- assumes that all validation
-     * is done and there is no other old connection to replace. Does not fire events or propagates reset or anything.
+    /**
+     * Implementation of {@link #addConnection(NodeID, int, NodeID, int, boolean)} -- assumes that all validation is
+     * done and there is no other old connection to replace. Does not fire events or propagates reset or anything.
+     *
      * @param newConn new connection to set.
      */
     private void addConnection(final ConnectionContainer newConn) {
@@ -1447,7 +1499,7 @@ public final class WorkflowManager extends NodeContainer
                     if (hasSuccessorsInProgress(destPort)) {
                         return false;
                     }
-                 }
+                }
             }
             // check if we are about to replace an existing connection
             for (ConnectionContainer cc : m_workflow.getConnectionsByDest(dest)) {
@@ -2763,8 +2815,8 @@ public final class WorkflowManager extends NodeContainer
      * must be a native node. Otherwise an exception will be thrown.
      *
      * @param id the id of the node to be re-executed
-     * @param data the data supplied to the node prior re-execution (via {@link ReExecutable#preReExecute(Object,
-     * boolean)})
+     * @param data the data supplied to the node prior re-execution (via
+     *            {@link ReExecutable#preReExecute(Object, boolean)})
      * @param useAsNewDefault if <code>true</code> the supplied data is used a new default node settings
      * @throws IllegalArgumentException if the specified node can't be re-executed because it doesn't fulfill the
      *             required conditions
@@ -2926,7 +2978,7 @@ public final class WorkflowManager extends NodeContainer
                 // (makes some of the statements below useless..)
                 return;
             } // node has all required predecessors and they are all marked
-            // or executing or executed....
+              // or executing or executed....
             InternalNodeContainerState state = nc.getInternalState();
             if (EXECUTED.equals(state)) {
                 // ignore executed nodes and push the step execution downstream
@@ -3322,8 +3374,7 @@ public final class WorkflowManager extends NodeContainer
                                     "Scope start and end nodes are not in the" + " same workflow");
                             }
                         } else if (headNode instanceof NativeNodeContainer
-                            && ((NativeNodeContainer)headNode)
-                                .isModelCompatibleTo(ScopeStartNode.class)) {
+                            && ((NativeNodeContainer)headNode).isModelCompatibleTo(ScopeStartNode.class)) {
                             //check that the start and end nodes have compatible flow scope contexts
                             Class<? extends FlowScopeContext> endNodeFlowScopeContext =
                                 ((ScopeEndNode<?>)nnc.getNodeModel()).getFlowScopeContextClass();
@@ -3789,7 +3840,8 @@ public final class WorkflowManager extends NodeContainer
                 if (startNC != null) {
                     NativeNodeContainer virtualInNode =
                         subwfm.getNodeContainer(copiedNodes.getVirtualInputID(), NativeNodeContainer.class, true);
-                    var virtualScopeCtx = virtualInNode.getOutgoingFlowObjectStack().peek(FlowVirtualScopeContext.class);
+                    var virtualScopeCtx =
+                        virtualInNode.getOutgoingFlowObjectStack().peek(FlowVirtualScopeContext.class);
                     virtualScopeCtx.registerHostNodeForPortObjectPersistence(startNC, exec);
                 }
                 copiedNodes.executeChunk();
@@ -3848,8 +3900,7 @@ public final class WorkflowManager extends NodeContainer
      *             respective 'capture workflow start node' is missing
      * @since 4.2
      */
-    public WorkflowCaptureOperation createCaptureOperationFor(final NodeID endNodeID)
-        throws IllegalScopeException {
+    public WorkflowCaptureOperation createCaptureOperationFor(final NodeID endNodeID) throws IllegalScopeException {
         return new WorkflowCaptureOperation(endNodeID, this);
     }
 
@@ -6857,6 +6908,7 @@ public final class WorkflowManager extends NodeContainer
      * <li>No duplicated error messages</li>
      * <li>At most three messages</li>
      * </ul>
+     *
      * @return String of errors
      * @see #getNodeWarningSummary()
      * @since 4.1
@@ -6921,13 +6973,11 @@ public final class WorkflowManager extends NodeContainer
         }
     }
 
-
-
     /**
-     * Similar to {@link #getNodeErrorSummary()} but the same logic applied to node warning messages. Used as
-     * 'fallback' when the workflow failed to execute but there are no errors. Nodes having failing during configuration
-     * ("No configuration available") will have no error message but a warning.
-
+     * Similar to {@link #getNodeErrorSummary()} but the same logic applied to node warning messages. Used as 'fallback'
+     * when the workflow failed to execute but there are no errors. Nodes having failing during configuration ("No
+     * configuration available") will have no error message but a warning.
+     *
      * @return String of warnings, if any.
      * @since 4.1
      */
@@ -7165,8 +7215,7 @@ public final class WorkflowManager extends NodeContainer
 
     /**
      * @param anchor The anchor
-     * @return List of node containers
-     * @deprecated, use {@link #getNodesInScope(SingleNodeContainer)}
+     * @return List of node containers @deprecated, use {@link #getNodesInScope(SingleNodeContainer)}
      * @since 2.8
      */
     public List<NodeContainer> getNodesInScopeOLD(final SingleNodeContainer anchor) {
@@ -7365,7 +7414,8 @@ public final class WorkflowManager extends NodeContainer
         if (recurseInto) {
             idsToCheck = tnc.fillLinkedTemplateNodesList(idsToCheck, true, false);
         }
-        var idUpdateStates = TemplateUpdateUtil.fillNodeUpdateStates(idsToCheck.values(), loadHelper, loadResult, visitedTemplateMap);
+        var idUpdateStates =
+            TemplateUpdateUtil.fillNodeUpdateStates(idsToCheck.values(), loadHelper, loadResult, visitedTemplateMap);
         for (Map.Entry<NodeID, UpdateStatus> entry : idUpdateStates.entrySet()) {
             var nodeId = entry.getKey();
             var status = entry.getValue();
@@ -7725,8 +7775,8 @@ public final class WorkflowManager extends NodeContainer
                 try {
                     final var tmpDir = FileUtil.createTempDir("templateWorkflowRoot").toPath();
                     final var wfctx = WorkflowContextV2.forTemporaryWorkflow(tmpDir, null);
-                    templateWorkflowRoot = ROOT.createAndAddProject("Workflow Template Root",
-                        new WorkflowCreationHelper(wfctx));
+                    templateWorkflowRoot =
+                        ROOT.createAndAddProject("Workflow Template Root", new WorkflowCreationHelper(wfctx));
                 } catch (IOException e) {
                     LOGGER.warn("Could not create temporary directory for template workflow root.", e);
                     return null;
@@ -8064,8 +8114,7 @@ public final class WorkflowManager extends NodeContainer
             for (int i = 0; i < nodeIDs.length; i++) {
                 // throws exception if not present in workflow
                 NodeContainer cont = getNodeContainer(nodeIDs[i]);
-                final NodeContainerPersistor copyPersistor = cont.getCopyPersistor(false,
-                    isUndoableDeleteCommand);
+                final NodeContainerPersistor copyPersistor = cont.getCopyPersistor(false, isUndoableDeleteCommand);
                 NodeContainerMetaPersistor copyMetaPersistor = copyPersistor.getMetaPersistor();
                 NodeUIInformation overwrittenUIInfo = content.getOverwrittenUIInfo(nodeIDs[i]);
                 Integer suggestedNodeIDSuffix = content.getSuggestedNodIDSuffix(nodeIDs[i]);
@@ -8107,9 +8156,9 @@ public final class WorkflowManager extends NodeContainer
                 }
             }
             workflowAnnotations = m_annotations.stream() //
-                    .filter(anno -> ArrayUtils.contains(content.getAnnotationIDs(), anno.getID())) //
-                    .map(anno -> Pair.create(anno.getData().clone(), anno.getID().getIndex())) //
-                    .collect(Collectors.toList());
+                .filter(anno -> ArrayUtils.contains(content.getAnnotationIDs(), anno.getID())) //
+                .map(anno -> Pair.create(anno.getData().clone(), anno.getID().getIndex())) //
+                .collect(Collectors.toList());
             return new PasteWorkflowContentPersistor(loaderMap, connTemplates, additionalConnTemplates,
                 workflowAnnotations);
         }
@@ -8149,7 +8198,8 @@ public final class WorkflowManager extends NodeContainer
                     .map(uuid -> Objects.equals(uuid, content.getPayloadIdentifier()))//
                     .orElse(false);
                 var pasteContent = unredactedPayloadAvailable ? defClipboardContent.get() : content;
-                return loadWorkflowContent(pasteContent.getPayload(), new ExecutionMonitor(), new LoadResult("Paste into Workflow"));
+                return loadWorkflowContent(pasteContent.getPayload(), new ExecutionMonitor(),
+                    new LoadResult("Paste into Workflow"));
             } catch (CanceledExecutionException e) {
                 throw new IllegalStateException("Cancelation although no access" + " on execution monitor", e);
             }
@@ -8204,8 +8254,8 @@ public final class WorkflowManager extends NodeContainer
     }
 
     /**
-     * Reads the temp folder location from the context and creates the temp folder, if needed. (Only if it's created by this method it will be deleted on
-     * {@link #cleanup()}.
+     * Reads the temp folder location from the context and creates the temp folder, if needed. (Only if it's created by
+     * this method it will be deleted on {@link #cleanup()}.
      *
      * @param context the current workflow context
      * @throws IllegalStateException if temp folder can't be created or is not a writable directory.
@@ -8291,9 +8341,8 @@ public final class WorkflowManager extends NodeContainer
                 if (nc instanceof SingleNodeContainer) {
                     NodeOutPort[] predecessorOutPorts = assemblePredecessorOutPorts(id);
                     FlowObjectStack[] sos = Arrays.stream(predecessorOutPorts)
-                            .map(p -> p != null ? p.getFlowObjectStack() : null)
-                            .toArray(FlowObjectStack[]::new);
-                    createAndSetFlowObjectStackFor((SingleNodeContainer) nc, sos);
+                        .map(p -> p != null ? p.getFlowObjectStack() : null).toArray(FlowObjectStack[]::new);
+                    createAndSetFlowObjectStackFor((SingleNodeContainer)nc, sos);
                 }
                 nc.loadExecutionResult(exResult, subExec, loadResult);
                 subExec.setProgress(1.0);
@@ -8524,15 +8573,16 @@ public final class WorkflowManager extends NodeContainer
         configureAfterLoadWorkflowContent(translationMap);
         NodeID[] newIDs = resultColl.toArray(new NodeID[resultColl.size()]);
         return WorkflowCopyContent.builder() //
-                .setAnnotationIDs(workflowContentPair.getFirst()) //
-                .setNodeIDs(newIDs) //
-                .build();
+            .setAnnotationIDs(workflowContentPair.getFirst()) //
+            .setNodeIDs(newIDs) //
+            .build();
     }
 
     /**
-     * configure inserted nodes; to date it configures all source nodes, which trigger configuration of their
-     * downstream nodes. One special handling: Metanodes might have been inserted and they can contain source nodes,
-     * hence they need to be configured 'fully'
+     * configure inserted nodes; to date it configures all source nodes, which trigger configuration of their downstream
+     * nodes. One special handling: Metanodes might have been inserted and they can contain source nodes, hence they
+     * need to be configured 'fully'
+     *
      * @param translationMap
      */
     // TODO change this to a proper sweep once WorkflowDef contain possible executed nodes
@@ -8559,7 +8609,7 @@ public final class WorkflowManager extends NodeContainer
     @Override
     void loadContent(final BaseNodeDef nodeDef, final ExecutionMonitor exec, final LoadResult loadResult)
         throws CanceledExecutionException {
-        var metaNodeDef = (MetaNodeDef) nodeDef;
+        var metaNodeDef = (MetaNodeDef)nodeDef;
         loadContent(metaNodeDef.getWorkflow(), exec, loadResult);
     }
 
@@ -8949,8 +8999,7 @@ public final class WorkflowManager extends NodeContainer
             case COMPONENT:
                 return new SubNodeContainer(this, nodeId, (ComponentNodeDef)def);
             default:
-                throw new IllegalArgumentException(
-                    String.format("The %s node type is not supported", nodeType.name()));
+                throw new IllegalArgumentException(String.format("The %s node type is not supported", nodeType.name()));
         }
     }
 
@@ -9021,8 +9070,8 @@ public final class WorkflowManager extends NodeContainer
      * @param def a {@link ComponentNodeDef}
      * @return a {@link WorkflowManager}
      */
-    static WorkflowManager newComponentWorkflowManagerInstance(final SubNodeContainer directNCParent, final NodeID nodeId,
-        final ComponentNodeDef def) {
+    static WorkflowManager newComponentWorkflowManagerInstance(final SubNodeContainer directNCParent,
+        final NodeID nodeId, final ComponentNodeDef def) {
         var wfm = new WorkflowManager(directNCParent, null, nodeId, false, def, def.getWorkflow());
         // in case of an subnode, not the WorkflowManager, but the subnode itself holds the template information
         wfm.setTemplateInformation(MetaNodeTemplateInformation.createEmptyTemplate(TemplateType.SubNode));
@@ -9657,9 +9706,8 @@ public final class WorkflowManager extends NodeContainer
      * user's view). Only applicable if the workflow manager doesn't have any inputs nor outputs, if it's not part of a
      * component (i.e. needs to be a metanode) and if it's not a project workflow manager.
      *
-     * One use case is a node that executes captured fragments ({@link WorkflowSegment}) within the same workflow
-     * again. The to be executed fragment is copied into a temporary metanode for execution and can be hidden from the
-     * user.
+     * One use case is a node that executes captured fragments ({@link WorkflowSegment}) within the same workflow again.
+     * The to be executed fragment is copied into a temporary metanode for execution and can be hidden from the user.
      *
      * @throws UnsupportedOperationException if the workflow manager to be hidden has inputs/outputs, is part of a
      *             component or is a project workflow
@@ -9910,7 +9958,7 @@ public final class WorkflowManager extends NodeContainer
      * @since 3.5
      */
     public NodeUIInformation getInPortsBarUIInfo() {
-       return m_inPortsBarUIInfo;
+        return m_inPortsBarUIInfo;
     }
 
     /**
@@ -10081,8 +10129,7 @@ public final class WorkflowManager extends NodeContainer
     }
 
     /** Adds annotation as in #addWorkf but does not fire dirty event. */
-    private WorkflowAnnotation addWorkflowAnnotationInternal(final AnnotationData data,
-        final int preferredIndex) {
+    private WorkflowAnnotation addWorkflowAnnotationInternal(final AnnotationData data, final int preferredIndex) {
         try (WorkflowLock lock = lock()) {
             BitSet bitSet = new BitSet();
             m_annotations.stream().mapToInt(anno -> anno.getID().getIndex()).forEach(bitSet::set);
@@ -10493,9 +10540,8 @@ public final class WorkflowManager extends NodeContainer
         List<ExternalParameterHandle<ExternalNodeData>> inputNodes =
             getExternalParameterHandles(InputNode.class, i -> i.getInputData().getID(), InputNode::getInputData,
                 InputNode::isUseAlwaysFullyQualifiedParameterName, true, true);
-        return inputNodes.stream().collect(Collectors.toMap(
-            ExternalParameterHandle::getParameterName,
-            ExternalParameterHandle::getParameterValue));
+        return inputNodes.stream().collect(
+            Collectors.toMap(ExternalParameterHandle::getParameterName, ExternalParameterHandle::getParameterValue));
     }
 
     /**
@@ -10531,9 +10577,8 @@ public final class WorkflowManager extends NodeContainer
         List<ExternalParameterHandle<ExternalNodeData>> outputNodes =
             getExternalParameterHandles(OutputNode.class, o -> o.getExternalOutput().getID(),
                 OutputNode::getExternalOutput, OutputNode::isUseAlwaysFullyQualifiedParameterName, true, true);
-          return outputNodes.stream().collect(Collectors.toMap(
-                ExternalParameterHandle::getParameterName,
-                ExternalParameterHandle::getParameterValue));
+        return outputNodes.stream().collect(
+            Collectors.toMap(ExternalParameterHandle::getParameterName, ExternalParameterHandle::getParameterValue));
     }
 
     /**
@@ -10654,8 +10699,8 @@ public final class WorkflowManager extends NodeContainer
                     matchingNodeOptional = inputNodes.stream()
                         .filter(e -> e.getParameterNameFullyQualified().equals(userParameter)).findFirst();
                 } else { // short notation, e.g. "param-name"
-                    matchingNodeOptional = inputNodes.stream()
-                            .filter(e -> e.getParameterNameShort().equals(userParameter)).findFirst();
+                    matchingNodeOptional =
+                        inputNodes.stream().filter(e -> e.getParameterNameShort().equals(userParameter)).findFirst();
                 }
                 ExternalParameterHandle<V> matchingNode =
                     matchingNodeOptional.orElseThrow(() -> new InvalidSettingsException(String.format(
@@ -10672,7 +10717,7 @@ public final class WorkflowManager extends NodeContainer
                 NativeNodeContainer inputNodeNC = t.getFirst();
                 V value = t.getSecond();
                 LOGGER.debugWithFormat("Setting new parameter for node \"%s\"", inputNodeNC.getNameWithID());
-                setParamValue.accept((T) inputNodeNC.getNodeModel(), value);
+                setParamValue.accept((T)inputNodeNC.getNodeModel(), value);
                 inputNodeNC.getParent().resetAndConfigureNode(inputNodeNC.getID());
             }
         }
@@ -10712,9 +10757,10 @@ public final class WorkflowManager extends NodeContainer
                     NodeContext.removeLastContext();
                 }
             }
-            if (!nonUniqueParameterNames.isEmpty() ) {
-                LOGGER.warnWithFormat("Workflow contains nodes with duplicate parameter name "
-                    + "(will be made unique by appending node IDs): %s",
+            if (!nonUniqueParameterNames.isEmpty()) {
+                LOGGER.warnWithFormat(
+                    "Workflow contains nodes with duplicate parameter name "
+                        + "(will be made unique by appending node IDs): %s",
                     ConvenienceMethods.getShortStringFrom(nonUniqueParameterNames, 5));
             }
 

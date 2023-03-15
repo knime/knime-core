@@ -155,6 +155,22 @@ public class ReplaceNodePorts extends WorkflowTestCase {
 
 		waitAndCheckNodePortsChangedEventCounterIs(1);
 	}
+	
+    /**
+     * Tests
+     * {@link WorkflowManager#replaceNode(NodeID, ModifiableNodeCreationConfiguration)}.
+     */
+	@Test
+	public void testReplaceNodeWithAnotherNodeType() {
+		WorkflowManager wfm = getManager();
+		var nodeFactory = ((NativeNodeContainer) wfm.getNodeContainer(m_concatenate_2)).getNode().getFactory();
+		var result = wfm.replaceNode(m_datagenerator_1, null, nodeFactory);
+
+		var nodes = wfm.getNodeContainers();
+		var concatenateNodes = nodes.stream().filter(n -> n.getName().equals("Concatenate")).toList();
+		assertThat("Create new node", concatenateNodes.size(), is(2));
+		assertThat("Restore a single connection", wfm.getOutgoingConnectionsFor(result.getReplacedNodeID()).size(), is(1));
+	}
 
 	/**
 	 * Tests that connections remain if a port is inserted before another already
