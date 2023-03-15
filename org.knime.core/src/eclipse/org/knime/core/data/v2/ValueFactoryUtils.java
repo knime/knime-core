@@ -94,6 +94,9 @@ import org.knime.core.data.v2.value.VoidRowKeyFactory;
 import org.knime.core.data.v2.value.VoidValueFactory;
 import org.knime.core.data.v2.value.cell.DataCellValueFactory;
 import org.knime.core.data.v2.value.cell.DictEncodedDataCellValueFactory;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.table.schema.DataSpec;
 import org.knime.core.table.schema.traits.DataTraitUtils;
@@ -191,11 +194,80 @@ public final class ValueFactoryUtils {
             valueFactory = getValueFactoryFromExtensionPoint(traits, dataRepository, valueFactoryName);
         }
 
-        if (valueFactory instanceof FileStoreAwareValueFactory) {
-            ((FileStoreAwareValueFactory)valueFactory).initializeForReading(dataRepository);
+        if (valueFactory instanceof FileStoreAwareValueFactory fsValueFactory) {
+            fsValueFactory.initializeForReading(dataRepository);
         }
 
         return valueFactory;
+    }
+
+    /**
+     * Loads a ValueFactory from {@link NodeSettingsRO} that were stored by
+     * {@link #saveValueFactory(ValueFactory, NodeSettingsWO)}.
+     *
+     * @param settings to load from (must be in the format of {@link #saveValueFactory(ValueFactory, NodeSettingsWO)})
+     * @param fsHandler for handling file stores
+     * @return the loaded ValueFactory
+     * @throws InvalidSettingsException if the settings are not in the format of
+     *             {@link #saveValueFactory(ValueFactory, NodeSettingsWO)}
+     * @see #saveValueFactory(ValueFactory, NodeSettingsWO) for saving a ValueFactory in the correct format
+     * @since 5.1
+     */
+    public static ValueFactory<?, ?> loadValueFactory(final NodeSettingsRO settings,
+        final IWriteFileStoreHandler fsHandler) throws InvalidSettingsException {
+        ValueFactory<?, ?> valueFactory = loadFsUninitializedValueFactory(settings);
+        initFileStoreHandler(valueFactory, fsHandler);
+        return valueFactory;
+    }
+
+    private static ValueFactory<?, ?> loadFsUninitializedValueFactory(final NodeSettingsRO settings)
+        throws InvalidSettingsException {
+        var valueFactoryName = settings.getString("valueFactoryName");
+        if (VoidValueFactory.class.getName().equals(valueFactoryName)) {
+            return VoidValueFactory.INSTANCE;
+        } else if (SPECIFIC_COLLECTION_FACTORY_PROVIDER.hasFactoryFor(valueFactoryName)) {
+            return SPECIFIC_COLLECTION_FACTORY_PROVIDER.getFactoryFor(valueFactoryName);
+        } else if (valueFactoryName.equals(DictEncodedDataCellValueFactory.class.getName())) {
+            var dataType = settings.getDataType("dataType");
+            return new DictEncodedDataCellValueFactory(dataType);
+        } else {
+            var valueFactory = getValueFactoryFromExtensionPoint(valueFactoryName)
+                .orElseThrow(() -> new IllegalArgumentException("Unknown ValueFactory: " + valueFactoryName));
+            if (valueFactory instanceof CollectionValueFactory<?, ?> collectionValueFactory) {
+                var elementValueFactory =
+                    loadFsUninitializedValueFactory(settings.getNodeSettings("elementValueFactory"));
+                collectionValueFactory.initialize(elementValueFactory, getDataTypeForValueFactory(elementValueFactory));
+            }
+            return valueFactory;
+        }
+    }
+
+    private static void initFileStoreHandler(final ValueFactory<?, ?> uninitializedValueFactory,
+        final IWriteFileStoreHandler fsHandler) {
+        if (uninitializedValueFactory instanceof FileStoreAwareValueFactory fsValueFactory) {
+            fsValueFactory.initializeForWriting(fsHandler);
+        }
+        if (uninitializedValueFactory instanceof CollectionValueFactory<?, ?> collectionValueFactory) {
+            initFileStoreHandler(collectionValueFactory.getElementValueFactory(), fsHandler);
+        }
+    }
+
+    /**
+     * Saves a ValueFactory into the provided settings.
+     *
+     * @param valueFactory to save
+     * @param settings to save to
+     * @see #loadValueFactory(NodeSettingsRO, IWriteFileStoreHandler) for loading the ValueFactory from the settings
+     * @since 5.1
+     */
+    public static void saveValueFactory(final ValueFactory<?, ?> valueFactory, final NodeSettingsWO settings) {
+        settings.addString("valueFactoryName", valueFactory.getClass().getName());
+        if (valueFactory instanceof CollectionValueFactory<?, ?> collectionValueFactory) {
+            saveValueFactory(collectionValueFactory.getElementValueFactory(),
+                settings.addNodeSettings("elementValueFactory"));
+        } else if (isDataCellValueFactory(valueFactory)) {
+            settings.addDataType("dataType", getDataTypeForValueFactory(valueFactory));
+        }
     }
 
     /**
@@ -281,40 +353,39 @@ public final class ValueFactoryUtils {
     public static ValueFactory<?, ?> getValueFactory(final DataType type, //NOSONAR
         final Function<DataType, ValueFactory<?, ?>> fallbackFactoryProvider,
         final IWriteFileStoreHandler fileStoreHandler) {
-        ValueFactory<?, ?> factory = null;
+        ValueFactory<?, ?> factory = getFsUninitializedValueFactory(type, fallbackFactoryProvider);
+        initFileStoreHandler(factory, fileStoreHandler);
+        return factory;
+    }
+
+    private static ValueFactory<?, ?> getFsUninitializedValueFactory(final DataType type,
+        final Function<DataType, ValueFactory<?, ?>> fallbackFactoryProvider) {
 
         // Handle special cases
         // Use special value factories for list/sets of primitive types
         if (type == null) {
-            factory = VoidValueFactory.INSTANCE;
+            return VoidValueFactory.INSTANCE;
         }
         if (SPECIFIC_COLLECTION_FACTORY_PROVIDER.hasFactoryFor(type)) {
             return SPECIFIC_COLLECTION_FACTORY_PROVIDER.getFactoryFor(type);
         }
 
         // Get the value factory from the extension point
-        if (factory == null) {
-            // Use the registered value factory
-            factory = ValueFactoryUtils.getValueFactoryFromExtensionPoint(type)//
-                // Use the fallback which works for all cells
-                .orElseGet(() -> fallbackFactoryProvider.apply(type));
-        }
+        // Use the registered value factory
+        var factory = ValueFactoryUtils.getValueFactoryFromExtensionPoint(type)//
+            // Use the fallback which works for all cells
+            .orElseGet(() -> fallbackFactoryProvider.apply(type));
 
         // Collection types need to be initialized
-        if (factory instanceof CollectionValueFactory) {
-            @SuppressWarnings("null")
+        if (factory instanceof CollectionValueFactory<?, ?> collectionFactory) {
             final DataType elementType = type.getCollectionElementType();
             final ValueFactory<?, ?> elementFactory =
-                getValueFactory(elementType, fallbackFactoryProvider, fileStoreHandler);
-            ((CollectionValueFactory<?, ?>)factory).initialize(elementFactory, elementType);
+                getFsUninitializedValueFactory(elementType, fallbackFactoryProvider);
+            collectionFactory.initialize(elementFactory, elementType);
         }
-
-        if (factory instanceof FileStoreAwareValueFactory) {
-            ((FileStoreAwareValueFactory)factory).initializeForWriting(fileStoreHandler);
-        }
-
         return factory;
     }
+
 
     /**
      * Extracts the traits from the provided factory and adds the LogicalTypeTrait to it.
@@ -519,9 +590,9 @@ public final class ValueFactoryUtils {
 
     private static DataType getDataTypeFromExtensionPoint(final ValueFactory<?, ?> factory) {
         var cellClass = REGISTRY.getCellClassForValueFactory(factory);
-        if (factory instanceof CollectionValueFactory) {
+        if (factory instanceof CollectionValueFactory<?, ?> collectionValueFactory) {
             var elementType =
-                getDataTypeForValueFactory(((CollectionValueFactory<?, ?>)factory).getElementValueFactory());
+                getDataTypeForValueFactory(collectionValueFactory.getElementValueFactory());
             return DataType.getType(cellClass, elementType);
         } else {
             return DataType.getType(cellClass);

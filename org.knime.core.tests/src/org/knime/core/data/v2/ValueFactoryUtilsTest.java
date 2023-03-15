@@ -53,6 +53,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.UUID;
+
 import org.junit.jupiter.api.Test;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
@@ -60,12 +62,14 @@ import org.knime.core.data.IntValue;
 import org.knime.core.data.collection.ListCell;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.StringCell;
 import org.knime.core.data.filestore.internal.NotInWorkflowDataRepository;
 import org.knime.core.data.filestore.internal.NotInWorkflowWriteFileStoreHandler;
 import org.knime.core.data.image.png.PNGImageCellFactory;
 import org.knime.core.data.v2.value.DefaultRowKeyValueFactory;
 import org.knime.core.data.v2.value.DoubleValueFactory;
 import org.knime.core.data.v2.value.IntListValueFactory;
+import org.knime.core.data.v2.value.IntSetValueFactory;
 import org.knime.core.data.v2.value.IntValueFactory;
 import org.knime.core.data.v2.value.ListValueFactory;
 import org.knime.core.data.v2.value.SparseListValueFactory;
@@ -75,6 +79,7 @@ import org.knime.core.data.v2.value.VoidValueFactory;
 import org.knime.core.data.v2.value.cell.DataCellValueFactory;
 import org.knime.core.data.v2.value.cell.DictEncodedDataCellValueFactory;
 import org.knime.core.data.xml.XMLCell;
+import org.knime.core.node.NodeSettings;
 import org.knime.core.table.access.IntAccess.IntReadAccess;
 import org.knime.core.table.access.IntAccess.IntWriteAccess;
 import org.knime.core.table.schema.DataSpec;
@@ -94,6 +99,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  *
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
+@SuppressWarnings("static-method")
 final class ValueFactoryUtilsTest {
 
     @Test
@@ -397,6 +403,61 @@ final class ValueFactoryUtilsTest {
         // no empty public constructor
         assertThrows(IllegalStateException.class,
             () -> ValueFactoryUtils.instantiateValueFactory(NoPublicEmptyConstructor.class));
+    }
+
+
+    @Test
+    void testSaveToNodeSettings() throws Exception {
+        var settings = new NodeSettings("test");
+        ValueFactoryUtils.saveValueFactory(new StringValueFactory(), settings.addNodeSettings("simple"));
+        ValueFactoryUtils.saveValueFactory(IntSetValueFactory.INSTANCE, settings.addNodeSettings("specificCollection"));
+        var listValueFactory = new ListValueFactory();
+        listValueFactory.initialize(new StringValueFactory(), StringCell.TYPE);
+        ValueFactoryUtils.saveValueFactory(listValueFactory, settings.addNodeSettings("genericCollection"));
+        var dataCellValueFactory = new DictEncodedDataCellValueFactory(StringCell.TYPE);
+        ValueFactoryUtils.saveValueFactory(dataCellValueFactory, settings.addNodeSettings("dataCell"));
+        ValueFactoryUtils.saveValueFactory(VoidValueFactory.INSTANCE, settings.addNodeSettings("void"));
+
+        assertEquals(createExpectedNodeSettings(), settings, "Unexpected settings structure");
+    }
+
+    @Test
+    void testLoadFromNodeSettings() throws Exception {
+        var settings = createExpectedNodeSettings();
+        var fsHandler = new NotInWorkflowWriteFileStoreHandler(UUID.randomUUID());
+        var simpleValueFactory = ValueFactoryUtils.loadValueFactory(settings.getNodeSettings("simple"), fsHandler);
+        assertThat(simpleValueFactory).isExactlyInstanceOf(StringValueFactory.class);
+        var specificCollectionValueFactory =
+            ValueFactoryUtils.loadValueFactory(settings.getNodeSettings("specificCollection"), fsHandler);
+        assertEquals(IntSetValueFactory.INSTANCE, specificCollectionValueFactory);
+        var genericCollectionValueFactory =
+            ValueFactoryUtils.loadValueFactory(settings.getNodeSettings("genericCollection"), fsHandler);
+        assertThat(genericCollectionValueFactory).isExactlyInstanceOf(ListValueFactory.class);
+        assertThat(((ListValueFactory)genericCollectionValueFactory).getElementValueFactory())//
+            .as("Check CollectionValueFactory type.")//
+            .isExactlyInstanceOf(StringValueFactory.class);
+        var dataCellValueFactory = ValueFactoryUtils.loadValueFactory(settings.getNodeSettings("dataCell"), fsHandler);
+        assertThat(dataCellValueFactory).isExactlyInstanceOf(DictEncodedDataCellValueFactory.class);
+        assertEquals(StringCell.TYPE, ((DictEncodedDataCellValueFactory)dataCellValueFactory).getType());
+        var voidValueFactory = ValueFactoryUtils.loadValueFactory(settings.getNodeSettings("void"), fsHandler);
+        assertEquals(VoidValueFactory.INSTANCE, voidValueFactory, "Unexpected void value factory.");
+    }
+
+    private static NodeSettings createExpectedNodeSettings() {
+        var settings = new NodeSettings("test");
+        var simpleSettings = settings.addNodeSettings("simple");
+        simpleSettings.addString("valueFactoryName", StringValueFactory.class.getName());
+        var specificCollectionSettings = settings.addNodeSettings("specificCollection");
+        specificCollectionSettings.addString("valueFactoryName", IntSetValueFactory.class.getName());
+        var genericCollectionSettings = settings.addNodeSettings("genericCollection");
+        genericCollectionSettings.addString("valueFactoryName", ListValueFactory.class.getName());
+        genericCollectionSettings.addNodeSettings("elementValueFactory").addString("valueFactoryName",
+            StringValueFactory.class.getName());
+        var dataCellSettings = settings.addNodeSettings("dataCell");
+        dataCellSettings.addString("valueFactoryName", DictEncodedDataCellValueFactory.class.getName());
+        dataCellSettings.addDataType("dataType", StringCell.TYPE);
+        settings.addNodeSettings("void").addString("valueFactoryName", VoidValueFactory.class.getName());
+        return settings;
     }
 
     private static DataTraits createSimpleTypeTraits(final String logicalType) {
