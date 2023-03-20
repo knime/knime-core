@@ -867,8 +867,8 @@ public final class WorkflowManager extends NodeContainer
     }
 
     /**
-     * Replaces a node with same type of node but another {@link NodeCreationConfiguration}, e.g. in order to change the
-     * ports.
+     * Replaces a node by another type of node (optionally with an additional {@link NodeCreationConfiguration}, e.g. in
+     * order to change the ports of the new node).
      *
      * Operation is only applicable for {@link NativeNodeContainer}s. Otherwise an {@link IllegalStateException} will be
      * thrown.
