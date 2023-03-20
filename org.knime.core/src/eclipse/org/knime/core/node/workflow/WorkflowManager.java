@@ -10758,7 +10758,7 @@ public final class WorkflowManager extends NodeContainer
                 }
             }
             if (!nonUniqueParameterNames.isEmpty()) {
-                LOGGER.warnWithFormat(
+                LOGGER.infoWithFormat(
                     "Workflow contains nodes with duplicate parameter name "
                         + "(will be made unique by appending node IDs): %s",
                     ConvenienceMethods.getShortStringFrom(nonUniqueParameterNames, 5));
