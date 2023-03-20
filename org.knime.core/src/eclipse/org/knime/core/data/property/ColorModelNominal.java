@@ -48,13 +48,17 @@
 package org.knime.core.data.property;
 
 import java.awt.Color;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import org.knime.core.data.DataCell;
-import org.knime.core.data.property.ColorHandler.ColorModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
@@ -64,6 +68,7 @@ import org.knime.core.node.config.ConfigWO;
  * Color model which maps a set of <code>DataCell</code> objects to
  * <code>Color</code>.
  *
+ * @noinstantiate This class is not intended to be instantiated by clients.
  * @author Thomas Gabriel, University of Konstanz, Germany
  */
 public final class ColorModelNominal implements ColorModel, Iterable<DataCell> {
@@ -71,16 +76,21 @@ public final class ColorModelNominal implements ColorModel, Iterable<DataCell> {
     /** Maps DataCell values to ColorAttr. */
     private final Map<DataCell, ColorAttr> m_map;
 
+    private final ColorAttr[] m_paletteColors;
+
     /**
      * Creates new ColorHandler based on a mapping.
      * @param map Mapping form DataCell values to ColorAttr objects.
+     * @param palette The palette passed on to a applier node to assign color to new unseen values (or null)
      * @throws IllegalArgumentException If the map is null.
+     * @since 5.1
      */
-    public ColorModelNominal(final Map<DataCell, ColorAttr> map) {
+    public ColorModelNominal(final Map<DataCell, ColorAttr> map, final ColorAttr[] palette) {
         if (map == null)  {
             throw new IllegalArgumentException("Mapping must not be null.");
         }
         m_map = Collections.unmodifiableMap(map);
+        m_paletteColors = Objects.requireNonNullElseGet(palette, () -> new ColorAttr[] {ColorAttr.DEFAULT});
     }
 
     /**
@@ -109,13 +119,14 @@ public final class ColorModelNominal implements ColorModel, Iterable<DataCell> {
     }
 
     private static final String CFG_KEYS = "keys";
+    private static final String CFG_PALETTE = "palette";
 
     /**
      * Saves the <code>DataCell</code> to <code>Color</code> mapping to the
      * given <code>Config</code>. The color is split into red, green, blue, and
      * alpha component which are stored as int array.
      * @param config Save settings to.
-     * @see org.knime.core.data.property.ColorHandler.ColorModel
+     * @see org.knime.core.data.property.ColorModel
      *      #save(ConfigWO)
      * @throws NullPointerException If the <i>config</i> is <code>null</code>.
      */
@@ -128,6 +139,8 @@ public final class ColorModelNominal implements ColorModel, Iterable<DataCell> {
             Color color = e.getValue().getColor();
             config.addInt(key.toString(), color.getRGB());
         }
+        config.addIntArray(CFG_PALETTE,
+            Stream.of(m_paletteColors).map(ColorAttr::getColor).mapToInt(Color::getRGB).toArray());
     }
 
     /**
@@ -155,23 +168,10 @@ public final class ColorModelNominal implements ColorModel, Iterable<DataCell> {
             DataCell cell = keyConfig.getDataCell(key);
             map.put(cell, ColorAttr.getInstance(color));
         }
-        return new ColorModelNominal(map);
-    }
-
-    /**
-     * @return A String for this <code>ColorModel</code> as list of
-     * <code>DataCell</code> to <code>Color</code> mapping.
-     */
-    public String printColorMapping() {
-        StringBuffer buf = new StringBuffer();
-        for (DataCell cell : m_map.keySet()) {
-            Color color = m_map.get(cell).getColor();
-            if (buf.length() > 0) {
-                buf.append(",");
-            }
-            buf.append(cell.toString() + "->" + color.toString());
-        }
-        return "[" + buf.toString() + "]";
+        int[] paletteInts = config.getIntArray(CFG_PALETTE, ColorAttr.DEFAULT.getColor().getRGB());
+        ColorAttr[] palette = IntStream.of(paletteInts).mapToObj(i -> new Color(i, true)).map(ColorAttr::getInstance)
+            .toArray(ColorAttr[]::new);
+        return new ColorModelNominal(map, palette);
     }
 
     /**
@@ -206,4 +206,68 @@ public final class ColorModelNominal implements ColorModel, Iterable<DataCell> {
         return m_map.hashCode();
     }
 
+    /**
+     * This model represented by a map of color hex code to data values, e.g.
+     * <pre>
+     * #194fab -> "Foo", "Bar"
+     * #88ff00 -> "Baz"
+     * </pre>
+     *
+     * @return That (new) map.
+     * @since 5.1
+     */
+    public Map<String, List<String>> getColorToValueMap() {
+        final var result = new LinkedHashMap<String, List<String>>();
+        for (var entry : m_map.entrySet()) {
+            final var color = entry.getValue().getColor();
+            final var colorS = ColorModel.colorToHexString(color);
+            result.computeIfAbsent(colorS, c -> new ArrayList<>()).add(entry.getKey().toString());
+        }
+        return result;
+    }
+
+    /**
+     * Used by the Color Appender node to apply the palette to new values seen in the "test" data.
+     *
+     * @param newValues Values in the input of the appender, possibly contains values already defined.
+     * @return A new model for the old and new values.
+     * @since 5.1
+     */
+    public ColorModelNominal applyToNewValues(final Iterable<DataCell> newValues) {
+        // the intention of the code below....
+        // assume orignal model contains this mapping:
+        //   A - Color1
+        //   B - Color2
+        //   C - Color3
+        // and this palette:
+        //   Color1, Color2, Color3, Color4, Color5
+        //
+        // the values in the argument list (colors to apply to) - note 'B' is missing:
+        //   A, C, D, E, F, G
+        // then the final assignment is:
+        //   A - Color1
+        //   C - Color3
+        //   D - Color4
+        //   E - Color5
+        //   F - Color1 (start over - palette apply from scratch)
+        //   G - Color2
+        // (Color2 is reserved as it's used for 'B' in the original data, though not present in the data now)
+
+        final Map<DataCell, ColorAttr> map = new LinkedHashMap<>(m_map);
+        final var paletteList = new ArrayList<ColorAttr>(Arrays.asList(m_paletteColors));
+        paletteList.removeAll(map.values());
+        for (var cell : newValues) {
+            if (paletteList.isEmpty()) {
+                paletteList.addAll(Arrays.asList(m_paletteColors));
+            }
+            final var assignedColor = map.get(cell);
+            if (assignedColor != null) {
+                paletteList.remove(assignedColor);
+            } else {
+                map.put(cell, paletteList.remove(0));
+            }
+        }
+        return new ColorModelNominal(map, m_paletteColors);
+    }
 }
+

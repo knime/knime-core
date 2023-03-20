@@ -49,6 +49,8 @@ import java.awt.Color;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.knime.core.node.util.CheckUtils;
+
 /**
  * This class holds a <code>Color</code> value as property for view objects and
  * supports colors for selection, hilite, selection-hilite, border, and
@@ -60,6 +62,14 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author Fabian Dill, University of Konstanz
  */
 public final class ColorAttr {
+
+    private static final Color DEFAULT_COLOR = Color.DARK_GRAY;
+
+    /**
+     * The hex value of {@link Color#DARK_GRAY}. It's the default color that is use if there is no mapping set.
+     * @since 5.1
+     */
+    public static final String DEFAULT_COLOR_HEX = ColorModel.colorToHexString(DEFAULT_COLOR);
 
     /** The default color attribute value, used when no color attribute set. */
     public static final ColorAttr DEFAULT;
@@ -125,7 +135,7 @@ public final class ColorAttr {
      * to <code>ColorAttr</code> map.
      */
     static {
-        COLORATTRS = new ConcurrentHashMap<Color, ColorAttr>();
+        COLORATTRS = new ConcurrentHashMap<>();
         DEFAULT = new ColorAttr();
         COLORATTRS.put(DEFAULT.getColor(), DEFAULT);
     }
@@ -134,7 +144,7 @@ public final class ColorAttr {
      * Creates the default color attribute using default color settings.
      */
     private ColorAttr() {
-        m_attrColor = Color.DARK_GRAY;
+        m_attrColor = DEFAULT_COLOR;
         m_attrColorSelected = SELECTED;
         m_attrColorSelectedHilite = SELECTED_HILITE;
         m_attrColorHilite = HILITE;
@@ -162,15 +172,8 @@ public final class ColorAttr {
      *         <code>null</code>
      */
     public static ColorAttr getInstance(final Color color) {
-        if (color == null) {
-            throw new IllegalArgumentException("Color can't be null.");
-        }
-        ColorAttr ca = COLORATTRS.get(color);
-        if (ca == null) {
-            ca = new ColorAttr(color);
-            COLORATTRS.put(color, ca);
-        }
-        return ca;
+        CheckUtils.checkArgumentNotNull(color, "Color can't be null.");
+        return COLORATTRS.computeIfAbsent(color, ColorAttr::new);
     }
 
     /**
@@ -212,6 +215,7 @@ public final class ColorAttr {
      * @param hilite if the border is hilite
      * @return the color for this objects's border under the given constrains
      */
+    @SuppressWarnings("static-method") // non-static for historic reason
     public Color getBorderColor(final boolean selected, final boolean hilite) {
         if (selected) {
             if (hilite) {

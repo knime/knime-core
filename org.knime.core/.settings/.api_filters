@@ -2370,4 +2370,69 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/data/property/ColorHandler.java" type="org.knime.core.data.property.ColorHandler">
+        <filter comment="interface moved in 5.1" id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.property.ColorHandler"/>
+                <message_argument value="ColorHandler(ColorHandler.ColorModel)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="interface moved in 5.1" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.property.ColorHandler"/>
+                <message_argument value="getColorModel()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="interface moved in 5.1" id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.property.ColorHandler.ColorModel"/>
+                <message_argument value="org.knime.core_5.1.0"/>
+            </message_arguments>
+        </filter>
+        <filter comment="interface moved in 5.1" id="1143996420">
+            <message_arguments>
+                <message_argument value="ColorHandler(ColorModel)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="interface moved in 5.1" id="1143996420">
+            <message_arguments>
+                <message_argument value="getColorModel()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/property/ColorModel.java" type="org.knime.core.data.property.ColorModel">
+        <filter comment="moved to top level class in 5.1" id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.property.ColorModel"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/property/ColorModelNominal.java" type="org.knime.core.data.property.ColorModelNominal">
+        <filter id="337682486">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.property.ColorModelNominal"/>
+                <message_argument value="org.knime.core.data.property.ColorHandler$ColorModel"/>
+            </message_arguments>
+        </filter>
+        <filter id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.property.ColorModelNominal"/>
+                <message_argument value="ColorModelNominal(Map&lt;DataCell,ColorAttr&gt;)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.property.ColorModelNominal"/>
+                <message_argument value="printColorMapping()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/property/ColorModelRange.java" type="org.knime.core.data.property.ColorModelRange">
+        <filter id="337682486">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.property.ColorModelRange"/>
+                <message_argument value="org.knime.core.data.property.ColorHandler$ColorModel"/>
+            </message_arguments>
+        </filter>
+    </resource>
 </component>

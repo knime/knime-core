@@ -51,7 +51,6 @@ import java.awt.Color;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DoubleValue;
-import org.knime.core.data.property.ColorHandler.ColorModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
@@ -61,6 +60,7 @@ import org.knime.core.node.config.ConfigWO;
  * Computes colors based on a range of minimum and maximum values assigned to
  * certain colors which are interpolated between a min and maximum color.
  *
+ * @noinstantiate This class is not intended to be instantiated by clients.
  * @author Thomas Gabriel, University of Konstanz
  */
 public final class ColorModelRange implements ColorModel {
@@ -169,9 +169,25 @@ public final class ColorModelRange implements ColorModel {
         return m_minColor;
     }
 
+    /**
+     * @return {@link #getMinColor()} has opaque 24bit hex string.
+     * @since 5.1
+     */
+    public String getMinColorHex() {
+        return ColorModel.colorToHexString(m_minColor);
+    }
+
     /** @return maximum double value. */
     public double getMaxValue() {
         return m_maxValue;
+    }
+
+    /**
+     * @return {@link #getMaxColor()} has opaque 24bit hex string.
+     * @since 5.1
+     */
+    public String getMaxColorHex() {
+        return ColorModel.colorToHexString(m_maxColor);
     }
 
     /** @return maximum Color value. */
@@ -191,7 +207,7 @@ public final class ColorModelRange implements ColorModel {
      * Save lower and upper, and min and max colors to the given Config.
      *
      * @param config to save settings to.
-     * @see org.knime.core.data.property.ColorHandler.ColorModel
+     * @see org.knime.core.data.property.ColorModel
      *      #save(ConfigWO)
      */
     @Override
