@@ -49,8 +49,10 @@
  */
 package org.knime.core.data.sort;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.OptionalInt;
 import java.util.function.UnaryOperator;
 
@@ -59,7 +61,6 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.MissingDataCellComparator;
-import org.knime.core.data.RowKey;
 import org.knime.core.data.StringValue;
 import org.knime.core.node.util.CheckUtils;
 
@@ -69,16 +70,9 @@ import org.knime.core.node.util.CheckUtils;
  *
  * @since 4.1 made public for the use in the TopK Selector node
  */
-public final class RowComparator implements Comparator<DataRow> {
+public final class RowComparator implements Comparator<DataRow> {//NOSONAR
 
-    /**
-     * The comparators for the columns (including row key represented by {@link OptionalInt#empty()})
-     * in the order they should be compared in together with the column index in the row.
-     *
-     * Currently, we do not support to compare the same column multiple times since the GUI does not need that option
-     * and well-used workarounds (such as computed columns) exist.
-     */
-    private final LinkedHashMap<OptionalInt, Comparator<?>> m_colComparators;
+    private final List<Comparator<DataRow>> m_comparators;
 
     /**
      * @param indices Array of sort column indices (-1 indicates the RowKey).
@@ -104,7 +98,7 @@ public final class RowComparator implements Comparator<DataRow> {
                     .withMissingsLast(sortMissingsToEnd));
             }
         }
-        m_colComparators = rc.build().m_colComparators;
+        m_comparators = rc.build().m_comparators;
     }
 
     private static boolean isRowKey(final int index) {
@@ -278,6 +272,39 @@ public final class RowComparator implements Comparator<DataRow> {
         }
     }
 
+    private static final class ColumnComparator implements Comparator<DataRow> {//NOSONAR
+
+        private final int m_colIdx;
+
+        private final Comparator<DataCell> m_cellComparator;
+
+        ColumnComparator(final int colIdx, final Comparator<DataCell> cellComparator) {
+            m_colIdx = colIdx;
+            m_cellComparator = cellComparator;
+        }
+
+        @Override
+        public int compare(final DataRow o1, final DataRow o2) {
+            return m_cellComparator.compare(o1.getCell(m_colIdx), o2.getCell(m_colIdx));
+        }
+
+    }
+
+    private static final class RowKeyComparator implements Comparator<DataRow> {//NOSONAR
+
+        private final Comparator<String> m_rowKeyComparator;
+
+        RowKeyComparator(final Comparator<String> rowKeyComparator) {
+            m_rowKeyComparator = rowKeyComparator;
+        }
+
+        @Override
+        public int compare(final DataRow o1, final DataRow o2) {
+            return m_rowKeyComparator.compare(o1.getKey().getString(), o2.getKey().getString());
+        }
+
+    }
+
     /**
      * Builder to construct a row comparator.
      *
@@ -285,7 +312,8 @@ public final class RowComparator implements Comparator<DataRow> {
      */
     public static final class RowComparatorBuilder {
 
-        private final LinkedHashMap<OptionalInt, Comparator<?>> m_columnComparators = new LinkedHashMap<>();
+        private final LinkedHashMap<OptionalInt, Comparator<DataRow>> m_columnComparators = new LinkedHashMap<>();
+
         private final DataTableSpec m_spec;
 
         private RowComparatorBuilder(final DataTableSpec spec) {
@@ -316,7 +344,7 @@ public final class RowComparator implements Comparator<DataRow> {
                 throw new IllegalArgumentException(String.format("Row comparator already contains column #%d",
                     columnIndex));
             }
-            m_columnComparators.put(colIdx, cellComp);
+            m_columnComparators.put(colIdx, new ColumnComparator(columnIndex, cellComp));
             return this;
         }
 
@@ -347,7 +375,7 @@ public final class RowComparator implements Comparator<DataRow> {
             if (m_columnComparators.containsKey(rowKeyIdx)) {
                 throw new IllegalArgumentException("Row comparator already contains row key");
             }
-            m_columnComparators.put(rowKeyIdx, Comparator.comparing(RowKey::getString, comp));
+            m_columnComparators.put(rowKeyIdx, new RowKeyComparator(comp));
             return this;
         }
 
@@ -356,7 +384,7 @@ public final class RowComparator implements Comparator<DataRow> {
          * @return row comparator
          */
         public RowComparator build() {
-            return new RowComparator(m_columnComparators);
+            return new RowComparator(new ArrayList<>(m_columnComparators.values()));
         }
     }
 
@@ -373,8 +401,8 @@ public final class RowComparator implements Comparator<DataRow> {
      * Compare rows based on the given comparators.
      * @param columns column comparators to compare
      */
-    private RowComparator(final LinkedHashMap<OptionalInt, Comparator<?>> columns) { // NOSONAR no suitable interface
-        m_colComparators = columns;
+    private RowComparator(final List<Comparator<DataRow>> comparators) {
+        m_comparators = comparators;
     }
 
     @Override
@@ -391,32 +419,12 @@ public final class RowComparator implements Comparator<DataRow> {
         assert dr1.getNumCells() == dr2.getNumCells() : String.format( // NOSONAR run time performance
             "The rows %s and %s don't contain the same number of cells.", dr1.getKey(), dr2.getKey()); //
 
-        // find first non-zero comparison result in order
-        return m_colComparators.entrySet().stream()
-                .mapToInt(e -> {
-                    final var col = e.getKey();
-                    final var comp = e.getValue();
-                    return comparePos(dr1, dr2, col, comp);
-                })
-                // find earliest column that differs to avoid unnecessary comparisons
-                .filter(cmp -> cmp != 0)
-                .findFirst()
-                // all cells in the DataRow have the same value
-                .orElse(0);
-    }
-
-    private static int comparePos(final DataRow dr1, final DataRow dr2, final OptionalInt pos,
-        final Comparator<?> comp) {
-        if (pos.isEmpty()) {
-            @SuppressWarnings("unchecked")
-            final var rowKeyComparator = (Comparator<RowKey>) comp;
-            return rowKeyComparator.compare(dr1.getKey(), dr2.getKey());
+        for (var comparator : m_comparators) {
+            var comparison = comparator.compare(dr1, dr2);
+            if (comparison != 0) {
+                return comparison;
+            }
         }
-        @SuppressWarnings("unchecked")
-        final var cellComparator = (Comparator<DataCell>) comp;
-        final var col = pos.getAsInt();
-        final var c1 = dr1.getCell(col);
-        final var c2 = dr2.getCell(col);
-        return cellComparator.compare(c1, c2);
+        return 0;
     }
 }
