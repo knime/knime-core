@@ -79,6 +79,25 @@ public final class ReplaceNodeResult {
 
     private final NodeFactory<?> m_originalNodeFactory;
 
+
+    /**
+     * New instance.
+     *
+     * @param wfm the host workflow manager
+     * @param replacedNodeID the id of the newly created node
+     * @param removedConnections the connections that couldn't be restored after the replacement
+     * @param originalNodeCreationConfig the original creation config of the old node (for the undo)
+     * @deprecated use
+     *             {@link #ReplaceNodeResult(WorkflowManager, NodeID, List, ModifiableNodeCreationConfiguration, NodeFactory)}
+     *             instead
+     */
+    @Deprecated(forRemoval = true)
+    public ReplaceNodeResult(final WorkflowManager wfm, final NodeID replacedNodeID,
+        final List<ConnectionContainer> removedConnections,
+        final ModifiableNodeCreationConfiguration originalNodeCreationConfig) {
+        this(wfm, replacedNodeID, removedConnections, originalNodeCreationConfig, null);
+    }
+
     /**
      * New instance.
      *
@@ -114,7 +133,11 @@ public final class ReplaceNodeResult {
      * Performs the undo.
      */
     public void undo() {
-        m_wfm.replaceNode(m_replacedNodeID, m_nodeCreationConfig, m_originalNodeFactory);
+        if (m_originalNodeFactory == null) {
+            m_wfm.replaceNode(m_replacedNodeID, m_nodeCreationConfig);
+        } else {
+            m_wfm.replaceNode(m_replacedNodeID, m_nodeCreationConfig, m_originalNodeFactory);
+        }
         m_removedConnections.stream()
             .filter(c -> m_wfm.canAddConnection(c.getSource(), c.getSourcePort(), c.getDest(), c.getDestPort()))
             .forEach(c -> m_wfm.addConnection(c.getSource(), c.getSourcePort(), c.getDest(), c.getDestPort()));
