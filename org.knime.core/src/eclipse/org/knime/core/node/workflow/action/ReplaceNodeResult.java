@@ -120,11 +120,4 @@ public final class ReplaceNodeResult {
             .forEach(c -> m_wfm.addConnection(c.getSource(), c.getSourcePort(), c.getDest(), c.getDestPort()));
     }
 
-    /**
-     * @return the replacedNodeID
-     */
-    public NodeID getReplacedNodeID() {
-        return m_replacedNodeID;
-    }
-
 }

@@ -65,6 +65,7 @@ import java.util.NoSuchElementException;
 
 import org.awaitility.Awaitility;
 import org.awaitility.Duration;
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.knime.core.node.BufferedDataTable;
@@ -158,7 +159,7 @@ public class ReplaceNodePorts extends WorkflowTestCase {
 	
     /**
      * Tests
-     * {@link WorkflowManager#replaceNode(NodeID, ModifiableNodeCreationConfiguration)}.
+     * {@link WorkflowManager#replaceNode(NodeID, ModifiableNodeCreationConfiguration, NodeFactory))}.
      */
 	@Test
 	public void testReplaceNodeWithAnotherNodeType() {
@@ -166,10 +167,17 @@ public class ReplaceNodePorts extends WorkflowTestCase {
 		var nodeFactory = ((NativeNodeContainer) wfm.getNodeContainer(m_concatenate_2)).getNode().getFactory();
 		var result = wfm.replaceNode(m_datagenerator_1, null, nodeFactory);
 
-		var nodes = wfm.getNodeContainers();
-		var concatenateNodes = nodes.stream().filter(n -> n.getName().equals("Concatenate")).toList();
-		assertThat("Create new node", concatenateNodes.size(), is(2));
-		assertThat("Restore a single connection", wfm.getOutgoingConnectionsFor(result.getReplacedNodeID()).size(), is(1));
+		var concatenateNode = wfm.getNodeContainer(m_datagenerator_1, NativeNodeContainer.class, true);
+		assertThat("Create new node", concatenateNode.getNode().getFactory().getClass().getSimpleName(),
+				is("AppendedRowsNodeFactory"));
+		assertThat("Restore a single connection", wfm.getOutgoingConnectionsFor(m_datagenerator_1).size(), is(1));
+		
+		result.undo();
+		var dataGenNode = wfm.getNodeContainer(m_datagenerator_1, NativeNodeContainer.class, true);
+		assertThat("Reverted node replacement", dataGenNode.getNode().getFactory().getClass().getSimpleName(),
+				is("SampleDataNodeFactory"));
+		assertThat("Restore multiple connections", wfm.getOutgoingConnectionsFor(m_datagenerator_1).size(), is(2));
+
 	}
 
 	/**
