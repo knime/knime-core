@@ -159,13 +159,13 @@ public class ReplaceNodePorts extends WorkflowTestCase {
 	
     /**
      * Tests
-     * {@link WorkflowManager#replaceNode(NodeID, ModifiableNodeCreationConfiguration, NodeFactory))}.
+     * {@link WorkflowManager#replaceNode(NodeID, ModifiableNodeCreationConfiguration, NodeFactory, boolean))}.
      */
 	@Test
-	public void testReplaceNodeWithAnotherNodeType() {
+	public void testReplaceNodeWithAnotherNodeTypeNoConfig() {
 		WorkflowManager wfm = getManager();
 		var nodeFactory = ((NativeNodeContainer) wfm.getNodeContainer(m_concatenate_2)).getNode().getFactory();
-		var result = wfm.replaceNode(m_datagenerator_1, null, nodeFactory);
+		var result = wfm.replaceNode(m_datagenerator_1, null, nodeFactory, false);
 
 		var concatenateNode = wfm.getNodeContainer(m_datagenerator_1, NativeNodeContainer.class, true);
 		assertThat("Create new node", concatenateNode.getNode().getFactory().getClass().getSimpleName(),
@@ -177,7 +177,29 @@ public class ReplaceNodePorts extends WorkflowTestCase {
 		assertThat("Reverted node replacement", dataGenNode.getNode().getFactory().getClass().getSimpleName(),
 				is("SampleDataNodeFactory"));
 		assertThat("Restore multiple connections", wfm.getOutgoingConnectionsFor(m_datagenerator_1).size(), is(2));
+	}
+	
+    /**
+     * Tests
+     * {@link WorkflowManager#replaceNode(NodeID, ModifiableNodeCreationConfiguration, NodeFactory, boolean))}.
+     */
+	@Test
+	public void testReplaceNodeWithAnotherType() {
+		WorkflowManager wfm = getManager();
+		var nodeFactory = ((NativeNodeContainer) wfm.getNodeContainer(m_datagenerator_1)).getNode().getFactory();
+		NativeNodeContainer oldNC = (NativeNodeContainer) wfm.getNodeContainer(m_concatenate_2);
+		ModifiableNodeCreationConfiguration creationConfig = oldNC.getNode().getCopyOfCreationConfig().get();
+		
+		assertThat("Two connections in", wfm.getIncomingConnectionsFor(m_concatenate_2).size(), is(2));
+		assertThat("One connection out", wfm.getOutgoingConnectionsFor(m_concatenate_2).size(), is(1));
+		var result = wfm.replaceNode(m_concatenate_2, creationConfig, nodeFactory, false);
 
+		assertThat("No connections in", wfm.getIncomingConnectionsFor(m_concatenate_2).size(), is(0));
+		assertThat("Keep outgoing connection", wfm.getOutgoingConnectionsFor(m_concatenate_2).size(), is(1));
+		
+		result.undo();
+		assertThat("Restore connections", wfm.getIncomingConnectionsFor(m_concatenate_2).size(), is(2));
+		assertThat("Restore connections", wfm.getOutgoingConnectionsFor(m_concatenate_2).size(), is(1));
 	}
 
 	/**

@@ -886,12 +886,12 @@ public final class WorkflowManager extends NodeContainer
     public ReplaceNodeResult replaceNode(final NodeID id, final ModifiableNodeCreationConfiguration newCreationConfig) {
         CheckUtils.checkState(canReplaceNode(id), "Node cannot be replaced");
         return replaceNodeInternal(id, newCreationConfig,
-            ((NativeNodeContainer)getNodeContainer(id)).getNode().getFactory());
+            ((NativeNodeContainer)getNodeContainer(id)).getNode().getFactory(), false);
     }
 
     /**
-     * Replaces a node with same type of node but another {@link NodeCreationConfiguration}, e.g. in order to change the
-     * ports.
+     * Replaces a node with another type of node {@link NodeFactory} and possibly another
+     * {@link NodeCreationConfiguration}
      *
      * Operation is only applicable for {@link NativeNodeContainer}s. Otherwise an {@link IllegalStateException} will be
      * thrown.
@@ -902,39 +902,34 @@ public final class WorkflowManager extends NodeContainer
      * @param id the id of the node to replace
      * @param newCreationConfig node creation configuration to create the new node, can be <code>null</code>
      * @param factory node factory of the new node
+     * @param skipReconnect if the connections of the previous node should be dropped and should be no attempt to keep
+     *            them
      * @return a result that contains all information necessary to undo the operation
      * @throws IllegalStateException if the node cannot be replaced (e.g. because there are executing successors)
      * @throws IllegalArgumentException if there is no node for the given id
      * @since 5.1
      */
     public ReplaceNodeResult replaceNode(final NodeID id, final ModifiableNodeCreationConfiguration newCreationConfig,
-        final NodeFactory<?> factory) {
+        final NodeFactory<?> factory, final boolean skipReconnect) {
         CheckUtils.checkState(canReplaceNode(id), "Node cannot be replaced");
-        return replaceNodeInternal(id, newCreationConfig, factory);
+        return replaceNodeInternal(id, newCreationConfig, factory, skipReconnect);
     }
 
     private ReplaceNodeResult replaceNodeInternal(final NodeID id,
-        final ModifiableNodeCreationConfiguration newCreationConfig, final NodeFactory<?> factory) {
+        final ModifiableNodeCreationConfiguration newCreationConfig, final NodeFactory<?> factory,
+        final boolean skipReconnect) {
         try (WorkflowLock lock = lock()) {
             var nnc = (NativeNodeContainer)getNodeContainer(id);
             // keep the node's settings
             final var settings = new NodeSettings("node settings");
             saveNodeSettings(id, settings);
 
-            // keep some node properties to be transfered to the new node
-            var uiInfo = nnc.getUIInformation();
-            var nodeAnnotation = nnc.getNodeAnnotation();
-            var incomingConnections = getIncomingConnectionsFor(id);
-            var outgoingConnections = getOutgoingConnectionsFor(id);
-
             // keep old node creation config
-            ModifiableNodeCreationConfiguration oldCreationConfig = null;
-            if (newCreationConfig != null) {
-                oldCreationConfig =
-                    nnc.getNode().getCopyOfCreationConfig()
-                        .orElseThrow(() -> new IllegalStateException(String.format(
-                            "<%s> cannot be replaced, it doesn't provide a `ModifiableNodeCreationConfiguration`",
-                            id)));
+            ModifiableNodeCreationConfiguration oldCreationConfig =
+                nnc.getNode().getCopyOfCreationConfig().orElse(null);
+            if (newCreationConfig != null && oldCreationConfig == null && !skipReconnect) {
+                throw new IllegalStateException(String
+                    .format("<%s> cannot be replaced, it doesn't provide a `ModifiableNodeCreationConfiguration`", id));
             }
             var oldNodeFactory = ((NativeNodeContainer)getNodeContainer(id)).getNode().getFactory();
 
@@ -952,6 +947,10 @@ public final class WorkflowManager extends NodeContainer
                 // ignore
             }
 
+            // keep some node properties to be transfered to the new node
+            var uiInfo = nnc.getUIInformation();
+            var nodeAnnotation = nnc.getNodeAnnotation();
+
             // transfer old node properties, such as position and annotation
             nnc.setUIInformation(uiInfo);
             if (!nodeAnnotation.getData().isDefault()) {
@@ -959,16 +958,23 @@ public final class WorkflowManager extends NodeContainer
             }
 
             // restore connections if possible
-            var removedConnections =
-                reconnect(id, oldCreationConfig, newCreationConfig, incomingConnections, outgoingConnections);
+            List<ConnectionContainer> removedConnections = List.of();
+            var incomingConnections = getIncomingConnectionsFor(id);
+            var outgoingConnections = getOutgoingConnectionsFor(id);
+            if (!skipReconnect) {
+                removedConnections =
+                    reconnect(id, oldCreationConfig, newCreationConfig, incomingConnections, outgoingConnections);
+            }
 
             // notify listeners if port config has changed
             if (nnc.getNode().getFactory().getClass().equals(factory.getClass()) && oldCreationConfig != null
+                && newCreationConfig != null
                 && nodeCreationConfigHasChangedPorts(oldCreationConfig, newCreationConfig)) {
                 notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.NODE_PORTS_CHANGED, id, null, null));
             }
 
-            return new ReplaceNodeResult(this, id, removedConnections, oldCreationConfig, oldNodeFactory);
+            return new ReplaceNodeResult(this, id, oldCreationConfig, oldNodeFactory, removedConnections,
+                incomingConnections, outgoingConnections);
         }
     }
 

@@ -49,6 +49,8 @@
 package org.knime.core.node.workflow.action;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Stream;
 
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.context.ModifiableNodeCreationConfiguration;
@@ -73,12 +75,15 @@ public final class ReplaceNodeResult {
 
     private final NodeID m_replacedNodeID;
 
-    private final List<ConnectionContainer> m_removedConnections;
-
     private final ModifiableNodeCreationConfiguration m_nodeCreationConfig;
 
     private final NodeFactory<?> m_originalNodeFactory;
 
+    private final List<ConnectionContainer> m_removedConnections;
+
+    private final Set<ConnectionContainer> m_inboundConnections;
+
+    private final Set<ConnectionContainer> m_outgoingConnections;
 
     /**
      * New instance.
@@ -95,7 +100,7 @@ public final class ReplaceNodeResult {
     public ReplaceNodeResult(final WorkflowManager wfm, final NodeID replacedNodeID,
         final List<ConnectionContainer> removedConnections,
         final ModifiableNodeCreationConfiguration originalNodeCreationConfig) {
-        this(wfm, replacedNodeID, removedConnections, originalNodeCreationConfig, null);
+        this(wfm, replacedNodeID, originalNodeCreationConfig, null, null, null, null);
     }
 
     /**
@@ -106,11 +111,13 @@ public final class ReplaceNodeResult {
      * @param removedConnections the connections that couldn't be restored after the replacement
      * @param originalNodeCreationConfig the original creation config of the old node (for the undo)
      * @param originalNodeFactory factory of the deleted node
+     * @param oldInConnections set of the incoming connections before the replace command
+     * @param oldOutConnections set of the outgoing connections before the replace command
      */
     public ReplaceNodeResult(final WorkflowManager wfm, final NodeID replacedNodeID,
-        final List<ConnectionContainer> removedConnections,
-        final ModifiableNodeCreationConfiguration originalNodeCreationConfig,
-        final NodeFactory<?> originalNodeFactory) {
+        final ModifiableNodeCreationConfiguration originalNodeCreationConfig, final NodeFactory<?> originalNodeFactory,
+        final List<ConnectionContainer> removedConnections, final Set<ConnectionContainer> oldInConnections,
+        final Set<ConnectionContainer> oldOutConnections) {
         CheckUtils.checkNotNull(wfm);
         CheckUtils.checkNotNull(replacedNodeID);
         CheckUtils.checkNotNull(removedConnections);
@@ -120,6 +127,8 @@ public final class ReplaceNodeResult {
         m_removedConnections = removedConnections;
         m_nodeCreationConfig = originalNodeCreationConfig;
         m_originalNodeFactory = originalNodeFactory;
+        m_inboundConnections = oldInConnections;
+        m_outgoingConnections = oldOutConnections;
     }
 
     /**
@@ -133,10 +142,12 @@ public final class ReplaceNodeResult {
      * Performs the undo.
      */
     public void undo() {
-        if (m_originalNodeFactory == null) {
-            m_wfm.replaceNode(m_replacedNodeID, m_nodeCreationConfig);
-        } else {
-            m_wfm.replaceNode(m_replacedNodeID, m_nodeCreationConfig, m_originalNodeFactory);
+        if (m_nodeCreationConfig == null) { // port mapping is unknown, reconnect on best effort
+            m_wfm.replaceNode(m_replacedNodeID, null, m_originalNodeFactory, false);
+        } else { // port mapping known, skip auto reconnect and use original connections
+            m_wfm.replaceNode(m_replacedNodeID, m_nodeCreationConfig, m_originalNodeFactory, true);
+            Stream.concat(m_inboundConnections.stream(), m_outgoingConnections.stream())
+                .forEach(c -> m_wfm.addConnection(c.getSource(), c.getSourcePort(), c.getDest(), c.getDestPort()));
         }
         m_removedConnections.stream()
             .filter(c -> m_wfm.canAddConnection(c.getSource(), c.getSourcePort(), c.getDest(), c.getDestPort()))
