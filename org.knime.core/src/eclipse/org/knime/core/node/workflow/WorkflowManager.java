@@ -867,29 +867,6 @@ public final class WorkflowManager extends NodeContainer
     }
 
     /**
-     * Replaces a node by another type of node (optionally with an additional {@link NodeCreationConfiguration}, e.g. in
-     * order to change the ports of the new node).
-     *
-     * Operation is only applicable for {@link NativeNodeContainer}s. Otherwise an {@link IllegalStateException} will be
-     * thrown.
-     *
-     * Node settings and annotation will be transfered to the new node. Incoming and outgoing connections will be kept
-     * as far as possible (if the respective input and output port is still there and compatible).
-     *
-     * @param id the id of the node to replace
-     * @param newCreationConfig node creation configuration to create the new node, can be <code>null</code>
-     * @return a result that contains all information necessary to undo the operation
-     * @throws IllegalStateException if the node cannot be replaced (e.g. because there are executing successors)
-     * @throws IllegalArgumentException if there is no node for the given id
-     * @since 4.2
-     */
-    public ReplaceNodeResult replaceNode(final NodeID id, final ModifiableNodeCreationConfiguration newCreationConfig) {
-        CheckUtils.checkState(canReplaceNode(id), "Node cannot be replaced");
-        return replaceNodeInternal(id, newCreationConfig,
-            ((NativeNodeContainer)getNodeContainer(id)).getNode().getFactory());
-    }
-
-    /**
      * Replaces a node with same type of node but another {@link NodeCreationConfiguration}, e.g. in order to change the
      * ports.
      *
@@ -900,8 +877,31 @@ public final class WorkflowManager extends NodeContainer
      * as far as possible (if the respective input and output port is still there and compatible).
      *
      * @param id the id of the node to replace
-     * @param newCreationConfig node creation configuration to create the new node, can be <code>null</code>
-     * @param factory node factory of the new node
+     * @param newCreationConfig node creation configuration to create the new node
+     * @return a result that contains all information necessary to undo the operation
+     * @throws IllegalStateException if the node cannot be replaced (e.g. because there are executing successors)
+     * @throws IllegalArgumentException if there is no node for the given id
+     * @since 4.2
+     */
+    public ReplaceNodeResult replaceNode(final NodeID id, final ModifiableNodeCreationConfiguration newCreationConfig) {
+        return replaceNode(id, newCreationConfig, null);
+    }
+
+    /**
+     * Replaces a node by another type of node (optionally with an additional {@link NodeCreationConfiguration}, e.g. in
+     * order to change the ports of the new node).
+     *
+     * Operation is only applicable for {@link NativeNodeContainer}s. Otherwise an {@link IllegalStateException} will be
+     * thrown.
+     *
+     * Node settings and annotation will be transfered to the new node. Incoming and outgoing connections will be kept
+     * as far as possible (if the respective input and output port is still there and compatible).
+     *
+     * @param id the id of the node to replace
+     * @param newCreationConfig node creation configuration to create the new node, can be <code>null</code> iff a node
+     *            factory is explicitly provided
+     * @param factory node factory of the new node; if <code>null</code> the node will be replaced with a node of the
+     *            same original type
      * @return a result that contains all information necessary to undo the operation
      * @throws IllegalStateException if the node cannot be replaced (e.g. because there are executing successors)
      * @throws IllegalArgumentException if there is no node for the given id
@@ -910,11 +910,6 @@ public final class WorkflowManager extends NodeContainer
     public ReplaceNodeResult replaceNode(final NodeID id, final ModifiableNodeCreationConfiguration newCreationConfig,
         final NodeFactory<?> factory) {
         CheckUtils.checkState(canReplaceNode(id), "Node cannot be replaced");
-        return replaceNodeInternal(id, newCreationConfig, factory);
-    }
-
-    private ReplaceNodeResult replaceNodeInternal(final NodeID id,
-        final ModifiableNodeCreationConfiguration newCreationConfig, final NodeFactory<?> factory) {
         try (WorkflowLock lock = lock()) {
             var nnc = (NativeNodeContainer)getNodeContainer(id);
             // keep the node's settings
@@ -927,28 +922,35 @@ public final class WorkflowManager extends NodeContainer
             var incomingConnections = getIncomingConnectionsFor(id);
             var outgoingConnections = getOutgoingConnectionsFor(id);
 
-            // keep old node creation config
-            ModifiableNodeCreationConfiguration oldCreationConfig = null;
-            if (newCreationConfig != null) {
-                oldCreationConfig =
-                    nnc.getNode().getCopyOfCreationConfig()
-                        .orElseThrow(() -> new IllegalStateException(String.format(
-                            "<%s> cannot be replaced, it doesn't provide a `ModifiableNodeCreationConfiguration`",
-                            id)));
-            }
+            // keep old node factory
             var oldNodeFactory = ((NativeNodeContainer)getNodeContainer(id)).getNode().getFactory();
+            var replaceWithSameNodeType = factory == null || oldNodeFactory.getClass().equals(factory.getClass());
+
+            // keep old node creation config
+            var oldCreationConfig = nnc.getNode().getCopyOfCreationConfig().orElse(null);
+
+            // make sure that creation configs are provided if a node is replaced with the same type
+            if (replaceWithSameNodeType && oldCreationConfig == null) {
+                throw new IllegalStateException(String
+                    .format("<%s> cannot be replaced, no `ModifiableNodeCreationConfiguration` provided as parameter",
+                        id));
+            }
+            if (replaceWithSameNodeType && newCreationConfig == null) {
+                throw new IllegalStateException(String.format(
+                    "<%s> cannot be replaced, the node doesn't provide a `ModifiableNodeCreationConfiguration`", id));
+            }
 
             // delete the old node
             removeNode(id);
 
             // add new node
-            addNodeAndApplyContext(factory, newCreationConfig, id.getIndex());
+            addNodeAndApplyContext(factory == null ? oldNodeFactory : factory, newCreationConfig, id.getIndex());
             nnc = (NativeNodeContainer)getNodeContainer(id);
 
             // load the previously stored settings
             try {
                 loadNodeSettings(id, settings);
-            } catch (InvalidSettingsException e) {
+            } catch (InvalidSettingsException e) { // NOSONAR
                 // ignore
             }
 
@@ -959,12 +961,16 @@ public final class WorkflowManager extends NodeContainer
             }
 
             // restore connections if possible
-            var removedConnections =
-                reconnect(id, oldCreationConfig, newCreationConfig, incomingConnections, outgoingConnections);
+            var removedConnections = reconnect( //
+                id, //
+                replaceWithSameNodeType ? oldCreationConfig : null, //
+                replaceWithSameNodeType ? newCreationConfig : null, //
+                incomingConnections, //
+                outgoingConnections //
+            );
 
             // notify listeners if port config has changed
-            if (nnc.getNode().getFactory().getClass().equals(factory.getClass()) && oldCreationConfig != null
-                && nodeCreationConfigHasChangedPorts(oldCreationConfig, newCreationConfig)) {
+            if (replaceWithSameNodeType && nodeCreationConfigHasChangedPorts(oldCreationConfig, newCreationConfig)) {
                 notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.NODE_PORTS_CHANGED, id, null, null));
             }
 

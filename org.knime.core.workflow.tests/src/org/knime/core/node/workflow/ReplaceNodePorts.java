@@ -317,7 +317,7 @@ public class ReplaceNodePorts extends WorkflowTestCase {
 		var exception1 = assertThrows(IllegalStateException.class,
 				() -> wfm.replaceNode(m_datagenerator_1, creationConfig2));
 		assertThat("Unexpected exception message", exception1.getMessage(),
-				containsString("cannot be replaced, it doesn't provide a `ModifiableNodeCreationConfiguration`"));
+				containsString("cannot be replaced, no `ModifiableNodeCreationConfiguration`"));
 
 		// Try to replace a node with a creation config that does not specify ports
 		var exception2 = assertThrows(NoSuchElementException.class,
