@@ -70,6 +70,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.context.ModifiableNodeCreationConfiguration;
+import org.knime.core.node.extension.InvalidNodeFactoryExtensionException;
 import org.knime.core.node.extension.NodeFactoryExtensionManager;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.workflow.action.ReplaceNodeResult;
@@ -347,10 +348,8 @@ public class ReplaceNodePorts extends WorkflowTestCase {
 		var oldNC = (NativeNodeContainer) wfm.getNodeContainer(nodeID);
 		var creationConfig = oldNC.getNode().getCopyOfCreationConfig().get();
 
-		// Try to add ports if port config would be present
-		if (creationConfig.getPortConfig().isPresent()) {
-			creationConfig.getPortConfig().get().getExtendablePorts().get("something").addPort(BufferedDataTable.TYPE);
-		}
+		assertThat(creationConfig.getPortConfig().isEmpty(), is(true));
+
 		wfm.replaceNode(nodeID, creationConfig);
 
 		// Assert nothing changed
@@ -360,6 +359,32 @@ public class ReplaceNodePorts extends WorkflowTestCase {
 				is(oldNC.getNode().getCopyOfCreationConfig().get().getPortConfig()));
 
 		waitAndCheckNodePortsChangedEventCounterIs(0);
+	}
+
+	/**
+	 * Makes sure that a previous port configuration (and the respective
+	 * connections) is restored on undo after a node was replaced with another node
+	 * type
+	 *
+	 * @throws Exception
+	 */
+	@Test
+	public void testRestorePortConfigOnUndoAfterReplaceWithAnotherNode() throws Exception {
+		var wfm = getManager();
+		var caseSwitchStart19 = wfm.getID().createChild(19);
+		var newFactory = NodeFactoryExtensionManager.getInstance()
+				.createNodeFactory("org.knime.base.node.io.filehandling.model.reader.ModelReaderNodeFactory")
+				.orElse(null);
+		assertThat(newFactory, is(notNullValue()));
+		var replaceResult = wfm.replaceNode(caseSwitchStart19, null, newFactory);
+		var nc = wfm.getNodeContainer(caseSwitchStart19, NativeNodeContainer.class, true);
+		assertThat(nc.getNode().getFactory().getClass().getSimpleName(), is("ModelReaderNodeFactory"));
+		assertThat(wfm.getOutgoingConnectionsFor(caseSwitchStart19).size(), is(3));
+	
+		replaceResult.undo();
+		nc = wfm.getNodeContainer(caseSwitchStart19, NativeNodeContainer.class, true);
+		assertThat(nc.getNode().getFactory().getClass().getSimpleName(), is("CaseStartAnyNodeFactory"));
+		assertThat(wfm.getOutgoingConnectionsFor(caseSwitchStart19).size(), is(3));
 	}
 
 	private void waitAndCheckNodePortsChangedEventCounterIs(final int numberOfEvents) {
