@@ -702,7 +702,9 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
      *
      */
     private void updatePanel() {
-        final boolean credentialsAvailable = m_credentialField.getItemCount() > 0;
+        final var modelEnabled = getModel().isEnabled();
+        final var credentialsAvailable = m_credentialField.getItemCount() > 0 && modelEnabled;
+        m_credentialField.setEnabled(credentialsAvailable);
         m_typeCredential.setEnabled(credentialsAvailable);
         m_credentialPanel.setVisible(m_typeCredential.isSelected());
         m_userPwdPanel.setVisible(m_typeUserPwd.isSelected());
