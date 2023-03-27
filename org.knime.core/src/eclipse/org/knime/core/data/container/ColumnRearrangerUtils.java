@@ -55,6 +55,8 @@ import org.knime.core.data.DataCellTypeConverter;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ColumnRearranger.SpecAndFactoryObject;
+import org.knime.core.data.filestore.FileStoreFactory;
+import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.util.CheckUtils;
 
 /**
@@ -112,6 +114,39 @@ public final class ColumnRearrangerUtils {
             i++;
         }
         return rearrangedColumns;
+    }
+
+    /**
+     * Set a file store factory on the {@link AbstractCellFactory}.
+     * See {@link AbstractCellFactory#getFileStoreFactory()} for details.
+     *
+     * @param cellFactories To work on
+     * @param exec Non-null context to init {@link FileStoreFactory}
+     * @since 5.1
+     */
+    public static void initProcessing(final Iterable<CellFactory> cellFactories, final ExecutionContext exec) {
+        var fsFactory = FileStoreFactory.createWorkflowFileStoreFactory(exec);
+        for (var uniqueFactory : cellFactories) {
+            if (uniqueFactory instanceof AbstractCellFactory abstractFactory) {
+                abstractFactory.setFileStoreFactory(fsFactory);
+            }
+        }
+    }
+
+    /**
+     * Calls {@link AbstractCellFactory#afterProcessing()} and
+     * {@link AbstractCellFactory#setFileStoreFactory(FileStoreFactory)} on all unique factories in the argument.
+     *
+     * @param cellFactories the CellFactories used for creating new columns
+     * @since 5.1
+     */
+    public static void finishProcessing(final Iterable<CellFactory> cellFactories) {
+        for (CellFactory uniqueFactory : cellFactories) {
+            if (uniqueFactory instanceof AbstractCellFactory abstractFactory) {
+                abstractFactory.setFileStoreFactory(null);
+                abstractFactory.afterProcessing();
+            }
+        }
     }
 
     /**

@@ -459,12 +459,7 @@ public final class RearrangeColumnsTable implements KnowsRowCountTable {
      * @since 2.11
      */
     static void initProcessing(final NewColumnsProducerMapping newColumnFactoryList, final ExecutionContext ctx) {
-        FileStoreFactory fsFactory = FileStoreFactory.createWorkflowFileStoreFactory(ctx);
-        for (CellFactory uniqueFactory : newColumnFactoryList.getUniqueCellFactoryMap().keySet()) {
-            if (uniqueFactory instanceof AbstractCellFactory) {
-                ((AbstractCellFactory)uniqueFactory).setFileStoreFactory(fsFactory);
-            }
-        }
+        ColumnRearrangerUtils.initProcessing(newColumnFactoryList.getUniqueCellFactoryMap().keySet(), ctx);
     }
     /**
      * Calls {@link AbstractCellFactory#afterProcessing()} and
@@ -472,12 +467,7 @@ public final class RearrangeColumnsTable implements KnowsRowCountTable {
      * @param newColumnFactoryList ...
      */
     static void finishProcessing(final NewColumnsProducerMapping newColumnFactoryList) {
-        for (CellFactory uniqueFactory : newColumnFactoryList.getUniqueCellFactoryMap().keySet()) {
-            if (uniqueFactory instanceof AbstractCellFactory) {
-                ((AbstractCellFactory)uniqueFactory).setFileStoreFactory(null);
-                ((AbstractCellFactory)uniqueFactory).afterProcessing();
-            }
-        }
+        ColumnRearrangerUtils.finishProcessing(newColumnFactoryList.getUniqueCellFactoryMap().keySet());
     }
 
     /** Processes input sequentially in the caller thread. */
