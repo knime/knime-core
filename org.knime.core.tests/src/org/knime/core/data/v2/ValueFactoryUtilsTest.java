@@ -53,8 +53,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.UUID;
-
 import org.junit.jupiter.api.Test;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
@@ -424,22 +422,22 @@ final class ValueFactoryUtilsTest {
     @Test
     void testLoadFromNodeSettings() throws Exception {
         var settings = createExpectedNodeSettings();
-        var fsHandler = new NotInWorkflowWriteFileStoreHandler(UUID.randomUUID());
-        var simpleValueFactory = ValueFactoryUtils.loadValueFactory(settings.getNodeSettings("simple"), fsHandler);
+        var dataRepo = NotInWorkflowDataRepository.newInstance();
+        var simpleValueFactory = ValueFactoryUtils.loadValueFactory(settings.getNodeSettings("simple"), dataRepo);
         assertThat(simpleValueFactory).isExactlyInstanceOf(StringValueFactory.class);
         var specificCollectionValueFactory =
-            ValueFactoryUtils.loadValueFactory(settings.getNodeSettings("specificCollection"), fsHandler);
+            ValueFactoryUtils.loadValueFactory(settings.getNodeSettings("specificCollection"), dataRepo);
         assertEquals(IntSetValueFactory.INSTANCE, specificCollectionValueFactory);
         var genericCollectionValueFactory =
-            ValueFactoryUtils.loadValueFactory(settings.getNodeSettings("genericCollection"), fsHandler);
+            ValueFactoryUtils.loadValueFactory(settings.getNodeSettings("genericCollection"), dataRepo);
         assertThat(genericCollectionValueFactory).isExactlyInstanceOf(ListValueFactory.class);
         assertThat(((ListValueFactory)genericCollectionValueFactory).getElementValueFactory())//
             .as("Check CollectionValueFactory type.")//
             .isExactlyInstanceOf(StringValueFactory.class);
-        var dataCellValueFactory = ValueFactoryUtils.loadValueFactory(settings.getNodeSettings("dataCell"), fsHandler);
+        var dataCellValueFactory = ValueFactoryUtils.loadValueFactory(settings.getNodeSettings("dataCell"), dataRepo);
         assertThat(dataCellValueFactory).isExactlyInstanceOf(DictEncodedDataCellValueFactory.class);
         assertEquals(StringCell.TYPE, ((DictEncodedDataCellValueFactory)dataCellValueFactory).getType());
-        var voidValueFactory = ValueFactoryUtils.loadValueFactory(settings.getNodeSettings("void"), fsHandler);
+        var voidValueFactory = ValueFactoryUtils.loadValueFactory(settings.getNodeSettings("void"), dataRepo);
         assertEquals(VoidValueFactory.INSTANCE, voidValueFactory, "Unexpected void value factory.");
     }
 

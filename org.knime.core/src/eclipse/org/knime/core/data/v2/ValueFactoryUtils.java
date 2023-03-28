@@ -56,6 +56,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
@@ -98,6 +99,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.CheckUtils;
+import org.knime.core.table.access.WriteAccess;
 import org.knime.core.table.schema.DataSpec;
 import org.knime.core.table.schema.traits.DataTraitUtils;
 import org.knime.core.table.schema.traits.DataTraits;
@@ -203,10 +205,17 @@ public final class ValueFactoryUtils {
 
     /**
      * Loads a ValueFactory from {@link NodeSettingsRO} that were stored by
-     * {@link #saveValueFactory(ValueFactory, NodeSettingsWO)}.
+     * {@link #saveValueFactory(ValueFactory, NodeSettingsWO)}.<br>
+     * <br>
+     *
+     * NOTE: A {@link FileStoreAwareValueFactory} is only
+     * {@link FileStoreAwareValueFactory#initializeForReading(IDataRepository) initialized for reading}. If the
+     * ValueFactory is meant for writing new data, call
+     * {@link #initializeForWriting(ValueFactory, IWriteFileStoreHandler)} before calling
+     * {@link ValueFactory#createWriteValue(WriteAccess)}
      *
      * @param settings to load from (must be in the format of {@link #saveValueFactory(ValueFactory, NodeSettingsWO)})
-     * @param fsHandler for handling file stores
+     * @param dataRepository for handling file stores
      * @return the loaded ValueFactory
      * @throws InvalidSettingsException if the settings are not in the format of
      *             {@link #saveValueFactory(ValueFactory, NodeSettingsWO)}
@@ -214,12 +223,30 @@ public final class ValueFactoryUtils {
      * @since 5.1
      */
     public static ValueFactory<?, ?> loadValueFactory(final NodeSettingsRO settings,
-        final IWriteFileStoreHandler fsHandler) throws InvalidSettingsException {
+        final IDataRepository dataRepository) throws InvalidSettingsException {
         ValueFactory<?, ?> valueFactory = loadFsUninitializedValueFactory(settings);
-        initFileStoreHandler(valueFactory, fsHandler);
+        initializeForReading(valueFactory, dataRepository);
         return valueFactory;
     }
 
+    private static void initializeForReading(final ValueFactory<?, ?> valueFactory,
+        final IDataRepository dataRepository) {
+        recursiveValueFactoryInit(valueFactory, f -> {
+            if (f instanceof FileStoreAwareValueFactory fileStoreAware) {
+                fileStoreAware.initializeForReading(dataRepository);
+            }
+        });
+    }
+
+    /**
+     * Loads the ValueFactory stored in the given settings but does not initialize the FileStoreHandler
+     * of {@link FileStoreAwareValueFactory FileStoreAwareValueFactories} because it may not be available yet.
+     * Call {@link #initializeForWriting(ValueFactory, IWriteFileStoreHandler)} to initialize those factories.
+     *
+     * @param settings that store the ValueFactory (typically written by {@link #saveValueFactory(ValueFactory, NodeSettingsWO)})
+     * @return the loaded ValueFactory (note any FileStoreHandlers have not been initialized yet)
+     * @throws InvalidSettingsException if the settings are invalid
+     */
     private static ValueFactory<?, ?> loadFsUninitializedValueFactory(final NodeSettingsRO settings)
         throws InvalidSettingsException {
         var valueFactoryName = settings.getString("valueFactoryName");
@@ -242,13 +269,27 @@ public final class ValueFactoryUtils {
         }
     }
 
-    private static void initFileStoreHandler(final ValueFactory<?, ?> uninitializedValueFactory,
+    /**
+     * Initializes the provided ValueFactory with the provided FileStoreHandler.
+     *
+     * @param uninitializedValueFactory ValueFactory to initialize with the FileStoreHandler
+     * @param fsHandler the FileStoreHandler
+     * @since 5.1
+     */
+    public static void initializeForWriting(final ValueFactory<?, ?> uninitializedValueFactory,
         final IWriteFileStoreHandler fsHandler) {
-        if (uninitializedValueFactory instanceof FileStoreAwareValueFactory fsValueFactory) {
-            fsValueFactory.initializeForWriting(fsHandler);
-        }
-        if (uninitializedValueFactory instanceof CollectionValueFactory<?, ?> collectionValueFactory) {
-            initFileStoreHandler(collectionValueFactory.getElementValueFactory(), fsHandler);
+        recursiveValueFactoryInit(uninitializedValueFactory, f -> {
+            if (f instanceof FileStoreAwareValueFactory fileStoreAware) {
+                fileStoreAware.initializeForWriting(fsHandler);
+            }
+        });
+    }
+
+    private static void recursiveValueFactoryInit(final ValueFactory<?, ?> valueFactory,
+        final Consumer<ValueFactory<?, ?>> initializer) {
+        initializer.accept(valueFactory);
+        if (valueFactory instanceof CollectionValueFactory<?, ?> collectionValueFactory) {
+            recursiveValueFactoryInit(collectionValueFactory.getElementValueFactory(), initializer);
         }
     }
 
@@ -257,7 +298,7 @@ public final class ValueFactoryUtils {
      *
      * @param valueFactory to save
      * @param settings to save to
-     * @see #loadValueFactory(NodeSettingsRO, IWriteFileStoreHandler) for loading the ValueFactory from the settings
+     * @see #loadValueFactory(NodeSettingsRO, IDataRepository) for loading the ValueFactory from the settings
      * @since 5.1
      */
     public static void saveValueFactory(final ValueFactory<?, ?> valueFactory, final NodeSettingsWO settings) {
@@ -354,7 +395,7 @@ public final class ValueFactoryUtils {
         final Function<DataType, ValueFactory<?, ?>> fallbackFactoryProvider,
         final IWriteFileStoreHandler fileStoreHandler) {
         ValueFactory<?, ?> factory = getFsUninitializedValueFactory(type, fallbackFactoryProvider);
-        initFileStoreHandler(factory, fileStoreHandler);
+        initializeForWriting(factory, fileStoreHandler);
         return factory;
     }
 
