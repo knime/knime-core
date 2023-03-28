@@ -69,6 +69,7 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.NativeNodeContainer;
+import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowCreationHelper;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -154,6 +155,7 @@ public final class ExecutionContextExtension
         final var lock = BlockingRepository.get(m_blockID, LockedMethod.EXECUTE).orElseThrow();
         lock.lock(); // NOSONAR - released in #afterEach
         m_manager.executeUpToHere(m_lastAddedNodeID);
+        NodeContext.pushContext(nodeContainer);
         m_executionContext = nodeModel.fetchExecutionContext().orElseThrow();
     }
 
@@ -168,6 +170,7 @@ public final class ExecutionContextExtension
     public void afterEach(final ExtensionContext context) throws Exception {
         ReentrantLock lock = BlockingRepository.get(m_blockID, LockedMethod.EXECUTE).orElseThrow();
         lock.unlock();
+        NodeContext.removeLastContext();
         m_manager.waitWhileInExecution(5, TimeUnit.SECONDS);
         m_manager.removeNode(m_lastAddedNodeID);
         m_lastAddedNodeID = null;
