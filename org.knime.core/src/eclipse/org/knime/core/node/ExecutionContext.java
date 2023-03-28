@@ -517,7 +517,7 @@ public class ExecutionContext extends ExecutionMonitor {
     public BufferedDataTable createConcatenateTable(final ExecutionMonitor exec, final BufferedDataTable... tables)
         throws CanceledExecutionException {
         final KnowsRowCountTable table =
-            getTableBackend().concatenate(exec, m_dataRepository::generateNewID, null, true, tables);
+            getTableBackend().concatenate(this, exec, m_dataRepository::generateNewID, null, true, tables);
         return wrapTableFromBackend(table);
     }
 
@@ -558,8 +558,8 @@ public class ExecutionContext extends ExecutionMonitor {
     public BufferedDataTable createConcatenateTable(final ExecutionMonitor exec,
         final Optional<String> rowKeyDuplicateSuffix, final boolean duplicatesPreCheck,
         final BufferedDataTable... tables) throws CanceledExecutionException {
-        final KnowsRowCountTable concatenated = getTableBackend().concatenate(exec, m_dataRepository::generateNewID,
-            rowKeyDuplicateSuffix.orElse(null), duplicatesPreCheck, tables);
+        final KnowsRowCountTable concatenated = getTableBackend().concatenate(this, exec,
+            m_dataRepository::generateNewID, rowKeyDuplicateSuffix.orElse(null), duplicatesPreCheck, tables);
         return wrapTableFromBackend(concatenated);
     }
 

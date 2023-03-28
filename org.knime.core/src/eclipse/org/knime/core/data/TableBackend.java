@@ -123,18 +123,19 @@ public interface TableBackend {
 
     /**
      * Concatenates the provided tables.
-     *
+     * @param exec for creating container tables
      * @param progressMonitor used to report progress
      * @param tableIdSupplier provides IDs for potentially created ContainerTables
      * @param rowKeyDuplicateSuffix the suffix for duplicate row keys
      * @param duplicatesPreCheck flag to check the row keys for duplicates (only takes effect if rowKeyDuplicateSuffix
      *            is null)
      * @param tables to concatenate
+     *
      * @return the concatenated table
      * @throws CanceledExecutionException if execution is canceled by the user
-     * @since 4.5
+     * @since 5.1
      */
-    KnowsRowCountTable concatenate(ExecutionMonitor progressMonitor, IntSupplier tableIdSupplier,
+    KnowsRowCountTable concatenate(ExecutionContext exec, ExecutionMonitor progressMonitor, IntSupplier tableIdSupplier,
         String rowKeyDuplicateSuffix, boolean duplicatesPreCheck, final BufferedDataTable... tables)
         throws CanceledExecutionException;
 

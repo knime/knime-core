@@ -139,13 +139,14 @@ public final class BufferedTableBackend implements TableBackend {
     }
 
     @Override
-    public KnowsRowCountTable concatenate(final ExecutionMonitor exec, final IntSupplier tableIdSupplier,
-        final String rowKeyDuplicateSuffix, final boolean duplicatesPreCheck, final BufferedDataTable... tables) throws CanceledExecutionException {
+    public KnowsRowCountTable concatenate(final ExecutionContext exec, final ExecutionMonitor progressMonitor,
+        final IntSupplier tableIdSupplier, final String rowKeyDuplicateSuffix, final boolean duplicatesPreCheck,
+        final BufferedDataTable... tables) throws CanceledExecutionException {
         if (duplicatesPreCheck && rowKeyDuplicateSuffix == null) {
-            return ConcatenateTable.create(exec, tables);
+            return ConcatenateTable.create(progressMonitor, tables);
         } else {
-            return ConcatenateTable.create(exec, Optional.ofNullable(rowKeyDuplicateSuffix), duplicatesPreCheck,
-                tables);
+            return ConcatenateTable.create(progressMonitor, Optional.ofNullable(rowKeyDuplicateSuffix),
+                duplicatesPreCheck, tables);
         }
     }
 
@@ -316,7 +317,7 @@ public final class BufferedTableBackend implements TableBackend {
     }
 
     @Override
-    public KnowsRowCountTable replaceSpec(ExecutionContext exec, final BufferedDataTable table,
+    public KnowsRowCountTable replaceSpec(final ExecutionContext exec, final BufferedDataTable table,
         final DataTableSpec newSpec, final IntSupplier tableIDSupplier) {
         return new TableSpecReplacerTable(table, newSpec);
     }

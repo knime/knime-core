@@ -2341,6 +2341,32 @@
                 <message_argument value="replaceSpec(ExecutionContext, BufferedDataTable, DataTableSpec, IntSupplier)"/>
             </message_arguments>
         </filter>
+        <filter comment="The TableBackend is not meant for direct reference or implementation by clients." id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.TableBackend"/>
+                <message_argument value="concatenate(ExecutionContext, ExecutionMonitor, IntSupplier, String, boolean, BufferedDataTable[])"/>
+            </message_arguments>
+        </filter>
+        <filter comment="The TableBackend interface is not meant for direct reference, extension or implementation by clients." id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.TableBackend"/>
+                <message_argument value="replaceSpec(ExecutionContext, BufferedDataTable, DataTableSpec, IntSupplier)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="The TableBackend is not meant for direct reference or implementation by clients." id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.TableBackend"/>
+                <message_argument value="concatenate(ExecutionMonitor, IntSupplier, String, boolean, BufferedDataTable[])"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/container/BufferedTableBackend.java" type="org.knime.core.data.container.BufferedTableBackend">
+        <filter comment="The BufferedDataTableBackend is noreference" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.BufferedTableBackend"/>
+                <message_argument value="concatenate(ExecutionMonitor, IntSupplier, String, boolean, BufferedDataTable[])"/>
+            </message_arguments>
+        </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/data/property/ColorHandler.java" type="org.knime.core.data.property.ColorHandler">
         <filter comment="interface moved in 5.1" id="338722907">
