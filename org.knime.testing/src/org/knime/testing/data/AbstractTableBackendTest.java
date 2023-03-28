@@ -78,12 +78,15 @@ public abstract class AbstractTableBackendTest {
 
     private SpecReplacerAPITester m_specReplacerTester;
 
+    private ConcatenationAPITester m_concatenationTester;
+
 
     @BeforeEach
     void before() {
         m_rearrangerTester = new ColumnRearrangerAPITester(getExecutionContext());
         m_appendTester = new AppendAPITester(getExecutionContext());
         m_specReplacerTester = new SpecReplacerAPITester(getExecutionContext());
+        m_concatenationTester = new ConcatenationAPITester(getExecutionContext());
     }
 
     //////////////////////////////// ColumnRearranger ////////////////////////////////
@@ -218,5 +221,22 @@ public abstract class AbstractTableBackendTest {
     @Test
     void testUpcast() throws Exception {
         m_specReplacerTester.testUpcast();
+    }
+
+    //////////////////////// Concatenation //////////////////////////
+
+    @Test
+    void testConcatenateWithDifferingSpecs() throws Exception {
+        m_concatenationTester.testConcatenateWithDifferingSpecs();
+    }
+
+    @Test
+    void testFailOnDuplicateRowKeys() throws Exception {
+        m_concatenationTester.testFailOnDuplicateRowIDs();
+    }
+
+    @Test
+    void testDeduplicateRowIDsWithSuffix() throws Exception {
+        m_concatenationTester.testDeduplicateRowIDsWithSuffix();
     }
 }
