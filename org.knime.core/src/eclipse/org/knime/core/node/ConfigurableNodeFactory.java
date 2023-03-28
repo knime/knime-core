@@ -48,7 +48,6 @@
  */
 package org.knime.core.node;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -551,23 +550,19 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
 
         /**
          * @param clientTypes port types to find subtypes for
-         * @return non-hidden port types from the port type registry that are a subtype of one of the given
-         *         client types and have no other registered subtypes (most special subtypes)
+         * @return non-hidden port types from the port type registry that are a subtype of one of the given client types
+         *         and have no other registered subtypes (most special subtypes)
          */
         private static PortType[] getRegisteredPortTypes(final PortType[] clientTypes) {
-            final var availablePortTypes = PortTypeRegistry.getInstance().availablePortTypes();
-            final var candidateList = new ArrayList<PortType>();
             // find all port types that are a subtype of a client type and not hidden
-            for (PortType clientType : clientTypes) {
-                availablePortTypes.stream().filter(type -> !type.isHidden())
-                    .filter(clientType::isSuperTypeOf).forEach(candidateList::add);
-            }
-            final var finalList = new LinkedHashSet<>();
+            final var availablePortTypes = PortTypeRegistry.getInstance().availablePortTypes();
+            final var candidateList = Arrays.stream(clientTypes).flatMap(clientType -> availablePortTypes.stream()
+                .filter(type -> !type.isHidden()).filter(clientType::isSuperTypeOf)).toList();
             // retain only the most special subtypes in the inheritance hierarchy
+            final var finalList = new LinkedHashSet<>();
             for (PortType candidate : candidateList) {
                 // none of the other candidates should be a subtype of this candidate
-                if (candidateList.stream().filter(c -> !c.equals(candidate))
-                    .noneMatch(otherCandidate -> otherCandidate.isSuperTypeOf(candidate))) {
+                if (candidateList.stream().filter(c -> !c.equals(candidate)).noneMatch(candidate::isSuperTypeOf)) {
                     finalList.add(candidate);
                 }
             }
