@@ -10177,13 +10177,12 @@ public final class WorkflowManager extends NodeContainer
      * Re-sorts the internal array to move the specified annotation to the last index.
      *
      * @param annotation to bring to front
-     * @since 2.6
+     * @return {@code true} if the annotion's z coordinate was actually changed, {@code false} otherwise.
+     * @since 5.1
      */
-    public void bringAnnotationToFront(final WorkflowAnnotation annotation) {
-        alterAnnotationZOrdering(annotation, (m_annotations.size() - 1), (index) -> {
-            // -1 because at the time of usage, the array will be one smaller
-            return new Integer(m_annotations.size() - 1);
-        });
+    public boolean bringAnnotationToFront(final WorkflowAnnotation annotation) {
+        return alterAnnotationZOrdering(annotation, (m_annotations.size() - 1),
+            index -> Integer.valueOf(m_annotations.size() - 1));
     }
 
     /**
@@ -10191,37 +10190,34 @@ public final class WorkflowManager extends NodeContainer
      * one step forward in the z-ordering.)
      *
      * @param annotation to move forward
-     * @since 3.7
+     * @return {@code true} if the annotion's z coordinate was actually changed, {@code false} otherwise.
+     * @since 5.1
      */
-    public void bringAnnotationForward(final WorkflowAnnotation annotation) {
-        alterAnnotationZOrdering(annotation, (m_annotations.size() - 1), (index) -> {
-            return new Integer(index + 1);
-        });
+    public boolean bringAnnotationForward(final WorkflowAnnotation annotation) {
+        return alterAnnotationZOrdering(annotation, (m_annotations.size() - 1), index -> Integer.valueOf(index + 1));
     }
 
     /**
      * Alters the ordering of the internal array to decrement the index of the specified annotation (thereby moving it
      * one step backwards in the z-ordering.)
      *
-     * @param annotation to move forward
-     * @since 3.7
+     * @param annotation to move backward
+     * @return {@code true} if the annotion's z coordinate was actually changed, {@code false} otherwise.
+     * @since 5.1
      */
-    public void sendAnnotationBackward(final WorkflowAnnotation annotation) {
-        alterAnnotationZOrdering(annotation, 0, (index) -> {
-            return new Integer(index - 1);
-        });
+    public boolean sendAnnotationBackward(final WorkflowAnnotation annotation) {
+        return alterAnnotationZOrdering(annotation, 0, index -> Integer.valueOf(index - 1));
     }
 
     /**
      * Re-sorts the internal array to move the specified annotation to the first index.
      *
-     * @param annotation to bring to front
-     * @since 2.6
+     * @param annotation to move to back
+     * @return {@code true} if the annotion's z coordinate was actually changed, {@code false} otherwise.
+     * @since 5.1
      */
-    public void sendAnnotationToBack(final WorkflowAnnotation annotation) {
-        alterAnnotationZOrdering(annotation, 0, (index) -> {
-            return new Integer(0);
-        });
+    public boolean sendAnnotationToBack(final WorkflowAnnotation annotation) {
+        return alterAnnotationZOrdering(annotation, 0, index -> Integer.valueOf(0));
     }
 
     /**
@@ -10244,21 +10240,37 @@ public final class WorkflowManager extends NodeContainer
     }
 
     /**
+     * @param annotation the annotation to move around
      * @param noOpIndex if the annotation is already at this index value, no re-ordering will occur
      * @param indexSpecifier a function which, given the existing index, returns the desired index at which to place the
      *            annotation
+     * @return {@code true} if the annotion's z coordinate was actually changed, {@code false} otherwise.
      */
-    private void alterAnnotationZOrdering(final WorkflowAnnotation annotation, final int noOpIndex,
+    private boolean alterAnnotationZOrdering(final WorkflowAnnotation annotation, final int noOpIndex,
         final IntFunction<Integer> indexSpecifier) {
-        final int index = getZOrderForAnnotation(annotation);
+        final var index = getZOrderForAnnotation(annotation);
         CheckUtils.checkArgument(index >= 0, "Annotation \"%s\" does not exist - cannot be moved", annotation);
 
         if (index == noOpIndex) {
             // cannot move any further in the direction desired
-            return;
+            return false;
         }
 
-        final int newIndex = indexSpecifier.apply(index).intValue();
+        final var newIndex = indexSpecifier.apply(index).intValue();
+        setAnnotationZOrdering(annotation, index, newIndex);
+        return true;
+    }
+
+    /**
+     * Set the z-position of a workflow annotation directly. Introduced to enable undoing
+     * {@code alterAnnotationZOrdering(...)}.
+     *
+     * @param annotation
+     * @param index
+     * @param newIndex
+     * @since 5.1
+     */
+    public void setAnnotationZOrdering(final WorkflowAnnotation annotation, final int index, final int newIndex) {
         m_annotations.remove(index);
         m_annotations.add(newIndex, annotation);
         annotation.fireChangeEvent(); // triggers workflow dirty

@@ -2336,4 +2336,30 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowManager.java" type="org.knime.core.node.workflow.WorkflowManager">
+        <filter comment="Signature only changed from void to boolean" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
+                <message_argument value="bringAnnotationForward(WorkflowAnnotation)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="Signature only changed from void to boolean" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
+                <message_argument value="bringAnnotationToFront(WorkflowAnnotation)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="Signature only changed from void to boolean" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
+                <message_argument value="sendAnnotationBackward(WorkflowAnnotation)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="Signature only changed from void to boolean" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
+                <message_argument value="sendAnnotationToBack(WorkflowAnnotation)"/>
+            </message_arguments>
+        </filter>
+    </resource>
 </component>
