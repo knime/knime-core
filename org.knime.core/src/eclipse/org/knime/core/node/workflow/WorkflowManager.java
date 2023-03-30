@@ -10257,7 +10257,7 @@ public final class WorkflowManager extends NodeContainer
         }
 
         final var newIndex = indexSpecifier.apply(index).intValue();
-        setAnnotationZOrdering(annotation, index, newIndex);
+        setAnnotationZOrdering(annotation, newIndex);
         return true;
     }
 
@@ -10266,11 +10266,11 @@ public final class WorkflowManager extends NodeContainer
      * {@code alterAnnotationZOrdering(...)}.
      *
      * @param annotation
-     * @param index
      * @param newIndex
      * @since 5.1
      */
-    public void setAnnotationZOrdering(final WorkflowAnnotation annotation, final int index, final int newIndex) {
+    public void setAnnotationZOrdering(final WorkflowAnnotation annotation, final int newIndex) {
+        final var index = getZOrderForAnnotation(annotation);
         m_annotations.remove(index);
         m_annotations.add(newIndex, annotation);
         annotation.fireChangeEvent(); // triggers workflow dirty
