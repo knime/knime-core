@@ -2408,12 +2408,6 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/data/property/ColorModelNominal.java" type="org.knime.core.data.property.ColorModelNominal">
-        <filter id="337682486">
-            <message_arguments>
-                <message_argument value="org.knime.core.data.property.ColorModelNominal"/>
-                <message_argument value="org.knime.core.data.property.ColorHandler$ColorModel"/>
-            </message_arguments>
-        </filter>
         <filter id="338722907">
             <message_arguments>
                 <message_argument value="org.knime.core.data.property.ColorModelNominal"/>

@@ -209,27 +209,19 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
         for (; idx < columnSpecs.length; idx++) {
             DataColumnSpec cspec = spec2.getColumnSpec(idx - l1);
             DataColumnSpecCreator cr = new DataColumnSpecCreator(cspec);
-            // remove color handler from second spec, when also present in first
-            if (spec1.m_colorHandlerColIndex >= 0
-                    && spec1.m_colorHandlerColIndex >= 0) {
-                LOGGER.warn("DataColumnSpec already contains a color "
-                         + "handler, ignoring color handler from second spec.");
-                // reset second handler
-                cr.setColorHandler(null);
-            }
+            // Not checking for multiple color handlers, see AP-20239
+
             // remove size handler from second spec, when also present in first
             if (spec1.m_sizeHandlerColIndex >= 0
-                    && spec1.m_sizeHandlerColIndex >= 0) {
-                LOGGER.warn("DataColumnSpec already contains a size "
-                         + "handler, ignoring size handler from second spec.");
+                    && spec2.m_sizeHandlerColIndex >= 0) {
+                LOGGER.warn("DataColumnSpec already contains a size handler, ignoring handler from second spec.");
                 // reset second handler
                 cr.setSizeHandler(null);
             }
             // remove shape handler from second spec, when also present in first
             if (spec1.m_shapeHandlerColIndex >= 0
-                    && spec1.m_shapeHandlerColIndex >= 0) {
-                LOGGER.warn("DataColumnSpec already contains a shape "
-                         + "handler, ignoring shape handler from second spec.");
+                    && spec2.m_shapeHandlerColIndex >= 0) {
+                LOGGER.warn("DataColumnSpec already contains a shape handler, ignoring handler from second spec.");
                 // reset second handler
                 cr.setSizeHandler(null);
             }
@@ -475,35 +467,25 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
         int shapeHdlIdx = -1;
         List<Integer> filterHandlerIndices = new ArrayList<>();
 
-        for (int i = 0; i < colCount; i++) {
+        for (var i = 0; i < colCount; i++) {
             // disallow duplicates
             String currentName = colSpecs[i].getName();
-            if (currentName == null) {
-                throw new NullPointerException("Column name must not be null.");
-            }
 
             // if the value is not null, duplicate column name found
             final Integer duplicateValue =
                     m_colIndexMap.put(colSpecs[i].getName(), i);
             if (duplicateValue != null) {
                 throw new IllegalArgumentException("Duplicate column name \""
-                        + currentName.toString() + "\" at positions "
+                        + currentName + "\" at positions "
                         + duplicateValue + " and " + i + ".");
             }
 
             // creator used to remove handlers
-            DataColumnSpecCreator cr = new DataColumnSpecCreator(colSpecs[i]);
+            var cr = new DataColumnSpecCreator(colSpecs[i]);
 
-            // check for multiple color handlers
-            if (colSpecs[i].getColorHandler() != null) {
-                if (colorHdlIdx >= 0) {
-                    LOGGER.warn("Found multiple color handler at columns "
-                            + "index " + colorHdlIdx + " and "
-                            + i + ", removed second one.");
-                    cr.setColorHandler(null);
-                } else {
-                    colorHdlIdx = i;
-                }
+            // allow multiple color handlers (changed in 5.1 - as per AP-20239), use "left-most" column as primary
+            if (colSpecs[i].getColorHandler() != null && colorHdlIdx < 0) {
+                colorHdlIdx = i;
             }
 
             // check for multiple size handlers
@@ -542,7 +524,7 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
         m_filterHandlerColIndices = filterHandlerIndices.isEmpty() ? ArrayUtils.EMPTY_INT_ARRAY :
             filterHandlerIndices.stream().mapToInt(i -> i).toArray();
         m_properties = properties.isEmpty() ? Collections.<String, String>emptyMap()
-                : new LinkedHashMap<String, String>(properties);
+                : new LinkedHashMap<>(properties);
     }
 
     /**
