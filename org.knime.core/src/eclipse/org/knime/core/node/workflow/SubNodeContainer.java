@@ -1575,8 +1575,7 @@ public final class SubNodeContainer extends SingleNodeContainer
      */
     @Override
     public ExecutionContext createExecutionContext() {
-        // TODO Auto-generated method stub
-        return null;
+        return getVirtualOutNode().createExecutionContext();
     }
 
     /**
