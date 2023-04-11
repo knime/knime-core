@@ -61,6 +61,7 @@ import org.knime.shared.workflow.def.StyleRangeDef;
 
 /**
  * @author  Bernd Wiswedel, KNIME AG, Zurich, Switzerland
+ * @author Kai Franze, KNIME GmbH
  */
 public class AnnotationData implements Cloneable {
 
@@ -83,14 +84,11 @@ public class AnnotationData implements Cloneable {
      * @since 4.0
      */
     public static TextAlignment getTextAlignmentForSWTAlignment(final int swtAlignment) {
-        switch (swtAlignment) {
-            case SWT.RIGHT:
-                return TextAlignment.RIGHT;
-            case SWT.CENTER:
-                return TextAlignment.CENTER;
-            default:
-                return TextAlignment.LEFT;
-        }
+        return switch (swtAlignment) {
+            case SWT.RIGHT -> TextAlignment.RIGHT;
+            case SWT.CENTER -> TextAlignment.CENTER;
+            default -> TextAlignment.LEFT;
+        };
     }
 
     /** Old type annotation - font is system font (inconsistent layout).
@@ -100,7 +98,7 @@ public class AnnotationData implements Cloneable {
      * @since 3.0 */
     public static final int VERSION_20151012 = 20151012;
 
-    /** Released with 3.1: store default font size in annotation.
+    /** Released with 3.1 - store default font size in annotation.
      * @since 3.1 */
     public static final int VERSION_20151123 = 20151123;
 
@@ -134,6 +132,13 @@ public class AnnotationData implements Cloneable {
     private int m_defaultFontSize = -1;
 
     private int m_version = VERSION_20151123;
+
+    /**
+     * Generic field to store annotation data content
+     *
+     * @since 5.1
+     */
+    private String m_content;
 
     /** @return the text */
     public final String getText() {
@@ -311,6 +316,24 @@ public class AnnotationData implements Cloneable {
         return m_defaultFontSize;
     }
 
+    /**
+     * Set the content
+     *
+     * @param content
+     * @since 5.1
+     */
+    public void setContent(final String content) {
+        m_content = content;
+    }
+
+    /**
+     * @return The content
+     * @since 5.1
+     */
+    public String getContent() {
+        return m_content;
+    }
+
     /** {@inheritDoc} */
     @Override
     public String toString() {
@@ -413,6 +436,7 @@ public class AnnotationData implements Cloneable {
         StyleRange[] otherStyles = otherData.getStyleRanges();
         StyleRange[] myStyles = cloneStyleRanges(otherStyles);
         setStyleRanges(myStyles);
+        setContent(otherData.getContent());
     }
 
     /**
@@ -438,7 +462,10 @@ public class AnnotationData implements Cloneable {
             throw new RuntimeException("Cant't clone", e);
         }
     }
-    /** Save all data.
+
+    /**
+     * Save all data.
+     *
      * @param config To save to.
      */
     public void save(final NodeSettingsWO config) {
@@ -454,20 +481,27 @@ public class AnnotationData implements Cloneable {
         config.addInt("defFontSize", m_defaultFontSize);
         config.addInt("annotation-version", m_version);
         NodeSettingsWO styleConfigs = config.addNodeSettings("styles");
-        int i = 0;
+        var i = 0;
         for (StyleRange sr : getStyleRanges()) {
-            NodeSettingsWO cur = styleConfigs.addNodeSettings("style_" + (i++));
+            NodeSettingsWO cur = styleConfigs.addNodeSettings("style_" + i);
             sr.save(cur);
+            i++;
+        }
+        if (m_content != null) {
+            config.addString("contentType", "text/html"); // Support for more content types might be added in the future
+            config.addString("content", m_content);
         }
     }
 
-    /** loads new values.
+    /**
+     * Loads new values.
+     *
      * @param config To load from
      * @param loadVersion Version to load
      * @throws InvalidSettingsException If fails
-     * @since 3.7*/
-    public void load(final NodeSettingsRO config, final LoadVersion loadVersion)
-            throws InvalidSettingsException {
+     * @since 3.7
+     */
+    public void load(final NodeSettingsRO config, final LoadVersion loadVersion) throws InvalidSettingsException {
         setText(config.getString("text"));
         setBgColor(config.getInt("bgcolor"));
         int x = config.getInt("x-coordinate");
@@ -484,8 +518,7 @@ public class AnnotationData implements Cloneable {
             try {
                 alignment = TextAlignment.valueOf(alignmentS);
             } catch (Exception e) {
-                throw new InvalidSettingsException(
-                        "Invalid alignment: " + alignmentS, e);
+                throw new InvalidSettingsException("Invalid alignment: " + alignmentS, e);
             }
         }
         setDimension(x, y, width, height);
@@ -495,12 +528,17 @@ public class AnnotationData implements Cloneable {
         setDefaultFontSize(defFontSize);
         NodeSettingsRO styleConfigs = config.getNodeSettings("styles");
         StyleRange[] styles = new StyleRange[styleConfigs.getChildCount()];
-        int i = 0;
+        var i = 0;
         for (String key : styleConfigs.keySet()) {
             NodeSettingsRO cur = styleConfigs.getNodeSettings(key);
-            styles[i++] = StyleRange.load(cur);
+            styles[i] = StyleRange.load(cur);
+            i++;
         }
         setStyleRanges(styles);
+        if (config.containsKey("content")) {
+            var content = config.getString("content");
+            setContent(content);
+        }
     }
 
     /** Formatting rule on the text; similar to SWT style range. */

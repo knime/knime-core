@@ -193,6 +193,14 @@ public abstract class Annotation implements UIInformation {
     }
 
     /**
+     * @return The content
+     * @since 5.1
+     */
+    public String getContent() {
+        return m_data.getContent();
+    }
+
+    /**
      * Return the current version of the annotation; this is updated each time
      * <code>copyFrom(AnnotationData, boolean)</code> is invoked.
      *
