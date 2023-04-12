@@ -78,6 +78,40 @@ public class AnnotationData implements Cloneable {
     }
 
     /**
+     * The content type in annotation.
+     *
+     * @since 5.1
+     */
+    public enum ContentType {
+        /** Legacy plain text */
+        TEXT_PLAIN("text/plain"),
+        /** HTML formatted text */
+        TEXT_HTML("text/html");
+
+        private final String m_value;
+
+        ContentType(final String value) {
+            m_value = value;
+        }
+
+        private String getValue() {
+            return m_value;
+        }
+
+        @Override
+        public String toString() {
+            return getValue();
+        }
+
+        private static ContentType fromValue(final String value) {
+            return Arrays.stream(values())//
+                .filter(ct -> ct.getValue().equalsIgnoreCase(value))//
+                .findFirst()//
+                .orElseThrow(IllegalArgumentException::new);
+        }
+    }
+
+    /**
      * @param swtAlignment a value which should be one of <code>SWT.RIGHT</code>, <code>SWT.CENTER</code>,
      *            <code>SWT.LEFT</code>
      * @return the semantically related <code>TextAlignment</code> enum
@@ -91,19 +125,38 @@ public class AnnotationData implements Cloneable {
         };
     }
 
-    /** Old type annotation - font is system font (inconsistent layout).
-     * @since 3.0 */
+    /**
+     * Old type annotation - font is system font (inconsistent layout).
+     *
+     * @since 3.0
+     */
     public static final int VERSION_OLD = -1;
-    /** Released with 3.0 - uses (almost) same fonts on all systems.
-     * @since 3.0 */
+
+    /**
+     * Released with 3.0 - uses (almost) same fonts on all systems.
+     *
+     * @since 3.0
+     */
     public static final int VERSION_20151012 = 20151012;
 
-    /** Released with 3.1 - store default font size in annotation.
-     * @since 3.1 */
+    /**
+     * Released with 3.1 - store default font size in annotation.
+     *
+     * @since 3.1
+     */
     public static final int VERSION_20151123 = 20151123;
+
+    /**
+     * Released with 5.1 - Stores different content types in the text field.
+     *
+     * @since 5.1
+     */
+    public static final int VERSION_20230412 = 20230412;
 
     /**  */
     private String m_text = "";
+
+    private ContentType m_contentType = ContentType.TEXT_PLAIN;
 
     /**  */
     private StyleRange[] m_styleRanges = new StyleRange[0];
@@ -131,14 +184,7 @@ public class AnnotationData implements Cloneable {
 
     private int m_defaultFontSize = -1;
 
-    private int m_version = VERSION_20151123;
-
-    /**
-     * Generic field to store annotation data content
-     *
-     * @since 5.1
-     */
-    private String m_content;
+    private int m_version = VERSION_20230412;
 
     /** @return the text */
     public final String getText() {
@@ -148,6 +194,24 @@ public class AnnotationData implements Cloneable {
     /** @param text the text to set */
     public final void setText(final String text) {
         m_text = text;
+    }
+
+    /**
+     * @return The content type in annotation
+     *
+     * @since 5.1
+     */
+    public final ContentType getContentType() {
+        return m_contentType;
+    }
+
+    /**
+     * @param contentType The content type in annotation
+     *
+     * @since 5.1
+     */
+    public final void setContentType(final ContentType contentType) {
+        m_contentType = contentType;
     }
 
     /** @return the styleRanges */
@@ -316,24 +380,6 @@ public class AnnotationData implements Cloneable {
         return m_defaultFontSize;
     }
 
-    /**
-     * Set the content
-     *
-     * @param content
-     * @since 5.1
-     */
-    public void setContent(final String content) {
-        m_content = content;
-    }
-
-    /**
-     * @return The content
-     * @since 5.1
-     */
-    public String getContent() {
-        return m_content;
-    }
-
     /** {@inheritDoc} */
     @Override
     public String toString() {
@@ -427,6 +473,7 @@ public class AnnotationData implements Cloneable {
                     otherData.getWidth(), otherData.getHeight());
         }
         setText(otherData.getText());
+        setContentType(otherData.getContentType());
         setBgColor(otherData.getBgColor());
         setAlignment(otherData.getAlignment());
         setBorderSize(otherData.getBorderSize());
@@ -436,7 +483,6 @@ public class AnnotationData implements Cloneable {
         StyleRange[] otherStyles = otherData.getStyleRanges();
         StyleRange[] myStyles = cloneStyleRanges(otherStyles);
         setStyleRanges(myStyles);
-        setContent(otherData.getContent());
     }
 
     /**
@@ -470,6 +516,7 @@ public class AnnotationData implements Cloneable {
      */
     public void save(final NodeSettingsWO config) {
         config.addString("text", getText());
+        config.addString("contentType", getContentType().toString());
         config.addInt("bgcolor", getBgColor());
         config.addInt("x-coordinate", getX());
         config.addInt("y-coordinate", getY());
@@ -487,10 +534,6 @@ public class AnnotationData implements Cloneable {
             sr.save(cur);
             i++;
         }
-        if (m_content != null) {
-            config.addString("contentType", "text/html"); // Support for more content types might be added in the future
-            config.addString("content", m_content);
-        }
     }
 
     /**
@@ -503,6 +546,11 @@ public class AnnotationData implements Cloneable {
      */
     public void load(final NodeSettingsRO config, final LoadVersion loadVersion) throws InvalidSettingsException {
         setText(config.getString("text"));
+
+        // Default to TEXT_PLAIN for backward compatibility
+        var contentTypeValue = config.getString("contentType", ContentType.TEXT_PLAIN.toString());
+        setContentType(ContentType.fromValue(contentTypeValue));
+
         setBgColor(config.getInt("bgcolor"));
         int x = config.getInt("x-coordinate");
         int y = config.getInt("y-coordinate");
@@ -512,6 +560,7 @@ public class AnnotationData implements Cloneable {
         int borderColor = config.getInt("borderColor", 0); // default for backward compatibility
         int defFontSize = config.getInt("defFontSize", -1); // default for backward compatibility
         m_version = config.getInt("annotation-version", VERSION_OLD); // added in 3.0
+
         TextAlignment alignment = TextAlignment.LEFT;
         if (loadVersion.ordinal() >= LoadVersion.V250.ordinal()) {
             String alignmentS = config.getString("alignment");
@@ -521,11 +570,13 @@ public class AnnotationData implements Cloneable {
                 throw new InvalidSettingsException("Invalid alignment: " + alignmentS, e);
             }
         }
+
         setDimension(x, y, width, height);
         setAlignment(alignment);
         setBorderSize(borderSize);
         setBorderColor(borderColor);
         setDefaultFontSize(defFontSize);
+
         NodeSettingsRO styleConfigs = config.getNodeSettings("styles");
         StyleRange[] styles = new StyleRange[styleConfigs.getChildCount()];
         var i = 0;
@@ -535,10 +586,6 @@ public class AnnotationData implements Cloneable {
             i++;
         }
         setStyleRanges(styles);
-        if (config.containsKey("content")) {
-            var content = config.getString("content");
-            setContent(content);
-        }
     }
 
     /** Formatting rule on the text; similar to SWT style range. */

@@ -52,6 +52,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.workflow.AnnotationData.ContentType;
 import org.knime.core.node.workflow.AnnotationData.StyleRange;
 import org.knime.core.node.workflow.AnnotationData.TextAlignment;
 import org.knime.core.util.LoadVersion;
@@ -89,6 +90,15 @@ public abstract class Annotation implements UIInformation {
     /** @return the text */
     public final String getText() {
         return m_data.getText();
+    }
+
+    /**
+     * @return The content type in annotation
+     *
+     * @since 5.1
+     */
+    public final ContentType getContentType() {
+        return m_data.getContentType();
     }
 
     /** @return the styleRanges */
@@ -190,14 +200,6 @@ public abstract class Annotation implements UIInformation {
      */
     protected void setDimensionNoNotify(final int x, final int y, final int width, final int height) {
         m_data.setDimension(x, y, width, height);
-    }
-
-    /**
-     * @return The content
-     * @since 5.1
-     */
-    public String getContent() {
-        return m_data.getContent();
     }
 
     /**
