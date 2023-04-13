@@ -88,24 +88,19 @@ public class AnnotationData implements Cloneable {
         /** HTML formatted text */
         TEXT_HTML("text/html");
 
-        private final String m_value;
+        private final String m_label;
 
-        ContentType(final String value) {
-            m_value = value;
+        ContentType(final String label) {
+            m_label = label;
         }
 
-        private String getValue() {
-            return m_value;
+        private String getLabel() {
+            return m_label;
         }
 
-        @Override
-        public String toString() {
-            return getValue();
-        }
-
-        private static ContentType fromValue(final String value) {
+        private static ContentType fromLabel(final String label) {
             return Arrays.stream(values())//
-                .filter(ct -> ct.getValue().equalsIgnoreCase(value))//
+                .filter(ct -> ct.getLabel().equalsIgnoreCase(label))//
                 .findFirst()//
                 .orElseThrow(IllegalArgumentException::new);
         }
@@ -516,7 +511,7 @@ public class AnnotationData implements Cloneable {
      */
     public void save(final NodeSettingsWO config) {
         config.addString("text", getText());
-        config.addString("contentType", getContentType().toString());
+        config.addString("contentType", getContentType().getLabel());
         config.addInt("bgcolor", getBgColor());
         config.addInt("x-coordinate", getX());
         config.addInt("y-coordinate", getY());
@@ -548,8 +543,8 @@ public class AnnotationData implements Cloneable {
         setText(config.getString("text"));
 
         // Default to TEXT_PLAIN for backward compatibility
-        var contentTypeValue = config.getString("contentType", ContentType.TEXT_PLAIN.toString());
-        setContentType(ContentType.fromValue(contentTypeValue));
+        var contentTypeValue = config.getString("contentType", ContentType.TEXT_PLAIN.getLabel());
+        setContentType(ContentType.fromLabel(contentTypeValue));
 
         setBgColor(config.getInt("bgcolor"));
         int x = config.getInt("x-coordinate");
