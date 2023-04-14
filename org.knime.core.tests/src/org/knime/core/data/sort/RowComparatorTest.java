@@ -50,6 +50,7 @@ package org.knime.core.data.sort;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -115,7 +116,11 @@ public class RowComparatorTest {
         // 11 entries so we get "Row10" as row id naturally
         IntStream.range(0, 11).forEach(
             // leading zeros with 2 digits for easy lexicographic proxy comparison of an alphanumeric ordering on RowKey
-            i -> container.addRowToTable(createRow(i, i, i, String.valueOf(i), String.format("%02d", i))));
+            i -> container.addRowToTable(createRow(i, 1.0 * i, i, String.valueOf(i), String.format("%02d", i))));
+        // add two rows containing missing values
+        IntStream.range(11, 13).forEach(
+            i -> container.addRowToTable(createRow(i, null, null, String.valueOf(i), String.format("%02d", i)))
+                );
         container.close();
         m_table = container.getTable();
         MemoryAlertSystemTest.forceGC();
@@ -211,16 +216,22 @@ public class RowComparatorTest {
                 final var sorted = sorter.sort(m_exec);
 
                 final var intComparator = Comparator.comparing(IntCell::getIntValue, Comparator.naturalOrder());
+
                 try (final var it = sorted.iterator()) {
                     IntCell last = null;
                     while (it.hasNext()) {
                         final var next = it.next();
-                        final IntCell ic = (IntCell) next.getCell(1);
-                        if (last != null) {
-                            final var cmp = intComparator.compare(ic, last);
-                            assertTrue(ascending ? cmp > 0 : cmp < 0);
+                        final var cell = next.getCell(1);
+                        if (cell.isMissing()) {
+
+                        } else {
+                            final IntCell ic = (IntCell) cell;
+                            if (last != null) {
+                                final var cmp = intComparator.compare(ic, last);
+                                assertTrue(ascending ? cmp > 0 : cmp < 0);
+                            }
+                            last = ic;
                         }
-                        last = ic;
                     }
                 }
             }
@@ -287,8 +298,8 @@ public class RowComparatorTest {
     @Test
     public void testComparatorShortcuts() {
         // increase code coverage
-        final var row1 = createRow(0L, 0, 0, "First", "A");
-        final var row2 = createRow(1L, 0, 1, "Second", "B");
+        final var row1 = createRow(0L, 0d, 0, "First", "A");
+        final var row2 = createRow(1L, 0d, 1, "Second", "B");
         final var cb = RowComparator.on(m_spec);
         IntStream.range(0, 3).forEach(i -> cb.thenComparingColumn(i, c -> c));
         final var comp = cb.build();
@@ -297,29 +308,72 @@ public class RowComparatorTest {
     }
 
     /**
-     * Tests that missing cells are always sorted to end of list if configured, else according to type comparator.
+     * Tests that all four cases of (ASC, DESC) x (missings last, missings first) work (and are possible).
      */
     @Test
     public void testMissingsOrder() {
-        for (final var descending : new boolean[] { false, true }) {
-            final var alphanum = false;
-            final var spec = new DataTableSpec(new DataColumnSpecCreator("MyDouble", DoubleCell.TYPE).createSpec());
+        final var spec = new DataTableSpec(new DataColumnSpecCreator("MyDouble", DoubleCell.TYPE).createSpec());
+        final var row0 = new DefaultRow(RowKey.createRowKey(0L), new DoubleCell(0));
+        final var row1 = new DefaultRow(RowKey.createRowKey(1L), new DoubleCell(1));
+        final var rowMissingCell = new DefaultRow(RowKey.createRowKey(2L), DataType.getMissingCell());
 
-            final var row = new DefaultRow(RowKey.createRowKey(0L), new DoubleCell(0));
-            final var missing = new DefaultRow(RowKey.createRowKey(1L), DataType.getMissingCell());
+        for (final var ascending : new boolean[] { false, true }) {
+            for (final var missingsLast : new boolean[] { false, true } ) {
 
-            // if the flag is not set, choose order based on type's comparator
-            final var missingsDefault = RowComparator.on(spec).thenComparingColumn(0,
-                c -> c.withDescendingSortOrder(descending).withAlphanumericComparison(alphanum)).build();
-            final var md = missingsDefault.compare(missing, row);
-            assertTrue(!descending ? md < 0 : md > 0);
+                final var order = ascending ? "ASC" : "DESC";
+                final var miss = missingsLast ? "MISS_LAST" : "MISS_FIRST";
 
-            // if flag is set, hard-code missings at the end of the list
-            final var missingsLast = RowComparator.on(spec).thenComparingColumn(0,
-                c -> c.withDescendingSortOrder(descending).withAlphanumericComparison(alphanum).withMissingsLast())
-                    .build();
-            final var lst = missingsLast.compare(missing, row);
-            assertTrue(lst > 0);
+                final var comp = RowComparator.on(spec).thenComparingColumn(0,
+                            c -> c.withDescendingSortOrder(!ascending).withMissingsLast(missingsLast)).build();
+
+                final var normalRows = comp.compare(row0, row1);
+                final var expectedNormalRows = ascending ? -1 : 1;
+                assertEquals(expectedNormalRows, normalRows,
+                    String.format("Non-missing rows have wrong sort order for %s with %s", order, miss));
+
+                // regardless of sort order, when missings are last the "outer" comparator should put them always
+                // as largest, when they are first, they should be compared as smallest
+                final var expectedMissing = missingsLast ? 1 : -1;
+                for (final var r : new DefaultRow[] { row0, row1 }) {
+                    assertEquals(expectedMissing, comp.compare(rowMissingCell, r),
+                        String.format("Unexpected order for missing vs. non-missing and %s with %s.", order, miss));
+                }
+            }
+        }
+    }
+
+    /**
+     * Tests that it is possible to make missings order dependent on non-missing sort order.
+     */
+    @Test
+    public void testMissingsSmallestLargest() {
+        final var spec = new DataTableSpec(new DataColumnSpecCreator("MyDouble", DoubleCell.TYPE).createSpec());
+        final var row0 = new DefaultRow(RowKey.createRowKey(0L), new DoubleCell(0));
+        final var row1 = new DefaultRow(RowKey.createRowKey(1L), new DoubleCell(1));
+        final var rowMissingCell = new DefaultRow(RowKey.createRowKey(2L), DataType.getMissingCell());
+
+        for (final var descending : new boolean[] { true, false }) {
+            for (final var missingsLargest : new boolean[] { true, false } ) {
+
+                final var order = descending ? "DESC" : "ASC";
+                final var miss = missingsLargest ? "MISS_LARGEST" : "MISS_SMALLEST";
+
+                final boolean missLast = descending ^ missingsLargest;
+                final var comp = RowComparator.on(spec).thenComparingColumn(0,
+                            c -> c.withDescendingSortOrder(descending).withMissingsLast(missLast))
+                        .build();
+
+                final var normalRows = comp.compare(row0, row1);
+                final var expectedNormalRows = !descending ? -1 : 1;
+                assertEquals(expectedNormalRows, normalRows,
+                    String.format("Non-missing rows have wrong sort order for %s with %s", order, miss));
+
+                final var expectedMissing = !missLast ? -1 : 1;
+                for (final var r : new DefaultRow[] { row0, row1 }) {
+                    assertEquals(expectedMissing, comp.compare(rowMissingCell, r),
+                        String.format("Unexpected order for missing vs. non-missing and %s with %s.", order, miss));
+                }
+            }
         }
     }
 
@@ -331,104 +385,130 @@ public class RowComparatorTest {
         final var spec = new DataTableSpec(new DataColumnSpecCreator("MyDouble", DoubleCell.TYPE).createSpec());
         final var row = new DefaultRow(RowKey.createRowKey(0L), new DoubleCell(0));
         final var comp = RowComparator.on(spec).thenComparingColumn(0, c -> c.withDescendingSortOrder()).build();
-        assertEquals(0, comp.compare(row, row));
-        assertTrue(comp.compare(row, null) < 0);
-        assertTrue(comp.compare(null, row) > 0);
+        assertEquals(0, comp.compare(row, row), "Unexpected inequality of same row.");
+        assertTrue(comp.compare(row, null) < 0, "Unexpected order of non-missing and missing row.");
+        assertTrue(comp.compare(null, row) > 0, "Unexpected order of missing and non-missing row.");
     }
 
     /**
-     * Tests that the old constructor-based API agrees with the new builder API.
+     * Tests that the old constructor-based API agrees with the new builder API, except in the case
+     * which is now possible with the new API.
+     * In the old version it was not possible to sort descending but with missing values on top.
+     *
      * @throws CanceledExecutionException if shuffle is canceled
      */
     @Test
     public void testOldVsNewAPI() throws CanceledExecutionException {
 
-        try (final var shuffler = new ClosableShuffler(m_table, m_exec, 42)) {
-            final var shuffledTable = shuffler.getShuffled();
+        final var spec = new DataTableSpec(new DataColumnSpecCreator("MyInt", IntCell.TYPE).createSpec());
+        final var container = m_exec.createDataContainer(spec);
+        // 2 rows with values and 2 with missing cells
+        IntStream.range(0, 4).forEach(
+            i -> container.addRowToTable(new DefaultRow(RowKey.createRowKey((long)i), i <= 1 ? new IntCell(i) : DataType.getMissingCell())));
+        container.close();
+        final var table = container.getTable();
 
-            final var newComp = RowComparator.on(m_spec)
-                    .thenComparingRowKey(k -> k)
-                    .thenComparingColumn(0, c -> c.withDescendingSortOrder().withMissingsLast())
-                    .thenComparingColumn(1, c -> c.withMissingsLast())
-                    .build();
+        for (final var missingsLast : new boolean[] { true, false } ) {
+            for (final var descending : new boolean[] { true, false } ) {
+                try (final var shuffler = new ClosableShuffler(table, m_exec, 42)) {
+                    final var shuffledTable = shuffler.getShuffled();
 
-            @SuppressWarnings("deprecation")
-            final var oldComp = new RowComparator(
-                new int[] { -1, 0 , 1},
-                new boolean[] {true, false, true},
-                false,
-            m_spec);
+                    final var newComp = RowComparator.on(m_spec) //
+                            .thenComparingColumn(0, //
+                                c -> c.withDescendingSortOrder(descending) //
+                                      .withMissingsLast(missingsLast))//
+                            .build();
+                    final var sorter = new BufferedDataTableSorter(shuffledTable, newComp);
+                    final var sorted = sorter.sort(m_exec);
+                    // assert correct order of rows
+                    // should be two blocks of 2 rows each: [non-missing] and [missing]
+                    // DESC and missings on top should not be possible with old comparator based on the constructor
+                    assertBlockOrder(sorted, descending, missingsLast);
 
-            final var sorter = new BufferedDataTableSorter(shuffledTable, new Comparator<DataRow> () {
 
-                @Override
-                public int compare(final DataRow o1, final DataRow o2) {
-                    final var nc = newComp.compare(o1, o2);
-                    final var oc = oldComp.compare(o1, o2);
-                    assertEquals(nc, oc, "Old constructor should result in same comparator as new API");
-                    return nc;
+                    @SuppressWarnings("deprecation")
+                    final var oldComp = new RowComparator(
+                        new int[] { 0 },
+                        new boolean[] { !descending },
+                        missingsLast,
+                    m_spec);
+                    final var sorterOld = new BufferedDataTableSorter(shuffledTable, oldComp);
+                    final var sortedOld = sorterOld.sort(m_exec);
+                    // old comparator constructor will not result in the case DESC-MissOnTop, therefore we expect
+                    // the missing block at a different position in one case
+                    assertBlockOrder(sortedOld, descending, missingsLast || descending);
+
+
+                    // same as above for the explicit constructor
+                    final var sorterOldConstr = new BufferedDataTableSorter(shuffledTable,
+                        Arrays.asList("MyInt"),
+                        new boolean[] { !descending },
+                        missingsLast);
+                    final var sortedOldConstr = sorterOldConstr.sort(m_exec);
+                    // old sorter constructor will not result in the case DESC-MissOnTop, therefore we expect
+                    // the missing block at a different position in one case
+                    assertBlockOrder(sortedOldConstr, descending, missingsLast || descending);
+
                 }
+            }
+        }
+    }
 
-            });
-            final var sorted = sorter.sort(m_exec);
+    private static void assertBlockOrder(final BufferedDataTable sorted, final boolean descending,
+            final boolean missingsLast) {
+        final var rowKeys = RowComparator.on(sorted.getSpec()).thenComparingRowKey().build();
+        try (final var it = sorted.iterator()) {
+            final DataRow[] rows = new DataRow[] { it.next(), it.next(), it.next(), it.next() };
+            final var blocks = new int[][] { new int[] { 0, 1 }, new int[] { 2, 3 } };
 
-            final var rowKeyComparator = Comparator.comparing(RowKey::getString, Comparator.naturalOrder());
+            final int[] missingBlock = blocks[missingsLast ? 1 : 0];
+            final int[] nonMissingBlock = blocks[missingsLast ? 0 : 1];
 
-            try (final var it = sorted.iterator()) {
-                RowKey last = null;
-                while (it.hasNext()) {
-                    final var next = it.next();
-                    final var rkv = next.getKey();
-                    if (last != null) {
-                        final var cmp = rowKeyComparator.compare(rkv, last);
-                        assertTrue(cmp > 0);
-                    }
-                    last = rkv;
+            // assert correct order of blocks
+            DataRow prev = null;
+            for (final int nonI : nonMissingBlock) {
+                final var next = rows[nonI];
+                assertFalse(next.getCell(0).isMissing(),
+                    String.format("Unexpected missing cell in row %d", nonI));
+                if (prev != null) {
+                    assertEquals(rowKeys.compare(prev, next), descending ? 1 : -1,
+                            String.format("Unexpected order of row keys (%s, %s) for %s sort order.",
+                                prev.getKey(), next.getKey(), descending ? "DESC" : "ASC"));
                 }
+                prev = next;
+            }
+            prev = null;
+            for (final int missI : missingBlock) {
+                final var next = rows[missI];
+                assertTrue(next.getCell(0).isMissing(),
+                    String.format("Unexpected non-missing cell in row %d", missI));
+                if (prev != null) {
+                    // our single-cell rows with missings should not be re-ordered by stable sorting algorithm since
+                    // all missings are equal
+                    assertEquals(rowKeys.compare(prev, next), -1,
+                            String.format("Unexpected order of row keys (%s, %s) for %s sort order.",
+                                prev.getKey(), next.getKey(), descending ? "DESC" : "ASC"));
+                }
+                prev = next;
             }
         }
     }
 
     /**
-     * Tests that the old API of AbstractTableSorter by giving sort columns agrees with the Row Comparator constructed
-     * by the builder.
-     * @throws CanceledExecutionException if shuffle is canceled
+     * Create a new test row based on the passed data. If any argument is null, the row will have a MissingCell in its
+     * place.
+     *
+     * @param rowKey Row ID for the row
+     * @param d double value for first cell
+     * @param i int value for second cell
+     * @param s string value for third cell
+     * @param s2 string value for fourth cell
+     * @return the created row (rowKey, d, i, s, s2)
      */
-    @Test
-    public void testOldVsNewAPISorter() throws CanceledExecutionException {
-
-        try (final var shuffler = new ClosableShuffler(m_table, m_exec, 42)) {
-            final var shuffledTable = shuffler.getShuffled();
-
-            final var newComp = RowComparator.on(m_spec)
-                    .thenComparingRowKey(k -> k)
-                    .thenComparingColumn(0, c -> c.withDescendingSortOrder().withMissingsLast())
-                    .thenComparingColumn(1, c -> c.withMissingsLast())
-                    .build();
-
-            final var sorter = new BufferedDataTableSorter(shuffledTable,
-                Arrays.asList("-ROWKEY -", "MyDouble", "MyInt"),
-                new boolean[] {true, false, true},
-                false);
-
-            final var sorted = sorter.sort(m_exec);
-
-            try (final var it = sorted.iterator()) {
-                DataRow last = null;
-                while (it.hasNext()) {
-                    final var next = it.next();
-                    if (last != null) {
-                        assertTrue(newComp.compare(last, next) < 0);
-                    }
-                    last = next;
-                }
-            }
-        }
-    }
-
-
-    private static DataRow createRow(final long rowKey, final double d, final int i, final String s, final String s2) {
-        return new DefaultRow(RowKey.createRowKey(rowKey), new DoubleCell(d), new IntCell(i),
+    private static DataRow createRow(final long rowKey, final Double d, final Integer i, final String s, final String s2) {
+        return new DefaultRow(RowKey.createRowKey(rowKey),
+            d != null ? new DoubleCell(d) : DataType.getMissingCell(),
+            i != null ? new IntCell(i) : DataType.getMissingCell(),
             s != null ? new StringCell(s) : DataType.getMissingCell(),
             s2 != null ? new StringCell(s2) : DataType.getMissingCell());
     }

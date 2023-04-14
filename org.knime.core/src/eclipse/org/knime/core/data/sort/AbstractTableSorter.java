@@ -326,15 +326,20 @@ abstract class AbstractTableSorter {
         var i = 0;
         for (final String name : inclList) {
             final int index = spec.findColumnIndex(name);
-            final boolean ascending = sortAscending[i];
+            final boolean descending = !sortAscending[i];
             if (index == -1) {
                 if (!ROWKEY_SORT_SPEC.getName().equals(name)) {
                     throw new IllegalArgumentException("Could not find column name:" + name);
                 }
-                rc.thenComparingRowKey(rk -> rk.withDescendingSortOrder(!ascending));
+                rc.thenComparingRowKey(rk -> rk.withDescendingSortOrder(descending));
             } else {
+                // legacy behavior: if "sortMissingsToEnd" is false, the sorter would sort missing cells based on
+                //                  the column sort order (ASC/DESC) and _not_ always to the start. this means that the
+                //                  combination (DESC, missings at the start) is not possible to achieve with this.
+                // In order to not break this legacy behavior, we make the actual argument to the comparator builder
+                // dependent on the sort order again.
                 rc.thenComparingColumn(index,
-                    col -> col.withDescendingSortOrder(!ascending).withMissingsLast(sortMissingsToEnd));
+                    col -> col.withDescendingSortOrder(descending).withMissingsLast(sortMissingsToEnd || descending));
             }
             i++;
         }

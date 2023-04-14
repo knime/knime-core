@@ -93,9 +93,14 @@ public final class RowComparator implements Comparator<DataRow> {//NOSONAR
                 rc.thenComparingRowKey(k -> k
                     .withDescendingSortOrder(descending));
             } else {
+                // legacy behavior: if "sortMissingsToEnd" is false, the comparator would sort missing cells based on
+                //                  the column sort order (ASC/DESC) and _not_ always to the start. this means that the
+                //                  combination (DESC, missings at the start) is not possible to achieve with this.
+                // In order to not break this legacy behavior, we make the actual argument to the comparator builder
+                // dependent on the sort order again.
                 rc.thenComparingColumn(index, c -> c
                     .withDescendingSortOrder(descending)
-                    .withMissingsLast(sortMissingsToEnd));
+                    .withMissingsLast(sortMissingsToEnd || descending));
             }
         }
         m_comparators = rc.build().m_comparators;
@@ -106,7 +111,23 @@ public final class RowComparator implements Comparator<DataRow> {//NOSONAR
     }
 
     /**
-     * Builder to configure a column comparator.
+     * <p>Builder to configure a column comparator. The comparator can be configured to always sort missing values
+     * to the end of the table, regardless of the configured sort order for non-missing values.
+     * <p>
+     * The default is to always sort them to the start.
+     * <p>
+     * If you want to configure the comparator such that it always compares missing values as smallest/largest
+     * relative to the sort order and not using the absolute position (missingsLast),
+     * you can adapt the {@code missingsLast} condition based on your non-missing value sort order.
+     * <p>
+     * <i>For example:</i>
+     * <pre><code>
+     *     final boolean missingAsLargest = ...;
+     *     final boolean descending = ...;
+     *     RowComparator.on(spec).thenComparingColumn(columnIndex,
+     *         c.withDescendingSortOrder(descending)
+     *          .withMissingsLast(descending ^ missingsAsLargest));
+     * </code></pre>
      *
      * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
      */
@@ -154,7 +175,7 @@ public final class RowComparator implements Comparator<DataRow> {//NOSONAR
         }
 
         /**
-         * Enable descending sort order.
+         * Enable descending sort order for non-missing values.
          * @return builder with descending sort order
          */
         public ColumnComparatorBuilder withDescendingSortOrder() {
@@ -162,7 +183,7 @@ public final class RowComparator implements Comparator<DataRow> {//NOSONAR
         }
 
         /**
-         * Configure descending sort order.
+         * Configure descending sort order for non-missing values.
          * @param descending {@code true} to enable descending sort order, {@code false} otherwise
          * @return builder with descending sort order configured
          */
@@ -181,7 +202,8 @@ public final class RowComparator implements Comparator<DataRow> {//NOSONAR
 
         /**
          * Configure handling of missing cells.
-         * @param missingsLast {@code true} to sort missing cells to the end of the table, {@code false} otherwise
+         * @param missingsLast {@code true} to sort missing cells to the end of the table, {@code false} to sort them to
+         *          the start of the table
          * @return builder configured to sort missing cells to end of table
          */
         public ColumnComparatorBuilder withMissingsLast(final boolean missingsLast) {
@@ -190,6 +212,7 @@ public final class RowComparator implements Comparator<DataRow> {//NOSONAR
         }
 
         private RowComparatorBuilder build(final RowComparatorBuilder rowComparatorBuilder) {
+            // build comparator from "inside"
             Comparator<DataCell> cellComp;
             if (this.m_alphanum) {
                 // compares column on string representation in alphanumerical order
@@ -200,12 +223,11 @@ public final class RowComparator implements Comparator<DataRow> {//NOSONAR
             } else {
                 cellComp = m_type.getComparator();
             }
-            // the condition is such that missing cells never get sorted to the top of a table if sorted in DESC order
-            cellComp = new MissingDataCellComparator<>(cellComp, m_missingsLast && !m_descending);
             if (m_descending) {
                 cellComp = cellComp.reversed();
             }
-            return rowComparatorBuilder.thenComparingColumn(m_index, cellComp);
+            return rowComparatorBuilder.thenComparingColumn(m_index,
+                new MissingDataCellComparator<>(cellComp, m_missingsLast));
         }
     }
 
