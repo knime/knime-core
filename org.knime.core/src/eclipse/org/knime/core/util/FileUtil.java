@@ -109,6 +109,7 @@ import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.WorkflowContext;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.core.util.exception.ResourceAccessException;
 import org.knime.core.util.pathresolve.ResolverUtil;
 import org.osgi.framework.BundleContext;
@@ -919,6 +920,54 @@ public final class FileUtil {
         }
         zipStream.close();
 
+    }
+
+    /**
+     * Information gathered from a {@code *.knwf/*.knar} archive.
+     *
+     * @param rootName name of the root entry of the archive
+     * @param isWorkflowGroup whether the root entry is a workflow group
+     * @since 5.1
+     */
+    public static record ArchiveInfo(String rootName, boolean isWorkflowGroup) {}
+
+    /**
+     * Analyzes a KNIME archive's directory information to determine the root entry's name and the type (workflow or
+     * workflow group).
+     *
+     * @param srcPath path to the {@code *.knwf/*.knar} archive
+     * @return archive information, containing root entry name and flag indicating whether it is a workflow group
+     * @throws IOException if reading the archive file fails
+     * @throws IllegalArgumentException if the archive contains more than one root element
+     * @since 5.1
+     */
+    public static ArchiveInfo analyzeKnimeArchive(final Path srcPath) throws IOException {
+        String root = null;
+        var isWorkflowGroup = true;
+        try (final var in = new ZipInputStream(new BufferedInputStream(Files.newInputStream(srcPath)))) {
+            for (ZipEntry entry; (entry = in.getNextEntry()) != null;) {
+                final var path = org.eclipse.core.runtime.Path.forPosix(entry.getName());
+                final int count = path.segmentCount();
+                if (count == 0) {
+                    continue;
+                }
+
+                // we must read the whole structure to guarantee that there is only a single root item
+                if (root == null) {
+                    root = path.segment(0);
+                } else if (!root.equals(path.segment(0))) {
+                    throw new IllegalArgumentException("Only archives with a single root item can be imported into Hub "
+                            + "spaces, found '" + root + "' and '" + path.segment(0) + "'.");
+                }
+
+                if (count == 2 && !entry.isDirectory() && WorkflowPersistor.WORKFLOW_FILE.equals(path.segment(1))) {
+                    // must be a single workflow
+                    isWorkflowGroup = false;
+                }
+            }
+        }
+
+        return new ArchiveInfo(root, isWorkflowGroup);
     }
 
     /**
