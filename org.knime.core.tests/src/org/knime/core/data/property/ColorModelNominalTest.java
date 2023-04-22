@@ -48,12 +48,12 @@
  */
 package org.knime.core.data.property;
 
+import static java.awt.Color.BLUE;
 import static java.awt.Color.GREEN;
 import static java.awt.Color.PINK;
 import static java.awt.Color.RED;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.awt.Color;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -77,7 +77,7 @@ class ColorModelNominalTest {
         map.put(new StringCell("value 1"), ColorAttr.getInstance(GREEN));
         map.put(new StringCell("value 2"), ColorAttr.getInstance(RED));
         map.put(new StringCell("value 3"), ColorAttr.getInstance(GREEN));
-        var palette = new ColorAttr[] {ColorAttr.getInstance(Color.BLUE), ColorAttr.getInstance(PINK)};
+        var palette = new ColorAttr[] {ColorAttr.getInstance(BLUE), ColorAttr.getInstance(PINK)};
 
         ColorModelNominal clrMdl = new ColorModelNominal(map, palette);
         return clrMdl;
@@ -88,6 +88,8 @@ class ColorModelNominalTest {
     @Test
     final void testColorAssignment() {
         ColorModelNominal clrMdl = newColorModel();
+        assertThat(clrMdl.getValues()).as("known values").containsAll(
+            Arrays.asList(new StringCell("value 1"), new StringCell("value 2"), new StringCell("value 3")));
         assertThat(clrMdl.getColorAttr(new StringCell("value 2")).getColor()).as("Color is red").isEqualTo(RED);
 
         // why not pink or blue (as per model defintion) -- pink or blue or part of the palette that the color
@@ -116,6 +118,38 @@ class ColorModelNominalTest {
 
         assertThat(clrMdl.getColorAttr(new StringCell("unknown")).getColor()) //
             .as("default color for unknowns").isEqualTo(ColorAttr.DEFAULT.getColor());
+    }
+
+    /** Derivation of color model for new values, applying palette */
+    @SuppressWarnings("static-method")
+    @Test
+    final void testApplyNewValues() throws InvalidSettingsException {
+        var clrMdl = newColorModel();
+        Iterable<DataCell> newValues = Arrays.asList(
+            new StringCell("value 1"),
+            new StringCell("value 3"),
+            new StringCell("value 4"),
+            new StringCell("value 5"),
+            new StringCell("value 6"),
+            new StringCell("value 7"));
+        final var appliedClrMdl = clrMdl.applyToNewValues(newValues);
+        assertThat(appliedClrMdl.getColorAttr(new StringCell("value 1"))).as("Color for value 1")
+            .isEqualTo(ColorAttr.getInstance(GREEN));
+        assertThat(appliedClrMdl.getColorAttr(new StringCell("value 2"))).as("Color for value 2")
+            .isEqualTo(ColorAttr.getInstance(RED));
+        assertThat(appliedClrMdl.getColorAttr(new StringCell("value 3"))).as("Color for value 3")
+            .isEqualTo(ColorAttr.getInstance(GREEN));
+        assertThat(appliedClrMdl.getColorAttr(new StringCell("value 4"))).as("Color for value 4")
+            .isEqualTo(ColorAttr.getInstance(BLUE));
+        assertThat(appliedClrMdl.getColorAttr(new StringCell("value 5"))).as("Color for value 5")
+            .isEqualTo(ColorAttr.getInstance(PINK));
+        assertThat(appliedClrMdl.getColorAttr(new StringCell("value 6"))).as("Color for value 6")
+            .isEqualTo(ColorAttr.getInstance(BLUE));
+        assertThat(appliedClrMdl.getColorAttr(new StringCell("value 7"))).as("Color for value 7")
+            .isEqualTo(ColorAttr.getInstance(PINK));
+
+        assertThat(clrMdl.getColorAttr(new StringCell("unknown")).getColor()) //
+        .as("default color for unknowns").isEqualTo(ColorAttr.DEFAULT.getColor());
     }
 
     /** Getters, added as part of AP-20239. */

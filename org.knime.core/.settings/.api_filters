@@ -2408,10 +2408,22 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/data/property/ColorModelNominal.java" type="org.knime.core.data.property.ColorModelNominal">
+        <filter id="337682486">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.property.ColorModelNominal"/>
+                <message_argument value="org.knime.core.data.property.ColorHandler$ColorModel,java.lang.Iterable"/>
+            </message_arguments>
+        </filter>
         <filter id="338722907">
             <message_arguments>
                 <message_argument value="org.knime.core.data.property.ColorModelNominal"/>
                 <message_argument value="ColorModelNominal(Map&lt;DataCell,ColorAttr&gt;)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.property.ColorModelNominal"/>
+                <message_argument value="iterator()"/>
             </message_arguments>
         </filter>
         <filter id="338792546">

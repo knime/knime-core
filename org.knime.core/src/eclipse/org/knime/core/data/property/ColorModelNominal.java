@@ -49,8 +49,8 @@ package org.knime.core.data.property;
 
 import java.awt.Color;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -71,7 +71,7 @@ import org.knime.core.node.config.ConfigWO;
  * @noinstantiate This class is not intended to be instantiated by clients.
  * @author Thomas Gabriel, University of Konstanz, Germany
  */
-public final class ColorModelNominal implements ColorModel, Iterable<DataCell> {
+public final class ColorModelNominal implements ColorModel {
 
     /** Maps DataCell values to ColorAttr. */
     private final Map<DataCell, ColorAttr> m_map;
@@ -106,16 +106,6 @@ public final class ColorModelNominal implements ColorModel, Iterable<DataCell> {
             return ColorAttr.DEFAULT;
         }
         return color;
-    }
-
-    /**
-     * Returns an iterator over the keys.
-     * @see java.lang.Iterable#iterator()
-     * @return - returns an iterator over the keys.
-     */
-    @Override
-    public Iterator<DataCell> iterator() {
-        return m_map.keySet().iterator();
     }
 
     private static final String CFG_KEYS = "keys";
@@ -207,6 +197,16 @@ public final class ColorModelNominal implements ColorModel, Iterable<DataCell> {
     }
 
     /**
+     * The values known by this model.
+     *
+     * @return That read-only collection
+     * @since 5.1
+     */
+    public Iterable<DataCell> getValues() {
+        return Collections.unmodifiableCollection(m_map.keySet());
+    }
+
+    /**
      * This model represented by a map of color hex code to data values, e.g.
      * <pre>
      * #194fab -> "Foo", "Bar"
@@ -253,7 +253,7 @@ public final class ColorModelNominal implements ColorModel, Iterable<DataCell> {
         //   G - Color2
         // (Color2 is reserved as it's used for 'B' in the original data, though not present in the data now)
 
-        final Map<DataCell, ColorAttr> map = new LinkedHashMap<>(m_map);
+        Map<DataCell, ColorAttr> map = new LinkedHashMap<>(m_map);
         final var paletteList = new ArrayList<ColorAttr>(Arrays.asList(m_paletteColors));
         paletteList.removeAll(map.values());
         for (var cell : newValues) {
@@ -270,4 +270,3 @@ public final class ColorModelNominal implements ColorModel, Iterable<DataCell> {
         return new ColorModelNominal(map, m_paletteColors);
     }
 }
-
