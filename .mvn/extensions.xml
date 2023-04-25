@@ -3,11 +3,11 @@
     <extension>
         <groupId>org.eclipse.tycho</groupId>
         <artifactId>tycho-build</artifactId>
-        <version>2.7.5</version>
+        <version>3.0.4</version>
     </extension>
     <extension>
         <groupId>com.nuance.clu.maven</groupId>
         <artifactId>maven-feature-branch-extension</artifactId>
-        <version>0.6.0</version>
+        <version>1.0.2.0011-fb0f827</version>
      </extension>
 </extensions>
