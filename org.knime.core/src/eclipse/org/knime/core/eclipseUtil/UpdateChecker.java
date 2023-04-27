@@ -53,6 +53,7 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 
 import org.eclipse.core.runtime.Platform;
 
@@ -170,36 +171,44 @@ public class UpdateChecker {
      * @throws URISyntaxException if the new update site URI is invalid
      */
     public static UpdateInfo checkForNewRelease(final URI updateURI) throws IOException, URISyntaxException {
-        URL nextVersionURL = new URL(updateURI.toString() + "/newRelease.txt");
+        final var nextVersionURL = new URL(updateURI.toString() + "/newRelease.txt");
+        // Since Java 8+, tunneling through a BASIC-auth-requiring proxy is disabled by default.
+        // See Java 8 release notes: https://www.oracle.com/java/technologies/javase/8u111-relnotes.html
+        final var disabledSchemesKey = "jdk.http.auth.tunneling.disabledSchemes";
+        final var disabledSchemesValue = System.getProperty(disabledSchemesKey);
 
+        // AP-19973: we temporarily enable BASIC auth tunneling for proxy connections.
+        System.setProperty(disabledSchemesKey, "");
         HttpURLConnection conn = null;
-        BufferedReader in = null;
         try {
             conn = (HttpURLConnection)nextVersionURL.openConnection();
             conn.setConnectTimeout(2000);
             conn.setReadTimeout(2000);
             conn.connect();
-            if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {
-                in = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
+            if (conn.getResponseCode() != HttpURLConnection.HTTP_OK) {
+                return null;
+            }
+            try (final var in =
+                new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
                 String line;
                 while ((line = in.readLine()) != null) {
-                    String[] parts = line.split("\t");
-                    if (parts.length >= 6) {
-                        if (Platform.getOS().equals(parts[OS_INDEX])
-                            && Platform.getOSArch().equals(parts[ARCH_INDEX])) {
-                            return new UpdateInfo(new URI(parts[URL_INDEX]), parts[NAME_INDEX], parts[SHORT_NAME_INDEX],
-                                Boolean.parseBoolean(parts[POSSIBLE_INDEX]));
-                        }
+                    final var parts = line.split("\t");
+                    if (parts.length >= 6 && Platform.getOS().equals(parts[OS_INDEX])
+                        && Platform.getOSArch().equals(parts[ARCH_INDEX])) {
+                        return new UpdateInfo(new URI(parts[URL_INDEX]), parts[NAME_INDEX], parts[SHORT_NAME_INDEX],
+                            Boolean.parseBoolean(parts[POSSIBLE_INDEX]));
                     }
                 }
             }
             return null;
         } finally {
-            if (in != null) {
-                in.close();
-            }
             if (conn != null) {
                 conn.disconnect();
+            }
+            if (disabledSchemesValue != null) {
+                System.setProperty(disabledSchemesKey, disabledSchemesValue);
+            } else {
+                System.clearProperty(disabledSchemesKey);
             }
         }
     }
