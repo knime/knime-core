@@ -264,8 +264,7 @@ public final class ValueFactoryUtils {
      */
     public static ValueFactory<?, ?> getValueFactory(final DataType type, //NOSONAR
         final IWriteFileStoreHandler fileStoreHandler) {
-        return getValueFactory(type, t -> new DictEncodedDataCellValueFactory(t),
-            fileStoreHandler);
+        return getValueFactory(type, DictEncodedDataCellValueFactory::new, fileStoreHandler);
     }
 
     /**
