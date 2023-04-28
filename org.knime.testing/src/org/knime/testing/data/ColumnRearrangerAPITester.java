@@ -60,6 +60,7 @@ import org.junit.jupiter.api.Test;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellTypeConverter;
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
@@ -67,6 +68,7 @@ import org.knime.core.data.IntValue;
 import org.knime.core.data.StringValue;
 import org.knime.core.data.container.AbstractCellFactory;
 import org.knime.core.data.container.ColumnRearranger;
+import org.knime.core.data.container.SingleCellFactory;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
@@ -203,6 +205,17 @@ final class ColumnRearrangerAPITester extends AbstractTableBackendAPITester {
         rearranger.replace(new DecrementNumberCellFactory(createColumnSpecs(expectedBaz, expectedBla), 2, 4), 2, 4);
         var rearrangedTable = rearrange(inputTable, rearranger);
         var expectedTable = createTable(expectedFoo, BAR, expectedBaz, expectedBli, expectedBla);
+        assertTableEquals(expectedTable, rearrangedTable);
+    }
+
+    void testInputRowMethods() throws Exception {
+        var inputTable = createTable(FOO, BAR);
+        var rearranger = new ColumnRearranger(inputTable.getDataTableSpec());
+        rearranger.append(new WholeRowToStringCellFactory("summary"));
+        rearranger.keepOnly("summary");
+        var rearrangedTable = rearrange(inputTable, rearranger);
+        var expectedSummaryColumn = new Column("summary", stringFactory("Row0?some", "Row12boring", "Row23?"));
+        var expectedTable = createTable(expectedSummaryColumn);
         assertTableEquals(expectedTable, rearrangedTable);
     }
 
@@ -359,7 +372,7 @@ final class ColumnRearrangerAPITester extends AbstractTableBackendAPITester {
                 .toArray(DataCell[]::new);
         }
 
-        private DataCell decrement(final DataCell cell) {
+        private DataCell decrement(final DataCell cell) {//NOSONAR
             if (cell.isMissing()) {
                 return cell;
             }
@@ -371,6 +384,23 @@ final class ColumnRearrangerAPITester extends AbstractTableBackendAPITester {
                 throw new IllegalStateException();
             }
         }
+    }
+
+    private static final class WholeRowToStringCellFactory extends SingleCellFactory {
+
+        WholeRowToStringCellFactory(final String columnName) {
+            super(new DataColumnSpecCreator(columnName, StringCell.TYPE).createSpec());
+        }
+
+        @Override
+        public DataCell getCell(final DataRow row) {
+            var sb = new StringBuilder(row.getKey().getString());
+            for (var cell : row) {
+                sb.append(cell.toString());
+            }
+            return new StringCell(sb.toString());
+        }
+
     }
 
     private static final class AppendSuffixCellFactory extends AbstractCellFactory {

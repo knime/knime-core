@@ -131,6 +131,11 @@ public abstract class AbstractTableBackendTest {
     }
 
     @Test
+    void testInputRowMethods() throws Exception {
+        m_rearrangerTester.testInputRowMethods();
+    }
+
+    @Test
     void testSingleTypeConverter() throws Exception {
         m_rearrangerTester.testSingleTypeConverter();
     }
