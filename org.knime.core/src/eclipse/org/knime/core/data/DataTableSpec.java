@@ -55,6 +55,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.OptionalInt;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.BiPredicate;
@@ -757,6 +758,22 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
         }
         Integer result = m_colIndexMap.get(columnName);
         return result == null ? -1 : result;
+    }
+
+    /**
+     * Retrieves the index of the column with the specified name in the spec, or {@link OptionalInt#empty()} if the
+     * column name is not present in the spec.
+     *
+     * @param columnName column name to look up
+     * @return index if column name is present in the spec, or empty optional otherwise
+     * @since 5.1
+     */
+    public OptionalInt lookupColumnIndex(final String columnName) {
+        final var idx = findColumnIndex(columnName);
+        if (idx == -1) {
+            return OptionalInt.empty();
+        }
+        return OptionalInt.of(idx);
     }
 
     /**
