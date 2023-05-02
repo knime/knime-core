@@ -225,6 +225,7 @@ public class CoreToDefUtil {
             .setBorderSize(annotation.getBorderSize())//
             .setBorderColor(annotation.getBorderColor())//
             .setBgcolor(annotation.getBgColor())//
+            .setContentType(annotation.getContentType())//
             .setText(annotation.getText())//
             .setAnnotationVersion(annotation.getVersion())//
             .setTextAlignment(annotation.getAlignment().toString());

@@ -57,6 +57,8 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.util.LoadVersion;
+import org.knime.shared.workflow.def.AnnotationDataDef;
+import org.knime.shared.workflow.def.AnnotationDataDef.ContentTypeEnum;
 import org.knime.shared.workflow.def.StyleRangeDef;
 
 /**
@@ -75,35 +77,6 @@ public class AnnotationData implements Cloneable {
         CENTER,
         /** Right alignment. */
         RIGHT;
-    }
-
-    /**
-     * The content type in annotation.
-     *
-     * @since 5.1
-     */
-    public enum ContentType {
-        /** Legacy plain text */
-        TEXT_PLAIN("text/plain"),
-        /** HTML formatted text */
-        TEXT_HTML("text/html");
-
-        private final String m_label;
-
-        ContentType(final String label) {
-            m_label = label;
-        }
-
-        private String getLabel() {
-            return m_label;
-        }
-
-        private static ContentType fromLabel(final String label) {
-            return Arrays.stream(values())//
-                .filter(ct -> ct.getLabel().equalsIgnoreCase(label))//
-                .findFirst()//
-                .orElseThrow(IllegalArgumentException::new);
-        }
     }
 
     /**
@@ -151,7 +124,7 @@ public class AnnotationData implements Cloneable {
     /**  */
     private String m_text = "";
 
-    private ContentType m_contentType = ContentType.TEXT_PLAIN;
+    private ContentTypeEnum m_contentType = ContentTypeEnum.PLAIN;
 
     /**  */
     private StyleRange[] m_styleRanges = new StyleRange[0];
@@ -196,7 +169,7 @@ public class AnnotationData implements Cloneable {
      *
      * @since 5.1
      */
-    public final ContentType getContentType() {
+    public final ContentTypeEnum getContentType() {
         return m_contentType;
     }
 
@@ -205,7 +178,7 @@ public class AnnotationData implements Cloneable {
      *
      * @since 5.1
      */
-    public final void setContentType(final ContentType contentType) {
+    public final void setContentType(final ContentTypeEnum contentType) {
         m_contentType = contentType;
     }
 
@@ -511,7 +484,7 @@ public class AnnotationData implements Cloneable {
      */
     public void save(final NodeSettingsWO config) {
         config.addString("text", getText());
-        config.addString("contentType", getContentType().getLabel());
+        config.addString("contentType", getContentType().toString());
         config.addInt("bgcolor", getBgColor());
         config.addInt("x-coordinate", getX());
         config.addInt("y-coordinate", getY());
@@ -532,6 +505,21 @@ public class AnnotationData implements Cloneable {
     }
 
     /**
+     * Helper method to get the {@link ContentTypeEnum}. It cannot be part of {@link AnnotationDataDef}, since it is
+     * auto-generated.
+     */
+    private static ContentTypeEnum getContentTypeEnumFromContentTypeValue(final String contentTypeValue) {
+        var values = ContentTypeEnum.values();
+        for (var value : values) {
+            if (contentTypeValue.equals(value.toString())) {
+                return value;
+            }
+        }
+        LOGGER.warn("Could not restore content type, setting it to 'text/plain' by default");
+        return ContentTypeEnum.PLAIN;
+    }
+
+    /**
      * Loads new values.
      *
      * @param config To load from
@@ -542,9 +530,9 @@ public class AnnotationData implements Cloneable {
     public void load(final NodeSettingsRO config, final LoadVersion loadVersion) throws InvalidSettingsException {
         setText(config.getString("text"));
 
-        // Default to TEXT_PLAIN for backward compatibility
-        var contentTypeValue = config.getString("contentType", ContentType.TEXT_PLAIN.getLabel());
-        setContentType(ContentType.fromLabel(contentTypeValue));
+        // Default to 'text/plain' for backward compatibility
+        var contentTypeValue = config.getString("contentType", ContentTypeEnum.PLAIN.toString());
+        setContentType(getContentTypeEnumFromContentTypeValue(contentTypeValue));
 
         setBgColor(config.getInt("bgcolor"));
         int x = config.getInt("x-coordinate");

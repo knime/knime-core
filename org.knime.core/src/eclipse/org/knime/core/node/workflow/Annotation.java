@@ -52,10 +52,10 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.CheckUtils;
-import org.knime.core.node.workflow.AnnotationData.ContentType;
 import org.knime.core.node.workflow.AnnotationData.StyleRange;
 import org.knime.core.node.workflow.AnnotationData.TextAlignment;
 import org.knime.core.util.LoadVersion;
+import org.knime.shared.workflow.def.AnnotationDataDef.ContentTypeEnum;
 
 /**
  * An annotation on the workflow. It keeps all relevant information, such as
@@ -97,7 +97,7 @@ public abstract class Annotation implements UIInformation {
      *
      * @since 5.1
      */
-    public final ContentType getContentType() {
+    public final ContentTypeEnum getContentType() {
         return m_data.getContentType();
     }
 
