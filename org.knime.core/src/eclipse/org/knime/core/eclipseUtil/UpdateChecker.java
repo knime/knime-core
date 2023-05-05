@@ -172,13 +172,6 @@ public class UpdateChecker {
      */
     public static UpdateInfo checkForNewRelease(final URI updateURI) throws IOException, URISyntaxException {
         final var nextVersionURL = new URL(updateURI.toString() + "/newRelease.txt");
-        // Since Java 8+, tunneling through a BASIC-auth-requiring proxy is disabled by default.
-        // See Java 8 release notes: https://www.oracle.com/java/technologies/javase/8u111-relnotes.html
-        final var disabledSchemesKey = "jdk.http.auth.tunneling.disabledSchemes";
-        final var disabledSchemesValue = System.getProperty(disabledSchemesKey);
-
-        // AP-19973: we temporarily enable BASIC auth tunneling for proxy connections.
-        System.setProperty(disabledSchemesKey, "");
         HttpURLConnection conn = null;
         try {
             conn = (HttpURLConnection)nextVersionURL.openConnection();
@@ -204,11 +197,6 @@ public class UpdateChecker {
         } finally {
             if (conn != null) {
                 conn.disconnect();
-            }
-            if (disabledSchemesValue != null) {
-                System.setProperty(disabledSchemesKey, disabledSchemesValue);
-            } else {
-                System.clearProperty(disabledSchemesKey);
             }
         }
     }
