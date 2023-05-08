@@ -66,6 +66,7 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -319,6 +320,23 @@ public class NodeDialogManagerTest {
         Assertions.assertThatThrownBy(() -> nodeDialogManager.callTextApplyDataService(nncWrapper, "ERROR,invalid"))
             .isInstanceOf(IOException.class).hasMessage("Invalid node settings: validation expected to fail");
     }
+
+    /**
+     * Makes sure that the initial data is properly returned for a node directly connected to a inner metanode output
+     * port (UIEXT-777).
+     */
+    @Test
+    public void callInitialDataServiceForNodeConnectedToMetanodeParent() {
+        var metanode = m_wfm.createAndAddSubWorkflow(new PortType[]{BufferedDataTable.TYPE},
+            new PortType[]{BufferedDataTable.TYPE}, "Metanode");
+        var nnc = createAndAddNode(metanode, new NodeDialogNodeFactory(
+            () -> NodeDialogTest.createNodeDialog(Page.builder(() -> "page content", "index.html").build()), 1));
+        metanode.addConnection(metanode.getID(), 0, nnc.getID(), 1);
+
+        assertThat(NodeDialogManager.getInstance().callTextInitialDataService(NodeWrapper.of(nnc)))
+            .isEqualTo("test settings");
+    }
+
 
     private static NodeSettingsRO getNodeViewSettings(final NodeContainer nc) {
         return ((NodeDialogNodeView)NodeViewManager.getInstance().getNodeView(nc)).getLoadNodeSettings();
