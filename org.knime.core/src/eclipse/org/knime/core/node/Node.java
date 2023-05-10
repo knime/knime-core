@@ -2586,6 +2586,48 @@ public final class Node {
     }
 
     /**
+     * Saves the provided table.
+     * Only intended for testing purposes.
+     * @param table to save
+     * @param dir directory to save the table to
+     * @param savedTableIDs the IDs of the already saved tables
+     * @param exec the progress monitor for cancellation
+     * @throws CanceledExecutionException if the save process is cancelled
+     * @throws IOException if writing the table fails due to IO issues
+     *
+     * @since 5.1
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public static void invokeSave(final BufferedDataTable table, final File dir, final Set<Integer> savedTableIDs,
+        final ExecutionMonitor exec) throws IOException, CanceledExecutionException {
+        table.save(dir, savedTableIDs, exec);
+    }
+
+    /**
+     * Factory method to restore a table that has been written using the invokeSave method.
+     * Only intended for testing purposes.
+     *
+     * @param dirRef The directory to load from.
+     * @param settings The settings to load from.
+     * @param exec The exec mon for progress/cancel
+     * @param tblRep The table repository
+     * @param dataRepository The data repository (needed for blobs and file stores).
+     * @return The table as written by save.
+     * @throws IOException If reading fails.
+     * @throws CanceledExecutionException If canceled.
+     * @throws InvalidSettingsException If settings are invalid.
+     *
+     * @since 5.1
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public static BufferedDataTable loadBufferedDataTableFromFile(final ReferencedFile dirRef,
+        final NodeSettingsRO settings, final ExecutionMonitor exec, final Map<Integer, BufferedDataTable> tblRep,
+        final WorkflowDataRepository dataRepository)
+        throws IOException, CanceledExecutionException, InvalidSettingsException {
+        return BufferedDataTable.loadFromFile(dirRef, settings, exec, tblRep, dataRepository);
+    }
+
+    /**
      * Exposes {@code ExecutionContext.getFileStoreHandler()} as public method.
      * This method has been added here in order to keep the scope of the original method to a minimum.
      *

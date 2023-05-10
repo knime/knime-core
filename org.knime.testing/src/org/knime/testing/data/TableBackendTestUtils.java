@@ -51,6 +51,11 @@ package org.knime.testing.data;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.function.Function;
 import java.util.function.LongConsumer;
 import java.util.function.LongFunction;
@@ -59,6 +64,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import org.apache.commons.io.FileUtils;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -75,8 +81,15 @@ import org.knime.core.data.v2.WriteValue;
 import org.knime.core.data.v2.value.ValueInterfaces.DoubleWriteValue;
 import org.knime.core.data.v2.value.ValueInterfaces.IntWriteValue;
 import org.knime.core.data.v2.value.ValueInterfaces.StringWriteValue;
+import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.Node;
+import org.knime.core.node.NodeSettings;
+import org.knime.core.node.workflow.NodeContext;
 
 /**
  * Contains utility functions for testing a {@link TableBackend}.
@@ -84,6 +97,39 @@ import org.knime.core.node.ExecutionContext;
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 final class TableBackendTestUtils {
+
+    static BufferedDataTable saveAndLoad(final BufferedDataTable table, final File tblDir)
+        throws IOException, CanceledExecutionException, InvalidSettingsException {
+        var savedTableIDs = new HashSet<Integer>();
+        Node.invokeSave(table, tblDir, savedTableIDs, new ExecutionMonitor());
+        // the node context is set by the test suite
+        var dataRepo = NodeContext.getContext().getWorkflowManager().getWorkflowDataRepository();
+        var referencedFile = new ReferencedFile(tblDir);
+        var tblRep = new HashMap<Integer, BufferedDataTable>();
+        var loadedTable = Node.loadBufferedDataTableFromFile(referencedFile, new NodeSettings("test"),
+            new ExecutionMonitor(), tblRep, dataRepo);
+        return loadedTable;
+    }
+
+    /**
+     * Checks if the table is as expected and also checks if it is still as expected after saving and loading.
+     *
+     * @param referenceTable the expected table
+     * @param actualTable the actual table
+     * @throws IOException if saving and loading the table fails
+     * @throws CanceledExecutionException not thrown
+     * @throws InvalidSettingsException not thrown
+     */
+    static void checkTable(final BufferedDataTable referenceTable, final BufferedDataTable actualTable)
+        throws IOException, CanceledExecutionException, InvalidSettingsException {
+        assertTableEquals(referenceTable, actualTable);
+        var tmpFolder = Files.createTempDirectory("tbl").toFile();
+        try {
+            assertTableEquals(referenceTable, saveAndLoad(actualTable, tmpFolder));
+        } finally {
+            FileUtils.deleteDirectory(tmpFolder);
+        }
+    }
 
     static void assertTableEquals(final BufferedDataTable referenceTable, final BufferedDataTable actualTable) {
         var referenceSpec = referenceTable.getDataTableSpec();

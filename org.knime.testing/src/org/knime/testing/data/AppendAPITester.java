@@ -49,7 +49,7 @@
 package org.knime.testing.data;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.knime.testing.data.TableBackendTestUtils.assertTableEquals;
+import static org.knime.testing.data.TableBackendTestUtils.checkTable;
 import static org.knime.testing.data.TableBackendTestUtils.intFactory;
 import static org.knime.testing.data.TableBackendTestUtils.rowIDFactory;
 
@@ -101,13 +101,13 @@ final class AppendAPITester extends AbstractTableBackendAPITester {
     void testAppendRightIDs() throws Exception {
         var appendedRightIDs = InternalTableAPI.append(getExec(), AppendConfig.rowIDsFromTable(1), m_left, m_right);
         var expected = createTable(RIGHT_IDS, FOO, BAR, BAZ, BUZ);
-        assertTableEquals(expected, appendedRightIDs);
+        checkTable(expected, appendedRightIDs);
     }
 
     void testAppendLeftIDs() throws Exception {
         var appendedLeftIDs = InternalTableAPI.append(getExec(), AppendConfig.rowIDsFromTable(0), m_left, m_right);
         var expected = createTable(LEFT_IDS, FOO, BAR, BAZ, BUZ);
-        assertTableEquals(expected, appendedLeftIDs);
+        checkTable(expected, appendedLeftIDs);
     }
 
     void testAppendMatchingIDsWithMatchingIDs() throws Exception {
@@ -115,7 +115,7 @@ final class AppendAPITester extends AbstractTableBackendAPITester {
         var appendedMatchingIDs =
             InternalTableAPI.append(getExec(), AppendConfig.matchingRowIDs(), m_left, rightWithMatchingIDs);
         var expected = createTable(LEFT_IDS, FOO, BAR, BAZ, BUZ);
-        assertTableEquals(expected, appendedMatchingIDs);
+        checkTable(expected, appendedMatchingIDs);
     }
 
     void testAppendMatchingIDsWithNonMatchingIDs() {

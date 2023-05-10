@@ -48,7 +48,7 @@
  */
 package org.knime.testing.data;
 
-import static org.knime.testing.data.TableBackendTestUtils.assertTableEquals;
+import static org.knime.testing.data.TableBackendTestUtils.checkTable;
 import static org.knime.testing.data.TableBackendTestUtils.doubleFactory;
 import static org.knime.testing.data.TableBackendTestUtils.intFactory;
 import static org.knime.testing.data.TableBackendTestUtils.stringFactory;
@@ -98,15 +98,14 @@ final class SpecReplacerAPITester extends AbstractTableBackendAPITester {
             new Column("blub", STRING_FACTORY)//
         );
         var renamedTable = getExec().createSpecReplacerTable(table, expectedTable.getDataTableSpec());
-        assertTableEquals(expectedTable, renamedTable);
+        checkTable(expectedTable, renamedTable);
     }
 
     void testUpcast() throws Exception {
         var table = createTable(FOO, BAR, BAZ);
         var expectedTable = createTable(new Column("foo", doubleFactory(1.0, 2.0, 3.0)), BAR, BAZ);
         var upcastedTable = getExec().createSpecReplacerTable(table, expectedTable.getDataTableSpec());
-        assertTableEquals(expectedTable, upcastedTable);
-        // TODO test saving and loading the table
+        checkTable(expectedTable, upcastedTable);
     }
 
 }

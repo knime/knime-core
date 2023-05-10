@@ -48,7 +48,7 @@
  */
 package org.knime.testing.data;
 
-import static org.knime.testing.data.TableBackendTestUtils.assertTableEquals;
+import static org.knime.testing.data.TableBackendTestUtils.checkTable;
 import static org.knime.testing.data.TableBackendTestUtils.createColumnSpecs;
 import static org.knime.testing.data.TableBackendTestUtils.doubleFactory;
 import static org.knime.testing.data.TableBackendTestUtils.intFactory;
@@ -102,7 +102,7 @@ final class ColumnRearrangerAPITester extends AbstractTableBackendAPITester {
         ExecutionContext exec = getExec();
         var rearrangedTable = exec.createColumnRearrangeTable(inputTable, rearranger, exec);
         var expectedTable = createTable(BAZ, FOO, BAR);
-        assertTableEquals(expectedTable, rearrangedTable);
+        checkTable(expectedTable, rearrangedTable);
     }
 
     /*====================== Filter =================*/
@@ -113,7 +113,7 @@ final class ColumnRearrangerAPITester extends AbstractTableBackendAPITester {
         rearranger.keepOnly(BAR.name());
         var rearrangedTable = rearrange(inputTable, rearranger);
         var expectedTable = createTable(BAR);
-        assertTableEquals(expectedTable, rearrangedTable);
+        checkTable(expectedTable, rearrangedTable);
     }
 
     /*====================== Append =================*/
@@ -126,7 +126,7 @@ final class ColumnRearrangerAPITester extends AbstractTableBackendAPITester {
         rearranger.append(new DecrementNumberCellFactory(createColumnSpecs(expectedAppendedColumn), 0));
         var rearrangedTable = rearrange(inputTable, rearranger);
         var expectedTable = createTable(FOO, BAR, BAZ, expectedAppendedColumn);
-        assertTableEquals(expectedTable, rearrangedTable);
+        checkTable(expectedTable, rearrangedTable);
     }
 
     void testAppendSingleFactoryMultipleColumns() throws Exception {
@@ -138,7 +138,7 @@ final class ColumnRearrangerAPITester extends AbstractTableBackendAPITester {
             .append(new DecrementNumberCellFactory(createColumnSpecs(expectedIntColumn, expectedDoubleColumn), 0, 2));
         var rearrangedTable = rearrange(inputTable, rearranger);
         var expectedTable = createTable(FOO, BAR, BAZ, expectedIntColumn, expectedDoubleColumn);
-        assertTableEquals(expectedTable, rearrangedTable);
+        checkTable(expectedTable, rearrangedTable);
     }
 
     void testAppendMultipleFactoriesOneColumnEach() throws Exception {
@@ -150,7 +150,7 @@ final class ColumnRearrangerAPITester extends AbstractTableBackendAPITester {
         rearranger.append(new DecrementNumberCellFactory(createColumnSpecs(expectedDoubleColumn), 2));
         var rearrangedTable = rearrange(inputTable, rearranger);
         var expectedTable = createTable(FOO, BAR, BAZ, expectedIntColumn, expectedDoubleColumn);
-        assertTableEquals(expectedTable, rearrangedTable);
+        checkTable(expectedTable, rearrangedTable);
     }
 
     /* ======================== Replace ============================*/
@@ -163,7 +163,7 @@ final class ColumnRearrangerAPITester extends AbstractTableBackendAPITester {
         rearranger.replace(new DecrementNumberCellFactory(createColumnSpecs(expectedBaz), 2), BAZ.name());
         var rearrangedTable = rearrange(inputTable, rearranger);
         var expectedTable = createTable(FOO, BAR, expectedBaz);
-        assertTableEquals(expectedTable, rearrangedTable);
+        checkTable(expectedTable, rearrangedTable);
     }
 
     void testReplaceSingleFactoryMultipleColumns() throws Exception {
@@ -175,7 +175,7 @@ final class ColumnRearrangerAPITester extends AbstractTableBackendAPITester {
         rearranger.replace(new DecrementNumberCellFactory(createColumnSpecs(expectedFoo, expectedBaz), 0, 2), 0, 2);
         var rearrangedTable = rearrange(inputTable, rearranger);
         var expectedTable = createTable(expectedFoo, BAR, expectedBaz);
-        assertTableEquals(expectedTable, rearrangedTable);
+        checkTable(expectedTable, rearrangedTable);
     }
 
     void testReplaceMultipleFactoriesOneColumnEach() throws Exception {
@@ -188,7 +188,7 @@ final class ColumnRearrangerAPITester extends AbstractTableBackendAPITester {
         rearranger.replace(new DecrementNumberCellFactory(createColumnSpecs(expectedFoo), 0), 0);
         var rearrangedTable = rearrange(inputTable, rearranger);
         var expectedTable = createTable(expectedFoo, BAR, expectedBaz);
-        assertTableEquals(expectedTable, rearrangedTable);
+        checkTable(expectedTable, rearrangedTable);
     }
 
     void testReplaceMultipleCellFactoriesMultipleColumnsEach() throws Exception {
@@ -205,7 +205,7 @@ final class ColumnRearrangerAPITester extends AbstractTableBackendAPITester {
         rearranger.replace(new DecrementNumberCellFactory(createColumnSpecs(expectedBaz, expectedBla), 2, 4), 2, 4);
         var rearrangedTable = rearrange(inputTable, rearranger);
         var expectedTable = createTable(expectedFoo, BAR, expectedBaz, expectedBli, expectedBla);
-        assertTableEquals(expectedTable, rearrangedTable);
+        checkTable(expectedTable, rearrangedTable);
     }
 
     void testInputRowMethods() throws Exception {
@@ -216,7 +216,7 @@ final class ColumnRearrangerAPITester extends AbstractTableBackendAPITester {
         var rearrangedTable = rearrange(inputTable, rearranger);
         var expectedSummaryColumn = new Column("summary", stringFactory("Row0?some", "Row12boring", "Row23?"));
         var expectedTable = createTable(expectedSummaryColumn);
-        assertTableEquals(expectedTable, rearrangedTable);
+        checkTable(expectedTable, rearrangedTable);
     }
 
     /*====================== Type Conversion ==================*/
@@ -228,7 +228,7 @@ final class ColumnRearrangerAPITester extends AbstractTableBackendAPITester {
         var rearrangedTable = rearrange(inputTable, rearranger);
         var expectedConvertedColumn = new Column(FOO.name(), stringFactory("?", "2", "3"));
         var expectedTable = createTable(expectedConvertedColumn, BAR, BAZ);
-        assertTableEquals(expectedTable, rearrangedTable);
+        checkTable(expectedTable, rearrangedTable);
     }
 
     void testMultipleTypeConverters() throws Exception {
@@ -240,7 +240,7 @@ final class ColumnRearrangerAPITester extends AbstractTableBackendAPITester {
         var expectedFoo = new Column(FOO.name(), stringFactory("?", "2", "3"));
         var expectedBaz = new Column(BAZ.name(), stringFactory("1.5", "?", "3.5"));
         var expectedTable = createTable(expectedFoo, BAR, expectedBaz);
-        assertTableEquals(expectedTable, rearrangedTable);
+        checkTable(expectedTable, rearrangedTable);
     }
 
     void testMultipleConvertersPerColumn() throws Exception {
@@ -251,7 +251,7 @@ final class ColumnRearrangerAPITester extends AbstractTableBackendAPITester {
         var rearrangedTable = rearrange(inputTable, rearranger);
         var expectedFoo = new Column(FOO.name(), doubleFactory(null, 2.0, 3.0));
         var expectedTable = createTable(expectedFoo, BAR, BAZ);
-        assertTableEquals(expectedTable, rearrangedTable);
+        checkTable(expectedTable, rearrangedTable);
     }
 
     /*======================= Combinations ======================*/
@@ -266,7 +266,7 @@ final class ColumnRearrangerAPITester extends AbstractTableBackendAPITester {
         var rearrangedTable = rearrange(inputTable, rearranger);
         var expectedConvertedColumn = new Column(FOO.name(), stringFactory("?", "2", "3"));
         var expectedTable = createTable(expectedConvertedColumn, BAR, BAZ, expectedAppendedColumn);
-        assertTableEquals(expectedTable, rearrangedTable);
+        checkTable(expectedTable, rearrangedTable);
     }
 
     //  replacing a converted column is not possible because the CellFactory and the DataCellTypeConverter
@@ -281,7 +281,7 @@ final class ColumnRearrangerAPITester extends AbstractTableBackendAPITester {
         rearranger.permute(new String[] {BAZ.name(), FOO.name()});
         var rearrangedTable = rearrange(inputTable, rearranger);
         var expectedTable = createTable(BAZ, FOO);
-        assertTableEquals(expectedTable, rearrangedTable);
+        checkTable(expectedTable, rearrangedTable);
     }
 
     @Test
@@ -293,7 +293,7 @@ final class ColumnRearrangerAPITester extends AbstractTableBackendAPITester {
         rearranger.remove(BAR.name());
         var rearrangedTable = rearrange(inputTable, rearranger);
         var expectedTable = createTable(BAZ, FOO);
-        assertTableEquals(expectedTable, rearrangedTable);
+        checkTable(expectedTable, rearrangedTable);
     }
 
     @Test
@@ -308,7 +308,7 @@ final class ColumnRearrangerAPITester extends AbstractTableBackendAPITester {
         rearranger.append(new DecrementNumberCellFactory(createColumnSpecs(kaboom), 0));
         var rearrangedTable = rearrange(inputTable, rearranger);
         var expectedTable = createTable(BAZ, FOO, kaboom);
-        assertTableEquals(expectedTable, rearrangedTable);
+        checkTable(expectedTable, rearrangedTable);
     }
 
     @Test
@@ -321,7 +321,7 @@ final class ColumnRearrangerAPITester extends AbstractTableBackendAPITester {
         rearranger.remove(FOO.name());
         var rearrangedTable = rearrange(inputTable, rearranger);
         var expectedTable = createTable(BAR, BAZ, kaboom);
-        assertTableEquals(expectedTable, rearrangedTable);
+        checkTable(expectedTable, rearrangedTable);
     }
 
 
