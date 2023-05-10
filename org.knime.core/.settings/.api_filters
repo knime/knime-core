@@ -2335,38 +2335,10 @@
                 <message_argument value="append(ExecutionContext, IntSupplier, TableBackend.AppendConfig, BufferedDataTable, BufferedDataTable)"/>
             </message_arguments>
         </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/node/workflow/AnnotationData.java" type="org.knime.core.node.workflow.AnnotationData">
-        <filter comment="New version added for compatibility with Modern UI" id="336658481">
+        <filter comment="Internal API" id="403804204">
             <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.AnnotationData"/>
-                <message_argument value="VERSION_20230412"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowManager.java" type="org.knime.core.node.workflow.WorkflowManager">
-        <filter comment="Signature only changed from void to boolean" id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
-                <message_argument value="bringAnnotationForward(WorkflowAnnotation)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="Signature only changed from void to boolean" id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
-                <message_argument value="bringAnnotationToFront(WorkflowAnnotation)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="Signature only changed from void to boolean" id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
-                <message_argument value="sendAnnotationBackward(WorkflowAnnotation)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="Signature only changed from void to boolean" id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
-                <message_argument value="sendAnnotationToBack(WorkflowAnnotation)"/>
+                <message_argument value="org.knime.core.data.TableBackend"/>
+                <message_argument value="replaceSpec(ExecutionContext, BufferedDataTable, DataTableSpec, IntSupplier)"/>
             </message_arguments>
         </filter>
     </resource>
@@ -2438,6 +2410,40 @@
             <message_arguments>
                 <message_argument value="org.knime.core.data.property.ColorModelRange"/>
                 <message_argument value="org.knime.core.data.property.ColorHandler$ColorModel"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/AnnotationData.java" type="org.knime.core.node.workflow.AnnotationData">
+        <filter comment="New version added for compatibility with Modern UI" id="336658481">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.AnnotationData"/>
+                <message_argument value="VERSION_20230412"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowManager.java" type="org.knime.core.node.workflow.WorkflowManager">
+        <filter comment="Signature only changed from void to boolean" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
+                <message_argument value="bringAnnotationForward(WorkflowAnnotation)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="Signature only changed from void to boolean" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
+                <message_argument value="bringAnnotationToFront(WorkflowAnnotation)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="Signature only changed from void to boolean" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
+                <message_argument value="sendAnnotationBackward(WorkflowAnnotation)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="Signature only changed from void to boolean" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
+                <message_argument value="sendAnnotationToBack(WorkflowAnnotation)"/>
             </message_arguments>
         </filter>
     </resource>
