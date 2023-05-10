@@ -52,11 +52,6 @@ import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
-import javax.json.JsonWriter;
-
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -65,7 +60,12 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.openapi.OpenAPIDefinitionGenerator;
 import org.knime.core.util.FileUtil;
+import org.knime.core.util.JsonUtil;
 import org.knime.core.util.TestWorkflowSaveHook;
+
+import jakarta.json.JsonObject;
+import jakarta.json.JsonReader;
+import jakarta.json.JsonWriter;
 
 /**
  * Runs the workflow save hooks (which counts nodes in a workflow ...)
@@ -165,21 +165,21 @@ public class BugAP7806_WorkflowSaveHooks extends WorkflowTestCase {
                 .resolve(OpenAPIDefinitionGenerator.INPUT_PARAMETERS_FILE);
 
         String actualInputParameters;
-        try (JsonReader reader = Json.createReader(Files.newInputStream(openApiFragmentFile))) {
+        try (JsonReader reader = JsonUtil.getProvider().createReader(Files.newInputStream(openApiFragmentFile))) {
             JsonObject o = reader.readObject();
 
-            try (StringWriter sw = new StringWriter(); JsonWriter writer = Json.createWriter(sw)) {
+            try (StringWriter sw = new StringWriter(); JsonWriter writer = JsonUtil.getProvider().createWriter(sw)) {
                 writer.write(o);
                 actualInputParameters = sw.toString();
             }
         }
 
         String expectedInputParameters;
-        try (JsonReader reader = Json.createReader(
+        try (JsonReader reader = JsonUtil.getProvider().createReader(
             Files.newInputStream(m_workflowDir.toPath().resolve("openapi-input-parameters-reference.json")))) {
             JsonObject o = reader.readObject();
 
-            try (StringWriter sw = new StringWriter(); JsonWriter writer = Json.createWriter(sw)) {
+            try (StringWriter sw = new StringWriter(); JsonWriter writer = JsonUtil.getProvider().createWriter(sw)) {
                 writer.write(o);
                 expectedInputParameters = sw.toString();
             }

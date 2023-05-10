@@ -56,10 +56,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.json.Json;
-import javax.json.JsonException;
-import javax.json.JsonValue;
-
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Rule;
@@ -68,10 +64,13 @@ import org.junit.rules.ExpectedException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.dialog.DialogNode;
-import org.knime.core.node.dialog.ExternalNodeData;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.util.CoreConstants;
 import org.knime.core.util.FileUtil;
+import org.knime.core.util.JsonUtil;
+
+import jakarta.json.JsonException;
+import jakarta.json.JsonValue;
 
 /**
  * Tests that the top-level configurations (configuration-/dialog nodes and workflow variables) are correctly written
@@ -161,7 +160,8 @@ public class EnhAP12286_ExternalConfiguration extends WorkflowTestCase {
         assertThat("unexptected number of config nodes", configurationNodes.size(), is(10));
 
         Map<String, JsonValue> configuration = new HashMap<>();
-        configuration.put("string-input", Json.createObjectBuilder().add("string", "new_config").build().get("string"));
+		configuration.put("string-input",
+				JsonUtil.getProvider().createObjectBuilder().add("string", "new_config").build().get("string"));
         getManager().setConfigurationNodes(configuration);
         checkState(m_stringConfiguration_1, InternalNodeContainerState.CONFIGURED);
         checkState(m_doubleConfiguration_2, InternalNodeContainerState.EXECUTED);
@@ -180,7 +180,8 @@ public class EnhAP12286_ExternalConfiguration extends WorkflowTestCase {
     @Test
     public void testSetInvalidConfiguration() throws JsonException, InvalidSettingsException {
         Map<String, JsonValue> configuration = new HashMap<>();
-        configuration.put("number-input-2", Json.createObjectBuilder().add("double", -1.0).build().get("double"));
+		configuration.put("number-input-2",
+				JsonUtil.getProvider().createObjectBuilder().add("double", -1.0).build().get("double"));
 
         exception.expect(InvalidSettingsException.class);
         exception.expectMessage("The set double -1.0 is smaller than the allowed minimum of 0.0");
@@ -196,7 +197,8 @@ public class EnhAP12286_ExternalConfiguration extends WorkflowTestCase {
     @Test
     public void testSetAmbiguousConfigurationNode() throws Exception {
         Map<String, JsonValue> configuration = new HashMap<>();
-        configuration.put("number-input", Json.createObjectBuilder().add("double", 3.14).build().get("double"));
+		configuration.put("number-input",
+				JsonUtil.getProvider().createObjectBuilder().add("double", 3.14).build().get("double"));
 
         exception.expect(InvalidSettingsException.class);
         exception.expectMessage("Parameter name \"number-input\" doesn't match any node in the workflow");

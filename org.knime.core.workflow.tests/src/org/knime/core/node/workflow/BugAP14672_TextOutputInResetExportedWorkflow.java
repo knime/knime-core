@@ -45,28 +45,16 @@
 package org.knime.core.node.workflow;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
 
 import java.io.File;
-import java.io.StringWriter;
-import java.nio.file.Files;
-import java.nio.file.Path;
-
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
-import javax.json.JsonWriter;
 
 import org.hamcrest.MatcherAssert;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
-import org.knime.core.openapi.OpenAPIDefinitionGenerator;
 import org.knime.core.util.FileUtil;
-import org.knime.core.util.TestWorkflowSaveHook;
 
 /**
  * Test if an executed workflow that got exported "without data" is properly reset after load.

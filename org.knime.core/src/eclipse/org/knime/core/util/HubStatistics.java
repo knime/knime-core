@@ -59,16 +59,15 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
-import javax.json.JsonReader;
-import javax.json.JsonString;
-import javax.json.JsonValue;
-import javax.json.JsonWriter;
-import javax.json.stream.JsonGenerator;
-
 import org.knime.core.node.KNIMEConstants;
+
+import jakarta.json.JsonObject;
+import jakarta.json.JsonObjectBuilder;
+import jakarta.json.JsonReader;
+import jakarta.json.JsonString;
+import jakarta.json.JsonValue;
+import jakarta.json.JsonWriter;
+import jakarta.json.stream.JsonGenerator;
 
 /**
  * Class to write/read some KNIME Hub statistics into/from the workspace.
@@ -109,7 +108,7 @@ public class HubStatistics {
     public static synchronized void storeKnimeHubStat(final String key, final String value) {
         try {
             final JsonObject stats = readHubStats(getStatisticsLocation());
-            final JsonObjectBuilder builder = Json.createObjectBuilder();
+            final JsonObjectBuilder builder = JsonUtil.getProvider().createObjectBuilder();
 
             for (final Entry<String, JsonValue> entry : stats.entrySet()) {
                 builder.add(entry.getKey(), entry.getValue());
@@ -135,7 +134,7 @@ public class HubStatistics {
         throws FileNotFoundException, IOException {
         Map<String, Boolean> cfg = Collections.singletonMap(JsonGenerator.PRETTY_PRINTING, Boolean.TRUE);
         try (FileOutputStream outStream = new FileOutputStream(location);
-                JsonWriter jw = Json.createWriterFactory(cfg).createWriter(outStream)) {
+                JsonWriter jw = JsonUtil.getProvider().createWriterFactory(cfg).createWriter(outStream)) {
             jw.write(json);
         }
     }
@@ -199,10 +198,10 @@ public class HubStatistics {
      */
     private static JsonObject readHubStats(final File location) throws FileNotFoundException {
         if (!location.exists()) {
-            return Json.createObjectBuilder().build();
+            return JsonUtil.getProvider().createObjectBuilder().build();
         }
 
-        try (JsonReader jr = Json.createReader(new FileInputStream(location))) {
+        try (JsonReader jr = JsonUtil.getProvider().createReader(new FileInputStream(location))) {
             return jr.readObject();
         }
     }

@@ -52,15 +52,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
-import javax.json.JsonValue;
-import javax.json.JsonValue.ValueType;
-import javax.json.JsonWriter;
-import javax.json.JsonWriterFactory;
-import javax.json.stream.JsonGenerator;
-
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.dialog.DialogNode;
 import org.knime.core.node.dialog.SubNodeDescriptionProvider;
@@ -70,6 +61,7 @@ import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowSaveHook;
 import org.knime.core.util.CoreConstants;
 import org.knime.core.util.CoreConstants.ConfigurationType;
+import org.knime.core.util.JsonUtil;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -77,8 +69,16 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.fasterxml.jackson.datatype.jsonp.JSONPModule;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fasterxml.jackson.datatype.jsr353.JSR353Module;
+
+import jakarta.json.JsonObject;
+import jakarta.json.JsonObjectBuilder;
+import jakarta.json.JsonValue;
+import jakarta.json.JsonValue.ValueType;
+import jakarta.json.JsonWriter;
+import jakarta.json.JsonWriterFactory;
+import jakarta.json.stream.JsonGenerator;
 
 /**
  * {@link WorkflowSaveHook} that saves the top-level input configurations (defined by {@link DialogNode}s, aka
@@ -96,7 +96,7 @@ public class WorkflowConfigArtifactsGenerator extends WorkflowSaveHook {
     private static final WorkflowConfigArtifactsGenerator INSTANCE = new WorkflowConfigArtifactsGenerator();
 
     private JsonWriterFactory m_writerFactory =
-        Json.createWriterFactory(Collections.singletonMap(JsonGenerator.PRETTY_PRINTING, true));
+        JsonUtil.getProvider().createWriterFactory(Collections.singletonMap(JsonGenerator.PRETTY_PRINTING, true));
 
     private final ObjectMapper m_mapper;
 
@@ -105,7 +105,7 @@ public class WorkflowConfigArtifactsGenerator extends WorkflowSaveHook {
      */
     public WorkflowConfigArtifactsGenerator() {
         m_mapper = new ObjectMapper();
-        m_mapper.registerModule(new JSR353Module());
+        m_mapper.registerModule(new JSONPModule(JsonUtil.getProvider()));
         m_mapper.registerModule(new Jdk8Module());
         m_mapper.registerModule(new JavaTimeModule());
         m_mapper.enable(SerializationFeature.INDENT_OUTPUT);
@@ -143,7 +143,7 @@ public class WorkflowConfigArtifactsGenerator extends WorkflowSaveHook {
     }
 
     private static JsonObject enrich(final JsonObject source, final String key, final String value) {
-        JsonObjectBuilder builder = Json.createObjectBuilder();
+        JsonObjectBuilder builder = JsonUtil.getProvider().createObjectBuilder();
         builder.add(key, value);
         source.entrySet().forEach(e -> builder.add(e.getKey(), e.getValue()));
         return builder.build();
@@ -151,15 +151,17 @@ public class WorkflowConfigArtifactsGenerator extends WorkflowSaveHook {
 
     @SuppressWarnings("rawtypes")
     private JsonObject extractTopLevelConfigurationRepresentation(final WorkflowManager wfm) {
-        final JsonObjectBuilder root = Json.createObjectBuilder();
+        final JsonObjectBuilder root = JsonUtil.getProvider().createObjectBuilder();
         final Map<String, DialogNode> configurationNodes = wfm.getConfigurationNodes(true);
 
         if (!configurationNodes.isEmpty()) {
             configurationNodes.entrySet().stream().filter(e -> m_mapper.canSerialize(e.getClass())).forEach(e -> {
                 try {
                     root.add(e.getKey(),
-                        Json.createReader(new StringReader(m_mapper.writerWithView(CoreConstants.ArtifactsView.class)
-                            .writeValueAsString(e.getValue().getDialogRepresentation()))).readObject());
+                        JsonUtil.getProvider()
+                            .createReader(new StringReader(m_mapper.writerWithView(CoreConstants.ArtifactsView.class)
+                                .writeValueAsString(e.getValue().getDialogRepresentation())))
+                            .readObject());
                 } catch (JsonProcessingException ex) {
                     LOGGER.warn("Could not serialize representation of configuration '" + e.getKey() + "'", ex);
                 }
@@ -172,7 +174,7 @@ public class WorkflowConfigArtifactsGenerator extends WorkflowSaveHook {
     private static void extractWorkflowVariables(final WorkflowManager wfm, final JsonObjectBuilder builder) {
         List<FlowVariable> workflowVariables = wfm.getWorkflowVariables();
         for (FlowVariable v : workflowVariables) {
-            JsonObjectBuilder val = Json.createObjectBuilder();
+            JsonObjectBuilder val = JsonUtil.getProvider().createObjectBuilder();
             switch (v.getType()) {
                 case INTEGER:
                     val.add("type", "integer");
@@ -208,13 +210,13 @@ public class WorkflowConfigArtifactsGenerator extends WorkflowSaveHook {
     private static void extractWorkflowCredentials(final WorkflowManager wfm, final JsonObjectBuilder builder) {
         Iterable<Credentials> credentials = wfm.getCredentialsStore().getCredentials();
         for (Credentials c : credentials) {
-            JsonObjectBuilder val = Json.createObjectBuilder();
+            JsonObjectBuilder val = JsonUtil.getProvider().createObjectBuilder();
             val.add("type", "object");
-            JsonObjectBuilder login = Json.createObjectBuilder();
+            JsonObjectBuilder login = JsonUtil.getProvider().createObjectBuilder();
             login.add("type", "string");
             login.add("default", c.getLogin());
             val.add("login", login);
-            JsonObjectBuilder pwd = Json.createObjectBuilder();
+            JsonObjectBuilder pwd = JsonUtil.getProvider().createObjectBuilder();
             pwd.add("type", "string");
             pwd.addNull("default");
             val.add("password", pwd);
@@ -253,6 +255,7 @@ public class WorkflowConfigArtifactsGenerator extends WorkflowSaveHook {
      * @param workflowManager the workflow manager
      * @param configurationType the configuration that type that shall be returned.
      * @return the workflow configuration template
+     * @since 5.1
      */
     public JsonObject getWorkflowConfiguration(final WorkflowManager workflowManager,
         final ConfigurationType configurationType) {
@@ -260,7 +263,7 @@ public class WorkflowConfigArtifactsGenerator extends WorkflowSaveHook {
             return extractTopLevelConfigurationRepresentation(workflowManager);
         }
 
-        final JsonObjectBuilder confBuilder = Json.createObjectBuilder();
+        final JsonObjectBuilder confBuilder = JsonUtil.getProvider().createObjectBuilder();
 
         extractTopLevelConfiguration(workflowManager, confBuilder);
         extractWorkflowVariables(workflowManager, confBuilder);

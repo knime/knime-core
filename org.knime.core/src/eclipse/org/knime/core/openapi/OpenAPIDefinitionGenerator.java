@@ -51,23 +51,23 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonNumber;
-import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
-import javax.json.JsonString;
-import javax.json.JsonValue;
-import javax.json.JsonValue.ValueType;
-import javax.json.JsonWriterFactory;
-import javax.json.stream.JsonGenerator;
-
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.dialog.ExternalNodeData;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowSaveHook;
+import org.knime.core.util.JsonUtil;
 
 import com.google.common.net.MediaType;
+
+import jakarta.json.JsonArray;
+import jakarta.json.JsonNumber;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonObjectBuilder;
+import jakarta.json.JsonString;
+import jakarta.json.JsonValue;
+import jakarta.json.JsonValue.ValueType;
+import jakarta.json.JsonWriterFactory;
+import jakarta.json.stream.JsonGenerator;
 
 /**
  * Application and singleton class that allows to create OpenAPI fragments that describes the in- and output of
@@ -84,7 +84,7 @@ public class OpenAPIDefinitionGenerator extends WorkflowSaveHook {
     private static final OpenAPIDefinitionGenerator INSTANCE = new OpenAPIDefinitionGenerator();
 
     private JsonWriterFactory m_writerFactory =
-        Json.createWriterFactory(Collections.singletonMap(JsonGenerator.PRETTY_PRINTING, true));
+        JsonUtil.getProvider().createWriterFactory(Collections.singletonMap(JsonGenerator.PRETTY_PRINTING, true));
 
     /**
      * Name of the file that contains the input parameter definition: {@value}.
@@ -163,6 +163,7 @@ public class OpenAPIDefinitionGenerator extends WorkflowSaveHook {
      *
      * @param wfm a workflow manager, must not be <code>null</code>
      * @return a JSON object
+     * @since 5.1
      */
     public JsonObject createInputParametersDescription(final WorkflowManager wfm) {
         return createParametersDescription(wfm.getInputNodes());
@@ -195,7 +196,7 @@ public class OpenAPIDefinitionGenerator extends WorkflowSaveHook {
      *
      * @param wfm the workflow manager
      * @return a JSON object
-     * @since 4.5
+     * @since 5.1
      */
     public JsonObject createInputResourceContent(final WorkflowManager wfm) {
         final var nodeData =
@@ -233,7 +234,7 @@ public class OpenAPIDefinitionGenerator extends WorkflowSaveHook {
      *
      * @param wfm the workflow manager
      * @return a JSON object
-     * @since 4.5
+     * @since 5.1
      */
     public JsonObject createOutputResourceContent(final WorkflowManager wfm) {
         final var nodeData =
@@ -244,15 +245,15 @@ public class OpenAPIDefinitionGenerator extends WorkflowSaveHook {
     }
 
     private static JsonObject createResourceContent(final Map<String, ExternalNodeData> nodeData) {
-        final var root = Json.createObjectBuilder();
+        final var root = JsonUtil.getProvider().createObjectBuilder();
 
         if (!nodeData.isEmpty()) {
-            final var schema = Json.createObjectBuilder();
-            final var properties = Json.createObjectBuilder();
-            final var encoding = Json.createObjectBuilder();
+            final var schema = JsonUtil.getProvider().createObjectBuilder();
+            final var properties = JsonUtil.getProvider().createObjectBuilder();
+            final var encoding = JsonUtil.getProvider().createObjectBuilder();
 
             // This is static since application form data accepts binary streams.
-            final var schemaObject = Json.createObjectBuilder()//
+            final var schemaObject = JsonUtil.getProvider().createObjectBuilder()//
                 .add("type", "string")//
                 .add("format", "binary")//
                 .build();
@@ -260,7 +261,7 @@ public class OpenAPIDefinitionGenerator extends WorkflowSaveHook {
             for (final var e : nodeData.entrySet()) {
                 properties.add(e.getKey(), schemaObject);
 
-                final var dataEncoding = Json.createObjectBuilder()//
+                final var dataEncoding = JsonUtil.getProvider().createObjectBuilder()//
                     .add("contentType", e.getValue().getContentType().orElse(MediaType.OCTET_STREAM.toString()))//
                     .build();
 
@@ -314,6 +315,7 @@ public class OpenAPIDefinitionGenerator extends WorkflowSaveHook {
      *
      * @param wfm a workflow manager, must not be <code>null</code>
      * @return a JSON object
+     * @since 5.1
      */
     public JsonObject createOutputParametersDescription(final WorkflowManager wfm) {
         return createParametersDescription(wfm.getExternalOutputs());
@@ -321,9 +323,9 @@ public class OpenAPIDefinitionGenerator extends WorkflowSaveHook {
 
 
     private static JsonObject createParametersDescription(final Map<String, ExternalNodeData> nodes) {
-        JsonObjectBuilder root = Json.createObjectBuilder();
+        JsonObjectBuilder root = JsonUtil.getProvider().createObjectBuilder();
         if (!nodes.isEmpty()) {
-            JsonObjectBuilder properties = Json.createObjectBuilder();
+            JsonObjectBuilder properties = JsonUtil.getProvider().createObjectBuilder();
 
             for (Map.Entry<String, ExternalNodeData> e : nodes.entrySet()) {
                 if (e.getValue().getJSONValue() != null) {
@@ -348,12 +350,12 @@ public class OpenAPIDefinitionGenerator extends WorkflowSaveHook {
      * @return the resulting json
      */
     private static JsonObjectBuilder translateToSchema(final JsonValue v) {
-        final JsonObjectBuilder node = Json.createObjectBuilder();
+        final JsonObjectBuilder node = JsonUtil.getProvider().createObjectBuilder();
 
         if (v instanceof JsonObject) {
             node.add("type", "object");
 
-            final JsonObjectBuilder properties = Json.createObjectBuilder();
+            final JsonObjectBuilder properties = JsonUtil.getProvider().createObjectBuilder();
             for (Map.Entry<String, JsonValue> e : ((JsonObject)v).entrySet()) {
                 final JsonObjectBuilder child = translateToSchema(e.getValue());
                 properties.add(e.getKey(), child);

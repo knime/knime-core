@@ -107,9 +107,6 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import javax.json.JsonException;
-import javax.json.JsonValue;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOCase;
@@ -220,6 +217,9 @@ import org.knime.shared.workflow.def.WorkflowDef;
 import org.knime.shared.workflow.storage.clipboard.DefClipboard;
 import org.knime.shared.workflow.storage.clipboard.DefClipboardContent;
 import org.knime.shared.workflow.storage.util.PasswordRedactor;
+
+import jakarta.json.JsonException;
+import jakarta.json.JsonValue;
 
 /**
  * Container holding nodes and connections of a (sub) workflow. In contrast to previous implementations, this class will

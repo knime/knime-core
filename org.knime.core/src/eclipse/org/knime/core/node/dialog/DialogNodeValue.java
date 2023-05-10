@@ -46,12 +46,12 @@
  */
 package org.knime.core.node.dialog;
 
-import javax.json.JsonException;
-import javax.json.JsonValue;
-
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+
+import jakarta.json.JsonException;
+import jakarta.json.JsonValue;
 
 /**
  *
@@ -90,7 +90,7 @@ public interface DialogNodeValue {
      * a JSON value.
      * @param json a JSON value, never <code>null</code>
      * @throws JsonException If parsing fails.
-     * @since 2.12
+     * @since 5.1
      */
     public abstract void loadFromJson(final JsonValue json) throws JsonException;
 
@@ -98,7 +98,7 @@ public interface DialogNodeValue {
      * file that can then be modified by the user. It helps the user to understand the structure of the expected
      * {@link JsonValue}.
      * @return Content as {@link JsonValue}, never <code>null</code>
-     * @since 2.12
+     * @since 5.1
      */
     public JsonValue toJson();
 

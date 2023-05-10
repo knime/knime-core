@@ -62,16 +62,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonArrayBuilder;
-import javax.json.JsonNumber;
-import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
-import javax.json.JsonReader;
-import javax.json.JsonWriter;
-import javax.json.stream.JsonGenerator;
-
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpStatus;
@@ -102,6 +92,7 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.util.EclipseUtil;
+import org.knime.core.util.JsonUtil;
 import org.knime.core.util.MutableInteger;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -110,6 +101,15 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.Version;
 import org.osgi.service.application.ApplicationHandle;
 import org.osgi.service.prefs.Preferences;
+
+import jakarta.json.JsonArray;
+import jakarta.json.JsonArrayBuilder;
+import jakarta.json.JsonNumber;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonObjectBuilder;
+import jakarta.json.JsonReader;
+import jakarta.json.JsonWriter;
+import jakarta.json.stream.JsonGenerator;
 
 /**
  * Holds execution timing information about a specific node. It also defines a static global
@@ -485,18 +485,18 @@ public final class NodeTimer {
         }
 
         private JsonObject constructJSONObject(final boolean properShutdown) {
-            JsonObjectBuilder job = Json.createObjectBuilder();
+            JsonObjectBuilder job = JsonUtil.getProvider().createObjectBuilder();
             job.add("version", KNIMEConstants.VERSION);
             job.add("created", m_created);
-            JsonObjectBuilder job2 = Json.createObjectBuilder();
+            JsonObjectBuilder job2 = JsonUtil.getProvider().createObjectBuilder();
             synchronized (this) {
-                    JsonArrayBuilder jab = Json.createArrayBuilder();
+                    JsonArrayBuilder jab = JsonUtil.getProvider().createArrayBuilder();
                     for (String cname : m_globalNodeStats.keySet()) {
                         if (!cname.matches(".+" + NODE_NAME_SEP + ".+")) {
                             // don't consider subnodes, metanodes or other weird things
                             continue;
                         }
-                        JsonObjectBuilder job3 = Json.createObjectBuilder();
+                        JsonObjectBuilder job3 = JsonUtil.getProvider().createObjectBuilder();
                         NodeStats ns = m_globalNodeStats.get(cname);
                         if (ns != null) {
                             job3.add("id", cname);
@@ -511,7 +511,7 @@ public final class NodeTimer {
                     job2.add("nodes", jab);
 
                     // metanodes
-                    JsonObjectBuilder jobMeta = Json.createObjectBuilder();
+                    JsonObjectBuilder jobMeta = JsonUtil.getProvider().createObjectBuilder();
                     NodeStats ns = m_globalNodeStats.get("NodeContainer");
                     if (ns != null) {
                         jobMeta.add("nrexecs", ns.executionCount);
@@ -522,7 +522,7 @@ public final class NodeTimer {
                     job2.add("metaNodes", jobMeta);
 
                     // sub nodes
-                    JsonObjectBuilder jobSub = Json.createObjectBuilder();
+                    JsonObjectBuilder jobSub = JsonUtil.getProvider().createObjectBuilder();
                     ns = m_globalNodeStats.get(SubNodeContainer.class.getName());
                     if (ns != null) {
                         jobSub.add("nrexecs", ns.executionCount);
@@ -533,7 +533,7 @@ public final class NodeTimer {
                     job2.add("wrappedNodes", jobSub);
 
                     //created information
-                    final JsonObjectBuilder jobNodesCreated = Json.createObjectBuilder();
+                    final JsonObjectBuilder jobNodesCreated = JsonUtil.getProvider().createObjectBuilder();
                     for (Entry<NodeCreationType, MutableInteger> e : m_nodesCreatedVia.entrySet()) {
                         jobNodesCreated.add(e.getKey().name(), e.getValue().intValue());
                     }
@@ -586,7 +586,7 @@ public final class NodeTimer {
                 File propfile = new File(KNIMEConstants.getKNIMEHomeDir(), FILENAME);
                 Map<String, Boolean> cfg = Collections.singletonMap(JsonGenerator.PRETTY_PRINTING, Boolean.TRUE);
                 try (FileOutputStream outStream = new FileOutputStream(propfile);
-                        JsonWriter jw = Json.createWriterFactory(cfg).createWriter(outStream)) {
+                        JsonWriter jw = JsonUtil.getProvider().createWriterFactory(cfg).createWriter(outStream)) {
                     jw.write(jo);
                 }
                 LOGGER.debug("Successfully wrote node usage stats to file: " + propfile.getCanonicalPath());
@@ -631,7 +631,7 @@ public final class NodeTimer {
                 JsonObject jo = constructJSONObject(properShutdown);
                 Map<String, Boolean> cfg = Collections.singletonMap(JsonGenerator.PRETTY_PRINTING, Boolean.TRUE);
                 ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                try (JsonWriter jw = Json.createWriterFactory(cfg).createWriter(bos)) {
+                try (JsonWriter jw = JsonUtil.getProvider().createWriterFactory(cfg).createWriter(bos)) {
                     jw.write(jo);
                 }
 
@@ -725,7 +725,7 @@ public final class NodeTimer {
                     return;
                 }
                 JsonObject jo;
-                try (JsonReader jr = Json.createReader(new FileInputStream(propfile))) {
+                try (JsonReader jr = JsonUtil.getProvider().createReader(new FileInputStream(propfile))) {
                     jo = jr.readObject();
                 }
                 String version = "0.0.0";

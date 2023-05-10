@@ -53,11 +53,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
-import javax.json.JsonValue;
-
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Rule;
@@ -68,6 +63,11 @@ import org.knime.core.node.dialog.DialogNode;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.util.CoreConstants;
 import org.knime.core.util.FileUtil;
+import org.knime.core.util.JsonUtil;
+
+import jakarta.json.JsonObject;
+import jakarta.json.JsonReader;
+import jakarta.json.JsonValue;
 
 /**
  * Tests that the top-level configurations (configuration-/dialog nodes and workflow variables) can be correctly set via
@@ -113,7 +113,8 @@ public class EnhAP12286_LoadFromJson extends WorkflowTestCase {
 
         JsonObject expectedConfigContent = null;
 
-        try (final JsonReader reader = Json.createReader(FileUtils.openInputStream(expectedWorkflowConfig))) {
+		try (final JsonReader reader = JsonUtil.getProvider()
+				.createReader(FileUtils.openInputStream(expectedWorkflowConfig))) {
             expectedConfigContent = reader.readObject();
         }
 
@@ -126,7 +127,8 @@ public class EnhAP12286_LoadFromJson extends WorkflowTestCase {
         assertTrue("'workflow-configuration.json' missing", actualWorkflowConfig.exists());
         JsonObject actualConfigContent = null;
 
-        try (final JsonReader reader = Json.createReader(FileUtils.openInputStream(actualWorkflowConfig))) {
+		try (final JsonReader reader = JsonUtil.getProvider()
+				.createReader(FileUtils.openInputStream(actualWorkflowConfig))) {
             actualConfigContent = reader.readObject();
         }
 
@@ -137,12 +139,14 @@ public class EnhAP12286_LoadFromJson extends WorkflowTestCase {
 
         assertTrue("'workflow-configuration.json' missing", actualWorkflowConfig.exists());
 
-        try (final JsonReader reader = Json.createReader(FileUtils.openInputStream(expectedWorkflowConfig))) {
-            expectedConfigContent = reader.readObject();
-        }
-        try (final JsonReader reader = Json.createReader(FileUtils.openInputStream(actualWorkflowConfig))) {
-            actualConfigContent = reader.readObject();
-        }
+		try (final JsonReader reader = JsonUtil.getProvider()
+				.createReader(FileUtils.openInputStream(expectedWorkflowConfig))) {
+			expectedConfigContent = reader.readObject();
+		}
+		try (final JsonReader reader = JsonUtil.getProvider()
+				.createReader(FileUtils.openInputStream(actualWorkflowConfig))) {
+			actualConfigContent = reader.readObject();
+		}
 
         assertThat("Configuration changed", expectedConfigContent, is(actualConfigContent));
     }
@@ -159,10 +163,10 @@ public class EnhAP12286_LoadFromJson extends WorkflowTestCase {
         JsonObject workflowConfigContentExp = null;// FileUtils.readFileToString(conf, StandardCharsets.UTF_8);
         JsonObject inputJson = null;
 
-        try (final JsonReader reader = Json.createReader(FileUtils.openInputStream(input))) {
+        try (final JsonReader reader = JsonUtil.getProvider().createReader(FileUtils.openInputStream(input))) {
             inputJson = reader.readObject();
         }
-        try (final JsonReader reader = Json.createReader(FileUtils.openInputStream(conf))) {
+        try (final JsonReader reader = JsonUtil.getProvider().createReader(FileUtils.openInputStream(conf))) {
             workflowConfigContentExp = reader.readObject();
         }
 

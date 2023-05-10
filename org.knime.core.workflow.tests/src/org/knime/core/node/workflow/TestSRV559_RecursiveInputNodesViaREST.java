@@ -59,10 +59,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.json.Json;
-import javax.json.JsonReader;
-import javax.json.JsonValue;
-
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
@@ -73,6 +69,10 @@ import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.dialog.ExternalNodeData;
+import org.knime.core.util.JsonUtil;
+
+import jakarta.json.JsonReader;
+import jakarta.json.JsonValue;
 
 /**
  *
@@ -355,7 +355,7 @@ public class TestSRV559_RecursiveInputNodesViaREST extends WorkflowTestCase {
     }
 
     private static JsonValue toJson(final String s) {
-        try (JsonReader r = Json.createReader(new StringReader(s))) {
+        try (JsonReader r = JsonUtil.getProvider().createReader(new StringReader(s))) {
             return r.read();
         }
     }
