@@ -84,6 +84,7 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
     private final WorkflowCipher m_workflowCipher;
     private final MetaNodeTemplateInformation m_templateInformation;
     private final AuthorInformation m_authorInformation;
+    private final WorkflowMetadata m_workflowMetadata;
     private final CopyNodeContainerMetaPersistor m_metaPersistor;
     private final WorkflowDataRepository m_workflowDataRepository;
     private final List<FlowVariable> m_workflowVariables;
@@ -127,6 +128,7 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
         m_workflowCipher = original.getWorkflowCipher().clone();
         m_templateInformation = original.getTemplateInformation().clone();
         m_authorInformation = original.getAuthorInformation();
+        m_workflowMetadata = original.getMetadata();
         m_metaPersistor = new CopyNodeContainerMetaPersistor(
                 original, preserveDeletableFlags, isUndoableDeleteCommand);
         if (m_isProject) {
@@ -221,6 +223,12 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
     @Override
     public MetaNodeTemplateInformation getTemplateInformation() {
         return m_templateInformation;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public WorkflowMetadata getWorkflowMetadata() {
+        return m_workflowMetadata;
     }
 
     /**

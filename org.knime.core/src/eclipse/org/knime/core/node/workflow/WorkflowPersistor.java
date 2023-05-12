@@ -107,6 +107,14 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
     /** Constant for the meta info file name. */
     public static final String METAINFO_FILE = "workflowset.meta";
 
+    /** Workflow metadata XML file name.
+     * @since 5.1 */
+    public static final String WORKFLOW_METADATA_FILE_NAME = "workflow-metadata.xml";
+
+    /** Component metadata XML file name.
+     * @since 5.1 */
+    public static final String COMPONENT_METADATA_FILE_NAME = "component-metadata.xml";
+
     /** @return The version of the workflow or template being loaded.
      * @since 3.7*/
     public LoadVersion getLoadVersion();
@@ -211,6 +219,13 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
      * @return The template info
      */
     public MetaNodeTemplateInformation getTemplateInformation();
+
+    /**
+     * Workflow metadata.
+     * @return metadata for project workflow managers, {@link Optional#empty()} otherwise
+     * @since 5.1
+     */
+    public WorkflowMetadata getWorkflowMetadata();
 
     /** The workflow author information or null for metanodes (or copied WFMs, which have not been saved yet).
      * @return ...

@@ -59,7 +59,9 @@ package org.knime.core.node.workflow.metadata;
  * @author loki der quaeler
  *
  * @noreference This class is not intended to be referenced by clients.
+ * @deprecated Use the new metadata format instead
  */
+@Deprecated(since="5.1")
 public final class MetadataXML {
     /** This is the label which has been historically used to denote the author **/
     public static final String AUTHOR_LABEL = "Author";
@@ -85,12 +87,20 @@ public final class MetadataXML {
      */
     public static final String METADATA_VERSION = "version";
 
-
-
     /** The sub-element name which describes a single atom of metadata.  */
     public static final String ATOM_ELEMENT = "element";
     /** The sub-element name which describes a single atom of metadata.  */
     public static final String ATOM_WRITE_ELEMENT = NAMESPACE_PREFIX + ":" + ATOM_ELEMENT;
+
+    /**
+     * We need some existent but actual-use-unlikely (but, still legible and unoffensive) text to denote
+     * "no title" since we're still writing the old "cram everything into the description block and parse it"
+     * format and so should not really have a blank first line.
+     */
+    public static final String NO_TITLE_PLACEHOLDER_TEXT = "There has been no title set for this workflow's metadata.";
+    /** ... and similarly for the description block **/
+    public static final String NO_DESCRIPTION_PLACEHOLDER_TEXT =
+        "There has been no description set for this workflow's metadata.";
 
     /**
      * Attribute name for the UI element descriptor; this is a holdover from pre-3.8.0 metadata storage and is basically
@@ -108,17 +118,17 @@ public final class MetadataXML {
     /** Attribute name for the "read-only" attribute. */
     public static final String READ_ONLY = "read-only";
 
-    /** Valid 'form' attribute value for pulldowns - NextGen XML format */
-    public static final String COMBOBOX = "pulldown";
-
     /** Valid 'form' attribute value for dates */
     public static final String DATE = "date";
 
-    /** Valid 'form' attribute value for text areas */
-    public static final String MULTILINE = "multiline";
-
     /** Valid 'form' attribute value for text fields */
     public static final String TEXT = "text";
+
+    /** Valid 'form' attribute value for pulldowns - NextGen XML format */
+    public static final String COMBOBOX = "pulldown";
+
+    /** Valid 'form' attribute value for text areas */
+    public static final String MULTILINE = "multiline";
 
     /** Valid 'form' attribute value for url links - NextGen XML format */
     public static final String URL = "url-link";
@@ -127,6 +137,9 @@ public final class MetadataXML {
     public static final String URL_TYPE_ATTRIBUTE = "url-type";
     /** This must be present when form == URL - NextGen XML format */
     public static final String URL_URL_ATTRIBUTE = "url-url";
+
+    /** I've seen legacy metadata show up with this as a type. */
+    public static final String URL_LEGACY_KEYWORD_TYPE_NAME = "Website";
 
 
     private MetadataXML() { }

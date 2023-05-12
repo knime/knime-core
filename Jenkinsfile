@@ -54,7 +54,8 @@ try {
                 'knime-streaming',
                 'knime-textprocessing',
                 'knime-virtual',
-                'knime-workbench'
+                'knime-workbench',
+                'knime-credentials-base'
             ],
             ius: [ 
                 'com.knime.enterprise.client.filehandling',

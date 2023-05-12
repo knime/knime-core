@@ -48,29 +48,48 @@
  */
 package org.knime.core.node.workflow;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
-import java.util.HashMap;
+import java.util.Collections;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
+import org.apache.commons.collections.BidiMap;
+import org.apache.commons.collections.bidimap.DualHashBidiMap;
+import org.apache.xmlbeans.XmlException;
+import org.apache.xmlbeans.XmlObject;
+import org.apache.xmlbeans.XmlOptions;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.workflow.metadata.MetadataVersion;
+import org.knime.core.node.workflow.metadata.v10.ComponentMetadata.ComponentType;
+import org.knime.core.node.workflow.metadata.v10.ComponentMetadataDocument;
+import org.knime.core.node.workflow.metadata.v10.PortGroup;
 import org.knime.core.util.LoadVersion;
-import org.knime.core.util.Pair;
+import org.knime.core.util.xml.NoExternalEntityResolver;
 
 /**
  * Represents general metadata associated with a component (i.e. a {@link SubNodeContainer}.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
+ * @author Leonard Wörteler, KNIME GmbH, Konstanz, Germany
  *
  * @since 4.1
  */
-public final class ComponentMetadata {
+public final class ComponentMetadata extends NodeContainerMetadata {
+
     /**
      * An enum which wraps the {@code NodeFactory.NodeType} enum with display text; for the time being, we are
      *  not wrapping an {@code Image} like we do with DisplayableNodeType for two reasons, both dealing with the
@@ -96,8 +115,8 @@ public final class ComponentMetadata {
         /** Any other node. */
         OTHER("Other", NodeFactory.NodeType.Other);
 
-
-        private static final Map<NodeFactory.NodeType, ComponentNodeType> NODE_TYPE_DISPLAYABLE_MAP = new HashMap<>();
+        private static final Map<NodeFactory.NodeType, ComponentNodeType> NODE_TYPE_DISPLAYABLE_MAP =
+                new EnumMap<>(NodeFactory.NodeType.class);
 
         /**
          * Given the {@code NodeFactory.NodeType}, return the mapped instance of this enum.
@@ -105,7 +124,7 @@ public final class ComponentMetadata {
          * @param nodeType
          * @return the instance of this enum which wraps the parameter value enum
          */
-        public synchronized static ComponentNodeType getTypeForNodeType(final NodeFactory.NodeType nodeType) {
+        public static synchronized ComponentNodeType getTypeForNodeType(final NodeFactory.NodeType nodeType) {
             if (NODE_TYPE_DISPLAYABLE_MAP.size() == 0) {
                 for (final ComponentNodeType ct : ComponentNodeType.values()) {
                     NODE_TYPE_DISPLAYABLE_MAP.put(ct.getType(), ct);
@@ -114,11 +133,10 @@ public final class ComponentMetadata {
             return NODE_TYPE_DISPLAYABLE_MAP.get(nodeType);
         }
 
-
         private final String m_displayText;
         private final NodeFactory.NodeType m_nodeType;
 
-        private ComponentNodeType(final String name, final NodeFactory.NodeType nodeType) {
+        ComponentNodeType(final String name, final NodeFactory.NodeType nodeType) {
             m_displayText = name;
             m_nodeType = nodeType;
         }
@@ -138,59 +156,138 @@ public final class ComponentMetadata {
         }
     }
 
-    /**
-     * An empty metadata object.
-     */
-    public static final ComponentMetadata NONE = ComponentMetadata.builder().build();
-
-    private static final String CFG_METADATA = "metadata";
-
-    private final String m_description;
-
-    private final ComponentNodeType m_type;
-
-    private final byte[] m_icon;
-
-    private final String[] m_inPortNames;
-
-    private final String[] m_inPortDescriptions;
-
-    private final String[] m_outPortNames;
-
-    private final String[] m_outPortDescriptions;
-
-    private ComponentMetadata(final ComponentMetadataBuilder builder) {
-        m_description = builder.m_description;
-        m_type = builder.m_type;
-        m_icon = builder.m_icon != null ? builder.m_icon.clone() : null;
-        if (!builder.m_inPorts.isEmpty()) {
-            m_inPortNames = builder.m_inPorts.stream().map(p -> p.getFirst()).toArray(s -> new String[s]);
-            m_inPortDescriptions = builder.m_inPorts.stream().map(p -> p.getSecond()).toArray(s -> new String[s]);
-        } else {
-            m_inPortNames = null;
-            m_inPortDescriptions = null;
-        }
-        if (!builder.m_outPorts.isEmpty()) {
-            m_outPortNames = builder.m_outPorts.stream().map(p -> p.getFirst()).toArray(s -> new String[s]);
-            m_outPortDescriptions = builder.m_outPorts.stream().map(p -> p.getSecond()).toArray(s -> new String[s]);
-        } else {
-            m_outPortNames = null;
-            m_outPortDescriptions = null;
-        }
+    /** Bidirectional mapping between {@link ComponentNodeType} and the IDs of {@link ComponentType.Enum}. */
+    private static final BidiMap COMPONENT_TYPE_MAP_V1_0;
+    static {
+        COMPONENT_TYPE_MAP_V1_0 = new DualHashBidiMap();
+        COMPONENT_TYPE_MAP_V1_0.put(ComponentNodeType.LEARNER, ComponentType.LEARNER.intValue());
+        COMPONENT_TYPE_MAP_V1_0.put(ComponentNodeType.MANIPULATOR, ComponentType.MANIPULATOR.intValue());
+        COMPONENT_TYPE_MAP_V1_0.put(ComponentNodeType.PREDICTOR, ComponentType.PREDICTOR.intValue());
+        COMPONENT_TYPE_MAP_V1_0.put(ComponentNodeType.SINK, ComponentType.SINK.intValue());
+        COMPONENT_TYPE_MAP_V1_0.put(ComponentNodeType.SOURCE, ComponentType.SOURCE.intValue());
+        COMPONENT_TYPE_MAP_V1_0.put(ComponentNodeType.VISUALIZER, ComponentType.VISUALIZER.intValue());
+        COMPONENT_TYPE_MAP_V1_0.put(ComponentNodeType.OTHER, ComponentType.OTHER.intValue());
     }
 
     /**
-     * @return the description
+     * Port description.
+     *
+     * @param name port name
+     * @param description port description
+     * @since 5.1
      */
-    public Optional<String> getDescription() {
-        return Optional.ofNullable(m_description);
+    public record Port(String name, String description) {}
+
+    private static final String CFG_METADATA = "metadata";
+
+    /**
+     * An empty metadata object.
+     */
+    public static final ComponentMetadata NONE = fluentBuilder() //
+            .withPlainContent() //
+            .withLastModifiedNow() //
+            .withDescription("") //
+            .build();
+
+    private final ComponentNodeType m_nodeType;
+
+    private byte[] m_icon;
+
+    private final List<Port> m_inPorts;
+
+    private final List<Port> m_outPorts;
+
+    private ComponentMetadata(final ContentType contentType, final ZonedDateTime lastModified, // NOSONAR
+            final ZonedDateTime created, final String author, final String description, final List<Link> links,
+            final List<String> tags, final ComponentNodeType nodeType, final byte[] icon, final List<Port> inPorts,
+            final List<Port> outPorts) {
+        super(org.knime.core.node.workflow.metadata.v10.ComponentMetadata.Factory,
+            contentType, lastModified, created, author, description, links, tags);
+        m_nodeType = nodeType;
+        m_icon = icon;
+        m_inPorts = inPorts;
+        m_outPorts = outPorts;
+    }
+
+    /**
+     * Parses metadata from an XML file.
+     *
+     * @param xmlFile file location
+     * @param version version of the metadata XML to read
+     * @return read metadata
+     * @throws IOException if reading has failed
+     * @since 5.1
+     */
+    public static ComponentMetadata fromXML(final Path xmlFile, final MetadataVersion version) throws IOException {
+        CheckUtils.checkArgument(version == MetadataVersion.V1_0, "Expected metadata version 1.0, found '%s'.");
+        try (final var bufferedReader = Files.newBufferedReader(xmlFile, StandardCharsets.UTF_8)) {
+            final var xmlOptions = new XmlOptions();
+            xmlOptions.setCharacterEncoding(StandardCharsets.UTF_8.name());
+            xmlOptions.setValidateStrict();
+            xmlOptions.disallowDocTypeDeclaration();
+            xmlOptions.setEntityResolver(NoExternalEntityResolver.getInstance());
+
+            final var componentMetadataDoc = ComponentMetadataDocument.Factory.parse(bufferedReader, xmlOptions);
+            final var metadataElement = componentMetadataDoc.getComponentMetadata();
+
+            // set fields for components
+            final var componentType = Optional.ofNullable(metadataElement.getComponentType()) //
+                    .map(ComponentType.Enum::intValue) //
+                    .map(COMPONENT_TYPE_MAP_V1_0.inverseBidiMap()::get) //
+                    .map(ComponentNodeType.class::cast) //
+                    .orElse(null);
+            final var compBuilder = fluentBuilder()
+                    .withComponentType(componentType)
+                    .withIcon(metadataElement.getIcon());
+            for (final var port : metadataElement.getInPorts().getPortArray()) {
+                compBuilder.withInPort(port.getName(), port.getStringValue());
+            }
+            for (final var port : metadataElement.getOutPorts().getPortArray()) {
+                compBuilder.withOutPort(port.getName(), port.getStringValue());
+            }
+
+            // set fields for general metadata
+            return readCommonFields(metadataElement, compBuilder);
+        } catch (XmlException e) {
+            throw new IOException("Unable to load component metadata: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    XmlObject toXMLDocument(final org.knime.core.node.workflow.metadata.v10.NodeContainerMetadata metadataXML) {
+        final var componentXML = (org.knime.core.node.workflow.metadata.v10.ComponentMetadata)metadataXML;
+        if (m_nodeType != null) {
+            final int typeIdx = (Integer) COMPONENT_TYPE_MAP_V1_0.get(m_nodeType);
+            componentXML.setComponentType((ComponentType.Enum.forInt(typeIdx)));
+        }
+        if (m_icon != null) {
+            componentXML.setIcon(m_icon);
+        }
+        final var inPorts = componentXML.addNewInPorts();
+        for (final var inPort : m_inPorts) {
+            addPortDescription(inPorts, inPort);
+        }
+        final var outPorts = componentXML.addNewOutPorts();
+        for (final var outPort : m_outPorts) {
+            addPortDescription(outPorts, outPort);
+        }
+
+        final var document = ComponentMetadataDocument.Factory.newInstance();
+        document.setComponentMetadata(componentXML);
+        return document;
+    }
+
+    private static void addPortDescription(final PortGroup group, final Port port) {
+        final var portDesc = group.addNewPort();
+        portDesc.setName(port.name);
+        portDesc.setStringValue(port.description);
     }
 
     /**
      * @return the type
      */
     public Optional<ComponentNodeType> getNodeType() {
-        return Optional.ofNullable(m_type);
+        return Optional.ofNullable(m_nodeType);
     }
 
     /**
@@ -204,28 +301,101 @@ public final class ComponentMetadata {
      * @return in-port names
      */
     public Optional<String[]> getInPortNames() {
-        return Optional.ofNullable(m_inPortNames);
+        return Optional.of(m_inPorts.stream().map(Port::name).toArray(String[]::new));
     }
 
     /**
      * @return in-port descriptions
      */
     public Optional<String[]> getInPortDescriptions() {
-        return Optional.ofNullable(m_inPortDescriptions);
+        return Optional.of(m_inPorts.stream().map(Port::description).toArray(String[]::new));
     }
 
     /**
      * @return out-port names
      */
     public Optional<String[]> getOutPortNames() {
-        return Optional.ofNullable(m_outPortNames);
+        return Optional.of(m_outPorts.stream().map(Port::name).toArray(String[]::new));
     }
 
     /**
      * @return out-port descriptions
      */
     public Optional<String[]> getOutPortDescriptions() {
-        return Optional.ofNullable(m_outPortDescriptions);
+        return Optional.of(m_outPorts.stream().map(Port::description).toArray(String[]::new));
+    }
+
+    /**
+     * @return in-port descriptions
+     * @since 5.1
+     */
+    public List<Port> getInPorts() {
+        return Collections.unmodifiableList(m_inPorts);
+    }
+
+    /**
+     * @return out-port descriptions
+     * @since 5.1
+     */
+    public List<Port> getOutPorts() {
+        return Collections.unmodifiableList(m_outPorts);
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        return this == obj || (obj instanceof ComponentMetadata other && commonEquals(other) //
+                && Objects.equals(m_nodeType, other.m_nodeType) //
+                && Objects.deepEquals(m_icon, other.m_icon) //
+                && Objects.equals(m_inPorts, other.m_inPorts) //
+                && Objects.equals(m_outPorts, other.m_outPorts));
+    }
+
+    @Override
+    public String toString() {
+        final var sb = new StringBuilder(getClass().getSimpleName()).append('[');
+        addCommonFields(sb);
+        sb.append(", icon=").append(m_icon == null ? "null" : ("'" + Base64.getEncoder().encodeToString(m_icon) + "'"))
+                .append(", nodeType=").append(m_nodeType).append(", inPorts=").append(m_inPorts)
+                .append(", outPorts=").append(m_outPorts);
+        return sb.append(']').toString();
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(commonHash(), m_nodeType, Arrays.hashCode(m_icon), m_inPorts, m_outPorts);
+    }
+
+    /**
+     * Creates a variant of these metadata with the number of in- and out-ports adjusted to the given numbers.
+     *
+     * @param numInPorts required number of in-ports
+     * @param numOutPorts required number of out-ports
+     * @return either this object itself (if it fulfills the requirements) or a copy with adjusted ports
+     * @since 5.1
+     */
+    public ComponentMetadata withNumberOfPorts(final int numInPorts, final int numOutPorts) {
+        if (m_inPorts.size() == numInPorts && m_outPorts.size() == numOutPorts) {
+            return this;
+        }
+
+        List<Port> inPorts = m_inPorts;
+        if (inPorts.size() != numInPorts) {
+            inPorts = new ArrayList<>(numInPorts);
+            for (var i = 0; i < numInPorts; i++) {
+                inPorts.add(i < m_inPorts.size() ? m_inPorts.get(i) : new Port("Port " + (i + 1), ""));
+            }
+        }
+
+        List<Port> outPorts = m_outPorts;
+        if (outPorts.size() != numOutPorts) {
+            outPorts = new ArrayList<>(numOutPorts);
+            for (var i = 0; i < numOutPorts; i++) {
+                outPorts.add(i < m_outPorts.size() ? m_outPorts.get(i) : new Port("Port " + (i + 1), ""));
+            }
+        }
+
+        return new ComponentMetadata(m_contentType, m_lastModified, m_created, m_author, m_description, m_links,
+            m_tags, m_nodeType, m_icon, inPorts, outPorts);
     }
 
     /**
@@ -235,144 +405,89 @@ public final class ComponentMetadata {
      * @param version The version this workflow is loading from
      * @return a new metadata object loaded from the argument settings.
      * @throws InvalidSettingsException If that fails.
+     * @deprecated
      */
+    @Deprecated(since = "5.1")
     public static ComponentMetadata load(final NodeSettingsRO settings, final LoadVersion version)
         throws InvalidSettingsException {
         if (!settings.containsKey(CFG_METADATA)) {
             return ComponentMetadata.NONE;
         }
         NodeSettingsRO nestedSettings = settings.getNodeSettings(CFG_METADATA);
-        ComponentMetadataBuilder builder = ComponentMetadata.builder();
-        builder.description(nestedSettings.getString("description", null));
-        builder.type(
+        ComponentOptionalsBuilder builder = ComponentMetadata.fluentBuilder();
+        builder.withComponentType(
             nestedSettings.containsKey("type") ? ComponentNodeType.valueOf(nestedSettings.getString("type")) : null);
-        builder.icon(
+        builder.withIcon(
             nestedSettings.containsKey("icon") ? Base64.getDecoder().decode(nestedSettings.getString("icon")) : null);
 
         if (nestedSettings.containsKey("inports")) {
             NodeSettingsRO inports = nestedSettings.getNodeSettings("inports");
             Set<String> keySet = inports.keySet();
-            String[] names = new String[keySet.size()];
-            String[] descs = new String[keySet.size()];
+            final var names = new String[keySet.size()];
+            final var descs = new String[keySet.size()];
             for (String key : keySet) {
                 NodeSettingsRO port = inports.getNodeSettings(key);
-                int index = port.getInt("index", -1);
+                final var index = port.getInt("index", -1);
                 names[index] = port.getString("name");
                 descs[index] = port.getString("description");
             }
-            for (int i = 0; i < names.length; i++) {
-                builder.addInPortNameAndDescription(names[i], descs[i]);
+            for (var i = 0; i < names.length; i++) {
+                builder.withInPort(names[i], descs[i]);
             }
         }
 
         if (nestedSettings.containsKey("outports")) {
             NodeSettingsRO outports = nestedSettings.getNodeSettings("outports");
             Set<String> keySet = outports.keySet();
-            String[] names = new String[keySet.size()];
-            String[] descs = new String[keySet.size()];
+            final var names = new String[keySet.size()];
+            final var descs = new String[keySet.size()];
             for (String key : keySet) {
                 NodeSettingsRO port = outports.getNodeSettings(key);
-                int index = port.getInt("index", -1);
+                final var index = port.getInt("index", -1);
                 names[index] = port.getString("name");
                 descs[index] = port.getString("description");
             }
-            for (int i = 0; i < names.length; i++) {
-                builder.addOutPortNameAndDescription(names[i], descs[i]);
+            for (var i = 0; i < names.length; i++) {
+                builder.withOutPort(names[i], descs[i]);
             }
         }
-        return builder.build();
-    }
-
-    /**
-     * Saves this object to the argument settings.
-     *
-     * @param settings To save to.
-     */
-    public void save(final NodeSettingsWO settings) {
-        if (this == NONE) {
-            return;
-        }
-        NodeSettingsWO nestedSettings = settings.addNodeSettings(CFG_METADATA);
-        if (m_description != null) {
-            nestedSettings.addString("description", m_description);
-        }
-        if (m_type != null) {
-            nestedSettings.addString("type", m_type.toString());
-        }
-        if (m_icon != null) {
-            nestedSettings.addString("icon", Base64.getEncoder().encodeToString(m_icon));
-        }
-        if (m_inPortNames != null) {
-            NodeSettingsWO ports = nestedSettings.addNodeSettings("inports");
-            for (int i = 0; i < m_inPortNames.length; i++) {
-                NodeSettingsWO port = ports.addNodeSettings("inport_" + i);
-                port.addString("name", m_inPortNames[i]);
-                port.addString("description", m_inPortDescriptions[i]);
-                port.addInt("index", i);
-            }
-        }
-        if (m_outPortNames != null) {
-            NodeSettingsWO ports = nestedSettings.addNodeSettings("outports");
-            for (int i = 0; i < m_outPortNames.length; i++) {
-                NodeSettingsWO port = ports.addNodeSettings("outport_" + i);
-                port.addString("name", m_outPortNames[i]);
-                port.addString("description", m_outPortDescriptions[i]);
-                port.addInt("index", i);
-            }
-        }
+        return builder.withPlainContent() //
+                .withLastModifiedNow() //
+                .withDescription(nestedSettings.getString("description", null)) //
+                .build();
     }
 
     /**
      * @return a new builder instance
+     * @since 5.1
      */
+    public static ComponentOptionalsBuilder fluentBuilder() {
+        return new FluentComponentMetadataBuilder();
+    }
+
+    /**
+     * @return a new builder instance
+     * @deprecated use {@link #fluentBuilder()} instead
+     */
+    @Deprecated(since = "5.1")
     public static ComponentMetadataBuilder builder() {
         return new ComponentMetadataBuilder();
     }
 
     /**
-     * Copy builder.
-     *
-     * @param metadata the metadata to initialize the builder with
-     * @return a new builder instance with pre-initialized with the properties of the passed metadata object
-     */
-    public static ComponentMetadataBuilder builder(final ComponentMetadata metadata) {
-        ComponentMetadataBuilder builder = new ComponentMetadataBuilder();
-        builder.m_description = metadata.m_description;
-        if (metadata.m_icon != null) {
-            builder.m_icon = metadata.m_icon.clone();
-        }
-        builder.m_type = metadata.m_type;
-        builder.m_inPorts = new ArrayList<>();
-        if (metadata.m_inPortNames != null) {
-            for (int i = 0; i < metadata.m_inPortNames.length; i++) {
-                builder.m_inPorts.add(Pair.create(metadata.m_inPortNames[i], metadata.m_inPortDescriptions[i]));
-            }
-        }
-        if (metadata.m_outPortNames != null) {
-            for (int i = 0; i < metadata.m_outPortNames.length; i++) {
-                builder.m_outPorts.add(Pair.create(metadata.m_outPortNames[i], metadata.m_outPortDescriptions[i]));
-            }
-        }
-        return builder;
-    }
-
-    /**
      * Helps building a component metadata instances.
+     * @deprecated This builder is only kept because was used in `org.knime.workbench.editor` before 5.1.
+     *      Use the fluent builder instead, via {@link #fluentBuilder()}.
      */
+    @Deprecated(since = "5.1")
     public static class ComponentMetadataBuilder {
+
+        private final ComponentOptionalsBuilder m_builder = fluentBuilder();
 
         private String m_description;
 
-        private byte[] m_icon;
-
-        private ComponentNodeType m_type;
-
-        private List<Pair<String, String>> m_inPorts = new ArrayList<>();
-
-        private List<Pair<String, String>> m_outPorts = new ArrayList<>();
-
         /**
-         * @param description
+         * @param description description interpreted as plain text
          * @return this builder
          */
         public ComponentMetadataBuilder description(final String description) {
@@ -385,7 +500,7 @@ public final class ComponentMetadata {
          * @return this builder
          */
         public ComponentMetadataBuilder type(final ComponentNodeType type) {
-            m_type = type;
+            m_builder.withComponentType(type);
             return this;
         }
 
@@ -394,7 +509,7 @@ public final class ComponentMetadata {
          * @return this builder
          */
         public ComponentMetadataBuilder icon(final byte[] icon) {
-            m_icon = icon;
+            m_builder.withIcon(icon);
             return this;
         }
 
@@ -402,11 +517,11 @@ public final class ComponentMetadata {
          * Adds a new in-port name and description. The port index corresponds to the order of adding it.
          *
          * @param name the port name
-         * @param description the port description
+         * @param description the port description (plain text)
          * @return this builder
          */
         public ComponentMetadataBuilder addInPortNameAndDescription(final String name, final String description) {
-            m_inPorts.add(Pair.create(name, description));
+            m_builder.withInPort(name, description);
             return this;
         }
 
@@ -414,32 +529,32 @@ public final class ComponentMetadata {
          * Adds a new out-port name and description. The port index corresponds to the order of adding it.
          *
          * @param name the port name
-         * @param description the port description
+         * @param description the port description (plain text)
          * @return this builder
          */
         public ComponentMetadataBuilder addOutPortNameAndDescription(final String name, final String description) {
-            m_outPorts.add(Pair.create(name, description));
+            m_builder.withOutPort(name, description);
             return this;
         }
 
         /**
-         * Removes the already added in-port names and descriptions.
+         * NOT SUPPORTED!
          *
-         * @return this builder
+         * @return never
+         * @throws UnsupportedOperationException
          */
         public ComponentMetadataBuilder clearInPorts() {
-            m_inPorts.clear();
-            return this;
+            throw new UnsupportedOperationException("Not supported any more, use the fluent builder");
         }
 
         /**
-         * Removes the already added out-port names and descriptions.
+         * NOT SUPPORTED!
          *
-         * @return this builder
+         * @return never
+         * @throws UnsupportedOperationException
          */
         public ComponentMetadataBuilder clearOutPorts() {
-            m_outPorts.clear();
-            return this;
+            throw new UnsupportedOperationException("Not supported any more, use the fluent builder");
         }
 
         /**
@@ -448,9 +563,104 @@ public final class ComponentMetadata {
          * @return the new instance
          */
         public ComponentMetadata build() {
-            return new ComponentMetadata(this);
+            return m_builder.withPlainContent() //
+                    .withLastModifiedNow() //
+                    .withDescription(m_description) //
+                    .build();
         }
 
     }
 
+    /**
+     * Stage of the component metadata builder.
+     * @since 5.1
+     */
+    public interface ComponentOptionalsBuilder extends NeedsContentType<ComponentMetadata> {
+
+        /**
+         * Sets the type of the component.
+         *
+         * @param componentType component type, e.g. {@link ComponentNodeType#VISUALIZER}
+         * @return next stage of the builder
+         */
+        ComponentOptionalsBuilder withComponentType(ComponentNodeType componentType);
+
+        /**
+         * Sets the icon of the component.
+         *
+         * @param icon file contents of the icon
+         * @return next stage of the builder
+         */
+        ComponentOptionalsBuilder withIcon(byte[] icon);
+
+        /**
+         * Adds an in-port of the component.
+         *
+         * @param name name of the in-port (may be {@code null})
+         * @param description description of the in-port (may be {@code null})
+         * @return next stage of the builder
+         */
+        ComponentOptionalsBuilder withInPort(String name, String description);
+
+        /**
+         * Adds an out-port of the component.
+         *
+         * @param name name of the out-port (may be {@code null})
+         * @param description description of the out-port (may be {@code null})
+         * @return next stage of the builder
+         */
+        ComponentOptionalsBuilder withOutPort(String name, String description);
+    }
+
+    private static final class FluentComponentMetadataBuilder extends NodeContainerMetadataBuilder<ComponentMetadata>
+            implements ComponentOptionalsBuilder {
+
+        private ComponentNodeType m_componentType;
+        private byte[] m_icon;
+        private final List<Port> m_inPorts = new ArrayList<>();
+        private final List<Port> m_outPorts = new ArrayList<>();
+
+        FluentComponentMetadataBuilder() {
+        }
+
+        @Override
+        public ComponentMetadata build() {
+            return new ComponentMetadata( //
+                CheckUtils.checkArgumentNotNull(m_contentType, "Component metadata need a content type"), //
+                CheckUtils.checkArgumentNotNull(m_lastModified, "Component metadata need a last-modified date"), //
+                m_created, //
+                m_author, //
+                CheckUtils.checkArgumentNotNull(m_description, "Component metadata need a description"), //
+                new ArrayList<>(m_links), //
+                new ArrayList<>(m_tags), //
+                m_componentType, //
+                m_icon, //
+                m_inPorts, //
+                m_outPorts);
+        }
+
+        @Override
+        public ComponentOptionalsBuilder withComponentType(final ComponentNodeType componentType) {
+            m_componentType = componentType;
+            return this;
+        }
+
+        @Override
+        public ComponentOptionalsBuilder withIcon(final byte[] icon) {
+            m_icon = icon;
+            return this;
+        }
+
+        @Override
+        public ComponentOptionalsBuilder withInPort(final String name, final String description) {
+            m_inPorts.add(new Port(name, description));
+            return this;
+        }
+
+        @Override
+        public ComponentOptionalsBuilder withOutPort(final String name, final String description) {
+            m_outPorts.add(new Port(name, description));
+            return this;
+        }
+    }
 }

@@ -52,7 +52,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
 import org.junit.Test;
-import org.knime.core.node.workflow.ComponentMetadata.ComponentMetadataBuilder;
 import org.knime.core.node.workflow.ComponentMetadata.ComponentNodeType;
 import org.knime.core.node.workflow.def.DefToCoreUtil;
 import org.knime.shared.workflow.def.ComponentMetadataDef;
@@ -69,14 +68,17 @@ public class DefToCoreUtilTest {
     @Test
     public void testComponentMetadataConversion() {
 
-        final var core = new ComponentMetadataBuilder().addInPortNameAndDescription("inName1", "inDescription1")//
-            .addInPortNameAndDescription("inName2", "inDescription2")//
-            .addOutPortNameAndDescription("outName1", "outDescription1")//
-            .addOutPortNameAndDescription("outName2", "outDescription2")//
-            .description("description")//
-            .icon(new byte[]{1, 2, 3})//
-            .type(ComponentNodeType.SINK)//
-            .build();
+        final var core = ComponentMetadata.fluentBuilder() //
+                .withComponentType(ComponentNodeType.SINK) //
+                .withIcon(new byte[]{1, 2, 3}) //
+                .withInPort("inName1", "inDescription1") //
+                .withInPort("inName2", "inDescription2") //
+                .withOutPort("outName1", "outDescription1") //
+                .withOutPort("outName2", "outDescription2") //
+                .withPlainContent() //
+                .withLastModifiedNow() //
+                .withDescription("description") //
+                .build();
 
         final var def = CoreToDefUtil.toComponentMetadataDef(core);
 
@@ -106,9 +108,11 @@ public class DefToCoreUtilTest {
     @Test
     public void testComponentTypeNull() {
 
-        final var core = new ComponentMetadataBuilder()//
-            .description("description")//
-            .build();
+        final var core = ComponentMetadata.fluentBuilder() //
+                .withPlainContent() //
+                .withLastModifiedNow() //
+                .withDescription("description") //
+                .build();
 
         final var def = CoreToDefUtil.toComponentMetadataDef(core);
 

@@ -382,6 +382,9 @@ public final class WorkflowManager extends NodeContainer
     /** Non-null object to check if successor execution is allowed - usually it is except for wizard execution. */
     private ExecutionController m_executionController;
 
+    /** User-supplied metadata of this workflow, non-{@code null} iff this is a project workflow manager. */
+    private WorkflowMetadata m_metadata;
+
     /**
      * The root of everything, a workflow with no in- or outputs. This workflow holds the top level projects.
      */
@@ -466,6 +469,11 @@ public final class WorkflowManager extends NodeContainer
             m_workflowContext = context; // might be null
             createAndSetWorkflowTempDirectory(context);
             m_tableBackendSettings = new WorkflowTableBackendSettings();
+            m_metadata = WorkflowMetadata.fluentBuilder() //
+                    .withPlainContent() //
+                    .withLastModifiedNow() //
+                    .withDescription("") //
+                    .build();
         } else {
             // ...synchronize across border
             m_workflowLock = new WorkflowLock(this, m_directNCParent);
@@ -494,8 +502,7 @@ public final class WorkflowManager extends NodeContainer
 
             /* Sync the annotation with the direct parent to fix AP-11150 as only the annotation of the metanode
              * gets updated which is missed by this workflow manager. */
-            if (directNCParent instanceof SubNodeContainer) {
-                final SubNodeContainer container = (SubNodeContainer)directNCParent;
+            if (directNCParent instanceof SubNodeContainer container) {
                 container.getNodeAnnotation().addUIInformationListener(e -> {
                     if (!getNodeAnnotation().getData().equals(container.getNodeAnnotation().getData())) {
                         getNodeAnnotation().copyFrom(container.getNodeAnnotation().getData(), true);
@@ -580,13 +587,24 @@ public final class WorkflowManager extends NodeContainer
         if (isProject) {
             m_workflowLock = new WorkflowLock(this);
             m_dataRepository = persistor.getWorkflowDataRepository();
-            WorkflowTableBackendSettings tableBackendSet = persistor.getWorkflowTableBackendSettings();
-            m_tableBackendSettings = tableBackendSet != null ? tableBackendSet : new WorkflowTableBackendSettings();
+            final var metadata = persistor.getWorkflowMetadata();
+            if (metadata != null) {
+                m_metadata = metadata;
+            } else {
+                LOGGER.coding("No workflow metadata available for " + m_name, new Throwable());
+                m_metadata = WorkflowMetadata.fluentBuilder() //
+                        .withPlainContent() //
+                        .withLastModifiedNow() //
+                        .withDescription("") //
+                        .build();
+            }
+            m_tableBackendSettings = Optional.ofNullable(persistor.getWorkflowTableBackendSettings()) //
+                    .orElseGet(WorkflowTableBackendSettings::new);
         } else {
             m_workflowLock = new WorkflowLock(this, m_directNCParent);
             m_dataRepository = workflowDataRepository;
         }
-        m_wfmListeners = new CopyOnWriteArrayList<WorkflowListener>();
+        m_wfmListeners = new CopyOnWriteArrayList<>();
         LOGGER.debug("Created subworkflow " + this.getID());
     }
 
@@ -627,6 +645,9 @@ public final class WorkflowManager extends NodeContainer
             m_dataRepository = new WorkflowDataRepository();
             m_tableBackendSettings = new WorkflowTableBackendSettings();
             // TODO  m_workflowContext derived from save location (see old persistor constructor)
+            if (isProject) {
+                //TODO m_metadata = ...;
+            }
         } else {
             m_workflowLock = new WorkflowLock(this, m_directNCParent);
             m_dataRepository = m_directNCParent != null ? m_directNCParent.getProjectWFM().getWorkflowDataRepository()
@@ -724,8 +745,8 @@ public final class WorkflowManager extends NodeContainer
             return Optional.ofNullable((SubNodeContainer)getDirectNCParent());
         } else {
             NodeContainerParent directNCParent = getDirectNCParent();
-            if (directNCParent instanceof WorkflowManager) {
-                return ((WorkflowManager)directNCParent).getProjectComponent();
+            if (directNCParent instanceof WorkflowManager workflowManager) {
+                return workflowManager.getProjectComponent();
             } else {
                 return ((WorkflowManager)directNCParent.getDirectNCParent()).getProjectComponent();
             }
@@ -792,16 +813,16 @@ public final class WorkflowManager extends NodeContainer
     public void removeProject(final NodeID id) {
         try (WorkflowLock lock = lock()) {
             NodeContainer nc = getNodeContainer(id);
-            if (nc instanceof WorkflowManager && ((WorkflowManager)nc).isProject()) {
+            if (nc instanceof WorkflowManager wfm && wfm.isProject()) {
                 final String nameAndID = "\"" + nc.getNameWithID() + "\"";
                 LOGGER.debug("Removing project " + nameAndID);
-                ((WorkflowManager)nc).shutdown();
+                wfm.shutdown();
                 removeNode(id);
                 LOGGER.debug("Project " + nameAndID + " removed (" + m_workflow.getNrNodes() + " remaining)");
-            } else if (nc instanceof SubNodeContainer) {
-                final String nameAndID = "\"" + nc.getNameWithID() + "\"";
+            } else if (nc instanceof SubNodeContainer snc) {
+                final String nameAndID = "\"" + snc.getNameWithID() + "\"";
                 LOGGER.debug("Removing component project " + nameAndID);
-                ((SubNodeContainer)nc).getWorkflowManager().shutdown();
+                snc.getWorkflowManager().shutdown();
                 removeNode(id);
                 LOGGER.debug("Component project " + nameAndID + " removed (" + m_workflow.getNrNodes() + " remaining)");
             } else {
@@ -10986,5 +11007,33 @@ public final class WorkflowManager extends NodeContainer
     @Override
     public boolean isInactive() {
         return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @since 5.1
+     */
+    @Override
+    public WorkflowMetadata getMetadata() {
+        return m_metadata;
+    }
+
+    @Override
+    public void setContainerMetadata(final NodeContainerMetadata updatedMetadata) {
+        if ((m_metadata == null) != (updatedMetadata == null)) {
+            throw new IllegalArgumentException(m_metadata == null
+                    ? "Only project workflow managers can have metadata"
+                        : "Project workflow manager must have metadata");
+        }
+        if (updatedMetadata instanceof WorkflowMetadata wfMetadata) {
+            if (!m_metadata.equals(wfMetadata)) {
+                m_metadata = wfMetadata;
+                setDirty();
+            }
+        } else if (updatedMetadata != null) {
+            throw new IllegalStateException("Can only set `" + WorkflowMetadata.class.getSimpleName() + "`, found: `"
+                    + updatedMetadata.getClass().getSimpleName() + "`");
+        }
     }
 }

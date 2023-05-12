@@ -53,9 +53,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -92,11 +94,13 @@ import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.node.workflow.WorkflowTableBackendSettings.TableBackendUnknownException;
 import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
+import org.knime.core.node.workflow.metadata.MetadataVersion;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.LockFailedException;
 import org.knime.core.util.Pair;
 import org.knime.core.util.workflowalizer.AuthorInformation;
+import org.knime.core.util.workflowalizer.Workflowalizer;
 
 /**
  *
@@ -201,6 +205,8 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
     private String m_name;
 
     private WorkflowCipher m_workflowCipher;
+
+    private WorkflowMetadata m_workflowMetadata;
 
     private MetaNodeTemplateInformation m_templateInformation;
 
@@ -366,6 +372,11 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
     @Override
     public MetaNodeTemplateInformation getTemplateInformation() {
         return m_templateInformation;
+    }
+
+    @Override
+    public WorkflowMetadata getWorkflowMetadata() {
+        return m_workflowMetadata;
     }
 
     /** {@inheritDoc}
@@ -853,6 +864,75 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
             loadResult.addError(error);
             m_editorUIInfo = null;
         }
+
+        // added in version 5.1
+        if (isProject()) {
+            // only project workflow managers and `SubNodeContainer`s have metadata attached
+            loadWorkflowMetadata(loadResult, parentRef);
+        }
+    }
+
+    private void loadWorkflowMetadata(final LoadResult loadResult, final ReferencedFile parentRef) { // NOSONAR
+        if (getLoadVersion().isOlderThan(LoadVersion.V5100)) {
+            final var wfSetMeta = parentRef.getFile().toPath().resolve(WorkflowPersistor.METAINFO_FILE);
+            if (Files.isReadable(wfSetMeta)) {
+                try {
+                    final var legacyMetadata = Workflowalizer.readWorkflowSetMeta(wfSetMeta);
+                    final var description = legacyMetadata.getDescription();
+                    final var title = legacyMetadata.getTitle();
+                    final String descStr;
+                    if (description.isPresent()) {
+                        if (title.isPresent()) {
+                            descStr = title.get() + "\n\n" + description.get();
+                        } else {
+                            descStr = description.get();
+                        }
+                    } else if (title.isPresent()) {
+                        descStr = title.get();
+                    } else {
+                        descStr = "";
+                    }
+
+                    final var builder = WorkflowMetadata.fluentBuilder() //
+                            .withPlainContent() //
+                            .withLastModifiedNow() //
+                            .withDescription(descStr);
+
+                    legacyMetadata.getAuthor().ifPresent(builder::withAuthor);
+                    legacyMetadata.getTags().stream().flatMap(List::stream).forEach(builder::addTag);
+                    legacyMetadata.getLinks().stream().flatMap(List::stream)
+                    .forEach(link -> builder.addLink(link.getUrl(), link.getText()));
+                    m_workflowMetadata = builder.build();
+                } catch (final IOException e) {
+                    String error = "Unable to load workflow metadata: " + e.getMessage();
+                    getLogger().debug(error, e);
+                    setDirtyAfterLoad();
+                    loadResult.addError(error);
+                }
+            }
+        } else {
+            final var xmlFile = parentRef.getFile().toPath().resolve(WorkflowPersistor.WORKFLOW_METADATA_FILE_NAME);
+            if (Files.isReadable(xmlFile)) {
+                try {
+                    m_workflowMetadata = WorkflowMetadata.fromXML(xmlFile, MetadataVersion.V1_0);
+                } catch (final IOException e) {
+                    String error = "Unable to load workflow metadata: " + e.getMessage();
+                    getLogger().debug(error, e);
+                    setDirtyAfterLoad();
+                    loadResult.addError(error);
+                }
+            }
+        }
+
+        if (m_workflowMetadata == null) {
+            // no metadata found, create an empty set
+            m_workflowMetadata = WorkflowMetadata.fluentBuilder() //
+                    .withPlainContent() //
+                    .withLastModifiedNow() //
+                    .withDescription("") //
+                    .withCreated(ZonedDateTime.now()) //
+                    .build();
+        }
     }
 
     /** {@inheritDoc} */
@@ -1126,9 +1206,8 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
     }
 
     private NodeUIInformation loadNodeUIInformation(final NodeSettingsRO nodeSetting) throws InvalidSettingsException {
-        // in previous releases, the settings were directly written to the
-        // top-most node settings object; since 2.0 they are put into a
-        // separate sub-settings object
+        // in previous releases, the settings were directly written to the top-most node settings object;
+        // since 2.0 they are put into a separate sub-settings object
         NodeSettingsRO subSettings = getLoadVersion().isOlderThan(LoadVersion.V200) ? nodeSetting
             : nodeSetting.getNodeSettings(CFG_UIINFO_SUB_CONFIG);
         final int loadOrdinal = getLoadVersion().ordinal();
@@ -1157,8 +1236,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
         // v2.1 and before did not have flow variable ports (index 0)
         if (getLoadVersion().isOlderThan(LoadVersion.V220)) {
             if (sourcePersistor instanceof FileSingleNodeContainerPersistor) {
-                // correct port index only for ordinary nodes (no new flow
-                // variable ports on metanodes)
+                // correct port index only for ordinary nodes (no new flow variable ports on metanodes)
                 int index = c.getSourcePort();
                 c.setSourcePort(index + 1);
             }
@@ -1177,10 +1255,8 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
         if (getLoadVersion().isOlderThan(LoadVersion.V220)) {
             if (destPersistor instanceof FileNativeNodeContainerPersistor) {
                 FileNativeNodeContainerPersistor pers = (FileNativeNodeContainerPersistor)destPersistor;
-                /* workflows saved with 1.x.x have misleading port indices for
-                 * incoming ports. Data ports precede the model ports (in their
-                 * index), although the GUI and the true ordering is the other
-                 * way around. */
+                /* workflows saved with 1.x.x have misleading port indices for incoming ports. Data ports precede the
+                 * model ports (in their index), although the GUI and the true ordering is the other way around. */
                 // only test if the node is not missing (missing node placeholder)
                 if (pers.getNode() != null && pers.shouldFixModelPortOrder()) {
                     Node node = pers.getNode();
@@ -1189,9 +1265,8 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
                     for (int i = 1; i < node.getNrInPorts(); i++) {
                         PortType portType = node.getInputType(i);
                         if (!portType.getPortObjectClass().isAssignableFrom(BufferedDataTable.class)
-                        // with v2.4 we added model ports to the
-                        // PMML learner nodes that don't count as model
-                        // ports in legacy workflows (not connected anyway)
+                        // with v2.4 we added model ports to the PMML learner nodes that don't count as model ports in
+                        // legacy workflows (not connected anyway)
                             && !portType.isOptional()) {
                             modelPortCount += 1;
                         }
@@ -1206,16 +1281,14 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
                         c.setDestPort(destPort - modelPortCount);
                     }
                 }
-                // correct port index only for ordinary nodes (no new flow
-                // variable ports on metanodes)
+                // correct port index only for ordinary nodes (no new flow variable ports on metanodes)
                 int index = c.getDestPort();
                 c.setDestPort(index + 1);
             }
         } else if (getLoadVersion().isOlderThan(LoadVersion.V220)) {
             // v2.1 and before did not have flow variable ports (index 0)
             if (destPersistor instanceof FileSingleNodeContainerPersistor) {
-                // correct port index only for ordinary nodes (no new flow
-                // variable ports on metanodes)
+                // correct port index only for ordinary nodes (no new flow variable ports on metanodes)
                 int index = c.getDestPort();
                 c.setDestPort(index + 1);
             }
@@ -1260,9 +1333,9 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
     }
 
     String fixUIInfoClassName(final String name) {
-        if (("org.knime.workbench.editor2.extrainfo." + "ModellingNodeExtraInfo").equals(name)) {
+        if (("org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo").equals(name)) {
             return "org.knime.core.node.workflow.NodeUIInformation";
-        } else if (("org.knime.workbench.editor2.extrainfo." + "ModellingConnectionExtraInfo").equals(name)) {
+        } else if (("org.knime.workbench.editor2.extrainfo.ModellingConnectionExtraInfo").equals(name)) {
             return "org.knime.core.node.workflow.ConnectionUIInformation";
         }
         return name;
@@ -1779,7 +1852,6 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
         return new File(workflowDir, SAVED_WITH_DATA_FILE).isFile();
     }
 
-
     /** {@inheritDoc} */
     @Override
     public void postLoad(final WorkflowManager wfm, final LoadResult loadResult) {
@@ -1965,6 +2037,14 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
             saveCredentials(wm, preFilledSettings);
             saveTableBackend(wm, preFilledSettings);
             saveWorkflowAnnotations(wm, preFilledSettings);
+
+            // added in version 5.1
+            if (wm.isProject()) {
+                final var metadata = CheckUtils.checkNotNull(wm.getMetadata(),
+                    "Project workflow manager must have metadata");
+                final var xmlFile = workflowDir.toPath().resolve(WorkflowPersistor.WORKFLOW_METADATA_FILE_NAME);
+                metadata.toXML(xmlFile);
+            }
 
             NodeSettingsWO nodesSettings = saveSettingsForNodes(preFilledSettings);
             Collection<NodeContainer> nodes = wm.getNodeContainers();

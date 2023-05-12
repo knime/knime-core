@@ -48,6 +48,7 @@
  */
 package org.knime.core.node.workflow.def;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -73,12 +74,12 @@ import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.AnnotationData;
 import org.knime.core.node.workflow.AnnotationData.TextAlignment;
 import org.knime.core.node.workflow.ComponentMetadata;
-import org.knime.core.node.workflow.ComponentMetadata.ComponentMetadataBuilder;
 import org.knime.core.node.workflow.ComponentMetadata.ComponentNodeType;
 import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.EditorUIInformation;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.NodeContainer.NodeLocks;
+import org.knime.core.node.workflow.NodeContainerMetadata.ContentType;
 import org.knime.core.node.workflow.NodeExecutionJobManager;
 import org.knime.core.node.workflow.NodeExecutionJobManagerFactory;
 import org.knime.core.node.workflow.NodeUIInformation;
@@ -274,21 +275,39 @@ public class DefToCoreUtil {
      * @return a {@link ComponentMetadata}.
      */
     public static ComponentMetadata toComponentMetadata(final ComponentMetadataDef def) {
-        ComponentMetadataBuilder builder = ComponentMetadata.builder()//
-            .description(def.getDescription())//
-            .type(toComponentNodeType(def.getComponentType()))
-            .icon(def.getIcon());
+        final var builder = ComponentMetadata.fluentBuilder()
+                .withIcon(def.getIcon())
+                .withComponentType(toComponentNodeType(def.getComponentType()));
+
         if (def.getInPortNames() != null) {
             for (var i = 0; i < def.getInPortNames().size(); i++) {
-                builder.addInPortNameAndDescription(def.getInPortNames().get(i), def.getInPortDescriptions().get(i));
+                builder.withInPort(def.getInPortNames().get(i), def.getInPortDescriptions().get(i));
             }
         }
+
         if (def.getOutPortNames() != null) {
             for (var i = 0; i < def.getOutPortNames().size(); i++) {
-                builder.addOutPortNameAndDescription(def.getOutPortNames().get(i), def.getOutPortDescriptions().get(i));
+                builder.withOutPort(def.getOutPortNames().get(i), def.getOutPortDescriptions().get(i));
             }
         }
-        return builder.build();
+
+        final var contentType = switch (def.getContentType()) {
+            case PLAIN -> ContentType.PLAIN;
+            case HTML -> ContentType.HTML;
+        };
+
+        final var baseBuilder = builder //
+                .withContentType(contentType) //
+                .withLastModified(def.getLastModified().toZonedDateTime()) //
+                .withDescription(def.getDescription()) //
+                .withAuthor(def.getAuthor()) //
+                .withCreated(Optional.ofNullable(def.getCreated()).map(OffsetDateTime::toZonedDateTime).orElse(null));
+
+        Optional.ofNullable(def.getLinks()).orElse(List.of()).stream() //
+                .forEach(link -> baseBuilder.addLink(link.getUrl(), link.getText()));
+        Optional.ofNullable(def.getTags()).orElse(List.of()).stream().forEach(baseBuilder::addTag);
+
+        return baseBuilder.build();
     }
 
     /**

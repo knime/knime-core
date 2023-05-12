@@ -59,6 +59,7 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.workflow.ComponentMetadata.ComponentNodeType;
+import org.knime.core.node.workflow.NodeContainerMetadata.ContentType;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.LoadVersion;
@@ -114,7 +115,6 @@ public class EnhAP13038_ComponentMetadata extends WorkflowTestCase {
 
         //set new metadata
         component.setMetadata(createComponentMetadata());
-        checkInOutNodes(component);
 
         //save and re-load workflow and check metadata
         getManager().save(m_workflowDir, new ExecutionMonitor(), true);
@@ -124,13 +124,18 @@ public class EnhAP13038_ComponentMetadata extends WorkflowTestCase {
         assertThat("unexpected load version", getManager().getLoadVersion(), is(LoadVersion.latest()));
         metadata = component.getMetadata();
         checkComponentMetadata(metadata);
-        checkInOutNodes(component);
     }
 
     private static ComponentMetadata createComponentMetadata() {
-        return ComponentMetadata.builder().description("new").addInPortNameAndDescription("new name", "new desc")
-            .addOutPortNameAndDescription("new out name", "new out desc").icon("test_icon".getBytes())
-            .type(ComponentNodeType.MANIPULATOR).build();
+        return ComponentMetadata.fluentBuilder() //
+                .withComponentType(ComponentNodeType.MANIPULATOR) //
+                .withIcon("test_icon".getBytes()) //
+                .withInPort("new name", "new desc") //
+                .withOutPort("new out name", "new out desc") //
+                .withPlainContent() //
+                .withLastModifiedNow() //
+                .withDescription("new") //
+                .build();
     }
 
     private static void checkComponentMetadata(final ComponentMetadata metadata) {
@@ -141,21 +146,6 @@ public class EnhAP13038_ComponentMetadata extends WorkflowTestCase {
         assertThat("unexpected metadata", metadata.getOutPortDescriptions().get()[0], is("new out desc"));
         assertThat("unexpected metadata", new String(metadata.getIcon().get()), is("test_icon"));
         assertThat("unexpected metadata", metadata.getNodeType().get(), is(ComponentNodeType.MANIPULATOR));
-    }
-
-    @SuppressWarnings("deprecation")
-    private static void checkInOutNodes(final SubNodeContainer component) {
-        //make sure that descriptions are also stored in input and output node (for backwards compatibility)
-        assertThat("metadata not transfert to input node", component.getVirtualInNodeModel().getSubNodeDescription(),
-            is("new"));
-        assertThat("metadata not transfert to input node", component.getVirtualInNodeModel().getPortNames()[0],
-            is("new name"));
-        assertThat("metadata not transfert to input node", component.getVirtualInNodeModel().getPortDescriptions()[0],
-            is("new desc"));
-        assertThat("metadata not transfert to output node", component.getVirtualOutNodeModel().getPortNames()[0],
-            is("new out name"));
-        assertThat("metadata not transfert to output node", component.getVirtualOutNodeModel().getPortDescriptions()[0],
-            is("new out desc"));
     }
 
     /**

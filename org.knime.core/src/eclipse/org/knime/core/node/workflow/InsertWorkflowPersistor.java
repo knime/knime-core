@@ -152,6 +152,12 @@ final class InsertWorkflowPersistor implements WorkflowPersistor {
 
     /** {@inheritDoc} */
     @Override
+    public WorkflowMetadata getWorkflowMetadata() {
+        throw new IllegalStateException("No netadata on root");
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public AuthorInformation getAuthorInformation() {
         throw new IllegalStateException("No author information on root");
     }

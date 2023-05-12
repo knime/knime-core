@@ -86,6 +86,7 @@ import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
+import org.knime.core.node.workflow.metadata.MetadataVersion;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.LockFailedException;
@@ -292,14 +293,29 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
             }
         }
 
-        try {
-            m_componentMetadata = ComponentMetadata.load(nodeSettings, getLoadVersion());
-        } catch (InvalidSettingsException e) {
-            String error = "Unable to load component metadata: " + e.getMessage();
-            getLogger().debug(error, e);
-            setDirtyAfterLoad();
-            result.addError(error);
-            m_componentMetadata = ComponentMetadata.NONE;
+        final var loadVersion = getLoadVersion();
+        if (loadVersion.isOlderThan(LoadVersion.V5100)) {
+            try {
+                m_componentMetadata = ComponentMetadata.load(nodeSettings, loadVersion);
+            } catch (InvalidSettingsException e) {
+                String error = "Unable to load component metadata: " + e.getMessage();
+                getLogger().debug(error, e);
+                setDirtyAfterLoad();
+                result.addError(error);
+                m_componentMetadata = ComponentMetadata.NONE;
+            }
+        } else {
+            final var componentDir = getMetaPersistor().getNodeContainerDirectory().getFile().toPath();
+            final var metadataFile = componentDir.resolve(WorkflowPersistor.COMPONENT_METADATA_FILE_NAME);
+            try {
+                m_componentMetadata = ComponentMetadata.fromXML(metadataFile, MetadataVersion.V1_0);
+            } catch (IOException e) {
+                String error = "Unable to load component metadata: " + e.getMessage();
+                getLogger().debug(error, e);
+                setDirtyAfterLoad();
+                result.addError(error);
+                m_componentMetadata = ComponentMetadata.NONE;
+            }
         }
 
         try {
@@ -307,7 +323,7 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
                 // template information was set after construction (this node is a link created from a template)
                 assert m_templateInformation.getRole() == Role.Link;
             } else {
-                m_templateInformation = MetaNodeTemplateInformation.load(nodeSettings, getLoadVersion());
+                m_templateInformation = MetaNodeTemplateInformation.load(nodeSettings, loadVersion);
                 CheckUtils.checkSettingNotNull(m_templateInformation, "No template information");
             }
         } catch (InvalidSettingsException e) {
@@ -534,8 +550,8 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
      * @throws IOException
      */
     static void save(final SubNodeContainer subnodeNC, final NodeSettings settings, final ExecutionMonitor exec,
-        final ReferencedFile nodeDirRef, final WorkflowSaveHelper saveHelper) throws IOException, CanceledExecutionException,
-        LockFailedException {
+            final ReferencedFile nodeDirRef, final WorkflowSaveHelper saveHelper)
+            throws IOException, CanceledExecutionException, LockFailedException {
         NativeNodeContainer virtualInNode = subnodeNC.getVirtualInNode();
         // added in 4.3, see AP-15029
         settings.addString("workflow-file", subnodeNC.getCipherFileName(WorkflowPersistor.WORKFLOW_FILE));
@@ -560,10 +576,15 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
         }
         var reportConfiguration = subnodeNC.getReportConfiguration();
         reportConfiguration.ifPresent(rf -> rf.save(settings.addNodeSettings("reportConfiguration")));
-        subnodeNC.getMetadata().save(settings);
+
+        // changed in 5.1, see AP-20406
+        final var metadataFile = nodeDirRef.getFile().toPath().resolve(WorkflowPersistor.COMPONENT_METADATA_FILE_NAME);
+        subnodeNC.getMetadata().toXML(metadataFile);
+
         subnodeNC.getTemplateInformation().save(settings);
         settings.addString("layoutJSON", subnodeNC.getSubnodeLayoutStringProvider().getLayoutString());
-        settings.addString("configurationLayoutJSON", subnodeNC.getSubnodeConfigurationLayoutStringProvider().getConfigurationLayoutString());
+        settings.addString("configurationLayoutJSON", subnodeNC.getSubnodeConfigurationLayoutStringProvider()
+            .getConfigurationLayoutString());
         settings.addBoolean("hideInWizard", subnodeNC.isHideInWizard());
         settings.addString("customCSS", subnodeNC.getCssStyles());
         WorkflowManager workflowManager = subnodeNC.getWorkflowManager();
@@ -599,8 +620,7 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
             singlePortSetting.addInt("index", i);
             if (t == null) {
                 singlePortSetting.addString("type", "null");
-            } else if (t instanceof BufferedDataTable) {
-                BufferedDataTable table = (BufferedDataTable)t;
+            } else if (t instanceof BufferedDataTable table) {
                 DataContainer.writeToZip(table, portFile, exec);
                 singlePortSetting.addString("type", "table");
                 singlePortSetting.addString("table_file", objName);

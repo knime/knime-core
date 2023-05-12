@@ -197,4 +197,21 @@ public interface NodeContainerParent {
             : ((SubNodeContainer)parent).getWorkflowManager();
     }
 
+    /**
+     * @return metadata, may be {@code null}
+     * @since 5.1
+     */
+    default NodeContainerMetadata getMetadata() {
+        return null;
+    }
+
+    /**
+     * Sets the metadata of this workflow or component.
+     *
+     * @param updatedMetadata updated metadata, {@code null} fur deletion
+     * @since 5.1
+     */
+    default void setContainerMetadata(final NodeContainerMetadata updatedMetadata) {
+        throw new IllegalStateException("Node container does not support metadata: " + getClass().getSimpleName());
+    }
 }

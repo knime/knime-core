@@ -48,6 +48,7 @@
  */
 package org.knime.core.node.workflow;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -75,7 +76,9 @@ import org.knime.shared.workflow.def.ConnectionUISettingsDef;
 import org.knime.shared.workflow.def.CoordinateDef;
 import org.knime.shared.workflow.def.CredentialPlaceholderDef;
 import org.knime.shared.workflow.def.JobManagerDef;
+import org.knime.shared.workflow.def.LinkDef;
 import org.knime.shared.workflow.def.NodeAnnotationDef;
+import org.knime.shared.workflow.def.NodeContainerMetadataDef.ContentTypeEnum;
 import org.knime.shared.workflow.def.NodeLocksDef;
 import org.knime.shared.workflow.def.NodeUIInfoDef;
 import org.knime.shared.workflow.def.PortDef;
@@ -94,6 +97,7 @@ import org.knime.shared.workflow.def.impl.ConnectionDefBuilder;
 import org.knime.shared.workflow.def.impl.ConnectionUISettingsDefBuilder;
 import org.knime.shared.workflow.def.impl.CoordinateDefBuilder;
 import org.knime.shared.workflow.def.impl.JobManagerDefBuilder;
+import org.knime.shared.workflow.def.impl.LinkDefBuilder;
 import org.knime.shared.workflow.def.impl.MetaNodeDefBuilder;
 import org.knime.shared.workflow.def.impl.NativeNodeDefBuilder;
 import org.knime.shared.workflow.def.impl.NodeAnnotationDefBuilder;
@@ -315,6 +319,16 @@ public class CoreToDefUtil {
         var builder = new ComponentMetadataDefBuilder();
         m.getNodeType().map(CoreToDefUtil::toComponentNodeType).ifPresent(builder::setComponentType);
         return builder//
+            .setContentType(switch (m.m_contentType) {
+                case HTML -> ContentTypeEnum.HTML;
+                case PLAIN -> ContentTypeEnum.PLAIN;
+            })//
+            .setAuthor(m.m_author)//
+            .setCreated(m.m_created == null ? null : m.m_created.toOffsetDateTime())//
+            .setLastModified(m.m_lastModified == null ? null : m.m_lastModified.toOffsetDateTime())//
+            .setTags(m.m_tags == null ? List.of() : new ArrayList<>(m.m_tags))//
+            .setLinks(m.m_links == null ? List.of() : m.m_links.stream() //
+                .map(link -> (LinkDef)new LinkDefBuilder().setUrl(link.url()).setText(link.text()).build()).toList())//
             .setDescription(m.getDescription().orElse(null))//
             .setIcon(m.getIcon().orElse(null))//
             .setInPortNames(m.getInPortNames().map(Arrays::asList).orElse(null))//

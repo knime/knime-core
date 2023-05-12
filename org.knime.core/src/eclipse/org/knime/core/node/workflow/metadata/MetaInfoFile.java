@@ -44,7 +44,10 @@
  */
 package org.knime.core.node.workflow.metadata;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Calendar;
+import java.util.GregorianCalendar;
 
 import org.knime.core.node.NodeLogger;
 
@@ -85,7 +88,8 @@ public final class MetaInfoFile {
     }
 
     /**
-     * Given a string value created in the correct format, return a correctly populated {@link Calendar} instance; if it's not in the correct format, null is returned.
+     * Given a string value created in the correct format, return a correctly populated {@link Calendar} instance;
+     * if it's not in the correct format, null is returned.
      *
      * @param value a correctly formatted date string
      * @return a correctly populated calendar or null if the date string is in a wrong format
@@ -98,19 +102,11 @@ public final class MetaInfoFile {
             //      13/5/2018/10:28:12 +02:00
             if (elements.length >= 3) {
                 try {
-                    Integer i = Integer.parseInt(elements[0]);
-                    final int day = i.intValue();
-
-                    i = Integer.parseInt(elements[1]);
-                    final int month = i.intValue();
-
-                    i = Integer.parseInt(elements[2]);
-                    final int year = i.intValue();
-
-                    final Calendar calendar = Calendar.getInstance();
-                    calendar.set(year, month, day);
-
-                    return calendar;
+                    final var day = Integer.parseInt(elements[0]);
+                    final var month = Integer.parseInt(elements[1]);
+                    final var year = Integer.parseInt(elements[2]);
+                    return GregorianCalendar.from(LocalDateTime.of(year, month, day, 12, 1) //
+                            .atZone(ZoneId.systemDefault()));
                 } catch (final NumberFormatException nfe) {
                     LOGGER.error("Unable to parse date string [" + value + "]", nfe);
                 }

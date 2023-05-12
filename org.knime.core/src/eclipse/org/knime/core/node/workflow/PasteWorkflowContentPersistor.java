@@ -181,6 +181,13 @@ public class PasteWorkflowContentPersistor implements WorkflowPersistor {
         return null;
     }
 
+    /** {@inheritDoc} */
+    @Override
+    public WorkflowMetadata getWorkflowMetadata() {
+        throwUnsupportedOperationException();
+        return null;
+    }
+
     /** {@inheritDoc}
      * @since 2.8*/
     @Override
