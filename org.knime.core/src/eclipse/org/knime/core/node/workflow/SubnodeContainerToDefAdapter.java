@@ -52,11 +52,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.knime.core.node.port.report.ReportConfiguration;
 import org.knime.shared.workflow.def.CipherDef;
 import org.knime.shared.workflow.def.ComponentDialogSettingsDef;
 import org.knime.shared.workflow.def.ComponentMetadataDef;
 import org.knime.shared.workflow.def.ComponentNodeDef;
 import org.knime.shared.workflow.def.PortDef;
+import org.knime.shared.workflow.def.ReportConfigurationDef;
 import org.knime.shared.workflow.def.TemplateInfoDef;
 import org.knime.shared.workflow.def.WorkflowDef;
 import org.knime.shared.workflow.def.impl.ComponentDialogSettingsDefBuilder;
@@ -111,14 +113,13 @@ public class SubnodeContainerToDefAdapter extends SingleNodeContainerToDefAdapte
      */
     @Override
     public List<PortDef> getOutPorts() {
-        var result = IntStream.range(0, m_nc.getNrOutPorts())//
-            .mapToObj(m_nc::getOutPort)//
+        // look at ports from the output node, not the ports of the subnode container
+        // (need to ignore the report port)
+        final var virtualOutNode = m_nc.getVirtualOutNode();
+        return IntStream.range(0, virtualOutNode.getNrInPorts())//
+            .mapToObj(virtualOutNode::getInPort)//
             .map(CoreToDefUtil::toPortDef)//
-            .collect(Collectors.toList());
-        // Set optional and hidden as true to the first out port type (aka micky mouse)
-        var firstOutPortDef = CoreToDefUtil.toPortDef(m_nc.getOutPort(0));
-        result.set(0, modifyToOptional(firstOutPortDef));
-        return result;
+            .collect(Collectors.toList()); // don't use 'toList()' (TODO - result should be read-only)
     }
 
     private static PortDef modifyToOptional(final PortDef def) {
@@ -190,6 +191,14 @@ public class SubnodeContainerToDefAdapter extends SingleNodeContainerToDefAdapte
     @Override
     public CipherDef getCipher() {
         return m_nc.getWorkflowManager().getWorkflowCipher().toDef();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ReportConfigurationDef getReportConfiguration() {
+        return m_nc.getReportConfiguration().map(ReportConfiguration::toDef).orElse(null);
     }
 
 }

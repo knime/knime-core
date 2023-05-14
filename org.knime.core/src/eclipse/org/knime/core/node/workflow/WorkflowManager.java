@@ -60,6 +60,7 @@ import static org.knime.core.node.workflow.InternalNodeContainerState.IDLE;
 import static org.knime.core.node.workflow.InternalNodeContainerState.POSTEXECUTE;
 import static org.knime.core.node.workflow.InternalNodeContainerState.PREEXECUTE;
 import static org.knime.core.node.workflow.InternalNodeContainerState.UNCONFIGURED_MARKEDFOREXEC;
+import static org.knime.core.node.workflow.WorkflowEvent.Type.NODE_PORTS_CHANGED;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -153,6 +154,8 @@ import org.knime.core.node.port.PortObjectHolder;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
+import org.knime.core.node.port.report.IReportPortObject;
+import org.knime.core.node.port.report.ReportConfiguration;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.ConvenienceMethods;
@@ -971,7 +974,7 @@ public final class WorkflowManager extends NodeContainer
 
             // notify listeners if port config has changed
             if (replaceWithSameNodeType && nodeCreationConfigHasChangedPorts(oldCreationConfig, newCreationConfig)) {
-                notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.NODE_PORTS_CHANGED, id, null, null));
+                notifyWorkflowListeners(new WorkflowEvent(NODE_PORTS_CHANGED, id, null, null));
             }
 
             return new ReplaceNodeResult(this, id, removedConnections, oldCreationConfig, oldNodeFactory);
@@ -1905,7 +1908,7 @@ public final class WorkflowManager extends NodeContainer
             setDirty();
 
             // Notify listeners if ports were added
-            notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.NODE_PORTS_CHANGED, subFlowID, null, null));
+            notifyWorkflowListeners(new WorkflowEvent(NODE_PORTS_CHANGED, subFlowID, null, null));
         }
     }
 
@@ -1962,7 +1965,7 @@ public final class WorkflowManager extends NodeContainer
             subFlowMgr.setDirty();
 
             // Notify listeners if ports were added
-            notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.NODE_PORTS_CHANGED, subFlowID, null, null));
+            notifyWorkflowListeners(new WorkflowEvent(NODE_PORTS_CHANGED, subFlowID, null, null));
         }
     }
 
@@ -2007,40 +2010,49 @@ public final class WorkflowManager extends NodeContainer
             }
             setDirty();
             // Notify listeners if ports were added
-            notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.NODE_PORTS_CHANGED, subFlowID, null, null));
+            notifyWorkflowListeners(new WorkflowEvent(NODE_PORTS_CHANGED, subFlowID, null, null));
         }
     }
 
     /**
      * @param subFlowID ID of the subflow
-     * @param newPorts The new ports
-     * @since 2.10
+     * @param newPortsRaw The new ports (excluding any potential report output)
+     * @since 5.1
      */
-    public void changeSubNodeOutputPorts(final NodeID subFlowID, final MetaPortInfo[] newPorts) {
+    public void changeSubNodeOutputPorts(final NodeID subFlowID, final MetaPortInfo[] newPortsRaw) {
         try (WorkflowLock lock = lock()) {
-            SubNodeContainer snc = getNodeContainer(subFlowID, SubNodeContainer.class, true);
+            final SubNodeContainer snc = getNodeContainer(subFlowID, SubNodeContainer.class, true);
+            final MetaPortInfo[] newPorts;
+            if (snc.hasReportOutput()) {
+                // this is only to retain the connections set on the report output
+                newPorts = ArrayUtils.add(newPortsRaw,
+                    MetaPortInfo.builder().setOldIndex(snc.getNrOutPorts() - 1).setNewIndex(newPortsRaw.length)
+                        .setIsConnected(!getOutgoingConnectionsFor(subFlowID, snc.getNrOutPorts() - 1).isEmpty())
+                        .setPortType(IReportPortObject.TYPE).build());
+            } else {
+                newPorts = newPortsRaw;
+            }
             if (!haveSubPortsChanged(newPorts, false, snc)) {
                 return;
             }
             List<Pair<ConnectionContainer, ConnectionContainer>> changedConnectionsThisFlow =
-                m_workflow.changeSourcePortsForMetaNode(subFlowID, newPorts, true);
+                    m_workflow.changeSourcePortsForMetaNode(subFlowID, newPorts, true);
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsThisFlow) {
                 ConnectionContainer old = p.getFirst();
                 removeConnection(old);
-                notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.CONNECTION_REMOVED, null, old, null));
             }
             var subFlow = snc.getWorkflowManager();
             List<Pair<ConnectionContainer, ConnectionContainer>> changedConnectionsSubFlow =
-                subFlow.m_workflow.changeDestinationPortsForMetaNode(snc.getVirtualOutNodeID(), newPorts, true);
+                    subFlow.m_workflow.changeDestinationPortsForMetaNode(snc.getVirtualOutNodeID(), newPortsRaw, true);
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsSubFlow) {
                 ConnectionContainer old = p.getFirst();
                 subFlow.removeConnection(old);
             }
-            var portTypes = new PortType[newPorts.length - 1];
-            for (var i = 0; i < newPorts.length - 1; i++) {
-                portTypes[i] = newPorts[i + 1].getType();
-            }
-            snc.setOutPorts(portTypes);
+            final PortType[] portTypes = Stream.of(newPortsRaw) //
+                    .skip(1) // flow var port
+                    .map(MetaPortInfo::getType) //
+                    .toArray(PortType[]::new);
+            snc.setOutPorts(portTypes, snc.getReportConfiguration().isPresent());
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsThisFlow) {
                 ConnectionContainer newConn = p.getSecond();
                 addConnection(newConn);
@@ -2054,7 +2066,32 @@ public final class WorkflowManager extends NodeContainer
             setDirty();
 
             // Notify listeners
-            notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.NODE_PORTS_CHANGED, subFlowID, null, null));
+            notifyWorkflowListeners(new WorkflowEvent(NODE_PORTS_CHANGED, subFlowID, null, null));
+        }
+    }
+
+    /**
+     * Enable/disable report output on a subnode.
+     *
+     * @param subFlowID The ID of the subnode
+     * @param reportConfiguration It's configuration, or <code>null</code> to disable.
+     * @since 5.1
+     */
+    public void changeSubNodeReportOutput(final NodeID subFlowID, final ReportConfiguration reportConfiguration) {
+        try (WorkflowLock lock = lock()) {
+            final SubNodeContainer snc = getNodeContainer(subFlowID, SubNodeContainer.class, true);
+            final var oldConfigurationOptional = snc.getReportConfiguration();
+            if (Objects.equals(oldConfigurationOptional.orElse(null), reportConfiguration)) {
+                return;
+            }
+            if (oldConfigurationOptional.isPresent() && reportConfiguration == null) { // port removed
+                for (final var connection : getOutgoingConnectionsFor(subFlowID, snc.getNrOutPorts() - 1)) {
+                    removeConnection(connection);
+                }
+            }
+            if (snc.setReportConfiguration(reportConfiguration)) { // ports have changed
+                notifyWorkflowListeners(new WorkflowEvent(NODE_PORTS_CHANGED, subFlowID, null, null));
+            }
         }
     }
 

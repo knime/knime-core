@@ -57,27 +57,31 @@ import org.knime.core.node.NodeView;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.workflow.SubNodeContainer;
 
 /** Factory to virtual subnode output node.
  * <p>No API.
+ * @noreference This class is not intended to be referenced by clients.
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  * @since 2.10
  */
 public class VirtualSubNodeOutputNodeFactory extends DynamicNodeFactory<VirtualSubNodeOutputNodeModel> {
 
+    private final SubNodeContainer m_subNodeContainer;
     private PortType[] m_inTypes;
 
     /** Serialization constructor. */
     public VirtualSubNodeOutputNodeFactory() {
+        m_subNodeContainer = null;
     }
 
-    /** @param inTypes subnode input port types. */
-    public VirtualSubNodeOutputNodeFactory(final PortType[] inTypes) {
-        if (inTypes == null) {
-            throw new NullPointerException(
-                    "Port type array argument must not be null");
-        }
-        m_inTypes = inTypes;
+    /** @param inTypes subnode input port types.
+     * @param subNodeContainer
+     * @since 5.1 */
+    public VirtualSubNodeOutputNodeFactory(final SubNodeContainer subNodeContainer, final PortType[] inTypes) {
+        m_subNodeContainer = CheckUtils.checkArgumentNotNull(subNodeContainer);
+        m_inTypes = CheckUtils.checkArgumentNotNull(inTypes, "Port type array argument must not be null");
         init();
     }
 
@@ -90,7 +94,7 @@ public class VirtualSubNodeOutputNodeFactory extends DynamicNodeFactory<VirtualS
     /** {@inheritDoc} */
     @Override
     public VirtualSubNodeOutputNodeModel createNodeModel() {
-        return new VirtualSubNodeOutputNodeModel(m_inTypes);
+        return new VirtualSubNodeOutputNodeModel(m_subNodeContainer, m_inTypes);
     }
 
     /** {@inheritDoc} */

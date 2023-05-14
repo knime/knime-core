@@ -52,16 +52,19 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
+import java.util.Optional;
 
 import javax.activation.FileTypeMap;
 import javax.activation.MimetypesFileTypeMap;
 
 import org.eclipse.core.runtime.Platform;
+import org.knime.core.node.port.report.IReportService;
 import org.knime.core.util.pathresolve.ResolverUtil;
 import org.knime.core.util.pathresolve.URIToFileResolve;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * Plugin class that is initialized when the plugin project is started. It will
@@ -93,6 +96,12 @@ public class CorePlugin implements BundleActivator {
         return m_isWrapColumnHeaderInTableViews;
     }
 
+    /**
+     * Added as part of AP-20402 - report generation on subnodes will be done by an extra extension, which needs to be
+     * installed. Presence of the service also is used as feature flag to disable user controls.
+     */
+    private ServiceTracker<IReportService, IReportService> m_reportServiceTracker;
+
         /**
      * {@inheritDoc}
      */
@@ -114,8 +123,9 @@ public class CorePlugin implements BundleActivator {
         }
 
         readMimeTypes();
+        m_reportServiceTracker = new ServiceTracker<>(context, IReportService.class, null);
+        m_reportServiceTracker.open();
     }
-
 
     private void readMimeTypes() throws IOException {
         Bundle utilBundle = Platform.getBundle("org.knime.core.util");
@@ -131,6 +141,8 @@ public class CorePlugin implements BundleActivator {
     /** {@inheritDoc} */
     @Override
     public void stop(final BundleContext context) throws Exception {
+        m_reportServiceTracker.close();
+        m_reportServiceTracker = null;
         instance = null;
     }
 
@@ -141,6 +153,14 @@ public class CorePlugin implements BundleActivator {
      */
     public static CorePlugin getInstance() {
         return instance;
+    }
+
+    /**
+     * @return the report service, or an empty {@link Optional} if none is registered (extension not installed).
+     * @since 5.1
+     */
+    public Optional<IReportService> getReportService() {
+        return Optional.ofNullable(m_reportServiceTracker).map(ser -> ser.getService());
     }
 
     /** Fetches a service implementing the {@link URIToFileResolve} interface

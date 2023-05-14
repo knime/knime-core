@@ -74,6 +74,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.xml.parsers.ParserConfigurationException;
 
@@ -116,6 +117,8 @@ import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec;
 import org.knime.core.node.port.inactive.InactiveBranchPortObject;
 import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
+import org.knime.core.node.port.report.IReportPortObject;
+import org.knime.core.node.port.report.ReportConfiguration;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
@@ -277,6 +280,9 @@ public final class SubNodeContainer extends SingleNodeContainer
 
     private MetaNodeTemplateInformation m_templateInformation;
 
+    /** report config as set by layout editor. */
+    private ReportConfiguration m_reportConfiguration;
+
     /** Caches the example input data spec */
     private PortObjectSpec[] m_exampleInputDataSpec;
 
@@ -295,14 +301,21 @@ public final class SubNodeContainer extends SingleNodeContainer
         m_wfm.setJobManager(null);
         WorkflowPortTemplate[] inPortTemplates = persistor.getInPortTemplates();
         WorkflowPortTemplate[] outPortTemplates = persistor.getOutPortTemplates();
-        m_outports = new NodeContainerOutPort[outPortTemplates.length];
-        m_outputs = new Output[outPortTemplates.length];
+        m_reportConfiguration = persistor.getReportConfiguration().orElse(null);
+        final int outputLength = outPortTemplates.length + (m_reportConfiguration != null ? 1 : 0);
+        m_outports = new NodeContainerOutPort[outputLength];
+        m_outputs = new Output[outputLength];
         for (int i = 0; i < outPortTemplates.length; i++) {
             WorkflowPortTemplate t = outPortTemplates[i];
             m_outputs[i] = new Output(t.getPortType());
             m_outputs[i].setName(t.getPortName());
             m_outports[i] = new NodeContainerOutPort(this, t.getPortType(), t.getPortIndex());
             m_outports[i].setPortName(t.getPortName());
+        }
+        if (m_reportConfiguration != null) {
+            final var lastPortIndex = m_outports.length - 1;
+            m_outports[lastPortIndex] = new NodeContainerOutPort(this, IReportPortObject.TYPE , lastPortIndex);
+            m_outputs[lastPortIndex] = new Output(IReportPortObject.TYPE);
         }
         m_inports = new NodeInPort[inPortTemplates.length];
         m_inHiliteHandler = new HiLiteHandler[inPortTemplates.length - 1];
@@ -338,14 +351,26 @@ public final class SubNodeContainer extends SingleNodeContainer
         m_wfm.setJobManager(null);
         var inports = def.getInPorts();
         var outports = def.getOutPorts();
-        m_outports = new NodeContainerOutPort[outports.size()];
-        m_outputs = new Output[outports.size()];
+        try {
+            m_reportConfiguration = ReportConfiguration.fromDef(def.getReportConfiguration()).orElse(null);
+        } catch (InvalidSettingsException ise) {
+            // TODO validation to be part of the yaml (enum instead of string)
+            LOGGER.error("Unable to read report configuration: " + ise.getMessage(), ise);
+        }
+        final int outputLength = outports.size() + (m_reportConfiguration != null ? 1 : 0);
+        m_outports = new NodeContainerOutPort[outputLength];
+        m_outputs = new Output[outputLength];
         for (var i = 0; i < outports.size(); i++) {
             var portType = DefToCoreUtil.toPortType(outports.get(i).getPortType());
             m_outputs[i] = new Output(portType);
             m_outputs[i].setName(portType.getName());
             m_outports[i] = new NodeContainerOutPort(this, portType, outports.get(i).getIndex());
             m_outports[i].setPortName(portType.getName());
+        }
+        if (m_reportConfiguration != null) {
+            final var lastPortIndex = m_outports.length - 1;
+            m_outports[lastPortIndex] = new NodeContainerOutPort(this, IReportPortObject.TYPE , lastPortIndex);
+            m_outputs[lastPortIndex] = new Output(IReportPortObject.TYPE);
         }
         m_inports = new NodeInPort[inports.size()];
         m_inHiliteHandler = new HiLiteHandler[inports.size()- 1];
@@ -478,7 +503,7 @@ public final class SubNodeContainer extends SingleNodeContainer
 
     /** Adds new/empty instance of a virtual output node and returns its ID. */
     private NodeID addVirtualOutNode(final PortType[] outTypes, final Pair<int[], int[]> minMaxCoordinates) {
-        NodeID outNodeID = m_wfm.createAndAddNode(new VirtualSubNodeOutputNodeFactory(outTypes));
+        NodeID outNodeID = m_wfm.createAndAddNode(new VirtualSubNodeOutputNodeFactory(this, outTypes));
         final NodeContainer outNodeNC = m_wfm.getNodeContainer(outNodeID);
         outNodeNC.setDeletable(false);
 
@@ -1717,23 +1742,75 @@ public final class SubNodeContainer extends SingleNodeContainer
     }
 
     /**
-     * @param portTypes Types of the new ports
+     * True if the last port is a report output (not represented "inside").
+     * @return That property.
+     * @since 5.1
+     */
+    public boolean hasReportOutput() {
+        return getNrOutPorts() > getVirtualOutNode().getNrInPorts();
+    }
+
+    /**
+     * The report configuration for this subnode/component, if report generation is set on it. Otherwise an empty
+     * optional.
+     *
+     * @return the report configuration.
+     * @since 5.1
+     */
+    public Optional<ReportConfiguration> getReportConfiguration() {
+        return Optional.ofNullable(m_reportConfiguration);
+    }
+
+    /**
+     * Sets a report configuration on the node, possibly showing/hiding report port type.
+     *
+     * @param reportConfiguration the new report config (or null to disable report).
+     * @return true if the ports have changed (now present but previously not, or vice versa)
+     * @since 5.1
+     */
+    boolean setReportConfiguration(final ReportConfiguration reportConfiguration) {
+        final var hasReportBefore = m_reportConfiguration != null;
+        final var hasReportNow = reportConfiguration != null;
+        final var havePortsChanged = hasReportBefore != hasReportNow;
+        if (havePortsChanged) {
+            final var portTypes = Stream.of(getOutputPortInfo()) //
+                    .skip(1) // flow variable port
+                    .map(MetaPortInfo::getType).toArray(PortType[]::new);
+            setOutPorts(portTypes, hasReportNow);
+        }
+        m_reportConfiguration = reportConfiguration;
+        setDirty();
+        return havePortsChanged;
+    }
+
+    /**
+     * @param outNodePortTypes Types of the new ports (excludes both the mickey mouse port and the report port)
+     * @param enableReportOutput true to enable report type, otherwise false.
      * @since 2.10
      */
-    public void setOutPorts(final PortType[] portTypes) {
-        m_outputs = new Output[portTypes.length + 1];
-        m_outports = new NodeContainerOutPort[portTypes.length + 1];
-        for (int i = 0; i < portTypes.length; i++) {
-            m_outputs[i + 1] = new Output(portTypes[i]);
-            m_outports[i + 1] = new NodeContainerOutPort(this, portTypes[i], i + 1);
-        }
+    void setOutPorts(final PortType[] outNodePortTypes, final boolean enableReportOutput) {
+        assert isLockedByCurrentThread();
+        m_wfm.resetAndConfigureNode(getVirtualOutNodeID()); // unset outputs (before we change its length)
+        final int length = outNodePortTypes.length + 1 + (enableReportOutput ? 1 : 0);
+        m_outputs = new Output[length];
+        m_outports = new NodeContainerOutPort[length];
         m_outputs[0] = new Output(FlowVariablePortObject.TYPE);
         m_outports[0] = new NodeContainerOutPort(this, FlowVariablePortObject.TYPE, 0);
+        for (int i = 0; i < outNodePortTypes.length; i++) {
+            m_outputs[i + 1] = new Output(outNodePortTypes[i]);
+            m_outports[i + 1] = new NodeContainerOutPort(this, outNodePortTypes[i], i + 1);
+        }
+        if (enableReportOutput) {
+            final var index = m_outputs.length - 1;
+            m_outputs[index] = new Output(IReportPortObject.TYPE);
+            m_outports[index] = new NodeContainerOutPort(this, IReportPortObject.TYPE, index);
+        }
         NodeContainer oldVNode = m_wfm.getNodeContainer(getVirtualOutNodeID());
         NodeSettings settings = new NodeSettings("node settings");
         m_wfm.saveNodeSettings(oldVNode.getID(), settings);
 
-        m_virtualOutNodeIDSuffix = m_wfm.createAndAddNode(new VirtualSubNodeOutputNodeFactory(portTypes)).getIndex();
+        m_virtualOutNodeIDSuffix =
+            m_wfm.createAndAddNode(new VirtualSubNodeOutputNodeFactory(this, outNodePortTypes)).getIndex();
         NodeContainer newVNode = m_wfm.getNodeContainer(getVirtualOutNodeID());
         newVNode.setUIInformation(oldVNode.getUIInformation());
         newVNode.setDeletable(false);
@@ -1751,6 +1828,17 @@ public final class SubNodeContainer extends SingleNodeContainer
         m_wfm.setDirty();
         setDirty();
         notifyNodePropertyChangedListener(NodeProperty.MetaNodePorts);
+    }
+
+    /**
+     * Used by the UI to determine whether the given port represents the report port (last port, if enabled).
+     *
+     * @param portIndex port in question.
+     * @return Whether it's the report port.
+     * @since 5.1
+     */
+    public boolean isReportOutPort(final int portIndex) {
+        return hasReportOutput() && portIndex == getNrOutPorts() - 1;
     }
 
     /**
@@ -1814,6 +1902,9 @@ public final class SubNodeContainer extends SingleNodeContainer
      */
     @Override
     public HiLiteHandler getOutputHiLiteHandler(final int portIndex) {
+        if (hasReportOutput() && portIndex == getNrOutPorts() - 1) {
+            return null;
+        }
         return getVirtualOutNode().getNode().getInHiLiteHandler(portIndex);
     }
 
@@ -2572,7 +2663,7 @@ public final class SubNodeContainer extends SingleNodeContainer
         return result.toArray(new MetaPortInfo[result.size()]);
     }
 
-    /** Implementation of {@link WorkflowManager#getSubnodeOutputPortInfo(NodeID)}.
+    /** Implementation of {@link WorkflowManager#getSubnodeOutputPortInfo(NodeID)}. Excludes possible report output!
      * @return ...
      */
     MetaPortInfo[] getOutputPortInfo() {

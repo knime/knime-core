@@ -47,9 +47,11 @@
 package org.knime.core.node.workflow;
 
 import java.util.Map;
+import java.util.Optional;
 
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.port.report.ReportConfiguration;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
 
@@ -72,6 +74,7 @@ public class CopySubNodeContainerPersistor
     private final String m_customCSS;
     private ComponentMetadata m_componentMetadata;
     private final MetaNodeTemplateInformation m_templateInformation;
+    private final ReportConfiguration m_reportConfiguration;
 
     /**
      * @param original
@@ -108,6 +111,7 @@ public class CopySubNodeContainerPersistor
         m_customCSS = new String(original.getCssStyles());
         m_componentMetadata = original.getMetadata();
         m_templateInformation = original.getTemplateInformation().clone();
+        m_reportConfiguration = original.getReportConfiguration().orElse(null);
     }
 
     /** {@inheritDoc} */
@@ -203,6 +207,11 @@ public class CopySubNodeContainerPersistor
     @Override
     public MetaNodeTemplateInformation getTemplateInformation() {
         return m_templateInformation;
+    }
+
+    @Override
+    public Optional<ReportConfiguration> getReportConfiguration() {
+        return Optional.ofNullable(m_reportConfiguration);
     }
 
 }

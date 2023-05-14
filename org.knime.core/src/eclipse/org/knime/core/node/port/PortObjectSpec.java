@@ -118,7 +118,7 @@ public interface PortObjectSpec {
             throws IOException;
 
         /**
-         * Returns the port object süec class that this serializer reads and writes. The class is determined from the
+         * Returns the port object spec class that this serializer reads and writes. The class is determined from the
          * generic argument.
          *
          * @return a port object spec class

@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -42,59 +43,40 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on Oct 5, 2013 by wiswedel
+ * History
+ *   May 14, 2023 (wiswedel): created
  */
-package org.knime.core.node.workflow;
+package org.knime.core.node.port.report;
 
-import java.util.Optional;
-
-import org.knime.core.node.port.report.ReportConfiguration;
-import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.workflow.SubNodeContainer;
 
 /**
- * Describes persistor for {@link SubNodeContainer}.
+ * Describes OSGi service enabling reporting outputs via Components/Subnodes.
  *
- * <p>Not to be extended or used by clients.
- * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
+ * @author Bernd Wiswedel, KNIME
+ * @noreference This interface is not intended to be referenced by clients.
  * @noimplement This interface is not intended to be implemented by clients.
  * @noextend This interface is not intended to be extended by clients.
- * @since 2.9
+ * @since 5.1
  */
-public interface SubNodeContainerPersistor extends SingleNodeContainerPersistor {
-
-    /** @return the wrapped workflow manager's persistor. */
-    WorkflowPersistor getWorkflowPersistor();
-
-    WorkflowPortTemplate[] getInPortTemplates();
-
-    WorkflowPortTemplate[] getOutPortTemplates();
-
-    int getVirtualInNodeIDSuffix();
-
-    int getVirtualOutNodeIDSuffix();
-
-    /** @since 3.7 */
-    boolean isHideInWizard();
-
-    /** @since 3.7 */
-    String getCssStyles();
-
-    /** @since 4.2 */
-    SubnodeContainerLayoutStringProvider getSubnodeLayoutStringProvider();
-
-    /** @since 4.3 */
-    SubnodeContainerConfigurationStringProvider getSubnodeConfigurationStringProvider();
+public interface IReportService {
 
     /**
-     * @since 4.1
+     * Called after execution of a {@link SubNodeContainer} to fill the report output.
+     *
+     * @param subnode The component that is about to execute.
+     * @param exec Progress/cancelation.
+     * @return The port object to be output by the component's report output.
      */
-    ComponentMetadata getMetadata();
-
-    MetaNodeTemplateInformation getTemplateInformation();
+    IReportPortObject createOutput(final SubNodeContainer subnode, final ExecutionMonitor exec);
 
     /**
-     * @return the report configuration, if set on the subnode.
-     * @since 5.1
+     * Determines the spec of the report output.
+     *
+     * @param subnode The component.
+     * @return the spec (currently a singleton).
      */
-    Optional<ReportConfiguration> getReportConfiguration();
+    IReportPortObjectSpec createOutputSpec(final SubNodeContainer subnode);
+
 }

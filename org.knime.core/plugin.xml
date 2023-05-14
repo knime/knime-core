@@ -692,6 +692,15 @@
             specClass="org.knime.core.node.workflow.capture.WorkflowPortObjectSpec"
             specSerializer="org.knime.core.node.workflow.capture.WorkflowPortObjectSpec$Serializer">
       </portType>
+      <portType
+            color="#1a6c85"
+            hidden="false"
+            name="Report Fragment"
+            objectClass="org.knime.core.node.port.report.IReportPortObject"
+            objectSerializer="org.knime.core.node.port.report.IReportPortObject$NoOpSerializer"
+            specClass="org.knime.core.node.port.report.IReportPortObjectSpec"
+            specSerializer="org.knime.core.node.port.report.IReportPortObjectSpec$NoOpSerializer">
+      </portType>
    </extension>
    <extension
          point="org.knime.core.TableFormat">

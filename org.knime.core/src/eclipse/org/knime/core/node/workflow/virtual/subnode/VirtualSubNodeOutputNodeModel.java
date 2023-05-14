@@ -59,6 +59,7 @@ import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
@@ -80,6 +81,7 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.inactive.InactiveBranchConsumer;
 import org.knime.core.node.port.inactive.InactiveBranchPortObject;
+import org.knime.core.node.port.report.ReportUtil;
 import org.knime.core.node.streamable.InputPortRole;
 import org.knime.core.node.streamable.PartitionInfo;
 import org.knime.core.node.streamable.PortInput;
@@ -115,9 +117,11 @@ public final class VirtualSubNodeOutputNodeModel extends ExtendedScopeNodeModel
     private VirtualSubNodeExchange m_outputExchange;
     private SubNodeContainer m_subNodeContainer;
 
-    /** @param outTypes Output types of subnode (which are input to this node) */
-    public VirtualSubNodeOutputNodeModel(final PortType[] outTypes) {
+    /** @param subNodeContainer
+     * @param outTypes Output types of subnode (which are input to this node) */
+    VirtualSubNodeOutputNodeModel(final SubNodeContainer subNodeContainer, final PortType[] outTypes) {
         super(outTypes, new PortType[0]);
+        m_subNodeContainer = subNodeContainer;
         m_numberOfPorts = outTypes.length;
         m_configuration = VirtualSubNodeOutputConfiguration.newDefault(m_numberOfPorts);
     }
@@ -126,7 +130,14 @@ public final class VirtualSubNodeOutputNodeModel extends ExtendedScopeNodeModel
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        setNewExchange(new VirtualSubNodeExchange(inSpecs, getVisibleFlowVariables()));
+        final PortObjectSpec[] specs;
+        if (m_subNodeContainer.getReportConfiguration().isPresent()) {
+            final var reportObjectSpec = ReportUtil.computeReportObjectSpec(m_subNodeContainer);
+            specs = ArrayUtils.add(inSpecs, reportObjectSpec);
+        } else {
+            specs = inSpecs;
+        }
+        setNewExchange(new VirtualSubNodeExchange(specs, getVisibleFlowVariables()));
         if (m_configuration == null) {
             setWarningMessage("Guessing defaults (excluding all variables)");
             m_configuration = VirtualSubNodeOutputConfiguration.newDefault(m_numberOfPorts);
@@ -156,7 +167,7 @@ public final class VirtualSubNodeOutputNodeModel extends ExtendedScopeNodeModel
     protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec)
             throws Exception {
         final var waiter = VirtualSubNodeOutputWaiter.startExecutionAndCreate(m_subNodeContainer);
-        final Callable<Optional<Message>> waiterCallable = () -> waiter.waitForNodesToExecute();
+        final Callable<Optional<Message>> waiterCallable = waiter::waitForNodesToExecute;
         final var currentPool = ThreadPool.currentPool();
         final Optional<Message> message;
         if (currentPool != null) {
@@ -165,9 +176,19 @@ public final class VirtualSubNodeOutputNodeModel extends ExtendedScopeNodeModel
             message = waiterCallable.call(); // as of today (05 '23) this is practically irrelevant
         }
         if (message.isPresent()) {
-            throw message.map(KNIMEException::of).get();
+            throw message.map(KNIMEException::of).get(); // NOSONAR
         }
-        setNewExchange(new VirtualSubNodeExchange(inObjects, getVisibleFlowVariables()));
+        final PortObject[] objects;
+        if (m_subNodeContainer.getReportConfiguration().isPresent()) {
+            final var reportExecContext = exec.createSubExecutionContext(1.0);
+            exec.setMessage("Creating report");
+            final var reportObject = ReportUtil.computeReportObject(m_subNodeContainer, reportExecContext);
+            objects = ArrayUtils.add(inObjects, reportObject);
+            reportExecContext.setProgress(1.0);
+        } else {
+            objects = inObjects;
+        }
+        setNewExchange(new VirtualSubNodeExchange(objects, getVisibleFlowVariables()));
         return new PortObject[0];
     }
 

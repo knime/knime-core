@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -42,59 +43,55 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on Oct 5, 2013 by wiswedel
+ * History
+ *   May 12, 2023 (wiswedel): created
  */
-package org.knime.core.node.workflow;
+package org.knime.core.node.port.report;
 
-import java.util.Optional;
+import java.io.IOException;
 
-import org.knime.core.node.port.report.ReportConfiguration;
-import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortObjectZipInputStream;
+import org.knime.core.node.port.PortObjectZipOutputStream;
+import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.PortTypeRegistry;
 
 /**
- * Describes persistor for {@link SubNodeContainer}.
+ * Generic interface for report ports associated with component outputs. Implementation lives in different (KNIME) repo.
  *
- * <p>Not to be extended or used by clients.
- * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
- * @noimplement This interface is not intended to be implemented by clients.
- * @noextend This interface is not intended to be extended by clients.
- * @since 2.9
+ * @author Bernd Wiswedel, KNIME, Konstanz, Germany
+ * @noextend This interface is not intended to be extended by clients (outside of KNIME).
+ * @noimplement This interface is not intended to be implemented by clients (outside of KNIME).
+ * @since 5.1
  */
-public interface SubNodeContainerPersistor extends SingleNodeContainerPersistor {
-
-    /** @return the wrapped workflow manager's persistor. */
-    WorkflowPersistor getWorkflowPersistor();
-
-    WorkflowPortTemplate[] getInPortTemplates();
-
-    WorkflowPortTemplate[] getOutPortTemplates();
-
-    int getVirtualInNodeIDSuffix();
-
-    int getVirtualOutNodeIDSuffix();
-
-    /** @since 3.7 */
-    boolean isHideInWizard();
-
-    /** @since 3.7 */
-    String getCssStyles();
-
-    /** @since 4.2 */
-    SubnodeContainerLayoutStringProvider getSubnodeLayoutStringProvider();
-
-    /** @since 4.3 */
-    SubnodeContainerConfigurationStringProvider getSubnodeConfigurationStringProvider();
+public interface IReportPortObject extends PortObject {
 
     /**
-     * @since 4.1
+     * Shortcut to retrieve type from port type registry.
      */
-    ComponentMetadata getMetadata();
-
-    MetaNodeTemplateInformation getTemplateInformation();
+    public static final PortType TYPE = PortTypeRegistry.getInstance().getPortType(IReportPortObject.class);
 
     /**
-     * @return the report configuration, if set on the subnode.
-     * @since 5.1
+     * Non-functional ("no-op") serializer defined to please the extension point definition. Not meant to be called.
      */
-    Optional<ReportConfiguration> getReportConfiguration();
+    public final class NoOpSerializer extends PortObjectSerializer<IReportPortObject> {
+
+        @Override
+        public void savePortObject(final IReportPortObject portObject, final PortObjectZipOutputStream out,
+            final ExecutionMonitor exec) throws IOException, CanceledExecutionException {
+            throw new IllegalStateException("Not intended to be call on interface level");
+        }
+
+        @Override
+        public IReportPortObject loadPortObject(final PortObjectZipInputStream in, final PortObjectSpec spec,
+            final ExecutionMonitor exec) throws IOException, CanceledExecutionException {
+            throw new IllegalStateException("Not intended to be call on interface level");
+        }
+    }
+
+    @Override
+    public IReportPortObjectSpec getSpec();
 }

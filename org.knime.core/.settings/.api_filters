@@ -2732,6 +2732,28 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/SubNodeContainer.java" type="org.knime.core.node.workflow.SubNodeContainer">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.SubNodeContainer"/>
+                <message_argument value="setOutPorts(PortType[])"/>
+            </message_arguments>
+        </filter>
+        <filter comment="only used by WFM" id="421572723">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.SubNodeContainer"/>
+                <message_argument value="setOutPorts(PortType[])"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/SubNodeContainerPersistor.java" type="org.knime.core.node.workflow.SubNodeContainerPersistor">
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.SubNodeContainerPersistor"/>
+                <message_argument value="getReportConfiguration()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowManager.java" type="org.knime.core.node.workflow.WorkflowManager">
         <filter comment="Signature only changed from void to boolean" id="338792546">
             <message_arguments>
@@ -2743,6 +2765,12 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
                 <message_argument value="bringAnnotationToFront(WorkflowAnnotation)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
+                <message_argument value="changeSubNodeOutputPorts(NodeID, MetaPortInfo[])"/>
             </message_arguments>
         </filter>
         <filter comment="Signature only changed from void to boolean" id="338792546">
@@ -2763,6 +2791,22 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.artifacts.WorkflowConfigArtifactsGenerator"/>
                 <message_argument value="getWorkflowConfiguration(WorkflowManager, CoreConstants.ConfigurationType)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/virtual/subnode/VirtualSubNodeOutputNodeFactory.java" type="org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeOutputNodeFactory">
+        <filter id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeOutputNodeFactory"/>
+                <message_argument value="VirtualSubNodeOutputNodeFactory(PortType[])"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/virtual/subnode/VirtualSubNodeOutputNodeModel.java" type="org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeOutputNodeModel">
+        <filter id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeOutputNodeModel"/>
+                <message_argument value="VirtualSubNodeOutputNodeModel(PortType[])"/>
             </message_arguments>
         </filter>
     </resource>

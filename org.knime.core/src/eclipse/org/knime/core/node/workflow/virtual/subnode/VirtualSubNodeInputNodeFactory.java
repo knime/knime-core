@@ -75,7 +75,7 @@ public final class VirtualSubNodeInputNodeFactory extends DynamicNodeFactory<Vir
     private SubNodeContainer m_subNodeContainer;
     private PortType[] m_outTypes;
 
-    /** Persistor used by constructor. */
+    /** Constructor used by persistor. */
     public VirtualSubNodeInputNodeFactory() {
     }
 

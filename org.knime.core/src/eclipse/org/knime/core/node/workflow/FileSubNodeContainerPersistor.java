@@ -55,7 +55,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.IntStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -79,6 +81,7 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortUtil;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec;
+import org.knime.core.node.port.report.ReportConfiguration;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
@@ -120,6 +123,8 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
     private ComponentMetadata m_componentMetadata;
 
     private MetaNodeTemplateInformation m_templateInformation;
+
+    private Optional<ReportConfiguration> m_reportConfiguration;
 
     /**
      * @param nodeSettingsFile
@@ -326,28 +331,28 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
 
         Set<String> outportSetKeys = Collections.emptySet();
         NodeSettingsRO outportsSettings = null;
+        List<WorkflowPortTemplate> outPortTemplatesList = new ArrayList<>();
         try {
             outportsSettings = nodeSettings.getNodeSettings("outports");
             // output of subnode is represented by input of virtual out node.
             outportSetKeys = outportsSettings.keySet();
-            m_outPortTemplates = new WorkflowPortTemplate[outportSetKeys.size() + 1];
-            m_outPortTemplates[0] = new WorkflowPortTemplate(0, FlowVariablePortObject.TYPE_OPTIONAL);
-            for (int i = 1; i < m_outPortTemplates.length; i++) { // fallback values, correctly set below
-                m_outPortTemplates[i] = new WorkflowPortTemplate(i, BufferedDataTable.TYPE);
-            }
+            outPortTemplatesList.add(new WorkflowPortTemplate(0, FlowVariablePortObject.TYPE_OPTIONAL));
+            IntStream.range(0, outportSetKeys.size())
+                // fallback values, correctly set below
+                .forEach(i -> outPortTemplatesList.add(new WorkflowPortTemplate(i + 1, BufferedDataTable.TYPE)));
         } catch (InvalidSettingsException e) {
             String error = "Can't load virtual output port information: " + e.getMessage();
             result.addError(error);
             getLogger().error(error, e);
             setDirtyAfterLoad();
-            m_outPortTemplates = new WorkflowPortTemplate[0];
+            outPortTemplatesList.clear();
         }
         for (String key : outportSetKeys) {
             try {
                 @SuppressWarnings("null")
                 NodeSettingsRO outportSetting = outportsSettings.getNodeSettings(key);
                 WorkflowPortTemplate portTemplate = loadPort(outportSetting, outportSetKeys.size());
-                m_outPortTemplates[portTemplate.getPortIndex()] = portTemplate;
+                outPortTemplatesList.set(portTemplate.getPortIndex(), portTemplate);
             } catch (InvalidSettingsException e) {
                 String error = "Could not load output port information: " + e.getMessage();
                 result.addError(error);
@@ -356,6 +361,10 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
                 continue;
             }
         }
+
+        m_reportConfiguration = loadReportConfiguration(nodeSettings, result);
+
+        m_outPortTemplates = outPortTemplatesList.toArray(WorkflowPortTemplate[]::new);
 
         // added in 3.1, updated with 4.2
         m_subnodeLayoutStringProvider = new SubnodeContainerLayoutStringProvider(nodeSettings.getString("layoutJSON", ""));
@@ -368,6 +377,22 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
 
         // added in 4.3
         m_subnodeConfigurationStringProvider = new SubnodeContainerConfigurationStringProvider(nodeSettings.getString("configurationLayoutJSON", ""));
+    }
+
+    private Optional<ReportConfiguration> loadReportConfiguration(final NodeSettingsRO settings, final LoadResult result) {
+        if (getLoadVersion().isOlderThan(LoadVersion.V5100) || !settings.containsKey("reportConfiguration")) {
+            return Optional.empty(); // added in 5.1 (AP-20402)
+        }
+        try {
+            final var configSettings = settings.getNodeSettings("reportConfiguration");
+            return Optional.of(ReportConfiguration.load(configSettings));
+        } catch (InvalidSettingsException e) {
+            String error = "Unable to load report output: " + e.getMessage();
+            result.addError(error);
+            getLogger().error(error, e);
+            setDirtyAfterLoad();
+        }
+        return Optional.empty();
     }
 
     private FileWorkflowPersistor createWorkflowPersistor(final ReferencedFile nodeSettingsFile,
@@ -404,7 +429,7 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
         };
     }
 
-    private WorkflowPortTemplate loadPort(final NodeSettingsRO portSetting,
+    private static WorkflowPortTemplate loadPort(final NodeSettingsRO portSetting,
         final int max) throws InvalidSettingsException {
         int index = portSetting.getInt("index");
         CheckUtils.checkSetting(index >= 0 && index < max, "Index must be in [0:%d]: %d", max - 1, index);
@@ -533,6 +558,8 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
             NodeSettingsWO portTypeSettings = inportSetting.addNodeSettings("type");
             virtualOutNode.getInPort(i).getPortType().save(portTypeSettings);
         }
+        var reportConfiguration = subnodeNC.getReportConfiguration();
+        reportConfiguration.ifPresent(rf -> rf.save(settings.addNodeSettings("reportConfiguration")));
         subnodeNC.getMetadata().save(settings);
         subnodeNC.getTemplateInformation().save(settings);
         settings.addString("layoutJSON", subnodeNC.getSubnodeLayoutStringProvider().getLayoutString());
@@ -733,6 +760,11 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
     @Override
     public ComponentMetadata getMetadata() {
         return m_componentMetadata;
+    }
+
+    @Override
+    public Optional<ReportConfiguration> getReportConfiguration() {
+        return m_reportConfiguration;
     }
 
     /**
