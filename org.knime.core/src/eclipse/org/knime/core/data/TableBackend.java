@@ -140,6 +140,18 @@ public interface TableBackend {
         throws CanceledExecutionException;
 
     /**
+     * Concatenates the given tables and generates new RowIDs to ensure uniqueness.
+     *
+     * @param exec for table creation
+     * @param tableIdSupplier provides new table ids
+     * @param tables to concatenate
+     * @return the concatenated table
+     * @since 5.1
+     */
+    KnowsRowCountTable concatenateWithNewRowIDs(ExecutionContext exec, IntSupplier tableIdSupplier,
+        BufferedDataTable... tables);
+
+    /**
      * Appends the provided tables in the column dimension.
      * @param exec ExecutionContext for creating tables
      * @param progressMonitor used to report progress

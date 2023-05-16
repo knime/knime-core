@@ -49,6 +49,7 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
@@ -81,20 +82,23 @@ public final class ConcatenateTable implements KnowsRowCountTable {
     private static final String CFG_ROW_COUNT = "table_rowcount";
     private static final String CFG_ROW_COUNT_L = "table_rowcount_long";
     private static final String CFG_DUPLICATE_ROW_KEY_SUFFIX = "duplicate_row_key_suffix";
+    private static final String CFG_DUPLICATE_ROW_KEY_POLICY = "duplicate_row_key_policy";
 
     private AppendedRowsTable m_tablesWrapper;
     private long m_rowCount;
     private BufferedDataTable[] m_tables;
     private DataTableSpec m_spec;
     private String m_rowKeyDuplicateSuffix;
+    private DuplicatePolicy m_duplicatePolicy;
 
     private ConcatenateTable(final BufferedDataTable[] tables,
-        final String rowKeyDuplicateSuffix, final long rowCount) {
+        final String rowKeyDuplicateSuffix, final long rowCount, final DuplicatePolicy duplicatePolicy) {
         m_rowCount = rowCount;
         m_rowKeyDuplicateSuffix = rowKeyDuplicateSuffix;
-
+        m_duplicatePolicy = duplicatePolicy;
         // check whether all specs are the same
-        if (allTableSpecsMatch(tables) && rowKeyDuplicateSuffix == null) {
+        if (allTableSpecsMatch(tables) && rowKeyDuplicateSuffix == null
+            && duplicatePolicy != DuplicatePolicy.CreateNew) {
             //all table specs are equal AND no special duplicate policy required
             DataTableSpec[] specs = new DataTableSpec[tables.length];
             for (int i = 0; i < specs.length; i++) {
@@ -104,11 +108,13 @@ public final class ConcatenateTable implements KnowsRowCountTable {
         } else {
             //table specs don't match or a special duplicate policy is required -> we need to use the AppendedRowsTable
             //create a new wrapper table without duplicate checking (was done already on creation)
-            DuplicatePolicy dp;
-            if (rowKeyDuplicateSuffix != null) {
-                dp = DuplicatePolicy.AppendSuffix;
-            } else {
-                dp = DuplicatePolicy.Fail;
+            DuplicatePolicy dp = duplicatePolicy;
+            if (dp == null) {
+                if (rowKeyDuplicateSuffix != null) {
+                    dp = DuplicatePolicy.AppendSuffix;
+                } else {
+                    dp = DuplicatePolicy.Fail;
+                }
             }
             m_tablesWrapper = new AppendedRowsTable(dp, rowKeyDuplicateSuffix, tables);
             m_spec = m_tablesWrapper.getDataTableSpec();
@@ -248,9 +254,10 @@ public final class ConcatenateTable implements KnowsRowCountTable {
 
         //duplicate handling settings
         subSettings.addString(CFG_DUPLICATE_ROW_KEY_SUFFIX, m_rowKeyDuplicateSuffix);
+        subSettings.addString(CFG_DUPLICATE_ROW_KEY_POLICY, m_duplicatePolicy.name());
     }
 
-    /** Restore table form node settings object.
+    /** Restore table from node settings object.
      * @param s Containing information.
      * @param spec Associated spec.
      * @param tblRep For table lookup
@@ -272,7 +279,22 @@ public final class ConcatenateTable implements KnowsRowCountTable {
             tables[i] = BufferedDataTable.getDataTable(tblRep, referenceIDs[i], dataRepository);
         }
         String dupSuffix = subSettings.getString(CFG_DUPLICATE_ROW_KEY_SUFFIX, null);
-        return new ConcatenateTable(tables, dupSuffix, rowCount);
+        // added in 5.1
+        var duplicatePolicy = loadDuplicatePolicy(subSettings);
+        return new ConcatenateTable(tables, dupSuffix, rowCount, duplicatePolicy);
+    }
+
+    private static DuplicatePolicy loadDuplicatePolicy(final NodeSettingsRO settings) {
+        var policyName = settings.getString(CFG_DUPLICATE_ROW_KEY_POLICY, null);
+        if (policyName == null) {
+            if (settings.getString(CFG_DUPLICATE_ROW_KEY_SUFFIX, null) != null) {
+                return DuplicatePolicy.AppendSuffix;
+            } else {
+                return DuplicatePolicy.Fail;
+            }
+        } else {
+            return DuplicatePolicy.valueOf(policyName);
+        }
     }
 
     /**
@@ -298,7 +320,8 @@ public final class ConcatenateTable implements KnowsRowCountTable {
         if (duplicatesPreCheck && rowKeyDuplicateSuffix.isEmpty()) {
             checkForDuplicates(mon, tables, rowCount);
         }
-        return new ConcatenateTable(tables, rowKeyDuplicateSuffix.orElse(null), rowCount);
+        return new ConcatenateTable(tables, rowKeyDuplicateSuffix.orElse(null), rowCount,
+            rowKeyDuplicateSuffix.isPresent() ? DuplicatePolicy.AppendSuffix : DuplicatePolicy.Fail);
     }
 
     /**
@@ -317,7 +340,19 @@ public final class ConcatenateTable implements KnowsRowCountTable {
             rowCount += tables[i].size();
         }
         checkForDuplicates(mon, tables, rowCount);
-        return new ConcatenateTable(tables, null, rowCount);
+        return new ConcatenateTable(tables, null, rowCount, DuplicatePolicy.Fail);
+    }
+
+    /**
+     * Concatenates the given tables and generates new RowIDs.
+     *
+     * @param tables to concatenate
+     * @return the new table
+     * @since 5.1
+     */
+    public static ConcatenateTable createWithNewRowIDs(final BufferedDataTable... tables) {
+        return new ConcatenateTable(tables, null, Stream.of(tables).mapToLong(BufferedDataTable::size).sum(),
+            DuplicatePolicy.CreateNew);
     }
 
     private static void checkForDuplicates(final ExecutionMonitor mon, final BufferedDataTable[] tables,

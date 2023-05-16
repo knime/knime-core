@@ -97,7 +97,12 @@ public class AppendedRowsTable implements DataTable {
         /** Append a suffix to unify IDs. */
         AppendSuffix,
         /** Fail . */
-        Fail
+        Fail,
+        /**
+         * Prevent duplicates by generating completely new IDs.
+         * @since 5.1
+         * */
+        CreateNew
     }
 
     /**

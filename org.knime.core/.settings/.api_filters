@@ -2579,6 +2579,12 @@
                 <message_argument value="concatenate(ExecutionContext, ExecutionMonitor, IntSupplier, String, boolean, BufferedDataTable[])"/>
             </message_arguments>
         </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.TableBackend"/>
+                <message_argument value="concatenateWithNewRowIDs(ExecutionContext, IntSupplier, BufferedDataTable[])"/>
+            </message_arguments>
+        </filter>
         <filter comment="Internal API" id="403804204">
             <message_arguments>
                 <message_argument value="org.knime.core.data.TableBackend"/>

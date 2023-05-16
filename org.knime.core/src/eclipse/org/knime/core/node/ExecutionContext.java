@@ -563,6 +563,13 @@ public class ExecutionContext extends ExecutionMonitor {
         return wrapTableFromBackend(concatenated);
     }
 
+    BufferedDataTable createConcatenateTableWithNewRowIDs(final BufferedDataTable... tables) {
+        // the use of "this" twice is intended because this is a new method that does not accept an ExecutionMonitor
+        // instead clients should create a SubExecutionContext with the appropriate progress
+        return wrapTableFromBackend(
+            getTableBackend().concatenateWithNewRowIDs(this, m_dataRepository::generateNewID, tables));
+    }
+
     /**
      * Creates a new {@link BufferedDataTable} that is a column based join of
      * the argument tables. The <code>left</code> table argument contributes

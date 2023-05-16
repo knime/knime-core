@@ -151,6 +151,12 @@ public final class BufferedTableBackend implements TableBackend {
     }
 
     @Override
+    public KnowsRowCountTable concatenateWithNewRowIDs(final ExecutionContext exec,
+        final IntSupplier tableIdSupplier, final BufferedDataTable... tables) {
+        return ConcatenateTable.createWithNewRowIDs(tables);
+    }
+
+    @Override
     public KnowsRowCountTable append(final ExecutionContext exec, final ExecutionMonitor progress,
         final IntSupplier tableIdSupplier, final BufferedDataTable left, final BufferedDataTable right)
         throws CanceledExecutionException {

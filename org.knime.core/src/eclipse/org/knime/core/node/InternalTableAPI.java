@@ -95,4 +95,17 @@ public final class InternalTableAPI {
         return exec.appendTables(config, left, right);
     }
 
+    /**
+     * Concatenates the given tables and creates new RowIDs to ensure uniqueness.
+     *
+     * @param exec for concatenating the tables
+     * @param tables to concatenate
+     * @return the concatenated table
+     * @since 5.1
+     */
+    public static BufferedDataTable concatenateWithNewRowID(final ExecutionContext exec,
+        final BufferedDataTable... tables) {
+        return exec.createConcatenateTableWithNewRowIDs(tables);
+    }
+
 }

@@ -200,10 +200,14 @@ public class AppendedRowsIterator extends CloseableRowIterator {
             } while (!m_curIterator.hasNext());
         }
         DataRow baseRow = m_curIterator.next(); // row from table
-        m_curRowIndex++;
         boolean keyHasChanged = false;
         RowKey origKey = baseRow.getKey();
         RowKey key = origKey;
+        if (m_duplPolicy == DuplicatePolicy.CreateNew) {
+            key = RowKey.createRowKey((long)m_curRowIndex);
+            keyHasChanged = !origKey.equals(key);
+        }
+        m_curRowIndex++;
         while (m_duplicateMap.containsKey(key)) {
             if (m_exec != null) {
                 try {
@@ -264,17 +268,21 @@ public class AppendedRowsIterator extends CloseableRowIterator {
                 // do not print warning here, user specified explicitly
                 // to do duplicate handling.
                 break;
+            case CreateNew:
+                throw new IllegalStateException("No duplicates should be detected if we create new RowIDs.");
             default:
                 throw new RuntimeException("Unknown policy: " + m_duplPolicy);
             }
         }
         switch (m_duplPolicy) {
-        case Fail:
-            // do not put key into map but leave it to the BufferedDataTable
-            // to do a efficient duplicate checking
-            break;
-        default:
-            m_duplicateMap.put(key, origKey);
+            case CreateNew:
+                // we create new keys, so checking is not necessary
+            case Fail://NOSONAR
+                // do not put key into map but leave it to the BufferedDataTable
+                // to do a efficient duplicate checking
+                break;
+            default:
+                m_duplicateMap.put(key, origKey);
         }
         if (m_exec != null) {
             try {
@@ -358,7 +366,7 @@ public class AppendedRowsIterator extends CloseableRowIterator {
      */
     @Deprecated
     public Set<RowKey> getDuplicateHash() {
-        return Collections.unmodifiableSet(m_duplicateMap.keySet());
+        return getDuplicateNameMap().keySet();
     }
 
     /** Get a map of keys in the resulting table to the keys in (any of)
@@ -372,7 +380,12 @@ public class AppendedRowsIterator extends CloseableRowIterator {
      * @return Such a map (unmodifiable)
      */
     public Map<RowKey, RowKey> getDuplicateNameMap() {
-        return Collections.unmodifiableMap(m_duplicateMap);
+        if (m_duplPolicy == DuplicatePolicy.CreateNew) {
+            // TODO AP-20333: Store RowIDs if hiliting is enabled
+            throw new IllegalStateException("No RowIDs are stored if new RowIDs are generated.");
+        } else {
+            return Collections.unmodifiableMap(m_duplicateMap);
+        }
     }
 
     /** {@inheritDoc} */
