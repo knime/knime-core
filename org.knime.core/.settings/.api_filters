@@ -2561,6 +2561,12 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/data/TableBackend.java" type="org.knime.core.data.TableBackend">
+        <filter comment="Internal API not meant to be extended by anyone outside of KNIME." id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.TableBackend"/>
+                <message_argument value="append(ExecutionContext, ExecutionMonitor, IntSupplier, BufferedDataTable, BufferedDataTable)"/>
+            </message_arguments>
+        </filter>
         <filter id="403804204">
             <message_arguments>
                 <message_argument value="org.knime.core.data.TableBackend"/>
@@ -2579,6 +2585,12 @@
                 <message_argument value="replaceSpec(ExecutionContext, BufferedDataTable, DataTableSpec, IntSupplier)"/>
             </message_arguments>
         </filter>
+        <filter comment="Internal API that should not be referenced by anyone outside of KNIME." id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.TableBackend"/>
+                <message_argument value="append(ExecutionMonitor, IntSupplier, BufferedDataTable, BufferedDataTable)"/>
+            </message_arguments>
+        </filter>
         <filter comment="The TableBackend is not meant for direct reference or implementation by clients." id="405901410">
             <message_arguments>
                 <message_argument value="org.knime.core.data.TableBackend"/>
@@ -2587,6 +2599,12 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/data/container/BufferedTableBackend.java" type="org.knime.core.data.container.BufferedTableBackend">
+        <filter comment="Internal API not to be referenced by external code." id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.BufferedTableBackend"/>
+                <message_argument value="append(ExecutionMonitor, IntSupplier, BufferedDataTable, BufferedDataTable)"/>
+            </message_arguments>
+        </filter>
         <filter id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.core.data.container.BufferedTableBackend"/>

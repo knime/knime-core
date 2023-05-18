@@ -151,10 +151,10 @@ public final class BufferedTableBackend implements TableBackend {
     }
 
     @Override
-    public KnowsRowCountTable append(final ExecutionMonitor exec, final IntSupplier tableIdSupplier,
-        final BufferedDataTable left, final BufferedDataTable right)
+    public KnowsRowCountTable append(final ExecutionContext exec, final ExecutionMonitor progress,
+        final IntSupplier tableIdSupplier, final BufferedDataTable left, final BufferedDataTable right)
         throws CanceledExecutionException {
-        return JoinedTable.create(left, right, exec);
+        return JoinedTable.create(left, right, progress);
     }
 
     @Override

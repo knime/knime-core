@@ -141,16 +141,17 @@ public interface TableBackend {
 
     /**
      * Appends the provided tables in the column dimension.
-     *
+     * @param exec ExecutionContext for creating tables
      * @param progressMonitor used to report progress
      * @param tableIdSupplier provides IDs for potentially created ContainerTables
      * @param left the left table
      * @param right the right table
+     *
      * @return the appended table
      * @throws CanceledExecutionException if execution is canceled by the user
-     * @since 4.5
+     * @since 5.1
      */
-    KnowsRowCountTable append(ExecutionMonitor progressMonitor, IntSupplier tableIdSupplier,
+    KnowsRowCountTable append(ExecutionContext exec, ExecutionMonitor progressMonitor, IntSupplier tableIdSupplier,
         final BufferedDataTable left, BufferedDataTable right) throws CanceledExecutionException;
 
     /**

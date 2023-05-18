@@ -599,7 +599,7 @@ public class ExecutionContext extends ExecutionMonitor {
      */
     public BufferedDataTable createJoinedTable(final BufferedDataTable left, final BufferedDataTable right,
         final ExecutionMonitor exec) throws CanceledExecutionException {
-        KnowsRowCountTable jt = getTableBackend().append(exec, m_dataRepository::generateNewID, left, right);
+        KnowsRowCountTable jt = getTableBackend().append(this, exec, m_dataRepository::generateNewID, left, right);
         return wrapTableFromBackend(jt);
     }
 
