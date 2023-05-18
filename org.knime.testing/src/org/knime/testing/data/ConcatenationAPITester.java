@@ -48,13 +48,20 @@
  */
 package org.knime.testing.data;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.knime.testing.data.TableBackendTestUtils.checkTable;
 import static org.knime.testing.data.TableBackendTestUtils.doubleFactory;
 import static org.knime.testing.data.TableBackendTestUtils.intFactory;
 
 import java.util.Optional;
 
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnDomain;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DoubleValue;
 import org.knime.core.node.ExecutionContext;
 import org.knime.testing.data.TableBackendTestUtils.Column;
 
@@ -80,11 +87,15 @@ final class ConcatenationAPITester extends AbstractTableBackendAPITester {
         var expectedFooIntDoubleTable = createTable(r -> r < 3 ? ("Row" + r) : Long.toString(r - 3),
             new Column("foo", doubleFactory(1.0, 2.0, 3.0, 1.5, 2.5, 3.5)));
         checkTable(expectedFooIntDoubleTable, fooIntDoubleTable);
+        var expectedSpec = expectedFooIntDoubleTable.getDataTableSpec();
+        var actualSpec = fooIntDoubleTable.getDataTableSpec();
+        assertSpecEquals(expectedSpec, actualSpec);
 
         var fooDoubleIntTable = getExec().createConcatenateTable(getExec(), fooDoubleTable, fooIntTable);
         var expectedFooDoubleIntTable = createTable(r -> r < 3 ? Long.toString(r) : ("Row" + (r - 3)),
             new Column("foo", doubleFactory(1.5, 2.5, 3.5, 1.0, 2.0, 3.0)));
         checkTable(expectedFooDoubleIntTable, fooDoubleIntTable);
+        assertSpecEquals(expectedFooDoubleIntTable.getDataTableSpec(), fooDoubleIntTable.getDataTableSpec());
     }
 
     void testFailOnDuplicateRowIDs() throws Exception {
@@ -102,6 +113,41 @@ final class ConcatenationAPITester extends AbstractTableBackendAPITester {
         var expected = createTable(r -> expectedIDs[(int)r],
             new Column("foo", intFactory(1, 2, 3, 1, 2, 3)));
         checkTable(expected, concatenated);
+        assertSpecEquals(expected.getDataTableSpec(), concatenated.getDataTableSpec());
+    }
+
+    private static void assertSpecEquals(final DataTableSpec expected, final DataTableSpec actual) {
+        assertEquals(expected.getName(), actual.getName());
+        assertEquals(expected.getNumColumns(), actual.getNumColumns());
+        assertEquals(expected.getProperties(), actual.getProperties());
+        for (int c = 0; c < expected.getNumColumns(); c++) {
+            assertColumnSpecEquals(expected.getColumnSpec(c), actual.getColumnSpec(c));
+        }
+    }
+
+    private static void assertColumnSpecEquals(final DataColumnSpec expected, final DataColumnSpec actual) {
+        assertEquals(expected.getName(), actual.getName());
+        assertEquals(expected.getType(), actual.getType());
+        assertDomainEquals(expected.getDomain(), actual.getDomain());
+        assertEquals(expected.getColorHandler(), actual.getColorHandler());
+        assertEquals(expected.getElementNames(), actual.getElementNames());
+        assertEquals(expected.getFilterHandler(), actual.getFilterHandler());
+        assertEquals(expected.getShapeHandler(), actual.getShapeHandler());
+        assertEquals(expected.getSizeHandler(), actual.getSizeHandler());
+    }
+
+    private static void assertDomainEquals(final DataColumnDomain expected, final DataColumnDomain actual) {
+        assertNumberCellEquals(expected.getLowerBound(), actual.getLowerBound());
+        assertNumberCellEquals(expected.getUpperBound(), actual.getUpperBound());
+        assertEquals(expected.getValues(), actual.getValues());
+    }
+
+    private static void assertNumberCellEquals(final DataCell expected, final DataCell actual) {
+        if (expected.isMissing()) {
+            assertTrue(actual.isMissing());
+        } else {
+            assertEquals(((DoubleValue)expected).getDoubleValue(), ((DoubleValue)actual).getDoubleValue());
+        }
     }
 
 }
