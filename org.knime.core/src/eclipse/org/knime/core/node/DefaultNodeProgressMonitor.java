@@ -596,7 +596,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
         /** {@inheritDoc} */
         @Override
         public void setProgress(final double progress, final Supplier<String> messageSupplier) {
-            // do nothing here
+            super.setProgress(progress);
         }
 
         /** {@inheritDoc} */
