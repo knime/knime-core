@@ -49,9 +49,11 @@
 package org.knime.core.data.convert;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -169,9 +171,14 @@ public abstract class AbstractConverterFactoryRegistry<ST, DT, ConverterFactoryT
         }
         bySourceType.add(factory);
 
-        final ConverterFactoryType previous = m_byIdentifier.put(factory.getIdentifier(), factory);
-        if (previous != null) {
-            LOGGER.coding("Factory identifier is not unique (" + factory.getIdentifier() + ")");
+        // AP-20486: introducing aliases to identifiers (required when moving "javax.json" -> "jakarta.json"
+        final List<String> identifiers = new ArrayList<>(Arrays.asList(factory.getIdentifier()));
+        factory.getIdentifierAliases().forEach(identifiers::add);
+        for (String identifier : identifiers) {
+            final ConverterFactoryType previous = m_byIdentifier.put(identifier, factory);
+            if (previous != null) {
+                LOGGER.coding("Factory identifier is not unique (" + identifier + ")");
+            }
         }
 
         return (RegistryImpl)this;

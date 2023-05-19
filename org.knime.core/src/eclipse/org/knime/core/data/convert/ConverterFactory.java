@@ -48,6 +48,8 @@
  */
 package org.knime.core.data.convert;
 
+import java.util.Collections;
+
 import org.knime.core.data.convert.util.SerializeUtil;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.base.ConfigBaseRO;
@@ -105,6 +107,17 @@ public interface ConverterFactory<ST, DT> {
      * @return a unique identifier for this factory
      */
     public String getIdentifier();
+
+    /**
+     * A list of alias identifiers used in previous versions of KNIME, so only used to guarantee backward compatibility
+     * when, e.g. java API package names change. Must not return <code>null</code>.
+     *
+     * @return Default implementation returns an empty list.
+     * @since 5.1
+     */
+    public default Iterable<String> getIdentifierAliases() { // added as part of AP-20486
+        return Collections.emptyList();
+    }
 
     /**
      * Called when this factory is being serialized.
