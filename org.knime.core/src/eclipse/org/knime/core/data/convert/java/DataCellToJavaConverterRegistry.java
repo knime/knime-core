@@ -438,14 +438,11 @@ public final class DataCellToJavaConverterRegistry extends
         /* add converters from plugin providers */
         for (final IConfigurationElement configurationElement : Platform.getExtensionRegistry()
             .getConfigurationElementsFor(EXTENSION_POINT_ID)) {
-            LOGGER.debug("Found ConverterProvider extension: " + configurationElement.getDeclaringExtension());
             try {
                 // the specified class may not implement ConverterProvider, so
                 // check this first
                 final Object extension = configurationElement.createExecutableExtension("factoryClass");
-                if (extension instanceof DataCellToJavaConverterFactory) {
-                    final DataCellToJavaConverterFactory<?, ?> factory =
-                        (DataCellToJavaConverterFactory<?, ?>)extension;
+                if (extension instanceof DataCellToJavaConverterFactory<?, ?> factory) {
 
                     // Check name of factory
                     if (!validateFactoryName(factory)) {
@@ -455,8 +452,8 @@ public final class DataCellToJavaConverterRegistry extends
                         LOGGER.coding("Factory will not be registered.");
                         continue;
                     }
-
                     register(factory);
+                    LOGGER.debugWithFormat("Found ConverterProvider extension: %s", factory.getIdentifier());
                 } else {
                     // object was not an instance of ConverterProvider
                     LOGGER.error("Extension \"" + configurationElement.getDeclaringExtension()
@@ -539,7 +536,7 @@ public final class DataCellToJavaConverterRegistry extends
      * @param name the name of the
      * @return
      */
-    private boolean validateFactoryName(final DataCellToJavaConverterFactory<?, ?> factory) {
+    private static boolean validateFactoryName(final DataCellToJavaConverterFactory<?, ?> factory) {
         final String name = factory.getName();
         final String className = factory.getDestinationType().getSimpleName();
         return name.matches(Pattern.quote(className) + "(| \\(.+\\))");

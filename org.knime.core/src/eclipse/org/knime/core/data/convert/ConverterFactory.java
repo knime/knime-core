@@ -115,7 +115,7 @@ public interface ConverterFactory<ST, DT> {
      * @return Default implementation returns an empty list.
      * @since 5.1
      */
-    public default Iterable<String> getIdentifierAliases() { // added as part of AP-20486
+    default Iterable<String> getIdentifierAliases() { // added as part of AP-20486
         return Collections.emptyList();
     }
 
