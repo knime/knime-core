@@ -53,7 +53,9 @@ import java.util.UUID;
 
 import org.knime.core.data.IDataRepository;
 import org.knime.core.data.filestore.FileStore;
+import org.knime.core.data.filestore.FileStoreCell;
 import org.knime.core.data.filestore.FileStoreKey;
+import org.knime.core.data.filestore.FileStorePortObject;
 import org.knime.core.data.filestore.internal.FileStoreProxy.FlushCallback;
 import org.knime.core.node.ExecutionContext;
 
@@ -88,9 +90,20 @@ public interface IWriteFileStoreHandler extends IFileStoreHandler {
     public void ensureOpenAfterLoad() throws IOException;
 
     /**
-     * @param fs
-     * @param flushCallback TODO
-     * @return */
+     * Copy the given {@link FileStore} to this {@link IWriteFileStoreHandler}.
+     *
+     * The {@link FlushCallback} is usually the {@link FileStoreCell} or {@link FileStorePortObject} referencing the
+     * {@link FileStore} and it will be asked to flush itself to the {@link FileStore} before the copy process is
+     * invoked (because copying is done on file level).
+     *
+     * This method must also be called for {@link FileStore}s created in loops to indicate that a {@link FileStore} is
+     * not just temporary to this loop iteration.
+     *
+     * @param fs The {@link FileStore} to copy to this {@link IWriteFileStoreHandler}
+     * @param flushCallback Will be invoked prior to copying the {@link FileStore} to make sure all data is written to
+     *            disk.
+     * @return The possibly updated {@link FileStoreKey} of this {@link FileStore}
+     */
     public FileStoreKey translateToLocal(FileStore fs, FlushCallback flushCallback);
 
     public boolean mustBeFlushedPriorSave(final FileStore fs);
