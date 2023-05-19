@@ -241,7 +241,7 @@ public abstract class AbstractFileStoreSerializableValueFactory<V extends DataVa
                 @SuppressWarnings("rawtypes")
                 var fsReadVal = (AbstractFileStoreSerializableValueFactory.FileStoreSerializableReadValue)value;
                 m_access.getWriteAccess(0).setFrom(fsReadVal.m_access.getAccess(0));
-                m_access.getWriteAccess(1).setFrom(fsReadVal.m_access.getAccess(1)); // TODO: cached var binary read access was not serialized but we want the bytes...
+                m_access.getWriteAccess(1).setFrom(fsReadVal.m_access.getAccess(1));
                 return;
             }
 
@@ -255,6 +255,23 @@ public abstract class AbstractFileStoreSerializableValueFactory<V extends DataVa
                     fsCell = blobToFileStore(blobCell);
                 } else {
                     fsCell = (FileStoreCell)value;
+
+                    if (mustBeFlushedPriorSave(fsCell)) {
+                        try {
+                            final FileStore[] fileStores = FileStoreUtil.getFileStores(fsCell);
+                            final FileStoreKey[] fileStoreKeys = new FileStoreKey[fileStores.length];
+
+                            for (int fileStoreIndex = 0; fileStoreIndex < fileStoreKeys.length; fileStoreIndex++) {
+                                fileStoreKeys[fileStoreIndex] =
+                                    m_fileStoreHandler.translateToLocal(fileStores[fileStoreIndex], fsCell);
+                            }
+
+                            // update file store keys without calling post-construct.
+                            FileStoreUtil.retrieveFileStoreHandlersFrom(fsCell, fileStoreKeys, m_dataRepository, false);
+                        } catch (IOException ex) {
+                            throw new IllegalStateException(ex);
+                        }
+                    }
                 }
 
                 try {
@@ -281,6 +298,16 @@ public abstract class AbstractFileStoreSerializableValueFactory<V extends DataVa
         @SuppressWarnings("unchecked")
         private FileStoreCell blobToFileStore(final BlobDataCell blobCell) {
             return createFileStoreCell((V)blobCell);
+        }
+
+        private boolean mustBeFlushedPriorSave(final FileStoreCell cell) {
+            final FileStore[] fileStores = FileStoreUtil.getFileStores(cell);
+            for (FileStore fs : fileStores) {
+                if (m_fileStoreHandler.mustBeFlushedPriorSave(fs)) {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 
