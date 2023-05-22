@@ -367,7 +367,8 @@ public final class ConcatenateTable implements KnowsRowCountTable {
                 try {
                     check.addKey(key.toString());
                 } catch (DuplicateKeyException | IOException ex) {
-                    throw new IllegalArgumentException("Duplicate row key \"" + key + "\" in table with index " + i);
+                    throw new IllegalArgumentException(
+                        "Duplicate RowID '%s' in table with index %s.".formatted(key, i), ex);
                 }
                 r++;
                 final long currentRow = r;
