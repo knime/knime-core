@@ -223,6 +223,11 @@ public abstract class AbstractTableBackendTest {
         m_specReplacerTester.testUpcast();
     }
 
+    @Test
+    void testDowncastAfterUpcastToDataValue() throws Exception {
+        m_specReplacerTester.testDowncastAfterUpcastToDataValue();
+    }
+
     //////////////////////// Concatenation //////////////////////////
 
     @Test
