@@ -55,7 +55,10 @@ import static org.knime.testing.data.TableBackendTestUtils.stringFactory;
 
 import java.util.function.IntSupplier;
 
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
 import org.knime.core.data.TableBackend;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
@@ -106,6 +109,14 @@ final class SpecReplacerAPITester extends AbstractTableBackendAPITester {
         var expectedTable = createTable(new Column("foo", doubleFactory(1.0, 2.0, 3.0)), BAR, BAZ);
         var upcastedTable = getExec().createSpecReplacerTable(table, expectedTable.getDataTableSpec());
         checkTable(expectedTable, upcastedTable);
+    }
+
+    void testDowncastAfterUpcastToDataValue() throws Exception {
+        var table = createTable(FOO);
+        var upcastedTable = getExec().createSpecReplacerTable(table,
+            new DataTableSpec(new DataColumnSpecCreator("foo", DataType.getType(DataCell.class)).createSpec()));
+        var downcastedTable = getExec().createSpecReplacerTable(upcastedTable, table.getDataTableSpec());
+        checkTable(table, downcastedTable);
     }
 
 }
