@@ -116,6 +116,32 @@ final class ConcatenationAPITester extends AbstractTableBackendAPITester {
         assertSpecEquals(expected.getDataTableSpec(), concatenated.getDataTableSpec());
     }
 
+    void testMissingColumnInSecondTable() throws Exception {
+        var foo = new Column("foo", intFactory(1, 2, 3));
+        var bar = new Column("bar", doubleFactory(1.1, 2.2, 3.3));
+        var firstTable = createTable(r -> "Row" + r, foo, bar);
+        var secondTable = createTable(r -> "Row" + (r + 3), foo);
+        var concatenatedTable = getExec().createConcatenateTable(getExec(), firstTable, secondTable);
+        var expectedFoo = new Column("foo", intFactory(1, 2, 3, 1, 2, 3));
+        var expectedBar = new Column("bar", doubleFactory(1.1, 2.2, 3.3, null, null, null));
+        var expectedTable = createTable(r -> "Row" + r, expectedFoo, expectedBar);
+        checkTable(expectedTable, concatenatedTable);
+        assertSpecEquals(expectedTable.getDataTableSpec(), concatenatedTable.getDataTableSpec());
+    }
+
+    void testMissingColumnInFirstTable() throws Exception {
+        var foo = new Column("foo", intFactory(1, 2, 3));
+        var bar = new Column("bar", doubleFactory(1.1, 2.2, 3.3));
+        var firstTable = createTable(r -> "Row" + r, bar);
+        var secondTable = createTable(r -> "Row" + (r + 3), foo, bar);
+        var concatenatedTable = getExec().createConcatenateTable(getExec(), firstTable, secondTable);
+        var expectedFoo = new Column("foo", intFactory(null, null, null, 1, 2, 3));
+        var expectedBar = new Column("bar", doubleFactory(1.1, 2.2, 3.3, 1.1, 2.2, 3.3));
+        var expectedTable = createTable(r -> "Row" + r, expectedBar, expectedFoo);
+        checkTable(expectedTable, concatenatedTable);
+        assertSpecEquals(expectedTable.getDataTableSpec(), concatenatedTable.getDataTableSpec());
+    }
+
     private static void assertSpecEquals(final DataTableSpec expected, final DataTableSpec actual) {
         assertEquals(expected.getName(), actual.getName());
         assertEquals(expected.getNumColumns(), actual.getNumColumns());

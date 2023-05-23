@@ -244,4 +244,10 @@ public abstract class AbstractTableBackendTest {
     void testDeduplicateRowIDsWithSuffix() throws Exception {
         m_concatenationTester.testDeduplicateRowIDsWithSuffix();
     }
+
+    @Test
+    void testMissingColumnInOneTable() throws Exception {
+        m_concatenationTester.testMissingColumnInFirstTable();
+        m_concatenationTester.testMissingColumnInSecondTable();
+    }
 }
