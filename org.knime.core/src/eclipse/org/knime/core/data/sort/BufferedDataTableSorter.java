@@ -53,6 +53,7 @@ import java.util.Comparator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -133,6 +134,55 @@ public class BufferedDataTableSorter extends AbstractTableSorter {
         m_execContext = ctx;
     }
 
+    private static Comparator<DataRow> getComparatorFromType(final DataType type, final int index,
+        final boolean sortAscending) {
+        var comparator = type.getComparator();
+        return (final DataRow o1, final DataRow o2) -> {
+            final var cell1 = o1.getCell(index);
+            final var cell2 = o2.getCell(index);
+            if (sortAscending) {
+                return comparator.compare(cell1, cell2);
+            } else {
+                return -1 * comparator.compare(cell1, cell2);
+            }
+        };
+    }
+
+    /**
+     * Utility method to sort a given data table.
+     * 
+     * @param table to be sorted
+     * @param columnIndex index of the column in the table to be used for the sorting algorithm
+     * @param sortAscending sort order
+     * @param exec {@link ExecutionContext} where the sorting operation will be performed
+     * @return a {@link BufferedDataTable} with the same columns as the given by parameter but sorted according to the
+     *         column given
+     * @throws CanceledExecutionException If execution context cancelled.
+     * @since 5.1
+     */
+    public static BufferedDataTable sortTable(final BufferedDataTable table, final int columnIndex,
+        final boolean sortAscending, final ExecutionContext exec) throws CanceledExecutionException {
+        var type = table.getSpec().getColumnSpec(columnIndex).getType();
+        var comparator = getComparatorFromType(type, columnIndex, sortAscending);
+        return new BufferedDataTableSorter(table, comparator).sort(exec);
+    }
+
+    /**
+     * Utility method to sort a given data table.
+     * 
+     * @param table to be sorted
+     * @param columnIndex index of the column in the table to be used for the sorting algorithm
+     * @param exec {@link ExecutionContext} where the sorting operation will be performed
+     * @return a {@link BufferedDataTable} with the same columns as the given by parameter but sorted according to the
+     *         column given
+     * @throws CanceledExecutionException If execution context cancelled.
+     * @since 5.1
+     */
+    public static BufferedDataTable sortTable(final BufferedDataTable table, final int columnIndex,
+        final ExecutionContext exec) throws CanceledExecutionException {
+        return sortTable(table, columnIndex, true, exec);
+    }
+
     /**
      * Sorts the table passed in the constructor according to the settings and returns the sorted output table.
      *
@@ -162,9 +212,8 @@ public class BufferedDataTableSorter extends AbstractTableSorter {
     @Override
     void clearTable(final DataTable table) {
         if (!(table instanceof BufferedDataTable)) {
-            NodeLogger.getLogger(getClass()).warnWithFormat(
-                "Can't clear table instance of \"%s\" - expected \"%s\"", table.getClass().getSimpleName(),
-                BufferedDataTable.class.getSimpleName());
+            NodeLogger.getLogger(getClass()).warnWithFormat("Can't clear table instance of \"%s\" - expected \"%s\"",
+                table.getClass().getSimpleName(), BufferedDataTable.class.getSimpleName());
         } else {
             m_execContext.clearTable((BufferedDataTable)table);
         }
