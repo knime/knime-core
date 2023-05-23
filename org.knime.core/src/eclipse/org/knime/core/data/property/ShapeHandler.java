@@ -161,7 +161,7 @@ public final class ShapeHandler implements PropertyHandler {
      * Internal <code>ShapeModel</code> used to request <code>Shape</code>
      * objects by <code>DataCell</code> attribute value.
      */
-    interface ShapeModel {
+    interface ShapeModel extends VisualModel {
         /**
          * Returns a <code>Shape</code> object for a given
          * <code>DataCell</code>.
@@ -173,6 +173,7 @@ public final class ShapeHandler implements PropertyHandler {
          * Saves this <code>ShapeModel</code> to the given <i>config</i>.
          * @param config This object.
          */
+        @Override
         void save(ConfigWO config);
     }
 

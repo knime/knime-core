@@ -44,47 +44,23 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Mar 15, 2023 (wiswedel): created
+ *   22 May 2023 (carlwitt): created
  */
 package org.knime.core.data.property;
 
-import java.awt.Color;
-
 import org.knime.core.data.DataCell;
-import org.knime.core.node.config.ConfigWO;
 
 /**
- * Interface allowing requests for {@link ColorAttr} by {@link DataCell}. This interface is not meant to be extended
- * by 3rd party code. There are two implementations available:
- * <ol>
- * <li> {@link ColorModelNominal} for nominal assignment based on column values
- * <li> {@link ColorModelRange} numeric range based coloring
- * </old>
- *
+ * TODO might be replaced with/moved to core-ui code (e.g., DataValueTextRenderer)
+ * @author Carl Witt, KNIME AG, Zurich, Switzerland
+ * @since 5.1
  */
-public sealed interface ColorModel extends VisualModel permits ColorModelNominal, ColorModelRange {
+public interface ValueFormatModel extends VisualModel {
 
     /**
-     * Returns a <code>ColorAttr</code> for the given <code>DataCell</code>.
-     * @param dc the <code>DataCell</code> to get the color for
-     * @return a <code>ColorAttr</code> object, but not <code>null</code>
+     * @param dataCell holds the value to display
+     * @return the html representation for the given data cell.
      */
-    ColorAttr getColorAttr(DataCell dc);
-    /**
-     * Saves this <code>ColorModel</code> to the given
-     * <code>ConfigWO</code>.
-     * @param config used to save this <code>ColorModel</code> to
-     */
-    @Override
-    void save(ConfigWO config);
+    String getHTML(DataCell dataCell);
 
-    /**
-     * Opaque color as a 24-bit integer - as per java.awt.Color.decode(String), e.g. RED -> "#FF0000"
-     *
-     * @param color Non-null color object
-     * @return The hex string
-     */
-    static String colorToHexString(final Color color) {
-        return String.format("#%06X", color.getRGB() & 0x00FFFFFF);
-    }
 }

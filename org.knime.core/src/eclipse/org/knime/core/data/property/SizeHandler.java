@@ -184,7 +184,7 @@ public final class SizeHandler implements PropertyHandler {
      * Internal <code>SizeModel</code> used to request sizes by
      * <code>DataCell</code> attribute value.
      */
-    interface SizeModel {
+    interface SizeModel extends VisualModel {
         /**
          * Returns a <code>double</code> value for a given <code>DataCell</code>
          * within 0 and 1, or -1 if no color setting available.
@@ -206,6 +206,7 @@ public final class SizeHandler implements PropertyHandler {
          * Save size settings to.
          * @param config This object.
          */
+        @Override
         void save(ConfigWO config);
     }
 

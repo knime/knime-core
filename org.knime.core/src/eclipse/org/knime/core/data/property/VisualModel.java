@@ -44,47 +44,37 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Mar 15, 2023 (wiswedel): created
+ *   22 May 2023 (carlwitt): created
  */
 package org.knime.core.data.property;
 
-import java.awt.Color;
-
-import org.knime.core.data.DataCell;
 import org.knime.core.node.config.ConfigWO;
 
 /**
- * Interface allowing requests for {@link ColorAttr} by {@link DataCell}. This interface is not meant to be extended
- * by 3rd party code. There are two implementations available:
- * <ol>
- * <li> {@link ColorModelNominal} for nominal assignment based on column values
- * <li> {@link ColorModelRange} numeric range based coloring
- * </old>
  *
+ * A {@link VisualModel} maps a data value to something visual, e.g., a color, shape, size, or HTML representation.
+ *
+ * The actual mapping method is not part of the interface because the existing implementations had incompatible names,
+ * e.g., getShape and getColor.
+ *
+ * All models can be saved and loaded, e.g., as part of converting the model to a port object and reading it back in at
+ * another node. The load method is typically a static method.
+ *
+ * @author Carl Witt, KNIME AG, Zurich, Switzerland
+ * @since 5.1
  */
-public sealed interface ColorModel extends VisualModel permits ColorModelNominal, ColorModelRange {
+public interface VisualModel {
 
     /**
-     * Returns a <code>ColorAttr</code> for the given <code>DataCell</code>.
-     * @param dc the <code>DataCell</code> to get the color for
-     * @return a <code>ColorAttr</code> object, but not <code>null</code>
+     * @param config to to persist the model's settings to. This given config is expected to be empty, i.e., a subtree
+     *            freshly created by the caller specifically to store this model's parameters and passed to this method.
      */
-    ColorAttr getColorAttr(DataCell dc);
-    /**
-     * Saves this <code>ColorModel</code> to the given
-     * <code>ConfigWO</code>.
-     * @param config used to save this <code>ColorModel</code> to
-     */
-    @Override
     void save(ConfigWO config);
 
     /**
-     * Opaque color as a 24-bit integer - as per java.awt.Color.decode(String), e.g. RED -> "#FF0000"
-     *
-     * @param color Non-null color object
-     * @return The hex string
+     * @return A string summary for this model containing type and parameter values.
      */
-    static String colorToHexString(final Color color) {
-        return String.format("#%06X", color.getRGB() & 0x00FFFFFF);
-    }
+    @Override
+    public String toString();
+
 }
