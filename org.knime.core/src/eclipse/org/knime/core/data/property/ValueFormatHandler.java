@@ -84,6 +84,7 @@ public final class ValueFormatHandler implements PropertyHandler {
     }
 
     /**
+     * TODO
      * Returns a <code>ColorAttr</code> object as specified by the content
      * of the given <code>DataCell</code>. Requests are forwarded to the
      * underlying <code>ColorModel</code>. If no <code>ColorAttr</code>
@@ -95,7 +96,7 @@ public final class ValueFormatHandler implements PropertyHandler {
      * @see ColorAttr#DEFAULT
      */
     public String get(final DataCell dc) {
-        return m_model.get(dc);
+        return m_model.getHTML(dc);
     }
 
     /**

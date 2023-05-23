@@ -54,6 +54,8 @@ import org.knime.core.data.meta.DataColumnMetaData;
 import org.knime.core.data.property.ColorHandler;
 import org.knime.core.data.property.ShapeHandler;
 import org.knime.core.data.property.SizeHandler;
+import org.knime.core.data.property.ValueFormatHandler;
+import org.knime.core.data.property.ValueFormatModel;
 import org.knime.core.data.property.filter.FilterHandler;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.ConfigRO;
@@ -101,6 +103,9 @@ public final class DataColumnSpec {
 
     /** Holds the ColorHandler if one was set or null. */
     private final ColorHandler m_colorHandler;
+
+    /** An optional format that defines how to display the column's values.*/
+    private final ValueFormatHandler m_formatHandler;
 
     /** Holds the FilterHandler if one was set or null. */
     private final FilterHandler m_filterHandler;
@@ -156,6 +161,13 @@ public final class DataColumnSpec {
     DataColumnSpec(final String name, final String[] elNames, final DataType type, final DataColumnDomain domain,
         final DataColumnProperties props, final SizeHandler sizeHdl, final ColorHandler colorHdl,
         final ShapeHandler shapeHdl, final FilterHandler filterHdl, final DataColumnMetaDataManager metaData) {
+        this(name, elNames, type, domain, props, sizeHdl, colorHdl, shapeHdl, null, filterHdl, metaData);
+    }
+
+    DataColumnSpec(final String name, final String[] elNames, final DataType type, final DataColumnDomain domain,
+        final DataColumnProperties props, final SizeHandler sizeHdl, final ColorHandler colorHdl,
+        final ShapeHandler shapeHdl, final ValueFormatHandler formatHandler, final FilterHandler filterHdl, final DataColumnMetaDataManager metaData) {
+
         final String nullError = "Do not init DataColumnSpec with null arguments!";
         List<String> elNamesAsList = Collections.unmodifiableList(
             Arrays.asList(CheckUtils.checkArgumentNotNull(elNames, nullError)));
@@ -169,6 +181,7 @@ public final class DataColumnSpec {
         m_sizeHandler = sizeHdl;
         m_colorHandler = colorHdl;
         m_shapeHandler = shapeHdl;
+        m_formatHandler = formatHandler;
         m_filterHandler = filterHdl;
         m_metaDataManager = metaData;
     }
@@ -262,6 +275,15 @@ public final class DataColumnSpec {
     public ColorHandler getColorHandler() {
         return m_colorHandler;
     }
+
+    /**
+     * @return the wrapper for the {@link ValueFormatModel} if any is defined, otherwise <code>null</code>.
+     * @since 5.1
+     */
+    public ValueFormatHandler getFormatHandler() {
+        return m_formatHandler;
+    }
+
 
     /**
      * Returns the <code>FilterHandler</code> defined on this column, if available. (Note, this method was added
