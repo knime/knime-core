@@ -139,8 +139,7 @@ public class TestSubnode_Actions_InAndOutsideOfSubnode extends WorkflowTestCase 
 
             final SubNodeContainer subNC = m.getNodeContainer(m_subnode12, SubNodeContainer.class, true);
 
-            waitWhile(m_subnodeOutput_12_13, nc -> !nc.getNodeContainerState().isExecuted(), -1);
-            checkState(m_subnodeOutput_12_13, EXECUTED);
+            waitWhile(m_subnodeOutput_12_13, nc -> !nc.getNodeContainerState().isExecutionInProgress(), -1);
             checkState(m_subnode12, EXECUTING);
 
             checkState(m_dataGen1, EXECUTED);
@@ -152,6 +151,7 @@ public class TestSubnode_Actions_InAndOutsideOfSubnode extends WorkflowTestCase 
             innerLock.unlock();
             waitWhileNodeInExecution(m_subnode12);
 
+            checkState(m_subnodeOutput_12_13, EXECUTED);
             checkState(m_subnode12, EXECUTED);
 
             checkState(m_tableView7, CONFIGURED_MARKEDFOREXEC, UNCONFIGURED_MARKEDFOREXEC);

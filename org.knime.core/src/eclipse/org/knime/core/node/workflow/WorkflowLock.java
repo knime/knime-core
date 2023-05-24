@@ -103,8 +103,13 @@ public final class WorkflowLock implements AutoCloseable {
         m_reentrantLock = parent.getReentrantLockInstance();
     }
 
-    /** @return the {@link ReentrantLock} - rarely used except for wait methods that need to sleep on the lock. */
-    ReentrantLock getReentrantLock() {
+    /**
+     * @return the {@link ReentrantLock} - rarely used except for wait methods that need to sleep on the lock.
+     *
+     * @noreference This method is not intended to be referenced by clients.
+     * @since 5.1
+     */
+    public ReentrantLock getReentrantLock() {
         return m_reentrantLock;
     }
 

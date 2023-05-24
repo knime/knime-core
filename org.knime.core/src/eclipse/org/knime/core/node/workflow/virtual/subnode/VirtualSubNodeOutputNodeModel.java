@@ -55,6 +55,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.ObjectUtils;
@@ -67,9 +69,11 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.ExtendedScopeNodeModel;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.KNIMEException;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.message.Message;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectHolder;
 import org.knime.core.node.port.PortObjectSpec;
@@ -93,6 +97,7 @@ import org.knime.core.node.workflow.FlowVariable.Type;
 import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowLoadHelper;
+import org.knime.core.util.ThreadPool;
 
 
 
@@ -150,6 +155,18 @@ public final class VirtualSubNodeOutputNodeModel extends ExtendedScopeNodeModel
     @Override
     protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec)
             throws Exception {
+        final var waiter = VirtualSubNodeOutputWaiter.startExecutionAndCreate(m_subNodeContainer);
+        final Callable<Optional<Message>> waiterCallable = () -> waiter.waitForNodesToExecute();
+        final var currentPool = ThreadPool.currentPool();
+        final Optional<Message> message;
+        if (currentPool != null) {
+            message = currentPool.runInvisible(waiterCallable);
+        } else {
+            message = waiterCallable.call(); // as of today (05 '23) this is practically irrelevant
+        }
+        if (message.isPresent()) {
+            throw message.map(KNIMEException::of).get();
+        }
         setNewExchange(new VirtualSubNodeExchange(inObjects, getVisibleFlowVariables()));
         return new PortObject[0];
     }

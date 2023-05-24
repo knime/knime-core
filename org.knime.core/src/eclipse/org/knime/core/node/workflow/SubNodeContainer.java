@@ -536,10 +536,13 @@ public final class SubNodeContainer extends SingleNodeContainer
                     } else {
                         setNodeMessage(NodeMessage.newWarning(msg));
                     }
+                    final var virtualOutNode = getVirtualOutNode();
+                    if (virtualOutNode.getInternalState().isExecuted()) {
+                        m_wfm.resetAndConfigureNode(virtualOutNode.getID());
+                    }
                     break;
                 default:
                     // annotation change, dirty state change
-
             }
         }
     }
@@ -1565,6 +1568,7 @@ public final class SubNodeContainer extends SingleNodeContainer
     void cleanup() {
         super.cleanup();
         getVirtualInNodeModel().setSubNodeContainer(null);
+        getVirtualOutNodeModel().setSubNodeContainer(null);
         m_wfm.removeNodeStateChangeListener(m_wfmStateChangeListener);
         m_wfm.removeListener(m_wfmListener);
         m_wfm.cleanup();
