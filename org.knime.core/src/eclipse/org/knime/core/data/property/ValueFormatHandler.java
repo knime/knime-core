@@ -47,7 +47,7 @@
  */
 package org.knime.core.data.property;
 
-import org.knime.core.data.DataCell;
+import org.knime.core.data.DataValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
@@ -95,8 +95,8 @@ public final class ValueFormatHandler implements PropertyHandler {
      * @return a <code>ColorAttr</code> object assigned to the given cell
      * @see ColorAttr#DEFAULT
      */
-    public String get(final DataCell dc) {
-        return m_model.getHTML(dc);
+    public String get(final DataValue dv) {
+        return m_model.getHTML(dv);
     }
 
     /**

@@ -47,71 +47,64 @@
  */
 package org.knime.core.data.property;
 
-import java.text.DecimalFormat;
-
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DoubleValue;
-import org.knime.core.data.LongValue;
+import org.knime.core.data.DataValue;
+import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.def.LongCell;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
+import org.knime.core.util.valueformat.NumberFormatter;
 
 /**
- * Computes colors based on a range of minimum and maximum values assigned to certain colors which are interpolated
- * between a min and maximum color.
- *
+ * Defines a transformation from numbers to html.
  * @noinstantiate This class is not intended to be instantiated by clients.
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  * @since 5.1
  */
 public final class ValueFormatModelNumber implements ValueFormatModel {
 
-    DecimalFormat m_format;
+    final NumberFormatter m_formatter;
 
-    public ValueFormatModelNumber(final DecimalFormat format) {
-        m_format = format;
+    /**
+     * @param formatter to handle value to markup conversion
+     */
+    public ValueFormatModelNumber(final NumberFormatter formatter) {
+        m_formatter = formatter;
     }
 
     /**
-     * Returns a ColorAttr for the given DataCell value, or <code>ColorAttr.DEFAULT</code> if not set. The colors red,
-     * green, and blue are merged in the same ratio from the original spread of the lower and upper bounds.
-     *
-     * @param dc A DataCell value to get color for.
-     * @return A ColorAttr for a DataCell value or the DEFAULT ColorAttr.
+     * @param dv value to transform
+     * @return markup of the formatted value.
      */
     @Override
-    public String getHTML(final DataCell dc) {
-        var value = unpack(dc);
-        return value == null ? "" : m_format.format(value);
+    public String getHTML(final DataValue dv) {
+        var value = unpack(dv);
+        return value == null ? "" : m_formatter.format(value);
     }
-
 
     /**
      * @param dc data cell that holds the value to format
      * @return a Double, a Long, or null
      */
-    private static Object unpack(final DataCell dc) {
-        if (dc == null || dc.isMissing()) {
+    private static Object unpack(final DataValue dc) {
+        if (dc == null) {
             return null;
         }
 
         // if we get a long, we'd rather assign it to long than double (and potentially changing value)
-        if (dc.getType().isCompatible(LongValue.class)) {
-            return ((LongValue)dc).getLongValue();
+        if (dc instanceof LongCell) {
+            return ((LongCell)dc).getLongValue();
         }
-        if (dc.getType().isCompatible(DoubleValue.class)) {
-            return ((DoubleValue)dc).getDoubleValue();
+        if (dc instanceof DoubleCell) {
+            return ((DoubleCell)dc).getDoubleValue();
         }
 
         return null;
-
     }
-
-    private static final String CFG_DECIMAL_FORMAT_PATTERN = "pattern";
 
     @Override
     public void save(final ConfigWO config) {
-        config.addString(CFG_DECIMAL_FORMAT_PATTERN, m_format.toPattern());
+        NumberFormatter.Persistor.save(config, m_formatter);
     }
 
     /**
@@ -120,14 +113,13 @@ public final class ValueFormatModelNumber implements ValueFormatModel {
      * @throws InvalidSettingsException If the settings could not be read.
      */
     public static ValueFormatModelNumber load(final ConfigRO config) throws InvalidSettingsException {
-        String pattern = config.getString(CFG_DECIMAL_FORMAT_PATTERN);
-        // TODO not sure if to pattern/from pattern is lossless
-        return new ValueFormatModelNumber(new DecimalFormat(pattern));
+        var numberFormatter = NumberFormatter.Persistor.load(config);
+        return new ValueFormatModelNumber(numberFormatter);
     }
 
     @Override
     public String toString() {
-        return "Number FormatModel (pattern=<" + m_format.toPattern() + ">)";
+        return "Number FormatModel (pattern=<" + m_formatter.toString() + ">)";
     }
 
     @Override
@@ -139,11 +131,11 @@ public final class ValueFormatModelNumber implements ValueFormatModel {
             return false;
         }
         ValueFormatModelNumber cmodel = (ValueFormatModelNumber)obj;
-        return m_format.toPattern().equals(cmodel.m_format.toPattern());
+        return m_formatter.equals(cmodel.m_formatter);
     }
 
     @Override
     public int hashCode() {
-        return m_format.toPattern().hashCode();
+        return m_formatter.hashCode();
     }
 }

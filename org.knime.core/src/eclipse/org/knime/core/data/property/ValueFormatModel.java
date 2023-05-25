@@ -48,7 +48,7 @@
  */
 package org.knime.core.data.property;
 
-import org.knime.core.data.DataCell;
+import org.knime.core.data.DataValue;
 
 /**
  * TODO might be replaced with/moved to core-ui code (e.g., DataValueTextRenderer)
@@ -61,6 +61,6 @@ public interface ValueFormatModel extends VisualModel {
      * @param dataCell holds the value to display
      * @return the html representation for the given data cell.
      */
-    String getHTML(DataCell dataCell);
+    String getHTML(DataValue dataCell);
 
 }

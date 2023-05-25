@@ -635,14 +635,6 @@
             specClass="org.knime.core.data.DataTableSpec">
       </portType>
       <portType
-            hidden="false"
-            color="#1eb9dc"
-            name="Value Format"
-            objectClass="org.knime.core.node.port.viewproperty.FormatHandlerPortObject"
-            objectSerializer="org.knime.core.node.port.viewproperty.FormatHandlerPortObject$Serializer"
-            specClass="org.knime.core.data.DataTableSpec">
-      </portType>
-      <portType
             color="#1eb9dc"
             hidden="false"
             name="FilterDefinition"

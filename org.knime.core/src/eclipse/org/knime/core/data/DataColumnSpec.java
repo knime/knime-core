@@ -105,7 +105,7 @@ public final class DataColumnSpec {
     private final ColorHandler m_colorHandler;
 
     /** An optional format that defines how to display the column's values.*/
-    private final ValueFormatHandler m_formatHandler;
+    private final ValueFormatHandler m_valueFormatHandler;
 
     /** Holds the FilterHandler if one was set or null. */
     private final FilterHandler m_filterHandler;
@@ -136,6 +136,9 @@ public final class DataColumnSpec {
     /** Config key for the ShapeHandler. */
     private static final String CFG_SHAPES = "shape_handler";
 
+    /** Config key for the {@link ValueFormatHandler}. */
+    private static final String CFG_VALUE_FORMAT = "value_format_handler";
+
     /** Config key for the FilterHandler. */
     private static final String CFG_FILTER = "filter_handler";
 
@@ -164,6 +167,22 @@ public final class DataColumnSpec {
         this(name, elNames, type, domain, props, sizeHdl, colorHdl, shapeHdl, null, filterHdl, metaData);
     }
 
+    /**
+     *
+     * @param name the name of the column, must not be <code>null</code>
+     * @param elNames Names of sub elements (if any), must not be <code>null</code>, nor contain <code>null</code> elements.
+     * @param type the type of the column, must not be <code>null</code>
+     * @param domain the domain, must not be <code>null</code>
+     * @param props additional properties, must not be <code>null</code>
+     * @param sizeHdl the <code>SizeHandler</code> or <code>null</code>
+     * @param colorHdl the <code>ColorHandler</code> or <code>null</code>
+     * @param shapeHdl the <code>ShapeHandler</code> or <code>null</code>
+     * @param formatHandler nullable
+     * @param filterHdl nullable
+     * @param metaData
+     * @throws IllegalArgumentException if either column name, type, domain, or properties are <code>null</code>
+     * @since 5.1
+     */
     DataColumnSpec(final String name, final String[] elNames, final DataType type, final DataColumnDomain domain,
         final DataColumnProperties props, final SizeHandler sizeHdl, final ColorHandler colorHdl,
         final ShapeHandler shapeHdl, final ValueFormatHandler formatHandler, final FilterHandler filterHdl, final DataColumnMetaDataManager metaData) {
@@ -181,7 +200,7 @@ public final class DataColumnSpec {
         m_sizeHandler = sizeHdl;
         m_colorHandler = colorHdl;
         m_shapeHandler = shapeHdl;
-        m_formatHandler = formatHandler;
+        m_valueFormatHandler = formatHandler;
         m_filterHandler = filterHdl;
         m_metaDataManager = metaData;
     }
@@ -280,8 +299,8 @@ public final class DataColumnSpec {
      * @return the wrapper for the {@link ValueFormatModel} if any is defined, otherwise <code>null</code>.
      * @since 5.1
      */
-    public ValueFormatHandler getFormatHandler() {
-        return m_formatHandler;
+    public ValueFormatHandler getValueFormatHandler() {
+        return m_valueFormatHandler;
     }
 
 
@@ -433,6 +452,9 @@ public final class DataColumnSpec {
         if (m_shapeHandler != null) {
             m_shapeHandler.save(config.addConfig(CFG_SHAPES));
         }
+        if (m_valueFormatHandler != null) {
+            m_valueFormatHandler.save(config.addConfig(CFG_VALUE_FORMAT));
+        }
         if (m_filterHandler != null) {
             m_filterHandler.save(config.addConfig(CFG_FILTER));
         }
@@ -474,6 +496,10 @@ public final class DataColumnSpec {
         if (config.containsKey(CFG_SHAPES)) {
             shape = ShapeHandler.load(config.getConfig(CFG_SHAPES));
         }
+        ValueFormatHandler valueFormatHandler = null;
+        if(config.containsKey(CFG_VALUE_FORMAT)) {
+            valueFormatHandler = ValueFormatHandler.load(config.getConfig(CFG_VALUE_FORMAT));
+        }
         FilterHandler filter = null;
         if (config.containsKey(CFG_FILTER)) {
             filter = FilterHandler.load(config.getConfig(CFG_FILTER));
@@ -485,7 +511,7 @@ public final class DataColumnSpec {
             // create an empty meta data object to avoid issues with NPEs
             metaDataManager = DataColumnMetaDataManager.EMPTY;
         }
-        return new DataColumnSpec(name, elNames, type, domain, properties, size, color, shape, filter, metaDataManager);
+        return new DataColumnSpec(name, elNames, type, domain, properties, size, color, shape, valueFormatHandler, filter, metaDataManager);
     }
 
 } // DataColumnSpec
