@@ -63,13 +63,31 @@ import org.knime.core.util.valueformat.NumberFormatter;
  */
 public final class ValueFormatModelNumber implements ValueFormatModel {
 
+    /**
+     * Produces the formatted number value (without markup).
+     */
     final NumberFormatter m_formatter;
+
+    final boolean m_negativeInRed;
+
+    /**
+     * Produces the html surrounding the formatted value string.
+     */
+    private static String DEFAULT_MARKUP_TEMPLATE = "%s";
+
+    /**
+     * Produces the html surrounding the formatted value string.
+     */
+    private static String NEGATIVE_IN_RED_TEMPLATE = """
+            <span style="color: red;">%s</span>
+            """;
 
     /**
      * @param formatter to handle value to markup conversion
      */
-    public ValueFormatModelNumber(final NumberFormatter formatter) {
+    public ValueFormatModelNumber(final NumberFormatter formatter, final boolean negativeInRed) {
         m_formatter = formatter;
+        m_negativeInRed = negativeInRed;
     }
 
     /**
@@ -79,14 +97,19 @@ public final class ValueFormatModelNumber implements ValueFormatModel {
     @Override
     public String getHTML(final DataValue dv) {
         var value = unpack(dv);
-        return value == null ? "" : m_formatter.format(value);
+        if(value == null) {
+            return "";
+        }
+        var formattedValue = m_formatter.format(value);
+        var markupTemplate = m_negativeInRed && value.doubleValue() < 0 ? NEGATIVE_IN_RED_TEMPLATE : DEFAULT_MARKUP_TEMPLATE;
+        return markupTemplate.formatted(formattedValue);
     }
 
     /**
      * @param dc data cell that holds the value to format
      * @return a Double, a Long, or null
      */
-    private static Object unpack(final DataValue dc) {
+    private static Number unpack(final DataValue dc) {
         if (dc == null) {
             return null;
         }
@@ -102,9 +125,12 @@ public final class ValueFormatModelNumber implements ValueFormatModel {
         return null;
     }
 
+    private static String CONFIG_KEY_NEGATIVE_IN_RED = "negative_in_red";
+
     @Override
     public void save(final ConfigWO config) {
         NumberFormatter.Persistor.save(config, m_formatter);
+        config.addBoolean(CONFIG_KEY_NEGATIVE_IN_RED, m_negativeInRed);
     }
 
     /**
@@ -114,7 +140,8 @@ public final class ValueFormatModelNumber implements ValueFormatModel {
      */
     public static ValueFormatModelNumber load(final ConfigRO config) throws InvalidSettingsException {
         var numberFormatter = NumberFormatter.Persistor.load(config);
-        return new ValueFormatModelNumber(numberFormatter);
+        var negativeInRed = config.getBoolean(CONFIG_KEY_NEGATIVE_IN_RED);
+        return new ValueFormatModelNumber(numberFormatter, negativeInRed);
     }
 
     @Override
