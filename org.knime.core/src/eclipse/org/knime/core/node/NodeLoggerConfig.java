@@ -57,6 +57,7 @@ import org.apache.log4j.Appender;
 import org.apache.log4j.Layout;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.apache.log4j.Priority;
 import org.apache.log4j.WriterAppender;
 import org.apache.log4j.spi.LoggingEvent;
 import org.apache.log4j.varia.LevelRangeFilter;
@@ -75,7 +76,7 @@ public final class NodeLoggerConfig {
     // -- WRITER MANAGMENT --
 
     /** Map of additionally added writers: Writer -> Appender. */
-    private static final Map<Writer, WriterAppender> WRITER = new HashMap<Writer, WriterAppender>();
+    private static final Map<Writer, WriterAppender> WRITER = new HashMap<>();
 
     /**
      * Adds a new {@link java.io.Writer} with the given level to this logger.
@@ -84,14 +85,14 @@ public final class NodeLoggerConfig {
      * @param minLevel The minimum level to output.
      * @param maxLevel The maximum level to output.
      */
-    static void addKNIMEConsoleWriter(final Writer writer, final LEVEL minLevel, final LEVEL maxLevel) {
+    public static void addKNIMEConsoleWriter(final Writer writer, final LEVEL minLevel, final LEVEL maxLevel) {
         final var appender = Logger.getRootLogger().getAppender(NodeLogger.KNIME_CONSOLE_APPENDER);
         final Layout layout;
         if (appender != null) {
             layout = appender.getLayout();
             NodeLogger.checkLayoutFlags(layout);
         } else {
-            layout = NodeLogger.WF_DIR_LOG_FILE_LAYOUT;
+            layout = NodeLogger.workflowDirLogfileLayout;
         }
         // no stack traces in KNIME's console view:
         // a custom layout that pretends Throwable information is baked into the log message
@@ -125,7 +126,7 @@ public final class NodeLoggerConfig {
      * @param minLevel The minimum level to output.
      * @param maxLevel The maximum level to output.
      */
-    static void addWriter(final Writer writer, final Layout layout, final LEVEL minLevel, final LEVEL maxLevel) {
+    public static void addWriter(final Writer writer, final Layout layout, final LEVEL minLevel, final LEVEL maxLevel) {
         final var appender = new WriterAppender(layout, writer);
         appender.setImmediateFlush(true);
         final var filter = new LevelRangeFilter();
@@ -145,6 +146,7 @@ public final class NodeLoggerConfig {
         }
         Logger.getRootLogger().addAppender(appender);
         NodeLogger.checkLayoutFlags(layout);
+        NodeLogger.updateLog4JKNIMELoggerLevel();
     }
 
     /**
@@ -152,7 +154,7 @@ public final class NodeLoggerConfig {
      *
      * @param writer The Writer to remove.
      */
-    static void removeWriter(final Writer writer) {
+    public static void removeWriter(final Writer writer) {
         synchronized (WRITER) {
             final var appender = WRITER.get(writer);
             if (appender != null) {
@@ -164,6 +166,7 @@ public final class NodeLoggerConfig {
                 NodeLogger.getLogger(NodeLogger.class).warn("Could not delete writer: " + writer);
             }
         }
+        NodeLogger.updateLog4JKNIMELoggerLevel();
     }
 
     // -- GLOBAL LOG LEVEL GETTER AND SETTER --
@@ -176,16 +179,16 @@ public final class NodeLoggerConfig {
      * @deprecated user {@link #setAppenderLevelRange(String, LEVEL, LEVEL)} instead for more fine-grained control
      */
     @Deprecated
-    static void setLevel(final LEVEL level) {
+    public static void setLevel(final LEVEL level) {
         NodeLogger.getLogger(NodeLogger.class).info("Changing logging level to " + level.toString());
         try {
             setAppenderLevelRange(NodeLogger.STDOUT_APPENDER, level, LEVEL.FATAL);
-        } catch (NoSuchElementException ex) {
+        } catch (NoSuchElementException ex) { // NOSONAR
             // ignore it
         }
         try {
             setAppenderLevelRange(NodeLogger.LOGFILE_APPENDER, level, LEVEL.FATAL);
-        } catch (NoSuchElementException ex) {
+        } catch (NoSuchElementException ex) { // NOSONAR
             // ignore it
         }
     }
@@ -242,6 +245,7 @@ public final class NodeLoggerConfig {
             ((LevelRangeFilter)filter).setLevelMin(translateKnimeToLog4JLevel(min));
             ((LevelRangeFilter)filter).setLevelMax(translateKnimeToLog4JLevel(max));
         }
+        NodeLogger.updateLog4JKNIMELoggerLevel();
     }
 
     // -- LOG LEVEL TRANSLATION --
@@ -254,20 +258,14 @@ public final class NodeLoggerConfig {
      * @return the Log4J logging level
      */
     static Level translateKnimeToLog4JLevel(final LEVEL level) {
-        switch (level) {
-            case DEBUG:
-                return Level.DEBUG;
-            case INFO:
-                return Level.INFO;
-            case WARN:
-                return Level.WARN;
-            case ERROR:
-                return Level.ERROR;
-            case FATAL:
-                return Level.FATAL;
-            default:
-                return Level.ALL;
-        }
+        return switch (level) {
+            case DEBUG -> Level.DEBUG;
+            case INFO -> Level.INFO;
+            case WARN -> Level.WARN;
+            case ERROR -> Level.ERROR;
+            case FATAL -> Level.FATAL;
+            default -> Level.ALL;
+        };
     }
 
     /**
@@ -278,19 +276,14 @@ public final class NodeLoggerConfig {
      * @return this logging LEVEL
      */
     static LEVEL translateLog4JToKnimeLevel(final Level level) {
-        if (level == Level.DEBUG) {
-            return LEVEL.DEBUG;
-        } else if (level == Level.INFO) {
-            return LEVEL.INFO;
-        } else if (level == Level.WARN) {
-            return LEVEL.WARN;
-        } else if (level == Level.ERROR) {
-            return LEVEL.ERROR;
-        } else if (level == Level.FATAL) {
-            return LEVEL.FATAL;
-        } else {
-            return LEVEL.ALL;
-        }
+        return switch (level.toInt()) {
+            case Priority.DEBUG_INT -> LEVEL.DEBUG;
+            case Priority.INFO_INT -> LEVEL.INFO;
+            case Priority.WARN_INT -> LEVEL.WARN;
+            case Priority.ERROR_INT -> LEVEL.ERROR;
+            case Priority.FATAL_INT -> LEVEL.FATAL;
+            default -> LEVEL.ALL;
+        };
     }
 
     /**

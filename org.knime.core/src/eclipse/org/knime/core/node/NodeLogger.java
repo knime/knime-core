@@ -302,7 +302,7 @@ public final class NodeLogger {
 
     private static boolean LOG_JOB_ID = false;
 
-    static Layout WF_DIR_LOG_FILE_LAYOUT = new PatternLayout("%-5p\t %-30c{1}\t %." + MAX_CHARS + "m\n");
+    static Layout workflowDirLogfileLayout = new PatternLayout("%-5p\t %-30c{1}\t %." + MAX_CHARS + "m\n");
 
     /** As per log4j-3.xml we only log 'knime' log out -- the loggers with these prefixes are the parents of all
      * 'knime' logger. List is amended by 'NodeLogger' from other packages (e.g. partner extensions), see AP-12238 */
@@ -324,8 +324,8 @@ public final class NodeLogger {
             Appender a = root.getAppender(LOGFILE_APPENDER);
             if (a != null) {
                 LOG_FILE_APPENDER = a;
-                WF_DIR_LOG_FILE_LAYOUT = a.getLayout();
-                checkLayoutFlags(WF_DIR_LOG_FILE_LAYOUT);
+                workflowDirLogfileLayout = a.getLayout();
+                checkLayoutFlags(workflowDirLogfileLayout);
             } else {
                 root.warn("Could not find '" + LOGFILE_APPENDER + "' appender");
                 LOG_FILE_APPENDER = new NullAppender();
@@ -399,7 +399,7 @@ public final class NodeLogger {
     /** Adjusts log level of 'knime' loggers so that it matches the minimum level of all registered appenders.
      * Called after initialization and after the log level is changed for individual appenders.
      */
-    private static void updateLog4JKNIMELoggerLevel() {
+    static void updateLog4JKNIMELoggerLevel() {
         final Logger rootLogger = LogManager.getRootLogger();
         Level minimumLevel = rootLogger.getLevel(); // by default this is 'ERROR' but may be changed in log4j.xml
         for (@SuppressWarnings("unchecked")
@@ -769,7 +769,7 @@ public final class NodeLogger {
                     //and that implements equals and hash code to ensure that two LogfileAppender
                     //with the same name are considered equal to prevent duplicate appender registration
                     final FileAppender fileAppender = new LogfileAppender(workflowDir);
-                    fileAppender.setLayout(WF_DIR_LOG_FILE_LAYOUT);
+                    fileAppender.setLayout(workflowDirLogfileLayout);
                     fileAppender.setName(workflowDirPath);
                     final Filter mainFilter = LOG_FILE_APPENDER.getFilter();
                     fileAppender.addFilter(new Filter() {
@@ -1071,56 +1071,55 @@ public final class NodeLogger {
      * @param writer The writer to add.
      * @param minLevel The minimum level to output.
      * @param maxLevel The maximum level to output.
+     * @see #addWriter(Writer, Layout, LEVEL, LEVEL)
      */
+    @Deprecated
     public static void addWriter(final Writer writer,
             final LEVEL minLevel, final LEVEL maxLevel) {
-        addWriter(writer, WF_DIR_LOG_FILE_LAYOUT, minLevel, maxLevel);
+        addWriter(writer, workflowDirLogfileLayout, minLevel, maxLevel);
     }
 
 
     /**
      * Adds a new {@link java.io.Writer} with the given level to this logger.
-     *
-     * Redirects to {@link NodeLoggerConfig#addKNIMEConsoleWriter(Writer, LEVEL, LEVEL)}.
      *
      * @param writer The writer to add.
      * @param minLevel The minimum level to output.
      * @param maxLevel The maximum level to output.
      * @since 2.12
+     * @deprecated Use {@link NodeLoggerConfig#addKNIMEConsoleWriter(Writer, LEVEL, LEVEL)} instead.
      */
+    @Deprecated
     public static void addKNIMEConsoleWriter(final Writer writer, final LEVEL minLevel, final LEVEL maxLevel) {
         NodeLoggerConfig.addKNIMEConsoleWriter(writer, minLevel, maxLevel);
-        updateLog4JKNIMELoggerLevel();
     }
 
     /**
      * Adds a new {@link java.io.Writer} with the given level to this logger.
-     *
-     * Redirects to {@link NodeLoggerConfig#addWriter(Writer, Layout, LEVEL, LEVEL)}.
      *
      * @param writer The writer to add.
      * @param layout the log file layout to use
      * @param minLevel The minimum level to output.
      * @param maxLevel The maximum level to output.
      * @since 2.12
+     * @deprecated Use {@link NodeLoggerConfig#addWriter(Writer, Layout, LEVEL, LEVEL)} instead.
      */
+    @Deprecated
     public static void addWriter(final Writer writer, final Layout layout,
             final LEVEL minLevel, final LEVEL maxLevel) {
         NodeLoggerConfig.addWriter(writer, layout, minLevel, maxLevel);
-        updateLog4JKNIMELoggerLevel();
     }
 
 
     /**
      * Removes the previously added {@link java.io.Writer} from the logger.
      *
-     * Redirects to {@link NodeLoggerConfig#removeWriter(Writer)}.
-     *
      * @param writer The Writer to remove.
+     * @deprecated Use {@link NodeLoggerConfig#removeWriter(Writer)} instead.
      */
+    @Deprecated
     public static void removeWriter(final Writer writer) {
         NodeLoggerConfig.removeWriter(writer);
-        updateLog4JKNIMELoggerLevel();
     }
 
     /**
@@ -1138,15 +1137,12 @@ public final class NodeLogger {
      * appender. The maximum logging level stays <code>LEVEL.ALL</code> for
      * all appenders.
      *
-     * Redirects to {@link NodeLoggerConfig#setLevel(LEVEL)}.
-     *
      * @param level new minimum logging level
      * @deprecated user {@link #setAppenderLevelRange(String, LEVEL, LEVEL)} instead for more fine-grained control
      */
     @Deprecated
     public static void setLevel(final LEVEL level) {
         NodeLoggerConfig.setLevel(level);
-        updateLog4JKNIMELoggerLevel();
     }
 
 
@@ -1211,18 +1207,17 @@ public final class NodeLogger {
     /**
      * Sets a level range filter on the given appender.
      *
-     * Redirects to {@link NodeLoggerConfig#addKNIMEConsoleWriter(Writer, LEVEL, LEVEL)}.
-     *
      * @param appenderName the name of the appender
      * @param min the minimum logging level
      * @param max the maximum logging level
      * @throws NoSuchElementException if the given appender does not exist
      * @since 2.8
+     * @deprecated Use {@link NodeLoggerConfig#addKNIMEConsoleWriter(Writer, LEVEL, LEVEL)} instead.
      */
+    @Deprecated
     public static void setAppenderLevelRange(final String appenderName, final LEVEL min, final LEVEL max)
             throws NoSuchElementException {
         NodeLoggerConfig.setAppenderLevelRange(appenderName, min, max);
-        updateLog4JKNIMELoggerLevel();
     }
 
     /**
