@@ -74,7 +74,6 @@ import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 import org.apache.log4j.PropertyConfigurator;
-import org.apache.log4j.WriterAppender;
 import org.apache.log4j.helpers.LogLog;
 import org.apache.log4j.helpers.OptionConverter;
 import org.apache.log4j.spi.Filter;
@@ -277,10 +276,6 @@ public final class NodeLogger {
     private static final Map<String, NodeLogger> LOGGERS =
             new HashMap<String, NodeLogger>();
 
-    /** Map of additionally added writers: Writer -> Appender. */
-    private static final Map<Writer, WriterAppender> WRITER =
-            new HashMap<Writer, WriterAppender>();
-
     private static final Map<String, Appender> WF_APPENDER = new HashMap<>();
 
     /**
@@ -294,8 +289,8 @@ public final class NodeLogger {
      */
     private static final String CODING_PROBLEM_PREFIX = "CODING PROBLEM\t";
 
-    /** Default log file appender. */
-    private static final Appender LOG_FILE_APPENDER;
+    /** Default log file appender, package-scope for access from {@link NodeLoggerConfig} */
+    static final Appender LOG_FILE_APPENDER;
 
     private static boolean LOG_IN_WF_DIR = false;
 
@@ -307,7 +302,7 @@ public final class NodeLogger {
 
     private static boolean LOG_JOB_ID = false;
 
-    private static Layout WF_DIR_LOG_FILE_LAYOUT = new PatternLayout("%-5p\t %-30c{1}\t %." + MAX_CHARS + "m\n");
+    static Layout WF_DIR_LOG_FILE_LAYOUT = new PatternLayout("%-5p\t %-30c{1}\t %." + MAX_CHARS + "m\n");
 
     /** As per log4j-3.xml we only log 'knime' log out -- the loggers with these prefixes are the parents of all
      * 'knime' logger. List is amended by 'NodeLogger' from other packages (e.g. partner extensions), see AP-12238 */
@@ -662,7 +657,7 @@ public final class NodeLogger {
      * @param layout checks if any of the KNIME specific flags e.g. node id is set in the layout pattern and ensures
      * that the corresponding boolean flag is enabled.
      */
-    private static void checkLayoutFlags(final Layout layout) {
+    static void checkLayoutFlags(final Layout layout) {
         if (layout instanceof PatternLayout) {
             final PatternLayout pl = (PatternLayout)layout;
             final String conversionPattern = pl.getConversionPattern();
@@ -1086,46 +1081,22 @@ public final class NodeLogger {
     /**
      * Adds a new {@link java.io.Writer} with the given level to this logger.
      *
+     * Redirects to {@link NodeLoggerConfig#addKNIMEConsoleWriter(Writer, LEVEL, LEVEL)}.
+     *
      * @param writer The writer to add.
      * @param minLevel The minimum level to output.
      * @param maxLevel The maximum level to output.
      * @since 2.12
      */
     public static void addKNIMEConsoleWriter(final Writer writer, final LEVEL minLevel, final LEVEL maxLevel) {
-        final Appender a = Logger.getRootLogger().getAppender(KNIME_CONSOLE_APPENDER);
-        final Layout layout;
-        if (a != null) {
-            layout = a.getLayout();
-            checkLayoutFlags(layout);
-        } else {
-            layout = WF_DIR_LOG_FILE_LAYOUT;
-        }
-        // no stack traces in KNIME's console view:
-        // a custom layout that pretends Throwable information is baked into the log message
-        final Layout suppressThrowableLayout = new Layout() {
-
-            @Override
-            public void activateOptions() {
-                layout.activateOptions();
-            }
-
-            @Override
-            public String format(final LoggingEvent event) {
-                return layout.format(event);
-            }
-
-            @Override
-            public boolean ignoresThrowable() {
-                // PatternLayout returns true (which makes the appender to log the Throwable)
-                return false;
-            }
-
-        };
-        addWriter(writer, suppressThrowableLayout, minLevel, maxLevel);
+        NodeLoggerConfig.addKNIMEConsoleWriter(writer, minLevel, maxLevel);
+        updateLog4JKNIMELoggerLevel();
     }
 
     /**
      * Adds a new {@link java.io.Writer} with the given level to this logger.
+     *
+     * Redirects to {@link NodeLoggerConfig#addWriter(Writer, Layout, LEVEL, LEVEL)}.
      *
      * @param writer The writer to add.
      * @param layout the log file layout to use
@@ -1135,46 +1106,20 @@ public final class NodeLogger {
      */
     public static void addWriter(final Writer writer, final Layout layout,
             final LEVEL minLevel, final LEVEL maxLevel) {
-        WriterAppender app = new WriterAppender(layout, writer);
-        app.setImmediateFlush(true);
-        LevelRangeFilter filter = new LevelRangeFilter();
-        filter.setLevelMin(transLEVEL(minLevel));
-        filter.setLevelMax(transLEVEL(maxLevel));
-        app.addFilter(filter);
-
-        // remove the writer first if existent
-        synchronized (WRITER) {
-            if (WRITER.containsKey(writer)) {
-                Appender a = WRITER.get(writer);
-                Logger.getRootLogger().removeAppender(a);
-                WRITER.remove(writer);
-            }
-            // register new appender
-            WRITER.put(writer, app);
-        }
-        Logger.getRootLogger().addAppender(app);
-        checkLayoutFlags(layout);
+        NodeLoggerConfig.addWriter(writer, layout, minLevel, maxLevel);
         updateLog4JKNIMELoggerLevel();
     }
+
 
     /**
      * Removes the previously added {@link java.io.Writer} from the logger.
      *
+     * Redirects to {@link NodeLoggerConfig#removeWriter(Writer)}.
+     *
      * @param writer The Writer to remove.
      */
     public static void removeWriter(final Writer writer) {
-        synchronized (WRITER) {
-            Appender o = WRITER.get(writer);
-            if (o != null) {
-                if (o != LOG_FILE_APPENDER) {
-                    Logger.getRootLogger().removeAppender(o);
-                    WRITER.remove(writer);
-                }
-            } else {
-                getLogger(NodeLogger.class).warn(
-                        "Could not delete writer: " + writer);
-            }
-        }
+        NodeLoggerConfig.removeWriter(writer);
         updateLog4JKNIMELoggerLevel();
     }
 
@@ -1193,25 +1138,16 @@ public final class NodeLogger {
      * appender. The maximum logging level stays <code>LEVEL.ALL</code> for
      * all appenders.
      *
+     * Redirects to {@link NodeLoggerConfig#setLevel(LEVEL)}.
+     *
      * @param level new minimum logging level
      * @deprecated user {@link #setAppenderLevelRange(String, LEVEL, LEVEL)} instead for more fine-grained control
      */
     @Deprecated
     public static void setLevel(final LEVEL level) {
-        getLogger(NodeLogger.class).info(
-                "Changing logging level to " + level.toString());
-        try {
-            setAppenderLevelRange(STDOUT_APPENDER, level, LEVEL.FATAL);
-        } catch (NoSuchElementException ex) {
-            // ignore it
-        }
-        try {
-            setAppenderLevelRange(LOGFILE_APPENDER, level, LEVEL.FATAL);
-        } catch (NoSuchElementException ex) {
-            // ignore it
-        }
+        NodeLoggerConfig.setLevel(level);
+        updateLog4JKNIMELoggerLevel();
     }
-
 
 
     /**
@@ -1220,7 +1156,7 @@ public final class NodeLogger {
      * @return minimum logging level
      */
     public LEVEL getLevel() {
-        return transLevel(getLoggerInternal().getLevel());
+        return NodeLoggerConfig.translateLog4JToKnimeLevel(getLoggerInternal().getLevel());
     }
 
     /**
@@ -1252,7 +1188,7 @@ public final class NodeLogger {
      *         <code>false</code>
      */
     public boolean isEnabledFor(final LEVEL level) {
-        return getLoggerInternal().isEnabledFor(transLEVEL(level));
+        return getLoggerInternal().isEnabledFor(NodeLoggerConfig.translateKnimeToLog4JLevel(level));
     }
 
     /**
@@ -1262,50 +1198,6 @@ public final class NodeLogger {
         return KNIMEConstants.ASSERTIONS_ENABLED || EclipseUtil.isRunFromSDK();
     }
 
-    /**
-     * Translates this logging <code>LEVEL</code> into Log4J logging levels.
-     *
-     * @param level the <code>LEVEL</code> to translate
-     * @return the Log4J logging level
-     */
-    private static Level transLEVEL(final LEVEL level) {
-        switch (level) {
-        case DEBUG:
-            return Level.DEBUG;
-        case INFO:
-            return Level.INFO;
-        case WARN:
-            return Level.WARN;
-        case ERROR:
-            return Level.ERROR;
-        case FATAL:
-            return Level.FATAL;
-        default:
-            return Level.ALL;
-        }
-    }
-
-    /**
-     * Translates Log4J logging level into this <code>LEVEL</code>.
-     *
-     * @param level the Level to translate
-     * @return this logging LEVEL
-     */
-    private static LEVEL transLevel(final Level level) {
-        if (level == Level.DEBUG) {
-            return LEVEL.DEBUG;
-        } else if (level == Level.INFO) {
-            return LEVEL.INFO;
-        } else if (level == Level.WARN) {
-            return LEVEL.WARN;
-        } else if (level == Level.ERROR) {
-            return LEVEL.ERROR;
-        } else if (level == Level.FATAL) {
-            return LEVEL.FATAL;
-        } else {
-            return LEVEL.ALL;
-        }
-    }
 
     private static String getHostname() {
         try {
@@ -1319,6 +1211,8 @@ public final class NodeLogger {
     /**
      * Sets a level range filter on the given appender.
      *
+     * Redirects to {@link NodeLoggerConfig#addKNIMEConsoleWriter(Writer, LEVEL, LEVEL)}.
+     *
      * @param appenderName the name of the appender
      * @param min the minimum logging level
      * @param max the maximum logging level
@@ -1327,27 +1221,7 @@ public final class NodeLogger {
      */
     public static void setAppenderLevelRange(final String appenderName, final LEVEL min, final LEVEL max)
             throws NoSuchElementException {
-        Logger root = Logger.getRootLogger();
-        Appender appender = root.getAppender(appenderName);
-        if (appender == null) {
-            throw new NoSuchElementException("Appender '" + appenderName + "' does not exist");
-        }
-
-        Filter filter = appender.getFilter();
-        while ((filter != null) && !(filter instanceof LevelRangeFilter)) {
-            filter = filter.getNext();
-        }
-        if (filter == null) {
-            // add a new level range filter
-            LevelRangeFilter levelFilter = new LevelRangeFilter();
-            levelFilter.setLevelMin(transLEVEL(min));
-            levelFilter.setLevelMax(transLEVEL(max));
-            appender.addFilter(levelFilter);
-        } else {
-            // modify existing level range filter
-            ((LevelRangeFilter) filter).setLevelMin(transLEVEL(min));
-            ((LevelRangeFilter) filter).setLevelMax(transLEVEL(max));
-        }
+        NodeLoggerConfig.setAppenderLevelRange(appenderName, min, max);
         updateLog4JKNIMELoggerLevel();
     }
 
