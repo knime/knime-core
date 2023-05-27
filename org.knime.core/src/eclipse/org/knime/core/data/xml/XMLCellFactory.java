@@ -144,6 +144,11 @@ public class XMLCellFactory implements FromComplexString, FromInputStream {
         }
         XMLCellContent content = new XMLCellContent(xml, true);
         if (xml.length() >= MIN_BLOB_SIZE_IN_BYTES) {
+            if (fsHandler == null) {
+                //     Workaround: we'd need a WriteFileStoreHandler here to convert Blob to FileStore cells,
+                //                 but as we don't have that, we simply create an in-memory XMLCell.
+                return new XMLCell(content);
+            }
             return new XMLFileStoreCell(fsHandler.createFileStore(UUID.randomUUID().toString()), content);
         } else {
             return new XMLCell(content);
@@ -216,7 +221,7 @@ public class XMLCellFactory implements FromComplexString, FromInputStream {
      * @throws NullPointerException if argument is null
      */
     public static DataCell create(final XMLValue<Document> xml) {
-       return create(xml, null); // FIXME: THIS WILL CRASH FOR BLOBS
+        return create(xml, null);
     }
 
 
@@ -224,12 +229,17 @@ public class XMLCellFactory implements FromComplexString, FromInputStream {
         if (xml == null) {
             throw new NullPointerException("XMLValue must not be null");
         }
-    	if(xml instanceof DataCell) {
-    		return (DataCell)xml;
+    	if(xml instanceof DataCell xmlCell) {
+    		return xmlCell;
     	} else {
-    		XMLCellContent content = new XMLCellContent(xml.getDocumentSupplier());
+    		var content = new XMLCellContent(xml.getDocumentSupplier());
             if (content.getStringValue().length() >= MIN_BLOB_SIZE_IN_BYTES) {
-//                return new XMLBlobCell(content);
+                if (fsHandler == null) {
+                    //     Workaround: we'd need a WriteFileStoreHandler here to convert Blob to FileStore cells,
+                    //                 but as we don't have that, we simply create an in-memory XMLCell.
+                    return new XMLCell(content);
+                }
+
                 try {
                     return new XMLFileStoreCell(fsHandler.createFileStore(UUID.randomUUID().toString()), content);
                 } catch (IOException ex) {
