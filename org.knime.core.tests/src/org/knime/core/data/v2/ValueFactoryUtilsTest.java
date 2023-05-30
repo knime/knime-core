@@ -55,7 +55,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellDataInput;
 import org.knime.core.data.DataCellDataOutput;
@@ -102,7 +102,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  *
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
-public final class ValueFactoryUtilsTest {
+@SuppressWarnings("static-method")
+final class ValueFactoryUtilsTest {
 
     @SuppressWarnings({"javadoc", "serial"})
     public static class DataCellWithoutValueFactory extends DataCell {
@@ -145,7 +146,7 @@ public final class ValueFactoryUtilsTest {
     }
 
     @Test
-    public void testAreEqual() {
+    void testAreEqual() {
         // both null
         assertThat(ValueFactoryUtils.areEqual(null, null)).isTrue();
 
@@ -203,7 +204,7 @@ public final class ValueFactoryUtilsTest {
     }
 
     @Test
-    public void testGetTraitsOnOrdinaryValueFactory() {
+    void testGetTraitsOnOrdinaryValueFactory() {
         var valueFactory = new StringValueFactory();
         var traits = ValueFactoryUtils.getTraits(valueFactory);
         assertTrue(traits.hasTrait(LogicalTypeTrait.class));
@@ -221,7 +222,7 @@ public final class ValueFactoryUtilsTest {
     }
 
     @Test
-    public void testGetTraitsOnDataCellValueFactory() {
+    void testGetTraitsOnDataCellValueFactory() {
         var valueFactory = createDataCellValueFactory();
         var traits = ValueFactoryUtils.getTraits(valueFactory);
         assertTrue(traits.hasTrait(LogicalTypeTrait.class));
@@ -238,7 +239,7 @@ public final class ValueFactoryUtilsTest {
     }
 
     @Test
-    public void testGetTraitsOnCollectionValueFactory() {
+    void testGetTraitsOnCollectionValueFactory() {
         var valueFactory = new ListValueFactory();
         valueFactory.initialize(new IntValueFactory(), IntCell.TYPE);
         assertThat(ValueFactoryUtils.getTraits(valueFactory))//
@@ -313,7 +314,7 @@ public final class ValueFactoryUtilsTest {
     }
 
     @Test
-    public void testGetDataTypeForValueFactory() throws Exception {
+    void testGetDataTypeForValueFactory() throws Exception {
         // void
         assertThat(ValueFactoryUtils.getDataTypeForValueFactory(VoidValueFactory.INSTANCE))
             .isEqualTo(DataType.getType(DataCell.class));
@@ -345,7 +346,7 @@ public final class ValueFactoryUtilsTest {
     }
 
     @Test
-    public void testGetRowKeyValueFactoryFromRowKeyType() {
+    void testGetRowKeyValueFactoryFromRowKeyType() {
         assertThat(ValueFactoryUtils.getRowKeyValueFactory(RowKeyType.CUSTOM))//
             .isEqualTo(DefaultRowKeyValueFactory.INSTANCE);
         assertThat(ValueFactoryUtils.getRowKeyValueFactory(RowKeyType.NOKEY))//
@@ -353,14 +354,14 @@ public final class ValueFactoryUtilsTest {
     }
 
     @Test
-    public void testGetRowKeyValueFactoryFromTraits() {
+    void testGetRowKeyValueFactoryFromTraits() {
         var traits = ValueFactoryUtils.getTraits(DefaultRowKeyValueFactory.INSTANCE);
         assertThat(ValueFactoryUtils.loadRowKeyValueFactory(traits))//
             .isInstanceOf(DefaultRowKeyValueFactory.class);
     }
 
     @Test
-    public void testGetDataValueFactoryForType() {
+    void testGetDataValueFactoryForType() {
         var fsHandler = NotInWorkflowWriteFileStoreHandler.create();
 
         // void
@@ -391,7 +392,7 @@ public final class ValueFactoryUtilsTest {
     }
 
     @Test
-    public void testLoadValueFactory() {
+    void testLoadValueFactory() {
         var dataRepo = NotInWorkflowDataRepository.newInstance();
 
         // no logical type trait
@@ -438,7 +439,7 @@ public final class ValueFactoryUtilsTest {
     }
 
     @Test
-    public void testInstantiateValueFactory() {
+    void testInstantiateValueFactory() {
         // exception in constructor
         assertThrows(IllegalStateException.class,
             () -> ValueFactoryUtils.instantiateValueFactory(ThrowingConstructorValueFactory.class));
