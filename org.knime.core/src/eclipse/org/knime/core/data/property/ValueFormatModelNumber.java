@@ -50,6 +50,7 @@ package org.knime.core.data.property;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.LongCell;
+import org.knime.core.data.property.format.ValueFormatModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
@@ -126,6 +127,22 @@ public final class ValueFormatModelNumber implements ValueFormatModel {
     }
 
     private static String CONFIG_KEY_NEGATIVE_IN_RED = "negative_in_red";
+
+    public class ValueFormatModelNumberSerializer extends ValueFormatModelSerializer<ValueFormatModelNumber> {
+
+        @Override
+        public void save(final ValueFormatModelNumber model, final ConfigWO config) {
+            NumberFormatter.Persistor.save(config, m_formatter);
+            config.addBoolean(CONFIG_KEY_NEGATIVE_IN_RED, m_negativeInRed);
+        }
+
+        @Override
+        public ValueFormatModelNumber load(final ConfigRO config) throws InvalidSettingsException {
+            return new ValueFormatModelNumber(NumberFormatter.Persistor.load(config),
+                config.getBoolean(CONFIG_KEY_NEGATIVE_IN_RED));
+        }
+
+    }
 
     @Override
     public void save(final ConfigWO config) {

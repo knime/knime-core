@@ -64,8 +64,8 @@ import org.knime.core.data.meta.DataColumnMetaData;
 import org.knime.core.data.property.ColorHandler;
 import org.knime.core.data.property.ShapeHandler;
 import org.knime.core.data.property.SizeHandler;
-import org.knime.core.data.property.ValueFormatHandler;
 import org.knime.core.data.property.filter.FilterHandler;
+import org.knime.core.data.property.format.ValueFormatHandler;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.CheckUtils;
 

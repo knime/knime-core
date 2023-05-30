@@ -45,9 +45,10 @@
  * History
  *   22 May 2023 (carlwitt): created
  */
-package org.knime.core.data.property;
+package org.knime.core.data.property.format;
 
 import org.knime.core.data.DataValue;
+import org.knime.core.data.property.PropertyHandler;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
@@ -83,56 +84,25 @@ public final class ValueFormatHandler implements PropertyHandler {
         m_model = model;
     }
 
-    /**
-     * TODO
-     * Returns a <code>ColorAttr</code> object as specified by the content
-     * of the given <code>DataCell</code>. Requests are forwarded to the
-     * underlying <code>ColorModel</code>. If no <code>ColorAttr</code>
-     * is assigned to the given <code>dc</code>, this method returns the
-     * {@link ColorAttr#DEFAULT} as default color, but never <code>null</code>.
-     *
-     * @param dc <code>DataCell</code> used to generate color
-     * @return a <code>ColorAttr</code> object assigned to the given cell
-     * @see ColorAttr#DEFAULT
-     */
     public String get(final DataValue dv) {
         return m_model.getHTML(dv);
     }
 
-    /**
-     * Saves the underlying <code>ColorModel</code> to the given
-     * <code>Config</code> by adding the <code>ColorModel</code> class as
-     * String and calling
-     * {@link ColorModel#save(ConfigWO)} within the model.
-     * @param config color settings are saved to
-     * @throws NullPointerException if the <i>config</i> is <code>null</code>
-     */
     public void save(final ConfigWO config) {
-        config.addString(CFG_FORMAT_MODEL_CLASS, m_model.getClass().getName());
-        m_model.save(config.addConfig(CFG_FORMAT_MODEL));
+        final var modelClassName = m_model.getClass().getName();
+        config.addString(CFG_FORMAT_MODEL_CLASS, modelClassName);
+        ValueFormatModelRegistry.getInstance().scanExtensionPointForModelSerializer(modelClassName)
+            .orElseThrow()
+            .save(m_model, config.addConfig(CFG_FORMAT_MODEL));
     }
 
-    /**
-     * Reads the color model settings from the given <code>Config</code>, inits
-     * a new <code>ColorModel</code>, and returns a new
-     * <code>ColorHandler</code>.
-     * @param config read color settings from
-     * @return a new <code>ColorHandler</code> object created with the color
-     *         model settings read from <code>config</code>
-     * @throws InvalidSettingsException if either the class or color model
-     *         settings could not be read
-     * @throws NullPointerException if the <code>config</code> is
-     *         <code>null</code>
-     */
     public static ValueFormatHandler load(final ConfigRO config)
             throws InvalidSettingsException {
-        String modelClass = config.getString(CFG_FORMAT_MODEL_CLASS);
-        if (modelClass.equals(ValueFormatModelNumber.class.getName())) {
-            ConfigRO subConfig = config.getConfig(CFG_FORMAT_MODEL);
-            return new ValueFormatHandler(ValueFormatModelNumber.load(subConfig));
-        } else {
-            throw new InvalidSettingsException("Unknown FormatModel class: " + modelClass);
-        }
+        final var modelClassName = config.getString(CFG_FORMAT_MODEL_CLASS);
+        return new ValueFormatHandler(ValueFormatModelRegistry.getInstance()
+            .scanExtensionPointForModelSerializer(modelClassName)
+            .orElseThrow()
+            .load(config.getConfig(CFG_FORMAT_MODEL)));
     }
 
     /**
@@ -155,7 +125,7 @@ public final class ValueFormatHandler implements PropertyHandler {
         if (obj == this) {
             return true;
         }
-        if (obj == null || !(obj instanceof ValueFormatHandler)) {
+        if (!(obj instanceof ValueFormatHandler)) {
             return false;
         }
         return m_model.equals(((ValueFormatHandler)obj).m_model);

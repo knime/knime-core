@@ -22,6 +22,7 @@
    <extension-point id="ImageContentFactory" name="Contributes custom image content to an image port object (NO public API)" schema="schema/ImageContentFactory.exsd"/>
    <extension-point id="RpcTransportFactory" name="RpcTransportFactory" schema="schema/RpcTransportFactory.exsd"/>
    <extension-point id="PortTypeClassMapper" name="PortTypeClassMapper" schema="schema/PortTypeClassMapper.exsd"/>
+   <extension-point id="ValueFormatModel" name="ValueFormatModel" schema="schema/ValueFormatModel.exsd"/>
    <extension point="org.knime.core.NodeExecutionJobManagerFactory">
       <NodeExecutionJobManagerFactory JobManagerFactory="org.knime.core.node.exec.ThreadNodeExecutionJobManagerFactory"/>
       <NodeExecutionJobManagerFactory JobManagerFactory="org.knime.core.node.exec.ThreadComponentExecutionJobManagerFactory"/>
@@ -757,5 +758,29 @@
       <TableBackend
             backend="org.knime.core.data.container.BufferedTableBackend">
       </TableBackend>
+   </extension>
+   <extension
+         point="org.knime.core.ValueFormatModel">
+      <dataValue
+            valueClass="org.knime.core.data.DoubleValue">
+         <formatModel
+               modelClass="org.knime.core.data.property.ValueFormatModelNumber"
+               modelSerializer="org.knime.core.data.property.ValueFormatModelNumber$ValueFormatModelNumberSerializer">
+         </formatModel>
+      </dataValue>
+      <dataValue
+            valueClass="org.knime.core.data.LongValue">
+         <formatModel
+               modelClass="org.knime.core.data.property.ValueFormatModelNumber"
+               modelSerializer="org.knime.core.data.property.ValueFormatModelNumber$ValueFormatModelNumberSerializer">
+         </formatModel>
+      </dataValue>
+      <dataValue
+            valueClass="org.knime.core.data.IntValue">
+         <formatModel
+               modelClass="org.knime.core.data.property.ValueFormatModelNumber"
+               modelSerializer="org.knime.core.data.property.ValueFormatModelNumber$ValueFormatModelNumberSerializer">
+         </formatModel>
+      </dataValue>
    </extension>
 </plugin>
