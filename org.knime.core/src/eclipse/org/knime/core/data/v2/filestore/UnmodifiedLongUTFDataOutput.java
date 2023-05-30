@@ -162,9 +162,9 @@ public final class UnmodifiedLongUTFDataOutput implements DataOutput {
     @Override
     public void writeChars(final String s) throws IOException {
         int len = s.length();
-        ByteBuffer b = ByteBuffer.allocate(len * 2);
+        var b = ByteBuffer.allocate(len * 2);
         b.order(m_byteOrder);
-        for (int i = 0; i < len; i++) {
+        for (var i = 0; i < len; i++) {
             b.putChar(s.charAt(i));
         }
         m_output.write(b.array());
@@ -172,7 +172,7 @@ public final class UnmodifiedLongUTFDataOutput implements DataOutput {
 
     @Override
     public void writeUTF(final String s) throws IOException {
-        ByteBuffer b = m_encoder.encode(s);
+        var b = m_encoder.encode(s);
         // TODO: allow string lengths > MAX_INTEGER https://knime-com.atlassian.net/browse/AP-19712
         final int length = b.limit();
         writeLong(length);

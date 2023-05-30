@@ -48,7 +48,6 @@
  */
 package org.knime.core.data.v2.filestore;
 
-import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -124,13 +123,13 @@ public final class UnmodifiedLongUTFReadableDataInput implements ReadableDataInp
 
     @Override
     public int readUnsignedShort() throws IOException {
-        byte[] bytes = new byte[Integer.BYTES];
+        var bytes = new byte[Integer.BYTES];
         if (m_byteOrder == ByteOrder.LITTLE_ENDIAN) {
             m_input.read(bytes, 2, 2);
         } else {
             m_input.read(bytes, 0, 2);
         }
-        ByteBuffer buffer = ByteBuffer.wrap(bytes);
+        var buffer = ByteBuffer.wrap(bytes);
         buffer.order(m_byteOrder);
         return buffer.getInt();
     }
@@ -157,7 +156,7 @@ public final class UnmodifiedLongUTFReadableDataInput implements ReadableDataInp
 
     private ByteBuffer readByteBuf(final byte[] bytes) throws IOException {
         m_input.readFully(bytes);
-        ByteBuffer buffer = ByteBuffer.wrap(bytes);
+        var buffer = ByteBuffer.wrap(bytes);
         buffer.order(m_byteOrder);
         return buffer;
     }
@@ -174,12 +173,12 @@ public final class UnmodifiedLongUTFReadableDataInput implements ReadableDataInp
 
     @Override
     public String readUTF() throws IOException {
-        long length = readLong();
+        var length = readLong();
         if (length > Integer.MAX_VALUE) {
             throw new IOException("Found a UTF string longer than 2GB, cannot read that yet");
             // TODO: allow string lengths > MAX_INTEGER https://knime-com.atlassian.net/browse/AP-19712
         }
-        byte[] bytes = new byte[(int)length];
+        var bytes = new byte[(int)length];
         m_input.readFully(bytes);
         return m_encoder.decode(bytes);
     }
@@ -190,8 +189,7 @@ public final class UnmodifiedLongUTFReadableDataInput implements ReadableDataInp
     }
 
     @Override
-    public byte[] readBytes() throws EOFException, IOException {
+    public byte[] readBytes() throws IOException {
         return m_input.readBytes();
     }
-
 }

@@ -77,17 +77,13 @@ import org.xml.sax.SAXException;
  */
 public class XMLValueFactory extends AbstractFileStoreSerializableValueFactory<XMLValue<Document>> {
 
-    static ObjectSerializer<XMLValue<Document>> SERIALIZER = (out, value) -> {
-        out.writeUTF(value.toString());
-    };
+    static final ObjectSerializer<XMLValue<Document>> SERIALIZER = (out, value) -> out.writeUTF(value.toString());
 
-    static ObjectDeserializer<XMLValue<Document>> DESERIALIZER = (in) -> {
+    static final ObjectDeserializer<XMLValue<Document>> DESERIALIZER = in -> {
         try {
             return new XMLCellContent(in.readUTF(), true);
-        } catch (ParserConfigurationException ex) {
-            return null;
-        } catch (SAXException ex) {
-            return null;
+        } catch (ParserConfigurationException | SAXException ex) {
+            throw new IOException(ex);
         }
     };
 

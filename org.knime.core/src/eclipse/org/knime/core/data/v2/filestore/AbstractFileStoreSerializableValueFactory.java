@@ -51,7 +51,6 @@ package org.knime.core.data.v2.filestore;
 import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -124,12 +123,8 @@ public abstract class AbstractFileStoreSerializableValueFactory<V extends DataVa
      */
     protected AbstractFileStoreSerializableValueFactory(final ObjectSerializer<V> serializer,
         final ObjectDeserializer<V> deserializer) {
-        m_serializer = (out, value) -> {
-            serializer.serialize(new UnmodifiedLongUTFDataOutput(out), value);
-        };
-        m_deserializer = (in) -> {
-            return deserializer.deserialize(new UnmodifiedLongUTFReadableDataInput(in));
-        };
+        m_serializer = (out, value) -> serializer.serialize(new UnmodifiedLongUTFDataOutput(out), value);
+        m_deserializer = in -> deserializer.deserialize(new UnmodifiedLongUTFReadableDataInput(in));
     }
 
     @Override
@@ -237,7 +232,7 @@ public abstract class AbstractFileStoreSerializableValueFactory<V extends DataVa
         @Override
         public void setValue(final V value) {
             // addressing the type with outer class because we don't care for the generic type V
-            if (value instanceof AbstractFileStoreSerializableValueFactory.FileStoreSerializableReadValue) {
+            if (value instanceof AbstractFileStoreSerializableValueFactory.FileStoreSerializableReadValue) { // NOSONAR
                 @SuppressWarnings("rawtypes")
                 var fsReadVal = (AbstractFileStoreSerializableValueFactory.FileStoreSerializableReadValue)value;
                 m_access.getWriteAccess(0).setFrom(fsReadVal.m_access.getAccess(0));
@@ -258,10 +253,10 @@ public abstract class AbstractFileStoreSerializableValueFactory<V extends DataVa
 
                     if (mustBeFlushedPriorSave(fsCell)) {
                         try {
-                            final FileStore[] fileStores = FileStoreUtil.getFileStores(fsCell);
-                            final FileStoreKey[] fileStoreKeys = new FileStoreKey[fileStores.length];
+                            final var fileStores = FileStoreUtil.getFileStores(fsCell);
+                            final var fileStoreKeys = new FileStoreKey[fileStores.length];
 
-                            for (int fileStoreIndex = 0; fileStoreIndex < fileStoreKeys.length; fileStoreIndex++) {
+                            for (var fileStoreIndex = 0; fileStoreIndex < fileStoreKeys.length; fileStoreIndex++) {
                                 fileStoreKeys[fileStoreIndex] =
                                     m_fileStoreHandler.translateToLocal(fileStores[fileStoreIndex], fsCell);
                             }
@@ -326,7 +321,7 @@ public abstract class AbstractFileStoreSerializableValueFactory<V extends DataVa
 
         @Override
         protected final void flushToFileStore() throws IOException {
-            final File file = getFileStores()[0].getFile();
+            final var file = getFileStores()[0].getFile();
             synchronized (file) {
                 if (!file.exists()) {
                     try (final var outputStream = new DataOutputStream(new FileOutputStream(file))) {
