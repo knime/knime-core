@@ -81,6 +81,7 @@ public final class DataTableSpecCreatorTest {
         return result;
     }
 
+    /** Test that constructor and creator return the same. */
     @Test
     public void testCreatorSimple() {
         DataColumnSpec[] cols = createColumnSpecs(5, "ColName");
@@ -91,6 +92,7 @@ public final class DataTableSpecCreatorTest {
         Assert.assertEquals(reference, toTest);
     }
 
+    /** No duplicate column names. */
     @Test(expected=IllegalArgumentException.class)
     public void testCreatorSimpleConflictNames() {
         DataColumnSpec[] cols = createColumnSpecs(5, "ColName");
@@ -99,6 +101,7 @@ public final class DataTableSpecCreatorTest {
         creator.addColumns(cols[4]); // throws exception
     }
 
+    /** Test adding columns from table specs.  */
     @Test
     public void testCreatorMultipleTableSpecs() {
         DataColumnSpec[] cols1 = createColumnSpecs(5, "ColName");
@@ -115,6 +118,7 @@ public final class DataTableSpecCreatorTest {
         Assert.assertEquals(outputSpec, new DataTableSpec(allCols));
     }
 
+    /** No duplicate column names when adding columns from table specs. */
     @Test(expected=IllegalArgumentException.class)
     public void testCreatorMultipleTableSpecsConflictNames() {
         DataColumnSpec[] cols1 = createColumnSpecs(5, "ColName");
@@ -125,6 +129,7 @@ public final class DataTableSpecCreatorTest {
         creator.addColumns(new DataTableSpec(cols2)); // throws exception
     }
 
+    /** Rename a column. */
     @Test
     public void testSetName() {
         DataColumnSpec[] cols1 = createColumnSpecs(5, "ColName");
@@ -134,6 +139,7 @@ public final class DataTableSpecCreatorTest {
         Assert.assertEquals(creator.createSpec().getName(), name);
     }
 
+    /** Cannot change table spec properties after creation. */
     @Test(expected=UnsupportedOperationException.class)
     public void testEmptyProperty() {
         Map<String, String> props = new DataTableSpec().getProperties();

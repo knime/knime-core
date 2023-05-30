@@ -64,6 +64,7 @@ import org.knime.core.data.meta.DataColumnMetaData;
 import org.knime.core.data.property.ColorHandler;
 import org.knime.core.data.property.ShapeHandler;
 import org.knime.core.data.property.SizeHandler;
+import org.knime.core.data.property.ValueFormatHandler;
 import org.knime.core.data.property.filter.FilterHandler;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.CheckUtils;
@@ -113,6 +114,9 @@ public final class DataColumnSpecCreator {
 
     /** Holds the ColorHandler if one was set or null. */
     private ColorHandler m_colorHandler = null;
+
+    /** Holds the ColorHandler if one was set or null. */
+    private ValueFormatHandler m_valueFormatHandler = null;
 
     /** Holds the names array (by default and array containing column name),
      * something different for array types or BitVector type.
@@ -174,6 +178,9 @@ public final class DataColumnSpecCreator {
         m_colorHandler = cspec.getColorHandler();
         // property filter
         m_filterHandler = cspec.getFilterHandler().orElse(null);
+        // value formatter
+        m_valueFormatHandler = cspec.getValueFormatHandler();
+
         m_metaDataCreator = new DataColumnMetaDataManager.Creator(cspec.getMetaDataManager());
     }
 
@@ -237,6 +244,7 @@ public final class DataColumnSpecCreator {
         mergeColorHandlers(cspec2.getColorHandler());
         mergeShapeHandlers(cspec2.getShapeHandler());
         mergeSizeHandlers(cspec2.getSizeHandler());
+        mergeValueFormatHandlers(cspec2.getValueFormatHandler());
         mergeFilterHandlers(cspec2.getFilterHandler().orElse(null));
         mergeProperties(cspec2.getProperties());
         mergeElementNames(cspec2.getElementNames(), options.contains(MergeOptions.ALLOW_VARYING_ELEMENT_NAMES));
@@ -292,6 +300,12 @@ public final class DataColumnSpecCreator {
     private void mergeColorHandlers(final ColorHandler colorHandler2) {
         if (!Objects.equals(m_colorHandler, colorHandler2)) {
             LOGGER.warn("Column has already a color handler attached, ignoring new handler.");
+        }
+    }
+
+    private void mergeValueFormatHandlers(final ValueFormatHandler valueFormatHandler2) {
+        if (!Objects.equals(m_valueFormatHandler, valueFormatHandler2)) {
+            LOGGER.warn("Column already has a value format handler attached, ignoring new handler.");
         }
     }
 
@@ -494,6 +508,16 @@ public final class DataColumnSpecCreator {
     }
 
     /**
+     * Set {@link ValueFormatHandler} which can be <code>null</code>.
+     *
+     * @param valueFormatHandler nullable
+     * @since 5.1
+     */
+    public void setValueFormatHandler(final ValueFormatHandler valueFormatHandler) {
+        m_valueFormatHandler = valueFormatHandler;
+    }
+
+    /**
      * Adds the provided {@link DataColumnMetaData metaData} by either overwriting existing meta data for the
      * associated DataValue (<b>overwrite</b> set to true)
      * or merging it with existing meta data (overwrite set to false).
@@ -558,6 +582,6 @@ public final class DataColumnSpecCreator {
         String[] elNames =
             m_elementNames == null ? new String[0] : m_elementNames;
         return new DataColumnSpec(m_name, elNames, m_type, m_domain, m_properties, m_sizeHandler, m_colorHandler,
-            m_shapeHandler, m_filterHandler, m_metaDataCreator.create());
+            m_shapeHandler, m_valueFormatHandler, m_filterHandler, m_metaDataCreator.create());
     }
 }

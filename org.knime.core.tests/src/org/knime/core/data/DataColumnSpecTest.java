@@ -45,14 +45,32 @@
  */
 package org.knime.core.data;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.awt.Color;
+import java.util.Map;
 
 import org.junit.Test;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.LongCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.data.property.ColorHandler;
+import org.knime.core.data.property.ColorModelRange;
+import org.knime.core.data.property.ShapeFactory;
+import org.knime.core.data.property.ShapeHandler;
+import org.knime.core.data.property.ShapeModelNominal;
+import org.knime.core.data.property.SizeHandler;
+import org.knime.core.data.property.SizeModelDouble;
+import org.knime.core.data.property.ValueFormatHandler;
+import org.knime.core.data.property.ValueFormatModelNumber;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettings;
+import org.knime.core.util.valueformat.NumberFormatter;
 
 /**
  * Tests {@link DataColumnSpec}.
@@ -72,38 +90,140 @@ public final class DataColumnSpecTest {
         final DataColumnSpec stringSpec = creator.createSpec();
 
         //null parameter
-        assertFalse(stringSpec.isCompatibleWith(null));
+        assertFalse(stringSpec.isCompatibleWith(null), "spec is not compatible with null");
 
         //same instance
-        assertTrue(stringSpec.isCompatibleWith(stringSpec));
+        assertTrue(stringSpec.isCompatibleWith(stringSpec), "spec is compatible with itself");
 
         //same spec
         final DataColumnSpec stringSpec2 = creator.createSpec();
-        assertTrue(stringSpec.isCompatibleWith(stringSpec2));
-        assertTrue(stringSpec2.isCompatibleWith(stringSpec));
+        assertTrue(stringSpec.isCompatibleWith(stringSpec2), "spec is compatible with identical spec");
+        assertTrue(stringSpec2.isCompatibleWith(stringSpec), "spec is compatible with identical spec");
 
         //compatible types
         creator.setType(IntCell.TYPE);
         final DataColumnSpec intSpec = creator.createSpec();
-        assertFalse(stringSpec.isCompatibleWith(intSpec));
-        assertFalse(intSpec.isCompatibleWith(stringSpec));
+        assertFalse(stringSpec.isCompatibleWith(intSpec), "string is not compatible with int");
+        assertFalse(intSpec.isCompatibleWith(stringSpec), "int is not compatible with string");
 
         creator.setType(LongCell.TYPE);
         final DataColumnSpec longSpec = creator.createSpec();
-        assertTrue(intSpec.isCompatibleWith(longSpec));
-        assertFalse(longSpec.isCompatibleWith(intSpec));
+        assertTrue(intSpec.isCompatibleWith(longSpec), "int is compatible with long");
+        assertFalse(longSpec.isCompatibleWith(intSpec), "long is not compatible with int");
         creator.setType(DoubleCell.TYPE);
         final DataColumnSpec doubleSpec = creator.createSpec();
-        assertTrue(intSpec.isCompatibleWith(doubleSpec));
-        assertTrue(longSpec.isCompatibleWith(doubleSpec));
-        assertFalse(doubleSpec.isCompatibleWith(intSpec));
-        assertFalse(doubleSpec.isCompatibleWith(longSpec));
+        assertTrue(intSpec.isCompatibleWith(doubleSpec), "int is compatible with double");
+        assertTrue(longSpec.isCompatibleWith(doubleSpec), "long is compatible with double");
+        assertFalse(doubleSpec.isCompatibleWith(intSpec), "double is not compatible with int");
+        assertFalse(doubleSpec.isCompatibleWith(longSpec), "double is not compatible with long");
 
         //different name but same type
         creator.setName(doubleSpec.getName() + "_other");
         final DataColumnSpec doubleDifferentNameSpec = creator.createSpec();
-        assertFalse(doubleSpec.isCompatibleWith(doubleDifferentNameSpec));
-        assertFalse(doubleDifferentNameSpec.isCompatibleWith(doubleSpec));
+        assertFalse(doubleSpec.isCompatibleWith(doubleDifferentNameSpec),
+            "double is not compatible with double with " + "different name");
+        assertFalse(doubleDifferentNameSpec.isCompatibleWith(doubleSpec),
+            "double with different name is not " + "compatible with double");
+    }
+
+    /** When creating a spec without specifying handlers, no handlers should be present. */
+    @Test
+    public void testDefaultHandlersAreNull() {
+        // given
+        final DataColumnSpecCreator creator = new DataColumnSpecCreator("Col", StringCell.TYPE);
+        final DataColumnSpec stringSpec = creator.createSpec();
+
+        // when checking default handlers
+        // then null is returned
+        assertNull(stringSpec.getColorHandler(), "Default color handler should be null");
+        assertNull(stringSpec.getShapeHandler(), "Default shape handler should be null");
+        assertNull(stringSpec.getSizeHandler(), "Default size handler should be null");
+        assertNull(stringSpec.getValueFormatHandler(), "Default value format handler should be null");
+    }
+
+    /** Test loading and saving visual attribute handlers (color, shape, value format)
+     * @throws InvalidSettingsException */
+    @Test
+    public void testSaveLoadHandlers() throws InvalidSettingsException {
+        // given spec with handlers
+        final var colorHandler = new ColorHandler(new ColorModelRange(0, Color.BLACK, 1, Color.RED));
+        final var shapeHandler = new ShapeHandler(new ShapeModelNominal(Map.of(new StringCell("A"), ShapeFactory.getShape(ShapeFactory.CIRCLE))));
+        final var sizeHandler = new SizeHandler(new SizeModelDouble(0, 1));
+        final var valueFormatHandler = new ValueFormatHandler(new ValueFormatModelNumber(NumberFormatter.builder().setMaximumDecimals(17).build()));
+
+        final DataColumnSpecCreator creator = new DataColumnSpecCreator("Col", StringCell.TYPE);
+        creator.setColorHandler(colorHandler);
+        creator.setShapeHandler(shapeHandler);
+        creator.setSizeHandler(sizeHandler);
+        creator.setValueFormatHandler(valueFormatHandler);
+        final DataColumnSpec stringSpec = creator.createSpec();
+
+        // when saving and loading
+        final var config = new NodeSettings("root");
+        stringSpec.save(config);
+        final var stringSpec2 = DataColumnSpec.load(config);
+
+        // then handlers are the same
+        assertEquals(colorHandler, stringSpec2.getColorHandler(), "Loaded color handler is not the same as saved one.");
+        assertEquals(shapeHandler, stringSpec2.getShapeHandler(), "Loaded shape handler is not the same as saved one.");
+        assertEquals(sizeHandler, stringSpec2.getSizeHandler(), "Loaded size handler is not the same as saved one.");
+        assertEquals(valueFormatHandler, stringSpec2.getValueFormatHandler(),
+            "Loaded value format handler is not the same as saved one.");
+    }
+
+    /**
+     * Tests the {@link DataColumnSpec#equals(Object)} method.
+     */
+    @Test
+    public void testEquals() {
+        // given
+        final DataColumnSpecCreator creator = new DataColumnSpecCreator("Col", StringCell.TYPE);
+        final DataColumnSpec stringSpec = creator.createSpec();
+        final DataColumnSpec stringSpec2 = creator.createSpec();
+
+        //null parameter
+        assertFalse(stringSpec.equals(null), "Spec is not unequal to null"); //NOSONAR assertNotNull is not what we want
+
+        //same instance
+        assertEquals(stringSpec, stringSpec, "Spec is not equal to itself");
+
+        //same spec
+        assertEquals(stringSpec, stringSpec2, "Spec is not equal to identical spec");
+    }
+
+    /**
+     * Test unequals. Different name, different type, different handlers.
+     * @throws InvalidSettingsException
+     */
+    @Test
+    public void testUnequals() throws InvalidSettingsException {
+        // given
+        final DataColumnSpecCreator creator = new DataColumnSpecCreator("Col", StringCell.TYPE);
+        final DataColumnSpec stringSpec = creator.createSpec();
+        // different name
+        creator.setName(stringSpec.getName() + "_other");
+        final DataColumnSpec stringSpec2 = creator.createSpec();
+        // different type
+        creator.setType(IntCell.TYPE);
+        final DataColumnSpec intSpec = creator.createSpec();
+        // different color handler
+        creator.setColorHandler(new ColorHandler(new ColorModelRange(0, Color.BLACK, 1, Color.RED)));
+        final DataColumnSpec colorSpec = creator.createSpec();
+        // different value format handler
+        creator.setValueFormatHandler(new ValueFormatHandler(
+            new ValueFormatModelNumber(NumberFormatter.builder().setMaximumDecimals(17).build())));
+        final DataColumnSpec valueFormatSpec = creator.createSpec();
+        // and another value format handler
+        creator.setValueFormatHandler(new ValueFormatHandler(
+            new ValueFormatModelNumber(NumberFormatter.builder().setMaximumDecimals(18).build())));
+        final DataColumnSpec valueFormatSpec2 = creator.createSpec();
+
+        // when checking equals, all should be false
+        assertNotEquals(stringSpec, stringSpec2, "Different column names not detected");
+        assertNotEquals(stringSpec, intSpec, "Different column types not detected");
+        assertNotEquals(stringSpec, colorSpec, "Different color handlers not detected");
+        assertNotEquals(stringSpec, valueFormatSpec, "Different value format handlers not detected");
+        assertNotEquals(valueFormatSpec, valueFormatSpec2, "Different value format handler parameters not detected");
     }
 
 }
