@@ -48,6 +48,7 @@
  */
 package org.knime.core.data.filestore;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 import java.util.UUID;
@@ -74,7 +75,13 @@ public class FileStoreKeyTest {
 
     @Test
     public void testLoadRealFSKey() {
-        FileStoreKey.fromString("0_0_bd1ee3d4-3ea6-4eb8-8f3b-5c2caa4cbd06-(891613d3-c03d-41e8-b9d4-0476b3b8b1f8)");
+        var key =
+            FileStoreKey.fromString("0_0_bd1ee3d4-3ea6-4eb8-8f3b-5c2caa4cbd06-(891613d3-c03d-41e8-b9d4-0476b3b8b1f8)");
+        assertEquals("Expected index to be 0", 0, key.getIndex());
+        assertEquals("Expected specific name", "bd1ee3d4-3ea6-4eb8-8f3b-5c2caa4cbd06", key.getName());
+        assertEquals("Expected specific store UUID", "891613d3-c03d-41e8-b9d4-0476b3b8b1f8",
+            key.getStoreUUID().toString());
+        assertArrayEquals("Expected empty nested loop path", new int[0], key.getNestedLoopPath());
     }
 
     @Test(expected = IllegalArgumentException.class)
