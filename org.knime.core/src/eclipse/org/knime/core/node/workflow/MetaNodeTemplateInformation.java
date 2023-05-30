@@ -110,7 +110,12 @@ public final class MetaNodeTemplateInformation implements Cloneable {
         }
     }
 
-    /** */
+    /**
+     * Represents a NodeContainerTemplate's update status. Can be up to date, having a update, or being in an error
+     * state where an update was attempted but failed.
+     *
+     * TODO: Find a way to attach a message to individual UpdateStatus'es.
+     */
     public enum UpdateStatus {
         /** Up to date. */
         UpToDate,
