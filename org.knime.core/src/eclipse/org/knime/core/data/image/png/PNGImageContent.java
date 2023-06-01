@@ -71,9 +71,9 @@ import org.knime.core.node.util.ImageViewPanel.ScaleType;
 import org.knime.core.util.FileUtil;
 
 /**
- * Content of a PNG image. It only wraps a byte[] which is supposed to be
- * PNG content. The rendering methods will delegate all work to
- * {@link BufferedImage}.
+ * Content of a PNG image. It only wraps a byte[] which is supposed to be PNG content. The rendering methods will
+ * delegate all work to {@link BufferedImage}.
+ *
  * @author Thomas Gabriel, KNIME AG, Zurich, Switzerland
  */
 public class PNGImageContent implements ImageContent {
@@ -91,11 +91,13 @@ public class PNGImageContent implements ImageContent {
         // no-arg, required by ImageContent
     }
 
-    /** Creates PNG image content from byte array.
+    /**
+     * Creates PNG image content from byte array.
+     *
      * @param imageBytes The image bytes.
      * @throws NullPointerException If the argument is null.
-     * @throws IllegalArgumentException If the argument does not represent a
-     * valid png byte stream (according to {@link ImageIO#read(InputStream)}.
+     * @throws IllegalArgumentException If the argument does not represent a valid png byte stream (according to
+     *             {@link ImageIO#read(InputStream)}.
      */
     public PNGImageContent(final byte[] imageBytes) {
         if (imageBytes == null) {
@@ -105,21 +107,21 @@ public class PNGImageContent implements ImageContent {
         m_imageRef = new SoftReference<Image>(getImageInternal(imageBytes));
     }
 
-    /** Reads image content from a stream. The reader will read content
-     * until the end of the stream, it will not close the stream.
+    /**
+     * Reads image content from a stream. The reader will read content until the end of the stream, it will not close
+     * the stream.
      *
      * @param is The input stream.
      * @throws IOException If reading from the stream fails.
      * @throws NullPointerException If the argument is null;
-     * @throws IllegalArgumentException If the argument does not represent a
-     * valid png byte stream (according to {@link ImageIO#read(InputStream)}.
+     * @throws IllegalArgumentException If the argument does not represent a valid png byte stream (according to
+     *             {@link ImageIO#read(InputStream)}.
      */
     public PNGImageContent(final InputStream is) throws IOException {
         this(toByteArray(is));
     }
 
-    private static final byte[] toByteArray(final InputStream in)
-        throws IOException {
+    private static final byte[] toByteArray(final InputStream in) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         FileUtil.copy(in, out);
         out.close();
@@ -127,16 +129,19 @@ public class PNGImageContent implements ImageContent {
         return out.toByteArray();
     }
 
-    /** Get a reference to the underlying byte array. The caller must not
-     * modify the returned array but should use the {@link #getByteArray()}
-     * if necessary.
+    /**
+     * Get a reference to the underlying byte array. The caller must not modify the returned array but should use the
+     * {@link #getByteArray()} if necessary.
+     *
      * @return Reference to the underlying byte array.
      */
     public byte[] getByteArrayReference() {
         return m_imageBytes;
     }
 
-    /** Get a copy of the underlying byte array.
+    /**
+     * Get a copy of the underlying byte array.
+     *
      * @return A new copy.
      * @see #getByteArrayReference()
      */
@@ -144,11 +149,12 @@ public class PNGImageContent implements ImageContent {
         return Arrays.copyOf(m_imageBytes, m_imageBytes.length);
     }
 
-    /** Get the image represented by this object.
+    /**
+     * Get the image represented by this object.
+     *
      * @return The image.
-     * @throws IllegalStateException If the image can't be read from the
-     *         internal memory representation (the Image is not actually stored
-     *         as part of this cell but kept in a SoftReference)
+     * @throws IllegalStateException If the image can't be read from the internal memory representation (the Image is
+     *             not actually stored as part of this cell but kept in a SoftReference)
      */
     public Image getImage() {
         Image image = m_imageRef.get();
@@ -164,16 +170,16 @@ public class PNGImageContent implements ImageContent {
         }
     }
 
-    /** Read image from byte[] array.
+    /**
+     * Read image from byte[] array.
+     *
      * @return A new image
      */
     private static Image getImageInternal(final byte[] array) {
         try {
-            BufferedImage bufImage =
-                ImageIO.read(new ByteArrayInputStream(array));
+            BufferedImage bufImage = ImageIO.read(new ByteArrayInputStream(array));
             if (bufImage == null) {
-                throw new IllegalArgumentException(
-                        "ImageIO returned null while reading image bytes");
+                throw new IllegalArgumentException("ImageIO returned null while reading image bytes");
             } else {
                 return bufImage;
             }
@@ -191,6 +197,7 @@ public class PNGImageContent implements ImageContent {
             image = ImageIO.read(new ByteArrayInputStream(m_imageBytes));
             if (image == null) {
                 error = "ImageIO returned null";
+
             }
         } catch (IOException e) {
             error = e.getMessage();
@@ -198,9 +205,9 @@ public class PNGImageContent implements ImageContent {
         if (error != null) {
             g.drawString(error, 0, 0);
         } else {
-            ImageViewPanel.drawInto(g, image, image.getWidth(), image.getHeight(),
-                new Rectangle(width, height), ScaleType.ShrinkAsNeeded);
-//            g.drawImage(image, 0, 0, width, height, null);
+            ImageViewPanel.drawInto(g, image, image.getWidth(), image.getHeight(), new Rectangle(width, height),
+                ScaleType.ShrinkAsNeeded);
+            //            g.drawImage(image, 0, 0, width, height, null);
         }
     }
 
@@ -210,20 +217,23 @@ public class PNGImageContent implements ImageContent {
         output.write(m_imageBytes);
     }
 
-    /** Deserialize method for DataCell implementation.
+    /**
+     * Deserialize method for DataCell implementation.
+     *
      * @param input To read from.
      * @return A new image content.
      * @throws IOException If that fails.
      */
-    static PNGImageContent deserialize(final DataCellDataInput input)
-        throws IOException {
+    static PNGImageContent deserialize(final DataCellDataInput input) throws IOException {
         int length = input.readInt();
         byte[] bytes = new byte[length];
         input.readFully(bytes);
         return new PNGImageContent(bytes);
     }
 
-    /** Serialize method for image content.
+    /**
+     * Serialize method for image content.
+     *
      * @param output To save to.
      * @throws IOException If that fails for any reason.
      */
@@ -232,16 +242,18 @@ public class PNGImageContent implements ImageContent {
         output.write(m_imageBytes);
     }
 
-    /** Minimum size for blobs in bytes. That is, if a given byte[] is at least
-     * as large as this value, it will be represented by a blob cell */
+    /**
+     * Minimum size for blobs in bytes. That is, if a given byte[] is at least as large as this value, it will be
+     * represented by a blob cell
+     */
     private static final long BLOB_SIZE_THRESHOLD =
-        ConvenienceMethods.readSizeSystemProperty(
-                "org.knime.pngminblobsize", 40 * 1024);
+        ConvenienceMethods.readSizeSystemProperty("org.knime.pngminblobsize", 40 * 1024);
 
     /** {@inheritDoc} */
     @Override
     public DataCell toImageCell() {
         if (m_imageBytes.length >= BLOB_SIZE_THRESHOLD) {
+            //TODO If we could return a PNGImageFileStoreCell here, we could replace Blobs faster. Possible?
             return new PNGImageBlobCell(this);
         } else {
             return new PNGImageCell(this);
@@ -264,8 +276,7 @@ public class PNGImageContent implements ImageContent {
     @Override
     public String getSummary() {
         Dimension dim = getPreferredSize();
-        String summary = "PNG Image " + dim.width + " x "
-            + dim.height + " with ";
+        String summary = "PNG Image " + dim.width + " x " + dim.height + " with ";
         if (m_imageBytes.length < 1000) {
             return summary + m_imageBytes.length + " B";
         } else {
