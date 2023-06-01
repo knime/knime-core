@@ -465,6 +465,13 @@
                cellClass="org.knime.core.data.image.png.PNGImageBlobCell"
                serializerClass="org.knime.core.data.image.png.PNGImageBlobCell$PNGSerializer">
          </serializer>
+         <serializer
+               cellClass="org.knime.core.data.image.png.PNGImageFileStoreCell"
+               serializerClass="org.knime.core.data.image.png.PNGImageFileStoreCell$PNGImageSerializer">
+         </serializer>
+         <ValueFactory
+               valueFactoryClass="org.knime.core.data.image.png.PNGImageValueFactory">
+         </ValueFactory>
       </DataType>
       <DataType
             cellClass="org.knime.core.data.blob.BinaryObjectDataCell"
