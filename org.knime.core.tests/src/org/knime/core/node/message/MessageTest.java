@@ -90,6 +90,18 @@ class MessageTest {
             .satisfies(rowIssueCondition);
     }
 
+    /** Change fields in message. */
+    @Test
+    void testModify() {
+        final var message = Message.builder().withSummary("first summary").addTextIssue("Text Issue")
+            .addResolutions("Some Resolution").build().orElseThrow();
+        final var message2 = message.modify().withSummary("second summary").build().orElseThrow();
+        assertThat(message2).as("Summary is changed").extracting(Message::getSummary).isEqualTo("second summary");
+        assertThat(message2).as("Issue is equal").extracting(Message::getIssue).isEqualTo(message.getIssue());
+        assertThat(message2).as("Resolution is equal").extracting(Message::getResolutions)
+            .isEqualTo(message.getResolutions());
+    }
+
     @Test
     void testEmpty() throws Exception {
         var messageBuilder = Message.builder();

@@ -107,6 +107,14 @@ public final class MessageBuilder {
         m_resolutions = new ArrayList<>();
     }
 
+    MessageBuilder(final Message msg) {
+        this();
+        m_summary = msg.getSummary();
+        m_relevantIssue = msg.getIssue().orElse(null);
+        m_issueCount = msg.getIssue().isPresent() ? 1 : 0;
+        m_resolutions.addAll(msg.getResolutions());
+    }
+
     /**
      * @return the currently set summary (or an empty Optional).
      */

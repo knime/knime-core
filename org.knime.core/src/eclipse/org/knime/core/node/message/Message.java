@@ -301,6 +301,16 @@ public final class Message {
     }
 
     /**
+     * A new message builder based off of this message. Use to, e.g. change the summary or add different details.
+     *
+     * @return A new builder using fields from this instance.
+     * @since 5.1
+     */
+    public MessageBuilder modify() {
+        return new MessageBuilder(this);
+    }
+
+    /**
      * Factory method to create a message from just a plain summary string. Equivalent to
      * <code>builder().withSummary(String).build()</code>
      *

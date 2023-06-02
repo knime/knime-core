@@ -44,11 +44,14 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
 
 import java.io.File;
 
+import org.hamcrest.CoreMatchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.knime.core.node.ExecutionMonitor;
@@ -124,23 +127,27 @@ public class TestNestedComponentErrorMessages extends WorkflowTestCase {
         wfm.executeAllAndWaitUntilDone();
 
         //check error messages after execute
-        assertThat("unexpected node message", wfm.getNodeContainer(m_component_19).getNodeMessage().getMessage(),
-            is("Execute failed: \nFail in execution " + m_baseID + ":19:0:9: This node fails on each execution."));
-        assertThat("unexpected node message", wfm.getNodeContainer(m_component_20).getNodeMessage().getMessage(),
-            is("Execute failed: \nWrite to file path " + m_baseID + ":20:0:19: Fail in execution " + m_baseID
-                + ":20:0:19:0:9: This node fails on each execution."));
-        assertThat("unexpected node message", wfm.findNodeContainer(m_component_20_0_19).getNodeMessage().getMessage(),
-            is("Execute failed: \nFail in execution " + m_baseID + ":20:0:19:0:9: This node fails on each execution."));
+		assertThat("unexpected node message",
+				wfm.getNodeContainer(m_component_19).getNodeMessage().toStringWithDetails(),
+				allOf(containsString("Fail in execution #9"), containsString("This node fails on each execution.")));
+		assertThat("unexpected node message",
+				wfm.getNodeContainer(m_component_20).getNodeMessage().toStringWithDetails(),
+				containsString("Contains one node with execution failure"));
+		assertThat("unexpected node message",
+				wfm.findNodeContainer(m_component_20_0_19).getNodeMessage().toStringWithDetails(),
+				allOf(containsString("Fail in execution #9"), containsString("This node fails on each execution.")));
         assertThat("unexpected node message", wfm.findNodeContainer(m_node_20_0_19_0_9).getNodeMessage().getMessage(),
             is("Execute failed: This node fails on each execution."));
         assertThat("unexpected node message", wfm.findNodeContainer(m_node_19_0_9).getNodeMessage().getMessage(),
             is("Execute failed: This node fails on each execution."));
-        assertThat("unexpected node message", wfm.getNodeContainer(m_component_22).getNodeMessage().getMessage(),
-            is("Execute failed: \nInner Component " + m_baseID + ":22:0:19: Duplicate Row Filter " + m_baseID
-                + ":22:0:19:0:9: At least one column has to be selected for duplicate detection."));
-        assertThat("unexpected node message", wfm.findNodeContainer(m_component_22_0_19).getNodeMessage().getMessage(),
-            is("Execute failed: \nDuplicate Row Filter " + m_baseID
-                + ":22:0:19:0:9: At least one column has to be selected for duplicate detection."));
+		assertThat("unexpected node message",
+				wfm.getNodeContainer(m_component_22).getNodeMessage().toStringWithDetails(),
+				allOf(containsString("Inner Component #19"),
+						containsString("Contains one node with execution failure")));
+		assertThat("unexpected node message",
+				wfm.findNodeContainer(m_component_22_0_19).getNodeMessage().toStringWithDetails(),
+				allOf(containsString("Duplicate Row Filter #9"),
+						containsString("At least one column has to be selected for duplicate detection.")));
         assertThat("unexpected node message", wfm.findNodeContainer(m_node_22_0_19_0_9).getNodeMessage().getMessage(),
             is("At least one column has to be selected for duplicate detection."));
 

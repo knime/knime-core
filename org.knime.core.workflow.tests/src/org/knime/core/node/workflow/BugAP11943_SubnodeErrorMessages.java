@@ -45,7 +45,7 @@ package org.knime.core.node.workflow;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.IDLE;
 
@@ -83,13 +83,13 @@ public class BugAP11943_SubnodeErrorMessages extends WorkflowTestCase {
         assertThat("Message type when no input is available",
             subContainer.getNodeMessage().getMessageType(), is(NodeMessage.Type.WARNING));
         assertThat("Message text when no input is available",
-            subContainer.getNodeMessage().getMessage(), containsString("does not have input data"));
+            subContainer.getNodeMessage().toStringWithDetails(), containsString("does not have input data"));
         executeAndWait(m_subnode_4);
         checkState(subContainer, CONFIGURED);
         assertThat("Message type after attempted execute",
             subContainer.getNodeMessage().getMessageType(), is(NodeMessage.Type.ERROR));
         assertThat("Message text when no input is available",
-            subContainer.getNodeMessage().getMessage(), containsString("fails on each execution"));
+            subContainer.getNodeMessage().toStringWithDetails(), containsString("fails on each execution"));
     }
 
     /** Subnode contains unconnected nodes. */
@@ -115,13 +115,13 @@ public class BugAP11943_SubnodeErrorMessages extends WorkflowTestCase {
         assertThat("Message type when no input is available",
             subContainer.getNodeMessage().getMessageType(), is(NodeMessage.Type.WARNING));
         assertThat("Message text when no input is available",
-            subContainer.getNodeMessage().getMessage(), containsString("unconnected node"));
+            subContainer.getNodeMessage().toStringWithDetails(), containsString("does not have input data"));
         executeAndWait(m_subnode_8);
         checkState(subContainer, IDLE);
         assertThat("Message type after attempted execute",
             subContainer.getNodeMessage().getMessageType(), is(NodeMessage.Type.ERROR));
         assertThat("Message text when no input is available",
-            subContainer.getNodeMessage().getMessage(), containsString("unconnected node"));
+            subContainer.getNodeMessage().toStringWithDetails(), containsString("unconnected node"));
     }
 
     /** Subnode contains node that hasn't been configured and fails during #configure.
@@ -132,13 +132,13 @@ public class BugAP11943_SubnodeErrorMessages extends WorkflowTestCase {
         assertThat("Message type when no input is available",
             subContainer.getNodeMessage().getMessageType(), is(NodeMessage.Type.WARNING));
         assertThat("Message text when no input is available",
-            subContainer.getNodeMessage().getMessage(), containsString("does not have input data"));
+            subContainer.getNodeMessage().toStringWithDetails(), containsString("does not have input data"));
         executeAndWait(m_subnode_9);
         checkState(subContainer, IDLE);
         assertThat("Message type after attempted execute",
             subContainer.getNodeMessage().getMessageType(), is(NodeMessage.Type.ERROR));
         assertThat("Message text when no input is available",
-            subContainer.getNodeMessage().getMessage(), containsString("Validation failed")); // has a lot more text
+            subContainer.getNodeMessage().toStringWithDetails(), containsString("Validation failed")); // has a lot more text
     }
 
     /** {@inheritDoc} */

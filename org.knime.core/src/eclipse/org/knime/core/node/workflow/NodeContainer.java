@@ -81,6 +81,7 @@ import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.web.WebTemplate;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
+import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.NodePropertyChangedEvent.NodeProperty;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.action.InteractiveWebViewsResult;
@@ -1383,6 +1384,23 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
 
     public final String getNameWithID() {
         return getName() + " " + getID().toString();
+    }
+
+    /** Similar to {@link #getNameWithID()} but the parent stripping off its prefix and a hash (#) added. So instead of
+     * "Row Filter 5:20:0:21" it would write "Row Filter #21".
+     *
+     * @param strippedPrefix The prefix to strip (in the above example "5:20:0")
+     * @return That string
+     * @since 5.1
+     */
+    public final String getNameWithID(final NodeID strippedPrefix) {
+        final String idS;
+        if (getID().hasPrefix(strippedPrefix)) {
+            idS = NodeIDSuffix.create(strippedPrefix, getID()).toString();
+        } else {
+            idS = getID().toString();
+        }
+        return getName() + " #" + idS;
     }
 
     /** @return Node name with status information.  */

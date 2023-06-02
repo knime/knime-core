@@ -148,6 +148,7 @@ import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.interactive.ReExecutable;
 import org.knime.core.node.interactive.ReexecutionCallback;
 import org.knime.core.node.interactive.ViewContent;
+import org.knime.core.node.message.Message;
 import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectHolder;
@@ -6185,8 +6186,9 @@ public final class WorkflowManager extends NodeContainer
         }
         // set summarization message if any of the internal nodes has an error
         if (internalNodeHasError) {
-            String summary = getNodeErrorSummary().orElse("An internal error occurred.");
-            setNodeMessage(new NodeMessage(NodeMessage.Type.ERROR, summary));
+            final var nodeMessage = getNodeErrorSummary().map(m -> m.toNodeMessage(Type.ERROR))
+                .orElse(NodeMessage.newError("An internal error occurred."));
+            setNodeMessage(nodeMessage);
         } else {
             setNodeMessage(NodeMessage.NONE);
         }
@@ -6952,12 +6954,13 @@ public final class WorkflowManager extends NodeContainer
      * <li>At most three messages</li>
      * </ul>
      *
-     * @return String of errors
+     * @return Message object describing the error or an <i>empty</i> when there are no errors.
      * @see #getNodeWarningSummary()
      * @since 4.1
      */
-    Optional<String> getNodeErrorSummary() {
+    public Optional<Message> getNodeErrorSummary() {
         try (WorkflowLock lock = lock()) {
+            final var msgBuilder = Message.builder();
             Map<NodeContainer, String> erroredNodes = new LinkedHashMap<>();
             Set<NodeContainer> notFullyConnectedNodes = new LinkedHashSet<>();
 
@@ -6984,8 +6987,13 @@ public final class WorkflowManager extends NodeContainer
                     if (nodeMessage.getMessageType() == Type.ERROR) {
                         msg = StringUtils.removeStart(nodeMessage.getMessage(), Node.EXECUTE_FAILED_PREFIX);
                         msg = StringUtils.removeStart(msg, "\n");
-                    } else if (nc instanceof WorkflowManager && !nc.getInternalState().isExecuted()) {
-                        msg = ((WorkflowManager)nc).getNodeErrorSummary().orElse(null);
+                    } else if (!nc.getInternalState().isExecuted()) {
+                        if (nc instanceof WorkflowManager wfm) {
+                            msg = wfm.getNodeErrorSummary().map(Message::getSummary).orElse(null);
+                        } else if (nodeMessage.getMessageType() == Type.WARNING // SNC with warning and input available
+                            && assembleInputData(nc.getID(), new PortObject[nc.getNrInPorts()])) {
+                            msg = nodeMessage.getMessage();
+                        }
                     }
                     // ignore error message that is inactive (caught by the try catch)
                     if (msg != null && !nc.isInactive()) {
@@ -6997,22 +7005,35 @@ public final class WorkflowManager extends NodeContainer
                     }
                 }
             }
-            StringBuilder errorStringBuilder = new StringBuilder();
+            getDirectNCParent().postProcessNodeErrors(erroredNodes);
+
             if (!notFullyConnectedNodes.isEmpty()) {
                 if (notFullyConnectedNodes.size() == 1) {
-                    errorStringBuilder.append("Contains an unconnected node (\"")//
-                        .append(notFullyConnectedNodes.iterator().next().getNameWithID())//
-                        .append("\")");
+                    msgBuilder.withSummary("Contains an unconnected node (\"%s\")".formatted(
+                        notFullyConnectedNodes.iterator().next().getNameWithID(getID())));
                 } else {
-                    errorStringBuilder.append("Contains ")//
-                        .append(notFullyConnectedNodes.size()).append(" unconnected nodes");
+                    msgBuilder.withSummary("Contains %d unconnected nodes".formatted(notFullyConnectedNodes.size()));
+                    notFullyConnectedNodes.stream().limit(3).map(nc -> nc.getNameWithID(getID()))
+                        .forEach(msgBuilder::addTextIssue);
+                }
+                msgBuilder.addResolutions("Properly connect the node(s).");
+                if (notFullyConnectedNodes.stream().anyMatch(NodeContainer::isDeletable)) {
+                    msgBuilder.addResolutions("Delete unconnected node(s) from inner workflow.");
                 }
             } else if (!erroredNodes.isEmpty()) {
-                errorStringBuilder.append(erroredNodes.entrySet().stream().limit(3)//
-                    .map(entry -> entry.getKey().getNameWithID() + ": " + entry.getValue())//
-                    .collect(Collectors.joining("\n")));
+                if (erroredNodes.size() == 1) {
+                    final var en = erroredNodes.entrySet().iterator().next();
+                    final var nameWithID = en.getKey().getNameWithID(getID());
+                    msgBuilder.withSummary("Contains one node with execution failure (%s)".formatted(nameWithID));
+                    msgBuilder.addTextIssue("%s: %s".formatted(nameWithID, en.getValue()));
+                } else {
+                    msgBuilder.withSummary("Contains %d nodes with execution failure".formatted(erroredNodes.size()));
+                    erroredNodes.entrySet().stream().limit(3)//
+                        .map(entry -> entry.getKey().getNameWithID(getID()) + ": " + entry.getValue())//
+                        .forEach(msgBuilder::addTextIssue);
+                }
             }
-            return errorStringBuilder.length() == 0 ? Optional.empty() : Optional.of(errorStringBuilder.toString());
+            return msgBuilder.build();
         }
     }
 
@@ -7021,14 +7042,14 @@ public final class WorkflowManager extends NodeContainer
      * when the workflow failed to execute but there are no errors. Nodes having failing during configuration ("No
      * configuration available") will have no error message but a warning.
      *
-     * @return String of warnings, if any.
+     * @return Message containing warnings, if any.
      * @since 4.1
      */
-    Optional<String> getNodeWarningSummary() {
+    public Optional<Message> getNodeWarningSummary() {
         try (WorkflowLock lock = lock()) {
-            Map<NodeContainer, String> warnedNodes = new LinkedHashMap<>();
-
-            Set<NodeID> downstreamNodesOfWarnedNodes = new HashSet<>();
+            final var msgBuilder = Message.builder();
+            final Map<NodeContainer, String> warnedNodes = new LinkedHashMap<>();
+            final Set<NodeID> downstreamNodesOfWarnedNodes = new HashSet<>();
 
             // traverse breadth first and a node with error/warning/etc will suppress errors on downstream nodes
             Collection<NodeID> nodes = m_workflow.createBreadthFirstSortedList(m_workflow.getNodeIDs(), true).keySet();
@@ -7051,12 +7072,21 @@ public final class WorkflowManager extends NodeContainer
                     }
                 }
             }
+            getDirectNCParent().postProcessNodeErrors(warnedNodes);
             if (!warnedNodes.isEmpty()) {
-                return Optional.of(warnedNodes.entrySet().stream().limit(3)//
-                    .map(entry -> entry.getKey().getNameWithID() + ": " + entry.getValue())//
-                    .collect(Collectors.joining("\n")));
+                if (warnedNodes.size() == 1) {
+                    final var en = warnedNodes.entrySet().iterator().next();
+                    final var nameWithID = en.getKey().getNameWithID(getID());
+                    msgBuilder.withSummary("One node with warning (%s)".formatted(nameWithID));
+                    msgBuilder.addTextIssue("%s: %s".formatted(nameWithID, en.getValue()));
+                } else {
+                    msgBuilder.withSummary("%d nodes contained nodes raised a warning".formatted(warnedNodes.size()));
+                    warnedNodes.entrySet().stream().limit(3)//
+                        .map(entry -> entry.getKey().getNameWithID(getID()) + ": " + entry.getValue())//
+                        .forEach(msgBuilder::addTextIssue);
+                }
             }
-            return Optional.empty();
+            return msgBuilder.build();
         }
     }
 

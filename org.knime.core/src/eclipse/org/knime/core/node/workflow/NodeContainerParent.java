@@ -50,6 +50,7 @@ package org.knime.core.node.workflow;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -142,6 +143,17 @@ public interface NodeContainerParent {
 
     /** Called by children when they are set dirty. */
     public void setDirty();
+
+    /**
+     * Allows a subnode container to remove irrelevant errors from the collected list of node errors, specifically the
+     * virtual output node will only mirror errors. The default implementation does nothing.
+     *
+     * @param messageMap The map of contained nodes to their collected messages.
+     * @since 5.1
+     */
+    default void postProcessNodeErrors(final Map<NodeContainer, String> messageMap) {
+        // empty
+    }
 
     /**
      * Checks whether this object (i.e. a workflow or subnode) or another parent up the hierarchy is in wizard execution

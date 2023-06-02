@@ -55,7 +55,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.stream.Collectors;
 
 import org.knime.core.node.message.Message;
 import org.knime.core.node.util.CheckUtils;
@@ -131,14 +130,11 @@ final class VirtualSubNodeOutputWaiter {
         if (nonExecutedNodesList.isEmpty()) {
             return Optional.empty();
         } else {
-            return Message.builder() //
-                .withSummary("%d node(s) could not be executed".formatted(nonExecutedNodesList.size())) //
-                .addTextIssue("Non-executed nodes: \n" + nonExecutedNodesList.stream() //
-                    .map(NodeContainer::getNameWithID) //
-                    .limit(3).collect(Collectors.joining("\n"))) //
-                .addResolutions("Remove not properly connected nodes (not all inputs connected)",
-                    "Fix execution errors") //
-                .build();
+            // get errors (or, if there are none, warnings) from workflow, prepend some text
+            return Optional.of(wfm.getNodeErrorSummary().or(wfm::getNodeWarningSummary) //
+                .map(msg -> msg.modify().withSummary("Errors in workflow - %s".formatted(msg.getSummary())).build()
+                    .orElseThrow())
+                .orElse(Message.fromSummary("<unknown error>")));
         }
     }
 

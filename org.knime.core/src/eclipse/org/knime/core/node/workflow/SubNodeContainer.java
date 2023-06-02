@@ -555,12 +555,11 @@ public final class SubNodeContainer extends SingleNodeContainer
                 case NODE_ADDED:
                 case NODE_REMOVED:
                 case NODE_SETTINGS_CHANGED:
-                    String msg = m_wfm.getNodeErrorSummary().orElseGet(() -> m_wfm.getNodeWarningSummary().orElse(null));
-                    if (msg == null) {
-                        setNodeMessage(NodeMessage.NONE);
-                    } else {
-                        setNodeMessage(NodeMessage.newWarning(msg));
-                    }
+                    final NodeMessage msg = m_wfm.getNodeErrorSummary() //
+                        .or(m_wfm::getNodeWarningSummary) //
+                        .map(m -> m.toNodeMessage(Type.WARNING)) //
+                        .orElse(NodeMessage.NONE);
+                    setNodeMessage(msg);
                     final var virtualOutNode = getVirtualOutNode();
                     if (virtualOutNode.getInternalState().isExecuted()) {
                         m_wfm.resetAndConfigureNode(virtualOutNode.getID());
@@ -1232,8 +1231,10 @@ public final class SubNodeContainer extends SingleNodeContainer
         final boolean keepNodeMessage) {
         assert rawInSpecs.length == m_inports.length;
         m_subnodeScopeContext.inactiveScope(Node.containsInactiveSpecs(rawInSpecs));
-        NodeMessage oldMessage = getNodeMessage();
-        if (!keepNodeMessage) {
+        final NodeMessage oldMessage;
+        if (keepNodeMessage) {
+            oldMessage = getNodeMessage();
+        } else {
             setNodeMessage(null);
             oldMessage = NodeMessage.NONE;
         }
@@ -1267,11 +1268,11 @@ public final class SubNodeContainer extends SingleNodeContainer
                 default:
                     newState = internalState;
             }
-            NodeMessage msg = m_wfm.getNodeErrorSummary().map(m -> NodeMessage.newWarning(m))
-                .orElseGet(() -> m_wfm.getNodeWarningSummary().map(m -> NodeMessage.newWarning(m)).orElse(null));
-            if (msg != null) {
-                setNodeMessage(keepNodeMessage ? mergeNodeMessagesAndRespectExecuteFailedPrefix(oldMessage, msg) : msg);
-            }
+            m_wfm.getNodeErrorSummary() //
+                .or(m_wfm::getNodeWarningSummary) //
+                .map(m -> m.toNodeMessage(Type.WARNING)) //
+                .ifPresent(m -> setNodeMessage(
+                    keepNodeMessage ? mergeNodeMessagesAndRespectExecuteFailedPrefix(oldMessage, m) : m));
             setVirtualOutputIntoOutport(newState);
             setInternalState(newState);
             if (nch != null && !m_subnodeScopeContext.isInactiveScope()) {
@@ -1477,10 +1478,12 @@ public final class SubNodeContainer extends SingleNodeContainer
             } else if (isCanceled) {
                 setNodeMessage(NodeMessage.newWarning("Execution canceled"));
             } else {
-                String msg = m_wfm.getNodeErrorSummary()//
-                        .orElseGet(() -> m_wfm.getNodeWarningSummary().orElse("<reason unknown>"));
-                setNodeMessage(NodeMessage.newError(Node.EXECUTE_FAILED_PREFIX + "\n" + msg));
-                return NodeContainerExecutionStatus.newFailure(msg);
+                final var nodeMessage = m_wfm.getNodeErrorSummary() //
+                        .or(m_wfm::getNodeWarningSummary) //
+                        .map(m -> m.toNodeMessage(Type.ERROR))
+                        .orElse(NodeMessage.newError("<reason unknown>"));
+                setNodeMessage(nodeMessage);
+                return NodeContainerExecutionStatus.newFailure(nodeMessage.getMessage());
             }
             return allExecuted ? NodeContainerExecutionStatus.SUCCESS : NodeContainerExecutionStatus.FAILURE;
         } finally {
@@ -2788,6 +2791,17 @@ public final class SubNodeContainer extends SingleNodeContainer
     @Override
     public void pushWorkflowVariablesOnStack(final FlowObjectStack sos) {
         sos.pushWithOwner(m_subnodeScopeContext);
+    }
+
+    /**
+     * Removes messages from the output node iff there are other messages in the map. This is because the output node
+     * only mirrors errors from contained nodes, so it should not show up in the summary.
+     */
+    @Override
+    public void postProcessNodeErrors(final Map<NodeContainer, String> messageMap) {
+        if (messageMap.size() > 1) {
+            messageMap.remove(getVirtualOutNode());
+        }
     }
 
     /** {@inheritDoc} */
