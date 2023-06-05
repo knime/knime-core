@@ -85,6 +85,7 @@ import org.knime.core.data.def.StringCell;
 import org.knime.core.data.filestore.internal.NotInWorkflowDataRepository;
 import org.knime.core.data.image.png.PNGImageCell;
 import org.knime.core.data.image.png.PNGImageCellFactory;
+import org.knime.core.data.property.ColorHandler;
 import org.knime.core.data.vector.bitvector.SparseBitVectorCell;
 import org.knime.core.data.vector.bitvector.SparseBitVectorCellFactory;
 import org.knime.core.node.BufferedDataContainer;
@@ -107,9 +108,6 @@ import org.knime.core.node.workflow.virtual.parchunk.VirtualParallelizedChunkPor
  */
 public final class TableTestUtil {
 
-    private static final ExecutionContext EXEC = TableTestUtil.createTestExecutionContext();
-    private static final DataTableSpec DEFAULT_SPEC = TableTestUtil.createDefaultTestSpec();
-
     static {
         try {
             NodeFactoryExtensionManager.getInstance();
@@ -120,19 +118,137 @@ public final class TableTestUtil {
         }
     }
 
-    private TableTestUtil() {
-        //utility class
+    private static final ExecutionContext EXEC = TableTestUtil.createTestExecutionContext();
+
+    private static final DataTableSpec DEFAULT_SPEC = TableTestUtil.createDefaultTestSpec();
+
+    /**
+     * A builder for creating {@link DataTableSpec DataTableSpecs} for testing purposes.
+     */
+    public static final class SpecBuilder {
+
+        private final List<DataColumnSpec> m_columnSpecs = new ArrayList<>();
+
+        /**
+         * Add a column with a given name and of a given type to this spec.
+         *
+         * @param name the name of the to-be-added column
+         * @param type the type of the to-be-added column
+         * @return this builder
+         */
+        public SpecBuilder addColumn(final String name, final DataType type) {
+            return addColumn(name, type, null);
+        }
+
+        /**
+         * Add a column with a given name, attached colorHandler and of a given type to this spec.
+         *
+         * @param name the name of the to-be-added column
+         * @param type the type of the to-be-added column
+         * @param colorHandler the color handler that is to be attached to the to-be-added column. Null if none.
+         * @return this builder
+         */
+        public SpecBuilder addColumn(final String name, final DataType type, final ColorHandler colorHandler) {
+            final var colSpecBuilder = new DataColumnSpecCreator(name, type);
+            if (colorHandler != null) {
+                colSpecBuilder.setColorHandler(colorHandler);
+            }
+            m_columnSpecs.add(colSpecBuilder.createSpec());
+            return this;
+        }
+
+        /**
+         * Finalizes the assembly of the spec.
+         *
+         * @return the fully assembled spec
+         */
+        public DataTableSpec build() {
+            return new DataTableSpec(m_columnSpecs.toArray(new DataColumnSpec[0]));
+        }
     }
 
-    public static TableBuilder tableBuilder(final DataTableSpec spec) {
-        return new TableBuilder(spec);
+    /**
+     * A builder for creating {@link Supplier tables} and {@link BufferedDataTable} for testing purposes.
+     */
+    public static final class TableBuilder {
+
+        private final BufferedDataContainer m_container;
+
+        private final Function<Object, DataCell> m_cellify;
+
+        private int runningRowId = 0;
+
+        /**
+         * Creates a new instance of a table builder.
+         *
+         * @param spec the spec of the to-be-assembled table
+         */
+        public TableBuilder(final DataTableSpec spec) {
+            this(spec, TableTestUtil::cellify);
+        }
+
+        /**
+         * Creates a new instance of a table builder.
+         *
+         * @param spec the spec of the to-be-assembled table
+         * @param cellify function for converting {@link Object objects} into {@link DataCell data cells}.
+         */
+        public TableBuilder(final DataTableSpec spec, final Function<Object, DataCell> cellify) {
+            m_container = EXEC.createDataContainer(spec, false, 0);
+            m_cellify = cellify;
+        }
+
+        /**
+         * Add another row to the table. Currently supported types include {@link DataCell DataCells}, {@link Integer},
+         * {@link Long}, {@link Double}, {@link String}, {@link Boolean}, and null.
+         *
+         * Note: the rowId will be prefixed with 'rowkey'.
+         *
+         * @param cells the cells comprising the to-be-added row
+         * @return this builder
+         */
+        public TableBuilder addRow(final Object... cells) {
+            addRowWithId("rowkey " + runningRowId, cells);
+            runningRowId++;
+            return this;
+        }
+
+        /**
+         * Add another row to the table. Currently supported types include {@link DataCell DataCells}, {@link Integer},
+         * {@link Long}, {@link Double}, {@link String}, {@link Boolean}, and null.
+         *
+         * @param rowId id to use for the new row
+         * @param cells the cells comprising the to-be-added row
+         * @return this builder
+         */
+        public TableBuilder addRowWithId(final String rowId, final Object... cells) {
+            m_container.addRowToTable(
+                new DefaultRow(new RowKey(rowId), Arrays.stream(cells).map(m_cellify).toArray(DataCell[]::new)));
+            return this;
+        }
+
+        /**
+         * Finalizes the assembly of the table.
+         *
+         * @return the fully assembled table
+         */
+        public Supplier<BufferedDataTable> build() {
+            m_container.close();
+            return () -> m_container.getTable();
+        }
+
+        /**
+         * Finalizes the assembly of the table.
+         *
+         * @return the fully assembled table as a BufferedDataTable
+         */
+        public BufferedDataTable buildDataTable() {
+            m_container.close();
+            return m_container.getTable();
+        }
     }
 
-    public static SpecBuilder specBuilder() {
-        return new SpecBuilder();
-    }
-
-    private static Object[][] convertToObjectArray(final BufferedDataTable table, final String[] parseAs) {
+    private static final Object[][] convertToObjectArray(final BufferedDataTable table, final String[] parseAs) {
         var out = new Object[parseAs.length][table.getRowCount()];
         try (final var cursor = table.cursor()) {
             for (int i = 0; cursor.canForward(); i++) {
@@ -207,8 +323,8 @@ public final class TableTestUtil {
      * @param parseAs an array consisting of "Double" and "String".
      * @param expected the expected parsed array
      */
-    public static void assertTableResults(final BufferedDataTable table, final String[] parseAs,
-                                          final Object[][] expected) {
+    public static final void assertTableResults(final BufferedDataTable table, final String[] parseAs,
+        final Object[][] expected) {
         Object[][] parsedTable = convertToObjectArray(table, parseAs);
         assert parsedTable.length == expected.length;
         for (int i = 0; i < parsedTable.length; i++) {
@@ -230,8 +346,8 @@ public final class TableTestUtil {
      * @param expectedNumColumns the expected number of columns
      * @param expectedNumRows the expected number of rows
      */
-    public static void assertTableDimensions(final BufferedDataTable table, final int expectedNumColumns,
-                                             final int expectedNumRows) {
+    public static final void assertTableDimensions(final BufferedDataTable table, final int expectedNumColumns,
+        final int expectedNumRows) {
         assert table.getSpec().getNumColumns() == expectedNumColumns;
         assert table.size() == expectedNumRows;
     }
@@ -242,7 +358,7 @@ public final class TableTestUtil {
      * @param table the table whose row keys are to be checked
      * @param expected the expected row keys
      */
-    public static void assertRowKeys(final BufferedDataTable table, final String[] expected) {
+    public static final void assertRowKeys(final BufferedDataTable table, final String[] expected) {
         RowKey[] rowKeys = getRowKeys(table);
         assert rowKeys.length == expected.length;
         for (int i = 0; i < rowKeys.length; i++) {
@@ -255,7 +371,7 @@ public final class TableTestUtil {
      * @param table
      * @return the row keys of the table in the order of the rows
      */
-    public static RowKey[] getRowKeys(final BufferedDataTable table) {
+    public static final RowKey[] getRowKeys(final BufferedDataTable table) {
         List<RowKey> rk = new ArrayList<>();
         try (final var cursor = table.cursor()) {
             for (int i = 0; cursor.canForward(); i += 1) {
@@ -349,7 +465,7 @@ public final class TableTestUtil {
         IntStream.range(0, rowCount).mapToObj(i -> new Object[]{//
             new IntCell(i), //
             new StringCell(Integer.toString(i)), //
-            new LongCell(i * 11L), // multiply by 11 to get 2-digit repdigit
+            new LongCell(i * 11), // multiply by 11 to get 2-digit repdigit
             new DoubleCell(i), //
             new SparseBitVectorCellFactory(Integer.toHexString(i)).createDataCell(), //
             i % 2 == 1 ? BooleanCell.TRUE : BooleanCell.FALSE, //
@@ -379,6 +495,10 @@ public final class TableTestUtil {
         return () -> result;
     }
 
+    private TableTestUtil() {
+        //utility class
+    }
+
     /**
      * @param seed the initial seed for the random number generator (for deterministic random images)
      * @return a {@link PNGImageCell} containing a small png image
@@ -400,149 +520,6 @@ public final class TableTestUtil {
             return PNGImageCellFactory.create(out.toByteArray());
         } catch (IOException e) {
             throw new RuntimeException(e); // NOSONAR
-        }
-    }
-
-    /**
-     * @param objectColumns an array of columns of equal length
-     * @return a {@link BufferedDataTable} consisting of the given columns
-     */
-    public static BufferedDataTable createTableFromColumns(final ObjectColumn... objectColumns) {
-        return createTableFromColumns(TableTestUtil::cellify, objectColumns);
-    }
-
-    /**
-     * @param cellify function for converting {@link Object objects} into {@link DataCell data cells}.
-     * @param objectColumns an array of columns of equal length
-     * @return a {@link BufferedDataTable} consisting of the given columns
-     */
-    public static BufferedDataTable createTableFromColumns(final Function<Object, DataCell> cellify,
-        final ObjectColumn... objectColumns) {
-        final var columnList = new ArrayList<ObjectColumn>(Arrays.asList(objectColumns));
-        final var specBuilder = new SpecBuilder();
-        columnList.forEach(col -> specBuilder.addColumn(col.m_name, col.m_type));
-        final var spec = specBuilder.build();
-        final var builder = new TableBuilder(spec, cellify);
-        if (!columnList.isEmpty()) {
-            Integer nRows = columnList.get(0).m_data.length;
-            columnList.stream().forEach(col -> {
-                if (col.m_data.length != nRows) {
-                    throw new IllegalArgumentException("Columns need to be of the same length");
-                }
-            });
-            IntStream.range(0, nRows).mapToObj(i -> columnList.stream().map(col -> col.m_data[i]).toArray())
-                .forEach(builder::addRow);
-        }
-        return builder.build().get();
-    }
-
-    /**
-     * A builder for creating {@link DataTableSpec DataTableSpecs} for testing purposes.
-     */
-    public static final class SpecBuilder {
-
-        private final List<DataColumnSpec> m_columnSpecs = new ArrayList<>();
-
-        /**
-         * Add a column with a given name and of a given type to this spec.
-         *
-         * @param name the name of the to-be-added column
-         * @param type the type of the to-be-added column
-         * @return this builder
-         */
-        public SpecBuilder addColumn(final String name, final DataType type) {
-            m_columnSpecs.add(new DataColumnSpecCreator(name, type).createSpec());
-            return this;
-        }
-
-        /**
-         * Finalizes the assembly of the spec.
-         *
-         * @return the fully assembled spec
-         */
-        public DataTableSpec build() {
-            return new DataTableSpec(m_columnSpecs.toArray(new DataColumnSpec[0]));
-        }
-    }
-
-    /**
-     * A builder for creating {@link Supplier tables} and {@link BufferedDataTable} for testing purposes.
-     */
-    public static final class TableBuilder {
-
-        private final BufferedDataContainer m_container;
-
-        private final Function<Object, DataCell> m_cellify;
-
-        private int runningRowId = 0;
-
-        /**
-         * Creates a new instance of a table builder.
-         *
-         * @param spec the spec of the to-be-assembled table
-         */
-        TableBuilder(final DataTableSpec spec) {
-            this(spec, TableTestUtil::cellify);
-        }
-
-        /**
-         * Creates a new instance of a table builder.
-         *
-         * @param spec the spec of the to-be-assembled table
-         * @param cellify function for converting {@link Object objects} into {@link DataCell data cells}.
-         */
-        public TableBuilder(final DataTableSpec spec, final Function<Object, DataCell> cellify) {
-            m_container = EXEC.createDataContainer(spec, false, 0);
-            m_cellify = cellify;
-        }
-
-        /**
-         * Add another row to the table. Currently supported types include {@link DataCell DataCells}, {@link Integer},
-         * {@link Long}, {@link Double}, {@link String}, {@link Boolean}, and null.
-         *
-         * Note: the rowId will be prefixed with 'rowkey'.
-         *
-         * @param cells the cells comprising the to-be-added row
-         * @return this builder
-         */
-        public TableBuilder addRow(final Object... cells) {
-            addRowWithId("rowkey " + runningRowId, cells);
-            runningRowId++;
-            return this;
-        }
-
-        /**
-         * Add another row to the table. Currently supported types include {@link DataCell DataCells}, {@link Integer},
-         * {@link Long}, {@link Double}, {@link String}, {@link Boolean}, and null.
-         *
-         * @param rowId id to use for the new row
-         * @param cells the cells comprising the to-be-added row
-         * @return this builder
-         */
-        public TableBuilder addRowWithId(final String rowId, final Object... cells) {
-            m_container.addRowToTable(
-                new DefaultRow(new RowKey(rowId), Arrays.stream(cells).map(m_cellify).toArray(DataCell[]::new)));
-            return this;
-        }
-
-        /**
-         * Finalizes the assembly of the table.
-         *
-         * @return the fully assembled table
-         */
-        public Supplier<BufferedDataTable> build() {
-            m_container.close();
-            return () -> m_container.getTable();
-        }
-
-        /**
-         * Finalizes the assembly of the table.
-         *
-         * @return the fully assembled table as a BufferedDataTable
-         */
-        public BufferedDataTable buildDataTable() {
-            m_container.close();
-            return m_container.getTable();
         }
     }
 
@@ -569,15 +546,65 @@ public final class TableTestUtil {
         private final Object[] m_data;
 
         /**
+         * the color handler that should be attached to the columns. Null if none
+         */
+        private final ColorHandler m_colorHandler;
+
+        /**
          * @param name the name of the column
          * @param type the {@link DataType} of the column
          * @param data the source of the row values of the column
          */
         public ObjectColumn(final String name, final DataType type, final Object[] data) {
+            this(name, type, null, data);
+        }
+
+        /**
+         * @param name the name of the column
+         * @param type the {@link DataType} of the column
+         * @param colorHandler the color handler that should be attached to the columns. Null if none
+         * @param data the source of the row values of the column
+         */
+        public ObjectColumn(final String name, final DataType type, final ColorHandler colorHandler,
+            final Object[] data) {
             m_name = name;
             m_type = type;
+            m_colorHandler = colorHandler;
             m_data = data;
         }
+    }
+
+    /**
+     * @param objectColumns an array of columns of equal length
+     * @return a {@link BufferedDataTable} consisting of the given columns
+     */
+    public static BufferedDataTable createTableFromColumns(final ObjectColumn... objectColumns) {
+        return createTableFromColumns(TableTestUtil::cellify, objectColumns);
+    }
+
+    /**
+     * @param cellify function for converting {@link Object objects} into {@link DataCell data cells}.
+     * @param objectColumns an array of columns of equal length
+     * @return a {@link BufferedDataTable} consisting of the given columns
+     */
+    public static BufferedDataTable createTableFromColumns(final Function<Object, DataCell> cellify,
+        final ObjectColumn... objectColumns) {
+        final var columnList = new ArrayList<ObjectColumn>(Arrays.asList(objectColumns));
+        final var specBuilder = new SpecBuilder();
+        columnList.forEach(col -> specBuilder.addColumn(col.m_name, col.m_type, col.m_colorHandler));
+        final var spec = specBuilder.build();
+        final var builder = new TableBuilder(spec, cellify);
+        if (!columnList.isEmpty()) {
+            Integer nRows = columnList.get(0).m_data.length;
+            columnList.stream().forEach(col -> {
+                if (col.m_data.length != nRows) {
+                    throw new IllegalArgumentException("Columns need to be of the same length");
+                }
+            });
+            IntStream.range(0, nRows).mapToObj(i -> columnList.stream().map(col -> col.m_data[i]).toArray())
+                .forEach(builder::addRow);
+        }
+        return builder.build().get();
     }
 
 }
