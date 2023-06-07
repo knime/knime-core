@@ -202,6 +202,9 @@ public final class NodeLoggerConfig {
      */
     public static Pair<LEVEL, LEVEL> getAppenderLevelRange(final String appenderName) {
         final var appender = Logger.getRootLogger().getAppender(appenderName);
+        if (appender == null) {
+            return null;
+        }
         var filter = appender.getFilter();
         while (filter != null) {
             if (filter instanceof LevelRangeFilter rangeFilter) {
