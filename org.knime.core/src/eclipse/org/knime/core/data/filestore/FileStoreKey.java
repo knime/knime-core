@@ -220,60 +220,69 @@ public final class FileStoreKey implements Comparable<FileStoreKey> {
         return new FileStoreKey(storeUUID, index, nestedLoopPath, iterationIndex, name);
     }
 
+    /**
+     * Save this {@link FileStoreKey} to a string, such that it can be restored with {@link #load(String)}
+     *
+     * @return The string representation of this {@link FileStoreKey}
+     * @since 5.1
+     */
+    public String saveToString() {
+        var builder = new StringBuilder();
+        builder.append(m_storeUUID.toString());
+        builder.append("_");
+
+        builder.append(m_index);
+        builder.append("_");
+
+        builder.append(m_name);
+        builder.append("_");
+
+        builder.append(m_iterationIndex);
+
+        if (m_iterationIndex >= 0) {
+            for (int i : m_nestedLoopPath) {
+                builder.append("_");
+                builder.append(i);
+            }
+        }
+        return builder.toString();
+    }
+
+    /**
+     * Restore a {@link FileStoreKey} from its string representation as created by {@link #saveToString()}
+     *
+     * @param stringRepresentation
+     * @since 5.1
+     * @return The FileStoreKey that was restored from the given stringRepresentation
+     * @throws IllegalArgumentException if the string did not match the expected format
+     * @throws NumberFormatException if parts of the string were expected to contain an integer but could not be parsed
+     */
+    public static FileStoreKey load(final String stringRepresentation) {
+        String[] parts = stringRepresentation.split("_");
+
+        if (parts.length < 4) {
+            throw new IllegalArgumentException(
+                "The string representation of a FileStoreKey must contain at least 4 parts separated by underscores,"
+                    + "but got " + stringRepresentation);
+        }
+
+        int[] nestedLoopPath = null;
+        final UUID uuid = UUID.fromString(parts[0]);
+        final int index = Integer.parseInt(parts[1]);
+        final int iterationIndex = Integer.parseInt(parts[3]);
+
+        if (iterationIndex >= 0) {
+            nestedLoopPath = Arrays.stream(parts).skip(4).mapToInt(Integer::parseInt).toArray();
+        }
+        return new FileStoreKey(uuid, index, nestedLoopPath, iterationIndex, parts[2]);
+    }
+
     /** {@inheritDoc} */
     @Override
     public String toString() {
         StringBuilder b = new StringBuilder(getNameOnDisc());
         b.append("-(").append(m_storeUUID).append(")");
         return b.toString();
-    }
-
-    /**
-     * Create a {@link FileStoreKey} from its string representation as returned by {@link FileStoreKey#toString()}.
-     *
-     * @param stringRepresentation
-     * @return The FileStoreKey as described by the string
-     * @throws IllegalArgumentException if the string did not have the expected format
-     */
-    public static FileStoreKey fromString(final String stringRepresentation) {
-        String end = null;
-        int index = 0;
-        int[] nestedLoopPath = null;
-        int iterationIndex = -1;
-
-        String[] parts = stringRepresentation.split("_");
-
-        if (parts.length == 0) {
-            throw new IllegalArgumentException("String representation of FileStoreKey was not valid");
-        }
-
-        if (parts.length == 1) {
-            // we only have a name
-            end = parts[0];
-        } else if (parts.length == 2) {
-            throw new IllegalArgumentException("String representation of FileStoreKey was not valid");
-        } else if (parts.length == 3) {
-            // no nested loop path available, we start directly with the index
-            index = Integer.valueOf(parts[0]);
-            iterationIndex = Integer.valueOf(parts[1]);
-            nestedLoopPath = new int[0];
-            end = parts[2];
-        } else {
-            // parse nested loop path
-            String[] nestedLoopIndices = parts[0].split("-");
-            nestedLoopPath = Arrays.stream(nestedLoopIndices).mapToInt(s -> Integer.valueOf(s).intValue()).toArray();
-            index = Integer.valueOf(parts[1]);
-            iterationIndex = Integer.valueOf(parts[2]);
-            end = parts[3];
-        }
-
-        String[] endParts = end.split("-\\(");
-        if (endParts.length != 2) {
-            throw new IllegalArgumentException("String representation of FileStoreKey was not valid");
-        }
-        String storeUUID = endParts[1].substring(0, endParts[1].length() - 1);
-
-        return new FileStoreKey(UUID.fromString(storeUUID), index, nestedLoopPath, iterationIndex, endParts[0]);
     }
 
     /** {@inheritDoc} */
