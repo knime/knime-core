@@ -10861,6 +10861,18 @@ public final class WorkflowManager extends NodeContainer
     }
 
     /**
+     * Updates this workflow manager's workflow context.
+     * This is needed when the storage location of the workflow is changed from the outside (e.g. in Save-As for
+     * component templates, see AP-20541).
+     *
+     * @param newWorkflowContext a {@link WorkflowContextV2} or <code>null</code>
+     * @since 5.1
+     */
+    public void setWorkflowContext(final WorkflowContextV2 newWorkflowContext) {
+        m_workflowContext = newWorkflowContext;
+    }
+
+    /**
      * Optional data container settings, mostly for performance testing.
      *
      * @return data container settings
