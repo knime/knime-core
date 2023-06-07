@@ -56,7 +56,7 @@ import org.knime.core.data.filestore.FileStoreCell;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
-import org.knime.core.data.v2.filestore.AbstractFileStoreSerializableValueFactory;
+import org.knime.core.data.v2.filestore.TableOrFileStoreValueFactory;
 import org.knime.core.data.xml.XMLBlobCell;
 import org.knime.core.table.access.StructAccess.StructReadAccess;
 import org.knime.core.table.access.StructAccess.StructWriteAccess;
@@ -74,7 +74,7 @@ import org.knime.core.table.schema.VarBinaryDataSpec.ObjectSerializer;
  * @since 5.1
  * @author Jonas Klotz, KNIME GmbH, Berlin, Germany
  */
-public class PNGImageValueFactory extends AbstractFileStoreSerializableValueFactory<PNGImageValue> {
+public class PNGImageValueFactory extends TableOrFileStoreValueFactory<PNGImageValue> {
 
     /**
      * Create an instance of the ({@link PNGImageValueFactory}
@@ -97,7 +97,7 @@ public class PNGImageValueFactory extends AbstractFileStoreSerializableValueFact
 
     };
 
-    private class PNGImageReadValue extends FileStoreSerializableReadValue implements PNGImageValue {
+    private class PNGImageReadValue extends TableOrFileStoreReadValue implements PNGImageValue {
 
         /**
          * @param access
@@ -140,46 +140,37 @@ public class PNGImageValueFactory extends AbstractFileStoreSerializableValueFact
         }
     }
 
-    private class PNGImageWriteValue extends FileStoreSerializableWriteValue {
+    private class PNGImageWriteValue extends TableOrFileStoreWriteValue {
 
         protected PNGImageWriteValue(final StructWriteAccess access) {
             super(access);
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
-        protected FileStoreCell createFileStoreCell(final PNGImageValue content) {
-            try {
-                return new PNGImageFileStoreCell(createFileStore(), content);
-            } catch (IOException ex) {
-                throw new IllegalStateException("Could not create file store for PNGImageFileStoreCell", ex);
-            }
+        protected boolean isCorrespondingReadValue(final PNGImageValue value) {
+            return value instanceof PNGImageReadValue;
+        }
 
+        @Override
+        protected FileStoreCell getFileStoreCell(final PNGImageValue value) throws IOException {
+            if (value instanceof PNGImageFileStoreCell fsCell) {
+                return fsCell;
+            }
+            return new PNGImageFileStoreCell(createFileStore(), value);
         }
 
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public ReadValue createReadValue(final StructReadAccess access) {
         return new PNGImageReadValue(access);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public WriteValue<PNGImageValue> createWriteValue(final StructWriteAccess access) {
         return new PNGImageWriteValue(access);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected boolean shouldBeStoredInFileStore(final PNGImageValue value) {
         return (value instanceof PNGImageBlobCell) || (value instanceof PNGImageFileStoreCell);

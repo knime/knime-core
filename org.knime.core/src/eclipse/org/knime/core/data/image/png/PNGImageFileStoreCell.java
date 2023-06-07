@@ -48,29 +48,29 @@
  */
 package org.knime.core.data.image.png;
 
-import java.io.DataOutput;
-import java.io.IOException;
-
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataCellDataInput;
-import org.knime.core.data.DataCellDataOutput;
-import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.filestore.FileStore;
-import org.knime.core.data.v2.filestore.AbstractFileStoreSerializableValueFactory.AbstractFileStoreSerializableCell;
-import org.knime.core.table.io.ReadableDataInput;
+import org.knime.core.data.v2.filestore.NoOpSerializer;
+import org.knime.core.data.v2.filestore.TableOrFileStoreValueFactory.ObjectSerializerFileStoreCell;
+import org.knime.core.table.schema.VarBinaryDataSpec.ObjectDeserializer;
+import org.knime.core.table.schema.VarBinaryDataSpec.ObjectSerializer;
 
 /**
  * @since 5.1
  * @author Jonas Klotz, KNIME GmbH, Berlin, Germany
  */
 @SuppressWarnings("serial")
-public final class PNGImageFileStoreCell extends AbstractFileStoreSerializableCell implements PNGImageValue {
+public final class PNGImageFileStoreCell extends ObjectSerializerFileStoreCell<PNGImageContent>
+    implements PNGImageValue {
 
-    private PNGImageContent m_content;
+    private static final ObjectSerializer<PNGImageContent> SERIALIZER = (output, object) -> {
+        PNGImageValueFactory.SERIALIZER.serialize(output, (PNGImageValue)object.toImageCell());
+    };
 
-    // cache the hash
-    private Integer m_hash = null;
+    private static final ObjectDeserializer<PNGImageContent> DESERIALIZER = input -> {
+        return contentFromValue(PNGImageValueFactory.DESERIALIZER.deserialize(input));
+    };
 
     /**
      * Initialize with an empty file store and content
@@ -79,8 +79,8 @@ public final class PNGImageFileStoreCell extends AbstractFileStoreSerializableCe
      * @param value PNG image value
      */
     PNGImageFileStoreCell(final FileStore fs, final PNGImageValue value) {
-        super(fs);
-        m_content = contentFromValue(value);
+        super(fs, SERIALIZER, DESERIALIZER);
+        setContent(contentFromValue(value));
 
     }
 
@@ -88,7 +88,7 @@ public final class PNGImageFileStoreCell extends AbstractFileStoreSerializableCe
      * Deserialization constructor, FileStore will be provided by framework
      */
     PNGImageFileStoreCell() {
-
+        super(SERIALIZER, DESERIALIZER);
     }
 
     /**
@@ -99,84 +99,29 @@ public final class PNGImageFileStoreCell extends AbstractFileStoreSerializableCe
         return value.getImageContent();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public PNGImageContent getImageContent() {
-        return getContentLazily();
+        return getContent();
     }
 
-    private PNGImageContent getContentLazily() {
-        // TODO: don't load immediately
-        return m_content;
-    }
-
-    /** {@inheritDoc} */
     @Override
     public String toString() {
-        return m_content.toString();
+        return getContent().toString();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected boolean equalsDataCell(final DataCell dc) {
-        PNGImageFileStoreCell ic = (PNGImageFileStoreCell)dc;
-        return m_content.equals(ic.m_content);
+        return getContent().equals(((PNGImageFileStoreCell)dc).getContent());
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected boolean equalContent(final DataValue otherValue) {
         return PNGImageValue.equalContent(this, (PNGImageValue)otherValue);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int hashCode() {
-        if (null == m_hash) {
-            m_hash = m_content.hashCode();
-        }
-
-        return m_hash;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String getImageExtension() {
         return "png";
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void serialize(final DataOutput output) {
-        try {
-            PNGImageValueFactory.SERIALIZER.serialize(output, (PNGImageValue)m_content.toImageCell());
-        } catch (IOException ex) {
-            throw new IllegalStateException("Could not save PNG", ex);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void deserialize(final ReadableDataInput input) {
-        try {
-            m_content = PNGImageValueFactory.DESERIALIZER.deserialize(input).getImageContent();
-        } catch (IOException ex) {
-            throw new IllegalStateException("Couldn't read PNG", ex);
-        }
     }
 
     /**
@@ -184,20 +129,9 @@ public final class PNGImageFileStoreCell extends AbstractFileStoreSerializableCe
      *
      * @noreference This class is not intended to be referenced by clients.
      */
-    public static final class PNGImageSerializer implements DataCellSerializer<PNGImageFileStoreCell> {
-        @Override
-        public void serialize(final PNGImageFileStoreCell cell, final DataCellDataOutput output) throws IOException {
-            // Nothing to do, all data is in FileStore
-            // TODO: maybe store the hash?
+    public static final class PNGImageSerializer extends NoOpSerializer<PNGImageFileStoreCell> {
+        public PNGImageSerializer() {
+            super(PNGImageFileStoreCell::new);
         }
-
-        @Override
-        public PNGImageFileStoreCell deserialize(final DataCellDataInput input) throws IOException {
-            // Nothing to do, all data is in FileStore
-            // TODO: maybe store the hash?
-            return new PNGImageFileStoreCell();
-
-        }
-
     }
 }

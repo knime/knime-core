@@ -48,18 +48,14 @@
  */
 package org.knime.core.data.xml;
 
-import java.io.DataOutput;
-import java.io.IOException;
-
-import org.knime.core.data.DataCellDataInput;
-import org.knime.core.data.DataCellDataOutput;
-import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.StringValue;
 import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.util.LockedSupplier;
-import org.knime.core.data.v2.filestore.AbstractFileStoreSerializableValueFactory.AbstractFileStoreSerializableCell;
-import org.knime.core.table.io.ReadableDataInput;
+import org.knime.core.data.v2.filestore.NoOpSerializer;
+import org.knime.core.data.v2.filestore.TableOrFileStoreValueFactory.ObjectSerializerFileStoreCell;
+import org.knime.core.table.schema.VarBinaryDataSpec.ObjectDeserializer;
+import org.knime.core.table.schema.VarBinaryDataSpec.ObjectSerializer;
 import org.w3c.dom.Document;
 
 /**
@@ -68,20 +64,14 @@ import org.w3c.dom.Document;
  * @author Carsten Haubold, KNIME GmbH, Konstanz, Germany
  */
 @SuppressWarnings("serial")
-public final class XMLFileStoreCell extends AbstractFileStoreSerializableCell
+public final class XMLFileStoreCell extends ObjectSerializerFileStoreCell<XMLCellContent>
     implements XMLValue<Document>, StringValue {
 
-    private XMLCellContent m_content;
+    private static final ObjectSerializer<XMLCellContent> SERIALIZER = XMLValueFactory.SERIALIZER::serialize;
 
-    /**
-     * Initialize with an empty file store and content
-     *
-     * @param fs {@link FileStore} to which the content will be written
-     */
-    XMLFileStoreCell(final FileStore fs, final XMLValue<Document> value) {
-        super(fs);
-        m_content = contentFromValue(value);
-    }
+    private static final ObjectDeserializer<XMLCellContent> DESERIALIZER = input -> {
+        return contentFromValue(XMLValueFactory.DESERIALIZER.deserialize(input));
+    };
 
     private static XMLCellContent contentFromValue(final XMLValue<Document> value) {
         try (var supplier = value.getDocumentSupplier()) {
@@ -90,43 +80,40 @@ public final class XMLFileStoreCell extends AbstractFileStoreSerializableCell
     }
 
     /**
+     * Initialize with an empty file store and content
+     *
+     * @param fs {@link FileStore} to which the content will be written
+     */
+    XMLFileStoreCell(final FileStore fs, final XMLValue<Document> value) {
+        super(fs, SERIALIZER, DESERIALIZER);
+        setContent(contentFromValue(value));
+    }
+
+    /**
      * Deserialization constructor, FileStore will be provided by framework
      */
     XMLFileStoreCell() {
-    }
-
-    @Override
-    protected void deserialize(final ReadableDataInput inputStream) {
-        try {
-            m_content = contentFromValue(XMLValueFactory.DESERIALIZER.deserialize(inputStream));
-        } catch (IOException ex) {
-            throw new IllegalStateException("Couldn't read XML", ex);
-        }
-    }
-
-    private XMLCellContent getContentLazily() {
-        // TODO: don't load immediately
-        return m_content;
+        super(SERIALIZER, DESERIALIZER);
     }
 
     @Override
     public String getStringValue() {
-        return getContentLazily().getStringValue();
+        return getContent().getStringValue();
     }
 
     @Override
     public Document getDocument() {
-        return getContentLazily().getDocument();
+        return getContent().getDocument();
     }
 
     @Override
     public LockedSupplier<Document> getDocumentSupplier() {
-        return getContentLazily().getDocumentSupplier();
+        return getContent().getDocumentSupplier();
     }
 
     @Override
     public String toString() {
-        return getContentLazily().toString();
+        return getContent().toString();
     }
 
     @SuppressWarnings("unchecked")
@@ -135,34 +122,15 @@ public final class XMLFileStoreCell extends AbstractFileStoreSerializableCell
         return XMLValue.equalContent(this, (XMLValue<Document>)otherValue);
     }
 
-    @Override
-    protected void serialize(final DataOutput output) {
-        try {
-            XMLValueFactory.SERIALIZER.serialize(output, m_content);
-        } catch (IOException ex) {
-            throw new IllegalStateException("Could not save XML", ex);
-        }
-    }
-
     /**
      * Serializer for {@link XMLFileStoreCell}s
      *
      * @noreference This class is not intended to be referenced by clients.
      */
-    public static final class XMLSerializer implements DataCellSerializer<XMLFileStoreCell> {
+    public static final class XMLSerializer extends NoOpSerializer<XMLFileStoreCell> {
 
-        @Override
-        public void serialize(final XMLFileStoreCell cell, final DataCellDataOutput output) throws IOException {
-            // Nothing to do, all data is in FileStore
-            // TODO: maybe store the hash?
+        public XMLSerializer() {
+            super(XMLFileStoreCell::new);
         }
-
-        @Override
-        public XMLFileStoreCell deserialize(final DataCellDataInput input) throws IOException {
-            // Nothing to do, all data is in FileStore
-            // TODO: maybe store the hash?
-            return new XMLFileStoreCell();
-        }
-
     }
 }

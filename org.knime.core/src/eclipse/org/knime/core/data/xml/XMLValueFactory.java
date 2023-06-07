@@ -56,7 +56,7 @@ import org.knime.core.data.util.LockedSupplier;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
-import org.knime.core.data.v2.filestore.AbstractFileStoreSerializableValueFactory;
+import org.knime.core.data.v2.filestore.TableOrFileStoreValueFactory;
 import org.knime.core.table.access.StructAccess.StructReadAccess;
 import org.knime.core.table.access.StructAccess.StructWriteAccess;
 import org.knime.core.table.schema.VarBinaryDataSpec.ObjectDeserializer;
@@ -73,9 +73,9 @@ import org.xml.sax.SAXException;
  * written into the table.
  *
  * @author Carsten Haubold, KNIME GmbH, Konstanz, Germany
- * @since 4.7
+ * @since 5.1
  */
-public class XMLValueFactory extends AbstractFileStoreSerializableValueFactory<XMLValue<Document>> {
+public class XMLValueFactory extends TableOrFileStoreValueFactory<XMLValue<Document>> {
 
     static final ObjectSerializer<XMLValue<Document>> SERIALIZER = (out, value) -> out.writeUTF(value.toString());
 
@@ -87,7 +87,29 @@ public class XMLValueFactory extends AbstractFileStoreSerializableValueFactory<X
         }
     };
 
-    private class XMLReadValue extends FileStoreSerializableReadValue implements XMLValue<Document> {
+    /**
+     * Create an instance of the {@link XMLValueFactory}
+     */
+    public XMLValueFactory() {
+        super(SERIALIZER, DESERIALIZER);
+    }
+
+    @Override
+    public ReadValue createReadValue(final StructReadAccess access) {
+        return new XMLReadValue(access);
+    }
+
+    @Override
+    public WriteValue<XMLValue<Document>> createWriteValue(final StructWriteAccess access) {
+        return new XMLWriteValue(access);
+    }
+
+    @Override
+    protected boolean shouldBeStoredInFileStore(final XMLValue<Document> value) {
+        return (value instanceof XMLBlobCell) || (value instanceof XMLFileStoreCell);
+    }
+
+    private class XMLReadValue extends TableOrFileStoreReadValue implements XMLValue<Document> {
         protected XMLReadValue(final StructReadAccess access) {
             super(access);
         }
@@ -115,43 +137,30 @@ public class XMLValueFactory extends AbstractFileStoreSerializableValueFactory<X
         protected FileStoreCell createFileStoreCell() {
             return new XMLFileStoreCell();
         }
+
+        @Override
+        public String toString() {
+            return getDataCell().toString();
+        }
     }
 
-    private class XMLWriteValue extends FileStoreSerializableWriteValue {
+    private class XMLWriteValue extends TableOrFileStoreWriteValue {
         protected XMLWriteValue(final StructWriteAccess access) {
             super(access);
         }
 
         @Override
-        protected FileStoreCell createFileStoreCell(final XMLValue<Document> content) {
-            try {
-                return new XMLFileStoreCell(createFileStore(), content);
-            } catch (IOException ex) {
-                throw new IllegalStateException("Could not create file store for XMLFileStoreCell", ex);
+        protected boolean isCorrespondingReadValue(final XMLValue<Document> value) {
+            return value instanceof XMLReadValue;
+        }
+
+        @Override
+        protected FileStoreCell getFileStoreCell(final XMLValue<Document> value) throws IOException {
+            if (value instanceof XMLFileStoreCell fsCell) {
+                return fsCell;
+            } else {
+                return new XMLFileStoreCell(createFileStore(), value);
             }
         }
     }
-
-    @Override
-    public ReadValue createReadValue(final StructReadAccess access) {
-        return new XMLReadValue(access);
-    }
-
-    @Override
-    public WriteValue<XMLValue<Document>> createWriteValue(final StructWriteAccess access) {
-        return new XMLWriteValue(access);
-    }
-
-    /**
-     * Create an instance of the {@link XMLValueFactory}
-     */
-    public XMLValueFactory() {
-        super(SERIALIZER, DESERIALIZER);
-    }
-
-    @Override
-    protected boolean shouldBeStoredInFileStore(final XMLValue<Document> value) {
-        return (value instanceof XMLBlobCell) || (value instanceof XMLFileStoreCell);
-    }
-
 }
