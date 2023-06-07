@@ -177,7 +177,7 @@ public abstract class AbstractFileStoreSerializableValueFactory<V extends DataVa
 
             if (fileStoreKeyString != null && !fileStoreKeyString.isEmpty()) {
                 if (m_lastFileStoreKeyString == null || !m_lastFileStoreKeyString.equals(fileStoreKeyString)) {
-                    var fileStoreKeys = Arrays.stream(fileStoreKeyString.split(";")).map(FileStoreKey::fromString)
+                    var fileStoreKeys = Arrays.stream(fileStoreKeyString.split(";")).map(FileStoreKey::load)
                         .toArray(FileStoreKey[]::new);
                     // the FSKeys have changed since the last access, so we cannot reuse the cached data cell
 
@@ -277,7 +277,7 @@ public abstract class AbstractFileStoreSerializableValueFactory<V extends DataVa
 
                 var fileStoreKeys = FileStoreUtil.getFileStoreKeys(fsCell);
                 var fileStoreKeyString = Arrays.stream(fileStoreKeys)//
-                    .map(FileStoreKey::toString)//
+                    .map(FileStoreKey::saveToString)//
                     .collect(Collectors.joining(";"));
                 fileStoreAccess.setStringValue(fileStoreKeyString);
                 return;

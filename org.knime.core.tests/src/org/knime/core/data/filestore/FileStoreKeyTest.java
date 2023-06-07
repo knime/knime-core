@@ -57,6 +57,7 @@ import org.junit.Test;
 
 /**
  * Test the {@link FileStoreKey}
+ *
  * @author Carsten Haubold, KNIME GmbH, Konstanz, Germany
  */
 @SuppressWarnings("javadoc")
@@ -66,17 +67,18 @@ public class FileStoreKeyTest {
         UUID uuid = UUID.randomUUID();
 
         testRoundtrip(new FileStoreKey(uuid, 0, null, -1, "test"));
-        testRoundtrip(new FileStoreKey(uuid, 3, new int[] {}, 1, "test"));
-        testRoundtrip(new FileStoreKey(uuid, 0, new int[] {1, 4, 19}, 0, "test"));
-        testRoundtrip(new FileStoreKey(uuid, 0, new int[] {1, 4, 19}, 42, "test"));
-        testRoundtrip(new FileStoreKey(uuid, 314, new int[] {1, 4, 19}, 42, "test"));
-        testRoundtrip(new FileStoreKey(uuid, 314, new int[] {1, 4, 19}, 42, UUID.randomUUID().toString()));
+        testRoundtrip(new FileStoreKey(uuid, 3, new int[]{}, 1, "test"));
+        testRoundtrip(new FileStoreKey(uuid, 0, new int[]{1, 4, 19}, 0, "test"));
+        testRoundtrip(new FileStoreKey(uuid, 0, new int[]{1, 4, 19}, 42, "test"));
+        testRoundtrip(new FileStoreKey(uuid, 314, new int[]{1, 4, 19}, 42, "test"));
+        testRoundtrip(new FileStoreKey(uuid, 314, new int[]{1, 4, 19}, 42, UUID.randomUUID().toString()));
+        testRoundtrip(new FileStoreKey(uuid, 4, null, -1, "test"));
     }
 
     @Test
     public void testLoadRealFSKey() {
         var key =
-            FileStoreKey.fromString("0_0_bd1ee3d4-3ea6-4eb8-8f3b-5c2caa4cbd06-(891613d3-c03d-41e8-b9d4-0476b3b8b1f8)");
+            FileStoreKey.load("891613d3-c03d-41e8-b9d4-0476b3b8b1f8_0_bd1ee3d4-3ea6-4eb8-8f3b-5c2caa4cbd06_0");
         assertEquals("Expected index to be 0", 0, key.getIndex());
         assertEquals("Expected specific name", "bd1ee3d4-3ea6-4eb8-8f3b-5c2caa4cbd06", key.getName());
         assertEquals("Expected specific store UUID", "891613d3-c03d-41e8-b9d4-0476b3b8b1f8",
@@ -86,15 +88,16 @@ public class FileStoreKeyTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testLoadInvalidFSKey() {
-        FileStoreKey.fromString("0_foo-(bar)");
+        FileStoreKey.load("0_foo-(bar)");
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testLoadInvalidEmptyFSKey() {
-        FileStoreKey.fromString("empty");
+        FileStoreKey.load("empty");
     }
 
     private static void testRoundtrip(final FileStoreKey fsKey) {
-        assertEquals("ToString -> FromString failed for FileStoreKey: " + fsKey.toString(), fsKey, FileStoreKey.fromString(fsKey.toString()));
+        assertEquals("ToString -> FromString failed for FileStoreKey: " + fsKey.toString(), fsKey,
+            FileStoreKey.load(fsKey.saveToString()));
     }
 }
