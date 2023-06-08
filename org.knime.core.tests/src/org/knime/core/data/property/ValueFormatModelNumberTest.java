@@ -70,7 +70,11 @@ class ValueFormatModelNumberTest {
 
     private static ValueFormatModelNumber createModel() throws InvalidSettingsException {
         return new ValueFormatModelNumber(
-            NumberFormatter.builder().setAlwaysShowDecimalSeparator(false).setMaximumDecimals(0).build());
+            NumberFormatter.builder()
+            .setAlwaysShowDecimalSeparator(false)
+            .setMaximumDecimals(0)
+            .setGroupSeparator(",")
+            .build());
     }
 
     /**
