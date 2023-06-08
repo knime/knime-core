@@ -52,6 +52,7 @@ import java.io.Writer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 
 import org.apache.log4j.Appender;
 import org.apache.log4j.Layout;
@@ -279,7 +280,8 @@ public final class NodeLoggerConfig {
      * @return this logging LEVEL
      */
     static LEVEL translateLog4JToKnimeLevel(final Level level) {
-        return switch (level.toInt()) {
+        // A null level defaults to log level ALL.
+        return switch (Objects.requireNonNullElse(level, Level.ALL).toInt()) {
             case Priority.DEBUG_INT -> LEVEL.DEBUG;
             case Priority.INFO_INT -> LEVEL.INFO;
             case Priority.WARN_INT -> LEVEL.WARN;
