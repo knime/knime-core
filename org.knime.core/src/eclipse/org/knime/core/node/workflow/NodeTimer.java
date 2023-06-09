@@ -229,7 +229,7 @@ public final class NodeTimer {
                 LOGGER.debug("Global Timer disabled due to system property");
                 return;
             }
-
+            //load the global stats
             readFromFile();
         }
 
@@ -552,7 +552,7 @@ public final class NodeTimer {
             job.add("launches", getNrLaunches());
             job.add("lastApplicationID", getApplicationID()); // batch, standard KNIME AP, ...
             job.add("timeSinceLastStart", getCurrentInstanceUpTime());
-            job.add("crashes", getNrCrashes());
+            job.add("crashes", m_crashes);
             job.add("properlyShutDown", properShutdown);
             JsonObject jo = job.build();
             return jo;
@@ -580,7 +580,7 @@ public final class NodeTimer {
             return "<unknown>";
         }
 
-        private void writeToFile(final boolean properShutdown) {
+        private synchronized void writeToFile(final boolean properShutdown) {
             try {
                 JsonObject jo = constructJSONObject(properShutdown);
                 File propfile = new File(KNIMEConstants.getKNIMEHomeDir(), FILENAME);
@@ -642,7 +642,8 @@ public final class NodeTimer {
                 org.apache.commons.httpclient.Credentials usageCredentials =
                     new UsernamePasswordCredentials("knime-usage-user", "knime");
                 requestClient.getState().setCredentials(AuthScope.ANY, usageCredentials);
-                String uri = SERVER_ADDRESS + "/usage/v1/" + knid;
+                //add s_ to the knid to indicate the new session based files
+                String uri = SERVER_ADDRESS + "/usage/v1/s_" + knid;
                 method = new PostMethod(uri);
                 RequestEntity entity = new ByteArrayRequestEntity(bytes);
                 method.setRequestEntity(entity);
@@ -653,6 +654,10 @@ public final class NodeTimer {
                         Integer.toString(response) : (response + " - " + responseReason);
                     throw new HttpException("Server returned HTTP code " + responseString);
                 }
+                //reset all session counts
+                resetSessionCounts();
+                //write new file after resetting the session counts to read the current global counts next time
+                writeToFile(properShutdown);
                 LOGGER.debug("Successfully sent node usage stats to server");
             } catch (HttpException ex) {
                 LOGGER.warn("Node usage file failed to send  because of a protocol exception.", ex);
@@ -736,7 +741,7 @@ public final class NodeTimer {
                             if (compareVersionString(version, "3.0.1") < 0) {
                                 // ignore file created before 3.0.1, as the structure has changed
                                 LOGGER.debug("Ignoring usage file content, because version was before 3.0.1. Starting counts from scratch.");
-                                resetCounts();
+                                resetAllCounts();
                                 return;
                             }
                             break;
@@ -751,7 +756,7 @@ public final class NodeTimer {
                             if (jab == null) {
                                 // secondary check for changed structure
                                 LOGGER.debug("Ignoring usage file content, because of missing 'nodes' field. Starting counts from scratch.");
-                                resetCounts();
+                                resetAllCounts();
                                 return;
                             }
                             for (int curNode = 0; curNode < jab.size(); curNode++) {
@@ -856,16 +861,39 @@ public final class NodeTimer {
                 LOGGER.debug("Successfully read node usage stats from file: " + propfile.getCanonicalPath());
             } catch (Exception e) {
                 LOGGER.warn("Failed reading node usage file. Starting counts from scratch.", e);
-                resetCounts();
+                resetAllCounts();
             }
         }
 
-        private void resetCounts() {
-            m_created = DATE_FORMAT.format(new Date());
-            m_avgUpTime = 0;
-            m_launches = 0;
-            m_crashes = 0;
+        private void resetSessionCounts() {
             m_globalNodeStats = new LinkedHashMap<String, NodeTimer.GlobalNodeStats.NodeStats>();
+            m_nodesCreatedVia = new LinkedHashMap<>();
+            m_workflowsOpened = 0;
+            m_remoteWorkflowsOpened = 0;
+            m_columnarStorageWorkflowsOpened = 0;
+            m_workflowsImported = 0;
+            m_workflowsExported = 0;
+            m_webUIPerspectiveSwitches = 0;
+            m_javaUIPerspectiveSwitches = 0;
+            m_lastUsedPerspective = CLASSIC_PERSPECTIVE_PLACEHOLDER;
+            m_crashes = 0;
+        }
+
+        private void resetAllCounts() {
+            m_created = DATE_FORMAT.format(new Date());
+            m_globalNodeStats = new LinkedHashMap<String, NodeTimer.GlobalNodeStats.NodeStats>();
+            m_nodesCreatedVia = new LinkedHashMap<>();
+            m_workflowsOpened = 0;
+            m_remoteWorkflowsOpened = 0;
+            m_columnarStorageWorkflowsOpened = 0;
+            m_workflowsImported = 0;
+            m_workflowsExported = 0;
+            m_webUIPerspectiveSwitches = 0;
+            m_javaUIPerspectiveSwitches = 0;
+            m_lastUsedPerspective = CLASSIC_PERSPECTIVE_PLACEHOLDER;
+            m_crashes = 0;
+            m_launches = 0;
+            m_avgUpTime = 0;
         }
 
         private Integer compareVersionString(final String str1, final String str2)
