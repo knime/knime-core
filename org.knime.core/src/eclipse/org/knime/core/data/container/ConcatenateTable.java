@@ -390,7 +390,7 @@ public final class ConcatenateTable implements KnowsRowCountTable {
      * @see DataTableSpec#mergeDataTableSpecs(DataTableSpec...)
      */
     public static DataTableSpec createSpec(final DataTableSpec... specs) {
-        return DataTableSpec.mergeDataTableSpecs(specs);
+        return AppendedRowsTable.generateDataTableSpec(specs);
     }
 
     private class ContatenateTableIterator extends CloseableRowIterator {
