@@ -132,9 +132,15 @@ public class AppendedRowsRowInput extends RowInput {
     /**
      * Concatenates a set of Inputs. Duplicates are handled according to the policy argument. Columns present in one
      * input but not the others or conflicting column tables are handled as described in {@link AppendedRowsTable}.
+     * <br><br>
+     * NOTE: This method calls {@link #create(RowInput[], DuplicatePolicy, String, ExecutionMonitor, long, boolean)}
+     * with {@code fillDuplicateMap} set to {@code false} because the duplicate map may cause memory problems for large
+     * tables.
      *
      * @param ins all inputs to be appended (non-null and no null values allowed)
-     * @param duplPolicy How to deal with duplicate keys. Non-null.
+     * @param duplPolicy How to deal with duplicate keys. Non-null. Note: {@link DuplicatePolicy#Skip} and
+     *            {@link DuplicatePolicy#AppendSuffix} store all RowIDs in memory which can cause memory issues for
+     *            large tables
      * @param suffix suffix to append to duplicate keys (must not be null if policy is
      *            {@link DuplicatePolicy#AppendSuffix})
      * @param exec (optional) execution monitor that is used to report progress and check for cancelation. Can be null.
@@ -144,6 +150,30 @@ public class AppendedRowsRowInput extends RowInput {
      */
     public static AppendedRowsRowInput create(final RowInput[] ins, final DuplicatePolicy duplPolicy,
         final String suffix, final ExecutionMonitor exec, final long totalRowCount) {
+        return create(ins, duplPolicy, suffix, exec, totalRowCount, false);
+    }
+
+    /**
+     * Concatenates a set of Inputs. Duplicates are handled according to the policy argument. Columns present in one
+     * input but not the others or conflicting column tables are handled as described in {@link AppendedRowsTable}.
+     *
+     * @param ins all inputs to be appended (non-null and no null values allowed)
+     * @param duplPolicy How to deal with duplicate keys. Non-null. Note: {@link DuplicatePolicy#Skip} and
+     *            {@link DuplicatePolicy#AppendSuffix} store all RowIDs in memory which can cause memory issues for
+     *            large tables
+     * @param suffix suffix to append to duplicate keys (must not be null if policy is
+     *            {@link DuplicatePolicy#AppendSuffix})
+     * @param exec (optional) execution monitor that is used to report progress and check for cancelation. Can be null.
+     * @param totalRowCount The number of rows to expect (sum over all row counts in the inputs). Only be used for
+     *            progress -- can be negative to have no progress.
+     * @param fillDuplicateMap if provided, the duplicate map is filled for all {@link DuplicatePolicy
+     *            DuplicatePolicies} including {@link DuplicatePolicy#CreateNew} and {@link DuplicatePolicy#Fail} which
+     *            don't fill it otherwise. Note that the duplicate map may cause memory issues for large tables
+     * @return a new row input whose iteration scans all argument inputs.
+     * @since 5.1
+     */
+    public static AppendedRowsRowInput create(final RowInput[] ins, final DuplicatePolicy duplPolicy,
+        final String suffix, final ExecutionMonitor exec, final long totalRowCount, final boolean fillDuplicateMap) {
         DataTableSpec[] specs = new DataTableSpec[ins.length];
         for (int i = 0; i < specs.length; i++) {
             specs[i] = ins[i].getDataTableSpec();
@@ -159,7 +189,8 @@ public class AppendedRowsRowInput extends RowInput {
             suppliers[i] = new PairSupplier(new Pair<RowIterator, DataTableSpec>(
                     new RowInputIterator(ins[i]), ins[i].getDataTableSpec()));
         }
-        AppendedRowsIterator it = new AppendedRowsIterator(suppliers, duplPolicy, suffix, spec, exec, totalRowCount);
+        AppendedRowsIterator it =
+            new AppendedRowsIterator(suppliers, duplPolicy, suffix, spec, exec, totalRowCount, fillDuplicateMap);
         return new AppendedRowsRowInput(spec, it);
     }
 

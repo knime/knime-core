@@ -130,15 +130,20 @@ public class AppendedRowsIterator extends CloseableRowIterator {
     /** Policy for duplicate rows. */
     private final DuplicatePolicy m_duplPolicy;
 
+    private final boolean m_fillDuplicateMap;
+
     /**
      * Creates new iterator of <code>tables</code> following <code>spec</code>.
      * The iterator may throw an exception in next.
      *
      * @param exec for progress/cancel, may be <code>null</code>
      * @param totalRowCount the total row count or negative if unknown
+     * @param fillDuplicateMap if true, the duplicate map ({@link #getDuplicateNameMap()} is also filled for
+     * {@link DuplicatePolicy#Fail} and {@link DuplicatePolicy#CreateNew} (the other policies fill it anyway)
      */
-    AppendedRowsIterator(final PairSupplier[] tables, final DuplicatePolicy duplPolicy,
-        final String suffix, final DataTableSpec spec, final ExecutionMonitor exec, final long totalRowCount) {
+    AppendedRowsIterator(final PairSupplier[] tables, final DuplicatePolicy duplPolicy, final String suffix,
+        final DataTableSpec spec, final ExecutionMonitor exec, final long totalRowCount,
+        final boolean fillDuplicateMap) {
         m_iteratorSuppliers = CheckUtils.checkArgumentNotNull(tables);
         m_suffix = suffix;
         m_spec = CheckUtils.checkArgumentNotNull(spec);
@@ -152,6 +157,7 @@ public class AppendedRowsIterator extends CloseableRowIterator {
             initNextTable();
             initNextRow();
         }
+        m_fillDuplicateMap = fillDuplicateMap;
     }
 
     /**
@@ -274,15 +280,8 @@ public class AppendedRowsIterator extends CloseableRowIterator {
                 throw new RuntimeException("Unknown policy: " + m_duplPolicy);
             }
         }
-        switch (m_duplPolicy) {
-            case CreateNew:
-                // we create new keys, so checking is not necessary
-            case Fail://NOSONAR
-                // do not put key into map but leave it to the BufferedDataTable
-                // to do a efficient duplicate checking
-                break;
-            default:
-                m_duplicateMap.put(key, origKey);
+        if (fillDuplicateMap()) {
+            m_duplicateMap.put(key, origKey);
         }
         if (m_exec != null) {
             try {
@@ -320,6 +319,10 @@ public class AppendedRowsIterator extends CloseableRowIterator {
         } else {
             m_nextRow = nextRow;
         }
+    }
+
+    private boolean fillDuplicateMap() {
+        return m_fillDuplicateMap || m_duplPolicy.needsDuplicateMap();
     }
 
     /**
@@ -380,12 +383,7 @@ public class AppendedRowsIterator extends CloseableRowIterator {
      * @return Such a map (unmodifiable)
      */
     public Map<RowKey, RowKey> getDuplicateNameMap() {
-        if (m_duplPolicy == DuplicatePolicy.CreateNew) {
-            // TODO AP-20333: Store RowIDs if hiliting is enabled
-            throw new IllegalStateException("No RowIDs are stored if new RowIDs are generated.");
-        } else {
-            return Collections.unmodifiableMap(m_duplicateMap);
-        }
+        return Collections.unmodifiableMap(m_duplicateMap);
     }
 
     /** {@inheritDoc} */

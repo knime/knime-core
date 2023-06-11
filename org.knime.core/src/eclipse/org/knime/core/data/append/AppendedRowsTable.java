@@ -93,16 +93,26 @@ public class AppendedRowsTable implements DataTable {
     /** How to deal with duplicate row ids. */
     public enum DuplicatePolicy {
         /** Skip duplicate occurrence. */
-        Skip,
+        Skip(true),
         /** Append a suffix to unify IDs. */
-        AppendSuffix,
+        AppendSuffix(true),
         /** Fail . */
-        Fail,
+        Fail(false),
         /**
          * Prevent duplicates by generating completely new IDs.
          * @since 5.1
          * */
-        CreateNew
+        CreateNew(false);
+
+        private boolean m_needsDuplicateMap;
+
+        DuplicatePolicy(final boolean needsDuplicateMap) {
+            m_needsDuplicateMap = needsDuplicateMap;
+        }
+
+        boolean needsDuplicateMap() {
+            return m_needsDuplicateMap;
+        }
     }
 
     /**
@@ -125,6 +135,12 @@ public class AppendedRowsTable implements DataTable {
 
     /** Duplicate unifying policy. */
     private final DuplicatePolicy m_duplPolicy;
+
+    /**
+     * If true, the duplicate map is also created for {@link DuplicatePolicy DuplicatePolicies} that don't need a
+     * duplicate map.
+     */
+    private boolean m_fillDuplicateMap;
 
     /**
      * Concatenates a set of tables. Duplicate entries are skipped.
@@ -177,6 +193,16 @@ public class AppendedRowsTable implements DataTable {
     }
 
     /**
+     * Note: The duplicate map can cause memory issues for sufficiently large tables.
+     *
+     * @param fillDuplicateMap whether to fill the duplicate map even if it isn't needed by the {@link DuplicatePolicy}
+     * @since 5.1
+     */
+    public void setFillDuplicateMap(final boolean fillDuplicateMap) {
+        m_fillDuplicateMap = fillDuplicateMap;
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -211,7 +237,8 @@ public class AppendedRowsTable implements DataTable {
             iteratorSuppliers[i] = new PairSupplier(new Pair<RowIterator, DataTableSpec>(
                     m_tables[i].iterator(), m_tables[i].getDataTableSpec()));
         }
-        return new AppendedRowsIterator(iteratorSuppliers, m_duplPolicy, m_suffix, m_spec, exec, totalRowCount);
+        return new AppendedRowsIterator(iteratorSuppliers, m_duplPolicy, m_suffix, m_spec, exec, totalRowCount,
+            m_fillDuplicateMap);
     }
 
     /**
