@@ -53,6 +53,7 @@ import java.io.InputStream;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellDataInput;
 import org.knime.core.data.IDataRepository;
+import org.knime.core.data.container.LongUTFDataInput;
 import org.knime.core.data.filestore.FileStoreCell;
 import org.knime.core.data.filestore.FileStoreKey;
 import org.knime.core.data.filestore.FileStoreUtil;
@@ -73,7 +74,7 @@ public abstract class AbstractDataInputDelegator extends InputStream implements 
     protected AbstractDataInputDelegator(final IDataRepository dataRepository, final ReadableDataInput input) {
 
         m_dataRepository = dataRepository;
-        m_delegate = input;
+        m_delegate = new ReadableLongUTFDataInput(input);
     }
 
     protected abstract DataCell readDataCellImpl() throws IOException;
@@ -190,4 +191,22 @@ public abstract class AbstractDataInputDelegator extends InputStream implements 
         return m_delegate.read(b, off, len);
     }
 
+    private static class ReadableLongUTFDataInput extends LongUTFDataInput implements ReadableDataInput {
+        private final ReadableDataInput m_readableInput;
+
+        ReadableLongUTFDataInput(final ReadableDataInput input) {
+            super(input);
+            m_readableInput = input;
+        }
+
+        @Override
+        public int read(final byte[] b, final int off, final int len) throws IOException {
+            return m_readableInput.read(b, off, len);
+        }
+
+        @Override
+        public byte[] readBytes() throws IOException {
+            return m_readableInput.readBytes();
+        }
+    }
 }

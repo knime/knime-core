@@ -52,6 +52,7 @@ import java.io.OutputStream;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellDataOutput;
+import org.knime.core.data.container.LongUTFDataOutput;
 import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.filestore.FileStoreCell;
 import org.knime.core.data.filestore.FileStoreKey;
@@ -71,7 +72,7 @@ public abstract class AbstractDataOutputDelegator extends OutputStream implement
     private final DataOutput m_delegate;
 
     protected AbstractDataOutputDelegator(final IWriteFileStoreHandler fsHandler, final DataOutput output) {
-        m_delegate = output;
+        m_delegate = new LongUTFDataOutput(output);
         m_fsHandler = fsHandler;
     }
 
