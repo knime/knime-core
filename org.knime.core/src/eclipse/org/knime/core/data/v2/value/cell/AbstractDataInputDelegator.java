@@ -80,22 +80,21 @@ public abstract class AbstractDataInputDelegator extends InputStream implements 
 
     @Override
     public DataCell readDataCell() throws IOException {
-        final DataCell result = readDataCellImpl();
-        if (result instanceof FileStoreCell) {
+        final var dataCell = readDataCellImpl();
+        if (dataCell instanceof FileStoreCell fsCell) {
             final FileStoreKey[] fileStoreKeys = readFileStoreKeys();
-            final FileStoreCell fsCell = (FileStoreCell)result;
 
             // call post contruct because cell is read from disc
             FileStoreUtil.retrieveFileStoreHandlersFrom(fsCell, fileStoreKeys, m_dataRepository);
         }
 
-        return result;
+        return dataCell;
     }
 
     private FileStoreKey[] readFileStoreKeys() throws IOException {
-        int numFileStoreKeys = readInt();
-        FileStoreKey[] fileStoreKeys = new FileStoreKey[numFileStoreKeys];
-        for (int fsIdx = 0; fsIdx < numFileStoreKeys; fsIdx++) {
+        int numFileStoreKeys = readInt(); // NOSONAR
+        var fileStoreKeys = new FileStoreKey[numFileStoreKeys];
+        for (int fsIdx = 0; fsIdx < numFileStoreKeys; fsIdx++) { // NOSONAR
             fileStoreKeys[fsIdx] = FileStoreKey.load(this);
         }
         return fileStoreKeys;

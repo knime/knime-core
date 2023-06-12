@@ -81,17 +81,18 @@ public abstract class AbstractDataOutputDelegator extends OutputStream implement
     public final void writeDataCell(final DataCell cell) throws IOException {
         writeDataCellImpl(cell);
 
-        if (cell instanceof FileStoreCell) {
-            handleFileStoreCell((FileStoreCell)cell);
+        if (cell instanceof FileStoreCell fsCell) {
+            handleFileStoreCell(fsCell);
         }
     }
 
     private void handleFileStoreCell(final FileStoreCell fsCell) throws IOException {
         final FileStore[] fileStores = FileStoreUtil.getFileStores(fsCell);
-        final FileStoreKey[] fileStoreKeys = new FileStoreKey[fileStores.length];
+        final var fileStoreKeys = new FileStoreKey[fileStores.length];
 
-        // TODO In case we already did that in DataCellValueFactory WriteValue, can we avoid doing this again? Is it harmful?
-        for (int fileStoreIndex = 0; fileStoreIndex < fileStoreKeys.length; fileStoreIndex++) {
+        // TODO In case we already did that in DataCellValueFactory WriteValue,
+        //      can we avoid doing this again? Is it harmful?
+        for (int fileStoreIndex = 0; fileStoreIndex < fileStoreKeys.length; fileStoreIndex++) { // NOSONAR
             fileStoreKeys[fileStoreIndex] = m_fsHandler.translateToLocal(fileStores[fileStoreIndex], fsCell);
         }
 
