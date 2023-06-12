@@ -188,9 +188,7 @@ public abstract class AbstractAdapterCellValueFactory
             for (var entry : adapterValueToCellMap.entrySet()) {
                 final var adapterValue = entry.getKey();
                 final var adapterCell = entry.getValue();
-                if (!adapterCellToValuesMap.containsKey(adapterCell)) {
-                    adapterCellToValuesMap.put(adapterCell, new ArrayList<>());
-                }
+                adapterCellToValuesMap.computeIfAbsent(adapterCell, k -> new ArrayList<>());
                 adapterCellToValuesMap.get(adapterCell).add(adapterValue);
             }
 
@@ -255,7 +253,7 @@ public abstract class AbstractAdapterCellValueFactory
                 return cell;
             }
 
-            ByteArrayInputStream inStream = new ByteArrayInputStream(blobAccess.getByteArray());
+            var inStream = new ByteArrayInputStream(blobAccess.getByteArray());
             try (final var dataInput =
                 new AdapterCellDataInputDelegator(m_dataRepository, new ReadableDataInputStream(inStream))) {
                 int numAdapters = dataInput.readInt();
