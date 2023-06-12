@@ -128,7 +128,7 @@ public class UnivariateStatisticsTest {
     }
 
     @Test
-    void testFormatMOstFrequentValuesWithMissing() {
+    void testFormatMostFrequentValuesWithMissing() {
         var pairs = List.of((DataValue)new StringCell("a"), new StringCell("b"), new StringCell("c")).stream()
             .map(v -> new Pair<>(v, (long)1)).collect(Collectors.toList());
         pairs.add(new Pair<>(null, (long)1));

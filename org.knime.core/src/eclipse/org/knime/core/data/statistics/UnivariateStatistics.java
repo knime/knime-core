@@ -53,6 +53,7 @@ import static org.knime.core.data.v2.TableExtractorUtil.extractData;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -111,7 +112,7 @@ public final class UnivariateStatistics {
     /**
      * Labels used for every column on the view data
      */
-    private static final Set<Statistic> DEFAULT_EXCLUDED_STATISTICS = Set.of(Statistic.K_MOST_COMMON,
+    private static final EnumSet<Statistic> DEFAULT_EXCLUDED_STATISTICS = EnumSet.of(Statistic.K_MOST_COMMON,
         Statistic.QUANTILE_1, Statistic.QUANTILE_5, Statistic.QUANTILE_25, Statistic.QUANTILE_50, Statistic.QUANTILE_75,
         Statistic.QUANTILE_90, Statistic.QUANTILE_95, Statistic.QUANTILE_99, Statistic.SUM, Statistic.STD_DEVIATION,
         Statistic.MEAN_ABSOLUTE_DEVIATION, Statistic.VARIANCE, Statistic.SKEWNESS, Statistic.KURTOSIS);
