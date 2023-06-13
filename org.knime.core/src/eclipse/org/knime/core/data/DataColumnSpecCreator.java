@@ -344,12 +344,15 @@ public final class DataColumnSpecCreator {
 
         DataValueComparator comparator = m_type.getComparator();
 
+
+        boolean hasBounds = m_type.isCompatible(BoundedValue.class);
         final DataCell myLower = m_domain.getLowerBound();
-        final DataCell newLower = mergeBound(myLower, domain2.getLowerBound(), comparator, i -> i > 0);
+        final DataCell newLower =
+            hasBounds ? mergeBound(myLower, domain2.getLowerBound(), comparator, i -> i > 0) : null;
         hasDomainChanged |= newLower != myLower;
 
         final DataCell myUpper = m_domain.getUpperBound();
-        DataCell newUpper = mergeBound(myUpper, domain2.getUpperBound(), comparator, i1 -> i1 < 0);
+        DataCell newUpper = hasBounds ? mergeBound(myUpper, domain2.getUpperBound(), comparator, i1 -> i1 < 0) : null;
         hasDomainChanged |= newUpper != myUpper;
         if (hasDomainChanged) {
             setDomain(new DataColumnDomain(newLower, newUpper, newValues));
