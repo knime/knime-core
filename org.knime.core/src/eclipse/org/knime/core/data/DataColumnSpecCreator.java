@@ -326,7 +326,7 @@ public final class DataColumnSpecCreator {
     private static DataCell mergeBound(final DataCell myBound, final DataCell otherBound,
         final DataValueComparator comparator, final IntPredicate takeOther) {
         if (myBound == null || otherBound == null) {
-            return myBound == null ? otherBound : myBound;
+            return null;
         } else if (myBound.equals(otherBound)) {
             return myBound;
         } else if (takeOther.test(comparator.compare(myBound, otherBound))) {
