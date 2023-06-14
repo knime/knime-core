@@ -132,6 +132,7 @@ Export-Package: log4j,
  org.knime.core.util.binning.auto.pmml,
  org.knime.core.util.binning.numeric,
  org.knime.core.util.exception,
+ org.knime.core.util.hub,
  org.knime.core.util.pathresolve,
  org.knime.core.util.string,
  org.knime.core.util.tokenizer,
@@ -179,7 +180,8 @@ Require-Bundle: org.eclipse.osgi;bundle-version="[3.16.0,4.0.0)";visibility:=ree
  javax.activation;bundle-version="[1.2.2,2.0.0)",
  org.knime.core.table;bundle-version="[5.0.0,6.0.0)",
  org.eclipse.jdt.annotation;bundle-version="[2.2.600,3.0.0)",
- org.eclipse.parsson.jakarta.json;bundle-version="[1.1.1,2.0.0)";visibility:=reexport
+ org.eclipse.parsson.jakarta.json;bundle-version="[1.1.1,2.0.0)";visibility:=reexport,
+ org.apache.httpcomponents.core5.httpcore5;bundle-version="[5.1.4,6.0.0)"
 Eclipse-RegisterBuddy: org.apache.log4j
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-17

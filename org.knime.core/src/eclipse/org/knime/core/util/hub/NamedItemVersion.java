@@ -44,62 +44,56 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   9 Nov 2022 (Dionysios Stolis): created
+ *   12 Jun 2023 (carlwitt): created
  */
-package org.knime.core.util.pathresolve;
 
-import org.knime.core.util.hub.NamedItemVersion;
+package org.knime.core.util.hub;
+
+import java.util.Objects;
+
+import org.knime.core.node.util.CheckUtils;
 
 /**
+ * Metadata of the version of a KNIME Hub repository item.
  *
- * @author Dionysios Stolis, KNIME GmbH, Berlin, Germany
+ * @param version a positive number
+ * @param title never {@code null}
+ * @param description optional
+ * @param author optional
+ * @param authorAccountId KNIME Hub author account identifier, never {@code null}.
+ * @param createdOn never {@code null}.
  *
- * @deprecated use {@link NamedItemVersion}
+ * @since 5.1
+ *
+ * @see HubItemVersion
  */
-@Deprecated(since = "5.1.0")
-public final class SpaceVersion {
+public record NamedItemVersion(int version, String title, String description, String author, String authorAccountId,
+    String createdOn) {
 
-    private final int m_version;
+    public static final String JSON_PROPERTY_VERSION = "version";
 
-    private final String m_name;
+    public static final String JSON_PROPERTY_TITLE = "title";
 
-    private final String m_author;
+    public static final String JSON_PROPERTY_DESCRIPTION = "description";
 
-    private final String m_createdOn;
+    public static final String JSON_PROPERTY_AUTHOR = "author";
 
-    public SpaceVersion(final int version, final String name, final String author, final String createdOn) {
-        m_version = version;
-        m_name = name;
-        m_author = author;
-        m_createdOn = createdOn;
-    }
+    public static final String JSON_PROPERTY_AUTHOR_ACCOUNT_ID = "authorAccountId";
+
+    public static final String JSON_PROPERTY_CREATED_ON = "createdOn";
 
     /**
-     * @return the version
+     * @param version a positive number
+     * @param title never {@code null}
+     * @param description optional
+     * @param author optional
+     * @param authorAccountId KNIME Hub author account identifier, never {@code null}.
+     * @param createdOn never {@code null}.
      */
-    public int getVersion() {
-        return m_version;
+    public NamedItemVersion {
+        CheckUtils.checkArgument(version > 0, "In NamedItemVersion 'version' must be positive");
+        Objects.requireNonNull(title, "In NamedItemVersion 'title' cannot be null");
+        Objects.requireNonNull(authorAccountId, "In NamedItemVersion 'authorAccountId' cannot be null");
+        Objects.requireNonNull(createdOn, "In NamedItemVersion 'createdOn' cannot be null");
     }
-
-    /**
-     * @return the author
-     */
-    public String getAuthor() {
-        return m_author;
-    }
-
-    /**
-     * @return the createdOn
-     */
-    public String getCreatedOn() {
-        return m_createdOn;
-    }
-
-    /**
-     * @return the name
-     */
-    public String getName() {
-        return m_name;
-    }
-
 }

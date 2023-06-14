@@ -54,6 +54,7 @@ import java.util.Optional;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.knime.core.util.exception.ResourceAccessException;
+import org.knime.core.util.hub.NamedItemVersion;
 
 /**
  * A service interface to convert a URI into a local file. The URI is usually (always?) either a file URI or a URI
@@ -129,14 +130,24 @@ public interface URIToFileResolve {
     }
 
     /**
-     * TODO
-     * @param uri
-     * @return
+     * @param uri of a shared component
+     * @return this used to return all space versions this item existed in. With item-level versioning, space versions
+     *         are replaced with workflow project item versions.
      * @throws Exception
+     * @deprecated use {@link #getHubItemVersions(URI)}
      */
-    public default Optional<List<SpaceVersion>> getSpaceVersions(final URI uri) throws Exception {
+    @Deprecated(since = "5.1.0")
+    default Optional<List<SpaceVersion>> getSpaceVersions(final URI uri) throws Exception {
         return Optional.empty();
     }
+
+    /**
+     * @param uri KNIME URI of an item (workflow, shared component, etc.)
+     * @return the version history of that item on a KNIME Hub
+     * @throws IllegalArgumentException if the given URI does not use have the knime scheme.
+     * @since 5.1
+     */
+    List<NamedItemVersion> getHubItemVersions(final URI uri);
 
     /**
      * Resolves the given URI into a local file. If the URI does not represent a local file (e.g. a remote file on a

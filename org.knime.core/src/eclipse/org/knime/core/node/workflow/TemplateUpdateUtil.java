@@ -51,12 +51,14 @@ package org.knime.core.node.workflow;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 
 import org.apache.commons.httpclient.URIException;
@@ -72,6 +74,7 @@ import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.MetaNodeLinkUpdateResult;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.exception.ResourceAccessException;
+import org.knime.core.util.hub.HubItemVersion;
 import org.knime.core.util.pathresolve.ResolverUtil;
 import org.knime.core.util.pathresolve.URIToFileResolve.KNIMEURIDescription;
 
@@ -86,38 +89,62 @@ public final class TemplateUpdateUtil {
     /**
      * A link to a template on Hub can contain three different kinds of version information through a query parameter.
      * <ul>
-     *   <li>A specific space version can be referenced: {@code spaceVersion=42}</li>
-     *   <li>The link can point to the <i>latest</i> (i.e., most current) version: {@code spaceVersion=latest}</li>
-     *   <li>If no {@code spaceVersion} query parameter is given, the <i>latest state</i> (i.e., the staging area)
-     *       of the space is referenced.</li>
+     *      <li>A specific item version can be referenced: {@code version=42}</li>
+     *      <li>The link can point to the <i>latest</i> version: {@code version=most-recent}</li>
+     *      <li>If no {@code version} query parameter is given or {@code version=current-state} the current state
+     * (i.e., the staging area) of the space is referenced.</li>
      * </ul>
      *
      * @since 5.0
      */
     public enum LinkType {
         /** Specific version is selected, no updates will be available. */
-        FIXED_VERSION(Object::toString),
+        FIXED_VERSION(Object::toString, null),
 
         /** <i>Latest version</i> is selected. */
-        LATEST_VERSION(v -> "latest"),
+        LATEST_VERSION(v -> "most-recent", "most-recent"),
 
-        /** <i>Latest state</i> is selected, which is the latest version and all unversioned changes. */
-        LATEST_STATE(v -> null);
+        /** <i>Current state</i> is selected, which includes unversioned changes. */
+        LATEST_STATE(v -> null, "current-state");
 
         private final Function<Integer, String> m_paramString;
+        private final String m_identifier;
 
-        LinkType(final Function<Integer, String> paramString) {
+        /**
+         * The key used in query parameters to specify the hub version of a repository item.
+         * @since 5.1
+         */
+        public static final String VERSION_QUERY_PARAM = "version";
+
+        /**
+         * spaceVersion query parameter was used prior to item level versioning. Space versions do not exist anymore.
+         * However, when the KNIME hub migrated from space versions to item versions, item versions were created such
+         * that item version X matches the content in space version X.
+         * @since 5.1
+         */
+        public static final String LEGACY_SPACE_VERSION_QUERY_PARAM = "spaceVersion";
+
+        LinkType(final Function<Integer, String> paramString, final String identifier) {
             m_paramString = paramString;
+            m_identifier = identifier;
         }
 
         /**
-         * Creates the value for the {@code spaceVersion="..."} query parameter.
+         * Creates the value for the {@code version} query parameter.
          *
-         * @param version space version number, only used for {@link #FIXED_VERSION}
-         * @return parameter value, e.g. {@code "latest"}, {@code "-1"} or {@code "123"}
+         * @param version item version number, only used for {@link #FIXED_VERSION}
+         * @return parameter value, e.g. {@code "most-recent"}, {@code "current-state"} or {@code "123"}
          */
         public String getParameterString(final Integer version) {
             return m_paramString.apply(version);
+        }
+
+        /**
+         * @return the value used in query parameters to denote a specific link type. {@code null} for FIXED_VERSION.
+         * @since 5.1
+         */
+        public String getIdentifier() {
+            return m_identifier;
         }
     }
 
@@ -181,21 +208,27 @@ public final class TemplateUpdateUtil {
      * @throws UnsupportedWorkflowVersionException
      * @throws CanceledExecutionException
      */
-    private static NodeContainerTemplate loadMetaNodeTemplateIfLocalOrOutdated(final NodeContainerTemplate meta,
-            final WorkflowLoadHelper loadHelper, final LoadResult loadResult)
-                    throws IOException, UnsupportedWorkflowVersionException, CanceledExecutionException {
+    private static NodeContainerTemplate loadMetaNodeTemplateIfLocalOrOutdatedOrVersioned(
+            final NodeContainerTemplate meta, final WorkflowLoadHelper loadHelper, final LoadResult loadResult)
+            throws IOException, UnsupportedWorkflowVersionException, CanceledExecutionException {
         final var linkInfo = meta.getTemplateInformation();
         final var sourceURI = linkInfo.getSourceURI();
+
         NodeContext.pushContext((NodeContainer)meta);
         try {
             /**
              * "ifModifiedSince" parameter is used to make an HTTP pre-check on whether an update is available to reduce
              * unnecessary downloads. Update is available only when the server version is *newer* than the local
              * timestamp. This will not fetch updates from an older, restored template snapshot on KS4.
+             *
+             * In case the template URI has a specific version set, we do not want to use the cutoff date
+             * (since there are no changes to versioned content but we still want the content when changing
+             * the version of the template.)
              */
-            final var timestamp = linkInfo.getTimestamp() != null ? linkInfo.getTimestamp().toZonedDateTime() : null;
+            final var cutoffDate = HubItemVersion.of(sourceURI).isVersioned() ? null // ignore modified since for versioned content
+                : Optional.ofNullable(linkInfo.getTimestamp()).map(OffsetDateTime::toZonedDateTime).orElse(null);
             final var localDir = ResolverUtil.resolveURItoLocalOrTempFileConditional(sourceURI,
-                new NullProgressMonitor(), timestamp).orElse(null);
+                new NullProgressMonitor(), cutoffDate).orElse(null);
             if (localDir == null) {
                 return null;
             }
@@ -277,7 +310,8 @@ public final class TemplateUpdateUtil {
                 // visit new template and try to load it
                 try {
                     final var templateLoadResult = new LoadResult("Template to " + uri);
-                    tempLink = loadMetaNodeTemplateIfLocalOrOutdated(linkedMeta, loadHelper, templateLoadResult);
+                    tempLink =
+                        loadMetaNodeTemplateIfLocalOrOutdatedOrVersioned(linkedMeta, loadHelper, templateLoadResult);
                     loadResult.addChildError(templateLoadResult);
                     visitedTemplateMap.put(uri, tempLink);
                 } catch (IOException | UnsupportedWorkflowVersionException e) {

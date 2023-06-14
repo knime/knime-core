@@ -56,7 +56,9 @@ import java.util.Optional;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.exception.ResourceAccessException;
+import org.knime.core.util.hub.NamedItemVersion;
 import org.knime.core.util.pathresolve.URIToFileResolve.KNIMEURIDescription;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
@@ -64,6 +66,8 @@ import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * Utility class for resolving URIs (e.g. on a server inside a KNIME TeamSpace) into local files.
+ *
+ * @see URIToFileResolve
  *
  * @author Thorsten Meinl, University of Konstanz
  * @since 2.6
@@ -287,7 +291,12 @@ public final class ResolverUtil {
         return Optional.empty();
     }
 
-    public static Optional<List<SpaceVersion>> getSpaceVersions(final URI uri, final IProgressMonitor monitor) throws Exception {
+    /**
+     * @deprecated use {@link ResolverUtil#getHubItemVersions(URI)}
+     */
+    @Deprecated(since = "5.1.0")
+    public static Optional<List<SpaceVersion>> getSpaceVersions(final URI uri, final IProgressMonitor monitor)
+        throws Exception {
         if (serviceTracker != null) {
             var resolver = (URIToFileResolve)serviceTracker.getService();
             if (resolver != null) {
@@ -295,5 +304,17 @@ public final class ResolverUtil {
             }
         }
         return Optional.empty();
+    }
+
+    /**
+     * @param uri to an item (workflow, workflow project, shared component)
+     * @return the version history of the given item
+     * @since 5.1
+     */
+    public static List<NamedItemVersion> getHubItemVersions(final URI uri) {
+        CheckUtils.checkState(serviceTracker != null, "No service available to resolve uri: %s", uri);
+        var resolver = (URIToFileResolve)serviceTracker.getService();
+        CheckUtils.checkState(resolver != null, "No resolver available to resolve uri: %s", uri);
+        return resolver.getHubItemVersions(uri);
     }
 }
