@@ -74,6 +74,7 @@ import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.NotInWorkflowDataRepository;
 import org.knime.core.data.filestore.internal.ROWriteFileStoreHandler;
 import org.knime.core.data.v2.RowContainer;
+import org.knime.core.data.v2.RowWriteCursor;
 import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.util.CheckUtils;
@@ -770,11 +771,14 @@ public class ExecutionContext extends ExecutionMonitor {
      * @implNote Highly experimental API added with KNIME AP 4.3 - Can change with future released of KNIME AP.
      * @since 4.3
      */
+    @SuppressWarnings("resource")// the RowContainer is closed by the LocalRepoAwareRowContainer
     public final RowContainer createRowContainer(final DataTableSpec spec, final boolean initDomains) {
         final TableBackend backend = WorkflowTableBackendSettings.getTableBackendForCurrentContext();
         LOGGER.debugWithFormat("Using Table Backend \"%s\".", backend.getClass().getSimpleName());
-        return backend.create(this, spec, DataContainerSettings.getDefault().withInitializedDomain(initDomains),
-            getDataRepository(), getFileStoreHandler());
+        var container =
+            backend.create(this, spec, DataContainerSettings.getDefault().withInitializedDomain(initDomains),
+                getDataRepository(), getFileStoreHandler());
+        return new LocalRepoAwareRowContainer(container, m_localTableRepository);
     }
 
     /** @return the fileStoreHandler the handler set at construction time (possibly null if run in 3rd party exec) */
@@ -843,5 +847,38 @@ public class ExecutionContext extends ExecutionMonitor {
         };
 
         return KNIMEConstants.GLOBAL_THREAD_POOL.enqueue(task);
+    }
+
+    private static final class LocalRepoAwareRowContainer implements RowContainer {
+
+        private final RowContainer m_backendDelegate;
+
+        private final ILocalDataRepository m_localDataRepo;
+
+        LocalRepoAwareRowContainer(final RowContainer backendDelegate, final ILocalDataRepository localDataRepo) {
+            m_backendDelegate = backendDelegate;
+            m_localDataRepo = localDataRepo;
+        }
+
+        @Override
+        public void close() throws Exception {
+            m_backendDelegate.close();
+        }
+
+        @Override
+        public RowWriteCursor createCursor() {
+            return m_backendDelegate.createCursor();
+        }
+
+        @Override
+        public BufferedDataTable finish() throws IOException {
+            var table = m_backendDelegate.finish();
+            var delegate = table.getDelegate();
+            if (delegate instanceof ContainerTable container) {
+                m_localDataRepo.addTable(container);
+            }
+            return table;
+        }
+
     }
 }
