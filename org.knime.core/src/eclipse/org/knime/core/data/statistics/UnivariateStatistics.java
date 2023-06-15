@@ -56,7 +56,6 @@ import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -104,7 +103,6 @@ import org.knime.core.util.Pair;
  * @author Juan Diaz Baquero
  * @author Benjamin Moser, KNIME GmbH, Konstanz, Germany
  * @since 5.1
- * @noextend Not public API, for internal use only.
  * @noreference Not public API, for internal use only.
  */
 public final class UnivariateStatistics {
@@ -149,6 +147,107 @@ public final class UnivariateStatistics {
 
     private Optional<Double> m_sum = Optional.empty();
 
+    private UnivariateStatistics() {
+        // Utility class
+    }
+    String getName() {
+        return m_name;
+    }
+    private void setName(final String name) {
+        m_name = name;
+    }
+    String getType() {
+        return m_type;
+    }
+    private void setType(final DataType type) {
+        m_type = type.toPrettyString();
+    }
+    long getNumberUniqueValues() {
+        return m_numberUniqueValues;
+    }
+    private void setNumberUniqueValues(final long numberUniqueValues) {
+        m_numberUniqueValues = numberUniqueValues;
+    }
+    String getFirstValue() {
+        return m_firstValue;
+    }
+    private void setFirstValue(final String firstValue) {
+        m_firstValue = firstValue;
+    }
+    String getLastValue() {
+        return m_lastValue;
+    }
+    private void setLastValue(final String lastValue) {
+        m_lastValue = lastValue;
+    }
+    String getCommonValues() {
+        return m_commonValues;
+    }
+    private void setCommonValues(final String[] items) {
+        m_commonValues = items.length == 0 ? null : String.join(", ", items);
+    }
+    Double[] getQuantiles() {
+        return m_quantiles;
+    }
+    private void setQuantiles(final Double[] quantiles) {
+        m_quantiles = quantiles;
+    }
+    double getMin() {
+        return m_min;
+    }
+    private void setMin(final double min) {
+        m_min = min;
+    }
+    double getMax() {
+        return m_max;
+    }
+    private void setMax(final double max) {
+        m_max = max;
+    }
+    Optional<Double> getMean() {
+        return m_mean;
+    }
+    private void setMean(final double mean) {
+        m_mean = Double.isNaN(mean) ? Optional.empty() : Optional.of(mean);
+    }
+    Optional<Double> getMeanAbsoluteDeviation() {
+        return m_meanAbsoluteDeviation;
+    }
+    private void setMeanAbsoluteDeviation(final double meanAbsoluteDeviation) {
+        m_meanAbsoluteDeviation =
+            Double.isNaN(meanAbsoluteDeviation) ? Optional.empty() : Optional.of(meanAbsoluteDeviation);
+    }
+    Optional<Double> getStandardDeviation() {
+        return m_standardDeviation;
+    }
+    private void setStandardDeviation(final double standardDeviation) {
+        m_standardDeviation = Double.isNaN(standardDeviation) ? Optional.empty() : Optional.of(standardDeviation);
+
+    }
+    Optional<Double> getVariance() {
+        return m_variance;
+    }
+    private void setVariance(final double variance) {
+        m_variance = Double.isNaN(variance) ? Optional.empty() : Optional.of(variance);
+    }
+    Optional<Double> getSkewness() {
+        return m_skewness;
+    }
+    private void setSkewness(final double skewness) {
+        m_skewness = Double.isNaN(skewness) ? Optional.empty() : Optional.of(skewness);
+    }
+    Optional<Double> getKurtosis() {
+        return m_kurtosis;
+    }
+    private void setKurtosis(final double kurtosis) {
+        m_kurtosis = Double.isNaN(kurtosis) ? Optional.empty() : Optional.of(kurtosis);
+    }
+    Optional<Double> getSum() {
+        return m_sum;
+    }
+    private void setSum(final double sum) {
+        m_sum = Double.isNaN(sum) ? Optional.empty() : Optional.of(sum);
+    }
     /**
      * Compute statistics for every column in the input table.
      *
@@ -159,9 +258,9 @@ public final class UnivariateStatistics {
      * @throws CanceledExecutionException If cancelled
      */
     public static BufferedDataTable computeStatisticsTable(final BufferedDataTable inputTable,
-        final ExecutionContext exec, Collection<Statistic> selectedStatistics) throws CanceledExecutionException {
+        final ExecutionContext exec, final Collection<Statistic> selectedStatistics) throws CanceledExecutionException {
         var allColumns = inputTable.getSpec().getColumnNames();
-        return computeStatisticsTable(inputTable, allColumns, selectedStatistics, exec);
+        return computeStatisticsTable(inputTable, allColumns, exec, selectedStatistics);
     }
 
     /**
@@ -169,22 +268,23 @@ public final class UnivariateStatistics {
      *
      * @param inputTable The table for whose columns to compute statistics
      * @param selectedColumns The column names of the input table for which to compute statistics
-     * @param selectedStatistics The statistics to include
      * @param exec Execution context
+     * @param selectedStatistics The statistics to include
      * @return A table in which each row corresponds to statistics about a selected column in the input table
      * @throws CanceledExecutionException If cancelled
      */
     public static BufferedDataTable computeStatisticsTable(final BufferedDataTable inputTable,
-        final String[] selectedColumns, final Collection<Statistic> selectedStatistics, final ExecutionContext exec)
+        final String[] selectedColumns, final ExecutionContext exec, final Collection<Statistic> selectedStatistics)
         throws CanceledExecutionException {
-        final var statisticsTable = exec.createDataContainer(getStatisticsTableSpec(selectedStatistics));
-
-        final var eligibleCols = Arrays.stream(selectedColumns).filter(name -> {
-            var type = inputTable.getDataTableSpec().getColumnSpec(name).getType();
-            return type.isCompatible(DoubleValue.class) || type.isCompatible(StringValue.class);
-        }).toArray(String[]::new);
+        final var eligibleCols = Arrays.stream(selectedColumns)//
+            .filter(name -> {
+                var type = inputTable.getDataTableSpec().getColumnSpec(name).getType();
+                return type.isCompatible(DoubleValue.class) || type.isCompatible(StringValue.class);
+            })//
+            .toArray(String[]::new);
 
         // trivial case -- nothing to do
+        final var statisticsTable = exec.createDataContainer(getStatisticsTableSpec(selectedStatistics));
         if (eligibleCols.length == 0) {
             statisticsTable.close();
             return statisticsTable.getTable();
@@ -204,7 +304,13 @@ public final class UnivariateStatistics {
         return statisticsTable.getTable();
     }
 
-    public static DataTableSpec getStatisticsTableSpec(Collection<Statistic> selectedStatistics) {
+    /**
+     * Given some selected statistics, it returns the table specification of the resulting statistics table.
+     *
+     * @param selectedStatistics The selected statistics to include
+     * @return The table specification for the selected statistics columns
+     */
+    public static DataTableSpec getStatisticsTableSpec(final Collection<Statistic> selectedStatistics) {
         var colSpecs = Arrays.stream(Statistic.values()) //
             .filter(selectedStatistics::contains) // to preserve original order of enum
             .map(statistic -> new DataColumnSpecCreator(statistic.getName(), statistic.getType()).createSpec()) //
@@ -258,31 +364,46 @@ public final class UnivariateStatistics {
         }
     }
 
+    /**
+     * @return The default statistics
+     */
     public static List<Statistic> getDefaultStatistics() {
         return Arrays.stream(Statistic.values()).filter(stat -> !DEFAULT_EXCLUDED_STATISTICS.contains(stat)).toList();
     }
 
+    /**
+     * @return The labels of the default statistics
+     */
     public static String[] getDefaultStatisticsLabels() {
-        return getDefaultStatistics().stream().map(Statistic::getName).toArray(String[]::new);
+        return getLabelsFromStatistics(getDefaultStatistics());
     }
-
+    /**
+     * @return All available statistics
+     */
     public static List<Statistic> getAvailableStatistics() {
         return Arrays.stream(Statistic.values()).toList();
     }
 
+    /**
+     * @return The labels of all available statistics
+     */
     public static String[] getAvailableStatisticsLabels() {
-        return Arrays.stream(Statistic.values()).map(Enum::name).toArray(String[]::new);
+        return getLabelsFromStatistics(getAvailableStatistics());
+    }
+
+    private static String[] getLabelsFromStatistics(final Collection<Statistic> statistics) {
+        return statistics.stream().map(Statistic::getName).toArray(String[]::new);
     }
 
     /**
      * String-format a list of pairs of data value and absolute frequencies.
-     * 
+     *
      * @param mostFrequentValues A list of pairs of some unique data values and their respective absolute frequencies.
      * @param type The type of the data values.
      * @param totalNumValues The total number of unique values
      * @return A string of shape "<value> (<absolute-count>; <percentage-count>)"
      */
-    public static String[] formatMostFrequentValues(final List<Pair<DataValue, Long>> mostFrequentValues,
+    static String[] formatMostFrequentValues(final List<Pair<DataValue, Long>> mostFrequentValues,
         final DataType type, final long totalNumValues) {
         Function<DataValue, String> reader;
         if (type.isCompatible(DoubleValue.class)) {
@@ -312,7 +433,7 @@ public final class UnivariateStatistics {
      *            {@link StringValue}.
      * @param exec The execution context
      */
-    public void performStatisticsCalculation(final BufferedDataTable inputColumnTable, final ExecutionContext exec)
+    private void performStatisticsCalculation(final BufferedDataTable inputColumnTable, final ExecutionContext exec)
         throws CanceledExecutionException {
         var columnIndex = 0;
         var type = inputColumnTable.getSpec().getColumnSpec(columnIndex).getType();
@@ -386,234 +507,6 @@ public final class UnivariateStatistics {
 
         setSkewness(skewnessExtractor.getOutput());
         setKurtosis(kurtosisExtractor.getOutput());
-    }
-
-    /**
-     * @return the name
-     */
-    public String getName() {
-        return m_name;
-    }
-
-    /**
-     * The name of the original column
-     * 
-     * @param name the name to set
-     */
-    public void setName(final String name) {
-        m_name = name;
-    }
-
-    /**
-     * @return the type
-     */
-    public String getType() {
-        return m_type;
-    }
-
-    /**
-     * @param type the type to set
-     */
-    public void setType(final DataType type) {
-        m_type = type.toPrettyString();
-    }
-
-    /**
-     * @return the numberUniqueValues
-     */
-    public long getNumberUniqueValues() {
-        return m_numberUniqueValues;
-    }
-
-    /**
-     * @param numberUniqueValues
-     */
-    public void setNumberUniqueValues(final long numberUniqueValues) {
-        m_numberUniqueValues = numberUniqueValues;
-    }
-
-    /**
-     * @return the firstValue
-     */
-    public String getFirstValue() {
-        return m_firstValue;
-    }
-
-    /**
-     * @param firstValue the firstValue to set
-     */
-    public void setFirstValue(final String firstValue) {
-        m_firstValue = firstValue;
-    }
-
-    /**
-     * @return the lastValue
-     */
-    public String getLastValue() {
-        return m_lastValue;
-    }
-
-    /**
-     * @param lastValue the lastValue to set
-     */
-    public void setLastValue(final String lastValue) {
-        m_lastValue = lastValue;
-    }
-
-    /**
-     * @return the commonValues
-     */
-    public String getCommonValues() {
-        return m_commonValues;
-    }
-
-    /**
-     * @param items the array of items to concat
-     */
-    public void setCommonValues(final String[] items) {
-        m_commonValues = items.length == 0 ? null : String.join(", ", items);
-    }
-
-    /**
-     * @return the quantiles
-     */
-    public Double[] getQuantiles() {
-        return m_quantiles;
-    }
-
-    /**
-     * @param quantiles the quantiles to set
-     */
-    public void setQuantiles(final Double[] quantiles) {
-        m_quantiles = quantiles;
-    }
-
-    /**
-     * @return the min
-     */
-    public double getMin() {
-        return m_min;
-    }
-
-    /**
-     * @param min the min to set
-     */
-    public void setMin(final double min) {
-        m_min = min;
-    }
-
-    /**
-     * @return the max
-     */
-    public double getMax() {
-        return m_max;
-    }
-
-    /**
-     * @param max the max to set
-     */
-    public void setMax(final double max) {
-        m_max = max;
-    }
-
-    /**
-     * @return the mean
-     */
-    public Optional<Double> getMean() {
-        return m_mean;
-    }
-
-    /**
-     * @param mean the mean to set
-     */
-    public void setMean(final double mean) {
-        m_mean = Double.isNaN(mean) ? Optional.empty() : Optional.of(mean);
-    }
-
-    /**
-     * @return the meanAbsoluteDeviation
-     */
-    public Optional<Double> getMeanAbsoluteDeviation() {
-        return m_meanAbsoluteDeviation;
-    }
-
-    /**
-     * @param meanAbsoluteDeviation the meanAbsoluteDeviation to set
-     */
-    public void setMeanAbsoluteDeviation(final double meanAbsoluteDeviation) {
-        m_meanAbsoluteDeviation =
-            Double.isNaN(meanAbsoluteDeviation) ? Optional.empty() : Optional.of(meanAbsoluteDeviation);
-    }
-
-    /**
-     * @return the standardDeviation
-     */
-    public Optional<Double> getStandardDeviation() {
-        return m_standardDeviation;
-    }
-
-    /**
-     * @param standardDeviation the standardDeviation to set
-     */
-    public void setStandardDeviation(final double standardDeviation) {
-        m_standardDeviation = Double.isNaN(standardDeviation) ? Optional.empty() : Optional.of(standardDeviation);
-
-    }
-
-    /**
-     * @return the variance
-     */
-    public Optional<Double> getVariance() {
-        return m_variance;
-    }
-
-    /**
-     * @param variance the variance to set
-     */
-    public void setVariance(final double variance) {
-        m_variance = Double.isNaN(variance) ? Optional.empty() : Optional.of(variance);
-    }
-
-    /**
-     * @return the skewness
-     */
-    public Optional<Double> getSkewness() {
-        return m_skewness;
-    }
-
-    /**
-     * @param skewness the skewness to set
-     */
-    public void setSkewness(final double skewness) {
-        m_skewness = Double.isNaN(skewness) ? Optional.empty() : Optional.of(skewness);
-    }
-
-    /**
-     * @return the kurtosis
-     */
-    public Optional<Double> getKurtosis() {
-        return m_kurtosis;
-    }
-
-    /**
-     * @param kurtosis the kurtosis to set
-     */
-    public void setKurtosis(final double kurtosis) {
-        m_kurtosis = Double.isNaN(kurtosis) ? Optional.empty() : Optional.of(kurtosis);
-    }
-
-    /**
-     * @return the sum
-     */
-    public Optional<Double> getSum() {
-        return m_sum;
-    }
-
-    /**
-     * @param sum the sum to set
-     */
-    public void setSum(final double sum) {
-        m_sum = Double.isNaN(sum) ? Optional.empty() : Optional.of(sum);
     }
 
     public enum Statistic {

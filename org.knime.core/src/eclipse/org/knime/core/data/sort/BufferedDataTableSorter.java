@@ -150,7 +150,7 @@ public class BufferedDataTableSorter extends AbstractTableSorter {
 
     /**
      * Utility method to sort a given data table.
-     * 
+     *
      * @param table to be sorted
      * @param columnIndex index of the column in the table to be used for the sorting algorithm
      * @param sortAscending sort order
@@ -168,8 +168,8 @@ public class BufferedDataTableSorter extends AbstractTableSorter {
     }
 
     /**
-     * Utility method to sort a given data table.
-     * 
+     * Utility method to sort a given data table in ascending order for the column at the given index.
+     *
      * @param table to be sorted
      * @param columnIndex index of the column in the table to be used for the sorting algorithm
      * @param exec {@link ExecutionContext} where the sorting operation will be performed

@@ -60,12 +60,9 @@ import org.knime.core.data.StringValue;
 
 /**
  * Utility methods to extract values from {@link RowRead} instances.
- * 
- * @
  *
- *   @author Paul Bärnreuther
+ * @author Paul Bärnreuther
  * @since 5.1
- * @noextend Not public API, for internal use only.
  * @noreference Not public API, for internal use only.
  */
 public final class RowReadUtil {
