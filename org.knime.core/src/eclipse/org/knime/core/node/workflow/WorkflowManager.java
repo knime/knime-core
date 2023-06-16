@@ -2042,7 +2042,7 @@ public final class WorkflowManager extends NodeContainer
                 ConnectionContainer old = p.getFirst();
                 removeConnection(old);
             }
-            var subFlow = snc.getWorkflowManager();
+            final var subFlow = snc.getWorkflowManager();
             List<Pair<ConnectionContainer, ConnectionContainer>> changedConnectionsSubFlow =
                     subFlow.m_workflow.changeDestinationPortsForMetaNode(snc.getVirtualOutNodeID(), newPortsRaw, true);
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsSubFlow) {

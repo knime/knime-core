@@ -48,6 +48,7 @@ package org.knime.core.node.workflow;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.IntStream;
 
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionMonitor;
@@ -99,10 +100,11 @@ public class CopySubNodeContainerPersistor
         for (int i = 0; i < m_inPortTemplates.length; i++) {
             m_inPortTemplates[i] = new WorkflowPortTemplate(i, original.getInPort(i).getPortType());
         }
-        m_outPortTemplates = new WorkflowPortTemplate[original.getNrOutPorts()];
-        for (int i = 0; i < m_outPortTemplates.length; i++) {
-            m_outPortTemplates[i] = new WorkflowPortTemplate(i, original.getOutPort(i).getPortType());
-        }
+        final var virtualOutNode = original.getVirtualOutNode();
+        // port info from virtual output node (excludes possible report port)
+        m_outPortTemplates = IntStream.range(0, virtualOutNode.getNrInPorts())
+            .mapToObj(i -> new WorkflowPortTemplate(i, virtualOutNode.getInPort(i).getPortType()))
+            .toArray(WorkflowPortTemplate[]::new);
         m_virtualInNodeIDSuffix = original.getVirtualInNode().getID().getIndex();
         m_virtualOutNodeIDSuffix = original.getVirtualOutNode().getID().getIndex();
         m_subnodeLayoutStringProvider = original.getSubnodeLayoutStringProvider();

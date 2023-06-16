@@ -63,6 +63,7 @@ import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.SubNodeContainer;
+import org.knime.core.node.workflow.WorkflowManager;
 
 /**
  * Listener added to a subnode container's WFM to listen for node adding / reset / execution to guarantee that the
@@ -134,8 +135,19 @@ final class VirtualSubNodeOutputWaiter {
             return Optional.of(wfm.getNodeErrorSummary().or(wfm::getNodeWarningSummary) //
                 .map(msg -> msg.modify().withSummary("Errors in workflow - %s".formatted(msg.getSummary())).build()
                     .orElseThrow())
-                .orElse(Message.fromSummary("<unknown error>")));
+                .orElse(getNonExecutedNodesListMessage(nonExecutedNodesList, wfm)));
         }
+    }
+
+    /**
+     * New message with list of nodes that were not executed.
+     */
+    private static Message getNonExecutedNodesListMessage(final List<NodeContainer> nonExecutedNodesList,
+        final WorkflowManager parent) {
+        final var msgBuilder = Message.builder() //
+            .withSummary("%s node(s) were not executed".formatted(nonExecutedNodesList.size()));
+        nonExecutedNodesList.stream().limit(3).forEach(nc -> msgBuilder.addTextIssue(nc.getNameWithID(parent.getID())));
+        return msgBuilder.build().orElseThrow();
     }
 
     /** Allows the caller thread to sleep until all currently executing nodes are done. */

@@ -74,6 +74,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -1808,26 +1809,32 @@ public final class SubNodeContainer extends SingleNodeContainer
             m_outputs[index] = new Output(IReportPortObject.TYPE);
             m_outports[index] = new NodeContainerOutPort(this, IReportPortObject.TYPE, index);
         }
-        NodeContainer oldVNode = m_wfm.getNodeContainer(getVirtualOutNodeID());
-        NodeSettings settings = new NodeSettings("node settings");
-        m_wfm.saveNodeSettings(oldVNode.getID(), settings);
 
-        m_virtualOutNodeIDSuffix =
-            m_wfm.createAndAddNode(new VirtualSubNodeOutputNodeFactory(this, outNodePortTypes)).getIndex();
-        NodeContainer newVNode = m_wfm.getNodeContainer(getVirtualOutNodeID());
-        newVNode.setUIInformation(oldVNode.getUIInformation());
-        newVNode.setDeletable(false);
-        // copy settings from old to new node
-        try {
-            m_wfm.loadNodeSettings(newVNode.getID(), settings);
-        } catch (InvalidSettingsException e) {
-            // ignore
+        NodeContainer oldVNode = m_wfm.getNodeContainer(getVirtualOutNodeID());
+        final PortType[] oldOutNodePortTypes = IntStream.range(1, oldVNode.getNrInPorts()) //
+            .mapToObj(oldVNode::getInPort).map(NodeInPort::getPortType).toArray(PortType[]::new);
+        // don't replace output node if its ports have changed (e.g. don't if only report is enabled now)
+        if (!Arrays.equals(outNodePortTypes, oldOutNodePortTypes)) {
+            NodeSettings settings = new NodeSettings("node settings");
+            m_wfm.saveNodeSettings(oldVNode.getID(), settings);
+
+            m_virtualOutNodeIDSuffix =
+                    m_wfm.createAndAddNode(new VirtualSubNodeOutputNodeFactory(this, outNodePortTypes)).getIndex();
+            NodeContainer newVNode = m_wfm.getNodeContainer(getVirtualOutNodeID());
+            newVNode.setUIInformation(oldVNode.getUIInformation());
+            newVNode.setDeletable(false);
+            // copy settings from old to new node
+            try {
+                m_wfm.loadNodeSettings(newVNode.getID(), settings);
+            } catch (InvalidSettingsException e) {
+                // ignore
+            }
+            oldVNode.setDeletable(true);
+            m_wfm.removeNode(oldVNode.getID());
+            getOutPort(0).setPortName("Variable Outport");
+            newVNode.addNodeStateChangeListener(new RefreshPortNamesListener());
+            refreshPortNames();
         }
-        oldVNode.setDeletable(true);
-        m_wfm.removeNode(oldVNode.getID());
-        getOutPort(0).setPortName("Variable Outport");
-        newVNode.addNodeStateChangeListener(new RefreshPortNamesListener());
-        refreshPortNames();
         m_wfm.setDirty();
         setDirty();
         notifyNodePropertyChangedListener(NodeProperty.MetaNodePorts);

@@ -518,11 +518,15 @@ public abstract class WorkflowTestCase {
         lock.lock();
         nc.addNodeStateChangeListener(l);
         try {
+        	long millisRemaining = TimeUnit.SECONDS.toMillis(secondsToWaitAtMost);
             while (hold.test(nc)) {
-                int secToWait = secondsToWaitAtMost;
-                if (secToWait > 0) {
-                    condition.await(secToWait, TimeUnit.SECONDS);
-                    break;
+                if (secondsToWaitAtMost > 0) {
+                	if (millisRemaining < 0L) {
+                		break;
+                	}
+                	final var start = System.currentTimeMillis();
+                    condition.await(millisRemaining, TimeUnit.MILLISECONDS);
+                    millisRemaining = millisRemaining - (System.currentTimeMillis() - start);
                 } else {
                     condition.await(10, TimeUnit.SECONDS); // do another iteration (no break)
                 }
