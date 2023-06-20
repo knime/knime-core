@@ -54,10 +54,10 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URLEncoder;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
-import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -195,8 +195,9 @@ public final class NodeTimer {
         }
         private LinkedHashMap<String, NodeStats> m_globalNodeStats = new LinkedHashMap<String, NodeStats>();
 
-        private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-        private String m_created = DATE_FORMAT.format(new Date());
+        private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+                .withZone(ZoneId.of("UTC"));
+        private String m_created = DATE_FORMAT.format(Instant.now());
         private long m_avgUpTime = 0;
         private long m_currentInstanceLaunchTime = System.currentTimeMillis();
         private int m_workflowsOpened = 0;
@@ -880,7 +881,7 @@ public final class NodeTimer {
         }
 
         private void resetAllCounts() {
-            m_created = DATE_FORMAT.format(new Date());
+            m_created = DATE_FORMAT.format(Instant.now());
             m_globalNodeStats = new LinkedHashMap<String, NodeTimer.GlobalNodeStats.NodeStats>();
             m_nodesCreatedVia = new LinkedHashMap<>();
             m_workflowsOpened = 0;
