@@ -47,6 +47,7 @@
 package org.knime.core.node.workflow;
 
 import static java.util.stream.Collectors.toList;
+import static org.knime.core.node.util.CheckUtils.checkState;
 import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 
 import java.io.ByteArrayInputStream;
@@ -1773,18 +1774,28 @@ public final class SubNodeContainer extends SingleNodeContainer
      * @since 5.1
      */
     boolean setReportConfiguration(final ReportConfiguration reportConfiguration) {
-        final var hasReportBefore = m_reportConfiguration != null;
-        final var hasReportNow = reportConfiguration != null;
-        final var havePortsChanged = hasReportBefore != hasReportNow;
-        if (havePortsChanged) {
-            final var portTypes = Stream.of(getOutputPortInfo()) //
-                    .skip(1) // flow variable port
-                    .map(MetaPortInfo::getType).toArray(PortType[]::new);
-            setOutPorts(portTypes, hasReportNow);
+        try (var lock = lock()) {
+            var stateOfOutnode = getVirtualOutNode().getInternalState();
+            // the UI code will have tested this also - so merely an assertion
+            checkState(!stateOfOutnode.isExecutionInProgress(), "Can't apply settings, node is currently in execution");
+            checkState(!getInternalState().isExecuted() || canResetContainedNodes(),
+                "Can't apply settings, unable to reset content (possibly executing downstream nodes)");
+            if (stateOfOutnode.isExecuted()) {
+                getWorkflowManager().resetAndConfigureNode(getVirtualOutNodeID());
+            }
+            final var hasReportBefore = m_reportConfiguration != null;
+            final var hasReportNow = reportConfiguration != null;
+            final var havePortsChanged = hasReportBefore != hasReportNow;
+            if (havePortsChanged) {
+                final var portTypes = Stream.of(getOutputPortInfo()) //
+                        .skip(1) // flow variable port
+                        .map(MetaPortInfo::getType).toArray(PortType[]::new);
+                setOutPorts(portTypes, hasReportNow);
+            }
+            m_reportConfiguration = reportConfiguration;
+            setDirty();
+            return havePortsChanged;
         }
-        m_reportConfiguration = reportConfiguration;
-        setDirty();
-        return havePortsChanged;
     }
 
     /**

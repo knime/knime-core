@@ -45,20 +45,16 @@
 package org.knime.core.node.workflow;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.core.IsSame.sameInstance;
 import static org.hamcrest.object.IsCompatibleType.typeCompatibleWith;
-import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 
+import java.util.Optional;
 import java.util.stream.IntStream;
 
-import org.hamcrest.core.IsInstanceOf;
-import org.hamcrest.core.IsSame;
 import org.junit.Before;
 import org.junit.Test;
 import org.knime.core.node.port.MetaPortInfo;
@@ -66,8 +62,6 @@ import org.knime.core.node.port.report.IReportPortObject;
 import org.knime.core.node.port.report.ReportConfiguration;
 import org.knime.core.node.port.report.ReportConfiguration.Orientation;
 import org.knime.core.node.port.report.ReportConfiguration.PageSize;
-import org.knime.testing.node.blocking.BlockingRepository;
-import org.knime.testing.node.blocking.BlockingRepository.LockedMethod;
 
 /** 
  * Enables/disables subnode's report output and checks if connections are properly retained. 
@@ -77,7 +71,6 @@ import org.knime.testing.node.blocking.BlockingRepository.LockedMethod;
 public class EnhAP20402_SubnodeWithReportPort extends WorkflowTestCase {
 
     private NodeID m_subnode_4;
-    private NodeID m_datagen_4_1;
     private NodeID m_modelWriter_5;
     private NodeID m_subnodeOut_4_8;
     private NodeID m_cache_2;
@@ -87,7 +80,6 @@ public class EnhAP20402_SubnodeWithReportPort extends WorkflowTestCase {
         NodeID baseID = loadAndSetWorkflow();
         m_subnode_4 = baseID.createChild(4);
         final var subnodeWFM = m_subnode_4.createChild(0);
-        m_datagen_4_1 = subnodeWFM.createChild(1);
         m_subnodeOut_4_8 = subnodeWFM.createChild(8);
         m_modelWriter_5 = baseID.createChild(5);
         m_cache_2 = baseID.createChild(2);
@@ -97,6 +89,7 @@ public class EnhAP20402_SubnodeWithReportPort extends WorkflowTestCase {
     public void testRegularExecute() throws Exception {
     	executeAndWait(m_cache_2);
     	checkState(m_cache_2, EXECUTED);
+    	checkState(m_subnodeOut_4_8, EXECUTED);
     	final var cacheInConnBefore = findInConnection(m_cache_2, 1);
     	
     	final var snc = getManager().getNodeContainer(m_subnode_4, SubNodeContainer.class, true);
@@ -108,6 +101,11 @@ public class EnhAP20402_SubnodeWithReportPort extends WorkflowTestCase {
     	
     	// add report, check connections are retained    	
     	getManager().changeSubNodeReportOutput(m_subnode_4, reportConfig);
+    	
+    	// downstream nodes are reset (AP-20600)
+    	checkState(m_subnodeOut_4_8, InternalNodeContainerState.CONFIGURED);
+    	checkState(m_cache_2, InternalNodeContainerState.CONFIGURED);
+
     	final var cacheInConnAfter = findInConnection(m_cache_2, 1);
     	assertThat("Same connection to cache node", cacheInConnAfter, sameInstance(cacheInConnBefore));
     	snc.getWorkflowManager().getNodeContainer(m_subnodeOut_4_8, NativeNodeContainer.class, true); // still present
@@ -121,6 +119,11 @@ public class EnhAP20402_SubnodeWithReportPort extends WorkflowTestCase {
 		assertThat("some other port is not report", snc.isReportOutPort(2), is(false));
 		assertThat("last port is report", snc.isReportOutPort(3), is(true));
 		
+		final var reportConfig2 = new ReportConfiguration(PageSize.A4, Orientation.Landscape);
+		getManager().changeSubNodeReportOutput(m_subnode_4, reportConfig2);
+		checkState(m_subnodeOut_4_8, InternalNodeContainerState.CONFIGURED);
+		checkState(m_cache_2, InternalNodeContainerState.CONFIGURED);
+		
 		// copy paste
 		final var copyContent = WorkflowCopyContent.builder().setNodeIDs(m_subnode_4).build();
 		final NodeID copiedSNCID = getManager().copyFromAndPasteHere(getManager(), copyContent).getNodeIDs()[0];
@@ -129,8 +132,8 @@ public class EnhAP20402_SubnodeWithReportPort extends WorkflowTestCase {
 		assertThat("Number outputs on SNC after report adding", copiedSNC.getNrOutPorts(), is(4));
 		assertThat("last port is report", copiedSNC.getOutputType(3).getPortObjectClass(),
 				typeCompatibleWith(IReportPortObject.class));
-		assertThat("Report config identical", snc.getReportConfiguration(),
-				is(equalTo(copiedSNC.getReportConfiguration())));		
+		assertThat("Report config identical", copiedSNC.getReportConfiguration(),
+				is(equalTo(Optional.of(reportConfig2))));
 		
 		getManager().addConnection(m_subnode_4, 3, m_modelWriter_5, 1);
 		
