@@ -107,14 +107,14 @@ public final class BufferedTableBackend implements TableBackend {
 
     @Override
     public String getShortName() {
-        return "Default";
+        return "Row-based Backend";
     }
 
     @Override
     public String getDescription() {
         // NB: HACK: The final line breaks prevent the backend selection panel from showing
         // scroll bars if the backend is changed from default to columnar
-        return "Default table backend, which supports all possible data types.    \n\n\n\n";
+        return "Row-based table backend, which supports all possible data types.    \n\n\n\n";
     }
 
     private static IWriteFileStoreHandler initFileStoreHandler(final IWriteFileStoreHandler fileStoreHandler,
