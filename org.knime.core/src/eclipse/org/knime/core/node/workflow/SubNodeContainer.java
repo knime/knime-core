@@ -1775,14 +1775,7 @@ public final class SubNodeContainer extends SingleNodeContainer
      */
     boolean setReportConfiguration(final ReportConfiguration reportConfiguration) {
         try (var lock = lock()) {
-            var stateOfOutnode = getVirtualOutNode().getInternalState();
-            // the UI code will have tested this also - so merely an assertion
-            checkState(!stateOfOutnode.isExecutionInProgress(), "Can't apply settings, node is currently in execution");
-            checkState(!getInternalState().isExecuted() || canResetContainedNodes(),
-                "Can't apply settings, unable to reset content (possibly executing downstream nodes)");
-            if (stateOfOutnode.isExecuted()) {
-                getWorkflowManager().resetAndConfigureNode(getVirtualOutNodeID());
-            }
+            resetOutputNodeForLayoutChanges();
             final var hasReportBefore = m_reportConfiguration != null;
             final var hasReportNow = reportConfiguration != null;
             final var havePortsChanged = hasReportBefore != hasReportNow;
@@ -1795,6 +1788,21 @@ public final class SubNodeContainer extends SingleNodeContainer
             m_reportConfiguration = reportConfiguration;
             setDirty();
             return havePortsChanged;
+        }
+    }
+
+    /**
+     * When new layout changes are applied (e.g. the report output is enabled/disabled) the output node needs
+     * to be reset. Also assert that nothing is currently in execution (exception thrown).
+     */
+    private void resetOutputNodeForLayoutChanges() {
+        var stateOfOutnode = getVirtualOutNode().getInternalState();
+        // the UI code will have tested this also - so merely an assertion
+        checkState(!stateOfOutnode.isExecutionInProgress(), "Can't apply settings, node is currently in execution");
+        checkState(!getInternalState().isExecuted() || canResetContainedNodes(),
+            "Can't apply settings, unable to reset content (possibly executing downstream nodes)");
+        if (stateOfOutnode.isExecuted()) {
+            getWorkflowManager().resetAndConfigureNode(getVirtualOutNodeID());
         }
     }
 
@@ -2403,19 +2411,12 @@ public final class SubNodeContainer extends SingleNodeContainer
      * @since 4.2
      */
     public void setSubnodeLayoutStringProvider(final SubnodeContainerLayoutStringProvider layoutStringProvider) {
-        if (!m_subnodeLayoutStringProvider.equals(layoutStringProvider)) {
-            m_subnodeLayoutStringProvider =
-                new SubnodeContainerLayoutStringProvider(layoutStringProvider.getLayoutString());
-            if (isProject()) {
-                //differently handled if this is a component project
-                //otherwise the setDirty event will just be past to the parent (which is ROOT)
-                getChangesTracker().ifPresent(ct -> ct.otherChange());
-                //for consistency
-                if (!getWorkflowManager().isDirty()) {
-                    getWorkflowManager().setDirty();
-                }
-            } else {
-                setDirty();
+        try (var lock = lock()) {
+            if (!m_subnodeLayoutStringProvider.equals(layoutStringProvider)) {
+                resetOutputNodeForLayoutChanges();
+                m_subnodeLayoutStringProvider =
+                        new SubnodeContainerLayoutStringProvider(layoutStringProvider.getLayoutString());
+                setDirtyAfterLayoutChanges();
             }
         }
     }
@@ -2426,20 +2427,26 @@ public final class SubNodeContainer extends SingleNodeContainer
      */
     public void setSubnodeConfigurationStringProvider(
         final SubnodeContainerConfigurationStringProvider configurationStringProvider) {
-        if (!m_subnodeConfigurationStringProvider.equals(configurationStringProvider)) {
-            m_subnodeConfigurationStringProvider = new SubnodeContainerConfigurationStringProvider(
-                configurationStringProvider.getConfigurationLayoutString());
-            if (isProject()) {
-                //differently handled if this is a component project
-                //otherwise the setDirty event will just be past to the parent (which is ROOT)
-                getChangesTracker().ifPresent(ct -> ct.otherChange());
-                //for consistency
-                if (!getWorkflowManager().isDirty()) {
-                    getWorkflowManager().setDirty();
-                }
-            } else {
-                setDirty();
+        try (var lock = lock()) {
+            if (!m_subnodeConfigurationStringProvider.equals(configurationStringProvider)) {
+                m_subnodeConfigurationStringProvider = new SubnodeContainerConfigurationStringProvider(
+                    configurationStringProvider.getConfigurationLayoutString());
+                setDirtyAfterLayoutChanges();
             }
+        }
+    }
+
+    private void setDirtyAfterLayoutChanges() {
+        if (isProject()) {
+            //differently handled if this is a component project
+            //otherwise the setDirty event will just be past to the parent (which is ROOT)
+            getChangesTracker().ifPresent(ct -> ct.otherChange());
+            //for consistency
+            if (!getWorkflowManager().isDirty()) {
+                getWorkflowManager().setDirty();
+            }
+        } else {
+            setDirty();
         }
     }
 
