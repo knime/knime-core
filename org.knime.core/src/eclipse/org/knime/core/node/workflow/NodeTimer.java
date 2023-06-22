@@ -632,6 +632,7 @@ public final class NodeTimer {
                 JsonObject jo = constructJSONObject(properShutdown);
                 Map<String, Boolean> cfg = Collections.singletonMap(JsonGenerator.PRETTY_PRINTING, Boolean.TRUE);
                 ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                //we don't need to compress here since gzip is done on the web server
                 try (JsonWriter jw = JsonUtil.getProvider().createWriterFactory(cfg).createWriter(bos)) {
                     jw.write(jo);
                 }
@@ -643,8 +644,8 @@ public final class NodeTimer {
                 org.apache.commons.httpclient.Credentials usageCredentials =
                     new UsernamePasswordCredentials("knime-usage-user", "knime");
                 requestClient.getState().setCredentials(AuthScope.ANY, usageCredentials);
-                //add s_ to the knid to indicate the new session based files
-                String uri = SERVER_ADDRESS + "/usage/v1/s_" + knid;
+                //use the new v2 end point for session based files
+                String uri = SERVER_ADDRESS + "/usage/v2/" + knid;
                 method = new PostMethod(uri);
                 RequestEntity entity = new ByteArrayRequestEntity(bytes);
                 method.setRequestEntity(entity);
@@ -860,6 +861,12 @@ public final class NodeTimer {
                     }
                 }
                 LOGGER.debug("Successfully read node usage stats from file: " + propfile.getCanonicalPath());
+                if (compareVersionString(version, "5.1.0") < 0) {
+                    // reset session counts for versions before 5.1.0, to start with a fresh session
+                    LOGGER.debug("Resetting session count, because version was before 5.1.0. "
+                            + "Starting session counts from scratch.");
+                    resetSessionCounts();
+                }
             } catch (Exception e) {
                 LOGGER.warn("Failed reading node usage file. Starting counts from scratch.", e);
                 resetAllCounts();
