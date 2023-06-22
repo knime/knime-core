@@ -11030,6 +11030,8 @@ public final class WorkflowManager extends NodeContainer
             if (!m_metadata.equals(wfMetadata)) {
                 m_metadata = wfMetadata;
                 setDirty();
+                notifyWorkflowListeners( // No need to send old and new value
+                    new WorkflowEvent(WorkflowEvent.Type.WORKFLOW_METADATA_CHANGED, getID(), null, null));
             }
         } else if (updatedMetadata != null) {
             throw new IllegalStateException("Can only set `" + WorkflowMetadata.class.getSimpleName() + "`, found: `"
