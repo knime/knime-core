@@ -52,7 +52,6 @@ import java.io.IOException;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.filestore.FileStore;
-import org.knime.core.data.filestore.FileStoreCell;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
@@ -131,12 +130,9 @@ public class PNGImageValueFactory extends TableOrFileStoreValueFactory<PNGImageV
             return new PNGImageCell(value.getImageContent());
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
-        protected FileStoreCell createFileStoreCell() {
-            return new PNGImageFileStoreCell();
+        protected ObjectSerializerFileStoreCell<?> createFileStoreCell(final Integer hashCode) {
+            return new PNGImageFileStoreCell(hashCode);
         }
     }
 
@@ -152,7 +148,7 @@ public class PNGImageValueFactory extends TableOrFileStoreValueFactory<PNGImageV
         }
 
         @Override
-        protected FileStoreCell getFileStoreCell(final PNGImageValue value) throws IOException {
+        protected PNGImageFileStoreCell getFileStoreCell(final PNGImageValue value) throws IOException {
             if (value instanceof PNGImageFileStoreCell fsCell) {
                 return fsCell;
             }

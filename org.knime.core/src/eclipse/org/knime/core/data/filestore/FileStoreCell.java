@@ -208,10 +208,19 @@ public abstract class FileStoreCell extends DataCell implements FlushCallback {
 
         for (int fsIdx = 0; fsIdx < m_fileStoreProxies.length; fsIdx++) {
             if (!otherFileStoreProxies[fsIdx].equals(m_fileStoreProxies[fsIdx])) {
-                return false;
+                return equalFileStoreContent(dc);
             }
         }
         return true;
+    }
+
+    /**
+     * @param dc datacell to compare, has the same type like this {@link FileStoreCell}
+     * @return if the cells have equal content
+     * @since 5.1
+     */
+    protected boolean equalFileStoreContent(final DataCell dc) {
+        return false;
     }
 
     /** {@inheritDoc} */

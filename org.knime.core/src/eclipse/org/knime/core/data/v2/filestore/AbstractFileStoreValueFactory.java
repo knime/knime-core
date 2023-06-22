@@ -112,7 +112,7 @@ public abstract class AbstractFileStoreValueFactory
 
     protected abstract class AbstractFileStoreReadValue<R extends ReadAccess> implements ReadValue {
 
-        private final StructReadAccess m_access;
+        final StructReadAccess m_access;
 
         public AbstractFileStoreReadValue(final StructReadAccess access) {
             m_access = access;
@@ -168,8 +168,15 @@ public abstract class AbstractFileStoreValueFactory
 
         protected abstract boolean isCorrespondingReadValue(V value);
 
-        // should return the value if it is already the FileStoreCell
-        // can return null if the value should not be stored in a file store
+        /**
+         * Get the appropriate {@link FileStoreCell} for the given value. If the value implements the correct
+         * {@link FileStoreCell} class already, the method should return the value again and should refer from creating
+         * a new cell. Use {@link #createFileStore()} to create file stores for the cell.
+         *
+         * @param value the value that should be used
+         * @return a {@link FileStoreCell}
+         * @throws IOException if creating file stores failed
+         */
         protected abstract FileStoreCell getFileStoreCell(V value) throws IOException;
 
         protected abstract void setTableData(V value, W access);
@@ -179,53 +186,51 @@ public abstract class AbstractFileStoreValueFactory
         }
 
         @Override
-        public final void setValue(final V value) {
-            // If we get the corresponding read value we can just copy everything from the access
+        public void setValue(final V value) {
             if (isCorrespondingReadValue(value)) {
-                m_access.setFrom(((AbstractFileStoreReadValue)value).m_access);
+                copyFromReadValue((AbstractFileStoreReadValue<?>)value);
                 return;
             }
-
-            if (hasFileStoreData(value)) {
-                setFileStoreData(value);
+            try {
+                setFileStoreData(getFileStoreCell(value));
+            } catch (IOException ex) {
+                throw new IllegalStateException(ex);
             }
-
             setTableData(value, m_access.getWriteAccess(1));
         }
 
-        // Override for special cases
-        protected boolean hasFileStoreData(final V value) {
-            return true;
+        /**
+         * Copies the data from the given corresponding read value to the {@link WriteAccess} of this value. The caller
+         * has to make sure that the {@link ReadAccess} of the given value has the same spec as the {@link WriteAccess}
+         * of this value.
+         *
+         * @param value the value which {@link ReadAccess} will be copied over
+         */
+        protected void copyFromReadValue(final AbstractFileStoreReadValue<?> value) {
+            m_access.setFrom((value).m_access);
         }
 
-        private final void setFileStoreData(final V value) {
-            try {
-                var fsCell = getFileStoreCell(value);
+        protected final void setFileStoreData(final FileStoreCell fsCell) throws IOException {
+            if (mustBeFlushedPriorSave(fsCell)) {
+                final var fileStores = FileStoreUtil.getFileStores(fsCell);
+                final var fileStoreKeys = new FileStoreKey[fileStores.length];
 
-                if (mustBeFlushedPriorSave(fsCell)) {
-                    final var fileStores = FileStoreUtil.getFileStores(fsCell);
-                    final var fileStoreKeys = new FileStoreKey[fileStores.length];
-
-                    for (var fileStoreIndex = 0; fileStoreIndex < fileStoreKeys.length; fileStoreIndex++) {
-                        fileStoreKeys[fileStoreIndex] =
-                            m_fileStoreHandler.translateToLocal(fileStores[fileStoreIndex], fsCell);
-                    }
-
-                    // update file store keys without calling post-construct.
-                    FileStoreUtil.retrieveFileStoreHandlersFrom(fsCell, fileStoreKeys, m_dataRepository, false);
+                for (var fileStoreIndex = 0; fileStoreIndex < fileStoreKeys.length; fileStoreIndex++) {
+                    fileStoreKeys[fileStoreIndex] =
+                        m_fileStoreHandler.translateToLocal(fileStores[fileStoreIndex], fsCell);
                 }
-                FileStoreUtil.invokeFlush(fsCell);
 
-                // Save the file store key to the table
-                var fileStoreKeys = FileStoreUtil.getFileStoreKeys(fsCell);
-                var fileStoreKeyString = Arrays.stream(fileStoreKeys)//
-                    .map(FileStoreKey::saveToString)//
-                    .collect(Collectors.joining(";"));
-                ((StringWriteAccess)m_access.getWriteAccess(0)).setStringValue(fileStoreKeyString);
-            } catch (IOException ex) {
-                // TODO handle better
-                throw new IllegalStateException(ex);
+                // update file store keys without calling post-construct.
+                FileStoreUtil.retrieveFileStoreHandlersFrom(fsCell, fileStoreKeys, m_dataRepository, false);
             }
+            FileStoreUtil.invokeFlush(fsCell);
+
+            // Save the file store key to the table
+            var fileStoreKeys = FileStoreUtil.getFileStoreKeys(fsCell);
+            var fileStoreKeyString = Arrays.stream(fileStoreKeys)//
+                .map(FileStoreKey::saveToString)//
+                .collect(Collectors.joining(";"));
+            ((StringWriteAccess)m_access.getWriteAccess(0)).setStringValue(fileStoreKeyString);
         }
 
         protected final FileStore createFileStore() throws IOException {

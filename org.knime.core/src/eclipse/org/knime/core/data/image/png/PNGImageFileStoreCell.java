@@ -84,11 +84,15 @@ public final class PNGImageFileStoreCell extends ObjectSerializerFileStoreCell<P
 
     }
 
+    PNGImageFileStoreCell(final Integer hashCode) {
+        super(SERIALIZER, DESERIALIZER, hashCode);
+    }
+
     /**
      * Deserialization constructor, FileStore will be provided by framework
      */
-    PNGImageFileStoreCell() {
-        super(SERIALIZER, DESERIALIZER);
+    private PNGImageFileStoreCell() {
+        this(null);
     }
 
     /**

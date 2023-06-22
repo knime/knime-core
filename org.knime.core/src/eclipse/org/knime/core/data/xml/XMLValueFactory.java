@@ -51,7 +51,6 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.filestore.FileStore;
-import org.knime.core.data.filestore.FileStoreCell;
 import org.knime.core.data.util.LockedSupplier;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
@@ -134,8 +133,8 @@ public class XMLValueFactory extends TableOrFileStoreValueFactory<XMLValue<Docum
         }
 
         @Override
-        protected FileStoreCell createFileStoreCell() {
-            return new XMLFileStoreCell();
+        protected XMLFileStoreCell createFileStoreCell(final Integer hash) {
+            return new XMLFileStoreCell(hash);
         }
 
         @Override
@@ -155,7 +154,7 @@ public class XMLValueFactory extends TableOrFileStoreValueFactory<XMLValue<Docum
         }
 
         @Override
-        protected FileStoreCell getFileStoreCell(final XMLValue<Document> value) throws IOException {
+        protected ObjectSerializerFileStoreCell<?> getFileStoreCell(final XMLValue<Document> value) throws IOException {
             if (value instanceof XMLFileStoreCell fsCell) {
                 return fsCell;
             } else {

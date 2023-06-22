@@ -79,6 +79,11 @@ public final class XMLFileStoreCell extends ObjectSerializerFileStoreCell<XMLCel
         }
     }
 
+    // Empty constructor for de-serialization (no cached hash code)
+    private XMLFileStoreCell() {
+        this(null);
+    }
+
     /**
      * Initialize with an empty file store and content
      *
@@ -89,11 +94,8 @@ public final class XMLFileStoreCell extends ObjectSerializerFileStoreCell<XMLCel
         setContent(contentFromValue(value));
     }
 
-    /**
-     * Deserialization constructor, FileStore will be provided by framework
-     */
-    XMLFileStoreCell() {
-        super(SERIALIZER, DESERIALIZER);
+    XMLFileStoreCell(final Integer hashCode) {
+        super(SERIALIZER, DESERIALIZER, hashCode);
     }
 
     @Override

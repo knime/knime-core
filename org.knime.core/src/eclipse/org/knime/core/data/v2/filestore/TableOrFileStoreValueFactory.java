@@ -61,6 +61,7 @@ import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.filestore.FileStoreCell;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
+import org.knime.core.table.access.StringAccess.StringReadAccess;
 import org.knime.core.table.access.StructAccess.StructReadAccess;
 import org.knime.core.table.access.StructAccess.StructWriteAccess;
 import org.knime.core.table.access.VarBinaryAccess.VarBinaryReadAccess;
@@ -136,18 +137,31 @@ public abstract class TableOrFileStoreValueFactory<V extends DataValue> extends 
 
         @Override
         protected final DataCell createCell(final VarBinaryReadAccess blobAccess) {
-            if (blobAccess.isMissing()) {
-                // Saved in the file store
-                return createFileStoreCell();
-            } else {
+            StringReadAccess stringReadAccess = m_access.getAccess(0);
+
+            if (stringReadAccess.isMissing()) {
                 // Saved in the table
                 return createCell(blobAccess.getObject(m_deserializer));
+            } else {
+                // Saved in the file store
+                // If there is some data in the blobAccess it is the cached hash code
+                Integer hashCode = blobAccess.isMissing() ? null : blobAccess.getObject(ReadableDataInput::readInt);
+                return createFileStoreCell(hashCode);
             }
         }
 
         protected abstract DataCell createCell(V value);
 
-        protected abstract DataCell createFileStoreCell();
+        /**
+         * Create a {@link ObjectSerializerFileStoreCell} with the appropriate type. The file stores are loaded into the
+         * cell by the framework and will be available before the content is accessed.
+         *
+         * @param hashCode the cached hash code or <code>null</code> if no hash code was cached. This value should be
+         *            forwarded to the constructor of {@link ObjectSerializerFileStoreCell} which will use it as the
+         *            hash code if it is not <code>null</code>.
+         * @return a new file store cell object
+         */
+        protected abstract ObjectSerializerFileStoreCell<?> createFileStoreCell(Integer hashCode); // NOSONAR: We do not care about the content type here
     }
 
     /**
@@ -166,16 +180,59 @@ public abstract class TableOrFileStoreValueFactory<V extends DataValue> extends 
         }
 
         @Override
-        protected void setTableData(final V value, final VarBinaryWriteAccess access) {
-            if (!shouldBeStoredInFileStore(value)) {
-                access.setObject(value, m_serializer);
+        protected abstract ObjectSerializerFileStoreCell<?> getFileStoreCell(V value) throws IOException;
+
+        @Override
+        public void setValue(final V value) {
+            if (isCorrespondingReadValue(value)) {
+                copyFromReadValue((AbstractFileStoreReadValue<?>)value);
+                return;
+            }
+
+            var blobAccess = getTableDataAccess();
+            try {
+                var fsCell = getFileStoreCell(value);
+                if (fsCell != null) {
+                    // Set the file store data
+                    setFileStoreData(fsCell);
+
+                    // Write the hash code
+                    blobAccess.setObject(fsCell.hashCode(), DataOutput::writeInt);
+                } else {
+                    // Write the content to the table if it is not in a file store
+                    setTableData(value, getTableDataAccess());
+                }
+            } catch (IOException ex) {
+                throw new IllegalStateException(ex);
             }
         }
 
         @Override
-        protected boolean hasFileStoreData(final V value) {
-            return shouldBeStoredInFileStore(value);
+        protected void setTableData(final V value, final VarBinaryWriteAccess access) {
+            // NB: Only called when we do not write into the file store
+            access.setObject(value, m_serializer);
+
         }
+
+        //        @Override
+        //        protected void setTableData(final V value, final StructWriteAccess structWriteAccess) {
+        //            VarBinaryWriteAccess access = structWriteAccess.getWriteAccess(0);
+        //            if (!shouldBeStoredInFileStore(value)) {
+        //                access.setObject(value, m_serializer);
+        //            }
+        //            // TODO: handle hash
+        //        }
+        //
+        //        @Override
+        //        protected boolean hasFileStoreData(final V value) {
+        //            /*
+        //             * TODO if the node developer sets a huge value directly via #setValue which is not a cell the
+        //             * implementations of shouldBeStoredInFileStore will return false. However, we might want to convert this to
+        //             * be stored in a file store.
+        //             * For example for JSONValue this would look like the check we do in the JSONCellFactory
+        //             */
+        //            return shouldBeStoredInFileStore(value);
+        //        }
     }
 
     /**
@@ -190,6 +247,8 @@ public abstract class TableOrFileStoreValueFactory<V extends DataValue> extends 
 
         private C m_content;
 
+        private Integer m_hashCode;
+
         protected ObjectSerializerFileStoreCell(final FileStore fs, final ObjectSerializer<C> serializer,
             final ObjectDeserializer<C> deserializer) {
             super(fs);
@@ -197,10 +256,15 @@ public abstract class TableOrFileStoreValueFactory<V extends DataValue> extends 
             m_deserializer = deserializer;
         }
 
+        /**
+         * @param hashCode the cached hash code or <code>null</code> if no hash code was cached. If <code>null</code>
+         *            {@link #hashCode()} will use the hash code of the content.
+         */
         protected ObjectSerializerFileStoreCell(final ObjectSerializer<C> serializer,
-            final ObjectDeserializer<C> deserializer) {
+            final ObjectDeserializer<C> deserializer, final Integer hashCode) {
             m_serializer = serializer;
             m_deserializer = deserializer;
+            m_hashCode = hashCode;
         }
 
         protected final void setContent(final C content) {
@@ -235,6 +299,25 @@ public abstract class TableOrFileStoreValueFactory<V extends DataValue> extends 
                     }
                 }
             }
+        }
+
+        /**
+         * @Override
+         */
+        @Override
+        protected boolean equalFileStoreContent(final DataCell dc) {
+            return equalContent(dc);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int hashCode() {
+            if (m_hashCode == null) {
+                m_hashCode = getContent().hashCode();
+            }
+            return m_hashCode;
         }
     }
 }
