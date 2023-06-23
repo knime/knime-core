@@ -76,6 +76,7 @@ import org.knime.core.data.def.LongCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.data.sort.BufferedDataTableSorter;
 import org.knime.core.data.statistics.StatisticsExtractors.CentralMomentExtractor;
+import org.knime.core.data.statistics.StatisticsExtractors.CountMissingValuesExtractor;
 import org.knime.core.data.statistics.StatisticsExtractors.CountUniqueExtractor;
 import org.knime.core.data.statistics.StatisticsExtractors.DoubleSumExtractor;
 import org.knime.core.data.statistics.StatisticsExtractors.FirstQuartileExtractor;
@@ -121,6 +122,8 @@ public final class UnivariateStatistics {
 
     private long m_numberUniqueValues;
 
+    private long m_numberMissingValues;
+
     private String m_firstValue;
 
     private String m_lastValue;
@@ -150,104 +153,145 @@ public final class UnivariateStatistics {
     private UnivariateStatistics() {
         // Utility class
     }
+
     String getName() {
         return m_name;
     }
+
     private void setName(final String name) {
         m_name = name;
     }
+
     String getType() {
         return m_type;
     }
+
     private void setType(final DataType type) {
         m_type = type.toPrettyString();
     }
+
     long getNumberUniqueValues() {
         return m_numberUniqueValues;
     }
+
     private void setNumberUniqueValues(final long numberUniqueValues) {
         m_numberUniqueValues = numberUniqueValues;
     }
+
+    long getNumberMissingValues() {
+        return m_numberMissingValues;
+    }
+
+    private void setNumberMissingValues(final long numberMissingValues) {
+        m_numberMissingValues = numberMissingValues;
+    }
+
     String getFirstValue() {
         return m_firstValue;
     }
+
     private void setFirstValue(final String firstValue) {
         m_firstValue = firstValue;
     }
+
     String getLastValue() {
         return m_lastValue;
     }
+
     private void setLastValue(final String lastValue) {
         m_lastValue = lastValue;
     }
+
     String getCommonValues() {
         return m_commonValues;
     }
+
     private void setCommonValues(final String[] items) {
         m_commonValues = items.length == 0 ? null : String.join(", ", items);
     }
+
     Double[] getQuantiles() {
         return m_quantiles;
     }
+
     private void setQuantiles(final Double[] quantiles) {
         m_quantiles = quantiles;
     }
+
     double getMin() {
         return m_min;
     }
+
     private void setMin(final double min) {
         m_min = min;
     }
+
     double getMax() {
         return m_max;
     }
+
     private void setMax(final double max) {
         m_max = max;
     }
+
     Optional<Double> getMean() {
         return m_mean;
     }
+
     private void setMean(final double mean) {
         m_mean = Double.isNaN(mean) ? Optional.empty() : Optional.of(mean);
     }
+
     Optional<Double> getMeanAbsoluteDeviation() {
         return m_meanAbsoluteDeviation;
     }
+
     private void setMeanAbsoluteDeviation(final double meanAbsoluteDeviation) {
         m_meanAbsoluteDeviation =
             Double.isNaN(meanAbsoluteDeviation) ? Optional.empty() : Optional.of(meanAbsoluteDeviation);
     }
+
     Optional<Double> getStandardDeviation() {
         return m_standardDeviation;
     }
+
     private void setStandardDeviation(final double standardDeviation) {
         m_standardDeviation = Double.isNaN(standardDeviation) ? Optional.empty() : Optional.of(standardDeviation);
 
     }
+
     Optional<Double> getVariance() {
         return m_variance;
     }
+
     private void setVariance(final double variance) {
         m_variance = Double.isNaN(variance) ? Optional.empty() : Optional.of(variance);
     }
+
     Optional<Double> getSkewness() {
         return m_skewness;
     }
+
     private void setSkewness(final double skewness) {
         m_skewness = Double.isNaN(skewness) ? Optional.empty() : Optional.of(skewness);
     }
+
     Optional<Double> getKurtosis() {
         return m_kurtosis;
     }
+
     private void setKurtosis(final double kurtosis) {
         m_kurtosis = Double.isNaN(kurtosis) ? Optional.empty() : Optional.of(kurtosis);
     }
+
     Optional<Double> getSum() {
         return m_sum;
     }
+
     private void setSum(final double sum) {
         m_sum = Double.isNaN(sum) ? Optional.empty() : Optional.of(sum);
     }
+
     /**
      * Compute statistics for every column in the input table.
      *
@@ -293,10 +337,14 @@ public final class UnivariateStatistics {
         // compute statistics for each column individually
         final var selectedColumnTables =
             StatisticsTableUtil.splitTableByColumnNames(inputTable, eligibleCols, true, true, exec);
+        final var selectedColumnTablesWithMissingValues =
+            StatisticsTableUtil.splitTableByColumnNames(inputTable, eligibleCols, false, true, exec);
         for (var columnName : eligibleCols) {
             final var allColumnStatistics = new UnivariateStatistics();
             final var sortedTable = BufferedDataTableSorter.sortTable(selectedColumnTables.get(columnName), 0, exec);
+            final var tableWithMissingValues = selectedColumnTablesWithMissingValues.get(columnName);
             allColumnStatistics.performStatisticsCalculation(sortedTable, exec);
+            allColumnStatistics.performMissingValuesComputation(tableWithMissingValues);
             statisticsTable.addRowToTable(StatisticsTableUtil.createTableRow(allColumnStatistics, selectedStatistics));
         }
         statisticsTable.close();
@@ -377,6 +425,7 @@ public final class UnivariateStatistics {
     public static String[] getDefaultStatisticsLabels() {
         return getLabelsFromStatistics(getDefaultStatistics());
     }
+
     /**
      * @return All available statistics
      */
@@ -403,8 +452,8 @@ public final class UnivariateStatistics {
      * @param totalNumValues The total number of unique values
      * @return A string of shape "<value> (<absolute-count>; <percentage-count>)"
      */
-    static String[] formatMostFrequentValues(final List<Pair<DataValue, Long>> mostFrequentValues,
-        final DataType type, final long totalNumValues) {
+    static String[] formatMostFrequentValues(final List<Pair<DataValue, Long>> mostFrequentValues, final DataType type,
+        final long totalNumValues) {
         Function<DataValue, String> reader;
         if (type.isCompatible(DoubleValue.class)) {
             reader = dv -> DataValueRendererUtils.formatDouble(((DoubleValue)dv).getDoubleValue());
@@ -424,6 +473,17 @@ public final class UnivariateStatistics {
             return String.format("%s (%s; %s)", valueReadable, absCount,
                 DataValueRendererUtils.formatPercentage(absCount / (double)totalNumValues));
         }).toArray(String[]::new);
+    }
+
+    private void performMissingValuesComputation(final BufferedDataTable inputColumnTable) {
+        var columnIndex = 0;
+
+        final var missingValuesExtractor = new CountMissingValuesExtractor(columnIndex);
+
+        // apply extractors
+        TableExtractorUtil.extractData(inputColumnTable, missingValuesExtractor);
+
+        setNumberMissingValues(missingValuesExtractor.getOutput());
     }
 
     /**
@@ -459,11 +519,14 @@ public final class UnivariateStatistics {
         qExtractors[8] = new QuantileExtractor(columnIndex, 99, 100); // 99%
         final var meanExtractor = new MeanExtractor(columnIndex);
         final var sumExtractor = new DoubleSumExtractor(columnIndex);
+        final var missingValuesExtractor = new CountMissingValuesExtractor(columnIndex);
 
         // apply extractors
         TableExtractorUtil.extractData(numericTable, minExtractor, maxExtractor, meanExtractor, sumExtractor,
             qExtractors[0], qExtractors[1], qExtractors[2], qExtractors[3], qExtractors[4], qExtractors[5],
-            qExtractors[6], qExtractors[7], qExtractors[8]);
+            qExtractors[6], qExtractors[7], qExtractors[8], missingValuesExtractor);
+
+        setNumberMissingValues(missingValuesExtractor.getOutput());
 
         final var mean = meanExtractor.getOutput();
         setMean(mean);
@@ -511,7 +574,8 @@ public final class UnivariateStatistics {
 
     public enum Statistic {
             NAME("Name", StringCell.TYPE), TYPE("Type", StringCell.TYPE),
-            NUMBER_UNIQUE_VALUES("# Unique values", LongCell.TYPE), MINIMUM("Minimum", StringCell.TYPE),
+            NUMBER_UNIQUE_VALUES("# Unique values", LongCell.TYPE),
+            NUMBER_MISSING_VALUES("# Missing values", LongCell.TYPE), MINIMUM("Minimum", StringCell.TYPE),
             MAXIMUM("Maximum", StringCell.TYPE), K_MOST_COMMON("10 most common values", StringCell.TYPE),
             QUANTILE_1("1% Quantile", DoubleCell.TYPE), QUANTILE_5("5% Quantile", DoubleCell.TYPE),
             QUANTILE_10("10% Quantile", DoubleCell.TYPE), QUANTILE_25("25% Quantile", DoubleCell.TYPE),

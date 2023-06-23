@@ -198,6 +198,50 @@ public final class StatisticsExtractors {
         }
     }
 
+    /**
+     * Counts the number of missing values in the column specified in the constructor
+     *
+     * @author Rupert Ettrich
+     */
+    public static class CountMissingValuesExtractor implements Extractor {
+
+        private final int m_colIndex;
+        private long m_count;
+
+        /**
+         *
+         * @param colIndex the column for which missing values are to be counted
+         */
+        public CountMissingValuesExtractor(final int colIndex) {
+            m_colIndex = colIndex;
+        }
+
+        @Override
+        public void init(final int size) {
+            m_count = 0;
+        }
+
+        @Override
+        public void readRow(final RowRead row, final int rowIndex) {
+            if (row.isMissing(m_colIndex)) {
+                m_count += 1;
+            }
+        }
+
+        @Override
+        public int[] getColumnIndices() {
+            return new int[]{m_colIndex};
+        }
+
+        /**
+         * @return the number of missing values in the specified column
+         */
+        public long getOutput() {
+            return m_count;
+        }
+
+    }
+
     public static class CountUniqueExtractor implements Extractor {
 
         private final LinkedHashMap<DataValue, Long> m_groups = new LinkedHashMap<>();

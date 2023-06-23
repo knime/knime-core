@@ -105,6 +105,10 @@ final class StatisticsTableUtil {
             cells.add(new LongCell(columnStatistics.getNumberUniqueValues()));
         }
 
+        if (selectedStatistics.contains(UnivariateStatistics.Statistic.NUMBER_MISSING_VALUES)) {
+            cells.add(new LongCell(columnStatistics.getNumberMissingValues()));
+        }
+
         if (selectedStatistics.contains(UnivariateStatistics.Statistic.MINIMUM)) {
             cells.add(getStringOrMissingCell(columnStatistics.getFirstValue()));
         }
