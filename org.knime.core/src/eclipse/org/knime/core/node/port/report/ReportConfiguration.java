@@ -209,9 +209,9 @@ public record ReportConfiguration(PageSize pageSize, Orientation orientation) {
     public static PixelDimension getPixelDimension(final ReportConfiguration config) {
         var dim = switch (config.pageSize()) {
             // 150 PPI/DPI
-            case A5 -> new PixelDimension(1240, 874);
-            case A4 -> new PixelDimension(1754, 1240);
-            case A3 -> new PixelDimension(1754, 2480);
+            case A5 -> new PixelDimension( 874, 1240);
+            case A4 -> new PixelDimension(1240, 1754);
+            case A3 -> new PixelDimension(2480, 1754);
             default -> null;
         };
 
