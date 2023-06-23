@@ -482,8 +482,8 @@ public final class UnivariateStatistics {
             setFirstValue(firstAndLastString.getFirst());
             setLastValue(firstAndLastString.getSecond());
         } else {
-            setFirstValue(DataValueRendererUtils.formatDouble(minExtractor.getOutput()));
-            setLastValue(DataValueRendererUtils.formatDouble(maxExtractor.getOutput()));
+            setFirstValue(DataValueRendererUtils.formatFullPrecisionDouble(minExtractor.getOutput()));
+            setLastValue(DataValueRendererUtils.formatFullPrecisionDouble(maxExtractor.getOutput()));
         }
 
         // further extractors whose initialisation depends on previous results

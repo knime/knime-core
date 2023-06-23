@@ -58,6 +58,7 @@ import org.knime.core.data.def.IntCell;
 import org.knime.core.data.renderer.DataValueRenderer;
 import org.knime.core.data.renderer.DefaultDataValueRenderer;
 import org.knime.core.data.renderer.DoubleValueRenderer;
+import org.knime.core.data.renderer.DoubleValueRenderer.FullPrecisionRendererFactory;
 import org.knime.core.data.renderer.IntValueRenderer;
 
 /**
@@ -109,6 +110,11 @@ final class DataValueRendererUtils {
 
     static String formatDouble(final Double doubleValue) {
         return formatNumber(getDoubleRenderer(), doubleValue);
+    }
+
+    static String formatFullPrecisionDouble(final Double value) {
+        var renderer = new FullPrecisionRendererFactory().createRenderer(null);
+        return ((DoubleValueRenderer)renderer.getRendererComponent(new DoubleCell(value))).getText();
     }
 
     static String formatPercentage(final Double doubleValue) {
