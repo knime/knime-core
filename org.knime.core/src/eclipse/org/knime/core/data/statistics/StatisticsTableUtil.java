@@ -101,12 +101,11 @@ final class StatisticsTableUtil {
         if (selectedStatistics.contains(UnivariateStatistics.Statistic.TYPE)) {
             cells.add(new StringCell(columnStatistics.getType()));
         }
-        if (selectedStatistics.contains(UnivariateStatistics.Statistic.NUMBER_UNIQUE_VALUES)) {
-            cells.add(new LongCell(columnStatistics.getNumberUniqueValues()));
-        }
-
         if (selectedStatistics.contains(UnivariateStatistics.Statistic.NUMBER_MISSING_VALUES)) {
             cells.add(new LongCell(columnStatistics.getNumberMissingValues()));
+        }
+        if (selectedStatistics.contains(UnivariateStatistics.Statistic.NUMBER_UNIQUE_VALUES)) {
+            cells.add(new LongCell(columnStatistics.getNumberUniqueValues()));
         }
 
         if (selectedStatistics.contains(UnivariateStatistics.Statistic.MINIMUM)) {
@@ -114,10 +113,6 @@ final class StatisticsTableUtil {
         }
         if (selectedStatistics.contains(UnivariateStatistics.Statistic.MAXIMUM)) {
             cells.add(getStringOrMissingCell(columnStatistics.getLastValue()));
-        }
-
-        if (selectedStatistics.contains(UnivariateStatistics.Statistic.K_MOST_COMMON)) {
-            cells.add(getStringOrMissingCell(columnStatistics.getCommonValues()));
         }
 
         var allQuantilesData = columnStatistics.getQuantiles();
@@ -133,17 +128,20 @@ final class StatisticsTableUtil {
         if (selectedStatistics.contains(UnivariateStatistics.Statistic.MEAN)) {
             cells.add(getDoubleOrMissingCell(columnStatistics.getMean().orElse(null)));
         }
-        if (selectedStatistics.contains(UnivariateStatistics.Statistic.SUM)) {
-            cells.add(getDoubleOrMissingCell(columnStatistics.getSum().orElse(null)));
-        }
         if (selectedStatistics.contains(UnivariateStatistics.Statistic.MEAN_ABSOLUTE_DEVIATION)) {
             cells.add(getDoubleOrMissingCell(columnStatistics.getMeanAbsoluteDeviation().orElse(null)));
         }
         if (selectedStatistics.contains(UnivariateStatistics.Statistic.STD_DEVIATION)) {
             cells.add(getDoubleOrMissingCell(columnStatistics.getStandardDeviation().orElse(null)));
         }
+        if (selectedStatistics.contains(UnivariateStatistics.Statistic.SUM)) {
+            cells.add(getDoubleOrMissingCell(columnStatistics.getSum().orElse(null)));
+        }
         if (selectedStatistics.contains(UnivariateStatistics.Statistic.VARIANCE)) {
             cells.add(getDoubleOrMissingCell(columnStatistics.getVariance().orElse(null)));
+        }
+        if (selectedStatistics.contains(UnivariateStatistics.Statistic.K_MOST_COMMON)) {
+            cells.add(getStringOrMissingCell(columnStatistics.getCommonValues()));
         }
         if (selectedStatistics.contains(UnivariateStatistics.Statistic.SKEWNESS)) {
             cells.add(getDoubleOrMissingCell(columnStatistics.getSkewness().orElse(null)));

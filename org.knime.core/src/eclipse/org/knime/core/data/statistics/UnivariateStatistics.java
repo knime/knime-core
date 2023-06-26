@@ -111,10 +111,9 @@ public final class UnivariateStatistics {
     /**
      * Labels used for every column on the view data
      */
-    private static final EnumSet<Statistic> DEFAULT_EXCLUDED_STATISTICS = EnumSet.of(Statistic.K_MOST_COMMON,
-        Statistic.QUANTILE_1, Statistic.QUANTILE_5, Statistic.QUANTILE_25, Statistic.QUANTILE_50, Statistic.QUANTILE_75,
-        Statistic.QUANTILE_90, Statistic.QUANTILE_95, Statistic.QUANTILE_99, Statistic.SUM, Statistic.STD_DEVIATION,
-        Statistic.MEAN_ABSOLUTE_DEVIATION, Statistic.VARIANCE, Statistic.SKEWNESS, Statistic.KURTOSIS);
+    private static final EnumSet<Statistic> DEFAULT_EXCLUDED_STATISTICS =
+        EnumSet.of(Statistic.QUANTILE_1, Statistic.QUANTILE_5, Statistic.QUANTILE_10, Statistic.QUANTILE_90,
+            Statistic.QUANTILE_95, Statistic.QUANTILE_99, Statistic.VARIANCE, Statistic.SKEWNESS, Statistic.KURTOSIS);
 
     private String m_name;
 
@@ -519,14 +518,11 @@ public final class UnivariateStatistics {
         qExtractors[8] = new QuantileExtractor(columnIndex, 99, 100); // 99%
         final var meanExtractor = new MeanExtractor(columnIndex);
         final var sumExtractor = new DoubleSumExtractor(columnIndex);
-        final var missingValuesExtractor = new CountMissingValuesExtractor(columnIndex);
 
         // apply extractors
         TableExtractorUtil.extractData(numericTable, minExtractor, maxExtractor, meanExtractor, sumExtractor,
             qExtractors[0], qExtractors[1], qExtractors[2], qExtractors[3], qExtractors[4], qExtractors[5],
-            qExtractors[6], qExtractors[7], qExtractors[8], missingValuesExtractor);
-
-        setNumberMissingValues(missingValuesExtractor.getOutput());
+            qExtractors[6], qExtractors[7], qExtractors[8]);
 
         final var mean = meanExtractor.getOutput();
         setMean(mean);
@@ -574,16 +570,16 @@ public final class UnivariateStatistics {
 
     public enum Statistic {
             NAME("Name", StringCell.TYPE), TYPE("Type", StringCell.TYPE),
-            NUMBER_UNIQUE_VALUES("# Unique values", LongCell.TYPE),
-            NUMBER_MISSING_VALUES("# Missing values", LongCell.TYPE), MINIMUM("Minimum", StringCell.TYPE),
-            MAXIMUM("Maximum", StringCell.TYPE), K_MOST_COMMON("10 most common values", StringCell.TYPE),
-            QUANTILE_1("1% Quantile", DoubleCell.TYPE), QUANTILE_5("5% Quantile", DoubleCell.TYPE),
-            QUANTILE_10("10% Quantile", DoubleCell.TYPE), QUANTILE_25("25% Quantile", DoubleCell.TYPE),
-            QUANTILE_50("50% Quantile (Median)", DoubleCell.TYPE), QUANTILE_75("75% Quantile", DoubleCell.TYPE),
-            QUANTILE_90("90% Quantile", DoubleCell.TYPE), QUANTILE_95("95% Quantile", DoubleCell.TYPE),
-            QUANTILE_99("99% Quantile", DoubleCell.TYPE), MEAN("Mean", DoubleCell.TYPE), SUM("Sum", DoubleCell.TYPE),
-            MEAN_ABSOLUTE_DEVIATION("Mean Absolute Deviation", DoubleCell.TYPE),
-            STD_DEVIATION("Standard Deviation", DoubleCell.TYPE), VARIANCE("Variance", DoubleCell.TYPE),
+            NUMBER_MISSING_VALUES("# Missing values", LongCell.TYPE),
+            NUMBER_UNIQUE_VALUES("# Unique values", LongCell.TYPE), MINIMUM("Minimum", StringCell.TYPE),
+            MAXIMUM("Maximum", StringCell.TYPE), QUANTILE_1("1% Quantile", DoubleCell.TYPE),
+            QUANTILE_5("5% Quantile", DoubleCell.TYPE), QUANTILE_10("10% Quantile", DoubleCell.TYPE),
+            QUANTILE_25("25% Quantile", DoubleCell.TYPE), QUANTILE_50("50% Quantile (Median)", DoubleCell.TYPE),
+            QUANTILE_75("75% Quantile", DoubleCell.TYPE), QUANTILE_90("90% Quantile", DoubleCell.TYPE),
+            QUANTILE_95("95% Quantile", DoubleCell.TYPE), QUANTILE_99("99% Quantile", DoubleCell.TYPE),
+            MEAN("Mean", DoubleCell.TYPE), MEAN_ABSOLUTE_DEVIATION("Mean Absolute Deviation", DoubleCell.TYPE),
+            STD_DEVIATION("Standard Deviation", DoubleCell.TYPE), SUM("Sum", DoubleCell.TYPE),
+            VARIANCE("Variance", DoubleCell.TYPE), K_MOST_COMMON("10 most common values", StringCell.TYPE),
             SKEWNESS("Skewness", DoubleCell.TYPE), KURTOSIS("Kurtosis", DoubleCell.TYPE);
 
         private final String m_name;
