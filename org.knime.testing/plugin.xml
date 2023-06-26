@@ -74,5 +74,8 @@
       <NodeExecutionJobManagerFactory
             JobManagerFactory="org.knime.testing.streaming.testexecutor.StreamingTestNodeExecutionJobManagerFactory">
       </NodeExecutionJobManagerFactory>
+      <NodeExecutionJobManagerFactory
+            JobManagerFactory="org.knime.testing.streaming.testexecutor.noopexecutor.NoopExecutionJobManagerFactory">
+      </NodeExecutionJobManagerFactory>
    </extension>
 </plugin>

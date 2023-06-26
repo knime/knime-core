@@ -100,6 +100,7 @@ import org.knime.core.node.workflow.NodeExecutionJob;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.NodeMessage.Type;
+import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.WorkflowLock;
@@ -108,6 +109,7 @@ import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.core.node.workflow.execresult.NativeNodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 import org.knime.core.node.workflow.execresult.NodeExecutionResult;
+import org.knime.testing.streaming.testexecutor.noopexecutor.NoopExecutionJobManager;
 
 /**
  * NodeExecutionJob that tests all streaming and distributed execution related functionsRoles()}<br>
@@ -237,21 +239,27 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
             }
         }
 
-        //create the 'remote' node containers used for the execution itself
-        NativeNodeContainer[] remoteNodeContainers = createNodeCopies(localNodeContainer, numChunks);
+        NativeNodeContainer[] remoteNodeContainers;
+        ExecutionContext[] remoteExec;
+        ExecutionContext localExec;
 
-        //exactly one execution context per 'remote' node
-        ExecutionContext[] remoteExec = createExecutionContexts(remoteNodeContainers);
+        // locking node insertion and configuration as there might be concurrent workflow changes
+        // (Component Output nodes will execute _all_ nodes as part of its own execution.)
+        try (WorkflowLock lock = localNodeContainer.getParent().lock()) {
+            //create the 'remote' node containers used for the execution itself
+            remoteNodeContainers = createNodeCopies(localNodeContainer, numChunks);
 
-        //execution context for the original node
-        //- mainly for the creation of the input and output tables (to be fed into the 'remote' node copies)
-        //- created tables are tracked in m_tableChunksToBeDisposed to be disposed at the end
-        //- should actually not be used for the actual execution but is currently! (TODO)
-        ExecutionContext localExec = remoteExec[0];
+            //exactly one execution context per 'remote' node
+            remoteExec = createExecutionContexts(remoteNodeContainers);
 
-        // configure the node copies
-        for (int i = 0; i < remoteNodeContainers.length; i++) {
-            try (WorkflowLock lock = localNodeContainer.getParent().lock()) {
+            //execution context for the original node
+            //- mainly for the creation of the input and output tables (to be fed into the 'remote' node copies)
+            //- created tables are tracked in m_tableChunksToBeDisposed to be disposed at the end
+            //- should actually not be used for the actual execution but is currently! (TODO)
+            localExec = remoteExec[0];
+
+            // configure the node copies
+            for (int i = 0; i < remoteNodeContainers.length; i++) {
                 // wfm.createAndSetFlowObjectStackFor(localNodeContainer,
                 // flowObjectStacks.toArray(new
                 // FlowObjectStack[flowObjectStacks.size()]));
@@ -716,6 +724,7 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
                 workflowManager.addConnection(c.getSource(), c.getSourcePort(), nodeContainers[i].getID(),
                     c.getDestPort());
             }
+            nodeContainers[i].getParent().setJobManager(nodeIDs[i], NoopExecutionJobManager.INSTANCE);
             nodeContainers[i].getNode().setFileStoreHandler(nodeContainer.getNode().getFileStoreHandler());
         }
 
@@ -729,11 +738,52 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
         //TODO this should actually NOT be necessary since all nodes used for execution should be copies
         //(or better sandboxed)
         for (int i = 1; i < nodeContainers.length; i++) {
-            nodeContainers[i].getNode().setFileStoreHandler(null);
-            NodeID id = nodeContainers[i].getID();
-            WorkflowManager workflowManager = nodeContainers[i].getParent();
+            final var nc = nodeContainers[i];
+            nc.getNode().setFileStoreHandler(null);
+            WorkflowManager workflowManager = waitWhileExecuting(nc);
+            NodeID id = nc.getID();
             workflowManager.removeNode(id);
         }
+    }
+
+    /**
+     * Added as part of AP-20402 - component output nodes execute all contained nodes, incl. the "remote" ones
+     * added by this class. This code waits until these nodes have finished execution (before they get removed).
+     *
+     * Fixed test case failure in knime-base: test_AP-15123_File_Meta_Info_File_Permissions
+     */
+    private static WorkflowManager waitWhileExecuting(final NativeNodeContainer nc) {
+        final var workflowManager = nc.getParent();
+        final var reentrantLock = workflowManager.getReentrantLockInstance();
+        final var condition = reentrantLock.newCondition();
+        try (var lock = workflowManager.lock()) {
+            NodeStateChangeListener listener = null;
+            while (nc.getNodeContainerState().isExecutionInProgress()) {
+                if (listener == null) {
+                    listener = event -> {
+                        reentrantLock.lock();
+                        try { // NOSONAR (complexity)
+                            condition.signalAll();
+                        } finally {
+                            reentrantLock.unlock();
+                        }
+                    };
+                    nc.addNodeStateChangeListener(listener);
+                }
+                try {
+                    condition.await();
+                } catch (InterruptedException e) {
+                    LOGGER.error(String.format("Error cleaning up %s: %s",
+                        StreamingTestNodeExecutionJob.class.getSimpleName(), e.getMessage()), e);
+                    Thread.currentThread().interrupt(); // as suggested by sonar
+                    break;
+                }
+            }
+            if (listener != null) {
+                nc.removeNodeStateChangeListener(listener);
+            }
+        }
+        return workflowManager;
     }
 
     /** Divides the given table into the given number of chunks. */
