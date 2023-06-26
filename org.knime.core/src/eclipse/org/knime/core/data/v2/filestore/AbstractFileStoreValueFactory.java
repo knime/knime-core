@@ -77,7 +77,16 @@ import org.knime.core.table.schema.StringDataSpec;
 import org.knime.core.table.schema.StructDataSpec;
 
 /**
+ * An abstract implementation of a {@link ValueFactory} that uses {@link FileStore file stores.}. The data value that is
+ * saved to the column consists of a serialized {@link FileStoreKey} and custom data with the specs defined by
+ * {@link #getTableDataSpec()}. This abstract implementation together with the {@link FileStoreReadValue} and the
+ * {@link FileStoreWriteValue} takes care of reading and writing the file store keys and resolving the file stores.
+ *
+ * @author Carsten Haubold, KNIME GmbH, Konstanz, Germany
+ * @author Jonas Klotz, KNIME GmbH, Berlin, Germany
+ * @author Benjamin Wilhelm, KNIME GmbH, Berlin, Germany
  * @since 5.1
+ * @noreference This class is not intended to be referenced by clients.
  */
 public abstract class AbstractFileStoreValueFactory
     implements FileStoreAwareValueFactory, ValueFactory<StructReadAccess, StructWriteAccess> {
@@ -87,9 +96,15 @@ public abstract class AbstractFileStoreValueFactory
     private IWriteFileStoreHandler m_fileStoreHandler;
 
     /**
-     * @return the {@link DataSpec} of data that should be stored inside the table (next to the file store key)
+     * @return the {@link DataSpec} of custom data that should be stored inside the table (next to the file store key)
      */
     protected abstract DataSpec getTableDataSpec();
+
+    @Override
+    public abstract FileStoreReadValue<?> createReadValue(StructReadAccess access);
+
+    @Override
+    public abstract FileStoreWriteValue<?, ?> createWriteValue(StructWriteAccess access);
 
     @Override
     public final DataSpec getSpec() {
@@ -110,35 +125,61 @@ public abstract class AbstractFileStoreValueFactory
         m_fileStoreHandler = fileStoreHandler;
     }
 
-    protected abstract class AbstractFileStoreReadValue<R extends ReadAccess> implements ReadValue {
+    /**
+     * A {@link ReadValue} implementation that stores a struct with a serialized file store key at location 0 and custom
+     * data fitting the {@link ReadAccess} <code>R</code> at location 1. The corresponding {@link WriteValue} should
+     * extend {@link FileStoreWriteValue}.
+     *
+     * @param <R> the type of the {@link ReadAccess} for the custom data at struct location 1
+     */
+    protected abstract class FileStoreReadValue<R extends ReadAccess> implements ReadValue {
 
-        final StructReadAccess m_access;
+        private final StructReadAccess m_access;
 
-        public AbstractFileStoreReadValue(final StructReadAccess access) {
+        /**
+         * @param access the access to the underlying data
+         */
+        protected FileStoreReadValue(final StructReadAccess access) {
             m_access = access;
         }
 
+        /**
+         * Create a {@link FileStoreCell} with the custom data from the given access. The file stores will be loaded
+         * into the cell later by the framework.
+         *
+         * @param tableDataAccess the access to the custom table data
+         * @return a new cell with the data from the access
+         */
+        protected abstract DataCell createCell(R tableDataAccess);
+
+        /**
+         * Package-private to be used in the {@link TableOrFileStoreValueFactory}.
+         *
+         * @return the access for the serialized {@link FileStoreKey}.
+         */
+        StringReadAccess getFileStoreKeyAccess() {
+            return m_access.getAccess(0);
+        }
+
+        /**
+         * @return the access to the custom data that is stored inside the column
+         */
         protected R getTableDataAccess() {
             return m_access.getAccess(1);
         }
 
         @Override
         public final DataCell getDataCell() {
-            // TODO do we have to handle missing cells here?
-            //            if (m_access.isMissing()) {
-            //                return new MissingCell("");
-            //            }
-
+            // TODO Cache the cell and return it again if the access has not been moved
             var cell = createCell(getTableDataAccess());
 
+            // NB: For the TableOrFileStoreValueFactory we do not always get file store cells
+            // because sometimes the data is stored in the table
             if (cell instanceof FileStoreCell fsCell) {
-                var fileStoreAccess = (StringReadAccess)m_access.getAccess(0);
-                final var fileStoreKeyString = fileStoreAccess.getStringValue();
+                final var fileStoreKeyString = getFileStoreKeyAccess().getStringValue();
 
                 // Load the file store into the cell if we have a key
                 if (fileStoreKeyString != null && !fileStoreKeyString.isEmpty()) {
-
-                    // TODO re-introduce caching
                     var fileStoreKeys = Arrays.stream(fileStoreKeyString.split(";")).map(FileStoreKey::load)
                         .toArray(FileStoreKey[]::new);
 
@@ -153,24 +194,39 @@ public abstract class AbstractFileStoreValueFactory
 
             return cell;
         }
-
-        protected abstract DataCell createCell(R r);
     }
 
-    protected abstract class AbstractFileStoreWriteValue<V extends DataValue, W extends WriteAccess>
-        implements WriteValue<V> {
+    /**
+     * A {@link WriteValue} implementation that stores a struct with a serialized file store key at location 0 and
+     * custom data fitting the {@link ReadAccess} <code>R</code> at location 1. The corresponding {@link ReadValue}
+     * should extend {@link FileStoreReadValue}.
+     *
+     * @param <V> the type of the associated {@link DataValue}
+     * @param <W> the type of the {@link WriteAccess} for the custom data at struct location 1
+     */
+    protected abstract class FileStoreWriteValue<V extends DataValue, W extends WriteAccess> implements WriteValue<V> {
 
         private final StructWriteAccess m_access;
 
-        protected AbstractFileStoreWriteValue(final StructWriteAccess access) {
+        /**
+         * @param access the access to the underlying data
+         */
+        protected FileStoreWriteValue(final StructWriteAccess access) {
             m_access = access;
         }
 
+        /**
+         * Check if the given value has the type of the corresponding {@link ReadValue}. If this is the case the
+         * {@link ReadAccess} of <code>value</code> can simply be copied to the {@link WriteAccess} of this object.
+         *
+         * @param value the value to check
+         * @return <code>true</code> if the type of <code>value</code> is the correspoding {@link ReadValue}
+         */
         protected abstract boolean isCorrespondingReadValue(V value);
 
         /**
          * Get the appropriate {@link FileStoreCell} for the given value. If the value implements the correct
-         * {@link FileStoreCell} class already, the method should return the value again and should refer from creating
+         * {@link FileStoreCell} class already, the method should return the value again and should refrain from creating
          * a new cell. Use {@link #createFileStore()} to create file stores for the cell.
          *
          * @param value the value that should be used
@@ -179,8 +235,17 @@ public abstract class AbstractFileStoreValueFactory
          */
         protected abstract FileStoreCell getFileStoreCell(V value) throws IOException;
 
+        /**
+         * Set the custom table data for the given <code>value</code> to the {@link WriteAccess}.
+         *
+         * @param value the value to get the custom data from
+         * @param access the access to write the custom data to
+         */
         protected abstract void setTableData(V value, W access);
 
+        /**
+         * @return the access to the custom table data
+         */
         protected W getTableDataAccess() {
             return m_access.getWriteAccess(1);
         }
@@ -188,7 +253,7 @@ public abstract class AbstractFileStoreValueFactory
         @Override
         public void setValue(final V value) {
             if (isCorrespondingReadValue(value)) {
-                copyFromReadValue((AbstractFileStoreReadValue<?>)value);
+                copyFromReadValue((FileStoreReadValue<?>)value);
                 return;
             }
             try {
@@ -206,10 +271,18 @@ public abstract class AbstractFileStoreValueFactory
          *
          * @param value the value which {@link ReadAccess} will be copied over
          */
-        protected void copyFromReadValue(final AbstractFileStoreReadValue<?> value) {
+        protected void copyFromReadValue(final FileStoreReadValue<?> value) {
             m_access.setFrom((value).m_access);
         }
 
+        /**
+         * Set the serialized {@link FileStoreKey} in the access at location 0 and make sure that the file stores are
+         * flushed and translated to local.
+         *
+         * @param fsCell the cell holding the file stores
+         * @throws IOException if updating the file store keys after translating them to local failed
+         * @throws IOException if flushing the file stores failed
+         */
         protected final void setFileStoreData(final FileStoreCell fsCell) throws IOException {
             if (mustBeFlushedPriorSave(fsCell)) {
                 final var fileStores = FileStoreUtil.getFileStores(fsCell);
@@ -233,6 +306,12 @@ public abstract class AbstractFileStoreValueFactory
             ((StringWriteAccess)m_access.getWriteAccess(0)).setStringValue(fileStoreKeyString);
         }
 
+        /**
+         * Create a new file store using the active {@link IWriteFileStoreHandler}.
+         *
+         * @return a new {@link FileStore} with a random UUID as name
+         * @throws IOException if the {@link FileStore} could not be created
+         */
         protected final FileStore createFileStore() throws IOException {
             final var uuid = UUID.randomUUID().toString();
 
@@ -245,6 +324,7 @@ public abstract class AbstractFileStoreValueFactory
             }
         }
 
+        /** Check if at least one of the file stores of the cell must be flushed prior save */
         private boolean mustBeFlushedPriorSave(final FileStoreCell cell) {
             final FileStore[] fileStores = FileStoreUtil.getFileStores(cell);
             for (FileStore fs : fileStores) {

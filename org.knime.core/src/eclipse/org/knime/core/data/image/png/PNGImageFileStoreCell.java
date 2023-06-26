@@ -79,8 +79,7 @@ public final class PNGImageFileStoreCell extends ObjectSerializerFileStoreCell<P
      * @param value PNG image value
      */
     PNGImageFileStoreCell(final FileStore fs, final PNGImageValue value) {
-        super(fs, SERIALIZER, DESERIALIZER);
-        setContent(contentFromValue(value));
+        super(fs, contentFromValue(value), SERIALIZER, DESERIALIZER);
 
     }
 

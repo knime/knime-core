@@ -90,8 +90,7 @@ public final class XMLFileStoreCell extends ObjectSerializerFileStoreCell<XMLCel
      * @param fs {@link FileStore} to which the content will be written
      */
     XMLFileStoreCell(final FileStore fs, final XMLValue<Document> value) {
-        super(fs, SERIALIZER, DESERIALIZER);
-        setContent(contentFromValue(value));
+        super(fs, contentFromValue(value), SERIALIZER, DESERIALIZER);
     }
 
     XMLFileStoreCell(final Integer hashCode) {

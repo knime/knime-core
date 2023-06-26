@@ -52,11 +52,8 @@ import java.io.IOException;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.filestore.FileStore;
-import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
-import org.knime.core.data.v2.WriteValue;
 import org.knime.core.data.v2.filestore.TableOrFileStoreValueFactory;
-import org.knime.core.data.xml.XMLBlobCell;
 import org.knime.core.table.access.StructAccess.StructReadAccess;
 import org.knime.core.table.access.StructAccess.StructWriteAccess;
 import org.knime.core.table.schema.VarBinaryDataSpec.ObjectDeserializer;
@@ -66,7 +63,7 @@ import org.knime.core.table.schema.VarBinaryDataSpec.ObjectSerializer;
  * A {@link ValueFactory} to (de-)serialize {@link PNGImageValue}s - in the form of {@link PNGImageCell} or
  * {@link PNGImageBlobCell} - in the columnar backend.
  *
- * {@link XMLBlobCell} instances will be written to a {@link FileStore} so that the table serialized by the columnar
+ * {@link PNGImageBlobCell} instances will be written to a {@link FileStore} so that the table serialized by the columnar
  * backend does not become huge immediately. Smaller {@link PNGImageValue}s (= not {@link PNGImageBlobCell}s) are
  * immediately written into the table.
  *
@@ -151,24 +148,21 @@ public class PNGImageValueFactory extends TableOrFileStoreValueFactory<PNGImageV
         protected PNGImageFileStoreCell getFileStoreCell(final PNGImageValue value) throws IOException {
             if (value instanceof PNGImageFileStoreCell fsCell) {
                 return fsCell;
+            } else if (value instanceof PNGImageBlobCell) {
+                return new PNGImageFileStoreCell(createFileStore(), value);
             }
-            return new PNGImageFileStoreCell(createFileStore(), value);
+            return null;
         }
 
     }
 
     @Override
-    public ReadValue createReadValue(final StructReadAccess access) {
+    public PNGImageReadValue createReadValue(final StructReadAccess access) {
         return new PNGImageReadValue(access);
     }
 
     @Override
-    public WriteValue<PNGImageValue> createWriteValue(final StructWriteAccess access) {
+    public PNGImageWriteValue createWriteValue(final StructWriteAccess access) {
         return new PNGImageWriteValue(access);
-    }
-
-    @Override
-    protected boolean shouldBeStoredInFileStore(final PNGImageValue value) {
-        return (value instanceof PNGImageBlobCell) || (value instanceof PNGImageFileStoreCell);
     }
 }

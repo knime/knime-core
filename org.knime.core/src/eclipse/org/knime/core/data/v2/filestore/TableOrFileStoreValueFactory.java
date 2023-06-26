@@ -61,7 +61,7 @@ import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.filestore.FileStoreCell;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
-import org.knime.core.table.access.StringAccess.StringReadAccess;
+import org.knime.core.data.v2.WriteValue;
 import org.knime.core.table.access.StructAccess.StructReadAccess;
 import org.knime.core.table.access.StructAccess.StructWriteAccess;
 import org.knime.core.table.access.VarBinaryAccess.VarBinaryReadAccess;
@@ -74,26 +74,27 @@ import org.knime.core.table.schema.VarBinaryDataSpec.ObjectDeserializer;
 import org.knime.core.table.schema.VarBinaryDataSpec.ObjectSerializer;
 
 /**
- * Abstract class providing the basic implementation for file store based {@link ValueFactory}s.
- *
- * Serialization and deserialization of the {@link DataValue} can happen either into a {@link FileStore} or a binary
- * blob directly in the Arrow table. The selection between the two is made by querying
- * {@link TableOrFileStoreValueFactory#shouldBeStoredInFileStore(DataValue)}, which must be implemented in derived
- * classes.
- *
- * Derived classes should specialize the ReadValue and also implement the {@link DataValue} V. To make this as explicit
- * as possible, the createReadValue method is abstract here.
- *
- * Serializer and deserializer must be provided in the constructor.
+ * Abstract basic implementation of the {@link AbstractFileStoreValueFactory}. This class adds abstraction for
+ * serializing and de-serializing {@link DataValue}s either into {@link FileStore file stores} or into binary blobs
+ * inside the table data. The decision if the data is serialized to a file store or the table is made by the
+ * specialization in the implementation of {@link TableOrFileStoreWriteValue#getFileStoreCell(DataValue)}.
+ * <P>
+ * Derived classes should specialize {@link TableOrFileStoreReadValue} (which should implement the {@link DataValue}
+ * <code>V</code>) and {@link TableOrFileStoreWriteValue}.
+ * <P>
+ * Serializer and deserializer must be provided in the constructor. The same implementations can be used in
+ * {@link ObjectSerializerFileStoreCell} for serialization and deserialization into/from file stores.
  *
  * @author Carsten Haubold, KNIME GmbH, Konstanz, Germany
+ * @author Jonas Klotz, KNIME GmbH, Berlin, Germany
+ * @author Benjamin Wilhelm, KNIME GmbH, Berlin, Germany
  * @param <V> The type of {@link DataValue} read and written by this {@link ValueFactory}
  * @since 5.1
  * @noreference This class is not intended to be referenced by clients.
  */
 public abstract class TableOrFileStoreValueFactory<V extends DataValue> extends AbstractFileStoreValueFactory {
 
-    /** used to write the data either into a binary blob or a file **/
+    /** Used to write the data either into a binary blob in the table or a {@link FileStore} **/
     private final ObjectSerializer<V> m_serializer;
 
     private final ObjectDeserializer<V> m_deserializer;
@@ -109,27 +110,26 @@ public abstract class TableOrFileStoreValueFactory<V extends DataValue> extends 
     }
 
     @Override
+    public abstract TableOrFileStoreReadValue createReadValue(StructReadAccess access);
+
+    @Override
+    public abstract TableOrFileStoreWriteValue createWriteValue(StructWriteAccess access);
+
+    @Override
     protected DataSpec getTableDataSpec() {
         return VarBinaryDataSpec.INSTANCE;
     }
 
     /**
-     * @param value
-     * @return True if the given value should be stored in a file store, e.g. because its size exceeds a threshold
-     */
-    protected abstract boolean shouldBeStoredInFileStore(final V value);
-
-    /**
-     * {@link ReadValue} that can be read from a FileStore or from a VarBinary blob from the table.
+     * A {@link ReadValue} that reads from a {@link FileStore} or from a binary blob from the table. The corresponding
+     * {@link WriteValue} should extend {@link TableOrFileStoreWriteValue}.
      *
      * Derived classes should also implement the respective DataValue.
      */
-    protected abstract class TableOrFileStoreReadValue extends AbstractFileStoreReadValue<VarBinaryReadAccess> {
+    protected abstract class TableOrFileStoreReadValue extends FileStoreReadValue<VarBinaryReadAccess> {
 
         /**
-         * Create a {@link TableOrFileStoreReadValue}
-         *
-         * @param access
+         * @param access the access to the underlying data
          */
         protected TableOrFileStoreReadValue(final StructReadAccess access) {
             super(access);
@@ -137,9 +137,7 @@ public abstract class TableOrFileStoreValueFactory<V extends DataValue> extends 
 
         @Override
         protected final DataCell createCell(final VarBinaryReadAccess blobAccess) {
-            StringReadAccess stringReadAccess = m_access.getAccess(0);
-
-            if (stringReadAccess.isMissing()) {
+            if (getFileStoreKeyAccess().isMissing()) {
                 // Saved in the table
                 return createCell(blobAccess.getObject(m_deserializer));
             } else {
@@ -150,6 +148,12 @@ public abstract class TableOrFileStoreValueFactory<V extends DataValue> extends 
             }
         }
 
+        /**
+         * Create a {@link DataCell} from the given value. The cell must implement the {@link DataValue} <code>V</code>.
+         *
+         * @param value the data value
+         * @return a {@link DataCell} with the same value
+         */
         protected abstract DataCell createCell(V value);
 
         /**
@@ -165,27 +169,33 @@ public abstract class TableOrFileStoreValueFactory<V extends DataValue> extends 
     }
 
     /**
-     * A {@link TableOrFileStoreWriteValue} writes the provided value V either into a {@link FileStore} or into a
-     * VarBinary blob
+     * A {@link WriteValue} that writes the a provided value (of type V) either into a {@link FileStore} or into a
+     * binary blob. The corresponding {@link WriteValue} should extend {@link TableOrFileStoreWriteValue}.
      */
-    protected abstract class TableOrFileStoreWriteValue extends AbstractFileStoreWriteValue<V, VarBinaryWriteAccess> {
+    protected abstract class TableOrFileStoreWriteValue extends FileStoreWriteValue<V, VarBinaryWriteAccess> {
 
         /**
-         * Create a {@link TableOrFileStoreWriteValue}
-         *
-         * @param access
+         * @param access the access to the underlying data
          */
         protected TableOrFileStoreWriteValue(final StructWriteAccess access) {
             super(access);
         }
 
+        /**
+         * {@inheritDoc}
+         * <P>
+         * NOTE: For classes extending {@link TableOrFileStoreWriteValue} this method should return <code>null</code> if
+         * the value should not be stored in a file store
+         *
+         * @return a {@link FileStoreCell} or <code>null</code>
+         */
         @Override
         protected abstract ObjectSerializerFileStoreCell<?> getFileStoreCell(V value) throws IOException;
 
         @Override
         public void setValue(final V value) {
             if (isCorrespondingReadValue(value)) {
-                copyFromReadValue((AbstractFileStoreReadValue<?>)value);
+                copyFromReadValue((FileStoreReadValue<?>)value);
                 return;
             }
 
@@ -193,14 +203,14 @@ public abstract class TableOrFileStoreValueFactory<V extends DataValue> extends 
             try {
                 var fsCell = getFileStoreCell(value);
                 if (fsCell != null) {
-                    // Set the file store data
+                    // Set the file store datagetFileStoreCell
                     setFileStoreData(fsCell);
 
                     // Write the hash code
                     blobAccess.setObject(fsCell.hashCode(), DataOutput::writeInt);
                 } else {
                     // Write the content to the table if it is not in a file store
-                    setTableData(value, getTableDataAccess());
+                    setTableData(value, blobAccess);
                 }
             } catch (IOException ex) {
                 throw new IllegalStateException(ex);
@@ -213,34 +223,23 @@ public abstract class TableOrFileStoreValueFactory<V extends DataValue> extends 
             access.setObject(value, m_serializer);
 
         }
-
-        //        @Override
-        //        protected void setTableData(final V value, final StructWriteAccess structWriteAccess) {
-        //            VarBinaryWriteAccess access = structWriteAccess.getWriteAccess(0);
-        //            if (!shouldBeStoredInFileStore(value)) {
-        //                access.setObject(value, m_serializer);
-        //            }
-        //            // TODO: handle hash
-        //        }
-        //
-        //        @Override
-        //        protected boolean hasFileStoreData(final V value) {
-        //            /*
-        //             * TODO if the node developer sets a huge value directly via #setValue which is not a cell the
-        //             * implementations of shouldBeStoredInFileStore will return false. However, we might want to convert this to
-        //             * be stored in a file store.
-        //             * For example for JSONValue this would look like the check we do in the JSONCellFactory
-        //             */
-        //            return shouldBeStoredInFileStore(value);
-        //        }
     }
 
     /**
-     * An abstract implementation of {@link FileStoreCell} that uses a {@link DataOutput} to serialize data to a file
-     * store (see {@link ObjectSerializerFileStoreCell#serialize(DataOutput)}) and a {@link ReadableDataInput} to load
-     * data from the file store (see {@link ObjectSerializerFileStoreCell#deserialize(ReadableDataInput)}.
+     * An abstract implementation of {@link FileStoreCell} that uses an {@link ObjectSerializer} to write data into a
+     * {@link FileStore} and an {@link ObjectDeserializer} to read data from a {@link FileStore}.
+     * <P>
+     * The content of type C is loaded lazily from the {@link FileStore} and can be accessed via
+     * {@link ObjectSerializerFileStoreCell#getContent()}.
+     * <P>
+     * The {@link Object#hashCode()} implementation uses the hash code of the content and caches it. The
+     * {@link Object#equals(Object)} method uses {@link DataCell#equalContent(DataValue)}.
+     *
+     * @param <C> type of the content
      */
+    // TODO this implements Serializable but is not serializable
     public abstract static class ObjectSerializerFileStoreCell<C> extends FileStoreCell {
+
         private final ObjectSerializer<C> m_serializer;
 
         private final ObjectDeserializer<C> m_deserializer;
@@ -249,16 +248,31 @@ public abstract class TableOrFileStoreValueFactory<V extends DataValue> extends 
 
         private Integer m_hashCode;
 
-        protected ObjectSerializerFileStoreCell(final FileStore fs, final ObjectSerializer<C> serializer,
-            final ObjectDeserializer<C> deserializer) {
+        /**
+         * Create an {@link ObjectSerializerFileStoreCell} with the given loaded content. The content will be writen to
+         * the given file store by the framework.
+         *
+         * @param fs the file store that the content will be serialized to
+         * @param content the content
+         * @param serializer the serializer used to write the content to the file store
+         * @param deserializer the deserializer used to read the content from the file store
+         */
+        protected ObjectSerializerFileStoreCell(final FileStore fs, final C content,
+            final ObjectSerializer<C> serializer, final ObjectDeserializer<C> deserializer) {
             super(fs);
+            m_content = content;
             m_serializer = serializer;
             m_deserializer = deserializer;
         }
 
         /**
+         * Create an {@link ObjectSerializerFileStoreCell} without a content. The content will be loaded lazily from the
+         * file stores set by the framework.
+         *
+         * @param serializer the serializer used to write the content to the file store
+         * @param deserializer the deserializer used to read the content from the file store
          * @param hashCode the cached hash code or <code>null</code> if no hash code was cached. If <code>null</code>
-         *            {@link #hashCode()} will use the hash code of the content.
+         *            {@link #hashCode()} will use the hash code of the content and cache the result
          */
         protected ObjectSerializerFileStoreCell(final ObjectSerializer<C> serializer,
             final ObjectDeserializer<C> deserializer, final Integer hashCode) {
@@ -267,10 +281,9 @@ public abstract class TableOrFileStoreValueFactory<V extends DataValue> extends 
             m_hashCode = hashCode;
         }
 
-        protected final void setContent(final C content) {
-            m_content = content;
-        }
-
+        /**
+         * @return the content of this cell. Loaded lazily if necessary.
+         */
         protected final C getContent() {
             if (m_content == null) {
                 loadContent();
@@ -301,19 +314,13 @@ public abstract class TableOrFileStoreValueFactory<V extends DataValue> extends 
             }
         }
 
-        /**
-         * @Override
-         */
         @Override
         protected boolean equalFileStoreContent(final DataCell dc) {
             return equalContent(dc);
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
-        public int hashCode() {
+        public int hashCode() { // NOSONAR: equals is overridden by FileStoreCell
             if (m_hashCode == null) {
                 m_hashCode = getContent().hashCode();
             }

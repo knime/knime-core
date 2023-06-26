@@ -52,9 +52,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.util.LockedSupplier;
-import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
-import org.knime.core.data.v2.WriteValue;
 import org.knime.core.data.v2.filestore.TableOrFileStoreValueFactory;
 import org.knime.core.table.access.StructAccess.StructReadAccess;
 import org.knime.core.table.access.StructAccess.StructWriteAccess;
@@ -94,18 +92,13 @@ public class XMLValueFactory extends TableOrFileStoreValueFactory<XMLValue<Docum
     }
 
     @Override
-    public ReadValue createReadValue(final StructReadAccess access) {
+    public XMLReadValue createReadValue(final StructReadAccess access) {
         return new XMLReadValue(access);
     }
 
     @Override
-    public WriteValue<XMLValue<Document>> createWriteValue(final StructWriteAccess access) {
+    public XMLWriteValue createWriteValue(final StructWriteAccess access) {
         return new XMLWriteValue(access);
-    }
-
-    @Override
-    protected boolean shouldBeStoredInFileStore(final XMLValue<Document> value) {
-        return (value instanceof XMLBlobCell) || (value instanceof XMLFileStoreCell);
     }
 
     private class XMLReadValue extends TableOrFileStoreReadValue implements XMLValue<Document> {
@@ -157,9 +150,10 @@ public class XMLValueFactory extends TableOrFileStoreValueFactory<XMLValue<Docum
         protected ObjectSerializerFileStoreCell<?> getFileStoreCell(final XMLValue<Document> value) throws IOException {
             if (value instanceof XMLFileStoreCell fsCell) {
                 return fsCell;
-            } else {
+            } else if (value instanceof XMLBlobCell) {
                 return new XMLFileStoreCell(createFileStore(), value);
             }
+            return null;
         }
     }
 }
