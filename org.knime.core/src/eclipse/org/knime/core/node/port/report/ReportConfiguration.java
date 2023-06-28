@@ -54,6 +54,8 @@ import java.util.stream.Stream;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.port.report.ReportConfiguration.Orientation;
+import org.knime.core.node.port.report.ReportConfiguration.PageSize;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.shared.workflow.def.ReportConfigurationDef;
 import org.knime.shared.workflow.def.impl.ReportConfigurationDefBuilder;
@@ -72,21 +74,25 @@ public record ReportConfiguration(PageSize pageSize, Orientation orientation) {
     /** page size, e.g. A4. */
     @SuppressWarnings({"java:S115", "javadoc"}) // naming of constants still OK to be persisted in workflow file
     public enum PageSize {
-        A5("A5"),
-        A4("A4"),
-        A3("A3"),
-        B5("B5"),
-        B4("B4"),
-        JIS_B5("JIS-B5"),
-        JIS_B4("JIS-B4"),
-        Letter("letter"),
-        Legal("legal"),
-        Ledger("ledger");
+        A5     ("A5",     5.8,      8.3      ),
+        A4     ("A4",     8.3,      11.7     ),
+        A3     ("A3",     11.7,     16.5     ),
+        B5     ("B5",     6.9,      9.8      ),
+        B4     ("B4",     9.8,      13.9     ),
+        JIS_B5 ("JIS-B5", 7.166667, 10.125   ),
+        JIS_B4 ("JIS-B4", 10.125,   14.333333),
+        Letter ("letter", 8.5,      11       ),
+        Legal  ("legal",  8.5,      14       ),
+        Ledger ("ledger", 11,       17       );
 
         private final String m_humanReadableFormat;
+        private final double m_width;
+        private final double m_height;
 
-        PageSize(final String humanReadableFormat) {
+        PageSize(final String humanReadableFormat, final double width, final double height) {
             m_humanReadableFormat = humanReadableFormat;
+            m_width = width;
+            m_height = height;
         }
 
         /**
@@ -94,6 +100,20 @@ public record ReportConfiguration(PageSize pageSize, Orientation orientation) {
          */
         public String getHumanReadableFormat() {
             return m_humanReadableFormat;
+        }
+
+        /**
+         * @return the width for the page in portrait orientation in inches
+         */
+        public double getWidth() {
+            return m_width;
+        }
+
+        /**
+         * @return the height for the page in portrait orientation in inches
+         */
+        public double getHeight() {
+            return m_height;
         }
 
         /**
@@ -141,6 +161,19 @@ public record ReportConfiguration(PageSize pageSize, Orientation orientation) {
                     .orElseThrow(() -> new InvalidSettingsException("Invalid Orientation: " + name));
         }
     }
+
+    @SuppressWarnings({"java:S115", "javadoc"})
+    public static record PageMargins(double top, double right, double bottom, double left) {}
+
+    /**
+     * Rendering resolution in ppi, constant for now
+     */
+    public static final int RESOLUTION = 96;
+
+    /**
+     * Page margins in inches, static default of 20mm (0.79in) for each side for now
+     */
+    public static final PageMargins PAGE_MARGINS = new PageMargins(0.79, 0.79, 0.79, 0.79);
 
     /**
      * Only checks null-ness.
@@ -204,26 +237,49 @@ public record ReportConfiguration(PageSize pageSize, Orientation orientation) {
         return Optional.of(new ReportConfiguration(pageSize, orientation));
     }
 
+    @SuppressWarnings({"java:S115", "javadoc"})
     public static record PixelDimension(int width, int height) {}
 
-    public static PixelDimension getPixelDimension(final ReportConfiguration config) {
-        var dim = switch (config.pageSize()) {
-            // 150 PPI/DPI
-            case A5 -> new PixelDimension( 874, 1240);
-            case A4 -> new PixelDimension(1240, 1754);
-            case A3 -> new PixelDimension(2480, 1754);
-            default -> null;
-        };
+    /**
+     * Determines the dimensions in pixels of a page size, given a {@link ReportConfiguration}
+     * @param config the configuration object containing page format, orientation and margins
+     * @param considerMargins true, if the defined margins should be subtracted from the page dimensions, false otherwise
+     *
+     * @return a {@link PixelDimension} containing width and height of
+     */
+    public static PixelDimension getPixelDimension(final ReportConfiguration config, final boolean considerMargins) {
+        int res = ReportConfiguration.RESOLUTION;
+        int pageWidth = getDevicePixelForPhysicalDimension(config.pageSize.getWidth(), res);
+        int pageHeight = getDevicePixelForPhysicalDimension(config.pageSize.getHeight(), res);
 
-        if (dim == null) {
-            throw new IllegalStateException("Page size " + config.pageSize() + " not supported");
+        int width = config.orientation() == Orientation.Portrait ? pageWidth : pageHeight;
+        int height = config.orientation() == Orientation.Portrait ? pageHeight : pageWidth;
+
+        if (considerMargins) {
+            var margins = ReportConfiguration.PAGE_MARGINS;
+            int marginTop = getDevicePixelForPhysicalDimension(margins.top, res);
+            int marginRight = getDevicePixelForPhysicalDimension(margins.right, res);
+            int marginBottom = getDevicePixelForPhysicalDimension(margins.bottom, res);
+            int marginLeft = getDevicePixelForPhysicalDimension(margins.left, res);
+
+            int widthMargin = Math.max(0, width - marginLeft - marginRight);
+            int heightMargin = Math.max(0, height - marginTop - marginBottom);
+
+            return new PixelDimension(widthMargin, heightMargin);
         }
+        return new PixelDimension(width, height);
+    }
 
-        if (config.orientation() == Orientation.Landscape) {
-            dim = new PixelDimension(dim.height, dim.width);
-        }
-
-        return dim;
+    /**
+     * Returns a rounded pixel value for a given physical value in inches
+     *
+     * @param physicalValue a value in inches to be converted to pixel
+     * @param resolution the resolution at which to convert the physical value
+     *
+     * @return the value in device pixels
+     */
+    public static int getDevicePixelForPhysicalDimension(final double physicalValue, final int resolution) {
+        return (int)Math.round(physicalValue * resolution);
     }
 
 }
