@@ -186,6 +186,16 @@
 					<layout>p2</layout>
 					<url>${knime.core.columnar.p2}</url>
 				</repository>
+				<repository>
+					<id>p2-knime-credentials-base</id>
+					<layout>p2</layout>
+					<url>${knime.credentials.base.p2}</url>
+				</repository>
+				<repository>
+					<id>p2-knime-gatewway</id>
+					<layout>p2</layout>
+					<url>${knime.gateway.p2}</url>
+				</repository>
 			</repositories>
 		</profile>
 	</profiles>
