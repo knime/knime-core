@@ -55,9 +55,12 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.report.ReportConfiguration.Orientation;
+import org.knime.core.node.port.report.ReportConfiguration.PageMargins;
 import org.knime.core.node.port.report.ReportConfiguration.PageSize;
 import org.knime.core.node.util.CheckUtils;
+import org.knime.shared.workflow.def.PageMarginsDef;
 import org.knime.shared.workflow.def.ReportConfigurationDef;
+import org.knime.shared.workflow.def.impl.PageMarginsDefBuilder;
 import org.knime.shared.workflow.def.impl.ReportConfigurationDefBuilder;
 
 /**
@@ -67,9 +70,20 @@ import org.knime.shared.workflow.def.impl.ReportConfigurationDefBuilder;
  * @author Bernd Wiswedel, KNIME
  * @param pageSize non-null page size
  * @param orientation non-null orientation
+ * @param margins non-null page margins
+ *
  * @since 5.1
  */
-public record ReportConfiguration(PageSize pageSize, Orientation orientation) {
+public record ReportConfiguration(PageSize pageSize, Orientation orientation, PageMargins margins) {
+
+    /**
+     * Report configuration constructor using default page margins and resolution
+     * @param pageSize non-null page size
+     * @param orientation non-null orientation
+     */
+    public ReportConfiguration(final PageSize pageSize, final Orientation orientation) {
+        this(pageSize, orientation, DEFAULT_PAGE_MARGINS);
+    }
 
     /** page size, e.g. A4. */
     @SuppressWarnings({"java:S115", "javadoc"}) // naming of constants still OK to be persisted in workflow file
@@ -162,18 +176,73 @@ public record ReportConfiguration(PageSize pageSize, Orientation orientation) {
         }
     }
 
-    @SuppressWarnings({"java:S115", "javadoc"})
-    public static record PageMargins(double top, double right, double bottom, double left) {}
+    /**
+     * Page margins which can be supplied as 1-4 values, similar to CSS margin definition shorthands.
+     * All values are assumed to be in inches.
+     * @param topMargin the value in inches to assign to the top page margin
+     * @param rightMargin the value in inches to assign to the right page margin
+     * @param bottomMargin the value in inches to assign to the bottom page margin
+     * @param leftMargin the value in inches to assign to the left page margin
+     *
+     * @author Christian Albrecht, KNIME GmbH, Konstanz, Germany
+     */
+    public record PageMargins(double topMargin, double rightMargin, double bottomMargin, double leftMargin) {
+
+        /**
+         * Shorthand constructor to supply all 4 margins as the same value.
+         * @param allMargins the value in inches to assign to top, right, bottom and left page margins
+         */
+        public PageMargins(final double allMargins) {
+            this(allMargins, allMargins, allMargins, allMargins);
+        }
+
+        /**
+         * Shorthand constructor to supply top/bottom and left/right margins as the same value.
+         * @param topBottomMargin the value in inches to assign to top and bottom page margins
+         * @param leftRightMargin the value in inches to assign to left and right page margins
+         */
+        public PageMargins(final double topBottomMargin, final double leftRightMargin) {
+            this(topBottomMargin, leftRightMargin, topBottomMargin, leftRightMargin);
+        }
+
+        /**
+         * Shorthand constructor to supply left/right margins as the same value.
+         * @param topMargin the value in inches to assign to the top page margin
+         * @param leftRightMargin the value in inches to assign to left and right page margins
+         * @param bottomMargin the value in inches to assign to the bottom page margin
+         */
+        public PageMargins(final double topMargin, final double leftRightMargin, final double bottomMargin) {
+            this(topMargin, leftRightMargin, bottomMargin, leftRightMargin);
+        }
+
+        /**
+         * Returns the set margin values as CSS value string
+         * @return the concatenated CSS value string
+         */
+        public String asCSSString() {
+            String unit = "in ";
+            StringBuilder css = new StringBuilder();
+            css.append(topMargin);
+            css.append(unit);
+            css.append(rightMargin);
+            css.append(unit);
+            css.append(bottomMargin);
+            css.append(unit);
+            css.append(leftMargin);
+            css.append(unit);
+            return css.substring(0, css.length() - 1);
+        }
+    }
 
     /**
-     * Rendering resolution in ppi, constant for now
+     * Rendering resolution in ppi, constant for now (96ppi)
      */
-    public static final int RESOLUTION = 96;
+    private static final int RESOLUTION_PPI = 96;
 
     /**
-     * Page margins in inches, static default of 20mm (0.79in) for each side for now
+     * Default page margins, 1cm (0.395in) for each side
      */
-    public static final PageMargins PAGE_MARGINS = new PageMargins(0.79, 0.79, 0.79, 0.79);
+    private static final PageMargins DEFAULT_PAGE_MARGINS = new PageMargins(0.395);
 
     /**
      * Only checks null-ness.
@@ -181,6 +250,7 @@ public record ReportConfiguration(PageSize pageSize, Orientation orientation) {
     public ReportConfiguration {
         CheckUtils.checkArgumentNotNull(pageSize);
         CheckUtils.checkArgumentNotNull(orientation);
+        CheckUtils.checkArgumentNotNull(margins);
     }
 
     /**
@@ -191,6 +261,11 @@ public record ReportConfiguration(PageSize pageSize, Orientation orientation) {
     public void save(final NodeSettingsWO settings) { //NOSONAR (more generic arg possible)
         settings.addString("pagesize", pageSize.name());
         settings.addString("orientation", orientation.name());
+        NodeSettingsWO marginSettings = settings.addNodeSettings("pagemargins");
+        marginSettings.addDouble("top", margins.topMargin);
+        marginSettings.addDouble("right", margins.rightMargin);
+        marginSettings.addDouble("bottom", margins.bottomMargin);
+        marginSettings.addDouble("left", margins.leftMargin);
     }
 
     /** Counterpart to {@link #save(NodeSettingsWO)}.
@@ -201,7 +276,17 @@ public record ReportConfiguration(PageSize pageSize, Orientation orientation) {
     public static ReportConfiguration load(final NodeSettingsRO settings) throws InvalidSettingsException { // NOSONAR
         final var pagesize = PageSize.fromName(settings.getString("pagesize"));
         final var orientation = Orientation.fromName(settings.getString("orientation"));
-        return new ReportConfiguration(pagesize, orientation);
+        var pageMargins = DEFAULT_PAGE_MARGINS;
+        try {
+            NodeSettingsRO marginSettings = settings.getNodeSettings("pagemargins");
+            double topMargin = marginSettings.getDouble("top");
+            double rightMargin = marginSettings.getDouble("right");
+            double bottomMargin = marginSettings.getDouble("bottom");
+            double leftMargin = marginSettings.getDouble("left");
+            pageMargins = new PageMargins(topMargin, rightMargin, bottomMargin, leftMargin);
+        } catch (InvalidSettingsException ex) { /* use default margins */ }
+
+        return new ReportConfiguration(pagesize, orientation, pageMargins);
     }
 
     /**
@@ -210,9 +295,16 @@ public record ReportConfiguration(PageSize pageSize, Orientation orientation) {
      * @return A def object.
      */
     public ReportConfigurationDef toDef() {
+        PageMarginsDef pageMargins = new PageMarginsDefBuilder()
+                .setTop(margins.topMargin) //
+                .setRight(margins.rightMargin) //
+                .setBottom(margins.bottomMargin) //
+                .setLeft(margins.leftMargin) //
+                .build();
         return new ReportConfigurationDefBuilder() //
             .setOrientation(orientation.getOrientation()) //
             .setPageSize(pageSize.getHumanReadableFormat()) //
+            .setPageMargins(pageMargins) //
             .build();
     }
 
@@ -234,7 +326,9 @@ public record ReportConfiguration(PageSize pageSize, Orientation orientation) {
         final var psDef = def.getPageSize();
         final var pageSize = Stream.of(PageSize.values()).filter(o -> o.getHumanReadableFormat().equals(psDef))
             .findFirst().orElseThrow(() -> new InvalidSettingsException("Invalid page size identifier: " + psDef));
-        return Optional.of(new ReportConfiguration(pageSize, orientation));
+        var marginsDef = def.getPageMargins();
+        var pageMargins = new PageMargins(marginsDef.getTop(), marginsDef.getRight(), marginsDef.getBottom(), marginsDef.getLeft());
+        return Optional.of(new ReportConfiguration(pageSize, orientation, pageMargins));
     }
 
     @SuppressWarnings({"java:S115", "javadoc"})
@@ -243,24 +337,23 @@ public record ReportConfiguration(PageSize pageSize, Orientation orientation) {
     /**
      * Determines the dimensions in pixels of a page size, given a {@link ReportConfiguration}
      * @param config the configuration object containing page format, orientation and margins
-     * @param considerMargins true, if the defined margins should be subtracted from the page dimensions, false otherwise
+     * @param subtractMargins true, if the defined margins should be subtracted from the page dimensions, false otherwise
      *
      * @return a {@link PixelDimension} containing width and height of
      */
-    public static PixelDimension getPixelDimension(final ReportConfiguration config, final boolean considerMargins) {
-        int res = ReportConfiguration.RESOLUTION;
+    public static PixelDimension getPixelDimension(final ReportConfiguration config, final boolean subtractMargins) {
+        int res = ReportConfiguration.RESOLUTION_PPI;
         int pageWidth = getDevicePixelForPhysicalDimension(config.pageSize.getWidth(), res);
         int pageHeight = getDevicePixelForPhysicalDimension(config.pageSize.getHeight(), res);
 
         int width = config.orientation() == Orientation.Portrait ? pageWidth : pageHeight;
         int height = config.orientation() == Orientation.Portrait ? pageHeight : pageWidth;
 
-        if (considerMargins) {
-            var margins = ReportConfiguration.PAGE_MARGINS;
-            int marginTop = getDevicePixelForPhysicalDimension(margins.top, res);
-            int marginRight = getDevicePixelForPhysicalDimension(margins.right, res);
-            int marginBottom = getDevicePixelForPhysicalDimension(margins.bottom, res);
-            int marginLeft = getDevicePixelForPhysicalDimension(margins.left, res);
+        if (subtractMargins) {
+            int marginTop = getDevicePixelForPhysicalDimension(config.margins.topMargin, res);
+            int marginRight = getDevicePixelForPhysicalDimension(config.margins.rightMargin, res);
+            int marginBottom = getDevicePixelForPhysicalDimension(config.margins.bottomMargin, res);
+            int marginLeft = getDevicePixelForPhysicalDimension(config.margins.leftMargin, res);
 
             int widthMargin = Math.max(0, width - marginLeft - marginRight);
             int heightMargin = Math.max(0, height - marginTop - marginBottom);
@@ -278,7 +371,7 @@ public record ReportConfiguration(PageSize pageSize, Orientation orientation) {
      *
      * @return the value in device pixels
      */
-    public static int getDevicePixelForPhysicalDimension(final double physicalValue, final int resolution) {
+    private static int getDevicePixelForPhysicalDimension(final double physicalValue, final int resolution) {
         return (int)Math.round(physicalValue * resolution);
     }
 
