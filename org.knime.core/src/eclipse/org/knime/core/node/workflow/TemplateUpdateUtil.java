@@ -99,16 +99,17 @@ public final class TemplateUpdateUtil {
      */
     public enum LinkType {
         /** Specific version is selected, no updates will be available. */
-        FIXED_VERSION(Object::toString, null),
+        FIXED_VERSION(Object::toString, null, null),
 
         /** <i>Latest version</i> is selected. */
-        LATEST_VERSION(v -> "most-recent", "most-recent"),
+        LATEST_VERSION(v -> "most-recent", "most-recent", "latest"),
 
         /** <i>Current state</i> is selected, which includes unversioned changes. */
-        LATEST_STATE(v -> null, "current-state");
+        LATEST_STATE(v -> null, "current-state", "-1");
 
         private final Function<Integer, String> m_paramString;
         private final String m_identifier;
+        private final String m_legacyIdentifier;
 
         /**
          * The key used in query parameters to specify the hub version of a repository item.
@@ -124,9 +125,10 @@ public final class TemplateUpdateUtil {
          */
         public static final String LEGACY_SPACE_VERSION_QUERY_PARAM = "spaceVersion";
 
-        LinkType(final Function<Integer, String> paramString, final String identifier) {
+        LinkType(final Function<Integer, String> paramString, final String identifier, final String legacyIdentifier) {
             m_paramString = paramString;
             m_identifier = identifier;
+            m_legacyIdentifier = legacyIdentifier;
         }
 
         /**
@@ -145,6 +147,15 @@ public final class TemplateUpdateUtil {
          */
         public String getIdentifier() {
             return m_identifier;
+        }
+
+        /**
+         * @return the value previously used in query parameters (for Space Versioning) to denote a specific link type.
+         * {@code null} for FIXED_VERSION.
+         * @since 5.1
+         */
+        public String getLegacyIdentifier() {
+            return m_legacyIdentifier;
         }
     }
 
@@ -225,7 +236,8 @@ public final class TemplateUpdateUtil {
              * (since there are no changes to versioned content but we still want the content when changing
              * the version of the template.)
              */
-            final var cutoffDate = HubItemVersion.of(sourceURI).isVersioned() ? null // ignore modified since for versioned content
+            // ignore modified since for versioned content
+            final var cutoffDate = HubItemVersion.of(sourceURI).filter(HubItemVersion::isVersioned).isPresent() ? null
                 : Optional.ofNullable(linkInfo.getTimestamp()).map(OffsetDateTime::toZonedDateTime).orElse(null);
             final var localDir = ResolverUtil.resolveURItoLocalOrTempFileConditional(sourceURI,
                 new NullProgressMonitor(), cutoffDate).orElse(null);

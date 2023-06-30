@@ -292,7 +292,7 @@ public final class MetaNodeTemplateInformation implements Cloneable {
     }
 
     private MetaNodeTemplateInformation buildTemplateInformation(final URI newSource) {
-        if (HubItemVersion.of(newSource).isVersioned()) {
+        if (HubItemVersion.of(newSource).filter(HubItemVersion::isVersioned).isPresent()) {
             // ifModifiedSince is set to null because always perform a download for components with a space version.
             return new MetaNodeTemplateInformation(Role.Link, null, newSource,
                 OffsetDateTime.parse("1970-01-01T00:00:00+00:00"), null, null);
@@ -419,7 +419,7 @@ public final class MetaNodeTemplateInformation implements Cloneable {
             throw new IllegalStateException("Argument not a template or link: " + this);
         }
 
-        if (HubItemVersion.of(m_sourceURI).isVersioned()) {
+        if (HubItemVersion.of(m_sourceURI).filter(HubItemVersion::isVersioned).isPresent()) {
             return !getTimestamp().isEqual(other.getTimestamp());
         } else {
             return getTimestamp().isAfter(other.getTimestamp());
