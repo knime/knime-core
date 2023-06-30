@@ -44,7 +44,9 @@
  */
 package org.knime.core.node.workflow.metadata;
 
+import java.time.DateTimeException;
 import java.time.LocalDateTime;
+import java.time.Year;
 import java.time.ZoneId;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
@@ -102,12 +104,12 @@ public final class MetaInfoFile {
             //      13/5/2018/10:28:12 +02:00
             if (elements.length >= 3) {
                 try {
-                    final var day = Integer.parseInt(elements[0]);
-                    final var month = Integer.parseInt(elements[1]);
-                    final var year = Integer.parseInt(elements[2]);
+                    final var day = Math.min(Math.max(1, Integer.parseInt(elements[0])), 31);
+                    final var month = Math.min(Math.max(1, Integer.parseInt(elements[1])), 12);
+                    final var year = Math.min(Math.max(Year.MIN_VALUE, Integer.parseInt(elements[2])), Year.MAX_VALUE);
                     return GregorianCalendar.from(LocalDateTime.of(year, month, day, 12, 1) //
                             .atZone(ZoneId.systemDefault()));
-                } catch (final NumberFormatException nfe) {
+                } catch (final NumberFormatException | DateTimeException nfe) {
                     LOGGER.error("Unable to parse date string [" + value + "]", nfe);
                 }
             }
