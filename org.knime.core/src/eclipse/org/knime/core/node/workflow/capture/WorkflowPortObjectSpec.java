@@ -75,6 +75,7 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortObjectSpecZipInputStream;
 import org.knime.core.node.port.PortObjectSpecZipOutputStream;
+import org.knime.core.node.port.PortSerializerContext;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.util.CheckUtils;
@@ -96,7 +97,7 @@ public class WorkflowPortObjectSpec implements PortObjectSpec {
 
     private WorkflowSegment m_ws;
 
-    private String m_customWorkflowName = null;
+    private String m_customWorkflowName;
 
     private List<String> m_inputIDs;
 
@@ -128,14 +129,36 @@ public class WorkflowPortObjectSpec implements PortObjectSpec {
         @Override
         public void savePortObjectSpec(final WorkflowPortObjectSpec portObjectSpec,
             final PortObjectSpecZipOutputStream out) throws IOException {
+            switch (PortSerializerContext.getIntent()) {
+                case COPY_TO_OTHER_JVM, WRAP_INTO_TABLE_CELL:
+                    checkCanWriteWorkflowPortObjectSpec(portObjectSpec);
+                    break;
+                case UNKNOWN:
+                default:
+            }
+
             out.putNextEntry(new ZipEntry("metadata.xml"));
-            ModelContent metadata = new ModelContent("metadata.xml");
+            final var metadata = new ModelContent("metadata.xml");
             portObjectSpec.saveSpecMetadata(metadata);
-            try (final NonClosableOutputStream.Zip zout = new NonClosableOutputStream.Zip(out)) {
+            try (final var zout = new NonClosableOutputStream.Zip(out)) {
                 metadata.saveToXML(zout);
             }
             portObjectSpec.m_ws.saveWorkflowData(out);
         }
+
+        // introduced via AP-20633 - will be obsolete as soon as AP-16226 is solved
+        private static void checkCanWriteWorkflowPortObjectSpec(final WorkflowPortObjectSpec spec) throws IOException {
+            var segment = spec.getWorkflowSegment();
+            var referenceReaderNodes = segment.getPortObjectReferenceReaderNodes();
+            if (!referenceReaderNodes.isEmpty()) {
+                throw new IOException("""
+                           Unable to write workflow segment because it 'statically' references other ports.
+                           Write/store the referenced port data separately and pass it into
+                           the workflow segment via a dedicated workflow input (Capture Workflow Start).
+                        """);
+            }
+        }
+
     }
 
     private static final String INPUT_ID_PREFIX = "Input";
