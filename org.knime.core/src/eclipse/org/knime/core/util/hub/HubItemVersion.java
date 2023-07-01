@@ -51,12 +51,14 @@ package org.knime.core.util.hub;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Optional;
 
 import org.apache.hc.core5.http.NameValuePair;
 import org.apache.hc.core5.http.message.BasicNameValuePair;
 import org.apache.hc.core5.net.URIBuilder;
+import org.apache.hc.core5.net.WWWFormCodec;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.TemplateUpdateUtil.LinkType;
 
@@ -178,7 +180,7 @@ public record HubItemVersion(LinkType linkType, Integer versionNumber) {
         }
 
         HubItemVersion found = null;
-        for (final var param : new URIBuilder().setCustomQuery(query).getQueryParams()) {
+        for (final var param : WWWFormCodec.parse(query, StandardCharsets.UTF_8)) {
             final var isItemVersion = LinkType.VERSION_QUERY_PARAM.equals(param.getName());
             boolean isLegacySpaceVersion = LinkType.LEGACY_SPACE_VERSION_QUERY_PARAM.equals(param.getName());
             if (isItemVersion || isLegacySpaceVersion) {

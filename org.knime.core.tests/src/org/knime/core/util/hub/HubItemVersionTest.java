@@ -86,7 +86,7 @@ public class HubItemVersionTest {
         // given a URI without a version number
         URI withoutSpaceVersion = URI.create("knime://SomeMountPoint/some/path?someParameter=12");
         // when extracting the version number
-        var version = HubItemVersion.of(withoutSpaceVersion);
+        var version = HubItemVersion.of(withoutSpaceVersion).orElse(HubItemVersion.currentState());
         // then the link type is latest state and the version number is null
         assertEquals(HubItemVersion.currentState(), version,
             "currentState should be returned for URIs without version number");
@@ -94,18 +94,20 @@ public class HubItemVersionTest {
         // given a URI with a version number
         URI withSpaceVersion3 = URI.create("knime://My-KNIME-Hub/*02j3f023j?someParameter=12&version=3&param=4");
         // when extracting the version number
-        version = HubItemVersion.of(withSpaceVersion3);
+        version = HubItemVersion.of(withSpaceVersion3).orElse(HubItemVersion.currentState());
         // then the link type is fixed version and the version number is 3
-        assertEquals(new HubItemVersion(LinkType.FIXED_VERSION, 3), HubItemVersion.of(withSpaceVersion3),
+        assertEquals(new HubItemVersion(LinkType.FIXED_VERSION, 3),
+            HubItemVersion.of(withSpaceVersion3).orElseThrow(),
             "version 3 should be returned for input: " + withSpaceVersion3);
 
         // given a URI with latest version
         URI withVersionLatest =
             URI.create("knime://My-KNIME-Hub/*02j3f023j?someParameter=12&version=most-recent&param=4");
         // when extracting the version number
-        version = HubItemVersion.of(withVersionLatest);
+        version = HubItemVersion.of(withVersionLatest).orElse(HubItemVersion.currentState());
         // then the link type is latest version and the version number is null
-        assertEquals(new HubItemVersion(LinkType.LATEST_VERSION, null), HubItemVersion.of(withVersionLatest),
+        assertEquals(new HubItemVersion(LinkType.LATEST_VERSION, null),
+            HubItemVersion.of(withVersionLatest).orElseThrow(),
             "latest version should be returned for input: " + withVersionLatest);
     }
 
