@@ -108,8 +108,10 @@ public record HubItemVersion(LinkType linkType, Integer versionNumber) {
     }
 
     /**
+     * Adds the item version query parameter to the given uri or removes it if this represents an item's current state.
+     *
      * @param uri to derive new URI from. Non-null.
-     * @return source URI with Hub item version set
+     * @return source URI, possibly with item version query parameter.
      */
     public URI applyTo(final URI uri) {
         CheckUtils.checkArgumentNotNull(uri);
@@ -149,7 +151,7 @@ public record HubItemVersion(LinkType linkType, Integer versionNumber) {
      *
      * @param knimeUrl KNIME URL. Non-null.
      * @return the link type and item version. Item version is {@code null} for link types ≠ FIXED_VERSION
-     * @throws IllegalArgumentException if the given URI is null or the version cannot be determined
+     * @throws IllegalArgumentException if the given URL is null or the version cannot be determined
      */
     public static Optional<HubItemVersion> of(final URI knimeUrl) {
         CheckUtils.checkArgumentNotNull(knimeUrl);
@@ -272,13 +274,19 @@ public record HubItemVersion(LinkType linkType, Integer versionNumber) {
 
         var builder = new URIBuilder(uri);
         var params = new ArrayList<>(builder.getQueryParams());
-        var offset = params.stream().map(NameValuePair::getName).toList().indexOf(oldName);
-        var insertAt = offset == -1 ? params.size() : offset;
 
-        if(offset != -1) {
+        var multiValueParameter = params.stream().filter(nvp -> nvp.getValue().contains(",")).findAny();
+        if (multiValueParameter.isPresent()) {
+            throw new IllegalArgumentException("Cannot handle multi-valued query parameters. "
+                + "Commas will be URL encoded, which means the parameter is interpreted as a single value parameter.");
+        }
+
+        var offset = params.stream().map(NameValuePair::getName).toList().indexOf(oldName);
+        if (offset != -1) {
             params.remove(offset);
         }
 
+        var insertAt = offset == -1 ? params.size() : offset;
         Optional.ofNullable(value)//
             .map(v -> new BasicNameValuePair(newName, v))//
             .ifPresent(pair -> params.add(insertAt, pair));
@@ -288,11 +296,5 @@ public record HubItemVersion(LinkType linkType, Integer versionNumber) {
         } catch (URISyntaxException ex) {
             throw new IllegalStateException(ex);
         }
-        //        // org.apache.hc.core5.net.URIBuilder encodes params=apple,banana into params=apple%2Cbanana that's why I use the UriBuilder here.
-//        var builder = UriBuilder.fromUri(uri);
-//        if(!Objects.equals(oldName, newName)) {
-//            builder.replaceQueryParam(oldName, (Object) null);
-//        }
-//        return builder.replaceQueryParam(newName, value).build();
     }
 }

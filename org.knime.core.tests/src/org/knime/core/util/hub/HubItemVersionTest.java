@@ -51,9 +51,20 @@ package org.knime.core.util.hub;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Optional;
 
+import org.apache.hc.core5.http.NameValuePair;
+import org.apache.hc.core5.http.message.BasicNameValuePair;
+import org.apache.hc.core5.net.URIBuilder;
+import org.apache.hc.core5.net.WWWFormCodec;
 import org.junit.Test;
 import org.knime.core.node.workflow.TemplateUpdateUtil.LinkType;
 
@@ -68,7 +79,7 @@ public class HubItemVersionTest {
      * Test that the utility constructors create the expected objects.
      */
     @Test
-    public void utilityConstructors() {
+    public void testUtilityConstructors() {
         assertEquals(new HubItemVersion(LinkType.LATEST_VERSION, null), HubItemVersion.latestVersion(),
             "Utility constructor for latest version is faulty.");
         assertEquals(new HubItemVersion(LinkType.LATEST_STATE, null), HubItemVersion.currentState(),
@@ -78,82 +89,126 @@ public class HubItemVersionTest {
     }
 
     /**
-     * Example input:  knime://My-KNIME-Hub/*02j3f023j?someParameter=12&version=3&param=4
+     * Example input: knime://My-KNIME-Hub/*02j3f023j?someParameter=12&version=3&param=4 <br/>
      * Example output: HubItemVersion(LinkType.FIXED_VERSION, 3)
+     *
+     * @throws MalformedURLException
      */
     @Test
-    public void testExtractVersionNumber() {
-        // given a URI without a version number
-        URI withoutSpaceVersion = URI.create("knime://SomeMountPoint/some/path?someParameter=12");
-        // when extracting the version number
-        var version = HubItemVersion.of(withoutSpaceVersion).orElse(HubItemVersion.currentState());
-        // then the link type is latest state and the version number is null
-        assertEquals(HubItemVersion.currentState(), version,
-            "currentState should be returned for URIs without version number");
+    public void testExtractVersionNumberWhenNotPresent() throws MalformedURLException {
+        // given a URI/URL without a version number
+        final URI uri = URI.create("knime://SomeMountPoint/some/path?someParameter=12");
+        final URL url = new URL("https://www.knime.com");
 
-        // given a URI with a version number
-        URI withSpaceVersion3 = URI.create("knime://My-KNIME-Hub/*02j3f023j?someParameter=12&version=3&param=4");
         // when extracting the version number
-        version = HubItemVersion.of(withSpaceVersion3).orElse(HubItemVersion.currentState());
-        // then the link type is fixed version and the version number is 3
-        assertEquals(new HubItemVersion(LinkType.FIXED_VERSION, 3),
-            HubItemVersion.of(withSpaceVersion3).orElseThrow(),
-            "version 3 should be returned for input: " + withSpaceVersion3);
+        var uriVersion = HubItemVersion.of(uri);
+        var urlVersion = HubItemVersion.of(url);
 
-        // given a URI with latest version
-        URI withVersionLatest =
-            URI.create("knime://My-KNIME-Hub/*02j3f023j?someParameter=12&version=most-recent&param=4");
-        // when extracting the version number
-        version = HubItemVersion.of(withVersionLatest).orElse(HubItemVersion.currentState());
-        // then the link type is latest version and the version number is null
-        assertEquals(new HubItemVersion(LinkType.LATEST_VERSION, null),
-            HubItemVersion.of(withVersionLatest).orElseThrow(),
-            "latest version should be returned for input: " + withVersionLatest);
+        // then the version is empty
+        assertEquals(Optional.empty(), uriVersion, "version should be empty uri: " + uri);
+        assertEquals(Optional.empty(), urlVersion, "version should be empty url: " + url);
     }
 
     /**
-     * Example input:  knime://My-KNIME-Hub/*02j3f023j?someParameter=12&version=3&param=4
+     * Example input: knime://My-KNIME-Hub/*02j3f023j?someParameter=12&version=3&param=4 <br/>
+     * Example output: HubItemVersion(LinkType.FIXED_VERSION, 3)
+     *
+     * @throws MalformedURLException
+     */
+    @Test
+    public void testExtractVersionNumberFixed() throws MalformedURLException {
+        // given a URI/URL with a version number
+        final URI uri = URI.create("knime://My-KNIME-Hub/*02j3f023j?multiValueParam=4,4&version=3&otherParam=book");
+        final URL url =
+            new URL("https://www.hub.knime.com/repo/some/item?multiValueParam=4,4&version=3&otherParam=book");
+
+        // when extracting the version number
+        var uriVersion = HubItemVersion.of(uri).get();
+        var urlVersion = HubItemVersion.of(url).get();
+
+        // then the link type is fixed version and the version number is 3
+        final var version3 = HubItemVersion.of(3);
+        assertEquals(version3, uriVersion, "version 3 should be returned for uri: " + uri);
+        assertEquals(version3, urlVersion, "version 3 should be returned for url: " + url);
+    }
+
+    /**
+     * Example input: knime://My-KNIME-Hub/*02j3f023j?someParameter=12&version=latest-state&param=4 <br/>
+     * Example output: HubItemVersion(LinkType.LATEST_STATE, null)
+     *
+     * @throws MalformedURLException
+     */
+    @Test
+    public void testExtractVersionNumberLatestState() throws MalformedURLException {
+        // given a URI/URL with latest version
+        final URI uri = URI.create("knime://My-KNIME-Hub/*02j3f023j?someParameter=12&version=most-recent&param=4");
+        final URL url =
+            new URL("https://www.hub.knime.com/repo/some/item?someParameter=12&version=most-recent&param=4");
+
+        // when extracting the version number
+        var uriVersion = HubItemVersion.of(uri).get();
+        var urlVersion = HubItemVersion.of(url).get();
+
+        // then the link type is latest version and the version number is null
+        final var latest = HubItemVersion.latestVersion();
+        assertEquals(latest, uriVersion, "latest version should be returned for uri: " + uri);
+        assertEquals(latest, urlVersion, "latest version should be returned for url: " + url);
+    }
+
+    /**
+     * Example input: knime://My-KNIME-Hub/*02j3f023j?someParameter=12&version=3&param=4 <br/>
      * Example output: knime://My-KNIME-Hub/*02j3f023j?someParameter=12&param=4
      */
     @Test
-    public void testRemoveVersion() {
-        // given a URI with version set
-        URI withVersion3 = URI.create("knime://My-KNIME-Hub/*02j3f023j?someParameter=12&version=3&param=4");
-        // when setting to current state by removing query parameter (set item version to null)
-        var withoutVersion = HubItemVersion.currentState().applyTo(withVersion3);
-        // then the version is removed
-        assertEquals(URI.create("knime://My-KNIME-Hub/*02j3f023j?someParameter=12&param=4"), withoutVersion,
-            "version should be removed from URI");
+    public void testApplyCurrentStateRemovesVersion() {
+        // given a URI/URL with version set
+        final URI uri = URI.create("knime://My-KNIME-Hub/*02j3f023j?someParameter=12&version=3&param=4");
 
-        // given a URI without version set
-        URI withoutSpaceVersion = URI.create("knime://SomeMountPoint/some/path?someParameter=12");
-        // when setting to latest by removing query parameter (set item version null)
-        var unchanged = HubItemVersion.currentState().applyTo(withoutSpaceVersion);
-        // then the url is unchanged
-        assertEquals(withoutSpaceVersion, unchanged, "URI should be unchanged.");
+        // when setting to current state
+        final var appliedUri = HubItemVersion.currentState().applyTo(uri);
+
+        // then the version is removed
+        assertEquals(URI.create("knime://My-KNIME-Hub/*02j3f023j?someParameter=12&param=4"), appliedUri,
+            "version should be removed from URI");
     }
 
     /**
-     * Example input: knime://My-KNIME-Hub/*02j3f023j?someParameter=12&version=3&param=4 Example output:
-     * knime://My-KNIME-Hub/*02j3f023j?someParameter=12&version=4&param=4
+     * Example input: knime://SomeMountPoint/some/path?someParameter=12 <br/>
+     * Example output: unchanged
      */
     @Test
-    public void testUpdateVersion() {
+    public void testApplyCurrentStateToCurrentStateLeavesUnchanged() {
+        // given a URI/URL without version set
+        final URI uri = URI.create("knime://SomeMountPoint/some/path?someParameter=12");
+
+        // when setting to current state
+        var appliedUri = HubItemVersion.currentState().applyTo(uri);
+
+        // then the result is unchanged
+        assertEquals(uri, appliedUri, "URI should be unchanged.");
+    }
+
+    /**
+     * Example input: knime://My-KNIME-Hub/*02j3f023j?someParameter=12&version=3&param=4 <br/>
+     * Example output: knime://My-KNIME-Hub/*02j3f023j?someParameter=12&version=4&param=4
+     */
+    @Test
+    public void testApplyFixedVersionUpdatesVersion() {
         // given a URI with version set
-        URI withVersion3 = URI.create("knime://My-KNIME-Hub/*02j3f023j?someParameter=12&version=3&param=4");
+        URI withVersion3 = URI.create("knime://My-KNIME-Hub/*02j3f023j?param=12&version=3&param=4");
         // when setting a different version
         var withVersion4 = HubItemVersion.of(4).applyTo(withVersion3);
         // then the version is removed
-        assertEquals(URI.create("knime://My-KNIME-Hub/*02j3f023j?someParameter=12&version=4&param=4"), withVersion4,
+        assertEquals(URI.create("knime://My-KNIME-Hub/*02j3f023j?param=12&version=4&param=4"), withVersion4,
             "version should be updated in URI");
     }
 
     /**
-     * Example input:  knime://SomeMountPoint/some/path
+     * Example input: knime://SomeMountPoint/some/path <br/>
      * Example output: knime://SomeMountPoint/some/path?version=4
      */
     @Test
-    public void testAddVersion() {
+    public void testApplyFixedVersionAddsVersion() {
         // given a URI without version set
         URI withoutVersion = URI.create("knime://SomeMountPoint/some/path");
         // when setting a version
@@ -164,11 +219,11 @@ public class HubItemVersionTest {
     }
 
     /**
-     * Example input:  knime://My-KNIME-Hub/*02j3f023j?someParameter=12&version=3&param=4
+     * Example input: knime://My-KNIME-Hub/*02j3f023j?someParameter=12&version=3&param=4 <br/>
      * Example output: knime://My-KNIME-Hub/*02j3f023j?someParameter=12&version=most-recent&param=4
      */
     @Test
-    public void testSetLatestVersion() {
+    public void testApplyLatestVersionReplacesFixedVersion() {
         // given a URI with version set
         URI withVersion3 = URI.create("knime://My-KNIME-Hub/*02j3f023j?someParameter=12&version=3&param=4");
         // when setting to latest version
@@ -179,11 +234,11 @@ public class HubItemVersionTest {
     }
 
     /**
-     * Example input:  knime://My-KNIME-Hub/*02j3f023j?someParameter=12&spaceVersion=3&param=4
+     * Example input: knime://My-KNIME-Hub/*02j3f023j?someParameter=12&spaceVersion=3&param=4 <br/>
      * Example output: knime://My-KNIME-Hub/*02j3f023j?someParameter=12&version=3&param=4
      */
     @Test
-    public void testMigrateVersion() {
+    public void testMigrateVersionReplacesQueryParameter() {
         // given a URI with a space version set and some other parameters
         URI withSpaceVersion3 = URI.create("knime://My-KNIME-Hub/*02j3f023j?someParameter=12&spaceVersion=3&param=4");
         // when calling migrate version
@@ -191,6 +246,28 @@ public class HubItemVersionTest {
         // then the version is set to version=3
         assertEquals(URI.create("knime://My-KNIME-Hub/*02j3f023j?someParameter=12&version=3&param=4"), withVersion3,
             "version should be migrated to version=3 in URI");
+    }
+
+    /**
+     * Example input: knime://My-KNIME-Hub/*02j3f023j <br/>
+     * Example output: knime://My-KNIME-Hub/*02j3f023j?version=3&spaceVersion=3
+     *
+     * @throws URISyntaxException
+     */
+    @Test
+    public void testAddToUriAddsBothParameters() throws URISyntaxException {
+        // given a fixed version
+        final var version = HubItemVersion.of(3);
+        final var builder = new URIBuilder(URI.create("knime://My-KNIME-Hub/*02j3f023j?someParameter=12&param=4"));
+
+        // when adding to a URI
+        version.addVersionToURI(builder);
+        final var result = builder.build();
+
+        // then the resulting URI has both parameters
+        final List<NameValuePair> params = WWWFormCodec.parse(result.getQuery(), StandardCharsets.UTF_8);
+        assertTrue(params.contains(new BasicNameValuePair(LinkType.VERSION_QUERY_PARAM, "3")), "URI should have query parameter version=3");
+        assertTrue(params.contains(new BasicNameValuePair(LinkType.LEGACY_SPACE_VERSION_QUERY_PARAM, "3")), "URI should have query parameter spaceVersion=3");
     }
 
     /**
@@ -208,10 +285,12 @@ public class HubItemVersionTest {
 
         // when applying, we expect an illegal argument exception
         final var version = HubItemVersion.of(1);
-        assertThrows(IllegalArgumentException.class, () -> version.applyTo(nonExistent), "Null URI should not be applicable.");
+        assertThrows(IllegalArgumentException.class, () -> version.applyTo(nonExistent),
+            "Null URI should not be applicable.");
 
         // when parsing, we expect an illegal argument exception
-        assertThrows(IllegalArgumentException.class, () -> HubItemVersion.of(nonExistent), "Null URI should not be parsable.");
+        assertThrows(IllegalArgumentException.class, () -> HubItemVersion.of(nonExistent),
+            "Null URI should not be parsable.");
     }
 
 }
