@@ -342,7 +342,11 @@ public final class UnivariateStatistics {
             final var allColumnStatistics = new UnivariateStatistics();
             final var sortedTable = BufferedDataTableSorter.sortTable(selectedColumnTables.get(columnName), 0, exec);
             final var tableWithMissingValues = selectedColumnTablesWithMissingValues.get(columnName);
-            allColumnStatistics.performStatisticsCalculation(sortedTable, exec);
+            allColumnStatistics.performStatisticsCalculationForAllColumns(sortedTable, exec);
+            boolean isStringColumn = sortedTable.getSpec().getColumnSpec(0).getType().isCompatible(StringValue.class);
+            if (!isStringColumn) {
+                allColumnStatistics.performStatisticsCalculationForNumericColumns(sortedTable, exec);
+            }
             allColumnStatistics.performMissingValuesComputation(tableWithMissingValues);
             statisticsTable.addRowToTable(StatisticsTableUtil.createTableRow(allColumnStatistics, selectedStatistics));
         }
@@ -486,23 +490,39 @@ public final class UnivariateStatistics {
     }
 
     /**
-     * Compute statistics for the given input column.
+     * Compute statistics for the given input column that will be computed for every type.
      *
      * @param inputColumnTable A table containing exactly one column of either {@link DoubleValue} or
      *            {@link StringValue}.
      * @param exec The execution context
      */
-    private void performStatisticsCalculation(final BufferedDataTable inputColumnTable, final ExecutionContext exec)
-        throws CanceledExecutionException {
+    private void performStatisticsCalculationForAllColumns(final BufferedDataTable inputColumnTable,
+        final ExecutionContext exec) throws CanceledExecutionException {
         var columnIndex = 0;
         var type = inputColumnTable.getSpec().getColumnSpec(columnIndex).getType();
-        var isStringValues = type.isCompatible(StringValue.class);
-        // in case of string values, compute some statistics on string lengths
-        var sortedInputTable = BufferedDataTableSorter.sortTable(inputColumnTable, 0, exec);
-        var numericTable = isStringValues ? getStringLengths(sortedInputTable, exec) : sortedInputTable;
 
         setName(inputColumnTable.getSpec().getColumnSpec(columnIndex).getName());
         setType(type);
+
+        // for unique values, always consider raw values (not string lengths)
+        final var countUniqueExtractor = new CountUniqueExtractor();
+        TableExtractorUtil.extractData(inputColumnTable, countUniqueExtractor);
+        setNumberUniqueValues(countUniqueExtractor.getNumberOfUniqueValues());
+        setCommonValues(formatMostFrequentValues(countUniqueExtractor.getMostFrequentValues(10),
+            inputColumnTable.getSpec().getColumnSpec(columnIndex).getType(), inputColumnTable.size()));
+    }
+
+    /**
+     * Compute statistics for the given numeric input column.
+     *
+     * @param inputColumnTable A table containing exactly one numeric column compatible with type {@link DoubleValue}.
+     * @param exec The execution context
+     */
+    private void performStatisticsCalculationForNumericColumns(final BufferedDataTable inputColumnTable,
+        final ExecutionContext exec) throws CanceledExecutionException {
+        var columnIndex = 0;
+        var type = inputColumnTable.getSpec().getColumnSpec(columnIndex).getType();
+        var sortedInputTable = BufferedDataTableSorter.sortTable(inputColumnTable, 0, exec);
 
         final var minExtractor = new MinimumExtractor(columnIndex);
         final var maxExtractor = new MaximumExtractor(columnIndex);
@@ -520,30 +540,17 @@ public final class UnivariateStatistics {
         final var sumExtractor = new DoubleSumExtractor(columnIndex);
 
         // apply extractors
-        TableExtractorUtil.extractData(numericTable, minExtractor, maxExtractor, meanExtractor, sumExtractor,
+        TableExtractorUtil.extractData(sortedInputTable, minExtractor, maxExtractor, meanExtractor, sumExtractor,
             qExtractors[0], qExtractors[1], qExtractors[2], qExtractors[3], qExtractors[4], qExtractors[5],
             qExtractors[6], qExtractors[7], qExtractors[8]);
 
         final var mean = meanExtractor.getOutput();
         setMean(mean);
-        setSum(numericTable.size() == 0 ? Double.NaN : sumExtractor.getOutput());
+        setSum(sortedInputTable.size() == 0 ? Double.NaN : sumExtractor.getOutput());
         setQuantiles(Stream.of(qExtractors).map(QuantileExtractor::getOutput).toArray(Double[]::new));
 
-        // for unique values, always consider raw values (not string lengths)
-        final var countUniqueExtractor = new CountUniqueExtractor();
-        TableExtractorUtil.extractData(sortedInputTable, countUniqueExtractor);
-        setNumberUniqueValues(countUniqueExtractor.getNumberOfUniqueValues());
-        setCommonValues(formatMostFrequentValues(countUniqueExtractor.getMostFrequentValues(10),
-            sortedInputTable.getSpec().getColumnSpec(columnIndex).getType(), sortedInputTable.size()));
-
-        if (isStringValues) {
-            var firstAndLastString = getFirstAndLastString(sortedInputTable);
-            setFirstValue(firstAndLastString.getFirst());
-            setLastValue(firstAndLastString.getSecond());
-        } else {
-            setFirstValue(DataValueRendererUtils.formatFullPrecisionDouble(minExtractor.getOutput()));
-            setLastValue(DataValueRendererUtils.formatFullPrecisionDouble(maxExtractor.getOutput()));
-        }
+        setFirstValue(DataValueRendererUtils.formatFullPrecisionDouble(minExtractor.getOutput()));
+        setLastValue(DataValueRendererUtils.formatFullPrecisionDouble(maxExtractor.getOutput()));
 
         // further extractors whose initialisation depends on previous results
         final var meanAbsoluteDeviationExtractor = new MeanAbsoluteDeviation(columnIndex, mean);
@@ -551,7 +558,7 @@ public final class UnivariateStatistics {
         final var biasedVariance = new CentralMomentExtractor(0, mean, 2);
         final var varianceExtractor = new VarianceExtractor(columnIndex, mean);
 
-        extractData(numericTable, meanAbsoluteDeviationExtractor, standardDeviationExtractor, varianceExtractor,
+        extractData(sortedInputTable, meanAbsoluteDeviationExtractor, standardDeviationExtractor, varianceExtractor,
             biasedVariance);
 
         final var stdDeviation = standardDeviationExtractor.getOutput();
@@ -562,7 +569,7 @@ public final class UnivariateStatistics {
         final var skewnessExtractor = new SkewnessExtractor(columnIndex, mean, stdDeviation);
         final var kurtosisExtractor = new KurtosisExtractor(columnIndex, mean, biasedVariance.getOutput());
 
-        extractData(numericTable, skewnessExtractor, kurtosisExtractor);
+        extractData(sortedInputTable, skewnessExtractor, kurtosisExtractor);
 
         setSkewness(skewnessExtractor.getOutput());
         setKurtosis(kurtosisExtractor.getOutput());
