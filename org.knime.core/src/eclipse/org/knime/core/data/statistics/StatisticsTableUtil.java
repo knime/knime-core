@@ -109,10 +109,10 @@ final class StatisticsTableUtil {
         }
 
         if (selectedStatistics.contains(UnivariateStatistics.Statistic.MINIMUM)) {
-            cells.add(getStringOrMissingCell(columnStatistics.getFirstValue()));
+            cells.add(getDoubleOrMissingCell(columnStatistics.getMin()));
         }
         if (selectedStatistics.contains(UnivariateStatistics.Statistic.MAXIMUM)) {
-            cells.add(getStringOrMissingCell(columnStatistics.getLastValue()));
+            cells.add(getDoubleOrMissingCell(columnStatistics.getMax()));
         }
 
         var allQuantilesData = columnStatistics.getQuantiles();

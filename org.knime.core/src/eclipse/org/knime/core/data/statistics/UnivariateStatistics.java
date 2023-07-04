@@ -131,9 +131,9 @@ public final class UnivariateStatistics {
 
     private Double[] m_quantiles = new Double[9];
 
-    private double m_min;
+    private Double m_min;
 
-    private double m_max;
+    private Double m_max;
 
     private Optional<Double> m_mean = Optional.empty();
 
@@ -217,19 +217,19 @@ public final class UnivariateStatistics {
         m_quantiles = quantiles;
     }
 
-    double getMin() {
+    Double getMin() {
         return m_min;
     }
 
-    private void setMin(final double min) {
+    private void setMin(final Double min) {
         m_min = min;
     }
 
-    double getMax() {
+    Double getMax() {
         return m_max;
     }
 
-    private void setMax(final double max) {
+    private void setMax(final Double max) {
         m_max = max;
     }
 
@@ -504,7 +504,7 @@ public final class UnivariateStatistics {
         setName(inputColumnTable.getSpec().getColumnSpec(columnIndex).getName());
         setType(type);
 
-        // for unique values, always consider raw values (not string lengths)
+        // for unique values, always consider raw values
         final var countUniqueExtractor = new CountUniqueExtractor();
         TableExtractorUtil.extractData(inputColumnTable, countUniqueExtractor);
         setNumberUniqueValues(countUniqueExtractor.getNumberOfUniqueValues());
@@ -549,8 +549,8 @@ public final class UnivariateStatistics {
         setSum(sortedInputTable.size() == 0 ? Double.NaN : sumExtractor.getOutput());
         setQuantiles(Stream.of(qExtractors).map(QuantileExtractor::getOutput).toArray(Double[]::new));
 
-        setFirstValue(DataValueRendererUtils.formatFullPrecisionDouble(minExtractor.getOutput()));
-        setLastValue(DataValueRendererUtils.formatFullPrecisionDouble(maxExtractor.getOutput()));
+        setMin(minExtractor.getOutput());
+        setMax(maxExtractor.getOutput());
 
         // further extractors whose initialisation depends on previous results
         final var meanAbsoluteDeviationExtractor = new MeanAbsoluteDeviation(columnIndex, mean);
@@ -578,8 +578,8 @@ public final class UnivariateStatistics {
     public enum Statistic {
             NAME("Name", StringCell.TYPE), TYPE("Type", StringCell.TYPE),
             NUMBER_MISSING_VALUES("# Missing values", LongCell.TYPE),
-            NUMBER_UNIQUE_VALUES("# Unique values", LongCell.TYPE), MINIMUM("Minimum", StringCell.TYPE),
-            MAXIMUM("Maximum", StringCell.TYPE), QUANTILE_1("1% Quantile", DoubleCell.TYPE),
+            NUMBER_UNIQUE_VALUES("# Unique values", LongCell.TYPE), MINIMUM("Minimum", DoubleCell.TYPE),
+            MAXIMUM("Maximum", DoubleCell.TYPE), QUANTILE_1("1% Quantile", DoubleCell.TYPE),
             QUANTILE_5("5% Quantile", DoubleCell.TYPE), QUANTILE_10("10% Quantile", DoubleCell.TYPE),
             QUANTILE_25("25% Quantile", DoubleCell.TYPE), QUANTILE_50("50% Quantile (Median)", DoubleCell.TYPE),
             QUANTILE_75("75% Quantile", DoubleCell.TYPE), QUANTILE_90("90% Quantile", DoubleCell.TYPE),
