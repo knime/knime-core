@@ -342,7 +342,7 @@ public final class UnivariateStatistics {
             final var allColumnStatistics = new UnivariateStatistics();
             final var sortedTable = BufferedDataTableSorter.sortTable(selectedColumnTables.get(columnName), 0, exec);
             final var tableWithMissingValues = selectedColumnTablesWithMissingValues.get(columnName);
-            allColumnStatistics.performStatisticsCalculationForAllColumns(sortedTable, exec);
+            allColumnStatistics.performStatisticsCalculationForAllColumns(sortedTable);
             boolean isStringColumn = sortedTable.getSpec().getColumnSpec(0).getType().isCompatible(StringValue.class);
             if (!isStringColumn) {
                 allColumnStatistics.performStatisticsCalculationForNumericColumns(sortedTable, exec);
@@ -494,10 +494,8 @@ public final class UnivariateStatistics {
      *
      * @param inputColumnTable A table containing exactly one column of either {@link DoubleValue} or
      *            {@link StringValue}.
-     * @param exec The execution context
      */
-    private void performStatisticsCalculationForAllColumns(final BufferedDataTable inputColumnTable,
-        final ExecutionContext exec) throws CanceledExecutionException {
+    private void performStatisticsCalculationForAllColumns(final BufferedDataTable inputColumnTable) {
         var columnIndex = 0;
         var type = inputColumnTable.getSpec().getColumnSpec(columnIndex).getType();
 
@@ -521,7 +519,6 @@ public final class UnivariateStatistics {
     private void performStatisticsCalculationForNumericColumns(final BufferedDataTable inputColumnTable,
         final ExecutionContext exec) throws CanceledExecutionException {
         var columnIndex = 0;
-        var type = inputColumnTable.getSpec().getColumnSpec(columnIndex).getType();
         var sortedInputTable = BufferedDataTableSorter.sortTable(inputColumnTable, 0, exec);
 
         final var minExtractor = new MinimumExtractor(columnIndex);
