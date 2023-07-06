@@ -95,6 +95,7 @@ import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.node.workflow.WorkflowTableBackendSettings.TableBackendUnknownException;
 import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.node.workflow.metadata.MetadataVersion;
+import org.knime.core.node.workflow.metadata.WorkflowSetMetaParser;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.LockFailedException;
@@ -2038,12 +2039,26 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
             saveTableBackend(wm, preFilledSettings);
             saveWorkflowAnnotations(wm, preFilledSettings);
 
-            // added in version 5.1
+            // added in version 5.1, see AP-20406
             if (wm.isProject()) {
                 final var metadata = CheckUtils.checkNotNull(wm.getMetadata(),
                     "Project workflow manager must have metadata");
-                final var xmlFile = workflowDir.toPath().resolve(WorkflowPersistor.WORKFLOW_METADATA_FILE_NAME);
+                final var workflowDirPath = workflowDir.toPath();
+                final var xmlFile = workflowDirPath.resolve(WorkflowPersistor.WORKFLOW_METADATA_FILE_NAME);
                 metadata.toXML(xmlFile);
+
+                // for now we also write the legacy `workflowset.meta` file to be backwards-compatible with Server
+                final var legacyBuilder = WorkflowSetMetaParser.builder() //
+                        .withAuthor(metadata.getAuthor().orElse(null))
+                        .withDescription(metadata.getDescription().orElse(null))
+                        .withCreationDate(metadata.getCreated().map(ZonedDateTime::toOffsetDateTime).orElse(null))
+                        .withLastEdited(metadata.getLastModified().toOffsetDateTime());
+                metadata.getTags().stream().forEach(legacyBuilder::addTag);
+                metadata.getLinks().stream().forEach(link -> legacyBuilder.addLink(link.url(), link.text()));
+
+                final var legacyMetadata = legacyBuilder.build();
+                final var legacyXmlFile = workflowDirPath.resolve(WorkflowPersistor.METAINFO_FILE);
+                legacyMetadata.toXML(legacyXmlFile);
             }
 
             NodeSettingsWO nodesSettings = saveSettingsForNodes(preFilledSettings);
