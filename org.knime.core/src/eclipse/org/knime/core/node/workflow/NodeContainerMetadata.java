@@ -49,6 +49,7 @@
 package org.knime.core.node.workflow;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.time.ZoneId;
@@ -76,6 +77,15 @@ import org.knime.core.node.workflow.metadata.v10.NodeContainerMetadata.ContentTy
  */
 public abstract class NodeContainerMetadata {
 
+    private static final XmlOptions SAVE_OPTIONS = new XmlOptions();
+    static {
+        SAVE_OPTIONS.setCharacterEncoding(StandardCharsets.UTF_8.name());
+        SAVE_OPTIONS.setUseDefaultNamespace();
+        SAVE_OPTIONS.setSavePrettyPrint();
+        SAVE_OPTIONS.setSavePrettyPrintIndent(4);
+        SAVE_OPTIONS.setValidateStrict();
+    }
+
     /** Content type of descriptions. */
     public enum ContentType {
         /** Plain text. */
@@ -83,9 +93,9 @@ public abstract class NodeContainerMetadata {
         /** HTML formatted text. */
         HTML(org.knime.core.node.workflow.metadata.v10.NodeContainerMetadata.ContentType.TEXT_HTML);
 
-        final org.knime.core.node.workflow.metadata.v10.NodeContainerMetadata.ContentType.Enum m_xmlType;
+        final Enum m_xmlType;
 
-        ContentType(final org.knime.core.node.workflow.metadata.v10.NodeContainerMetadata.ContentType.Enum xmlType) {
+        ContentType(final Enum xmlType) {
             m_xmlType = xmlType;
         }
     }
@@ -216,13 +226,25 @@ public abstract class NodeContainerMetadata {
      * @since 5.1
      */
     public final void toXML(final Path xmlFile) throws IOException {
-        final var xmlOptions = new XmlOptions();
-        xmlOptions.setCharacterEncoding(StandardCharsets.UTF_8.name());
-        xmlOptions.setUseDefaultNamespace();
-        xmlOptions.setSavePrettyPrint();
-        xmlOptions.setSavePrettyPrintIndent(4);
-        xmlOptions.setValidateStrict();
+        getXMLDocument().save(xmlFile.toFile(), SAVE_OPTIONS);
+    }
 
+    /**
+     * @return these metadata as an XML string
+     * @since 5.1
+     */
+    public final String toXML() {
+        try {
+            final var writer = new StringWriter();
+            getXMLDocument().save(writer, SAVE_OPTIONS);
+            return writer.toString();
+        } catch (IOException ex) {
+            // cannot happen
+            throw new IllegalStateException(ex);
+        }
+    }
+
+    private XmlObject getXMLDocument() {
         final var metadataXML = m_elementFactory.newInstance();
         metadataXML.setContentType(m_contentType.m_xmlType);
 
@@ -251,8 +273,7 @@ public abstract class NodeContainerMetadata {
         }
 
         // save additional fields from sub-types and create a document
-        final var document = toXMLDocument(metadataXML);
-        document.save(xmlFile.toFile(), xmlOptions);
+        return toXMLDocument(metadataXML);
     }
 
     abstract XmlObject toXMLDocument(org.knime.core.node.workflow.metadata.v10.NodeContainerMetadata metadataXML);
