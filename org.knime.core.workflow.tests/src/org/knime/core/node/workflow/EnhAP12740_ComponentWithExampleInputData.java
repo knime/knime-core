@@ -65,6 +65,7 @@ import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryCause;
 import org.knime.core.node.workflow.WorkflowPersistor.MetaNodeLinkUpdateResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
+import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.util.FileUtil;
 
 /**
@@ -114,18 +115,19 @@ public class EnhAP12740_ComponentWithExampleInputData extends WorkflowTestCase {
         /* extract and open with example input data */
         PortObject[] inputData = component.fetchInputDataFromParent();
         component.saveAsTemplate(componentDir, new ExecutionMonitor(), inputData);
-        WorkflowLoadHelper loadHelper = new WorkflowLoadHelper(true, true, null);
+        WorkflowLoadHelper loadHelper = new WorkflowLoadHelper(true, true,
+                WorkflowContextV2.forTemporaryWorkflow(componentDir.toPath(), null));
         MetaNodeLinkUpdateResult loadResult = loadComponent(componentDir, new ExecutionMonitor(), loadHelper);
         assertComponentLoadingResult(loadResult, 8); //nodes are expected to change state their from IDLE to CONFIGURED on load
         final SubNodeContainer componentProject = (SubNodeContainer)loadResult.getLoadedInstance();
         WorkflowManager wfm = componentProject.getWorkflowManager();
         wfm.executeAllAndWaitUntilDone();
-		Awaitility.await().atMost(5, TimeUnit.SECONDS).pollInterval(10, TimeUnit.MILLISECONDS)
-		.untilAsserted(() -> assertThat(
-				"Execution of shared component failed. Node messages: "
-						+ wfm.getNodeMessages(NodeMessage.Type.WARNING, NodeMessage.Type.ERROR),
-				componentProject.getVirtualOutNode().getInternalState(),
-				is(InternalNodeContainerState.EXECUTED)));
+        Awaitility.await().atMost(5, TimeUnit.SECONDS).pollInterval(10, TimeUnit.MILLISECONDS)
+        .untilAsserted(() -> assertThat(
+                "Execution of shared component failed. Node messages: "
+                        + wfm.getNodeMessages(NodeMessage.Type.WARNING, NodeMessage.Type.ERROR),
+                componentProject.getVirtualOutNode().getInternalState(),
+                is(InternalNodeContainerState.EXECUTED)));
         
         /* save and open without example input data */
         component.saveAsTemplate(componentDir, new ExecutionMonitor());
@@ -155,7 +157,8 @@ public class EnhAP12740_ComponentWithExampleInputData extends WorkflowTestCase {
 
         /* load and save a component project with data to another location, re-load and execute */
         //first load
-        WorkflowLoadHelper loadHelper = new WorkflowLoadHelper(true, true, null);
+        WorkflowLoadHelper loadHelper = new WorkflowLoadHelper(true, true,
+                WorkflowContextV2.forTemporaryWorkflow(componentDir.toPath(), null));
         MetaNodeLinkUpdateResult loadResult = loadComponent(componentDir, new ExecutionMonitor(), loadHelper);
         SubNodeContainer componentProject = (SubNodeContainer)loadResult.getLoadedInstance();
 
@@ -169,12 +172,12 @@ public class EnhAP12740_ComponentWithExampleInputData extends WorkflowTestCase {
         final SubNodeContainer componentProject2 = (SubNodeContainer)loadResult.getLoadedInstance();
         WorkflowManager wfm = componentProject2.getWorkflowManager();
         wfm.executeAllAndWaitUntilDone();
-		Awaitility.await().atMost(5, TimeUnit.SECONDS).pollInterval(10, TimeUnit.MILLISECONDS)
-				.untilAsserted(() -> assertThat(
-						"Execution of shared component failed. Node messages: "
-								+ wfm.getNodeMessages(NodeMessage.Type.WARNING, NodeMessage.Type.ERROR),
-						componentProject2.getVirtualOutNode().getInternalState(),
-						is(InternalNodeContainerState.EXECUTED)));
+        Awaitility.await().atMost(5, TimeUnit.SECONDS).pollInterval(10, TimeUnit.MILLISECONDS)
+                .untilAsserted(() -> assertThat(
+                        "Execution of shared component failed. Node messages: "
+                                + wfm.getNodeMessages(NodeMessage.Type.WARNING, NodeMessage.Type.ERROR),
+                        componentProject2.getVirtualOutNode().getInternalState(),
+                        is(InternalNodeContainerState.EXECUTED)));
     }
 
     /**
@@ -190,7 +193,8 @@ public class EnhAP12740_ComponentWithExampleInputData extends WorkflowTestCase {
         File componentDir = FileUtil.createTempDir(getClass().getSimpleName());
         PortObject[] inputData = component.fetchInputDataFromParent();
         component.saveAsTemplate(componentDir, new ExecutionMonitor(), inputData);
-        WorkflowLoadHelper loadHelper = new WorkflowLoadHelper(true, true, null);
+        WorkflowLoadHelper loadHelper = new WorkflowLoadHelper(true, true,
+                WorkflowContextV2.forTemporaryWorkflow(componentDir.toPath(), null));
         MetaNodeLinkUpdateResult loadResult = loadComponent(componentDir, new ExecutionMonitor(), loadHelper);
         SubNodeContainer componentProject = (SubNodeContainer)loadResult.getLoadedInstance();
 
@@ -248,11 +252,12 @@ public class EnhAP12740_ComponentWithExampleInputData extends WorkflowTestCase {
      */
     @Test
     public void testActionsOnComponentProjectWorkflow() throws Exception {
-    	// save and open component project
+        // save and open component project
         SubNodeContainer component = (SubNodeContainer)getManager().getNodeContainer(m_component_10);
         File componentDir = FileUtil.createTempDir(getClass().getSimpleName());
         component.saveAsTemplate(componentDir, new ExecutionMonitor(), null);
-        WorkflowLoadHelper loadHelper = new WorkflowLoadHelper(true, true, null);
+        WorkflowLoadHelper loadHelper = new WorkflowLoadHelper(true, true,
+                WorkflowContextV2.forTemporaryWorkflow(componentDir.toPath(), null));
         MetaNodeLinkUpdateResult loadResult = loadComponent(componentDir, new ExecutionMonitor(), loadHelper);
         SubNodeContainer componentProject = (SubNodeContainer)loadResult.getLoadedInstance();
 

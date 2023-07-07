@@ -160,7 +160,8 @@ public class NodeContainerParentTest {
 
     private SubNodeContainer loadComponent(final File componentDir)
         throws IOException, InvalidSettingsException, CanceledExecutionException, UnsupportedWorkflowVersionException {
-        WorkflowLoadHelper loadHelper = new WorkflowLoadHelper(true, true, null);
+        WorkflowLoadHelper loadHelper = new WorkflowLoadHelper(true, true,
+                WorkflowContextV2.forTemporaryWorkflow(componentDir.toPath(), null));
         URI componentURI = componentDir.toURI();
         TemplateNodeContainerPersistor loadPersistor =
             loadHelper.createTemplateLoadPersistor(componentDir, componentURI);

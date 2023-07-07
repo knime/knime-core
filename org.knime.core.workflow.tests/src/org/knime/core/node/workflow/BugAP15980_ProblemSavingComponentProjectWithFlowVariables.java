@@ -56,6 +56,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.WorkflowPersistor.MetaNodeLinkUpdateResult;
+import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.util.FileUtil;
 
 /**
@@ -84,7 +85,8 @@ public class BugAP15980_ProblemSavingComponentProjectWithFlowVariables extends W
 	}
 
 	private void initComponentFromTemp() throws Exception {
-		WorkflowLoadHelper loadHelper = new WorkflowLoadHelper(true, true, null);
+		WorkflowLoadHelper loadHelper = new WorkflowLoadHelper(true, true,
+				WorkflowContextV2.forTemporaryWorkflow(m_componentDir.toPath(), null));
 		MetaNodeLinkUpdateResult loadResult = loadComponent(m_componentDir, new ExecutionMonitor(), loadHelper);
 		m_componentProject = (SubNodeContainer) loadResult.getLoadedInstance();
 		NodeID baseID = m_componentProject.getWorkflowManager().getID();

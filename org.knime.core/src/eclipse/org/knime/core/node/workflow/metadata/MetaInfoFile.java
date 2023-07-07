@@ -86,7 +86,7 @@ public final class MetaInfoFile {
      * @return string representation
      */
     public static String dateToStorageString(final int day, final int month, final int year) {
-        return day + DATE_SEPARATOR + month + DATE_SEPARATOR + year;
+        return day + DATE_SEPARATOR + (month - 1) + DATE_SEPARATOR + year;
     }
 
     /**
@@ -105,7 +105,7 @@ public final class MetaInfoFile {
             if (elements.length >= 3) {
                 try {
                     final var day = Math.min(Math.max(1, Integer.parseInt(elements[0])), 31);
-                    final var month = Math.min(Math.max(1, Integer.parseInt(elements[1])), 12);
+                    final var month = Math.min(Math.max(1, Integer.parseInt(elements[1]) + 1), 12);
                     final var year = Math.min(Math.max(Year.MIN_VALUE, Integer.parseInt(elements[2])), Year.MAX_VALUE);
                     return GregorianCalendar.from(LocalDateTime.of(year, month, day, 12, 1) //
                             .atZone(ZoneId.systemDefault()));

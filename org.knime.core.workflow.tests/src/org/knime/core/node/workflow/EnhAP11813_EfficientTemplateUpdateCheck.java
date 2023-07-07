@@ -60,6 +60,7 @@ import java.util.Optional;
 import org.junit.After;
 import org.junit.Test;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.util.pathresolve.URIToFileResolve;
 import org.mockito.Mockito;
 import org.osgi.framework.BundleContext;
@@ -75,65 +76,66 @@ import org.osgi.framework.ServiceReference;
  */
 public class EnhAP11813_EfficientTemplateUpdateCheck extends WorkflowTestCase {
 
-	private URIToFileResolve m_resolveOrg;
+    private URIToFileResolve m_resolveOrg;
 
-	/**
-	 * Essentially tests that
-	 * {@link WorkflowManager#checkUpdateMetaNodeLink(NodeID, WorkflowLoadHelper)}
-	 * eventually uses
-	 * {@link URIToFileResolve#resolveToLocalOrTempFileConditional(java.net.URI, org.eclipse.core.runtime.IProgressMonitor, java.time.ZonedDateTime)}
-	 * to resolve URIs to files.
-	 * 
-	 * @throws Exception
-	 */
-	@Test
-	public void testCheckUpdateMetaNodeLink() throws Exception {
-		loadAndSetWorkflow();
-		WorkflowManager wfm = getManager();
-		NodeID compId = wfm.getID().createChild(0);
+    /**
+     * Essentially tests that
+     * {@link WorkflowManager#checkUpdateMetaNodeLink(NodeID, WorkflowLoadHelper)}
+     * eventually uses
+     * {@link URIToFileResolve#resolveToLocalOrTempFileConditional(java.net.URI, org.eclipse.core.runtime.IProgressMonitor, java.time.ZonedDateTime)}
+     * to resolve URIs to files.
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void testCheckUpdateMetaNodeLink() throws Exception {
+        loadAndSetWorkflow();
+        WorkflowManager wfm = getManager();
+        NodeID compId = wfm.getID().createChild(0);
 
-		URIToFileResolve resolveMock = Mockito.mock(URIToFileResolve.class);
-		m_resolveOrg = replaceURIToFileResolveService(resolveMock);
+        URIToFileResolve resolveMock = Mockito.mock(URIToFileResolve.class);
+        m_resolveOrg = replaceURIToFileResolveService(resolveMock);
 
-		// case if there is no (mocked) update
-		when(resolveMock.resolveToLocalOrTempFileConditional(any(), any(), any())).thenReturn(Optional.empty());
-		assertFalse(wfm.checkUpdateMetaNodeLink(compId, null));
-		verify(resolveMock).resolveToFile(any());
-		verify(resolveMock, never()).resolveToLocalOrTempFile(any());
-		verify(resolveMock).resolveToLocalOrTempFileConditional(any(), any(), any());
+        // case if there is no (mocked) update
+        when(resolveMock.resolveToLocalOrTempFileConditional(any(), any(), any())).thenReturn(Optional.empty());
+        assertFalse(wfm.checkUpdateMetaNodeLink(compId, null));
+        verify(resolveMock).resolveToFile(any());
+        verify(resolveMock, never()).resolveToLocalOrTempFile(any());
+        verify(resolveMock).resolveToLocalOrTempFileConditional(any(), any(), any());
 
-		// case there is a (mocked) update
-		File componentDir = new File(getDefaultWorkflowDirectory().getAbsolutePath() + "_Component");
-		when(resolveMock.resolveToLocalOrTempFileConditional(any(), any(), any()))
-				.thenReturn(Optional.of(componentDir));
-		assertTrue(wfm.checkUpdateMetaNodeLink(compId, new WorkflowLoadHelper(true, true, null)));
-		verify(resolveMock, times(2)).resolveToLocalOrTempFileConditional(any(), any(), any());
+        // case there is a (mocked) update
+        File componentDir = new File(getDefaultWorkflowDirectory().getAbsolutePath() + "_Component");
+        when(resolveMock.resolveToLocalOrTempFileConditional(any(), any(), any()))
+                .thenReturn(Optional.of(componentDir));
+        assertTrue(wfm.checkUpdateMetaNodeLink(compId, new WorkflowLoadHelper(true, true,
+                WorkflowContextV2.forTemporaryWorkflow(componentDir.toPath(), null))));
+        verify(resolveMock, times(2)).resolveToLocalOrTempFileConditional(any(), any(), any());
 
-		// ensures that the file is _not_ resolved conditionally when
-		// calling wfm.updateMetaNodeLink
-		Mockito.reset(resolveMock);
-		when(resolveMock.resolveToFile(any())).thenReturn(null);
-		when(resolveMock.resolveToLocalOrTempFile(any())).thenReturn(null);
-		wfm.updateMetaNodeLink(compId, new ExecutionMonitor(), null);
-		verify(resolveMock).resolveToFile(any());
-		verify(resolveMock, never()).resolveToLocalOrTempFile(any());
-		verify(resolveMock).resolveToLocalOrTempFileConditional(any(), any(), any());
+        // ensures that the file is _not_ resolved conditionally when
+        // calling wfm.updateMetaNodeLink
+        Mockito.reset(resolveMock);
+        when(resolveMock.resolveToFile(any())).thenReturn(null);
+        when(resolveMock.resolveToLocalOrTempFile(any())).thenReturn(null);
+        wfm.updateMetaNodeLink(compId, new ExecutionMonitor(), null);
+        verify(resolveMock).resolveToFile(any());
+        verify(resolveMock, never()).resolveToLocalOrTempFile(any());
+        verify(resolveMock).resolveToLocalOrTempFileConditional(any(), any(), any());
 
-	}
+    }
 
-	@After
-	public void setOriginalURIToFileResolve() {
-		replaceURIToFileResolveService(m_resolveOrg);
-	}
+    @After
+    public void setOriginalURIToFileResolve() {
+        replaceURIToFileResolveService(m_resolveOrg);
+    }
 
-	// is there a better way?
-	private static URIToFileResolve replaceURIToFileResolveService(URIToFileResolve impl) {
-		BundleContext bundleContext = FrameworkUtil.getBundle(WorkflowManager.class).getBundleContext();
-		ServiceReference<?> oldService = bundleContext.getServiceReference(URIToFileResolve.class.getName());
-		URIToFileResolve oldImpl = (URIToFileResolve) bundleContext.getService(oldService);
-		((org.eclipse.osgi.internal.serviceregistry.ServiceReferenceImpl) oldService).getRegistration().unregister();
-		bundleContext.registerService(URIToFileResolve.class.getName(), impl, new Hashtable<>());
-		return oldImpl;
-	}
+    // is there a better way?
+    private static URIToFileResolve replaceURIToFileResolveService(URIToFileResolve impl) {
+        BundleContext bundleContext = FrameworkUtil.getBundle(WorkflowManager.class).getBundleContext();
+        ServiceReference<?> oldService = bundleContext.getServiceReference(URIToFileResolve.class.getName());
+        URIToFileResolve oldImpl = (URIToFileResolve) bundleContext.getService(oldService);
+        ((org.eclipse.osgi.internal.serviceregistry.ServiceReferenceImpl) oldService).getRegistration().unregister();
+        bundleContext.registerService(URIToFileResolve.class.getName(), impl, new Hashtable<>());
+        return oldImpl;
+    }
 
 }
