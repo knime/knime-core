@@ -68,7 +68,6 @@ import org.knime.core.node.property.hilite.HiLiteManager;
 import org.knime.core.node.property.hilite.HiLiteTranslator;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.wizard.ViewHideable;
-import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.wizard.WizardNodeFactoryExtension;
 import org.knime.core.node.wizard.util.LayoutUtil;
 import org.knime.core.node.workflow.NativeNodeContainer;
@@ -80,7 +79,6 @@ import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.SubnodeContainerLayoutStringProvider;
 import org.knime.core.node.workflow.WorkflowLock;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.node.workflow.WorkflowManager.NodeModelFilter;
 import org.knime.core.util.Pair;
 
 /**
@@ -290,10 +288,11 @@ public final class WizardPageUtil {
      * The stream of successors
      * <ul>
      * <li>includes the 'start' node itself</li>
-     * <li>only contains nodes whose node model is of type {@link WizardNode}</li>
+     * <li>only contains nodes which considered wizard nodes (see {@link #isWizardPageNode(NativeNodeContainer)})</li>
      * <li>does <i>not</i> include successors beyond the parent component (i.e. the component denoted by
      * componentId)</li>
-     * <li>includes successors across component and metanode 'borders' (but not beyond the component page itself)</li>
+     * <li>includes successors contained in nested components</li>
+     * <li>doesn't not include node in nested metanodes (i.e. metanode content is completely ignored)</li>
      * </ul>
      *
      * @param wfm parent manager of the component denoted by componentId
@@ -316,24 +315,18 @@ public final class WizardPageUtil {
                 .flatMap(nc -> {
                     if (nc instanceof NativeNodeContainer) {
                         return Stream.of(nc);
+                    } else if(nc instanceof SubNodeContainer snc){
+                        return getWizardPageNodes(snc.getWorkflowManager(), true).stream();
                     } else {
-                        return getAllWizardNodesFromMetanodeOrComponent(wfm, nc);
+                        return Stream.of();
                     }
                 }).map(nc -> Pair.create(NodeIDSuffix.create(wfm.getProjectWFM().getID(), nc.getID()), nc));
         }
     }
 
-    private static Stream<NodeContainer> getAllWizardNodesFromMetanodeOrComponent(final WorkflowManager wfm,
-        final NodeContainer nc) {
-        WorkflowManager ncWfm =
-            nc instanceof WorkflowManager ? (WorkflowManager)nc : ((SubNodeContainer)nc).getWorkflowManager();
-        return ncWfm.findNodes(WizardNode.class, new NodeModelFilter<WizardNode>(), true, true).keySet().stream()
-            .map(wfm::findNodeContainer);
-    }
-
     private static boolean isWizardPageNodeOrComponentOrMetanode(final NodeContainer nc) {
-        return (nc instanceof NativeNodeContainer && isWizardPageNode((NativeNodeContainer)nc))
-            || nc instanceof WorkflowManager || nc instanceof SubNodeContainer;
+        return (nc instanceof NativeNodeContainer nnc && isWizardPageNode(nnc)) || nc instanceof WorkflowManager
+            || nc instanceof SubNodeContainer;
     }
 
     private static Stream<NodeContainer> getAllSuccessorNodesWithinComponent(final NodeID componentId,
