@@ -46,6 +46,7 @@
 package org.knime.core.data.renderer;
 
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.util.Locale;
 
@@ -70,20 +71,15 @@ public class DoubleValueRenderer extends DefaultDataValueRenderer {
     public static final class PercentageRendererFactory extends AbstractDataValueRendererFactory {
         private static final String DESCRIPTION = "Percentage";
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         public String getDescription() {
             return DESCRIPTION;
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         public DataValueRenderer createRenderer(final DataColumnSpec colSpec) {
-            return new DoubleValueRenderer(new DecimalFormat("###0.0#%"), DESCRIPTION);
+            return new DoubleValueRenderer(new DecimalFormat("###0.0#%", DecimalFormatSymbols.getInstance(Locale.US)),
+                DESCRIPTION);
         }
     }
 
@@ -96,17 +92,11 @@ public class DoubleValueRenderer extends DefaultDataValueRenderer {
     public static final class StandardRendererFactory extends AbstractDataValueRendererFactory {
         private static final String DESCRIPTION = "Standard Double";
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         public String getDescription() {
             return DESCRIPTION;
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         public DataValueRenderer createRenderer(final DataColumnSpec colSpec) {
             return new DoubleValueRenderer(NumberFormat.getNumberInstance(Locale.US), DESCRIPTION);
@@ -122,46 +112,16 @@ public class DoubleValueRenderer extends DefaultDataValueRenderer {
     public static final class FullPrecisionRendererFactory extends AbstractDataValueRendererFactory {
         private static final String DESCRIPTION = "Full Precision";
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         public String getDescription() {
             return DESCRIPTION;
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         public DataValueRenderer createRenderer(final DataColumnSpec colSpec) {
             return new DoubleValueRenderer(null, DESCRIPTION);
         }
     }
-
-    /**
-     * Singleton for percentage.
-     * @deprecated Do not use this singleton instance, renderers are not thread-safe!
-     */
-    @Deprecated
-    public static final DataValueRenderer PERCENT_RENDERER = new DoubleValueRenderer(new DecimalFormat("###0.0#%"),
-        PercentageRendererFactory.DESCRIPTION);
-
-    /**
-     * Singleton for ordinary representation.
-     * @deprecated Do not use this singleton instance, renderers are not thread-safe!
-     */
-    @Deprecated
-    public static final DataValueRenderer STANDARD_RENDERER = new DoubleValueRenderer(
-        NumberFormat.getNumberInstance(Locale.US), StandardRendererFactory.DESCRIPTION);
-
-    /**
-     * Singleton for full precision representation.
-     * @deprecated Do not use this singleton instance, renderers are not thread-safe!
-     */
-    @Deprecated
-    public static final DataValueRenderer FULL_PRECISION_RENDERER =
-        new DoubleValueRenderer(null, FullPrecisionRendererFactory.DESCRIPTION);
 
     /** disable grouping in renderer */
     static {
@@ -197,15 +157,13 @@ public class DoubleValueRenderer extends DefaultDataValueRenderer {
      */
     @Override
     protected void setValue(final Object value) {
-        Object newValue;
-        if (value instanceof DoubleValue) {
-            DoubleValue cell = (DoubleValue)value;
-            double d = cell.getDoubleValue();
+        final Object newValue;
+        if (value instanceof DoubleValue cell) {
+            final var d = cell.getDoubleValue();
             if (Double.isNaN(d)) {
                 newValue = "NaN";
             } else {
-                newValue = m_format != null
-                    ? m_format.format(d) : Double.toString(d);
+                newValue = m_format != null ? m_format.format(d) : Double.toString(d);
             }
         } else {
             // missing data cells will also end up here
