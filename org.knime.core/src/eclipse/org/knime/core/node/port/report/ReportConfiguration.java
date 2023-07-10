@@ -88,11 +88,11 @@ public record ReportConfiguration(PageSize pageSize, Orientation orientation, Pa
     /** page size, e.g. A4. */
     @SuppressWarnings({"java:S115", "javadoc"}) // naming of constants still OK to be persisted in workflow file
     public enum PageSize {
-        A5     ("A5",     5.8,      8.3      ),
-        A4     ("A4",     8.3,      11.7     ),
-        A3     ("A3",     11.7,     16.5     ),
-        B5     ("B5",     6.9,      9.8      ),
-        B4     ("B4",     9.8,      13.9     ),
+        A5     ("A5",     5.83,     8.27     ),
+        A4     ("A4",     8.27,     11.69    ),
+        A3     ("A3",     11.69,    16.54    ),
+        B5     ("B5",     6.93,     9.84     ),
+        B4     ("B4",     9.84,     13.9     ),
         JIS_B5 ("JIS-B5", 7.166667, 10.125   ),
         JIS_B4 ("JIS-B4", 10.125,   14.333333),
         Letter ("letter", 8.5,      11       ),
