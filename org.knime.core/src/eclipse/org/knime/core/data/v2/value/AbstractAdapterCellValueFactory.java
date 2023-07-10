@@ -50,6 +50,7 @@ package org.knime.core.data.v2.value;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -71,6 +72,8 @@ import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.IDataRepository;
 import org.knime.core.data.MissingValue;
+import org.knime.core.data.container.LongUTFDataInputStream;
+import org.knime.core.data.container.LongUTFDataOutputStream;
 import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.v2.FileStoreAwareValueFactory;
@@ -192,8 +195,10 @@ public abstract class AbstractAdapterCellValueFactory
                 adapterCellToValuesMap.get(adapterCell).add(adapterValue);
             }
 
-            try (final var dataOutput =
-                new AdapterCellDataOutputDelegator(m_writeFileStoreHandler, new DataOutputStream(outStream))) {
+            try (final var intermediateOutput = new DataOutputStream(outStream);
+                    final var longUtfOutStream = new LongUTFDataOutputStream(intermediateOutput);
+                    final var dataOutput =
+                        new AdapterCellDataOutputDelegator(m_writeFileStoreHandler, longUtfOutStream)) {
                 dataOutput.writeInt(adapterCellToValuesMap.size());
                 for (var entry : adapterCellToValuesMap.entrySet()) {
                     final var adapterCell = entry.getKey();
@@ -254,8 +259,9 @@ public abstract class AbstractAdapterCellValueFactory
             }
 
             var inStream = new ByteArrayInputStream(blobAccess.getByteArray());
-            try (final var dataInput =
-                new AdapterCellDataInputDelegator(m_dataRepository, new ReadableDataInputStream(inStream))) {
+            try (final var dataInputStream = new DataInputStream(inStream);
+                    final var readableInputStream = new ReadableLongUTFDataInputStream(dataInputStream);
+                    final var dataInput = new AdapterCellDataInputDelegator(m_dataRepository, readableInputStream)) {
                 int numAdapters = dataInput.readInt();
 
                 for (int adapterIdx = 0; adapterIdx < numAdapters; adapterIdx++) {
@@ -379,5 +385,20 @@ public abstract class AbstractAdapterCellValueFactory
             return serializer.get().deserialize(this);
         }
 
+    }
+
+    private static final class ReadableLongUTFDataInputStream extends LongUTFDataInputStream
+        implements ReadableDataInput {
+        private final ReadableDataInput m_delegate;
+
+        ReadableLongUTFDataInputStream(final DataInputStream stream) {
+            super(stream);
+            m_delegate = new ReadableDataInputStream(stream);
+        }
+
+        @Override
+        public byte[] readBytes() throws IOException {
+            return m_delegate.readBytes();
+        }
     }
 }
