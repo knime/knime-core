@@ -52,6 +52,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -61,6 +62,7 @@ import org.apache.xmlbeans.XmlObject;
 import org.apache.xmlbeans.XmlOptions;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.metadata.MetadataVersion;
+import org.knime.core.node.workflow.metadata.WorkflowSetMetaParser.MetadataContents;
 import org.knime.core.node.workflow.metadata.v10.WorkflowMetadataDocument;
 import org.knime.core.util.xml.NoExternalEntityResolver;
 
@@ -148,5 +150,23 @@ public final class WorkflowMetadata extends NodeContainerMetadata {
                     new ArrayList<>(m_tags));
             }
         };
+    }
+
+    /**
+     * Creates a {@link WorkflowMetadata} instance from the contents of a legacy {@code workflowset.meta} file.
+     *
+     * @param workflowSetMeta metadata contents to convert
+     * @return resulting workflow metadata
+     */
+    public static WorkflowMetadata fromWorkflowSetMeta(final MetadataContents workflowSetMeta) {
+        final var metadataBuilder = fluentBuilder() //
+                .withPlainContent() //
+                .withLastModified(workflowSetMeta.getLastEdited().orElse(OffsetDateTime.now()).toZonedDateTime()) //
+                .withDescription(workflowSetMeta.getDescription().orElse(""));
+        workflowSetMeta.getAuthor().ifPresent(metadataBuilder::withAuthor);
+        workflowSetMeta.getCreationDate().ifPresent(created -> metadataBuilder.withCreated(created.toZonedDateTime()));
+        workflowSetMeta.getTags().forEach(metadataBuilder::addTag);
+        workflowSetMeta.getLinks().forEach(link -> metadataBuilder.addLink(link.getUrl(), link.getText()));
+        return metadataBuilder.build();
     }
 }

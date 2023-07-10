@@ -74,6 +74,7 @@ import java.util.Stack;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
+import org.apache.xmlbeans.XmlException;
 import org.knime.core.data.TableBackend;
 import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.internal.ReferencedFile;
@@ -101,7 +102,6 @@ import org.knime.core.util.LoadVersion;
 import org.knime.core.util.LockFailedException;
 import org.knime.core.util.Pair;
 import org.knime.core.util.workflowalizer.AuthorInformation;
-import org.knime.core.util.workflowalizer.Workflowalizer;
 
 /**
  *
@@ -877,34 +877,10 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
         if (getLoadVersion().isOlderThan(LoadVersion.V5100)) {
             final var wfSetMeta = parentRef.getFile().toPath().resolve(WorkflowPersistor.METAINFO_FILE);
             if (Files.isReadable(wfSetMeta)) {
-                try {
-                    final var legacyMetadata = Workflowalizer.readWorkflowSetMeta(wfSetMeta);
-                    final var description = legacyMetadata.getDescription();
-                    final var title = legacyMetadata.getTitle();
-                    final String descStr;
-                    if (description.isPresent()) {
-                        if (title.isPresent()) {
-                            descStr = title.get() + "\n\n" + description.get();
-                        } else {
-                            descStr = description.get();
-                        }
-                    } else if (title.isPresent()) {
-                        descStr = title.get();
-                    } else {
-                        descStr = "";
-                    }
-
-                    final var builder = WorkflowMetadata.fluentBuilder() //
-                            .withPlainContent() //
-                            .withLastModifiedNow() //
-                            .withDescription(descStr);
-
-                    legacyMetadata.getAuthor().ifPresent(builder::withAuthor);
-                    legacyMetadata.getTags().stream().flatMap(List::stream).forEach(builder::addTag);
-                    legacyMetadata.getLinks().stream().flatMap(List::stream)
-                    .forEach(link -> builder.addLink(link.getUrl(), link.getText()));
-                    m_workflowMetadata = builder.build();
-                } catch (final IOException e) {
+                try (final var inStream = Files.newInputStream(wfSetMeta)) {
+                    final var legacyMetadata = WorkflowSetMetaParser.parse(inStream);
+                    m_workflowMetadata = WorkflowMetadata.fromWorkflowSetMeta(legacyMetadata);
+                } catch (final IOException | XmlException e) {
                     String error = "Unable to load workflow metadata: " + e.getMessage();
                     getLogger().debug(error, e);
                     setDirtyAfterLoad();

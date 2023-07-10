@@ -61,6 +61,7 @@ import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.TimeZone;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.xmlbeans.XmlObject;
@@ -138,6 +139,19 @@ public abstract class NodeContainerMetadata {
         m_description = description;
         m_links = links;
         m_tags = tags;
+    }
+
+    /**
+     * Converts from a {@link Calendar} (as provided by the XMLBeans classes) to a {@link ZonedDateTime} in the least
+     * lossy way we know of.
+     *
+     * @param calendar input calendar
+     * @return converted {@code ZonedDateTime}
+     */
+    public static ZonedDateTime toZonedDateTime(final Calendar calendar) {
+        return calendar instanceof GregorianCalendar gregorian ? gregorian.toZonedDateTime()
+            : ZonedDateTime.ofInstant(calendar.toInstant(),
+                Optional.ofNullable(calendar.getTimeZone()).map(TimeZone::toZoneId).orElse(ZoneId.systemDefault()));
     }
 
     /**
@@ -332,11 +346,6 @@ public abstract class NodeContainerMetadata {
                 -> ContentType.HTML;
             default -> throw new IllegalArgumentException("Unknown content type: " + contentTypeEnum);
         };
-    }
-
-    static ZonedDateTime toZonedDateTime(final Calendar calendar) {
-        return calendar instanceof GregorianCalendar gregorian ? gregorian.toZonedDateTime()
-            : ZonedDateTime.ofInstant(calendar.toInstant(), ZoneId.systemDefault());
     }
 
     /**
