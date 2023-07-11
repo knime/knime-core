@@ -2719,12 +2719,6 @@
                 <message_argument value="PERCENT_RENDERER"/>
             </message_arguments>
         </filter>
-        <filter comment="deprecated (unused) code" id="338755678">
-            <message_arguments>
-                <message_argument value="org.knime.core.data.renderer.DoubleValueRenderer"/>
-                <message_argument value="STANDARD_RENDERER"/>
-            </message_arguments>
-        </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/dialog/DialogNodeValue.java" type="org.knime.core.node.dialog.DialogNodeValue">
         <filter id="403804204">
@@ -2760,20 +2754,6 @@
             </message_arguments>
         </filter>
     </resource>
-    <resource path="src/eclipse/org/knime/core/node/workflow/ComponentMetadata.java" type="org.knime.core.node.workflow.ComponentMetadata">
-        <filter comment="Method was only being used inside its own plugin." id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.ComponentMetadata"/>
-                <message_argument value="builder(ComponentMetadata)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="Method was only being used inside its own plugin." id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.ComponentMetadata"/>
-                <message_argument value="save(NodeSettingsWO)"/>
-            </message_arguments>
-        </filter>
-    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/SubNodeContainer.java" type="org.knime.core.node.workflow.SubNodeContainer">
         <filter id="338792546">
             <message_arguments>
@@ -2793,6 +2773,20 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.SubNodeContainerPersistor"/>
                 <message_argument value="getReportConfiguration()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/ComponentMetadata.java" type="org.knime.core.node.workflow.ComponentMetadata">
+        <filter comment="Method was only being used inside its own plugin." id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.ComponentMetadata"/>
+                <message_argument value="builder(ComponentMetadata)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="Method was only being used inside its own plugin." id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.ComponentMetadata"/>
+                <message_argument value="save(NodeSettingsWO)"/>
             </message_arguments>
         </filter>
     </resource>

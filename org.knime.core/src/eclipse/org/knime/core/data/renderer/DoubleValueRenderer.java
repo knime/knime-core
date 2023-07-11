@@ -132,6 +132,14 @@ public class DoubleValueRenderer extends DefaultDataValueRenderer {
     private final NumberFormat m_format;
 
     /**
+     * Singleton for ordinary representation.
+     * @deprecated Do not use this singleton instance, renderers are not thread-safe!
+     */
+    @Deprecated
+    public static final DataValueRenderer STANDARD_RENDERER = new DoubleValueRenderer(
+        NumberFormat.getNumberInstance(Locale.US), StandardRendererFactory.DESCRIPTION);
+
+    /**
      * Instantiates a new object using a given format.
      * @param format To be used to render this object, may be <code>null</code>
      * to use full precision.
