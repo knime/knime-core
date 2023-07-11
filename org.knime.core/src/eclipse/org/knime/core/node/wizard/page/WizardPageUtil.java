@@ -292,7 +292,7 @@ public final class WizardPageUtil {
      * <li>does <i>not</i> include successors beyond the parent component (i.e. the component denoted by
      * componentId)</li>
      * <li>includes successors contained in nested components</li>
-     * <li>doesn't not include node in nested metanodes (i.e. metanode content is completely ignored)</li>
+     * <li>does not include node in nested metanodes (i.e. metanode content is completely ignored)</li>
      * </ul>
      *
      * @param wfm parent manager of the component denoted by componentId
