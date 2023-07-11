@@ -165,13 +165,6 @@
          </renderer>
       </dataValue>
       <dataValue
-            valueClass="org.knime.core.data.ComplexNumberValue">
-         <renderer
-               rendererFactoryClass="org.knime.core.data.renderer.ComplexNumberValueRenderer$Factory"
-               suggestAsDefault="true">
-         </renderer>
-      </dataValue>
-      <dataValue
             valueClass="org.knime.core.data.date.DateAndTimeValue">
          <renderer
                rendererFactoryClass="org.knime.core.data.date.DateAndTimeValueRenderer$UsRendererFactory"

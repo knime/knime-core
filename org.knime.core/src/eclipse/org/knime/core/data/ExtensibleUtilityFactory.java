@@ -65,6 +65,7 @@ import org.knime.core.data.DataValue.UtilityFactory;
 import org.knime.core.data.renderer.DataValueRenderer;
 import org.knime.core.data.renderer.DataValueRendererFactory;
 import org.knime.core.data.renderer.DataValueRendererFamily;
+import org.knime.core.data.renderer.DefaultDataValueRenderer;
 import org.knime.core.data.renderer.DefaultDataValueRendererFamily;
 import org.knime.core.node.NodeLogger;
 import org.osgi.framework.FrameworkUtil;
@@ -313,6 +314,9 @@ public abstract class ExtensibleUtilityFactory extends UtilityFactory {
     protected final DataValueRendererFamily getRendererFamily(final DataColumnSpec spec) {
         readRenderersFromExtensionPoint();
 
+        if(m_renderers.isEmpty()) {
+            return new DefaultDataValueRendererFamily(new DefaultDataValueRenderer.Factory().createRenderer(spec));
+        }
         DataValueRenderer[] renderers = new DataValueRenderer[m_renderers.size()];
         int i = 0;
         readPreferredRendererFromPreferences();

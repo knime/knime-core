@@ -240,6 +240,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.data.renderer.ComplexNumberValueRenderer">
+        <filter comment="Remove deprecated, non-referenced renderer extensions" id="305324134">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.renderer.ComplexNumberValueRenderer"/>
+                <message_argument value="org.knime.core_5.1.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v210.ADocument">
         <filter id="305365105">
             <message_arguments>

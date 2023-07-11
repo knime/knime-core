@@ -80,7 +80,7 @@ public class ByteVectorValueStringRenderer extends DefaultDataValueRenderer {
         }
     }
 
-    private static final String DESCRIPTION = "Default";
+    private static final String DESCRIPTION = "Byte Vector";
 
     /**
      * Instance to be used.

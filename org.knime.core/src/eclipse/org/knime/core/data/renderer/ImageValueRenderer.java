@@ -100,7 +100,7 @@ public class ImageValueRenderer implements DataValueRenderer {
         }
     }
 
-    static final String DESCRIPTION = "Default";
+    static final String DESCRIPTION = "Image";
 
     private final JLabel m_fallbackRendererComponent = new JLabel();
 

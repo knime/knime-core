@@ -62,7 +62,7 @@ public final class PortObjectValueRenderer extends DefaultDataValueRenderer {
      * @since 2.8
      */
     public static final class Factory extends AbstractDataValueRendererFactory {
-        private static final String DESCRIPTION = "Default";
+        private static final String DESCRIPTION = "Port Object";
 
         /**
          * {@inheritDoc}

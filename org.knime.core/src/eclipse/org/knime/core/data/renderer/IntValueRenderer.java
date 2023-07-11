@@ -86,7 +86,7 @@ public final class IntValueRenderer extends DefaultDataValueRenderer {
     @Deprecated
     public static final IntValueRenderer INSTANCE = new IntValueRenderer();
 
-    private static final String DESCRIPTION = "Default";
+    private static final String DESCRIPTION = "Integer";
 
     /**
      * Default Initialization is empty.

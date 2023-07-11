@@ -77,7 +77,7 @@ public final class BooleanValueRenderer extends DefaultDataValueRenderer {
         }
     }
 
-    private static final String DESCRIPTION = "Default";
+    private static final String DESCRIPTION = "Boolean";
 
     /**
      * Instance to be used.
