@@ -107,6 +107,8 @@ import org.knime.core.table.schema.VarBinaryDataSpec;
 public abstract class AbstractAdapterCellValueFactory
     implements ValueFactory<StructReadAccess, StructWriteAccess>, FileStoreAwareValueFactory { // NOSONAR: cannot be removed
 
+    private static final int VERSION = 1;
+
     /**
      * The {@link IDataRepository} is used when reading cells with {@link FileStore}s. Is only available after
      * {@link #initializeForReading(IDataRepository)} or {@link #initializeForWriting(IWriteFileStoreHandler)} has been
@@ -199,6 +201,10 @@ public abstract class AbstractAdapterCellValueFactory
                     final var longUtfOutStream = new LongUTFDataOutputStream(intermediateOutput);
                     final var dataOutput =
                         new AdapterCellDataOutputDelegator(m_writeFileStoreHandler, longUtfOutStream)) {
+                // Since KNIME 5.1 we first write a -1 instead of the num adapters to be able to differentiate
+                // before/after opening the correct type of stream.
+                dataOutput.writeInt(-1);
+                dataOutput.writeByte(VERSION);
                 dataOutput.writeInt(adapterCellToValuesMap.size());
                 for (var entry : adapterCellToValuesMap.entrySet()) {
                     final var adapterCell = entry.getKey();
@@ -248,7 +254,6 @@ public abstract class AbstractAdapterCellValueFactory
             m_dataRepository = dataRepository;
         }
 
-        @SuppressWarnings("unchecked") // due to raw types in cloneAndAddAdapter signature
         @Override
         public final DataCell getDataCell() {
             var cell = getAdapterCell(m_access.getAccess(0));
@@ -259,31 +264,59 @@ public abstract class AbstractAdapterCellValueFactory
             }
 
             var inStream = new ByteArrayInputStream(blobAccess.getByteArray());
-            try (final var dataInputStream = new DataInputStream(inStream);
-                    final var readableInputStream = new ReadableLongUTFDataInputStream(dataInputStream);
-                    final var dataInput = new AdapterCellDataInputDelegator(m_dataRepository, readableInputStream)) {
-                int numAdapters = dataInput.readInt();
+            try (final var dataInputStream = new DataInputStream(inStream)) {
+                // before version 5.1 we didn't store a VERSION field and were using a different stream
+                int numAdapters = dataInputStream.readInt(); // NOSONAR
+                if (numAdapters < 0) {
+                    // This is the marker for 5.1 and later: read version and (real) num adapters
+                    final int version = dataInputStream.readByte(); // NOSONAR
 
-                for (int adapterIdx = 0; adapterIdx < numAdapters; adapterIdx++) {
-                    int numValues = dataInput.readInt();
-                    var adapterValues = new ArrayList<Class<? extends DataValue>>();
-                    for (int v = 0; v < numValues; v++) {
-                        var adapterValueName = dataInput.readUTF();
-                        final var adapterValue = DataTypeRegistry.getInstance().getValueClass(adapterValueName)
-                            .orElseThrow(() -> new IOException("Did not know how to read " + adapterValueName));
-                        adapterValues.add(adapterValue);
+                    if (version != VERSION) {
+                        throw new IllegalStateException(
+                            "Encountered unknown AdapterCell serializer version " + version);
                     }
-                    var adapterCell = dataInput.readDataCell();
 
-                    for (var adapterValue : adapterValues) {
-                        cell = cell.cloneAndAddAdapter(adapterCell, adapterValue);
+                    numAdapters = dataInputStream.readInt();
+                    try (final var readableInputStream = new ReadableLongUTFDataInputStream(dataInputStream)) {
+                        cell = readAdapters(cell, numAdapters, readableInputStream);
+                    }
+                } else {
+                    // before 5.1 we only used a DataOutputStream and no LongUTF version
+                    try (final var readableInputStream = new ReadableDataInputStream(dataInputStream)) {
+                        cell = readAdapters(cell, numAdapters, readableInputStream);
                     }
                 }
+
             } catch (IOException e) {
                 throw new IllegalStateException("Could not save AdapterCell", e);
             }
 
             return cell;
+        }
+
+        // due to raw types in cloneAndAddAdapter signature
+        @SuppressWarnings("unchecked")
+        private AdapterCell readAdapters(AdapterCell cell, final int numAdapters,
+            final ReadableDataInput readableDataInput) throws IOException {
+            try (final var dataInputDelegator =
+                new AdapterCellDataInputDelegator(m_dataRepository, readableDataInput)) {
+                for (int adapterIdx = 0; adapterIdx < numAdapters; adapterIdx++) { // NOSONAR
+                    int numValues = dataInputDelegator.readInt(); // NOSONAR
+                    var adapterValues = new ArrayList<Class<? extends DataValue>>();
+                    for (int v = 0; v < numValues; v++) { // NOSONAR
+                        var adapterValueName = dataInputDelegator.readUTF();
+                        final var adapterValue = DataTypeRegistry.getInstance().getValueClass(adapterValueName)
+                            .orElseThrow(() -> new IOException("Did not know how to read " + adapterValueName));
+                        adapterValues.add(adapterValue);
+                    }
+                    var adapterCell = dataInputDelegator.readDataCell();
+
+                    for (var adapterValue : adapterValues) {
+                        cell = cell.cloneAndAddAdapter(adapterCell, adapterValue);
+                    }
+                }
+                return cell;
+            }
         }
 
         /**
