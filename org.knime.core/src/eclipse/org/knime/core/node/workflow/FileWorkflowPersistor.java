@@ -2026,7 +2026,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
                 // for now we also write the legacy `workflowset.meta` file to be backwards-compatible with Server
                 final var legacyBuilder = WorkflowSetMetaParser.builder() //
                         .withAuthor(metadata.getAuthor().orElse(null))
-                        .withDescription(metadata.getDescription().orElse(null))
+                        .withDescription(metadata.getDescription().filter(desc -> !desc.isBlank()).orElse(null))
                         .withCreationDate(metadata.getCreated().map(ZonedDateTime::toOffsetDateTime).orElse(null))
                         .withLastEdited(metadata.getLastModified().toOffsetDateTime());
                 metadata.getTags().stream().forEach(legacyBuilder::addTag);
