@@ -84,7 +84,7 @@ public class BugAP16962_ReexecutionInNestedComponents extends WorkflowTestCase {
 						pageId.createChild(0).createChild(28).createChild(0).createChild(2))
 				.map(p -> p.getFirst().toString()).collect(Collectors.toList());
 		assertThat("unexpected successors", successors,
-				containsInAnyOrder("9:0:28:0:2", "9:0:28:0:26", "9:0:28:0:33:1", "9:0:31"));
+				containsInAnyOrder("9:0:28:0:2", "9:0:28:0:26", "9:0:31"));
 	}
 
 	/**
