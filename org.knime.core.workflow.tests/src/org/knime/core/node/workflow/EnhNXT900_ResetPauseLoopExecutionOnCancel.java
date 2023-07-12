@@ -84,6 +84,7 @@ public class EnhNXT900_ResetPauseLoopExecutionOnCancel extends WorkflowTestCase 
 		triggerStepLoop(m_tail);
 		assertTrue(m_tail.getNode().getPauseLoopExecution());
 		m_wfm.cancelExecution(m_tail);
+		waitWhileInExecution();
 		checkState(m_tail.getID(), InternalNodeContainerState.CONFIGURED);
 		assertFalse(m_tail.getNode().getPauseLoopExecution());
 	}
