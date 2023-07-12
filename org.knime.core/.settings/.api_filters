@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <component id="org.knime.core" version="2">
     <resource path="META-INF/MANIFEST.MF">
+        <filter id="923795461">
+            <message_arguments>
+                <message_argument value="5.1.0"/>
+                <message_argument value="5.0.0"/>
+            </message_arguments>
+        </filter>
         <filter id="933232702">
             <message_arguments>
                 <message_argument value="5.1.0"/>
@@ -2612,6 +2618,13 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/data/blob/BinaryObjectFileStoreDataCell.java" type="org.knime.core.data.blob.BinaryObjectFileStoreDataCell">
+        <filter id="338849923">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.blob.BinaryObjectFileStoreDataCell"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/data/container/BufferedTableBackend.java" type="org.knime.core.data.container.BufferedTableBackend">
         <filter comment="Internal API not to be referenced by external code." id="338792546">
             <message_arguments>
@@ -2632,6 +2645,61 @@
                 <message_argument value="org.knime.core.data.container.DataContainerDelegate"/>
                 <message_argument value="org.knime.core.data.container.RowFlushable"/>
                 <message_argument value="flushRows()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/filestore/FileStore.java" type="org.knime.core.data.filestore.FileStore">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.filestore.FileStore"/>
+                <message_argument value="org.knime.core_5.1.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/filestore/FileStoreCell.java" type="org.knime.core.data.filestore.FileStoreCell">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.filestore.FileStoreCell"/>
+                <message_argument value="org.knime.core_5.1.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/filestore/FileStoreFactory.java" type="org.knime.core.data.filestore.FileStoreFactory">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.filestore.FileStoreFactory"/>
+                <message_argument value="org.knime.core_5.1.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/filestore/FileStoreKey.java" type="org.knime.core.data.filestore.FileStoreKey">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.filestore.FileStoreKey"/>
+                <message_argument value="org.knime.core_5.1.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/filestore/FileStorePortObject.java" type="org.knime.core.data.filestore.FileStorePortObject">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.filestore.FileStorePortObject"/>
+                <message_argument value="org.knime.core_5.1.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/filestore/FileStoreUtil.java" type="org.knime.core.data.filestore.FileStoreUtil">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.filestore.FileStoreUtil"/>
+                <message_argument value="org.knime.core_5.1.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/probability/nominal/NominalDistributionCell.java" type="org.knime.core.data.probability.nominal.NominalDistributionCell">
+        <filter id="338849923">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.probability.nominal.NominalDistributionCell"/>
             </message_arguments>
         </filter>
     </resource>
@@ -2754,6 +2822,20 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/ComponentMetadata.java" type="org.knime.core.node.workflow.ComponentMetadata">
+        <filter comment="Method was only being used inside its own plugin." id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.ComponentMetadata"/>
+                <message_argument value="builder(ComponentMetadata)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="Method was only being used inside its own plugin." id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.ComponentMetadata"/>
+                <message_argument value="save(NodeSettingsWO)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/SubNodeContainer.java" type="org.knime.core.node.workflow.SubNodeContainer">
         <filter id="338792546">
             <message_arguments>
@@ -2773,20 +2855,6 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.SubNodeContainerPersistor"/>
                 <message_argument value="getReportConfiguration()"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/node/workflow/ComponentMetadata.java" type="org.knime.core.node.workflow.ComponentMetadata">
-        <filter comment="Method was only being used inside its own plugin." id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.ComponentMetadata"/>
-                <message_argument value="builder(ComponentMetadata)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="Method was only being used inside its own plugin." id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.ComponentMetadata"/>
-                <message_argument value="save(NodeSettingsWO)"/>
             </message_arguments>
         </filter>
     </resource>
