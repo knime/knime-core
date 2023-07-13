@@ -33,7 +33,6 @@ try {
                 'knime-cluster',
                 'knime-conda',
                 'knime-core',
-                'knime-core-arrow',
                 'knime-core-columnar',
                 'knime-database',
                 'knime-datageneration',
