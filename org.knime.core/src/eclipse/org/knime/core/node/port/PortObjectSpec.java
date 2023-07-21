@@ -57,6 +57,7 @@ import javax.swing.JComponent;
 import org.knime.core.internal.SerializerMethodLoader.Serializer;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
+import org.knime.core.node.port.PortObject.FailOnInvocationPortObjectSerializer;
 import org.knime.core.node.util.ConvenienceMethods;
 
 /**
@@ -169,6 +170,28 @@ public interface PortObjectSpec {
                 // this is not possible
                 throw new AssertionError("Someone removed the 'loadPortObjectSpec' method from this class");
             }
+        }
+    }
+
+    /**
+     * Noop implementation of a port object spec serializer that will cause an {@link IllegalStateException} to be
+     * thrown when it's invoked. See {@link FailOnInvocationPortObjectSerializer} for details.
+     *
+     * @param <T> The type of spec, defined by the (empty) subclass.
+     *
+     * @since 5.2
+     */
+    abstract class FailOnInvocationPortObjectSpecSerializer<T extends PortObjectSpec>
+        extends PortObjectSpecSerializer<T> {
+
+        @Override
+        public T loadPortObjectSpec(final PortObjectSpecZipInputStream in) {
+            throw new IllegalStateException("Not meant to be called for argument port type");
+        }
+
+        @Override
+        public void savePortObjectSpec(final T portObjectSpec, final PortObjectSpecZipOutputStream out) {
+            throw new IllegalStateException("Not meant to be called for argument port type");
         }
     }
 

@@ -60,6 +60,7 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.ModelContent;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
+import org.knime.core.node.port.PortObjectSpec.FailOnInvocationPortObjectSpecSerializer;
 import org.knime.core.node.util.ConvenienceMethods;
 
 
@@ -195,6 +196,31 @@ public interface PortObject {
                 throw new AssertionError("Someone removed the 'loadPortObject' method from this class");
             }
         }
+    }
+
+    /**
+     * Noop implementation of a port object serializer that will cause an {@link IllegalStateException} to be thrown
+     * when it's invoked. It's used for {@link PortObject} types that are itself still abstract (but required to
+     * be registered as an extension such that the UI is able to make them available in dialogs etc.).
+     *
+     * @param <T> The class defined by the final serializer class.
+     * @see FailOnInvocationPortObjectSpecSerializer
+     * @since 5.2
+     */
+    abstract class FailOnInvocationPortObjectSerializer<T extends PortObject> extends PortObjectSerializer<T> {
+
+        @Override
+        public void savePortObject(final T portObject, final PortObjectZipOutputStream out,
+            final ExecutionMonitor exec) {
+            throw new IllegalStateException("Not meant to be called for argument port type");
+        }
+
+        @Override
+        public T loadPortObject(final PortObjectZipInputStream in, final PortObjectSpec spec,
+            final ExecutionMonitor exec) {
+            throw new IllegalStateException("Not meant to be called for argument port type");
+        }
+
     }
 
     /** Get a short summary of this <code>PortObject</code>.
