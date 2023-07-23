@@ -2814,6 +2814,34 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/port/report/IReportPortObject.java" type="org.knime.core.node.port.report.IReportPortObject$NoOpSerializer">
+        <filter comment="definitely not used outside of core... (in fact, not used at all) " id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.port.report.IReportPortObject.NoOpSerializer"/>
+                <message_argument value="loadPortObject(PortObjectZipInputStream, PortObjectSpec, ExecutionMonitor)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="definitely not used outside of core... (in fact, not used at all) " id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.port.report.IReportPortObject.NoOpSerializer"/>
+                <message_argument value="savePortObject(IReportPortObject, PortObjectZipOutputStream, ExecutionMonitor)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/port/report/IReportPortObjectSpec.java" type="org.knime.core.node.port.report.IReportPortObjectSpec$NoOpSerializer">
+        <filter comment="definitely not used outside of core... (in fact, not used at all) " id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.port.report.IReportPortObjectSpec.NoOpSerializer"/>
+                <message_argument value="loadPortObjectSpec(PortObjectSpecZipInputStream)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="definitely not used outside of core... (in fact, not used at all) " id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.port.report.IReportPortObjectSpec.NoOpSerializer"/>
+                <message_argument value="savePortObjectSpec(IReportPortObjectSpec, PortObjectSpecZipOutputStream)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/AnnotationData.java" type="org.knime.core.node.workflow.AnnotationData">
         <filter comment="New version added for compatibility with Modern UI" id="336658481">
             <message_arguments>

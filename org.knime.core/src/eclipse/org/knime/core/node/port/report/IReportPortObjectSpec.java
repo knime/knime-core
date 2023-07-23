@@ -48,11 +48,7 @@
  */
 package org.knime.core.node.port.report;
 
-import java.io.IOException;
-
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.port.PortObjectSpecZipInputStream;
-import org.knime.core.node.port.PortObjectSpecZipOutputStream;
 
 /**
  * Spec for {@link IReportPortObject}.
@@ -67,18 +63,6 @@ public interface IReportPortObjectSpec extends PortObjectSpec {
     /**
      * Non-functional ("no-op") serializer defined to please the extension point definition. Not meant to be called.
      */
-    public final class NoOpSerializer extends PortObjectSpecSerializer<IReportPortObjectSpec> {
-
-        @Override
-        public void savePortObjectSpec(final IReportPortObjectSpec portObjectSpec,
-            final PortObjectSpecZipOutputStream out) throws IOException {
-            throw new IllegalStateException("Not intended to be call on interface level");
-        }
-
-        @Override
-        public IReportPortObjectSpec loadPortObjectSpec(final PortObjectSpecZipInputStream in) throws IOException {
-            throw new IllegalStateException("Not intended to be call on interface level");
-        }
-    }
+    final class NoOpSerializer extends FailOnInvocationPortObjectSpecSerializer<IReportPortObjectSpec> {}
 
 }

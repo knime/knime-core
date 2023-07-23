@@ -48,14 +48,7 @@
  */
 package org.knime.core.node.port.report;
 
-import java.io.IOException;
-
-import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.port.PortObject;
-import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.port.PortObjectZipInputStream;
-import org.knime.core.node.port.PortObjectZipOutputStream;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortTypeRegistry;
 
@@ -72,26 +65,13 @@ public interface IReportPortObject extends PortObject {
     /**
      * Shortcut to retrieve type from port type registry.
      */
-    public static final PortType TYPE = PortTypeRegistry.getInstance().getPortType(IReportPortObject.class);
+    PortType TYPE = PortTypeRegistry.getInstance().getPortType(IReportPortObject.class);
 
     /**
      * Non-functional ("no-op") serializer defined to please the extension point definition. Not meant to be called.
      */
-    public final class NoOpSerializer extends PortObjectSerializer<IReportPortObject> {
-
-        @Override
-        public void savePortObject(final IReportPortObject portObject, final PortObjectZipOutputStream out,
-            final ExecutionMonitor exec) throws IOException, CanceledExecutionException {
-            throw new IllegalStateException("Not intended to be call on interface level");
-        }
-
-        @Override
-        public IReportPortObject loadPortObject(final PortObjectZipInputStream in, final PortObjectSpec spec,
-            final ExecutionMonitor exec) throws IOException, CanceledExecutionException {
-            throw new IllegalStateException("Not intended to be call on interface level");
-        }
-    }
+    final class NoOpSerializer extends FailOnInvocationPortObjectSerializer<IReportPortObject> {}
 
     @Override
-    public IReportPortObjectSpec getSpec();
+    IReportPortObjectSpec getSpec();
 }
