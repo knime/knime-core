@@ -111,6 +111,7 @@ import org.knime.core.node.workflow.WorkflowContext;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.exception.ResourceAccessException;
 import org.knime.core.util.pathresolve.ResolverUtil;
+import org.knime.core.util.proxy.URLConnectionFactory;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
@@ -1272,7 +1273,7 @@ public final class FileUtil {
         if (looksLikeUNC(url)) {
             return Paths.get(url.toURI());
         } else {
-            URL resolvedUrl = url.openConnection().getURL();
+            final var resolvedUrl = URLConnectionFactory.getConnection(url).getURL();
 
             if (resolvedUrl.getProtocol().equalsIgnoreCase("file")) {
                 String pathString = resolvedUrl.getPath();
@@ -1411,7 +1412,7 @@ public final class FileUtil {
      */
     public static URLConnection openOutputConnection(final URL url, final String httpMethod,
         final Map<String, String> properties) throws IOException {
-        URLConnection urlConnection = url.openConnection();
+        var urlConnection = URLConnectionFactory.getConnection(url);
 
         if (urlConnection instanceof HttpURLConnection) {
             ((HttpURLConnection)urlConnection).setRequestMethod(httpMethod);
@@ -1445,7 +1446,7 @@ public final class FileUtil {
      */
     public static URLConnection openOutputConnection(final URL url, final String httpMethod,
         final Map<String, String> properties, final HostnameVerifier hostnameVerifier) throws IOException {
-        URLConnection urlConnection = url.openConnection();
+        var urlConnection = URLConnectionFactory.getConnection(url);
 
         if (urlConnection instanceof HttpURLConnection) {
             ((HttpURLConnection)urlConnection).setRequestMethod(httpMethod);
@@ -1548,7 +1549,7 @@ public final class FileUtil {
      */
     public static InputStream openStreamWithTimeout(final URL url, final int timeout)
             throws IOException {
-        URLConnection conn = url.openConnection();
+        final var conn = URLConnectionFactory.getConnection(url);
         conn.setConnectTimeout(timeout);
         conn.setReadTimeout(timeout);
         return new WrappedURLInputStream(conn);
