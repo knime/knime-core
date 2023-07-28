@@ -64,6 +64,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Appender;
@@ -633,12 +634,36 @@ public final class NodeLogger {
     }
 
     /**
+     * Write warning message into this logger.
+     *
+     * @param supplier Supplier for the object to print.
+     * @since 5.2
+     */
+    public void warn(final Supplier<Object> supplier) {
+        if (isEnabledFor(LEVEL.WARN)) {
+            getLoggerInternal().warn(getLogObject(supplier.get()));
+        }
+    }
+
+    /**
      * Write debugging message into this logger.
      *
      * @param o The object to print.
      */
     public void debug(final Object o) {
         getLoggerInternal().debug(getLogObject(o));
+    }
+
+    /**
+     * Write debugging message into this logger.
+     *
+     * @param supplier Supplier for the object to print.
+     * @since 5.2
+     */
+    public void debug(final Supplier<Object> supplier) {
+        if (isEnabledFor(LEVEL.DEBUG)) {
+            getLoggerInternal().debug(getLogObject(supplier.get()));
+        }
     }
 
 
@@ -653,13 +678,26 @@ public final class NodeLogger {
         m_logger.debug(o);
     }
 
+
+    /**
+     * Write debugging message into this logger. The message is logged without a node context. This method should only
+     * be used when you know that there is no node context available.
+     *
+     * @param supplier Supplier for the object to print.
+     * @since 5.2
+     */
+    public void debugWithoutContext(final Supplier<Object> supplier) {
+        if (isEnabledFor(LEVEL.DEBUG)) {
+            m_logger.debug(supplier.get());
+        }
+    }
+
     /**
      * @param layout checks if any of the KNIME specific flags e.g. node id is set in the layout pattern and ensures
      * that the corresponding boolean flag is enabled.
      */
     static void checkLayoutFlags(final Layout layout) {
-        if (layout instanceof PatternLayout) {
-            final PatternLayout pl = (PatternLayout)layout;
+        if (layout instanceof PatternLayout pl) {
             final String conversionPattern = pl.getConversionPattern();
             //enable the node id logging if one of the appender contains the node id or node name pattern
             LOG_NODE_ID |= conversionPattern.contains("%" + NodeLoggerPatternLayout.NODE_ID);
@@ -821,7 +859,8 @@ public final class NodeLogger {
                     appender.close();
                     //Remove the appender from all open node loggers
                     @SuppressWarnings("unchecked")
-                    final Enumeration<Logger> allLoggers = Logger.getRootLogger().getLoggerRepository().getCurrentLoggers();
+                    final Enumeration<Logger> allLoggers =
+                            Logger.getRootLogger().getLoggerRepository().getCurrentLoggers();
                     while (allLoggers.hasMoreElements()) {
                         allLoggers.nextElement().removeAppender(appender);
                     }
@@ -840,6 +879,18 @@ public final class NodeLogger {
     }
 
     /**
+     * Write info message into this logger.
+     *
+     * @param supplier Supplier for the object to print.
+     * @since 5.2
+     */
+    public void info(final Supplier<Object> supplier) {
+        if (isEnabledFor(LEVEL.INFO)) {
+            getLoggerInternal().info(getLogObject(supplier.get()));
+        }
+    }
+
+    /**
      * Write error message into the logger.
      *
      * @param o The object to print.
@@ -849,12 +900,36 @@ public final class NodeLogger {
     }
 
     /**
+     * Write error message into the logger.
+     *
+     * @param supplier Supplier for the object to print.
+     * @since 5.2
+     */
+    public void error(final Supplier<Object> supplier) {
+        if (isEnabledFor(LEVEL.ERROR)) {
+            getLoggerInternal().error(getLogObject(supplier.get()));
+        }
+    }
+
+    /**
      * Write fatal error message into the logger.
      *
      * @param o The object to print.
      */
     public void fatal(final Object o) {
         getLoggerInternal().fatal(getLogObject(o));
+    }
+
+    /**
+     * Write fatal error message into the logger.
+     *
+     * @param supplier Supplier for the object to print.
+     * @since 5.2
+     */
+    public void fatal(final Supplier<Object> supplier) {
+        if (isEnabledFor(LEVEL.FATAL)) {
+            getLoggerInternal().fatal(getLogObject(supplier.get()));
+        }
     }
 
     /**
@@ -868,6 +943,19 @@ public final class NodeLogger {
     }
 
     /**
+     * Write warning message and throwable into this logger.
+     *
+     * @param supplier Supplier for the object to print.
+     * @param t The exception to log at debug level, including its stack trace.
+     * @since 5.2
+     */
+    public void warn(final Supplier<Object> supplier, final Throwable t) {
+        if (isEnabledFor(LEVEL.WARN)) {
+            getLoggerInternal().warn(getLogObject(supplier.get()), t);
+        }
+    }
+
+    /**
      * Write debugging message and throwable into this logger.
      *
      * @param o The object to print.
@@ -875,6 +963,19 @@ public final class NodeLogger {
      */
     public void debug(final Object o, final Throwable t) {
         getLoggerInternal().debug(getLogObject(o), t);
+    }
+
+    /**
+     * Write debugging message and throwable into this logger.
+     *
+     * @param supplier Supplier for the object to print.
+     * @param t The exception to log, including its stack trace.
+     * @since 5.2
+     */
+    public void debug(final Supplier<Object> supplier, final Throwable t) {
+        if (isEnabledFor(LEVEL.DEBUG)) {
+            getLoggerInternal().debug(getLogObject(supplier.get()), t);
+        }
     }
 
     /**
@@ -888,6 +989,19 @@ public final class NodeLogger {
     }
 
     /**
+     * Write info message and throwable into this logger.
+     *
+     * @param supplier Supplier for the object to print.
+     * @param t The exception to log at debug level, including its stack trace.
+     * @since 5.2
+     */
+    public void info(final Supplier<Object> supplier, final Throwable t) {
+        if (isEnabledFor(LEVEL.INFO)) {
+            getLoggerInternal().info(getLogObject(supplier.get()), t);
+        }
+    }
+
+    /**
      * Write error message and throwable into the logger.
      *
      * @param o The object to print.
@@ -895,6 +1009,19 @@ public final class NodeLogger {
      */
     public void error(final Object o, final Throwable t) {
         getLoggerInternal().error(getLogObject(o), t);
+    }
+
+    /**
+     * Write error message and throwable into the logger.
+     *
+     * @param supplier Supplier for the object to print.
+     * @param t The exception to log at debug level, including its stack trace.
+     * @since 5.2
+     */
+    public void error(final Supplier<Object> supplier, final Throwable t) {
+        if (isEnabledFor(LEVEL.ERROR)) {
+            getLoggerInternal().error(getLogObject(supplier.get()), t);
+        }
     }
 
     /**
@@ -940,6 +1067,19 @@ public final class NodeLogger {
     }
 
     /**
+     * Writes CODING PROBLEM plus this message into this logger as error. The event is only logged if assertions are
+     * enabled or KNIME is run from within the SDK.
+     *
+     * @param supplier Supplier for the object to print.
+     * @since 5.2
+     */
+    public void coding(final Supplier<Object> supplier) {
+        if (isToLogCodingMessages()) {
+            getLoggerInternal().error(getLogObject(CODING_PROBLEM_PREFIX + supplier.get()));
+        }
+    }
+
+    /**
      * Writes <i>CODING PROBLEM</i> plus this message, as well as the the message of the throwable into this logger as
      * error and debug. The event is only logged if assertions are enabled or KNIME is run from within the SDK.
      *
@@ -949,6 +1089,20 @@ public final class NodeLogger {
     public void coding(final Object o, final Throwable t) {
         if (isToLogCodingMessages()) {
             getLoggerInternal().error(getLogObject(CODING_PROBLEM_PREFIX + o), t);
+        }
+    }
+
+    /**
+     * Writes <i>CODING PROBLEM</i> plus this message, as well as the the message of the throwable into this logger as
+     * error and debug. The event is only logged if assertions are enabled or KNIME is run from within the SDK.
+     *
+     * @param supplier Supplier for the object to print.
+     * @param t the exception to log at debug level, including its stack trace
+     * @since 5.2
+     */
+    public void coding(final Supplier<Object> supplier, final Throwable t) {
+        if (isToLogCodingMessages()) {
+            getLoggerInternal().error(getLogObject(CODING_PROBLEM_PREFIX + supplier.get()), t);
         }
     }
 
@@ -966,6 +1120,19 @@ public final class NodeLogger {
     }
 
     /**
+     * Write coding message into this logger. The message is logged without a node context. This method should only
+     * be used when you know that there is no node context available.
+     *
+     * @param supplier Supplier for the object to print.
+     * @since 5.2
+     */
+    public void codingWithoutContext(final Supplier<Object> supplier) {
+        if (isToLogCodingMessages()) {
+            m_logger.error(CODING_PROBLEM_PREFIX + supplier.get());
+        }
+    }
+
+    /**
      * Write fatal error message and throwable into the logger.
      *
      * @param o The object to print.
@@ -973,6 +1140,19 @@ public final class NodeLogger {
      */
     public void fatal(final Object o, final Throwable t) {
         getLoggerInternal().fatal(getLogObject(o), t);
+    }
+
+    /**
+     * Write fatal error message and throwable into the logger.
+     *
+     * @param supplier Supplier for the object to print.
+     * @param t The exception to log at debug level, including its stack trace.
+     * @since 5.2
+     */
+    public void fatal(final Supplier<Object> supplier, final Throwable t) {
+        if (isEnabledFor(LEVEL.FATAL)) {
+            getLoggerInternal().fatal(getLogObject(supplier.get()), t);
+        }
     }
 
     /**
