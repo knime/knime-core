@@ -182,6 +182,15 @@ public class AnnotationData implements Cloneable {
         m_contentType = contentType;
     }
 
+    /**
+     * @param version of this annotation, e.g. {@link #VERSION_20230412}
+     *
+     * @since 5.2
+     */
+    public final void setVersion(final int version) {
+        m_version = version;
+    }
+
     /** @return the styleRanges */
     public final StyleRange[] getStyleRanges() {
         return m_styleRanges;
