@@ -500,7 +500,7 @@ public final class DataColumnSpec {
             shape = ShapeHandler.load(config.getConfig(CFG_SHAPES));
         }
         ValueFormatHandler valueFormatHandler = null;
-        if(config.containsKey(CFG_VALUE_FORMAT)) {
+        if (config.containsKey(CFG_VALUE_FORMAT)) {
             valueFormatHandler = ValueFormatHandler.load(config.getConfig(CFG_VALUE_FORMAT));
         }
         FilterHandler filter = null;

@@ -1,0 +1,164 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Schema file written by PDE -->
+<schema targetNamespace="org.knime.core" xmlns="http://www.w3.org/2001/XMLSchema">
+<annotation>
+      <appInfo>
+         <meta.schema plugin="org.knime.core" id="DataValueFormatter" name="DataValueFormatter"/>
+      </appInfo>
+      <documentation>
+         This extension point lets plugins register their own value formatters for data values in KNIME.
+      </documentation>
+   </annotation>
+
+   <element name="extension">
+      <annotation>
+         <appInfo>
+            <meta.element />
+         </appInfo>
+      </annotation>
+      <complexType>
+         <sequence minOccurs="1" maxOccurs="unbounded">
+            <element ref="formatter"/>
+         </sequence>
+         <attribute name="point" type="string" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="formatter">
+      <complexType>
+         <attribute name="factoryClass" type="string" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+               <appInfo>
+                  <meta.attribute kind="java" basedOn=":org.knime.core.data.property.ValueFormatModelFactory"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+         <attribute name="formatterClass" type="string" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+               <appInfo>
+                  <meta.attribute kind="java" basedOn=":org.knime.core.data.property.ValueFormatModel"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="since"/>
+      </appInfo>
+      <documentation>
+         KNIME 5.2
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="examples"/>
+      </appInfo>
+      <documentation>
+         An example of an extension point:
+
+&lt;pre&gt;
+&lt;extension point=&quot;org.knime.core.DataValueFormatter&quot;&gt;
+	&lt;formatter
+		factoryClass=&quot;org.knime.core.data.property.ValueFormatModelNumber$Factory&quot;
+	    formatterClass=&quot;org.knime.core.data.property.ValueFormatModelNumber&quot;&gt;
+	&lt;/formatter&gt;
+&lt;/extension&gt;
+&lt;/pre&gt;
+
+Note that arbitrarily many formatters can be added.
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="apiinfo"/>
+      </appInfo>
+      <documentation>
+         In the field &lt;samp&gt;formatterClass&lt;/samp&gt; there must be the fully qualified name of a class that implements &lt;samp&gt;org.knime.core.data.property.ValueFormatModel&lt;/samp&gt;.
+
+The &lt;samp&gt;factoryClass&lt;/samp&gt; must be a fully qualified name of an instantiable class with a public zero-argument constructor that extends &lt;samp&gt;org.knime.core.data.property.ValueFormatModelFactory&lt;/samp&gt; and is parametrized by the specified formatter class. The method &lt;samp&gt;org.knime.core.data.property.ValueFormatModelFactory#getFormatterClass()&lt;/samp&gt; must return that same class.
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="implementation"/>
+      </appInfo>
+      <documentation>
+         This example shows a formatter that surrounds a string with a custom quotation character. Both classes need to be registered at the extension point.
+
+&lt;pre&gt;
+public final class QuoteStringFormatter implements ValueFormatModel {
+
+    private char m_quoteChar;
+
+    public QuoteStringFormatter(final char quoteChar) {
+        m_quoteChar = quoteChar;
+    }
+
+    @Override
+    public void save(final ConfigWO config) {
+        config.addChar(&quot;quote_char&quot;, m_quoteChar);
+    }
+
+    @Override
+    public String getHTML(final DataValue dataValue) {
+        if (dataValue instanceof StringValue sv) {
+            return new StringBuilder()//
+                .append(m_quoteChar)//
+                .append(sv.getStringValue())//
+                .append(m_quoteChar)//
+                .toString();
+        }
+        return &quot;&quot;;
+    }
+
+    public static final class Factory implements ValueFormatModelFactory&amp;lt;QuoteStringFormatter&amp;gt; {
+
+        @Override
+        public String getDescription() {
+            return &quot;Quoted String&quot;;
+        }
+
+        @Override
+        public QuoteStringFormatter getFormatter(final ConfigRO config) throws InvalidSettingsException {
+            return new QuoteStringFormatter(config.getChar(&quot;quote_char&quot;));
+        }
+
+        @Override
+        public Class&amp;lt;QuoteStringFormatter&amp;gt; getFormatterClass() {
+            return QuoteStringFormatter.class;
+        }
+
+    }
+
+}
+&lt;/pre&gt;
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="copyright"/>
+      </appInfo>
+      <documentation>
+         KNIME GmbH, Konstanz, Germany
+      </documentation>
+   </annotation>
+
+</schema>

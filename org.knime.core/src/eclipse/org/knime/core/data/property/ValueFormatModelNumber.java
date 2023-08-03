@@ -57,6 +57,7 @@ import org.knime.core.util.valueformat.NumberFormatter;
 
 /**
  * Defines a transformation from numbers to html.
+ *
  * @noinstantiate This class is not intended to be instantiated by clients.
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  * @since 5.1
@@ -82,7 +83,7 @@ public final class ValueFormatModelNumber implements ValueFormatModel {
     @Override
     public String getHTML(final DataValue dv) {
         var value = unpack(dv);
-        if(value == null) {
+        if (value == null) {
             return "";
         }
         return m_formatter.format(value);
@@ -145,5 +146,30 @@ public final class ValueFormatModelNumber implements ValueFormatModel {
     @Override
     public int hashCode() {
         return m_formatter.hashCode();
+    }
+
+    /**
+     * Factory implementation for this value formatter
+     *
+     * @author Jasper Krauter, KNIME GmbH, Konstanz, Germany
+     * @since 5.2
+     */
+    public static final class Factory implements ValueFormatModelFactory<ValueFormatModelNumber> {
+
+        @Override
+        public Class<ValueFormatModelNumber> getFormatterClass() {
+            return ValueFormatModelNumber.class;
+        }
+
+        @Override
+        public String getDescription() {
+            return "Formatted Number";
+        }
+
+        @Override
+        public ValueFormatModelNumber getFormatter(final ConfigRO config) throws InvalidSettingsException {
+            return ValueFormatModelNumber.load(config);
+        }
+
     }
 }

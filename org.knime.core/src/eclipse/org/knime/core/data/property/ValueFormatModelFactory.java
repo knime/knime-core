@@ -44,39 +44,45 @@
  * ---------------------------------------------------------------------
  *
  * History
- *  22 May 2023 (carlwitt): created
+ *   2 Aug 2023 (jasper): created
  */
 package org.knime.core.data.property;
 
-import org.knime.core.data.DataValue;
-import org.knime.core.node.config.ConfigWO;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.config.ConfigRO;
 
 /**
- * Interface for all Data Value Formatters that are used to represent Data Values in a WebView (e.g. the Table preview).
- * The containing function maps data values to an HTML String. Missing Values need to be handled separately.
+ * A factory for a {@link ValueFormatModel}. Implementing classes across repositories must be registered for the
+ * extension point {@code org.knime.core.DataValueFormatter}. Every implementation must have a zero-argument constructor
+ * so that it can be instantiated by the platform registry.
  *
- * TODO replace with DataValueTextRenderer after moving it from core-ui to core
- *
- * @author Carl Witt, KNIME AG, Zurich, Switzerland
- * @since 5.1
+ * @author Jasper Krauter, KNIME GmbH, Konstanz, Germany
+ * @param <T> The {@link ValueFormatModel} class that this factory will "produce"
+ * @since 5.2
  */
-public interface ValueFormatModel {
+public interface ValueFormatModelFactory<T extends ValueFormatModel> {
     /**
-     * Formats a data value to an HTML String, representing the underlying value
+     * Get a description of the attached formatter
      *
-     * @param dataValue
-     * @return an HTML String that represents the data value
+     * @return a string describing the formatter
      */
-    String getHTML(DataValue dataValue);
+    String getDescription();
 
     /**
-     * Saves the settings of the formatter to a provided {@link ConfigWO} object. Override this method if your formatter
-     * has any settings that need to be persisted
+     * Get an instance of the appropriate {@link ValueFormatModel} with the settings that were stored by
+     * {@link ValueFormatModel#save(org.knime.core.node.config.ConfigWO)}.
      *
-     * @param config the configuration object to write to
+     * @param config The settings for the formatter
+     * @return an instance of the formatter
+     * @throws InvalidSettingsException If the provided settings are invalid for this formatter
      */
-    default void save(final ConfigWO config) {
-        // no-op
-    }
+    T getFormatter(ConfigRO config) throws InvalidSettingsException;
 
+    /**
+     * Returns the formatter class that is also used to parametrise the factory class. This must be consistent with the
+     * return type of {@link #getFormatter(ConfigRO)}.
+     *
+     * @return A {@link Class} instance of the type {@code T}
+     */
+    Class<T> getFormatterClass();
 }

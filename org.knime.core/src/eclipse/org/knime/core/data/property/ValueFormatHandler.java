@@ -47,6 +47,8 @@
  */
 package org.knime.core.data.property;
 
+import java.util.NoSuchElementException;
+
 import org.knime.core.data.DataValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.ConfigRO;
@@ -65,6 +67,9 @@ public final class ValueFormatHandler implements PropertyHandler {
 
     /** Config key for the format model class. */
     private static final String CFG_FORMAT_MODEL_CLASS = "format_model_class";
+
+    /** Config key for the format model extension name. */
+    private static final String CFG_FORMAT_MODEL_PROVIDER = "format_model_provider";
 
     /** Config key for the format model config. */
     private static final String CFG_FORMAT_MODEL = "format_model";
@@ -97,7 +102,10 @@ public final class ValueFormatHandler implements PropertyHandler {
      * @throws NullPointerException if the <i>config</i> is <code>null</code>
      */
     public void save(final ConfigWO config) {
-        config.addString(CFG_FORMAT_MODEL_CLASS, m_model.getClass().getName());
+        var id = m_model.getClass().getName();
+        config.addString(CFG_FORMAT_MODEL_CLASS, id);
+        config.addString(CFG_FORMAT_MODEL_PROVIDER,
+            ValueFormatModelRegistry.getFactoryProvider(id).orElse("<unknown>"));
         m_model.save(config.addConfig(CFG_FORMAT_MODEL));
     }
 
@@ -107,14 +115,14 @@ public final class ValueFormatHandler implements PropertyHandler {
      * @throws InvalidSettingsException if either the class or model settings could not be read
      * @throws NullPointerException if the <code>config</code> is <code>null</code>
      */
-    public static ValueFormatHandler load(final ConfigRO config)
-            throws InvalidSettingsException {
-        var modelClass = config.getString(CFG_FORMAT_MODEL_CLASS);
-        if (modelClass.equals(ValueFormatModelNumber.class.getName())) {
-            ConfigRO subConfig = config.getConfig(CFG_FORMAT_MODEL);
-            return new ValueFormatHandler(ValueFormatModelNumber.load(subConfig));
-        } else {
-            throw new InvalidSettingsException("Unknown FormatModel class: " + modelClass);
+    public static ValueFormatHandler load(final ConfigRO config) throws InvalidSettingsException {
+        try {
+            var fac = ValueFormatModelRegistry.getFactory(config.getString(CFG_FORMAT_MODEL_CLASS)).orElseThrow();
+            return new ValueFormatHandler(fac.getFormatter(config.getConfig(CFG_FORMAT_MODEL)));
+        } catch (NoSuchElementException nsee) {
+            final var msg = String.format("Can't load attached formatter \"%s\" from the bundle \"%s\".",
+                config.getString(CFG_FORMAT_MODEL_CLASS), config.getString(CFG_FORMAT_MODEL_PROVIDER));
+            throw new InvalidSettingsException(msg, nsee);
         }
     }
 
