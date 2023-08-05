@@ -74,7 +74,6 @@ import java.util.Stack;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
-import org.apache.xmlbeans.XmlException;
 import org.knime.core.data.TableBackend;
 import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.internal.ReferencedFile;
@@ -880,7 +879,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
                 try (final var inStream = Files.newInputStream(wfSetMeta)) {
                     final var legacyMetadata = WorkflowSetMetaParser.parse(inStream);
                     m_workflowMetadata = WorkflowMetadata.fromWorkflowSetMeta(legacyMetadata);
-                } catch (final IOException | XmlException e) {
+                } catch (final Exception e) { // NOSONAR should never crash workflow loading
                     String error = "Unable to load workflow metadata: " + e.getMessage();
                     getLogger().debug(error, e);
                     setDirtyAfterLoad();
