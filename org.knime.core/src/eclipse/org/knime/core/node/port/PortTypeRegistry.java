@@ -48,11 +48,13 @@
  */
 package org.knime.core.node.port;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.eclipse.core.runtime.CoreException;
@@ -66,6 +68,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortObject.PortObjectSerializer;
 import org.knime.core.node.port.PortObjectSpec.PortObjectSpecSerializer;
+import org.knime.core.node.util.CheckUtils;
 
 /**
  *
@@ -73,6 +76,7 @@ import org.knime.core.node.port.PortObjectSpec.PortObjectSpecSerializer;
  * @since 3.0
  */
 public final class PortTypeRegistry {
+
     private static final String EXT_POINT_ID = "org.knime.core.PortType";
 
     private final Map<Class<? extends PortObject>, PortObjectSerializer<? extends PortObject>> m_objectSerializers =
@@ -124,6 +128,16 @@ public final class PortTypeRegistry {
             new PortType(BufferedDataTable.class, true, "Table", 0, false));
     }
 
+    /**
+     * Get static logger - not using a static class member to avoid eager initialization (PortTypeRegistry might be
+     * instantiated early in the application life cycle, causing a logger init chain with side effects, AP-3352).
+     *
+     * @return NodeLogger.getLogger(PortTypeRegistry.class);
+     */
+    private static NodeLogger getLogger() {
+        return NodeLogger.getLogger(PortTypeRegistry.class);
+    }
+
     private boolean m_allPortTypesRead;
 
     /**
@@ -139,22 +153,27 @@ public final class PortTypeRegistry {
             IExtensionPoint point = registry.getExtensionPoint(EXT_POINT_ID);
             Stream.of(point.getExtensions()).flatMap(ext -> Stream.of(ext.getConfigurationElements()))
                 .filter(e -> getObjectClass(e.getAttribute("objectClass")).isPresent())
-                .forEach(e -> createPortTypes(e));
+                .forEach(this::createAndRegisterPortType);
             m_allPortTypesRead = true;
         }
 
         return m_allPortTypes.values();
     }
 
-    private void createPortTypes(final IConfigurationElement e) {
+    /** Used in unit test to assert presence of certain port object classes. */
+    Map<Class<? extends PortObject>, PortType> getAvailablePortTypeMap() {
+        availablePortTypes();
+        return m_allPortTypes;
+    }
+
+    private void createAndRegisterPortType(final IConfigurationElement e) {
         int color;
         try {
             color = e.getAttribute("color") != null ? Integer.parseInt(e.getAttribute("color").substring(1), 16)
                 : PortType.DEFAULT_COLOR;
         } catch (NumberFormatException ex) {
-            NodeLogger.getLogger(getClass()).coding(
-                "Illegal color in port type extension for '" + e.getAttribute("name") + "': " + e.getAttribute("color"),
-                ex);
+            getLogger().coding(String.format("Illegal color in port type extension for '%s': %s",
+                e.getAttribute("name"), e.getAttribute("color")), ex);
             color = PortType.DEFAULT_COLOR;
         }
 
@@ -162,18 +181,53 @@ public final class PortTypeRegistry {
         final Optional<Class<? extends PortObject>> poClassOpt = getObjectClass(poClassName);
         if (poClassOpt.isPresent()) {
             final Class<? extends PortObject> poClass = poClassOpt.get();
-            final boolean isHidden = Boolean.parseBoolean(e.getAttribute("hidden"));
+            final var isHidden = Boolean.parseBoolean(e.getAttribute("hidden"));
             final String name = e.getAttribute("name");
             // The initialization of a PortType can throw a NoClassDefFoundError, see AP-13925.
             try {
-                m_allPortTypes.put(poClass, new PortType(poClass, false, name, color, isHidden));
-                m_allOptionalPortTypes.put(poClass, new PortType(poClass, true, name, color, isHidden));
+                final var type = new PortType(poClass, false, name, color, isHidden);
+                final var optionalType = new PortType(poClass, true, name, color, isHidden);
+                m_allPortTypes.put(poClass, type);
+                m_allOptionalPortTypes.put(poClass, optionalType);
             } catch (NoClassDefFoundError ex) {
-                NodeLogger.getLogger(getClass())
-                    .error(String.format("Could not create port type for '%s' from plug-in '%s': %s", poClassName,
-                        e.getNamespaceIdentifier(), ex.getMessage()), ex);
+                getLogger().error(String.format("Could not create port type for '%s' from plug-in '%s': %s",
+                    poClassName, e.getNamespaceIdentifier(), ex.getMessage()), ex);
             }
         }
+    }
+
+    /**
+     * For a port object class not registered via extension point it will search the "nearest" registered port type
+     * by finding the most specific port object class, which has a proper extension point definition
+     * (or PortObject.TYPE).
+     * @param portClass class of interest
+     */
+    private void searchAndRegisterCompatiblePortType(final Class<? extends PortObject> portClass) {
+        availablePortTypes();
+        final var nonRegType = new PortType(portClass, true, null, PortType.DEFAULT_COLOR, false);
+        // modifiable list of all registered port types having the argument type as subtype (incl. PortObject.TYPE)
+        final var parentTypeCandidates = m_allPortTypes.values().stream() //
+                .filter(type -> type.isSuperTypeOf(nonRegType)) //
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        // remove all candidates which are itself only parent types of other candidate types
+        for (final var parentTypeIterator = parentTypeCandidates.iterator(); parentTypeIterator.hasNext();) {
+            final var parentTypeCandidate = parentTypeIterator.next();
+            if (parentTypeCandidates.stream().filter(p -> p != parentTypeCandidate)
+                .anyMatch(parentTypeCandidate::isSuperTypeOf)) {
+                parentTypeIterator.remove();
+            }
+        }
+        final var parentType = parentTypeCandidates.stream().findFirst()
+            .orElseThrow(() -> new IllegalStateException(
+                String.format("Expected to find %s as parent of port object of class %s",
+                    PortObject.TYPE, portClass.getName())));
+
+        getLogger().debugWithFormat("No registered port type for class %s, using parent %s", portClass.getName(),
+            parentType);
+
+        m_allPortTypes.put(portClass, parentType);
+        m_allOptionalPortTypes.put(portClass, m_allOptionalPortTypes.get(parentType.getPortObjectClass()));
     }
 
     /**
@@ -203,24 +257,19 @@ public final class PortTypeRegistry {
     }
 
     private PortType getPortTypeInternal(final Class<? extends PortObject> portClass, final boolean isOptional) {
-        Map<Class<? extends PortObject>, PortType> map = isOptional ? m_allOptionalPortTypes : m_allPortTypes;
-        PortType pt = map.get(portClass);
+        final Map<Class<? extends PortObject>, PortType> map = isOptional ? m_allOptionalPortTypes : m_allPortTypes;
+        PortType pt = map.get(CheckUtils.checkArgumentNotNull(portClass));
         if (pt == null) {
             IExtensionRegistry registry = Platform.getExtensionRegistry();
             IExtensionPoint point = registry.getExtensionPoint(EXT_POINT_ID);
             Optional<IConfigurationElement> configElement =
                 Stream.of(point.getExtensions()).flatMap(ext -> Stream.of(ext.getConfigurationElements()))
                     .filter(e -> portClass.getName().equals(e.getAttribute("objectClass"))).findFirst();
-            if (configElement.isPresent()) {
-                createPortTypes(configElement.get());
-                pt = map.get(portClass);
-            } else {
-                if (!portClass.isInterface()) {
-                    NodeLogger.getLogger(getClass()).coding("Port object class '" + portClass.getName() + "' is not "
-                        + "registered at the extension point org.knime.core.PortType.");
-                }
-                pt = new PortType(portClass, isOptional, null, PortType.DEFAULT_COLOR, true);
-                map.put(portClass, pt);
+            configElement.ifPresent(this::createAndRegisterPortType);
+            pt = map.get(portClass);
+            if (pt == null) { // might still be null (error loading extension point contribution)
+                searchAndRegisterCompatiblePortType(portClass);
+                pt = map.get(portClass); // not null at this point
             }
         }
         return pt;
@@ -245,7 +294,7 @@ public final class PortTypeRegistry {
             return Optional.of(m_objectClassMap.get(className));
         }
 
-        NodeLogger.getLogger(getClass()).coding(
+        getLogger().coding(
             "Port object implementation '" + className + "' is not registered at extension point '" + EXT_POINT_ID
                 + "' via it's serializer. Please change your implementation " + "and use the extension point.");
         return Optional.empty();
@@ -271,10 +320,8 @@ public final class PortTypeRegistry {
             return Optional.of(m_specClassMap.get(className));
         }
 
-        NodeLogger.getLogger(getClass())
-            .coding("Port object spec implementation '" + className + "' is not registered at extension point '"
-                + EXT_POINT_ID
-                + "' via it's serializer. Please change your implementation and use the extension point.");
+        getLogger().coding("Port object spec implementation '" + className + "' is not registered at extension point '"
+            + EXT_POINT_ID + "' via it's serializer. Please change your implementation and use the extension point.");
         return Optional.empty();
     }
 
@@ -306,19 +353,17 @@ public final class PortTypeRegistry {
             PortObjectSerializer<? extends PortObject> serializer = SerializerMethodLoader.getSerializer(objectClass,
                 PortObjectSerializer.class, "getPortObjectSerializer", true);
             ser = (PortObjectSerializer<PortObject>)serializer;
-            NodeLogger.getLogger(getClass())
-                .coding("No serializer for port object class '" + objectClass + "' registered at " + "extension point '"
-                    + EXT_POINT_ID + "', using static method as fallback. Please change your "
-                    + "implementation and use the extension point.");
+            getLogger().coding("No serializer for port object class '" + objectClass + "' registered at "
+                + "extension point '" + EXT_POINT_ID + "', using static method as fallback. Please change your "
+                + "implementation and use the extension point.");
             m_objectSerializers.put(objectClass, ser);
             return Optional.of(ser);
         } catch (NoSuchMethodException nsme) {
             // check if it's an AbstractSimplePortObject which had a static method in the abstract class
             if (AbstractSimplePortObject.class.isAssignableFrom(objectClass)) {
-                NodeLogger.getLogger(getClass())
-                    .coding("No serializer for port object class '" + objectClass + "' registered at "
-                        + "extension point '" + EXT_POINT_ID + "', using static method as fallback. Please change your "
-                        + "implementation and use the extension point.");
+                getLogger().coding("No serializer for port object class '" + objectClass + "' registered at "
+                    + "extension point '" + EXT_POINT_ID + "', using static method as fallback. Please change your "
+                    + "implementation and use the extension point.");
                 ser = new AbstractSimplePortObject.AbstractSimplePortObjectSerializer() {
                     /**
                      * {@inheritDoc}
@@ -331,7 +376,7 @@ public final class PortTypeRegistry {
                 m_objectSerializers.put(objectClass, ser);
                 return Optional.of(ser);
             } else {
-                NodeLogger.getLogger(getClass()).coding(
+                getLogger().coding(
                     "Class \"" + objectClass.getSimpleName() + "\" does not have a custom PortObjectSerializer, "
                         + "using standard (but slow) Java serialization. Consider implementing a PortObjectSerialzer.",
                     nsme);
@@ -370,19 +415,17 @@ public final class PortTypeRegistry {
             PortObjectSpecSerializer<? extends PortObjectSpec> serializer = SerializerMethodLoader
                 .getSerializer(specClass, PortObjectSpecSerializer.class, "getPortObjectSpecSerializer", true);
             ser = (PortObjectSpecSerializer<PortObjectSpec>)serializer;
-            NodeLogger.getLogger(getClass())
-                .coding("No serializer for port object spec class '" + specClass + "' registered at "
-                    + "extension point '" + EXT_POINT_ID + "', using static method as fallback. Please change your "
-                    + "implementation and use the extension point.");
+            getLogger().coding("No serializer for port object spec class '" + specClass + "' registered at "
+                + "extension point '" + EXT_POINT_ID + "', using static method as fallback. Please change your "
+                + "implementation and use the extension point.");
             m_specSerializers.put(specClass, ser);
             return Optional.of(ser);
         } catch (NoSuchMethodException nsme) {
             // check if it's an AbstractSimplePortObject which had a static method in the abstract class
             if (AbstractSimplePortObjectSpec.class.isAssignableFrom(specClass)) {
-                NodeLogger.getLogger(getClass())
-                    .coding("No serializer for port object spec class '" + specClass + "' registered at "
-                        + "extension point '" + EXT_POINT_ID + "', using static method as fallback. Please change your "
-                        + "implementation and use the extension point.");
+                getLogger().coding("No serializer for port object spec class '" + specClass + "' registered at "
+                    + "extension point '" + EXT_POINT_ID + "', using static method as fallback. Please change your "
+                    + "implementation and use the extension point.");
                 ser = new AbstractSimplePortObjectSpec.AbstractSimplePortObjectSpecSerializer() {
                     /**
                      * {@inheritDoc}
@@ -395,9 +438,9 @@ public final class PortTypeRegistry {
                 m_specSerializers.put(specClass, ser);
                 return Optional.of(ser);
             } else {
-                NodeLogger.getLogger(getClass()).coding(
-                    "Class \"" + specClass.getSimpleName() + "\" does not have a custom PortObjectSpecSerializer, "
-                        + "using standard (but slow) Java serialization. Consider implementing a PortObjectSpecSerialzer.",
+                getLogger().coding("Class \"" + specClass.getSimpleName()
+                    + "\" does not have a custom PortObjectSpecSerializer, "
+                    + "using standard (but slow) Java serialization. Consider implementing a PortObjectSpecSerialzer.",
                     nsme);
                 return Optional.empty();
             }
@@ -449,10 +492,9 @@ public final class PortTypeRegistry {
             Class<? extends PortObject> objectClass = ser.getObjectClass();
 
             if (!objectClass.getName().equals(objectClassName)) {
-                NodeLogger.getLogger(getClass())
-                    .coding("Port object serializer class '" + ser.getClass().getName() + "' does not seem to create '"
-                        + objectClassName + "' but instead '" + objectClass.getName()
-                        + "'. Please check your implementation and the proper use of generics.");
+                getLogger().coding("Port object serializer class '" + ser.getClass().getName()
+                    + "' does not seem to create '" + objectClassName + "' but instead '" + objectClass.getName()
+                    + "'. Please check your implementation and the proper use of generics.");
                 return Optional.empty();
             } else {
                 m_objectClassMap.put(objectClassName, objectClass);
@@ -460,7 +502,7 @@ public final class PortTypeRegistry {
                 return Optional.of(ser);
             }
         } catch (CoreException ex) {
-            NodeLogger.getLogger(getClass()).error("Could not create port object serializer for '" + objectClassName
+            getLogger().error("Could not create port object serializer for '" + objectClassName
                 + "' from plug-in '" + configElement.getNamespaceIdentifier() + "': " + ex.getMessage(), ex);
             return Optional.empty();
         }
@@ -477,8 +519,7 @@ public final class PortTypeRegistry {
             Class<? extends PortObjectSpec> specClass = ser.getSpecClass();
 
             if (!specClass.getName().equals(specClassName)) {
-                NodeLogger.getLogger(getClass())
-                    .coding("Port object spec serializer class '" + ser.getClass().getName()
+                getLogger().coding("Port object spec serializer class '" + ser.getClass().getName()
                         + "' does not seem to create '" + specClassName + "' but instead '" + specClass.getName()
                         + "'. Please check your implementation and the proper use of generics.");
                 return Optional.empty();
@@ -488,7 +529,7 @@ public final class PortTypeRegistry {
                 return Optional.of(ser);
             }
         } catch (CoreException ex) {
-            NodeLogger.getLogger(getClass()).error("Could not create port object spec serializer for '" + specClassName
+            getLogger().error("Could not create port object spec serializer for '" + specClassName
                 + "' from plug-in '" + configElement.getNamespaceIdentifier() + "': " + ex.getMessage(), ex);
             return Optional.empty();
         }
