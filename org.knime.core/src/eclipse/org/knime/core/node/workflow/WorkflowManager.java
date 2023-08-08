@@ -4260,28 +4260,7 @@ public final class WorkflowManager extends NodeContainer
                     }
                 }
             } else if (node instanceof SubNodeContainer) {
-                // connect connections TO the sub workflow:
-                for (ConnectionContainer outerConnection : m_workflow.getConnectionsByDest(nodeID)) {
-                    for (ConnectionContainer innerConnection : subWFM.m_workflow
-                        .getConnectionsBySource(((SubNodeContainer)node).getVirtualInNodeID())) {
-                        if (outerConnection.getDestPort() == innerConnection.getSourcePort()) {
-                            addConnection(outerConnection.getSource(), outerConnection.getSourcePort(),
-                                oldIDsHash.get(innerConnection.getDest()), innerConnection.getDestPort());
-                        }
-                    }
-                }
-                // connect connections FROM the sub workflow:
-                List<ConnectionContainer> cons = new ArrayList<ConnectionContainer>();
-                cons.addAll(m_workflow.getConnectionsBySource(nodeID));
-                for (ConnectionContainer outerConnection : cons) {
-                    for (ConnectionContainer innerConnection : subWFM.m_workflow
-                        .getConnectionsByDest(((SubNodeContainer)node).getVirtualOutNodeID())) {
-                        if (outerConnection.getSourcePort() == innerConnection.getDestPort()) {
-                            addConnection(oldIDsHash.get(innerConnection.getSource()), innerConnection.getSourcePort(),
-                                outerConnection.getDest(), outerConnection.getDestPort());
-                        }
-                    }
-                }
+                expandSubNode(nodeID, (SubNodeContainer)node, subWFM, oldIDsHash);
             }
             // move nodes so that their center lies on the position of
             // the old metanode!
@@ -4340,6 +4319,35 @@ public final class WorkflowManager extends NodeContainer
             var result = new ExpandSubnodeResult(this, newContent, undoCopyPersistor);
             notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.NODE_EXPANDED, null, null, result));
             return result;
+        }
+    }
+
+    /**
+     * Called by {@link #expandSubWorkflow(NodeID)} on a SubNodeContainer.
+     */
+    private void expandSubNode(final NodeID nodeID, final SubNodeContainer snc, final WorkflowManager subWFM,
+        final Map<NodeID, NodeID> oldIDsHash) {
+        // connect connections TO the sub workflow:
+        for (ConnectionContainer outerConnection : m_workflow.getConnectionsByDest(nodeID)) {
+            for (ConnectionContainer innerConnection : subWFM.m_workflow
+                .getConnectionsBySource(snc.getVirtualInNodeID())) {
+                if (outerConnection.getDestPort() == innerConnection.getSourcePort()) {
+                    addConnection(outerConnection.getSource(), outerConnection.getSourcePort(),
+                        oldIDsHash.get(innerConnection.getDest()), innerConnection.getDestPort());
+                }
+            }
+        }
+        // connect connections FROM the sub workflow:
+        List<ConnectionContainer> cons = new ArrayList<ConnectionContainer>();
+        cons.addAll(m_workflow.getConnectionsBySource(nodeID));
+        for (ConnectionContainer outerConnection : cons) {
+            for (ConnectionContainer innerConnection : subWFM.m_workflow
+                .getConnectionsByDest(snc.getVirtualOutNodeID())) {
+                if (outerConnection.getSourcePort() == innerConnection.getDestPort()) {
+                    addConnection(oldIDsHash.get(innerConnection.getSource()), innerConnection.getSourcePort(),
+                        outerConnection.getDest(), outerConnection.getDestPort());
+                }
+            }
         }
     }
 
