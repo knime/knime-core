@@ -4259,8 +4259,8 @@ public final class WorkflowManager extends NodeContainer
                         }
                     }
                 }
-            } else if (node instanceof SubNodeContainer) {
-                expandSubNode(nodeID, (SubNodeContainer)node, subWFM, oldIDsHash);
+            } else if (node instanceof SubNodeContainer snc) {
+                rewireConnectionsAfterSubnodeExpand(nodeID, snc, subWFM, oldIDsHash);
             }
             // move nodes so that their center lies on the position of
             // the old metanode!
@@ -4325,27 +4325,46 @@ public final class WorkflowManager extends NodeContainer
     /**
      * Called by {@link #expandSubWorkflow(NodeID)} on a SubNodeContainer.
      */
-    private void expandSubNode(final NodeID nodeID, final SubNodeContainer snc, final WorkflowManager subWFM,
-        final Map<NodeID, NodeID> oldIDsHash) {
+    @SuppressWarnings({"java:S3776", "java:S134"}) // yeah, cyclic complexity & nesting
+    private void rewireConnectionsAfterSubnodeExpand(final NodeID nodeID, final SubNodeContainer snc,
+        final WorkflowManager subWFM, final Map<NodeID, NodeID> oldIDsHash) {
+        final var virtualInID = snc.getVirtualInNodeID();
+        final var virtualOutID = snc.getVirtualOutNodeID();
+        record NodeAndPort(NodeID nodeId, int outportIndex) {}
+        final var incomingThroughConnectionMap = new HashMap<ConnectionContainer, NodeAndPort>();
         // connect connections TO the sub workflow:
         for (ConnectionContainer outerConnection : m_workflow.getConnectionsByDest(nodeID)) {
-            for (ConnectionContainer innerConnection : subWFM.m_workflow
-                .getConnectionsBySource(snc.getVirtualInNodeID())) {
+            for (ConnectionContainer innerConnection : subWFM.m_workflow.getConnectionsBySource(virtualInID)) {
                 if (outerConnection.getDestPort() == innerConnection.getSourcePort()) {
-                    addConnection(outerConnection.getSource(), outerConnection.getSourcePort(),
-                        oldIDsHash.get(innerConnection.getDest()), innerConnection.getDestPort());
+                    // through connection? -- rewire outer source with outer destination (later)
+                    if (innerConnection.getDest().equals(virtualOutID)) {
+                        incomingThroughConnectionMap.put(innerConnection,
+                            new NodeAndPort(outerConnection.getSource(), outerConnection.getSourcePort()));
+                    } else {
+                        addConnection(outerConnection.getSource(), outerConnection.getSourcePort(),
+                            oldIDsHash.get(innerConnection.getDest()), innerConnection.getDestPort());
+                    }
                 }
             }
         }
         // connect connections FROM the sub workflow:
-        List<ConnectionContainer> cons = new ArrayList<ConnectionContainer>();
-        cons.addAll(m_workflow.getConnectionsBySource(nodeID));
-        for (ConnectionContainer outerConnection : cons) {
+        // (copy since collection is modified by replacing connections)
+        for (ConnectionContainer outerConnection : new ArrayList<>(m_workflow.getConnectionsBySource(nodeID))) {
             for (ConnectionContainer innerConnection : subWFM.m_workflow
-                .getConnectionsByDest(snc.getVirtualOutNodeID())) {
+                .getConnectionsByDest(virtualOutID)) {
                 if (outerConnection.getSourcePort() == innerConnection.getDestPort()) {
-                    addConnection(oldIDsHash.get(innerConnection.getSource()), innerConnection.getSourcePort(),
-                        outerConnection.getDest(), outerConnection.getDestPort());
+                    // three cases (there are more but 3 cases when there is an outside downstream connection)
+                    // (1) through connection and a connection outside to an upstream node - needs rewiring
+                    // (2) through connection but no outside upstream connection - ignore it
+                    // (3) regular connection to a node inside the component - rewire
+                    final NodeAndPort incomingThrough = incomingThroughConnectionMap.get(innerConnection);
+                    if (incomingThrough != null) { // (case (1))
+                        addConnection(incomingThrough.nodeId(), incomingThrough.outportIndex(),
+                            outerConnection.getDest(), outerConnection.getDestPort());
+                    } else if (!innerConnection.getSource().equals(virtualInID)) { // case (3)
+                        addConnection(oldIDsHash.get(innerConnection.getSource()), innerConnection.getSourcePort(),
+                            outerConnection.getDest(), outerConnection.getDestPort());
+                    }
                 }
             }
         }
