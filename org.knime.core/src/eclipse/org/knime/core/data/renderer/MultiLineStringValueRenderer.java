@@ -134,10 +134,10 @@ public class MultiLineStringValueRenderer extends DefaultDataValueRenderer {
     protected void setValue(final Object value) {
         if (value == null) {
             super.setValue("?");
-        } else if (value instanceof StringValue) {
-            super.setValue(((StringValue)value).getStringValue());
+        } else if (value instanceof StringValue sValue) {
+            super.setValue(StringValueRenderer.truncateOverlyLongStrings(sValue.getStringValue()));
         } else {
-            super.setValue(value.toString());
+            super.setValue(StringValueRenderer.truncateOverlyLongStrings(value.toString()));
         }
     }
 

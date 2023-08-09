@@ -47,6 +47,9 @@
  */
 package org.knime.core.data.renderer;
 
+import java.util.Objects;
+
+import org.apache.commons.lang3.StringUtils;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.StringValue;
 
@@ -98,12 +101,11 @@ public final class StringValueRenderer extends DefaultDataValueRenderer {
     @Override
     protected void setValue(final Object value) {
         Object newValue;
-        if (value instanceof StringValue) {
-            StringValue cell = (StringValue)value;
-            newValue = cell.getStringValue();
+        if (value instanceof StringValue strValue) {
+            newValue = truncateOverlyLongStrings(strValue.getStringValue());
         } else {
-            // missing data cells will also end up here
-            newValue = value;
+            // missing data cells will also end up here (non-null MissingCell object)
+            newValue = truncateOverlyLongStrings(Objects.toString(value, ""));
         }
         super.setValue(newValue);
     }
@@ -114,5 +116,17 @@ public final class StringValueRenderer extends DefaultDataValueRenderer {
     @Override
     public String getDescription() {
         return DESCRIPTION;
+    }
+
+    private static final int TRUNCATED_LENGTH = 10_000;
+
+    /** Truncates long strings to a size that they won't cause endless loops when rendering. */
+    static String truncateOverlyLongStrings(final String s) {
+        final int length = StringUtils.length(s);
+        if (length > TRUNCATED_LENGTH) {
+            return String.format("%s ... (truncated %d characters)", StringUtils.truncate(s, TRUNCATED_LENGTH),
+                length - TRUNCATED_LENGTH);
+        }
+        return s;
     }
 }
