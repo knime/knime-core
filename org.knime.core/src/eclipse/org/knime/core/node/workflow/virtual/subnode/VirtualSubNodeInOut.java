@@ -58,7 +58,7 @@ import org.knime.core.node.workflow.SubNodeContainer;
  * @noreference This interface is not intended to be referenced by clients.
  *
  */
-public interface VirtualSubNodeInOut {
+public sealed interface VirtualSubNodeInOut permits VirtualSubNodeOutputNodeModel, VirtualSubNodeInputNodeModel {
 
     /**
      * @param subNodeContainer inform the virtual input/output node about its containing component
