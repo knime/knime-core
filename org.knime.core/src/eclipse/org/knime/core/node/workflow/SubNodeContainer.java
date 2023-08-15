@@ -74,9 +74,11 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import javax.xml.parsers.ParserConfigurationException;
 
@@ -91,6 +93,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.KNIMEException;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeConfigureHelper;
 import org.knime.core.node.NodeDescription;
@@ -111,6 +114,7 @@ import org.knime.core.node.dialog.util.ConfigurationLayoutUtil;
 import org.knime.core.node.exec.ThreadNodeExecutionJobManagerFactory;
 import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.interactive.ViewContent;
+import org.knime.core.node.message.Message;
 import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
@@ -744,6 +748,43 @@ public final class SubNodeContainer extends SingleNodeContainer
     /** @return the outportNodeModel */
     VirtualSubNodeOutputNodeModel getVirtualOutNodeModel() {
         return (VirtualSubNodeOutputNodeModel)getVirtualOutNode().getNodeModel();
+    }
+
+    /**
+     * Iterate the "incoming" stack of the output node and throw an exception if a possible unclosed loop is detected.
+     * (Prohibited for workflows created with 5.1.1+, see AP-20483.)
+     *
+     * @throws KNIMEException
+     * @noreference This method is not intended to be referenced by clients.
+     * @since 5.2
+     */
+    public void checkForUnclosedLoopAtOutputNode() throws KNIMEException {
+        // the input stack of the output node - traverse it until we find subnode context. No open loop context
+        // is expected (ideally also no other context but see details below)
+        final var unclosedContextOptional = //
+            StreamSupport.stream(getVirtualOutNode().getFlowObjectStack().spliterator(), false) //
+                .takeWhile(Predicate.not(FlowSubnodeScopeContext.class::isInstance)) //
+                .filter(FlowLoopContext.class::isInstance) //
+                .map(FlowLoopContext.class::cast) //
+                .findFirst();
+
+        // ideally we would disallow any context (except for subnode context) but that seems overly
+        // restrictive since:
+        //    - try-catch constructs are often unclosed.
+        //    - in version of KNIME before 5.1.1 (and also now) a component output could always be in any scope
+        //      (whereby only loop scopes are plain wrong) and this would cause a lot of potential backward comp. issues
+        if (unclosedContextOptional.isPresent()) {
+            final var wfm = getWorkflowManager();
+            final var startNodeID = unclosedContextOptional.get().getHeadNode();
+            final var startNodeName = wfm.getNodeContainer(startNodeID).getNameWithID(wfm.getID());
+            throw KNIMEException.of(Message.builder() //
+                .withSummary("Output node must not be part of a loop construct.") //
+                .addTextIssue("Node is part of loop body (started by %s).".formatted(startNodeName)) //
+                .addResolutions( //
+                    "Move this node downstream of the loop end node.",
+                    "Move loop outside the component.") //
+                .build().orElseThrow());
+        }
     }
 
     /** Static utility node to retrieve the nodemodel of the virtual output node. It does the type casts etc.

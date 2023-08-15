@@ -64,5 +64,4 @@ public interface VirtualSubNodeInOut {
      * @param subNodeContainer inform the virtual input/output node about its containing component
      */
     void setSubNodeContainer(SubNodeContainer subNodeContainer);
-
 }

@@ -49,7 +49,11 @@
 package org.knime.core.node.workflow.virtual.subnode;
 
 import java.util.Collections;
+import java.util.Map;
 
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.workflow.FlowVariable;
 
 /**
@@ -58,11 +62,53 @@ import org.knime.core.node.workflow.FlowVariable;
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  */
 final class VirtualSubNodeOutputConfiguration extends AbstractVirtualSubNodeConfiguration {
+
+    /**
+     * added in 5.1.1, see AP-20843: in order go guarantee backward compatibility with 5.0/4.7 (and before) we allow the
+     * component output node to execute before other nodes get executed. This behavior was previously "accidently
+     * desired" in case the component output is part of a loop body and loop end awaits execution of body.
+     *
+     * (N.B. The component itself is executed only when _all_ nodes contained in it are executed -- unchanged behavior
+     * since v1 of components.)
+     *
+     * Option is hidden (not user configurable) and defaults to <code>false</code> for components created in 5.1.1+.
+     *
+     * @since 5.1.1
+     */
+    // default for new components (created with 5.1.1+) is false
+    private boolean m_allowOutputNodeToCompleteBeforeContent;
+
     /**
      * @param numberOfPorts The number of out ports of this virtual out node
      */
     public VirtualSubNodeOutputConfiguration(final int numberOfPorts) {
         super(numberOfPorts);
+    }
+
+    /**
+     * @return the allowOutputNodeToCompleteBeforeContent, see field description for details.
+     */
+    boolean isAllowOutputNodeToCompleteBeforeContent() {
+        return m_allowOutputNodeToCompleteBeforeContent;
+    }
+
+    @Override
+    void saveConfiguration(final NodeSettingsWO settings) {
+        super.saveConfiguration(settings);
+        settings.addBoolean("allowOutputNodeToCompleteBeforeContent", m_allowOutputNodeToCompleteBeforeContent);
+    }
+
+    @Override
+    void loadConfigurationInDialog(final NodeSettingsRO settings, final Map<String, FlowVariable> variableMap) {
+        super.loadConfigurationInDialog(settings, variableMap);
+        m_allowOutputNodeToCompleteBeforeContent = settings.getBoolean("allowOutputNodeToCompleteBeforeContent", false);
+    }
+
+    @Override
+    void loadConfigurationInModel(final NodeSettingsRO settings) throws InvalidSettingsException {
+        super.loadConfigurationInModel(settings);
+        // 4.7 components didn't have the flag so their value needs to be true
+        m_allowOutputNodeToCompleteBeforeContent = settings.getBoolean("allowOutputNodeToCompleteBeforeContent", true);
     }
 
     /** @param numberOfPorts The number of output ports of this virtual in node
