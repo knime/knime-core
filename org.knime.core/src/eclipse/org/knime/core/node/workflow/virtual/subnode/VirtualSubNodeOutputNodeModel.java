@@ -126,10 +126,16 @@ public final class VirtualSubNodeOutputNodeModel extends ExtendedScopeNodeModel
         m_configuration = VirtualSubNodeOutputConfiguration.newDefault(m_numberOfPorts);
     }
 
-    /** {@inheritDoc} */
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
+        if (isReportEnabledOrModern51Component()) {
+            try {
+                m_subNodeContainer.checkForUnclosedLoopAtOutputNode();
+            } catch (KNIMEException ex) {
+                throw new InvalidSettingsException(ex.getMessage(), ex);
+            }
+        }
         final PortObjectSpec[] specs;
         if (m_subNodeContainer.getReportConfiguration().isPresent()) {
             final var reportObjectSpec = ReportUtil.computeReportObjectSpec(m_subNodeContainer);
@@ -166,17 +172,8 @@ public final class VirtualSubNodeOutputNodeModel extends ExtendedScopeNodeModel
     @Override
     protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec)
             throws Exception {
-        final var waiter = VirtualSubNodeOutputWaiter.startExecutionAndCreate(m_subNodeContainer);
-        final Callable<Optional<Message>> waiterCallable = waiter::waitForNodesToExecute;
-        final var currentPool = ThreadPool.currentPool();
-        final Optional<Message> message;
-        if (currentPool != null) {
-            message = currentPool.runInvisible(waiterCallable);
-        } else {
-            message = waiterCallable.call(); // as of today (05 '23) this is practically irrelevant
-        }
-        if (message.isPresent()) {
-            throw message.map(KNIMEException::of).get(); // NOSONAR
+        if (isReportEnabledOrModern51Component()) {
+            waitForContentToExecute();
         }
         final PortObject[] objects;
         if (m_subNodeContainer.getReportConfiguration().isPresent()) {
@@ -192,7 +189,34 @@ public final class VirtualSubNodeOutputNodeModel extends ExtendedScopeNodeModel
         return new PortObject[0];
     }
 
-    /** {@inheritDoc} */
+    /**
+     * Called to determine whether this node should wait for the component content to complete. This is either when
+     * reporting is enabled on the component or this is a "new" component (5.1.1+)
+     * @return that property.
+     */
+    private boolean isReportEnabledOrModern51Component() {
+        return m_subNodeContainer.getReportConfiguration().isPresent()
+                || !getConfiguration().isAllowOutputNodeToCompleteBeforeContent();
+    }
+
+    /**
+     * Wait for all nodes inside the component to finish execution.
+     */
+    private void waitForContentToExecute() throws Exception {
+        final var waiter = VirtualSubNodeOutputWaiter.startExecutionAndCreate(m_subNodeContainer);
+        final Callable<Optional<Message>> waiterCallable = waiter::waitForNodesToExecute;
+        final var currentPool = ThreadPool.currentPool();
+        final Optional<Message> message;
+        if (currentPool != null) {
+            message = currentPool.runInvisible(waiterCallable);
+        } else {
+            message = waiterCallable.call(); // as of today (05 '23) this is practically irrelevant
+        }
+        if (message.isPresent()) {
+            throw message.map(KNIMEException::of).get(); // NOSONAR
+        }
+    }
+
     @Override
     public InputPortRole[] getInputPortRoles() {
         InputPortRole[] result = new InputPortRole[getNrInPorts()];

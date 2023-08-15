@@ -33,6 +33,7 @@
             <entry key="0" type="xstring" value=""/>
             <entry key="1" type="xstring" value=""/>
         </config>
+        <entry key="allowOutputNodeToCompleteBeforeContent" type="xboolean" value="true"/>
     </config>
     <entry key="customDescription" type="xstring" isnull="true" value=""/>
     <entry key="state" type="xstring" value="CONFIGURED"/>
