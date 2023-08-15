@@ -93,7 +93,6 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.KNIMEException;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeConfigureHelper;
 import org.knime.core.node.NodeDescription;
@@ -754,11 +753,11 @@ public final class SubNodeContainer extends SingleNodeContainer
      * Iterate the "incoming" stack of the output node and throw an exception if a possible unclosed loop is detected.
      * (Prohibited for workflows created with 5.1.1+, see AP-20483.)
      *
-     * @throws KNIMEException
+     * @throws InvalidSettingsException if unclosed loops are detected
      * @noreference This method is not intended to be referenced by clients.
      * @since 5.2
      */
-    public void checkForUnclosedLoopAtOutputNode() throws KNIMEException {
+    public void checkForUnclosedLoopAtOutputNode() throws InvalidSettingsException {
         // the input stack of the output node - traverse it until we find subnode context. No open loop context
         // is expected (ideally also no other context but see details below)
         final var unclosedContextOptional = //
@@ -777,13 +776,13 @@ public final class SubNodeContainer extends SingleNodeContainer
             final var wfm = getWorkflowManager();
             final var startNodeID = unclosedContextOptional.get().getHeadNode();
             final var startNodeName = wfm.getNodeContainer(startNodeID).getNameWithID(wfm.getID());
-            throw KNIMEException.of(Message.builder() //
+            throw Message.builder() //
                 .withSummary("Output node must not be part of a loop construct.") //
                 .addTextIssue("Node is part of loop body (started by %s).".formatted(startNodeName)) //
                 .addResolutions( //
-                    "Move this node downstream of the loop end node.",
-                    "Move loop outside the component.") //
-                .build().orElseThrow());
+                    "Move this node downstream of the loop end node.", "Move loop outside the component.") //
+                .build().orElseThrow() //
+                .toInvalidSettingsException();
         }
     }
 

@@ -130,11 +130,7 @@ public final class VirtualSubNodeOutputNodeModel extends ExtendedScopeNodeModel
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
         if (isReportEnabledOrModern51Component()) {
-            try {
-                m_subNodeContainer.checkForUnclosedLoopAtOutputNode();
-            } catch (KNIMEException ex) {
-                throw new InvalidSettingsException(ex.getMessage(), ex);
-            }
+            m_subNodeContainer.checkForUnclosedLoopAtOutputNode();
         }
         final PortObjectSpec[] specs;
         if (m_subNodeContainer.getReportConfiguration().isPresent()) {
