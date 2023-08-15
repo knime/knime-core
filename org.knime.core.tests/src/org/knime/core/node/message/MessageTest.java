@@ -54,6 +54,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.assertj.core.api.ThrowingConsumer;
 import org.junit.jupiter.api.Test;
+import org.knime.core.internal.MessageAwareException;
 import org.knime.core.node.ModelContent;
 import org.knime.core.node.workflow.NodeMessage;
 
@@ -218,6 +219,44 @@ class MessageTest {
         var message2 = messageBuilder2.build().orElseThrow();
 
         assertThat(message2.toLogPrintable()).isEqualTo("Some Summary Message");
+    }
+
+    @Test
+    void testToException() throws Exception {
+        var messageBuilder1 = Message.builder();
+        messageBuilder1.addResolutions("Resolution 1", "Resolution 2");
+        var issueText1 = "Issue Details XYZ";
+        messageBuilder1.addTextIssue(issueText1);
+        final var summary = "Some Summary Message";
+        messageBuilder1.withSummary(summary);
+        var message1 = messageBuilder1.build().orElseThrow();
+
+        assertThat(message1.toInvalidSettingsException()) //
+            .as("Exception message extracted from KNIME Message object").hasMessage(summary) //
+            .as("is MessageAwareException").isInstanceOf(MessageAwareException.class) //
+            .extracting(e -> ((MessageAwareException)e).getKNIMEMessage()) //
+            .as("Original message is available").isEqualTo(message1);
+
+        final var cause = new Exception();
+        assertThat(message1.toInvalidSettingsException(cause)) //
+            .as("Exception message extracted from KNIME Message object").hasMessage(summary) //
+            .as("root cause is exactly").hasRootCause(cause)
+            .as("is MessageAwareException").isInstanceOf(MessageAwareException.class) //
+            .extracting(e -> ((MessageAwareException)e).getKNIMEMessage()) //
+            .as("Original message is available").isEqualTo(message1);
+
+        assertThat(message1.toKNIMEException()) //
+            .as("Exception message extracted from KNIME Message object").hasMessage(summary) //
+            .as("is MessageAwareException").isInstanceOf(MessageAwareException.class) //
+            .extracting(e -> ((MessageAwareException)e).getKNIMEMessage()) //
+            .as("Original message is available").isEqualTo(message1);
+
+        assertThat(message1.toKNIMEException(cause)) //
+            .as("Exception message extracted from KNIME Message object").hasMessage(summary) //
+            .as("root cause is exactly").hasRootCause(cause)
+            .as("is MessageAwareException").isInstanceOf(MessageAwareException.class) //
+            .extracting(e -> ((MessageAwareException)e).getKNIMEMessage()) //
+            .as("Original message is available").isEqualTo(message1);
     }
 
     /** Jackson serialization/deserialization, incl. issue and resolution. */

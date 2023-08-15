@@ -81,9 +81,9 @@ import org.knime.core.data.filestore.FileStorePortObject;
 import org.knime.core.data.filestore.FileStoreUtil;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
+import org.knime.core.internal.MessageAwareException;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
-import org.knime.core.node.KNIMEException.KNIMERuntimeException;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.context.ModifiableNodeCreationConfiguration;
 import org.knime.core.node.context.NodeCreationConfiguration;
@@ -1961,12 +1961,13 @@ public final class Node {
                 m_outputs[0].spec = FlowVariablePortObjectSpec.INSTANCE;
                 success = true;
             } catch (InvalidSettingsException ise) {
-                Throwable cause = ise.getCause();
-                if (cause == null) {
-                    createWarningMessageAndNotify(Message.fromSummary(ise.getMessage()));
+                final Message message;
+                if (ise instanceof MessageAwareException mae) {
+                    message = mae.getKNIMEMessage();
                 } else {
-                    createWarningMessageAndNotify(Message.fromSummary(ise.getMessage()), ise);
+                    message = Message.fromSummary(ise.getMessage());
                 }
+                createWarningMessageAndNotify(message, ise.getCause());
             } catch (Throwable t) {
                 var error = String.format("Configure failed (%s): %s", t.getClass().getSimpleName(), t.getMessage());
                 createErrorMessageAndNotify(Message.fromSummary(error), t);
@@ -2922,18 +2923,6 @@ public final class Node {
     /** @return The credentials as set in the model. */
     public CredentialsProvider getCredentialsProvider() {
         return m_model.getCredentialsProvider();
-    }
-
-    /**
-     * Implemented by {@link KNIMEException} and {@link KNIMERuntimeException} to have a comment getter...
-     */
-    interface MessageAwareException {
-
-        /**
-         * @return the {@link Message} this exception was instantiated with (or which got created from the exception
-         *         details).
-         */
-        Message getKNIMEMessage();
     }
 
     /**

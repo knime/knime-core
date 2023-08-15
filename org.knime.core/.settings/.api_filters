@@ -2788,6 +2788,22 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/KNIMEException.java" type="org.knime.core.node.KNIMEException">
+        <filter comment="moved private interface to &quot;internal&quot; package - may cause binary incompatibility of class implementation. New API in 5.0 so unlikely to cause trouble. " id="337682486">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.KNIMEException"/>
+                <message_argument value="org.knime.core.node.Node$MessageAwareException"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/KNIMEException.java" type="org.knime.core.node.KNIMEException$KNIMERuntimeException">
+        <filter comment="moved private interface to &quot;internal&quot; package - may cause binary incompatibility of class implementation. New API in 5.0 so unlikely to cause trouble. " id="337682486">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.KNIMEException.KNIMERuntimeException"/>
+                <message_argument value="org.knime.core.node.Node$MessageAwareException"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/dialog/DialogNodeValue.java" type="org.knime.core.node.dialog.DialogNodeValue">
         <filter id="403804204">
             <message_arguments>

@@ -48,6 +48,7 @@
  */
 package org.knime.core.node;
 
+import org.knime.core.internal.MessageAwareException;
 import org.knime.core.node.message.Message;
 import org.knime.core.node.util.CheckUtils;
 
@@ -60,7 +61,7 @@ import org.knime.core.node.util.CheckUtils;
  * @since 5.0
  */
 @SuppressWarnings("serial")
-public final class KNIMEException extends Exception implements Node.MessageAwareException {
+public final class KNIMEException extends Exception implements MessageAwareException {
 
     private final Message m_message; // NOSONAR non-transient string
 
@@ -148,7 +149,7 @@ public final class KNIMEException extends Exception implements Node.MessageAware
      * A runtime exception derived from a {@link KNIMEException}. It only exists to not break APIs which really
      * should have thrown a {@link KNIMEException} but these APIs were defined much before that existed.
      */
-    public final class KNIMERuntimeException extends RuntimeException implements Node.MessageAwareException {
+    public final class KNIMERuntimeException extends RuntimeException implements MessageAwareException {
 
         KNIMERuntimeException() {
             super(KNIMEException.this.getMessage(), KNIMEException.this);

@@ -56,6 +56,7 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.KNIMEException;
 import org.knime.core.node.config.base.ConfigBaseRO;
 import org.knime.core.node.config.base.ConfigBaseWO;
 import org.knime.core.node.message.Issue.Type;
@@ -186,6 +187,50 @@ public final class Message {
     public NodeMessage toNodeMessage(final NodeMessage.Type type) {
         var issue = m_issue != null ? m_issue.toPreformatted() : null;
         return new NodeMessage(type, m_summary, issue, m_resolutions);
+    }
+
+    /**
+     * Adapts this message as exception that can be thrown in a node's <code>configure</code> method.
+     *
+     * @return A new exception representing this message.
+     * @since 5.2
+     */
+    public InvalidSettingsException toInvalidSettingsException() {
+        return new MessageAwareInvalidSettingsException(this, null);
+    }
+
+    /**
+     * Adapts this message as exception that can be thrown in a node's <code>configure</code> method.
+     *
+     * @param cause An optional cause
+     * @return A new exception representing this message.
+     * @since 5.2
+     */
+    public InvalidSettingsException toInvalidSettingsException(final Throwable cause) {
+        return new MessageAwareInvalidSettingsException(this, cause);
+    }
+
+    /**
+     * Adapts the message as exception as generic {@link KNIMEException}, e.g. thrown by a node's <code>execute</code>
+     * method.
+     *
+     * @return A new exception representing this message.
+     * @since 5.2
+     */
+    public KNIMEException toKNIMEException() {
+        return KNIMEException.of(this);
+    }
+
+    /**
+     * Adapts the message as exception as generic {@link KNIMEException}, e.g. thrown by a node's <code>execute</code>
+     * method.
+     *
+     * @param cause An optional cause.
+     * @return A new exception representing this message.
+     * @since 5.2
+     */
+    public KNIMEException toKNIMEException(final Throwable cause) {
+        return KNIMEException.of(this, cause);
     }
 
     /**
