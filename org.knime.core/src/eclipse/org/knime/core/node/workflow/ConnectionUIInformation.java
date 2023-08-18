@@ -48,6 +48,7 @@
 package org.knime.core.node.workflow;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -162,6 +163,22 @@ public class ConnectionUIInformation {
             m_bendpoints.forEach(point -> {
                 point[0] = point[0] + moveDist[0];
                 point[1] = point[1] + moveDist[1];
+            });
+            return this;
+        }
+
+        /**
+         * Move specific bendpoints by the same delta
+         *
+         * @param delta First element is assumed to be delta in X-direction, second element in Y-direction
+         * @param indices Indices of bendpoints on this connection to move
+         * @return a modified builder instance
+         * @since 5.2
+         */
+        public Builder translate(final int[] delta, final int[] indices) {
+            Arrays.stream(indices).forEach(indexToTranslate -> {
+                var oldBendpoint = m_bendpoints.get(indexToTranslate);
+                m_bendpoints.set(indexToTranslate, new int[]{oldBendpoint[0] + delta[0], oldBendpoint[1] + delta[1]});
             });
             return this;
         }
