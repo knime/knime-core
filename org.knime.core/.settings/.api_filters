@@ -2821,6 +2821,13 @@
                 <message_argument value="VERSION_20230412"/>
             </message_arguments>
         </filter>
+        <filter comment="fix made on master and backported to 5.1 (hence since tag is 5.2)" id="1141899266">
+            <message_arguments>
+                <message_argument value="5.2"/>
+                <message_argument value="5.1"/>
+                <message_argument value="setVersion(int)"/>
+            </message_arguments>
+        </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/ComponentMetadata.java" type="org.knime.core.node.workflow.ComponentMetadata">
         <filter comment="Method was only being used inside its own plugin." id="338792546">
