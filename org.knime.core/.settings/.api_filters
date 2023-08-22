@@ -4,12 +4,12 @@
         <filter id="924844039">
             <message_arguments>
                 <message_argument value="5.1.1"/>
-                <message_argument value="5.1.0"/>
+                <message_argument value="5.1.1"/>
             </message_arguments>
         </filter>
         <filter id="933232702">
             <message_arguments>
-                <message_argument value="5.1.0"/>
+                <message_argument value="5.1.1"/>
                 <message_argument value="org.glassfish.javax.json"/>
             </message_arguments>
         </filter>
@@ -18,7 +18,7 @@
         <filter id="305422471">
             <message_arguments>
                 <message_argument value="javax.json.Json"/>
-                <message_argument value="org.knime.core_5.0.0"/>
+                <message_argument value="org.knime.core_5.1.1"/>
             </message_arguments>
         </filter>
     </resource>
@@ -26,7 +26,7 @@
         <filter id="305422471">
             <message_arguments>
                 <message_argument value="javax.json.JsonArray"/>
-                <message_argument value="org.knime.core_5.0.0"/>
+                <message_argument value="org.knime.core_5.1.1"/>
             </message_arguments>
         </filter>
     </resource>
@@ -34,7 +34,7 @@
         <filter id="305422471">
             <message_arguments>
                 <message_argument value="javax.json.JsonArrayBuilder"/>
-                <message_argument value="org.knime.core_5.0.0"/>
+                <message_argument value="org.knime.core_5.1.1"/>
             </message_arguments>
         </filter>
     </resource>
@@ -42,7 +42,7 @@
         <filter id="305422471">
             <message_arguments>
                 <message_argument value="javax.json.JsonBuilderFactory"/>
-                <message_argument value="org.knime.core_5.0.0"/>
+                <message_argument value="org.knime.core_5.1.1"/>
             </message_arguments>
         </filter>
     </resource>
@@ -50,7 +50,7 @@
         <filter id="305422471">
             <message_arguments>
                 <message_argument value="javax.json.JsonException"/>
-                <message_argument value="org.knime.core_5.0.0"/>
+                <message_argument value="org.knime.core_5.1.1"/>
             </message_arguments>
         </filter>
     </resource>
@@ -58,7 +58,7 @@
         <filter id="305422471">
             <message_arguments>
                 <message_argument value="javax.json.JsonMergePatch"/>
-                <message_argument value="org.knime.core_5.0.0"/>
+                <message_argument value="org.knime.core_5.1.1"/>
             </message_arguments>
         </filter>
     </resource>
@@ -66,7 +66,7 @@
         <filter id="305422471">
             <message_arguments>
                 <message_argument value="javax.json.JsonNumber"/>
-                <message_argument value="org.knime.core_5.0.0"/>
+                <message_argument value="org.knime.core_5.1.1"/>
             </message_arguments>
         </filter>
     </resource>
@@ -74,7 +74,7 @@
         <filter id="305422471">
             <message_arguments>
                 <message_argument value="javax.json.JsonObject"/>
-                <message_argument value="org.knime.core_5.0.0"/>
+                <message_argument value="org.knime.core_5.1.1"/>
             </message_arguments>
         </filter>
     </resource>
@@ -82,7 +82,7 @@
         <filter id="305422471">
             <message_arguments>
                 <message_argument value="javax.json.JsonObjectBuilder"/>
-                <message_argument value="org.knime.core_5.0.0"/>
+                <message_argument value="org.knime.core_5.1.1"/>
             </message_arguments>
         </filter>
     </resource>
@@ -90,7 +90,7 @@
         <filter id="305422471">
             <message_arguments>
                 <message_argument value="javax.json.JsonPatch"/>
-                <message_argument value="org.knime.core_5.0.0"/>
+                <message_argument value="org.knime.core_5.1.1"/>
             </message_arguments>
         </filter>
     </resource>
@@ -98,7 +98,7 @@
         <filter id="305422471">
             <message_arguments>
                 <message_argument value="javax.json.JsonPatchBuilder"/>
-                <message_argument value="org.knime.core_5.0.0"/>
+                <message_argument value="org.knime.core_5.1.1"/>
             </message_arguments>
         </filter>
     </resource>
@@ -106,7 +106,7 @@
         <filter id="305422471">
             <message_arguments>
                 <message_argument value="javax.json.JsonPointer"/>
-                <message_argument value="org.knime.core_5.0.0"/>
+                <message_argument value="org.knime.core_5.1.1"/>
             </message_arguments>
         </filter>
     </resource>
@@ -114,7 +114,7 @@
         <filter id="305422471">
             <message_arguments>
                 <message_argument value="javax.json.JsonReader"/>
-                <message_argument value="org.knime.core_5.0.0"/>
+                <message_argument value="org.knime.core_5.1.1"/>
             </message_arguments>
         </filter>
     </resource>
@@ -122,7 +122,7 @@
         <filter id="305422471">
             <message_arguments>
                 <message_argument value="javax.json.JsonReaderFactory"/>
-                <message_argument value="org.knime.core_5.0.0"/>
+                <message_argument value="org.knime.core_5.1.1"/>
             </message_arguments>
         </filter>
     </resource>
@@ -130,7 +130,7 @@
         <filter id="305422471">
             <message_arguments>
                 <message_argument value="javax.json.JsonString"/>
-                <message_argument value="org.knime.core_5.0.0"/>
+                <message_argument value="org.knime.core_5.1.1"/>
             </message_arguments>
         </filter>
     </resource>
@@ -138,7 +138,7 @@
         <filter id="305422471">
             <message_arguments>
                 <message_argument value="javax.json.JsonStructure"/>
-                <message_argument value="org.knime.core_5.0.0"/>
+                <message_argument value="org.knime.core_5.1.1"/>
             </message_arguments>
         </filter>
     </resource>
@@ -146,7 +146,7 @@
         <filter id="305422471">
             <message_arguments>
                 <message_argument value="javax.json.JsonValue"/>
-                <message_argument value="org.knime.core_5.0.0"/>
+                <message_argument value="org.knime.core_5.1.1"/>
             </message_arguments>
         </filter>
     </resource>
@@ -154,7 +154,7 @@
         <filter id="305422471">
             <message_arguments>
                 <message_argument value="javax.json.JsonWriter"/>
-                <message_argument value="org.knime.core_5.0.0"/>
+                <message_argument value="org.knime.core_5.1.1"/>
             </message_arguments>
         </filter>
     </resource>
@@ -162,7 +162,7 @@
         <filter id="305422471">
             <message_arguments>
                 <message_argument value="javax.json.JsonWriterFactory"/>
-                <message_argument value="org.knime.core_5.0.0"/>
+                <message_argument value="org.knime.core_5.1.1"/>
             </message_arguments>
         </filter>
     </resource>
@@ -170,7 +170,7 @@
         <filter id="305422471">
             <message_arguments>
                 <message_argument value="javax.json.spi.JsonProvider"/>
-                <message_argument value="org.knime.core_5.0.0"/>
+                <message_argument value="org.knime.core_5.1.1"/>
             </message_arguments>
         </filter>
     </resource>
@@ -178,7 +178,7 @@
         <filter id="305422471">
             <message_arguments>
                 <message_argument value="javax.json.stream.JsonCollectors"/>
-                <message_argument value="org.knime.core_5.0.0"/>
+                <message_argument value="org.knime.core_5.1.1"/>
             </message_arguments>
         </filter>
     </resource>
@@ -186,7 +186,7 @@
         <filter id="305422471">
             <message_arguments>
                 <message_argument value="javax.json.stream.JsonGenerationException"/>
-                <message_argument value="org.knime.core_5.0.0"/>
+                <message_argument value="org.knime.core_5.1.1"/>
             </message_arguments>
         </filter>
     </resource>
@@ -194,7 +194,7 @@
         <filter id="305422471">
             <message_arguments>
                 <message_argument value="javax.json.stream.JsonGenerator"/>
-                <message_argument value="org.knime.core_5.0.0"/>
+                <message_argument value="org.knime.core_5.1.1"/>
             </message_arguments>
         </filter>
     </resource>
@@ -202,7 +202,7 @@
         <filter id="305422471">
             <message_arguments>
                 <message_argument value="javax.json.stream.JsonGeneratorFactory"/>
-                <message_argument value="org.knime.core_5.0.0"/>
+                <message_argument value="org.knime.core_5.1.1"/>
             </message_arguments>
         </filter>
     </resource>
@@ -210,7 +210,7 @@
         <filter id="305422471">
             <message_arguments>
                 <message_argument value="javax.json.stream.JsonLocation"/>
-                <message_argument value="org.knime.core_5.0.0"/>
+                <message_argument value="org.knime.core_5.1.1"/>
             </message_arguments>
         </filter>
     </resource>
@@ -218,7 +218,7 @@
         <filter id="305422471">
             <message_arguments>
                 <message_argument value="javax.json.stream.JsonParser"/>
-                <message_argument value="org.knime.core_5.0.0"/>
+                <message_argument value="org.knime.core_5.1.1"/>
             </message_arguments>
         </filter>
     </resource>
@@ -226,7 +226,7 @@
         <filter id="305422471">
             <message_arguments>
                 <message_argument value="javax.json.stream.JsonParserFactory"/>
-                <message_argument value="org.knime.core_5.0.0"/>
+                <message_argument value="org.knime.core_5.1.1"/>
             </message_arguments>
         </filter>
     </resource>
@@ -234,7 +234,7 @@
         <filter id="305422471">
             <message_arguments>
                 <message_argument value="javax.json.stream.JsonParsingException"/>
-                <message_argument value="org.knime.core_5.0.0"/>
+                <message_argument value="org.knime.core_5.1.1"/>
             </message_arguments>
         </filter>
     </resource>
@@ -242,7 +242,7 @@
         <filter id="305422471">
             <message_arguments>
                 <message_argument value="org.glassfish.json.api.BufferPool"/>
-                <message_argument value="org.knime.core_5.0.0"/>
+                <message_argument value="org.knime.core_5.1.1"/>
             </message_arguments>
         </filter>
     </resource>
