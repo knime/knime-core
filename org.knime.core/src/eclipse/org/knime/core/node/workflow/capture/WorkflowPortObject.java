@@ -63,6 +63,7 @@ import javax.swing.JComponent;
 
 import org.knime.core.data.DataTable;
 import org.knime.core.data.container.DataContainer;
+import org.knime.core.data.model.IsPortObjectCellWrappable;
 import org.knime.core.data.util.NonClosableInputStream;
 import org.knime.core.data.util.NonClosableOutputStream;
 import org.knime.core.node.CanceledExecutionException;
@@ -78,6 +79,10 @@ import org.knime.core.node.port.PortObjectZipOutputStream;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.workflow.BufferedDataTableView;
+import org.knime.core.node.workflow.FlowLoopContext;
+import org.knime.core.node.workflow.FlowObjectStack;
+import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.WorkflowManager;
 
 /**
@@ -86,7 +91,7 @@ import org.knime.core.node.workflow.WorkflowManager;
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  * @since 4.2
  */
-public class WorkflowPortObject extends AbstractPortObject {
+public class WorkflowPortObject extends AbstractPortObject implements IsPortObjectCellWrappable {
 
     /**
      * Convenience accessor for the port type.
@@ -272,6 +277,42 @@ public class WorkflowPortObject extends AbstractPortObject {
             segmentCopy.serializeAndDisposeWorkflow();
             segment.disposeWorkflow();
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void checkIsPortObjectCellWrappable() throws NotPortObjectCellWrappableException {
+        if (hasReferenceReaderNodes() && isInLoop()) {
+            throw new NotPortObjectCellWrappableException("""
+                       Unable to turn a workflow port object into a table cell because the respective workflow
+                       segment 'statically' references other ports.
+                       Write/store the referenced port data separately and pass it into
+                       the workflow segment via a dedicated workflow input (Capture Workflow Start).
+                    """);
+        }
+    }
+
+    private boolean hasReferenceReaderNodes() {
+        return !m_spec.getWorkflowSegment().getPortObjectReferenceReaderNodes().isEmpty();
+    }
+
+    private static boolean isInLoop() {
+        return Optional.ofNullable(NodeContext.getContext()) //
+            .map(NodeContext::getNodeContainer) //
+            .map(NodeContainer::getFlowObjectStack) //
+            .map(WorkflowPortObject::containsFlowLoopContext) //
+            .orElse(Boolean.FALSE).booleanValue();
+    }
+
+    private static Boolean containsFlowLoopContext(final FlowObjectStack fos) {
+        for (Object fo : fos) {
+            if (fo instanceof FlowLoopContext) {
+                return Boolean.TRUE;
+            }
+        }
+        return Boolean.FALSE;
     }
 
 }
