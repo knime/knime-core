@@ -44,93 +44,49 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Jul 2, 2023 (hornm): created
+ *   Aug 27, 2023 (hornm): created
  */
-package org.knime.core.node.port;
+package org.knime.core.data.model;
 
-import java.io.Closeable;
-
-import org.knime.core.data.model.PortObjectCell;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.workflow.NodeContext;
 
 /**
- * Provides contextual information which might be required to serialize a {@link PortObject} (and/or the
- * {@link PortObjectSpec}).
+ * Introduced via AP-20633 - will be obsolete as soon as AP-16226 is solved.
  *
- * When setting the context it must be unset again as soon as the serialization is done, ideally in an
- * try-resource-block:
- *
- * <pre>
- * try (var psc = PortSerializerContext.set(INTENT.WRAP_INTO_TABLE_CELL)) {
- *     PortUtil.writeObjectToStream(cell.m_content, (OutputStream)output, new ExecutionMonitor());
- * }
- * </pre>
+ * Allows the implementing {@link PortObject} to conditional determine (e.g. based on the {@link NodeContext} and the
+ * {@link PortObject}-content whether it can be wrapped into a {@link PortObjectCell}.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
- * @since 5.1
+ * @since 5.2
+ *
+ * @noimplement This interface is not intended to be implemented by clients.
+ * @noreference This interface is not intended to be referenced by clients.
  */
-public final class PortSerializerContext {
-
-    private static final ThreadLocal<PortSerializerContext> CONTEXT = new ThreadLocal<>();
+public interface IsPortObjectCellWrappable {
 
     /**
-     * The intention of why a port object (spec) is being serialized.
-     */
-    public enum INTENT {
-
-            /**
-             * If the port (spec) is to be serialized in order to be transferred to another JVM (e.g. in order to call
-             * another workflow).
-             */
-            COPY_TO_OTHER_JVM,
-
-            /**
-             * If the port (spec) is to be serialized in order to be wrapped into a {@link PortObjectCell} which is then
-             * put into a data table (usually in order to aggregate multiple port-objects into a table column)
-             */
-            WRAP_INTO_TABLE_CELL,
-
-            /** If the intent for the serialization is not known. */
-            UNKNOWN
-
-    }
-
-    private final INTENT m_intent;
-
-    private PortSerializerContext(final INTENT intent) {
-        m_intent = intent;
-    }
-
-    /**
-     * Sets the context for the current thread initialized with the given intent.
+     * Checks whether the implementing {@link PortObject} can be wrapped into a {@link PortObjectCell}. If not, it
+     * throws a {@link NotPortObjectCellWrappableException}.
      *
-     * @param intent
-     * @return a closable to be used to unset the context again (i.e. equivalent to calling {@link #unset()}).
-     * @throws IllegalStateException if there is already a context set
+     * @throws NotPortObjectCellWrappableException if it can't be wrapped
      */
-    public static Closeable set(final INTENT intent) {
-        if (CONTEXT.get() != null) {
-            throw new IllegalStateException("PortSerializerContext already set");
-        }
-        CONTEXT.set(new PortSerializerContext(intent));
-        return () -> unset();
-    }
+    void checkIsPortObjectCellWrappable() throws NotPortObjectCellWrappableException;
 
     /**
-     * Unsets the currently set context for this thread.
+     * Exception thrown if a {@link PortObject} can't be wrapped into a {@link PortObjectCell}.
      */
-    public static void unset() {
-        CONTEXT.remove();
-    }
+    class NotPortObjectCellWrappableException extends RuntimeException {
 
-    /**
-     * @return the {@link INTENT} for the port serialization
-     */
-    public static INTENT getIntent() {
-        var c = CONTEXT.get();
-        if (c != null && c.m_intent != null) {
-            return c.m_intent;
+        private static final long serialVersionUID = 7230609770940281220L;
+
+        /**
+         * @param message
+         */
+        public NotPortObjectCellWrappableException(final String message) {
+            super(message);
         }
-        return INTENT.UNKNOWN;
+
     }
 
 }

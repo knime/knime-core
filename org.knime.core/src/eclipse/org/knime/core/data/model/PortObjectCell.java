@@ -59,8 +59,6 @@ import org.knime.core.data.util.NonClosableInputStream;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.port.PortObject;
-import org.knime.core.node.port.PortSerializerContext;
-import org.knime.core.node.port.PortSerializerContext.INTENT;
 import org.knime.core.node.port.PortUtil;
 
 
@@ -91,9 +89,7 @@ public class PortObjectCell extends DataCell implements PortObjectValue {
         @Override
         public void serialize(final PortObjectCell cell, final DataCellDataOutput output) throws IOException {
             try {
-                try (var psc = PortSerializerContext.set(INTENT.WRAP_INTO_TABLE_CELL)) {
-                    PortUtil.writeObjectToStream(cell.m_content, (OutputStream)output, new ExecutionMonitor());
-                }
+                PortUtil.writeObjectToStream(cell.m_content, (OutputStream)output, new ExecutionMonitor());
             } catch (CanceledExecutionException cee) {
                 throw new IOException(cee);
             }
@@ -119,12 +115,17 @@ public class PortObjectCell extends DataCell implements PortObjectValue {
 
     private final PortObject m_content;
 
-    /** Constructor for creating port object cell objects.
+    /**
+     * Constructor for creating port object cell objects.
+     *
      * @param content The port object to wrap.
      */
     public PortObjectCell(final PortObject content) {
         if (content == null) {
             throw new NullPointerException("Argument must not be null.");
+        }
+        if (content instanceof IsPortObjectCellWrappable wrappable) {
+            wrappable.checkIsPortObjectCellWrappable();
         }
         m_content = content;
     }

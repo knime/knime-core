@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <component id="org.knime.core" version="2">
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.port.PortSerializerContext">
+        <filter id="305324134">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.port.PortSerializerContext"/>
+                <message_argument value="org.knime.core_5.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="META-INF/MANIFEST.MF" type="org.knime.node.v210.ADocument">
         <filter id="305365105">
             <message_arguments>
