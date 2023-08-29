@@ -60,6 +60,7 @@ import org.knime.core.data.IDataRepository;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.TableBackend;
+import org.knime.core.data.TableBackend.RowFilter;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainerSettings;
@@ -448,6 +449,11 @@ public class ExecutionContext extends ExecutionMonitor {
     public BufferedDataTable createSpecReplacerTable(
             final BufferedDataTable in, final DataTableSpec newSpec) {
         var t = getTableBackend().replaceSpec(this, in, newSpec, m_dataRepository::generateNewID);
+        return wrapTableFromBackend(t);
+    }
+
+    BufferedDataTable createFilteredTable(final BufferedDataTable table, final RowFilter filter) throws Exception {
+        var t = getTableBackend().filter(this, table, filter, m_dataRepository::generateNewID);
         return wrapTableFromBackend(t);
     }
 

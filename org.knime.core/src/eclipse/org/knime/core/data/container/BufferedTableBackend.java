@@ -151,8 +151,8 @@ public final class BufferedTableBackend implements TableBackend {
     }
 
     @Override
-    public KnowsRowCountTable concatenateWithNewRowIDs(final ExecutionContext exec,
-        final IntSupplier tableIdSupplier, final BufferedDataTable... tables) {
+    public KnowsRowCountTable concatenateWithNewRowIDs(final ExecutionContext exec, final IntSupplier tableIdSupplier,
+        final BufferedDataTable... tables) {
         return ConcatenateTable.createWithNewRowIDs(tables);
     }
 
@@ -200,9 +200,8 @@ public final class BufferedTableBackend implements TableBackend {
     }
 
     @Override
-    public KnowsRowCountTable rearrange(final ExecutionMonitor progressMonitor,
-        final IntSupplier tableIdSupplier, final ColumnRearranger columnRearranger,
-        final BufferedDataTable table, final ExecutionContext context)
+    public KnowsRowCountTable rearrange(final ExecutionMonitor progressMonitor, final IntSupplier tableIdSupplier,
+        final ColumnRearranger columnRearranger, final BufferedDataTable table, final ExecutionContext context)
         throws CanceledExecutionException {
         return RearrangeColumnsTable.create(columnRearranger, table, progressMonitor, context);
     }
@@ -256,8 +255,7 @@ public final class BufferedTableBackend implements TableBackend {
 
         private void copySlice(final ExecutionContext exec, final BufferedDataTable table, final double numRows,
             final RowWriteCursor writeCursor) {
-            var sliceFromFirstRow = Selection.all()
-                    .retainColumns(m_slice.columns());
+            var sliceFromFirstRow = Selection.all().retainColumns(m_slice.columns());
             if (!m_slice.rows().allSelected()) {
                 sliceFromFirstRow = sliceFromFirstRow.retainRows(0, m_slice.rows().toIndex());
             }
@@ -326,6 +324,19 @@ public final class BufferedTableBackend implements TableBackend {
     public KnowsRowCountTable replaceSpec(final ExecutionContext exec, final BufferedDataTable table,
         final DataTableSpec newSpec, final IntSupplier tableIDSupplier) {
         return new TableSpecReplacerTable(table, newSpec);
+    }
+
+    @Override
+    public KnowsRowCountTable filter(final ExecutionContext exec, final BufferedDataTable table, final RowFilter filter,
+        final IntSupplier tableIDSupplier) throws Exception {
+        try (var filteredContainer = exec.createRowContainer(table.getDataTableSpec(), false);
+                var writeCursor = filteredContainer.createCursor();
+                var readCursor = table.cursor()) {
+            while (readCursor.canForward()) {
+                writeCursor.forward().setFrom(readCursor.forward());
+            }
+            return Node.invokeGetDelegate(filteredContainer.finish());
+        }
     }
 
 }

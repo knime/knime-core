@@ -49,6 +49,7 @@
 package org.knime.core.node;
 
 import org.knime.core.data.TableBackend;
+import org.knime.core.data.TableBackend.RowFilter;
 import org.knime.core.table.row.Selection;
 
 /**
@@ -106,6 +107,11 @@ public final class InternalTableAPI {
     public static BufferedDataTable concatenateWithNewRowID(final ExecutionContext exec,
         final BufferedDataTable... tables) {
         return exec.createConcatenateTableWithNewRowIDs(tables);
+    }
+
+    public static BufferedDataTable filter(final ExecutionContext exec, final BufferedDataTable table,
+        final RowFilter filter) throws Exception {
+        return exec.createFilteredTable(table, filter);
     }
 
 }

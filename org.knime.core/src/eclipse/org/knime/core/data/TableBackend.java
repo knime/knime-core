@@ -48,6 +48,7 @@ package org.knime.core.data;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.IntSupplier;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import org.knime.core.data.container.ColumnRearranger;
@@ -57,6 +58,7 @@ import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.data.container.ILocalDataRepository;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.v2.RowContainer;
+import org.knime.core.data.v2.RowRead;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -332,5 +334,11 @@ public interface TableBackend {
      */
     KnowsRowCountTable replaceSpec(ExecutionContext exec, final BufferedDataTable table,
         final DataTableSpec newSpec, IntSupplier tableIDSupplier);
+
+    public interface RowFilter extends Predicate<RowRead> {
+        int[] filterColumns();
+    }
+
+    KnowsRowCountTable filter(final ExecutionContext exec, final BufferedDataTable table, final RowFilter filter, IntSupplier tableIDSupplier) throws Exception;
 
 }
