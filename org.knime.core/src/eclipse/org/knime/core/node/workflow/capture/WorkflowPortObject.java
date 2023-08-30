@@ -55,6 +55,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.zip.ZipEntry;
@@ -72,6 +73,9 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContent;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
+import org.knime.core.node.exec.dataexchange.PortObjectIDSettings;
+import org.knime.core.node.exec.dataexchange.PortObjectIDSettings.ReferenceType;
+import org.knime.core.node.exec.dataexchange.in.PortObjectInNodeModel;
 import org.knime.core.node.port.AbstractPortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortObjectZipInputStream;
@@ -80,9 +84,10 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.workflow.BufferedDataTableView;
 import org.knime.core.node.workflow.FlowLoopContext;
-import org.knime.core.node.workflow.FlowObjectStack;
+import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContext;
+import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.WorkflowManager;
 
 /**
@@ -284,7 +289,11 @@ public class WorkflowPortObject extends AbstractPortObject implements IsPortObje
      */
     @Override
     public void checkIsPortObjectCellWrappable() throws NotPortObjectCellWrappableException {
-        if (hasReferenceReaderNodes() && isInLoop()) {
+        // AP-20916: If the workflow segment references another node (port) within the workflow it has been created/captured and the
+        // _referenced_ node is part of a loop, then don't allow the workflow segment to be wrapped within a PortObjectCell.
+        // Reason: Since the referenced node is in a loop, its output port data most likely changes with each loop iteration.
+        // The proper fix would be to include a copy of the output port data in the workflow port object (AP-16226).
+        if (referencesNodesInALoop()) {
             throw new NotPortObjectCellWrappableException("""
                        Unable to turn a workflow port object into a table cell because the respective workflow
                        segment 'statically' references other ports.
@@ -294,25 +303,70 @@ public class WorkflowPortObject extends AbstractPortObject implements IsPortObje
         }
     }
 
-    private boolean hasReferenceReaderNodes() {
-        return !m_spec.getWorkflowSegment().getPortObjectReferenceReaderNodes().isEmpty();
+    private boolean referencesNodesInALoop() {
+        var referenceReaderNodes = m_spec.getWorkflowSegment().getPortObjectReferenceReaderNodes();
+        if(referenceReaderNodes.isEmpty()) {
+            return false;
+        }
+
+        var segment = m_spec.getWorkflowSegment();
+        var referencedNodeIDSuffixes = getReferencedNodeIDSuffixes(segment);
+        if (referencedNodeIDSuffixes.isEmpty()) {
+            return false;
+        }
+
+        var projectWfm = getProjectWfm();
+        if (projectWfm == null) {
+            return false;
+        }
+
+        return referencedNodeIDSuffixes.stream().anyMatch(nodeIDSuffix -> {
+            var nc = projectWfm.findNodeContainer(nodeIDSuffix.prependParent(projectWfm.getID()));
+            return isInLoop(nc);
+        });
     }
 
-    private static boolean isInLoop() {
-        return Optional.ofNullable(NodeContext.getContext()) //
+    private static List<NodeIDSuffix> getReferencedNodeIDSuffixes(final WorkflowSegment segment) {
+        var segmentWfm = segment.loadWorkflow();
+        try {
+            return segment.getPortObjectReferenceReaderNodes().stream().map(nodeIDSuffix -> {
+                return Optional.of(segmentWfm.findNodeContainer(nodeIDSuffix.prependParent(segmentWfm.getID()))) //
+                    .filter(NativeNodeContainer.class::isInstance) //
+                    .map(NativeNodeContainer.class::cast) //
+                    .map(NativeNodeContainer::getNodeModel) //
+                    .filter(PortObjectInNodeModel.class::isInstance) //
+                    .map(PortObjectInNodeModel.class::cast) //
+                    .map(PortObjectInNodeModel::getInputNodeSettingsCopy) //
+                    .filter(settings -> settings.getReferenceType() == ReferenceType.NODE) //
+                    .map(PortObjectIDSettings::getNodeIDSuffix) //
+                    .orElse(null);
+            }).filter(Objects::nonNull).toList();
+        } finally {
+            segment.disposeWorkflow();
+        }
+    }
+
+    private static WorkflowManager getProjectWfm() {
+        var projectWfm = Optional.ofNullable(NodeContext.getContext()) //
             .map(NodeContext::getNodeContainer) //
-            .map(NodeContainer::getFlowObjectStack) //
-            .map(WorkflowPortObject::containsFlowLoopContext) //
-            .orElse(Boolean.FALSE).booleanValue();
+            .map(NodeContainer::getParent) //
+            .map(WorkflowManager::getProjectWFM) //
+            .orElse(null);
+        return projectWfm;
     }
 
-    private static Boolean containsFlowLoopContext(final FlowObjectStack fos) {
-        for (Object fo : fos) {
+    private static boolean isInLoop(final NodeContainer nc) {
+        var flowObjectStack = nc.getFlowObjectStack();
+        if (flowObjectStack == null) {
+            return false;
+        }
+
+        for (Object fo : flowObjectStack) {
             if (fo instanceof FlowLoopContext) {
-                return Boolean.TRUE;
+                return true;
             }
         }
-        return Boolean.FALSE;
+        return false;
     }
 
 }
