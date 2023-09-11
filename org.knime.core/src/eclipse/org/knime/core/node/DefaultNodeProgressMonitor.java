@@ -124,8 +124,8 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
                         try {
                             p.fireProgressChanged(); // something has changed
                         } catch (Exception e) {
-                            LOGGER.warn(
-                                "Exception (\"" + e.getClass().getSimpleName() + "\") " + " during event notification.", e);
+                            LOGGER.warn("Exception (\"" + e.getClass().getSimpleName() + "\") "
+                                    + " during event notification.", e);
                         }
                     }
                 }
@@ -512,10 +512,10 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
                     m_innerAppendSupplier = NULL_SUPPLIER;
                 }
                 Supplier<String> createSupplier = () -> createMessage(m_innerMessageSupplier, m_innerAppendSupplier);
-                if (m_parent instanceof DefaultNodeProgressMonitor) {
-                    ((DefaultNodeProgressMonitor)m_parent).appendMessage(createSupplier);
-                } else if (m_parent instanceof SubNodeProgressMonitor) {
-                    ((SubNodeProgressMonitor)m_parent).appendMessage(createSupplier);
+                if (m_parent instanceof DefaultNodeProgressMonitor defaultNodeMon) {
+                    defaultNodeMon.appendMessage(createSupplier);
+                } else if (m_parent instanceof SubNodeProgressMonitor subNodeMon) {
+                    subNodeMon.appendMessage(createSupplier);
                 } else {
                     m_parent.setMessage(createSupplier);
                 }

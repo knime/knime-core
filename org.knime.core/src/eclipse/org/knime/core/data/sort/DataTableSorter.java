@@ -62,20 +62,38 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
 
 /**
- * Table sorter for sorting plain {@link DataTable} objects (use the class
- * <b>{@link BufferedDataTableSorter}</b> if you want to sort buffered data
- * table objects.
+ * Table sorter for sorting plain {@link DataTable} objects (use the class <b>{@link BufferedDataTableSorter}</b> if
+ * you want to sort buffered data table objects.
  *
- * <p>Usage: Client implementations will initialize this object with the table
- * to be sorted, set properties using the varies set-methods (defaults are
- * generally fine) and finally call the {@link #sort(ExecutionMonitor)} method.
+ * <p>Usage: Client implementations will initialize this object with the table to be sorted, set properties using the
+ * varies set-methods (defaults are generally fine) and finally call the {@link #sort(ExecutionMonitor)} method.
  *
- * <p>For details on the sorting mechanism see the <a href="package.html">
- * package description</a>.
+ * <p>For details on the sorting mechanism see the <a href="package.html">package description</a>.
  *
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  */
 public class DataTableSorter extends AbstractTableSorter {
+
+    static final TableIOHandler TABLE_IO_HANDLER = new TableIOHandler() {
+        @Override
+        public DataContainer createDataContainer(final DataTableSpec spec, final boolean forceOnDisk) {
+            return forceOnDisk ? new DataContainer(spec, true, 0) : new DataContainer(spec, true);
+        }
+
+        @Override
+        public void clearTable(final DataTable table) {
+            // the DataContainer returns ContainerTable
+            if (table instanceof ContainerTable ct) {
+                ct.clear();
+            } else {
+                NodeLogger.getLogger(getClass()).warn("Can't clear table instance "
+                        + "of \"" + table.getClass().getSimpleName()
+                        + "\" - expected \"" + ContainerTable.class.getSimpleName()
+                        + "\"");
+            }
+        }
+    };
+
     /**
      * Inits sorter on argument table with given row comparator.
      *
@@ -86,9 +104,8 @@ public class DataTableSorter extends AbstractTableSorter {
      * @deprecated use {@link #DataTableSorter(DataTable, long, Comparator)} instead which supports more than
      *             {@link Integer#MAX_VALUE} rows
      */
-    @Deprecated
-    public DataTableSorter(final DataTable inputTable, final int rowsCount,
-            final Comparator<DataRow> rowComparator) {
+    @Deprecated(since = "3.0", forRemoval = true)
+    public DataTableSorter(final DataTable inputTable, final int rowsCount, final Comparator<DataRow> rowComparator) {
         super(inputTable, rowsCount, rowComparator);
     }
 
@@ -105,9 +122,9 @@ public class DataTableSorter extends AbstractTableSorter {
      * @deprecated use {@link #DataTableSorter(DataTable, int, Collection, boolean[])} instead which supports more than
      *             {@link Integer#MAX_VALUE} rows
      */
-    @Deprecated
-    public DataTableSorter(final DataTable inputTable, final int rowsCount,
-            final Collection<String> inclList, final boolean[] sortAscending) {
+    @Deprecated(since = "3.0", forRemoval = true)
+    public DataTableSorter(final DataTable inputTable, final int rowsCount, final Collection<String> inclList,
+            final boolean[] sortAscending) {
         super(inputTable, rowsCount, inclList, sortAscending);
     }
 
@@ -126,10 +143,9 @@ public class DataTableSorter extends AbstractTableSorter {
      * @deprecated use {@link #DataTableSorter(DataTable, long, Collection, boolean[], boolean)} instead which supports
      *             more than {@link Integer#MAX_VALUE} rows
      */
-    @Deprecated
-    public DataTableSorter(final DataTable inputTable, final int rowsCount,
-            final Collection<String> inclList, final boolean[] sortAscending,
-            final boolean sortMissingToEnd) {
+    @Deprecated(since = "3.0", forRemoval = true)
+    public DataTableSorter(final DataTable inputTable, final int rowsCount, final Collection<String> inclList,
+            final boolean[] sortAscending, final boolean sortMissingToEnd) {
         super(inputTable, rowsCount, inclList, sortAscending);
     }
 
@@ -139,61 +155,50 @@ public class DataTableSorter extends AbstractTableSorter {
      * Inits sorter on argument table with given row comparator.
      *
      * @param inputTable Table to sort.
-     * @param rowsCount The number of rows in the table, if known. Specify
-     * -1 if you don't know the table row count. This field is only used
-     * to report progress upon {@link #sort(ExecutionMonitor)}.
+     * @param rowsCount The number of rows in the table, if known. Specify -1 if you don't know the table row count.
+     *            This field is only used to report progress upon {@link #sort(ExecutionMonitor)}.
      * @param rowComparator Passed to {@link #setRowComparator(Comparator)}.
      * @since 3.0
      */
-    public DataTableSorter(final DataTable inputTable, final long rowsCount,
-            final Comparator<DataRow> rowComparator) {
+    public DataTableSorter(final DataTable inputTable, final long rowsCount, final Comparator<DataRow> rowComparator) {
         super(inputTable, rowsCount, rowComparator);
     }
 
     /**
-     * Inits table sorter using the sorting according to
-     * {@link #setSortColumns(Collection, boolean[])}.
+     * Inits table sorter using the sorting according to {@link #setSortColumns(Collection, boolean[])}.
      *
      * @param inputTable The table to sort
-     * @param rowsCount The number of rows in the table, if known. Specify
-     * -1 if you don't know the table row count. This field is only used
-     * to report progress upon {@link #sort(ExecutionMonitor)}.
-     * @param inclList Passed on to
-     * {@link #setSortColumns(Collection, boolean[])}.
-     * @param sortAscending Passed on to
-     * {@link #setSortColumns(Collection, boolean[])}.
+     * @param rowsCount The number of rows in the table, if known. Specify -1 if you don't know the table row count.
+     *            This field is only used to report progress upon {@link #sort(ExecutionMonitor)}.
+     * @param inclList Passed on to {@link #setSortColumns(Collection, boolean[])}.
+     * @param sortAscending Passed on to {@link #setSortColumns(Collection, boolean[])}.
      * @throws NullPointerException If any argument is null.
      * @throws IllegalArgumentException If arguments are inconsistent.
      * @since 3.0
      */
-    public DataTableSorter(final DataTable inputTable, final long rowsCount,
-            final Collection<String> inclList, final boolean[] sortAscending) {
+    public DataTableSorter(final DataTable inputTable, final long rowsCount, final Collection<String> inclList,
+            final boolean[] sortAscending) {
         super(inputTable, rowsCount, inclList, sortAscending);
     }
 
     /**
-     * Inits table sorter using the sorting according to
-     * {@link #setSortColumns(Collection, boolean[], boolean)}.
+     * Inits table sorter using the sorting according to {@link #setSortColumns(Collection, boolean[], boolean)}.
      *
      * @param inputTable The table to sort
-     * @param rowsCount The number of rows in the table, if known. Specify
-     * -1 if you don't know the table row count. This field is only used
-     * to report progress upon {@link #sort(ExecutionMonitor)}.
-     * @param inclList Passed on to
-     * {@link #setSortColumns(Collection, boolean[], boolean)}.
-     * @param sortAscending Passed on to
-     * {@link #setSortColumns(Collection, boolean[], boolean)}.
-     * @param sortMissingToEnd Passed on to
-     * {@link #setSortColumns(Collection, boolean[], boolean)}
+     * @param rowsCount The number of rows in the table, if known. Specify -1 if you don't know the table row count.
+     *            This field is only used to report progress upon {@link #sort(ExecutionMonitor)}.
+     * @param inclList Passed on to {@link #setSortColumns(Collection, boolean[], boolean)}.
+     * @param sortAscending Passed on to {@link #setSortColumns(Collection, boolean[], boolean)}.
+     * @param sortMissingToEnd Passed on to {@link #setSortColumns(Collection, boolean[], boolean)}
      * @throws NullPointerException If any argument is null.
      * @throws IllegalArgumentException If arguments are inconsistent.
      * @since 3.0
      */
-    public DataTableSorter(final DataTable inputTable, final long rowsCount,
-            final Collection<String> inclList, final boolean[] sortAscending,
-            final boolean sortMissingToEnd) {
+    public DataTableSorter(final DataTable inputTable, final long rowsCount, final Collection<String> inclList,
+            final boolean[] sortAscending, final boolean sortMissingToEnd) {
         super(inputTable, rowsCount, inclList, sortAscending);
     }
+
     /**
      * Package default constructor for the {@link AbstractColumnTableSorter}.
      *
@@ -214,13 +219,13 @@ public class DataTableSorter extends AbstractTableSorter {
      * @since 4.2
      */
     public CloseableTable sort(final ExecutionMonitor exec) throws CanceledExecutionException {
-        DataTable delegate = super.sortInternal(exec);
+        DataTable delegate = super.sortInternal(exec, TABLE_IO_HANDLER);
 
         // only allow closing this delegate if it's not the input table.
-        // FIXME Why does the DataTableSorter need to understand that it shouldn't be able to
-        // close a table? That's state logic which should be caught in the design.
-        if (delegate != getInputTable() && delegate instanceof CloseableTable) {
-            return (CloseableTable)delegate;
+        // FIXME Why does the DataTableSorter need to understand that it shouldn't be able to close a table?
+        //       That's state logic which should be caught in the design.
+        if (delegate != getInputTable() && delegate instanceof CloseableTable closeable) {
+            return closeable;
         } else {
             return new CloseableTable() {
                 @Override
@@ -242,30 +247,20 @@ public class DataTableSorter extends AbstractTableSorter {
         }
     }
 
-    /** {@inheritDoc} */
-    @Override
-    protected DataContainer createDataContainer(final DataTableSpec spec,
-            final boolean forceOnDisk) {
+    /**
+     * Creates data container, either a buffered data container or a plain one.
+     *
+     * @param spec The spec of the container/table.
+     * @param forceOnDisk false to use default, true to flush data immediately to disk. It's true when used in the
+     *            #sortOnDisk(ExecutionMonitor) method and the container is only used temporarily.
+     * @return A new fresh container.
+     */
+    @Deprecated(since="5.2", forRemoval = true)
+    protected DataContainer createDataContainer(final DataTableSpec spec, final boolean forceOnDisk) {
         if (forceOnDisk) {
             return new DataContainer(spec, true, 0);
         } else {
             return new DataContainer(spec, true);
         }
     }
-
-    /** {@inheritDoc} */
-    @Override
-    void clearTable(final DataTable table) {
-        // the DataContainer returns ContainerTable
-        if (!(table instanceof ContainerTable)) {
-            NodeLogger.getLogger(getClass()).warn("Can't clear table instance "
-                    + "of \"" + table.getClass().getSimpleName()
-                    + "\" - expected \"" + ContainerTable.class.getSimpleName()
-                    + "\"");
-        } else {
-            ContainerTable t = (ContainerTable)table;
-            t.clear();
-        }
-    }
-
 }

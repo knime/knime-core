@@ -115,10 +115,9 @@ public class ColumnDataTableSorter extends AbstractColumnTableSorter {
      * @param resultConsumer the result listener
      * @throws CanceledExecutionException the canceled execution exception
      */
-    @Override
     public void sort(final DataTable dataTable, final ExecutionMonitor executionMonitor,
-        final SortingConsumer resultConsumer) throws CanceledExecutionException {
-        super.sort(dataTable, executionMonitor, resultConsumer);
+            final SortingConsumer resultConsumer) throws CanceledExecutionException {
+        super.sort(dataTable, executionMonitor, DataTableSorter.TABLE_IO_HANDLER, resultConsumer);
     }
 
     /**

@@ -54,11 +54,13 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.CheckUtils;
 
 /**
  * Table sorter for sorting {@link BufferedDataTable} objects. The returned table is also of class
@@ -77,9 +79,6 @@ import org.knime.core.node.NodeLogger;
  */
 public class BufferedDataTableSorter extends AbstractTableSorter {
 
-    /** Used to create temporary and final output table. */
-    private ExecutionContext m_execContext;
-
     /**
      * Inits table sorter using the sorting according to {@link #setSortColumns(Collection, boolean[])}.
      *
@@ -90,7 +89,7 @@ public class BufferedDataTableSorter extends AbstractTableSorter {
      * @throws IllegalArgumentException If arguments are inconsistent.
      */
     public BufferedDataTableSorter(final BufferedDataTable inputTable, final Collection<String> inclList,
-        final boolean[] sortAscending) {
+            final boolean[] sortAscending) {
         super(inputTable, inputTable.size(), inclList, sortAscending);
     }
 
@@ -131,7 +130,6 @@ public class BufferedDataTableSorter extends AbstractTableSorter {
     BufferedDataTableSorter(final long rowCount, final DataTableSpec dataTableSpec,
         final Comparator<DataRow> rowComparator, final ExecutionContext ctx) {
         super(rowCount, dataTableSpec, rowComparator);
-        m_execContext = ctx;
     }
 
     private static Comparator<DataRow> getComparatorFromType(final DataType type, final int index,
@@ -194,29 +192,40 @@ public class BufferedDataTableSorter extends AbstractTableSorter {
         if (ctx == null) {
             throw new NullPointerException("Argument must not be null.");
         }
-        m_execContext = ctx;
-        try {
-            return (BufferedDataTable)super.sortInternal(ctx);
-        } finally {
-            m_execContext = null;
-        }
+
+        return (BufferedDataTable)super.sortInternal(ctx, createTableIOHandler(ctx));
     }
 
-    /** {@inheritDoc} */
-    @Override
-    DataContainer createDataContainer(final DataTableSpec spec, final boolean forceOnDisk) {
-        return m_execContext.createDataContainer(spec, true, forceOnDisk ? 0 : -1);
+    /**
+     * Sorts the table passed in the constructor according to the settings and returns a resource iterator over the
+     * resulting table.
+     *
+     * @param ctx To report progress &amp; create temporary output tables
+     * @return The sorted output as an iterator
+     * @throws CanceledExecutionException If canceled
+     * @since 5.2
+     */
+    public CloseableRowIterator sortedIterator(final ExecutionContext ctx) throws CanceledExecutionException {
+        return super.sortedIteratorInternal(CheckUtils.checkArgumentNotNull(ctx), createTableIOHandler(ctx));
     }
 
-    /** {@inheritDoc} */
-    @Override
-    void clearTable(final DataTable table) {
-        if (!(table instanceof BufferedDataTable)) {
-            NodeLogger.getLogger(getClass()).warnWithFormat("Can't clear table instance of \"%s\" - expected \"%s\"",
-                table.getClass().getSimpleName(), BufferedDataTable.class.getSimpleName());
-        } else {
-            m_execContext.clearTable((BufferedDataTable)table);
-        }
-    }
+    static TableIOHandler createTableIOHandler(final ExecutionContext ctx) {
+        return new TableIOHandler() {
+            @Override
+            public DataContainer createDataContainer(final DataTableSpec spec, final boolean forceOnDisk) {
+                return ctx.createDataContainer(spec, true, forceOnDisk ? 0 : -1);
+            }
 
+            @Override
+            public void clearTable(final DataTable table) {
+                if (table instanceof BufferedDataTable bdt) {
+                    ctx.clearTable(bdt);
+                } else {
+                    NodeLogger.getLogger(getClass()).warnWithFormat(
+                        "Can't clear table instance of \"%s\" - expected \"%s\"",
+                        table.getClass().getSimpleName(), BufferedDataTable.class.getSimpleName());
+                }
+            }
+        };
+    }
 }

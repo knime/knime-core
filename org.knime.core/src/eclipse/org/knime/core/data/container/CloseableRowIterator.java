@@ -48,30 +48,78 @@
 package org.knime.core.data.container;
 
 import java.io.Closeable;
+import java.util.Collections;
+import java.util.Iterator;
 
+import org.knime.core.data.DataRow;
 import org.knime.core.data.RowIterator;
 
 /**
- * A {@link RowIterator row iterator} that can be closed in order to save
- * resources. Iterator of this class are returned by tables created with a
- * {@link DataContainer} or {@link org.knime.core.node.BufferedDataContainer},
- * which typically read from file. If the iterator is not pushed to the end of
- * the table, the input stream is not closed, which can cause system failures.
- * This iterator allows the user to close the stream early on (before reaching
- * the end of the table in which case the stream is closed anyway).
+ * A {@link RowIterator row iterator} that can be closed in order to save resources. Iterator of this class are returned
+ * by tables created with a {@link DataContainer} or {@link org.knime.core.node.BufferedDataContainer}, which typically
+ * read from file. If the iterator is not pushed to the end of the table, the input stream is not closed, which can
+ * cause system failures. This iterator allows the user to close the stream early on (before reaching the end of the
+ * table in which case the stream is closed anyway).
  *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public abstract class CloseableRowIterator extends RowIterator implements Closeable {
 
-    /** Closes this iterator. Subsequent calls of {@link RowIterator#hasNext()}
-     * will return <code>false</code>. This method does not need to be called
-     * if the iterator was pushed to the end (stream will be closed
-     * automatically). It's meant to be used in cases where the iterator might
-     * not advance to the end of the table.
+    /**
+     * If the given iterator already is a {@link CloseableRowIterator}, it is returned unchanged.
+     * Otherwise it is wrapped by {@link #wrap(Iterator)}.
      *
-     * <p>This method does nothing if the table is already closed (multiple
-     * invocations are ignored). */
+     * @param iterator iterator to be adapted to a {@link CloseableRowIterator}
+     * @return adapted iterator
+     * @since 5.2
+     */
+    public static CloseableRowIterator from(final Iterator<DataRow> iterator) {
+        return iterator instanceof CloseableRowIterator closeable ? closeable : wrap(iterator);
+    }
+
+    /**
+     * Wraps a regular row iterator, adding a no-op #{@link #close()} method.
+     *
+     * @param delegate iterator to wrap
+     * @return wrapped iterator
+     * @since 5.2
+     */
+    public static CloseableRowIterator wrap(final Iterator<DataRow> delegate) {
+        return new CloseableRowIterator() {
+            @Override
+            public boolean hasNext() {
+                return delegate.hasNext();
+            }
+
+            @Override
+            public DataRow next() {
+                return delegate.next();
+            }
+
+            @Override
+            public void close() {
+                // nothing to close
+            }
+        };
+    }
+
+    /**
+     * Creates a new empty {@link CloseableRowIterator}.
+     *
+     * @return empty iterator
+     * @since 5.2
+     */
+    public static CloseableRowIterator empty() {
+        return wrap(Collections.emptyIterator());
+    }
+
+    /**
+     * Closes this iterator. Subsequent calls of {@link RowIterator#hasNext()} will return <code>false</code>.
+     * This method does not need to be called if the iterator was pushed to the end (stream will be closed
+     * automatically). It's meant to be used in cases where the iterator might not advance to the end of the table.
+     *
+     * <p>This method does nothing if the table is already closed (multiple invocations are ignored).
+     */
     @Override
     public abstract void close();
 }

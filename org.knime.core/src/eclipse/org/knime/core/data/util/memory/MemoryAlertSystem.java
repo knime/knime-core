@@ -97,7 +97,7 @@ public final class MemoryAlertSystem {
          *
          * @return <code>true</code> if an action is required, <code>false</code> if no action is required
          */
-        public boolean lowMemoryActionRequired();
+        boolean lowMemoryActionRequired();
     }
 
     private final class MemoryActionIndicatorImpl implements MemoryActionIndicator {
@@ -129,7 +129,7 @@ public final class MemoryAlertSystem {
      */
     private static final MemoryAlertSystem INSTANCE = new MemoryAlertSystem(DEFAULT_USAGE_THRESHOLD, true);
 
-    private final static boolean IS_G1 = ManagementFactory.getGarbageCollectorMXBeans().stream()
+    private static final boolean IS_G1 = ManagementFactory.getGarbageCollectorMXBeans().stream()
             .map(GarbageCollectorMXBean::getName).anyMatch(n -> n.equals("G1 Old Generation"));
 
     /**
@@ -173,7 +173,7 @@ public final class MemoryAlertSystem {
 
     private final Map<MemoryAlertListener, Object> m_listeners = new ConcurrentHashMap<>();
 
-    /** Dummy object for the listerners map. */
+    /** Dummy object for the listeners map. */
     private static final Object DUMMY = new Object();
 
     private final MemoryPoolMXBean m_memPool = OLD_GEN_POOL;

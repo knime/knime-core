@@ -52,10 +52,11 @@ import static org.knime.core.node.util.CheckUtils.checkArgument;
 import static org.knime.core.node.util.CheckUtils.checkNotNull;
 import static org.knime.core.node.util.CheckUtils.checkSettingNotNull;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Iterator;
+import java.util.Deque;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.ListIterator;
@@ -74,7 +75,9 @@ import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.BlobSupportDataRow;
+import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.data.def.DefaultRow;
+import org.knime.core.data.sort.ChunksWriter.ChunkHandle;
 import org.knime.core.data.util.memory.MemoryAlertSystem;
 import org.knime.core.data.util.memory.MemoryAlertSystem.MemoryActionIndicator;
 import org.knime.core.node.CanceledExecutionException;
@@ -93,8 +96,8 @@ import org.knime.core.util.ThreadPool;
  */
 abstract class AbstractColumnTableSorter {
 
-    private final ThreadPool m_executor = KNIMEConstants.GLOBAL_THREAD_POOL.createSubPool(Runtime.getRuntime()
-        .availableProcessors());
+    private final ThreadPool m_executor =
+            KNIMEConstants.GLOBAL_THREAD_POOL.createSubPool(Runtime.getRuntime().availableProcessors());
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(AbstractColumnTableSorter.class);
 
@@ -144,7 +147,7 @@ abstract class AbstractColumnTableSorter {
      * @throws NullPointerException if any argument is null.
      */
     AbstractColumnTableSorter(final DataTableSpec spec, final long rowsCount, final String... columnToSort)
-        throws InvalidSettingsException {
+            throws InvalidSettingsException {
         this(spec, rowsCount, toSortDescriptions(spec, columnToSort));
     }
 
@@ -157,14 +160,14 @@ abstract class AbstractColumnTableSorter {
      * @throws InvalidSettingsException If arguments are inconsistent.
      */
     AbstractColumnTableSorter(final DataTableSpec spec, final long rowsCount, final SortingDescription... descriptions)
-        throws InvalidSettingsException {
+            throws InvalidSettingsException {
         checkArgument(!ArrayUtils.contains(descriptions, null), "Null values are not permitted.");
         m_dataTableSpec = checkNotNull(spec);
         m_sortDescriptions = descriptions;
         m_rowCount = rowsCount;
         m_buffer = new LinkedHashMap<>();
         for (SortingDescription desc : descriptions) {
-            m_buffer.put(desc, new ArrayList<DataRow>());
+            m_buffer.put(desc, new ArrayList<>());
         }
         validateAndInit(spec, descriptions);
     }
@@ -175,7 +178,8 @@ abstract class AbstractColumnTableSorter {
      * @param rowComparator the comparator to use
      * @return a concrete TableSorter
      */
-    abstract AbstractTableSorter createTableSorter(long rowCount, DataTableSpec spec, Comparator<DataRow> rowComparator);
+    abstract AbstractTableSorter createTableSorter(long rowCount, DataTableSpec spec,
+        Comparator<DataRow> rowComparator);
 
     /**
      * @param dataTable the table to sort
@@ -183,8 +187,8 @@ abstract class AbstractColumnTableSorter {
      * @param resultListener the result listener
      * @throws CanceledExecutionException if the user cancels the execution
      */
-    void sort(final DataTable dataTable, final ExecutionMonitor exec, final SortingConsumer resultListener)
-        throws CanceledExecutionException {
+    void sort(final DataTable dataTable, final ExecutionMonitor exec, final TableIOHandler dataHandler,
+            final SortingConsumer resultListener) throws CanceledExecutionException {
 
         if (m_sortDescriptions.length <= 0) {
             for (DataRow r : dataTable) {
@@ -192,7 +196,7 @@ abstract class AbstractColumnTableSorter {
             }
         } else {
             clearBuffer();
-            sortOnDisk(dataTable, exec, resultListener);
+            sortOnDisk(dataTable, exec, dataHandler, resultListener);
         }
     }
 
@@ -229,16 +233,18 @@ abstract class AbstractColumnTableSorter {
      * @throws CanceledExecutionException if the user has canceled execution
      */
     private void sortOnDisk(final DataTable dataTable, final ExecutionMonitor exec,
-        final SortingConsumer resultListener) throws CanceledExecutionException {
+            final TableIOHandler dataHandler, final SortingConsumer resultListener)
+            throws CanceledExecutionException {
 
-        final List<AbstractTableSorter> columnPartitions = new ArrayList<>(m_sortDescriptions.length);
+        final AbstractTableSorter[] columnPartitions = new AbstractTableSorter[m_sortDescriptions.length];
+        final ChunksWriter[] chunksWriters = new ChunksWriter[m_sortDescriptions.length];
 
         // Each sorting description is done as a single external merge sort of their parts of the data
-        for (int i = 0; i < m_sortDescriptions.length; i++) {
-            AbstractTableSorter tableSorter =
-                createTableSorter(m_rowCount, m_sortDescriptions[i].createDataTableSpec(m_dataTableSpec),
-                    m_sortDescriptions[i]);
-            columnPartitions.add(tableSorter);
+        for (var i = 0; i < m_sortDescriptions.length; i++) {
+            final var colTableSpec = m_sortDescriptions[i].createDataTableSpec(m_dataTableSpec);
+            AbstractTableSorter tableSorter = createTableSorter(m_rowCount, colTableSpec, m_sortDescriptions[i]);
+            columnPartitions[i] = tableSorter;
+            chunksWriters[i] = tableSorter.newChunksWriter(dataHandler);
         }
 
         exec.setMessage("Reading table");
@@ -246,10 +252,9 @@ abstract class AbstractColumnTableSorter {
 
         ExecutionMonitor readProgress = exec.createSubProgress(0.7);
 
-        // phase one: create as big chunks as possible from the given input table
-        // for each sort description
-        int chunkCount = 0;
-        long currentTotalRows = 0L;
+        // phase one: create as big chunks as possible from the given input table for each sort description
+        int chunkCount = 0; // NOSONAR
+        long currentTotalRows = 0L; // NOSONAR
         while (iterator.hasNext()) {
             LOGGER.debugWithFormat("Reading temporary tables -- (chunk %d)", chunkCount);
             assert m_buffer.values().stream().allMatch(l -> l.isEmpty());
@@ -262,26 +267,19 @@ abstract class AbstractColumnTableSorter {
             LOGGER.debugWithFormat("Sorting temporary tables -- (chunk %d with %d rows)", chunkCount, bufferedRows);
             sortBufferInParallel();
 
-            for (AbstractTableSorter tableSorter : columnPartitions) {
-                tableSorter.openChunk();
-            }
-
             LOGGER.debugWithFormat("Writing temporary tables (chunk %d with %d rows)", chunkCount, bufferedRows);
-            for (int i = 0; i < m_sortDescriptions.length; i++) {
-                SortingDescription sortingDescription = m_sortDescriptions[i];
+            for (var i = 0; i < m_sortDescriptions.length; i++) {
+                final var sortingDescription = m_sortDescriptions[i];
                 LOGGER.debugWithFormat("Writing temporary table (chunk %d, column %d)", chunkCount, i);
-                AbstractTableSorter tableSorter = columnPartitions.get(i);
                 ListIterator<DataRow> rowIterator = m_buffer.get(sortingDescription).listIterator();
-                while (rowIterator.hasNext()) {
-                    tableSorter.addRowToChunk(rowIterator.next());
-                    // release the row as early as possible
-                    rowIterator.set(null);
+                try (ChunkHandle chunk = chunksWriters[i].openChunk(true)) {
+                    while (rowIterator.hasNext()) { // NOSONAR
+                        chunk.addRow(rowIterator.next());
+                        // release the row as early as possible
+                        rowIterator.set(null);
+                    }
                 }
                 exec.checkCanceled();
-            }
-
-            for (AbstractTableSorter tableSorter : columnPartitions) {
-                tableSorter.closeChunk();
             }
 
             clearBuffer();
@@ -292,29 +290,40 @@ abstract class AbstractColumnTableSorter {
         // phase 2: merge the temporary tables
         exec.setMessage("Merging temporary tables.");
         ExecutionMonitor mergingProgress = exec.createSubProgress(0.3);
-        List<Iterator<DataRow>> partitionRowIterators = mergePartitions(columnPartitions, mergingProgress, chunkCount);
+        final List<CloseableRowIterator> partitionRowIterators = mergePartitions(columnPartitions, chunksWriters,
+            mergingProgress, dataHandler, chunkCount, currentTotalRows);
+        if (partitionRowIterators.isEmpty()) {
+            return;
+        }
 
-        // publish the results to the listener
-        List<DataRow> currentRow = new ArrayList<>();
-        long rowNo = 0;
-        Iterator<DataRow> firstPartitionIterator = partitionRowIterators.isEmpty()
-                ? Collections.<DataRow>emptyList().iterator() : partitionRowIterators.get(0);
-        while (firstPartitionIterator.hasNext()) {
-            for (int i = 0; i < partitionRowIterators.size(); i++) {
-                currentRow.add(partitionRowIterators.get(i).next());
+        try {
+            // publish the results to the listener
+            final var currentRow = new ArrayList<DataRow>();
+            @SuppressWarnings("resource")
+            final var firstPartitionIterator = partitionRowIterators.get(0);
+            for (var rowNo = 0L; firstPartitionIterator.hasNext(); rowNo++) {
+                for (var i = 0; i < partitionRowIterators.size(); i++) {
+                    @SuppressWarnings("resource")
+                    final var colIterator = partitionRowIterators.get(i);
+                    currentRow.add(colIterator.next());
+                }
+                resultListener.consume(aggregateRows(new RowKey("AutoGenerated" + rowNo), currentRow));
+                currentRow.clear();
             }
-            resultListener.consume(aggregateRows(new RowKey("AutoGenerated" + rowNo++), currentRow));
-            currentRow.clear();
+        } finally {
+            partitionRowIterators.forEach(CloseableRowIterator::close);
         }
     }
 
-    private List<Iterator<DataRow>> mergePartitions(final List<AbstractTableSorter> columnPartitions,
-        final ExecutionMonitor exec, final int chunkCount) throws CanceledExecutionException {
+    @SuppressWarnings("resource")
+    private List<CloseableRowIterator> mergePartitions(final AbstractTableSorter[] columnPartitions,
+            final ChunksWriter[] initialChunks, final ExecutionMonitor exec, final TableIOHandler dataHandler,
+            final int chunkCount, final long numRows) throws CanceledExecutionException {
         LOGGER.debug("Merging tables");
-        final List<Iterator<DataRow>> partitionRowIterators = new ArrayList<>();
+        final var partitionRowIterators = new ArrayList<CloseableRowIterator>();
 
         final int numberOfNecessaryContainers = chunkCount * m_sortDescriptions.length;
-        final Iterator<AbstractTableSorter> i = columnPartitions.iterator();
+        var partIdx = 0;
         if (numberOfNecessaryContainers > m_maxOpenContainers && chunkCount > 1) {
             // AP-12179: if chunkCount == 1, numberOfNecessaryContainers can still exceed maxOpenContainers if we have
             // many sortDescriptions but in this case we can't reduce the number of containers by merging
@@ -328,23 +337,35 @@ abstract class AbstractColumnTableSorter {
             // consequently we have to reduce more partitions to fall below maxOpenContainers
             // AP-12179: In case of chunkCount == 1 this formula led to a division by zero but we now ensure
             // in the if condition above that chunkCount is greater than 1.
-            final double numPartitionsToMergeSeparately = numExcessPartitions + Math.ceil(
-                numExcessPartitions / (chunkCount - 1));
-            int index = 0;
-            while (tmp > m_maxOpenContainers && i.hasNext()) {
-                partitionRowIterators.add(i.next().mergeChunks(
-                    exec.createSubProgress(index / numPartitionsToMergeSeparately), true));
+            final double numPartitionsToMergeSeparately = numExcessPartitions
+                    + Math.ceil(numExcessPartitions / (chunkCount - 1));
+            var index = 0;
+            while (tmp > m_maxOpenContainers && partIdx < columnPartitions.length) {
+                final var subProgress = exec.createSubProgress(index / numPartitionsToMergeSeparately);
+                final Deque<Iterable<DataRow>> mergeQueue = new ArrayDeque<>();
+                initialChunks[partIdx].finish(mergeQueue::addAll);
+                final var columnSorter = columnPartitions[partIdx];
+                try (final var mergePhase = columnSorter.startMergePhase(dataHandler, mergeQueue, numRows)) {
+                    partitionRowIterators.add(mergePhase.mergeIntoMaterializedIterator(subProgress));
+                }
                 index++;
                 // if we merge a run completely we save chunkCount of open file handles
                 // but need obviously one for opening the result file.
                 tmp = tmp - chunkCount + 1;
+                partIdx++;
             }
         }
         exec.setProgress(1, "Merging Done.");
         // we can now open enough containers to merge all runs at one time.
         // Hence the remaining containers don't need to be merged separately
-        while (i.hasNext()) {
-            partitionRowIterators.add(i.next().mergeChunks(exec.createSubProgress(0), false));
+        while (partIdx < columnPartitions.length) {
+            final var subProgress = exec.createSubProgress(0);
+            final Deque<Iterable<DataRow>> mergeQueue = new ArrayDeque<>();
+            initialChunks[partIdx].finish(mergeQueue::addAll);
+            try (final var mergePhase = columnPartitions[partIdx].startMergePhase(dataHandler, mergeQueue, numRows)) {
+                partitionRowIterators.add(mergePhase.mergeIntoIterator(subProgress));
+            }
+            partIdx++;
         }
         return partitionRowIterators;
     }
@@ -359,31 +380,30 @@ abstract class AbstractColumnTableSorter {
     }
 
     private static void validateAndInit(final DataTableSpec dataTableSpec, final SortingDescription[] toSort)
-        throws InvalidSettingsException {
+            throws InvalidSettingsException {
         for (SortingDescription desc : toSort) {
             desc.init(dataTableSpec);
         }
     }
 
     private static SortingDescription[] toSortDescriptions(final DataTableSpec dataTableSpec, final String[] toSort)
-        throws InvalidSettingsException {
+            throws InvalidSettingsException {
         checkArgument(!ArrayUtils.contains(toSort, null), "Null values are not permitted.");
 
-        SortingDescription[] toReturn = new SortingDescription[toSort.length];
-        int index = 0;
-        for (String so : toSort) {
-            DataColumnSpec columnSpec = checkSettingNotNull(//
+        final var descriptions = new SortingDescription[toSort.length];
+        for (var i = 0; i < toSort.length; i++) {
+            final var so = toSort[i];
+            DataColumnSpec columnSpec = checkSettingNotNull( //
                 dataTableSpec.getColumnSpec(so), "Column: '%s' does not exist in input table.", so);
             final DataValueComparator comparator = columnSpec.getType().getComparator();
-            toReturn[index++] = new SortingDescription(so) {
-
+            descriptions[i] = new SortingDescription(so) {
                 @Override
                 public int compare(final DataRow o1, final DataRow o2) {
                     return comparator.compare(o1.getCell(0), o2.getCell(0));
                 }
             };
         }
-        return toReturn;
+        return descriptions;
     }
 
     /**
@@ -394,7 +414,7 @@ abstract class AbstractColumnTableSorter {
      * @throws CanceledExecutionException
      */
     private long fillBuffer(final RowIterator iterator, final ExecutionMonitor readExec)
-        throws CanceledExecutionException {
+            throws CanceledExecutionException {
 
         long count = 0;
         while (iterator.hasNext()) {
@@ -422,12 +442,7 @@ abstract class AbstractColumnTableSorter {
         List<Future<?>> futures = new ArrayList<>();
         try {
             for (final Entry<SortingDescription, List<DataRow>> descr : m_buffer.entrySet()) {
-                futures.add(m_executor.enqueue(new Runnable() {
-                    @Override
-                    public void run() {
-                        Collections.sort(descr.getValue(), descr.getKey());
-                    }
-                }));
+                futures.add(m_executor.enqueue(() -> Collections.sort(descr.getValue(), descr.getKey())));
             }
             // wait until the inserting is finished
             for (Future<?> f : futures) {

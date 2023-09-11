@@ -165,7 +165,8 @@ public class ColumnBufferedDataTableSorter extends AbstractColumnTableSorter {
     public void sort(final DataTable dataTable, final ExecutionContext executionContext,
         final SortingConsumer resultConsumer) throws CanceledExecutionException {
         this.m_executionContext = checkNotNull(executionContext);
-        super.sort(dataTable, executionContext, resultConsumer);
+        final var dataHandler = BufferedDataTableSorter.createTableIOHandler(executionContext);
+        super.sort(dataTable, executionContext, dataHandler, resultConsumer);
     }
 
     @Override
