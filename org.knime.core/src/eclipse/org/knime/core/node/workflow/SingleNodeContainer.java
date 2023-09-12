@@ -833,6 +833,16 @@ public abstract class SingleNodeContainer extends NodeContainer {
         setDirty();
     }
 
+    /**
+     * Replaces the node's view settings with the provided ones.
+     *
+     * @param variableSettings
+     */
+    void loadViewVariableSettings(final NodeSettingsRO variableSettings) {
+        m_settings.m_viewVariablesSettings = variableSettings;
+        setDirty();
+    }
+
     /** {@inheritDoc} */
     @Override
     WorkflowCopyContent loadContent(final NodeContainerPersistor nodePersistor,

@@ -2201,7 +2201,8 @@ public final class WorkflowManager extends NodeContainer
      * components.
      *
      * @param id the node id to load the settings for
-     * @param settings the node setting which contain the view settings (i.e. not the view settings themselves)
+     * @param settings the node setting which is expected to contain the view settings and optionally the view variable
+     *            settings. I.e. these are not the view settings themselves.
      * @throws InvalidSettingsException if the view settings couldn't be loaded
      * @throws IllegalArgumentException if the passed node id does not reference a {@link SingleNodeContainer}
      *
@@ -2212,6 +2213,9 @@ public final class WorkflowManager extends NodeContainer
         if (nc instanceof SingleNodeContainer) {
             var snc = (SingleNodeContainer)nc;
             snc.loadViewSettings(settings.getNodeSettings(SingleNodeContainer.CFG_VIEW));
+            if (settings.containsKey(SingleNodeContainer.CFG_VIEW_VARIABLES)) {
+                snc.loadViewVariableSettings(settings.getNodeSettings(SingleNodeContainer.CFG_VIEW_VARIABLES));
+            }
             notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.NODE_SETTINGS_CHANGED, id, null, null));
         } else {
             throw new IllegalArgumentException("Node view settings can only be loaded for native nodes or components");
