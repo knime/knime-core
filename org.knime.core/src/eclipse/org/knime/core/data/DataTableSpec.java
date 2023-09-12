@@ -55,6 +55,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.BiPredicate;
@@ -66,6 +67,7 @@ import javax.swing.JComponent;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.knime.core.data.property.ColorAttr;
+import org.knime.core.data.property.ColorHandler;
 import org.knime.core.data.property.ShapeFactory;
 import org.knime.core.data.property.ShapeFactory.Shape;
 import org.knime.core.data.property.SizeHandler;
@@ -115,8 +117,13 @@ import org.knime.core.node.workflow.DataTableSpecView;
  * A <code>DataTableSpec</code> can also have a name which does not need to be
  * unique.
  *
+ * Since version 5.2 a table spec also supports mapping column names by color,
+ * e.g. used in line charts etc. These can be set via the corresponding creator
+ * class and be fetched via {@link #getColumnNamesColorHandler()}.
+ *
  * @see DataTable
  * @see DataColumnSpec
+ * @see DataTableSpecCreator
  *
  * @author Peter Ohl, University of Konstanz
  */
@@ -131,6 +138,9 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
 
     /** Key for table spec properties. */
     private static final String CFG_PROPERTIES = "spec_properties";
+
+    /** Key for the spec {@link ColorHandler} */
+    private static final String CFG_COLUMN_NAMES_COLOR_HANDLER = "column_names_color_handler";
 
     /** Key for 'key' field in properties map. */
     private static final String CFG_PROPERTY_KEY = "key";
@@ -331,7 +341,10 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
             map = Collections.emptyMap();
         }
 
-        return new DataTableSpec(name, specs, map);
+        final var colNamesColorHandler = config.containsKey(CFG_COLUMN_NAMES_COLOR_HANDLER)
+            ? ColorHandler.load(config.getConfig(CFG_COLUMN_NAMES_COLOR_HANDLER)) : null;
+
+        return new DataTableSpec(name, specs, map, colNamesColorHandler);
     }
 
     /**
@@ -360,8 +373,14 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
     private final Map<String, Integer> m_colIndexMap =
             new HashMap<String, Integer>();
 
-    /** The index of the column holding the ColorHandler or -1 if not set. */
+    /** The index of the column holding the ColorHandler (used to determine the color of a row) or -1 if not set. */
     private final int m_colorHandlerColIndex;
+
+    /**
+     * Maybe holds a {@link ColumnHandler} that maps column names to colors.
+     * @since 5.2
+     */
+    private final Optional<ColorHandler> m_columnNamesColorHandler;
 
     /** Keep an array of column specs. */
     private final DataColumnSpec[] m_columnSpecs;
@@ -449,16 +468,20 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
      *             method
      */
     public DataTableSpec(final String name, final DataColumnSpec... colSpecs) {
-        this(name, colSpecs, Collections.<String, String>emptyMap());
+        this(name, colSpecs, Collections.<String, String>emptyMap(), null);
     }
 
-
-    /** Constructor used eventually also by other constructors and the creator.
+    /**
+     * Constructor used eventually also by other constructors and the creator.
+     *
      * @param name Name of spec.
      * @param colSpecs Columns.
      * @param properties Properties.
+     * @param columnColorHandler The {@link ColorHandler} to use on this spec, or {@code null}.
+     * @since 5.2
      */
-    DataTableSpec(final String name, final DataColumnSpec[] colSpecs, final Map<String, String> properties) {
+    DataTableSpec(final String name, final DataColumnSpec[] colSpecs, final Map<String, String> properties,
+        final ColorHandler columnColorHandler) {
         m_name = (name == null ? DFT_SPEC_NAME : name);
         final int colCount = colSpecs.length;
         m_columnSpecs = new DataColumnSpec[colCount];
@@ -491,8 +514,8 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
             // check for multiple size handlers
             if (colSpecs[i].getSizeHandler() != null) {
                 if (sizeHdlIdx >= 0) {
-                    LOGGER.warn("Found multiple color handler at columns "
-                            + "index " + colorHdlIdx + " and "
+                    LOGGER.warn("Found multiple size handlers at columns "
+                            + "index " + sizeHdlIdx + " and "
                             + i + ", removed second one.");
                     cr.setSizeHandler(null);
                 } else {
@@ -503,8 +526,8 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
             // check for multiple shape handlers
             if (colSpecs[i].getShapeHandler() != null) {
                 if (shapeHdlIdx >= 0) {
-                    LOGGER.warn("Found multiple color handler at columns "
-                            + "index " + colorHdlIdx + " and "
+                    LOGGER.warn("Found multiple shape handlers at columns "
+                            + "index " + shapeHdlIdx + " and "
                             + i + ", removed second one.");
                     cr.setShapeHandler(null);
                 } else {
@@ -521,6 +544,7 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
         m_sizeHandlerColIndex  = sizeHdlIdx;
         m_colorHandlerColIndex = colorHdlIdx;
         m_shapeHandlerColIndex = shapeHdlIdx;
+        m_columnNamesColorHandler = Optional.ofNullable(columnColorHandler);
         m_filterHandlerColIndices = filterHandlerIndices.isEmpty() ? ArrayUtils.EMPTY_INT_ARRAY :
             filterHandlerIndices.stream().mapToInt(i -> i).toArray();
         m_properties = properties.isEmpty() ? Collections.<String, String>emptyMap()
@@ -711,6 +735,9 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
                 || m_sizeHandlerColIndex != spec.m_sizeHandlerColIndex) {
             return false;
         }
+        if (!m_columnNamesColorHandler.equals(spec.m_columnNamesColorHandler)) {
+            return false;
+        }
         final int colCount = this.getNumColumns();
         // must have same number of columns to be identical
         if (spec.getNumColumns() != colCount) {
@@ -845,6 +872,18 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
     }
 
     /**
+     * Get the {@link ColorHandler} that is associated with this table. It maps column names to colors, which can be
+     * used in views. This property is set via e.g. a Color Manager node. If set, the underlying model is a
+     * nominal color model.
+     *
+     * @return The associated {@link ColorHandler}, or {@link Optional#empty}
+     * @since 5.2
+     */
+    public Optional<ColorHandler> getColumnNamesColorHandler() {
+        return m_columnNamesColorHandler;
+    }
+
+    /**
      * Return the shape that an object should have when displaying information
      * concerning this row (for instance in a scatterplot). The shape is
      * determined by the {@link org.knime.core.data.property.ShapeHandler} of
@@ -931,6 +970,7 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
             tempHash ^= colHash;
         }
         tempHash ^= m_properties.hashCode();
+        tempHash ^= m_columnNamesColorHandler.hashCode();
         return tempHash;
     }
 
@@ -976,6 +1016,7 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
                 entryConfig.addString(CFG_PROPERTY_VALUE, entry.getValue());
             }
         }
+        m_columnNamesColorHandler.ifPresent(h -> h.save(config.addConfig(CFG_COLUMN_NAMES_COLOR_HANDLER)));
     }
 
     /**
@@ -1047,7 +1088,20 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
         for (int i = 0; i < mergedcolspecs.length; i++) {
             mergedcolspecs[i] = mergedColSpecCreators[i].createSpec();
         }
-        return new DataTableSpec(mergedcolspecs);
+
+        // append first column color handler
+        ColorHandler columnColorHandler = null;
+        for (var spec : specs) {
+            final var h = spec.getColumnNamesColorHandler();
+            if (h.isPresent()) {
+                columnColorHandler = h.orElseThrow();
+                break;
+            }
+        }
+        return new DataTableSpecCreator() //
+            .addColumns(mergedcolspecs) //
+            .setColumnNamesColorHandler(columnColorHandler) //
+            .createSpec();
     }
 
     /**

@@ -45,22 +45,31 @@
  */
 package org.knime.core.data;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.awt.Color;
 import java.util.Collections;
 import java.util.Map;
 
-import junit.framework.Assert;
-
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.knime.core.data.def.BooleanCell;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.data.property.ColorAttr;
+import org.knime.core.data.property.ColorHandler;
+import org.knime.core.data.property.ColorModelNominal;
+import org.knime.core.data.property.ColorModelRange;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.ModelContent;
 import org.knime.core.node.NodeSettings;
 
 /**
  * Tests {@link DataTableSpec} and {@link DataTableSpecCreator}.
+ *
  * @author wiswedel
  *
  */
@@ -71,9 +80,15 @@ public final class DataTableSpecCreatorTest {
         for (int i = 0; i < count; i++) {
             DataType type;
             switch (i % 3) {
-                case 0: type = StringCell.TYPE; break;
-                case 1: type = DoubleCell.TYPE; break;
-                default: type = IntCell.TYPE; break;
+                case 0:
+                    type = StringCell.TYPE;
+                    break;
+                case 1:
+                    type = DoubleCell.TYPE;
+                    break;
+                default:
+                    type = IntCell.TYPE;
+                    break;
             }
             String name = prefixName + i;
             result[i] = new DataColumnSpecCreator(name, type).createSpec();
@@ -83,72 +98,72 @@ public final class DataTableSpecCreatorTest {
 
     /** Test that constructor and creator return the same. */
     @Test
-    public void testCreatorSimple() {
+    void testCreatorSimple() {
         DataColumnSpec[] cols = createColumnSpecs(5, "ColName");
         DataTableSpec reference = new DataTableSpec(cols);
         DataTableSpecCreator creator = new DataTableSpecCreator();
         creator.addColumns(cols);
         DataTableSpec toTest = creator.createSpec();
-        Assert.assertEquals(reference, toTest);
+        assertEquals(reference, toTest);
     }
 
     /** No duplicate column names. */
-    @Test(expected=IllegalArgumentException.class)
-    public void testCreatorSimpleConflictNames() {
+    @Test
+    void testCreatorSimpleConflictNames() {
         DataColumnSpec[] cols = createColumnSpecs(5, "ColName");
         DataTableSpecCreator creator = new DataTableSpecCreator();
         creator.addColumns(cols);
-        creator.addColumns(cols[4]); // throws exception
+        assertThrows(IllegalArgumentException.class, () -> creator.addColumns(cols[4]));
     }
 
-    /** Test adding columns from table specs.  */
+    /** Test adding columns from table specs. */
     @Test
-    public void testCreatorMultipleTableSpecs() {
+    void testCreatorMultipleTableSpecs() {
         DataColumnSpec[] cols1 = createColumnSpecs(5, "ColName");
         DataColumnSpec[] cols2 = createColumnSpecs(5, "OtherColName");
         DataColumnSpec[] cols3 = createColumnSpecs(5, "YetOtherColName");
         DataTableSpecCreator creator = new DataTableSpecCreator();
-        creator.addColumns(new DataTableSpec(cols1)).addColumns(
-                new DataTableSpec(cols2)).addColumns(new DataTableSpec(cols3));
+        creator.addColumns(new DataTableSpec(cols1)).addColumns(new DataTableSpec(cols2))
+            .addColumns(new DataTableSpec(cols3));
         DataTableSpec outputSpec = creator.createSpec();
         DataColumnSpec[] allCols = new DataColumnSpec[cols1.length + cols2.length + cols3.length];
         System.arraycopy(cols1, 0, allCols, 0, cols1.length);
         System.arraycopy(cols2, 0, allCols, cols1.length, cols2.length);
         System.arraycopy(cols3, 0, allCols, cols1.length + cols2.length, cols3.length);
-        Assert.assertEquals(outputSpec, new DataTableSpec(allCols));
+        assertEquals(outputSpec, new DataTableSpec(allCols));
     }
 
     /** No duplicate column names when adding columns from table specs. */
-    @Test(expected=IllegalArgumentException.class)
-    public void testCreatorMultipleTableSpecsConflictNames() {
+    @Test
+    void testCreatorMultipleTableSpecsConflictNames() {
         DataColumnSpec[] cols1 = createColumnSpecs(5, "ColName");
         DataColumnSpec[] cols2 = createColumnSpecs(5, "OtherColName");
         DataTableSpecCreator creator = new DataTableSpecCreator();
         creator.addColumns(new DataTableSpec(cols1));
         creator.addColumns(new DataTableSpec(cols2));
-        creator.addColumns(new DataTableSpec(cols2)); // throws exception
+        assertThrows(IllegalArgumentException.class, () -> creator.addColumns(new DataTableSpec(cols2)));
     }
 
     /** Rename a column. */
     @Test
-    public void testSetName() {
+    void testSetName() {
         DataColumnSpec[] cols1 = createColumnSpecs(5, "ColName");
         DataTableSpecCreator creator = new DataTableSpecCreator();
         String name = "expected name 'ae-";
         creator.addColumns(cols1).setName(name);
-        Assert.assertEquals(creator.createSpec().getName(), name);
+        assertEquals(creator.createSpec().getName(), name);
     }
 
     /** Cannot change table spec properties after creation. */
-    @Test(expected=UnsupportedOperationException.class)
-    public void testEmptyProperty() {
+    @Test
+    void testEmptyProperty() {
         Map<String, String> props = new DataTableSpec().getProperties();
-        Assert.assertTrue(props.isEmpty());
-        props.put("key", "value"); // read only, throws exception
+        assertTrue(props.isEmpty());
+        assertThrows(UnsupportedOperationException.class, () -> props.put("key", "value")); // read only
     }
 
     @Test
-    public void testReplace() {
+    void testReplace() {
         DataColumnSpec[] cols1 = createColumnSpecs(5, "ColName");
         DataTableSpecCreator creator = new DataTableSpecCreator();
         creator.addColumns(cols1);
@@ -161,55 +176,104 @@ public final class DataTableSpecCreatorTest {
         DataTableSpec spec = creator.createSpec();
 
         final DataColumnSpec colSpec0 = spec.getColumnSpec(0);
-        assertEquals("Column names don't match", "ColName-somethingdifferent", colSpec0.getName());
-        assertEquals("Column types don't match", BooleanCell.TYPE, colSpec0.getType());
+        assertEquals("ColName-somethingdifferent", colSpec0.getName(), "Column names don't match");
+        assertEquals(BooleanCell.TYPE, colSpec0.getType(), "Column types don't match");
 
         final DataColumnSpec colSpec2 = spec.getColumnSpec(2);
-        assertEquals("Column names don't match", "ColName2", colSpec2.getName());
-        assertEquals("Column types don't match", BooleanCell.TYPE, colSpec2.getType());
+        assertEquals("ColName2", colSpec2.getName(), "Column names don't match");
+        assertEquals(BooleanCell.TYPE, colSpec2.getType(), "Column types don't match");
 
         creator.addColumns(new DataColumnSpecCreator("ColName0", BooleanCell.TYPE).createSpec());
     }
 
-    @Test(expected=IllegalArgumentException.class)
-    public void testReplaceWithDuplicate() {
+    @Test
+    void testReplaceWithDuplicate() {
         DataColumnSpec[] cols1 = createColumnSpecs(5, "ColName");
         DataTableSpecCreator creator = new DataTableSpecCreator();
         creator.addColumns(cols1);
         DataColumnSpec replaceCol = new DataColumnSpecCreator("ColName3", BooleanCell.TYPE).createSpec();
-        creator.replaceColumn(2, replaceCol);
+        assertThrows(IllegalArgumentException.class, () -> creator.replaceColumn(2, replaceCol));
     }
 
-    @Test(expected=IllegalArgumentException.class)
-    public void testReplaceWithInvalidIndex() {
+    @Test
+    void testReplaceWithInvalidIndex() {
         DataColumnSpec[] cols1 = createColumnSpecs(5, "ColName");
         DataTableSpecCreator creator = new DataTableSpecCreator();
         creator.addColumns(cols1);
         DataColumnSpec replaceCol = new DataColumnSpecCreator("NewName", BooleanCell.TYPE).createSpec();
-        creator.replaceColumn(6, replaceCol);
+        assertThrows(IllegalArgumentException.class, () -> creator.replaceColumn(6, replaceCol));
     }
 
     @Test
-    public void testAllPropertiesAndSaveLoad() throws Exception {
+    void testAllPropertiesAndSaveLoad() throws Exception {
         DataColumnSpec[] cols1 = createColumnSpecs(5, "ColName");
         DataTableSpecCreator creator = new DataTableSpecCreator();
         creator.addColumns(cols1);
         String name = "expected name 'ae-";
         creator.setName(name);
-        creator.putProperties(Collections.<String, String>emptyMap());
+        creator.putProperties(Collections.<String, String> emptyMap());
         creator.putProperties(Collections.singletonMap("key1", "value1"));
         creator.putProperty("key2", "value2");
         DataTableSpec spec = creator.createSpec();
         Map<String, String> properties = spec.getProperties();
-        Assert.assertEquals(properties.get("key1"), "value1");
-        Assert.assertEquals(properties.get("key2"), "value2");
+        assertEquals(properties.get("key1"), "value1");
+        assertEquals(properties.get("key2"), "value2");
         NodeSettings config = new NodeSettings("dummy");
         spec.save(config);
         DataTableSpec load = DataTableSpec.load(config);
         Map<String, String> loadProperties = load.getProperties();
-        Assert.assertEquals(loadProperties.get("key1"), "value1");
-        Assert.assertEquals(loadProperties.get("key2"), "value2");
-        Assert.assertEquals(spec, load);
+        assertEquals(loadProperties.get("key1"), "value1");
+        assertEquals(loadProperties.get("key2"), "value2");
+        assertEquals(spec, load);
+    }
+
+    @Test
+    void testColumnNameColorHandler() throws InvalidSettingsException {
+        final var blue = ColorAttr.getInstance(Color.BLUE);
+        final var sc = new DataTableSpecCreator();
+        final var ch =
+            new ColorHandler(new ColorModelNominal(Map.of(new StringCell("col1"), blue), new ColorAttr[]{blue}));
+        sc.setColumnNamesColorHandler(ch);
+        final var spec = sc.createSpec();
+        assertEquals(ch, spec.getColumnNamesColorHandler().orElseThrow(),
+            "The color column handler should be present in the table spec");
+
+        final var config = new ModelContent("test");
+        spec.save(config);
+        final var identicalSpec = DataTableSpec.load(config);
+        assertEquals(spec, identicalSpec, "Load-Save cycle should not change spec");
+        assertEquals(spec.getColumnNamesColorHandler(), identicalSpec.getColumnNamesColorHandler(),
+            "The column color handlers should be identical");
+
+        final var anotherSpecCreator = new DataTableSpecCreator(spec);
+        assertEquals(spec, anotherSpecCreator.createSpec(), "Table spec copy should be identical");
+        anotherSpecCreator.setColumnNamesColorHandler(null);
+        final var unequalSpec = anotherSpecCreator.createSpec();
+        assertNotEquals(spec, unequalSpec, "Table specs should not be equal if color handler differs");
+
+        final var combinedSpec = DataTableSpec.mergeDataTableSpecs(unequalSpec, spec);
+        assertEquals(ch, combinedSpec.getColumnNamesColorHandler().orElseThrow(),
+            "When combining table specs, the column color handler should also come along");
+
+        final var emptySpec1 = new DataTableSpecCreator().createSpec();
+        final var emptySpec2 = new DataTableSpecCreator().createSpec();
+        assertTrue(DataTableSpec.mergeDataTableSpecs(emptySpec1, emptySpec2).getColumnNamesColorHandler().isEmpty(),
+            "Merging table specs should not come up with a non-existing color handler");
+
+        final var copy_spec = new DataTableSpecCreator(spec).createSpec();
+        assertEquals(spec.getColumnNamesColorHandler(), copy_spec.getColumnNamesColorHandler(),
+            "Copying a table spec also copies the color handler");
+
+        final var removing_sc = new DataTableSpecCreator(spec);
+        removing_sc.setColumnNamesColorHandler(null);
+        assertTrue(removing_sc.createSpec().getColumnNamesColorHandler().isEmpty(),
+            "The color handler should be removed from the table spec");
+
+        final var faulty_ch = new ColorHandler(new ColorModelRange(0, Color.BLACK, 1, Color.WHITE));
+        final var ignoring_sc = new DataTableSpecCreator();
+        ignoring_sc.setColumnNamesColorHandler(faulty_ch);
+        assertTrue(ignoring_sc.createSpec().getColumnNamesColorHandler().isEmpty(),
+            "A non-nominal color handler should not be added to the table spec");
     }
 
 }

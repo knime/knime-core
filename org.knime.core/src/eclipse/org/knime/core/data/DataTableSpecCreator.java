@@ -52,6 +52,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.knime.core.data.property.ColorHandler;
+import org.knime.core.data.property.ColorModelNominal;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.CheckUtils;
 
 /**
@@ -66,6 +69,8 @@ import org.knime.core.node.util.CheckUtils;
  */
 public final class DataTableSpecCreator {
 
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(DataTableSpecCreator.class);
+
     private List<DataColumnSpec> m_columnSpecs = new ArrayList<DataColumnSpec>();
 
     private Map<String, Integer> m_columnSpecMap = new HashMap<String, Integer>();
@@ -73,6 +78,8 @@ public final class DataTableSpecCreator {
     private String m_name;
 
     private Map<String, String> m_properties = new LinkedHashMap<String, String>();
+
+    private ColorHandler m_columnNamesColorHandler;
 
     /**
      * Start with empty spec.
@@ -92,6 +99,7 @@ public final class DataTableSpecCreator {
         addColumns(spec);
         setName(spec.getName());
         putProperties(spec.getProperties());
+        setColumnNamesColorHandler(spec.getColumnNamesColorHandler().orElse(null));
     }
 
 
@@ -157,6 +165,24 @@ public final class DataTableSpecCreator {
      */
     public DataTableSpecCreator setName(final String name) {
         m_name = name;
+        return this;
+    }
+
+    /**
+     * Set a {@link ColorHandler} that maps column names to colors. Must hold a {@link ColorModelNominal}, otherwise
+     * this method will show a warning and ignore the input.
+     *
+     * @param colorHandler The {@link ColorHandler} in question, can be {@code null}
+     * @return this
+     * @since 5.2
+     */
+    public DataTableSpecCreator setColumnNamesColorHandler(final ColorHandler colorHandler) {
+        if (colorHandler == null || colorHandler.getColorModel() instanceof ColorModelNominal) {
+            m_columnNamesColorHandler = colorHandler;
+        } else {
+            LOGGER.warn("Can only use a nominal color model for column colors. Got instead: "
+                + colorHandler.getColorModel().getClass().getName() + " ... ignoring.");
+        }
         return this;
     }
 
@@ -229,7 +255,8 @@ public final class DataTableSpecCreator {
      * @return A new table spec.
      */
     public DataTableSpec createSpec() {
-        return new DataTableSpec(m_name, m_columnSpecs.toArray(new DataColumnSpec[m_columnSpecs.size()]), m_properties);
+        return new DataTableSpec(m_name, m_columnSpecs.toArray(new DataColumnSpec[m_columnSpecs.size()]), m_properties,
+            m_columnNamesColorHandler);
     }
 
 }
