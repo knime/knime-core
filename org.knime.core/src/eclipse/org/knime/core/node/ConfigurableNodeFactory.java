@@ -51,7 +51,6 @@ package org.knime.core.node;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -556,17 +555,12 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
         private static PortType[] getRegisteredPortTypes(final PortType[] clientTypes) {
             // find all port types that are a subtype of a client type and not hidden
             final var availablePortTypes = PortTypeRegistry.getInstance().availablePortTypes();
-            final var candidateList = Arrays.stream(clientTypes).flatMap(clientType -> availablePortTypes.stream()
-                .filter(type -> !type.isHidden()).filter(clientType::isSuperTypeOf)).toList();
-            // retain only the most special subtypes in the inheritance hierarchy
-            final var finalList = new LinkedHashSet<>();
-            for (PortType candidate : candidateList) {
-                // none of the other candidates should be a subtype of this candidate
-                if (candidateList.stream().filter(c -> !c.equals(candidate)).noneMatch(candidate::isSuperTypeOf)) {
-                    finalList.add(candidate);
-                }
-            }
-            return finalList.toArray(PortType[]::new);
+            return Arrays.stream(clientTypes) //
+                .flatMap(clientType -> availablePortTypes.stream() //
+                    .filter(type -> !type.isHidden()) //
+                    .filter(clientType::isSuperTypeOf)) //
+                .distinct() //
+                .toArray(PortType[]::new);
         }
 
         /**
