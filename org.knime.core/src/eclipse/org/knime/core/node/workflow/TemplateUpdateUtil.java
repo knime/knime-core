@@ -112,7 +112,8 @@ public final class TemplateUpdateUtil {
         private final String m_legacyIdentifier;
 
         /**
-         * The key used in query parameters to specify the hub version of a repository item.
+         * The key used in KNIME hub catalog service query parameters to specify the version of a repository item.
+         * Note that the hub execution service uses "itemVersion" instead.
          * @since 5.1
          */
         public static final String VERSION_QUERY_PARAM = "version";
@@ -156,6 +157,34 @@ public final class TemplateUpdateUtil {
          */
         public String getLegacyIdentifier() {
             return m_legacyIdentifier;
+        }
+
+        /**
+         * @return a permanent identifier for this link type
+         * @since 5.2
+         */
+        @Override
+        public String toString() {
+            return switch (this) {
+                case LATEST_STATE -> "LATEST_STATE";
+                case LATEST_VERSION -> "LATEST_VERSION";
+                case FIXED_VERSION -> "FIXED_VERSION";
+            };
+        }
+
+        /**
+         * @param s permanent identifier as returned by {@link #toString()}
+         * @return the link type for the given string representation, or {@link Optional#empty()} if the string does
+         *         not match any identifier.
+         * @since 5.2
+         */
+        public static Optional<LinkType> fromString(final String s) {
+            return switch (s) {
+                case "LATEST_STATE" -> Optional.of(LATEST_STATE);
+                case "LATEST_VERSION" -> Optional.of(LATEST_VERSION);
+                case "FIXED_VERSION" -> Optional.of(FIXED_VERSION);
+                default -> Optional.empty();
+            };
         }
     }
 

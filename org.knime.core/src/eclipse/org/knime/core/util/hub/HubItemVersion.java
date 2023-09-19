@@ -65,7 +65,7 @@ import org.knime.core.node.workflow.TemplateUpdateUtil.LinkType;
 /**
  * Reference to a KNIME Hub item version. Provides utility methods for conversion to/from URI query parameters.
  *
- * @param linkType whether this refers to a fixed version, the latest version, or the staging area
+ * @param linkType whether this refers to a fixed version, the latest version, or the staging area. Never {@code null}.
  * @param versionNumber only for fixed version: the id of the version
  *
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
@@ -78,8 +78,11 @@ public record HubItemVersion(LinkType linkType, Integer versionNumber) {
     private static final HubItemVersion MOST_RECENT = new HubItemVersion(LinkType.LATEST_VERSION, null);
 
     /**
-     * @param linkType whether this refers to a fixed version, the latest version, or the staging area
+     * @param linkType whether this refers to a fixed version, the latest version, or the staging area. Never
+     *            {@code null}.
      * @param versionNumber only for fixed version: the id of the version
+     * @throws IllegalArgumentException if the link type is null or if the link type is not equal to fixed version but a
+     *             version number is specified.
      */
     public HubItemVersion {
         CheckUtils.checkArgumentNotNull(linkType);
@@ -133,7 +136,7 @@ public record HubItemVersion(LinkType linkType, Integer versionNumber) {
     }
 
     /**
-     * @param versionNumber id of the version
+     * @param versionNumber id of the version, larger than zero
      * @return a reference to a fixed version state
      */
     public static HubItemVersion of(final int versionNumber) {
