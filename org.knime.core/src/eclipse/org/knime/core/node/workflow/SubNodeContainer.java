@@ -2911,10 +2911,11 @@ public final class SubNodeContainer extends SingleNodeContainer
      */
     public void setMetadata(final ComponentMetadata metadata) {
         m_metadata = metadata;
-
         notifyNodePropertyChangedListener(NodeProperty.ComponentMetadata);
         refreshPortNames();
         setDirty();
+        getWorkflowManager().notifyWorkflowListeners(
+            new WorkflowEvent(WorkflowEvent.Type.WORKFLOW_METADATA_CHANGED, getID(), null, null));
     }
 
     @Override
