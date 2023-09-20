@@ -92,7 +92,7 @@ final class KWayMergeIterator extends CloseableRowIterator {
 
     /**
      * Replenishes the <i>Tree of Losers</i> with the next element from the iterator with index {@code start}.
-     * If the iterator is drained, {@code #DRAINED} is added, which compares as larger than all elements.
+     * If the iterator is drained, {@code null} is added, which compares as larger than all elements.
      *
      * @param inputIdx index of the source iterator
      */
@@ -129,8 +129,8 @@ final class KWayMergeIterator extends CloseableRowIterator {
 
     /**
      * Compares two elements coming from different input iterators. If the elements compare as equal, the iterators'
-     * indexes are compared as a tie breaker. The special value {@link #DRAINED} is compared as larger than
-     * non-{@link #DRAINED} elements because it indicates that the corresponding iterator has been drained.
+     * indexes are compared as a tie breaker. The special value {@code null} is compared as larger than
+     * non-{@code null} elements because it indicates that the corresponding iterator has been drained.
      *
      * @param firstIdx index of the first element's iterator
      * @param first first element, may be {@code null}

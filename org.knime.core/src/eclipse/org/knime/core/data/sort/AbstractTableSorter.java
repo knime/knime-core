@@ -62,7 +62,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.eclipse.core.runtime.Assert;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
@@ -457,6 +456,7 @@ abstract class AbstractTableSorter { // NOSONAR has to be abstract so the class 
         if (m_rowsInInputTable <= 0) {
             exec.setMessage("Reading data");
         } else {
+            // current row number is padded to the length of the total number of rows to minimize jumping
             final var template = "Reading data (row % " + total.length() + "d/" + total + ")";
             exec.setMessage(() -> template.formatted(ticker.get()));
         }
@@ -474,6 +474,7 @@ abstract class AbstractTableSorter { // NOSONAR has to be abstract so the class 
             final var mergePhaseExec = exec.createSubProgress(0.5 * numLevels / (numLevels + 1));
             try (final var mergeIterator = mergePhase.mergeIntoIterator(mergePhaseExec)) {
 
+                // current row number is padded to the length of the total number of rows to minimize jumping
                 final var template = "Writing output table (row % " + total.length() + "d/" + total + ")";
                 ticker.set(0L);
                 exec.setMessage(() -> template.formatted(ticker.get()));
@@ -482,8 +483,9 @@ abstract class AbstractTableSorter { // NOSONAR has to be abstract so the class 
                 final var resultContainer = tableIOHandler.createDataContainer(m_dataTableSpec, false);
                 final var outputPhaseExec = exec.createSubProgress(0.5 / (numLevels + 1));
                 while (mergeIterator.hasNext()) {
+                    exec.checkCanceled();
                     resultContainer.addRowToTable(mergeIterator.next());
-                    outputPhaseExec.setProgress(1.0 * ticker.incrementAndGet() / numRows, "Writing");
+                    outputPhaseExec.setProgress(1.0 * ticker.incrementAndGet() / numRows);
                 }
                 outputPhaseExec.setProgress(1.0);
 
@@ -558,7 +560,7 @@ abstract class AbstractTableSorter { // NOSONAR has to be abstract so the class 
                 if (m_rowsInInputTable > 0) {
                     initialPhaseExec.setProgress(1.0 * rowNo / m_rowsInInputTable, "Filling in-memory buffer");
                 } else {
-                    initialPhaseExec.setMessage("Reading table, %d rows read".formatted(rowNo));
+                    initialPhaseExec.setMessage(() -> "Reading table, %d rows read".formatted(rowNo));
                 }
                 buffer.add(inputIter.next());
 
@@ -589,13 +591,14 @@ abstract class AbstractTableSorter { // NOSONAR has to be abstract so the class 
 
         initialPhaseExec.setProgress(1.0);
 
-        return startMergePhase(tableIOHandler, chunksContainer, rowsRead.get());
+        return createMergePhase(tableIOHandler, chunksContainer, rowsRead.get());
     }
 
     private static void writeChunk(final ExecutionMonitor exec, final ChunksWriter chunksWriter,
             final ArrayList<DataRow> buffer) throws CanceledExecutionException {
         try (final var chunk = chunksWriter.openChunk(true)) {
             final int totalBufferSize = buffer.size();
+            // current row number is padded to the length of the total number of rows to minimize jumping
             final var numStr = Integer.toString(totalBufferSize);
             final var template = "Writing temporary table (row % " + (numStr.length()) + "d/" + numStr + ")";
             for (var i = 0; i < totalBufferSize; i++) {
@@ -609,9 +612,17 @@ abstract class AbstractTableSorter { // NOSONAR has to be abstract so the class 
         }
     }
 
-    MergePhase startMergePhase(final TableIOHandler dataHandler, final Deque<Iterable<DataRow>> chunks,
+    /**
+     * Creates a merge phase configured for this sorter. Mostly needed for {@link AbstractColumnTableSorter}.
+     *
+     * @param tableIOHandler table I/O handler
+     * @param chunks chunks to be merged
+     * @param numRows number of rows in the input
+     * @return configured merge phase
+     */
+    MergePhase createMergePhase(final TableIOHandler tableIOHandler, final Deque<Iterable<DataRow>> chunks,
             final long numRows) {
-        return new MergePhase(m_dataTableSpec, dataHandler, m_rowComparator, m_maxOpenContainers, chunks, numRows);
+        return new MergePhase(m_dataTableSpec, tableIOHandler, m_rowComparator, m_maxOpenContainers, chunks, numRows);
     }
 
     /**
@@ -701,7 +712,7 @@ abstract class AbstractTableSorter { // NOSONAR has to be abstract so the class 
          * Performs a single scan over all data, merging groups of {@link #m_maxOpenContainers} chunks.
          *
          * @param exec execution monitor
-         * @param round nimber of the current merge round
+         * @param round number of the current merge round
          * @param numRounds total number of merge rounds
          * @throws CanceledExecutionException if the algorithm has been canceled
          */
@@ -719,15 +730,16 @@ abstract class AbstractTableSorter { // NOSONAR has to be abstract so the class 
                         chunksToMerge.add(m_chunks.poll());
                     }
 
-                    // merge the `k` chunks together and add the combined
+                    // merge the `k` chunks together and add the combined chunk to the chunks writer
                     try (final var mergeIterator = createMergeIterator(chunksToMerge);
                             final var chunk = chunksWriter.openChunk(true)) {
                         while (mergeIterator.hasNext()) { // NOSONAR
                             exec.checkCanceled();
                             chunk.addRow(mergeIterator.next());
                             numRowsProcessed++;
+                            final var currentRowNo = numRowsProcessed;
                             final var progress = 1.0 * numRowsProcessed / m_numRows;
-                            exec.setProgress(progress, message.formatted(numRowsProcessed, m_numRows));
+                            exec.setProgress(progress, () -> message.formatted(currentRowNo, m_numRows));
                         }
                     }
                     chunksToMerge.clear();
@@ -735,7 +747,6 @@ abstract class AbstractTableSorter { // NOSONAR has to be abstract so the class 
 
                 // it makes no sense to merge a single final chunk, just copy it over into the next round
                 final var last = m_chunks.poll();
-                Assert.isTrue(m_chunks.isEmpty());
                 chunksWriter.finish(m_chunks::addAll);
                 if (last != null) {
                     m_chunks.add(last);

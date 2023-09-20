@@ -54,6 +54,7 @@ import static org.knime.core.node.util.CheckUtils.checkSettingNotNull;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Deque;
@@ -64,6 +65,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.knime.core.data.DataCell;
@@ -124,19 +126,6 @@ abstract class AbstractColumnTableSorter {
     private final DataTableSpec m_dataTableSpec;
 
     /**
-     * The constructor is identical to {@link #AbstractColumnTableSorter(DataTableSpec, long, String...)} with
-     * {@link DataTableSpec#getColumnNames()} as the last input.
-     *
-     * @param spec the spec
-     * @param rowsCount the amount of rows of the data table, if known -1 otherwise
-     * @throws InvalidSettingsException if arguments are inconsistent.
-     * @throws NullPointerException if any argument is null.
-     */
-    AbstractColumnTableSorter(final DataTableSpec spec, final long rowsCount) throws InvalidSettingsException {
-        this(spec, rowsCount, spec.getColumnNames());
-    }
-
-    /**
      * Sorts the columns of the given table separately and ascending. <b>Attention</b> this means that the data rows are
      * split.
      *
@@ -168,18 +157,17 @@ abstract class AbstractColumnTableSorter {
         m_buffer = new LinkedHashMap<>();
         for (SortingDescription desc : descriptions) {
             m_buffer.put(desc, new ArrayList<>());
+            desc.init(spec);
         }
-        validateAndInit(spec, descriptions);
     }
 
     /**
      * @param rowCount the row count
      * @param spec the spec
-     * @param rowComparator the comparator to use
+     * @param comparator the comparator to use
      * @return a concrete TableSorter
      */
-    abstract AbstractTableSorter createTableSorter(long rowCount, DataTableSpec spec,
-        Comparator<DataRow> rowComparator);
+    abstract AbstractTableSorter createTableSorter(long rowCount, DataTableSpec spec, Comparator<DataRow> comparator);
 
     /**
      * @param dataTable the table to sort
@@ -192,10 +180,12 @@ abstract class AbstractColumnTableSorter {
 
         if (m_sortDescriptions.length <= 0) {
             for (DataRow r : dataTable) {
-                resultListener.consume(new DefaultRow(r.getKey(), new DataCell[0]));
+                resultListener.consume(new DefaultRow(r.getKey(), new DataCell[0])); // NOSONAR
             }
         } else {
-            clearBuffer();
+            for (List<DataRow> i : m_buffer.values()) {
+                i.clear();
+            }
             sortOnDisk(dataTable, exec, dataHandler, resultListener);
         }
     }
@@ -228,76 +218,24 @@ abstract class AbstractColumnTableSorter {
     /**
      * Sorts the given data table using a disk-based k-way merge sort.
      *
-     * @param dataTable the data table that sgetRowCounthould be sorted
-     * @param exec an execution context for reporting progress and creating BufferedDataContainers
-     * @throws CanceledExecutionException if the user has canceled execution
+     * @param dataTable input table
+     * @param exec execution monitor
+     * @param dataHandler table I/O handler
+     * @param resultListener result consumer
+     * @throws CanceledExecutionException if the operation was cancelled
      */
-    private void sortOnDisk(final DataTable dataTable, final ExecutionMonitor exec,
-            final TableIOHandler dataHandler, final SortingConsumer resultListener)
-            throws CanceledExecutionException {
+    private void sortOnDisk(final DataTable dataTable, final ExecutionMonitor exec, final TableIOHandler dataHandler,
+            final SortingConsumer resultListener) throws CanceledExecutionException {
 
-        final AbstractTableSorter[] columnPartitions = new AbstractTableSorter[m_sortDescriptions.length];
-        final ChunksWriter[] chunksWriters = new ChunksWriter[m_sortDescriptions.length];
-
-        // Each sorting description is done as a single external merge sort of their parts of the data
-        for (var i = 0; i < m_sortDescriptions.length; i++) {
-            final var colTableSpec = m_sortDescriptions[i].createDataTableSpec(m_dataTableSpec);
-            AbstractTableSorter tableSorter = createTableSorter(m_rowCount, colTableSpec, m_sortDescriptions[i]);
-            columnPartitions[i] = tableSorter;
-            chunksWriters[i] = tableSorter.newChunksWriter(dataHandler);
-        }
-
-        exec.setMessage("Reading table");
-        RowIterator iterator = dataTable.iterator();
-
-        ExecutionMonitor readProgress = exec.createSubProgress(0.7);
-
-        // phase one: create as big chunks as possible from the given input table for each sort description
-        int chunkCount = 0; // NOSONAR
-        long currentTotalRows = 0L; // NOSONAR
-        while (iterator.hasNext()) {
-            LOGGER.debugWithFormat("Reading temporary tables -- (chunk %d)", chunkCount);
-            assert m_buffer.values().stream().allMatch(l -> l.isEmpty());
-            long bufferedRows = fillBuffer(iterator, exec);
-            LOGGER.debugWithFormat("Writing temporary tables -- (chunk %d with %d rows)", chunkCount, bufferedRows);
-            currentTotalRows += bufferedRows;
-            readProgress.setProgress(currentTotalRows / (double)m_rowCount,
-                String.format("Writing temporary tables (chunk %d with %d rows)", chunkCount, bufferedRows));
-            chunkCount += 1;
-            LOGGER.debugWithFormat("Sorting temporary tables -- (chunk %d with %d rows)", chunkCount, bufferedRows);
-            sortBufferInParallel();
-
-            LOGGER.debugWithFormat("Writing temporary tables (chunk %d with %d rows)", chunkCount, bufferedRows);
-            for (var i = 0; i < m_sortDescriptions.length; i++) {
-                final var sortingDescription = m_sortDescriptions[i];
-                LOGGER.debugWithFormat("Writing temporary table (chunk %d, column %d)", chunkCount, i);
-                ListIterator<DataRow> rowIterator = m_buffer.get(sortingDescription).listIterator();
-                try (ChunkHandle chunk = chunksWriters[i].openChunk(true)) {
-                    while (rowIterator.hasNext()) { // NOSONAR
-                        chunk.addRow(rowIterator.next());
-                        // release the row as early as possible
-                        rowIterator.set(null);
-                    }
-                }
-                exec.checkCanceled();
+        List<CloseableRowIterator> partitionRowIterators = null;
+        try {
+            // merge all selected columns into closeable iterators
+            partitionRowIterators = sortSingleColumns(exec, dataHandler, dataTable);
+            if (partitionRowIterators.isEmpty()) {
+                return;
             }
 
-            clearBuffer();
-        }
-
-        readProgress.setProgress(1.0);
-
-        // phase 2: merge the temporary tables
-        exec.setMessage("Merging temporary tables.");
-        ExecutionMonitor mergingProgress = exec.createSubProgress(0.3);
-        final List<CloseableRowIterator> partitionRowIterators = mergePartitions(columnPartitions, chunksWriters,
-            mergingProgress, dataHandler, chunkCount, currentTotalRows);
-        if (partitionRowIterators.isEmpty()) {
-            return;
-        }
-
-        try {
-            // publish the results to the listener
+            // assemble and publish the results to the listener
             final var currentRow = new ArrayList<DataRow>();
             @SuppressWarnings("resource")
             final var firstPartitionIterator = partitionRowIterators.get(0);
@@ -307,82 +245,209 @@ abstract class AbstractColumnTableSorter {
                     final var colIterator = partitionRowIterators.get(i);
                     currentRow.add(colIterator.next());
                 }
-                resultListener.consume(aggregateRows(new RowKey("AutoGenerated" + rowNo), currentRow));
+                resultListener.consume(new BlobSupportDataRow(new RowKey("AutoGenerated" + rowNo), currentRow));
                 currentRow.clear();
             }
         } finally {
-            partitionRowIterators.forEach(CloseableRowIterator::close);
-        }
-    }
-
-    @SuppressWarnings("resource")
-    private List<CloseableRowIterator> mergePartitions(final AbstractTableSorter[] columnPartitions,
-            final ChunksWriter[] initialChunks, final ExecutionMonitor exec, final TableIOHandler dataHandler,
-            final int chunkCount, final long numRows) throws CanceledExecutionException {
-        LOGGER.debug("Merging tables");
-        final var partitionRowIterators = new ArrayList<CloseableRowIterator>();
-
-        final int numberOfNecessaryContainers = chunkCount * m_sortDescriptions.length;
-        var partIdx = 0;
-        if (numberOfNecessaryContainers > m_maxOpenContainers && chunkCount > 1) {
-            // AP-12179: if chunkCount == 1, numberOfNecessaryContainers can still exceed maxOpenContainers if we have
-            // many sortDescriptions but in this case we can't reduce the number of containers by merging
-
-            // we have to merge some of the partitions completely before returning the final containers.
-            int tmp = numberOfNecessaryContainers;
-            final int numExcessContainers = numberOfNecessaryContainers - m_maxOpenContainers;
-            final double numExcessPartitions = numExcessContainers / chunkCount;
-            // merging a partition reduces the number of containers for this partition from chunkCount to 1
-            // thus after merging numExcessPartitions, we still have numExcessPartitions files more than allowed
-            // consequently we have to reduce more partitions to fall below maxOpenContainers
-            // AP-12179: In case of chunkCount == 1 this formula led to a division by zero but we now ensure
-            // in the if condition above that chunkCount is greater than 1.
-            final double numPartitionsToMergeSeparately = numExcessPartitions
-                    + Math.ceil(numExcessPartitions / (chunkCount - 1));
-            var index = 0;
-            while (tmp > m_maxOpenContainers && partIdx < columnPartitions.length) {
-                final var subProgress = exec.createSubProgress(index / numPartitionsToMergeSeparately);
-                final Deque<Iterable<DataRow>> mergeQueue = new ArrayDeque<>();
-                initialChunks[partIdx].finish(mergeQueue::addAll);
-                final var columnSorter = columnPartitions[partIdx];
-                try (final var mergePhase = columnSorter.startMergePhase(dataHandler, mergeQueue, numRows)) {
-                    partitionRowIterators.add(mergePhase.mergeIntoMaterializedIterator(subProgress));
-                }
-                index++;
-                // if we merge a run completely we save chunkCount of open file handles
-                // but need obviously one for opening the result file.
-                tmp = tmp - chunkCount + 1;
-                partIdx++;
+            if (partitionRowIterators != null) {
+                partitionRowIterators.forEach(CloseableRowIterator::close);
             }
         }
-        exec.setProgress(1, "Merging Done.");
-        // we can now open enough containers to merge all runs at one time.
-        // Hence the remaining containers don't need to be merged separately
-        while (partIdx < columnPartitions.length) {
-            final var subProgress = exec.createSubProgress(0);
-            final Deque<Iterable<DataRow>> mergeQueue = new ArrayDeque<>();
-            initialChunks[partIdx].finish(mergeQueue::addAll);
-            try (final var mergePhase = columnPartitions[partIdx].startMergePhase(dataHandler, mergeQueue, numRows)) {
-                partitionRowIterators.add(mergePhase.mergeIntoIterator(subProgress));
-            }
-            partIdx++;
-        }
-        return partitionRowIterators;
     }
 
     /**
-     * @param next
-     * @param rowToAggregate
-     * @return
+     * Merges the selected columns into single-column tables and returns closeable iterators over the sorted tables.
+     *
+     * @param exec execution monitor
+     * @param dataHandler table I/O handler
+     * @param dataTable input table
+     * @return list of iterators, which have to be closed by the caller in all cases
+     * @throws CanceledExecutionException if the operation was canceled
      */
-    private static DataRow aggregateRows(final RowKey next, final List<DataRow> rowToAggregate) {
-        return new BlobSupportDataRow(next, rowToAggregate);
+    private List<CloseableRowIterator> sortSingleColumns(final ExecutionMonitor exec, final TableIOHandler dataHandler,
+        final DataTable dataTable) throws CanceledExecutionException {
+        // Each sorting description is done as a single external merge sort of their parts of the data
+        final var columnPartitions = new AbstractTableSorter[m_sortDescriptions.length];
+        for (var i = 0; i < m_sortDescriptions.length; i++) {
+            final var colTableSpec = m_sortDescriptions[i].createDataTableSpec(m_dataTableSpec);
+            columnPartitions[i] = createTableSorter(m_rowCount, colTableSpec, m_sortDescriptions[i]);
+        }
+
+        final List<Deque<Iterable<DataRow>>> chunks = new ArrayList<>();
+        try {
+            // phase one: create as big chunks as possible from the given input table for each sort description
+            exec.setMessage("Reading table");
+            final var chunksAndRows = createInitialChunks(exec, dataHandler, dataTable, columnPartitions, chunks);
+            final var chunkCount = chunksAndRows[0];
+            final var currentTotalRows = chunksAndRows[1];
+
+            // phase 2: merge the temporary tables
+            exec.setMessage("Merging temporary tables.");
+            final var mergingProgress = exec.createSubProgress(0.3);
+            return mergePartitions(columnPartitions, chunks, mergingProgress, dataHandler,
+                chunkCount, currentTotalRows);
+
+        } finally {
+            // should be empty in normal operation, clean up temporary data in case of cancellation
+            for (final var chunkDeque : chunks) {
+                if (chunkDeque != null) {
+                    for (final var chunk : chunkDeque) {
+                        if (chunk instanceof DataTable dt) { // NOSONAR
+                            dataHandler.clearTable(dt);
+                        }
+                    }
+                    chunkDeque.clear();
+                }
+            }
+        }
     }
 
-    private static void validateAndInit(final DataTableSpec dataTableSpec, final SortingDescription[] toSort)
-            throws InvalidSettingsException {
-        for (SortingDescription desc : toSort) {
-            desc.init(dataTableSpec);
+    /**
+     * Creates initial chunks for all selected columns from the input table.
+     *
+     * @param exec execution monitor
+     * @param dataHandler table I/O handler
+     * @param dataTable input table
+     * @param columnPartitions column sorters
+     * @param chunks output parameter for the chunks
+     * @return two-element arrays containing the number of chunks per column and the number of rows overall
+     * @throws CanceledExecutionException if the operation was canceled
+     */
+    @SuppressWarnings("resource")
+    private long[] createInitialChunks(final ExecutionMonitor exec, final TableIOHandler dataHandler,
+            final DataTable dataTable, final AbstractTableSorter[] columnPartitions,
+            final List<Deque<Iterable<DataRow>>> chunks) throws CanceledExecutionException {
+        final var readProgress = exec.createSubProgress(0.7);
+        List<ChunksWriter> chunksWriters = List.of();
+        try (final var iterator = CloseableRowIterator.from(dataTable.iterator())) {
+            chunksWriters = Arrays.stream(columnPartitions) //
+                    .map(sorter -> sorter.newChunksWriter(dataHandler)) //
+                    .collect(Collectors.toCollection(ArrayList<ChunksWriter>::new));
+
+            long chunkCount = 0;
+            long currentTotalRows = 0;
+            while (iterator.hasNext()) {
+                LOGGER.debugWithFormat("Reading temporary tables -- (chunk %d)", chunkCount);
+                assert m_buffer.values().stream().allMatch(l -> l.isEmpty());
+                long bufferedRows = fillBuffer(iterator, exec);
+                LOGGER.debugWithFormat("Writing temporary tables -- (chunk %d with %d rows)", chunkCount, bufferedRows);
+                currentTotalRows += bufferedRows;
+                readProgress.setProgress(currentTotalRows / (double)m_rowCount,
+                    String.format("Writing temporary tables (chunk %d with %d rows)", chunkCount, bufferedRows));
+                chunkCount++;
+                LOGGER.debugWithFormat("Sorting temporary tables -- (chunk %d with %d rows)", chunkCount, bufferedRows);
+                sortBufferInParallel();
+
+                LOGGER.debugWithFormat("Writing temporary tables (chunk %d with %d rows)", chunkCount, bufferedRows);
+                for (var i = 0; i < m_sortDescriptions.length; i++) {
+                    final var sortingDescription = m_sortDescriptions[i];
+                    LOGGER.debugWithFormat("Writing temporary table (chunk %d, column %d)", chunkCount, i);
+                    ListIterator<DataRow> rowIterator = m_buffer.get(sortingDescription).listIterator();
+                    try (ChunkHandle chunk = chunksWriters.get(i).openChunk(true)) { // NOSONAR
+                        while (rowIterator.hasNext()) { // NOSONAR
+                            exec.checkCanceled();
+
+                            chunk.addRow(rowIterator.next());
+                            // release the row as early as possible
+                            rowIterator.set(null);
+                        }
+                    }
+                }
+                for (List<DataRow> i : m_buffer.values()) {
+                    i.clear();
+                }
+            }
+
+            for (final var writer : chunksWriters) {
+                try (writer) {
+                    // drain and close all writers
+                    final var chunkQueue = new ArrayDeque<Iterable<DataRow>>();
+                    chunks.add(chunkQueue);
+                    writer.finish(chunkQueue::addAll);
+                }
+            }
+            chunksWriters.clear();
+
+            readProgress.setProgress(1.0);
+            return new long[] { chunkCount, currentTotalRows };
+
+        } finally {
+            // should be empty in normal operation, clean up temporary data in case of cancellation
+            chunksWriters.forEach(ChunksWriter::close);
+        }
+    }
+
+    /**
+     * Merges all partitions.
+     *
+     * @param columnPartitions column sorters
+     * @param chunks collections of chunks grouped by column
+     * @param exec execution monitor
+     * @param dataHandler table I/O handler
+     * @param chunkCount number of chunks per column table
+     * @param numRows number of rows per column table
+     * @return list of closeable iterators over the column tables, must be closed by the caller in all circumstances
+     * @throws CanceledExecutionException
+     */
+    @SuppressWarnings("resource")
+    private List<CloseableRowIterator> mergePartitions(final AbstractTableSorter[] columnPartitions,
+            final List<Deque<Iterable<DataRow>>> chunks, final ExecutionMonitor exec, final TableIOHandler dataHandler,
+            final long chunkCount, final long numRows) throws CanceledExecutionException {
+        LOGGER.debug("Merging tables");
+        final var partitionRowIterators = new ArrayList<CloseableRowIterator>();
+        try {
+            final long numberOfNecessaryContainers = chunkCount * m_sortDescriptions.length;
+            var partIdx = 0;
+            if (numberOfNecessaryContainers > m_maxOpenContainers && chunkCount > 1) {
+                // AP-12179: if chunkCount == 1, numberOfNecessaryContainers can still exceed maxOpenContainers if we
+                // have many sortDescriptions but in this case we can't reduce the number of containers by merging
+
+                // we have to merge some of the partitions completely before returning the final containers.
+                long tmp = numberOfNecessaryContainers;
+                final long numExcessContainers = numberOfNecessaryContainers - m_maxOpenContainers;
+                final double numExcessPartitions = numExcessContainers / chunkCount;
+                // merging a partition reduces the number of containers for this partition from chunkCount to 1
+                // thus after merging numExcessPartitions, we still have numExcessPartitions files more than allowed
+                // consequently we have to reduce more partitions to fall below maxOpenContainers
+                // AP-12179: In case of chunkCount == 1 this formula led to a division by zero but we now ensure
+                // in the if condition above that chunkCount is greater than 1.
+                final double numPartitionsToMergeSeparately = numExcessPartitions
+                        + Math.ceil(numExcessPartitions / (chunkCount - 1));
+                var index = 0;
+                while (tmp > m_maxOpenContainers && partIdx < columnPartitions.length) {
+                    final var subProgress = exec.createSubProgress(index / numPartitionsToMergeSeparately);
+                    final Deque<Iterable<DataRow>> mergeQueue = chunks.set(partIdx, null);
+                    final var columnSorter = columnPartitions[partIdx];
+                    try (final var mergePhase = // NOSONAR
+                            columnSorter.createMergePhase(dataHandler, mergeQueue, numRows)) {
+                        partitionRowIterators.add(mergePhase.mergeIntoMaterializedIterator(subProgress));
+                    }
+                    index++;
+                    // if we merge a run completely we save chunkCount of open file handles
+                    // but need obviously one for opening the result file.
+                    tmp = tmp - chunkCount + 1;
+                    partIdx++;
+                }
+            }
+            exec.setProgress(1, "Merging Done.");
+            // we can now open enough containers to merge all runs at one time.
+            // Hence the remaining containers don't need to be merged separately
+            while (partIdx < columnPartitions.length) {
+                final var subProgress = exec.createSubProgress(0);
+                final Deque<Iterable<DataRow>> mergeQueue = chunks.set(partIdx, null);
+                try (final var mergePhase =
+                        columnPartitions[partIdx].createMergePhase(dataHandler, mergeQueue, numRows)) {
+                    partitionRowIterators.add(mergePhase.mergeIntoIterator(subProgress));
+                }
+                partIdx++;
+            }
+
+            final var result = new ArrayList<>(partitionRowIterators);
+            partitionRowIterators.clear();
+            return result;
+        } finally {
+            // should be empty in normal operation, clean up temporary data in case of cancellation
+            partitionRowIterators.forEach(CloseableRowIterator::close);
         }
     }
 
@@ -406,16 +471,8 @@ abstract class AbstractColumnTableSorter {
         return descriptions;
     }
 
-    /**
-     * @param m_buffer
-     * @param iterator
-     * @param checkMemory
-     * @param exec
-     * @throws CanceledExecutionException
-     */
     private long fillBuffer(final RowIterator iterator, final ExecutionMonitor readExec)
             throws CanceledExecutionException {
-
         long count = 0;
         while (iterator.hasNext()) {
             count += 1;
@@ -432,12 +489,6 @@ abstract class AbstractColumnTableSorter {
         return count;
     }
 
-    private void clearBuffer() {
-        for (List<DataRow> i : m_buffer.values()) {
-            i.clear();
-        }
-    }
-
     private void sortBufferInParallel() {
         List<Future<?>> futures = new ArrayList<>();
         try {
@@ -448,9 +499,9 @@ abstract class AbstractColumnTableSorter {
             for (Future<?> f : futures) {
                 f.get();
             }
-        } catch (ExecutionException | InterruptedException e) {
+        } catch (ExecutionException | InterruptedException e) { // NOSONAR
             futures.stream().forEach(f -> f.cancel(true));
-            throw new RuntimeException("Execution has been interrupted!", e);
+            throw new RuntimeException("Execution has been interrupted!", e); // NOSONAR
         }
     }
 }
