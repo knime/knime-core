@@ -49,6 +49,7 @@
 package org.knime.core.node.wizard.page;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertFalse;
@@ -64,12 +65,14 @@ import org.junit.Before;
 import org.junit.Test;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.NativeNodeContainer;
+import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowAnnotationID;
 import org.knime.core.node.workflow.WorkflowLock;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.util.Pair;
 import org.knime.testing.node.view.NodeViewNodeFactory;
 import org.knime.testing.util.WorkflowManagerUtil;
 
@@ -157,6 +160,22 @@ public class WizardPageUtilTest {
         wizardPageNodes = WizardPageUtil.getWizardPageNodes(componentWfm);
         assertThat(wizardPageNodes.size(), is(1));
         assertThat(wizardPageNodes.get(0).getName(), is("Wizard"));
+
+        // test that wizard-nodes in metanodes are ignored
+        NodeID metanodeWithNodeViewNode = m_wfm.collapseIntoMetaNode(
+            new NodeID[]{WorkflowManagerUtil.createAndAddNode(m_wfm, new NodeViewNodeFactory(0, 0)).getID()},
+            new WorkflowAnnotationID[0], "metanode").getCollapsedMetanodeID();
+        NodeID componentWithNodeViewAndMetanode = m_wfm.collapseIntoMetaNode(
+            new NodeID[]{WorkflowManagerUtil.createAndAddNode(m_wfm, new NodeViewNodeFactory(0, 0)).getID(),
+                metanodeWithNodeViewNode},
+            new WorkflowAnnotationID[0], "component").getCollapsedMetanodeID();
+        m_wfm.convertMetaNodeToSubNode(componentWithNodeViewAndMetanode);
+        componentWfm =
+            ((SubNodeContainer)m_wfm.getNodeContainer(componentWithNodeViewAndMetanode)).getWorkflowManager();
+
+        wizardPageNodes = WizardPageUtil.getWizardPageNodes(componentWfm);
+        assertThat(wizardPageNodes.size(), is(1));
+        assertThat(wizardPageNodes.get(0).getName(), is("NodeView"));
     }
 
     /**
@@ -216,6 +235,64 @@ public class WizardPageUtilTest {
             containsInAnyOrder(NodeIDSuffix.fromString("4:0:2"), NodeIDSuffix.fromString("4:0:3:0:1")));
         assertThat(wizardPage.getPageMap().values().stream().map(n -> n.getName()).collect(Collectors.toList()),
             containsInAnyOrder("NodeView", "NodeView"));
+    }
+
+    /**
+     * Tests {@link WizardPageUtil#getSuccessorWizardPageNodesWithinComponent(WorkflowManager, NodeID, NodeID)}.
+     */
+    @Test
+    public void testGetSuccessorWizardPageNodesWithinComponent() {
+        // top-level component
+        NodeID n1 = WorkflowManagerUtil.createAndAddNode(m_wfm, new NodeViewNodeFactory(0, 0)).getID();
+        NodeID n2 = WorkflowManagerUtil.createAndAddNode(m_wfm, new WizardNodeFactory()).getID();
+        NodeID component = m_wfm.collapseIntoMetaNode(new NodeID[]{n1, n2}, new WorkflowAnnotationID[0], "component")
+            .getCollapsedMetanodeID();
+        m_wfm.convertMetaNodeToSubNode(component);
+        var componentWfm = ((SubNodeContainer)m_wfm.getNodeContainer(component)).getWorkflowManager();
+        n1 = componentWfm.getID().createChild(n1.getIndex());
+        n2 = componentWfm.getID().createChild(n2.getIndex());
+
+        // nested component
+        NodeID n3 = WorkflowManagerUtil.createAndAddNode(componentWfm, new NodeViewNodeFactory(0, 0)).getID();
+        NodeID n4 = WorkflowManagerUtil.createAndAddNode(componentWfm, new WizardNodeFactory()).getID();
+        componentWfm.addConnection(n1, 0, n3, 0);
+        componentWfm.addConnection(n1, 0, n4, 0);
+        NodeID nestedComponent =
+            componentWfm.collapseIntoMetaNode(new NodeID[]{n3, n4}, new WorkflowAnnotationID[0], "nested component")
+                .getCollapsedMetanodeID();
+        componentWfm.convertMetaNodeToSubNode(nestedComponent);
+        var nestedComponentWfm =
+            ((SubNodeContainer)componentWfm.getNodeContainer(nestedComponent)).getWorkflowManager();
+        n3 = nestedComponentWfm.getID().createChild(n3.getIndex());
+        n4 = nestedComponentWfm.getID().createChild(n4.getIndex());
+
+        // nested metanode
+        NodeID n5 = WorkflowManagerUtil.createAndAddNode(componentWfm, new NodeViewNodeFactory(0, 0)).getID();
+        NodeID n6 = WorkflowManagerUtil.createAndAddNode(componentWfm, new WizardNodeFactory()).getID();
+        componentWfm.addConnection(n2, 0, n5, 0);
+        componentWfm.addConnection(n2, 0, n6, 0);
+        componentWfm.collapseIntoMetaNode(new NodeID[]{n5, n6}, new WorkflowAnnotationID[0], "nested metanode")
+            .getCollapsedMetanodeID();
+
+        // double nested component
+        NodeID n7 = WorkflowManagerUtil.createAndAddNode(nestedComponentWfm, new NodeViewNodeFactory(0, 0)).getID();
+        NodeID n8 = WorkflowManagerUtil.createAndAddNode(nestedComponentWfm, new WizardNodeFactory()).getID();
+        NodeID doubleNestedComponent = nestedComponentWfm
+            .collapseIntoMetaNode(new NodeID[]{n7, n8}, new WorkflowAnnotationID[0], "double nested component")
+            .getCollapsedMetanodeID();
+        nestedComponentWfm.convertMetaNodeToSubNode(doubleNestedComponent);
+        var doubleNestedComponentWfm =
+            ((SubNodeContainer)nestedComponentWfm.getNodeContainer(doubleNestedComponent)).getWorkflowManager();
+        n7 = doubleNestedComponentWfm.getID().createChild(n7.getIndex());
+        n8 = doubleNestedComponentWfm.getID().createChild(n8.getIndex());
+
+        // the actual tests
+        var nodes = WizardPageUtil.getSuccessorWizardPageNodesWithinComponent(m_wfm, component, n1).map(Pair::getSecond)
+            .map(NodeContainer::getID).collect(Collectors.toList());
+        assertThat(nodes, containsInAnyOrder(n1, n3, n4, n7, n8));
+        nodes = WizardPageUtil.getSuccessorWizardPageNodesWithinComponent(m_wfm, component, n2).map(Pair::getSecond)
+            .map(NodeContainer::getID).collect(Collectors.toList());
+        assertThat(nodes, contains(n2));
     }
 
     @SuppressWarnings("javadoc")
