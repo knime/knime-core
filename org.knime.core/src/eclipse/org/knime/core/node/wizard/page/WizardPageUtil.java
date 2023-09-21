@@ -315,8 +315,8 @@ public final class WizardPageUtil {
                 .flatMap(nc -> {
                     if (nc instanceof NativeNodeContainer) {
                         return Stream.of(nc);
-                    } else if(nc instanceof SubNodeContainer snc){
-                        return getWizardPageNodes(snc.getWorkflowManager(), true).stream();
+                    } else if(nc instanceof SubNodeContainer){
+                        return getWizardPageNodes(((SubNodeContainer)nc).getWorkflowManager(), true).stream();
                     } else {
                         return Stream.of();
                     }
@@ -325,7 +325,7 @@ public final class WizardPageUtil {
     }
 
     private static boolean isWizardPageNodeOrComponentOrMetanode(final NodeContainer nc) {
-        return (nc instanceof NativeNodeContainer nnc && isWizardPageNode(nnc)) || nc instanceof WorkflowManager
+        return (nc instanceof NativeNodeContainer && isWizardPageNode((NativeNodeContainer)nc)) || nc instanceof WorkflowManager
             || nc instanceof SubNodeContainer;
     }
 
