@@ -235,8 +235,7 @@ public abstract class NodeModel implements ViewableModel {
     private boolean m_hasContent;
 
     /**
-     * Optional warning message to be set during / after execution. Enables
-     * higher levels to display the given message.
+     * Optional warning message to be set during / after execution. Enables higher levels to display the given message.
      */
     private Message m_warningMessage;
 
@@ -252,15 +251,13 @@ public abstract class NodeModel implements ViewableModel {
     private final CopyOnWriteArraySet<NodeModelWarningListener> m_warningListeners;
 
     /**
-     * Creates a new model with the given number of input and
-     * output data ports.
+     * Creates a new model with the given number of input and output data ports.
+     *
      * @param nrInDataPorts number of input data ports
      * @param nrOutDataPorts number of output data ports
-     * @throws NegativeArraySizeException If the number of in- or outputs is
-     *             smaller than zero.
+     * @throws NegativeArraySizeException If the number of in- or outputs is smaller than zero.
      */
-    protected NodeModel(final int nrInDataPorts,
-            final int nrOutDataPorts) {
+    protected NodeModel(final int nrInDataPorts, final int nrOutDataPorts) {
         this(createPOs(nrInDataPorts), createPOs(nrOutDataPorts));
     }
 
@@ -271,13 +268,12 @@ public abstract class NodeModel implements ViewableModel {
     }
 
     /**
-     * Creates a new model with the given number (and types!) of input and
-     * output types.
+     * Creates a new model with the given number (and types!) of input and output types.
+     *
      * @param inPortTypes an array of non-null in-port types
      * @param outPortTypes an array of non-null out-port types
      */
-    protected NodeModel(final PortType[] inPortTypes,
-            final PortType[] outPortTypes) {
+    protected NodeModel(final PortType[] inPortTypes, final PortType[] outPortTypes) {
         // create logger
         m_logger = NodeLogger.getLogger(this.getClass());
 
@@ -324,12 +320,10 @@ public abstract class NodeModel implements ViewableModel {
     }
 
     /**
-     * Load internals into the derived <code>NodeModel</code>. This method is
-     * only called if the <code>Node</code> was executed. Read all your
-     * internal structures from the given file directory to create your internal
-     * data structure which is necessary to provide all node functionalities
-     * after the workflow is loaded, e.g. view content and/or hilite mapping.
-     * <br>
+     * Load internals into the derived <code>NodeModel</code>. This method is only called if the <code>Node</code> was
+     * executed. Read all your internal structures from the given file directory to create your internal data structure
+     * which is necessary to provide all node functionalities after the workflow is loaded, e.g. view content and/or
+     * hilite mapping. <br>
      *
      * @param nodeInternDir The directory to read from.
      * @param exec Used to report progress and to cancel the load process.
@@ -337,16 +331,13 @@ public abstract class NodeModel implements ViewableModel {
      * @throws CanceledExecutionException If the loading has been canceled.
      * @see #saveInternals(File,ExecutionMonitor)
      */
-    protected abstract void loadInternals(final File nodeInternDir,
-            final ExecutionMonitor exec)
-            throws IOException, CanceledExecutionException;
+    protected abstract void loadInternals(final File nodeInternDir, final ExecutionMonitor exec)
+        throws IOException, CanceledExecutionException;
 
     /**
-     * Save internals of the derived <code>NodeModel</code>. This method is
-     * only called if the <code>Node</code> is executed. Write all your
-     * internal structures into the given file directory which are necessary to
-     * recreate this model when the workflow is loaded, e.g. view content and/or
-     * hilite mapping.<br>
+     * Save internals of the derived <code>NodeModel</code>. This method is only called if the <code>Node</code> is
+     * executed. Write all your internal structures into the given file directory which are necessary to recreate this
+     * model when the workflow is loaded, e.g. view content and/or hilite mapping.<br>
      *
      * @param nodeInternDir The directory to write into.
      * @param exec Used to report progress and to cancel the save process.
@@ -354,14 +345,12 @@ public abstract class NodeModel implements ViewableModel {
      * @throws CanceledExecutionException If the saving has been canceled.
      * @see #loadInternals(File,ExecutionMonitor)
      */
-    protected abstract void saveInternals(final File nodeInternDir,
-            final ExecutionMonitor exec)
-            throws IOException, CanceledExecutionException;
-
+    protected abstract void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
+        throws IOException, CanceledExecutionException;
 
     /**
-     * Registers the given view at the model to receive change events of the
-     * underlying model. Note that no change event is fired.
+     * Registers the given view at the model to receive change events of the underlying model. Note that no change event
+     * is fired.
      *
      * @param view The view to register.
      */
@@ -377,7 +366,8 @@ public abstract class NodeModel implements ViewableModel {
      * @since 2.8
      */
     @SuppressWarnings("unchecked")
-    public final <V extends AbstractNodeView<?> & InteractiveView<?, ? extends ViewContent, ? extends ViewContent>> V getInteractiveNodeView() {
+    public final <V extends AbstractNodeView<?> & InteractiveView<?, ? extends ViewContent, ? extends ViewContent>> V
+        getInteractiveNodeView() {
         for (AbstractNodeView<?> abv : m_views) {
             if (abv instanceof InteractiveView) {
                 return (V)abv;
@@ -430,7 +420,9 @@ public abstract class NodeModel implements ViewableModel {
         return m_outPortTypes.length;
     }
 
-    /** Port type as specified in constructor.
+    /**
+     * Port type as specified in constructor.
+     *
      * @param index Index of inport
      * @return Type of port as specified in constructor.
      * @throws IndexOutOfBoundsException If index is invalid.
@@ -442,7 +434,9 @@ public abstract class NodeModel implements ViewableModel {
         return m_inPortTypes[index];
     }
 
-    /** Port type as specified in constructor.
+    /**
+     * Port type as specified in constructor.
+     *
      * @param index Index of outport
      * @return Type of port as specified in constructor.
      * @throws IndexOutOfBoundsException If index is invalid.
@@ -455,15 +449,12 @@ public abstract class NodeModel implements ViewableModel {
     }
 
     /**
-     * Validates the specified settings in the model and then loads them into
-     * it.
+     * Validates the specified settings in the model and then loads them into it.
      *
      * @param settings the settings to read
-     * @throws InvalidSettingsException if the settings are not valid or cannot
-     *      be loaded into the model
+     * @throws InvalidSettingsException if the settings are not valid or cannot be loaded into the model
      */
-    final void loadSettingsFrom(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    final void loadSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
         // validate the settings before loading them
         validateSettings(settings);
         // load settings into the model
@@ -487,29 +478,66 @@ public abstract class NodeModel implements ViewableModel {
     protected abstract void saveSettingsTo(final NodeSettingsWO settings);
 
     /**
-     * Validates the settings in the passed <code>NodeSettings</code> object.
-     * The specified settings should be checked for completeness and
-     * consistency. It must be possible to load a settings object validated
-     * here without any exception in the
-     * <code>#loadValidatedSettings(NodeSettings)</code> method. The method
-     * must not change the current settings in the model - it is supposed to
-     * just check them. If some settings are missing, invalid, inconsistent, or
-     * just not right throw an exception with a message useful to the user.
+     * Validates the settings in the passed <code>NodeSettings</code> object. The specified settings should be checked
+     * for completeness and consistency. It must be possible to load a settings object validated here without any
+     * exception in the <code>#loadValidatedSettings(NodeSettings)</code> method. The method must not change the current
+     * settings in the model - it is supposed to just check them. If some settings are missing, invalid, inconsistent,
+     * or just not right throw an exception with a message useful to the user.
      *
-     * @param settings The settings to validate.
-     * @throws InvalidSettingsException If the validation of the settings
-     *             failed.
+     * @param settings - the settings to validate.
+     * @throws InvalidSettingsException - if the validation of the settings failed.
      * @see #saveSettingsTo(NodeSettingsWO)
      * @see #loadValidatedSettingsFrom(NodeSettingsRO)
      */
-    protected abstract void validateSettings(final NodeSettingsRO settings)
-            throws InvalidSettingsException;
+    protected abstract void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException;
+
+    ViewSettingsValidator m_viewSettingsValidator;
+
+    void validateViewSettings(final NodeSettingsRO viewSettings) throws InvalidSettingsException {
+        if (m_viewSettingsValidator != null) {
+            m_viewSettingsValidator.validateViewSettings(viewSettings);
+        }
+    }
 
     /**
-     * Sets new settings from the passed object in the model. You can safely
-     * assume that the object passed has been successfully validated by the
-     * <code>#validateSettings(NodeSettings)</code> method. The model must set
-     * its internal configuration according to the settings object passed.
+     * With this method the model can be supplied with a validation for view settings. If it is not called or the
+     * supplied instance is null, no validation will take place on configure.
+     *
+     * @param viewSettingsValidator to be called on configure
+     * @since 5.2
+     */
+    protected final void setViewSettingsValidator(final ViewSettingsValidator viewSettingsValidator) {
+        m_viewSettingsValidator = viewSettingsValidator;
+    }
+
+    /**
+     * The node model can be supplied with validation behavior for view settings by setting an instance of this class
+     * via {@link NodeModel#setViewSettingsValidator}. The method {@link ViewSettingsValidator#validateViewSettings}
+     * will be called on configure with view settings which are already overwritten by the view flow variables.
+     *
+     * @author Paul Bärnreuther
+     * @since 5.2
+     */
+    @FunctionalInterface
+    public interface ViewSettingsValidator {
+        /**
+         * Validates the view settings in the passed <code>NodeSettings</code> object. The specified settings should be
+         * checked for completeness and consistency. The method must not change these settings - it is supposed to just
+         * check them. If some settings are missing, invalid, inconsistent, or just not right throw an exception with a
+         * message useful to the user.
+         *
+         * @param viewSettings - the view settings to validate.
+         * @throws InvalidSettingsException - if the validation of the settings failed.
+         * @see #saveSettingsTo(NodeSettingsWO)
+         * @see #loadValidatedSettingsFrom(NodeSettingsRO)
+         */
+        void validateViewSettings(NodeSettingsRO viewSettings) throws InvalidSettingsException;
+    }
+
+    /**
+     * Sets new settings from the passed object in the model. You can safely assume that the object passed has been
+     * successfully validated by the <code>#validateSettings(NodeSettings)</code> method. The model must set its
+     * internal configuration according to the settings object passed.
      *
      * @param settings The settings to read.
      *
@@ -625,6 +653,7 @@ public abstract class NodeModel implements ViewableModel {
     /**
      * Called from {@link #executeModel(PortObject[], ExecutionEnvironment, ExecutionContext)} -- post process result
      * data (wrapping 'copied' tables and treats files stores properly).
+     *
      * @param inData The execute's input data
      * @param rawOutData The result data (as produced by concrete NodeModel impl.)
      * @param exec ...

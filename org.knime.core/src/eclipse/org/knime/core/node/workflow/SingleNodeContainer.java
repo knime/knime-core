@@ -344,29 +344,19 @@ public abstract class SingleNodeContainer extends NodeContainer {
         }
 
         List<FlowVariable> newVariableList = new ArrayList<>();
-
-        if (viewVariableSettings != null) {
-            NodeSettings fromViewModel = m_settings.getViewSettingsClone();
-            List<FlowVariable> newViewVariableList =
-                overwriteSettingsWithFlowVariables(fromViewModel, viewVariableSettings, null);
-            newVariableList.addAll(newViewVariableList);
-        }
-
-        if (variableSettings != null) {
-            NodeSettings fromModel = m_settings.getModelSettingsClone();
-            List<FlowVariable> newModelVariableList = overwriteSettingsWithFlowVariables(fromModel, variableSettings,
-                getFlowObjectStack().getAvailableFlowVariables(VariableType.getAllTypes()));
-            newVariableList.addAll(newModelVariableList);
-
+        try {
             NodeContext.pushContext(this);
-            try {
-                performValidateSettings(fromModel);
-                performLoadModelSettingsFrom(fromModel);
-            } catch (InvalidSettingsException e) {
-                throw new InvalidSettingsException("Errors loading flow variables into node : " + e.getMessage(), e);
-            } finally {
-                NodeContext.removeLastContext();
+            if (viewVariableSettings != null) {
+                applyViewSettingsUsingFlowObjectStack(viewVariableSettings, newVariableList);
             }
+
+            if (variableSettings != null) {
+                applyModelSettingsUsingFlowObjectStack(variableSettings, newVariableList);
+            }
+        } catch (InvalidSettingsException e) {
+            throw new InvalidSettingsException("Errors loading flow variables into node : " + e.getMessage(), e);
+        } finally {
+            NodeContext.removeLastContext();
         }
 
         Map<String, FlowVariable> newVariableMap = new LinkedHashMap<String, FlowVariable>();
@@ -376,6 +366,32 @@ public abstract class SingleNodeContainer extends NodeContainer {
             }
         }
         return newVariableMap;
+    }
+
+    private void applyModelSettingsUsingFlowObjectStack(final NodeSettingsRO variableSettings,
+        final List<FlowVariable> newVariableList) throws InvalidSettingsException {
+        NodeSettings fromModel = m_settings.getModelSettingsClone();
+        List<FlowVariable> newModelVariableList = overwriteSettingsWithFlowVariables(fromModel, variableSettings,
+            getAllFlowVariables());
+        newVariableList.addAll(newModelVariableList);
+
+        performValidateSettings(fromModel);
+        performLoadModelSettingsFrom(fromModel);
+    }
+
+    private void applyViewSettingsUsingFlowObjectStack(final NodeSettingsRO viewVariableSettings,
+        final List<FlowVariable> newVariableList) throws InvalidSettingsException {
+        NodeSettings fromViewModel = m_settings.getViewSettingsClone();
+
+        List<FlowVariable> newViewVariableList =
+            overwriteSettingsWithFlowVariables(fromViewModel, viewVariableSettings, getAllFlowVariables());
+        newVariableList.addAll(newViewVariableList);
+
+        performValidateViewSettings(fromViewModel);
+    }
+
+    private Map<String, FlowVariable> getAllFlowVariables() {
+        return getFlowObjectStack().getAvailableFlowVariables(VariableType.getAllTypes());
     }
 
     private static List<FlowVariable> overwriteSettingsWithFlowVariables(final NodeSettings settingsToOverwrite,
@@ -420,7 +436,7 @@ public abstract class SingleNodeContainer extends NodeContainer {
         }
         NodeSettings modelSettings = m_settings.getModelSettingsClone();
         overwriteSettingsWithFlowVariables(modelSettings, m_settings.getVariablesSettings(),
-            getFlowObjectStack().getAvailableFlowVariables(VariableType.getAllTypes()));
+            getAllFlowVariables());
         return modelSettings;
     }
 
@@ -443,12 +459,13 @@ public abstract class SingleNodeContainer extends NodeContainer {
         }
         var viewSettings = m_settings.getViewSettingsClone();
         overwriteSettingsWithFlowVariables(viewSettings, m_settings.getViewVariablesSettings(),
-            getFlowObjectStack().getAvailableFlowVariables(VariableType.getAllTypes()));
+            getAllFlowVariables());
         return Optional.of(viewSettings);
     }
 
-    /** Load cleaned and "variable adjusted" into underlying implementation.  Throws exception
-     * if validation of settings fails or other problems occur.
+    /**
+     * Load cleaned and "variable adjusted" into underlying implementation. Throws exception if validation of settings
+     * fails or other problems occur.
      *
      * @param settings ...
      * @throws InvalidSettingsException ...
@@ -1013,12 +1030,24 @@ public abstract class SingleNodeContainer extends NodeContainer {
         }
     }
 
-    /** Validate settings of specific implementation.
+    /**
+     * Validate settings of specific implementation.
+     *
      * @param modelSettings ...
      * @throws InvalidSettingsException ...
      */
-   abstract void performValidateSettings(final NodeSettingsRO modelSettings) throws InvalidSettingsException;
+    abstract void performValidateSettings(final NodeSettingsRO modelSettings) throws InvalidSettingsException;
 
+    /**
+     * Validate view settings of specific implementation. Throws exception if validation of settings fails or other
+     * problems occur.
+     *
+     * @param viewSettings ...
+     * @throws InvalidSettingsException ...
+     * @since 5.2
+     */
+    protected void performValidateViewSettings(final NodeSettingsRO viewSettings) throws InvalidSettingsException {
+    }
 
     ////////////////////////////////////
     // Credentials handling

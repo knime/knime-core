@@ -688,12 +688,35 @@ public final class Node {
      */
     // (previously called areSettingsValid with boolean return type)
     public void validateModelSettings(final NodeSettingsRO modelSettings) throws InvalidSettingsException {
-        LOGGER.assertLog(NodeContext.getContext() != null,
-                "No node context available, please check call hierarchy and fix it");
+        validateSettings(modelSettings,  m_model::validateSettings);
+    }
 
-        /* Note the comment in method loadSettingsFrom(NodeSettingsROf) */
+    /**
+     * Validates the argument view settings.
+     *
+     * @param viewSettings a settings object
+     * @noreference This method is not intended to be referenced by clients.
+     * @throws InvalidSettingsException Missing/invalid settings.
+     * @since 5.2
+     */
+    public void validateViewSettings(final NodeSettingsRO viewSettings) throws InvalidSettingsException {
+        validateSettings(viewSettings,  m_model::validateViewSettings);
+
+    }
+
+    @FunctionalInterface
+    private interface ValidatorConsumer {
+
+        void accept(NodeSettingsRO settings) throws InvalidSettingsException;
+
+    }
+
+    private void validateSettings(final NodeSettingsRO viewSettings, final ValidatorConsumer validator)
+        throws InvalidSettingsException {
+        LOGGER.assertLog(NodeContext.getContext() != null,
+            "No node context available, please check call hierarchy and fix it");
         try {
-            m_model.validateSettings(modelSettings);
+            validator.accept(viewSettings);
         } catch (InvalidSettingsException e) {
             throw e;
         } catch (Throwable t) {

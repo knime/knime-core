@@ -1184,6 +1184,12 @@ public class NativeNodeContainer extends SingleNodeContainer {
         getNode().validateModelSettings(modelSettings);
     }
 
+    /** {@inheritDoc} */
+    @Override
+    protected void performValidateViewSettings(final NodeSettingsRO viewSettings) throws InvalidSettingsException {
+        getNode().validateViewSettings(viewSettings);
+    }
+
     /* ------------ Stacks and Co --------------- */
 
     /** {@inheritDoc} */
