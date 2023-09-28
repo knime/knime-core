@@ -5636,6 +5636,10 @@ public final class WorkflowManager extends NodeContainer
             if (nc == null) {
                 return false;
             }
+            // check it is not already executed
+            if (getNodeContainer(nodeID).getInternalState() == EXECUTED) {
+                return false;
+            }
             // check node itself:
             if (canExecuteNodeDirectly(nodeID)) {
                 return true;
