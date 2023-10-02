@@ -2722,6 +2722,20 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/action/ReplaceNodeResult.java" type="org.knime.core.node.workflow.action.ReplaceNodeResult">
+        <filter id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.action.ReplaceNodeResult"/>
+                <message_argument value="ReplaceNodeResult(WorkflowManager, NodeID, List&lt;ConnectionContainer&gt;, ModifiableNodeCreationConfiguration)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.action.ReplaceNodeResult"/>
+                <message_argument value="ReplaceNodeResult(WorkflowManager, NodeID, List&lt;ConnectionContainer&gt;, ModifiableNodeCreationConfiguration, NodeFactory&lt;?&gt;)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/artifacts/WorkflowConfigArtifactsGenerator.java" type="org.knime.core.node.workflow.artifacts.WorkflowConfigArtifactsGenerator">
         <filter id="338792546">
             <message_arguments>

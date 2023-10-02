@@ -909,7 +909,7 @@ public final class WorkflowManager extends NodeContainer
      * @since 4.2
      */
     public ReplaceNodeResult replaceNode(final NodeID id, final ModifiableNodeCreationConfiguration newCreationConfig) {
-        return replaceNode(id, newCreationConfig, null);
+        return replaceNode(id, newCreationConfig, null, true);
     }
 
     /**
@@ -934,11 +934,39 @@ public final class WorkflowManager extends NodeContainer
      */
     public ReplaceNodeResult replaceNode(final NodeID id, final ModifiableNodeCreationConfiguration newCreationConfig,
         final NodeFactory<?> factory) {
+        return replaceNode(id, newCreationConfig, factory, true);
+    }
+
+    /**
+     * Replaces a node by another type of node (optionally with an additional {@link NodeCreationConfiguration}, e.g. in
+     * order to change the ports of the new node).
+     *
+     * Operation is only applicable for {@link NativeNodeContainer}s. Otherwise an {@link IllegalStateException} will be
+     * thrown.
+     *
+     * The node annotation will be transfered to the new node. Incoming and outgoing connections will be kept as far as
+     * possible (if the respective input and output port is still there and compatible). Node settings will only be
+     * transfered if the respective parameter says so.
+     *
+     * @param id the id of the node to replace
+     * @param newCreationConfig node creation configuration to create the new node, can be <code>null</code> iff a node
+     *            factory is explicitly provided
+     * @param factory node factory of the new node; if <code>null</code> the node will be replaced with a node of the
+     *            same original type
+     * @param transferNodeSettings whether to transfer the (matching) node settings from one node to the other
+     * @return a result that contains all information necessary to undo the operation
+     * @throws IllegalStateException if the node cannot be replaced (e.g. because there are executing successors)
+     * @throws IllegalArgumentException if there is no node for the given id
+     * @since 5.2
+     */
+    public ReplaceNodeResult replaceNode(final NodeID id, final ModifiableNodeCreationConfiguration newCreationConfig,
+        final NodeFactory<?> factory, final boolean transferNodeSettings) {
         CheckUtils.checkState(canReplaceNode(id), "Node cannot be replaced");
         try (WorkflowLock lock = lock()) {
             var nnc = (NativeNodeContainer)getNodeContainer(id);
+
             // keep the node's settings
-            final var settings = new NodeSettings("node settings");
+            var settings = new NodeSettings("node settings");
             saveNodeSettings(id, settings);
 
             // keep some node properties to be transfered to the new node
@@ -972,11 +1000,13 @@ public final class WorkflowManager extends NodeContainer
             addNodeAndApplyContext(factory == null ? oldNodeFactory : factory, newCreationConfig, id.getIndex());
             nnc = (NativeNodeContainer)getNodeContainer(id);
 
-            // load the previously stored settings
-            try {
-                loadNodeSettings(id, settings);
-            } catch (InvalidSettingsException e) { // NOSONAR
-                // ignore
+            if (transferNodeSettings) {
+                // load the previously stored settings
+                try {
+                    loadNodeSettings(id, settings);
+                } catch (InvalidSettingsException e) { // NOSONAR
+                    // ignore
+                }
             }
 
             // transfer old node properties, such as position and annotation
@@ -999,7 +1029,7 @@ public final class WorkflowManager extends NodeContainer
                 notifyWorkflowListeners(new WorkflowEvent(NODE_PORTS_CHANGED, id, null, null));
             }
 
-            return new ReplaceNodeResult(this, id, removedConnections, oldCreationConfig, oldNodeFactory);
+            return new ReplaceNodeResult(this, id, removedConnections, oldCreationConfig, oldNodeFactory, settings);
         }
     }
 

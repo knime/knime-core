@@ -65,12 +65,12 @@ import java.util.NoSuchElementException;
 
 import org.awaitility.Awaitility;
 import org.awaitility.Duration;
-import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettings;
 import org.knime.core.node.context.ModifiableNodeCreationConfiguration;
-import org.knime.core.node.extension.InvalidNodeFactoryExtensionException;
 import org.knime.core.node.extension.NodeFactoryExtensionManager;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.workflow.action.ReplaceNodeResult;
@@ -386,7 +386,58 @@ public class ReplaceNodePorts extends WorkflowTestCase {
 		assertThat(nc.getNode().getFactory().getClass().getSimpleName(), is("CaseStartAnyNodeFactory"));
 		assertThat(wfm.getOutgoingConnectionsFor(caseSwitchStart19).size(), is(3));
 	}
+	
+	/**
+	 * Make sure that the original settings are restored when undoing the node
+	 * replacement.
+	 * 
+	 * @throws Exception
+	 */
+	@Test
+	public void testRestoreNodeSettingsOnUndo() throws Exception {
+		var wfm = getManager();
+		var concatenate2 = wfm.getID().createChild(2);
+		var originalSettings = new NodeSettings("original settings");
+		wfm.saveNodeSettings(concatenate2, originalSettings);
+		assertThat(originalSettings.getNodeSettings("model").getString("suffix"), is("_dup_original_setting"));
 
+		var oldNode = ((NativeNodeContainer) wfm.getNodeContainer(concatenate2));
+		var replaceResult = wfm.replaceNode(concatenate2, oldNode.getNode().getCopyOfCreationConfig().get(), null,
+				false);
+		var newSettings = ((NativeNodeContainer) wfm.getNodeContainer(m_concatenate_2)).getNodeSettings();
+		assertThat(newSettings.getNodeSettings("model").getString("suffix"), is("_dup"));
+	
+		replaceResult.undo();
+		var originalSettingsAfterUndo = new NodeSettings("original settings");
+		wfm.saveNodeSettings(concatenate2, originalSettingsAfterUndo);
+		assertThat(originalSettingsAfterUndo.getNodeSettings("model").getString("suffix"), is("_dup_original_setting"));
+	}
+	
+	/**
+	 * Assert that settings are transfered to the node replacement, if desired.
+	 * 
+	 * @throws InvalidSettingsException
+	 */
+	@Test
+	public void testTransferSettings() throws InvalidSettingsException {
+		var wfm = getManager();
+		var concatenate2 = wfm.getID().createChild(2);
+		var originalSettings = new NodeSettings("original settings");
+		wfm.saveNodeSettings(concatenate2, originalSettings);
+		assertThat(originalSettings.getNodeSettings("model").getString("suffix"), is("_dup_original_setting"));
+
+		// transfer settings true
+		var oldNode = ((NativeNodeContainer) wfm.getNodeContainer(concatenate2));
+		wfm.replaceNode(concatenate2, oldNode.getNode().getCopyOfCreationConfig().get(), null, true);
+		var newSettings = ((NativeNodeContainer) wfm.getNodeContainer(m_concatenate_2)).getNodeSettings();
+		assertThat(newSettings.getNodeSettings("model").getString("suffix"), is("_dup_original_setting"));
+		
+		// transfer settings false
+		wfm.replaceNode(concatenate2, oldNode.getNode().getCopyOfCreationConfig().get(), null, false);
+		newSettings = ((NativeNodeContainer) wfm.getNodeContainer(m_concatenate_2)).getNodeSettings();
+		assertThat(newSettings.getNodeSettings("model").getString("suffix"), is("_dup"));
+	}
+	
 	private void waitAndCheckNodePortsChangedEventCounterIs(final int numberOfEvents) {
 		Awaitility.waitAtMost(Duration.ONE_SECOND).untilAsserted(
 				() -> assertThat("NODE_PORTS_CHANGED was not received exactly " + numberOfEvents + " times",

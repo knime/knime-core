@@ -9,7 +9,7 @@
         <entry key="fail_on_duplicates" type="xboolean" value="false"/>
         <entry key="append_suffix" type="xboolean" value="true"/>
         <entry key="intersection_of_columns" type="xboolean" value="false"/>
-        <entry key="suffix" type="xstring" value="_dup"/>
+        <entry key="suffix" type="xstring" value="_dup_original_setting"/>
         <entry key="enable_hiliting" type="xboolean" value="false"/>
     </config>
     <config key="nodeAnnotation">
