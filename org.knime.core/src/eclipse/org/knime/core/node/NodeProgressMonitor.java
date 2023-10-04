@@ -44,8 +44,10 @@
  */
 package org.knime.core.node;
 
+import java.util.List;
 import java.util.function.Supplier;
 
+import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.workflow.NodeProgressListener;
 
 
@@ -130,6 +132,17 @@ public interface NodeProgressMonitor {
      * @return Progress message.
      */
     String getMessage();
+
+    /**
+     * Hierarchical list of all current progress messages.
+     *
+     * @return progress messages, from most general to most specific
+     * @since 5.2
+     */
+    default List<String> getMessages() {
+        final var message = getMessage();
+        return StringUtils.isEmpty(message) ? List.of() : List.of(message);
+    }
 
     /**
      * Sets the cancel requested flag.

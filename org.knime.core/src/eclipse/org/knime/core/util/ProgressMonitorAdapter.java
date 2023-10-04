@@ -46,8 +46,10 @@
  */
 package org.knime.core.util;
 
+import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.NodeLogger;
@@ -157,6 +159,12 @@ public class ProgressMonitorAdapter implements NodeProgressMonitor {
     @Override
     public String getMessage() {
         return m_message;
+    }
+
+    @Override
+    public List<String> getMessages() {
+        final var message = m_message;
+        return StringUtils.isEmpty(message) ? List.of() : List.of(message);
     }
 
     /**
