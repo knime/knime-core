@@ -1096,7 +1096,7 @@ public final class WorkflowManager extends NodeContainer
 
         // set outgoing connections
         for (final ConnectionContainer c : outgoingConnections) {
-            int sourcePort = outputPortMapping != null ? outputPortMapping.get(c.getDestPort()) : c.getDestPort();
+            int sourcePort = outputPortMapping != null ? outputPortMapping.get(c.getSourcePort()) : c.getSourcePort();
             if (canAddConnection(newId, sourcePort, c.getDest(), c.getDestPort())) {
                 final ConnectionContainer newcc = addConnection(newId, sourcePort, c.getDest(), c.getDestPort());
                 newcc.setUIInfo(c.getUIInfo());
