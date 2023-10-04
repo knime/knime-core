@@ -66,8 +66,9 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.config.ConfigRO;
+import org.knime.core.node.config.ConfigWO;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.VariableType.CredentialsType;
 import org.knime.core.util.CoreConstants;
@@ -370,6 +371,11 @@ public final class CredentialsStore implements Observer {
 
     static final class CredentialsFlowVariableValue implements ICredentials {
 
+        private static final String CFG_NAME = "name";
+        private static final String CFG_LOGIN = "login";
+        private static final String CFG_PWD = "password";
+        private static final String SECRET = "XKdPobvbDEBZEJmBsbMq";
+
         private final String m_name;
         private final String m_login;
         private final String m_password;
@@ -431,14 +437,35 @@ public final class CredentialsStore implements Observer {
         }
 
         void save(final NodeSettingsWO settings) {
-            settings.addString("name", getName());
-            settings.addString("login", getLogin());
+            store(settings, false);
         }
 
-        static CredentialsFlowVariableValue load(final NodeSettingsRO settings) throws InvalidSettingsException {
-            String name = settings.getString("name");
-            String login = settings.getString("login");
-            return new CredentialsFlowVariableValue(name, login, null);
+        /**
+         * Stores the credentials information into the provided {@link ConfigWO}.
+         * @param config the {@link ConfigWO} to store the credentials
+         * @param includePasswords <code>true</code> if the passwords should be stored weakly encrypted as well
+         */
+        void store(final ConfigWO config, final boolean includePasswords) {
+            config.addString(CFG_NAME, getName());
+            config.addString(CFG_LOGIN, getLogin());
+            if (includePasswords) {
+                config.addPassword(CFG_PWD, SECRET, getPassword());
+            }
+        }
+
+        static CredentialsFlowVariableValue load(final ConfigRO settings) throws InvalidSettingsException {
+            String name = settings.getString(CFG_NAME);
+            String login = settings.getString(CFG_LOGIN);
+            String password = settings.getPassword(CFG_PWD, SECRET, null);
+            return new CredentialsFlowVariableValue(name, login, password);
+        }
+
+        /**
+         * @param config
+         * @return <code>true</code> if the given config contains credentials information
+         */
+        static boolean isCredentials(final ConfigRO config) {
+            return config.containsKey(CFG_NAME) && config.containsKey(CFG_LOGIN) && config.containsKey(CFG_PWD);
         }
     }
 

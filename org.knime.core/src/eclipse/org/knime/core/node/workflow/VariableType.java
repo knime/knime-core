@@ -1914,25 +1914,46 @@ public abstract class VariableType<T> {
         }
 
         @Override
+        protected boolean canOverwrite(final Config config, final String configKey) {
+            try {
+                return CredentialsFlowVariableValue.isCredentials(config.getConfig(configKey));
+            } catch (InvalidSettingsException ex) {// NOSONAR
+                // the key did not correspond to a config -> this can't be a credentials flow variable
+                return false;
+            }
+        }
+
+        @Override
         protected void overwrite(final CredentialsFlowVariableValue value, final Config config, final String configKey)
             throws InvalidConfigEntryException {
-            throw createCannotOverwriteException(config, "Credentials");
+            if (!canOverwrite(config, configKey)) {
+                throw new InvalidConfigEntryException("The provided config does not correspond to a credential.",
+                    v -> String.format(
+                        "The variable '%s' can't overwrite the setting '%s' because it is not a credential.",
+                        v, config.getEntry(configKey)));
+            }
+            value.store(config.addConfig(configKey), true);
+        }
+
+        @Override
+        protected boolean canCreateFrom(final Config config, final String configKey) {
+            try {
+                return CredentialsFlowVariableValue.isCredentials(config.getConfig(configKey));
+            } catch (InvalidSettingsException ex) {//NOSONAR
+                // the key did not correspond to a config -> this can't be a credentials flow variable
+                return false;
+            }
         }
 
         @Override
         protected CredentialsFlowVariableValue createFrom(final Config config, final String configKey)
             throws InvalidSettingsException, InvalidConfigEntryException {
-            throw createCannotCreateFromException(config, "Credentials");
-        }
-
-        @Override
-        protected boolean canOverwrite(final Config config, final String configKey) {
-            return false;
-        }
-
-        @Override
-        protected boolean canCreateFrom(final Config config, final String configKey) {
-            return false;
+            if (!canCreateFrom(config, configKey)) {
+                throw new InvalidConfigEntryException("The provided config does not correspond to a credential.",
+                    v -> String.format("The settings stored in '%s' can't be exposed as flow variable '%s'.",
+                        config.getEntry(configKey), v));
+            }
+            return CredentialsFlowVariableValue.load(config.getConfig(configKey));
         }
     }
 
