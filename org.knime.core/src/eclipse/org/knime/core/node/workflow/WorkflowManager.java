@@ -959,6 +959,7 @@ public final class WorkflowManager extends NodeContainer
      * @throws IllegalArgumentException if there is no node for the given id
      * @since 5.2
      */
+    @SuppressWarnings("java:S2301") // "selector" argument `transferNodeSettings` is reasonable here.
     public ReplaceNodeResult replaceNode(final NodeID id, final ModifiableNodeCreationConfiguration newCreationConfig,
         final NodeFactory<?> factory, final boolean transferNodeSettings) {
         CheckUtils.checkState(canReplaceNode(id), "Node cannot be replaced");

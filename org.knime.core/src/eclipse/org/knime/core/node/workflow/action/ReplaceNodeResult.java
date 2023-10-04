@@ -52,6 +52,7 @@ import java.util.List;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.context.ModifiableNodeCreationConfiguration;
 import org.knime.core.node.util.CheckUtils;
@@ -128,7 +129,7 @@ public final class ReplaceNodeResult {
         try {
             m_wfm.loadNodeSettings(m_replacedNodeID, m_originalNodeSettings);
         } catch (InvalidSettingsException ex) {
-            // ignore - should never happen
+            NodeLogger.getLogger(ReplaceNodeResult.class).error("Could not re-apply node settings on undo", ex);
         }
     }
 
