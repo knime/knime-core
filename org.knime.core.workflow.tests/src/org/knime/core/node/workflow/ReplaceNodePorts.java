@@ -57,10 +57,12 @@ import static org.hamcrest.core.IsNot.not;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 import org.awaitility.Awaitility;
@@ -379,12 +381,21 @@ public class ReplaceNodePorts extends WorkflowTestCase {
 		var replaceResult = wfm.replaceNode(caseSwitchStart19, null, newFactory);
 		var nc = wfm.getNodeContainer(caseSwitchStart19, NativeNodeContainer.class, true);
 		assertThat(nc.getNode().getFactory().getClass().getSimpleName(), is("ModelReaderNodeFactory"));
-		assertThat(wfm.getOutgoingConnectionsFor(caseSwitchStart19).size(), is(3));
-	
+		// when undo
 		replaceResult.undo();
+		// then make sure the same connections are restored
 		nc = wfm.getNodeContainer(caseSwitchStart19, NativeNodeContainer.class, true);
 		assertThat(nc.getNode().getFactory().getClass().getSimpleName(), is("CaseStartAnyNodeFactory"));
-		assertThat(wfm.getOutgoingConnectionsFor(caseSwitchStart19).size(), is(3));
+		// output port 1 connects to node 21
+        // output port 2 connects to node 22
+        // output port 3 connects to node 23
+		for(var entry : Map.of(1, 21, 2, 22, 3, 23).entrySet()) {
+            var outConnections = wfm.getOutgoingConnectionsFor(caseSwitchStart19, entry.getKey());
+            String reason = "Expected a connection from output port %s to node %s".formatted(entry.getKey(), entry.getValue());
+            assertThat(reason, outConnections.size(), is(1));
+            var outConnection = outConnections.stream().findFirst().get();
+            assertThat(reason, outConnection.getDest(), is(wfm.getID().createChild(entry.getValue())));
+        }
 	}
 
 	private void waitAndCheckNodePortsChangedEventCounterIs(final int numberOfEvents) {
