@@ -48,20 +48,15 @@
  */
 package org.knime.core.node.workflow.virtual.subnode;
 
-import java.util.Arrays;
-import java.util.Set;
-
 import org.knime.core.node.DelegateNodeDescription;
 import org.knime.core.node.DynamicNodeFactory;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDescription;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeView;
-import org.knime.core.node.config.Config;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.SubNodeContainer;
 
 /**
@@ -157,30 +152,6 @@ public final class VirtualSubNodeInputNodeFactory extends DynamicNodeFactory<Vir
     @Override
     public org.knime.core.node.NodeFactory.NodeType getType() {
         return NodeType.VirtualIn;
-    }
-
-    /**
-     * @param config
-     * @return TODO
-     * @throws InvalidSettingsException
-     */
-    static PortType[] loadPortTypeList(final ConfigRO config) throws InvalidSettingsException {
-        Set<String> keySet = config.keySet();
-        PortType[] outTypes = new PortType[keySet.size()];
-        for (String s : keySet) {
-            ConfigRO portConfig = config.getConfig(s);
-            int index = portConfig.getInt("index");
-            CheckUtils.checkSetting(index >= 0 && index < outTypes.length,
-                    "Invalid port index must be in [0, %d]: %d", keySet.size() - 1, index);
-            Config portTypeConfig = portConfig.getConfig("type");
-            PortType type = PortType.load(portTypeConfig);
-            outTypes[index] = type;
-        }
-        int invalidIndex = Arrays.asList(outTypes).indexOf(null);
-        if (invalidIndex >= 0) {
-            throw new InvalidSettingsException("Unassigned port type at index " + invalidIndex);
-        }
-        return outTypes;
     }
 
     private static final class SubnodeInputNodeDescription extends DelegateNodeDescription {

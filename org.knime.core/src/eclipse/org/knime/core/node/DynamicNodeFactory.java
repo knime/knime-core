@@ -48,9 +48,13 @@
 package org.knime.core.node;
 
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Optional;
 
 import org.knime.core.eclipseUtil.OSGIHelper;
+import org.knime.core.node.config.ConfigRO;
+import org.knime.core.node.port.PortType;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.node2012.KnimeNodeDocument;
 
 /**
@@ -154,6 +158,31 @@ public abstract class DynamicNodeFactory<T extends NodeModel> extends NodeFactor
      */
     protected Optional<String> getBundleName() {
         return Optional.ofNullable(OSGIHelper.getBundle(getClass())).map(b -> b.getSymbolicName());
+    }
+
+    /**
+     * @param config Configuration of the ports
+     * @return An array of port types
+     * @throws InvalidSettingsException if there has been an error finding the port types
+     * @since 5.2 (moved method here from subclasses)
+     */
+    protected static PortType[] loadPortTypeList(final ConfigRO config) throws InvalidSettingsException {
+        var keySet = config.keySet();
+        var outTypes = new PortType[keySet.size()];
+        for (var s : keySet) {
+            ConfigRO portConfig = config.getConfig(s);
+            var index = portConfig.getInt("index");
+            CheckUtils.checkSetting(index >= 0 && index < outTypes.length, "Invalid port index must be in [0, %d]: %d",
+                keySet.size() - 1, index);
+            var portTypeConfig = portConfig.getConfig("type");
+            var type = PortType.load(portTypeConfig);
+            outTypes[index] = type;
+        }
+        var invalidIndex = Arrays.asList(outTypes).indexOf(null);
+        if (invalidIndex >= 0) {
+            throw new InvalidSettingsException("Unassigned port type at index " + invalidIndex);
+        }
+        return outTypes;
     }
 
 }

@@ -1051,8 +1051,8 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
                     getLogger().error(error, e);
                 }
                 loadResult.addError(loadErrorString);
-                if (e instanceof NodeFactoryUnknownException) {
-                    missingNodeIDMap.put(nodeIDSuffix, (NodeFactoryUnknownException)e);
+                if (e instanceof NodeFactoryUnknownException nfue) {
+                    missingNodeIDMap.put(nodeIDSuffix, nfue);
                     // don't set dirty
                 } else {
                     setDirtyAfterLoad();
