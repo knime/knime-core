@@ -154,8 +154,8 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
      * {@inheritDoc}
      */
     @Override
-    public void preLoadNodeContainer(final WorkflowPersistor parentPersistor,
-        final NodeSettingsRO parentSettings, final LoadResult result) throws InvalidSettingsException, IOException {
+    public void preLoadNodeContainer(final WorkflowPersistor parentPersistor, final NodeSettingsRO parentSettings,
+        final LoadResult result) throws InvalidSettingsException, IOException {
         super.preLoadNodeContainer(parentPersistor, parentSettings, result);
         m_parentPersistor = parentPersistor;
         NodeSettingsRO settings = getNodeSettings();
@@ -170,7 +170,7 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
         NodeSettingsRO additionalFactorySettings;
         try {
             additionalFactorySettings = loadAdditionalFactorySettings(settings);
-        } catch (Exception e) {
+        } catch (InvalidSettingsException | RuntimeException e) {
             error = "Unable to load additional factory settings for \"" + nodeInfo + "\"";
             setDirtyAfterLoad();
             throw new InvalidSettingsException(error, e);
@@ -187,12 +187,12 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
             if (additionalFactorySettings != null) {
                 nodeFactory.loadAdditionalFactorySettings(additionalFactorySettings);
             }
-        } catch (Exception e) {
+        } catch (InvalidSettingsException | RuntimeException e) {
             error = "Unable to load additional factory settings into node factory (node \"" + nodeInfo + "\")";
             getLogger().error(error);
             // setDirtyAfterLoad(); // don't set dirty, missing node placeholder
 
-            throw new NodeFactoryUnknownException(error, nodeInfo, additionalFactorySettings, e);
+            throw new InvalidSettingsException(error, e);
         }
         m_nodeAndBundleInformation = nodeInfo;
         m_node = new Node(nodeFactory, loadCreationConfig(settings, nodeFactory).orElse(null));
