@@ -91,7 +91,8 @@ public final class ReplaceNodeResult {
      * @param replacedNodeID the id of the newly created node
      * @param removedConnections the connections that couldn't be restored after the replacement
      * @param originalNodeCreationConfig the original creation config of the old node (for the undo)
-     * @param originalNodeFactory factory of the deleted node
+     * @param originalNodeFactory factory of the deleted node; or {@code null} if the old node is of the same type as
+     *            the new one (i.e. replacement happened in order to change the port configuration)
      * @param originalNodeSettings the settings of the deleted node
      */
     public ReplaceNodeResult(final WorkflowManager wfm, final NodeID replacedNodeID,

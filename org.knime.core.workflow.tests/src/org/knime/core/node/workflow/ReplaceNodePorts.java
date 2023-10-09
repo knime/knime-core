@@ -432,23 +432,47 @@ public class ReplaceNodePorts extends WorkflowTestCase {
 	@Test
 	public void testTransferSettings() throws InvalidSettingsException {
 		var wfm = getManager();
-		var concatenate2 = wfm.getID().createChild(2);
 		var originalSettings = new NodeSettings("original settings");
-		wfm.saveNodeSettings(concatenate2, originalSettings);
+		wfm.saveNodeSettings(m_concatenate_2, originalSettings);
 		assertThat(originalSettings.getNodeSettings("model").getString("suffix"), is("_dup_original_setting"));
 
 		// transfer settings true
-		var oldNode = ((NativeNodeContainer) wfm.getNodeContainer(concatenate2));
-		wfm.replaceNode(concatenate2, oldNode.getNode().getCopyOfCreationConfig().get(), null, true);
+		var oldNode = ((NativeNodeContainer) wfm.getNodeContainer(m_concatenate_2));
+		wfm.replaceNode(m_concatenate_2, oldNode.getNode().getCopyOfCreationConfig().get(), null, true);
 		var newSettings = ((NativeNodeContainer) wfm.getNodeContainer(m_concatenate_2)).getNodeSettings();
 		assertThat(newSettings.getNodeSettings("model").getString("suffix"), is("_dup_original_setting"));
 		
 		// transfer settings false
-		wfm.replaceNode(concatenate2, oldNode.getNode().getCopyOfCreationConfig().get(), null, false);
+		wfm.replaceNode(m_concatenate_2, oldNode.getNode().getCopyOfCreationConfig().get(), null, false);
 		newSettings = ((NativeNodeContainer) wfm.getNodeContainer(m_concatenate_2)).getNodeSettings();
 		assertThat(newSettings.getNodeSettings("model").getString("suffix"), is("_dup"));
 	}
 	
+	/**
+	 * Replaces a node of the same type by explicitly specifying the type. But
+	 * without providing a creation config.
+	 *
+	 * @throws InvalidSettingsException
+	 */
+	@Test
+	public void testReplaceNodeOfSameTypeWithoutCreationConfig() throws InvalidSettingsException {
+		var wfm = getManager();
+		var originalSettings = new NodeSettings("original settings");
+		wfm.saveNodeSettings(m_concatenate_2, originalSettings);
+		assertThat(originalSettings.getNodeSettings("model").getString("suffix"), is("_dup_original_setting"));
+
+		var nnc = (NativeNodeContainer) wfm.getNodeContainer(m_concatenate_2);
+		// provide no node creation config, but the exact same factory
+		var result = wfm.replaceNode(m_concatenate_2, null, nnc.getNode().getFactory(), false);
+		var newSettings = ((NativeNodeContainer) wfm.getNodeContainer(m_concatenate_2)).getNodeSettings();
+		assertThat(newSettings.getNodeSettings("model").getString("suffix"), is("_dup"));
+
+		result.undo();
+		var undoSettings = new NodeSettings("original settings");
+		wfm.saveNodeSettings(m_concatenate_2, undoSettings);
+		assertThat(undoSettings.getNodeSettings("model").getString("suffix"), is("_dup_original_setting"));
+	}
+
 	private void waitAndCheckNodePortsChangedEventCounterIs(final int numberOfEvents) {
 		Awaitility.waitAtMost(Duration.ONE_SECOND).untilAsserted(
 				() -> assertThat("NODE_PORTS_CHANGED was not received exactly " + numberOfEvents + " times",

@@ -955,7 +955,8 @@ public final class WorkflowManager extends NodeContainer
      *            same original type
      * @param transferNodeSettings whether to transfer the (matching) node settings from one node to the other
      * @return a result that contains all information necessary to undo the operation
-     * @throws IllegalStateException if the node cannot be replaced (e.g. because there are executing successors)
+     * @throws IllegalStateException if the node cannot be replaced (e.g. because there are executing successors or no
+     *             node-creation-config is provided)
      * @throws IllegalArgumentException if there is no node for the given id
      * @since 5.2
      */
@@ -978,7 +979,7 @@ public final class WorkflowManager extends NodeContainer
 
             // keep old node factory
             var oldNodeFactory = ((NativeNodeContainer)getNodeContainer(id)).getNode().getFactory();
-            var replaceWithSameNodeType = factory == null || oldNodeFactory.getClass().equals(factory.getClass());
+            var replaceWithSameNodeType = factory == null;
 
             // keep old node creation config
             var oldCreationConfig = nnc.getNode().getCopyOfCreationConfig().orElse(null);
@@ -1030,7 +1031,8 @@ public final class WorkflowManager extends NodeContainer
                 notifyWorkflowListeners(new WorkflowEvent(NODE_PORTS_CHANGED, id, null, null));
             }
 
-            return new ReplaceNodeResult(this, id, removedConnections, oldCreationConfig, oldNodeFactory, settings);
+            return new ReplaceNodeResult(this, id, removedConnections, oldCreationConfig,
+                replaceWithSameNodeType ? null : oldNodeFactory, settings);
         }
     }
 
