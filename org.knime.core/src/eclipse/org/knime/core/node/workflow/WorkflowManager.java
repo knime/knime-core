@@ -953,7 +953,8 @@ public final class WorkflowManager extends NodeContainer
      *            factory is explicitly provided
      * @param factory node factory of the new node; if <code>null</code> the node will be replaced with a node of the
      *            same original type
-     * @param transferNodeSettings whether to transfer the (matching) node settings from one node to the other
+     * @param transferNodeSettingsAndLabel whether to transfer the (matching) node settings and node label (aka node
+     *            annotation) from one node to the other
      * @return a result that contains all information necessary to undo the operation
      * @throws IllegalStateException if the node cannot be replaced (e.g. because there are executing successors or no
      *             node-creation-config is provided)
@@ -962,7 +963,7 @@ public final class WorkflowManager extends NodeContainer
      */
     @SuppressWarnings("java:S2301") // "selector" argument `transferNodeSettings` is reasonable here.
     public ReplaceNodeResult replaceNode(final NodeID id, final ModifiableNodeCreationConfiguration newCreationConfig,
-        final NodeFactory<?> factory, final boolean transferNodeSettings) {
+        final NodeFactory<?> factory, final boolean transferNodeSettingsAndLabel) {
         CheckUtils.checkState(canReplaceNode(id), "Node cannot be replaced");
         try (WorkflowLock lock = lock()) {
             var nnc = (NativeNodeContainer)getNodeContainer(id);
@@ -1002,7 +1003,7 @@ public final class WorkflowManager extends NodeContainer
             addNodeAndApplyContext(factory == null ? oldNodeFactory : factory, newCreationConfig, id.getIndex());
             nnc = (NativeNodeContainer)getNodeContainer(id);
 
-            if (transferNodeSettings) {
+            if (transferNodeSettingsAndLabel) {
                 // load the previously stored settings
                 try {
                     loadNodeSettings(id, settings);
@@ -1013,7 +1014,7 @@ public final class WorkflowManager extends NodeContainer
 
             // transfer old node properties, such as position and annotation
             nnc.setUIInformation(uiInfo);
-            if (!nodeAnnotation.getData().isDefault()) {
+            if (transferNodeSettingsAndLabel && !nodeAnnotation.getData().isDefault()) {
                 nnc.getNodeAnnotation().copyFrom(nodeAnnotation.getData(), true);
             }
 
@@ -1032,7 +1033,7 @@ public final class WorkflowManager extends NodeContainer
             }
 
             return new ReplaceNodeResult(this, id, removedConnections, oldCreationConfig,
-                replaceWithSameNodeType ? null : oldNodeFactory, settings);
+                replaceWithSameNodeType ? null : oldNodeFactory, settings, nodeAnnotation);
         }
     }
 

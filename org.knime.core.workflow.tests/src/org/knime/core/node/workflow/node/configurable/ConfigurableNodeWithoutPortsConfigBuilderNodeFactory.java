@@ -6,11 +6,11 @@ import org.knime.core.node.ConfigurableNodeFactory;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.context.NodeCreationConfiguration;
-import org.knime.core.node.workflow.ReplaceNodePorts;
+import org.knime.core.node.workflow.ReplaceNodeTest;
 import org.knime.core.node.workflow.node.adapter.AdapterNodeModel;
 
 /**
- * Dummy node factory for test purposes only. See {@link ReplaceNodePorts}
+ * Dummy node factory for test purposes only. See {@link ReplaceNodeTest}
  * 
  * @author Kai Franze, KNIME GmbH
  *

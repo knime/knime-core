@@ -57,6 +57,7 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.context.ModifiableNodeCreationConfiguration;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.ConnectionContainer;
+import org.knime.core.node.workflow.NodeAnnotation;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
 
@@ -84,6 +85,8 @@ public final class ReplaceNodeResult {
 
     private final NodeSettings m_originalNodeSettings;
 
+    private final NodeAnnotation m_originalNodeAnnotation;
+
     /**
      * New instance.
      *
@@ -94,11 +97,13 @@ public final class ReplaceNodeResult {
      * @param originalNodeFactory factory of the deleted node; or {@code null} if the old node is of the same type as
      *            the new one (i.e. replacement happened in order to change the port configuration)
      * @param originalNodeSettings the settings of the deleted node
+     * @param originalNodeAnnotation the original node annotation of the deleted node; won't be restored, if
+     *            {@code null}
      */
     public ReplaceNodeResult(final WorkflowManager wfm, final NodeID replacedNodeID,
         final List<ConnectionContainer> removedConnections,
         final ModifiableNodeCreationConfiguration originalNodeCreationConfig, final NodeFactory<?> originalNodeFactory,
-        final NodeSettings originalNodeSettings) {
+        final NodeSettings originalNodeSettings, final NodeAnnotation originalNodeAnnotation) {
         CheckUtils.checkNotNull(wfm);
         CheckUtils.checkNotNull(replacedNodeID);
         CheckUtils.checkNotNull(removedConnections);
@@ -110,6 +115,7 @@ public final class ReplaceNodeResult {
         m_nodeCreationConfig = originalNodeCreationConfig;
         m_originalNodeFactory = originalNodeFactory;
         m_originalNodeSettings = originalNodeSettings;
+        m_originalNodeAnnotation = originalNodeAnnotation;
     }
 
     /**
@@ -127,6 +133,10 @@ public final class ReplaceNodeResult {
         m_removedConnections.stream()
             .filter(c -> m_wfm.canAddConnection(c.getSource(), c.getSourcePort(), c.getDest(), c.getDestPort()))
             .forEach(c -> m_wfm.addConnection(c.getSource(), c.getSourcePort(), c.getDest(), c.getDestPort()));
+        if (m_originalNodeAnnotation != null && !m_originalNodeAnnotation.getData().isDefault()) {
+            m_wfm.getNodeContainer(m_replacedNodeID).getNodeAnnotation().copyFrom(m_originalNodeAnnotation.getData(),
+                true);
+        }
         try {
             m_wfm.loadNodeSettings(m_replacedNodeID, m_originalNodeSettings);
         } catch (InvalidSettingsException ex) {

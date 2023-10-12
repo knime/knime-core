@@ -85,7 +85,7 @@ import org.knime.filehandling.core.port.FileSystemPortObject;
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  * @author Kai Franze, KNIME GmbH
  */
-public class ReplaceNodePorts extends WorkflowTestCase {
+public class ReplaceNodeTest extends WorkflowTestCase {
 
 	private NodeID m_datagenerator_1;
 
@@ -405,23 +405,27 @@ public class ReplaceNodePorts extends WorkflowTestCase {
 	 * @throws Exception
 	 */
 	@Test
-	public void testRestoreNodeSettingsOnUndo() throws Exception {
+	public void testRestoreNodeSettingsAndLabelOnUndo() throws Exception {
 		var wfm = getManager();
-		var concatenate2 = wfm.getID().createChild(2);
 		var originalSettings = new NodeSettings("original settings");
-		wfm.saveNodeSettings(concatenate2, originalSettings);
+		wfm.saveNodeSettings(m_concatenate_2, originalSettings);
 		assertThat(originalSettings.getNodeSettings("model").getString("suffix"), is("_dup_original_setting"));
 
-		var oldNode = ((NativeNodeContainer) wfm.getNodeContainer(concatenate2));
-		var replaceResult = wfm.replaceNode(concatenate2, oldNode.getNode().getCopyOfCreationConfig().get(), null,
+		var oldNode = ((NativeNodeContainer) wfm.getNodeContainer(m_concatenate_2));
+		var replaceResult = wfm.replaceNode(m_concatenate_2, oldNode.getNode().getCopyOfCreationConfig().get(), null,
 				false);
-		var newSettings = ((NativeNodeContainer) wfm.getNodeContainer(m_concatenate_2)).getNodeSettings();
+		var nnc = (NativeNodeContainer) wfm.getNodeContainer(m_concatenate_2);
+		var newSettings = nnc.getNodeSettings();
+		var newLabel = nnc.getNodeAnnotation().getText();
 		assertThat(newSettings.getNodeSettings("model").getString("suffix"), is("_dup"));
+		assertThat(newLabel, is(""));
 	
 		replaceResult.undo();
 		var originalSettingsAfterUndo = new NodeSettings("original settings");
-		wfm.saveNodeSettings(concatenate2, originalSettingsAfterUndo);
+		wfm.saveNodeSettings(m_concatenate_2, originalSettingsAfterUndo);
+		var originalLabelAfterUndo = wfm.getNodeContainer(m_concatenate_2).getNodeAnnotation().getText();
 		assertThat(originalSettingsAfterUndo.getNodeSettings("model").getString("suffix"), is("_dup_original_setting"));
+		assertThat(originalLabelAfterUndo, is("Node 2"));
 	}
 	
 	/**
@@ -430,22 +434,28 @@ public class ReplaceNodePorts extends WorkflowTestCase {
 	 * @throws InvalidSettingsException
 	 */
 	@Test
-	public void testTransferSettings() throws InvalidSettingsException {
+	public void testTransferSettingsAndLabel() throws InvalidSettingsException {
 		var wfm = getManager();
 		var originalSettings = new NodeSettings("original settings");
 		wfm.saveNodeSettings(m_concatenate_2, originalSettings);
 		assertThat(originalSettings.getNodeSettings("model").getString("suffix"), is("_dup_original_setting"));
 
-		// transfer settings true
+		// transfer settings and label true
 		var oldNode = ((NativeNodeContainer) wfm.getNodeContainer(m_concatenate_2));
 		wfm.replaceNode(m_concatenate_2, oldNode.getNode().getCopyOfCreationConfig().get(), null, true);
-		var newSettings = ((NativeNodeContainer) wfm.getNodeContainer(m_concatenate_2)).getNodeSettings();
+		var nnc = (NativeNodeContainer) wfm.getNodeContainer(m_concatenate_2);
+		var newSettings = nnc.getNodeSettings();
+		var newLabel = nnc.getNodeAnnotation().getText();
 		assertThat(newSettings.getNodeSettings("model").getString("suffix"), is("_dup_original_setting"));
+		assertThat(newLabel, is("Node 2"));
 		
-		// transfer settings false
+		// transfer settings and label false
 		wfm.replaceNode(m_concatenate_2, oldNode.getNode().getCopyOfCreationConfig().get(), null, false);
-		newSettings = ((NativeNodeContainer) wfm.getNodeContainer(m_concatenate_2)).getNodeSettings();
+		nnc = (NativeNodeContainer) wfm.getNodeContainer(m_concatenate_2);
+		newSettings = nnc.getNodeSettings();
+		newLabel = nnc.getNodeAnnotation().getText();
 		assertThat(newSettings.getNodeSettings("model").getString("suffix"), is("_dup"));
+		assertThat(newLabel, is(""));
 	}
 	
 	/**
