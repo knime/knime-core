@@ -221,7 +221,7 @@ public final class NodeTimer {
         private long m_timeOfLastSend = m_timeOfLastSave;
         private static final long SAVEINTERVAL = 15*60*1000;  // save no more than every 15mins
         private static final long SENDINTERVAL = 24*60*60*1000; // only send every 24h
-        private static final String FILENAME = "nodeusage_3.0.json";
+        static final String FILENAME = "nodeusage_3.0.json";
 
         private static final boolean DISABLE_GLOBAL_TIMER = Boolean.getBoolean("knime.globaltimer.disable");
 
@@ -581,7 +581,7 @@ public final class NodeTimer {
             return "<unknown>";
         }
 
-        private synchronized void writeToFile(final boolean properShutdown) {
+        synchronized void writeToFile(final boolean properShutdown) {
             try {
                 JsonObject jo = constructJSONObject(properShutdown);
                 File propfile = new File(KNIMEConstants.getKNIMEHomeDir(), FILENAME);
@@ -887,7 +887,7 @@ public final class NodeTimer {
             m_crashes = 0;
         }
 
-        private void resetAllCounts() {
+        void resetAllCounts() {
             m_created = DATE_FORMAT.format(Instant.now());
             m_globalNodeStats = new LinkedHashMap<String, NodeTimer.GlobalNodeStats.NodeStats>();
             m_nodesCreatedVia = new LinkedHashMap<>();
