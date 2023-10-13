@@ -104,6 +104,39 @@ public abstract class CloseableRowIterator extends RowIterator implements Closea
     }
 
     /**
+     * Wraps an iterator over rows that's also closeable into a {@link CloseableRowIterator}.
+     *
+     * @param <T> type of the closable iterator to wrap
+     *
+     * @param delegate iterator to wrap
+     * @return wrapped iterator
+     * @since 5.2
+     */
+    public static <T extends Iterator<? extends DataRow> & AutoCloseable>
+            CloseableRowIterator fromCloseable(final T delegate) {
+        return new CloseableRowIterator() {
+            @Override
+            public boolean hasNext() {
+                return delegate.hasNext();
+            }
+
+            @Override
+            public DataRow next() {
+                return delegate.next();
+            }
+
+            @Override
+            public void close() {
+                try {
+                    delegate.close();
+                } catch (Exception ex) {
+                    throw new RuntimeException(ex.getMessage(), ex); // NOSONAR
+                }
+            }
+        };
+    }
+
+    /**
      * Creates a new empty {@link CloseableRowIterator}.
      *
      * @return empty iterator

@@ -60,7 +60,13 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.LongSupplier;
+import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
+import java.util.regex.Pattern;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -76,7 +82,9 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.util.valueformat.NumberFormatter;
 
 /**
  * Class to sort a table. See <a href="package.html">package description</a> for details.
@@ -96,6 +104,12 @@ abstract class AbstractTableSorter { // NOSONAR has to be abstract so the class 
      */
     @SuppressWarnings("javadoc")
     public static final int DEF_MAX_OPENCONTAINER = 40;
+
+    /** Pattern matching a single numeric digit. */
+    private static final Pattern ANY_DIGIT = Pattern.compile("\\d");
+
+    /** Space character that's exactly as wide as a single digit. */
+    private static final String FIGURE_SPACE = "\u2007";
 
     private MemoryAlertSystem m_memService = MemoryAlertSystem.getInstance();
 
@@ -134,7 +148,7 @@ abstract class AbstractTableSorter { // NOSONAR has to be abstract so the class 
         m_dataTableSpec = inputTable.getDataTableSpec();
         // for BDT better use the appropriate derived class (blob handling)
         if (getClass().equals(AbstractTableSorter.class) && inputTable instanceof BufferedDataTable) {
-            LOGGER.coding("Do not use a " + AbstractTableSorter.class.getSimpleName() + " to sort" + " a "
+            LOGGER.coding("Do not use a " + AbstractTableSorter.class.getSimpleName() + " to sort a "
                 + BufferedDataTable.class.getSimpleName() + " but use a "
                 + BufferedDataTableSorter.class.getSimpleName());
         }
@@ -377,7 +391,7 @@ abstract class AbstractTableSorter { // NOSONAR has to be abstract so the class 
             }
             result = sortOnDisk(exec, dataHandler);
         }
-        exec.setProgress(1.0);
+        exec.setProgress(1.0, (String)null);
         return result;
     }
 
@@ -451,18 +465,19 @@ abstract class AbstractTableSorter { // NOSONAR has to be abstract so the class 
             exec.setProgress(-1);
         }
 
+        final var numberFormat = newProgressNumberFormat();
+
         final var ticker = new AtomicLong();
-        final var total = Long.toString(m_rowsInInputTable);
         if (m_rowsInInputTable <= 0) {
             exec.setMessage("Reading data");
         } else {
-            // current row number is padded to the length of the total number of rows to minimize jumping
-            final var template = "Reading data (row % " + total.length() + "d/" + total + ")";
-            exec.setMessage(() -> template.formatted(ticker.get()));
+            final var rowFracBuilder = progressFractionBuilder(numberFormat, ticker::get, m_rowsInInputTable);
+            exec.setMessage(() -> rowFracBuilder.apply(new StringBuilder("Reading data (row ")).append(")").toString());
         }
 
         final var initialPhaseExec = exec.createSubProgress(0.5);
-        try (final var mergePhase = createInitialChunks(initialPhaseExec, tableIOHandler, m_inputTable, ticker)) {
+        try (final var mergePhase =
+                createInitialChunks(initialPhaseExec, tableIOHandler, m_inputTable, ticker, numberFormat)) {
             long numRows = mergePhase.getNumRows();
             // no or one row only in input table, can exit immediately (can't rely on global rowCount, might not be set)
             if (numRows <= 1) {
@@ -470,14 +485,14 @@ abstract class AbstractTableSorter { // NOSONAR has to be abstract so the class 
             }
 
             exec.setMessage("Merging temporary tables");
-            long numLevels = Math.max(mergePhase.computeNumLevels(false), 1);
+            final var numLevels = Math.max(mergePhase.computeNumLevels(false), 1);
             final var mergePhaseExec = exec.createSubProgress(0.5 * numLevels / (numLevels + 1));
             try (final var mergeIterator = mergePhase.mergeIntoIterator(mergePhaseExec)) {
-
-                // current row number is padded to the length of the total number of rows to minimize jumping
-                final var template = "Writing output table (row % " + total.length() + "d/" + total + ")";
+                // update progress message
                 ticker.set(0L);
-                exec.setMessage(() -> template.formatted(ticker.get()));
+                final var rowFracBuilder = progressFractionBuilder(numberFormat, ticker::get, numRows);
+                exec.setMessage( //
+                    () -> rowFracBuilder.apply(new StringBuilder("Writing output table (row ")).append(")").toString());
 
                 // The final output container, leave it to the system to do the caching (bug 1809)
                 final var resultContainer = tableIOHandler.createDataContainer(m_dataTableSpec, false);
@@ -487,11 +502,11 @@ abstract class AbstractTableSorter { // NOSONAR has to be abstract so the class 
                     resultContainer.addRowToTable(mergeIterator.next());
                     outputPhaseExec.setProgress(1.0 * ticker.incrementAndGet() / numRows);
                 }
-                outputPhaseExec.setProgress(1.0);
+                outputPhaseExec.setProgress(1.0, (String)null);
 
                 exec.setMessage("Closing output table");
                 resultContainer.close();
-                exec.setProgress(1.0);
+                exec.setProgress(1.0, (String)null);
                 return resultContainer.getTable();
             }
         }
@@ -510,22 +525,25 @@ abstract class AbstractTableSorter { // NOSONAR has to be abstract so the class 
                 final var optSorted = memSort(exec);
                 return CloseableRowIterator.from(optSorted.map(List::iterator).orElse(m_inputTable.iterator()));
             } else {
+                final var numberFormat = newProgressNumberFormat();
                 if (m_sortInMemory) {
-                    LOGGER.info("Not sorting table in memory, because it has more than "
-                            + Integer.MAX_VALUE + " rows.");
+                    LOGGER.info("Not sorting table in memory, because it has " + numberFormat.format(m_rowsInInputTable)
+                        + " rows (Java arrays can fit only " + numberFormat.format(Integer.MAX_VALUE) + " entries).");
                 }
 
                 final var ticker = new AtomicLong();
-                final var total = Long.toString(m_rowsInInputTable);
                 if (m_rowsInInputTable <= 0) {
                     exec.setMessage("Reading data");
                 } else {
-                    final var template = "Reading data (row % " + total.length() + "d/" + total + ")";
-                    exec.setMessage(() -> template.formatted(ticker.get()));
+                    // instantiate the supplier only once
+                    final var rowFracBuilder = progressFractionBuilder(numberFormat, ticker::get, m_rowsInInputTable);
+                    exec.setMessage( //
+                        () -> rowFracBuilder.apply(new StringBuilder("Reading data (row ")).append(")").toString());
                 }
 
                 final var initialPhaseExec = exec.createSubProgress(0.5);
-                try (final var mergePhase = createInitialChunks(initialPhaseExec, dataHandler, m_inputTable, ticker)) {
+                try (final var mergePhase =
+                        createInitialChunks(initialPhaseExec, dataHandler, m_inputTable, ticker, numberFormat)) {
                     // no or one row only in input table, can exit immediately (can't rely on global rowCount)
                     if (mergePhase.getNumRows() <= 1) { // NOSONAR
                         return CloseableRowIterator.from(m_inputTable.iterator());
@@ -538,12 +556,13 @@ abstract class AbstractTableSorter { // NOSONAR has to be abstract so the class 
                 }
             }
         } finally {
-            exec.setProgress(1.0);
+            exec.setProgress(1.0, (String)null);
         }
     }
 
     private MergePhase createInitialChunks(final ExecutionMonitor initialPhaseExec, final TableIOHandler tableIOHandler,
-            final DataTable dataTable, final AtomicLong rowsRead) throws CanceledExecutionException {
+            final DataTable dataTable, final AtomicLong rowsRead, final NumberFormatter numFormat)
+            throws CanceledExecutionException {
         final var buffer = new ArrayList<DataRow>();
         long chunkStartRow = 0;
         var rowsInCurrentChunk = 0;
@@ -560,7 +579,7 @@ abstract class AbstractTableSorter { // NOSONAR has to be abstract so the class 
                 if (m_rowsInInputTable > 0) {
                     initialPhaseExec.setProgress(1.0 * rowNo / m_rowsInInputTable, "Filling in-memory buffer");
                 } else {
-                    initialPhaseExec.setMessage(() -> "Reading table, %d rows read".formatted(rowNo));
+                    initialPhaseExec.setMessage(() -> "Reading table, %s rows read".formatted(numFormat.format(rowNo)));
                 }
                 buffer.add(inputIter.next());
 
@@ -571,7 +590,7 @@ abstract class AbstractTableSorter { // NOSONAR has to be abstract so the class 
                     // sort buffer
                     Collections.sort(buffer, m_rowComparator);
                     // write buffer to disk
-                    writeChunk(initialPhaseExec, chunksWriter, buffer);
+                    writeChunk(initialPhaseExec, chunksWriter, buffer, numFormat);
                     LOGGER.debug("Wrote chunk [" + chunkStartRow + ":" + rowNo + "] - mem usage: " + getMemUsage());
                     chunkStartRow = rowNo + 1;
                     rowsInCurrentChunk = 0;
@@ -589,27 +608,57 @@ abstract class AbstractTableSorter { // NOSONAR has to be abstract so the class 
             chunksContainer.add(buffer);
         }
 
-        initialPhaseExec.setProgress(1.0);
+        initialPhaseExec.setProgress(1.0, (String)null);
 
         return createMergePhase(tableIOHandler, chunksContainer, rowsRead.get());
     }
 
     private static void writeChunk(final ExecutionMonitor exec, final ChunksWriter chunksWriter,
-            final ArrayList<DataRow> buffer) throws CanceledExecutionException {
+            final ArrayList<DataRow> buffer, final NumberFormatter numFormat) throws CanceledExecutionException {
         try (final var chunk = chunksWriter.openChunk(true)) {
             final int totalBufferSize = buffer.size();
             // current row number is padded to the length of the total number of rows to minimize jumping
-            final var numStr = Integer.toString(totalBufferSize);
-            final var template = "Writing temporary table (row % " + (numStr.length()) + "d/" + numStr + ")";
+            final var ticker = new AtomicInteger();
+            // instantiate the supplier only once
+            final var fraction = progressFractionBuilder(numFormat, ticker::longValue, totalBufferSize);
+            Supplier<String> messageSupplier =
+                    () -> fraction.apply(new StringBuilder("Writing temporary table (row ")).append(")").toString();
             for (var i = 0; i < totalBufferSize; i++) {
-                exec.setMessage(template.formatted(i));
+                // notify the progress monitor that something has changed
+                exec.setMessage(messageSupplier);
+
                 // must not use Iterator#remove as it causes array copies
                 final var next = buffer.set(i, null);
                 chunk.addRow(next);
                 exec.checkCanceled();
+                ticker.incrementAndGet();
             }
             buffer.clear();
         }
+    }
+
+    /**
+     * Creates a function that adds a nicely formatted, padded fraction of the form {@code " 173/2065"} to a given
+     * {@link StringBuilder} that reflects the current value of the given supplier {@code currentValue}. The padding
+     * with space characters tries to minimize jumping in the UI.
+     *
+     * @param numFormat number format for the numerator and denominator
+     * @param currentValue supplier for the current numerator
+     * @param total fixed denominator
+     * @return function that modified the given {@link StringBuilder} and returns it for convenience
+     */
+    private static UnaryOperator<StringBuilder> progressFractionBuilder(final NumberFormatter numFormat,
+            final LongSupplier currentValue, final long total) {
+        // only computed once
+        final var totalStr = numFormat.format(total);
+        final var paddingStr = ANY_DIGIT.matcher(totalStr).replaceAll(FIGURE_SPACE).replace(',', ' ');
+
+        return sb -> {
+            // computed every time a progress message is requested
+            final var currentStr = numFormat.format(currentValue.getAsLong());
+            final var padding = paddingStr.substring(0, Math.max(totalStr.length() - currentStr.length(), 0));
+            return sb.append(padding).append(currentStr).append("/").append(totalStr);
+        };
     }
 
     /**
@@ -632,6 +681,7 @@ abstract class AbstractTableSorter { // NOSONAR has to be abstract so the class 
      */
     static final class MergePhase implements AutoCloseable {
 
+        private final NumberFormatter m_numberFormat;
         private final DataTableSpec m_tableSpec;
         private final TableIOHandler m_dataHandler;
         private final Comparator<DataRow> m_rowComparator;
@@ -642,6 +692,7 @@ abstract class AbstractTableSorter { // NOSONAR has to be abstract so the class 
         MergePhase(final DataTableSpec tableSpec, final TableIOHandler dataHandler,
                 final Comparator<DataRow> rowComparator, final int maxOpenContainers,
                 final Deque<Iterable<DataRow>> chunks, final long numRows) {
+            m_numberFormat = newProgressNumberFormat();
             m_tableSpec = tableSpec;
             m_dataHandler = dataHandler;
             m_rowComparator = rowComparator;
@@ -689,22 +740,24 @@ abstract class AbstractTableSorter { // NOSONAR has to be abstract so the class 
                 throws CanceledExecutionException {
 
             final int numRounds = computeNumLevels(mergeCompletely);
-            for (var round = 0; !m_chunks.isEmpty(); round++) {
+            final var roundsTicker = new AtomicInteger();
+            final var levelFracBuilder = progressFractionBuilder(m_numberFormat, roundsTicker::longValue, numRounds);
+            while (!m_chunks.isEmpty()) {
                 final var numChunks = m_chunks.size();
                 if (numChunks == 1 || (!mergeCompletely && numChunks <= m_maxOpenContainers)) {
                     // can be merged in one scan, ownership of the chunks is transferred to the merge iterator
                     final var chunksToMerge = new ArrayList<>(m_chunks);
                     m_chunks.clear();
-                    mergePhaseExec.setProgress(1.0);
+                    mergePhaseExec.setProgress(1.0, (String)null);
                     return createMergeIterator(chunksToMerge);
                 }
 
                 // `numChunks` > 1, `numRounds` > 0.0
                 final var subProgress = mergePhaseExec.createSubProgress(numRounds == 0 ? 1.0 : (1.0 / numRounds));
-                performMergeRound(subProgress, round, numRounds);
-                subProgress.setProgress(1.0);
+                performMergeRound(subProgress, () -> levelFracBuilder.apply(new StringBuilder("Merging level ")));
+                subProgress.setProgress(1.0, (String)null);
             }
-            mergePhaseExec.setProgress(1.0);
+            mergePhaseExec.setProgress(1.0, (String)null);
             return CloseableRowIterator.empty();
         }
 
@@ -716,13 +769,19 @@ abstract class AbstractTableSorter { // NOSONAR has to be abstract so the class 
          * @param numRounds total number of merge rounds
          * @throws CanceledExecutionException if the algorithm has been canceled
          */
-        private void performMergeRound(final ExecutionMonitor exec, final int round, final int numRounds)
+        private void performMergeRound(final ExecutionMonitor exec, final Supplier<StringBuilder> prefixSupplier)
                 throws CanceledExecutionException {
-            final var messageStart = "Merging level %d/%d".formatted(round + 1, numRounds);
-            final var message = messageStart + " (row % " + Long.toString(m_numRows).length() + "d/%d)";
+            final var rowsTicker = new AtomicLong();
+
+            // creates messages of the form "<prefix> (row XX/YYY)<additionalInfo>" with optional additional info
+            final var additionalInfo = new AtomicReference<>("");
+            final var rowsBuilder = progressFractionBuilder(m_numberFormat, rowsTicker::get, m_numRows);
+            final Supplier<String> messageSupplier = () -> rowsBuilder.apply(prefixSupplier.get().append(" (row ")) //
+                    .append(")").append(additionalInfo.get()).toString();
+            exec.setMessage(messageSupplier);
+
             try (final var chunksWriter = new ChunksWriter(m_tableSpec, m_dataHandler)) {
                 final var chunksToMerge = new ArrayList<Iterable<DataRow>>(m_maxOpenContainers);
-                long numRowsProcessed = 0;
                 while (m_chunks.size() > 1) {
                     // remove the next `k` chunks from the last round
                     final var k = Math.min(m_maxOpenContainers, m_chunks.size());
@@ -736,12 +795,14 @@ abstract class AbstractTableSorter { // NOSONAR has to be abstract so the class 
                         while (mergeIterator.hasNext()) { // NOSONAR
                             exec.checkCanceled();
                             chunk.addRow(mergeIterator.next());
-                            numRowsProcessed++;
-                            final var currentRowNo = numRowsProcessed;
-                            final var progress = 1.0 * numRowsProcessed / m_numRows;
-                            exec.setProgress(progress, () -> message.formatted(currentRowNo, m_numRows));
+                            final var numRowsProcessed = rowsTicker.incrementAndGet();
+                            exec.setProgress(1.0 * numRowsProcessed / m_numRows);
                         }
+                        additionalInfo.set("; Closing temporary table...");
+                        // notify the progress monitor that the message has changed
+                        exec.setMessage(messageSupplier);
                     }
+                    additionalInfo.set("");
                     chunksToMerge.clear();
                 }
 
@@ -751,7 +812,6 @@ abstract class AbstractTableSorter { // NOSONAR has to be abstract so the class 
                 if (last != null) {
                     m_chunks.add(last);
                 }
-                exec.setProgress(1.0, messageStart + " - Finishing...");
             }
         }
 
@@ -824,6 +884,14 @@ abstract class AbstractTableSorter { // NOSONAR has to be abstract so the class 
         final var totalS = NumberFormat.getInstance().format(totalD);
         final var availS = NumberFormat.getInstance().format(availD);
         return "avail: " + availS + "MB, total: " + totalS + "MB, free: " + freeS + "MB";
+    }
+
+    private static NumberFormatter newProgressNumberFormat() {
+        try {
+            return NumberFormatter.builder().setGroupSeparator(",").build();
+        } catch (InvalidSettingsException ex) {
+            throw new IllegalStateException(ex);
+        }
     }
 
     /**
