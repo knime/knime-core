@@ -51,7 +51,7 @@ package org.knime.core.data;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -96,24 +96,24 @@ public final class DataTypeRegistry {
 
     static final String EXT_POINT_ID = "org.knime.core.DataType";
 
-    private final Map<String, IConfigurationElement> m_factories = new HashMap<>();
 
-    private final Map<Class<? extends DataCell>, DataCellSerializer<? extends DataCell>> m_serializers =
-        new ConcurrentHashMap<>();
+    private final Map<String, IConfigurationElement> m_factories;
 
-    private final Map<String, Class<? extends DataCell>> m_cellClassMap = new ConcurrentHashMap<>();
+    private final Map<Class<? extends DataCell>, DataCellSerializer<? extends DataCell>> m_serializers;
 
-    private final Map<String, Class<? extends DataValue>> m_valueClassMap = new ConcurrentHashMap<>();
+    private final Map<String, Class<? extends DataCell>> m_cellClassMap;
+
+    private final Map<String, Class<? extends DataValue>> m_valueClassMap;
 
     private Collection<DataType> m_allDataTypes;
 
-    private final Map<String, Class<? extends ValueFactory<?, ?>>> m_valueFactoryClassMap = new ConcurrentHashMap<>();
+    private final Map<String, Class<? extends ValueFactory<?, ?>>> m_valueFactoryClassMap;
 
-    private boolean m_cellToValueFactoryInitialized = false;
+    private boolean m_cellToValueFactoryInitialized;
 
-    private final Map<String, String> m_cellToValueFactoryMap = new ConcurrentHashMap<>();
+    private final Map<String, String> m_cellToValueFactoryMap;
 
-    private final Map<String, String> m_valueFactoryToCellMap = new ConcurrentHashMap<>();
+    private final Map<String, String> m_valueFactoryToCellMap;
 
     private static final DataTypeRegistry INSTANCE = new DataTypeRegistry();
 
@@ -127,6 +127,13 @@ public final class DataTypeRegistry {
     }
 
     private DataTypeRegistry() {
+        m_factories = new LinkedHashMap<>();
+        m_serializers = new ConcurrentHashMap<>();
+        m_cellClassMap = new ConcurrentHashMap<>();
+        m_valueClassMap = new ConcurrentHashMap<>();
+        m_valueFactoryClassMap = new ConcurrentHashMap<>();
+        m_cellToValueFactoryMap = new ConcurrentHashMap<>();
+        m_valueFactoryToCellMap = new ConcurrentHashMap<>();
         getExtensionStream()//
             .filter(e -> (e.getAttribute(FACTORY_CLASS) != null))//
             .forEach(e -> m_factories.put(e.getAttribute(CELL_CLASS), e));
@@ -485,9 +492,7 @@ public final class DataTypeRegistry {
     /** Fills {@link #m_cellToValueFactoryMap} if not already filled. Adds all values and does not activate plugins. */
     private synchronized void initCellToValueFactoryMap() {
         if (!m_cellToValueFactoryInitialized) {
-            getExtensionStream() //
-                .forEach(this::collectValueFactories);
-
+            getExtensionStream().forEach(this::collectValueFactories);
             m_cellToValueFactoryInitialized = true;
         }
     }
@@ -514,34 +519,31 @@ public final class DataTypeRegistry {
         var valueFactoryChildren = dataTypeExtension.getChildren(VALUE_FACTORY_ELEMENT);
         var cellClassesWithDeprecatedValueFactories = new ArrayList<String>();
 
-        if (valueFactoryChildren.length > 0) {
-            for (IConfigurationElement valueFactoryElement : valueFactoryChildren) {
-                var valueFactorySpecificCellClass = cellClass;
-                if (valueFactoryElement.getAttribute(CELL_CLASS) != null) {
-                    valueFactorySpecificCellClass = valueFactoryElement.getAttribute(CELL_CLASS);
-                }
-                final var valueFactoryClass = valueFactoryElement.getAttribute(VALUE_FACTORY_CLASS);
-                if (m_valueFactoryToCellMap.containsKey(valueFactoryClass)) {
-                    LOGGER.codingWithFormat("Attempting to register ValueFactory " + valueFactoryClass
-                        + " for a second cell class. Was registered for "
-                        + m_valueFactoryToCellMap.get(valueFactoryClass) + " already, ignoring registration for "
-                        + valueFactorySpecificCellClass + ".");
-                } else {
-                    m_valueFactoryToCellMap.put(valueFactoryClass, valueFactorySpecificCellClass);
-                }
+        for (IConfigurationElement valueFactoryElement : valueFactoryChildren) {
+            var valueFactorySpecificCellClass = cellClass;
+            if (valueFactoryElement.getAttribute(CELL_CLASS) != null) {
+                valueFactorySpecificCellClass = valueFactoryElement.getAttribute(CELL_CLASS);
+            }
+            final var valueFactoryClass = valueFactoryElement.getAttribute(VALUE_FACTORY_CLASS);
+            if (m_valueFactoryToCellMap.containsKey(valueFactoryClass)) {
+                LOGGER.codingWithFormat("Attempting to register ValueFactory " + valueFactoryClass
+                    + " for a second cell class. Was registered for "
+                    + m_valueFactoryToCellMap.get(valueFactoryClass) + " already, ignoring registration for "
+                    + valueFactorySpecificCellClass + ".");
+            } else {
+                m_valueFactoryToCellMap.put(valueFactoryClass, valueFactorySpecificCellClass);
+            }
 
-                if (isNotDeprecated(valueFactoryElement)) {
-                    if (m_cellToValueFactoryMap.containsKey(valueFactorySpecificCellClass)) {
-                        LOGGER.codingWithFormat(
-                            "More than one ValueFactory for the DataType with cell class '%s' was not marked as deprecated. "
-                                + "Only the first one is used as ValueFactory for this DataType.",
-                            valueFactorySpecificCellClass);
-                    } else {
-                        m_cellToValueFactoryMap.put(valueFactorySpecificCellClass, valueFactoryClass);
-                    }
+            if (isNotDeprecated(valueFactoryElement)) {
+                if (m_cellToValueFactoryMap.containsKey(valueFactorySpecificCellClass)) {
+                    LOGGER.codingWithFormat("More than one ValueFactory for the DataType with cell class '%s' was not "
+                        + "marked as deprecated. Only the first one is used as ValueFactory for this DataType.",
+                                valueFactorySpecificCellClass);
                 } else {
-                    cellClassesWithDeprecatedValueFactories.add(valueFactorySpecificCellClass);
+                    m_cellToValueFactoryMap.put(valueFactorySpecificCellClass, valueFactoryClass);
                 }
+            } else {
+                cellClassesWithDeprecatedValueFactories.add(valueFactorySpecificCellClass);
             }
         }
 
