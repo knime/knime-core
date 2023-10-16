@@ -182,7 +182,6 @@ public final class NodeTimer {
         }
 
         private static final String N_A = "n/a";
-        private static final String NODE_NAME_SEP = "#";
 
         private static final NodeLogger LOGGER = NodeLogger.getLogger(GlobalNodeStats.class);
 
@@ -499,7 +498,7 @@ public final class NodeTimer {
                         JsonObjectBuilder job3 = JsonUtil.getProvider().createObjectBuilder();
                         NodeStats ns = m_globalNodeStats.get(nodeKey);
                         if (ns != null) {
-                            job3.add("id", nodeKey.id());
+                            job3.add("id", nodeKey.id()); // NodeFactory.getFactoryId
                             job3.add("nrexecs", ns.executionCount);
                             job3.add("nrfails", ns.failureCount);
                             job3.add("exectime", ns.executionTime);
@@ -999,9 +998,7 @@ public final class NodeTimer {
 
         static NodeKey get(final NodeContainer nc) {
             if (nc instanceof NativeNodeContainer nnc) {
-                var id =
-                    nnc.getNode().getFactory().getClass().getName() + GlobalNodeStats.NODE_NAME_SEP + nnc.getName();
-                return new NodeKey(nnc.getClass(), id);
+                return new NodeKey(nnc.getClass(), nnc.getNode().getFactory().getFactoryId());
             } else {
                 return new NodeKey(nc.getClass());
             }
