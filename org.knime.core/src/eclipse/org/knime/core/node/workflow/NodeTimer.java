@@ -193,7 +193,7 @@ public final class NodeTimer {
             int creationCount = 0;
             String likelySuccessor = N_A;
         }
-        private LinkedHashMap<String, NodeStats> m_globalNodeStats = new LinkedHashMap<String, NodeStats>();
+        private LinkedHashMap<NodeKey, NodeStats> m_globalNodeStats = new LinkedHashMap<>();
 
         private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
                 .withZone(ZoneId.of("UTC"));
@@ -234,16 +234,16 @@ public final class NodeTimer {
             readFromFile();
         }
 
-        void addExecutionTime(final String cname, final boolean success, final long exectime) {
+        private void addExecutionTime(final NodeKey nodeKey, final boolean success, final long exectime) {
             if (DISABLE_GLOBAL_TIMER) {
                 return;
             }
             // synchronized to avoid conflicts and parallel file writes
             synchronized (this) {
-                NodeStats ns = m_globalNodeStats.get(cname);
+                NodeStats ns = m_globalNodeStats.get(nodeKey);
                 if (ns == null) {
                     ns = new NodeStats();
-                    m_globalNodeStats.put(cname, ns);
+                    m_globalNodeStats.put(nodeKey, ns);
                 }
                 ns.executionTime += exectime;
                 if (success) {
@@ -261,10 +261,10 @@ public final class NodeTimer {
             }
             // synchronized to avoid conflicts and parallel file writes
             synchronized (this) {
-                NodeStats ns = m_globalNodeStats.get(NodeTimer.getCanonicalName(nc));
+                NodeStats ns = m_globalNodeStats.get(NodeKey.get(nc));
                 if (ns == null) {
                     ns = new NodeStats();
-                    m_globalNodeStats.put(NodeTimer.getCanonicalName(nc), ns);
+                    m_globalNodeStats.put(NodeKey.get(nc), ns);
                 }
                 ns.creationCount++;
                 processStatChanges();
@@ -277,15 +277,15 @@ public final class NodeTimer {
             }
             // synchronized to avoid conflicts and parallel file writes
             synchronized (this) {
-                NodeStats ns = m_globalNodeStats.get(NodeTimer.getCanonicalName(source));
+                NodeStats ns = m_globalNodeStats.get(NodeKey.get(source));
                 if (ns == null) {
                     ns = new NodeStats();
-                    m_globalNodeStats.put(NodeTimer.getCanonicalName(source), ns);
+                    m_globalNodeStats.put(NodeKey.get(source), ns);
                 }
                 // remember the newly connected successor with a 50:50 chance
                 // (statistics over many thousands of users will provide real info)
                 if ((ns.likelySuccessor.equals(N_A)) | (Math.random() >= .5)) {
-                    ns.likelySuccessor = NodeTimer.getCanonicalName(dest);
+                    ns.likelySuccessor = NodeKey.get(dest).id();
                 }
                 processStatChanges();
             }
@@ -432,12 +432,12 @@ public final class NodeTimer {
             //  (if so: copy data first...)
             BufferedDataContainer result = exec.createDataContainer(getGlobalStatsSpecs());
             int rowcount = 0;
-            for (String cname : m_globalNodeStats.keySet()) {
-                NodeStats ns = m_globalNodeStats.get(cname);
+            for (NodeKey nodeKey : m_globalNodeStats.keySet()) {
+                NodeStats ns = m_globalNodeStats.get(nodeKey);
                 if (ns != null) {
                     DataRow row = new DefaultRow(
                         new RowKey("Row " + rowcount++),
-                        new StringCell(cname),
+                        new StringCell(nodeKey.id()),
                         new LongCell(ns.executionTime),
                         new IntCell(ns.executionCount),
                         new IntCell(ns.creationCount),
@@ -492,15 +492,14 @@ public final class NodeTimer {
             JsonObjectBuilder job2 = JsonUtil.getProvider().createObjectBuilder();
             synchronized (this) {
                     JsonArrayBuilder jab = JsonUtil.getProvider().createArrayBuilder();
-                    for (String cname : m_globalNodeStats.keySet()) {
-                        if (!cname.matches(".+" + NODE_NAME_SEP + ".+")) {
-                            // don't consider subnodes, metanodes or other weird things
+                    for (NodeKey nodeKey : m_globalNodeStats.keySet()) {
+                        if (!nodeKey.type().equals(NativeNodeContainer.class)) {
                             continue;
                         }
                         JsonObjectBuilder job3 = JsonUtil.getProvider().createObjectBuilder();
-                        NodeStats ns = m_globalNodeStats.get(cname);
+                        NodeStats ns = m_globalNodeStats.get(nodeKey);
                         if (ns != null) {
-                            job3.add("id", cname);
+                            job3.add("id", nodeKey.id());
                             job3.add("nrexecs", ns.executionCount);
                             job3.add("nrfails", ns.failureCount);
                             job3.add("exectime", ns.executionTime);
@@ -513,7 +512,7 @@ public final class NodeTimer {
 
                     // metanodes
                     JsonObjectBuilder jobMeta = JsonUtil.getProvider().createObjectBuilder();
-                    NodeStats ns = m_globalNodeStats.get("NodeContainer");
+                    NodeStats ns = m_globalNodeStats.get(NodeKey.get(WorkflowManager.class));
                     if (ns != null) {
                         jobMeta.add("nrexecs", ns.executionCount);
                         jobMeta.add("nrfails", ns.failureCount);
@@ -524,7 +523,7 @@ public final class NodeTimer {
 
                     // sub nodes
                     JsonObjectBuilder jobSub = JsonUtil.getProvider().createObjectBuilder();
-                    ns = m_globalNodeStats.get(SubNodeContainer.class.getName());
+                    ns = m_globalNodeStats.get(NodeKey.get(SubNodeContainer.class));
                     if (ns != null) {
                         jobSub.add("nrexecs", ns.executionCount);
                         jobSub.add("nrfails", ns.failureCount);
@@ -776,7 +775,7 @@ public final class NodeTimer {
                                 ns.executionTime = time;
                                 ns.creationCount = creationCount;
                                 ns.likelySuccessor = successor;
-                                m_globalNodeStats.put(nodeID, ns);
+                                m_globalNodeStats.put(new NodeKey(NativeNodeContainer.class, nodeID), ns);
                             }
 
                             // metanodes
@@ -792,7 +791,7 @@ public final class NodeTimer {
                                 ns.failureCount = failCount;
                                 ns.executionTime = time;
                                 ns.creationCount = creationCount;
-                                m_globalNodeStats.put("NodeContainer", ns);
+                                m_globalNodeStats.put(NodeKey.get(NodeContainer.class), ns);
                             }
 
                             JsonObject jubSub = jo2.getJsonObject("wrappedNodes");
@@ -807,7 +806,7 @@ public final class NodeTimer {
                                 ns.failureCount = failCount;
                                 ns.executionTime = time;
                                 ns.creationCount = creationCount;
-                                m_globalNodeStats.put(SubNodeContainer.class.getName(), ns);
+                                m_globalNodeStats.put(new NodeKey(SubNodeContainer.class), ns);
                             }
 
                             //created information
@@ -874,7 +873,7 @@ public final class NodeTimer {
         }
 
         private void resetSessionCounts() {
-            m_globalNodeStats = new LinkedHashMap<String, NodeTimer.GlobalNodeStats.NodeStats>();
+            m_globalNodeStats = new LinkedHashMap<>();
             m_nodesCreatedVia = new LinkedHashMap<>();
             m_workflowsOpened = 0;
             m_remoteWorkflowsOpened = 0;
@@ -889,7 +888,7 @@ public final class NodeTimer {
 
         void resetAllCounts() {
             m_created = DATE_FORMAT.format(Instant.now());
-            m_globalNodeStats = new LinkedHashMap<String, NodeTimer.GlobalNodeStats.NodeStats>();
+            m_globalNodeStats = new LinkedHashMap<>();
             m_nodesCreatedVia = new LinkedHashMap<>();
             m_workflowsOpened = 0;
             m_remoteWorkflowsOpened = 0;
@@ -915,20 +914,6 @@ public final class NodeTimer {
 
 
     public static final GlobalNodeStats GLOBAL_TIMER = new GlobalNodeStats();
-
-    private static String getCanonicalName(final NodeContainer nc) {
-        String cname = "NodeContainer";
-        if (nc instanceof NativeNodeContainer) {
-            NativeNodeContainer node = (NativeNodeContainer)nc;
-            //changed in 3.0.1: name consists of factory class name + node name
-            String className = node.getNode().getFactory().getClass().getName();
-            String nodeName = node.getName();
-            cname = className + GlobalNodeStats.NODE_NAME_SEP + nodeName;
-        } else if (nc instanceof SubNodeContainer) {
-            cname = nc.getClass().getName();
-        }
-        return cname;
-    }
 
     NodeTimer(final NodeContainer parent) {
         m_parent = parent;
@@ -998,11 +983,34 @@ public final class NodeTimer {
             m_executionDurationOverall += m_lastExecutionDuration;
             m_numberOfExecutionsOverall++;
             m_numberOfExecutionsSinceReset++;
-            String cname = getCanonicalName(m_parent);
-            GLOBAL_TIMER.addExecutionTime(cname, success, m_lastExecutionDuration);
+            var nodeKey = NodeKey.get(m_parent);
+            GLOBAL_TIMER.addExecutionTime(nodeKey, success, m_lastExecutionDuration);
         }
         m_lastStartTime = m_startTime;
         m_startTime = -1;
+    }
+
+    private record NodeKey(Class<? extends NodeContainer> type, String id) {
+
+        NodeKey(final Class<? extends NodeContainer> type) {
+            this(type, SubNodeContainer.class.isAssignableFrom(type) ? type.getName() : "NodeContainer");
+            assert !NativeNodeContainer.class.equals(type);
+        }
+
+        static NodeKey get(final NodeContainer nc) {
+            if (nc instanceof NativeNodeContainer nnc) {
+                var id =
+                    nnc.getNode().getFactory().getClass().getName() + GlobalNodeStats.NODE_NAME_SEP + nnc.getName();
+                return new NodeKey(nnc.getClass(), id);
+            } else {
+                return new NodeKey(nc.getClass());
+            }
+        }
+
+        static NodeKey get(final Class<? extends NodeContainer> type) {
+            return new NodeKey(type);
+        }
+
     }
 
 }
