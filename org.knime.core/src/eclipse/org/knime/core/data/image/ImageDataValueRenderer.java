@@ -104,4 +104,30 @@ public class ImageDataValueRenderer extends AbstractPainterDataValueRenderer {
         return new Dimension(contentPrefSize.width + 1, contentPrefSize.height + 1);
     }
 
+    /**
+     * {@inheritDoc}
+     * @since 5.2
+     */
+    @Override
+    public Dimension getPreferredSize(final Dimension viewPortDimension) {
+        final var viewPortWidth = viewPortDimension.width;
+        final var viewPortHeight = viewPortDimension.height;
+
+        final var preferredDimensions = getPreferredSize();
+        final var preferredWidth = preferredDimensions.width;
+        final var preferredHeight = preferredDimensions.height;
+
+        if (viewPortWidth >= preferredWidth && viewPortHeight >= preferredHeight) {
+            return preferredDimensions;
+        }
+
+        final var scalingRatio =
+            Math.min(((float)viewPortWidth) / preferredWidth, ((float)viewPortHeight) / preferredHeight);
+
+        final var width = Math.round(preferredWidth * scalingRatio);
+        final var height = Math.round(preferredHeight * scalingRatio);
+
+        return new Dimension(width, height);
+    }
+
 }

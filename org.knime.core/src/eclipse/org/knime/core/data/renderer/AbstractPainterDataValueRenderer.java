@@ -49,6 +49,7 @@ package org.knime.core.data.renderer;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.Rectangle;
 
 import javax.swing.JComponent;
@@ -381,6 +382,18 @@ public abstract class AbstractPainterDataValueRenderer
      */
     @Override
     public void repaint() {
+    }
+
+    /**
+     * This method is used to determine the size in which the image has to be requested when rendered into a view port
+     * with fixed dimensions. Per default, the preferred size is returned independent from the view port dimensions.
+     *
+     * @param viewPortDimension the dimensions of the view port the image is going to be rendered to.
+     * @return the dimensions used when rendering the image
+     * @since 5.2
+     */
+    public Dimension getPreferredSize(final Dimension viewPortDimension) {
+        return getPreferredSize();
     }
 
 }
