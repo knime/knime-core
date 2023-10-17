@@ -54,6 +54,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
@@ -115,6 +116,14 @@ public final class DataTypeRegistry {
 
     private final Map<String, String> m_valueFactoryToCellMap;
 
+    /**
+     * Map of, e.g.
+     * <pre>SmilesCell.class -> SmilesAdapterCell.class, SmilesBlobCell.class</pre>
+     *
+     * See {@link #getImplementationSubDataTypes(DataType)} for details.
+     */
+    private final Map<String, List<String>> m_cellClassNameToImplementationOfCellClassName;
+
     private static final DataTypeRegistry INSTANCE = new DataTypeRegistry();
 
     /**
@@ -134,6 +143,7 @@ public final class DataTypeRegistry {
         m_valueFactoryClassMap = new ConcurrentHashMap<>();
         m_cellToValueFactoryMap = new ConcurrentHashMap<>();
         m_valueFactoryToCellMap = new ConcurrentHashMap<>();
+        m_cellClassNameToImplementationOfCellClassName = new ConcurrentHashMap<>();
         getExtensionStream()//
             .filter(e -> (e.getAttribute(FACTORY_CLASS) != null))//
             .forEach(e -> m_factories.put(e.getAttribute(CELL_CLASS), e));
@@ -206,19 +216,24 @@ public final class DataTypeRegistry {
         // perform lazy initialization
         if (m_allDataTypes != null) {
             return m_allDataTypes;
-
         }
 
-        List<DataType> types = new ArrayList<>();
+        final var types = new ArrayList<DataType>();
 
         for (IConfigurationElement configElement : m_factories.values()) {
+            final var cellClass = configElement.getAttribute(CELL_CLASS);
             try {
-                DataCellFactory fac = (DataCellFactory)configElement.createExecutableExtension(FACTORY_CLASS);
-                types.add(fac.getDataType());
+                final var dataCellFactory = (DataCellFactory)configElement.createExecutableExtension(FACTORY_CLASS);
+                types.add(dataCellFactory.getDataType());
+                final var implementationCellClassList = Stream.of(configElement.getChildren("serializer")) //
+                    .map(cfe -> cfe.getAttribute(CELL_CLASS)) //
+                    .filter(Objects::nonNull) //
+                    .toList();
+                m_cellClassNameToImplementationOfCellClassName.put(cellClass, implementationCellClassList);
             } catch (CoreException e) {
                 NodeLogger.getLogger(getClass())
                     .error("Could not create data cell factory '" + configElement.getAttribute(FACTORY_CLASS)
-                        + "' for '" + configElement.getAttribute(CELL_CLASS) + "' from plug-in '"
+                        + "' for '" + cellClass + "' from plug-in '"
                         + configElement.getNamespaceIdentifier() + "': " + e.getMessage(), e);
             }
         }
@@ -390,6 +405,33 @@ public final class DataTypeRegistry {
         if (!m_cellToValueFactoryInitialized) {
             initCellToValueFactoryMap();
         }
+    }
+
+    /**
+     * A {@link DataType} represents one specific {@link DataCell} class (if at all) but there might be
+     * other {@link DataCell} classes that also represent the same type and this map brings them together
+     * (by class name), e.g.
+     * <pre>
+     *    SmilesCell.class -> SmilesAdapterCell.class, SmilesBlobCell.class
+     * </pre>
+     *
+     * <p>This information is only available for some of the types and derived from registered ValueFactories
+     * (added in 4.3). It was added as part of AP-12956, whereby the specific requirement here is to have
+     * the information for cell types supporting Adapters.
+     * @param type
+     * @return A (possible empty) stream of class names of DataCell implementations representing the "same" type.
+     *
+     * @since 5.2
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    // added as part of AP-12956 (type mapping for chem types), tested in database extension (which use type mapping)
+    public Stream<String> getImplementationSubDataTypes(final DataType type) {
+        final Class<? extends DataCell> cellClass = type.getCellClass();
+        if (cellClass == null) {
+            return Stream.empty();
+        }
+        availableDataTypes();
+        return m_cellClassNameToImplementationOfCellClassName.getOrDefault(cellClass.getName(), List.of()).stream();
     }
 
     /**
