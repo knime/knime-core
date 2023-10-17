@@ -66,6 +66,7 @@ import org.knime.core.node.NodeLogger;
 import org.w3c.dom.DOMConfiguration;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 
 /**
  * This class encapsulates a {@link Document}. It is the common content of a
@@ -220,7 +221,12 @@ public class XMLCellContent implements XMLValue<Document> {
                 doc = parse(m_xmlString);
                 m_content = new SoftReference<Document>(doc);
             } catch (Exception ex) {
-                LOGGER.error("Error while parsing XML in XML Cell", ex);
+                var detail = "";
+                if (ex.getCause() instanceof SAXParseException parseException) {
+                    detail = ": " + parseException.getMessage();
+                }
+
+                LOGGER.error("Error while parsing XML in XML Cell" + detail, ex);
             }
         }
         return doc;
