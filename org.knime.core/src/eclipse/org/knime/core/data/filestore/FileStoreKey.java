@@ -58,39 +58,53 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
 
-/** Wraps name and enumerated number to a file store object.
+/**
+ * Wraps name and enumerated number to a file store object.
+ *
  * @noreference This class is not intended to be referenced by clients.
  *
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  */
 public final class FileStoreKey implements Comparable<FileStoreKey> {
 
+    /** Separator used in serialization. Introduced as "_" in 5.1.0 but switched to ":" in 5.1.3 **/
+    private static final String SERIALIZATION_SEPARATOR = ":";
+
+    /**
+     * String-serialization version introduced in 5.1.3 and set to v1. 5.1.0 started with v0 but had no version field
+     **/
+    static final String STRING_SERIALIZATION_VERSION = "v1";
+
     /** Version number, introduced in 4.0.1 for 'large' loop counts. */
     private static final int VERSION_NUM = -20190808;
 
     private final UUID m_storeUUID;
-    /** Prior KNIME 4.0.1 this was a byte[]. The save/load methods are changed so that it reads/writes backward
+
+    /**
+     * Prior KNIME 4.0.1 this was a byte[]. The save/load methods are changed so that it reads/writes backward
      * compatibly unless there are a large number of parallel loops (see AP-6372).
      */
     private final int[] m_nestedLoopPath;
+
     private final int m_iterationIndex;
+
     private final int m_index;
+
     private final String m_name;
+
     /**
      * @param index
-     * @param name */
-    public FileStoreKey(final UUID storeUUID, final int index,
-            final int[] nestedLoopPath,
-            final int iterationIndex,
-            final String name) {
+     * @param name
+     */
+    public FileStoreKey(final UUID storeUUID, final int index, final int[] nestedLoopPath, final int iterationIndex,
+        final String name) {
         if (name == null || storeUUID == null) {
             throw new NullPointerException("Argument must not be null.");
         }
         // iteration < 0 --> no loops (neither nested or directly)
         if ((iterationIndex < 0) != (nestedLoopPath == null)) {
-            throw new IllegalArgumentException(String.format(
-                    "Invalid argument %d  -  %s",
-                    iterationIndex, Arrays.toString(nestedLoopPath)));
+            throw new IllegalArgumentException(
+                String.format("Invalid argument %d  -  %s", iterationIndex, Arrays.toString(nestedLoopPath)));
         }
         m_storeUUID = storeUUID;
         m_index = index;
@@ -129,6 +143,7 @@ public final class FileStoreKey implements Comparable<FileStoreKey> {
         b.append("_").append(m_name);
         return b.toString();
     }
+
     /** @return the index */
     public int getIndex() {
         return m_index;
@@ -188,7 +203,7 @@ public final class FileStoreKey implements Comparable<FileStoreKey> {
         output.addInt("iterationIndex", m_iterationIndex);
         if (m_iterationIndex >= 0) {
             int maximum = IntStream.of(m_nestedLoopPath).max().orElse(0);
-            if (maximum > Byte.MAX_VALUE) {          // see m_nestedLoopPath javadoc for details
+            if (maximum > Byte.MAX_VALUE) { // see m_nestedLoopPath javadoc for details
                 output.addInt("version", VERSION_NUM); // version number, introduced in 4.0.1 for 'large' loop counts
                 output.addIntArray("nestedLoopPathInt", m_nestedLoopPath);
             } else {
@@ -228,20 +243,23 @@ public final class FileStoreKey implements Comparable<FileStoreKey> {
      */
     public String saveToString() {
         var builder = new StringBuilder();
+        builder.append(STRING_SERIALIZATION_VERSION);
+        builder.append(SERIALIZATION_SEPARATOR);
+
         builder.append(m_storeUUID.toString());
-        builder.append("_");
+        builder.append(SERIALIZATION_SEPARATOR);
 
         builder.append(m_index);
-        builder.append("_");
+        builder.append(SERIALIZATION_SEPARATOR);
 
         builder.append(m_name);
-        builder.append("_");
+        builder.append(SERIALIZATION_SEPARATOR);
 
         builder.append(m_iterationIndex);
 
         if (m_iterationIndex >= 0) {
             for (int i : m_nestedLoopPath) {
-                builder.append("_");
+                builder.append(SERIALIZATION_SEPARATOR);
                 builder.append(i);
             }
         }
@@ -258,7 +276,22 @@ public final class FileStoreKey implements Comparable<FileStoreKey> {
      * @throws NumberFormatException if parts of the string were expected to contain an integer but could not be parsed
      */
     public static FileStoreKey load(final String stringRepresentation) {
-        String[] parts = stringRepresentation.split("_");
+        String[] parts = stringRepresentation.split(SERIALIZATION_SEPARATOR);
+        if (parts.length == 1) {
+            // Version 5.1.0 used "_" as separator, but as that can be part of the name (e.g. after
+            // WriteFileStoreHandler.copyFileStore) we switched to ":" in 5.1.3. To be able to read the previous
+            // FileStoreKey representation, we fall back to splitting the string by "_".
+            parts = stringRepresentation.split("_");
+        } else {
+            if (parts.length > 1) {
+                if (!parts[0].equals(STRING_SERIALIZATION_VERSION)) {
+                    throw new IllegalArgumentException(
+                        "Found FileStoreKey with unknown serialization version: " + parts[0]);
+                }
+                // drop version
+                parts = Arrays.copyOfRange(parts, 1, parts.length);
+            }
+        }
 
         if (parts.length < 4) {
             throw new IllegalArgumentException(
