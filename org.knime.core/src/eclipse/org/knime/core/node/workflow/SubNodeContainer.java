@@ -3028,6 +3028,7 @@ public final class SubNodeContainer extends SingleNodeContainer
                         //(for non-project templates it's done during copy above)
                         copy.getWorkflowManager().resetAndConfigureAll();
 
+                        getWorkflowManager().unsetDirty(); // To emit a `WorkflowEvent.Type.WORKFLOW_CLEAN` event.
                         unsetDirty();
                     }
                     copy.setName(null);
