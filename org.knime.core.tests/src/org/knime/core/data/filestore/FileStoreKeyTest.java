@@ -73,12 +73,24 @@ public class FileStoreKeyTest {
         testRoundtrip(new FileStoreKey(uuid, 314, new int[]{1, 4, 19}, 42, "test"));
         testRoundtrip(new FileStoreKey(uuid, 314, new int[]{1, 4, 19}, 42, UUID.randomUUID().toString()));
         testRoundtrip(new FileStoreKey(uuid, 4, null, -1, "test"));
+        testRoundtrip(new FileStoreKey(uuid, 4, null, -1, "0_test")); // copyFileStore prepends a number with underscore
+    }
+
+    @Test
+    public void testLoadOldFSKey() {
+        var key =
+            FileStoreKey.load("891613d3-c03d-41e8-b9d4-0476b3b8b1f8_0_bd1ee3d4-3ea6-4eb8-8f3b-5c2caa4cbd06_0");
+        assertEquals("Expected index to be 0", 0, key.getIndex());
+        assertEquals("Expected specific name", "bd1ee3d4-3ea6-4eb8-8f3b-5c2caa4cbd06", key.getName());
+        assertEquals("Expected specific store UUID", "891613d3-c03d-41e8-b9d4-0476b3b8b1f8",
+            key.getStoreUUID().toString());
+        assertArrayEquals("Expected empty nested loop path", new int[0], key.getNestedLoopPath());
     }
 
     @Test
     public void testLoadRealFSKey() {
         var key =
-            FileStoreKey.load("891613d3-c03d-41e8-b9d4-0476b3b8b1f8_0_bd1ee3d4-3ea6-4eb8-8f3b-5c2caa4cbd06_0");
+            FileStoreKey.load("v1:891613d3-c03d-41e8-b9d4-0476b3b8b1f8:0:bd1ee3d4-3ea6-4eb8-8f3b-5c2caa4cbd06:0");
         assertEquals("Expected index to be 0", 0, key.getIndex());
         assertEquals("Expected specific name", "bd1ee3d4-3ea6-4eb8-8f3b-5c2caa4cbd06", key.getName());
         assertEquals("Expected specific store UUID", "891613d3-c03d-41e8-b9d4-0476b3b8b1f8",
@@ -99,5 +111,12 @@ public class FileStoreKeyTest {
     private static void testRoundtrip(final FileStoreKey fsKey) {
         assertEquals("ToString -> FromString failed for FileStoreKey: " + fsKey.toString(), fsKey,
             FileStoreKey.load(fsKey.saveToString()));
+    }
+
+    @Test
+    public void testWritesCurrentVersion() {
+        var fsKey = new FileStoreKey(UUID.randomUUID(), 0, null, -1, "test");
+        var stringRepresentation = fsKey.saveToString();
+        assertEquals(FileStoreKey.STRING_SERIALIZATION_VERSION, stringRepresentation.split(":")[0]);
     }
 }
