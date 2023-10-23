@@ -7540,8 +7540,8 @@ public final class WorkflowManager extends NodeContainer
     public boolean checkUpdateMetaNodeLink(final NodeID id, final WorkflowLoadHelper loadHelper) throws IOException {
         final Map<URI, TemplateUpdateCheckResult> visitedTemplateMap = new HashMap<>();
         try {
-            final LoadResult loadResult = new LoadResult("ignored");
-            boolean result = checkUpdateMetaNodeLinkWithCache(id, loadHelper, loadResult, visitedTemplateMap, true);
+            final var loadResult = new LoadResult("ignored");
+            var result = checkUpdateMetaNodeLinkWithCache(id, loadHelper, loadResult, visitedTemplateMap, true); // NOSONAR
             if (loadResult.hasErrors()) {
                 throw new IOException(
                     "Errors checking updates:\n" + loadResult.getFilteredError("  ", LoadResultEntryType.Error));
@@ -7662,7 +7662,7 @@ public final class WorkflowManager extends NodeContainer
      * @throws IllegalArgumentException If the node does not exist or is not a metanode.
      */
     public NodeContainerTemplateLinkUpdateResult updateMetaNodeLink(final NodeID id, final ExecutionMonitor exec,
-        final WorkflowLoadHelper loadHelper) throws CanceledExecutionException {
+        final WorkflowLoadHelper loadHelper) {
         final Map<URI, TemplateUpdateCheckResult> visitedTemplateMap = new HashMap<>();
         try {
             return updateMetaNodeLinkWithCache(id, exec, loadHelper, visitedTemplateMap);
@@ -7680,17 +7680,16 @@ public final class WorkflowManager extends NodeContainer
      */
     private NodeContainerTemplateLinkUpdateResult updateMetaNodeLinkWithCache(final NodeID id,
         final ExecutionMonitor exec, final WorkflowLoadHelper loadHelper,
-        final Map<URI, TemplateUpdateCheckResult> visitedTemplateMap) throws CanceledExecutionException {
-        final NodeContainerTemplateLinkUpdateResult loadRes =
-            new NodeContainerTemplateLinkUpdateResult("Update node link \"" + getNameWithID() + "\"");
-        NodeContainer nc = getNodeContainer(id);
+        final Map<URI, TemplateUpdateCheckResult> visitedTemplateMap) {
+        final var nc = getNodeContainer(id);
         if (!(nc instanceof NodeContainerTemplate)) {
             throw new IllegalArgumentException(
                 "Node \"" + nc.getNameWithID() + "\" is not a template node (can't update link)");
         }
         NodeContainerTemplate tnc = (NodeContainerTemplate)nc;
         final MetaNodeTemplateInformation tempInfo = tnc.getTemplateInformation();
-        if (!tempInfo.getRole().equals(Role.Link)) {
+        final var loadRes = new NodeContainerTemplateLinkUpdateResult("Update node link \"" + getNameWithID() + "\"");
+        if (tempInfo.getRole() != Role.Link) {
             loadRes.addError("Node \"" + getNameWithID() + "\" is not a template node link");
             return loadRes;
         }
@@ -7741,15 +7740,14 @@ public final class WorkflowManager extends NodeContainer
      */
     @Override
     public void updateMetaNodeLinkInternalRecursively(final ExecutionMonitor exec, final WorkflowLoadHelper loadHelper,
-        final Map<URI, TemplateUpdateCheckResult> visitedTemplateMap, final NodeContainerTemplateLinkUpdateResult loadRes)
-        throws Exception {
+        final Map<URI, TemplateUpdateCheckResult> visitedTemplateMap,
+        final NodeContainerTemplateLinkUpdateResult loadRes) throws Exception {
         try (WorkflowLock lock = lock()) {
             for (NodeID id : m_workflow.createBreadthFirstSortedList(m_workflow.getNodeIDs(), true).keySet()) {
-                NodeContainer nc = getNodeContainer(id);
-                if (nc instanceof NodeContainerTemplate) {
-                    NodeContainerTemplate t = (NodeContainerTemplate)nc;
-                    if (t.getTemplateInformation().getRole().equals(Role.Link)) {
-                        final NodeContainerTemplateLinkUpdateResult childResult =
+                final var nc = getNodeContainer(id);
+                if (nc instanceof NodeContainerTemplate t) {
+                    if (t.getTemplateInformation().getRole() == Role.Link) {
+                        final var childResult =
                             new NodeContainerTemplateLinkUpdateResult("Update child link \"" + getNameWithID() + "\"");
                         t = updateNodeTemplateLinkInternal(t.getID(), exec, loadHelper, visitedTemplateMap,
                             childResult);
@@ -7778,8 +7776,8 @@ public final class WorkflowManager extends NodeContainer
         final NodeContainer oldLinkMN = m_workflow.getNode(id);
         NodeContainerTemplate tnc = (NodeContainerTemplate)oldLinkMN;
         MetaNodeTemplateInformation templInfo = tnc.getTemplateInformation();
-        assert templInfo.getRole().equals(Role.Link);
-        URI sourceURI = templInfo.getSourceURI();
+        assert templInfo.getRole() == Role.Link;
+        final var sourceURI = templInfo.getSourceURI();
         NodeContainerTemplate tempLink;
         if (visitedTemplateMap.get(sourceURI) == null) {
             try {
@@ -7800,7 +7798,7 @@ public final class WorkflowManager extends NodeContainer
             tempLink = visitedTemplateMap.get(sourceURI).template();
         }
         try (WorkflowLock lock = lock()) {
-            NodeSettings ncSettings = new NodeSettings("metanode_settings"); // current settings, re-apply after update
+            final var ncSettings = new NodeSettings("metanode_settings"); // current settings, re-apply after update
             saveNodeSettings(id, ncSettings);
 
             NodeAnnotationData oldAnnoData = oldLinkMN.getNodeAnnotation().getData();
@@ -7876,24 +7874,24 @@ public final class WorkflowManager extends NodeContainer
         // all linked metanodes that need to be checked.
         Map<NodeID, NodeContainerTemplate> linkedMetaNodes =
             fillLinkedTemplateNodesList(new HashMap<>(), true, true);
-        int linksChecked = 0;
-        int linksUpdated = 0;
-        NodeContainerTemplateLinkUpdateResult update = new NodeContainerTemplateLinkUpdateResult(
+        var linksChecked = 0;
+        var linksUpdated = 0;
+        final var update = new NodeContainerTemplateLinkUpdateResult(
             "Update on " + linkedMetaNodes.size() + " node(s) in " + getNameWithID());
         final Map<URI, TemplateUpdateCheckResult> visitedTemplateMap = new HashMap<>();
         try {
             for (NodeContainerTemplate tnc : linkedMetaNodes.values()) {
                 linksChecked += 1;
-                WorkflowManager parent = tnc.getParent();
                 exec.setProgress(linksChecked / (double)linkedMetaNodes.size(), "node " + tnc.getNameWithID());
                 exec.checkCanceled();
-                LoadResult checkTemplateResult = new LoadResult("update check");
-                final boolean updatesAvail = parent.checkUpdateMetaNodeLinkWithCache(tnc.getID(), lH,
-                    checkTemplateResult, visitedTemplateMap, true);
+                final var checkTemplateResult = new LoadResult("update check");
                 if (failOnLoadError && checkTemplateResult.hasErrors()) {
                     LOGGER.error(checkTemplateResult.getFilteredError("", LoadResultEntryType.Error));
                     throw new IOException("Error(s) while updating metanode links");
                 }
+                final var parent = tnc.getParent();
+                final var updatesAvail = parent.checkUpdateMetaNodeLinkWithCache(tnc.getID(), lH,
+                    checkTemplateResult, visitedTemplateMap, true);
                 if (updatesAvail) {
                     NodeContainerTemplateLinkUpdateResult loadResult = parent.updateMetaNodeLinkWithCache(tnc.getID(),
                         exec.createSubProgress(1.0 / linkedMetaNodes.size()), lH, visitedTemplateMap);

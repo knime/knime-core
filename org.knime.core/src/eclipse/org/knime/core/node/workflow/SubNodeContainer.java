@@ -3095,8 +3095,8 @@ public final class SubNodeContainer extends SingleNodeContainer
      */
     @Override
     public void updateMetaNodeLinkInternalRecursively(final ExecutionMonitor exec, final WorkflowLoadHelper loadHelper,
-        final Map<URI, TemplateUpdateCheckResult> visitedTemplateMap, final NodeContainerTemplateLinkUpdateResult loadRes)
-        throws Exception {
+        final Map<URI, TemplateUpdateCheckResult> visitedTemplateMap,
+        final NodeContainerTemplateLinkUpdateResult loadRes) throws Exception {
         m_wfm.updateMetaNodeLinkInternalRecursively(exec, loadHelper, visitedTemplateMap, loadRes);
     }
 
