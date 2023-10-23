@@ -138,6 +138,7 @@ import org.knime.core.node.workflow.MetaNodeTemplateInformation.TemplateType;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
 import org.knime.core.node.workflow.NodeMessage.Type;
 import org.knime.core.node.workflow.NodePropertyChangedEvent.NodeProperty;
+import org.knime.core.node.workflow.TemplateUpdateUtil.TemplateUpdateCheckResult;
 import org.knime.core.node.workflow.WorkflowManager.NodeModelFilter;
 import org.knime.core.node.workflow.WorkflowPersistor.ConnectionContainerTemplate;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
@@ -3094,7 +3095,7 @@ public final class SubNodeContainer extends SingleNodeContainer
      */
     @Override
     public void updateMetaNodeLinkInternalRecursively(final ExecutionMonitor exec, final WorkflowLoadHelper loadHelper,
-        final Map<URI, NodeContainerTemplate> visitedTemplateMap, final NodeContainerTemplateLinkUpdateResult loadRes)
+        final Map<URI, TemplateUpdateCheckResult> visitedTemplateMap, final NodeContainerTemplateLinkUpdateResult loadRes)
         throws Exception {
         m_wfm.updateMetaNodeLinkInternalRecursively(exec, loadHelper, visitedTemplateMap, loadRes);
     }

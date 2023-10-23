@@ -129,7 +129,7 @@ public class EnhAP11813_EfficientTemplateUpdateCheck extends WorkflowTestCase {
     }
 
     // is there a better way?
-    private static URIToFileResolve replaceURIToFileResolveService(URIToFileResolve impl) {
+    static URIToFileResolve replaceURIToFileResolveService(URIToFileResolve impl) {
         BundleContext bundleContext = FrameworkUtil.getBundle(WorkflowManager.class).getBundleContext();
         ServiceReference<?> oldService = bundleContext.getServiceReference(URIToFileResolve.class.getName());
         URIToFileResolve oldImpl = (URIToFileResolve) bundleContext.getService(oldService);

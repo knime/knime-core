@@ -58,6 +58,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.port.PortObject;
+import org.knime.core.node.workflow.TemplateUpdateUtil.TemplateUpdateCheckResult;
 import org.knime.core.node.workflow.WorkflowPersistor.NodeContainerTemplateLinkUpdateResult;
 import org.knime.core.util.LockFailedException;
 
@@ -118,7 +119,7 @@ public interface NodeContainerTemplate {
     public NodeID getID();
 
     public void updateMetaNodeLinkInternalRecursively(final ExecutionMonitor exec,
-        final WorkflowLoadHelper loadHelper, final Map<URI, NodeContainerTemplate> visitedTemplateMap,
+        final WorkflowLoadHelper loadHelper, final Map<URI, TemplateUpdateCheckResult> visitedTemplateMap,
         final NodeContainerTemplateLinkUpdateResult loadRes) throws Exception;
 
     public WorkflowManager getParent();

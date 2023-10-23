@@ -188,6 +188,17 @@ public final class TemplateUpdateUtil {
         }
     }
 
+    /**
+     * Pair of the resolved {@link NodeContainerTemplate} and the corresponding {@link MetaNodeTemplateInformation}. The
+     * node container template is <code>null</code> iff no update is available. The template information is used to
+     * check which timestamp refers to the stored update-check-result.
+     *
+     * Allows for creating a new result record when a new template is available.
+     *
+     * @author Leon Wenzler, KNIME GmbH, Konstanz, Germany
+     */
+    record TemplateUpdateCheckResult(NodeContainerTemplate template, MetaNodeTemplateInformation info) {}
+
     private static final NodeLogger LOGGER = NodeLogger.getLogger(TemplateUpdateUtil.class);
 
     /**
@@ -340,21 +351,22 @@ public final class TemplateUpdateUtil {
      */
     public static Map<NodeID, UpdateStatus> fillNodeUpdateStates(
         final Collection<NodeContainerTemplate> nodesToCheck, final WorkflowLoadHelper loadHelper,
-        final LoadResult loadResult, final Map<URI, NodeContainerTemplate> visitedTemplateMap) throws IOException {
+        final LoadResult loadResult, final Map<URI, TemplateUpdateCheckResult> visitedTemplateMap) throws IOException {
         Map<NodeID, UpdateStatus> nodeIdToUpdateStatus = new LinkedHashMap<>();
 
         for (NodeContainerTemplate linkedMeta : nodesToCheck) {
             MetaNodeTemplateInformation linkInfo = linkedMeta.getTemplateInformation();
             final var uri = linkInfo.getSourceURI();
             NodeContainerTemplate tempLink = null;
-            if (!visitedTemplateMap.containsKey(uri)) {
-                // visit new template and try to load it
+            // if not visited yet OR we visited a newer version: visit new template and try to load it
+            if (!visitedTemplateMap.containsKey(uri)
+                || visitedTemplateMap.get(uri).info().isNewerOrNotEqualThan(linkInfo)) {
                 try {
                     final var templateLoadResult = new LoadResult("Template to " + uri);
                     tempLink =
                         loadMetaNodeTemplateIfLocalOrOutdatedOrVersioned(linkedMeta, loadHelper, templateLoadResult);
                     loadResult.addChildError(templateLoadResult);
-                    visitedTemplateMap.put(uri, tempLink);
+                    visitedTemplateMap.put(uri, new TemplateUpdateCheckResult(tempLink, linkInfo));
                 } catch (IOException | UnsupportedWorkflowVersionException e) {
                     /**
                      * Remark: we introduced the {@link ResourceAccessException} as an exception for non-resolvable
@@ -377,7 +389,7 @@ public final class TemplateUpdateUtil {
                 }
             } else {
                 // retrieve already visited template link
-                tempLink = visitedTemplateMap.get(uri);
+                tempLink = visitedTemplateMap.get(uri).template();
             }
 
             nodeIdToUpdateStatus.put(linkedMeta.getID(), fillUpdateStatus(linkedMeta, tempLink));

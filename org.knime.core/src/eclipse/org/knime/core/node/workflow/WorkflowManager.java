@@ -173,6 +173,7 @@ import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitTyp
 import org.knime.core.node.workflow.NodeMessage.Type;
 import org.knime.core.node.workflow.NodePropertyChangedEvent.NodeProperty;
 import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
+import org.knime.core.node.workflow.TemplateUpdateUtil.TemplateUpdateCheckResult;
 import org.knime.core.node.workflow.Workflow.NodeAndInports;
 import org.knime.core.node.workflow.WorkflowPersistor.ConnectionContainerTemplate;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
@@ -7537,7 +7538,7 @@ public final class WorkflowManager extends NodeContainer
      * @throws IOException If that fails (template not accessible)
      */
     public boolean checkUpdateMetaNodeLink(final NodeID id, final WorkflowLoadHelper loadHelper) throws IOException {
-        final HashMap<URI, NodeContainerTemplate> visitedTemplateMap = new HashMap<>();
+        final Map<URI, TemplateUpdateCheckResult> visitedTemplateMap = new HashMap<>();
         try {
             final LoadResult loadResult = new LoadResult("ignored");
             boolean result = checkUpdateMetaNodeLinkWithCache(id, loadHelper, loadResult, visitedTemplateMap, true);
@@ -7547,11 +7548,8 @@ public final class WorkflowManager extends NodeContainer
             }
             return result;
         } finally {
-            for (NodeContainerTemplate tempLink : visitedTemplateMap.values()) {
-                if (tempLink != null) {
-                    tempLink.getParent().removeNode(tempLink.getID());
-                }
-            }
+            visitedTemplateMap.values().stream().map(TemplateUpdateCheckResult::template).filter(Objects::nonNull)
+                .forEach(t -> t.getParent().removeNode(t.getID()));
         }
     }
 
@@ -7563,7 +7561,7 @@ public final class WorkflowManager extends NodeContainer
      * @param recurseInto Should linked metanodes contained in the metanode also be checked.
      */
     private boolean checkUpdateMetaNodeLinkWithCache(final NodeID id, final WorkflowLoadHelper loadHelper,
-        final LoadResult loadResult, final Map<URI, NodeContainerTemplate> visitedTemplateMap,
+        final LoadResult loadResult, final Map<URI, TemplateUpdateCheckResult> visitedTemplateMap,
         final boolean recurseInto) throws IOException {
         NodeContainer nc = m_workflow.getNode(id);
         if (!(nc instanceof NodeContainerTemplate)) {
@@ -7665,15 +7663,12 @@ public final class WorkflowManager extends NodeContainer
      */
     public NodeContainerTemplateLinkUpdateResult updateMetaNodeLink(final NodeID id, final ExecutionMonitor exec,
         final WorkflowLoadHelper loadHelper) throws CanceledExecutionException {
-        final HashMap<URI, NodeContainerTemplate> visitedTemplateMap = new HashMap<URI, NodeContainerTemplate>();
+        final Map<URI, TemplateUpdateCheckResult> visitedTemplateMap = new HashMap<>();
         try {
             return updateMetaNodeLinkWithCache(id, exec, loadHelper, visitedTemplateMap);
         } finally {
-            for (NodeContainerTemplate tempLink : visitedTemplateMap.values()) {
-                if (tempLink != null) {
-                    tempLink.getParent().removeNode(tempLink.getID());
-                }
-            }
+            visitedTemplateMap.values().stream().map(TemplateUpdateCheckResult::template).filter(Objects::nonNull)
+                .forEach(t -> t.getParent().removeNode(t.getID()));
         }
     }
 
@@ -7685,7 +7680,7 @@ public final class WorkflowManager extends NodeContainer
      */
     private NodeContainerTemplateLinkUpdateResult updateMetaNodeLinkWithCache(final NodeID id,
         final ExecutionMonitor exec, final WorkflowLoadHelper loadHelper,
-        final Map<URI, NodeContainerTemplate> visitedTemplateMap) throws CanceledExecutionException {
+        final Map<URI, TemplateUpdateCheckResult> visitedTemplateMap) throws CanceledExecutionException {
         final NodeContainerTemplateLinkUpdateResult loadRes =
             new NodeContainerTemplateLinkUpdateResult("Update node link \"" + getNameWithID() + "\"");
         NodeContainer nc = getNodeContainer(id);
@@ -7746,7 +7741,7 @@ public final class WorkflowManager extends NodeContainer
      */
     @Override
     public void updateMetaNodeLinkInternalRecursively(final ExecutionMonitor exec, final WorkflowLoadHelper loadHelper,
-        final Map<URI, NodeContainerTemplate> visitedTemplateMap, final NodeContainerTemplateLinkUpdateResult loadRes)
+        final Map<URI, TemplateUpdateCheckResult> visitedTemplateMap, final NodeContainerTemplateLinkUpdateResult loadRes)
         throws Exception {
         try (WorkflowLock lock = lock()) {
             for (NodeID id : m_workflow.createBreadthFirstSortedList(m_workflow.getNodeIDs(), true).keySet()) {
@@ -7776,7 +7771,7 @@ public final class WorkflowManager extends NodeContainer
      * does not keep any backups and doesn't have a rollback.
      */
     private NodeContainerTemplate updateNodeTemplateLinkInternal(final NodeID id, final ExecutionMonitor exec,
-        final WorkflowLoadHelper loadHelper, final Map<URI, NodeContainerTemplate> visitedTemplateMap,
+        final WorkflowLoadHelper loadHelper, final Map<URI, TemplateUpdateCheckResult> visitedTemplateMap,
         final NodeContainerTemplateLinkUpdateResult loadRes) throws Exception {
 
         final NodeContainerTemplate newLinkMN;
@@ -7785,11 +7780,11 @@ public final class WorkflowManager extends NodeContainer
         MetaNodeTemplateInformation templInfo = tnc.getTemplateInformation();
         assert templInfo.getRole().equals(Role.Link);
         URI sourceURI = templInfo.getSourceURI();
-        NodeContainerTemplate tempLink = visitedTemplateMap.get(sourceURI);
-        if (tempLink == null) {
+        NodeContainerTemplate tempLink;
+        if (visitedTemplateMap.get(sourceURI) == null) {
             try {
                 tempLink = TemplateUpdateUtil.loadMetaNodeTemplate(tnc, loadHelper, loadRes);
-                visitedTemplateMap.put(sourceURI, tempLink);
+                visitedTemplateMap.put(sourceURI, new TemplateUpdateCheckResult(tempLink, templInfo));
             } catch (IOException e) {
                 String error = "Failed to update metanode reference: " + e.getMessage();
                 LOGGER.error(error, e);
@@ -7801,6 +7796,8 @@ public final class WorkflowManager extends NodeContainer
                 loadRes.addError(error);
                 return null;
             }
+        } else {
+            tempLink = visitedTemplateMap.get(sourceURI).template();
         }
         try (WorkflowLock lock = lock()) {
             NodeSettings ncSettings = new NodeSettings("metanode_settings"); // current settings, re-apply after update
@@ -7878,12 +7875,12 @@ public final class WorkflowManager extends NodeContainer
         final boolean failOnLoadError, final ExecutionMonitor exec) throws IOException, CanceledExecutionException {
         // all linked metanodes that need to be checked.
         Map<NodeID, NodeContainerTemplate> linkedMetaNodes =
-            fillLinkedTemplateNodesList(new LinkedHashMap<NodeID, NodeContainerTemplate>(), true, true);
+            fillLinkedTemplateNodesList(new HashMap<>(), true, true);
         int linksChecked = 0;
         int linksUpdated = 0;
         NodeContainerTemplateLinkUpdateResult update = new NodeContainerTemplateLinkUpdateResult(
             "Update on " + linkedMetaNodes.size() + " node(s) in " + getNameWithID());
-        HashMap<URI, NodeContainerTemplate> visitedTemplateMap = new HashMap<>();
+        final Map<URI, TemplateUpdateCheckResult> visitedTemplateMap = new HashMap<>();
         try {
             for (NodeContainerTemplate tnc : linkedMetaNodes.values()) {
                 linksChecked += 1;
@@ -7916,11 +7913,8 @@ public final class WorkflowManager extends NodeContainer
             }
             return update;
         } finally {
-            for (NodeContainerTemplate tempLink : visitedTemplateMap.values()) {
-                if (tempLink != null) {
-                    tempLink.getParent().removeNode(tempLink.getID());
-                }
-            }
+            visitedTemplateMap.values().stream().map(TemplateUpdateCheckResult::template).filter(Objects::nonNull)
+                .forEach(t -> t.getParent().removeNode(t.getID()));
         }
     }
 
