@@ -193,6 +193,21 @@ public abstract class NodeFactory<T extends NodeModel> {
     }
 
     /**
+     * @return a globally unique factory id
+     * @since 5.2
+     */
+    public final String getFactoryId() {
+        var isDynamicNodeFactory = false;
+        String factoryIdUniquifier = null;
+        if (this instanceof DynamicNodeFactory dynamicNodeFactory) {
+            isDynamicNodeFactory = true;
+            factoryIdUniquifier = dynamicNodeFactory.getFactoryIdUniquifier();
+        }
+        return NodeFactoryId.compose(this.getClass().getName(), isDynamicNodeFactory, factoryIdUniquifier,
+            this::getNodeName);
+    }
+
+    /**
      * Creates the description for this node. The default implementation reads the factory's XML file. Subclasses may
      * override this method in order to create the description by other means.
      *

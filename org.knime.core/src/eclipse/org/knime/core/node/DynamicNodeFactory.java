@@ -61,6 +61,8 @@ import org.knime.node2012.KnimeNodeDocument;
  * A node factory to create nodes dynamically. It essentially creates the node description (usually given in the
  * XXXNodeFactory.xml) dynamically.
  *
+ * IMPORTANT: Make sure to overwrite {@link #getFactoryIdUniquifier()} for a stable and globally unique factory-id.
+ *
  * @author Dominik Morent, KNIME AG, Zurich, Switzerland
  * @author Martin Horn, University of Konstanz
  * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
@@ -68,6 +70,7 @@ import org.knime.node2012.KnimeNodeDocument;
  * @since 2.6
  */
 public abstract class DynamicNodeFactory<T extends NodeModel> extends NodeFactory<T> {
+
     /**
      * Creates a new dynamic node factory.
      */
@@ -158,6 +161,21 @@ public abstract class DynamicNodeFactory<T extends NodeModel> extends NodeFactor
      */
     protected Optional<String> getBundleName() {
         return Optional.ofNullable(OSGIHelper.getBundle(getClass())).map(b -> b.getSymbolicName());
+    }
+
+    /**
+     * Returns a string that globally uniquifies the factory id because the factory-class-name is not sufficient to
+     * identify a single node since it's being used for multiple nodes in case of a dynamic node factory.
+     *
+     * The returned id-uniquifier must only be unique within the {@link NodeSetFactory} this node is part of. But it
+     * must always remain the same for a particular node as soon as the node has been released to users.
+     *
+     * @return the factory-id-uniquifier or {@code null} in which case the node-name is being used (which is not optimal
+     *         because it's not guaranteed to be stable)
+     * @since 5.2
+     */
+    public String getFactoryIdUniquifier() {
+        return null;
     }
 
     /**
