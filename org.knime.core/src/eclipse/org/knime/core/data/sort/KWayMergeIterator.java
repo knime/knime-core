@@ -102,11 +102,13 @@ final class KWayMergeIterator extends CloseableRowIterator {
         final var iterator = m_iterators[inputIdx];
         var currentIndex = inputIdx;
         DataRow currentValue;
-        if (iterator.hasNext()) {
+        if (iterator != null && iterator.hasNext()) {
             currentValue = iterator.next();
         } else {
-            iterator.close();
-            m_iterators[inputIdx] = null;
+            if (iterator != null) {
+                iterator.close();
+                m_iterators[inputIdx] = null;
+            }
             currentValue = null;
         }
 
@@ -145,16 +147,16 @@ final class KWayMergeIterator extends CloseableRowIterator {
 
     @Override
     public boolean hasNext() {
-        return m_values[0] != null;
+        return m_values.length > 0 && m_values[0] != null;
     }
 
     @Override
     public DataRow next() {
-        final var res = m_values[0];
-        if (res == null) {
+        if (!hasNext()) {
             throw new NoSuchElementException();
         }
 
+        final var res = m_values[0];
         final var source = m_indexes[0];
         m_values[0] = null;
         m_indexes[0] = -1;
@@ -164,9 +166,12 @@ final class KWayMergeIterator extends CloseableRowIterator {
 
     @Override
     public void close() {
-        for (final var iter : m_iterators) {
+        for (var i = 0; i < m_iterators.length; i++) {
+            @SuppressWarnings("resource")
+            final var iter = m_iterators[i];
             if (iter != null) {
                 iter.close();
+                m_iterators[i] = null;
             }
         }
     }

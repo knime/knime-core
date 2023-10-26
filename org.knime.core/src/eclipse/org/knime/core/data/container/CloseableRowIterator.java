@@ -66,15 +66,13 @@ import org.knime.core.data.RowIterator;
 public abstract class CloseableRowIterator extends RowIterator implements Closeable {
 
     /**
-     * If the given iterator already is a {@link CloseableRowIterator}, it is returned unchanged.
-     * Otherwise it is wrapped by {@link #wrap(Iterator)}.
+     * Creates a new empty {@link CloseableRowIterator}.
      *
-     * @param iterator iterator to be adapted to a {@link CloseableRowIterator}
-     * @return adapted iterator
+     * @return empty iterator
      * @since 5.2
      */
-    public static CloseableRowIterator from(final Iterator<DataRow> iterator) {
-        return iterator instanceof CloseableRowIterator closeable ? closeable : wrap(iterator);
+    public static CloseableRowIterator empty() {
+        return wrap(Collections.emptyIterator());
     }
 
     /**
@@ -84,36 +82,39 @@ public abstract class CloseableRowIterator extends RowIterator implements Closea
      * @return wrapped iterator
      * @since 5.2
      */
-    public static CloseableRowIterator wrap(final Iterator<DataRow> delegate) {
-        return new CloseableRowIterator() {
-            @Override
-            public boolean hasNext() {
-                return delegate.hasNext();
-            }
-
-            @Override
-            public DataRow next() {
-                return delegate.next();
-            }
-
-            @Override
-            public void close() {
-                // nothing to close
-            }
-        };
+    public static CloseableRowIterator wrap(final Iterator<? extends DataRow> delegate) {
+        return from(delegate, () -> {});
     }
 
     /**
-     * Wraps an iterator over rows that's also closeable into a {@link CloseableRowIterator}.
+     * If the given iterator already is a {@link CloseableRowIterator}, it is returned unchanged.
+     * If it is {@link AutoCloseable}, it is converted via {@link #from(Iterator, AutoCloseable)}.
+     * Otherwise it is wrapped by {@link #wrap(Iterator)}.
      *
-     * @param <T> type of the closable iterator to wrap
+     * @param iterator iterator to be adapted to a {@link CloseableRowIterator}
+     * @return adapted iterator
+     * @since 5.2
+     */
+    @SuppressWarnings("resource")
+    public static CloseableRowIterator from(final Iterator<? extends DataRow> iterator) {
+        if (iterator instanceof CloseableRowIterator closeableIter) {
+            return closeableIter;
+        }
+        return iterator instanceof AutoCloseable closeable ? from(iterator, closeable) : wrap(iterator);
+    }
+
+    /**
+     * Wraps an iterator over rows into a {@link CloseableRowIterator}, closing the given {@link AutoCloseable} when
+     * {@link #close()} is being called.
+     *
      *
      * @param delegate iterator to wrap
+     * @param closeAction object to call {@link AutoCloseable#close()} on
      * @return wrapped iterator
      * @since 5.2
      */
-    public static <T extends Iterator<? extends DataRow> & AutoCloseable>
-            CloseableRowIterator fromCloseable(final T delegate) {
+    public static CloseableRowIterator from(final Iterator<? extends DataRow> delegate,
+            final AutoCloseable closeAction) {
         return new CloseableRowIterator() {
             @Override
             public boolean hasNext() {
@@ -128,22 +129,12 @@ public abstract class CloseableRowIterator extends RowIterator implements Closea
             @Override
             public void close() {
                 try {
-                    delegate.close();
-                } catch (Exception ex) {
-                    throw new RuntimeException(ex.getMessage(), ex); // NOSONAR
+                    closeAction.close();
+                } catch (final Exception e) {
+                    throw new RuntimeException(e.getMessage(), e); // NOSONAR
                 }
             }
         };
-    }
-
-    /**
-     * Creates a new empty {@link CloseableRowIterator}.
-     *
-     * @return empty iterator
-     * @since 5.2
-     */
-    public static CloseableRowIterator empty() {
-        return wrap(Collections.emptyIterator());
     }
 
     /**
