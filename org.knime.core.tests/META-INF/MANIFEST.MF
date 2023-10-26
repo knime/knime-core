@@ -32,3 +32,4 @@ Import-Package: org.knime.core.data.convert.map,
  org.knime.core.data.join.results,
  org.knime.shared.workflow.storage.multidir.loader
 Automatic-Module-Name: org.knime.core.tests
+Bundle-ClassPath: .

@@ -60,4 +60,11 @@
          </serializer>
       </DataType>
    </extension>
+   <extension
+         point="org.knime.workbench.repository.nodesets">
+      <nodeset
+            deprecated="false"
+            factory-class="org.knime.core.node.NodeFactoryIdTestNodeSetFactory">
+      </nodeset>
+   </extension>
 </fragment>
