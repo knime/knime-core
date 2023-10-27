@@ -248,7 +248,7 @@ public class AbstractColumnTableSorterTest {
         });
     }
 
-    private Comparator<DataRow> createAscendingOrderAssertingComparator(final BufferedDataTable testTable2,
+    private static Comparator<DataRow> createAscendingOrderAssertingComparator(final BufferedDataTable testTable2,
         final String... cols) {
         final List<Comparator<DataCell>> innerComp = new ArrayList<>();
         final int[] indexes = new int[cols.length];

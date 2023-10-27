@@ -71,7 +71,7 @@ import org.knime.core.data.def.DefaultRow;
  *
  * @author Leonard Wörteler, KNIME GmbH, Konstanz, Germany
  */
-public class KWayMergeIteratorTest {
+class KWayMergeIteratorTest {
 
     @Test
     void testKZero() {
