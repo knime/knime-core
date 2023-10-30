@@ -431,8 +431,9 @@ public final class NodeTimer {
             //  (if so: copy data first...)
             BufferedDataContainer result = exec.createDataContainer(getGlobalStatsSpecs());
             int rowcount = 0;
-            for (NodeKey nodeKey : m_globalNodeStats.keySet()) {
-                NodeStats ns = m_globalNodeStats.get(nodeKey);
+            for (var entry : m_globalNodeStats.entrySet()) {
+                var nodeKey = entry.getKey();
+                var ns = entry.getValue();
                 if (ns != null) {
                     DataRow row = new DefaultRow(
                         new RowKey("Row " + rowcount++),
@@ -491,12 +492,13 @@ public final class NodeTimer {
             JsonObjectBuilder job2 = JsonUtil.getProvider().createObjectBuilder();
             synchronized (this) {
                     JsonArrayBuilder jab = JsonUtil.getProvider().createArrayBuilder();
-                    for (NodeKey nodeKey : m_globalNodeStats.keySet()) {
+                    for (var entry : m_globalNodeStats.entrySet()) {
+                        var nodeKey = entry.getKey();
                         if (!nodeKey.type().equals(NativeNodeContainer.class)) {
                             continue;
                         }
                         JsonObjectBuilder job3 = JsonUtil.getProvider().createObjectBuilder();
-                        NodeStats ns = m_globalNodeStats.get(nodeKey);
+                        var ns = entry.getValue();
                         if (ns != null) {
                             job3.add("id", nodeKey.id()); // NodeFactory.getFactoryId
                             job3.add("nrexecs", ns.executionCount);
