@@ -53,6 +53,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -197,14 +198,23 @@ public abstract class NodeFactory<T extends NodeModel> {
      * @since 5.2
      */
     public final String getFactoryId() {
+        String factoryClassName;
+        if (this instanceof MissingNodeFactory missingFactory) {
+            var nodeAndBundleInfo = missingFactory.getNodeAndBundleInfo();
+            factoryClassName = nodeAndBundleInfo.getFactoryClass()
+                .orElseGet(() -> "unknown_missing_node_factory_" + UUID.randomUUID());
+        } else {
+            factoryClassName = this.getClass().getName();
+        }
+
         var isDynamicNodeFactory = false;
         String factoryIdUniquifier = null;
         if (this instanceof DynamicNodeFactory dynamicNodeFactory) {
             isDynamicNodeFactory = true;
             factoryIdUniquifier = dynamicNodeFactory.getFactoryIdUniquifier();
         }
-        return NodeFactoryId.compose(this.getClass().getName(), isDynamicNodeFactory, factoryIdUniquifier,
-            this::getNodeName);
+
+        return NodeFactoryId.compose(factoryClassName, isDynamicNodeFactory, factoryIdUniquifier, this::getNodeName);
     }
 
     /**

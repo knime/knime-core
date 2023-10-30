@@ -55,6 +55,8 @@ import java.io.FileInputStream;
 
 import org.junit.Test;
 import org.knime.core.node.extension.NodeFactoryExtensionManager;
+import org.knime.core.node.missing.MissingNodeFactory;
+import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.core.util.FileUtil;
 import org.knime.testing.util.WorkflowManagerUtil;
@@ -86,6 +88,17 @@ public class NodeFactoryIdTest {
             "org.knime.core.node.NodeFactoryIdTestNodeSetFactory$NodeFactoryIdTestNodeFactory", null,
             FactoryType.NORMAL_FACTORY);
 
+    }
+
+    /**
+     * Tests {@link MissingNodeFactory#getFactoryId()}.
+     */
+    @Test
+    public void testMissingNodeFactoryId() {
+        var factory = new MissingNodeFactory(new NodeAndBundleInformationPersistor("TEST"), null, new PortType[0],
+            new PortType[0]);
+        factory.init();
+        assertThat(factory.getFactoryId()).isEqualTo("TEST#MISSING TEST");
     }
 
     private static enum FactoryType {
