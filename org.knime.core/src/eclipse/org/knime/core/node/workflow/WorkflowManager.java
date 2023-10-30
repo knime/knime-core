@@ -7884,14 +7884,14 @@ public final class WorkflowManager extends NodeContainer
                 linksChecked += 1;
                 exec.setProgress(linksChecked / (double)linkedMetaNodes.size(), "node " + tnc.getNameWithID());
                 exec.checkCanceled();
+                final var parent = tnc.getParent();
                 final var checkTemplateResult = new LoadResult("update check");
+                final var updatesAvail = parent.checkUpdateMetaNodeLinkWithCache(tnc.getID(), lH, // NOSONAR
+                    checkTemplateResult, visitedTemplateMap, true);
                 if (failOnLoadError && checkTemplateResult.hasErrors()) {
                     LOGGER.error(checkTemplateResult.getFilteredError("", LoadResultEntryType.Error));
                     throw new IOException("Error(s) while updating metanode links");
                 }
-                final var parent = tnc.getParent();
-                final var updatesAvail = parent.checkUpdateMetaNodeLinkWithCache(tnc.getID(), lH,
-                    checkTemplateResult, visitedTemplateMap, true);
                 if (updatesAvail) {
                     NodeContainerTemplateLinkUpdateResult loadResult = parent.updateMetaNodeLinkWithCache(tnc.getID(),
                         exec.createSubProgress(1.0 / linkedMetaNodes.size()), lH, visitedTemplateMap);
