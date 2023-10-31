@@ -55,16 +55,24 @@ package org.knime.core.node.func;
  */
 public final class DefaultArgumentDefinition extends AbstractApiDefinition implements ArgumentDefinition {
 
-    private ArgumentType m_type;
+    private final PrimitiveArgumentType m_type;
 
-    public DefaultArgumentDefinition(final String name, final String description, final ArgumentType type) {
+    private final boolean m_isOptional;
+
+    public DefaultArgumentDefinition(final String name, final String description, final PrimitiveArgumentType type, final boolean isOptional) {
         super(name, description);
         m_type = type;
+        m_isOptional = isOptional;
     }
 
     @Override
-    public ArgumentType getType() {
+    public PrimitiveArgumentType getType() {
         return m_type;
+    }
+
+    @Override
+    public boolean isOptional() {
+        return m_isOptional;
     }
 
 }

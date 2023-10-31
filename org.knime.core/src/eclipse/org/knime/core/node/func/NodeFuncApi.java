@@ -51,7 +51,7 @@ package org.knime.core.node.func;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.knime.core.node.func.ArgumentDefinition.ArgumentType;
+import org.knime.core.node.func.ArgumentDefinition.PrimitiveArgumentType;
 import org.knime.core.node.util.CheckUtils;
 
 /**
@@ -115,8 +115,13 @@ public final class NodeFuncApi {
             return this;
         }
 
-        public Builder withArgument(final String name, final String description, final ArgumentType type) {
-            m_arguments.add(new DefaultArgumentDefinition(name, description, type));
+        public Builder withArgument(final String name, final String description, final PrimitiveArgumentType type) {
+            m_arguments.add(new DefaultArgumentDefinition(name, description, type, false));
+            return this;
+        }
+
+        public Builder withOptionalArgument(final String name, final String description, final PrimitiveArgumentType type) {
+            m_arguments.add(new DefaultArgumentDefinition(name, description, type, true));
             return this;
         }
 

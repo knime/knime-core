@@ -57,8 +57,48 @@ public interface ArgumentDefinition extends ApiDefinition {
 
     ArgumentType getType();
 
-    public enum ArgumentType {
+    boolean isOptional();
+
+    interface ArgumentType {
+        default boolean isPrimitive() {
+            return false;
+        }
+
+        default boolean isList() {
+            return false;
+        }
+
+        default boolean isStruct() {
+            return false;
+        }
+    }
+
+    interface StructArgumentType extends ArgumentType {
+        ArgumentDefinition[] getProperties();
+
+        @Override
+        default boolean isStruct() {
+            return true;
+        }
+
+    }
+
+    interface ListArgumentType extends ArgumentType {
+        ArgumentType getItemType();
+
+        @Override
+        default boolean isList() {
+            return true;
+        }
+    }
+
+    public enum PrimitiveArgumentType implements ArgumentType {
         STRING, INT, DOUBLE, BOOLEAN;
+
+        @Override
+        public boolean isPrimitive() {
+            return true;
+        }
     }
 
 }
