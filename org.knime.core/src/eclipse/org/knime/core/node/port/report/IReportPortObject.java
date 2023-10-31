@@ -48,9 +48,12 @@
  */
 package org.knime.core.node.port.report;
 
+import java.util.List;
+
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortTypeRegistry;
+import org.knime.core.node.util.CheckUtils;
 
 /**
  * Generic interface for report ports associated with component outputs. Implementation lives in different (KNIME) repo.
@@ -74,4 +77,28 @@ public interface IReportPortObject extends PortObject {
 
     @Override
     IReportPortObjectSpec getSpec();
+
+    /**
+     * @return The non-modifiable, non-null list of report fragments.
+     * @since 5.2
+     */
+    List<ReportFragment> getReportFragments();
+
+    /**
+     * A single fragment in a report. This is usually a page (or a set of pages) contributed by a single component
+     * (subnode). A combines the fragment content + the page configuration.
+     * @param content The content (html-like)
+     * @param config the config.
+     * @since 5.2
+     */
+    public record ReportFragment(String content, ReportPageConfiguration config) {
+
+        @SuppressWarnings("javadoc")
+        public ReportFragment {
+            CheckUtils.checkArgumentNotNull(content, "Content must not be null");
+            CheckUtils.checkArgumentNotNull(config, "Config must not be null");
+        }
+
+    }
+
 }

@@ -401,7 +401,7 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
         }
         try {
             final var configSettings = settings.getNodeSettings("reportConfiguration");
-            return Optional.of(ReportConfiguration.load(configSettings));
+            return ReportConfiguration.load(configSettings);
         } catch (InvalidSettingsException e) {
             String error = "Unable to load report output: " + e.getMessage();
             result.addError(error);

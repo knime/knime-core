@@ -105,6 +105,11 @@ public final class MetaPortInfo {
         return m_newIndex;
     }
 
+    @Override
+    public String toString() {
+        return "%s, old->new: %d->%d, connected: %b".formatted(m_type, m_oldIndex, m_newIndex, m_isConnected);
+    }
+
     /**
      * @return a new builder with default values
      * @since 3.5

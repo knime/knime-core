@@ -100,17 +100,24 @@ public final class ReportUtil {
     }
 
     /**
-     * Determines a subnode's report output object spec.
+     * Determines a subnode's report output object spec. Possible return values:
+     *
+     * <ul>
+     * <li>The report spec - normal case when a report can be generated and the input info is available
+     * <li>An inactive port - report extension not found or loaded
+     * <li>An empty optional - service is present but input of a component is not populated
+     * </ul>
      *
      * @param container The subnode whose output is to be generated.
-     * @return The report port object spec (or an inactive object).
+     * @return see above
+     * @since 5.2
      */
-    public static PortObjectSpec computeReportObjectSpec(final SubNodeContainer container) {
+    public static Optional<? extends PortObjectSpec> computeReportObjectSpec(final SubNodeContainer container) {
         Optional<IReportService> serviceOptional = CorePlugin.getInstance().getReportService();
         if (serviceOptional.isPresent()) {
             return serviceOptional.get().createOutputSpec(container);
         } else {
-            return InactiveBranchPortObjectSpec.INSTANCE;
+            return Optional.of(InactiveBranchPortObjectSpec.INSTANCE);
         }
     }
 

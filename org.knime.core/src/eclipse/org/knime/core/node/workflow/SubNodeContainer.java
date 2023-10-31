@@ -323,22 +323,26 @@ public final class SubNodeContainer extends SingleNodeContainer
             m_outports[lastPortIndex] = new NodeContainerOutPort(this, IReportPortObject.TYPE , lastPortIndex);
             m_outputs[lastPortIndex] = new Output(IReportPortObject.TYPE);
         }
-        m_inports = new NodeInPort[inPortTemplates.length];
-        m_inHiliteHandler = new HiLiteHandler[inPortTemplates.length - 1];
         m_virtualInNodeIDSuffix = persistor.getVirtualInNodeIDSuffix();
         m_virtualOutNodeIDSuffix = persistor.getVirtualOutNodeIDSuffix();
         m_subnodeLayoutStringProvider = persistor.getSubnodeLayoutStringProvider();
         m_subnodeConfigurationStringProvider = persistor.getSubnodeConfigurationStringProvider();
         m_hideInWizard = persistor.isHideInWizard();
         m_customCSS = persistor.getCssStyles();
-        PortType[] inTypes = new PortType[inPortTemplates.length];
+
+        final int inputLength = inPortTemplates.length + (m_reportConfiguration != null ? 1 : 0);
+        m_inports = new NodeInPort[inputLength];
+        m_inHiliteHandler = new HiLiteHandler[inPortTemplates.length - 1];
         for (int i = 0; i < inPortTemplates.length; i++) {
-            inTypes[i] = inPortTemplates[i].getPortType();
-            m_inports[i] = new NodeInPort(i, inTypes[i]);
+            m_inports[i] = new NodeInPort(i, inPortTemplates[i].getPortType());
             if (i > 0) {
                 // ignore optional variable input port
                 m_inHiliteHandler[i - 1] = new HiLiteHandler();
             }
+        }
+        if (m_reportConfiguration != null) {
+            final int lastPortIndex = m_inports.length - 1;
+            m_inports[lastPortIndex] = new NodeInPort(lastPortIndex, IReportPortObject.TYPE);
         }
         m_metadata = persistor.getMetadata();
         m_templateInformation = persistor.getTemplateInformation();
@@ -357,12 +361,7 @@ public final class SubNodeContainer extends SingleNodeContainer
         m_wfm.setJobManager(null);
         var inports = def.getInPorts();
         var outports = def.getOutPorts();
-        try {
-            m_reportConfiguration = ReportConfiguration.fromDef(def.getReportConfiguration()).orElse(null);
-        } catch (InvalidSettingsException ise) {
-            // TODO validation to be part of the yaml (enum instead of string)
-            LOGGER.error("Unable to read report configuration: " + ise.getMessage(), ise);
-        }
+        m_reportConfiguration = ReportConfiguration.fromDef(def.getReportConfiguration()).orElse(null);
         final int outputLength = outports.size() + (m_reportConfiguration != null ? 1 : 0);
         m_outports = new NodeContainerOutPort[outputLength];
         m_outputs = new Output[outputLength];
@@ -388,15 +387,22 @@ public final class SubNodeContainer extends SingleNodeContainer
                 new SubnodeContainerConfigurationStringProvider(dialogSettings.getConfigurationLayoutJSON());
         m_hideInWizard = dialogSettings.isHideInWizard();
         m_customCSS = dialogSettings.getCssStyles();
-        PortType[] inTypes = new PortType[inports.size()];
-        for (var i = 0; i < inports.size(); i++) {
-            inTypes[i] = DefToCoreUtil.toPortType(inports.get(i).getPortType());
-            m_inports[i] = new NodeInPort(i, inTypes[i]);
+
+        final int inputLength = inports.size() + (m_reportConfiguration != null ? 1 : 0);
+        m_inports = new NodeInPort[inputLength];
+        m_inHiliteHandler = new HiLiteHandler[inports.size() - 1];
+        for (int i = 0; i < inports.size(); i++) {
+            m_inports[i] = new NodeInPort(i, DefToCoreUtil.toPortType(inports.get(i).getPortType()));
             if (i > 0) {
                 // ignore optional variable input port
                 m_inHiliteHandler[i - 1] = new HiLiteHandler();
             }
         }
+        if (m_reportConfiguration != null) {
+            final int lastPortIndex = m_inports.length - 1;
+            m_inports[lastPortIndex] = new NodeInPort(lastPortIndex, IReportPortObject.TYPE);
+        }
+
         m_metadata = DefToCoreUtil.toComponentMetadata(def.getMetadata());
         m_templateInformation =
                 MetaNodeTemplateInformation.createNewTemplate(def.getTemplateInfo(), TemplateType.SubNode);
@@ -1741,36 +1747,47 @@ public final class SubNodeContainer extends SingleNodeContainer
     }
 
     /**
-     * @param portTypes Types of the new ports
-     * @since 2.10
+     * @param portTypes Types of the new ports (excludes both the mickey mouse port and the report port)
+     * @param enableReportOutput true to enable report type, otherwise false.
      */
-    public void setInPorts(final PortType[] portTypes) {
-        m_inports = new NodeInPort[portTypes.length + 1];
+    void setInPorts(final PortType[] portTypes, final boolean enableReportOutput) {
+        final int nrIns = portTypes.length + /* flow var */ 1 + (enableReportOutput ? 1 : 0);
+        m_inports = new NodeInPort[nrIns];
         m_inHiliteHandler = new HiLiteHandler[portTypes.length];
+        m_inports[0] = new NodeInPort(0, FlowVariablePortObject.TYPE_OPTIONAL);
         for (int i = 0; i < portTypes.length; i++) {
             m_inports[i + 1] = new NodeInPort(i + 1, portTypes[i]);
             m_inHiliteHandler[i] = new HiLiteHandler();
         }
-        NodeContainer oldVNode = m_wfm.getNodeContainer(getVirtualInNodeID());
-        m_inports[0] = new NodeInPort(0, FlowVariablePortObject.TYPE_OPTIONAL);
-        NodeSettings settings = new NodeSettings("node settings");
-        m_wfm.saveNodeSettings(oldVNode.getID(), settings);
-
-        m_virtualInNodeIDSuffix = m_wfm.createAndAddNode(new VirtualSubNodeInputNodeFactory(this, portTypes)).getIndex();
-        NodeContainer newVNode = m_wfm.getNodeContainer(getVirtualInNodeID());
-        newVNode.setUIInformation(oldVNode.getUIInformation());
-        newVNode.setDeletable(false);
-        // copy settings from old to new node
-        try {
-            m_wfm.loadNodeSettings(newVNode.getID(), settings);
-        } catch (InvalidSettingsException e) {
-            // ignore
+        if (enableReportOutput) {
+            final int lastPortIndex = m_inports.length - 1;
+            m_inports[lastPortIndex] = new NodeInPort(lastPortIndex, IReportPortObject.TYPE);
         }
-        oldVNode.setDeletable(true);
-        m_wfm.removeNode(oldVNode.getID());
-        getInPort(0).setPortName("Variable Inport");
-        newVNode.addNodeStateChangeListener(new RefreshPortNamesListener());
-        refreshPortNames();
+
+        NodeContainer oldVNode = m_wfm.getNodeContainer(getVirtualInNodeID());
+        final PortType[] oldInNodePortTypes = IntStream.range(1, oldVNode.getNrOutPorts()) //
+                .mapToObj(oldVNode::getOutPort).map(NodeOutPort::getPortType).toArray(PortType[]::new);
+        // don't replace output node if its ports have changed (e.g. don't if only report is enabled now)
+        if (!Arrays.equals(portTypes, oldInNodePortTypes)) {
+            NodeSettings settings = new NodeSettings("node settings");
+            m_wfm.saveNodeSettings(oldVNode.getID(), settings);
+            m_virtualInNodeIDSuffix = m_wfm.createAndAddNode(
+                new VirtualSubNodeInputNodeFactory(this, portTypes)).getIndex();
+            NodeContainer newVNode = m_wfm.getNodeContainer(getVirtualInNodeID());
+            newVNode.setUIInformation(oldVNode.getUIInformation());
+            newVNode.setDeletable(false);
+            // copy settings from old to new node
+            try {
+                m_wfm.loadNodeSettings(newVNode.getID(), settings);
+            } catch (InvalidSettingsException e) {
+                // ignore
+            }
+            oldVNode.setDeletable(true);
+            m_wfm.removeNode(oldVNode.getID());
+            getInPort(0).setPortName("Variable Inport");
+            newVNode.addNodeStateChangeListener(new RefreshPortNamesListener());
+            refreshPortNames();
+        }
         m_wfm.setDirty();
         setDirty();
         notifyNodePropertyChangedListener(NodeProperty.MetaNodePorts);
@@ -1830,11 +1847,25 @@ public final class SubNodeContainer extends SingleNodeContainer
                         .skip(1) // flow variable port
                         .map(MetaPortInfo::getType).toArray(PortType[]::new);
                 setOutPorts(portTypes, hasReportNow);
+                final var inPortTypes = Stream.of(getInputPortInfo()) //
+                        .skip(1) // flow variable port
+                        .map(MetaPortInfo::getType).toArray(PortType[]::new);
+                setInPorts(inPortTypes, hasReportNow);
             }
             m_reportConfiguration = reportConfiguration;
             setDirty();
             return havePortsChanged;
         }
+    }
+
+    /**
+     * Get the report object set on this subnode, or an empty optional if this subnode is not
+     * building a report or the input node is not executed.
+     * @return The spec of the report object, or an empty optional as described above.
+     * @since 5.2
+     */
+    public Optional<IReportPortObject> getReportObjectFromInput() {
+        return getVirtualInNodeModel().getReportObjectFromInput();
     }
 
     /**
@@ -1855,14 +1886,13 @@ public final class SubNodeContainer extends SingleNodeContainer
     /**
      * @param outNodePortTypes Types of the new ports (excludes both the mickey mouse port and the report port)
      * @param enableReportOutput true to enable report type, otherwise false.
-     * @since 2.10
      */
     void setOutPorts(final PortType[] outNodePortTypes, final boolean enableReportOutput) {
         assert isLockedByCurrentThread();
         m_wfm.resetAndConfigureNode(getVirtualOutNodeID()); // unset outputs (before we change its length)
-        final int length = outNodePortTypes.length + 1 + (enableReportOutput ? 1 : 0);
-        m_outputs = new Output[length];
-        m_outports = new NodeContainerOutPort[length];
+        final int nrOuts = outNodePortTypes.length + /* flowvar */ 1 + (enableReportOutput ? 1 : 0);
+        m_outputs = new Output[nrOuts];
+        m_outports = new NodeContainerOutPort[nrOuts];
         m_outputs[0] = new Output(FlowVariablePortObject.TYPE);
         m_outports[0] = new NodeContainerOutPort(this, FlowVariablePortObject.TYPE, 0);
         for (int i = 0; i < outNodePortTypes.length; i++) {
@@ -1870,7 +1900,7 @@ public final class SubNodeContainer extends SingleNodeContainer
             m_outports[i + 1] = new NodeContainerOutPort(this, outNodePortTypes[i], i + 1);
         }
         if (enableReportOutput) {
-            final var index = m_outputs.length - 1;
+            final int index = m_outputs.length - 1;
             m_outputs[index] = new Output(IReportPortObject.TYPE);
             m_outports[index] = new NodeContainerOutPort(this, IReportPortObject.TYPE, index);
         }
@@ -1909,11 +1939,13 @@ public final class SubNodeContainer extends SingleNodeContainer
      * Used by the UI to determine whether the given port represents the report port (last port, if enabled).
      *
      * @param portIndex port in question.
+     * @param isInput true when refering to input port, false for output port.
      * @return Whether it's the report port.
-     * @since 5.1
+     * @since 5.2
      */
-    public boolean isReportOutPort(final int portIndex) {
-        return hasReportOutput() && portIndex == getNrOutPorts() - 1;
+    public boolean isReportPort(final int portIndex, final boolean isInput) {
+        return getReportConfiguration().isPresent()
+                && portIndex == (isInput ? getNrInPorts() : getNrOutPorts()) - 1;
     }
 
     /**
@@ -1966,9 +1998,10 @@ public final class SubNodeContainer extends SingleNodeContainer
     @Override
     void setInHiLiteHandler(final int index, final HiLiteHandler hdl) {
         assert 0 <= index && index < getNrInPorts();
-        if (index > 0) {
+        final int validStart = m_reportConfiguration != null ? 2 : 1;
+        if (index >= validStart) {
             // ignore HiLiteHandler on optional variable input port
-            m_inHiliteHandler[index - 1] = hdl;
+            m_inHiliteHandler[index - validStart] = hdl;
         }
     }
 

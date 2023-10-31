@@ -48,6 +48,8 @@
  */
 package org.knime.core.node.port.report;
 
+import java.util.Optional;
+
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.SubNodeContainer;
 
@@ -76,7 +78,8 @@ public interface IReportService {
      *
      * @param subnode The component.
      * @return the spec (currently a singleton).
+     * @since 5.2
      */
-    IReportPortObjectSpec createOutputSpec(final SubNodeContainer subnode);
+    Optional<IReportPortObjectSpec> createOutputSpec(final SubNodeContainer subnode);
 
 }

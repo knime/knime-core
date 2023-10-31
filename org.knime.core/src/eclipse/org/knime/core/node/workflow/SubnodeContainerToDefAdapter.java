@@ -99,12 +99,10 @@ public class SubnodeContainerToDefAdapter extends SingleNodeContainerToDefAdapte
     @Override
     public List<PortDef> getInPorts() {
         var result = IntStream.range(0, m_nc.getNrInPorts())//
+            .filter(portIdx -> !m_nc.isReportPort(portIdx, true)) //
             .mapToObj(m_nc::getInPort)//
             .map(CoreToDefUtil::toPortDef)//
             .collect(Collectors.toList());
-        // Set optional and hidden as true to the first in port type (aka micky mouse)
-        var firstInPortDef = CoreToDefUtil.toPortDef(m_nc.getInPort(0));
-        result.set(0, modifyToOptional(firstInPortDef));
         return result;
     }
 
@@ -113,11 +111,9 @@ public class SubnodeContainerToDefAdapter extends SingleNodeContainerToDefAdapte
      */
     @Override
     public List<PortDef> getOutPorts() {
-        // look at ports from the output node, not the ports of the subnode container
-        // (need to ignore the report port)
-        final var virtualOutNode = m_nc.getVirtualOutNode();
-        return IntStream.range(0, virtualOutNode.getNrInPorts())//
-            .mapToObj(virtualOutNode::getInPort)//
+        return IntStream.range(0, m_nc.getNrOutPorts()) //
+            .filter(portIdx -> !m_nc.isReportPort(portIdx, false)) //
+            .mapToObj(m_nc::getOutPort)//
             .map(CoreToDefUtil::toPortDef)//
             .collect(Collectors.toList()); // don't use 'toList()' (TODO - result should be read-only)
     }

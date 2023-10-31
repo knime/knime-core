@@ -65,6 +65,7 @@ public interface SubNodeContainerPersistor extends SingleNodeContainerPersistor 
     /** @return the wrapped workflow manager's persistor. */
     WorkflowPersistor getWorkflowPersistor();
 
+    /** @return Input ports, excluding the flow variable (and possible) report port. */
     WorkflowPortTemplate[] getInPortTemplates();
 
     WorkflowPortTemplate[] getOutPortTemplates();

@@ -2352,6 +2352,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/port/report/IReportPortObject.java" type="org.knime.core.node.port.report.IReportPortObject">
+        <filter comment="reporting refactoring -- accepting breaking changes" id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.port.report.IReportPortObject"/>
+                <message_argument value="getReportFragments()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/port/report/IReportPortObject.java" type="org.knime.core.node.port.report.IReportPortObject$NoOpSerializer">
         <filter comment="definitely not used outside of core... (in fact, not used at all) " id="338792546">
             <message_arguments>
@@ -2366,6 +2374,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/port/report/IReportPortObjectSpec.java" type="org.knime.core.node.port.report.IReportPortObjectSpec">
+        <filter comment="reporting refactoring -- accepting breaking changes" id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.port.report.IReportPortObjectSpec"/>
+                <message_argument value="getPageConfiguration()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/port/report/IReportPortObjectSpec.java" type="org.knime.core.node.port.report.IReportPortObjectSpec$NoOpSerializer">
         <filter comment="definitely not used outside of core... (in fact, not used at all) " id="338792546">
             <message_arguments>
@@ -2377,6 +2393,115 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.port.report.IReportPortObjectSpec.NoOpSerializer"/>
                 <message_argument value="savePortObjectSpec(IReportPortObjectSpec, PortObjectSpecZipOutputStream)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/port/report/IReportService.java" type="org.knime.core.node.port.report.IReportService">
+        <filter comment="reporting refactoring -- accepting breaking changes" id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.port.report.IReportService"/>
+                <message_argument value="createOutputSpec(SubNodeContainer)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="reporting refactoring -- accepting breaking changes" id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.port.report.IReportService"/>
+                <message_argument value="createOutputSpec(SubNodeContainer)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/port/report/ReportConfiguration.java" type="org.knime.core.node.port.report.ReportConfiguration">
+        <filter comment="reporting refactoring -- accepting breaking changes" id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.port.report.ReportConfiguration"/>
+                <message_argument value="ReportConfiguration(ReportConfiguration.PageSize, ReportConfiguration.Orientation)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="reporting refactoring -- accepting breaking changes" id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.port.report.ReportConfiguration"/>
+                <message_argument value="ReportConfiguration(ReportConfiguration.PageSize, ReportConfiguration.Orientation, ReportConfiguration.PageMargins)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="reporting refactoring -- accepting breaking changes" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.port.report.ReportConfiguration"/>
+                <message_argument value="getPixelDimension(ReportConfiguration, boolean)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="reporting refactoring -- accepting breaking changes" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.port.report.ReportConfiguration"/>
+                <message_argument value="load(NodeSettingsRO)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="reporting refactoring -- accepting breaking changes" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.port.report.ReportConfiguration"/>
+                <message_argument value="margins()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="reporting refactoring -- accepting breaking changes" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.port.report.ReportConfiguration"/>
+                <message_argument value="orientation()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="reporting refactoring -- accepting breaking changes" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.port.report.ReportConfiguration"/>
+                <message_argument value="pageSize()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="reporting refactoring -- accepting breaking changes" id="338849923">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.port.report.ReportConfiguration"/>
+            </message_arguments>
+        </filter>
+        <filter comment="reporting refactoring -- accepting breaking changes" id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.port.report.ReportConfiguration.Orientation"/>
+                <message_argument value="org.knime.core_5.2.0"/>
+            </message_arguments>
+        </filter>
+        <filter comment="reporting refactoring -- accepting breaking changes" id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.port.report.ReportConfiguration.PageMargins"/>
+                <message_argument value="org.knime.core_5.2.0"/>
+            </message_arguments>
+        </filter>
+        <filter comment="reporting refactoring -- accepting breaking changes" id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.port.report.ReportConfiguration.PageSize"/>
+                <message_argument value="org.knime.core_5.2.0"/>
+            </message_arguments>
+        </filter>
+        <filter comment="reporting refactoring -- accepting breaking changes" id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.port.report.ReportConfiguration.PixelDimension"/>
+                <message_argument value="org.knime.core_5.2.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/port/report/ReportUtil.java" type="org.knime.core.node.port.report.ReportUtil">
+        <filter comment="reporting refactoring -- accepting breaking changes" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.port.report.ReportUtil"/>
+                <message_argument value="computeReportObjectSpec(SubNodeContainer)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/SubNodeContainer.java" type="org.knime.core.node.workflow.SubNodeContainer">
+        <filter comment="not meant as api" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.SubNodeContainer"/>
+                <message_argument value="isReportOutPort(int)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="method was never meant to be API" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.SubNodeContainer"/>
+                <message_argument value="setInPorts(PortType[])"/>
             </message_arguments>
         </filter>
     </resource>

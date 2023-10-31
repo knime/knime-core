@@ -60,8 +60,8 @@ import org.junit.Test;
 import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.port.report.IReportPortObject;
 import org.knime.core.node.port.report.ReportConfiguration;
-import org.knime.core.node.port.report.ReportConfiguration.Orientation;
-import org.knime.core.node.port.report.ReportConfiguration.PageSize;
+import org.knime.core.node.port.report.ReportPageConfiguration.PageOrientation;
+import org.knime.core.node.port.report.ReportPageConfiguration.PageSize;
 
 /** 
  * Enables/disables subnode's report output and checks if connections are properly retained. 
@@ -94,10 +94,10 @@ public class EnhAP20402_SubnodeWithReportPort extends WorkflowTestCase {
     	
     	final var snc = getManager().getNodeContainer(m_subnode_4, SubNodeContainer.class, true);
     	assertThat("has no report config", snc.getReportConfiguration().isEmpty(), is(true));
-    	assertThat("some other port is not report", snc.isReportOutPort(1), is(false));
-    	assertThat("last port is report", snc.isReportOutPort(2), is(false));
+    	assertThat("some other port is not report", snc.isReportPort(1, false), is(false));
+    	assertThat("last port is report", snc.isReportPort(2, false), is(false));
     	
-    	final var reportConfig = new ReportConfiguration(PageSize.A4, Orientation.Portrait);
+    	final var reportConfig = ReportConfiguration.INSTANCE;
     	
     	// add report, check connections are retained    	
     	getManager().changeSubNodeReportOutput(m_subnode_4, reportConfig);
@@ -116,10 +116,10 @@ public class EnhAP20402_SubnodeWithReportPort extends WorkflowTestCase {
     	assertThat("Number outputs on SNC after report adding", snc.getNrOutPorts(), is(4));
 		assertThat("last port is report", snc.getOutputType(3).getPortObjectClass(),
 				typeCompatibleWith(IReportPortObject.class));
-		assertThat("some other port is not report", snc.isReportOutPort(2), is(false));
-		assertThat("last port is report", snc.isReportOutPort(3), is(true));
+		assertThat("some other port is not report", snc.isReportPort(2, false), is(false));
+		assertThat("last port is report", snc.isReportPort(3, false), is(true));
 		
-		final var reportConfig2 = new ReportConfiguration(PageSize.A4, Orientation.Landscape);
+		final var reportConfig2 = ReportConfiguration.INSTANCE;
 		getManager().changeSubNodeReportOutput(m_subnode_4, reportConfig2);
 		checkState(m_subnodeOut_4_8, InternalNodeContainerState.CONFIGURED);
 		checkState(m_cache_2, InternalNodeContainerState.CONFIGURED);

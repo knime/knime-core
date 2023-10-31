@@ -134,7 +134,8 @@ public final class VirtualSubNodeOutputNodeModel extends ExtendedScopeNodeModel
         }
         final PortObjectSpec[] specs;
         if (m_subNodeContainer.getReportConfiguration().isPresent()) {
-            final var reportObjectSpec = ReportUtil.computeReportObjectSpec(m_subNodeContainer);
+            final var reportObjectSpec =
+                    ReportUtil.computeReportObjectSpec(m_subNodeContainer).orElse(null);
             specs = ArrayUtils.add(inSpecs, reportObjectSpec);
         } else {
             specs = inSpecs;

@@ -2028,12 +2028,24 @@ public final class WorkflowManager extends NodeContainer
 
     /**
      * @param subFlowID ID of the subflow
-     * @param newPorts The new ports
+     * @param newPortsRaw The new ports (excluding any potential report output)
      * @since 2.10
      */
-    public void changeSubNodeInputPorts(final NodeID subFlowID, final MetaPortInfo[] newPorts) {
+    public void changeSubNodeInputPorts(final NodeID subFlowID, final MetaPortInfo[] newPortsRaw) {
         try (WorkflowLock lock = lock()) {
             SubNodeContainer snc = getNodeContainer(subFlowID, SubNodeContainer.class, true);
+            final MetaPortInfo[] newPorts;
+            CheckUtils.checkArgument(newPortsRaw[0].getType().equals(FlowVariablePortObject.TYPE),
+                "Inport  at index 0 must be flow variable type (is: %s)", newPortsRaw[0].getType().getName());
+            if (snc.hasReportOutput()) {
+                // this is only to retain the connections set on the report input
+                newPorts = ArrayUtils.add(newPortsRaw,
+                    MetaPortInfo.builder().setOldIndex(snc.getNrInPorts() - 1).setNewIndex(newPortsRaw.length)
+                    .setIsConnected(getIncomingConnectionFor(subFlowID, snc.getNrInPorts() - 1) != null)
+                    .setPortType(IReportPortObject.TYPE).build());
+            } else {
+                newPorts = newPortsRaw;
+            }
             if (!haveSubPortsChanged(newPorts, true, snc)) {
                 return;
             }
@@ -2046,15 +2058,15 @@ public final class WorkflowManager extends NodeContainer
             }
             var subFlow = snc.getWorkflowManager();
             List<Pair<ConnectionContainer, ConnectionContainer>> changedConnectionsSubFlow =
-                subFlow.m_workflow.changeSourcePortsForMetaNode(snc.getVirtualInNodeID(), newPorts, true);
+                subFlow.m_workflow.changeSourcePortsForMetaNode(snc.getVirtualInNodeID(), newPortsRaw, true);
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsSubFlow) {
                 subFlow.removeConnection(p.getFirst());
             }
-            var portTypes = new PortType[newPorts.length - 1];
-            for (var i = 0; i < newPorts.length - 1; i++) {
-                portTypes[i] = newPorts[i + 1].getType();
-            }
-            snc.setInPorts(portTypes);
+            final PortType[] portTypes = Stream.of(newPortsRaw) //
+                    .skip(1) // flow var port
+                    .map(MetaPortInfo::getType) //
+                    .toArray(PortType[]::new);
+            snc.setInPorts(portTypes, snc.getReportConfiguration().isPresent());
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsThisFlow) {
                 ConnectionContainer newConn = p.getSecond();
                 addConnection(newConn);
@@ -2089,7 +2101,7 @@ public final class WorkflowManager extends NodeContainer
             } else {
                 newPorts = newPortsRaw;
             }
-            if (!haveSubPortsChanged(newPorts, false, snc)) {
+            if (!haveSubPortsChanged(newPortsRaw, false, snc)) {
                 return;
             }
             List<Pair<ConnectionContainer, ConnectionContainer>> changedConnectionsThisFlow =
@@ -2121,8 +2133,6 @@ public final class WorkflowManager extends NodeContainer
                     snc.getVirtualOutNodeID(), p.getSecond().getDestPort());
             }
             setDirty();
-
-            // Notify listeners
             notifyWorkflowListeners(new WorkflowEvent(NODE_PORTS_CHANGED, subFlowID, null, null));
         }
     }
@@ -2145,6 +2155,8 @@ public final class WorkflowManager extends NodeContainer
                 for (final var connection : getOutgoingConnectionsFor(subFlowID, snc.getNrOutPorts() - 1)) {
                     removeConnection(connection);
                 }
+                Optional.ofNullable(getIncomingConnectionFor(subFlowID, snc.getNrInPorts() - 1))
+                    .ifPresent(this::removeConnection);
             }
             if (snc.setReportConfiguration(reportConfiguration)) { // ports have changed
                 notifyWorkflowListeners(new WorkflowEvent(NODE_PORTS_CHANGED, subFlowID, null, null));

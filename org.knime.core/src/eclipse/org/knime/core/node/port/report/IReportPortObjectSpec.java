@@ -65,4 +65,11 @@ public interface IReportPortObjectSpec extends PortObjectSpec {
      */
     final class NoOpSerializer extends FailOnInvocationPortObjectSpecSerializer<IReportPortObjectSpec> {}
 
+    /**
+     * The default page configuration, used for to-be-appended pages.
+     * @return The non-null page configuration.
+     * @since 5.2
+     */
+    ReportPageConfiguration getPageConfiguration();
+
 }

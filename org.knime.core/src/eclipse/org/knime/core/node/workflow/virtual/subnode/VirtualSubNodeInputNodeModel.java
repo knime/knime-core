@@ -52,6 +52,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.knime.core.data.DataRow;
@@ -68,6 +69,7 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.inactive.InactiveBranchPortObject;
+import org.knime.core.node.port.report.IReportPortObject;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.streamable.PartitionInfo;
 import org.knime.core.node.streamable.PortInput;
@@ -100,6 +102,7 @@ public final class VirtualSubNodeInputNodeModel extends ExtendedScopeNodeModel i
      */
     private SubNodeContainer m_subNodeContainer;
     private VirtualSubNodeInputConfiguration m_configuration;
+    private IReportPortObject m_inputReportPortObject;
 
     /**
      * @param subnodeContainer
@@ -185,10 +188,15 @@ public final class VirtualSubNodeInputNodeModel extends ExtendedScopeNodeModel i
             throws Exception {
         PortObject[] inputData = m_subNodeContainer.fetchInputData(exec);
         pushFlowVariables();
-        PortObject[] resultData = new PortObject[inputData.length - 1];
-        for (int i = 1; i < inputData.length; i++) {
-            PortObject o = inputData[i];
-            resultData[i - 1] = o instanceof BufferedDataTable ? exec.createWrappedTable((BufferedDataTable)o) : o;
+        int nodePortCount = inputData.length - /* flow var port */ 1;
+        if (m_subNodeContainer.getReportConfiguration().isPresent()) {
+            m_inputReportPortObject = (IReportPortObject)inputData[inputData.length - 1];
+            nodePortCount -= 1;
+        }
+        PortObject[] resultData = new PortObject[nodePortCount];
+        for (int i = 0; i < nodePortCount; i++) {
+            PortObject o = inputData[i + 1];
+            resultData[i] = o instanceof BufferedDataTable bdt ? exec.createWrappedTable(bdt) : o;
         }
         return resultData;
     }
@@ -230,11 +238,16 @@ public final class VirtualSubNodeInputNodeModel extends ExtendedScopeNodeModel i
             setWarningMessage("Guessing defaults (excluding all variables)");
             m_configuration = VirtualSubNodeInputConfiguration.newDefault(m_numberOfPorts);
         }
-        PortObjectSpec[] inputSpecs = m_subNodeContainer.fetchInputSpec();
-        final PortObjectSpec[] specsNoFlowVar = ArrayUtils.removeAll(inputSpecs, 0);
-        int firstNullIndex = ArrayUtils.indexOf(specsNoFlowVar, null);
-        CheckUtils.checkSetting(firstNullIndex < 0,
-            "Component input port %d is not connected or doesn't have meta data", firstNullIndex);
+        final PortObjectSpec[] inputSpecs = m_subNodeContainer.fetchInputSpec();
+        final int nodePortCount = inputSpecs.length - /* flow var port */ 1
+            - (m_subNodeContainer.getReportConfiguration().isPresent() ? 1 : 0);
+        final PortObjectSpec[] specsNoFlowVar = new PortObjectSpec[nodePortCount];
+        for (int i = 0; i < nodePortCount; i++) {
+            PortObjectSpec pos = inputSpecs[i + 1]; // off by one (flow var port)
+            CheckUtils.checkSettingNotNull(pos,
+                "Component input port %d is not connected or doesn't have meta data", i + 1);
+            specsNoFlowVar[i] = pos;
+        }
         pushFlowVariables();
         return specsNoFlowVar;
     }
@@ -244,6 +257,7 @@ public final class VirtualSubNodeInputNodeModel extends ExtendedScopeNodeModel i
      */
     @Override
     protected void reset() {
+        m_inputReportPortObject = null;
     }
 
     /**
@@ -366,5 +380,15 @@ public final class VirtualSubNodeInputNodeModel extends ExtendedScopeNodeModel i
             return new HiLiteHandler();
         }
         return m_subNodeContainer.getInHiliteHandler(outIndex);
+    }
+
+    /**
+     * Get the report port object set on the input. An empty optional if the component is not configured
+     * to generate a report or this node is not executed.
+     * @return That object.
+     * @since 5.2
+     */
+    public Optional<IReportPortObject> getReportObjectFromInput() {
+        return Optional.ofNullable(m_inputReportPortObject);
     }
 }
