@@ -59,7 +59,7 @@ import org.knime.core.node.port.PortObjectSpec;
  */
 public interface NodeFunc extends ApiDefinition {
 
-    void saveSettings(final String[] arguments, final PortObjectSpec[] inputSpecs, final NodeSettingsWO settings)
+    void saveSettings(final NodeSettingsRO arguments, final PortObjectSpec[] inputSpecs, final NodeSettingsWO settings)
         throws InvalidSettingsException;
 
     PortDefinition[] getInputs();
