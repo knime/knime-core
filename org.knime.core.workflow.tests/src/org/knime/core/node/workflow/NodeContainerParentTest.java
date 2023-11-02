@@ -64,7 +64,7 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.exec.dataexchange.in.PortObjectInNodeFactory;
 import org.knime.core.node.extension.InvalidNodeFactoryExtensionException;
-import org.knime.core.node.extension.NodeFactoryExtensionManager;
+import org.knime.core.node.extension.NodeFactoryProvider;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.WorkflowPersistor.MetaNodeLinkUpdateResult;
 import org.knime.core.node.workflow.action.MetaNodeToSubNodeResult;
@@ -133,8 +133,8 @@ public class NodeContainerParentTest {
 
     private static NativeNodeContainer addSaveWorkflowNode(final WorkflowManager wfm)
         throws InstantiationException, IllegalAccessException, InvalidNodeFactoryExtensionException {
-        NodeID id = wfm.createAndAddNode(NodeFactoryExtensionManager.getInstance() // NOSONAR
-            .createNodeFactory(PortObjectInNodeFactory.class.getCanonicalName()).get());
+        NodeID id = wfm.createAndAddNode(NodeFactoryProvider.getInstance() //
+        		.getNodeFactory(PortObjectInNodeFactory.class.getCanonicalName()).get());
         return (NativeNodeContainer)wfm.getNodeContainer(id);
     }
 

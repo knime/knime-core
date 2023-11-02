@@ -66,7 +66,7 @@ import org.knime.core.node.config.base.AbstractConfigEntry;
 import org.knime.core.node.context.ModifiableNodeCreationConfiguration;
 import org.knime.core.node.context.NodeCreationConfiguration;
 import org.knime.core.node.extension.InvalidNodeFactoryExtensionException;
-import org.knime.core.node.extension.NodeFactoryExtensionManager;
+import org.knime.core.node.extension.NodeFactoryProvider;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortTypeRegistry;
@@ -226,12 +226,13 @@ public class DefToCoreUtil {
      * @since 3.5
      */
     @SuppressWarnings("unchecked")
-    private static final NodeFactory<NodeModel> loadNodeFactory(final String factoryClassName) throws InvalidSettingsException,
-        InstantiationException, IllegalAccessException,  InvalidNodeFactoryExtensionException{
-        Optional<NodeFactory<? extends NodeModel>> facOptional =
-                NodeFactoryExtensionManager.getInstance().createNodeFactory(factoryClassName);
+    private static final NodeFactory<NodeModel> loadNodeFactory(final String factoryClassName)
+            throws InvalidSettingsException, InstantiationException, IllegalAccessException,
+            InvalidNodeFactoryExtensionException{
+        Optional<NodeFactory<NodeModel>> facOptional =
+                NodeFactoryProvider.getInstance().getNodeFactory(factoryClassName);
         if (facOptional.isPresent()) {
-            return (NodeFactory<NodeModel>)facOptional.get();
+            return facOptional.get();
         }
         List<NodeFactoryClassMapper> classMapperList = NodeFactoryClassMapper.getRegisteredMappers();
         for (NodeFactoryClassMapper mapper : classMapperList) {

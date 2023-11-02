@@ -73,7 +73,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.context.ModifiableNodeCreationConfiguration;
-import org.knime.core.node.extension.NodeFactoryExtensionManager;
+import org.knime.core.node.extension.NodeFactoryProvider;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.workflow.action.ReplaceNodeResult;
 import org.knime.core.node.workflow.node.configurable.ConfigurableNodeWithoutPortsConfigBuilderNodeFactory;
@@ -344,8 +344,8 @@ public class ReplaceNodeTest extends WorkflowTestCase {
 	@Test
 	public void testReplaceNodeWithOutPortConfig() throws Exception {
 		var wfm = getManager();
-		var factory = NodeFactoryExtensionManager.getInstance()
-				.createNodeFactory(ConfigurableNodeWithoutPortsConfigBuilderNodeFactory.class.getName()).orElse(null);
+		var factory = NodeFactoryProvider.getInstance() //
+				.getNodeFactory(ConfigurableNodeWithoutPortsConfigBuilderNodeFactory.class.getName()).orElse(null);
 		var nodeID = wfm.createAndAddNode(factory);
 		var oldNC = (NativeNodeContainer) wfm.getNodeContainer(nodeID);
 		var creationConfig = oldNC.getNode().getCopyOfCreationConfig().get();
@@ -374,8 +374,8 @@ public class ReplaceNodeTest extends WorkflowTestCase {
 	public void testRestorePortConfigOnUndoAfterReplaceWithAnotherNode() throws Exception {
 		var wfm = getManager();
 		var caseSwitchStart19 = wfm.getID().createChild(19);
-		var newFactory = NodeFactoryExtensionManager.getInstance()
-				.createNodeFactory("org.knime.base.node.io.filehandling.model.reader.ModelReaderNodeFactory")
+		var newFactory = NodeFactoryProvider.getInstance() //
+				.getNodeFactory("org.knime.base.node.io.filehandling.model.reader.ModelReaderNodeFactory")
 				.orElse(null);
 		assertThat(newFactory, is(notNullValue()));
 		var replaceResult = wfm.replaceNode(caseSwitchStart19, null, newFactory);

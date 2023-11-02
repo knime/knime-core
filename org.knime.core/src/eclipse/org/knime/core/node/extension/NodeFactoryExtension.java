@@ -48,6 +48,8 @@
  */
 package org.knime.core.node.extension;
 
+import java.util.Optional;
+
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.IConfigurationElement;
@@ -71,7 +73,7 @@ import org.osgi.framework.Bundle;
  * @author Bernd Wiswedel, KNIME GmbH, Konstanz, Germany
  * @noreference This class is not intended to be referenced by clients.
  */
-public final class NodeFactoryExtension {
+public final class NodeFactoryExtension implements INodeFactoryExtension {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(NodeFactoryExtension.class);
 
@@ -106,6 +108,7 @@ public final class NodeFactoryExtension {
     }
 
     /** @return symbolic name of the plug-in contributing the node/extension. */
+    @Override
     public String getPlugInSymbolicName() {
         return m_configurationElement.getContributor().getName();
     }
@@ -140,7 +143,7 @@ public final class NodeFactoryExtension {
         return m_isDeprecated.booleanValue();
     }
 
-    /** @return the "hidden" field in the extension point. */
+    @Override
     public boolean isHidden() {
         return Boolean.parseBoolean(m_configurationElement.getAttribute("hidden"));
     }
@@ -150,9 +153,19 @@ public final class NodeFactoryExtension {
         return ObjectUtils.defaultIfNull(m_configurationElement.getAttribute("after"), "");
     }
 
+    @Override
+    public String getAfterID(final String id) {
+        return getAfterID();
+    }
+
     /** @return the "category-path" field in the extension point or "/". */
     public String getCategoryPath() {
         return ObjectUtils.defaultIfNull(m_configurationElement.getAttribute("category-path"), "/");
+    }
+
+    @Override
+    public String getCategoryPath(final String id) {
+        return getCategoryPath();
     }
 
     /**
@@ -170,6 +183,16 @@ public final class NodeFactoryExtension {
             m_factory = createFactory();
         }
         return m_factory;
+    }
+
+    @Override
+    public Optional<NodeFactory<? extends NodeModel>> getNodeFactory(final String id) {
+        try {
+            return Optional.of(getFactory());
+        } catch (InvalidNodeFactoryExtensionException ex) {
+            LOGGER.warn("Could not create node factory", ex);
+            return Optional.empty();
+        }
     }
 
     /** Returns a new factory instance.
@@ -211,4 +234,5 @@ public final class NodeFactoryExtension {
         return String.format("%s (via %s)%s", getFactoryClassName(), getPlugInSymbolicName(),
             Boolean.parseBoolean(m_configurationElement.getAttribute("deprecated")) ? " -- deprecated" : "");
     }
+
 }

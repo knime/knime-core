@@ -63,7 +63,7 @@ import org.apache.xmlbeans.XmlException;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
 import org.knime.core.node.context.NodeCreationConfiguration;
-import org.knime.core.node.extension.NodeFactoryExtensionManager;
+import org.knime.core.node.extension.NodeFactoryProvider;
 import org.knime.core.node.missing.MissingNodeFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -746,7 +746,7 @@ public abstract class NodeFactory<T extends NodeModel> {
     @Deprecated
     @SuppressWarnings({"rawtypes", "unchecked"})
     public static void addLoadedFactory(final Class<? extends NodeFactory> factoryClass) {
-        NodeFactoryExtensionManager.getInstance()
+        NodeFactoryProvider.getInstance() //
             .addLoadedFactory((Class<? extends NodeFactory<NodeModel>>)factoryClass);
     }
 

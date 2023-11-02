@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <component id="org.knime.core" version="2">
+    <resource path="META-INF/MANIFEST.MF">
+        <filter comment="Added INodeFactoryExtension" id="923795461">
+            <message_arguments>
+                <message_argument value="5.2.0"/>
+                <message_argument value="5.1.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.port.PortSerializerContext">
         <filter id="305324134">
             <message_arguments>

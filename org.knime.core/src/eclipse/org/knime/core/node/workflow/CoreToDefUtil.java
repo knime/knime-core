@@ -59,6 +59,7 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeAndBundleInformationPersistor;
 import org.knime.core.node.NodeSettings;
+import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.AnnotationData.StyleRange;
 import org.knime.core.node.workflow.ComponentMetadata.ComponentNodeType;
@@ -277,18 +278,27 @@ public class CoreToDefUtil {
     }
 
     /**
-     * @param p
-     * @return
+     * @since 5.2
+     */
+    public static PortTypeDef toPortTypeDef(final PortType p) {
+        return new PortTypeDefBuilder()//
+            .setColor(p.getColor())//
+            .setHidden(p.isHidden())//
+            .setName(p.getName())//
+            .setOptional(p.isOptional())//
+            .setPortObjectClass(p.getPortObjectClass().getCanonicalName())//
+            .setPortObjectSpecClass(p.getPortObjectSpecClass().getCanonicalName())//
+            .build();
+    }
+
+    /**
+     * Used for metanodes and components.
+     *
+     * @param p node port as provided by a workflow manager
+     * @return port information
      */
     public static PortDef toPortDef(final NodePort p) {
-        PortTypeDef portType = new PortTypeDefBuilder()//
-                .setColor(p.getPortType().getColor())//
-                .setHidden(p.getPortType().isHidden())//
-                .setName(p.getPortType().getName())//
-                .setOptional(p.getPortType().isOptional())//
-                .setPortObjectClass(p.getPortType().getPortObjectClass().getCanonicalName())//
-                .setPortObjectSpecClass(p.getPortType().getPortObjectSpecClass().getCanonicalName())//
-                .build();
+        var portType = toPortTypeDef(p.getPortType());
 
         return new PortDefBuilder()//
             .setIndex(p.getPortIndex())//

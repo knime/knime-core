@@ -78,7 +78,7 @@ import org.osgi.framework.Bundle;
  *
  * @noreference This class is not intended to be referenced by clients.
  */
-public final class NodeSetFactoryExtension {
+public final class NodeSetFactoryExtension implements INodeFactoryExtension {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(NodeSetFactoryExtension.class);
 
@@ -115,6 +115,7 @@ public final class NodeSetFactoryExtension {
     /**
      * @return name of the plug-in defining the extension.
      */
+    @Override
     public String getPlugInSymbolicName() {
         return getContributingPlugIn(m_configurationElement);
     }
@@ -150,7 +151,7 @@ public final class NodeSetFactoryExtension {
         return cl;
     }
 
-    /** @return the number of nodes defined through this NodeSetFactory. */
+    @Override
     public long getNumberOfNodes() {
         return m_numberOfNodes;
     }
@@ -165,6 +166,7 @@ public final class NodeSetFactoryExtension {
     /**
      * @return delegates to {@link org.knime.core.node.NodeSetFactory#getNodeFactoryIds()}.
      */
+    @Override
     public Collection<String> getNodeFactoryIds() {
         return m_setFactory.getNodeFactoryIds();
     }
@@ -180,6 +182,7 @@ public final class NodeSetFactoryExtension {
      * @return a factory instance or an empty Optional if there couldn't be found one for the given id
      * @since 4.5
      */
+    @Override
     public Optional<NodeFactory<? extends NodeModel>> getNodeFactory(final String id) {
         if (m_nodeFactories == null) {
             m_nodeFactories = new HashMap<>();
@@ -222,18 +225,12 @@ public final class NodeSetFactoryExtension {
         }
     }
 
-    /** Category path as per {@link org.knime.core.node.NodeSetFactory#getCategoryPath(String)}.
-     * @param id ...
-     * @return Category path or and empty string ("").
-     */
+    @Override
     public String getCategoryPath(final String id) {
         return StringUtils.defaultString(m_setFactory.getCategoryPath(id), "");
     }
 
-    /** The "after-id" as defined through {@link org.knime.core.node.NodeSetFactory#getAfterID(String)}.
-     * @param id ..
-     * @return The after ID or "/".
-     */
+    @Override
     public String getAfterID(final String id) {
         return StringUtils.defaultIfEmpty(m_setFactory.getAfterID(id), "/");
     }
@@ -244,6 +241,18 @@ public final class NodeSetFactoryExtension {
      */
     public boolean isDeprecated() {
         return Boolean.parseBoolean(m_configurationElement.getAttribute("deprecated"));
+    }
+
+    @Override
+    public boolean isInternal() {
+        return Optional.ofNullable(m_configurationElement.getAttribute("internal"))//
+            .map(Boolean::parseBoolean)//
+            .orElse(false);
+    }
+
+    @Override
+    public boolean isHidden() {
+        return m_setFactory.isHidden();
     }
 
     @Override

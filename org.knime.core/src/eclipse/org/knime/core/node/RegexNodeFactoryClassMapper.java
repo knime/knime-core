@@ -52,7 +52,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 
-import org.knime.core.node.extension.NodeFactoryExtensionManager;
+import org.knime.core.node.extension.NodeFactoryProvider;
 import org.knime.core.util.Pair;
 
 /**
@@ -66,7 +66,6 @@ import org.knime.core.util.Pair;
  * @author Alison Walter, KNIME GmbH, Konstanz, Germany
  * @since 4.1
  */
-@SuppressWarnings("deprecation")
 public abstract class RegexNodeFactoryClassMapper extends NodeFactoryClassMapper {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(RegexNodeFactoryClassMapper.class);
@@ -98,8 +97,8 @@ public abstract class RegexNodeFactoryClassMapper extends NodeFactoryClassMapper
                 final String newClassName =
                     factoryClassName.replaceAll(replacement.getFirst(), replacement.getSecond());
                 try {
-                    Optional<NodeFactory<? extends NodeModel>> replacementFacOptional =
-                            NodeFactoryExtensionManager.getInstance().createNodeFactory(newClassName);
+                    Optional<NodeFactory<NodeModel>> replacementFacOptional =
+                            NodeFactoryProvider.getInstance().getNodeFactory(newClassName);
                     if (replacementFacOptional.isPresent()) {
                         return replacementFacOptional.get();
                     }

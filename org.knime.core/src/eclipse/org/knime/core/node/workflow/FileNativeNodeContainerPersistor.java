@@ -78,7 +78,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.context.ModifiableNodeCreationConfiguration;
 import org.knime.core.node.context.NodeCreationConfiguration;
 import org.knime.core.node.extension.InvalidNodeFactoryExtensionException;
-import org.knime.core.node.extension.NodeFactoryExtensionManager;
+import org.knime.core.node.extension.NodeFactoryProvider;
 import org.knime.core.node.message.Message;
 import org.knime.core.node.missing.MissingNodeFactory;
 import org.knime.core.node.port.PortObject;
@@ -296,16 +296,23 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
     /**
      * Creates the node factory instance for the given fully-qualified factory class name.
      * Otherwise a respective exception will be thrown.
+     * @param factoryClassName
+     * @return
+     * @throws InvalidSettingsException
+     * @throws InstantiationException
+     * @throws IllegalAccessException
+     * @throws InvalidNodeFactoryExtensionException
      *
      * @since 3.5
      */
     @SuppressWarnings("unchecked")
-    public static final NodeFactory<NodeModel> loadNodeFactory(final String factoryClassName) throws InvalidSettingsException,
-        InstantiationException, IllegalAccessException,  InvalidNodeFactoryExtensionException{
-        Optional<NodeFactory<? extends NodeModel>> facOptional =
-                NodeFactoryExtensionManager.getInstance().createNodeFactory(factoryClassName);
+    public static final NodeFactory<NodeModel> loadNodeFactory(final String factoryClassName)
+            throws InvalidSettingsException, InstantiationException, IllegalAccessException,
+            InvalidNodeFactoryExtensionException{
+        Optional<NodeFactory<NodeModel>> facOptional =
+                NodeFactoryProvider.getInstance().getNodeFactory(factoryClassName);
         if (facOptional.isPresent()) {
-            return (NodeFactory<NodeModel>)facOptional.get();
+            return facOptional.get();
         }
         List<NodeFactoryClassMapper> classMapperList = NodeFactoryClassMapper.getRegisteredMappers();
         for (NodeFactoryClassMapper mapper : classMapperList) {

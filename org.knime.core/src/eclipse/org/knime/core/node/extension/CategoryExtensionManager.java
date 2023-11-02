@@ -48,20 +48,7 @@
  */
 package org.knime.core.node.extension;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.stream.Stream;
-
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IConfigurationElement;
-import org.eclipse.core.runtime.IExtensionPoint;
-import org.eclipse.core.runtime.IExtensionRegistry;
-import org.eclipse.core.runtime.Platform;
-import org.knime.core.node.NodeLogger;
-import org.knime.core.node.util.CheckUtils;
 
 /**
  * A singleton class to collect node categories from the respective extension point.
@@ -69,32 +56,17 @@ import org.knime.core.node.util.CheckUtils;
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  * @noreference This class is not intended to be referenced by clients@
  * @since 4.5
+ * @deprecated not used in current code but in some installations out there
  */
+@Deprecated(forRemoval = true)
 public final class CategoryExtensionManager {
 
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(CategoryExtensionManager.class);
-
-    /** ID of the "category" extension point */
-    private static final String ID_CATEGORY = "org.knime.workbench.repository.categories";
-
-    /** ID of the "categorysets" extension point */
-    private static final String ID_CATEGORY_SET  = "org.knime.workbench.repository.categorysets";
-
-    private static CategoryExtensionManager instance;
-
-    /**
-     * Map from the complete category path to the associated {@link CategoryExtension}.
-     */
-    private Map<String, CategoryExtension> m_categoryExtensions;
+    private static CategoryExtensionManager instance = new CategoryExtensionManager();
 
     /**
      * @return the singleton instance
      */
     public static synchronized CategoryExtensionManager getInstance() {
-        if (instance == null) {
-            instance = new CategoryExtensionManager();
-            instance.collectCategoryExtensions();
-        }
         return instance;
     }
 
@@ -102,58 +74,12 @@ public final class CategoryExtensionManager {
         // singleton
     }
 
-    private void collectCategoryExtensions() {
-        Map<String, CategoryExtension> categoryExtensions = new HashMap<>();
-        collectFromCategoryExtPoint(categoryExtensions);
-        collectFromCategorySetsExtPoint(categoryExtensions);
-        m_categoryExtensions = Collections.unmodifiableMap(categoryExtensions);
-    }
-
-    /** Collect all categories from the "categories" extension point. */
-    private static void collectFromCategoryExtPoint(final Map<String, CategoryExtension> categoryExtensions) {
-        IExtensionRegistry registry = Platform.getExtensionRegistry();
-        IExtensionPoint point = registry.getExtensionPoint(ID_CATEGORY);
-        CheckUtils.checkState(point != null, "Invalid extension point: %s", ID_CATEGORY);
-        @SuppressWarnings("null")
-        Iterator<IConfigurationElement> it = Arrays.stream(point.getExtensions())//
-            .flatMap(ext -> Stream.of(ext.getConfigurationElements())).iterator();
-        while (it.hasNext()) {
-            try {
-                CategoryExtension categoryExtension = CategoryExtension.fromConfigurationElement(it.next());
-                categoryExtensions.put(categoryExtension.getCompletePath(), categoryExtension);
-            } catch (IllegalArgumentException iae) {
-                LOGGER.error(iae.getMessage(), iae);
-            }
-        }
-    }
-
-    /** Collect all categories from the "categorysets" extension point. */
-    private static void collectFromCategorySetsExtPoint(final Map<String, CategoryExtension> categoryExtensions) {
-        IExtensionRegistry registry = Platform.getExtensionRegistry();
-        IExtensionPoint point = registry.getExtensionPoint(ID_CATEGORY_SET);
-        CheckUtils.checkState(point != null, "Invalid extension point: %s", ID_CATEGORY_SET);
-        @SuppressWarnings("null")
-        final Iterator<IConfigurationElement> it = Arrays.stream(point.getExtensions()) //
-            .flatMap(ext -> Stream.of(ext.getConfigurationElements())) //
-            .iterator();
-        while (it.hasNext()) {
-            final var ext = it.next();
-            try {
-                final var factory = (CategorySetFactory)ext.createExecutableExtension("factory-class");
-                factory.getCategories().forEach(c -> categoryExtensions.put(c.getCompletePath(), c));
-            } catch (final CoreException e) {
-                LOGGER.error(String.format("Failed to create CategorySetFactory from plugin '%s'.",
-                    ext.getDeclaringExtension().getNamespaceIdentifier()), e);
-            }
-        }
-    }
-
     /**
      * @return the category extensions as a map from the complete category path to the respective
      *         {@link CategoryExtension}
      */
     public Map<String, CategoryExtension> getCategoryExtensions() {
-        return m_categoryExtensions;
+        return CategoryExtensionUtil.collectCategoryExtensions();
     }
 
 }

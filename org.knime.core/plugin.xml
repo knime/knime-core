@@ -754,7 +754,8 @@
          point="org.knime.workbench.repository.nodesets">
       <nodeset
             deprecated="false"
-            factory-class="org.knime.core.node.workflow.virtual.VirtualNodeSetFactory">
+            factory-class="org.knime.core.node.workflow.virtual.VirtualNodeSetFactory"
+            internal="true">
       </nodeset>
    </extension>
    <extension

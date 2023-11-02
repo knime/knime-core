@@ -54,7 +54,7 @@ import java.io.File;
 import java.io.FileInputStream;
 
 import org.junit.Test;
-import org.knime.core.node.extension.NodeFactoryExtensionManager;
+import org.knime.core.node.extension.NodeFactoryProvider;
 import org.knime.core.node.missing.MissingNodeFactory;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.WorkflowPersistor;
@@ -105,11 +105,11 @@ public class NodeFactoryIdTest {
             DYNAMIC_FACTORY, DYNAMIC_FACTORY_PRIOR_AP_5_2, NORMAL_FACTORY;
     }
 
-    private static void testNodeFactoryIdAndFactoryIdUniquifier(final String factoryClassName, final String expectedFactoryIdUniquifier,
-        final FactoryType factoryType) throws Exception {
+    private static void testNodeFactoryIdAndFactoryIdUniquifier(final String factoryClassName,
+            final String expectedFactoryIdUniquifier, final FactoryType factoryType) throws Exception {
         // create workflow and check
         var newWfm = WorkflowManagerUtil.createEmptyWorkflow();
-        var factory = NodeFactoryExtensionManager.getInstance().createNodeFactory(factoryClassName).orElseThrow();
+        var factory = NodeFactoryProvider.getInstance().getNodeFactory(factoryClassName).orElseThrow();
         var nnc = WorkflowManagerUtil.createAndAddNode(newWfm, factory);
         var expectedFactoryId = switch (factoryType) {
             case DYNAMIC_FACTORY -> factoryClassName + "#" + expectedFactoryIdUniquifier;
@@ -120,10 +120,10 @@ public class NodeFactoryIdTest {
         factory = nnc.getNode().getFactory();
         switch (factoryType) {
             case DYNAMIC_FACTORY -> {
-                var idUniquifier = ((DynamicNodeFactory)factory).getFactoryIdUniquifier();
+                var idUniquifier = ((DynamicNodeFactory<?>)factory).getFactoryIdUniquifier();
                 assertThat(idUniquifier).isEqualTo(expectedFactoryIdUniquifier);
             }
-            case DYNAMIC_FACTORY_PRIOR_AP_5_2 -> assertThat(((DynamicNodeFactory)factory).getFactoryIdUniquifier())
+            case DYNAMIC_FACTORY_PRIOR_AP_5_2 -> assertThat(((DynamicNodeFactory<?>)factory).getFactoryIdUniquifier())
                 .isNull();
             case NORMAL_FACTORY -> assertThat(factory).isNotInstanceOf(DynamicNodeFactory.class);
         }
