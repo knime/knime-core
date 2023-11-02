@@ -564,7 +564,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
         m_workflowSett = subWFSettings;
 
         try {
-            if (m_nameOverwrite != null) {
+            if (!m_isComponentProject && m_nameOverwrite != null) {
                 m_name = m_nameOverwrite;
             } else {
                 m_name = loadWorkflowName(m_workflowSett);

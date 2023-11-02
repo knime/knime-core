@@ -9711,15 +9711,6 @@ public final class WorkflowManager extends NodeContainer
     }
 
     /**
-     * Unset the name without marking the project dirty.
-     *
-     * @since 5.2
-     */
-    public void unsetNameUndirty() {
-        m_name = null;
-    }
-
-    /**
      * Renames the underlying workflow directory to the new name.
      *
      * @param newName The name of the directory.
