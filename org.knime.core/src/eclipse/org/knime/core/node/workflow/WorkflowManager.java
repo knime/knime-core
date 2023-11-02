@@ -9703,11 +9703,20 @@ public final class WorkflowManager extends NodeContainer
      * @param name The new name or null
      */
     public void setName(final String name) {
-        if (!ConvenienceMethods.areEqual(m_name, name)) {
+        if (!Objects.equals(m_name, name)) {
             m_name = name;
             setDirty();
             notifyNodePropertyChangedListener(NodeProperty.Name);
         }
+    }
+
+    /**
+     * Unset the name without marking the project dirty.
+     *
+     * @since 5.2
+     */
+    public void unsetNameUndirty() {
+        m_name = null;
     }
 
     /**
