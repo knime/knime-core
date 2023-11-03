@@ -47,6 +47,7 @@
 package org.knime.core.data;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -367,7 +368,8 @@ public class DataTableDomainCreator {
             outColSpecs[i] = specCreator.createSpec();
         }
 
-        return new DataTableSpec(m_inputSpec.getName(), outColSpecs);
+        return new DataTableSpec(m_inputSpec.getName(), outColSpecs, Collections.emptyMap(),
+            m_inputSpec.getColumnNamesColorHandler().orElse(null));
     }
 
     private Set<DataCell> getSortedValues(final int index) {

@@ -52,13 +52,17 @@ import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.nullValue;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -70,6 +74,9 @@ import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.data.meta.TestDataColumnMetaData;
+import org.knime.core.data.property.ColorAttr;
+import org.knime.core.data.property.ColorHandler;
+import org.knime.core.data.property.ColorModelNominal;
 
 /**
  * Testcases for {@link DataTableDomainCreator}.
@@ -629,6 +636,27 @@ public class DataTableDomainCreatorTest {
         concat.add("A");
         domainCreator.updateDomain(new DefaultRow("test", "A"));
         assertThat(getMetaData(domainCreator), is(new TestDataColumnMetaData(concat)));
+    }
+
+    /**
+     * Tests whether the column color handler is copied to the new spec.
+     */
+    @Test
+    public void testColumnColorHandlerCopied() {
+        Map<DataCell, ColorAttr> columnNamesColorMap = new HashMap<>();
+        columnNamesColorMap.put(new StringCell("column1"), ColorAttr.getInstance(new Color(0, 0, 255)));
+        columnNamesColorMap.put(new StringCell("column2"), ColorAttr.getInstance(new Color(0, 255, 0)));
+        final var columnNamesColorModel = new ColorModelNominal(columnNamesColorMap, new ColorAttr[0]);
+
+        final var dataTableSpecCreator = new DataTableSpecCreator();
+        dataTableSpecCreator.setColumnNamesColorHandler(new ColorHandler(columnNamesColorModel));
+
+        DataTableDomainCreator domainCreator = new DataTableDomainCreator(dataTableSpecCreator.createSpec(), true);
+        final var newSpec = domainCreator.createSpec();
+
+        final var newSpecColorHandler = newSpec.getColumnNamesColorHandler();
+        assertTrue(newSpecColorHandler.isPresent());
+        assertTrue(columnNamesColorModel.equals(newSpecColorHandler.get().getColorModel()));
     }
 
 }
