@@ -48,6 +48,8 @@
  */
 package org.knime.core.node.func;
 
+import org.knime.core.node.NodeFactory;
+
 /**
  *
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
@@ -59,34 +61,18 @@ public abstract class AbstractNodeFunc implements NodeFunc {
 
     private final String m_nodeFactoryName;
 
+    /**
+     * @param api of the {@link NodeFunc}
+     * @param nodeFactoryName name of the {@link NodeFactory} that creates the node
+     */
     protected AbstractNodeFunc(final NodeFuncApi api, final String nodeFactoryName) {
         m_api = api;
         m_nodeFactoryName = nodeFactoryName;
     }
 
     @Override
-    public String getName() {
-        return m_api.m_name;
-    }
-
-    @Override
-    public String getDescription() {
-        return m_api.m_description;
-    }
-
-    @Override
-    public PortDefinition[] getInputs() {
-        return m_api.m_inputs;
-    }
-
-    @Override
-    public ArgumentDefinition[] getArguments() {
-        return m_api.m_arguments;
-    }
-
-    @Override
-    public PortDefinition[] getOutputs() {
-        return m_api.m_outputs;
+    public NodeFuncApi getApi() {
+        return m_api;
     }
 
     @Override

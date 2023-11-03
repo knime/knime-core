@@ -49,13 +49,20 @@
 package org.knime.core.node.func;
 
 /**
+ * Base interface for ApiDefinitions.
  *
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  * @since 5.2
  */
 public interface ApiDefinition {
 
+    /**
+     * @return name of the defined API entity
+     */
     String getName();
 
+    /**
+     * @return description of the defined API entity
+     */
     String getDescription();
 }

@@ -78,7 +78,7 @@ public final class NodeFuncRegistry {
         var nodeFuncs = new HashMap<String, NodeFunc>();
         for (var extension : extPoint.getExtensions()) {
             for (var element : extension.getConfigurationElements()) {
-                createNodeFunc(element).ifPresent(n -> nodeFuncs.put(n.getName(), n));
+                createNodeFunc(element).ifPresent(n -> nodeFuncs.put(n.getApi().getName(), n));
             }
         }
         m_nodeFuncsById = Collections.unmodifiableMap(nodeFuncs);

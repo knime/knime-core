@@ -50,6 +50,7 @@ package org.knime.core.node.func;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.knime.core.node.func.ArgumentDefinition.PrimitiveArgumentType;
 import org.knime.core.node.util.CheckUtils;
@@ -59,7 +60,7 @@ import org.knime.core.node.util.CheckUtils;
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  * @since 5.2
  */
-public final class NodeFuncApi {
+public final class NodeFuncApi implements ApiDefinition {
 
     final String m_name;
 
@@ -71,6 +72,8 @@ public final class NodeFuncApi {
 
     final ArgumentDefinition[] m_arguments;
 
+    private static final Pattern VALID_NAME_PATTERN = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_]*$");
+
     private NodeFuncApi(final Builder builder) {
         m_name = builder.m_name;
         m_description = builder.m_description;
@@ -79,10 +82,51 @@ public final class NodeFuncApi {
         m_arguments = builder.m_arguments.toArray(ArgumentDefinition[]::new);
     }
 
+    @Override
+    public String getName() {
+        return m_name;
+    }
+
+    @Override
+    public String getDescription() {
+        return m_description;
+    }
+
+    /**
+     * @return the inputs of the node
+     */
+    public PortDefinition[] getInputs() {
+        return m_inputs;
+    }
+
+    /**
+     * @return the output of the nodes
+     */
+    public ArgumentDefinition[] getArguments() {
+        return m_arguments;
+    }
+
+    /**
+     * @return the outputs of the node
+     */
+    public PortDefinition[] getOutputs() {
+        return m_outputs;
+    }
+
+    /**
+     * @param name of the NodeFunc (must be unique)
+     * @return a builder for a NodeFuncApi
+     */
     public static Builder builder(final String name) {
         return new Builder(name);
     }
 
+
+    /**
+     * Builder for {@link NodeFuncApi}.
+     *
+     * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
+     */
     public static final class Builder {
 
         private final String m_name;
@@ -96,35 +140,91 @@ public final class NodeFuncApi {
         private final List<ArgumentDefinition> m_arguments = new ArrayList<>();
 
         private Builder(final String name) {
+            checkName(name);
             m_name = name;
         }
 
+        private static void checkName(final String name) {
+            CheckUtils.checkArgumentNotNull(name, "Name must not be null.");
+            if (!VALID_NAME_PATTERN.matcher(name).matches()) {
+                throw new IllegalArgumentException("The given name '%s' is not valid.".formatted(name));
+            }
+        }
+
+        /**
+         * @param description of what the NodeFunc does. Should be comprehensive.
+         * @return this Builder
+         */
         public Builder withDescription(final String description) {
             CheckUtils.checkArgumentNotNull(description);
             m_description = description;
             return this;
         }
 
+        /**
+         * @param name of the input table
+         * @param description of what the input table contains
+         * @return this Builder
+         */
         public Builder withInputTable(final String name, final String description) {
+            checkName(name);
             m_inputs.add(new DefaultPortDefinition(name, description));
             return this;
         }
 
+        /**
+         * @param name of the output table
+         * @param description of what the output table represents or contains
+         * @return this Builder
+         */
         public Builder withOutputTable(final String name, final String description) {
+            checkName(name);
             m_outputs.add(new DefaultPortDefinition(name, description));
             return this;
         }
 
-        public Builder withArgument(final String name, final String description, final PrimitiveArgumentType type) {
+        private Builder withArgument(final String name, final String description, final PrimitiveArgumentType type) {
+            checkName(name);
             m_arguments.add(new DefaultArgumentDefinition(name, description, type, false));
             return this;
         }
 
-        public Builder withOptionalArgument(final String name, final String description, final PrimitiveArgumentType type) {
-            m_arguments.add(new DefaultArgumentDefinition(name, description, type, true));
-            return this;
+        /**
+         * Adds an integer argument.
+         *
+         * @param name of the argument (must not contain whitespaces, - or other special characters)
+         * @param description of what the argument is there for
+         * @return this builder
+         */
+        public Builder withIntArgument(final String name, final String description) {
+            return withArgument(name, description, PrimitiveArgumentType.INT);
         }
 
+        /**
+         * Adds a double argument.
+         *
+         * @param name of the argument (must not contain whitespaces, - or other special characters)
+         * @param description of what the argument is there for
+         * @return this builder
+         */
+        public Builder withDoubleArgument(final String name, final String description) {
+            return withArgument(name, description, PrimitiveArgumentType.DOUBLE);
+        }
+
+        /**
+         * Adds a string argument.
+         *
+         * @param name of the argument (must not contain whitespaces, - or other special characters)
+         * @param description of what the argument is there for
+         * @return this builder
+         */
+        public Builder withStringArgument(final String name, final String description) {
+            return withArgument(name, description, PrimitiveArgumentType.STRING);
+        }
+
+        /**
+         * @return the final {@link NodeFuncApi}
+         */
         public NodeFuncApi build() {
             return new NodeFuncApi(this);
         }

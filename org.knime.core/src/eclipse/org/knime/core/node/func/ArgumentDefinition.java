@@ -55,10 +55,21 @@ package org.knime.core.node.func;
  */
 public interface ArgumentDefinition extends ApiDefinition {
 
+    /**
+     * @return the type of the argument
+     */
     ArgumentType getType();
 
+    /**
+     * @return whether the argument is optional
+     */
     boolean isOptional();
 
+    /**
+     * Base interface for argument types.
+     *
+     * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
+     */
     interface ArgumentType {
         default boolean isPrimitive() {
             return false;
@@ -73,6 +84,11 @@ public interface ArgumentDefinition extends ApiDefinition {
         }
     }
 
+    /**
+     * Represents struct arguments that consist of multiple properties.
+     *
+     * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
+     */
     interface StructArgumentType extends ArgumentType {
         ArgumentDefinition[] getProperties();
 
@@ -83,6 +99,11 @@ public interface ArgumentDefinition extends ApiDefinition {
 
     }
 
+    /**
+     * Represents lists of arguments of specific {@link ArgumentType}.
+     *
+     * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
+     */
     interface ListArgumentType extends ArgumentType {
         ArgumentType getItemType();
 
@@ -92,8 +113,28 @@ public interface ArgumentDefinition extends ApiDefinition {
         }
     }
 
+    /**
+     * Enum representing primitive types.
+     *
+     * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
+     */
     public enum PrimitiveArgumentType implements ArgumentType {
-        STRING, INT, DOUBLE, BOOLEAN;
+        /**
+         * String
+         */
+        STRING,
+        /**
+         * Integer
+         */
+        INT,
+        /**
+         * Double
+         */
+        DOUBLE,
+        /**
+         * Boolean
+         */
+        BOOLEAN;
 
         @Override
         public boolean isPrimitive() {

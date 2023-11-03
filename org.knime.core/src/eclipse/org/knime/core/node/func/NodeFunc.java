@@ -54,22 +54,33 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObjectSpec;
 
 /**
+ * A NodeFunc is a simplified interface to a KNIME node.
  *
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  * @since 5.2
  */
-public interface NodeFunc extends ApiDefinition {
+public interface NodeFunc {
 
+    /**
+     * Creates settings from the given argument and inputSpecs and saves them into settings.
+     *
+     * @param arguments supplied to the NodeFunc
+     * @param inputSpecs of the node
+     * @param settings to save to
+     * @throws InvalidSettingsException if the arguments and inputSpecs are not compatible
+     */
     void saveSettings(final NodeSettingsRO arguments, final PortObjectSpec[] inputSpecs, final NodeSettingsWO settings)
         throws InvalidSettingsException;
 
-    PortDefinition[] getInputs();
-
-    ArgumentDefinition[] getArguments();
-
-    PortDefinition[] getOutputs();
+    /**
+     * @return the API of this NodeFunc
+     */
+    NodeFuncApi getApi();
 
     // TODO or ID? What about nodes from NodeSets (e.g. Python nodes)?
+    /**
+     * @return the name of the NodeFactory class
+     */
     String getNodeFactoryClassName();
 
 }

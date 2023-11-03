@@ -51,15 +51,15 @@ package org.knime.core.node.func;
 /**
  *
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
- * @since 5.2
  */
-public final class DefaultArgumentDefinition extends AbstractApiDefinition implements ArgumentDefinition {
+final class DefaultArgumentDefinition extends AbstractApiDefinition implements ArgumentDefinition {
 
     private final PrimitiveArgumentType m_type;
 
     private final boolean m_isOptional;
 
-    public DefaultArgumentDefinition(final String name, final String description, final PrimitiveArgumentType type, final boolean isOptional) {
+    public DefaultArgumentDefinition(final String name, final String description, final PrimitiveArgumentType type,
+        final boolean isOptional) {
         super(name, description);
         m_type = type;
         m_isOptional = isOptional;

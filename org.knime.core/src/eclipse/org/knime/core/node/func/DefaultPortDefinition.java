@@ -53,7 +53,7 @@ package org.knime.core.node.func;
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  * @since 5.2
  */
-public final class DefaultPortDefinition extends AbstractApiDefinition implements PortDefinition {
+final class DefaultPortDefinition extends AbstractApiDefinition implements PortDefinition {
 
     public DefaultPortDefinition(final String name, final String description) {
         super(name, description);
