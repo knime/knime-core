@@ -316,7 +316,8 @@ public final class CredentialsStore implements Observer {
         CheckUtils.checkArgument(v.getVariableType().equals(CredentialsType.INSTANCE),
             "Not a crendentials flow variable: %s", v);
         CredentialsFlowVariableValue credentialsValue = v.getValue(CredentialsType.INSTANCE);
-        add(new Credentials(credentialsValue.getName(), credentialsValue.getLogin(), credentialsValue.getPassword()));
+        add(new Credentials(credentialsValue.getName(), credentialsValue.getLogin(), credentialsValue.getPassword(),
+            credentialsValue.getSecondAuthenticationFactor().orElse(null)));
     }
 
     /**
@@ -345,6 +346,21 @@ public final class CredentialsStore implements Observer {
      */
     public static void update(final CredentialsProvider p, final String credIdentifier,
         final String userName, final String password) {
+        update(p, credIdentifier, userName, password, null);
+    }
+
+    /** Framework private method to update or add a credentials object. Used by the Credentials quickform node
+     * to hijack the store and add/fix. Subject to change in the next feature release.
+     *
+     * @param p provider set at node.
+     * @param credIdentifier non-null credentials key
+     * @param userName login/user name
+     * @param password password
+     * @param secondFactor the second authentication factor or <code>null</code>
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public static void update(final CredentialsProvider p, final String credIdentifier,
+        final String userName, final String password, final String secondFactor) {
         if (p == CredentialsProvider.EMPTY_CREDENTIALS_PROVIDER) {
             return;
         }
@@ -352,11 +368,12 @@ public final class CredentialsStore implements Observer {
         synchronized (store) {
             Credentials credentials = store.m_credentials.get(CheckUtils.checkArgumentNotNull(credIdentifier));
             if (credentials == null) {
-                credentials = new Credentials(credIdentifier, userName, password);
+                credentials = new Credentials(credIdentifier, userName, password, secondFactor);
                 store.add(credentials);
             } else {
                 credentials.setLogin(userName);
                 credentials.setPassword(password);
+                credentials.setSecondAuthenticationFactor(secondFactor);
             }
             store.m_manager.setDirty();
         }
@@ -366,7 +383,15 @@ public final class CredentialsStore implements Observer {
      * @noreference This method is not intended to be referenced by clients. */
     public static FlowVariable newCredentialsFlowVariable(final String name, final String login, final String password,
         final boolean saveWeaklyEncrypted, final boolean useServerLogin) throws InvalidSettingsException {
-        return new FlowVariable(name, new CredentialsFlowVariableValue(name, login, password));
+        return newCredentialsFlowVariable(name, login, password, null, saveWeaklyEncrypted, useServerLogin);
+    }
+
+    /** Factory to create a flow variable wrapping the credentials information. Used by the framework, no API.
+     * @noreference This method is not intended to be referenced by clients. */
+    public static FlowVariable newCredentialsFlowVariable(final String name, final String login, final String password,
+        final String secondFactor,final boolean saveWeaklyEncrypted, final boolean useServerLogin)
+                throws InvalidSettingsException {
+        return new FlowVariable(name, new CredentialsFlowVariableValue(name, login, password, secondFactor));
     }
 
     static final class CredentialsFlowVariableValue implements ICredentials {
@@ -374,20 +399,33 @@ public final class CredentialsStore implements Observer {
         static final String CFG_NAME = "name";
         static final String CFG_LOGIN = "login";
         static final String CFG_PWD = "password";
+        static final String CFG_SECOND_FACTOR = "secondfactor";
         static final String SECRET = "XKdPobvbDEBZEJmBsbMq";
 
         private final String m_name;
         private final String m_login;
         private final String m_password;
+        private Optional<String> m_secondFactor;
 
         /**
          * @param credentials
          * @throws InvalidSettingsException
          */
         CredentialsFlowVariableValue(final String name, final String login, final String password) {
+            this(name, login, password, null);
+        }
+
+
+        /**
+         * @param credentials
+         * @throws InvalidSettingsException
+         */
+        CredentialsFlowVariableValue(final String name, final String login, final String password,
+            final String secondFactor) {
             m_name = CheckUtils.checkArgumentNotNull(name);
             m_login = CheckUtils.checkArgumentNotNull(login);
             m_password = password;
+            m_secondFactor = Optional.ofNullable(secondFactor);
         }
 
 
@@ -409,10 +447,19 @@ public final class CredentialsStore implements Observer {
             return m_password;
         }
 
+        @Override
+        public Optional<String> getSecondAuthenticationFactor() {
+            return m_secondFactor;
+        }
+
         /** {@inheritDoc} */
         @Override
         public int hashCode() {
-            return new HashCodeBuilder().append(m_name).append(m_login).append(m_password).hashCode();
+            return new HashCodeBuilder().append(m_name)
+                    .append(m_login)
+                    .append(m_password)
+                    .append(m_secondFactor)
+                    .hashCode();
         }
 
         /** {@inheritDoc} */
@@ -427,13 +474,20 @@ public final class CredentialsStore implements Observer {
             return new EqualsBuilder().append(m_name, other.m_name)
                           .append(m_login, other.m_login)
                           .append(m_password, other.m_password)
+                          .append(m_password, other.m_password)
+                          .append(m_secondFactor, other.m_secondFactor)
                           .isEquals();
         }
 
         /** {@inheritDoc} */
         @Override
         public String toString() {
-            return String.format("%s [login: %s, password set: %b]", m_name, m_login, m_password != null);
+            if (m_secondFactor.isEmpty()) {
+                //we make the distinction here to create a backward compatible message
+                return String.format("%s [login: %s, password set: %b]", m_name, m_login, m_password != null);
+            }
+            return String.format("%s [login: %s, password set: %b, second factor set: %b]",
+                m_name, m_login, m_password != null, m_secondFactor.isPresent());
         }
 
         void save(final NodeSettingsWO settings) {
@@ -450,6 +504,7 @@ public final class CredentialsStore implements Observer {
             config.addString(CFG_LOGIN, getLogin());
             if (includePasswords) {
                 config.addPassword(CFG_PWD, SECRET, getPassword());
+                config.addPassword(CFG_SECOND_FACTOR, SECRET, getSecondAuthenticationFactor().orElse(null));
             }
         }
 
@@ -457,7 +512,8 @@ public final class CredentialsStore implements Observer {
             String name = settings.getString(CFG_NAME);
             String login = settings.getString(CFG_LOGIN);
             String password = settings.getPassword(CFG_PWD, SECRET, null);
-            return new CredentialsFlowVariableValue(name, login, password);
+            String secondFactor = settings.getPassword(CFG_SECOND_FACTOR, SECRET, null);
+            return new CredentialsFlowVariableValue(name, login, password, secondFactor);
         }
     }
 
@@ -478,9 +534,20 @@ public final class CredentialsStore implements Observer {
          * @param password Possibly null password.
          */
         public default void pushCredentialsFlowVariable(final String name, final String login, final String password) {
+            pushCredentialsFlowVariable(name, login, password, null);
+        }
+        /** Pushes a flow variable wrapping the passed credentials.
+         * @param name Non-null identifier
+         * @param login Non-null login
+         * @param password Possibly null password.
+         * @param secondFactor Possibly null second factor
+         * @since 5.2
+         */
+        public default void pushCredentialsFlowVariable(final String name, final String login, final String password,
+            final String secondFactor) {
             CheckUtils.checkState(this instanceof NodeModel, "Interface %s not implemented by a NodeModel instance");
             Node.invokePushFlowVariable((NodeModel)this,
-                new FlowVariable(name, new CredentialsFlowVariableValue(name, login, password)));
+                new FlowVariable(name, new CredentialsFlowVariableValue(name, login, password, secondFactor)));
         }
 
         /**

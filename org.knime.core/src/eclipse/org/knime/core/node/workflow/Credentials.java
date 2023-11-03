@@ -46,6 +46,7 @@
 package org.knime.core.node.workflow;
 
 import java.util.Observable;
+import java.util.Optional;
 import java.util.WeakHashMap;
 
 import org.knime.core.node.InvalidSettingsException;
@@ -64,6 +65,7 @@ public final class Credentials extends Observable implements ICredentials {
     private final String m_name;
     private String m_login;
     private String m_password;
+    private Optional<String> m_secondFactor;
 
     /** A set of nodes that read this credentials object in either their
      * configure or execute methods. Used to determine which of the credentials
@@ -90,6 +92,21 @@ public final class Credentials extends Observable implements ICredentials {
      */
     public Credentials(final String name, final String login,
         final String password) {
+        this(name, login, password, null);
+    }
+
+
+    /** Create new credentials for a given name, initializing defaults.
+     *  The name must be unique in the context of a workflow's credentials
+     *  store.
+     * @param name Name of credentials (identifier)
+     * @param login The login name.
+     * @param password the password.
+     * @param secondFactor the second factor or <code>null</code> if not available
+     * @since 5.2
+     */
+    public Credentials(final String name, final String login,
+        final String password, final String secondFactor) {
         if (name == null) {
             throw new NullPointerException("Argument must not be null");
         }
@@ -99,6 +116,7 @@ public final class Credentials extends Observable implements ICredentials {
         m_name = name;
         m_login = login;
         m_password = password;
+        m_secondFactor = Optional.ofNullable(secondFactor);
         m_clientNodes = new WeakHashMap<NodeContainer, Object>();
     }
 
@@ -132,6 +150,18 @@ public final class Credentials extends Observable implements ICredentials {
         m_password = password;
     }
 
+    @Override
+    public Optional<String> getSecondAuthenticationFactor() {
+        return m_secondFactor;
+    }
+
+    /**
+     * @param secondFactor the second authentication factor to set or <code>null</code> if not available
+     */
+    void setSecondAuthenticationFactor(final String secondFactor) {
+        m_secondFactor = Optional.ofNullable(secondFactor);
+    }
+
     /** {@inheritDoc} */
     @Override
     public String getName() {
@@ -158,6 +188,9 @@ public final class Credentials extends Observable implements ICredentials {
         if (!ConvenienceMethods.areEqual(m_login, cred.m_login)) {
             return false;
         }
+        if (!ConvenienceMethods.areEqual(m_secondFactor, cred.m_secondFactor)) {
+            return false;
+        }
         return true;
     }
 
@@ -168,6 +201,9 @@ public final class Credentials extends Observable implements ICredentials {
         if (m_login != null) {
             hash = hash ^ m_login.hashCode();
         }
+        if (m_secondFactor.isPresent()) {
+            hash = hash ^ m_secondFactor.get().hashCode();
+        }
         return hash;
     }
 
@@ -176,7 +212,7 @@ public final class Credentials extends Observable implements ICredentials {
     public Credentials clone() {
         // don't use super.clone() as we extend Observable and the Observer
         // list must not be copied
-        return new Credentials(m_name, m_login, m_password);
+        return new Credentials(m_name, m_login, m_password, m_secondFactor.orElse(null));
     }
 
     /** Remove the client from the history list (if registered).

@@ -1917,7 +1917,8 @@ public abstract class VariableType<T> {
             return (config.getEntry(configKey) instanceof Config subConfig)
                 && subConfig.containsKey(CredentialsFlowVariableValue.CFG_NAME)
                 && subConfig.containsKey(CredentialsFlowVariableValue.CFG_LOGIN)
-                && subConfig.containsKey(CredentialsFlowVariableValue.CFG_PWD);
+                && subConfig.containsKey(CredentialsFlowVariableValue.CFG_PWD)
+                && subConfig.containsKey(CredentialsFlowVariableValue.CFG_SECOND_FACTOR);
         }
 
         @Override

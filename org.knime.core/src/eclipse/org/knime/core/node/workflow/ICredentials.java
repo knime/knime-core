@@ -47,11 +47,14 @@
  */
 package org.knime.core.node.workflow;
 
+import java.util.Optional;
+
 /** Credentials object representing login/password information. A credentials
  * object has a (workflow-global) unique identifier. Node implementations do
  * not save credentials as part of their settings or internals but only the
  * identifier. The saving of the corresponding login (and possibly) password
- * information is responsibility of the workflow/framework, whereby passwords
+ * and second authentication factor information is responsibility of the
+ * workflow/framework, whereby passwords and second factors
  * are not saved by default (but prompted for on restart).
  *
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
@@ -72,5 +75,14 @@ public interface ICredentials {
      * systems.
      * @return the login name. */
     public String getPassword();
+
+    /**
+     * The second authentication factor as entered by the user or an empty {@link Optional} if not available.
+     * @return the second authentication factor if available
+     * @since 5.2
+     */
+    default Optional<String> getSecondAuthenticationFactor() {
+        return Optional.empty();
+    }
 
 }
