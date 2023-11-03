@@ -73,6 +73,7 @@ import org.knime.core.data.filestore.FileStoreCell;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.NotInWorkflowDataRepository;
 import org.knime.core.data.filestore.internal.ROWriteFileStoreHandler;
+import org.knime.core.data.filestore.internal.WriteFileStoreHandler;
 import org.knime.core.data.v2.RowContainer;
 import org.knime.core.data.v2.RowWriteCursor;
 import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
@@ -338,33 +339,47 @@ public class ExecutionContext extends ExecutionMonitor {
     }
 
     /**
-     * Creates a container to which rows can be added, overwriting the
-     * node's memory policy. This method has the same behavior as
-     * {@link #createDataContainer(DataTableSpec, boolean)} except for the
-     * last argument <code>maxCellsInMemory</code>. It controls the memory
-     * policy of the data container (which is otherwise controlled by a user
-     * setting in the dialog).
+     * Creates a container to which rows can be added, overwriting the nodes {@link IWriteFileStoreHandler}.
+     * This method has the same behavior as {@link #createDataContainer(DataTableSpec)} except that the provided
+     * {@link WriteFileStoreHandler} is used. This is useful e.g. if the container is created to serve as a preview
+     * even while this nodes' fileStoreHandler is closed.
      *
-     * <p>
-     * <b>Note:</b> It's strongly advised to use
-     * {@link #createDataContainer(DataTableSpec, boolean)} instead of this
-     * method as the above method realizes the memory policy specified by the
-     * user. Use this method only if you have good reasons to do so
-     * (for instance if you create many containers, whose default memory
-     * options would yield a high accumulated memory consumption).
      * @param spec The spec to open the container.
-     * @param initDomain If the domain information from the argument shall
-     * be used to initialize the domain (min, max, possible values). If false,
-     * the domain will be determined on the fly.
-     * @param maxCellsInMemory Number of cells to be kept in memory, especially
-     * 0 forces the table to write to disk immediately. A value smaller than 0
-     * will respect the user setting (as defined by the accompanying node).
-     * @return A container to which rows can be added and which provides
-     * the <code>BufferedDataTable</code>.
+     * @param writeFileStoreHandler The {@link IWriteFileStoreHandler} to use instead of the one associated with this
+     *            {@link ExecutionContext}, useful e.g. if the container is only used as a preview.
+     * @return A container to which rows can be added and which provides the <code>BufferedDataTable</code>.
      * @throws NullPointerException If the spec argument is <code>null</code>.
+     * @since 5.2
+     * @noreference This method is not intended to be referenced by clients.
      */
     public BufferedDataContainer createDataContainer(final DataTableSpec spec,
-            final boolean initDomain, final int maxCellsInMemory) {
+        final IWriteFileStoreHandler writeFileStoreHandler) {
+        return createDataContainer(spec, true, -1, true, writeFileStoreHandler);
+    }
+
+    /**
+     * Creates a container to which rows can be added, overwriting the node's memory policy. This method has the same
+     * behavior as {@link #createDataContainer(DataTableSpec, boolean)} except for the last argument
+     * <code>maxCellsInMemory</code>. It controls the memory policy of the data container (which is otherwise controlled
+     * by a user setting in the dialog).
+     *
+     * <p>
+     * <b>Note:</b> It's strongly advised to use {@link #createDataContainer(DataTableSpec, boolean)} instead of this
+     * method as the above method realizes the memory policy specified by the user. Use this method only if you have
+     * good reasons to do so (for instance if you create many containers, whose default memory options would yield a
+     * high accumulated memory consumption).
+     *
+     * @param spec The spec to open the container.
+     * @param initDomain If the domain information from the argument shall be used to initialize the domain (min, max,
+     *            possible values). If false, the domain will be determined on the fly.
+     * @param maxCellsInMemory Number of cells to be kept in memory, especially 0 forces the table to write to disk
+     *            immediately. A value smaller than 0 will respect the user setting (as defined by the accompanying
+     *            node).
+     * @return A container to which rows can be added and which provides the <code>BufferedDataTable</code>.
+     * @throws NullPointerException If the spec argument is <code>null</code>.
+     */
+    public BufferedDataContainer createDataContainer(final DataTableSpec spec, final boolean initDomain,
+        final int maxCellsInMemory) {
         return createDataContainer(spec, initDomain, maxCellsInMemory, true);
     }
 
@@ -395,16 +410,33 @@ public class ExecutionContext extends ExecutionMonitor {
      * the <code>BufferedDataTable</code>.
      * @throws NullPointerException If the spec argument is <code>null</code>.
      */
-    BufferedDataContainer createDataContainer(final DataTableSpec spec,
-        final boolean initDomain, final int maxCellsInMemory, final boolean rowKeys) {
-        boolean forceCopyOfBlobs = m_node.isModelCompatibleTo(LoopEndNode.class)
-                || m_node.isModelCompatibleTo(VirtualSubNodeOutputNodeModel.class);
-        final TableBackend backend = getTableBackend();
+    BufferedDataContainer createDataContainer(final DataTableSpec spec, final boolean initDomain,
+        final int maxCellsInMemory, final boolean rowKeys) {
+        return createDataContainer(spec, initDomain, maxCellsInMemory, rowKeys, m_fileStoreHandler);
+    }
 
-        var container = new BufferedDataContainer(spec, initDomain, m_node,
-                m_memoryPolicy, forceCopyOfBlobs, maxCellsInMemory, m_dataRepository,
-                m_localTableRepository, m_fileStoreHandler, rowKeys, backend);
-        return container;
+    /**
+     * Create a {@link BufferedDataContainer} using the provide {@link IWriteFileStoreHandler}. For all other
+     * parameters, see the method above.
+     *
+     * @param spec The spec to open the container.
+     * @param initDomain If the domain information from the argument shall be used to initialize the domain (min, max,
+     *            possible values). If false, the domain will be determined on the fly.
+     * @param maxCellsInMemory Number of cells to be kept in memory, especially 0 forces the table to write to disk
+     *            immediately. A value smaller than 0 will respect the user setting (as defined by the accompanying
+     *            node).
+     * @param rowKeys if true, {@link RowKey}s are expected to be part of a {@link DataRow}.
+     * @param writeFileStoreHandler The {@link IWriteFileStoreHandler} to use instead of the one associated with this
+     *            {@link ExecutionContext}, useful e.g. if the container is only used as a preview.
+     * @return A container to which rows can be added and which provides the <code>BufferedDataTable</code>.
+     * @throws NullPointerException If the spec argument is <code>null</code>.
+     */
+    private BufferedDataContainer createDataContainer(final DataTableSpec spec, final boolean initDomain,
+        final int maxCellsInMemory, final boolean rowKeys, final IWriteFileStoreHandler writeFileStoreHandler) {
+        boolean forceCopyOfBlobs = m_node.isModelCompatibleTo(LoopEndNode.class)
+            || m_node.isModelCompatibleTo(VirtualSubNodeOutputNodeModel.class);
+        return new BufferedDataContainer(spec, initDomain, m_node, m_memoryPolicy, forceCopyOfBlobs, maxCellsInMemory,
+            m_dataRepository, m_localTableRepository, writeFileStoreHandler, rowKeys, getTableBackend());
     }
 
     private static TableBackend getTableBackend() {
