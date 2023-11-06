@@ -491,48 +491,20 @@ public abstract class NodeModel implements ViewableModel {
      */
     protected abstract void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException;
 
-    ViewSettingsValidator m_viewSettingsValidator;
-
-    void validateViewSettings(final NodeSettingsRO viewSettings) throws InvalidSettingsException {
-        if (m_viewSettingsValidator != null) {
-            m_viewSettingsValidator.validateViewSettings(viewSettings);
-        }
-    }
-
     /**
-     * With this method the model can be supplied with a validation for view settings. If it is not called or the
-     * supplied instance is null, no validation will take place on configure.
+     * Validates the view settings in the passed <code>NodeSettings</code> object. The specified settings should be
+     * checked for completeness and consistency. The method must not change these settings - it is supposed to just
+     * check them. If some settings are missing, invalid, inconsistent, or just not right throw an exception with a
+     * message useful to the user.
      *
-     * @param viewSettingsValidator to be called on configure
+     * @param viewSettings - the view settings to validate.
+     * @throws InvalidSettingsException - if the validation of the settings failed.
+     *
      * @since 5.2
      */
-    protected final void setViewSettingsValidator(final ViewSettingsValidator viewSettingsValidator) {
-        m_viewSettingsValidator = viewSettingsValidator;
+    protected void validateViewSettings(final NodeSettingsRO viewSettings) throws InvalidSettingsException {
     }
 
-    /**
-     * The node model can be supplied with validation behavior for view settings by setting an instance of this class
-     * via {@link NodeModel#setViewSettingsValidator}. The method {@link ViewSettingsValidator#validateViewSettings}
-     * will be called on configure with view settings which are already overwritten by the view flow variables.
-     *
-     * @author Paul Bärnreuther
-     * @since 5.2
-     */
-    @FunctionalInterface
-    public interface ViewSettingsValidator {
-        /**
-         * Validates the view settings in the passed <code>NodeSettings</code> object. The specified settings should be
-         * checked for completeness and consistency. The method must not change these settings - it is supposed to just
-         * check them. If some settings are missing, invalid, inconsistent, or just not right throw an exception with a
-         * message useful to the user.
-         *
-         * @param viewSettings - the view settings to validate.
-         * @throws InvalidSettingsException - if the validation of the settings failed.
-         * @see #saveSettingsTo(NodeSettingsWO)
-         * @see #loadValidatedSettingsFrom(NodeSettingsRO)
-         */
-        void validateViewSettings(NodeSettingsRO viewSettings) throws InvalidSettingsException;
-    }
 
     /**
      * Sets new settings from the passed object in the model. You can safely assume that the object passed has been
