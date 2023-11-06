@@ -70,7 +70,6 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeModel.ViewSettingsValidator;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -100,9 +99,11 @@ public class NativeNodeContainerTest {
     class ValidateViewSettingsTest {
         class TestNodeModel extends NodeModel {
 
+            private final ViewSettingsValidator m_viewSettingsValidator;
+
             protected TestNodeModel(final ViewSettingsValidator viewSettingsValidator) {
                 super(0, 0);
-                setViewSettingsValidator(viewSettingsValidator);
+                m_viewSettingsValidator = viewSettingsValidator;
             }
 
             @Override
@@ -132,6 +133,11 @@ public class NativeNodeContainerTest {
             @Override
             protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
                 // Not used
+            }
+
+            @Override
+            protected void validateViewSettings(final NodeSettingsRO viewSettings) throws InvalidSettingsException {
+                m_viewSettingsValidator.validateViewSettings(viewSettings);
             }
 
             @Override
@@ -220,6 +226,11 @@ public class NativeNodeContainerTest {
             return WorkflowManagerUtil.createAndAddNode(m_wfm, new TestNodeFactory(validator));
         }
 
+    }
+
+    @SuppressWarnings("javadoc")
+    public static interface ViewSettingsValidator {
+        void validateViewSettings(NodeSettingsRO settings) throws InvalidSettingsException;
     }
 
 }
