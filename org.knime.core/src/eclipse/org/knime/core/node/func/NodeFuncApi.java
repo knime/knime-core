@@ -223,6 +223,17 @@ public final class NodeFuncApi implements ApiDefinition {
         }
 
         /**
+         * Adds a boolean argument.
+         *
+         * @param name of the argument (must not contain whitespaces, - or other special characters)
+         * @param description of wht the argument is there fore
+         * @return this builder
+         */
+        public Builder withBooleanArgument(final String name, final String description) {
+            return withArgument(name, description, PrimitiveArgumentType.BOOLEAN);
+        }
+
+        /**
          * @return the final {@link NodeFuncApi}
          */
         public NodeFuncApi build() {
