@@ -201,6 +201,17 @@ public final class NodeFuncApi implements ApiDefinition {
         }
 
         /**
+         * Adds a long argument.
+         *
+         * @param name of the argument (must not contain whitespaces, - or other special characters)
+         * @param description of what the argument is there for
+         * @return this builder
+         */
+        public Builder withLongArgument(final String name, final String description) {
+            return withArgument(name, description, PrimitiveArgumentType.LONG);
+        }
+
+        /**
          * Adds a double argument.
          *
          * @param name of the argument (must not contain whitespaces, - or other special characters)

@@ -134,7 +134,11 @@ public interface ArgumentDefinition extends ApiDefinition {
         /**
          * Boolean
          */
-        BOOLEAN;
+        BOOLEAN,
+        /**
+         * Long
+         */
+        LONG;
 
         @Override
         public boolean isPrimitive() {
