@@ -1913,14 +1913,16 @@ public abstract class VariableType<T> {
             return CredentialsFlowVariableValue.class;
         }
 
+        private static boolean isCredentials(final Config config, final String configKey) {
+            return (config.getEntry(configKey) instanceof Config subConfig)
+                && subConfig.containsKey(CredentialsFlowVariableValue.CFG_NAME)
+                && subConfig.containsKey(CredentialsFlowVariableValue.CFG_LOGIN)
+                && subConfig.containsKey(CredentialsFlowVariableValue.CFG_PWD);
+        }
+
         @Override
         protected boolean canOverwrite(final Config config, final String configKey) {
-            try {
-                return CredentialsFlowVariableValue.isCredentials(config.getConfig(configKey));
-            } catch (InvalidSettingsException ex) {// NOSONAR
-                // the key did not correspond to a config -> this can't be a credentials flow variable
-                return false;
-            }
+            return isCredentials(config, configKey);
         }
 
         @Override
@@ -1937,12 +1939,7 @@ public abstract class VariableType<T> {
 
         @Override
         protected boolean canCreateFrom(final Config config, final String configKey) {
-            try {
-                return CredentialsFlowVariableValue.isCredentials(config.getConfig(configKey));
-            } catch (InvalidSettingsException ex) {//NOSONAR
-                // the key did not correspond to a config -> this can't be a credentials flow variable
-                return false;
-            }
+            return isCredentials(config, configKey);
         }
 
         @Override

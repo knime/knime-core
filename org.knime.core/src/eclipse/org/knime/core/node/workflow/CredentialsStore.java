@@ -371,10 +371,10 @@ public final class CredentialsStore implements Observer {
 
     static final class CredentialsFlowVariableValue implements ICredentials {
 
-        private static final String CFG_NAME = "name";
-        private static final String CFG_LOGIN = "login";
-        private static final String CFG_PWD = "password";
-        private static final String SECRET = "XKdPobvbDEBZEJmBsbMq";
+        static final String CFG_NAME = "name";
+        static final String CFG_LOGIN = "login";
+        static final String CFG_PWD = "password";
+        static final String SECRET = "XKdPobvbDEBZEJmBsbMq";
 
         private final String m_name;
         private final String m_login;
@@ -458,14 +458,6 @@ public final class CredentialsStore implements Observer {
             String login = settings.getString(CFG_LOGIN);
             String password = settings.getPassword(CFG_PWD, SECRET, null);
             return new CredentialsFlowVariableValue(name, login, password);
-        }
-
-        /**
-         * @param config
-         * @return <code>true</code> if the given config contains credentials information
-         */
-        static boolean isCredentials(final ConfigRO config) {
-            return config.containsKey(CFG_NAME) && config.containsKey(CFG_LOGIN) && config.containsKey(CFG_PWD);
         }
     }
 
