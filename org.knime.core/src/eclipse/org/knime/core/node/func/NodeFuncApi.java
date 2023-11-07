@@ -121,7 +121,6 @@ public final class NodeFuncApi implements ApiDefinition {
         return new Builder(name);
     }
 
-
     /**
      * Builder for {@link NodeFuncApi}.
      *
@@ -183,9 +182,10 @@ public final class NodeFuncApi implements ApiDefinition {
             return this;
         }
 
-        private Builder withArgument(final String name, final String description, final PrimitiveArgumentType type) {
+        private Builder withArgument(final String name, final String description, final PrimitiveArgumentType type,
+            final boolean isOptional) {
             checkName(name);
-            m_arguments.add(new DefaultArgumentDefinition(name, description, type, false));
+            m_arguments.add(new DefaultArgumentDefinition(name, description, type, isOptional));
             return this;
         }
 
@@ -197,7 +197,7 @@ public final class NodeFuncApi implements ApiDefinition {
          * @return this builder
          */
         public Builder withIntArgument(final String name, final String description) {
-            return withArgument(name, description, PrimitiveArgumentType.INT);
+            return withArgument(name, description, PrimitiveArgumentType.INT, false);
         }
 
         /**
@@ -208,7 +208,18 @@ public final class NodeFuncApi implements ApiDefinition {
          * @return this builder
          */
         public Builder withLongArgument(final String name, final String description) {
-            return withArgument(name, description, PrimitiveArgumentType.LONG);
+            return withArgument(name, description, PrimitiveArgumentType.LONG, false);
+        }
+
+        /**
+         * Adds an optional long argument, i.e. the argument must not be declared.
+         *
+         * @param name of the argument (must not contain whitespaces, - or other special characters)
+         * @param description of what the argument is there for
+         * @return this builder
+         */
+        public Builder withOptionalLongArgument(final String name, final String description) {
+            return withArgument(name, description, PrimitiveArgumentType.LONG, true);
         }
 
         /**
@@ -219,7 +230,7 @@ public final class NodeFuncApi implements ApiDefinition {
          * @return this builder
          */
         public Builder withDoubleArgument(final String name, final String description) {
-            return withArgument(name, description, PrimitiveArgumentType.DOUBLE);
+            return withArgument(name, description, PrimitiveArgumentType.DOUBLE, false);
         }
 
         /**
@@ -230,7 +241,18 @@ public final class NodeFuncApi implements ApiDefinition {
          * @return this builder
          */
         public Builder withStringArgument(final String name, final String description) {
-            return withArgument(name, description, PrimitiveArgumentType.STRING);
+            return withArgument(name, description, PrimitiveArgumentType.STRING, false);
+        }
+
+        /**
+         * Adds an optional string argument.
+         *
+         * @param name of the argument (must not contain whitespaces, - or other special characters)
+         * @param description of what the argument is there for
+         * @return this builder
+         */
+        public Builder withOptionalStringArgument(final String name, final String description) {
+            return withArgument(name, description, PrimitiveArgumentType.STRING, true);
         }
 
         /**
@@ -241,7 +263,7 @@ public final class NodeFuncApi implements ApiDefinition {
          * @return this builder
          */
         public Builder withBooleanArgument(final String name, final String description) {
-            return withArgument(name, description, PrimitiveArgumentType.BOOLEAN);
+            return withArgument(name, description, PrimitiveArgumentType.BOOLEAN, false);
         }
 
         /**
