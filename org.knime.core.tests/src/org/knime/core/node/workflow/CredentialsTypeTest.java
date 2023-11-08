@@ -56,6 +56,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.knime.core.node.workflow.CredentialsStore.CredentialsFlowVariableValue.CFG_LOGIN;
 import static org.knime.core.node.workflow.CredentialsStore.CredentialsFlowVariableValue.CFG_NAME;
 import static org.knime.core.node.workflow.CredentialsStore.CredentialsFlowVariableValue.CFG_PWD;
+import static org.knime.core.node.workflow.CredentialsStore.CredentialsFlowVariableValue.CFG_SECOND_FACTOR;
 import static org.knime.core.node.workflow.CredentialsStore.CredentialsFlowVariableValue.SECRET;
 import static org.knime.core.node.workflow.VariableTypeTestUtils.CFG_VALUE;
 import static org.knime.core.node.workflow.VariableTypeTestUtils.KEY;
@@ -75,14 +76,19 @@ import org.knime.core.node.workflow.VariableType.InvalidConfigEntryException;
  */
 public class CredentialsTypeTest extends AbstractVariableTypeTest<CredentialsFlowVariableValue> {
 
-    private static final CredentialsFlowVariableValue VARIABLE = new CredentialsFlowVariableValue("foo", "bar", "baz");
+    private static final CredentialsFlowVariableValue VARIABLE =
+        new CredentialsFlowVariableValue("name", "login", "password", "secondFactor");
 
-    static final NodeSettings createCredentialsSettings(final String name, final String login, final String password) {
+    static final NodeSettings createCredentialsSettings(final String name, final String login, final String password,
+        final String secondFactor) {
         final var settings = new NodeSettings(CFG_VALUE);
         settings.addString(CFG_NAME, name);
         settings.addString(CFG_LOGIN, login);
         if (password != null) {
             settings.addPassword(CFG_PWD, SECRET, password);
+        }
+        if (secondFactor != null) {
+            settings.addPassword(CFG_SECOND_FACTOR, SECRET, secondFactor);
         }
         return settings;
     }
@@ -113,7 +119,7 @@ public class CredentialsTypeTest extends AbstractVariableTypeTest<CredentialsFlo
     @Override
     public void testLoadValue() throws InvalidSettingsException {
         final var settings = new NodeSettings(KEY);
-        settings.addNodeSettings(createCredentialsSettings("foo", "bar", "baz"));
+        settings.addNodeSettings(createCredentialsSettings("name", "login", "password", "secondFactor"));
         assertEquals(VARIABLE, m_testInstance.loadValue(settings).get());
     }
 
@@ -121,7 +127,7 @@ public class CredentialsTypeTest extends AbstractVariableTypeTest<CredentialsFlo
     public void testSaveValue() {
         final var settings = new NodeSettings(KEY);
         m_testInstance.saveValue(settings, m_testInstance.newValue(VARIABLE));
-        assertEquals(createCredentialsSettings("foo", "bar", null), settings.getEntry(CFG_VALUE));
+        assertEquals(createCredentialsSettings("name", "login", null, null), settings.getEntry(CFG_VALUE));
     }
 
     @Override
@@ -130,11 +136,13 @@ public class CredentialsTypeTest extends AbstractVariableTypeTest<CredentialsFlo
         assertFalse(m_testInstance.canOverwrite(settings, CFG_VALUE));
         final var subSettings = settings.addNodeSettings(CFG_VALUE);
         assertFalse(m_testInstance.canOverwrite(settings, CFG_VALUE));
-        subSettings.addString(CFG_NAME, "foo");
+        subSettings.addString(CFG_NAME, "name");
         assertFalse(m_testInstance.canOverwrite(settings, CFG_VALUE));
-        subSettings.addString(CFG_LOGIN, "bar");
+        subSettings.addString(CFG_LOGIN, "login");
         assertFalse(m_testInstance.canOverwrite(settings, CFG_VALUE));
-        subSettings.addPassword(CFG_PWD, SECRET, "baz");
+        subSettings.addPassword(CFG_PWD, SECRET, "password");
+        assertFalse(m_testInstance.canOverwrite(settings, CFG_VALUE));
+        subSettings.addPassword(CFG_SECOND_FACTOR, SECRET, "secondFactor");
         assertTrue(m_testInstance.canOverwrite(settings, CFG_VALUE));
     }
 
@@ -147,9 +155,10 @@ public class CredentialsTypeTest extends AbstractVariableTypeTest<CredentialsFlo
         } catch (InvalidConfigEntryException e) {
             assertThat(e.getErrorMessageWithVariableName("").isPresent());
         }
-        settings.addNodeSettings(createCredentialsSettings("", "", ""));
+        settings.addNodeSettings(createCredentialsSettings("", "", "", ""));
         m_testInstance.overwrite(VARIABLE, settings, CFG_VALUE);
-        assertEquals(createCredentialsSettings("foo", "bar", "baz"), settings.getConfig(CFG_VALUE));
+        assertEquals(createCredentialsSettings("name", "login", "password", "secondFactor"),
+            settings.getConfig(CFG_VALUE));
     }
 
     @Override
@@ -163,6 +172,8 @@ public class CredentialsTypeTest extends AbstractVariableTypeTest<CredentialsFlo
         subSettings.addString(CFG_LOGIN, "bar");
         assertFalse(m_testInstance.canCreateFrom(settings, CFG_VALUE));
         subSettings.addPassword(CFG_PWD, SECRET, "baz");
+        assertFalse(m_testInstance.canOverwrite(settings, CFG_VALUE));
+        subSettings.addPassword(CFG_SECOND_FACTOR, SECRET, "secondFactor");
         assertTrue(m_testInstance.canCreateFrom(settings, CFG_VALUE));
     }
 
@@ -175,7 +186,7 @@ public class CredentialsTypeTest extends AbstractVariableTypeTest<CredentialsFlo
         } catch (InvalidConfigEntryException e) {
             assertThat(e.getErrorMessageWithVariableName("").isPresent());
         }
-        settings.addNodeSettings(createCredentialsSettings("foo", "bar", "baz"));
+        settings.addNodeSettings(createCredentialsSettings("name", "login", "password", "secondFactor"));
         assertEquals(VARIABLE, m_testInstance.createFrom(settings, CFG_VALUE));
     }
 
