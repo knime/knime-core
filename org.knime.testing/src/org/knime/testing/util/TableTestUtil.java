@@ -94,7 +94,7 @@ import org.knime.core.node.DefaultNodeProgressMonitor;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.extension.NodeFactoryExtensionManager;
+import org.knime.core.node.extension.NodeFactoryProvider;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.virtual.parchunk.VirtualParallelizedChunkPortObjectInNodeFactory;
@@ -110,7 +110,7 @@ public final class TableTestUtil {
 
     static {
         try {
-            NodeFactoryExtensionManager.getInstance();
+            NodeFactoryProvider.getInstance();
         } catch (IllegalStateException e) { // NOSONAR
             // HACK to make tests work in the build system where the org.knime.workbench.repository plugin
             // is not present (causes an exception on the first call

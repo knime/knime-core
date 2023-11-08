@@ -56,7 +56,7 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;
-import org.knime.core.node.extension.NodeFactoryExtensionManager;
+import org.knime.core.node.extension.NodeFactoryProvider;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.UnsupportedWorkflowVersionException;
 import org.knime.core.node.workflow.WorkflowCreationHelper;
@@ -79,7 +79,7 @@ public final class WorkflowManagerUtil {
 
     static {
         try {
-            NodeFactoryExtensionManager.getInstance();
+            NodeFactoryProvider.getInstance();
         } catch (IllegalStateException e) { // NOSONAR
             // HACK to make tests work in the build system where the org.knime.workbench.repository plugin
             // is not present (causes an exception on the first call
