@@ -71,17 +71,6 @@ public interface ArgumentDefinition extends ApiDefinition {
      * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
      */
     interface ArgumentType {
-        default boolean isPrimitive() {
-            return false;
-        }
-
-        default boolean isList() {
-            return false;
-        }
-
-        default boolean isStruct() {
-            return false;
-        }
     }
 
     /**
@@ -91,11 +80,6 @@ public interface ArgumentDefinition extends ApiDefinition {
      */
     interface StructArgumentType extends ArgumentType {
         ArgumentDefinition[] getProperties();
-
-        @Override
-        default boolean isStruct() {
-            return true;
-        }
 
     }
 
@@ -107,10 +91,8 @@ public interface ArgumentDefinition extends ApiDefinition {
     interface ListArgumentType extends ArgumentType {
         ArgumentType getItemType();
 
-        @Override
-        default boolean isList() {
-            return true;
-        }
+        boolean allowsNullItems();
+
     }
 
     /**
@@ -140,10 +122,6 @@ public interface ArgumentDefinition extends ApiDefinition {
          */
         LONG;
 
-        @Override
-        public boolean isPrimitive() {
-            return true;
-        }
     }
 
 }
