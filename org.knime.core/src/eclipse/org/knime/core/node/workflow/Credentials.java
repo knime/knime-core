@@ -188,9 +188,6 @@ public final class Credentials extends Observable implements ICredentials {
         if (!ConvenienceMethods.areEqual(m_login, cred.m_login)) {
             return false;
         }
-        if (!ConvenienceMethods.areEqual(m_secondFactor, cred.m_secondFactor)) {
-            return false;
-        }
         return true;
     }
 
@@ -200,9 +197,6 @@ public final class Credentials extends Observable implements ICredentials {
         int hash = m_name.hashCode();
         if (m_login != null) {
             hash = hash ^ m_login.hashCode();
-        }
-        if (m_secondFactor.isPresent()) {
-            hash = hash ^ m_secondFactor.get().hashCode();
         }
         return hash;
     }

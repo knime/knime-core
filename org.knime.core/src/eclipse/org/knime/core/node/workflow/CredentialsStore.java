@@ -383,14 +383,22 @@ public final class CredentialsStore implements Observer {
      * @noreference This method is not intended to be referenced by clients. */
     public static FlowVariable newCredentialsFlowVariable(final String name, final String login, final String password,
         final boolean saveWeaklyEncrypted, final boolean useServerLogin) throws InvalidSettingsException {
-        return newCredentialsFlowVariable(name, login, password, null, saveWeaklyEncrypted, useServerLogin);
+        return newCredentialsFlowVariable(name, login, password, null);
     }
 
-    /** Factory to create a flow variable wrapping the credentials information. Used by the framework, no API.
-     * @noreference This method is not intended to be referenced by clients. */
+    /**
+     * Factory to create a flow variable wrapping the credentials information. Used by the framework, no API.
+     *
+     * @param name the name of the to-be-created flow variable
+     * @param login the login / username of the to-be-created flow variable
+     * @param password the password of the to-be-created flow variable
+     * @param secondFactor the seconf authentication factor of the to-be-created flow variable, or null, if there is
+     *            none
+     * @return a new credentials flow variable
+     * @noreference This method is not intended to be referenced by clients.
+     */
     public static FlowVariable newCredentialsFlowVariable(final String name, final String login, final String password,
-        final String secondFactor,final boolean saveWeaklyEncrypted, final boolean useServerLogin)
-                throws InvalidSettingsException {
+        final String secondFactor) {
         return new FlowVariable(name, new CredentialsFlowVariableValue(name, login, password, secondFactor));
     }
 
@@ -405,21 +413,8 @@ public final class CredentialsStore implements Observer {
         private final String m_name;
         private final String m_login;
         private final String m_password;
-        private Optional<String> m_secondFactor;
+        private final Optional<String> m_secondFactor;
 
-        /**
-         * @param credentials
-         * @throws InvalidSettingsException
-         */
-        CredentialsFlowVariableValue(final String name, final String login, final String password) {
-            this(name, login, password, null);
-        }
-
-
-        /**
-         * @param credentials
-         * @throws InvalidSettingsException
-         */
         CredentialsFlowVariableValue(final String name, final String login, final String password,
             final String secondFactor) {
             m_name = CheckUtils.checkArgumentNotNull(name);
@@ -427,7 +422,6 @@ public final class CredentialsStore implements Observer {
             m_password = password;
             m_secondFactor = Optional.ofNullable(secondFactor);
         }
-
 
         /** {@inheritDoc} */
         @Override
@@ -455,11 +449,8 @@ public final class CredentialsStore implements Observer {
         /** {@inheritDoc} */
         @Override
         public int hashCode() {
-            return new HashCodeBuilder().append(m_name)
-                    .append(m_login)
-                    .append(m_password)
-                    .append(m_secondFactor)
-                    .hashCode();
+            return new HashCodeBuilder().append(m_name).append(m_login).append(m_password).append(m_secondFactor)
+                .hashCode();
         }
 
         /** {@inheritDoc} */
@@ -473,7 +464,6 @@ public final class CredentialsStore implements Observer {
             CredentialsFlowVariableValue other = (CredentialsFlowVariableValue)obj;
             return new EqualsBuilder().append(m_name, other.m_name)
                           .append(m_login, other.m_login)
-                          .append(m_password, other.m_password)
                           .append(m_password, other.m_password)
                           .append(m_secondFactor, other.m_secondFactor)
                           .isEquals();
@@ -543,7 +533,7 @@ public final class CredentialsStore implements Observer {
          * @param secondFactor Possibly null second factor
          * @since 5.2
          */
-        public default void pushCredentialsFlowVariable(final String name, final String login, final String password,
+        default void pushCredentialsFlowVariable(final String name, final String login, final String password,
             final String secondFactor) {
             CheckUtils.checkState(this instanceof NodeModel, "Interface %s not implemented by a NodeModel instance");
             Node.invokePushFlowVariable((NodeModel)this,
