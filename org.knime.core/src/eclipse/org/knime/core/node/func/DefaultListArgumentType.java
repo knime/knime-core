@@ -44,35 +44,55 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 20, 2023 (Adrian Nembach, KNIME GmbH, Konstanz, Germany): created
+ *   Nov 9, 2023 (Adrian Nembach, KNIME GmbH, Konstanz, Germany): created
  */
 package org.knime.core.node.func;
 
+import java.util.Objects;
+
+import org.knime.core.node.func.ArgumentDefinition.ArgumentType;
+import org.knime.core.node.func.ArgumentDefinition.ListArgumentType;
+
 /**
+ * Default implementation of a {@link ListArgumentType}.
  *
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
-final class DefaultArgumentDefinition extends AbstractApiDefinition implements ArgumentDefinition {
+final class DefaultListArgumentType implements ListArgumentType {
 
-    private final ArgumentType m_type;
+    private final ArgumentType m_itemType;
 
-    private final boolean m_isOptional;
+    private final boolean m_nullAllowed;
 
-    public DefaultArgumentDefinition(final String name, final String description, final ArgumentType type,
-        final boolean isOptional) {
-        super(name, description);
-        m_type = type;
-        m_isOptional = isOptional;
+    DefaultListArgumentType(final ArgumentType itemType, final boolean allowsNullItems) {
+        m_itemType = itemType;
+        m_nullAllowed = allowsNullItems;
     }
 
     @Override
-    public ArgumentType getType() {
-        return m_type;
+    public ArgumentType getItemType() {
+        return m_itemType;
     }
 
     @Override
-    public boolean isOptional() {
-        return m_isOptional;
+    public boolean allowsNullItems() {
+        return m_nullAllowed;
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        if (obj == this) {
+            return true;
+        } else if (obj instanceof DefaultListArgumentType other) {
+            return m_itemType.equals(other.getItemType());
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        return 13 + Objects.hash(m_itemType);
     }
 
 }
