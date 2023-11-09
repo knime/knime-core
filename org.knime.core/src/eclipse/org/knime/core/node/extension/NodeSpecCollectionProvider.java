@@ -298,6 +298,13 @@ public final class NodeSpecCollectionProvider {
             progressEvents = null;
         }
 
+        /**
+         * @return whether the node-spec collection is completely loaded
+         */
+        public static boolean isDone() {
+            return fractionDone == 1.0;
+        }
+
         private static void updateProgress() {
             fractionDone = done.entrySet().stream()
                 .mapToDouble(e -> work.get(e.getKey()) == 0 ? 0. : (e.getValue() / (double)work.get(e.getKey()))) //
