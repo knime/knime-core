@@ -73,7 +73,6 @@ import org.knime.core.data.filestore.FileStoreCell;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.NotInWorkflowDataRepository;
 import org.knime.core.data.filestore.internal.ROWriteFileStoreHandler;
-import org.knime.core.data.filestore.internal.WriteFileStoreHandler;
 import org.knime.core.data.v2.RowContainer;
 import org.knime.core.data.v2.RowWriteCursor;
 import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
@@ -341,7 +340,7 @@ public class ExecutionContext extends ExecutionMonitor {
     /**
      * Creates a container to which rows can be added, overwriting the nodes {@link IWriteFileStoreHandler}.
      * This method has the same behavior as {@link #createDataContainer(DataTableSpec)} except that the provided
-     * {@link WriteFileStoreHandler} is used. This is useful e.g. if the container is created to serve as a preview
+     * {@link IWriteFileStoreHandler} is used. This is useful e.g. if the container is created to serve as a preview
      * even while this nodes' fileStoreHandler is closed.
      *
      * @param spec The spec to open the container.
@@ -352,7 +351,7 @@ public class ExecutionContext extends ExecutionMonitor {
      * @since 5.2
      * @noreference This method is not intended to be referenced by clients.
      */
-    public BufferedDataContainer createDataContainer(final DataTableSpec spec,
+    BufferedDataContainer createDataContainer(final DataTableSpec spec,
         final IWriteFileStoreHandler writeFileStoreHandler) {
         return createDataContainer(spec, true, -1, true, writeFileStoreHandler);
     }

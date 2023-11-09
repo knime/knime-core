@@ -48,12 +48,13 @@
  */
 package org.knime.core.node;
 
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.TableBackend;
+import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.table.row.Selection;
 
 /**
- * Provides internal API for manipulating tables.
- * May change at any point in time.
+ * Provides internal API for manipulating tables. May change at any point in time.
  *
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  * @noreference This class is not intended to be referenced by clients.
@@ -108,4 +109,22 @@ public final class InternalTableAPI {
         return exec.createConcatenateTableWithNewRowIDs(tables);
     }
 
+    /**
+     * Creates a container to which rows can be added, overwriting the node's default {@link IWriteFileStoreHandler}.
+     * This method has the same behavior as {@link ExecutionContext#createDataContainer(DataTableSpec)} except that the
+     * provided {@link IWriteFileStoreHandler} is used. This is useful e.g. if the container is created to serve as a
+     * preview even while this nodes' fileStoreHandler is closed.
+     *
+     * @param exec The {@link ExecutionContext} to use when creating the data container.
+     * @param spec The spec to open the container.
+     * @param writeFileStoreHandler The {@link IWriteFileStoreHandler} to use instead of the one associated with this
+     *            {@link ExecutionContext}, useful e.g. if the container is only used as a preview.
+     * @return A container to which rows can be added and which provides the <code>BufferedDataTable</code>.
+     * @throws NullPointerException If the spec argument is <code>null</code>.
+     * @since 5.2
+     */
+    public static BufferedDataContainer createDataContainer(final ExecutionContext exec, final DataTableSpec spec,
+        final IWriteFileStoreHandler writeFileStoreHandler) {
+        return exec.createDataContainer(spec, writeFileStoreHandler);
+    }
 }
