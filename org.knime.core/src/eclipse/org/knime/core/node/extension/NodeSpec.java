@@ -103,9 +103,15 @@ import org.knime.shared.workflow.def.VendorDef;
 public record NodeSpec(Factory factory, NodeType type, Ports ports, Metadata metadata, URL icon,
     boolean deprecated, boolean hidden) {
 
-    public static final Predicate<NodeSpec> IS_HIDDEN = ns -> ns.hidden();
+    public static final Predicate<NodeSpec> IS_HIDDEN = NodeSpec::hidden;
 
-    public static final Predicate<NodeSpec> IS_DEPRECATED = ns -> ns.deprecated();
+    public static final Predicate<NodeSpec> IS_DEPRECATED = NodeSpec::deprecated;
+
+    /**
+     * Needs to be incremented if data is added or removed from {@link NodeSpec} in order to invalidate data cached on
+     * disk.
+     */
+    static final String SERIALIZATION_VERSION = "1";
 
     /**
      * @param factory node factory information

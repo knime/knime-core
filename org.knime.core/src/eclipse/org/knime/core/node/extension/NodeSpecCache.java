@@ -64,7 +64,7 @@ import org.osgi.framework.Bundle;
  * Extracts node information (name, vendor information, port types, etc.) from node factories. This requires node
  * instantiation and can be expensive for a large set of nodes.
  * <p>
- * Stores the information on disk in the bundle data directories, see {@link NodeSpecCachePersistor}.
+ * Stores the information on disk in the bundle data directories, see {@link DiskBasedNodeSpecCache}.
  * </p>
  *
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
@@ -97,6 +97,8 @@ final class NodeSpecCache {
 
     private final Thread m_initializerThread;
 
+    private final DiskBasedNodeSpecCache m_diskBasedCache;
+
     /**
      * @param allExtensions extension point implementations that contribute nodes or node sets
      * @param catExts node repository category extension point implementations
@@ -104,6 +106,10 @@ final class NodeSpecCache {
      */
     NodeSpecCache(final Map<Bundle, Set<INodeFactoryExtension>> allExtensions,
         final Map<String, CategoryExtension> catExts) {
+
+        m_diskBasedCache = new DiskBasedNodeSpecCache(NodeSpec.SERIALIZATION_VERSION);
+        m_diskBasedCache.startInitialization();
+
         m_initializerThread = new Thread(new Initializer(allExtensions, catExts));
         m_initializerThread.setName("Node Repository Initializer");
     }
@@ -156,10 +162,10 @@ final class NodeSpecCache {
                     var extensions = nameAndExts.getValue();
                     NodeSpecCollectionProvider.Progress.setLoadingFeature(featureName);
                     for (var ext : extensions) {
-                        var nodeSpecs = NodeSpec.of(m_categoryExtensions, ext);
+                        var nodeSpecs = DiskBasedNodeSpecCache.get(ext) //
+                            .orElse(NodeSpec.of(m_categoryExtensions, ext));
                         // report progress
-                        NodeSpecCollectionProvider.Progress.incrementDone(Stage.NODE_METADATA,
-                            nodeSpecs.size());
+                        NodeSpecCollectionProvider.Progress.incrementDone(Stage.NODE_METADATA, nodeSpecs.size());
                         for (var ns : nodeSpecs) {
                             var factoryId = ns.factory().id();
                             if (allNodes.containsKey(factoryId)) {
