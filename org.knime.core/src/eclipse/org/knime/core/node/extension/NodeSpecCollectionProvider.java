@@ -48,12 +48,12 @@
  */
 package org.knime.core.node.extension;
 
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeSetFactory;
@@ -82,7 +82,6 @@ public final class NodeSpecCollectionProvider {
             if (instance == null) {
                 final var catExts = CategoryExtensionUtil.collectCategoryExtensions();
 
-
                 // index node specs
                 var nodeSpecCache = new NodeSpecCache(nodeFactoryExts, catExts);
                 nodeSpecCache.startInitialization();
@@ -101,7 +100,7 @@ public final class NodeSpecCollectionProvider {
     private final Map<String, CategoryExtension> m_categoryExtensions;
 
     private NodeSpecCollectionProvider(final NodeSpecCache cache,
-            final Map<String, CategoryExtension> categoryExtensions) {
+        final Map<String, CategoryExtension> categoryExtensions) {
         m_cache = cache;
         m_categoryExtensions = Collections.unmodifiableMap(categoryExtensions);
     }
@@ -171,8 +170,8 @@ public final class NodeSpecCollectionProvider {
      * access the instance.
      * <p>
      * Does not need to be thread-safe because access is serially confined to the first thread to call
-     * {@link #getInstance()}. At the end of {@link #getInstance()} write access is passed on to the
-     * NodeSpecCache which updates the progress for node spec collection.
+     * {@link #getInstance()}. At the end of {@link #getInstance()} write access is passed on to the NodeSpecCache which
+     * updates the progress for node spec collection.
      * </p>
      *
      * @since 5.2
@@ -180,23 +179,9 @@ public final class NodeSpecCollectionProvider {
     public static final class Progress {
 
         /**
-         * Property name for initialization progress events.
-         *
-         * @see #addPropertyChangeListener(java.beans.PropertyChangeListener)
-         */
-        public static final String PROGRESS_PROPERTY = "progress";
-
-        /**
-         * Property name for the event that is fired when the initialization is complete.
-         *
-         * @see #addPropertyChangeListener(java.beans.PropertyChangeListener)
-         */
-        public static final String ALL_DONE_PROPERTY = "allDone";
-
-        /**
          * {@link NodeFactoryExtensionManager} initialization follows three stages.
          */
-        public enum Stage {
+        enum Stage {
                 /** Collecting node factory extensions */
                 NODE_FACTORY,
                 /** Collecting node set factory extensions */
@@ -207,59 +192,26 @@ public final class NodeSpecCollectionProvider {
 
         /**
          * Represents the progress of the initialization of the {@link NodeSpecCollectionProvider} singleton.
+         *
+         * @param extensionName null or in stage NODE_METADATA the name of the feature that is currently being loaded,
+         *            e.g., "Vernalis KNIME Nodes",
+         * @param overallProgress progress over all three stages in range [0, 1]
+         * @param isDone whether initialization has finished
+         *
          * @since 5.2
          */
-        public static final class ProgressEvent {
-
-            /** The current step of the initialization. */
-            public final Stage m_currentStage;
-
-            /**
-             * Null for stage NODE_FACTORY and NODE_SET_FACTORY. After metadata indexing has started, this is the name
-             * of the feature that is currently being loaded, e.g., "Vernalis KNIME Nodes", "KNIME Google Connectors",
-             * or "KNIME Javasnippet".
-             */
-            public final String m_extensionName;
-
-            /**
-             * Progress over all three stages in range [0, 1].
-             */
-            public final double m_overallProgress;
-
-            /** Number of units of work done in the current stage. */
-            public final long m_stageWorkDone;
-
-            /** Total number of units of work in the current stage. */
-            public final long m_stageWorkTotal;
-
-            /**
-             * @param stage the current stage of initialization
-             * @param extensionName null or in stage NODE_METADATA the name of the feature that is currently being
-             *            loaded, e.g., "Vernalis KNIME Nodes",
-             * @param overallProgress progress over all three stages in range [0, 1]
-             * @param stageWorkDone number of units of work done in the current stage
-             * @param stageWorkTotal total number of units of work in the current stage
-             */
-            private ProgressEvent(final Stage stage, final String extensionName,
-                final double overallProgress, final long stageWorkDone, final long stageWorkTotal) {
-                m_currentStage = stage;
-                m_extensionName = extensionName;
-                m_overallProgress = overallProgress;
-                m_stageWorkDone = stageWorkDone;
-                m_stageWorkTotal = stageWorkTotal;
-            }
-
+        public static record ProgressEvent(String extensionName, double overallProgress, boolean isDone) {
         }
 
-        /** Progress of initialization, in range [0, 1]. */
-        private static double fractionDone;
+        private static Set<ProgressListener> listeners = new CopyOnWriteArraySet<>();
+
+        /** Whether initialization has finished. */
+        private static boolean complete;
 
         /**
          * The currently loaded feature or bundle during node metadata creation.
          */
         private static String loadingFeature;
-
-        private static Stage currentStage = Stage.NODE_FACTORY;
 
         private static EnumMap<Stage, Long> work = new EnumMap<>(Stage.class);
 
@@ -270,18 +222,13 @@ public final class NodeSpecCollectionProvider {
             Arrays.stream(Stage.values()).forEach(s -> done.put(s, 0L));
         }
 
-        /** Nulled after initialization is complete. */
-        private static PropertyChangeSupport progressEvents = new PropertyChangeSupport(Progress.class);
-
         static synchronized void setWork(final Stage type, final long total) {
             work.put(type, total);
-            currentStage = type;
             updateProgress();
         }
 
         static synchronized void incrementDone(final Stage type, final long completed) {
             done.merge(type, completed, Long::sum);
-            currentStage = type;
             updateProgress();
         }
 
@@ -291,55 +238,54 @@ public final class NodeSpecCollectionProvider {
         }
 
         static synchronized void setDone() {
-            fractionDone = 1.0;
-            progressEvents.firePropertyChange(ALL_DONE_PROPERTY, false, true);
-            Arrays.stream(progressEvents.getPropertyChangeListeners())
-                .forEach(progressEvents::removePropertyChangeListener);
-            progressEvents = null;
+            complete = true;
+            updateProgress();
+            listeners.clear();
+            listeners = null;
+            work = null;
+            done = null;
         }
 
         /**
          * @return whether the node-spec collection is completely loaded
          */
-        public static boolean isDone() {
-            return fractionDone == 1.0;
+        public static synchronized boolean isDone() {
+            return complete;
         }
 
         private static void updateProgress() {
-            fractionDone = done.entrySet().stream()
+            final var fractionDone = done.entrySet().stream()
                 .mapToDouble(e -> work.get(e.getKey()) == 0 ? 0. : (e.getValue() / (double)work.get(e.getKey()))) //
                 .sum() / 3.;
-            var event = new ProgressEvent(currentStage, loadingFeature, fractionDone, done.get(currentStage),
-                work.get(currentStage));
-            progressEvents.firePropertyChange(PROGRESS_PROPERTY, null, event);
+            final var event = new ProgressEvent(loadingFeature, fractionDone, complete);
+            listeners.forEach(l -> l.progress(event));
         }
 
         /**
-         * <p>
-         * The callback should be lightweight, as the callback is executed in the thread that initializes the
-         * {@link NodeSpecCollectionProvider} instance (and thus also the {@link NodeFactoryProvider} instance).
-         * </p>
-         * The property for progress is {@value #PROGRESS_PROPERTY}. A single event with property name
-         * {@value #ALL_DONE_PROPERTY} is fired when the initialization is complete.
-         *
-         * @param listener to be notified when the progress changes.
-         *
-         * @return false if the initialization process is already complete.
+         * @param listener notified every time progress is made
+         * @return false and take no action if initialization is already complete
          */
-        public static synchronized boolean addPropertyChangeListener(final PropertyChangeListener listener) {
-            if (progressEvents == null) {
+        public static synchronized boolean addListener(final ProgressListener listener) {
+            if (complete) {
                 return false;
-            } else {
-                progressEvents.addPropertyChangeListener(listener);
-                return true;
+            }
+            listeners.add(listener);
+            return true;
+        }
+
+        /** @param listener to be removed */
+        public static synchronized void removeListener(final ProgressListener listener) {
+            if (listeners != null) {
+                listeners.remove(listener);
             }
         }
 
-        /** @param listener to remove */
-        public static synchronized void removePropertyChangeListener(final PropertyChangeListener listener) {
-            if (progressEvents != null) {
-                progressEvents.removePropertyChangeListener(listener);
-            }
+        /**
+         * To receive updates on the progress of the initialization of the {@link NodeSpecCollectionProvider} singleton.
+         */
+        public interface ProgressListener {
+            /** @param progressEvent current progress */
+            void progress(ProgressEvent progressEvent);
         }
     }
 }
