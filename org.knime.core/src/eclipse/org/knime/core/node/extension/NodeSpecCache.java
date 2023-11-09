@@ -97,8 +97,6 @@ final class NodeSpecCache {
 
     private final Thread m_initializerThread;
 
-    private final DiskBasedNodeSpecCache m_diskBasedCache;
-
     /**
      * @param allExtensions extension point implementations that contribute nodes or node sets
      * @param catExts node repository category extension point implementations
@@ -106,10 +104,6 @@ final class NodeSpecCache {
      */
     NodeSpecCache(final Map<Bundle, Set<INodeFactoryExtension>> allExtensions,
         final Map<String, CategoryExtension> catExts) {
-
-        m_diskBasedCache = new DiskBasedNodeSpecCache(NodeSpec.SERIALIZATION_VERSION);
-        m_diskBasedCache.startInitialization();
-
         m_initializerThread = new Thread(new Initializer(allExtensions, catExts));
         m_initializerThread.setName("Node Repository Initializer");
     }

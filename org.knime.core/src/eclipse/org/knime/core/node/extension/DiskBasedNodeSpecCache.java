@@ -48,25 +48,42 @@
  */
 package org.knime.core.node.extension;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeSettings;
+import org.knime.core.node.workflow.def.DefToCoreUtil;
 import org.knime.core.util.workflowalizer.NodeMetadata;
+import org.knime.shared.workflow.def.ConfigMapDef;
+import org.knime.shared.workflow.storage.multidir.util.LoaderUtils;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Version;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+
 /**
- * This class is responsible for persisting the {@link NodeSpecCache} to disk to reuse the information across restarts
- * of the Analytics Platform.
+ * The singleton instance of this class is responsible for persisting {@link NodeSpec} information to/from disk to speed
+ * up the initialization of the {@link NodeSpecCache} across restarts of the Analytics Platform.
  *
  * <p>
  * Only the node factory extensions are persisted, not node set factory extensions. The reason is that node set factory
@@ -99,50 +116,90 @@ final class DiskBasedNodeSpecCache {
     /** Used to wait for the cache to be loaded. */
     private static final CountDownLatch initialized = new CountDownLatch(1);
 
-    private static final String DATA_DIR = "nodespeccachedata";
+    private static record CacheIndex() {
+        private static final String INDEX_FILE = "nodespeccachecontent.json";
 
-    private static final String INDEX_FILE = "nodespeccachecontent.json";
+        private static final String PATH = "nodespeccachedata";
 
-    /**
-     * The cache stores a file in the data area of each bundle contributing node factories or node set factories. It
-     * simply contains
-     */
-    private static final String VERSION_FILE_NAME = "node-metadata-cache-version.txt";
+    }
 
-    private static final String CACHE_FILE_NAME = "node-metadata-cache.json.gzip";
+    private static record PartialCache(Bundle bundle, Map<INodeFactoryExtension, List<NodeSpec>> specs) {
+        /**
+         * The cache stores a file in the data area of each bundle contributing node factories or node set factories. It
+         * simply contains
+         */
+        private static final String VERSION_FILE_NAME = "node-metadata-cache-version.txt";
+
+        private static final String CACHE_FILE_NAME = "node-metadata-cache.json.gzip";
+    }
 
     private static boolean cannotWriteFilesWarningIssued;
 
     private static final Map<INodeFactoryExtension, List<NodeSpec>> specs = new HashMap<>();
 
-
     static {
         loadThread.setName("Node Repository Disk Loader");
         loadThread.start();
     }
-//
-//    /**
-//     * @param cacheFormatVersion summarizes the format/schema of the metadata cache. This is compared to the
-//     *            cacheFormatVersion that was written with the previous serialization. If the format versions disagree,
-//     *            the cache is invalidated.
-//     */
+
+    //
+    //    /**
+    //     * @param cacheFormatVersion summarizes the format/schema of the metadata cache. This is compared to the
+    //     *            cacheFormatVersion that was written with the previous serialization. If the format versions disagree,
+    //     *            the cache is invalidated.
+    //     */
     private DiskBasedNodeSpecCache() {
 
     }
 
     private static void loadCache() {
-        //
+        try {
+
+        } finally {
+            initialized.countDown();
+        }
     }
 
-    /**
-     * @param bundle
-     * @return whether the cache is up to date (was computed for the given bundle version and the current cache format
-     *         version)
-     */
-    static boolean isCacheUsable(final Bundle bundle) {
-        final var requiredFingerprint = new Fingerprint(bundle.getVersion());
-        return cacheStateFilePath(bundle).flatMap(Fingerprint::read).filter(requiredFingerprint::equals).isPresent();
+    static void testWrite(final Map<String, NodeSpec> allNodes) {
+        var mapper = new CustomObjectMapper();
+        // load nodes from disk
+        var path = Paths.get("allNodes.json.zip");
+        var t0 = System.currentTimeMillis();
+        System.out.println("Writing to " + path.toAbsolutePath());
+        try (var zis = new GZIPOutputStream(Files.newOutputStream(path))) {
+            mapper.writeValue(zis, allNodes);
+            System.out.println("Wrote " + allNodes.size() + " nodes in " + (System.currentTimeMillis() - t0) + " ms");
+        } catch (IOException ex) {
+            System.err.println(ex);
+        }
     }
+
+    // test read
+    static Map<String, NodeSpec> testRead() {
+        var mapper = new CustomObjectMapper();
+        var path = Paths.get("allNodes.json.zip");
+        var t0 = System.currentTimeMillis();
+        System.out.println("Reading from " + path.toAbsolutePath());
+        try (var zis = new GZIPInputStream(Files.newInputStream(path))) {
+            final var result = mapper.readValue(zis, new TypeReference<Map<String, NodeSpec>>() {
+            });
+            System.out.println("Read " + result.size() + " nodes in " + (System.currentTimeMillis() - t0) + " ms");
+            return result;
+        } catch (IOException ex) {
+            System.err.println(ex);
+            return null;
+        }
+    }
+
+    //    /**
+    //     * @param bundle
+    //     * @return whether the cache is up to date (was computed for the given bundle version and the current cache format
+    //     *         version)
+    //     */
+    //    static boolean isCacheUsable(final Bundle bundle) {
+    //        final var requiredFingerprint = new Fingerprint(bundle.getVersion());
+    //        return cacheStateFilePath(bundle).flatMap(Fingerprint::read).filter(requiredFingerprint::equals).isPresent();
+    //    }
     //
     //    /**
     //     * @param bundle
@@ -202,29 +259,29 @@ final class DiskBasedNodeSpecCache {
     //        }
     //    }
 
-    private void writeBundleCacheState(final Bundle bundle) throws IOException {
-        var optPath = cacheStateFilePath(bundle);
-        if (optPath.isEmpty()) {
-            throw new IOException("Could not write node metadata cache state for bundle %s".formatted(bundle));
-        }
-        new Fingerprint(bundle.getVersion()).write(optPath.get());
-    }
-
-    private static Optional<Path> cacheStateFilePath(final Bundle bundle) {
-        return Optional.ofNullable(bundle.getBundleContext())//
-            .map(bc -> bc.getDataFile(VERSION_FILE_NAME)).map(File::toPath);
-    }
-
-    /** @return the path to the bundle data directory provided by the bundle context */
-    private static Optional<Path> cacheDataFilePath(final Bundle bundle) {
-        try {
-            return Optional.ofNullable(bundle.getBundleContext())//
-                .map(bc -> bc.getDataFile(CACHE_FILE_NAME)).map(File::toPath);
-        } catch (IllegalStateException ex) {
-            NodeLogger.getLogger(DiskBasedNodeSpecCache.class).warn("Bundle context for %s no longer valid", ex);
-            return Optional.empty();
-        }
-    }
+    //    private void writeBundleCacheState(final Bundle bundle) throws IOException {
+    //        var optPath = cacheStateFilePath(bundle);
+    //        if (optPath.isEmpty()) {
+    //            throw new IOException("Could not write node metadata cache state for bundle %s".formatted(bundle));
+    //        }
+    //        new Fingerprint(bundle.getVersion()).write(optPath.get());
+    //    }
+    //
+    //    private static Optional<Path> cacheStateFilePath(final Bundle bundle) {
+    //        return Optional.ofNullable(bundle.getBundleContext())//
+    //            .map(bc -> bc.getDataFile(VERSION_FILE_NAME)).map(File::toPath);
+    //    }
+    //
+    //    /** @return the path to the bundle data directory provided by the bundle context */
+    //    private static Optional<Path> cacheDataFilePath(final Bundle bundle) {
+    //        try {
+    //            return Optional.ofNullable(bundle.getBundleContext())//
+    //                .map(bc -> bc.getDataFile(CACHE_FILE_NAME)).map(File::toPath);
+    //        } catch (IllegalStateException ex) {
+    //            NodeLogger.getLogger(DiskBasedNodeSpecCache.class).warn("Bundle context for %s no longer valid", ex);
+    //            return Optional.empty();
+    //        }
+    //    }
 
     /**
      * @param bundle
@@ -272,7 +329,7 @@ final class DiskBasedNodeSpecCache {
      * @param cacheFormatVersion identifies the schema of the persisted data
      * @param version identifies the bundle version
      */
-    private static record Fingerprint(String cacheFormatVersion, Version version) {
+    private static record Fingerprint(int cacheFormatVersion, Version version) {
 
         private Fingerprint(final Version version) {
             this(NodeSpec.SERIALIZATION_VERSION, version);
@@ -289,7 +346,7 @@ final class DiskBasedNodeSpecCache {
                     // invalid cache state file
                     return Optional.empty();
                 }
-                final var cacheFormatVersion = lines.get(0);
+                final var cacheFormatVersion = Integer.parseInt(lines.get(0));
                 final var version = Version.valueOf(lines.get(1));
                 return Optional.of(new Fingerprint(cacheFormatVersion, version));
             } catch (NoSuchFileException ex) {
@@ -322,4 +379,41 @@ final class DiskBasedNodeSpecCache {
             return null; // NOSONAR nothing should be returned
         }
     }
+
+    static final class CustomObjectMapper extends ObjectMapper {
+
+        private static class NodeSettingsSerializer extends JsonSerializer<NodeSettings> {
+            @Override
+            public void serialize(final NodeSettings nodeSettings, final JsonGenerator jsonGenerator,
+                final SerializerProvider serializerProvider) throws IOException {
+                ConfigMapDef dto;
+                try {
+                    dto = LoaderUtils.toConfigMapDef(nodeSettings);
+                    serializerProvider.defaultSerializeValue(dto, jsonGenerator);
+                } catch (InvalidSettingsException ex) {
+                    throw new IOException("Failed to serialize NodeSettings", ex);
+                }
+            }
+        }
+
+        private static class NodeSettingsDeserializer extends JsonDeserializer<NodeSettings> {
+            @Override
+            public NodeSettings deserialize(final JsonParser jsonParser,
+                final DeserializationContext deserializationContext) throws IOException {
+                // Deserialize to NodeSettingsDto
+                ConfigMapDef dto = jsonParser.readValueAs(ConfigMapDef.class);
+                return DefToCoreUtil.toNodeSettings(dto);
+            }
+        }
+
+        public CustomObjectMapper() {
+            var module = new SimpleModule();
+            module.addSerializer(NodeSettings.class, new NodeSettingsSerializer());
+            module.addDeserializer(NodeSettings.class, new NodeSettingsDeserializer());
+            registerModule(module);
+        }
+    }
+
+
+
 }

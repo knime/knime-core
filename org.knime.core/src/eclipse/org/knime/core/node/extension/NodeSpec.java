@@ -84,6 +84,8 @@ import org.knime.core.node.workflow.def.DefToCoreUtil;
 import org.knime.shared.workflow.def.PortTypeDef;
 import org.knime.shared.workflow.def.VendorDef;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 /**
  * Specification for a node.
  *
@@ -111,7 +113,7 @@ public record NodeSpec(Factory factory, NodeType type, Ports ports, Metadata met
      * Needs to be incremented if data is added or removed from {@link NodeSpec} in order to invalidate data cached on
      * disk.
      */
-    static final String SERIALIZATION_VERSION = "1";
+    static final int SERIALIZATION_VERSION = 1;
 
     /**
      * @param factory node factory information
@@ -211,7 +213,7 @@ public record NodeSpec(Factory factory, NodeType type, Ports ports, Metadata met
      * @param supportedInputPortTypes as defined by the node factory
      * @param outputPorts output ports
      */
-    public static record Ports(List<Port> inputPorts, List<PortTypeDef> supportedInputPortTypes,
+    public static record Ports(List<Port> inputPorts, List<PortTypeDef> supportedInputPortTypeDefs,
         List<Port> outputPorts) {
 
         /**
@@ -281,6 +283,7 @@ public record NodeSpec(Factory factory, NodeType type, Ports ports, Metadata met
         /**
          * @return input ports types
          */
+        @JsonIgnore
         public Stream<PortType> getInputPortTypes() {
             return inputPorts.stream().map(Port::type).map(DefToCoreUtil::toPortType);
         }
@@ -288,6 +291,7 @@ public record NodeSpec(Factory factory, NodeType type, Ports ports, Metadata met
         /**
          * @return output ports types
          */
+        @JsonIgnore
         public Stream<PortType> getOutputPortTypes() {
             return outputPorts.stream().map(Port::type).map(DefToCoreUtil::toPortType);
         }
@@ -296,8 +300,9 @@ public record NodeSpec(Factory factory, NodeType type, Ports ports, Metadata met
          * @return if the creating factory is a {@link ConfigurableNodeFactory}, this returns the supported port types.
          *         Otherwise it returns the distinct present input port types.
          */
-        public Stream<PortType> getSupportedInputPortTypes() { // NOSONAR I want to to return port types, not port type defs
-            return supportedInputPortTypes.stream().map(DefToCoreUtil::toPortType);
+        @JsonIgnore
+        public Stream<PortType> getSupportedInputPortTypes() {
+            return supportedInputPortTypeDefs.stream().map(DefToCoreUtil::toPortType);
         }
 
         /**
@@ -388,7 +393,7 @@ public record NodeSpec(Factory factory, NodeType type, Ports ports, Metadata met
             ports.inputPorts().forEach(port -> Formatter.port(sb, indent + "    ", port));
             sb.append(indent).append("  ],\n");
             sb.append(indent).append("  supportedInputPortTypes: [\n");
-            ports.supportedInputPortTypes().forEach(typeDef -> Formatter.portTypeDef(sb, indent + "    ", typeDef));
+            ports.supportedInputPortTypeDefs().forEach(typeDef -> Formatter.portTypeDef(sb, indent + "    ", typeDef));
             sb.append(indent).append("  ],\n");
             sb.append(indent).append("  outputPorts: [\n");
             ports.outputPorts().forEach(port -> Formatter.port(sb, indent + "    ", port));
