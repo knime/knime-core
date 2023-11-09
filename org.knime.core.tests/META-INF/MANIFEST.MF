@@ -34,4 +34,7 @@ Import-Package: org.knime.core.data.convert.map,
  org.knime.core.data.join.results,
  org.knime.shared.workflow.storage.multidir.loader
 Automatic-Module-Name: org.knime.core.tests
-Bundle-ClassPath: .
+Bundle-ClassPath: .,
+ lib/byte-buddy-1.14.8.jar,
+ lib/equalsverifier-3.15.2.jar,
+ lib/objenesis-3.3.jar

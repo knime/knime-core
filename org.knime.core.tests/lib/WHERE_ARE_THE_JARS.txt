@@ -1,0 +1,6 @@
+The jars for org.knime.core.tests need to be fetched from maven. This can be done with:
+
+cd fetch_jars
+mvn clean package
+
+IMPORTANT: If you run maven from Eclipse, make sure to set the working directory to "fetch_jars". Otherwise maven will not put them into the right location.
