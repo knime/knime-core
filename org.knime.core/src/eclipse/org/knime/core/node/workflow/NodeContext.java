@@ -57,6 +57,7 @@ import java.util.stream.Collectors;
 
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 
 /**
  * A {@link NodeContext} holds information about the context in which an operation on a node is executed. This is used
@@ -394,12 +395,14 @@ public final class NodeContext {
         @SuppressWarnings("unchecked")
         @Override
         public <C> Optional<C> getObjOfClass(final Class<C> contextObjClass, final Object srcObj) {
-            if (srcObj instanceof NodeContainer) {
+            if (srcObj instanceof NodeContainer nc) {
                 //order of checking important
                 if (WorkflowManager.class.isAssignableFrom(contextObjClass)) {
-                    return Optional.of((C)NodeContainerParent.getProjectWFM((NodeContainer)srcObj));
+                    return Optional.of((C)NodeContainerParent.getProjectWFM(nc));
                 } else if (NodeContainer.class.isAssignableFrom(contextObjClass)) {
                     return Optional.of((C)srcObj);
+                } else if (WorkflowContextV2.class.isAssignableFrom(contextObjClass)) {
+                    return Optional.of((C)NodeContainerParent.getProjectWFM(nc).getContextV2());
                 } else {
                     return Optional.empty();
                 }
