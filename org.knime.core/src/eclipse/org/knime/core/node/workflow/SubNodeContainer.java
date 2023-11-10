@@ -2373,6 +2373,14 @@ public final class SubNodeContainer extends SingleNodeContainer
      * {@inheritDoc}
      */
     @Override
+    void performSaveDefaultViewSettingsTo(final NodeSettings viewSettings) {
+        // components don't have view settings
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     protected NodeContainerPersistor getCopyPersistor(final boolean preserveDeletableFlags,
         final boolean isUndoableDeleteCommand) {
         return new CopySubNodeContainerPersistor(this, preserveDeletableFlags, isUndoableDeleteCommand);
@@ -2606,7 +2614,7 @@ public final class SubNodeContainer extends SingleNodeContainer
                 if (hide != vh.isHideInWizard()) {
                     vh.setHideInWizard(hide);
                     if (nnc != null) {
-                        nnc.saveNodeSettingsToDefault();
+                        nnc.saveModelSettingsToDefault();
                         nnc.setDirty();
                     }
                 }
@@ -2628,7 +2636,7 @@ public final class SubNodeContainer extends SingleNodeContainer
             DialogNode<?,?> dn = (DialogNode<?,?>)model;
             if (hide != dn.isHideInDialog()) {
                 dn.setHideInDialog(hide);
-                nnc.saveNodeSettingsToDefault();
+                nnc.saveModelSettingsToDefault();
                 nnc.setDirty();
             }
         }

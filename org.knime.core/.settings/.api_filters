@@ -2352,6 +2352,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/NodeDialogPane.java" type="org.knime.core.node.NodeDialogPane">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.NodeDialogPane"/>
+                <message_argument value="getDefaultViewSettings(PortObjectSpec[])"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/port/report/IReportPortObject.java" type="org.knime.core.node.port.report.IReportPortObject">
         <filter comment="reporting refactoring -- accepting breaking changes" id="403804204">
             <message_arguments>

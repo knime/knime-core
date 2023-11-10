@@ -2422,6 +2422,22 @@ public final class Node {
         }
     }
 
+    /**
+     * This method is called for freshly added nodes with view settings if the view is accessed for the first time
+     * and no view settings have been set yet.
+     *
+     * It is also called for loaded nodes with view settings for which no view settings were stored on the last save of
+     * the workflow. This is only the case for nodes with a bundle version before 5.2. In this case, if the node was is
+     * executed initially, the bundle version is available via the NodeContext
+     *
+     * @param viewSettings
+     * @since 5.2
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public void saveDefaultViewSettingsTo(final NodeSettingsWO viewSettings) {
+        m_model.saveDefaultViewSettingsTo(viewSettings);
+    }
+
     /** Call {@link NodeModel#saveInternals(File, ExecutionMonitor)} and handles errors by logging to the NodeLogger
      * or setting a warning message at the node.
      * @param internDir ...

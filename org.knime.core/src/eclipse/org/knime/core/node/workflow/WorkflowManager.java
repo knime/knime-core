@@ -871,7 +871,7 @@ public final class WorkflowManager extends NodeContainer
             configureNodeAndSuccessors(id, true);
             // save node settings if source URL/context was provided (bug 5772)
             if (creationConfig != null && creationConfig.getURLConfig().isPresent()) {
-                container.saveNodeSettingsToDefault();
+                container.saveModelSettingsToDefault();
             }
             LOGGER.debug("Added new node " + id);
             setDirty();
@@ -2956,7 +2956,7 @@ public final class WorkflowManager extends NodeContainer
     }
 
     /**
-     * Called by views of {@link InteractiveNode interactive nodes}. It will take the settings of the NodeModel and save
+     * Called by views of {@link InteractiveNode interactive nodes}. It will take the model settings of the NodeModel and save
      * them in the {@link SingleNodeContainerSettings} so that they become the default for the next execution.
      *
      * @param id The node in question.
@@ -2969,7 +2969,7 @@ public final class WorkflowManager extends NodeContainer
                 throw new IllegalArgumentException("Can't set new defaults for metanodes.");
             }
             SingleNodeContainer snc = (SingleNodeContainer)nc;
-            snc.saveNodeSettingsToDefault();
+            snc.saveModelSettingsToDefault();
             snc.setDirty();
         }
     }
@@ -3430,7 +3430,7 @@ public final class WorkflowManager extends NodeContainer
                 NativeNodeContainer nnc = (NativeNodeContainer)nc;
                 if (nnc.getExecutionEnvironment().getUseAsDefault()) {
                     // interactive nodes may have new defaults
-                    nnc.saveNodeSettingsToDefault();
+                    nnc.saveModelSettingsToDefault();
                 }
             }
             nc.performStateTransitionPOSTEXECUTE();

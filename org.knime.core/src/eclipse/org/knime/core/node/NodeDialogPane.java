@@ -1558,7 +1558,7 @@ public abstract class NodeDialogPane {
         try {
             return nodeContainer.getNodeSettings().getNodeSettings("view");
         } catch (InvalidSettingsException e) { // NOSONAR
-            return getDefaultViewSettings(m_specs);
+            throw new IllegalStateException("View settings should be available.", e);
         }
     }
 
@@ -1602,20 +1602,6 @@ public abstract class NodeDialogPane {
      */
     protected boolean hasViewSettings() {
         return false;
-    }
-
-    /**
-     * Implemented by sub-classes to provide default view settings used in the flow variable tab. Will only be called as
-     * long as there are no view settings stored with the node.
-     *
-     * @param specs the node's input specs including flow variable port
-     * @return the default view settings
-     *
-     * @since 4.6
-     */
-    protected NodeSettingsRO getDefaultViewSettings(final PortObjectSpec[] specs) {
-        throw new IllegalStateException(
-            "This method must be overwritten if view settings are being used. Most likely an implementation error.");
     }
 
     /**

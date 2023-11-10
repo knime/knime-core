@@ -432,7 +432,7 @@ public abstract class SingleNodeContainer extends NodeContainer {
     public NodeSettings getModelSettingsUsingFlowObjectStack() throws InvalidSettingsException {
         if (m_settings.getModelSettings() == null) {
             //model settings haven't been initialized, yet (freshly added node)
-            saveNodeSettingsToDefault();
+            saveModelSettingsToDefault();
         }
         NodeSettings modelSettings = m_settings.getModelSettingsClone();
         overwriteSettingsWithFlowVariables(modelSettings, m_settings.getVariablesSettings(),
@@ -442,7 +442,8 @@ public abstract class SingleNodeContainer extends NodeContainer {
 
     /**
      * Extracts and returns the view settings of a node. The (sub-)settings that are controlled by flow variables are
-     * replaced by the flow variable value.
+     * replaced by the flow variable value. An empty optional is returned when either the node has no view settings or
+     * it is a freshly added node and the node container provides no default view settings.
      *
      * NOTE: this method can fail if the set flow variables are not available in the flow object stack (mainly because
      * upstream nodes aren't executed, yet)
@@ -454,12 +455,12 @@ public abstract class SingleNodeContainer extends NodeContainer {
      * @since 4.6
      */
     public Optional<NodeSettings> getViewSettingsUsingFlowObjectStack() throws InvalidSettingsException {
+        saveViewSettingsToDefault();
         if (m_settings.getViewSettings() == null) {
             return Optional.empty();
         }
         var viewSettings = m_settings.getViewSettingsClone();
-        overwriteSettingsWithFlowVariables(viewSettings, m_settings.getViewVariablesSettings(),
-            getAllFlowVariables());
+        overwriteSettingsWithFlowVariables(viewSettings, m_settings.getViewVariablesSettings(), getAllFlowVariables());
         return Optional.of(viewSettings);
     }
 
@@ -957,18 +958,52 @@ public abstract class SingleNodeContainer extends NodeContainer {
         return settings;
     }
 
-    /** Saves config from super NodeContainer (job manager) and the model settings and the variable settings.
+    /** Saves config from super NodeContainer (job manager) and the view and model settings and variable settings.
      * @param settings To save to.
-     * @param initDefaultModelSettings If true and the model settings are not yet assigned (node freshly dragged onto
-     * workflow) the NodeModel's saveSettings method is called to init fallback settings.
+     * @param initDefaultSettings If true and the model or view settings are not yet assigned (node freshly dragged onto
+     * workflow) the NodeModel's saveSettingsTo or saveDefaultViewSettingsTo method is called to init fallback settings.
      */
-    void saveSettings(final NodeSettingsWO settings, final boolean initDefaultModelSettings) {
+    void saveSettings(final NodeSettingsWO settings, final boolean initDefaultSettings) {
         super.saveSettings(settings);
-        saveSNCSettings(settings, initDefaultModelSettings);
+        saveSNCSettings(settings, initDefaultSettings);
     }
 
     /** Implementation of {@link WorkflowManager#saveNodeSettingsToDefault(NodeID)}. */
-    void saveNodeSettingsToDefault() {
+    void saveModelSettingsToDefault() {
+        saveModelSettingsTo(m_settings);
+    }
+
+    void saveViewSettingsToDefault() {
+        if (m_settings.getViewSettings() == null) {
+            saveDefaultViewSettingsTo(m_settings);
+        }
+    }
+
+    /**
+     * Saves the {@link SingleNodeContainerSettings}.
+     * @param settings To save to.
+     * @param initDefaultSettings If true and the view or model settings are not yet assigned (node freshly dragged onto
+     * workflow) the NodeModel's saveSettingsTo or saveDefaultViewSettingsTo method is called to init fallback settings.
+     */
+    void saveSNCSettings(final NodeSettingsWO settings, final boolean initDefaultSettings) {
+        SingleNodeContainerSettings sncSettings = m_settings;
+        if (initDefaultSettings) {
+            final var initDefaultModelSettings = m_settings.getModelSettings() == null;
+            final var initDefaultViewSettings = m_settings.getViewSettings() == null;
+            if (initDefaultModelSettings || initDefaultViewSettings) {
+                sncSettings = m_settings.clone();
+                if (initDefaultModelSettings) {
+                    saveModelSettingsTo(sncSettings);
+                }
+                if (initDefaultViewSettings) {
+                    saveDefaultViewSettingsTo(sncSettings);
+                }
+            }
+        }
+        sncSettings.save(settings);
+    }
+
+    private void saveModelSettingsTo(final SingleNodeContainerSettings sncSettings) {
         NodeSettings modelSettings = new NodeSettings("model");
         NodeContext.pushContext(this);
         try {
@@ -976,36 +1011,36 @@ public abstract class SingleNodeContainer extends NodeContainer {
         } finally {
             NodeContext.removeLastContext();
         }
-        m_settings.setModelSettings(modelSettings);
+        sncSettings.setModelSettings(modelSettings);
+    }
+
+    private void saveDefaultViewSettingsTo(final SingleNodeContainerSettings sncSettings) {
+        NodeSettings viewSettings = new NodeSettings("view");
+        NodeContext.pushContext(this);
+        try {
+            performSaveDefaultViewSettingsTo(viewSettings);
+        } finally {
+            NodeContext.removeLastContext();
+        }
+        if (!viewSettings.keySet().isEmpty()) {
+            sncSettings.setViewSettings(viewSettings);
+        }
     }
 
     /** Save settings of specific implementation.
+     * The NodeContext is available when this method is called.
      *
      * @param modelSettings ...
      */
     abstract void performSaveModelSettingsTo(final NodeSettings modelSettings);
 
     /**
-     * Saves the {@link SingleNodeContainerSettings}.
-     * @param settings To save to.
-     * @param initDefaultModelSettings If true and the model settings are not yet assigned (node freshly dragged onto
-     * workflow) the NodeModel's saveSettings method is called to init fallback settings.
+     * Save default view settings of specific implementation. This is called when first requesting view settings on a
+     * newly loaded view. The NodeContext is available when this method is called.
+     *
+     * @param viewSettings ...
      */
-    void saveSNCSettings(final NodeSettingsWO settings, final boolean initDefaultModelSettings) {
-        SingleNodeContainerSettings sncSettings = m_settings;
-        if (initDefaultModelSettings && m_settings.getModelSettings() == null) {
-            sncSettings = m_settings.clone();
-            NodeSettings modelSettings = new NodeSettings("model");
-            NodeContext.pushContext(this);
-            try {
-                performSaveModelSettingsTo(modelSettings);
-            } finally {
-                NodeContext.removeLastContext();
-            }
-            sncSettings.setModelSettings(modelSettings);
-        }
-        sncSettings.save(settings);
-    }
+    abstract void performSaveDefaultViewSettingsTo(final NodeSettings viewSettings);
 
     /** @return reference to internally used settings (contains information for
      * memory policy, e.g.) */

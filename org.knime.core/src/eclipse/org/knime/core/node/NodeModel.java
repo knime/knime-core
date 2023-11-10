@@ -497,12 +497,42 @@ public abstract class NodeModel implements ViewableModel {
      * check them. If some settings are missing, invalid, inconsistent, or just not right throw an exception with a
      * message useful to the user.
      *
+     * Clients should not override or reference this method, since view settings validation will be moved out of the
+     * {@link NodeModel} in the future.
+     *
+     * @nooverride
+     * @noreference
+     *
      * @param viewSettings - the view settings to validate.
+     *
      * @throws InvalidSettingsException - if the validation of the settings failed.
      *
      * @since 5.2
      */
     protected void validateViewSettings(final NodeSettingsRO viewSettings) throws InvalidSettingsException {
+    }
+
+
+    /**
+     * This method is called for freshly added nodes with view settings if the view is accessed for the first time and
+     * no view settings have been set yet.
+     *
+     * It is also called for loaded nodes with view settings for which no view settings were stored on the last save of
+     * the workflow. This is only the case for nodes with a bundle version before 5.2. In this case, if the node was is
+     * executed initially, the bundle version is available via the NodeContext which is available here.
+     *
+     * Clients should not override or reference this method, since it will be moved out of the {@link NodeModel} in the
+     * future.
+     *
+     * @nooverride
+     * @noreference
+     *
+     * @param viewSettings
+     *
+     * @since 5.2
+     */
+    protected void saveDefaultViewSettingsTo(final NodeSettingsWO viewSettings) {
+        // Do nothing per default to not set any view settings.
     }
 
 

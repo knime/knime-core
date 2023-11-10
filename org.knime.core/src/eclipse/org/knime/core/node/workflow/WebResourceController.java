@@ -259,7 +259,7 @@ public abstract class WebResourceController {
         newViewValue.loadFromStream(new ByteArrayInputStream(viewValue.getBytes(StandardCharsets.UTF_8)));
         wizardNode.loadViewValue(newViewValue, useAsDefault);
         if (useAsDefault) {
-            nnc.saveNodeSettingsToDefault();
+            nnc.saveModelSettingsToDefault();
         }
     }
 

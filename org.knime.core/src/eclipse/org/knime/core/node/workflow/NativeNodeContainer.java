@@ -1058,6 +1058,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
                 NodeContext.removeLastContext();
             }
         }
+        saveViewSettingsToDefault();
 
     }
 
@@ -1076,6 +1077,14 @@ public class NativeNodeContainer extends SingleNodeContainer {
             if (innerNodePersistor.needsResetAfterLoad()) {
                 fileNativeNCPersistor.setNeedsResetAfterLoad();
             }
+            /**
+             * Only necessary for executed nodes with nodes saved before 5.2 with views. For these, no view settings
+             * were saved if the defaults were used. This is not the case anymore with 5.2, where the default settings
+             * are persisted nevertheless since defaults might change over time. To stay backwards compatible with
+             * changing defaults of nodes before 5.2, the node bundle version within
+             * {@link #getNodeAndBundleInformation()} can be used for executed nodes to initialize the correct defaults.
+             */
+            saveViewSettingsToDefault();
             String status;
             switch (loadResult.getType()) {
                 case Ok:
@@ -1100,7 +1109,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
                 CredentialsNode credNode = (CredentialsNode)m_node.getNodeModel();
                 credNode.doAfterLoadFromDisc(fileNativeNCPersistor.getLoadHelper(),
                     getCredentialsProvider(), isExecuted, isInactive());
-                saveNodeSettingsToDefault();
+                saveModelSettingsToDefault();
             }
         }
 
@@ -1176,6 +1185,18 @@ public class NativeNodeContainer extends SingleNodeContainer {
     @Override
     void performSaveModelSettingsTo(final NodeSettings modelSettings) {
         getNode().saveModelSettingsTo(modelSettings);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * This method is also called for loaded nodes with view settings for which no view settings were stored on the last
+     * save of the workflow. This is only the case for nodes with a bundle version before 5.2. In this case, if the node
+     * was is executed initially, the bundle version is available via the NodeContext
+     */
+    @Override
+    void performSaveDefaultViewSettingsTo(final NodeSettings viewSettings) {
+        getNode().saveDefaultViewSettingsTo(viewSettings);
     }
 
     /** {@inheritDoc} */
