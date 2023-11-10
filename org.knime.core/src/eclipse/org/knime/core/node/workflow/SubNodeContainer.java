@@ -184,7 +184,6 @@ public final class SubNodeContainer extends SingleNodeContainer
     /** Keeps outgoing information (specs, objects, HiLiteHandlers...). */
     private static final class Output {
         private final PortType m_type;
-        private String m_name = "none";
         private PortObjectSpec m_spec;
         private PortObject m_object;
         private HiLiteHandler m_hiliteHdl;
@@ -197,11 +196,6 @@ public final class SubNodeContainer extends SingleNodeContainer
         boolean setSpec(final PortObjectSpec spec) {
             boolean differ = ObjectUtils.notEqual(m_spec, spec);
             m_spec = spec;
-            return differ;
-        }
-        boolean setName(final String name) {
-            boolean differ = ObjectUtils.notEqual(m_name, name);
-            m_name = name;
             return differ;
         }
         boolean setObject(final PortObject object) {
@@ -219,9 +213,6 @@ public final class SubNodeContainer extends SingleNodeContainer
         }
         PortType getType() {
             return m_type;
-        }
-        String getName() {
-            return m_name;
         }
         PortObjectSpec getSpec() {
             return m_spec;
@@ -314,7 +305,6 @@ public final class SubNodeContainer extends SingleNodeContainer
         for (int i = 0; i < outPortTemplates.length; i++) {
             WorkflowPortTemplate t = outPortTemplates[i];
             m_outputs[i] = new Output(t.getPortType());
-            m_outputs[i].setName(t.getPortName());
             m_outports[i] = new NodeContainerOutPort(this, t.getPortType(), t.getPortIndex());
             m_outports[i].setPortName(t.getPortName());
         }
@@ -368,7 +358,6 @@ public final class SubNodeContainer extends SingleNodeContainer
         for (var i = 0; i < outports.size(); i++) {
             var portType = DefToCoreUtil.toPortType(outports.get(i).getPortType());
             m_outputs[i] = new Output(portType);
-            m_outputs[i].setName(portType.getName());
             m_outports[i] = new NodeContainerOutPort(this, portType, outports.get(i).getIndex());
             m_outports[i].setPortName(portType.getName());
         }
