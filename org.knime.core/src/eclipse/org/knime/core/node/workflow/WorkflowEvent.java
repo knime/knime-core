@@ -99,14 +99,21 @@ public class WorkflowEvent {
             WORKFLOW_CLEAN,
             /**
              * Metadata of the currently open workflow (e.g. project or component) has changed
-             * 
+             *
              * @since 5.1
              */
             WORKFLOW_METADATA_CHANGED,
             /** Workflow context changed (e.g. through {@link WorkflowManager#saveAs(
              * org.knime.core.node.workflow.contextv2.WorkflowContextV2, org.knime.core.node.ExecutionMonitor)}.
              * @since 5.0 */
-            CONTEXT_CHANGED
+            CONTEXT_CHANGED,
+            /**
+             * If the ports-bar ui-info changes via {@link WorkflowManager#setInPortsBarUIInfo(NodeUIInformation)} or
+             * {@link WorkflowManager#setOutPortsBarUIInfo(NodeUIInformation)}.
+             *
+             * @since 5.2
+             */
+            PORTS_BAR_UI_INFO_CHANGED;
     }
 
     private final NodeID m_id;

@@ -10103,6 +10103,8 @@ public final class WorkflowManager extends NodeContainer
     public void setInPortsBarUIInfo(final NodeUIInformation inPortsBarUIInfo) {
         if (!ConvenienceMethods.areEqual(m_inPortsBarUIInfo, inPortsBarUIInfo)) {
             m_inPortsBarUIInfo = inPortsBarUIInfo;
+            notifyWorkflowListeners(
+                new WorkflowEvent(WorkflowEvent.Type.PORTS_BAR_UI_INFO_CHANGED, getID(), null, null));
             setDirty();
         }
     }
@@ -10116,6 +10118,8 @@ public final class WorkflowManager extends NodeContainer
     public void setOutPortsBarUIInfo(final NodeUIInformation outPortsBarUIInfo) {
         if (!ConvenienceMethods.areEqual(m_outPortsBarUIInfo, outPortsBarUIInfo)) {
             m_outPortsBarUIInfo = outPortsBarUIInfo;
+            notifyWorkflowListeners(
+                new WorkflowEvent(WorkflowEvent.Type.PORTS_BAR_UI_INFO_CHANGED, getID(), null, null));
             setDirty();
         }
     }
