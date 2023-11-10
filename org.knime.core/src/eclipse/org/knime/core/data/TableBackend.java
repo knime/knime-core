@@ -181,6 +181,8 @@ public interface TableBackend {
     KnowsRowCountTable append(ExecutionContext exec, IntSupplier tableIdSupplier, AppendConfig config,
         BufferedDataTable left, BufferedDataTable right) throws CanceledExecutionException;
 
+    KnowsRowCountTable prependRowIndex(final ExecutionContext exec, IntSupplier tableIdSupplier, final BufferedDataTable table, String columnName);
+
     /**
      * Config for appending tables.
      *

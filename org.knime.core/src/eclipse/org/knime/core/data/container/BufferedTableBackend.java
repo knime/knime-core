@@ -328,4 +328,10 @@ public final class BufferedTableBackend implements TableBackend {
         return new TableSpecReplacerTable(table, newSpec);
     }
 
+    @Override
+    public KnowsRowCountTable prependRowIndex(final ExecutionContext exec, final IntSupplier tableIdSupplier,
+        final BufferedDataTable table, final String columnName) {
+        return new IndexedTable(table, columnName);
+    }
+
 }
