@@ -310,8 +310,8 @@ public final class SubNodeContainer extends SingleNodeContainer
         }
         if (m_reportConfiguration != null) {
             final var lastPortIndex = m_outports.length - 1;
-            m_outports[lastPortIndex] = new NodeContainerOutPort(this, IReportPortObject.TYPE , lastPortIndex);
-            m_outputs[lastPortIndex] = new Output(IReportPortObject.TYPE);
+            m_outports[lastPortIndex] = createReportOutputPort(lastPortIndex);
+            m_outputs[lastPortIndex] = new Output(m_outports[lastPortIndex].getPortType());
         }
         m_virtualInNodeIDSuffix = persistor.getVirtualInNodeIDSuffix();
         m_virtualOutNodeIDSuffix = persistor.getVirtualOutNodeIDSuffix();
@@ -332,7 +332,7 @@ public final class SubNodeContainer extends SingleNodeContainer
         }
         if (m_reportConfiguration != null) {
             final int lastPortIndex = m_inports.length - 1;
-            m_inports[lastPortIndex] = new NodeInPort(lastPortIndex, IReportPortObject.TYPE);
+            m_inports[lastPortIndex] = createReportInputPort(lastPortIndex);
         }
         m_metadata = persistor.getMetadata();
         m_templateInformation = persistor.getTemplateInformation();
@@ -363,8 +363,8 @@ public final class SubNodeContainer extends SingleNodeContainer
         }
         if (m_reportConfiguration != null) {
             final var lastPortIndex = m_outports.length - 1;
-            m_outports[lastPortIndex] = new NodeContainerOutPort(this, IReportPortObject.TYPE , lastPortIndex);
-            m_outputs[lastPortIndex] = new Output(IReportPortObject.TYPE);
+            m_outports[lastPortIndex] = createReportOutputPort(lastPortIndex);
+            m_outputs[lastPortIndex] = new Output(m_outports[lastPortIndex].getPortType());
         }
         m_inports = new NodeInPort[inports.size()];
         m_inHiliteHandler = new HiLiteHandler[inports.size()- 1];
@@ -389,7 +389,7 @@ public final class SubNodeContainer extends SingleNodeContainer
         }
         if (m_reportConfiguration != null) {
             final int lastPortIndex = m_inports.length - 1;
-            m_inports[lastPortIndex] = new NodeInPort(lastPortIndex, IReportPortObject.TYPE);
+            m_inports[lastPortIndex] = createReportInputPort(lastPortIndex);
         }
 
         m_metadata = DefToCoreUtil.toComponentMetadata(def.getMetadata());
@@ -1750,7 +1750,7 @@ public final class SubNodeContainer extends SingleNodeContainer
         }
         if (enableReportOutput) {
             final int lastPortIndex = m_inports.length - 1;
-            m_inports[lastPortIndex] = new NodeInPort(lastPortIndex, IReportPortObject.TYPE);
+            m_inports[lastPortIndex] = createReportInputPort(lastPortIndex);
         }
 
         NodeContainer oldVNode = m_wfm.getNodeContainer(getVirtualInNodeID());
@@ -1857,6 +1857,18 @@ public final class SubNodeContainer extends SingleNodeContainer
         return getVirtualInNodeModel().getReportObjectFromInput();
     }
 
+    private NodeContainerOutPort createReportOutputPort(final int index) {
+        final var port = new NodeContainerOutPort(this, IReportPortObject.TYPE , index);
+        port.setPortName("Component Report");
+        return port;
+    }
+
+    private static NodeInPort createReportInputPort(final int index) {
+        final var port = new NodeInPort(index, IReportPortObject.TYPE);
+        port.setPortName("Report (Template)");
+        return port;
+    }
+
     /**
      * When new layout changes are applied (e.g. the report output is enabled/disabled) the output node needs
      * to be reset. Also assert that nothing is currently in execution (exception thrown).
@@ -1891,7 +1903,7 @@ public final class SubNodeContainer extends SingleNodeContainer
         if (enableReportOutput) {
             final int index = m_outputs.length - 1;
             m_outputs[index] = new Output(IReportPortObject.TYPE);
-            m_outports[index] = new NodeContainerOutPort(this, IReportPortObject.TYPE, index);
+            m_outports[index] = createReportOutputPort(index);
         }
 
         NodeContainer oldVNode = m_wfm.getNodeContainer(getVirtualOutNodeID());
