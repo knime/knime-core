@@ -2151,6 +2151,8 @@ public final class WorkflowManager extends NodeContainer
             if (Objects.equals(oldConfigurationOptional.orElse(null), reportConfiguration)) {
                 return;
             }
+            CheckUtils.checkState(!snc.getInternalState().isExecutionInProgress() && !hasSuccessorInProgress(subFlowID),
+                "Unable to apply report configuration - node is in execution or has executing successors");
             if (oldConfigurationOptional.isPresent() && reportConfiguration == null) { // port removed
                 for (final var connection : getOutgoingConnectionsFor(subFlowID, snc.getNrOutPorts() - 1)) {
                     removeConnection(connection);
@@ -2159,6 +2161,7 @@ public final class WorkflowManager extends NodeContainer
                     .ifPresent(this::removeConnection);
             }
             if (snc.setReportConfiguration(reportConfiguration)) { // ports have changed
+                resetAndConfigureNode(subFlowID);
                 notifyWorkflowListeners(new WorkflowEvent(NODE_PORTS_CHANGED, subFlowID, null, null));
             }
         }
