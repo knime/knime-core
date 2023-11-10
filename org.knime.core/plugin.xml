@@ -704,7 +704,7 @@
       <portType
             color="#1a6c85"
             hidden="false"
-            name="Report Fragment"
+            name="Report"
             objectClass="org.knime.core.node.port.report.IReportPortObject"
             objectSerializer="org.knime.core.node.port.report.IReportPortObject$NoOpSerializer"
             specClass="org.knime.core.node.port.report.IReportPortObjectSpec"
