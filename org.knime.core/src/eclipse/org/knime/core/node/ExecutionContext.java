@@ -617,6 +617,12 @@ public class ExecutionContext extends ExecutionMonitor {
         return wrapTableFromBackend(appendedTable);
     }
 
+    BufferedDataTable prependRowIndex(final BufferedDataTable table, final String indexColumnName) {
+        var tableWithIndex =
+            getTableBackend().prependRowIndex(this, m_dataRepository::generateNewID, table, indexColumnName);
+        return wrapTableFromBackend(tableWithIndex);
+    }
+
     /**
      * Creates a sliced table according to the provided {@link TableFilter slice}. This {@link ExecutionContext} will be
      * used for progress reporting. Use {@code exec.createSubExecutionContext(0.2).createSlicedTable(table, slice)} if

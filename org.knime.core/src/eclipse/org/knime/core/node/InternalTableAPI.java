@@ -108,4 +108,9 @@ public final class InternalTableAPI {
         return exec.createConcatenateTableWithNewRowIDs(tables);
     }
 
+    public static BufferedDataTable prependIndexColumn(final ExecutionContext exec, final BufferedDataTable table,
+        final String indexColumnName) {
+        return exec.prependRowIndex(table, indexColumnName);
+    }
+
 }
