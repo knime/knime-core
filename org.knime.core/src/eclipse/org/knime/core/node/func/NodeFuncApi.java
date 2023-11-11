@@ -183,11 +183,35 @@ public final class NodeFuncApi implements ApiDefinition {
             return this;
         }
 
-        private Builder withArgument(final String name, final String description, final PrimitiveArgumentType type,
+        private Builder withArgument(final String name, final String description, final ArgumentType type,
             final boolean isOptional) {
             checkName(name);
             m_arguments.add(new DefaultArgumentDefinition(name, description, type, isOptional));
             return this;
+        }
+
+        /**
+         * Adds a new argument to the NodeFunc API.
+         *
+         * @param name of the argument
+         * @param description of the argument
+         * @param type of the argument
+         * @return this builder
+         */
+        public Builder withArgument(final String name, final String description, final ArgumentType type) {
+            return withArgument(name, description, type, false);
+        }
+
+        /**
+         * Adds a new optional argument to the NodeFunc API.
+         *
+         * @param name of the argument
+         * @param description of the argument
+         * @param type of the argument
+         * @return this builder
+         */
+        public Builder withOptionalArgument(final String name, final String description ,final ArgumentType type) {
+            return withArgument(name, description, type, true);
         }
 
         /**
@@ -248,7 +272,7 @@ public final class NodeFuncApi implements ApiDefinition {
         /**
          * Adds an optional string argument.
          *
-         * @param name of the argument (must not contain whitespaces, - or other special characters)
+         * @param name of the argument (must not contain whitespace, - or other special characters)
          * @param description of what the argument is there for
          * @return this builder
          */
