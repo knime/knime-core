@@ -12,7 +12,8 @@
 		<surefireArgLine>-Dsun.java2d.d3d=false -Dosgi.classloader.lock=classname \
 		-XX:+UnlockDiagnosticVMOptions -XX:+UnsyncloadClass \
 		-Dsun.net.client.defaultReadTimeout=0 -Xmx4G \
-		-XX:CompileCommand=exclude,javax/swing/text/GlyphView,getBreakSpot
+		-XX:CompileCommand=exclude,javax/swing/text/GlyphView,getBreakSpot \
+		-Dchromium.multi_threaded_message_loop=true
 		</surefireArgLine>
 		<revision>5.2.0</revision>
 	</properties>
@@ -84,6 +85,16 @@
 							<requirement>
 								<type>eclipse-feature</type>
 								<id>org.knime.features.javasnippet</id>
+								<versionRange>0.0.0</versionRange>
+							</requirement>
+							<requirement>
+								<type>eclipse-feature</type>
+								<id>org.knime.features.browser.cef</id>
+								<versionRange>0.0.0</versionRange>
+							</requirement>
+							<requirement>
+								<type>eclipse-feature</type>
+								<id>org.knime.features.reporting2</id>
 								<versionRange>0.0.0</versionRange>
 							</requirement>
 							<requirement>

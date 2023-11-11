@@ -96,12 +96,12 @@ public class CopySubNodeContainerPersistor
                 subnode.postLoadWFM();
             }
         };
-        m_inPortTemplates = new WorkflowPortTemplate[original.getNrInPorts()];
-        for (int i = 0; i < m_inPortTemplates.length; i++) {
-            m_inPortTemplates[i] = new WorkflowPortTemplate(i, original.getInPort(i).getPortType());
-        }
+        // port info from virtual nodes (excludes possible report port)
+        final var virtualInNode = original.getVirtualInNode();
+        m_inPortTemplates = IntStream.range(0, virtualInNode.getNrOutPorts())
+                .mapToObj(i -> new WorkflowPortTemplate(i, virtualInNode.getOutPort(i).getPortType()))
+                .toArray(WorkflowPortTemplate[]::new);
         final var virtualOutNode = original.getVirtualOutNode();
-        // port info from virtual output node (excludes possible report port)
         m_outPortTemplates = IntStream.range(0, virtualOutNode.getNrInPorts())
             .mapToObj(i -> new WorkflowPortTemplate(i, virtualOutNode.getInPort(i).getPortType()))
             .toArray(WorkflowPortTemplate[]::new);

@@ -6,29 +6,41 @@
         <entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
     </config>
     <config key="model">
-        <entry key="stddeviation" type="xdouble" value="0.1"/>
-        <entry key="noise" type="xdouble" value="0.0"/>
-        <entry key="patcount" type="xint" value="20"/>
-        <entry key="seed" type="xint" value="-1014463320"/>
-        <config key="clustercount">
-            <entry key="array-size" type="xint" value="2"/>
-            <entry key="0" type="xint" value="2"/>
-            <entry key="1" type="xint" value="2"/>
+        <config key="rowIndices">
+            <entry key="array-size" type="xint" value="1"/>
+            <entry key="0" type="xint" value="0"/>
         </config>
-        <config key="unisize">
-            <entry key="array-size" type="xint" value="2"/>
-            <entry key="0" type="xint" value="2"/>
-            <entry key="1" type="xint" value="2"/>
+        <config key="columnIndices">
+            <entry key="array-size" type="xint" value="1"/>
+            <entry key="0" type="xint" value="0"/>
+        </config>
+        <config key="values">
+            <entry key="array-size" type="xint" value="1"/>
+            <entry key="0" type="xstring" value="fixed-value"/>
+        </config>
+        <entry key="rowIdPrefix" type="xstring" value="Row"/>
+        <entry key="rowIdSuffix" type="xstring" value=""/>
+        <entry key="rowIdStartValue" type="xint" value="0"/>
+        <entry key="highlightOutputTable" type="xboolean" value="false"/>
+        <config key="columnProperties">
+            <config key="0">
+                <entry key="UserSetValues" type="xboolean" value="true"/>
+                <entry key="MissValuePattern" type="xstring" value=""/>
+                <entry key="FormatParameter" type="xstring" isnull="true" value=""/>
+                <entry key="ReadPossValsFromFile" type="xboolean" value="false"/>
+                <entry key="SkipThisColumn" type="xboolean" value="false"/>
+                <entry key="ColumnName" type="xstring" value="fixed-column"/>
+                <config key="ColumnClass">
+                    <entry key="cell_class" type="xstring" value="org.knime.core.data.def.StringCell"/>
+                    <entry key="is_null" type="xboolean" value="false"/>
+                </config>
+            </config>
         </config>
     </config>
     <entry key="customDescription" type="xstring" isnull="true" value=""/>
-    <entry key="state" type="xstring" value="IDLE"/>
-    <config key="nodecontainer_message">
-        <entry key="type" type="xstring" value="WARNING"/>
-        <entry key="message" type="xstring" value="Component does not have input data, execute upstream nodes first"/>
-    </config>
-    <entry key="factory" type="xstring" value="org.knime.base.node.util.sampledata.SampleDataNodeFactory"/>
-    <entry key="node-name" type="xstring" value="Data Generator"/>
+    <entry key="state" type="xstring" value="CONFIGURED"/>
+    <entry key="factory" type="xstring" value="org.knime.base.node.io.tablecreator.TableCreator2NodeFactory"/>
+    <entry key="node-name" type="xstring" value="Table Creator"/>
     <entry key="node-bundle-name" type="xstring" value="KNIME Base Nodes"/>
     <entry key="node-bundle-symbolic-name" type="xstring" value="org.knime.base"/>
     <entry key="node-bundle-vendor" type="xstring" value="KNIME AG, Zurich, Switzerland"/>
@@ -38,16 +50,12 @@
     <entry key="node-feature-vendor" type="xstring" isnull="true" value=""/>
     <entry key="node-feature-version" type="xstring" value="0.0.0"/>
     <config key="factory_settings"/>
-    <entry key="name" type="xstring" value="Data Generator"/>
+    <entry key="name" type="xstring" value="Table Creator"/>
     <entry key="hasContent" type="xboolean" value="false"/>
     <entry key="isInactive" type="xboolean" value="false"/>
     <config key="ports">
         <config key="port_1">
             <entry key="index" type="xint" value="1"/>
-            <entry key="port_dir_location" type="xstring" isnull="true" value=""/>
-        </config>
-        <config key="port_2">
-            <entry key="index" type="xint" value="2"/>
             <entry key="port_dir_location" type="xstring" isnull="true" value=""/>
         </config>
     </config>
