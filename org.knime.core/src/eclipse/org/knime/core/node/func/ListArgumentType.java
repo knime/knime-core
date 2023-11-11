@@ -44,52 +44,48 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Nov 9, 2023 (Adrian Nembach, KNIME GmbH, Konstanz, Germany): created
+ *   Nov 10, 2023 (Adrian Nembach, KNIME GmbH, Konstanz, Germany): created
  */
 package org.knime.core.node.func;
 
-import java.util.Objects;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
 
 /**
- * Default implementation of a {@link ListArgumentType}.
+ * Represents lists of arguments of specific {@link ArgumentType}.
  *
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
-final class DefaultListArgumentType implements ListArgumentType {
+public interface ListArgumentType extends ArgumentType {
 
-    private final ArgumentType m_itemType;
+    /**
+     * @return the type of the contained items
+     */
+    ArgumentType getItemType();
 
-    private final boolean m_allowsNullItems;
+    /**
+     * @return whether null items are allowed
+     */
+    boolean allowsNullItems();
 
-    DefaultListArgumentType(final ArgumentType itemType, final boolean allowsNullItems) {
-        m_itemType = itemType;
-        m_allowsNullItems = allowsNullItems;
+    /**
+     * @param listSettings settings that represent a complex list
+     * @return the size of the list
+     * @throws InvalidSettingsException
+     */
+    public static int size(final NodeSettingsRO listSettings) throws InvalidSettingsException {
+        return listSettings.getInt("size");
     }
 
-    @Override
-    public ArgumentType getItemType() {
-        return m_itemType;
-    }
-
-    @Override
-    public boolean allowsNullItems() {
-        return m_allowsNullItems;
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        if (obj == this) {
-            return true;
-        } else if (obj instanceof DefaultListArgumentType other) {
-            return m_allowsNullItems == other.m_allowsNullItems && m_itemType.equals(other.getItemType());
-        } else {
-            return false;
-        }
-    }
-
-    @Override
-    public int hashCode() {
-        return 13 + Objects.hash(m_itemType, m_allowsNullItems);
+    /**
+     * Creates a ListArgumentType.
+     *
+     * @param itemType the type of items the list holds
+     * @param allowsNullItems whether null is allowed as item
+     * @return a ListArgumentType
+     */
+    public static ListArgumentType create(final ArgumentType itemType, final boolean allowsNullItems) {
+        return new DefaultListArgumentType(itemType, allowsNullItems);
     }
 
 }
