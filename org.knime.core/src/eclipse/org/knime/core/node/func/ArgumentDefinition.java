@@ -66,36 +66,6 @@ public interface ArgumentDefinition extends ApiDefinition {
     boolean isOptional();
 
     /**
-     * Base interface for argument types.
-     *
-     * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
-     */
-    interface ArgumentType {
-    }
-
-    /**
-     * Represents struct arguments that consist of multiple properties.
-     *
-     * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
-     */
-    interface StructArgumentType extends ArgumentType {
-        ArgumentDefinition[] getProperties();
-
-    }
-
-    /**
-     * Represents lists of arguments of specific {@link ArgumentType}.
-     *
-     * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
-     */
-    interface ListArgumentType extends ArgumentType {
-        ArgumentType getItemType();
-
-        boolean allowsNullItems();
-
-    }
-
-    /**
      * Enum representing primitive types.
      *
      * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
