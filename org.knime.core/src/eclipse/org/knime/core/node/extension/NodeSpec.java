@@ -327,7 +327,6 @@ public record NodeSpec(Factory factory, NodeType type, Ports ports, Metadata met
 
             final var tags = new HashSet<String>();
             for (IPath path = new Path(categoryPath); !path.isRoot(); path = path.removeLastSegments(1)) {
-                tags.add(path.lastSegment());
                 Optional.ofNullable(catExts.get(path.toString())).ifPresent(ext -> tags.add(ext.getName()));
             }
 
