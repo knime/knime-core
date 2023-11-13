@@ -1546,7 +1546,9 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
      * @throws InvalidSettingsException Not actually thrown here.
      */
     String loadWorkflowName(final NodeSettingsRO set) throws InvalidSettingsException {
-        if (getLoadVersion().isOlderThan(LoadVersion.V200)) {
+        if (m_isProject || m_isComponentProject) {
+            return null;
+        } else if (getLoadVersion().isOlderThan(LoadVersion.V200)) {
             return "Workflow Manager";
         } else {
             return set.getString("name");
