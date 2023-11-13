@@ -48,6 +48,8 @@
  */
 package org.knime.core.node.func;
 
+import org.knime.core.node.InvalidSettingsException;
+
 /**
  *
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
@@ -69,5 +71,20 @@ public interface EnumArgumentType<E extends Enum<E>> extends ArgumentType {
         return new DefaultEnumArgumentType<>(enumClass);
     }
 
+    /**
+     * @param <E> the enum class
+     * @param enumClass the enum class
+     * @param name of the constant
+     * @return the enum constant
+     * @throws InvalidSettingsException if the given name is not a valid constant of the enum
+     */
+    static <E extends Enum<E>> E getConstant(final Class<E> enumClass, final String name)
+        throws InvalidSettingsException {
+        try {
+            return Enum.valueOf(enumClass, name);
+        } catch (IllegalArgumentException ex) {
+            throw new InvalidSettingsException(ex.getMessage(), ex);
+        }
+    }
 
 }
