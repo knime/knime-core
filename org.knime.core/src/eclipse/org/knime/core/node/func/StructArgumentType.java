@@ -57,6 +57,9 @@ import java.util.List;
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 public interface StructArgumentType extends ArgumentType {
+    /**
+     * @return the properties of this struct
+     */
     ArgumentDefinition[] getProperties();
 
     /**
@@ -78,19 +81,34 @@ public interface StructArgumentType extends ArgumentType {
         private Builder() {
         }
 
+        /**
+         * @return the struct argument type
+         */
         public StructArgumentType build() {
             return new DefaultStructArgumentType(m_properties.toArray(ArgumentDefinition[]::new));
         }
 
-        public Builder withProperty(final String name, final ArgumentType type, final String description) {
-            return withProperty(name, type, description, false);
+        /**
+         * @param name of the property
+         * @param description of the property
+         * @param type of the property
+         * @return this builder
+         */
+        public Builder withProperty(final String name, final String description, final ArgumentType type) {
+            return withProperty(name, description, type, false);
         }
 
-        public Builder withOptionalProperty(final String name, final ArgumentType type, final String description) {
-            return withProperty(name, type, description, true);
+        /**
+         * @param name of the property
+         * @param description of the property
+         * @param type of the property
+         * @return this builder
+         */
+        public Builder withOptionalProperty(final String name, final String description, final ArgumentType type) {
+            return withProperty(name, description, type, true);
         }
 
-        private Builder withProperty(final String name, final ArgumentType type, final String description,
+        private Builder withProperty(final String name, final String description, final ArgumentType type,
             final boolean isOptional) {
             m_properties.add(new DefaultArgumentDefinition(name, description, type, isOptional));
             return this;
