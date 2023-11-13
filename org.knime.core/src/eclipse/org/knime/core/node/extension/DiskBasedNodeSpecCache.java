@@ -116,14 +116,27 @@ final class DiskBasedNodeSpecCache {
     /** Used to wait for the cache to be loaded. */
     private static final CountDownLatch initialized = new CountDownLatch(1);
 
-    private static record CacheIndex() {
-        private static final String INDEX_FILE = "nodespeccachecontent.json";
+    private static boolean cannotWriteFilesWarningIssued;
 
-        private static final String PATH = "nodespeccachedata";
+    /**
+     * Defines for which bundle versions the contents of the cache are created.
+     *
+     * @param bundleVersions maps from bundle symbolic name to version
+     */
+    static record CacheState(Map<String, Version> bundleVersions) {
+        private static final String FILE_NAME = "node-spec-cache-state.json";
 
+        private static void load() {
+
+        }
     }
 
-    private static record PartialCache(Bundle bundle, Map<INodeFactoryExtension, List<NodeSpec>> specs) {
+    /**
+     *
+     */
+    private static record CacheData(Map<String, NodeSpec> specs) {
+        private static final String FILE_NAME = "node_spec_cache_data.json.gzip";
+
         /**
          * The cache stores a file in the data area of each bundle contributing node factories or node set factories. It
          * simply contains
@@ -131,9 +144,11 @@ final class DiskBasedNodeSpecCache {
         private static final String VERSION_FILE_NAME = "node-metadata-cache-version.txt";
 
         private static final String CACHE_FILE_NAME = "node-metadata-cache.json.gzip";
-    }
 
-    private static boolean cannotWriteFilesWarningIssued;
+        private static void load() {
+
+        }
+    }
 
     private static final Map<INodeFactoryExtension, List<NodeSpec>> specs = new HashMap<>();
 
@@ -142,19 +157,14 @@ final class DiskBasedNodeSpecCache {
         loadThread.start();
     }
 
-    //
-    //    /**
-    //     * @param cacheFormatVersion summarizes the format/schema of the metadata cache. This is compared to the
-    //     *            cacheFormatVersion that was written with the previous serialization. If the format versions disagree,
-    //     *            the cache is invalidated.
-    //     */
     private DiskBasedNodeSpecCache() {
-
+        // singleton
     }
 
     private static void loadCache() {
         try {
-
+            CacheState.load();
+            CacheData.load();
         } finally {
             initialized.countDown();
         }
