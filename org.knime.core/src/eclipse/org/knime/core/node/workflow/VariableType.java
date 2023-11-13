@@ -1860,6 +1860,48 @@ public abstract class VariableType<T> {
      */
     public static final class CredentialsType extends VariableType<CredentialsFlowVariableValue> {
 
+        /**
+         * The config key for the name / id of the credentials
+         *
+         * @since 5.2
+         */
+        public static final String CFG_NAME = "name";
+
+        /**
+         * The config key for the username / login of the credentials
+         *
+         * @since 5.2
+         */
+        public static final String CFG_USERNAME = "login";
+
+        /**
+         * The config key for the weakly encrypted password of the credentials
+         *
+         * @since 5.2
+         */
+        public static final String CFG_PASSWORD = "weaklyEncryptedPassword";
+
+        /**
+         * The config key for the weakly encrypted second authentication factor of the credentials
+         *
+         * @since 5.2
+         */
+        public static final String CFG_SECOND_FACTOR = "weaklyEncryptedSecondfactor";
+
+        /**
+         * The encryption key for encrypting passwords
+         *
+         * @since 5.2
+         */
+        public static final String PASSWORD_SECRET = "XKdPobvbDEBZEJmBsbMq"; // NOSONAR (weak symmetric encryption only)
+
+        /**
+         * The encryption key for encrypting second authentication factors
+         *
+         * @since 5.2
+         */
+        public static final String SECOND_FACTOR_SECRET = "lLNIScQYgDJJXUrUdhSG";
+
         private static final class CredentialsValue extends VariableValue<CredentialsFlowVariableValue> {
 
             private CredentialsValue(final CredentialsFlowVariableValue c) {
@@ -1915,10 +1957,10 @@ public abstract class VariableType<T> {
 
         private static boolean isCredentials(final Config config, final String configKey) {
             return (config.getEntry(configKey) instanceof Config subConfig)
-                && subConfig.containsKey(CredentialsFlowVariableValue.CFG_NAME)
-                && subConfig.containsKey(CredentialsFlowVariableValue.CFG_LOGIN)
-                && subConfig.containsKey(CredentialsFlowVariableValue.CFG_PWD)
-                && subConfig.containsKey(CredentialsFlowVariableValue.CFG_SECOND_FACTOR);
+                && subConfig.containsKey(CFG_NAME)
+                && subConfig.containsKey(CFG_USERNAME)
+                && subConfig.containsKey(CFG_PASSWORD)
+                && subConfig.containsKey(CFG_SECOND_FACTOR);
         }
 
         @Override

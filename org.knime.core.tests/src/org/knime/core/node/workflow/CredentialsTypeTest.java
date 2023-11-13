@@ -53,11 +53,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.knime.core.node.workflow.CredentialsStore.CredentialsFlowVariableValue.CFG_LOGIN;
-import static org.knime.core.node.workflow.CredentialsStore.CredentialsFlowVariableValue.CFG_NAME;
-import static org.knime.core.node.workflow.CredentialsStore.CredentialsFlowVariableValue.CFG_PWD;
-import static org.knime.core.node.workflow.CredentialsStore.CredentialsFlowVariableValue.CFG_SECOND_FACTOR;
-import static org.knime.core.node.workflow.CredentialsStore.CredentialsFlowVariableValue.SECRET;
+import static org.knime.core.node.workflow.VariableType.CredentialsType.CFG_NAME;
+import static org.knime.core.node.workflow.VariableType.CredentialsType.CFG_PASSWORD;
+import static org.knime.core.node.workflow.VariableType.CredentialsType.CFG_SECOND_FACTOR;
+import static org.knime.core.node.workflow.VariableType.CredentialsType.CFG_USERNAME;
+import static org.knime.core.node.workflow.VariableType.CredentialsType.PASSWORD_SECRET;
+import static org.knime.core.node.workflow.VariableType.CredentialsType.SECOND_FACTOR_SECRET;
 import static org.knime.core.node.workflow.VariableTypeTestUtils.CFG_VALUE;
 import static org.knime.core.node.workflow.VariableTypeTestUtils.KEY;
 
@@ -83,12 +84,12 @@ public class CredentialsTypeTest extends AbstractVariableTypeTest<CredentialsFlo
         final String secondFactor) {
         final var settings = new NodeSettings(CFG_VALUE);
         settings.addString(CFG_NAME, name);
-        settings.addString(CFG_LOGIN, login);
+        settings.addString(CFG_USERNAME, login);
         if (password != null) {
-            settings.addPassword(CFG_PWD, SECRET, password);
+            settings.addPassword(CFG_PASSWORD, PASSWORD_SECRET, password);
         }
         if (secondFactor != null) {
-            settings.addPassword(CFG_SECOND_FACTOR, SECRET, secondFactor);
+            settings.addPassword(CFG_SECOND_FACTOR, SECOND_FACTOR_SECRET, secondFactor);
         }
         return settings;
     }
@@ -138,11 +139,11 @@ public class CredentialsTypeTest extends AbstractVariableTypeTest<CredentialsFlo
         assertFalse(m_testInstance.canOverwrite(settings, CFG_VALUE));
         subSettings.addString(CFG_NAME, "name");
         assertFalse(m_testInstance.canOverwrite(settings, CFG_VALUE));
-        subSettings.addString(CFG_LOGIN, "login");
+        subSettings.addString(CFG_USERNAME, "login");
         assertFalse(m_testInstance.canOverwrite(settings, CFG_VALUE));
-        subSettings.addPassword(CFG_PWD, SECRET, "password");
+        subSettings.addPassword(CFG_PASSWORD, PASSWORD_SECRET, "password");
         assertFalse(m_testInstance.canOverwrite(settings, CFG_VALUE));
-        subSettings.addPassword(CFG_SECOND_FACTOR, SECRET, "secondFactor");
+        subSettings.addPassword(CFG_SECOND_FACTOR, SECOND_FACTOR_SECRET, "secondFactor");
         assertTrue(m_testInstance.canOverwrite(settings, CFG_VALUE));
     }
 
@@ -169,11 +170,11 @@ public class CredentialsTypeTest extends AbstractVariableTypeTest<CredentialsFlo
         assertFalse(m_testInstance.canCreateFrom(settings, CFG_VALUE));
         subSettings.addString(CFG_NAME, "foo");
         assertFalse(m_testInstance.canCreateFrom(settings, CFG_VALUE));
-        subSettings.addString(CFG_LOGIN, "bar");
+        subSettings.addString(CFG_USERNAME, "bar");
         assertFalse(m_testInstance.canCreateFrom(settings, CFG_VALUE));
-        subSettings.addPassword(CFG_PWD, SECRET, "baz");
+        subSettings.addPassword(CFG_PASSWORD, PASSWORD_SECRET, "baz");
         assertFalse(m_testInstance.canOverwrite(settings, CFG_VALUE));
-        subSettings.addPassword(CFG_SECOND_FACTOR, SECRET, "secondFactor");
+        subSettings.addPassword(CFG_SECOND_FACTOR, SECOND_FACTOR_SECRET, "secondFactor");
         assertTrue(m_testInstance.canCreateFrom(settings, CFG_VALUE));
     }
 
