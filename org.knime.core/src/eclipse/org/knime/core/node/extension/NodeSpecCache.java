@@ -187,6 +187,7 @@ final class NodeSpecCache {
         try {
             m_initialized.await();
         } catch (InterruptedException ex) {
+            NodeLogger.getLogger(getClass()).warn(ex);
             Thread.currentThread().interrupt();
             return null; // NOSONAR null is more accurate than an empty map
         }
@@ -197,6 +198,7 @@ final class NodeSpecCache {
         try {
             m_initialized.await();
         } catch (InterruptedException ex) {
+            NodeLogger.getLogger(getClass()).warn(ex);
             Thread.currentThread().interrupt();
             return null; // NOSONAR null is more accurate than an empty map
         }
@@ -207,6 +209,7 @@ final class NodeSpecCache {
         try {
             m_initialized.await();
         } catch (InterruptedException ex) {
+            NodeLogger.getLogger(getClass()).warn(ex);
             Thread.currentThread().interrupt();
             return null; // NOSONAR null is more accurate than an empty map
         }
@@ -217,6 +220,7 @@ final class NodeSpecCache {
         try {
             m_initialized.await();
         } catch (InterruptedException ex) {
+            NodeLogger.getLogger(getClass()).warn(ex);
             Thread.currentThread().interrupt();
             return null; // NOSONAR null is more accurate than an empty map
         }
