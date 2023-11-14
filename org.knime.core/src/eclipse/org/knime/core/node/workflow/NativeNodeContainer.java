@@ -1058,7 +1058,6 @@ public class NativeNodeContainer extends SingleNodeContainer {
                 NodeContext.removeLastContext();
             }
         }
-        saveViewSettingsToDefault();
 
     }
 
@@ -1077,14 +1076,6 @@ public class NativeNodeContainer extends SingleNodeContainer {
             if (innerNodePersistor.needsResetAfterLoad()) {
                 fileNativeNCPersistor.setNeedsResetAfterLoad();
             }
-            /**
-             * Only necessary for executed nodes with nodes saved before 5.2 with views. For these, no view settings
-             * were saved if the defaults were used. This is not the case anymore with 5.2, where the default settings
-             * are persisted nevertheless since defaults might change over time. To stay backwards compatible with
-             * changing defaults of nodes before 5.2, the node bundle version within
-             * {@link #getNodeAndBundleInformation()} can be used for executed nodes to initialize the correct defaults.
-             */
-            saveViewSettingsToDefault();
             String status;
             switch (loadResult.getType()) {
                 case Ok:

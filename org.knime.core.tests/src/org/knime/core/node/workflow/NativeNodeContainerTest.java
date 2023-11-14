@@ -54,7 +54,6 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
@@ -67,7 +66,6 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataTableSpecCreator;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.FileNodePersistor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
@@ -77,7 +75,6 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.testing.util.WorkflowManagerUtil;
 
 /**
@@ -205,48 +202,40 @@ public class NativeNodeContainerTest {
         }
 
         @Test
-        void testSavesDefaultViewSettingsOnLoadIfNecessary()
+        void testSavesDefaultViewSettingsOnGetViewSettingsIfNecessary()
             throws InvalidSettingsException, CanceledExecutionException {
             final var nnc = constructNativeNodeContainer(new SaveDefaultViewSettingsTestNodeModel());
             assertThat(nnc.getSingleNodeContainerSettings().getViewSettings()).isNull();
-            loadContent(nnc);
+            tryReceiveViewSettings(nnc);
             assertThat(
                 nnc.getSingleNodeContainerSettings().getViewSettings().getBoolean("saveDefaultViewSettingsCalled"))
                     .isTrue();
         }
 
         @Test
-        void testDoesNotSaveDefaultViewSettingsOnLoadIfNotNecessary()
+        void testDoesNotSaveDefaultViewSettingsOnGetViewSettingsIfNotNecessary()
             throws InvalidSettingsException, CanceledExecutionException {
             final var nnc = constructNativeNodeContainer(new SaveDefaultViewSettingsTestNodeModel());
             final var viewSettings = new NodeSettings("view");
             viewSettings.addBoolean("saveDefaultViewSettingsCalled", false);
             nnc.getSingleNodeContainerSettings().setViewSettings(viewSettings);
-            loadContent(nnc);
+            tryReceiveViewSettings(nnc);
             assertThat(
                 nnc.getSingleNodeContainerSettings().getViewSettings().getBoolean("saveDefaultViewSettingsCalled"))
                     .isFalse();
         }
 
         @Test
-        void testDoesNotSaveDefaultViewSettingsOnLoadIfNoneProvided()
+        void testDoesNotSaveDefaultViewSettingsOnGetViewSettingsIfNoneProvided()
             throws InvalidSettingsException, CanceledExecutionException {
             final var nnc = constructNativeNodeContainer(new TestNodeModel());
-            loadContent(nnc);
+            tryReceiveViewSettings(nnc);
             assertThat(nnc.getSingleNodeContainerSettings().getViewSettings()).isNull();
         }
 
-        private void loadContent(final NativeNodeContainer nnc) throws CanceledExecutionException {
-            final var metaPersistor = mock(FileNodeContainerMetaPersistor.class);
-            final var nodePersistor = mock(FileNodePersistor.class);
-            final var persistor = mock(FileNativeNodeContainerPersistor.class);
-            final var exec = mock(ExecutionMonitor.class);
-            final var loadResult = new LoadResult("");
-            when(persistor.getMetaPersistor()).thenReturn(metaPersistor);
-            when(persistor.getNodePersistor()).thenReturn(nodePersistor);
-            when(metaPersistor.getState()).thenReturn(InternalNodeContainerState.CONFIGURED);
-
-            nnc.performLoadContent(persistor, null, null, exec, loadResult, false);
+        private void tryReceiveViewSettings(final NativeNodeContainer nnc) throws InvalidSettingsException {
+            nnc.setFlowObjectStack(new FlowObjectStack(nnc.getID()), new FlowObjectStack(nnc.getID()));
+            nnc.getViewSettingsUsingFlowObjectStack();
         }
 
         @Test
@@ -255,13 +244,6 @@ public class NativeNodeContainerTest {
             final var savedSettings = new NodeSettings("saved_settings");
             nnc.saveSNCSettings(savedSettings, true);
             assertThat(savedSettings.getNodeSettings("view").getBoolean("saveDefaultViewSettingsCalled")).isTrue();
-        }
-
-        private static void addViewVariable(final String settingsKey, final NodeSettingsWO variableTree) {
-            var variableTreeNode1 = variableTree.addNodeSettings(settingsKey);
-            variableTreeNode1.addString("used_variable", "knime.workspace");
-            variableTreeNode1.addBoolean("used_variable_flawed", false);
-            variableTreeNode1.addString("exposed_variable", null);
         }
 
         private NativeNodeContainer constructNativeNodeContainer(final TestNodeModel nodeModel) {
