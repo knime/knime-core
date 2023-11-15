@@ -56,6 +56,7 @@ try {
                 'knime-textprocessing',
                 'knime-virtual',
                 'knime-workbench',
+                'knime-xml',
                 'knime-credentials-base'
             ],
             ius: [ 
