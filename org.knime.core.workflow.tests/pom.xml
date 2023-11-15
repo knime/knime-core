@@ -39,6 +39,11 @@
 							</requirement>
 							<requirement>
 								<type>eclipse-feature</type>
+								<id>org.knime.features.filehandling.core</id>
+								<versionRange>0.0.0</versionRange>
+							</requirement>
+							<requirement>
+								<type>eclipse-feature</type>
 								<id>org.knime.features.datageneration</id>
 								<versionRange>0.0.0</versionRange>
 							</requirement>
