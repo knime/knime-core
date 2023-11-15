@@ -48,6 +48,9 @@
  */
 package org.knime.core.node.func;
 
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import org.knime.core.node.InvalidSettingsException;
 
 /**
@@ -69,6 +72,17 @@ public interface EnumArgumentType<E extends Enum<E>> extends ArgumentType {
      */
     static <E extends Enum<E>> EnumArgumentType<E> create(final Class<E> enumClass) {
         return new DefaultEnumArgumentType<>(enumClass);
+    }
+
+    /**
+     * @param <E> the type of enum
+     * @param enumClass the class of the enum
+     * @return string representing the constants of this class in the format [constant1, constant2]
+     */
+    static<E extends Enum<E>> String createValuesString(final Class<E> enumClass) {
+        return Stream.of(enumClass.getEnumConstants())//
+                .map(Enum::name)//
+                .collect(Collectors.joining(", ", "[", "]"));
     }
 
     /**
