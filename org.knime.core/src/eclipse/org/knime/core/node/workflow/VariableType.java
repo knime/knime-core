@@ -93,7 +93,6 @@ import java.util.stream.Stream;
 import javax.swing.Icon;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.NotImplementedException;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
@@ -1937,7 +1936,8 @@ public abstract class VariableType<T> {
 
         @Override
         protected VariableValue<CredentialsFlowVariableValue> defaultValue() {
-            throw new NotImplementedException("The CredentialsType does not support the creation of default values.");
+            // used, e.g. in the flow variable tab to denote missing elements
+            return new CredentialsType.CredentialsValue(new CredentialsFlowVariableValue("<Invalid>", "", "", ""));
         }
 
         @Override
@@ -1971,7 +1971,7 @@ public abstract class VariableType<T> {
                         "The variable '%s' can't overwrite the setting '%s' because it is not a credential.",
                         v, config.getEntry(configKey)));
             }
-            value.save(config.addConfig(configKey));
+            value.save((Config)config.getEntry(configKey));
         }
 
         @Override
