@@ -53,6 +53,7 @@ import org.knime.core.node.NodeFactory;
 /**
  *
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
+ * @since 5.2
  */
 public interface SimpleNodeFunc extends NodeFunc {
 

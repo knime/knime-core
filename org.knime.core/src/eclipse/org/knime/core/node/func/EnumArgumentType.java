@@ -57,6 +57,7 @@ import org.knime.core.node.InvalidSettingsException;
  *
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  * @param <E> The type of enum this EnumArgumentType wraps
+ * @since 5.2
  */
 public interface EnumArgumentType<E extends Enum<E>> extends ArgumentType {
 

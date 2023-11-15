@@ -55,6 +55,7 @@ import org.knime.core.node.NodeSettingsRO;
  * Represents lists of arguments of specific {@link ArgumentType}.
  *
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
+ * @since 5.2
  */
 public interface ListArgumentType extends ArgumentType {
 
