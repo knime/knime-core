@@ -62,15 +62,28 @@ import org.knime.core.node.port.PortObjectSpec;
 public interface NodeFunc {
 
     /**
-     * Creates settings from the given argument and inputSpecs and saves them into settings.
+     * Creates settings from the given argument and inputSpecs and saves them into the model settings of the node.
      *
-     * @param arguments supplied to the NodeFunc
-     * @param inputSpecs of the node
-     * @param settings to save to
+     * @param arguments according to the defined {@link #getApi() API}
+     * @param inputSpecs of the node (may contain null if predecessors didn't provide specs)
+     * @param modelSettings to save to
      * @throws InvalidSettingsException if the arguments and inputSpecs are not compatible
      */
-    void saveSettings(final NodeSettingsRO arguments, final PortObjectSpec[] inputSpecs, final NodeSettingsWO settings)
-        throws InvalidSettingsException;
+    void saveSettings(final NodeSettingsRO arguments, final PortObjectSpec[] inputSpecs,
+        final NodeSettingsWO modelSettings) throws InvalidSettingsException;
+
+    /**
+     * Saves the view settings specified by the given arguments.
+     *
+     * @param arguments according to the defined {@link #getApi() API}
+     * @param inputSpecs of the node (may contain null if predecessors didn't provide specs)
+     * @param viewSettings to save to
+     * @throws InvalidSettingsException if the arguments and inputSpecs are not compatible
+     */
+    default void saveViewSettings(final NodeSettingsRO arguments, final PortObjectSpec[] inputSpecs,
+        final NodeSettingsWO viewSettings) throws InvalidSettingsException {
+        // most nodes don't have view settings
+    }
 
     /**
      * @return the API of this NodeFunc
