@@ -102,6 +102,7 @@ import org.knime.core.node.config.Config;
 import org.knime.core.node.config.base.AbstractConfigEntry;
 import org.knime.core.node.config.base.ConfigEntries;
 import org.knime.core.node.config.base.ConfigPasswordEntry;
+import org.knime.core.node.defaultnodesettings.SettingsModel;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.SharedIcons;
 import org.knime.core.node.workflow.CredentialsStore.CredentialsFlowVariableValue;
@@ -1861,6 +1862,14 @@ public abstract class VariableType<T> {
     public static final class CredentialsType extends VariableType<CredentialsFlowVariableValue> {
 
         /**
+         * The config key used to identify a variable setting representing a credentials object. It's not used
+         * to persist variables but only a detection "shortcut" for node configuration elements.
+         *
+         * @since 5.2
+         */
+        public static final String CFG_IS_CREDENTIALS_FLAG= "isCredentials" + SettingsModel.CFGKEY_INTERNAL;
+
+        /**
          * The config key for the name / id of the credentials
          *
          * @since 5.2
@@ -1872,35 +1881,21 @@ public abstract class VariableType<T> {
          *
          * @since 5.2
          */
-        public static final String CFG_USERNAME = "login";
+        public static final String CFG_LOGIN = "login";
 
         /**
-         * The config key for the weakly encrypted password of the credentials
+         * The config key for the password of the credentials, not stored to disc (transient)
          *
          * @since 5.2
          */
-        public static final String CFG_PASSWORD = "weaklyEncryptedPassword";
+        public static final String CFG_TRANSIENT_PASSWORD = "transientPassword";
 
         /**
-         * The config key for the weakly encrypted second authentication factor of the credentials
+         * The config key for the second authentication factor of the credentials, not stored to disc (transient)
          *
          * @since 5.2
          */
-        public static final String CFG_SECOND_FACTOR = "weaklyEncryptedSecondfactor";
-
-        /**
-         * The encryption key for encrypting passwords
-         *
-         * @since 5.2
-         */
-        public static final String PASSWORD_SECRET = "XKdPobvbDEBZEJmBsbMq"; // NOSONAR (weak symmetric encryption only)
-
-        /**
-         * The encryption key for encrypting second authentication factors
-         *
-         * @since 5.2
-         */
-        public static final String SECOND_FACTOR_SECRET = "lLNIScQYgDJJXUrUdhSG";
+        public static final String CFG_TRANSIENT_SECOND_FACTOR = "transientSecondFactor";
 
         private static final class CredentialsValue extends VariableValue<CredentialsFlowVariableValue> {
 
@@ -1957,10 +1952,9 @@ public abstract class VariableType<T> {
 
         private static boolean isCredentials(final Config config, final String configKey) {
             return (config.getEntry(configKey) instanceof Config subConfig)
+                && subConfig.containsKey(CFG_IS_CREDENTIALS_FLAG)
                 && subConfig.containsKey(CFG_NAME)
-                && subConfig.containsKey(CFG_USERNAME)
-                && subConfig.containsKey(CFG_PASSWORD)
-                && subConfig.containsKey(CFG_SECOND_FACTOR);
+                && subConfig.containsKey(CFG_LOGIN);
         }
 
         @Override
@@ -1977,7 +1971,7 @@ public abstract class VariableType<T> {
                         "The variable '%s' can't overwrite the setting '%s' because it is not a credential.",
                         v, config.getEntry(configKey)));
             }
-            value.store(config.addConfig(configKey), true);
+            value.save(config.addConfig(configKey));
         }
 
         @Override

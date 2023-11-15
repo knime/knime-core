@@ -47,12 +47,10 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.knime.core.node.workflow.VariableType.CredentialsType.CFG_LOGIN;
 import static org.knime.core.node.workflow.VariableType.CredentialsType.CFG_NAME;
-import static org.knime.core.node.workflow.VariableType.CredentialsType.CFG_PASSWORD;
-import static org.knime.core.node.workflow.VariableType.CredentialsType.CFG_SECOND_FACTOR;
-import static org.knime.core.node.workflow.VariableType.CredentialsType.CFG_USERNAME;
-import static org.knime.core.node.workflow.VariableType.CredentialsType.PASSWORD_SECRET;
-import static org.knime.core.node.workflow.VariableType.CredentialsType.SECOND_FACTOR_SECRET;
+import static org.knime.core.node.workflow.VariableType.CredentialsType.CFG_TRANSIENT_PASSWORD;
+import static org.knime.core.node.workflow.VariableType.CredentialsType.CFG_TRANSIENT_SECOND_FACTOR;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -481,30 +479,22 @@ public final class CredentialsStore implements Observer {
                 m_name, m_login, m_password != null, m_secondFactor.isPresent());
         }
 
-        void save(final NodeSettingsWO settings) {
-            store(settings, false);
-        }
-
         /**
-         * Stores the credentials information into the provided {@link ConfigWO}.
+         * Stores the credentials information into the provided argument.
          * @param config the {@link ConfigWO} to store the credentials
-         * @param includePasswords <code>true</code> if the passwords should be stored weakly encrypted as well
          */
-        void store(final ConfigWO config, final boolean includePasswords) {
+        void save(final ConfigWO config) {
             config.addString(CFG_NAME, getName());
-            config.addString(CFG_USERNAME, getLogin());
-            if (includePasswords) {
-                config.addPassword(CFG_PASSWORD, PASSWORD_SECRET, getPassword());
-                config.addPassword(CFG_SECOND_FACTOR, SECOND_FACTOR_SECRET,
-                    getSecondAuthenticationFactor().orElse(null));
-            }
+            config.addString(CFG_LOGIN, getLogin());
+            config.addTransientString(CFG_TRANSIENT_PASSWORD, getPassword());
+            config.addTransientString(CFG_TRANSIENT_SECOND_FACTOR, getSecondAuthenticationFactor().orElse(null));
         }
 
         static CredentialsFlowVariableValue load(final ConfigRO settings) throws InvalidSettingsException {
             String name = settings.getString(CFG_NAME);
-            String login = settings.getString(CFG_USERNAME);
-            String password = settings.getPassword(CFG_PASSWORD, PASSWORD_SECRET, null);
-            String secondFactor = settings.getPassword(CFG_SECOND_FACTOR, SECOND_FACTOR_SECRET, null);
+            String login = settings.getString(CFG_LOGIN);
+            String password = settings.getTransientString(CFG_TRANSIENT_PASSWORD);
+            String secondFactor = settings.getTransientString(CFG_TRANSIENT_SECOND_FACTOR);
             return new CredentialsFlowVariableValue(name, login, password, secondFactor);
         }
     }

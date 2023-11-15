@@ -53,12 +53,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.knime.core.node.workflow.VariableType.CredentialsType.CFG_IS_CREDENTIALS_FLAG;
+import static org.knime.core.node.workflow.VariableType.CredentialsType.CFG_LOGIN;
 import static org.knime.core.node.workflow.VariableType.CredentialsType.CFG_NAME;
-import static org.knime.core.node.workflow.VariableType.CredentialsType.CFG_PASSWORD;
-import static org.knime.core.node.workflow.VariableType.CredentialsType.CFG_SECOND_FACTOR;
-import static org.knime.core.node.workflow.VariableType.CredentialsType.CFG_USERNAME;
-import static org.knime.core.node.workflow.VariableType.CredentialsType.PASSWORD_SECRET;
-import static org.knime.core.node.workflow.VariableType.CredentialsType.SECOND_FACTOR_SECRET;
+import static org.knime.core.node.workflow.VariableType.CredentialsType.CFG_TRANSIENT_PASSWORD;
+import static org.knime.core.node.workflow.VariableType.CredentialsType.CFG_TRANSIENT_SECOND_FACTOR;
 import static org.knime.core.node.workflow.VariableTypeTestUtils.CFG_VALUE;
 import static org.knime.core.node.workflow.VariableTypeTestUtils.KEY;
 
@@ -83,14 +82,12 @@ public class CredentialsTypeTest extends AbstractVariableTypeTest<CredentialsFlo
     static final NodeSettings createCredentialsSettings(final String name, final String login, final String password,
         final String secondFactor) {
         final var settings = new NodeSettings(CFG_VALUE);
+        // only to comply to schema for variable type detection (value doesn't matter)
+        settings.addBoolean(CFG_IS_CREDENTIALS_FLAG, true);
         settings.addString(CFG_NAME, name);
-        settings.addString(CFG_USERNAME, login);
-        if (password != null) {
-            settings.addPassword(CFG_PASSWORD, PASSWORD_SECRET, password);
-        }
-        if (secondFactor != null) {
-            settings.addPassword(CFG_SECOND_FACTOR, SECOND_FACTOR_SECRET, secondFactor);
-        }
+        settings.addString(CFG_LOGIN, login);
+        settings.addTransientString(CFG_TRANSIENT_PASSWORD, password);
+        settings.addTransientString(CFG_TRANSIENT_SECOND_FACTOR, secondFactor);
         return settings;
     }
 
@@ -139,11 +136,11 @@ public class CredentialsTypeTest extends AbstractVariableTypeTest<CredentialsFlo
         assertFalse(m_testInstance.canOverwrite(settings, CFG_VALUE));
         subSettings.addString(CFG_NAME, "name");
         assertFalse(m_testInstance.canOverwrite(settings, CFG_VALUE));
-        subSettings.addString(CFG_USERNAME, "login");
+        subSettings.addString(CFG_LOGIN, "login");
         assertFalse(m_testInstance.canOverwrite(settings, CFG_VALUE));
-        subSettings.addPassword(CFG_PASSWORD, PASSWORD_SECRET, "password");
+        subSettings.addTransientString(CFG_TRANSIENT_PASSWORD, "password");
         assertFalse(m_testInstance.canOverwrite(settings, CFG_VALUE));
-        subSettings.addPassword(CFG_SECOND_FACTOR, SECOND_FACTOR_SECRET, "secondFactor");
+        subSettings.addTransientString(CFG_TRANSIENT_SECOND_FACTOR, "secondFactor");
         assertTrue(m_testInstance.canOverwrite(settings, CFG_VALUE));
     }
 
@@ -170,11 +167,11 @@ public class CredentialsTypeTest extends AbstractVariableTypeTest<CredentialsFlo
         assertFalse(m_testInstance.canCreateFrom(settings, CFG_VALUE));
         subSettings.addString(CFG_NAME, "foo");
         assertFalse(m_testInstance.canCreateFrom(settings, CFG_VALUE));
-        subSettings.addString(CFG_USERNAME, "bar");
+        subSettings.addString(CFG_LOGIN, "bar");
         assertFalse(m_testInstance.canCreateFrom(settings, CFG_VALUE));
-        subSettings.addPassword(CFG_PASSWORD, PASSWORD_SECRET, "baz");
+        subSettings.addTransientString(CFG_TRANSIENT_PASSWORD, "baz");
         assertFalse(m_testInstance.canOverwrite(settings, CFG_VALUE));
-        subSettings.addPassword(CFG_SECOND_FACTOR, SECOND_FACTOR_SECRET, "secondFactor");
+        subSettings.addTransientString(CFG_TRANSIENT_SECOND_FACTOR, "secondFactor");
         assertTrue(m_testInstance.canCreateFrom(settings, CFG_VALUE));
     }
 
