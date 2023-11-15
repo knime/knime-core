@@ -1865,7 +1865,7 @@ public final class SubNodeContainer extends SingleNodeContainer
 
     private static NodeInPort createReportInputPort(final int index) {
         final var port = new NodeInPort(index, IReportPortObject.TYPE);
-        port.setPortName("Report (Template)");
+        port.setPortName("Report");
         return port;
     }
 
