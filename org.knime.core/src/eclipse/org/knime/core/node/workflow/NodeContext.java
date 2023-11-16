@@ -402,7 +402,7 @@ public final class NodeContext {
                 } else if (NodeContainer.class.isAssignableFrom(contextObjClass)) {
                     return Optional.of((C)srcObj);
                 } else if (WorkflowContextV2.class.isAssignableFrom(contextObjClass)) {
-                    return Optional.of((C)NodeContainerParent.getProjectWFM(nc).getContextV2());
+                    return Optional.ofNullable((C)NodeContainerParent.getProjectWFM(nc).getContextV2());
                 } else {
                     return Optional.empty();
                 }
