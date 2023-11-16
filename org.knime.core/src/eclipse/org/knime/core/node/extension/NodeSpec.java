@@ -116,7 +116,7 @@ public record NodeSpec(Factory factory, NodeType type, Ports ports, Metadata met
      * @param hidden whether the node is hidden from the node repository
      * @return null if the node cannot be instantiated
      */
-    static NodeSpec of(final NodeFactory<NodeModel> factory, final String categoryPath,
+    static Optional<NodeSpec> of(final NodeFactory<NodeModel> factory, final String categoryPath,
         final Map<String, CategoryExtension> catExts, final String afterID, final boolean hidden) {
 
         final Node node;
@@ -125,7 +125,7 @@ public record NodeSpec(Factory factory, NodeType type, Ports ports, Metadata met
         } catch (Exception e) {
             // if the node cannot be instantiated, we probably do not want to add it to the node repo anyways
             NodeLogger.getLogger(NodeSpec.class).debug("Cannot instantiate node.", e);
-            return null;
+            return Optional.empty();
         }
 
         final var fact = NodeSpec.Factory.of(factory);
@@ -136,7 +136,7 @@ public record NodeSpec(Factory factory, NodeType type, Ports ports, Metadata met
 
         final var icon = factory.getIcon();
 
-        return new NodeSpec(fact, factory.getType(), ports, description, icon, deprecated, hidden);
+        return Optional.of(new NodeSpec(fact, factory.getType(), ports, description, icon, deprecated, hidden));
     }
 
     /**
@@ -164,8 +164,8 @@ public record NodeSpec(Factory factory, NodeType type, Ports ports, Metadata met
                 final var categoryPath = Path.forPosix(nodeFactoryExtension.getCategoryPath(id)) //
                     .removeTrailingSeparator().makeAbsolute().makeUNC(false).toString();
 
-                var nodeSpec = NodeSpec.of(factory, categoryPath, catExts, afterID, hidden);
-                nodeSpecs.add(nodeSpec);
+                NodeSpec.of(factory, categoryPath, catExts, afterID, hidden) //
+                    .ifPresent(nodeSpecs::add);
             }
             return nodeSpecs;
         } catch (Exception ex) {
