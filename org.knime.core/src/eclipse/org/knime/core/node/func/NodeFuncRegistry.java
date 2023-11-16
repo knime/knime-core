@@ -67,6 +67,8 @@ import org.knime.core.node.NodeLogger;
  */
 public final class NodeFuncRegistry {
 
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(NodeFuncRegistry.class);
+
     private static final String EXT_POINT_ID = "org.knime.core.NodeFunc";
 
     private final Map<String, NodeFunc> m_nodeFuncsById;
@@ -78,7 +80,11 @@ public final class NodeFuncRegistry {
         var nodeFuncs = new HashMap<String, NodeFunc>();
         for (var extension : extPoint.getExtensions()) {
             for (var element : extension.getConfigurationElements()) {
-                createNodeFunc(element).ifPresent(n -> nodeFuncs.put(n.getApi().getName(), n));
+                try {
+                    createNodeFunc(element).ifPresent(n -> nodeFuncs.put(n.getApi().getName(), n));
+                } catch (Exception ex) {
+                    LOGGER.error("Failed to instantiate NodeFunc %s.".formatted(element.getAttribute("impl")), ex);
+                }
             }
         }
         m_nodeFuncsById = Collections.unmodifiableMap(nodeFuncs);
