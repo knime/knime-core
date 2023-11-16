@@ -185,25 +185,20 @@ public final class WorkflowSummaryCreator {
     }
 
     /**
-     * For keys representing passwords, return {@value WorkflowSummaryCreator#REDACTED_PASSWORD}, otherwise return
-     * value. Added as part of AP-16774. Logic is inspired by
-     * <code>org.eclipse.e4.core.internal.services.about.PrintedMap</code>, which checks if the key contains 'password'
-     * (ignoring case).
+     * For keys representing passwords, return \"********\", otherwise return value. Added as part of AP-16774. Logic is
+     * inspired by <code>org.eclipse.e4.core.internal.services.about.PrintedMap</code>, which checks if the key contains
+     * 'password' (ignoring case).
      *
      * @param key System properties key
      * @param value The original value
-     * @return value or a {@value WorkflowSummaryCreator#REDACTED_PASSWORD}
+     * @return value or a ********
      * @since 4.4
      */
     public static String getValueHidePasswords(final String key, final String value) {
         if (StringUtils.containsIgnoreCase(key, "password")) {
-            return emptyOrRedacted(value);
+            return REDACTED_PASSWORD;
         }
         return value;
-    }
-
-    private static String emptyOrRedacted(final String value) {
-        return value == null || value.isEmpty() ? "" : REDACTED_PASSWORD;
     }
 
     private static class WorkflowSummaryImpl implements WorkflowSummary {
@@ -1000,7 +995,7 @@ public final class WorkflowSummaryCreator {
                     value = null;
                     settings = createSettings((Config)entry);
                 } else if (type == ConfigEntries.xpassword) {
-                    value = emptyOrRedacted(entry.toStringValue());
+                    value = REDACTED_PASSWORD;
                     settings = null;
                 } else {
                     value = entry.toStringValue();
