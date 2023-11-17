@@ -191,6 +191,11 @@ public final class NodeTimer {
             int failureCount = 0;
             int creationCount = 0;
             String likelySuccessor = N_A;
+            String nodeName;
+
+            private NodeStats(final String name) {
+                nodeName = name;
+            }
         }
         private LinkedHashMap<NodeKey, NodeStats> m_globalNodeStats = new LinkedHashMap<>();
 
@@ -233,15 +238,16 @@ public final class NodeTimer {
             readFromFile();
         }
 
-        private void addExecutionTime(final NodeKey nodeKey, final boolean success, final long exectime) {
+        private void addExecutionTime(final NodeContainer nc, final boolean success, final long exectime) {
             if (DISABLE_GLOBAL_TIMER) {
                 return;
             }
+            var nodeKey = NodeKey.get(nc);
             // synchronized to avoid conflicts and parallel file writes
             synchronized (this) {
                 NodeStats ns = m_globalNodeStats.get(nodeKey);
                 if (ns == null) {
-                    ns = new NodeStats();
+                    ns = new NodeStats(nc.getName());
                     m_globalNodeStats.put(nodeKey, ns);
                 }
                 ns.executionTime += exectime;
@@ -262,7 +268,7 @@ public final class NodeTimer {
             synchronized (this) {
                 NodeStats ns = m_globalNodeStats.get(NodeKey.get(nc));
                 if (ns == null) {
-                    ns = new NodeStats();
+                    ns = new NodeStats(nc.getName());
                     m_globalNodeStats.put(NodeKey.get(nc), ns);
                 }
                 ns.creationCount++;
@@ -278,7 +284,7 @@ public final class NodeTimer {
             synchronized (this) {
                 NodeStats ns = m_globalNodeStats.get(NodeKey.get(source));
                 if (ns == null) {
-                    ns = new NodeStats();
+                    ns = new NodeStats(source.getName());
                     m_globalNodeStats.put(NodeKey.get(source), ns);
                 }
                 // remember the newly connected successor with a 50:50 chance
@@ -501,6 +507,7 @@ public final class NodeTimer {
                         var ns = entry.getValue();
                         if (ns != null) {
                             job3.add("id", nodeKey.id()); // NodeFactory.getFactoryId
+                            job3.add("nodename", ns.nodeName);
                             job3.add("nrexecs", ns.executionCount);
                             job3.add("nrfails", ns.failureCount);
                             job3.add("exectime", ns.executionTime);
@@ -515,6 +522,7 @@ public final class NodeTimer {
                     JsonObjectBuilder jobMeta = JsonUtil.getProvider().createObjectBuilder();
                     NodeStats ns = m_globalNodeStats.get(NodeKey.get(WorkflowManager.class));
                     if (ns != null) {
+                        jobMeta.add("nodename", ns.nodeName);
                         jobMeta.add("nrexecs", ns.executionCount);
                         jobMeta.add("nrfails", ns.failureCount);
                         jobMeta.add("exectime", ns.executionTime);
@@ -526,6 +534,7 @@ public final class NodeTimer {
                     JsonObjectBuilder jobSub = JsonUtil.getProvider().createObjectBuilder();
                     ns = m_globalNodeStats.get(NodeKey.get(SubNodeContainer.class));
                     if (ns != null) {
+                        jobSub.add("nodename", ns.nodeName);
                         jobSub.add("nrexecs", ns.executionCount);
                         jobSub.add("nrfails", ns.failureCount);
                         jobSub.add("exectime", ns.executionTime);
@@ -764,13 +773,19 @@ public final class NodeTimer {
                             for (int curNode = 0; curNode < jab.size(); curNode++) {
                                 JsonObject job3 = jab.getJsonObject(curNode);
                                 String nodeID = job3.getString("id");
+                                String nodeName;
+                                if (job3.containsKey("nodename")) {
+                                    nodeName = job3.getString("nodename");
+                                } else {
+                                    nodeName = getNodeNameFromLegacyNodeID(nodeID);
+                                }
                                 int execCount = job3.getInt("nrexecs", 0);
                                 int failCount = job3.getInt("nrfails", 0);
                                 JsonNumber num = job3.getJsonNumber("exectime");
                                 Long time = num == null ? 0 : num.longValue();
                                 int creationCount = job3.getInt("nrcreated", 0);
                                 String successor = job3.getString("successor", "");
-                                NodeStats ns = new NodeStats();
+                                NodeStats ns = new NodeStats(nodeName);
                                 ns.executionCount = execCount;
                                 ns.failureCount = failCount;
                                 ns.executionTime = time;
@@ -782,12 +797,18 @@ public final class NodeTimer {
                             // metanodes
                             JsonObject jobMeta = jo2.getJsonObject("metaNodes");
                             if (!jobMeta.isEmpty()) {
+                                String nodeName;
+                                if (jobMeta.containsKey("nodename")) {
+                                    nodeName = jobMeta.getString("nodename");
+                                } else {
+                                    nodeName = "MetaNode";
+                                }
                                 int execCount = jobMeta.getInt("nrexecs", 0);
                                 int failCount = jobMeta.getInt("nrfails", 0);
                                 JsonNumber num = jobMeta.getJsonNumber("exectime");
                                 Long time = num == null ? 0 : num.longValue();
                                 int creationCount = jobMeta.getInt("nrcreated", 0);
-                                NodeStats ns = new NodeStats();
+                                NodeStats ns = new NodeStats(nodeName);
                                 ns.executionCount = execCount;
                                 ns.failureCount = failCount;
                                 ns.executionTime = time;
@@ -797,12 +818,18 @@ public final class NodeTimer {
 
                             JsonObject jubSub = jo2.getJsonObject("wrappedNodes");
                             if (!jubSub.isEmpty()) {
+                                String nodeName;
+                                if (jubSub.containsKey("nodename")) {
+                                    nodeName = jubSub.getString("nodename");
+                                } else {
+                                    nodeName = "Component";
+                                }
                                 int execCount = jubSub.getInt("nrexecs", 0);
                                 int failCount = jubSub.getInt("nrfails", 0);
                                 JsonNumber num = jubSub.getJsonNumber("exectime");
                                 Long time = num == null ? 0 : num.longValue();
                                 int creationCount = jubSub.getInt("nrcreated", 0);
-                                NodeStats ns = new NodeStats();
+                                NodeStats ns = new NodeStats(nodeName);
                                 ns.executionCount = execCount;
                                 ns.failureCount = failCount;
                                 ns.executionTime = time;
@@ -871,6 +898,24 @@ public final class NodeTimer {
                 LOGGER.warn("Failed reading node usage file. Starting counts from scratch.", e);
                 resetAllCounts();
             }
+        }
+
+        /** Parses the given node id and returns the node name if it is a node id created by a KNIME AP version
+         * prior 5.2.
+         * @param nodeID the node id to parse
+         * @return the node name or 'unknown' if the id format doesn't match the old id format
+         * e.g. factoryclassname#nodename
+         */
+        private static String getNodeNameFromLegacyNodeID(final String nodeID) {
+            if (StringUtils.isAllBlank(nodeID)) {
+                return "unknwon";
+            }
+            //this looks for the previous used NODE_NAME_SEP '#'
+            int i = nodeID.lastIndexOf('#');
+            if (i < 0) {
+                return "unknwon";
+            }
+            return nodeID.substring(i + 1);
         }
 
         private void resetSessionCounts() {
@@ -984,8 +1029,7 @@ public final class NodeTimer {
             m_executionDurationOverall += m_lastExecutionDuration;
             m_numberOfExecutionsOverall++;
             m_numberOfExecutionsSinceReset++;
-            var nodeKey = NodeKey.get(m_parent);
-            GLOBAL_TIMER.addExecutionTime(nodeKey, success, m_lastExecutionDuration);
+            GLOBAL_TIMER.addExecutionTime(m_parent, success, m_lastExecutionDuration);
         }
         m_lastStartTime = m_startTime;
         m_startTime = -1;
