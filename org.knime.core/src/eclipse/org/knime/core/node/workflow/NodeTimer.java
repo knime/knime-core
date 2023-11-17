@@ -191,7 +191,7 @@ public final class NodeTimer {
             int failureCount = 0;
             int creationCount = 0;
             String likelySuccessor = N_A;
-            String nodeName;
+            final String nodeName;
 
             private NodeStats(final String name) {
                 nodeName = name;
@@ -908,12 +908,12 @@ public final class NodeTimer {
          */
         private static String getNodeNameFromLegacyNodeID(final String nodeID) {
             if (StringUtils.isAllBlank(nodeID)) {
-                return "unknwon";
+                return "unknown";
             }
             //this looks for the previous used NODE_NAME_SEP '#'
-            int i = nodeID.lastIndexOf('#');
+            int i = nodeID.indexOf('#');
             if (i < 0) {
-                return "unknwon";
+                return "unknown";
             }
             return nodeID.substring(i + 1);
         }
