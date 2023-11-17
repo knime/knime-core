@@ -77,6 +77,7 @@ public class NodeTimerTest {
     private static final String EXPECTED_NODESTATS_NODE_1 = """
             {
                 "id": "org.knime.core.node.exec.dataexchange.in.PortObjectInNodeFactory",
+                "nodename": "PortObject Reference Reader",
                 "nrexecs": 0,
                 "nrfails": 0,
                 "exectime": 0,
@@ -88,6 +89,7 @@ public class NodeTimerTest {
     private static final String EXPECTED_NODESTATS_NODE_2 = """
             {
                 "id": "org.knime.core.node.exec.dataexchange.in.PortObjectInNodeFactory",
+                "nodename": "PortObject Reference Reader",
                 "nrexecs": 0,
                 "nrfails": 0,
                 "exectime": 0,
@@ -98,6 +100,7 @@ public class NodeTimerTest {
 
     private static final String EXPECTED_NODESTATS_METANODES = """
             {
+                "nodename": "component",
                 "nrexecs": 0,
                 "nrfails": 0,
                 "exectime": 0,
@@ -107,6 +110,7 @@ public class NodeTimerTest {
 
     private static final String EXPECTED_NODESTATS_WRAPPEDNODES = """
             {
+                "nodename": "component",
                 "nrexecs": 0,
                 "nrfails": 0,
                 "exectime": 0,
