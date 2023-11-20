@@ -10,10 +10,13 @@ import static org.hamcrest.Matchers.startsWith;
 import org.junit.Before;
 import org.junit.Test;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.shared.workflow.def.ConfigDef;
 import org.knime.shared.workflow.def.ConfigMapDef;
 import org.knime.shared.workflow.def.ConfigValuePasswordDef;
 import org.knime.shared.workflow.def.NativeNodeDef;
+import org.knime.shared.workflow.storage.clipboard.DefClipboardContent;
 import org.knime.shared.workflow.storage.util.PasswordRedactor;
+import java.util.function.*;
 
 /**
  * Test the new copy-paste (that uses the *Def classes) by ensuring no
@@ -226,16 +229,16 @@ public class EnhAP18918_FunctionalIntegrationTestsForDefBasedCopyPaste extends W
 		// looks spooky, but just extracts encrypted password from copied node and
 		// checks its value
 		var copiedUnsafe = getManager().copyToDef(cc, PasswordRedactor.unsafe());
-		assertThat(((ConfigValuePasswordDef) ((ConfigMapDef) ((NativeNodeDef) copiedUnsafe.getPayload().getNodes()
-				.get("15")).getModelSettings().getChildren().get("defaultValue")).getChildren()
-						.get("passwordEncrypted")).getValue(),
+		Function<DefClipboardContent, ConfigValuePasswordDef> passwordDef = dcc -> 
+			((ConfigValuePasswordDef) ((ConfigMapDef) ((ConfigMapDef) ((NativeNodeDef) dcc.getPayload().getNodes()
+				.get("15")).getModelSettings().getChildren().get("defaultValue")).getChildren().get("credentialsValue"))
+				.getChildren().get("passwordEncrypted")); 
+		assertThat(passwordDef.apply(copiedUnsafe).getValue(),
 				is("02BAAAAGMq_QxveL1vZ0EBj9UiWy7_u1C6"));
 
 		// same, but here we require the password value to be null
 		var copiedAsNull = getManager().copyToDef(cc, PasswordRedactor.asNull());
-		assertThat(((ConfigValuePasswordDef) ((ConfigMapDef) ((NativeNodeDef) copiedAsNull.getPayload().getNodes()
-				.get("15")).getModelSettings().getChildren().get("defaultValue")).getChildren()
-						.get("passwordEncrypted")).getValue(),
+		assertThat(passwordDef.apply(copiedAsNull).getValue(),
 				nullValue());
 
 		// when pasting the redacted version, the unredacted version should be available and pasted instead
