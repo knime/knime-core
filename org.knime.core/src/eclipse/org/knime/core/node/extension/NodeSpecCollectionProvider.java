@@ -56,6 +56,7 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSetFactory;
 
 /**
@@ -258,7 +259,16 @@ public final class NodeSpecCollectionProvider {
                 .mapToDouble(e -> work.get(e.getKey()) == 0 ? 0. : (e.getValue() / (double)work.get(e.getKey()))) //
                 .sum() / 3.;
             final var event = new ProgressEvent(loadingFeature, fractionDone, complete);
-            listeners.forEach(l -> l.progress(event));
+            for (var listener : listeners) {
+                try {
+                    // since this is executed on the node repository initializer thread, we must protect against
+                    // abnormal termination due to exceptions bubbling up from listener code
+                    listener.progress(event);
+                } catch (Exception ex) { // NOSONAR can't restrict the exceptions thrown by arbitrary listeners
+                    NodeLogger.getLogger(NodeSpecCollectionProvider.class)
+                        .warn("Exception in listener to the node spec cache initialization progress.", ex);
+                }
+            }
         }
 
         /**
