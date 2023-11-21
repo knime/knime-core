@@ -419,23 +419,19 @@ public final class SubNodeContainer extends SingleNodeContainer
         m_wfm.setJobManager(null);
         m_subnodeScopeContext = new FlowSubnodeScopeContext(this);
         // and copy content
-        WorkflowCopyContent.Builder c = WorkflowCopyContent.builder();
-        c.setAnnotationIDs(content.getWorkflowAnnotationIDs().toArray(new WorkflowAnnotationID[0]));
-        c.setNodeIDs(content.getWorkflow().getNodeIDs().toArray(new NodeID[0]));
-        c.setIncludeInOutConnections(false);
-        WorkflowPersistor wp = content.copy(c.build());
+        WorkflowCopyContent c = WorkflowCopyContent.builder() //
+                .setAnnotationIDs(content.getWorkflowAnnotationIDs().toArray(WorkflowAnnotationID[]::new)) //
+                .setNodeIDs(content.getWorkflow().getNodeIDs().toArray(NodeID[]::new)) //
+                .setIncludeInOutConnections(false) //
+                .build();
+        WorkflowPersistor wp = content.copy(c);
         WorkflowCopyContent wcc = m_wfm.paste(wp);
         // create map of NodeIDs for quick lookup/search
         Collection<NodeContainer> ncs = content.getNodeContainers();
-        NodeID[] orgIDs = new NodeID[ncs.size()];
-        int j = 0;
-        for (NodeContainer nc : ncs) {
-            orgIDs[j] = nc.getID();
-            j++;
-        }
+        NodeID[] orgIDs = ncs.stream().map(NodeContainer::getID).toArray(NodeID[]::new);
         NodeID[] newIDs = wcc.getNodeIDs();
         Map<NodeID, NodeID> oldIDsHash = new HashMap<NodeID, NodeID>();
-        for (j = 0; j < orgIDs.length; j++) {
+        for (int j = 0; j < orgIDs.length; j++) {
             oldIDsHash.put(orgIDs[j], newIDs[j]);
         }
         // initialize NodeContainer inports
@@ -482,7 +478,6 @@ public final class SubNodeContainer extends SingleNodeContainer
             m_wfm.addConnection(oldIDsHash.get(cc.getSource()), cc.getSourcePort(), outNodeID, cc.getDestPort() + 1);
         }
         m_virtualOutNodeIDSuffix = outNodeID.getIndex();
-        getVirtualInNodeModel().setSubNodeContainer(this);
         m_wfmStateChangeListener = createAndAddStateListener();
         m_wfmListener = createAndAddWorkflowListener();
         setInternalState(m_wfm.getInternalState());
