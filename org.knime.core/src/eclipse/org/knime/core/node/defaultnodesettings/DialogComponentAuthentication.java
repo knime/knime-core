@@ -141,6 +141,8 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
     private HashSet<AuthenticationType> m_supportedTypes;
     private Map<AuthenticationType, Pair<String, String>> m_namingMap = new HashMap<>();
 
+    private int m_numberOfAvailableCredentials;
+
     private JRadioButton createAuthenticationTypeButton(final AuthenticationType type, final ButtonGroup group,
         final ActionListener l) {
         boolean contains = m_namingMap.containsKey(type);
@@ -592,7 +594,9 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
         String pwd = null;
         switch (type) {
             case CREDENTIALS:
-                credential = (String)m_credentialField.getSelectedItem();
+                // field caches last credential for convenience, which is not tracked by #available creds
+                // hence, only choose the selected item, once credentials are actually there
+                credential = m_numberOfAvailableCredentials > 0 ? (String)m_credentialField.getSelectedItem() : null;
                 break;
             case KERBEROS:
                 //nothing to store
@@ -705,7 +709,7 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
      */
     private void updatePanel() {
         final var modelEnabled = getModel().isEnabled();
-        final var credentialsAvailable = m_credentialField.getItemCount() > 0 && modelEnabled;
+        final var credentialsAvailable = m_numberOfAvailableCredentials > 0 && modelEnabled;
         m_credentialField.setEnabled(credentialsAvailable);
         m_typeCredential.setEnabled(credentialsAvailable);
         m_credentialPanel.setVisible(m_typeCredential.isSelected());
@@ -787,7 +791,23 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
         updateComponent();
     }
 
-    /** Loads items in credentials select box. */
+    /**
+     * Loads items in credentials select box. This implementation caches the last
+     * available credentials name. This way, if the selected credential becomes unavailable,
+     * it remains cached in the model. Allows for easy re-selection on re-execute.
+     *
+     * This also means that clients using this method have to check for the existence
+     * of the cache credential since it no longer implies that. Technically, this should
+     * not be a problem because this parent class ({@link DialogComponentAuthentication})
+     * automatically disables credentials selection once none are available anymore.
+     *
+     * Note: other dialog components (e.g. the {@link DialogComponentCredentialSelection}) or
+     * nodes (e.g. Hub Authenticator, SSH Connector, ...) that allow for credential selection
+     * do not cache the last credential name. I.e. everywhere else, after a re-configure, the
+     * selected credential name is lost if the implementation does not take precautions.
+     *
+     * @param cp CredentialsProvider
+     */
     public void loadCredentials(final CredentialsProvider cp) {
         final SettingsModelAuthentication model = (SettingsModelAuthentication)getModel();
         m_credentialField.removeAllItems();
@@ -796,8 +816,17 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
             for (final String option : names) {
                 m_credentialField.addItem(option);
             }
+            m_numberOfAvailableCredentials = names.size();
+        } else {
+            m_numberOfAvailableCredentials = 0;
         }
-        m_credentialField.setSelectedItem(model.getCredential());
+        // If the credential was lost due to re-configure, it might become available again.
+        // Let it remain stored as credentials field.
+        final var storedCredential = model.getCredential();
+        if (m_credentialField.getItemCount() == 0 && storedCredential != null) {
+            m_credentialField.addItem(storedCredential);
+        }
+        m_credentialField.setSelectedItem(storedCredential);
     }
 
     /**
