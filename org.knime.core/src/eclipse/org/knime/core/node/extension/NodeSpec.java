@@ -164,6 +164,18 @@ public record NodeSpec(Factory factory, NodeType type, Ports ports, Metadata met
                 final var categoryPath = Path.forPosix(nodeFactoryExtension.getCategoryPath(id)) //
                     .removeTrailingSeparator().makeAbsolute().makeUNC(false).toString();
 
+                // consistency check: warn developers if they forgot to declare the node as deprecated
+                // in the extension or node description
+                if (nodeFactoryExtension instanceof NodeFactoryExtension nfe
+                    && nfe.isDeprecated() != factory.isDeprecated()) {
+                    NodeLogger.getLogger(NodeFactoryExtension.class).codingWithFormat(
+                        "%s \"%s\" has inconsistent deprecated declarations. "
+                            + "Node description declares deprecated = %s but "
+                            + "extension point contribution declares deprecated = %s (plug-in \"%s\")",
+                        NodeFactory.class.getSimpleName(), nfe.getFactoryClassName(),
+                        factory.isDeprecated(), nfe.isDeprecated(), nfe.getPlugInSymbolicName());
+                }
+
                 NodeSpec.of(factory, categoryPath, catExts, afterID, hidden) //
                     .ifPresent(nodeSpecs::add);
             }

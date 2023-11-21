@@ -85,7 +85,7 @@ public final class NodeFactoryExtension implements INodeFactoryExtension {
 
     /**
      * null = not yet read
-     * true = declared so either in ext point or in NodeFactory.xml
+     * true = declared in ext point
      * false = ...
      */
     private Boolean m_isDeprecated;
@@ -120,27 +120,21 @@ public final class NodeFactoryExtension implements INodeFactoryExtension {
         return m_factoryClassName;
     }
 
-    /** @return the "deprecated" field in the extension point. */
+    /**
+     * NXT-2175: we used to instantiate the node factory here to check if the node description might declare the node as
+     * deprecated (without having the deprecation flag on the extension set). As this adds several seconds to the
+     * startup we only return the information from the extension.
+     *
+     * @return the "deprecated" field in the extension point.
+     */
     public boolean isDeprecated() {
         if (m_isDeprecated == null) {
-            boolean isDeprecated = Boolean.parseBoolean(m_configurationElement.getAttribute("deprecated"));
-            if (!isDeprecated) {
-                try {
-                    isDeprecated = getFactory().isDeprecated();
-                } catch (InvalidNodeFactoryExtensionException e) { // NOSONAR
-                    // more or less ignore -- someone will call #createFactory later and get the same error
-                    LOGGER.debug("Failed to create node factory instance", e);
-                }
-                if (isDeprecated) {
-                    LOGGER.codingWithFormat(
-                        "%s \"%s\" is declared 'deprecated' in its node description but not in "
-                            + "the extension point contribution (plug-in \"%s\")",
-                        NodeFactory.class.getSimpleName(), getFactoryClassName(), getPlugInSymbolicName());
-                }
-            }
+            final var isDeprecated = Boolean.parseBoolean(m_configurationElement.getAttribute("deprecated"));
+            // there used to be a consistency check here that would warn developers if they forgot to mark the extension
+            // deprecated. This warning is now issued in NodeSpec.
             m_isDeprecated = Boolean.valueOf(isDeprecated);
         }
-        return m_isDeprecated.booleanValue();
+        return m_isDeprecated;
     }
 
     @Override
