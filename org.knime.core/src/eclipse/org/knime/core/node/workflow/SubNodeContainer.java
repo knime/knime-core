@@ -399,79 +399,112 @@ public final class SubNodeContainer extends SingleNodeContainer
     /**
      * Create new SubNode from existing Metanode (=WorkflowManager).
      *
-     * @param parent ...
-     * @param id ...
-     * @param content ...
+     * @param parent hosting parent WFM
+     * @param id The ID of this node
+     * @param content The metanode instance
      * @param name The name of the sub node
      */
-    SubNodeContainer(final WorkflowManager parent, final NodeID id, final WorkflowManager content, final String name) {
-        super(parent, id, content.getNodeAnnotation());
-        // Create new, internal workflow manager:
-        m_wfm = new WorkflowManager(this, null, new NodeID(id, 0), new PortType[]{}, new PortType[]{}, false,
-                parent.getContextV2(), name,
-                Optional.of(parent.getWorkflowDataRepository()), Optional.of(content.getNodeAnnotation()));
-        m_wfm.setJobManager(null);
-        m_subnodeScopeContext = new FlowSubnodeScopeContext(this);
+    static SubNodeContainer newSubNodeContainerFromMetaNodeContent(final WorkflowManager parent, final NodeID id,
+        final WorkflowManager content, final String name) {
+
+        final PortType[] inTypes = IntStream.range(0, content.getNrInPorts()) //
+                .mapToObj(content::getInPort) //
+                .map(WorkflowInPort::getPortType) //
+                .toArray(PortType[]::new);
+        final PortType[] outTypes = IntStream.range(0, content.getNrOutPorts()) //
+                .mapToObj(content::getOutPort) //
+                .map(WorkflowOutPort::getPortType) //
+                .toArray(PortType[]::new);
+
+        final SubNodeContainer snc = new SubNodeContainer(parent, id, inTypes, outTypes, name);
+        snc.getNodeAnnotation().copyFrom(content.getNodeAnnotation().getData(), true);
+
+
         // and copy content
-        WorkflowCopyContent c = WorkflowCopyContent.builder() //
+        final WorkflowCopyContent c = WorkflowCopyContent.builder() //
                 .setAnnotationIDs(content.getWorkflowAnnotationIDs().toArray(WorkflowAnnotationID[]::new)) //
                 .setNodeIDs(content.getWorkflow().getNodeIDs().toArray(NodeID[]::new)) //
                 .setIncludeInOutConnections(false) //
                 .build();
-        WorkflowPersistor wp = content.copy(c);
-        WorkflowCopyContent wcc = m_wfm.paste(wp);
+        final WorkflowPersistor wp = content.copy(c);
+        final WorkflowManager wfm = snc.m_wfm;
+        final WorkflowCopyContent wcc = wfm.paste(wp);
         // create map of NodeIDs for quick lookup/search
-        Collection<NodeContainer> ncs = content.getNodeContainers();
-        NodeID[] orgIDs = ncs.stream().map(NodeContainer::getID).toArray(NodeID[]::new);
-        NodeID[] newIDs = wcc.getNodeIDs();
-        Map<NodeID, NodeID> oldIDsHash = new HashMap<NodeID, NodeID>();
+        final Collection<NodeContainer> ncs = content.getNodeContainers();
+        final NodeID[] orgIDs = ncs.stream().map(NodeContainer::getID).toArray(NodeID[]::new);
+        final NodeID[] newIDs = wcc.getNodeIDs();
+        final Map<NodeID, NodeID> oldIDsHash = new HashMap<>();
         for (int j = 0; j < orgIDs.length; j++) {
             oldIDsHash.put(orgIDs[j], newIDs[j]);
         }
+
+        final NodeID inNodeID = snc.getVirtualInNodeID();
+        final NodeID outNodeID = snc.getVirtualOutNodeID();
+
+        final MinMaxCoordinates minMaxCoordinates = snc.getMinMaxCoordinates();
+
+        for (ConnectionContainer cc : content.getWorkflow().getConnectionsBySource(content.getID())) {
+            if (cc.getType() == ConnectionType.WFMTHROUGH) {
+                wfm.addConnection(inNodeID, cc.getSourcePort() + 1, outNodeID, cc.getDestPort() + 1);
+            } else {
+                wfm.addConnection(inNodeID, cc.getSourcePort() + 1, oldIDsHash.get(cc.getDest()), cc.getDestPort());
+            }
+        }
+        for (ConnectionContainer cc : content.getWorkflow().getConnectionsByDest(content.getID())) {
+            if (cc.getType() == ConnectionType.WFMTHROUGH) {
+                // wfm-through-connections have already been added above
+                continue;
+            }
+            wfm.addConnection(oldIDsHash.get(cc.getSource()), cc.getSourcePort(), outNodeID, cc.getDestPort() + 1);
+        }
+
+        snc.placeVirtualInNode(minMaxCoordinates);
+        snc.placeVirtualOutNode(minMaxCoordinates);
+        return snc;
+    }
+
+    /**
+     * Create new SubNode from existing Metanode (=WorkflowManager), only used via
+     * {@link #newSubNodeContainerFromMetaNodeContent(WorkflowManager, NodeID, WorkflowManager, String)}.
+     *
+     * @param parent ...
+     * @param id ...
+     * @param inTypes Types of input ports (excl. flow var & report)
+     * @param outTypes Types of output ports (excl. flow var & report)
+     * @param name The name of the sub node
+     */
+    private SubNodeContainer(final WorkflowManager parent, final NodeID id, final PortType[] inTypes,
+        final PortType[] outTypes, final String name) {
+        super(parent, id);
+        // Create new, internal workflow manager:
+        m_wfm = new WorkflowManager(this, null, new NodeID(id, 0), new PortType[]{}, new PortType[]{}, false,
+                parent.getContextV2(), name,
+                Optional.of(parent.getWorkflowDataRepository()), Optional.empty());
+        m_wfm.setJobManager(null);
+        m_subnodeScopeContext = new FlowSubnodeScopeContext(this);
         // initialize NodeContainer inports
         // (metanodes don't have hidden variable port 0, SingleNodeContainers do!)
-        m_inports = new NodeInPort[content.getNrInPorts() + 1];
+        m_inports = new NodeInPort[inTypes.length + 1];
         // but for hilite handler we still ignore optional variable port 0
-        m_inHiliteHandler = new HiLiteHandler[content.getNrInPorts()];
-        PortType[] inTypes = new PortType[content.getNrInPorts()];
-        for (int i = 0; i < content.getNrInPorts(); i++) {
-            inTypes[i] = content.getInPort(i).getPortType();
+        m_inHiliteHandler = new HiLiteHandler[inTypes.length];
+        for (int i = 0; i < inTypes.length; i++) {
             m_inports[i + 1] = new NodeInPort(i + 1, inTypes[i]);
             m_inHiliteHandler[i] = new HiLiteHandler();
         }
         m_inports[0] = new NodeInPort(0, FlowVariablePortObject.TYPE_OPTIONAL);
         // initialize NodeContainer outports
         // (metanodes don't have hidden variable port 0, SingleNodeContainers do!)
-        m_outports = new NodeContainerOutPort[content.getNrOutPorts() + 1];
-        PortType[] outTypes = new PortType[content.getNrOutPorts()];
-        m_outputs = new Output[content.getNrOutPorts() + 1];
-        for (int i = 0; i < content.getNrOutPorts(); i++) {
-            outTypes[i] = content.getOutPort(i).getPortType();
-            m_outputs[i + 1] = new Output(content.getOutPort(i).getPortType());
-            m_outports[i + 1] = new NodeContainerOutPort(this, m_outputs[i + 1].getType(), i + 1);
+        m_outports = new NodeContainerOutPort[outTypes.length + 1];
+        m_outputs = new Output[outTypes.length + 1];
+        for (int i = 0; i < outTypes.length; i++) {
+            m_outputs[i + 1] = new Output(outTypes[i]);
+            m_outports[i + 1] = new NodeContainerOutPort(this, outTypes[i], i + 1);
         }
         m_outputs[0] = new Output(FlowVariablePortObject.TYPE_OPTIONAL);
         m_outports[0] = new NodeContainerOutPort(this, FlowVariablePortObject.TYPE_OPTIONAL, 0);
-        MinMaxCoordinates minMaxCoordinates = getMinMaxCoordinates();
         // add virtual in/out nodes and connect them
-        NodeID inNodeID = addVirtualInNode(inTypes, minMaxCoordinates);
-        NodeID outNodeID = addVirtualOutNode(outTypes, minMaxCoordinates);
-        for (ConnectionContainer cc : content.getWorkflow().getConnectionsBySource(content.getID())) {
-            if (cc.getType() == ConnectionType.WFMTHROUGH) {
-                m_wfm.addConnection(inNodeID, cc.getSourcePort() + 1, outNodeID, cc.getDestPort() + 1);
-            } else {
-                m_wfm.addConnection(inNodeID, cc.getSourcePort() + 1, oldIDsHash.get(cc.getDest()), cc.getDestPort());
-            }
-        }
-        m_virtualInNodeIDSuffix = inNodeID.getIndex();
-        for (ConnectionContainer cc : content.getWorkflow().getConnectionsByDest(content.getID())) {
-            if (cc.getType() == ConnectionType.WFMTHROUGH) {
-                // wfm-through-connections have already been added above
-                continue;
-            }
-            m_wfm.addConnection(oldIDsHash.get(cc.getSource()), cc.getSourcePort(), outNodeID, cc.getDestPort() + 1);
-        }
-        m_virtualOutNodeIDSuffix = outNodeID.getIndex();
+        m_virtualInNodeIDSuffix = addVirtualInNode(inTypes).getID().getIndex();
+        m_virtualOutNodeIDSuffix = addVirtualOutNode(outTypes).getID().getIndex();
         m_wfmStateChangeListener = createAndAddStateListener();
         m_wfmListener = createAndAddWorkflowListener();
         setInternalState(m_wfm.getInternalState());
@@ -480,32 +513,38 @@ public final class SubNodeContainer extends SingleNodeContainer
 
         m_subnodeLayoutStringProvider = new SubnodeContainerLayoutStringProvider();
         m_subnodeConfigurationStringProvider = new SubnodeContainerConfigurationStringProvider();
-
         postLoadWFM();
+
     }
 
     /** Adds new/empty instance of a virtual input node and returns its ID. */
-    private NodeID addVirtualInNode(final PortType[] inTypes, final MinMaxCoordinates minMaxCoordinates) {
-        NodeID inNodeID = m_wfm.createAndAddNode(new VirtualSubNodeInputNodeFactory(this, inTypes));
+    private NodeContainer addVirtualInNode(final PortType[] inTypes) {
+        final NodeID inNodeID = m_wfm.createAndAddNode(new VirtualSubNodeInputNodeFactory(this, inTypes));
         final NodeContainer inNodeNC = m_wfm.getNodeContainer(inNodeID);
         inNodeNC.setDeletable(false);
+        return inNodeNC;
+    }
 
-        int x = minMaxCoordinates.minX() - 100;
-        int y = minMaxCoordinates.centerY();
-        inNodeNC.setUIInformation(NodeUIInformation.builder().setNodeLocation(x, y, 0, 0).build());
-        return inNodeID;
+    /** Moves the input node to the left-x, center-y of all nodes defined by the argument. */
+    private void placeVirtualInNode(final MinMaxCoordinates minMaxCoordinates) {
+        final int x = minMaxCoordinates.minX() - 100;
+        final int y = minMaxCoordinates.centerY();
+        getVirtualInNode().setUIInformation(NodeUIInformation.builder().setNodeLocation(x, y, 0, 0).build());
     }
 
     /** Adds new/empty instance of a virtual output node and returns its ID. */
-    private NodeID addVirtualOutNode(final PortType[] outTypes, final MinMaxCoordinates minMaxCoordinates) {
-        NodeID outNodeID = m_wfm.createAndAddNode(new VirtualSubNodeOutputNodeFactory(this, outTypes));
+    private NodeContainer addVirtualOutNode(final PortType[] outTypes) {
+        final NodeID outNodeID = m_wfm.createAndAddNode(new VirtualSubNodeOutputNodeFactory(this, outTypes));
         final NodeContainer outNodeNC = m_wfm.getNodeContainer(outNodeID);
         outNodeNC.setDeletable(false);
+        return outNodeNC;
+    }
 
-        int x = minMaxCoordinates.maxX() + 100;
-        int y = minMaxCoordinates.centerY();
-        outNodeNC.setUIInformation(NodeUIInformation.builder().setNodeLocation(x, y, 0, 0).build());
-        return outNodeID;
+    /** Moves the output node to the right-x, center-y of all nodes defined by the argument. */
+    private void placeVirtualOutNode(final MinMaxCoordinates minMaxCoordinates) {
+        final int x = minMaxCoordinates.maxX() + 100;
+        final int y = minMaxCoordinates.centerY();
+        getVirtualOutNode().setUIInformation(NodeUIInformation.builder().setNodeLocation(x, y, 0, 0).build());
     }
 
     /** Return type of {@link #getMinMaxCoordinates()} - workflow bounding box. */
@@ -2203,7 +2242,7 @@ public final class SubNodeContainer extends SingleNodeContainer
                 setDirty();
             }
         }
-        checkInOutNodesAfterLoad(subNodePersistor, loadResult);
+        checkInOutNodesAfterLoad(loadResult);
         loadLegacyPortNamesAndDescriptionsFromInOutNodes();
         // put data input output node if it was executed;
         final NativeNodeContainer virtualOutNode = getVirtualOutNode();
@@ -2266,8 +2305,7 @@ public final class SubNodeContainer extends SingleNodeContainer
     }
 
     /** Fixes in- and output nodes after loading (in case they don't exist or have errors). */
-    private void checkInOutNodesAfterLoad(
-        final SubNodeContainerPersistor subNodePersistor, final LoadResult loadResult) {
+    private void checkInOutNodesAfterLoad(final LoadResult loadResult) {
         /* Fix output node */
         NodeID virtualOutID = getVirtualOutNodeID();
         String error = null;                  // non null in case not is not present of of wrong type
@@ -2294,8 +2332,9 @@ public final class SubNodeContainer extends SingleNodeContainer
 
         if (error != null) {
             minMaxCoordinates = getMinMaxCoordinates();
-            m_virtualOutNodeIDSuffix = addVirtualOutNode(
-                Output.getPortTypesNoFlowVariablePort(m_outputs), minMaxCoordinates).getIndex();
+            m_virtualOutNodeIDSuffix =
+                addVirtualOutNode(Output.getPortTypesNoFlowVariablePort(m_outputs)).getID().getIndex();
+            placeVirtualOutNode(minMaxCoordinates);
             error = error.concat(String.format(" - creating new instance (ID %s)", m_virtualOutNodeIDSuffix));
             loadResult.addError(error);
             if (outputSettings != null) {
@@ -2336,7 +2375,8 @@ public final class SubNodeContainer extends SingleNodeContainer
             for (int i = 1; i < getNrInPorts(); i++) {
                 inportTypes[i - 1] = getInPort(i).getPortType();
             }
-            m_virtualInNodeIDSuffix = addVirtualInNode(inportTypes, minMaxCoordinates).getIndex();
+            m_virtualInNodeIDSuffix = addVirtualInNode(inportTypes).getID().getIndex();
+            placeVirtualInNode(minMaxCoordinates);
             error = error.concat(String.format(" - creating new instance (ID %s)", m_virtualInNodeIDSuffix));
             loadResult.addError(error);
             if (inputSettings != null) {
@@ -3219,7 +3259,7 @@ public final class SubNodeContainer extends SingleNodeContainer
             }
         }
         // add virtual input/ouput nodes.
-        checkInOutNodesAfterLoad(null, loadResult);
+        checkInOutNodesAfterLoad(loadResult);
         loadLegacyPortNamesAndDescriptionsFromInOutNodes();
 
         // put data input output node if it was executed;
