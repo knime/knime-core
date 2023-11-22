@@ -106,7 +106,7 @@ public class ObsoleteMetaNodeFileWorkflowPersistor extends
             final ReferencedFile workflowKNIMEFile,
             final WorkflowLoadHelper loadHelper,
             final LoadVersion version) {
-        super(workflowDataRepository, workflowKNIMEFile, loadHelper, version, false);
+        super(workflowDataRepository, workflowKNIMEFile, loadHelper, version, false, false);
     }
 
     /** {@inheritDoc} */

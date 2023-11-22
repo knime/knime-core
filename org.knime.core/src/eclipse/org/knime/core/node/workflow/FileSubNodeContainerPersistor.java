@@ -233,7 +233,8 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
         final LoadResult result) throws InvalidSettingsException, IOException {
         super.preLoadNodeContainer(parentPersistor, parentSettings, result);
         NodeSettingsRO nodeSettings = getNodeSettings(); // assigned by super
-        m_workflowPersistor = createWorkflowPersistor(getMetaPersistor().getNodeSettingsFile(), getWorkflowDataRepository());
+        m_workflowPersistor = createWorkflowPersistor(getMetaPersistor().getNodeSettingsFile(),
+            getWorkflowDataRepository(), parentPersistor != null);
         if (m_nameOverwrite != null) {
             m_workflowPersistor.setNameOverwrite(m_nameOverwrite);
             m_nameOverwrite = null;
@@ -412,34 +413,35 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
     }
 
     private FileWorkflowPersistor createWorkflowPersistor(final ReferencedFile nodeSettingsFile,
-        final WorkflowDataRepository workflowDataRepository) {
-        String workflowKNIME = getNodeSettings().getString("workflow-file", WorkflowPersistor.WORKFLOW_FILE);
-        return new FileWorkflowPersistor(workflowDataRepository,
-            new ReferencedFile(nodeSettingsFile.getParent(), workflowKNIME), getLoadHelper(),
-            getLoadVersion(), false) {
+        final WorkflowDataRepository workflowDataRepository, final boolean hasParent) {
+        final var workflowKNIME = getNodeSettings().getString("workflow-file", WorkflowPersistor.WORKFLOW_FILE);
+        final var loadHelper = getLoadHelper();
+        final var isTemplateProject = !hasParent && loadHelper.isTemplateProject();
+        return new FileWorkflowPersistor(workflowDataRepository, // NOSONAR
+            new ReferencedFile(nodeSettingsFile.getParent(), workflowKNIME), loadHelper,
+            getLoadVersion(), false, isTemplateProject) {
             @Override
             public void postLoad(final WorkflowManager wfm, final LoadResult loadResult) {
                 NodeContainerParent ncParent = wfm.getDirectNCParent();
-                if (!(ncParent instanceof SubNodeContainer)) {
-                    String error =
-                        String.format("Parent is not instance of %s but %s", SubNodeContainer.class.getSimpleName(),
-                            ncParent == null ? "<null>" : ncParent.getClass().getSimpleName());
-                    LOGGER.error(error);
-                    setNeedsResetAfterLoad();
-                    setDirtyAfterLoad();
-                    loadResult.addError(error);
-                } else {
-                    SubNodeContainer subnode = (SubNodeContainer)ncParent;
+                if (ncParent instanceof SubNodeContainer subnode) {
                     try {
                         subnode.postLoadWFM();
-                    } catch (Exception e) {
-                        String error =
-                            String.format("Post-load error (%s): %s", e.getClass().getSimpleName(), e.getMessage());
+                    } catch (Exception e) { // NOSONAR
+                        final var error = String.format("Post-load error (%s): %s",
+                            e.getClass().getSimpleName(), e.getMessage());
                         LOGGER.error(error, e);
                         loadResult.addError(error, false);
                         setDirtyAfterLoad();
                         setNeedsResetAfterLoad();
                     }
+                } else {
+                    final var error = String.format("Parent is not instance of %s but %s",
+                        SubNodeContainer.class.getSimpleName(),
+                        ncParent == null ? "<null>" : ncParent.getClass().getSimpleName());
+                    LOGGER.error(error);
+                    setNeedsResetAfterLoad();
+                    setDirtyAfterLoad();
+                    loadResult.addError(error);
                 }
             }
         };

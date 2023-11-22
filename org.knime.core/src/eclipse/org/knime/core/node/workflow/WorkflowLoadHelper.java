@@ -414,7 +414,7 @@ public class WorkflowLoadHelper {
         // ordinary workflow is loaded
         if (templateInfo == null) {
             persistor = new FileWorkflowPersistor(workflowDataRepository, dotKNIMERef, this,
-                version, !isTemplateFlow());
+                version, !isTemplateFlow(), isTemplateProject());
         } else {
             // some template is loaded
             switch (templateInfo.getNodeContainerTemplateType()) {
@@ -426,7 +426,7 @@ public class WorkflowLoadHelper {
                         workflowDotKNIME = new ReferencedFile(dotKNIMERef.getParent(), WorkflowPersistor.WORKFLOW_FILE);
                     }
                     persistor = new FileWorkflowPersistor(workflowDataRepository, workflowDotKNIME, this,
-                        version, !isTemplateFlow());
+                        version, !isTemplateFlow(), isTemplateProject());
                     break;
                 case SubNode:
                     final ReferencedFile settingsDotXML = new ReferencedFile(dotKNIMERef.getParent(),

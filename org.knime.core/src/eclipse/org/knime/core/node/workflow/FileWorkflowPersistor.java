@@ -252,13 +252,17 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
 
     /**
      * Create persistor for load.
+     *
+     * @param workflowDataRepository data repository
      * @param dotKNIMEFile Associated workflow.knime or template.knime file
-     * @param loadHelper The load helper as required by meta persistor.
-     * @param version of loading workflow.
+     * @param loadHelper The load helper as required by meta persistor
+     * @param version of loading workflow
+     * @param isProject indicates whether a workflow project is being loaded
+     * @param isComponentProject indicates whether a component project is being loaded
      */
     FileWorkflowPersistor(final WorkflowDataRepository workflowDataRepository,
         final ReferencedFile dotKNIMEFile, final WorkflowLoadHelper loadHelper,
-        final LoadVersion version, final boolean isProject) {
+        final LoadVersion version, final boolean isProject, final boolean isComponentProject) {
         assert version != null;
         m_workflowDataRepository = workflowDataRepository;
         m_versionString = version;
@@ -267,7 +271,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
         m_connectionSet = new HashSet<ConnectionContainerTemplate>();
         m_obsoleteNodeDirectories = new ArrayList<ReferencedFile>();
         m_isProject = isProject;
-        m_isComponentProject = loadHelper.isTemplateProject();
+        m_isComponentProject = isComponentProject;
     }
 
     /** {@inheritDoc} */
@@ -1851,7 +1855,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
                 wfmFile, getLoadHelper(), getLoadVersion());
         } else {
             return new FileWorkflowPersistor(getWorkflowDataRepository(), wfmFile,
-                getLoadHelper(), getLoadVersion(), false);
+                getLoadHelper(), getLoadVersion(), false, false);
         }
     }
 
