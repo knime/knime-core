@@ -158,7 +158,6 @@ import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeOutputNodeFact
 import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeOutputNodeModel;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.LockFailedException;
-import org.knime.core.util.Pair;
 import org.knime.core.util.ThreadPool;
 import org.knime.shared.workflow.def.BaseNodeDef;
 import org.knime.shared.workflow.def.ComponentNodeDef;
@@ -453,10 +452,10 @@ public final class SubNodeContainer extends SingleNodeContainer
         }
         m_outputs[0] = new Output(FlowVariablePortObject.TYPE_OPTIONAL);
         m_outports[0] = new NodeContainerOutPort(this, FlowVariablePortObject.TYPE_OPTIONAL, 0);
-        Pair<int[], int[]> minMaxCoordinates = getMinMaxCoordinates();
+        MinMaxCoordinates minMaxCoordinates = getMinMaxCoordinates();
         // add virtual in/out nodes and connect them
         NodeID inNodeID = addVirtualInNode(inTypes, minMaxCoordinates);
-        NodeID outNodeID = addVirtualOutNode(outTypes, getMinMaxCoordinates());
+        NodeID outNodeID = addVirtualOutNode(outTypes, minMaxCoordinates);
         for (ConnectionContainer cc : content.getWorkflow().getConnectionsBySource(content.getID())) {
             if (cc.getType() == ConnectionType.WFMTHROUGH) {
                 m_wfm.addConnection(inNodeID, cc.getSourcePort() + 1, outNodeID, cc.getDestPort() + 1);
@@ -486,36 +485,40 @@ public final class SubNodeContainer extends SingleNodeContainer
     }
 
     /** Adds new/empty instance of a virtual input node and returns its ID. */
-    private NodeID addVirtualInNode(final PortType[] inTypes, final Pair<int[], int[]> minMaxCoordinates) {
+    private NodeID addVirtualInNode(final PortType[] inTypes, final MinMaxCoordinates minMaxCoordinates) {
         NodeID inNodeID = m_wfm.createAndAddNode(new VirtualSubNodeInputNodeFactory(this, inTypes));
         final NodeContainer inNodeNC = m_wfm.getNodeContainer(inNodeID);
         inNodeNC.setDeletable(false);
 
-        int[] minCoordinates = minMaxCoordinates.getFirst();
-        int[] maxCoordinates = minMaxCoordinates.getSecond();
-        int x = minCoordinates[0] - 100;
-        int y = (minCoordinates[1] + maxCoordinates[1]) / 2;
+        int x = minMaxCoordinates.minX() - 100;
+        int y = minMaxCoordinates.centerY();
         inNodeNC.setUIInformation(NodeUIInformation.builder().setNodeLocation(x, y, 0, 0).build());
         return inNodeID;
     }
 
     /** Adds new/empty instance of a virtual output node and returns its ID. */
-    private NodeID addVirtualOutNode(final PortType[] outTypes, final Pair<int[], int[]> minMaxCoordinates) {
+    private NodeID addVirtualOutNode(final PortType[] outTypes, final MinMaxCoordinates minMaxCoordinates) {
         NodeID outNodeID = m_wfm.createAndAddNode(new VirtualSubNodeOutputNodeFactory(this, outTypes));
         final NodeContainer outNodeNC = m_wfm.getNodeContainer(outNodeID);
         outNodeNC.setDeletable(false);
 
-        int[] minCoordinates = minMaxCoordinates.getFirst();
-        int[] maxCoordinates = minMaxCoordinates.getSecond();
-        int x = maxCoordinates[0] + 100;
-        int y = (minCoordinates[1] + maxCoordinates[1]) / 2;
+        int x = minMaxCoordinates.maxX() + 100;
+        int y = minMaxCoordinates.centerY();
         outNodeNC.setUIInformation(NodeUIInformation.builder().setNodeLocation(x, y, 0, 0).build());
         return outNodeID;
     }
 
+    /** Return type of {@link #getMinMaxCoordinates()} - workflow bounding box. */
+    private record MinMaxCoordinates(int minX, int minY, int maxX, int maxY) {
+        /** @return the center position in the y direction. */
+        int centerY() {
+            return (minY + maxY) / 2;
+        }
+    }
+
     /** Iterates all nodes and determines min and max x,y coordinates. Used to place virtual in & output nodes.
-     * @return 1st: {minX, minY}, 2nd: {maxX, maxY} */
-    private Pair<int[], int[]> getMinMaxCoordinates() {
+     * @return the bounding box as {@link MinMaxCoordinates} */
+    private MinMaxCoordinates getMinMaxCoordinates() {
         final Collection<NodeContainer> nodeContainers = m_wfm.getNodeContainers();
         final int nodeCount = nodeContainers.size();
         int xmin = nodeCount > 0 ? Integer.MAX_VALUE : 0;
@@ -534,7 +537,7 @@ public final class SubNodeContainer extends SingleNodeContainer
                 }
             }
         }
-        return Pair.create(new int[] {xmin, ymin}, new int[] {xmax, ymax});
+        return new MinMaxCoordinates(xmin, ymin, xmax, ymax);
     }
 
     /** Creates listener, adds it to m_wfm and sets the class field. */
@@ -2269,7 +2272,7 @@ public final class SubNodeContainer extends SingleNodeContainer
         NodeID virtualOutID = getVirtualOutNodeID();
         String error = null;                  // non null in case not is not present of of wrong type
         NodeSettings outputSettings = null;   // settings of previous node if present or null
-        Pair<int[], int[]> minMaxCoordinates; // assigned with node insertion, used for node placement
+        MinMaxCoordinates minMaxCoordinates; // assigned with node insertion, used for node placement
         if (m_wfm.containsNodeContainer(virtualOutID)) {
             NodeContainer virtualOutNC = m_wfm.getNodeContainer(virtualOutID);
             if (virtualOutNC instanceof NativeNodeContainer) {
