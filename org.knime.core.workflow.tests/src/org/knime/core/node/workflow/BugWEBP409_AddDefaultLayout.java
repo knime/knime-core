@@ -134,8 +134,8 @@ public class BugWEBP409_AddDefaultLayout extends WorkflowTestCase {
 		SubNodeContainer container1 = (SubNodeContainer) findNodeContainer(m_subNode1);
 		assertNotNull(container1);
 		NodeID m_subNodeNew = new NodeID(wfm.getID(), 5);
-		SubNodeContainer newComponent = new SubNodeContainer(wfm, m_subNodeNew, container1.getWorkflowManager(),
-				"Test_Node");
+		SubNodeContainer newComponent = SubNodeContainer.newSubNodeContainerFromMetaNodeContent(wfm, m_subNodeNew,
+				container1.getWorkflowManager(), "Test_Node");
 		assertNotNull(newComponent);
 		assertTrue("Problem creating new component layouts layouts", newComponent.getSubnodeLayoutStringProvider()
 				.checkOriginalContains("{\"parentLayoutLegacyMode\":false}"));

@@ -4366,7 +4366,8 @@ public final class WorkflowManager extends NodeContainer
 
             removeNode(wfmID);
 
-            SubNodeContainer subNC = new SubNodeContainer(this, wfmID, subWFM, subWFM.getName());
+            SubNodeContainer subNC =
+                SubNodeContainer.newSubNodeContainerFromMetaNodeContent(this, wfmID, subWFM, subWFM.getName());
             this.addNodeContainer(subNC, /*propagateChanges=*/true);
 
             // rewire connections TO the old metanode:
