@@ -254,7 +254,7 @@ public final class StatisticsExtractors {
         @Override
         public void readRow(final RowRead row, final int rowIndex) {
             m_groups.merge( //
-                row.isMissing(0) ? null : row.getValue(0), //
+                row.isMissing(0) ? null : RowReadUtil.getCell(row.getValue(0)), //
                 1L, //
                 (prevValue, value) -> prevValue + 1 //
             );

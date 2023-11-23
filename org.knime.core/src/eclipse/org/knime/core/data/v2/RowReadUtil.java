@@ -52,7 +52,9 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import org.apache.commons.lang3.NotImplementedException;
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
+import org.knime.core.data.DataValue;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.MissingValueException;
@@ -137,10 +139,25 @@ public final class RowReadUtil {
      */
     public static int readPrimitiveIntValue(final RowValueRead row, final int colIndex) {
         if (row.isMissing(colIndex)) {
-            throw new MissingValueException(row.getValue(colIndex));
+            throw new MissingValueException("Cell is missing.");
         }
         IntValue value = row.getValue(colIndex);
         return value.getIntValue();
+    }
+
+    /**
+     * @param value the value retrieved from a {@link RowValueRead}
+     * @return the materialized DataCell
+     */
+    public static DataCell getCell(final DataValue value) {
+        if (value instanceof DataCell cell) {
+            return cell;
+        } else if (value instanceof ReadValue readValue) {
+            return readValue.getDataCell();
+        } else {
+            throw new IllegalArgumentException(
+                "The DataValue '%s' is neither a DataCell nor a ReadValue.".formatted(value));
+        }
     }
 
     /**
@@ -174,7 +191,7 @@ public final class RowReadUtil {
      */
     public static double readPrimitiveDoubleValue(final RowValueRead row, final int colIndex) {
         if (row.isMissing(colIndex)) {
-            throw new MissingValueException(row.getValue(colIndex));
+            throw new MissingValueException("Cell is missing.");
         }
         DoubleValue value = row.getValue(colIndex);
         return value.getDoubleValue();
