@@ -67,6 +67,9 @@ public interface RowValueRead {
 
     /**
      * Get a {@link DataValue} at a given position.
+     * <b>NOTE:</b> The DataValues are transient and may return a different value if the {@link RowCursor} producing
+     * this RowValueRead is {@link RowCursor#forward() forwarded}. If you need to store the underlying value, access them
+     * via the corresponding access methods that the concrete DataValue interface provides.
      *
      * @param <D> type of the {@link DataValue}
      * @param index the column index
