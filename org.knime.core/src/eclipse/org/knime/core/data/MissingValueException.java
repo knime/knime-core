@@ -98,6 +98,19 @@ public class MissingValueException extends RuntimeException {
     }
 
     /**
+     * Constructs a <code>MissingvalueException</code> with the specified
+     * detail message in the case where a missing value can't be accessed.
+     * Use a helpful message here as it might be displayed to the user.
+     *
+     * @param msg the reason for the missing value
+     * @since 5.2
+     */
+    public MissingValueException(final String msg) {
+        super(msg);
+        m_error = msg;
+    }
+
+    /**
      * Constructs a <code>MissingvalueException</code> for the provided
      * {@link MissingValue} with the specified cause.
      *
