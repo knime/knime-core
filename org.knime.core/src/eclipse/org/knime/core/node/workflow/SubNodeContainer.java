@@ -2922,11 +2922,23 @@ public final class SubNodeContainer extends SingleNodeContainer
         return getTemplateInformation().getExampleInputDataInfo().isPresent();
     }
 
-    /** {@inheritDoc} */
     @Override
     public boolean canResetContainedNodes() {
         // see AP-6886 -- if executed then there must be no downstream node in execution
         return !getInternalState().isExecuted() || getParent().canResetSuccessors(getID());
+    }
+
+    @Override
+    public boolean canModifyStructure() {
+        final InternalNodeContainerState state = getInternalState();
+        if (state.isIdle() || state.isConfigured()) {
+            return true; // if this subnode is non-executing/executed their downstream nodes can't be executing
+        }
+        // if this is executing then it can be still modified (e.g. nodes be added) but once it's green it's green.
+        if (state.isExecuted() && getParent().hasSuccessorInProgress(getID())) {
+            return false;
+        }
+        return getDirectNCParent().canModifyStructure();
     }
 
     /** {@inheritDoc} */

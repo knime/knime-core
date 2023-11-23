@@ -82,6 +82,16 @@ public interface NodeContainerParent {
      */
     public boolean canResetContainedNodes();
 
+    /**
+     * For the special case this parent is a {@link SubNodeContainer}, or this parent is contained in one,
+     * and that container has downstream nodes in execution, return <code>true</code>. Used to determine if
+     * content in a SNC can be modified, whereby "downstream" might not be directly connected to the node in question.
+     *
+     * @return this property.
+     * @since 5.3
+     */
+    boolean canModifyStructure();
+
     /** May return false for nodes contained in subnodes, which cannot be configured until all data is available
      * to the subnode. Used to ensure the user doesn't execute nodes in a subnode unless all data is available. For
      * ordinary workflows/metanodes it always returns true.

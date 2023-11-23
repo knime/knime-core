@@ -1,3 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <component id="org.knime.core" version="2">
+    <resource path="src/eclipse/org/knime/core/node/workflow/NodeContainerParent.java" type="org.knime.core.node.workflow.NodeContainerParent">
+        <filter comment="added method to &quot;quasi-sealed&quot; interface (no api)" id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.NodeContainerParent"/>
+                <message_argument value="canModifyStructure()"/>
+            </message_arguments>
+        </filter>
+    </resource>
 </component>

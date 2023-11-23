@@ -857,6 +857,8 @@ public final class WorkflowManager extends NodeContainer
         final ModifiableNodeCreationConfiguration creationConfig, final int nodeIDSuffix) {
         CheckUtils.checkArgument(nodeIDSuffix >= -1, "Suffix must be -1 or larger or equal to 0: %d", nodeIDSuffix);
         try (WorkflowLock lock = lock()) {
+            CheckUtils.checkState(canModifyStructure(), "Cannot add node to %s at this time (execution in progress?)",
+                getNameWithID());
             final NodeID id;
             if (nodeIDSuffix >= 0) {
                 id = getID().createChild(nodeIDSuffix);
@@ -1125,7 +1127,7 @@ public final class WorkflowManager extends NodeContainer
             if (nc == null) {
                 return false;
             }
-            if (nc.getInternalState().isExecutionInProgress()) {
+            if (!canModifyStructure(nodeID)) {
                 return false;
             }
             if (!nc.isDeletable()) {
@@ -1218,6 +1220,7 @@ public final class WorkflowManager extends NodeContainer
             CheckUtils.checkState(isNewProject, "Children of ROOT workflow manager must have 'isProject' flag set");
         }
         CheckUtils.checkState(!(isNewProject && hasPorts), "Projects must not have ports");
+        CheckUtils.checkState(canModifyStructure(), "Cannot add nodes/subnodes to workflow (in execution?)");
         NodeID newID;
         WorkflowManager wfm;
         try (WorkflowLock lock = lock()) {
@@ -1513,8 +1516,7 @@ public final class WorkflowManager extends NodeContainer
                 return false;
             }
             // get NodeContainer for source/dest - can be null for WFM-connections!
-            NodeContainer sourceNode = m_workflow.getNode(source);
-            NodeContainer destNode = m_workflow.getNode(dest);
+            final NodeContainer sourceNode = m_workflow.getNode(source);
             // sanity checks (index/null)
             final boolean sourceIsWFM = source.equals(this.getID());
             final boolean sourceNodeExists = sourceNode != null;
@@ -1522,6 +1524,7 @@ public final class WorkflowManager extends NodeContainer
                 return false; // source node exists or is WFM itself
             }
             final boolean destIsWFM = dest.equals(this.getID());
+            final NodeContainer destNode = m_workflow.getNode(dest);
             final boolean destNodeExists = destNode != null;
             if (!(destIsWFM || destNodeExists)) {
                 return false; // dest node exists or is WFM itself
@@ -1542,16 +1545,9 @@ public final class WorkflowManager extends NodeContainer
                 if (destNode.getNrInPorts() <= destPort) {
                     return false; // dest Node index exists
                 }
-                // omit execution checks during loading (dest node may
-                // be executing remotely -- SGE execution)
-                if (!currentlyLoadingFlow) {
-                    // destination node may have optional inputs
-                    if (hasSuccessorInProgress(dest)) {
-                        return false;
-                    }
-                    if (destNode.getInternalState().isExecutionInProgress()) {
-                        return false;
-                    }
+                // omit execution checks during loading (dest node may be executing remotely -- SGE execution)
+                if (!currentlyLoadingFlow && !canModifyStructure(dest)) {
+                    return false;
                 }
             } else { // leaving workflow connection
                 assert dest.equals(getID());
@@ -2151,7 +2147,7 @@ public final class WorkflowManager extends NodeContainer
             if (Objects.equals(oldConfigurationOptional.orElse(null), reportConfiguration)) {
                 return;
             }
-            CheckUtils.checkState(!snc.getInternalState().isExecutionInProgress() && !hasSuccessorInProgress(subFlowID),
+            CheckUtils.checkState(canModifyStructure(subFlowID),
                 "Unable to apply report configuration - node is in execution or has executing successors");
             if (oldConfigurationOptional.isPresent() && reportConfiguration == null) { // port removed
                 for (final var connection : getOutgoingConnectionsFor(subFlowID, snc.getNrOutPorts() - 1)) {
@@ -2221,7 +2217,7 @@ public final class WorkflowManager extends NodeContainer
     public void loadNodeSettings(final NodeID id, final NodeSettingsRO settings) throws InvalidSettingsException {
         try (WorkflowLock lock = lock()) {
             NodeContainer nc = getNodeContainer(id);
-            if (!nc.getInternalState().isExecutionInProgress() && !hasSuccessorInProgress(id)) {
+            if (canModifyStructure(id)) {
                 // make sure we are consistent (that is reset + configure)
                 // if we touch upstream nodes implicitly (e.g. loop heads)
                 nc.validateSettings(settings);
@@ -2319,10 +2315,9 @@ public final class WorkflowManager extends NodeContainer
         throws InvalidSettingsException {
         try (WorkflowLock lock = lock()) {
             for (NodeID id : ids) {
-                NodeContainer nc = getNodeContainer(id);
-                if (nc.getInternalState().isExecutionInProgress() || hasSuccessorInProgress(id)) {
-                    throw new IllegalStateException("Cannot load settings into node \"" + nc.getNameWithID()
-                        + "\"; it is executing or has executing successors");
+                if (!canModifyStructure(id)) {
+                    throw new IllegalStateException("Cannot load settings into node \""
+                        + getNodeContainer(id).getNameWithID() + "\"; it is executing or has executing successors");
                 }
             }
             for (NodeID id : ids) {
@@ -5184,8 +5179,12 @@ public final class WorkflowManager extends NodeContainer
     /** {@inheritDoc} */
     @Override
     public boolean canResetContainedNodes() {
-        // workflows and metanodes can always reset their interna (under canReset(NodeID)) unless the parent forbids it
-        return isProject() || getDirectNCParent().canResetContainedNodes();
+        return isProject() || (getDirectNCParent().canResetContainedNodes() && canModifyStructure());
+    }
+
+    @Override
+    public boolean canModifyStructure() {
+        return isProject() || getDirectNCParent().canModifyStructure();
     }
 
     /**
@@ -5211,6 +5210,24 @@ public final class WorkflowManager extends NodeContainer
         if (snc.isModelCompatibleTo(ScopeEndNode.class)) {
             ((NativeNodeContainer)snc).getNode().setScopeStartNode(null);
         }
+    }
+
+    /**
+     * Can the argument node be modified, i.e. not in execution, has no downstream executors and this workflow
+     * itself can be modified (not embedded in a subnode that has downstream executors).
+     *
+     * @param nodeID The node in question.
+     * @return that property.
+     *
+     * @since 5.3
+     */
+    public boolean canModifyStructure(final NodeID nodeID) {
+        assert m_workflowLock.isHeldByCurrentThread();
+        final NodeContainer n = m_workflow.getNode(nodeID);
+        if (n == null) {
+            return false;
+        }
+        return !n.getInternalState().isExecutionInProgress() && !hasSuccessorInProgress(nodeID) && canModifyStructure();
     }
 
     /**
@@ -7627,7 +7644,7 @@ public final class WorkflowManager extends NodeContainer
                 default:
                     return false;
             }
-            return !(nc.getInternalState().isExecutionInProgress() || hasSuccessorInProgress(id));
+            return canModifyStructure(id);
         }
     }
 
@@ -8343,6 +8360,7 @@ public final class WorkflowManager extends NodeContainer
      */
     public WorkflowCopyContent paste(final WorkflowPersistor persistor) {
         try (WorkflowLock lock = lock()) {
+            CheckUtils.checkState(canModifyStructure(), "Can't currently paste into workflow");
             try {
                 return loadContent(persistor, new HashMap<Integer, BufferedDataTable>(), new FlowObjectStack(getID()),
                     new ExecutionMonitor(), new LoadResult("Paste into Workflow"), false);
@@ -8360,6 +8378,7 @@ public final class WorkflowManager extends NodeContainer
      */
     public WorkflowCopyContent paste(final DefClipboardContent content) {
         try (WorkflowLock lock = lock()) {
+            CheckUtils.checkState(canModifyStructure(), "Can't currently paste into workflow");
             try {
                 var defClipboardContent = DefClipboard.getInstance().getContent();
                 // compare payload identifiers, if they match the global DefClipboard contains everything
