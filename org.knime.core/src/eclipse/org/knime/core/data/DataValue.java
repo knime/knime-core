@@ -48,6 +48,7 @@ package org.knime.core.data;
 import javax.swing.Icon;
 
 import org.knime.core.data.renderer.DataValueRendererFamily;
+import org.knime.core.data.v2.RowValueRead;
 import org.knime.core.node.util.SharedIcons;
 import org.knime.core.node.util.ViewUtils;
 
@@ -80,6 +81,32 @@ public interface DataValue {
      * own renderers, comparator, and/or icon.
      */
     public static final UtilityFactory UTILITY = new UtilityFactory();
+
+
+    /**
+     * Materializes this {@link DataValue} into a {@link DataCell}.
+     *
+     * This method addresses the potentially transient nature of {@code DataValue}.
+     * When accessed through {@link RowValueRead#getValue(int)} {@code DataValue} instances are only pointers into the
+     * underlying data storage, so accessing the values at a later point might result in data that is either
+     * inaccessible or altered.
+     * Materializing a {@code DataValue} into a {@code DataCell} ensures that the value is captured and stored in a
+     * stable form.
+     * This persistent representation allows for consistent and reliable access to the data at any subsequent point
+     * in time.
+     *
+     * It's particularly useful in situations where data consistency is crucial, and there's a need to hold a reference
+     * to the original value for later access, analysis, or processing.
+     *
+     * Note: As this method creates a materialized, or "snapshot", version of the data, any future changes to the
+     * originating {@code DataValue} will not be reflected in the returned {@code DataCell}.
+     *
+     * @return a materialized DataCell that represents a stable snapshot of this DataValue at the point of invocation.
+     * @since 5.2
+     */
+    default DataCell materializeDataCell() {
+        throw new UnsupportedOperationException("This DataValue does not implement materializeDataCell.");
+    }
 
     /**
      * Implementation of the meta information to a <code>DataValue</code>.

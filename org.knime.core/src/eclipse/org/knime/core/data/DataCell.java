@@ -106,6 +106,11 @@ public abstract class DataCell implements DataValue, Serializable {
 
     private static final Map<Class<? extends DataCell>, DataType> classToTypeMap = new ConcurrentHashMap<>(100, 1 / 3f);
 
+    @Override
+    public DataCell materializeDataCell() {
+        return this;
+    }
+
     /**
      * Returns this cell's <code>DataType</code>. This method is provided for
      * convenience only, it is a shortcut for

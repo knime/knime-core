@@ -67,4 +67,9 @@ public interface ReadValue extends DataValue {
      * @return a new {@link DataCell}.
      */
     DataCell getDataCell();
+
+    @Override
+    default DataCell materializeDataCell() {
+        return getDataCell();
+    }
 }
