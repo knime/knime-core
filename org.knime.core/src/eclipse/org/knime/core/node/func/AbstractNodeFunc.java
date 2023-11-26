@@ -53,7 +53,8 @@ import org.knime.core.node.NodeFactory;
 /**
  *
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
- * @since 5.2
+ * @noreference This class is not intended to be referenced by clients.
+ * @noextend This class is not intended to be extended by clients.
  */
 public abstract class AbstractNodeFunc implements NodeFunc {
 

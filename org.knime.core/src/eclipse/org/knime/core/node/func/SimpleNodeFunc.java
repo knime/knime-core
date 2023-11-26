@@ -51,12 +51,18 @@ package org.knime.core.node.func;
 import org.knime.core.node.NodeFactory;
 
 /**
+ * NodeFunc for nodes that are registered the traditional way via {@link NodeFactory}.
  *
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
- * @since 5.2
+ * @noreference This interface is not intended to be referenced by clients.
+ * @noimplement This interface is not intended to be implemented by clients.
+ * @noextend This interface is not intended to be extended by clients.
  */
 public interface SimpleNodeFunc extends NodeFunc {
 
+    /**
+     * @return the class of the corresponding node's {@link NodeFactory}
+     */
     Class<? extends NodeFactory<?>> getNodeFactoryClass();
 
     @Override

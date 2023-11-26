@@ -57,7 +57,9 @@ import org.knime.core.node.port.PortObjectSpec;
  * A NodeFunc is a simplified interface to a KNIME node.
  *
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
- * @since 5.2
+ * @noextend This interface is not intended to be extended by clients.
+ * @noimplement This interface is not intended to be implemented by clients.
+ * @noreference This interface is not intended to be referenced by clients.
  */
 public interface NodeFunc {
 
