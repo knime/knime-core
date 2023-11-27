@@ -3109,8 +3109,8 @@ public final class SubNodeContainer extends SingleNodeContainer
                         //(for non-project templates it's done during copy above)
                         copy.getWorkflowManager().resetAndConfigureAll();
 
-                        getWorkflowManager().unsetDirty(); // To emit a `WorkflowEvent.Type.WORKFLOW_CLEAN` event.
-                        unsetDirty();
+                        unsetDirtyAndPropagateToChildren(this);
+                        getChangesTracker().ifPresent(ct -> ct.clearChanges());
                     }
                     copy.setName(null);
 
@@ -3131,6 +3131,21 @@ public final class SubNodeContainer extends SingleNodeContainer
                 tempParent.removeNode(copy.getID());
             }
             workflowDirRef.unlock();
+        }
+    }
+
+    private static void unsetDirtyAndPropagateToChildren(final NodeContainer nc) {
+        if (nc instanceof SubNodeContainer snc) {
+            // Components aren't 'unset dirty' directly because this would also 'unset dirty'
+            // their workflow manager and thus preventing the 'workflow clean' event from being emitted.
+            // The component's dirty-state will change nevertheless since it's derived from the
+            // node container-directory (which is the same as the workflow manager's one).
+            unsetDirtyAndPropagateToChildren(snc.getWorkflowManager());
+        } else if (nc instanceof WorkflowManager wfm) {
+            wfm.unsetDirty();
+            wfm.getNodeContainers().forEach(SubNodeContainer::unsetDirtyAndPropagateToChildren);
+        } else {
+            nc.unsetDirty();
         }
     }
 
