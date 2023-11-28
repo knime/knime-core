@@ -788,7 +788,7 @@ public final class NodeTimer {
                                 Long time = num == null ? 0 : num.longValue();
                                 int creationCount = job3.getInt("nrcreated", 0);
                                 String successor = job3.getString("successor", "");
-                                String successorNodeName = job3.getString("successornodename", null);
+                                String successorNodeName = job3.getString("successornodename", "");
                                 NodeStats ns = new NodeStats(nodeName);
                                 ns.executionCount = execCount;
                                 ns.failureCount = failCount;
