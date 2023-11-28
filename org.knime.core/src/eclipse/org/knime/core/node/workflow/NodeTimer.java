@@ -191,6 +191,7 @@ public final class NodeTimer {
             int failureCount = 0;
             int creationCount = 0;
             String likelySuccessor = N_A;
+            String successorNodeName;
             final String nodeName;
 
             private NodeStats(final String name) {
@@ -291,6 +292,7 @@ public final class NodeTimer {
                 // (statistics over many thousands of users will provide real info)
                 if ((ns.likelySuccessor.equals(N_A)) | (Math.random() >= .5)) {
                     ns.likelySuccessor = NodeKey.get(dest).id();
+                    ns.successorNodeName = dest.getName();
                 }
                 processStatChanges();
             }
@@ -513,6 +515,7 @@ public final class NodeTimer {
                             job3.add("exectime", ns.executionTime);
                             job3.add("nrcreated", ns.creationCount);
                             job3.add("successor", ns.likelySuccessor);
+                            job3.add("successornodename", ns.successorNodeName);
                             jab.add(job3);
                         }
                     }
@@ -785,12 +788,14 @@ public final class NodeTimer {
                                 Long time = num == null ? 0 : num.longValue();
                                 int creationCount = job3.getInt("nrcreated", 0);
                                 String successor = job3.getString("successor", "");
+                                String successorNodeName = job3.getString("successornodename", null);
                                 NodeStats ns = new NodeStats(nodeName);
                                 ns.executionCount = execCount;
                                 ns.failureCount = failCount;
                                 ns.executionTime = time;
                                 ns.creationCount = creationCount;
                                 ns.likelySuccessor = successor;
+                                ns.successorNodeName = successorNodeName;
                                 m_globalNodeStats.put(new NodeKey(NativeNodeContainer.class, nodeID), ns);
                             }
 

@@ -82,7 +82,8 @@ public class NodeTimerTest {
                 "nrfails": 0,
                 "exectime": 0,
                 "nrcreated": 1,
-                "successor": "NodeContainer"
+                "successor": "NodeContainer",
+                "successornodename": "component"
             }
                      """;
 
@@ -94,7 +95,8 @@ public class NodeTimerTest {
                 "nrfails": 0,
                 "exectime": 0,
                 "nrcreated": 2,
-                "successor": "org.knime.core.node.workflow.SubNodeContainer"
+                "successor": "org.knime.core.node.workflow.SubNodeContainer",
+                "successornodename": "component"
             }
                      """;
 
