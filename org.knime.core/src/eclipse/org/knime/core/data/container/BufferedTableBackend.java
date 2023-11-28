@@ -224,13 +224,19 @@ public final class BufferedTableBackend implements TableBackend {
         private final DataTableSpec m_slicedSpec;
 
         TableSlicer(final DataTableSpec spec, final Selection slice) {
-            m_slice = slice;
             var filterColumns = slice.columns();
             if (!filterColumns.allSelected()) {
                 var cols = filterColumns.getSelected();
+                m_slice = Selection.all();
+                m_slice.retainRows(slice.rows());
+                m_slice.retainColumns(IntStream.concat(//
+                    IntStream.of(0), // slice does not include the row index
+                    IntStream.of(slice.columns().getSelected()).map(i -> i + 1)//
+                ).toArray());
                 m_indexMap = i -> cols[i];
                 m_slicedSpec = sliceSpec(spec, cols);
             } else {
+                m_slice = slice;
                 m_indexMap = i -> i;
                 m_slicedSpec = spec;
             }
