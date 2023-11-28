@@ -191,7 +191,7 @@ public final class NodeTimer {
             int failureCount = 0;
             int creationCount = 0;
             String likelySuccessor = N_A;
-            String successorNodeName;
+            String successorNodeName = N_A;
             final String nodeName;
 
             private NodeStats(final String name) {
