@@ -47,68 +47,91 @@ package org.knime.core.node.workflow;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.notNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
-import org.awaitility.Awaitility;
-import org.hamcrest.MatcherAssert;
-import org.hamcrest.Matchers;
+import java.io.File;
+
+import org.junit.Before;
 import org.junit.Test;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.WorkflowEvent.Type;
-import org.knime.core.node.workflow.WorkflowPersistor.MetaNodeLinkUpdateResult;
 import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.util.FileUtil;
-import org.mockito.Mockito;
 
 /**
  * 
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
 public class BugNXT2146_UnsetDirtyChildWorkflowsOfComponent extends WorkflowTestCase {
+	
+	private SubNodeContainer m_componentProject;
+	private WorkflowLoadHelper m_loadHelper;
+	
+	@Before
+	public void loadComponent() throws Exception {
+		var componentDir = FileUtil.createTempDir(getClass().getSimpleName());
+		FileUtil.copyDir(getDefaultWorkflowDirectory(), componentDir);
+		m_loadHelper = new WorkflowLoadHelper(true, true,
+				WorkflowContextV2.forTemporaryWorkflow(componentDir.toPath(), null));
+		m_componentProject = (SubNodeContainer) loadComponent(componentDir, new ExecutionMonitor(), m_loadHelper)
+				.getLoadedInstance();
+	}
 
 	@Test
 	public void testUnsetDirtyChildWorkflowsOfComponentsOnSave() throws Exception {
-		// load component
-		var componentDir = FileUtil.createTempDir(getClass().getSimpleName());
-		FileUtil.copyDir(getDefaultWorkflowDirectory(), componentDir);
-		var loadHelper = new WorkflowLoadHelper(true, true,
-				WorkflowContextV2.forTemporaryWorkflow(componentDir.toPath(), null));
-		var loadResult = loadComponent(componentDir, new ExecutionMonitor(), loadHelper);
-
 		// get nodes
-		var componentProject = (SubNodeContainer) loadResult.getLoadedInstance();
-		var nestedMetanode = (WorkflowManager) componentProject.getWorkflowManager()
-				.findNodeContainer(NodeIDSuffix.fromString("0:5:0:4").prependParent(componentProject.getID()));
-		var nestedComponent = (SubNodeContainer) componentProject.getWorkflowManager()
-				.findNodeContainer(NodeIDSuffix.fromString("0:6:5").prependParent(componentProject.getID()));
+		var nestedMetanode = (WorkflowManager) m_componentProject.getWorkflowManager()
+				.findNodeContainer(NodeIDSuffix.fromString("0:5:0:4").prependParent(m_componentProject.getID()));
+		var nestedComponent = (SubNodeContainer) m_componentProject.getWorkflowManager()
+				.findNodeContainer(NodeIDSuffix.fromString("0:6:5").prependParent(m_componentProject.getID()));
 
 		// set dirty and check
 		nestedMetanode.setDirty();
 		nestedComponent.getWorkflowManager().setDirty();
-		assertDirtyState(true, componentProject, componentProject.getWorkflowManager(), nestedMetanode, nestedComponent,
-				nestedComponent.getWorkflowManager());
+		assertDirtyState(true, m_componentProject, m_componentProject.getWorkflowManager(), nestedMetanode,
+				nestedComponent, nestedComponent.getWorkflowManager());
 
 		// save component and check that everything is clean again and the respective
 		// events have been emitted
 		var componentWorkflowListener = mock(WorkflowListener.class);
-		componentProject.getWorkflowManager().addListener(componentWorkflowListener);
+		m_componentProject.getWorkflowManager().addListener(componentWorkflowListener);
 		var nestedMetanodeWorkflowListener = mock(WorkflowListener.class);
 		nestedMetanode.addListener(nestedMetanodeWorkflowListener);
 		var nestedComponentWorkflowListener = mock(WorkflowListener.class);
 		nestedComponent.getWorkflowManager().addListener(nestedComponentWorkflowListener);
-		componentProject.saveAsTemplate(componentDir, new ExecutionMonitor()); // save
-		assertDirtyState(false, componentProject, componentProject.getWorkflowManager(), nestedMetanode,
+		m_componentProject.saveTemplate(new ExecutionMonitor()); // save
+		assertDirtyState(false, m_componentProject, m_componentProject.getWorkflowManager(), nestedMetanode,
 				nestedComponent, nestedComponent.getWorkflowManager());
 		await().untilAsserted(() -> {
 			verify(componentWorkflowListener).workflowChanged(argThat(e -> Type.WORKFLOW_CLEAN == e.getType()));
 			verify(nestedMetanodeWorkflowListener).workflowChanged(argThat(e -> Type.WORKFLOW_CLEAN == e.getType()));
 			verify(nestedComponentWorkflowListener).workflowChanged(argThat(e -> Type.WORKFLOW_CLEAN == e.getType()));
 		});
+	}
+	
+	/**
+	 * General test to save and load a component project in place (i.e. using
+	 * {@link SubNodeContainer#saveTemplate(ExecutionMonitor)}).
+	 */
+	@Test
+	public void testComponentProjectSaveLoad() throws Exception {
+		var wfm = m_componentProject.getWorkflowManager();
+		assertThat(wfm.getNodeContainers().size(), is(4)); // component input/output, a component and a metanode
+		wfm.collapseIntoMetaNode(
+				new NodeID[] { NodeIDSuffix.fromString("0:5").prependParent(m_componentProject.getID()),
+						NodeIDSuffix.fromString("0:6").prependParent(m_componentProject.getID()) },
+				new WorkflowAnnotationID[0], "metanode");
+		assertThat(wfm.getNodeContainers().size(), is(3));
+		
+		m_componentProject.saveTemplate(new ExecutionMonitor());
+		
+		var reloadedComponentProject = (SubNodeContainer) loadComponent(
+				m_componentProject.getNodeContainerDirectory().getFile(), new ExecutionMonitor(), m_loadHelper)
+				.getLoadedInstance();
+		assertThat(reloadedComponentProject.getNodeContainers().size(), is(3));
 	}
 
 	private static void assertDirtyState(boolean isDirty, NodeContainer... ncs) {

@@ -3046,6 +3046,23 @@ public final class SubNodeContainer extends SingleNodeContainer
         setDirty();
     }
 
+    /**
+     * Saves the component in place (as opposed to {@link #saveAsTemplate(File, ExecutionMonitor)} where a copy is saved
+     * to a new directory).
+     *
+     * @param exec execution monitor
+     * @return information about the component template
+     * @throws IOException If an IO error occurs
+     * @throws CanceledExecutionException If execution is canceled during the operation
+     * @throws LockFailedException If locking failed
+     * @throws InvalidSettingsException if defaults can't be set (meta node settings to be reverted in template)
+     * @since 5.2
+     */
+    public MetaNodeTemplateInformation saveTemplate(final ExecutionMonitor exec)
+        throws IOException, CanceledExecutionException, LockFailedException, InvalidSettingsException {
+        return saveInternal(getNodeContainerDirectory().getFile(), exec, null, false);
+    }
+
     /** {@inheritDoc} */
     @Override
     public MetaNodeTemplateInformation saveAsTemplate(final File directory, final ExecutionMonitor exec)
@@ -3058,29 +3075,42 @@ public final class SubNodeContainer extends SingleNodeContainer
     public MetaNodeTemplateInformation saveAsTemplate(final File directory, final ExecutionMonitor exec,
         final PortObject[] exampleInputData)
         throws IOException, CanceledExecutionException, LockFailedException, InvalidSettingsException {
-        WorkflowManager tempParent = WorkflowManager.lazyInitTemplateWorkflowRoot();
-        SubNodeContainer copy = null;
+        return saveInternal(directory, exec, exampleInputData, true);
+    }
+
+    private MetaNodeTemplateInformation saveInternal(final File directory, final ExecutionMonitor exec,
+        final PortObject[] exampleInputData, final boolean createCopy)
+        throws IOException, CanceledExecutionException, LockFailedException, InvalidSettingsException {
+        WorkflowManager tempParent = null;
+        SubNodeContainer copyOrThis = null;
         ReferencedFile workflowDirRef = new ReferencedFile(directory);
         directory.mkdir();
         workflowDirRef.lock();
         ReferencedFile artifactsDirRef = getArtifactsDir(workflowDirRef);
         try {
-            WorkflowCopyContent.Builder cntBuilder = WorkflowCopyContent.builder();
-            cntBuilder.setNodeIDs(getID());
-            WorkflowCopyContent cnt;
-            synchronized (m_nodeMutex) {
-                cnt = tempParent.copyFromAndPasteHere(getParent(), cntBuilder.build());
+            if (createCopy) {
+                tempParent = WorkflowManager.lazyInitTemplateWorkflowRoot();
+                WorkflowCopyContent.Builder cntBuilder = WorkflowCopyContent.builder();
+                cntBuilder.setNodeIDs(getID());
+                WorkflowCopyContent cnt;
+                synchronized (m_nodeMutex) {
+                    cnt = tempParent.copyFromAndPasteHere(getParent(), cntBuilder.build());
+                }
+                NodeID cID = cnt.getNodeIDs()[0];
+                copyOrThis = ((SubNodeContainer)tempParent.getNodeContainer(cID));
+            } else {
+                copyOrThis = this;
             }
-            NodeID cID = cnt.getNodeIDs()[0];
-            copy = ((SubNodeContainer)tempParent.getNodeContainer(cID));
-            try (WorkflowLock copyLock = copy.lock()) {
-                SingleNodeContainerSettings sncSettings = copy.getSingleNodeContainerSettings().clone();
-                sncSettings.setModelSettings(new NodeSettings("empty model"));
-                sncSettings.setVariablesSettings(new NodeSettings("empty variables setting"));
-                NodeSettings newSettings = new NodeSettings("new settings");
-                sncSettings.save(newSettings);
-                copy.loadSettings(newSettings);
-                synchronized (copy.m_nodeMutex) {
+            try (WorkflowLock copyLock = copyOrThis.lock()) {
+                if (createCopy) {
+                    SingleNodeContainerSettings sncSettings = copyOrThis.getSingleNodeContainerSettings().clone();
+                    sncSettings.setModelSettings(new NodeSettings("empty model"));
+                    sncSettings.setVariablesSettings(new NodeSettings("empty variables setting"));
+                    NodeSettings newSettings = new NodeSettings("new settings");
+                    sncSettings.save(newSettings);
+                    copyOrThis.loadSettings(newSettings);
+                }
+                synchronized (copyOrThis.m_nodeMutex) {
                     NodeSettingsRO exampleInputDataInfo = null;
                     List<FlowVariable> incomingFlowVariables = Collections.emptyList();
                     if (!isProject() && exampleInputData != null) {
@@ -3091,11 +3121,11 @@ public final class SubNodeContainer extends SingleNodeContainer
                         incomingFlowVariables = new ArrayList<>(
                             Node.invokeGetAvailableFlowVariables(getVirtualInNodeModel(), FlowVariable.Type.values())
                                 .values());
-                    } else if (isProject() && copy.hasExampleInputData()) {
+                    } else if (isProject() && copyOrThis.hasExampleInputData()) {
                         //save a component that is not embedded in a workflow
                         //and has example data
-                        exampleInputDataInfo = copy.getTemplateInformation().getExampleInputDataInfo().get();
-                        incomingFlowVariables = copy.getTemplateInformation().getIncomingFlowVariables();
+                        exampleInputDataInfo = copyOrThis.getTemplateInformation().getExampleInputDataInfo().get();
+                        incomingFlowVariables = copyOrThis.getTemplateInformation().getIncomingFlowVariables();
                         if (!directory.equals(getNodeContainerDirectory().getFile())) {
                             //~save as -> copy example data over
                             FileSubNodeContainerPersistor.copyExampleInputData(
@@ -3107,45 +3137,29 @@ public final class SubNodeContainer extends SingleNodeContainer
                         //makes sure that all contained nodes are IDLE
                         //templates/components are always saved in IDLE-state
                         //(for non-project templates it's done during copy above)
-                        copy.getWorkflowManager().resetAndConfigureAll();
-
-                        unsetDirtyAndPropagateToChildren(this);
-                        getChangesTracker().ifPresent(ct -> ct.clearChanges());
+                        copyOrThis.getWorkflowManager().resetAndConfigureAll();
                     }
-                    copy.setName(null);
+                    copyOrThis.setName(null);
 
                     MetaNodeTemplateInformation template =
                         MetaNodeTemplateInformation.createNewTemplate(exampleInputDataInfo, incomingFlowVariables);
-                    copy.setTemplateInformation(template);
-                    NodeSettings templateSettings = MetaNodeTemplateInformation.createNodeSettingsForTemplate(copy);
+                    copyOrThis.setTemplateInformation(template);
+                    NodeSettings templateSettings =
+                        MetaNodeTemplateInformation.createNodeSettingsForTemplate(copyOrThis);
                     templateSettings.saveToXML(
                         new FileOutputStream(new File(workflowDirRef.getFile(), WorkflowPersistor.TEMPLATE_FILE)));
 
-                    FileSingleNodeContainerPersistor.save(copy, workflowDirRef, exec,
+                    FileSingleNodeContainerPersistor.save(copyOrThis, workflowDirRef, exec,
                         new WorkflowSaveHelper(true, false));
+
                     return template;
                 }
             }
         } finally {
-            if (copy != null) {
-                tempParent.removeNode(copy.getID());
+            if (copyOrThis != null && tempParent != null) {
+                tempParent.removeNode(copyOrThis.getID());
             }
             workflowDirRef.unlock();
-        }
-    }
-
-    private static void unsetDirtyAndPropagateToChildren(final NodeContainer nc) {
-        if (nc instanceof SubNodeContainer snc) {
-            // Components aren't 'unset dirty' directly because this would also 'unset dirty'
-            // their workflow manager and thus preventing the 'workflow clean' event from being emitted.
-            // The component's dirty-state will change nevertheless since it's derived from the
-            // node container-directory (which is the same as the workflow manager's one).
-            unsetDirtyAndPropagateToChildren(snc.getWorkflowManager());
-        } else if (nc instanceof WorkflowManager wfm) {
-            wfm.unsetDirty();
-            wfm.getNodeContainers().forEach(SubNodeContainer::unsetDirtyAndPropagateToChildren);
-        } else {
-            nc.unsetDirty();
         }
     }
 
