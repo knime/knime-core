@@ -57,6 +57,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.IntFunction;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import org.eclipse.core.runtime.IPath;
@@ -129,14 +130,19 @@ public record NodeSpec(Factory factory, NodeType type, Ports ports, Metadata met
         }
 
         final var fact = NodeSpec.Factory.of(factory);
-        final var ports = Ports.of(node, factory);
-        final var description = Metadata.of(factory, categoryPath, catExts, afterID);
+        // NXT-2233 harden against buggy node descriptions
+        final var ports = tryEval(() -> Ports.of(node, factory), new Ports(List.of(), List.of(), List.of()));
+        final var nodeType = tryEval(factory::getType, NodeType.Other);
+        final var vendor = tryEval(() -> Vendor.of(factory), null);
+        final var fallBackDescription =
+            new Metadata(vendor, factory.getNodeName(), nodeType, categoryPath, afterID, List.of(), List.of());
+        final var description =
+            tryEval(() -> Metadata.of(factory, categoryPath, catExts, afterID), fallBackDescription);
 
         final var deprecated = factory.isDeprecated();
-
         final var icon = factory.getIcon();
 
-        return Optional.of(new NodeSpec(fact, factory.getType(), ports, description, icon, deprecated, hidden));
+        return Optional.of(new NodeSpec(fact, nodeType, ports, description, icon, deprecated, hidden));
     }
 
     /**
@@ -275,11 +281,13 @@ public record NodeSpec(Factory factory, NodeType type, Ports ports, Metadata met
                         "Port name mismatch, description name is %s but port name is %s", portDescriptionName.apply(i),
                         portName.apply(i));
                 }
-                final var index = i;
-                final var type = CoreToDefUtil.toPortTypeDef(portType.apply(i));
-                final var name = portName.apply(i);
-                final var description = portDescription.apply(i);
-                ports.add(new Port(index, type, name, description));
+                final var portIndex = i;
+                final var type = CoreToDefUtil.toPortTypeDef(portType.apply(portIndex));
+                // NXT-2233 harden against buggy node descriptions
+                final var name = tryEval(() -> portName.apply(portIndex), "No port name provided by node description");
+                var description =
+                    tryEval(() -> portDescription.apply(portIndex), "No port description provided by node description");
+                ports.add(new Port(portIndex, type, name, description));
             }
             return ports;
         }
@@ -338,7 +346,8 @@ public record NodeSpec(Factory factory, NodeType type, Ports ports, Metadata met
             final var keywords = List.of(factory.getKeywords());
 
             final var tags = new HashSet<String>();
-            for (IPath path = new Path(categoryPath); !path.isRoot(); path = path.removeLastSegments(1)) {
+            for (IPath path = new Path(categoryPath); !path.isEmpty() && !path.isRoot(); path =
+                path.removeLastSegments(1)) {
                 Optional.ofNullable(catExts.get(path.toString())).ifPresent(ext -> tags.add(ext.getName()));
             }
 
@@ -358,6 +367,15 @@ public record NodeSpec(Factory factory, NodeType type, Ports ports, Metadata met
             }
         }
 
+    }
+
+    private static <T> T tryEval(final Supplier<T> supplier, final T defaultValue) {
+        try {
+            return supplier.get();
+        } catch (Exception e) {
+            NodeLogger.getLogger(NodeSpec.class).debug("Cannot evaluate supplier.", e);
+            return defaultValue;
+        }
     }
 
     @Override
