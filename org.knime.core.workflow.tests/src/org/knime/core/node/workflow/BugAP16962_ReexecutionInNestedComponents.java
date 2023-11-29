@@ -144,7 +144,7 @@ public class BugAP16962_ReexecutionInNestedComponents extends WorkflowTestCase {
 		Map<String, FlowVariable> flowVars = page.getOutgoingFlowObjectStack().getAllAvailableFlowVariables();
 
 		// widgets _not_ being re-executed in the nested component
-		assertThat(flowVars.get("Text Output Widget").getIntValue(), is(1));
+		assertThat(flowVars.get("Text Output Widget (legacy)").getIntValue(), is(1));
 		assertThat(flowVars.get("String Widget").getIntValue(), is(1));
 
 		// widgets being re-executed in the nested component
@@ -174,7 +174,7 @@ public class BugAP16962_ReexecutionInNestedComponents extends WorkflowTestCase {
 		Map<String, FlowVariable> flowVars = page.getOutgoingFlowObjectStack().getAllAvailableFlowVariables();
 
 		// widgets _not_ being re-executed in the nested component
-		assertThat(flowVars.get("Text Output Widget").getIntValue(), is(1));
+		assertThat(flowVars.get("Text Output Widget (legacy)").getIntValue(), is(1));
 		assertThat(flowVars.get("String Widget").getIntValue(), is(1));
 
 		// widgets _not_ being re-executed on page top-level

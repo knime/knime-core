@@ -136,7 +136,7 @@ public class BugWEBP803_OnlyResetNodesToBeReexecuted extends WorkflowTestCase {
 		Map<String, FlowVariable> flowVars = page.getOutgoingFlowObjectStack().getAllAvailableFlowVariables();
 
 		// widgets not being re-executed
-		assertThat(flowVars.get("Text Output Widget").getIntValue(), is(1));
+		assertThat(flowVars.get("Text Output Widget (legacy)").getIntValue(), is(1));
 		assertThat(flowVars.get("String Widget").getIntValue(), is(1));
 
 		// widgets being re-executed

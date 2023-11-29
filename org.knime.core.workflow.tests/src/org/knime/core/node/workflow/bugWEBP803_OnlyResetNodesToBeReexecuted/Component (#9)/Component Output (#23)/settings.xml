@@ -12,7 +12,7 @@
                 <entry key="array-size" type="xint" value="4"/>
                 <entry key="0" type="xstring" value="Refresh Button Widget"/>
                 <entry key="1" type="xstring" value="String Widget"/>
-                <entry key="2" type="xstring" value="Text Output Widget"/>
+                <entry key="2" type="xstring" value="Text Output Widget (legacy)"/>
                 <entry key="3" type="xstring" value="Table View (JavaScript)"/>
             </config>
             <config key="excluded_names">
