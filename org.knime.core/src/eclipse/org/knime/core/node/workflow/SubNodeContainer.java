@@ -3138,6 +3138,9 @@ public final class SubNodeContainer extends SingleNodeContainer
                         //templates/components are always saved in IDLE-state
                         //(for non-project templates it's done during copy above)
                         copyOrThis.getWorkflowManager().resetAndConfigureAll();
+
+                        // hack only required for the classic UI
+                        unsetDirty();
                     }
                     copyOrThis.setName(null);
 
