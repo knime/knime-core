@@ -227,9 +227,9 @@ public final class BufferedTableBackend implements TableBackend {
             var filterColumns = slice.columns();
             if (!filterColumns.allSelected()) {
                 var cols = filterColumns.getSelected();
-                m_slice = Selection.all();
-                m_slice.retainRows(slice.rows());
-                m_slice.retainColumns(IntStream.concat(//
+                m_slice = Selection.all()//
+                        .retainRows(slice.rows())//
+                        .retainColumns(IntStream.concat(//
                     IntStream.of(0), // slice does not include the row index
                     IntStream.of(slice.columns().getSelected()).map(i -> i + 1)//
                 ).toArray());
