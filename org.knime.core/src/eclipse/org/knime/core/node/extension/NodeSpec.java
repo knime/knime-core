@@ -285,8 +285,10 @@ public record NodeSpec(Factory factory, NodeType type, Ports ports, Metadata met
                 final var type = CoreToDefUtil.toPortTypeDef(portType.apply(portIndex));
                 // NXT-2233 harden against buggy node descriptions
                 final var name = tryEval(() -> portName.apply(portIndex), "No port name provided by node description");
+                // port names are 0 based, port descriptions are 1 based
                 var description =
-                    tryEval(() -> portDescription.apply(portIndex), "No port description provided by node description");
+                    tryEval(() -> portDescription.apply(portIndex - 1),
+                        "No port description provided by node description");
                 ports.add(new Port(portIndex, type, name, description));
             }
             return ports;

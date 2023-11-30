@@ -42,42 +42,50 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- *
+ * 
  * History
  *   29 Nov 2023 (carlwitt): created
  */
 package org.knime.core.node.extension;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+import java.io.File;
+import java.io.IOException;
 
-public final class TestNodeFactory extends NodeFactory<TestNodeModel> {
-    @Override
-    public TestNodeModel createNodeModel() {
-        // but node description provides only information for one input and output port
-        return new TestNodeModel(2, 2);
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+
+final class BuggyNodeModel extends NodeModel {
+    protected BuggyNodeModel(final int nrInDataPorts, final int nrOutDataPorts) {
+        super(nrInDataPorts, nrOutDataPorts);
     }
 
     @Override
-    protected int getNrNodeViews() {
-        // but node description has only one view element
-        return 1;
+    protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec)
+        throws IOException, CanceledExecutionException {
     }
 
     @Override
-    public NodeView<TestNodeModel> createNodeView(final int viewIndex, final TestNodeModel nodeModel) {
-        return null;
+    protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
+        throws IOException, CanceledExecutionException {
     }
 
     @Override
-    protected boolean hasDialog() {
-        return false;
+    protected void saveSettingsTo(final NodeSettingsWO settings) {
     }
 
     @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return null;
+    protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
     }
 
+    @Override
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
+    }
+
+    @Override
+    protected void reset() {
+    }
 }

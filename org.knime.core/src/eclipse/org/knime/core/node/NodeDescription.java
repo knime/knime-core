@@ -104,7 +104,8 @@ public abstract class NodeDescription {
     /**
      * Returns a description for an input port.
      *
-     * @param index the index of the input port, starting at 0
+     * @param index the index of the input port, starting at 0. Does not include the single flow-variable port that
+     *              is present on any node.
      * @return an input port description or <code>null</code> if no description exists
      * @see NodeFactory#getInportDescription(int)
      */
@@ -113,7 +114,8 @@ public abstract class NodeDescription {
     /**
      * Returns a name for an input port.
      *
-     * @param index the index of the input port, starting at 0
+     * @param index the index of the input port, starting at 0. Does not include the single flow-variable port that
+    *              is present on any node.
      * @return an input port name or <code>null</code> if not name is known
      * @see NodeFactory#getInportName(int)
      */
@@ -198,7 +200,8 @@ public abstract class NodeDescription {
     /**
      * Returns a description for an output port.
      *
-     * @param index the index of the output port, starting at 0
+     * @param index the index of the output port, starting at 0. Does not include the single flow-variable port that
+     *              is present on any node.
      * @return an output port description or <code>null</code> if not description exists
      * @see NodeFactory#getOutportDescription(int)
      */
@@ -207,7 +210,8 @@ public abstract class NodeDescription {
     /**
      * Returns a name for an output port.
      *
-     * @param index the index of the output port, starting at 0
+     * @param index the index of the output port, starting at 0. Does not include the single flow-variable port that
+     *      *              is present on any node.
      * @return an output port name or <code>null</code> if no name is known
      * @see NodeFactory#getOutportName(int)
      */

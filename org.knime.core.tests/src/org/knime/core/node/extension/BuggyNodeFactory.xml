@@ -35,10 +35,8 @@ xsi:schemaLocation="http://knime.org/node/v4.1 http://knime.org/node/v4.1.xsd">
         not contain missing values in these two columns. If they do, the node will fail during execution.</option>
 	</fullDescription>
     <ports>
-        <inPort index="0" name="inport1">inport1 description</inPort>
-        <inPort index="1" name="inport2">inport2 description</inPort>
-        <outPort index="0" name="outport1">outport1 description</outPort>
-        <outPort index="1" name="outport2">outport2 description</outPort>
+        <inPort index="0" name="Input table">Table containing at least two columns to compare.</inPort>
+        <outPort index="0" name="Confusion matrix">The confusion matrix.</outPort>
 	</ports>
 	<views>
 		<view index="0" name="Confusion Matrix">

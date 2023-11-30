@@ -461,7 +461,8 @@ public abstract class NodeFactory<T extends NodeModel> {
     /**
      * Returns a description for an input port.
      *
-     * @param index the index of the input port, starting at 0
+     * @param index the index of the input port, starting at 0. Does not include the single flow-variable port that is
+     *            present on any node.
      * @return an input port description
      */
     public final String getInportDescription(final int index) {
@@ -472,7 +473,8 @@ public abstract class NodeFactory<T extends NodeModel> {
     /**
      * Returns a description for an output port.
      *
-     * @param index the index of the output port, starting at 0
+     * @param index the index of the output port, starting at 0. Does not include the single flow-variable port that is
+     *            present on any node.
      * @return an output port description
      */
     public final String getOutportDescription(final int index) {
