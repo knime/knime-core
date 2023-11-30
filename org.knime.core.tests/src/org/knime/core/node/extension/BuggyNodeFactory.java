@@ -48,25 +48,31 @@
  */
 package org.knime.core.node.extension;
 
+import java.io.IOException;
+
+import org.apache.xmlbeans.XmlException;
+import org.knime.core.node.NodeDescription;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
+import org.w3c.dom.Element;
+import org.xml.sax.SAXException;
 
-public final class TestNodeFactory extends NodeFactory<TestNodeModel> {
+public final class BuggyNodeFactory extends NodeFactory<BuggyNodeModel> {
     @Override
-    public TestNodeModel createNodeModel() {
+    public BuggyNodeModel createNodeModel() {
         // but node description provides only information for one input and output port
-        return new TestNodeModel(2, 2);
+        return new BuggyNodeModel(2, 2);
     }
 
     @Override
     protected int getNrNodeViews() {
         // but node description has only one view element
-        return 1;
+        return 2;
     }
 
     @Override
-    public NodeView<TestNodeModel> createNodeView(final int viewIndex, final TestNodeModel nodeModel) {
+    public NodeView<BuggyNodeModel> createNodeView(final int viewIndex, final BuggyNodeModel nodeModel) {
         return null;
     }
 
@@ -78,6 +84,80 @@ public final class TestNodeFactory extends NodeFactory<TestNodeModel> {
     @Override
     protected NodeDialogPane createNodeDialogPane() {
         return null;
+    }
+
+    @Override
+    protected NodeDescription createNodeDescription() throws SAXException, IOException, XmlException {
+        final var defaultNodeDescription = super.createNodeDescription();
+        return new NodeDescription() {
+
+            @Override
+            public Element getXMLDescription() {
+                // the node factory cannot be created if this throws an exception
+                return defaultNodeDescription.getXMLDescription();
+            }
+
+            @Override
+            public String getViewName(final int index) {
+                throw new IllegalStateException("This test node description always fails");
+            }
+
+            @Override
+            public String getViewDescription(final int index) {
+                // the node instance cannot be created if this throws an exception
+                return null;
+            }
+
+            @Override
+            public int getViewCount() {
+                // but node description has only one view element
+                return 2;
+            }
+
+            @Override
+            public NodeType getType() {
+                throw new IllegalStateException("This test node description always fails");
+            }
+
+            @Override
+            public String getOutportName(final int index) {
+                // the node instance cannot be created if this throws an exception
+                return null;
+            }
+
+            @Override
+            public String getOutportDescription(final int index) {
+                throw new IllegalStateException("This test node description always fails");
+            }
+
+            @Override
+            public String getNodeName() {
+                // the node factory cannot be created if this throws an exception
+                return defaultNodeDescription.getNodeName();
+            }
+
+            @Override
+            public String getInteractiveViewName() {
+                throw new IllegalStateException("This test node description always fails");
+            }
+
+            @Override
+            public String getInportName(final int index) {
+                // the node instance cannot be created if this throws an exception
+                return null;
+            }
+
+            @Override
+            public String getInportDescription(final int index) {
+                throw new IllegalStateException("This test node description always fails");
+            }
+
+            @Override
+            public String getIconPath() {
+                // the node factory cannot be created if this throws an exception
+                return defaultNodeDescription.getIconPath();
+            }
+        };
     }
 
 }
