@@ -1,0 +1,194 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "NodeTimer",
+  "type": "object",
+  "description": "Instrumentation data provided by the AP.",
+  "properties": {
+    "version": {
+      "description": "The Analytics Platform version.",
+      "type": "string"
+    },
+    "created": {
+      "description": "When file containing the instrumentation data has been created for the first time.",
+      "type": "string"
+    },
+    "nodestats": {
+      "type": "object",
+      "description": "The statistics per node type.",
+      "properties": {
+        "nodes": {
+          "type": "array",
+          "description": "Statistics for native nodes that have been used so far.",
+          "items": {
+            "$ref": "#/$defs/nodestats"
+          }
+        },
+        "metaNodes": {
+          "description": "Either an empty object or the statistics for metanodes (aggregated for all metanodes).",
+          "anyOf": [
+            {
+              "type": "object",
+              "description": "empty object",
+              "additionalProperties": false
+            },
+            {
+              "$ref": "#/$defs/nodestats"
+            }
+          ]
+        },
+        "wrappedNodes": {
+          "description": "Either an empty object or the statistics for components (aggregated for all components).",
+          "anyOf": [
+            {
+              "type": "object",
+              "description": "empty object",
+              "additionalProperties": false
+            },
+            {
+              "$ref": "#/$defs/nodestats"
+            }
+          ]
+        },
+        "createdVia": {
+          "type": "object",
+          "description": "A map from the 'node creation type' (JAVA_UI, WEB_UI, JAVA_UI_HUB, WEB_UI_HUB, WEB_UI_QUICK_INSERTION_RECOMMENDED) to the number of times a node has been created that way.",
+          "additionalProperties": {
+            "type": "integer"
+          }
+        }
+      },
+      "required": [
+        "nodes",
+        "metaNodes",
+        "wrappedNodes",
+        "createdVia"
+      ]
+    },
+    "uptime": {
+      "description": "Average up-time (moving average relative to the number of launches).",
+      "type": "integer"
+    },
+    "workflowsOpened": {
+      "description": "The total number of workflows that have been opened in classic or modern UI.",
+      "type": "integer"
+    },
+    "remoteWorkflowsOpened": {
+      "description": "The total number of workflows opened from a Server or Hub repository (not via the remote workflow editor).",
+      "type": "integer"
+    },
+    "columnarStorageWorkflowsOpened": {
+      "description": "The number of workflows that have been opened with the columnar backend enabled.",
+      "type": "integer"
+    },
+    "workflowsImported": {
+      "description": "The number of worklfows imported (via classic or modern UI). The import of a workflow group is counted as 1.",
+      "type": "integer"
+    },
+    "workflowsExported": {
+      "description": "The number of workflows exported (via classic or modern UI). The export of a workflow group is counted as 1.",
+      "type": "integer"
+    },
+    "webUIPerspectiveSwitches": {
+      "description": "The number of switches to the modern (web-based) UI.",
+      "type": "integer"
+    },
+    "javaUIPerspectiveSwitches": {
+      "description": "The number of switches to the classic (java-based) UI.",
+      "type": "integer"
+    },
+    "lastUsedPerspective": {
+      "description": "The last used perspective (e.g. starter nodes).",
+      "type": "string",
+      "enum": [
+        "none (classic)",
+        "none",
+        "starter"
+      ]
+    },
+    "launches": {
+      "description": "The number of AP launches.",
+      "type": "integer"
+    },
+    "lastApplicationID": {
+      "description": "A unique identifier of the application. Potentially controlled by the 'eclipse.application' system property.",
+      "type": "string"
+    },
+    "timeSinceLastStart": {
+      "description": "The uptime since the last start.",
+      "type": "integer"
+    },
+    "crashes": {
+      "description": "The number of times the AP was not shutdown properly.",
+      "type": "integer"
+    },
+    "properlyShutDown": {
+      "description": "Whether the file was written on shutdown or not. Not relevant for instrumentation, just used to estimate the number of crashes.",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "version",
+    "created",
+    "nodestats",
+    "uptime",
+    "workflowsOpened",
+    "remoteWorkflowsOpened",
+    "columnarStorageWorkflowsOpened",
+    "workflowsImported",
+    "workflowsExported",
+    "webUIPerspectiveSwitches",
+    "javaUIPerspectiveSwitches",
+    "lastUsedPerspective",
+    "launches",
+    "lastApplicationID",
+    "timeSinceLastStart",
+    "crashes",
+    "properlyShutDown"
+  ],
+  "$defs": {
+    "nodestats": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "A globally unique id that will never change for a particular node. Not present in case of metanodes and components.",
+          "type": "string"
+        },
+        "nodename": {
+          "description": "The node's name",
+          "type": "string"
+        },
+        "nrexecs": {
+          "description": "The overall number of executions of this node.",
+          "type": "integer"
+        },
+        "nrfails": {
+          "description": "The overall number of failures of this node.",
+          "type": "integer"
+        },
+        "exectime": {
+          "description": "The total execution time of all node execution together.",
+          "type": "integer"
+        },
+        "nrcreated": {
+          "description": "The overall numbers of creations of this node.",
+          "type": "integer"
+        },
+        "successor": {
+          "description": "The id of the most recently used successor-node for this node.",
+          "type": "string"
+        },
+        "successornodename": {
+          "description": "The name of the successor specified via the id at 'successor'.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "nodename",
+        "nrexecs",
+        "nrfails",
+        "exectime",
+        "nrcreated"
+      ]
+    }
+  }
+}

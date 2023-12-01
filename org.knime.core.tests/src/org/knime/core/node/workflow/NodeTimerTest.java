@@ -52,6 +52,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 
 import org.junit.jupiter.api.AfterEach;
@@ -66,6 +67,9 @@ import org.knime.testing.util.WorkflowManagerUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.networknt.schema.JsonSchema;
+import com.networknt.schema.JsonSchemaFactory;
+import com.networknt.schema.SpecVersion;
 
 /**
  * Tests {@link NodeTimer}.
@@ -151,6 +155,10 @@ public class NodeTimerTest {
         assertThatJson(jsonString, "/nodestats/metaNodes").isEqualTo(EXPECTED_NODESTATS_METANODES);
         assertThatJson(jsonString, "/nodestats/wrappedNodes").isEqualTo("{}");
 
+        var schema = readNodeTimerSchema();
+        var errors = schema.validate(MAPPER.readTree(jsonString));
+        assertThat(errors).as("Node timer schema validation errors").isEmpty();
+
         NodeTimer.GLOBAL_TIMER.addNodeCreation(nnc);
         var snc = createComponent();
         NodeTimer.GLOBAL_TIMER.addNodeCreation(snc);
@@ -161,6 +169,12 @@ public class NodeTimerTest {
         jsonString = Files.readString(statsFile.toPath());
         assertThatJson(jsonString, "/nodestats/nodes/0").isEqualTo(EXPECTED_NODESTATS_NODE_2);
         assertThatJson(jsonString, "/nodestats/wrappedNodes").isEqualTo(EXPECTED_NODESTATS_WRAPPEDNODES);
+    }
+
+    private static JsonSchema readNodeTimerSchema() {
+        JsonSchemaFactory factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V4);
+        InputStream is = NodeTimerTest.class.getResourceAsStream("NodeTimerSchema.json");
+        return factory.getSchema(is);
     }
 
     private NativeNodeContainer createNode() {

@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
+	<classpathentry exported="true" kind="lib" path="lib/jackson-dataformat-yaml-2.15.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/slf4j-api-2.0.7.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/itu-1.7.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/json-schema-validator-1.0.87.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/byte-buddy-1.14.8.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/equalsverifier-3.15.2.jar" sourcepath="lib/equalsverifier-3.15.2-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/objenesis-3.3.jar"/>
