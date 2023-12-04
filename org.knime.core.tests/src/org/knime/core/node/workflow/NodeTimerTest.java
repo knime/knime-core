@@ -62,6 +62,7 @@ import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.exec.dataexchange.in.PortObjectInNodeFactory;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.NodeTimer.GlobalNodeStats;
+import org.knime.core.node.workflow.NodeTimer.GlobalNodeStats.NodeCreationType;
 import org.knime.testing.util.WorkflowManagerUtil;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -143,6 +144,7 @@ public class NodeTimerTest {
     void testNodeStatsInNodeUsageFile() throws IOException {
         var nnc = createNode();
         NodeTimer.GLOBAL_TIMER.addNodeCreation(nnc);
+        NodeTimer.GLOBAL_TIMER.incNodeCreatedVia(NodeCreationType.WEB_UI);
 
         var wfm = createMetanode();
         NodeTimer.GLOBAL_TIMER.addNodeCreation(wfm);
@@ -154,12 +156,16 @@ public class NodeTimerTest {
         assertThatJson(jsonString, "/nodestats/nodes/0").isEqualTo(EXPECTED_NODESTATS_NODE_1);
         assertThatJson(jsonString, "/nodestats/metaNodes").isEqualTo(EXPECTED_NODESTATS_METANODES);
         assertThatJson(jsonString, "/nodestats/wrappedNodes").isEqualTo("{}");
+        assertThatJson(jsonString, "/nodestats/createdVia").isEqualTo("""
+                {"WEB_UI" : 1}
+                """);
 
         var schema = readNodeTimerSchema();
         var errors = schema.validate(MAPPER.readTree(jsonString));
         assertThat(errors).as("Node timer schema validation errors").isEmpty();
 
         NodeTimer.GLOBAL_TIMER.addNodeCreation(nnc);
+        NodeTimer.GLOBAL_TIMER.incNodeCreatedVia(NodeCreationType.WEB_UI_HUB);
         var snc = createComponent();
         NodeTimer.GLOBAL_TIMER.addNodeCreation(snc);
         repeat(() -> NodeTimer.GLOBAL_TIMER.addConnectionCreation(nnc, snc), 20);
