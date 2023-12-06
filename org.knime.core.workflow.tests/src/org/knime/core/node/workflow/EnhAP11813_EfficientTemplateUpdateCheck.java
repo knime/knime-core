@@ -62,6 +62,7 @@ import org.junit.Test;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.util.pathresolve.URIToFileResolve;
+import org.knime.testing.util.URIToFileResolveTestUtil;
 import org.mockito.Mockito;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
@@ -94,7 +95,7 @@ public class EnhAP11813_EfficientTemplateUpdateCheck extends WorkflowTestCase {
         NodeID compId = wfm.getID().createChild(0);
 
         URIToFileResolve resolveMock = Mockito.mock(URIToFileResolve.class);
-        m_resolveOrg = replaceURIToFileResolveService(resolveMock);
+		m_resolveOrg = URIToFileResolveTestUtil.replaceURIToFileResolveService(resolveMock);
 
         // case if there is no (mocked) update
         when(resolveMock.resolveToLocalOrTempFileConditional(any(), any(), any())).thenReturn(Optional.empty());
@@ -123,19 +124,9 @@ public class EnhAP11813_EfficientTemplateUpdateCheck extends WorkflowTestCase {
 
     }
 
-    @After
-    public void setOriginalURIToFileResolve() {
-        replaceURIToFileResolveService(m_resolveOrg);
-    }
-
-    // is there a better way?
-    static URIToFileResolve replaceURIToFileResolveService(URIToFileResolve impl) {
-        BundleContext bundleContext = FrameworkUtil.getBundle(WorkflowManager.class).getBundleContext();
-        ServiceReference<?> oldService = bundleContext.getServiceReference(URIToFileResolve.class.getName());
-        URIToFileResolve oldImpl = (URIToFileResolve) bundleContext.getService(oldService);
-        ((org.eclipse.osgi.internal.serviceregistry.ServiceReferenceImpl) oldService).getRegistration().unregister();
-        bundleContext.registerService(URIToFileResolve.class.getName(), impl, new Hashtable<>());
-        return oldImpl;
-    }
+	@After
+	public void setOriginalURIToFileResolve() {
+		URIToFileResolveTestUtil.replaceURIToFileResolveService(m_resolveOrg);
+	}
 
 }
