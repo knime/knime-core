@@ -774,4 +774,11 @@
             backend="org.knime.core.data.container.BufferedTableBackend">
       </TableBackend>
    </extension>
+   <extension
+	   point="org.knime.core.EarlyStartup">
+      <provider
+	   callBeforeKNIMEApplicationStart="false"
+	   class="org.knime.core.eclipseUtil.NetAuthenticatorSuppressor">
+      </provider>
+   </extension>
 </plugin>
