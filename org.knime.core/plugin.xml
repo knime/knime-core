@@ -783,5 +783,12 @@
 	      factoryClass="org.knime.core.data.property.ValueFormatModelNumber$Factory"
 	      formatterClass="org.knime.core.data.property.ValueFormatModelNumber">
 	</formatter>
-	 </extension>
+   </extension>
+   <extension
+	   point="org.knime.core.EarlyStartup">
+      <provider
+	   callBeforeKNIMEApplicationStart="false"
+	   class="org.knime.core.eclipseUtil.NetAuthenticatorSuppressor">
+      </provider>
+   </extension>
 </plugin>

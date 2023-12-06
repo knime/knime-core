@@ -153,6 +153,7 @@ Require-Bundle: org.eclipse.osgi;bundle-version="[3.16.0,4.0.0)";visibility:=ree
  org.apache.xmlbeans5;bundle-version="[5.1.1,6.0.0)";visibility:=reexport,
  org.apache.log4j;bundle-version="[1.2.21,1.3.0)",
  org.eclipse.core.resources;bundle-version="[3.10.0,4.0.0)";resolution:=optional,
+ org.eclipse.core.net;bundle-version="[1.4.0,2.0.0)",
  org.knime.core.util;bundle-version="[6.2.0,7.0.0)";visibility:=reexport,
  org.knime.shared.workflow.def;bundle-version="[5.2.0,6.0.0)";visibility:=reexport,
  org.knime.shared.workflow.storage;bundle-version="[5.2.0,6.0.0)";visibility:=reexport,
