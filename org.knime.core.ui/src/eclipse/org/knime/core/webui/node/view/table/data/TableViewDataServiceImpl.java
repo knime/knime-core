@@ -65,7 +65,6 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowKey;
-import org.knime.core.data.StringValue;
 import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainer;
@@ -278,7 +277,7 @@ public class TableViewDataServiceImpl implements TableViewDataService {
         } else {
             final var colType = dts.getColumnSpec(sortColIndex).getType();
             rc.thenComparingColumn(sortColIndex, col -> col
-                .withAlphanumericComparison(colType.isCompatible(StringValue.class))
+                .withAlphanumericComparison(StringCell.TYPE.equals(colType))
                 .withDescendingSortOrder(!sortAscending));
         }
         final Comparator<DataRow> comp = rc.build();
