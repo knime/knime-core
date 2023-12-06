@@ -56,6 +56,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
 import org.eclipse.core.runtime.Platform;
+import org.knime.core.util.ThreadLocalHTTPAuthenticator;
 import org.knime.core.util.proxy.URLConnectionFactory;
 
 /**
@@ -174,7 +175,7 @@ public class UpdateChecker {
     public static UpdateInfo checkForNewRelease(final URI updateURI) throws IOException, URISyntaxException {
         final var nextVersionURL = new URL(updateURI.toString() + "/newRelease.txt");
         HttpURLConnection conn = null;
-        try {
+        try (final var c = ThreadLocalHTTPAuthenticator.suppressAuthenticationPopups()) {
             conn = (HttpURLConnection)URLConnectionFactory.getConnection(nextVersionURL);
             conn.setConnectTimeout(2000);
             conn.setReadTimeout(2000);
