@@ -71,8 +71,8 @@ import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 
 import org.knime.core.data.DataTable;
-import org.knime.core.data.StringValue;
 import org.knime.core.data.container.ContainerTable;
+import org.knime.core.data.def.StringCell;
 import org.knime.core.data.sort.DataTableSorter;
 import org.knime.core.data.sort.RowComparator;
 import org.knime.core.node.BufferedDataTable;
@@ -176,7 +176,7 @@ final class TableSorterWorker extends SwingWorkerWithContext<DataTable, NodeProg
             } else {
                 final var colSpec = spec.getColumnSpec(colIndex);
                 rc.thenComparingColumn(colIndex, col -> col.withDescendingSortOrder(descending)
-                    .withAlphanumericComparison(colSpec.getType().isCompatible(StringValue.class)));
+                    .withAlphanumericComparison(StringCell.TYPE.equals(colSpec.getType())));
                 name = colSpec.getName();
             }
             sortColNames.add(name);
