@@ -44,55 +44,49 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   20.05.2016 (thor): created
+ *   Dec 19, 2023 (lw): created
  */
-package org.knime.core.util;
+package org.knime.core.eclipseUtil;
 
-import java.io.Closeable;
-import java.net.Authenticator;
-
-import org.knime.core.util.auth.SuppressingAuthenticator;
+import org.eclipse.core.internal.net.ProxyManager;
+import org.eclipse.core.net.proxy.IProxyService;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.util.IEarlyStartup;
+import org.knime.core.util.auth.DelegatingAuthenticator;
 
 /**
- * This {@link Authenticator} allows threads to turn off any authentication callbacks in case authentication data is
- * wrong or missing. Usage is as follow:
+ * Installs custom delegating authenticators globally, before other plugins (using CXF)
+ * can initialize. This prevents interference.
+ * <p>
+ * Conditionally suppressing the {@link org.eclipse.ui.internal.net.auth.NetAuthenticator}
+ * is useful since it automatically displays an popup to the user when authentication failed.
+ * We want to prevent this.
  *
- * <pre>
- * try (Closeable c = ThreadLocalHTTPAuthenticator.suppressAuthenticationPopups()) {
- *     // some HTTP stuff
- * }
- * </pre>
- *
- * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
- * @since 3.2
+ * @author Leon Wenzler, KNIME GmbH, Konstanz, Germany
+ * @since 5.3
  */
-public class ThreadLocalHTTPAuthenticator extends Authenticator {
-    /**
-     * Turns suppression of authentication popups off (*). Make sure to close the returned closeable after you have
-     * performed all HTTP operations (hint: use try-with-resources).
-     * Note: this method never instantiates a new {@link ThreadLocalHTTPAuthenticator}.
-     *
-     * (*) technically does not suppress popups, but all authenticators to delegate to.
-     * See {@link SuppressingAuthenticator#suppressDelegate()} for details.
-     *
-     * @see SuppressingAuthenticator#suppressDelegate()
-     * @return a closeable that enables popups again (if there were any before)
-     */
-    @SuppressWarnings("resource")
-    public static AuthenticationCloseable suppressAuthenticationPopups() {
-        final var closeable = SuppressingAuthenticator.suppressDelegate();
-        // wraps the other type NewAuthenticationCloseable into this AuthenticationCloseable
-        return closeable::close;
-    }
+public class NetAuthenticatorSuppressor implements IEarlyStartup {
 
-    /**
-     * Extension of {@link Closeable} that doesn't throw any exceptions.
-     *
-     * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
-     */
-    @FunctionalInterface
-    public interface AuthenticationCloseable extends Closeable {
-        @Override
-        void close();
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(NetAuthenticatorSuppressor.class);
+
+    @SuppressWarnings("restriction")
+    @Override
+    public void run() {
+        final var eclipseProxyService = ProxyManager.getProxyManager();
+        if (eclipseProxyService instanceof ProxyManager proxyManager) {
+            // initializes class `org.eclipse.ui.internal.net.auth.NetAuthenticator`
+            proxyManager.initialize();
+
+            /*
+             * Add custom authenticators, including the ThreadLocalHTTPAuthenticator before CXF can initialize
+             * this avoids interference with the org.apache.cxf.transport.http.ReferencingAuthenticator.
+             */
+            DelegatingAuthenticator.installAuthenticators();
+        } else {
+            LOGGER.error(() -> String.format("Could not install custom authenticators since "
+                + "'org.eclipse.ui.internal.net.auth.NetAuthenticator' could not be initialized. "
+                + "Reason: '%s' implementation is of unexpected type '%s'.",
+                IProxyService.class.getSimpleName(), eclipseProxyService.getClass().getSimpleName()));
+        }
     }
 }
