@@ -44,43 +44,61 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   29 Nov 2023 (carlwitt): created
+ *   12 Dec 2023 (carlwitt): created
  */
 package org.knime.core.node.extension;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+import java.io.File;
+import java.io.IOException;
+
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
 
 /**
- * Test node factory for validating node specification computation.
+ * AP-21681: Test node model that throws an error during node instantiation. This must not interfere with node
+ * repository creation.
  *
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  */
-public final class TestNodeFactory extends NodeFactory<TestNodeModel> {
-    @Override
-    public TestNodeModel createNodeModel() {
-        return new TestNodeModel(2, 2);
+public class ErrorThrowingNodeNodeModel extends NodeModel {
+
+    /**
+     * @param nrInDataPorts
+     * @param nrOutDataPorts
+     */
+    protected ErrorThrowingNodeNodeModel(final int nrInDataPorts, final int nrOutDataPorts) {
+        super(nrInDataPorts, nrOutDataPorts);
+        throw new Error();
     }
 
     @Override
-    protected int getNrNodeViews() {
-        return 1;
+    protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec)
+        throws IOException, CanceledExecutionException {
     }
 
     @Override
-    public NodeView<TestNodeModel> createNodeView(final int viewIndex, final TestNodeModel nodeModel) {
-        return null;
+    protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
+        throws IOException, CanceledExecutionException {
     }
 
     @Override
-    protected boolean hasDialog() {
-        return false;
+    protected void saveSettingsTo(final NodeSettingsWO settings) {
     }
 
     @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return null;
+    protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+    }
+
+    @Override
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
+    }
+
+    @Override
+    protected void reset() {
     }
 
 }

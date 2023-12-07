@@ -55,6 +55,7 @@ import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.extension.NodeSpecCollectionProvider.Progress.Stage;
@@ -86,12 +87,14 @@ final class NodeSpecCache {
         }
     }
 
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(NodeSpecCache.class);
+
     /** Contains unmodifiable maps. */
     private final EnumMap<View, Map<String, NodeSpec>> m_views = new EnumMap<>(View.class);
 
     /**
-     * Protects {@link #m_NodeSpec} and {@link #m_nodeSetMetadata} from being read before the {@link Initializer}
-     * thread has finished.
+     * Protects {@link #m_NodeSpec} and {@link #m_nodeSetMetadata} from being read before the {@link Initializer} thread
+     * has finished.
      */
     private final CountDownLatch m_initialized = new CountDownLatch(1);
 
@@ -141,34 +144,32 @@ final class NodeSpecCache {
         public void run() {
             try {
                 // cannot load in parallel because creation of executable extensions seems to be able to
-                // deadlock on org.eclipse.osgi.internal.serviceregistry.ServiceRegistry
+                // deadlock on org.eclipse.osgi.internal.serviceregistry.ServiceRegistry (at least in SDK)
                 // however, it might be possible to process nodes in parallel to node sets
 
-                // compute feature names for better progress
-                var exts = m_extensions.values().stream()//
+                // group by feature name for better progress reporting
+                final var exts = m_extensions.values().stream()//
                     .flatMap(Set::stream) //
                     .filter(Predicate.not(INodeFactoryExtension::isInternal)) //
                     .collect(Collectors.groupingBy(ext -> ext.getInstallableUnitName().orElse("KNIME Nodes")));
 
-                var allNodes = new HashMap<String, NodeSpec>();
+                final var allNodes = new HashMap<String, NodeSpec>();
+
+                // for each installable unit
                 for (var nameAndExts : exts.entrySet()) {
                     var featureName = nameAndExts.getKey();
                     var extensions = nameAndExts.getValue();
                     NodeSpecCollectionProvider.Progress.setLoadingFeature(featureName);
-                    for (var ext : extensions) {
-                        var nodeSpecs = NodeSpec.of(m_categoryExtensions, ext);
-                        // report progress
-                        NodeSpecCollectionProvider.Progress.incrementDone(Stage.NODE_METADATA,
-                            nodeSpecs.size());
-                        for (var ns : nodeSpecs) {
-                            var factoryId = ns.factory().id();
-                            if (allNodes.containsKey(factoryId)) {
-                                NodeLogger.getLogger(getClass()).debug("Duplicate node factory id: " + factoryId);
-                            }
-                            allNodes.put(factoryId, ns);
-                        }
-                    }
 
+                    extensions.stream() //
+                        .flatMap(this::computeNodeSpecIgnoringErrors) //
+                        .forEach(nodeSpec -> {
+                            final var factoryId = nodeSpec.factory().id();
+                            if (allNodes.containsKey(factoryId)) {
+                                LOGGER.debug("Duplicate node factory id: " + factoryId);
+                            }
+                            allNodes.put(factoryId, nodeSpec);
+                        });
                 }
 
                 for (var view : View.values()) {
@@ -181,13 +182,33 @@ final class NodeSpecCache {
                 NodeSpecCollectionProvider.Progress.setDone();
             }
         }
+
+        /**
+         * AP-21681: compute node spec asynchronously to harden node repository creation against
+         *
+         * @param ext providing the node factories to compute node specs for
+         * @return node specs or empty stream if something goes wrong
+         */
+        private Stream<NodeSpec> computeNodeSpecIgnoringErrors(final INodeFactoryExtension ext) {
+            try {
+                final var nodeSpecs = NodeSpec.of(m_categoryExtensions, ext);
+                NodeSpecCollectionProvider.Progress.incrementDone(Stage.NODE_METADATA, nodeSpecs.size());
+                return nodeSpecs.stream();
+            } catch (Throwable throwable) { // NOSONAR: extension point code cannot be trusted
+                final var extType = ext instanceof NodeSetFactoryExtension ? " set" : "";
+                LOGGER.warn(
+                    "Error while computing node specifications of node%s factory extensions %s".formatted(extType, ext),
+                    throwable);
+                return Stream.empty();
+            }
+        }
     }
 
     public Map<String, NodeSpec> getNodes() {
         try {
             m_initialized.await();
         } catch (InterruptedException ex) {
-            NodeLogger.getLogger(getClass()).warn(ex);
+            LOGGER.warn(ex);
             Thread.currentThread().interrupt();
             return null; // NOSONAR null is more accurate than an empty map
         }
@@ -198,7 +219,7 @@ final class NodeSpecCache {
         try {
             m_initialized.await();
         } catch (InterruptedException ex) {
-            NodeLogger.getLogger(getClass()).warn(ex);
+            LOGGER.warn(ex);
             Thread.currentThread().interrupt();
             return null; // NOSONAR null is more accurate than an empty map
         }
@@ -209,7 +230,7 @@ final class NodeSpecCache {
         try {
             m_initialized.await();
         } catch (InterruptedException ex) {
-            NodeLogger.getLogger(getClass()).warn(ex);
+            LOGGER.warn(ex);
             Thread.currentThread().interrupt();
             return null; // NOSONAR null is more accurate than an empty map
         }
@@ -220,7 +241,7 @@ final class NodeSpecCache {
         try {
             m_initialized.await();
         } catch (InterruptedException ex) {
-            NodeLogger.getLogger(getClass()).warn(ex);
+            LOGGER.warn(ex);
             Thread.currentThread().interrupt();
             return null; // NOSONAR null is more accurate than an empty map
         }

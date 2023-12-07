@@ -35,7 +35,9 @@
             factory-class="org.knime.core.node.workflow.Enh1536_CancelDuringLoad$CheckLoadInternalsNotCalledNodeFactory"
             hidden="true">
       </node>
-      <node factory-class="org.knime.core.node.extension.BuggyNodeFactory" hidden="true" />
+      <node factory-class="org.knime.core.node.extension.ErrorThrowingNodeFactory" hidden="true" />
+      <node factory-class="org.knime.core.node.extension.ErrorThrowingNodeNodeFactory" hidden="true" />
+      <node factory-class="org.knime.core.node.extension.BuggyNodeDescriptionNodeFactory" hidden="true" />
       <node factory-class="org.knime.core.node.extension.TestNodeFactory" hidden="true" deprecated="true" />
    </extension>
    <extension

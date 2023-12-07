@@ -44,43 +44,38 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   29 Nov 2023 (carlwitt): created
+ *   7 Dec 2023 (carlwitt): created
  */
 package org.knime.core.node.extension;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import org.junit.jupiter.api.Test;
 
 /**
- * Test node factory for validating node specification computation.
+ *
  *
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  */
-public final class TestNodeFactory extends NodeFactory<TestNodeModel> {
-    @Override
-    public TestNodeModel createNodeModel() {
-        return new TestNodeModel(2, 2);
-    }
+class NodeSpecCacheTest {
 
-    @Override
-    protected int getNrNodeViews() {
-        return 1;
-    }
+    /**
+     * If the node spec initializer thread exits abnormally due to an exception or error when computing node specs, the
+     * node specification collections will be <code>null</code>.
+     */
+    @Test
+    void testCollectionsNotNull() {
+        // when accessing node spec collection
+        final var activeNodes = NodeSpecCollectionProvider.getInstance().getActiveNodes();
+        final var deprecatedNodes = NodeSpecCollectionProvider.getInstance().getDeprecatedNodes();
+        final var hiddenNodes = NodeSpecCollectionProvider.getInstance().getHiddenNodes();
+        final var allNodes = NodeSpecCollectionProvider.getInstance().getNodes();
 
-    @Override
-    public NodeView<TestNodeModel> createNodeView(final int viewIndex, final TestNodeModel nodeModel) {
-        return null;
-    }
-
-    @Override
-    protected boolean hasDialog() {
-        return false;
-    }
-
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return null;
+        // then return should not be null
+        assertThat(activeNodes).isNotNull();
+        assertThat(deprecatedNodes).isNotNull();
+        assertThat(hiddenNodes).isNotNull();
+        assertThat(allNodes).isNotNull();
     }
 
 }
