@@ -42,50 +42,51 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   29 Nov 2023 (carlwitt): created
  */
 package org.knime.core.node.extension;
 
-import java.io.File;
-import java.io.IOException;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
-import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
+/**
+ * AP-21681: Test node factory for the case that a node factory throws an error. This must not interfere with node
+ * repository creation.
+ *
+ * @author Carl Witt, KNIME AG, Zurich, Switzerland
+ */
+public final class ErrorThrowingNodeFactory extends NodeFactory<BuggyNodeDescriptionNodeModel> {
 
-final class BuggyNodeModel extends NodeModel {
-    protected BuggyNodeModel(final int nrInDataPorts, final int nrOutDataPorts) {
-        super(nrInDataPorts, nrOutDataPorts);
+    public ErrorThrowingNodeFactory() {
+        throw new Error("This node factory fails with an error.");
     }
 
     @Override
-    protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec)
-        throws IOException, CanceledExecutionException {
+    public BuggyNodeDescriptionNodeModel createNodeModel() {
+        return null;
     }
 
     @Override
-    protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
-        throws IOException, CanceledExecutionException {
+    protected int getNrNodeViews() {
+        return 0;
     }
 
     @Override
-    protected void saveSettingsTo(final NodeSettingsWO settings) {
+    public NodeView<BuggyNodeDescriptionNodeModel> createNodeView(final int viewIndex, final BuggyNodeDescriptionNodeModel nodeModel) {
+        return null;
     }
 
     @Override
-    protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+    protected boolean hasDialog() {
+        return false;
     }
 
     @Override
-    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
+    protected NodeDialogPane createNodeDialogPane() {
+        return null;
     }
 
-    @Override
-    protected void reset() {
-    }
 }

@@ -71,6 +71,10 @@ import org.knime.core.node.workflow.CoreToDefUtil;
  */
 class NodeSpecTest {
 
+    private static final String BUGGY_NODE_FACTORY_CLASS_NAME = BuggyNodeDescriptionNodeFactory.class.getName();
+
+    private static final String TEST_NODE_FACTORY_CLASS_NAME = TestNodeFactory.class.getName();
+
     /**
      * @return
      */
@@ -79,19 +83,19 @@ class NodeSpecTest {
         final var optExt = NodeFactoryProvider.getInstance().getAllExtensions().values().stream() //
             .flatMap(Set::stream) //
             .flatMap(nodeOrNodeSet -> ClassUtils.castStream(NodeFactoryExtension.class, nodeOrNodeSet)) //
-            .filter(nfe -> "org.knime.core.node.extension.BuggyNodeFactory".equals(nfe.getFactoryClassName())) //
+            .filter(nfe -> BUGGY_NODE_FACTORY_CLASS_NAME.equals(nfe.getFactoryClassName())) //
             .findAny();
         assertTrue(optExt.isPresent(), "Buggy test node factory extension could node be found.");
         final var ext = optExt.get();
         return ext;
     }
 
-     private static NodeFactoryExtension getTestExtension() {
+    private static NodeFactoryExtension getTestExtension() {
         // given a node factory extension that has a regular node description
         final var optExt = NodeFactoryProvider.getInstance().getAllExtensions().values().stream() //
             .flatMap(Set::stream) //
             .flatMap(nodeOrNodeSet -> ClassUtils.castStream(NodeFactoryExtension.class, nodeOrNodeSet)) //
-            .filter(nfe -> "org.knime.core.node.extension.TestNodeFactory".equals(nfe.getFactoryClassName())) //
+            .filter(nfe -> TEST_NODE_FACTORY_CLASS_NAME.equals(nfe.getFactoryClassName())) //
             .findAny();
         assertTrue(optExt.isPresent(), "Test node factory extension could node be found.");
         final var ext = optExt.get();
@@ -100,6 +104,7 @@ class NodeSpecTest {
 
     /**
      * Test that the buggy node is not too buggy to be created.
+     *
      * @throws InvalidNodeFactoryExtensionException
      */
     @Test
@@ -120,8 +125,7 @@ class NodeSpecTest {
     void testOfBuggyNodeFactory()
         throws InstantiationException, IllegalAccessException, InvalidNodeFactoryExtensionException {
         // given a node factory that has a buggy node description
-        final var optFactory =
-            NodeFactoryProvider.getInstance().getNodeFactory("org.knime.core.node.extension.BuggyNodeFactory");
+        final var optFactory = NodeFactoryProvider.getInstance().getNodeFactory(BUGGY_NODE_FACTORY_CLASS_NAME);
         assertTrue(optFactory.isPresent(), "Test node factory could node be found.");
         final var factory = optFactory.get();
 
@@ -162,14 +166,12 @@ class NodeSpecTest {
         final var nodeSpec = nodeSpecList.get(0);
 
         final var tableType = CoreToDefUtil.toPortTypeDef(BufferedDataTable.TYPE);
-        final var inputPorts = List.of (
+        final var inputPorts = List.of(
             new NodeSpec.Ports.Port(1, tableType, "inport1", "inport1 description"),
-            new NodeSpec.Ports.Port(2, tableType, "inport2", "inport2 description")
-        );
-        final var outputPorts = List.of (
+            new NodeSpec.Ports.Port(2, tableType, "inport2", "inport2 description"));
+        final var outputPorts = List.of(
             new NodeSpec.Ports.Port(1, tableType, "outport1", "outport1 description"),
-            new NodeSpec.Ports.Port(2, tableType, "outport2", "outport2 description")
-        );
+            new NodeSpec.Ports.Port(2, tableType, "outport2", "outport2 description"));
         // the node spec should have a port description for each port
         assertEquals(inputPorts, nodeSpec.ports().inputPorts());
         assertEquals(outputPorts, nodeSpec.ports().outputPorts());

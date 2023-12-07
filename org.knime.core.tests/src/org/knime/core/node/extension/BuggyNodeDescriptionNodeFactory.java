@@ -58,11 +58,18 @@ import org.knime.core.node.NodeView;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
-public final class BuggyNodeFactory extends NodeFactory<BuggyNodeModel> {
+/**
+ * NXT-2233: Test node factory that returns a node description that throws exceptions on all methods except those that
+ * would currently prevent the node from being instantiated (as broken as possible). This must not interfere with node
+ * repository creation, e.g., when computing node specifications.
+ *
+ * @author Carl Witt, KNIME AG, Zurich, Switzerland
+ */
+public final class BuggyNodeDescriptionNodeFactory extends NodeFactory<BuggyNodeDescriptionNodeModel> {
     @Override
-    public BuggyNodeModel createNodeModel() {
+    public BuggyNodeDescriptionNodeModel createNodeModel() {
         // but node description provides only information for one input and output port
-        return new BuggyNodeModel(2, 2);
+        return new BuggyNodeDescriptionNodeModel(2, 2);
     }
 
     @Override
@@ -72,7 +79,8 @@ public final class BuggyNodeFactory extends NodeFactory<BuggyNodeModel> {
     }
 
     @Override
-    public NodeView<BuggyNodeModel> createNodeView(final int viewIndex, final BuggyNodeModel nodeModel) {
+    public NodeView<BuggyNodeDescriptionNodeModel> createNodeView(final int viewIndex,
+        final BuggyNodeDescriptionNodeModel nodeModel) {
         return null;
     }
 
@@ -99,7 +107,7 @@ public final class BuggyNodeFactory extends NodeFactory<BuggyNodeModel> {
 
             @Override
             public String getViewName(final int index) {
-                throw new IllegalStateException("This test node description always fails");
+                throw new IllegalStateException("getViewName of this test node description always fails");
             }
 
             @Override
@@ -116,7 +124,7 @@ public final class BuggyNodeFactory extends NodeFactory<BuggyNodeModel> {
 
             @Override
             public NodeType getType() {
-                throw new IllegalStateException("This test node description always fails");
+                throw new IllegalStateException("getType of this test node description always fails");
             }
 
             @Override
@@ -127,7 +135,7 @@ public final class BuggyNodeFactory extends NodeFactory<BuggyNodeModel> {
 
             @Override
             public String getOutportDescription(final int index) {
-                throw new IllegalStateException("This test node description always fails");
+                throw new IllegalStateException("getOutportDescription of this test node description always fails");
             }
 
             @Override
@@ -138,7 +146,7 @@ public final class BuggyNodeFactory extends NodeFactory<BuggyNodeModel> {
 
             @Override
             public String getInteractiveViewName() {
-                throw new IllegalStateException("This test node description always fails");
+                throw new IllegalStateException("getInteractiveViewName of this test node description always fails");
             }
 
             @Override
@@ -149,7 +157,7 @@ public final class BuggyNodeFactory extends NodeFactory<BuggyNodeModel> {
 
             @Override
             public String getInportDescription(final int index) {
-                throw new IllegalStateException("This test node description always fails");
+                throw new IllegalStateException("getInportDescription of this test node description always fails");
             }
 
             @Override

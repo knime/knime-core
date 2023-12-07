@@ -53,23 +53,26 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- * Test node factory for validating node specification computation.
+ * AP-21681: Test node factory for the case that a node throws an error during its instantiation. This must not
+ * interfere with node repository creation.
  *
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  */
-public final class TestNodeFactory extends NodeFactory<TestNodeModel> {
+public final class ErrorThrowingNodeNodeFactory extends NodeFactory<ErrorThrowingNodeNodeModel> {
+
     @Override
-    public TestNodeModel createNodeModel() {
-        return new TestNodeModel(2, 2);
+    public ErrorThrowingNodeNodeModel createNodeModel() {
+        throw new Error("Node creation always fails for this node factory.");
     }
 
     @Override
     protected int getNrNodeViews() {
-        return 1;
+        return 0;
     }
 
     @Override
-    public NodeView<TestNodeModel> createNodeView(final int viewIndex, final TestNodeModel nodeModel) {
+    public NodeView<ErrorThrowingNodeNodeModel> createNodeView(final int viewIndex,
+        final ErrorThrowingNodeNodeModel nodeModel) {
         return null;
     }
 

@@ -125,7 +125,7 @@ public record NodeSpec(Factory factory, NodeType type, Ports ports, Metadata met
             node = new Node(factory);
         } catch (Exception e) {
             // if the node cannot be instantiated, we probably do not want to add it to the node repo anyways
-            NodeLogger.getLogger(NodeSpec.class).debug("Cannot instantiate node.", e);
+            NodeLogger.getLogger(NodeSpec.class).warn("Cannot instantiate node.", e);
             return Optional.empty();
         }
 
@@ -188,7 +188,7 @@ public record NodeSpec(Factory factory, NodeType type, Ports ports, Metadata met
             return nodeSpecs;
         } catch (Exception ex) {
             // if the node cannot be instantiated, we probably do not want to add it to the node repo anyways
-            NodeLogger.getLogger(NodeSpec.class).debug("Cannot compute node properties.", ex);
+            NodeLogger.getLogger(NodeSpec.class).warn("Cannot compute node properties.", ex);
             return List.of();
         }
     }
