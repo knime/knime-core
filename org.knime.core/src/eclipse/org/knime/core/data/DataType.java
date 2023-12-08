@@ -63,6 +63,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 import javax.swing.Icon;
 
@@ -225,6 +227,9 @@ public final class DataType {
     private static final Map<ClassAndSubDataTypePair, DataType>
         CLASS_TO_TYPE_MAP = new HashMap<ClassAndSubDataTypePair, DataType>();
 
+    /** Checks whether the given package name starts with either {@code "com.knime."} or {@code "org.knime."}. */
+    private static final Predicate<String> IS_KNIME_PACKAGE = Pattern.compile("^(?:com|org)\\.knime\\.").asPredicate();
+
     /**
      * The String representation comparator. Fall back comparator if no other is
      * available.
@@ -341,40 +346,37 @@ public final class DataType {
     }
 
     /**
-     * Returns a type which is compatible to only those values, both given types
-     * are compatible to, i.e. it contains the intersection of both value lists.
-     * This super type can be safely asked for a comparator for cells of both
-     * specified types, or a renderer for {@link org.knime.core.data.DataCell}s
-     * of any of the given types.
-     * The returned object could be one of the arguments passed in, if one type
-     * is compatible to all (and more) types the other is compatible to.
+     * Returns a type which is compatible to only those values both given types are compatible to, i.e. it contains the
+     * intersection of both value lists. This super type can be safely asked for a comparator for cells of both
+     * specified types, or a renderer for {@link org.knime.core.data.DataCell}s of any of the given types.
+     * The returned object could be one of the arguments passed in, if one type is compatible to all (and more) types
+     * the other is compatible to.
      *
      * <p>
-     * As there could be more than one common compatible type (if both cells
-     * implement multiple value interfaces), the common super type could be a
-     * new instance of <code>DataType</code> with no native type, which only
-     * contains the list of those common compatible types.
+     * If none of the two arguments is super-type of the other, a search of all available {@link DataType}s is performed
+     * to find one which supports exactly the intersection of the {@link DataValue} interfaces and adapters of the two
+     * argument types. In this search, non-KNIME {@link DataType}s which don't implement any non-KNIME {@link DataValue}
+     * interfaces are ignored.
      *
      * <p>
-     * If both types have no common data values, the resulting
-     * <code>DataType</code> has no preferred value class; its list of
-     * compatible value classes will only contain (the class representation of)
-     * {@link DataValue}, and the cell class is <code>null</code>.
+     * If no suitable super-type could be determined, the common super type could be a new instance of {@link DataType}
+     * with no native type, which only contains the list of those common compatible types.
+     *
+     * <p>
+     * If both types have no common data values, the resulting {@link DataType} has no preferred value class; its list
+     * of compatible value classes will only contain (the class representation of) {@link DataValue}, and the cell
+     * class is <code>null</code>.
      *
      * @param type1 type 1
      * @param type2 type 2
      * @return a type compatible to types both arguments are compatible to
-     * @throws NullPointerException if one of the given types is
-     *          <code>null</code>
+     * @throws NullPointerException if one of the given types is <code>null</code>
      */
-    public static DataType getCommonSuperType(final DataType type1,
-            final DataType type2) {
+    public static DataType getCommonSuperType(final DataType type1, final DataType type2) {
         if ((type1 == null) || (type2 == null)) {
-            throw new NullPointerException("Cannot build super type of"
-                    + " a null type");
+            throw new NullPointerException("Cannot build super type of a null type"); // NOSONAR
         }
-        // if one of the types represents the missing cell type, we
-        // return the other type.
+        // if one of the types represents the missing cell type, we return the other type.
         if (type1.isMissingValueType()) {
             return type2;
         }
@@ -390,12 +392,36 @@ public final class DataType {
             return type2;
         }
 
-        final DataType nonNativeCandidate = new DataType(type1, type2);
+        /*
+         * We exclude "impostor" data types here because those can be introduced by badly implemented extensions and
+         * would then lead to bogus "super-types" which can break workflows (see AP-21471).
+         * This only prevents extensions from messing with the KNIME-internal type hierarchy, not with types introduced
+         * by other foreign extensions. Our goal here is to prevent accidental breakage, not malicious code.
+         */
+        final var nonNativeCandidate = new DataType(type1, type2);
         return DataTypeRegistry.getInstance().availableDataTypes() //
                 .stream() //
-                .filter(type -> type.equalsNoPreferredValueClass(nonNativeCandidate)) //
+                .filter(type -> !type.isImpostor() && type.equalsNoPreferredValueClass(nonNativeCandidate)) //
                 .findFirst() //
                 .orElse(nonNativeCandidate);
+    }
+
+    /**
+     * @param clazz class object
+     * @return whether the given class' full name starts with either {@code "com.knime."} or {@code "org.knime."}
+     */
+    private static boolean isInInternalPackage(final Class<?> clazz) {
+        return IS_KNIME_PACKAGE.test(clazz.getName());
+    }
+
+    /**
+     * @return whether this data type looks like a KNIME type (by only implementing KNIME value classes and adapters)
+     * but is actually from a non-KNIME package
+     */
+    private boolean isImpostor() {
+        return m_cellClass != null && !isInInternalPackage(m_cellClass)
+                && m_valueClasses.stream().allMatch(DataType::isInInternalPackage)
+                && m_adapterValueList.stream().allMatch(DataType::isInInternalPackage);
     }
 
     /**
