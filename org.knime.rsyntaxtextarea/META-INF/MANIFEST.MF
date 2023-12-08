@@ -2,12 +2,12 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: KNIME Shared Library for RSyntaxTextArea
 Bundle-SymbolicName: org.knime.rsyntaxtextarea;singleton:=true
-Bundle-Version: 5.2.0.qualifier
+Bundle-Version: 5.3.0.qualifier
 Bundle-ClassPath: knime-rsyntaxtextarea.jar
 Bundle-Vendor: KNIME AG, Zurich, Switzerland
 Export-Package: org.knime.rsyntaxtextarea,
   org.knime.rsyntaxtextarea.guarded
-Require-Bundle: org.knime.core;bundle-version="[5.2.0,6.0.0)",
+Require-Bundle: org.knime.core;bundle-version="[5.3.0,6.0.0)",
   com.fifesoft.autocomplete;bundle-version="[2.6.0,3.0.0)",
   com.fifesoft.rsyntaxtextarea;bundle-version="[2.6.0,3.0.0)",
   com.fifesoft.languagesupport;bundle-version="[2.6.0,3.0.0)"
