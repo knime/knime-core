@@ -48,72 +48,42 @@
  */
 package org.knime.core.node.workflow;
 
-import java.util.Map;
-
-import org.eclipse.core.runtime.IStatus;
-import org.knime.core.node.workflow.MetaNodeTemplateInformation.UpdateStatus;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.workflow.AbstractTemplateUpdater.TemplateOperationContext;
+import org.knime.core.node.workflow.TemplateUpdateUtil.TemplateUpdateCheckResult;
+import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 
 /**
- * Interface for all {@link NodeContainerTemplate}-relevant link update actions.
- * Includes checking and performing updates. Sets the internal (and visible) update statuses accordingly.
+ * Interface for all {@link NodeContainerTemplate}-relevant link update actions. Includes checking and performing
+ * updates. Sets the internal (and visible) update statuses accordingly.
  *
  * @author Leon Wenzler, KNIME GmbH, Konstanz, Germany
  */
-sealed interface TemplateUpdater permits AbstractTemplateUpdater {
+public sealed interface TemplateUpdater extends GeneralTemplateUpdater permits AbstractTemplateUpdater {
 
     /**
-     * Checks for updates on the given selection of NodeIDs. Returns a map of the found {@link UpdateStatus}es per
-     * {@link NodeID}.
+     * Allows the use of more advanced context properties for checking and performing template updates.
+     * These properties include:
+     * <ul>
+     *   <li> a {@link WorkflowLoadHelper} representing a callback during template loads
+     *   <li> a {@link LoadResult} summarizing the results from loading templates
+     *   <li> a given cache for {@link TemplateUpdateCheckResult} to use and fill
+     *   <li> an {@link ExecutionMonitor} for tracking the operations and progress
+     * </ul>
      *
-     * @param nodeIds Array of NodeIDs, representing updateable {@link NodeContainerTemplate}s.
-     * @return Map between node ID and its update status.
+     * @return {@link TemplateOperationContext}
      */
-    Map<NodeID, UpdateStatus> checkUpdateForTemplates(final NodeID[] nodeIds);
+    @SuppressWarnings("javadoc")
+    TemplateOperationContext withContext();
 
     /**
-     * Checks for updates on all updateable NodeContainerTemplates in the workflow. Returns a map of the found
-     * {@link UpdateStatus}es per {@link NodeID}.
+     * Creates the current default {@link TemplateUpdater} instance for a given {@link WorkflowManager}.
      *
-     * @param nodeIds Array of NodeIDs, representing updateable {@link NodeContainerTemplate}s.
-     * @return Map between node ID and its update status.
+     * @param manager WorkflowManager to use
+     * @return template updater
      */
-    Map<NodeID, UpdateStatus> checkUpdateForAllTemplates();
-
-    /**
-     * Updates the given selection of {@link NodeID}s, uses potentially cached information from earlier runs of an
-     * update-checking method. If no previous run was found, it performs a new update check before.
-     * Returns a summary status on how the updating went, useful for displaying information to the user.
-     *
-     * @param nodeIds Array of NodeIDs, representing updateable {@link NodeContainerTemplate}s.
-     * @param recurseInto whether to recurse into each of the selected NodeIDs.
-     * @return Summary IStatus
-     */
-    IStatus updateTemplates(final NodeID[] nodeIds, final boolean recurseInto);
-
-    /**
-     * Updates the all *top-level* NodeContainerTemplates in the workflow.
-     * Uses potentially cached information from earlier runs of an update-checking method.
-     * If no previous run was found, it performs a new update check before.
-     * Returns a summary status on how the updating went, useful for displaying information to the user.
-     *
-     * @param nodeIds Array of NodeIDs, representing updateable {@link NodeContainerTemplate}s.
-     * @return Summary IStatus
-     */
-    IStatus updateTemplatesShallow();
-
-    /**
-     * Updates the *all* (deeply-nested) found NodeContainerTemplates in the workflow.
-     * Uses potentially cached information from earlier runs of an update-checking method.
-     * If no previous run was found, it performs a new update check before.
-     * Returns a summary status on how the updating went, useful for displaying information to the user.
-     *
-     * @param nodeIds Array of NodeIDs, representing updateable {@link NodeContainerTemplate}s.
-     * @return Summary IStatus
-     */
-    IStatus updateTemplatesDeep();
-
-    /**
-     * Clears the internal caches of found update statuses and downloaded artifacts.
-     */
-    void clearCaches();
+    static TemplateUpdater forWorkflowManager(final WorkflowManager manager) {
+        // TODO: Switch this to the SingleCacheTemplateUpdater eventually.
+        return new LegacyTemplateUpdater(manager);
+    }
 }

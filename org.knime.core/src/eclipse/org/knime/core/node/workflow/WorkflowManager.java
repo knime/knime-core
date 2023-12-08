@@ -386,6 +386,9 @@ public final class WorkflowManager extends NodeContainer
     /** User-supplied metadata of this workflow, non-{@code null} iff this is a project workflow manager. */
     private WorkflowMetadata m_metadata;
 
+    /** Responsible for checking and performing template updates within the workflow. */
+    private TemplateUpdater m_templateUpdater = TemplateUpdater.forWorkflowManager(this);
+
     /**
      * The root of everything, a workflow with no in- or outputs. This workflow holds the top level projects.
      */
@@ -7596,30 +7599,12 @@ public final class WorkflowManager extends NodeContainer
     private boolean checkUpdateMetaNodeLinkWithCache(final NodeID id, final WorkflowLoadHelper loadHelper,
         final LoadResult loadResult, final Map<URI, TemplateUpdateCheckResult> visitedTemplateMap,
         final boolean recurseInto) throws IOException {
-        NodeContainer nc = m_workflow.getNode(id);
-        if (!(nc instanceof NodeContainerTemplate)) {
-            return false;
-        }
-        NodeContainerTemplate tnc = (NodeContainerTemplate)nc;
-        Map<NodeID, NodeContainerTemplate> idsToCheck = new LinkedHashMap<>();
-        if (tnc.getTemplateInformation().getRole() == Role.Link) {
-            idsToCheck.put(id, tnc);
-        }
-        if (recurseInto) {
-            idsToCheck = tnc.fillLinkedTemplateNodesList(idsToCheck, true, false);
-        }
-        var idUpdateStates =
-            TemplateUpdateUtil.fillNodeUpdateStates(idsToCheck.values(), loadHelper, loadResult, visitedTemplateMap);
-        for (Map.Entry<NodeID, UpdateStatus> entry : idUpdateStates.entrySet()) {
-            var nodeId = entry.getKey();
-            var status = entry.getValue();
-            var template = idsToCheck.get(nodeId);
-
-            if (template.getTemplateInformation().setUpdateStatusInternal(status)) {
-                template.notifyTemplateConnectionChangedListener();
-            }
-        }
-        return TemplateUpdateUtil.extractTemplateHasUpdate(idUpdateStates);
+        final var updateStates = m_templateUpdater.withContext()//
+                .loadHelper(loadHelper)//
+                .loadResult(loadResult)//
+                .resultCache(visitedTemplateMap)//
+                .perform(t -> t.checkUpdateForTemplates(new NodeID[]{id}, recurseInto));
+        return TemplateUpdateUtil.extractTemplateHasUpdate(updateStates);
     }
 
     /**

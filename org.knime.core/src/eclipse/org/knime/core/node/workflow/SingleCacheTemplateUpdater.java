@@ -56,54 +56,49 @@ import org.eclipse.core.runtime.IStatus;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.UpdateStatus;
 
 /**
- * Implementation of the {@link TemplateUpdater}.
- * Uses update-status and download caches for efficient checking of the {@link MetaNodeTemplateInformation.UpdateStatus}.
- * See issues AP-16072, AP-16421 and AP-19382.
+ * Implementation of an efficient {@link TemplateUpdater}. Uses existing update states,
+ * and downloaded caches for recursively retrieving the {@link MetaNodeTemplateInformation.UpdateStatus}es.
  *
- * TODO: Enforce the correct and consistent setting of the UpdateStatus via {@link MetaNodeTemplateInformation#setUpdateStatusInternal(UpdateStatus)}
- * and the notifying of listeners via {@link NodeContainerTemplate#notifyTemplateConnectionChangedListener()}.
+ * TODO: See issues AP-16072, AP-16421 and AP-19382.
  *
  * @author Leon Wenzler, KNIME GmbH, Konstanz, Germany
  */
-final class CachingTemplateUpdater extends AbstractTemplateUpdater {
+final class SingleCacheTemplateUpdater extends AbstractTemplateUpdater {
 
     /**
      * Caches already downloaded NodeContainerTemplates to reuse for nodes of the same kind.
      *
      * Important: do not only compare on URI but also on the *local* timestamp before looking at this.
-     * Otherwise, a check might determine no update to be available altough the first template of the kind was just newer,
-     * registering its URI as null or something -- see issue AP-20451.
+     * Otherwise, a check might determine no update to be available although the first template of the kind
+     * was just newer, registering its URI as null or something -- see issue AP-20451.
      */
     private final Map<URI, NodeContainerTemplate> m_downloadCache;
 
     /**
-     * Default constructor, only to be called from {@link WorkflowManager}.
+     * Default constructor.
      */
-    public CachingTemplateUpdater(final WorkflowManager wfm) {
+    SingleCacheTemplateUpdater(final WorkflowManager wfm) {
         super(wfm);
         this.m_downloadCache = new HashMap<>();
     }
 
     @Override
-    public Map<NodeID, UpdateStatus> checkUpdateForTemplates(final NodeID[] nodeIds) {
-        // TODO Auto-generated method stub
-        return null;
+    public Map<NodeID, UpdateStatus> checkUpdateForTemplates(final NodeID[] nodeIds, final boolean recurseInto) {
+        throw new UnsupportedOperationException("not yet implemented");
     }
 
     @Override
     public IStatus updateTemplates(final NodeID[] nodeIds, final boolean recurseInto) {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException("not yet implemented");
     }
 
     @Override
     protected IStatus updateAllTemplatesRecursively(final int depthLimit) {
-        // TODO Auto-generated method stub
-        return null;
+        throw new UnsupportedOperationException("not yet implemented");
     }
 
     @Override
-    public void clearCachesInternal() {
+    public void resetInternal() {
         this.m_downloadCache.clear();
     }
 }

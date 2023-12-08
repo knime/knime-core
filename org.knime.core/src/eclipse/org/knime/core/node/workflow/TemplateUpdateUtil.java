@@ -52,7 +52,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.time.OffsetDateTime;
-import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -79,7 +78,7 @@ import org.knime.core.util.pathresolve.ResolverUtil;
 import org.knime.core.util.pathresolve.URIToFileResolve.KNIMEURIDescription;
 
 /**
- * Encapsulates util functionality for updating template links (a.k.a Components, Metanodes).
+ * Has utilities for checking for, extracting and performing updates on linked {@link NodeContainerTemplate}s.
  *
  * @author Leon Wenzler, KNIME AG, Konstanz, Germany
  * @since 4.7
@@ -89,31 +88,34 @@ public final class TemplateUpdateUtil {
     /**
      * A link to a template on Hub can contain three different kinds of version information through a query parameter.
      * <ul>
-     *      <li>A specific item version can be referenced: {@code version=42}</li>
-     *      <li>The link can point to the <i>latest</i> version: {@code version=most-recent}</li>
-     *      <li>If no {@code version} query parameter is given or {@code version=current-state} the current state
-     * (i.e., the staging area) of the space is referenced.</li>
+     * <li>A specific item version can be referenced: {@code version=42}</li>
+     * <li>The link can point to the <i>latest</i> version: {@code version=most-recent}</li>
+     * <li>If no {@code version} query parameter is given or {@code version=current-state} the current state (i.e., the
+     * staging area) of the space is referenced.</li>
      * </ul>
      *
      * @since 5.0
      */
     public enum LinkType {
-        /** Specific version is selected, no updates will be available. */
-        FIXED_VERSION(Object::toString, null, null),
+            /** Specific version is selected, no updates will be available. */
+            FIXED_VERSION(Object::toString, null, null),
 
-        /** <i>Latest version</i> is selected. */
-        LATEST_VERSION(v -> "most-recent", "most-recent", "latest"),
+            /** <i>Latest version</i> is selected. */
+            LATEST_VERSION(v -> "most-recent", "most-recent", "latest"),
 
-        /** <i>Current state</i> is selected, which includes unversioned changes. */
-        LATEST_STATE(v -> null, "current-state", "-1");
+            /** <i>Current state</i> is selected, which includes unversioned changes. */
+            LATEST_STATE(v -> null, "current-state", "-1");
 
         private final Function<Integer, String> m_paramString;
+
         private final String m_identifier;
+
         private final String m_legacyIdentifier;
 
         /**
-         * The key used in KNIME hub catalog service query parameters to specify the version of a repository item.
-         * Note that the hub execution service uses "itemVersion" instead.
+         * The key used in KNIME hub catalog service query parameters to specify the version of a repository item. Note
+         * that the hub execution service uses "itemVersion" instead.
+         *
          * @since 5.1
          */
         public static final String VERSION_QUERY_PARAM = "version";
@@ -122,6 +124,7 @@ public final class TemplateUpdateUtil {
          * spaceVersion query parameter was used prior to item level versioning. Space versions do not exist anymore.
          * However, when the KNIME hub migrated from space versions to item versions, item versions were created such
          * that item version X matches the content in space version X.
+         *
          * @since 5.1
          */
         public static final String LEGACY_SPACE_VERSION_QUERY_PARAM = "spaceVersion";
@@ -152,7 +155,7 @@ public final class TemplateUpdateUtil {
 
         /**
          * @return the value previously used in query parameters (for Space Versioning) to denote a specific link type.
-         * {@code null} for FIXED_VERSION.
+         *         {@code null} for FIXED_VERSION.
          * @since 5.1
          */
         public String getLegacyIdentifier() {
@@ -174,8 +177,8 @@ public final class TemplateUpdateUtil {
 
         /**
          * @param s permanent identifier as returned by {@link #toString()}
-         * @return the link type for the given string representation, or {@link Optional#empty()} if the string does
-         *         not match any identifier.
+         * @return the link type for the given string representation, or {@link Optional#empty()} if the string does not
+         *         match any identifier.
          * @since 5.2
          */
         public static Optional<LinkType> fromString(final String s) {
@@ -197,13 +200,14 @@ public final class TemplateUpdateUtil {
      *
      * @author Leon Wenzler, KNIME GmbH, Konstanz, Germany
      */
-    record TemplateUpdateCheckResult(NodeContainerTemplate template, MetaNodeTemplateInformation info) {}
+    record TemplateUpdateCheckResult(NodeContainerTemplate template, MetaNodeTemplateInformation info) {
+    }
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(TemplateUpdateUtil.class);
 
     /**
-     * Resolves the localDir from the template information's source URI,
-     * then passes it on to {@linkplain TemplateUpdateUtil#loadMetaNodeTemplateInternal}.
+     * Resolves the localDir from the template information's source URI, then passes it on to
+     * {@linkplain TemplateUpdateUtil#loadMetaNodeTemplateInternal}.
      *
      * @param meta template
      * @param loadHelper
@@ -247,9 +251,8 @@ public final class TemplateUpdateUtil {
     }
 
     /**
-     * Resolves the localDir from the template information's source URI but with the condition
-     * that the URI must either be local or outdated,
-     * then passes it on to {@linkplain TemplateUpdateUtil#loadMetaNodeTemplateInternal}.
+     * Resolves the localDir from the template information's source URI but with the condition that the URI must either
+     * be local or outdated, then passes it on to {@linkplain TemplateUpdateUtil#loadMetaNodeTemplateInternal}.
      *
      * @param meta template
      * @param loadHelper
@@ -260,8 +263,8 @@ public final class TemplateUpdateUtil {
      * @throws CanceledExecutionException
      */
     private static NodeContainerTemplate loadMetaNodeTemplateIfLocalOrOutdatedOrVersioned(
-            final NodeContainerTemplate meta, final WorkflowLoadHelper loadHelper, final LoadResult loadResult)
-            throws IOException, UnsupportedWorkflowVersionException, CanceledExecutionException {
+        final NodeContainerTemplate meta, final WorkflowLoadHelper loadHelper, final LoadResult loadResult)
+        throws IOException, UnsupportedWorkflowVersionException, CanceledExecutionException {
         final var linkInfo = meta.getTemplateInformation();
         final var sourceURI = linkInfo.getSourceURI();
 
@@ -272,15 +275,15 @@ public final class TemplateUpdateUtil {
              * unnecessary downloads. Update is available only when the server version is *newer* than the local
              * timestamp. This will not fetch updates from an older, restored template snapshot on KS4.
              *
-             * In case the template URI has a specific version set, we do not want to use the cutoff date
-             * (since there are no changes to versioned content but we still want the content when changing
-             * the version of the template.)
+             * In case the template URI has a specific version set, we do not want to use the cutoff date (since there
+             * are no changes to versioned content but we still want the content when changing the version of the
+             * template.)
              */
             // ignore modified since for versioned content
             final var cutoffDate = HubItemVersion.of(sourceURI).filter(HubItemVersion::isVersioned).isPresent() ? null
                 : Optional.ofNullable(linkInfo.getTimestamp()).map(OffsetDateTime::toZonedDateTime).orElse(null);
-            final var localDir = ResolverUtil.resolveURItoLocalOrTempFileConditional(sourceURI,
-                new NullProgressMonitor(), cutoffDate).orElse(null);
+            final var localDir = ResolverUtil
+                .resolveURItoLocalOrTempFileConditional(sourceURI, new NullProgressMonitor(), cutoffDate).orElse(null);
             if (localDir == null) {
                 return null;
             }
@@ -338,9 +341,9 @@ public final class TemplateUpdateUtil {
     }
 
     /**
-     * Iterates through a collection of NodeContainerTemplates and retrieves their update status
-     * by trying to load the template. Also uses a cache with the visitedTemplateMap from which already
-     * visited templates' links are retrieved.
+     * Iterates through a collection of NodeContainerTemplates and retrieves their update status by trying to load the
+     * template. Also uses a cache with the visitedTemplateMap from which already visited templates' links are
+     * retrieved.
      *
      * @param nodesToCheck NodeContainerTemplates to check
      * @param loadHelper
@@ -349,9 +352,9 @@ public final class TemplateUpdateUtil {
      * @return map from NodeIDs to their corresponding UpdateStatus
      * @throws IOException if the execution was cancelled or the workflow could not be loaded
      */
-    public static Map<NodeID, UpdateStatus> fillNodeUpdateStates(
-        final Collection<NodeContainerTemplate> nodesToCheck, final WorkflowLoadHelper loadHelper,
-        final LoadResult loadResult, final Map<URI, TemplateUpdateCheckResult> visitedTemplateMap) throws IOException {
+    public static Map<NodeID, UpdateStatus> fillNodeUpdateStates(final Iterable<NodeContainerTemplate> nodesToCheck,
+        final WorkflowLoadHelper loadHelper, final LoadResult loadResult,
+        final Map<URI, TemplateUpdateCheckResult> visitedTemplateMap) throws IOException {
         Map<NodeID, UpdateStatus> nodeIdToUpdateStatus = new LinkedHashMap<>();
 
         for (NodeContainerTemplate linkedMeta : nodesToCheck) {
@@ -376,8 +379,8 @@ public final class TemplateUpdateUtil {
                      * the template.
                      */
                     var uriString = ResolverUtil.toDescription(uri, null) //
-                            .map(KNIMEURIDescription::toDisplayString) //
-                            .orElseGet(uri::toString);
+                        .map(KNIMEURIDescription::toDisplayString) //
+                        .orElseGet(uri::toString);
                     var verb = e instanceof ResourceAccessException ? "accessed" : "read";
                     LOGGER.warn(String.format(
                         "Could not load template for \"%s\" - it links to \"%s\" but it could not be %s: %s", //
@@ -447,7 +450,7 @@ public final class TemplateUpdateUtil {
                 if (totalStatus != UpdateStatus.Error) {
                     totalStatus = UpdateStatus.HasUpdate;
                 }
-            // fixes bug AP-18224
+                // fixes bug AP-18224
             } else if (status == UpdateStatus.Error
                 && updateableIds.stream().allMatch(updatedId -> !nodeId.hasPrefix(updatedId))) {
                 erroneousNode = String.valueOf(nodeId);

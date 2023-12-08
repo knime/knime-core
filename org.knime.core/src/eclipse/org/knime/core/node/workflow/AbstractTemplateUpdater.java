@@ -48,39 +48,53 @@
  */
 package org.knime.core.node.workflow;
 
-import java.util.Collection;
+import java.net.URI;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import org.eclipse.core.runtime.IStatus;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.UpdateStatus;
+import org.knime.core.node.workflow.TemplateUpdateUtil.TemplateUpdateCheckResult;
+import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 
 /**
- * Provides basic functionality for the {@link CachingTemplateUpdater}. Includes overriding basic methods where the
- * stored WFM can be used to fill default values, e.g. checking all updates.
+ * Provides basic functionality for the template updater implementations. Includes overriding basic methods where the
+ * stored WFM was originally used to fill default values, e.g. checking all updates.
  *
- * Specifies the class {@link TemplateInformationStatus} which is used to keep track of scanned NodeID's and their
- * associated {@link MetaNodeTemplateInformation}s.
+ * Specifies the class {@link TemplateInformationStatus} which is used to keep track of scanned NodeID's, the mutability
+ * of found results, and their associated {@link MetaNodeTemplateInformation}s.
  *
  * @author Leon Wenzler, KNIME GmbH, Konstanz, Germany
  */
-abstract sealed class AbstractTemplateUpdater implements TemplateUpdater permits CachingTemplateUpdater {
+abstract sealed class AbstractTemplateUpdater implements TemplateUpdater
+    permits LegacyTemplateUpdater, SingleCacheTemplateUpdater {
 
-    private final WorkflowManager m_wfm;
+    protected static final NodeLogger LOGGER = NodeLogger.getLogger(AbstractTemplateUpdater.class);
 
-    private final Map<NodeID, TemplateInformationStatus> m_templateStatuses;
+    protected final WorkflowManager m_wfm;
+
+    protected final Map<NodeID, TemplateInformationStatus> m_updateStatesCache;
+
+    protected Deque<TemplateOperationContext> m_contextStack;
 
     /**
-     * TODO: Find out how to connect this to and redirect from the {@link WorkflowManager}.
+     * Default constructor, only to be called from {@link TemplateUpdater}.
      *
      * @param wfm WorkflowManager.
      */
     protected AbstractTemplateUpdater(final WorkflowManager wfm) {
-        this.m_wfm = wfm;
-        this.m_templateStatuses = new HashMap<>();
+        m_wfm = wfm;
+        m_updateStatesCache = new HashMap<>();
+        m_contextStack = new ArrayDeque<>();
     }
 
     /**
@@ -89,7 +103,7 @@ abstract sealed class AbstractTemplateUpdater implements TemplateUpdater permits
      * @return has at least one update?
      */
     public boolean isUpdatesAvailable() {
-        return this.getNumberUpdatesAvailable() > 0;
+        return getNumberUpdatesAvailable() > 0;
     }
 
     /**
@@ -100,12 +114,17 @@ abstract sealed class AbstractTemplateUpdater implements TemplateUpdater permits
      * @return Number of current updates available.
      */
     public long getNumberUpdatesAvailable() {
-        return m_templateStatuses.values().stream().filter(TemplateInformationStatus::hasUpdate).count();
+        return m_updateStatesCache.values().stream().filter(TemplateInformationStatus::hasUpdate).count();
     }
 
     @Override
-    public Map<NodeID, UpdateStatus> checkUpdateForAllTemplates() {
-        return this.checkUpdateForTemplates(this.findAllNodeContainerTemplates());
+    public Map<NodeID, UpdateStatus> checkUpdateForTemplatesShallow() {
+        return checkUpdateForTemplates(findTemplateEntryPoints(), false);
+    }
+
+    @Override
+    public Map<NodeID, UpdateStatus> checkUpdateForTemplatesDeep() {
+        return checkUpdateForTemplates(findTemplateEntryPoints(), true);
     }
 
     /**
@@ -113,40 +132,72 @@ abstract sealed class AbstractTemplateUpdater implements TemplateUpdater permits
      *
      * @return Array of NodeIDs corresponding to updateable NodeContainerTemplates.
      */
-    private NodeID[] findAllNodeContainerTemplates() {
-        List<NodeID> nctList = new LinkedList<>();
-        findAllNodeContainerTemplates(this.m_wfm, nctList);
-        return nctList.toArray(new NodeID[nctList.size()]);
+    private NodeID[] findTemplateEntryPoints() {
+        final Map<NodeID, NodeContainerTemplate> entryPoints = new HashMap<>();
+        m_wfm.fillLinkedTemplateNodesList(entryPoints, true, true);
+        return entryPoints.keySet().toArray(NodeID[]::new);
     }
 
     /**
-     * Recursive method to collect all updateable NodeContainerTemplates.
+     * Stores retrieved updates states from {@link #checkUpdateForTemplates(NodeID[], boolean)} in the
+     * {@link #m_updateStatesCache} caches for reuse and easy querying. Also notifies ands sets template update status
+     * indicators (little red/green) arrow.
      *
-     * @param node NodeContainerTemplate entry point
-     * @param nctList list to collect the NodeIDs in
+     * TODO: Ensure consistent setting of the UpdateStatus in all error (!) and update cases. TODO: Make all linked
+     * templates nested within linked templates as non-definitive.
+     *
+     * @param updateStates
      */
-    private void findAllNodeContainerTemplates(final NodeContainerTemplate node, final Collection<NodeID> nctList) {
-        for (NodeContainer nc : node.getNodeContainers()) {
-            if (nc instanceof NodeContainerTemplate nct) {
-                // TODO: Does the root WFM now about each of the nested NCT's updateable state?
-                if (this.m_wfm.canUpdateMetaNodeLink(nct.getID())) {
-                    nctList.add(nct.getID());
+    protected void storeAndNotifyUpdateCheckResults(final Map<NodeID, UpdateStatus> updateStates) {
+        for (Map.Entry<NodeID, UpdateStatus> entry : updateStates.entrySet()) {
+            final var nodeId = entry.getKey();
+            final var status = entry.getValue();
+            final var container = m_wfm.findNodeContainer(nodeId);
+            if (container instanceof NodeContainerTemplate template) {
+                final var info = Objects.requireNonNull(template.getTemplateInformation());
+                if (info.setUpdateStatusInternal(status)) {
+                    template.notifyTemplateConnectionChangedListener();
                 }
-                findAllNodeContainerTemplates(nct, nctList);
+                // if the template lies within another linked template, don't mark as definitive
+                final var infoStatus = TemplateInformationStatus.create(info);
+                if (!isTemplateNestedWithinLinked(container)) {
+                    infoStatus.toDefinitive();
+                }
+                m_updateStatesCache.put(nodeId, infoStatus);
             }
         }
     }
 
+    /**
+     * Iteratively retrieves the parents of a found {@link NodeContainer} template
+     * to check if one of them is a linked template. Returns true, if that's the case.
+     *
+     * TODO: Is there a better way to check that?
+     *
+     * @param container nodeContainer to check
+     * @return lies within linked template?
+     */
+    private static boolean isTemplateNestedWithinLinked(final NodeContainer container) {
+        var parent = container.getDirectNCParent();
+        while (parent instanceof NodeContainerTemplate parentTemplate) {
+            if (parentTemplate.getTemplateInformation().getRole() == Role.Link) {
+                return true;
+            }
+            parent = parent.getDirectNCParent();
+        }
+        return false;
+    }
+
     @Override
     public IStatus updateTemplatesShallow() {
-        // Shallow update only looks on the top level.
-        return this.updateAllTemplatesRecursively(1);
+        // shallow update scans on the top level
+        return updateAllTemplatesRecursively(1);
     }
 
     @Override
     public IStatus updateTemplatesDeep() {
-        // Deep update has no depth limit.
-        return this.updateAllTemplatesRecursively(Integer.MAX_VALUE);
+        // deep update has no depth limit
+        return updateAllTemplatesRecursively(Integer.MAX_VALUE);
     }
 
     /**
@@ -160,16 +211,17 @@ abstract sealed class AbstractTemplateUpdater implements TemplateUpdater permits
     protected abstract IStatus updateAllTemplatesRecursively(final int depthLimit);
 
     @Override
-    public void clearCaches() {
-        this.m_templateStatuses.clear();
-        // Overriden by the implementation, usually contains downloaded artifacts.
-        this.clearCachesInternal();
+    public void reset() {
+        m_updateStatesCache.clear();
+        m_contextStack.clear();
+        // usually contains downloaded artifacts
+        resetInternal();
     }
 
     /**
      * Clears internal caches, which are used for a more efficient update routine.
      */
-    protected abstract void clearCachesInternal();
+    protected abstract void resetInternal();
 
     /**
      * Pair of a stored {@link MetaNodeTemplateInformation} instance and a flag, indicating whether it is defintive. A
@@ -181,7 +233,7 @@ abstract sealed class AbstractTemplateUpdater implements TemplateUpdater permits
      *
      * @author Leon Wenzler, KNIME GmbH, Konstanz, Germany
      */
-    protected static class TemplateInformationStatus {
+    protected static final class TemplateInformationStatus {
 
         private boolean m_definitive;
 
@@ -194,9 +246,9 @@ abstract sealed class AbstractTemplateUpdater implements TemplateUpdater permits
          */
         private TemplateInformationStatus(final MetaNodeTemplateInformation info) {
             CheckUtils.checkNotNull(info, "New template information must not be null");
-            this.m_information = info;
-            // Per default non-definitive statuses are created, i.e. they are to be updated.
-            this.m_definitive = false;
+            m_information = info;
+            // per default non-definitive statuses are created, i.e. they are still mutable
+            m_definitive = false;
         }
 
         /**
@@ -225,7 +277,7 @@ abstract sealed class AbstractTemplateUpdater implements TemplateUpdater permits
          * @return has this metanode/component an update available?
          */
         boolean hasUpdate() {
-            return this.m_information.getUpdateStatus() == UpdateStatus.HasUpdate;
+            return m_information.getUpdateStatus() == UpdateStatus.HasUpdate;
         }
 
         /**
@@ -237,7 +289,7 @@ abstract sealed class AbstractTemplateUpdater implements TemplateUpdater permits
         void updateInformation(final MetaNodeTemplateInformation info) {
             CheckUtils.checkNotNull(info, "New template information must not be null");
             CheckUtils.checkArgument(!m_definitive, "Cannot update a definitive template information status");
-            this.m_information = info;
+            m_information = info;
         }
 
         /**
@@ -259,5 +311,149 @@ abstract sealed class AbstractTemplateUpdater implements TemplateUpdater permits
         static TemplateInformationStatus createDefintive(final MetaNodeTemplateInformation info) {
             return create(info).toDefinitive();
         }
+    }
+
+    @Override
+    public TemplateOperationContext withContext() {
+        return new TemplateOperationContext();
+    }
+
+    /**
+     * Creates a context of properties around an operation performed by a {@link AbstractTemplateUpdater}
+     * implementation. The {@link TemplateOperationContext} specifies the following properties:
+     * <ul>
+     * <li>a {@link WorkflowLoadHelper} representing a callback during template loads
+     * <li>a {@link LoadResult} summarizing the results from loading templates
+     * <li>a given cache for {@link TemplateUpdateCheckResult} to use and fill
+     * <li>an {@link ExecutionMonitor} for tracking the operations and progress
+     * </ul>
+     *
+     * Using the {@link #perform(Function)} method, a given template operation is performed within the built context.
+     * After the operation, the context is removed again.
+     *
+     * @author Leon Wenzler, KNIME GmbH, Konstanz, Germany
+     */
+    public final class TemplateOperationContext {
+
+        /**
+         * Callback used during loading workflows, here templates.
+         */
+        private static final Supplier<WorkflowLoadHelper> DEFAULT_LOAD_HELPER = () -> null;
+
+        private WorkflowLoadHelper m_loadHelper = DEFAULT_LOAD_HELPER.get();
+
+        /**
+         * Summary of the status from loading node container templates.
+         */
+        private static final Supplier<LoadResult> DEFAULT_LOAD_RESULT = () -> new LoadResult("ignored");
+
+        private LoadResult m_loadResult = DEFAULT_LOAD_RESULT.get();
+
+        /**
+         * Cache of visited templates for update checks.
+         */
+        private static final Supplier<Map<URI, TemplateUpdateCheckResult>> DEFAULT_RESULT_CACHE = HashMap::new;
+
+        private Map<URI, TemplateUpdateCheckResult> m_resultCache = DEFAULT_RESULT_CACHE.get();
+
+        /**
+         * Progress and execution tracker for the operation.
+         */
+        private static final Supplier<ExecutionMonitor> DEFAULT_MONITOR = ExecutionMonitor::new;
+
+        private ExecutionMonitor m_monitor = DEFAULT_MONITOR.get();
+
+        /**
+         * Sets a given {@link WorkflowLoadHelper} in the context. Null-valued helper by default.
+         *
+         * @param helper
+         * @return context
+         */
+        public TemplateOperationContext loadHelper(final WorkflowLoadHelper helper) {
+            m_loadHelper = helper;
+            return this;
+        }
+
+        /**
+         * Sets a given {@link LoadResult} in the context. Ignored result by default.
+         *
+         *
+         * @param result
+         * @return context
+         */
+        public TemplateOperationContext loadResult(final LoadResult result) {
+            m_loadResult = result;
+            return this;
+        }
+
+        /**
+         * Sets a given {@link Map} of {@link URI}s to {@link TemplateUpdateCheckResult} in the context. Used for more
+         * efficient checking of updates. Empty map by default.
+         *
+         * @param resultCache
+         * @return context
+         */
+        public TemplateOperationContext resultCache(final Map<URI, TemplateUpdateCheckResult> resultCache) {
+            m_resultCache = resultCache;
+            return this;
+        }
+
+        /**
+         * Sets a given {@link ExecutionMonitor} to track progress and operations in the context. Plain
+         * {@link ExecutionMonitor#ExecutionMonitor()} by default.
+         *
+         * @param monitor
+         * @return context
+         */
+        public TemplateOperationContext executionMonitor(final ExecutionMonitor monitor) {
+            m_monitor = monitor;
+            return this;
+        }
+
+        /**
+         * Performs a given template operation within the context of properties. After the operation completes, the
+         * context is removed again.
+         *
+         * @param <T> generic type parameter for result type
+         * @param templateOperation operation to be performed
+         * @return result of type T
+         */
+        public <T> T perform(final Function<GeneralTemplateUpdater, T> templateOperation) {
+            m_contextStack.push(this);
+            try {
+                return templateOperation.apply(AbstractTemplateUpdater.this);
+            } finally {
+                // equivalent to Stack#pop but does not throw an exception if empty
+                m_contextStack.pollFirst();
+            }
+        }
+    }
+
+    protected synchronized WorkflowLoadHelper getLoadHelper() {
+        if (m_contextStack.isEmpty()) {
+            return TemplateOperationContext.DEFAULT_LOAD_HELPER.get();
+        }
+        return m_contextStack.peek().m_loadHelper;
+    }
+
+    protected synchronized LoadResult getLoadResult() {
+        if (m_contextStack.isEmpty()) {
+            return TemplateOperationContext.DEFAULT_LOAD_RESULT.get();
+        }
+        return m_contextStack.peek().m_loadResult;
+    }
+
+    protected synchronized Map<URI, TemplateUpdateCheckResult> getResultCache() {
+        if (m_contextStack.isEmpty()) {
+            return TemplateOperationContext.DEFAULT_RESULT_CACHE.get();
+        }
+        return m_contextStack.peek().m_resultCache;
+    }
+
+    protected synchronized ExecutionMonitor getExecutionMonitor() {
+        if (m_contextStack.isEmpty()) {
+            return TemplateOperationContext.DEFAULT_MONITOR.get();
+        }
+        return m_contextStack.peek().m_monitor;
     }
 }
