@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: KNIME SLF4J NodeLogger Binding
 Bundle-SymbolicName: org.knime.slf4j.binding;singleton:=true
-Bundle-Version: 4.7.0.qualifier
+Bundle-Version: 4.7.8.qualifier
 Bundle-ClassPath: .
 Bundle-Vendor: KNIME AG, Zurich, Switzerland
 Fragment-Host: org.slf4j.api;bundle-version="[1.7.2.v20121108-1250,2)"

@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: KNIME Shared Library for RSyntaxTextArea
 Bundle-SymbolicName: org.knime.rsyntaxtextarea;singleton:=true
-Bundle-Version: 4.7.0.qualifier
+Bundle-Version: 4.7.8.qualifier
 Bundle-ClassPath: knime-rsyntaxtextarea.jar
 Bundle-Vendor: KNIME AG, Zurich, Switzerland
 Export-Package: org.knime.rsyntaxtextarea,

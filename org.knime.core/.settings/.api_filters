@@ -3,7 +3,7 @@
     <resource path="META-INF/MANIFEST.MF">
         <filter comment="backporting fix from 5.0" id="924844039">
             <message_arguments>
-                <message_argument value="4.7.7"/>
+                <message_argument value="4.7.8"/>
                 <message_argument value="4.7.0"/>
             </message_arguments>
         </filter>
@@ -12,7 +12,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v210.ADocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -20,7 +20,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v210.AbstractView"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -28,7 +28,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v210.BDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -36,7 +36,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v210.BrDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -44,7 +44,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v210.DescriptionDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -52,7 +52,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v210.FullDescriptionDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -60,7 +60,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v210.H3Document"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -68,7 +68,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v210.H4Document"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -76,7 +76,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v210.HDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -84,7 +84,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v210.IDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -92,7 +92,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v210.InPortDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -100,7 +100,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v210.IntroDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -108,7 +108,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v210.KnimeNodeDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -116,7 +116,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v210.LiDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -124,7 +124,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v210.NameDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -132,7 +132,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v210.OlDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -140,7 +140,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v210.OptionDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -148,7 +148,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v210.OutPortDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -156,7 +156,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v210.PDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -164,7 +164,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v210.PortsDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -172,7 +172,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v210.PreDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -180,7 +180,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v210.ShortDescriptionDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -188,7 +188,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v210.SubDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -196,7 +196,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v210.SupDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -204,7 +204,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v210.TabDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -212,7 +212,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v210.TableDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -220,7 +220,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v210.TdDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -228,7 +228,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v210.ThDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -236,7 +236,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v210.TrDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -244,7 +244,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v210.TtDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -252,7 +252,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v210.UDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -260,7 +260,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v210.UlDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -268,7 +268,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v210.ViewDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -276,7 +276,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v210.ViewsDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -284,7 +284,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v212.ADocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -292,7 +292,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v212.AbstractView"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -300,7 +300,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v212.BDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -308,7 +308,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v212.BrDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -316,7 +316,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v212.Description"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -324,7 +324,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v212.ExtendedDescription"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -332,7 +332,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v212.FullDescription"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -340,7 +340,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v212.H3Document"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -348,7 +348,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v212.H4Document"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -356,7 +356,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v212.HDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -364,7 +364,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v212.IDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -372,7 +372,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v212.InPort"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -380,7 +380,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v212.Intro"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -388,7 +388,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v212.KnimeNode"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -396,7 +396,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v212.KnimeNodeDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -404,7 +404,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v212.LiDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -412,7 +412,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v212.MinimalTags"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -420,7 +420,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v212.NodeType"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -428,7 +428,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v212.OlDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -436,7 +436,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v212.Option"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -444,7 +444,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v212.OutPort"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -452,7 +452,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v212.PDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -460,7 +460,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v212.Port"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -468,7 +468,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v212.Ports"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -476,7 +476,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v212.PreDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -484,7 +484,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v212.SubDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -492,7 +492,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v212.SupDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -500,7 +500,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v212.Tab"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -508,7 +508,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v212.TableDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -516,7 +516,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v212.TdDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -524,7 +524,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v212.TextTags"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -532,7 +532,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v212.ThDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -540,7 +540,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v212.TrDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -548,7 +548,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v212.TtDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -556,7 +556,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v212.UDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -564,7 +564,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v212.UlDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -572,7 +572,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v212.View"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -580,7 +580,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v212.Views"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -588,7 +588,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v28.ADocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -596,7 +596,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v28.AbstractView"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -604,7 +604,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v28.BDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -612,7 +612,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v28.BrDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -620,7 +620,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v28.FullDescriptionDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -628,7 +628,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v28.H3Document"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -636,7 +636,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v28.H4Document"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -644,7 +644,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v28.HDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -652,7 +652,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v28.IDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -660,7 +660,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v28.InPortDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -668,7 +668,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v28.IntroDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -676,7 +676,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v28.KnimeNodeDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -684,7 +684,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v28.LiDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -692,7 +692,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v28.NameDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -700,7 +700,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v28.OlDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -708,7 +708,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v28.OptionDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -716,7 +716,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v28.OutPortDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -724,7 +724,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v28.PDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -732,7 +732,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v28.PortsDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -740,7 +740,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v28.PreDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -748,7 +748,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v28.ShortDescriptionDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -756,7 +756,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v28.SubDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -764,7 +764,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v28.SupDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -772,7 +772,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v28.TabDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -780,7 +780,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v28.TableDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -788,7 +788,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v28.TdDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -796,7 +796,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v28.ThDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -804,7 +804,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v28.TrDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -812,7 +812,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v28.TtDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -820,7 +820,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v28.UDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -828,7 +828,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v28.UlDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -836,7 +836,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v28.ViewDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -844,7 +844,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v28.ViewsDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -852,7 +852,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v31.ADocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -860,7 +860,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v31.AbstractView"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -868,7 +868,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v31.BDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -876,7 +876,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v31.BrDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -884,7 +884,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v31.Description"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -892,7 +892,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v31.ExtendedDescription"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -900,7 +900,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v31.FullDescription"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -908,7 +908,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v31.H3Document"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -916,7 +916,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v31.H4Document"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -924,7 +924,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v31.HrDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -932,7 +932,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v31.IDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -940,7 +940,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v31.InPort"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -948,7 +948,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v31.Intro"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -956,7 +956,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v31.KnimeNode"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -964,7 +964,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v31.KnimeNodeDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -972,7 +972,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v31.LiDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -980,7 +980,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v31.MinimalTags"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -988,7 +988,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v31.NodeType"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -996,7 +996,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v31.OlDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1004,7 +1004,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v31.Option"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1012,7 +1012,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v31.OutPort"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1020,7 +1020,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v31.PDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1028,7 +1028,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v31.Port"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1036,7 +1036,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v31.Ports"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1044,7 +1044,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v31.PreDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1052,7 +1052,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v31.SubDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1060,7 +1060,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v31.SupDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1068,7 +1068,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v31.Tab"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1076,7 +1076,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v31.TableDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1084,7 +1084,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v31.TdDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1092,7 +1092,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v31.TextTags"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1100,7 +1100,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v31.ThDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1108,7 +1108,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v31.TrDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1116,7 +1116,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v31.TtDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1124,7 +1124,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v31.UDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1132,7 +1132,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v31.UlDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1140,7 +1140,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v31.View"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1148,7 +1148,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v31.Views"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1156,7 +1156,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v36.ADocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1164,7 +1164,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v36.AbstractView"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1172,7 +1172,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v36.BDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1180,7 +1180,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v36.BrDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1188,7 +1188,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v36.Description"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1196,7 +1196,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v36.ExtendedDescription"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1204,7 +1204,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v36.FullDescription"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1212,7 +1212,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v36.H3Document"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1220,7 +1220,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v36.H4Document"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1228,7 +1228,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v36.HrDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1236,7 +1236,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v36.IDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1244,7 +1244,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v36.InPort"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1252,7 +1252,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v36.Intro"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1260,7 +1260,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v36.KnimeNode"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1268,7 +1268,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v36.KnimeNodeDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1276,7 +1276,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v36.LiDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1284,7 +1284,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v36.Link"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1292,7 +1292,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v36.MinimalTags"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1300,7 +1300,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v36.NodeType"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1308,7 +1308,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v36.OlDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1316,7 +1316,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v36.Option"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1324,7 +1324,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v36.OutPort"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1332,7 +1332,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v36.PDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1340,7 +1340,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v36.Port"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1348,7 +1348,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v36.Ports"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1356,7 +1356,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v36.PreDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1364,7 +1364,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v36.SubDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1372,7 +1372,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v36.SupDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1380,7 +1380,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v36.Tab"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1388,7 +1388,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v36.TableDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1396,7 +1396,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v36.TdDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1404,7 +1404,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v36.TextTags"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1412,7 +1412,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v36.ThDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1420,7 +1420,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v36.TrDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1428,7 +1428,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v36.TtDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1436,7 +1436,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v36.UDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1444,7 +1444,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v36.UlDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1452,7 +1452,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v36.View"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1460,7 +1460,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v36.Views"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1468,7 +1468,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v41.ADocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1476,7 +1476,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v41.AbstractView"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1484,7 +1484,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v41.BDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1492,7 +1492,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v41.BrDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1500,7 +1500,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v41.Description"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1508,7 +1508,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v41.DynInPort"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1516,7 +1516,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v41.DynOutPort"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1524,7 +1524,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v41.DynPort"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1532,7 +1532,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v41.ExtendedDescription"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1540,7 +1540,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v41.FullDescription"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1548,7 +1548,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v41.H3Document"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1556,7 +1556,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v41.H4Document"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1564,7 +1564,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v41.HrDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1572,7 +1572,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v41.IDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1580,7 +1580,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v41.InPort"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1588,7 +1588,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v41.Intro"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1596,7 +1596,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v41.KnimeNode"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1604,7 +1604,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v41.KnimeNodeDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1612,7 +1612,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v41.LiDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1620,7 +1620,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v41.Link"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1628,7 +1628,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v41.MinimalTags"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1636,7 +1636,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v41.NodeType"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1644,7 +1644,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v41.NonEmptyString"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1652,7 +1652,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v41.OlDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1660,7 +1660,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v41.Option"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1668,7 +1668,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v41.OutPort"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1676,7 +1676,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v41.PDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1684,7 +1684,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v41.Port"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1692,7 +1692,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v41.Ports"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1700,7 +1700,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v41.PreDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1708,7 +1708,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v41.SubDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1716,7 +1716,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v41.SupDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1724,7 +1724,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v41.Tab"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1732,7 +1732,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v41.TableDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1740,7 +1740,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v41.TdDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1748,7 +1748,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v41.TextTags"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1756,7 +1756,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v41.ThDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1764,7 +1764,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v41.TrDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1772,7 +1772,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v41.TtDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1780,7 +1780,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v41.UDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1788,7 +1788,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v41.UlDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1796,7 +1796,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v41.View"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1804,7 +1804,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node.v41.Views"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1812,7 +1812,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.ADocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1820,7 +1820,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.BDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1828,7 +1828,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.BrDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1836,7 +1836,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.FullDescriptionDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1844,7 +1844,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.H3Document"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1852,7 +1852,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.H4Document"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1860,7 +1860,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.HDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1868,7 +1868,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.IDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1876,7 +1876,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.InPortDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1884,7 +1884,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.IntroDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1892,7 +1892,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.KnimeNodeDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1900,7 +1900,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.LiDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1908,7 +1908,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.NameDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1916,7 +1916,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.OlDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1924,7 +1924,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.OptionDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1932,7 +1932,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.OutPortDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1940,7 +1940,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.PDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1948,7 +1948,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.PortsDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1956,7 +1956,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.PreDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1964,7 +1964,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.ShortDescriptionDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1972,7 +1972,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.SubDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1980,7 +1980,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.SupDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1988,7 +1988,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.TabDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1996,7 +1996,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.TableDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -2004,7 +2004,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.TdDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -2012,7 +2012,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.ThDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -2020,7 +2020,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.TrDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -2028,7 +2028,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.TtDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -2036,7 +2036,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.UDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -2044,7 +2044,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.UlDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -2052,7 +2052,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.ViewDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -2060,7 +2060,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.ViewsDocument"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -2068,7 +2068,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.impl.ADocumentImpl"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -2076,7 +2076,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.impl.BDocumentImpl"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -2084,7 +2084,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.impl.BrDocumentImpl"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -2092,7 +2092,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.impl.FullDescriptionDocumentImpl"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -2100,7 +2100,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.impl.H3DocumentImpl"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -2108,7 +2108,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.impl.H4DocumentImpl"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -2116,7 +2116,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.impl.HDocumentImpl"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -2124,7 +2124,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.impl.IDocumentImpl"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -2132,7 +2132,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.impl.InPortDocumentImpl"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -2140,7 +2140,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.impl.IntroDocumentImpl"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -2148,7 +2148,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.impl.KnimeNodeDocumentImpl"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -2156,7 +2156,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.impl.LiDocumentImpl"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -2164,7 +2164,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.impl.NameDocumentImpl"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -2172,7 +2172,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.impl.OlDocumentImpl"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -2180,7 +2180,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.impl.OptionDocumentImpl"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -2188,7 +2188,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.impl.OutPortDocumentImpl"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -2196,7 +2196,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.impl.PDocumentImpl"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -2204,7 +2204,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.impl.PortsDocumentImpl"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -2212,7 +2212,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.impl.PreDocumentImpl"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -2220,7 +2220,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.impl.ShortDescriptionDocumentImpl"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -2228,7 +2228,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.impl.SubDocumentImpl"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -2236,7 +2236,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.impl.SupDocumentImpl"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -2244,7 +2244,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.impl.TabDocumentImpl"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -2252,7 +2252,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.impl.TableDocumentImpl"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -2260,7 +2260,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.impl.TdDocumentImpl"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -2268,7 +2268,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.impl.ThDocumentImpl"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -2276,7 +2276,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.impl.TrDocumentImpl"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -2284,7 +2284,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.impl.TtDocumentImpl"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -2292,7 +2292,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.impl.UDocumentImpl"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -2300,7 +2300,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.impl.UlDocumentImpl"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -2308,7 +2308,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.impl.ViewDocumentImpl"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -2316,7 +2316,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.node2012.impl.ViewsDocumentImpl"/>
-                <message_argument value="org.knime.core_4.7.7"/>
+                <message_argument value="org.knime.core_4.7.8"/>
             </message_arguments>
         </filter>
     </resource>

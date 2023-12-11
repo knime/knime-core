@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: KNIME Core UI Tests
 Bundle-SymbolicName: org.knime.core.ui.tests;singleton:=true
-Bundle-Version: 4.7.3.qualifier
+Bundle-Version: 4.7.8.qualifier
 Bundle-ClassPath: .,
  lib/byte-buddy-1.11.12.jar,
  lib/byte-buddy-agent-1.11.12.jar,
