@@ -668,7 +668,8 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
             }
 
             //update the password field
-            if (model.getPassword() != null) {
+            final var fieldPassword = String.valueOf(m_passwordField.getPassword());
+            if (!fieldPassword.equals(model.getPassword())) {
                 String modelPwd = model.getPassword();
                 char[] password = m_passwordField.getPassword();
                 String componentPwd = null;
@@ -682,7 +683,8 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
 
         } else if (model.getAuthenticationType().equals(AuthenticationType.PWD)) {
             //update the password field
-            if (model.getPassword() != null) {
+            final var fieldPassword = String.valueOf(m_passwordField.getPassword());
+            if (!fieldPassword.equals(model.getPassword())) {
                 String modelPwd = model.getPassword();
                 char[] password = m_passwordOnlyField.getPassword();
                 String componentPwd = null;
