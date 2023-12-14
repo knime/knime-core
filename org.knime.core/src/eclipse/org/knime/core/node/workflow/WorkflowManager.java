@@ -857,7 +857,7 @@ public final class WorkflowManager extends NodeContainer
         final ModifiableNodeCreationConfiguration creationConfig, final int nodeIDSuffix) {
         CheckUtils.checkArgument(nodeIDSuffix >= -1, "Suffix must be -1 or larger or equal to 0: %d", nodeIDSuffix);
         try (WorkflowLock lock = lock()) {
-            CheckUtils.checkState(canModifyStructure(), "Cannot add node to %s at this time (execution in progress?)",
+            CheckUtils.checkState(canModifyStructure(), "Cannot add node to %s at this time (execution in progress)",
                 getNameWithID());
             final NodeID id;
             if (nodeIDSuffix >= 0) {
