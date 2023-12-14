@@ -51,16 +51,20 @@ package org.knime.core.node.extension;
 import java.io.File;
 import java.io.IOException;
 
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 
 final class BuggyNodeDescriptionNodeModel extends NodeModel {
-    protected BuggyNodeDescriptionNodeModel(final int nrInDataPorts, final int nrOutDataPorts) {
-        super(nrInDataPorts, nrOutDataPorts);
+    protected BuggyNodeDescriptionNodeModel() {
+        super(new PortType[]{BufferedDataTable.TYPE, FlowVariablePortObject.TYPE},
+            new PortType[]{FlowVariablePortObject.TYPE, BufferedDataTable.TYPE});
     }
 
     @Override

@@ -104,9 +104,9 @@ import org.knime.shared.workflow.def.VendorDef;
 public record NodeSpec(Factory factory, NodeType type, Ports ports, Metadata metadata, URL icon,
     boolean deprecated, boolean hidden) {
 
-    public static final Predicate<NodeSpec> IS_HIDDEN = ns -> ns.hidden();
+    public static final Predicate<NodeSpec> IS_HIDDEN = NodeSpec::hidden;
 
-    public static final Predicate<NodeSpec> IS_DEPRECATED = ns -> ns.deprecated();
+    public static final Predicate<NodeSpec> IS_DEPRECATED = NodeSpec::deprecated;
 
     /**
      * @param factory node factory information
@@ -232,12 +232,13 @@ public record NodeSpec(Factory factory, NodeType type, Ports ports, Metadata met
          * @return input and output ports of the node
          */
         private static Ports of(final Node node, final NodeFactory<?> factory) {
-            // skip port 0, it is the flow variable input port
-            final var inputPorts = ports(1, node.getNrInPorts(), node::getInportName, node::getInportDescriptionName,
-                node::getInputType, factory::getInportDescription);
-            // skip port 0, it is the flow variable output port
-            final var outputPorts = ports(1, node.getNrOutPorts(), node::getOutportName,
-                node::getOutportDescriptionName, node::getOutputType, factory::getOutportDescription);
+            // node counts the implicit flow variable port, the factory does not
+            final var inputPorts = ports(node.getNrInPorts() - 1, i -> node.getInportName(i + 1),
+                i -> node.getInportDescriptionName(i + 1), i -> node.getInputType(i + 1),
+                factory::getInportDescription);
+            final var outputPorts = ports(node.getNrOutPorts() - 1, i -> node.getOutportName(i + 1),
+                i -> node.getOutportDescriptionName(i + 1), i -> node.getOutputType(i + 1),
+                factory::getOutportDescription);
 
             // what the factory declares as supported input port types
             var optDeclaredInputPortTypes = getCopyOfCreationConfig(factory)//
@@ -268,12 +269,12 @@ public record NodeSpec(Factory factory, NodeType type, Ports ports, Metadata met
             }
         }
 
-        private static List<Port> ports(final int firstPort, final int numPorts, final IntFunction<String> portName,
+        private static List<Port> ports(final int numPorts, final IntFunction<String> portName,
             final IntFunction<String> portDescriptionName, final IntFunction<PortType> portType,
             final IntFunction<String> portDescription) {
 
             final var ports = new ArrayList<Port>();
-            for (var i = firstPort; i < numPorts; i++) {
+            for (var i = 0; i < numPorts; i++) {
                 // log info if port names provided by factory and node mismatch
                 // log info if port description name is not same as port name
                 if (!portDescriptionName.apply(i).equals(portName.apply(i))) {
@@ -287,7 +288,7 @@ public record NodeSpec(Factory factory, NodeType type, Ports ports, Metadata met
                 final var name = tryEval(() -> portName.apply(portIndex), "No port name provided by node description");
                 // port names are 0 based, port descriptions are 1 based
                 var description =
-                    tryEval(() -> portDescription.apply(portIndex - 1),
+                    tryEval(() -> portDescription.apply(portIndex),
                         "No port description provided by node description");
                 ports.add(new Port(portIndex, type, name, description));
             }
@@ -375,7 +376,7 @@ public record NodeSpec(Factory factory, NodeType type, Ports ports, Metadata met
         try {
             return supplier.get();
         } catch (Exception e) {
-            NodeLogger.getLogger(NodeSpec.class).debug("Cannot evaluate supplier.", e);
+            NodeLogger.getLogger(NodeSpec.class).warn("Cannot evaluate supplier.", e);
             return defaultValue;
         }
     }

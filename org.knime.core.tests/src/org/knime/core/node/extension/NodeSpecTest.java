@@ -48,47 +48,28 @@
  */
 package org.knime.core.node.extension;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.net.MalformedURLException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.Node;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.util.ClassUtils;
 import org.knime.core.node.workflow.CoreToDefUtil;
 
 /**
- * Nodes might throw exceptions when retrieving their metadata. The node spec should be robust against that because the
- * nodes will not show up in the modern UI node repository otherwise.
+ * Test that node properties are correctly computed by the NodeSpec.
  *
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  */
 class NodeSpecTest {
 
-    private static final String BUGGY_NODE_FACTORY_CLASS_NAME = BuggyNodeDescriptionNodeFactory.class.getName();
-
     private static final String TEST_NODE_FACTORY_CLASS_NAME = TestNodeFactory.class.getName();
-
-    /**
-     * @return
-     */
-    private static NodeFactoryExtension getBuggyTestExtension() {
-        // given a node factory extension that has a buggy node description
-        final var optExt = NodeFactoryProvider.getInstance().getAllExtensions().values().stream() //
-            .flatMap(Set::stream) //
-            .flatMap(nodeOrNodeSet -> ClassUtils.castStream(NodeFactoryExtension.class, nodeOrNodeSet)) //
-            .filter(nfe -> BUGGY_NODE_FACTORY_CLASS_NAME.equals(nfe.getFactoryClassName())) //
-            .findAny();
-        assertTrue(optExt.isPresent(), "Buggy test node factory extension could node be found.");
-        final var ext = optExt.get();
-        return ext;
-    }
 
     private static NodeFactoryExtension getTestExtension() {
         // given a node factory extension that has a regular node description
@@ -97,58 +78,36 @@ class NodeSpecTest {
             .flatMap(nodeOrNodeSet -> ClassUtils.castStream(NodeFactoryExtension.class, nodeOrNodeSet)) //
             .filter(nfe -> TEST_NODE_FACTORY_CLASS_NAME.equals(nfe.getFactoryClassName())) //
             .findAny();
-        assertTrue(optExt.isPresent(), "Test node factory extension could node be found.");
+        assertThat(optExt).as("Test node factory extension could node be found.").isPresent();
         final var ext = optExt.get();
         return ext;
     }
 
-    /**
-     * Test that the buggy node is not too buggy to be created.
-     *
-     * @throws InvalidNodeFactoryExtensionException
-     */
-    @Test
-    void testCreateBuggyTestNode() throws InvalidNodeFactoryExtensionException {
-        // given a node factory that has a buggy node description
-        final var ext = getBuggyTestExtension();
+    private static NodeSpec getTestNodeSpec() {
+        final var ext = getTestExtension();
 
-        // when creating a node
-        final var node = new Node((NodeFactory<NodeModel>)ext.getFactory());
-
-        // then no exceptions should be thrown
+        final Map<String, CategoryExtension> categoryExtensions = Map.of( //
+            "/root", CategoryExtension.builder("One", "root").build(), //
+            "/root/level", CategoryExtension.builder("Two", "level").build(), //
+            "/root/level/leaf", CategoryExtension.builder("Three", "leaf").build());
+        return NodeSpec.of(categoryExtensions, ext).get(0);
     }
 
     /**
-     * Test that node specs for buggy node descriptions contain empty strings instead of failing to be created.
+     * Individual node spec properties: factory, node type, ports, metadata, etc.
      */
+
     @Test
-    void testOfBuggyNodeFactory()
-        throws InstantiationException, IllegalAccessException, InvalidNodeFactoryExtensionException {
-        // given a node factory that has a buggy node description
-        final var optFactory = NodeFactoryProvider.getInstance().getNodeFactory(BUGGY_NODE_FACTORY_CLASS_NAME);
-        assertTrue(optFactory.isPresent(), "Test node factory could node be found.");
-        final var factory = optFactory.get();
+    void testNodeFactory() {
+        // given the test node spec
+        final var nodeSpec = getTestNodeSpec();
 
-        // when creating a node spec from that factory
-        var optNodeSpec = NodeSpec.of(factory, "", Map.of(), "", false);
+        // when retrieving the node factory information
+        final var factory = nodeSpec.factory();
 
-        // then exceptions should be caught and the node spec should be created
-        assertTrue(optNodeSpec.isPresent());
-    }
-
-    /**
-     * Test that node specs for buggy node descriptions contain empty strings instead of failing to be created.
-     */
-    @Test
-    void testOfBuggyExtension() {
-        final var ext = getBuggyTestExtension();
-
-        // when creating a node spec from that factory
-        var nodeSpecList = NodeSpec.of(Map.of(), ext);
-
-        // then exceptions should be caught and the node spec should be created
-        // exactly one node spec should be created
-        assertEquals(1, nodeSpecList.size());
+        assertThat(factory.id()).isEqualTo("org.knime.core.node.extension.TestNodeFactory");
+        assertThat(factory.className()).isEqualTo(TEST_NODE_FACTORY_CLASS_NAME);
+        assertThat(factory.factorySettings()).isNull(); // not a configurable
     }
 
     /**
@@ -156,25 +115,62 @@ class NodeSpecTest {
      */
     @Test
     void testPortDescriptions() {
-        final var ext = getTestExtension();
-
-        // when creating a node spec from the test factory
-        var nodeSpecList = NodeSpec.of(Map.of(), ext);
-
-        // there should be one node spec
-        assertEquals(1, nodeSpecList.size());
-        final var nodeSpec = nodeSpecList.get(0);
+        final var nodeSpec = getTestNodeSpec();
 
         final var tableType = CoreToDefUtil.toPortTypeDef(BufferedDataTable.TYPE);
         final var inputPorts = List.of(
-            new NodeSpec.Ports.Port(1, tableType, "inport1", "inport1 description"),
-            new NodeSpec.Ports.Port(2, tableType, "inport2", "inport2 description"));
+            new NodeSpec.Ports.Port(0, tableType, "inport1", "inport1 description"),
+            new NodeSpec.Ports.Port(1, tableType, "inport2", "inport2 description"));
         final var outputPorts = List.of(
-            new NodeSpec.Ports.Port(1, tableType, "outport1", "outport1 description"),
-            new NodeSpec.Ports.Port(2, tableType, "outport2", "outport2 description"));
+            new NodeSpec.Ports.Port(0, tableType, "outport1", "outport1 description"),
+            new NodeSpec.Ports.Port(1, tableType, "outport2", "outport2 description"));
         // the node spec should have a port description for each port
         assertEquals(inputPorts, nodeSpec.ports().inputPorts());
         assertEquals(outputPorts, nodeSpec.ports().outputPorts());
+    }
+
+    /**
+     * Test metadata generated by node spec.
+     */
+    @Test
+    void testMetadata() {
+        // given the test node spec
+        final var nodeSpec = getTestNodeSpec();
+
+        // when retrieving the metadata
+        final var metadata = nodeSpec.metadata();
+
+        // vendor
+        assertThat(metadata.vendor().bundle().getName()).isEqualTo("KNIME Core API");
+        assertThat(metadata.vendor().bundle().getSymbolicName()).isEqualTo("org.knime.core");
+        assertThat(metadata.vendor().bundle().getVendor()).isEqualTo("KNIME AG, Zurich, Switzerland");
+
+        // node name is "node name" but since the deprecated flag is set, the suffix is added
+        assertThat(metadata.nodeName()).isEqualTo("node name (deprecated)");
+
+        // category path
+        assertThat(metadata.categoryPath()).isEqualTo("/root/level/leaf");
+
+        // after ID
+        assertThat(metadata.afterID()).isEqualTo("afterId");
+
+        // keywords
+        assertThat(metadata.keywords()).containsExactly("keyword1", "keyword2", "keyword3");
+
+        //tags
+        assertThat(metadata.tags()).containsExactlyInAnyOrder("One", "Two", "Three");
+    }
+
+    @Test
+    void testMiscellaneous() throws MalformedURLException {
+        // given the test node spec
+        final var nodeSpec = getTestNodeSpec();
+
+        // when retrieving the non-nested factory information
+        assertThat(nodeSpec.type()).isEqualTo(NodeType.Configuration);
+        assertThat(nodeSpec.icon().toString()).endsWith("org/knime/core/node/extension/help.png");
+        assertThat(nodeSpec.deprecated()).isTrue();
+        assertThat(nodeSpec.hidden()).isTrue();
     }
 
 }

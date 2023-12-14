@@ -163,13 +163,7 @@ final class NodeSpecCache {
 
                     extensions.stream() //
                         .flatMap(this::computeNodeSpecIgnoringErrors) //
-                        .forEach(nodeSpec -> {
-                            final var factoryId = nodeSpec.factory().id();
-                            if (allNodes.containsKey(factoryId)) {
-                                LOGGER.debug("Duplicate node factory id: " + factoryId);
-                            }
-                            allNodes.put(factoryId, nodeSpec);
-                        });
+                        .forEach(nodeSpec -> allNodes.put(nodeSpec.factory().id(), nodeSpec));
                 }
 
                 for (var view : View.values()) {

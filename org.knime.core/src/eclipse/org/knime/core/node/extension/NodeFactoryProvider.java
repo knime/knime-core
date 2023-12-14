@@ -233,9 +233,13 @@ public final class NodeFactoryProvider {
 
         for (var configElement : configElements) {
             try {
-                var nodeFactoryExtension = new NodeFactoryExtension(configElement);
-                factoryNameToExtension.put(nodeFactoryExtension.getFactoryClassName(),
-                    nodeFactoryExtension);
+                final var nodeFactoryExtension = new NodeFactoryExtension(configElement);
+                final var factoryClassName = nodeFactoryExtension.getFactoryClassName();
+                if (factoryNameToExtension.containsKey(factoryClassName)) {
+                    NodeLogger.getLogger(NodeFactoryProvider.class)
+                        .debug("Duplicate node factory id: %s".formatted(factoryClassName));
+                }
+                factoryNameToExtension.put(factoryClassName, nodeFactoryExtension);
                 Progress.incrementDone(Progress.Stage.NODE_FACTORY, 1);
             } catch (IllegalArgumentException iae) {
                 NodeLogger.getLogger(NodeFactoryProvider.class).error(iae.getMessage(), iae);

@@ -69,7 +69,7 @@ public final class BuggyNodeDescriptionNodeFactory extends NodeFactory<BuggyNode
     @Override
     public BuggyNodeDescriptionNodeModel createNodeModel() {
         // but node description provides only information for one input and output port
-        return new BuggyNodeDescriptionNodeModel(2, 2);
+        return new BuggyNodeDescriptionNodeModel();
     }
 
     @Override
