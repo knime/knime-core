@@ -52,11 +52,12 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static org.apache.commons.lang3.StringUtils.abbreviate;
 import static org.apache.commons.lang3.StringUtils.center;
-import static org.apache.commons.lang3.StringUtils.repeat;
 import static org.apache.commons.lang3.StringUtils.rightPad;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -80,20 +81,22 @@ final class SimpleTabular {
     private static final int MIN_COL_WIDTH = 6;
     private final String[] m_colHeaders;
     private final String[] m_rowHeaders;
-    private final String[][] m_data;
+    private final String[][] m_paddedData;
     private final int m_underlineColumn;
+    private final int m_cellContentWidth;
     private final String m_description;
 
-    private SimpleTabular(final String[] colHeaders, final String[] rowHeaders, final String[][] data,
-        final int underlineColumn, final String description) {
+    private SimpleTabular(final String[] colHeaders, final String[] rowHeaders, final String[][] paddedData,
+        final int underlineColumn, final int cellContentWidth, final String description) {
         m_colHeaders = colHeaders;
         m_rowHeaders = rowHeaders;
-        m_data = data;
+        m_paddedData = paddedData;
         m_underlineColumn = underlineColumn;
+        m_cellContentWidth = cellContentWidth;
         m_description = description;
     }
 
-    static SimpleTabular from(final List<String> colHeaders, final List<String> rowHeaders,
+    static SimpleTabular forCellInLastRow(final List<String> colHeaders, final List<String> rowHeaders,
         final List<List<String>> data, final int underlineColumn, final String description) {
         var fixedWidthColHeaders = new String[colHeaders.size()];
         var fixedWidthRowHeaders = new String[rowHeaders.size()];
@@ -117,8 +120,9 @@ final class SimpleTabular {
                 fixedWidthData[r][i] = rightPad(abbreviate(data.get(r).get(i), colWidth), colWidth);
             }
         }
+        final var cellLength = underlineColumn >= 0 ? data.get(data.size() - 1).get(underlineColumn).length() : 0;
         return new SimpleTabular(fixedWidthColHeaders, fixedWidthRowHeaders, fixedWidthData, underlineColumn,
-            description);
+            cellLength, description);
     }
 
     @Override
@@ -127,38 +131,46 @@ final class SimpleTabular {
     }
 
     String toAsciiString() {
-        var strB = new StringBuilder();
-        strB.append(StringUtils.center("RowID", m_rowHeaders[0].length()));
-        int underlineStartIndex = -1;
-        int underlineEndIndex = -1;
+        final var colWidths = Stream.concat(Stream.of(m_rowHeaders[0]), Arrays.stream(m_colHeaders)) //
+                .mapToInt(String::length).toArray();
+
+        final var sb = new StringBuilder();
+
+        // add the column headers
+        sb.append(' ').append(StringUtils.center("RowID", colWidths[0]));
         for (var c = 0; c < m_colHeaders.length; c++) {
             var colHeader = m_colHeaders[c];
-            strB.append(" |");
-            if (c == m_underlineColumn) {
-                underlineStartIndex = strB.length();
-            }
-            strB.append(" ").append(colHeader);
-            if (c == m_underlineColumn) {
-                underlineEndIndex = strB.length();
-            }
+            sb.append(" | ").append(colHeader);
         }
-        int hLineLength = strB.length();
-        strB.append('\n').append(repeat('-', hLineLength)).append('\n');
+        sb.append('\n');
+
+        // add the divider
+        for (var c = 0; c < colWidths.length; c++) {
+            sb.append("-".repeat(colWidths[c] + 2)).append(c == colWidths.length - 1 ? '\n' : '+');
+        }
+
+        // add the data rows
         for (var r = 0; r < m_rowHeaders.length; r++) {
-            strB.append(m_rowHeaders[r]);
+            sb.append(' ').append(m_rowHeaders[r]);
             for (var c = 0; c < m_colHeaders.length; c++) {
-                strB.append(" | ").append(m_data[r][c]);
+                sb.append(" | ").append(m_paddedData[r][c]);
             }
-            strB.append('\n');
+            sb.append('\n');
         }
-        if (underlineStartIndex >= 0) {
-            strB.append(repeat(' ', underlineStartIndex));
-            strB.append(repeat('^', underlineEndIndex - underlineStartIndex));
-            strB.append('\n');
+
+        if (m_underlineColumn >= 0) {
+            // add cell underline
+            final var outColNo = m_underlineColumn + 1;
+            final var offset = IntStream.of(colWidths).limit(outColNo).sum() + 3 * outColNo + 1;
+            final var underlineLength = min(max(1, m_cellContentWidth), colWidths[outColNo]);
+            sb.append(" ".repeat(offset));
+            sb.append("^".repeat(underlineLength));
+            sb.append('\n');
         }
+
         if (m_description != null) {
-            strB.append(m_description).append('\n');
+            sb.append(m_description).append('\n');
         }
-        return strB.toString();
+        return sb.toString();
     }
 }

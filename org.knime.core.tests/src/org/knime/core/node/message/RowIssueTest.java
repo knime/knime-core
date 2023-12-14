@@ -131,13 +131,13 @@ final class RowIssueTest {
         assertThat(message2.getIssue()).get().isInstanceOf(DefaultIssue.class);
         var defaultIssue = (DefaultIssue)message2.getIssue().orElseThrow();
         assertThat(defaultIssue).extracting(d -> d.toPreformatted()).isEqualTo(
-              "RowID  | ABCDEFGHIJK...\n"
-            + "-----------------------\n"
-            + "Row3   | Cell in row...\n"
-            + "Row4   | Cell in row...\n"
-            + "Row5   | Cell in row...\n"
-            + "        ^^^^^^^^^^^^^^^\n"
-            + "some error\n");
+                " RowID  | ABCDEFGHIJK...\n"
+              + "--------+----------------\n"
+              + " Row3   | Cell in row...\n"
+              + " Row4   | Cell in row...\n"
+              + " Row5   | Cell in row...\n"
+              + "          ^^^^^^^^^^^^^^\n"
+              + "some error\n");
     }
 
     /** Test invalid arguments of issue */
@@ -164,13 +164,13 @@ final class RowIssueTest {
         var rowIssue = (RowIssue)message.getIssue().orElseThrow();
         var defaultIssue = rowIssue.toDefaultIssue(new PortObject[] {table});
         assertThat(defaultIssue).extracting(d -> d.toPreformatted()).isEqualTo(
-              "RowID  |   ..   |       D        |   E   \n"
-            + "-----------------------------------------\n"
-            + "Row3   | ..     | Cell in row... | 12    \n"
-            + "Row4   | ..     | Cell in row... | 16    \n"
-            + "Row5   | ..     | Cell in row... | 20    \n"
-            + "                                  ^^^^^^^\n"
-            + "some error\n");
+                " RowID  |   ..   |       D        |   E   \n"
+              + "--------+--------+----------------+--------\n"
+              + " Row3   | ..     | Cell in row... | 12    \n"
+              + " Row4   | ..     | Cell in row... | 16    \n"
+              + " Row5   | ..     | Cell in row... | 20    \n"
+              + "                                    ^^\n"
+              + "some error\n");
     }
 
     /** Table with multiple columns, error somewhere in between. */
@@ -185,13 +185,39 @@ final class RowIssueTest {
         var rowIssue = (RowIssue)message.getIssue().orElseThrow();
         var defaultIssue = rowIssue.toDefaultIssue(new PortObject[] {table});
         assertThat(defaultIssue).extracting(d -> d.toPreformatted()).isEqualTo(
-              "RowID  |   ..   |   B    |   C    |       D       \n"
-            + "--------------------------------------------------\n"
-            + "Row3   | ..     | 3      | 1.5    | Cell in row...\n"
-            + "Row4   | ..     | 4      | 2.0    | Cell in row...\n"
-            + "Row5   | ..     | 5      | 2.5    | Cell in row...\n"
-            + "                          ^^^^^^^\n"
-            + "some error\n");
+                " RowID  |   ..   |   B    |   C    |       D       \n"
+              + "--------+--------+--------+--------+----------------\n"
+              + " Row3   | ..     | 3      | 1.5    | Cell in row...\n"
+              + " Row4   | ..     | 4      | 2.0    | Cell in row...\n"
+              + " Row5   | ..     | 5      | 2.5    | Cell in row...\n"
+              + "                            ^^^\n"
+              + "some error\n");
+    }
+
+    /** Table with a single string column, of which the highlighted cell contains an empty string. */
+    @SuppressWarnings("static-method")
+    @Test
+    void testEmptyString() {
+        final var exec = executionContextExtension.getExecutionContext();
+        final var dataContainer = exec.createDataContainer(new DataTableSpecCreator() //
+                .addColumns(new DataColumnSpecCreator("Empty", StringCell.TYPE).createSpec()) //
+                .createSpec());
+        dataContainer.addRowToTable(new DefaultRow("Row0", new StringCell("Longer cell content")));
+        dataContainer.addRowToTable(new DefaultRow("Row1", new StringCell("")));
+        dataContainer.close();
+
+        final var issue = Message.builder().withSummary("ignored") //
+            .addRowIssue(0, 0, 1, "some error") //
+            .build().orElseThrow().getIssue();
+        final var rowIssue = (RowIssue)issue.orElseThrow();
+        final var defaultIssue = rowIssue.toDefaultIssue(new PortObject[] { dataContainer.getTable() });
+        assertThat(defaultIssue).extracting(d -> d.toPreformatted()).isEqualTo(
+                  " RowID  |     Empty     \n"
+                + "--------+----------------\n"
+                + " Row0   | Longer cell...\n"
+                + " Row1   |               \n"
+                + "          ^\n"
+                + "some error\n");
     }
 
     /** Table with multiple columns, many rows (details will be skipped until default backend is changed). */
@@ -222,13 +248,13 @@ final class RowIssueTest {
             .asInstanceOf(type(DefaultIssue.class)) //
             .extracting(DefaultIssue::toPreformatted) //
             .isEqualTo(
-                "RowID  | ABCDEFGHIJK... |   B    |   C   \n"
-                + "-----------------------------------------\n"
-                + "Row2   | Cell in row... | 2      | 1.0   \n"
-                + "Row3   | Cell in row... | 3      | 1.5   \n"
-                + "Row4   | Cell in row... | 4      | 2.0   \n"
-                + "                         ^^^^^^^\n"
-                + "unknown message\n");
+                " RowID  | ABCDEFGHIJK... |   B    |   C   \n"
+              + "--------+----------------+--------+--------\n"
+              + " Row2   | Cell in row... | 2      | 1.0   \n"
+              + " Row3   | Cell in row... | 3      | 1.5   \n"
+              + " Row4   | Cell in row... | 4      | 2.0   \n"
+              + "                           ^\n"
+              + "unknown message\n");
     }
 
 }

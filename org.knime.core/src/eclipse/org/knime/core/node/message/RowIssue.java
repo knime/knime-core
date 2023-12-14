@@ -175,7 +175,7 @@ final class RowIssue implements Issue {
                 }
                 data.add(datalist);
             }
-            var tab = SimpleTabular.from(colHeaders, rowHeaders, data, underlineColumn, m_description);
+            var tab = SimpleTabular.forCellInLastRow(colHeaders, rowHeaders, data, underlineColumn, m_description);
             return new DefaultIssue(tab.toAsciiString());
         }
     }
