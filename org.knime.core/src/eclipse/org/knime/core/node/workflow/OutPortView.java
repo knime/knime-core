@@ -322,14 +322,11 @@ public class OutPortView extends JFrame {
                 m_tabNameToViewDetailMap.put("Flow Variables", ViewDetails.of(stackView));
 
                 for (Component oldComponent : m_tabbedPane.getComponents()) {
-                    if (oldComponent instanceof PortObjectView) {
-                        PortObjectView poView = (PortObjectView)oldComponent;
-                        poView.setCredentialsProvider(null);
-                        poView.setHiliteHandler(null);
+                    if (oldComponent instanceof PortObjectView poView) {
                         poView.dispose();
                     }
-                    if (oldComponent instanceof PortObjectSpecView) {
-                        ((PortObjectSpecView)oldComponent).dispose();
+                    if (oldComponent instanceof PortObjectSpecView posView) {
+                        posView.dispose();
                     }
                 }
                 m_tabbedPane.removeAll();

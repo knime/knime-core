@@ -169,6 +169,7 @@ public class BufferedDataTableView extends JComponent implements PortObjectView 
     public void dispose() {
         m_table = null;
         m_dataView.setDataTable(null);
+        m_dataView.setHiLiteHandler(null);
     }
 
     /**

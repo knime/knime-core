@@ -217,6 +217,11 @@ public class DatabasePortObject extends DatabaseConnectionPortObject {
         public void setCredentialsProvider(final CredentialsProvider cp) {
             m_credentials = cp;
         }
+
+        @Override
+        public void dispose() {
+            m_credentials = null;
+        }
     }
 
     /** {@inheritDoc} */
