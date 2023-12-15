@@ -196,6 +196,9 @@ public class UpdateChecker {
                 }
             }
             return null;
+        } catch (IOException e) {
+            throw new IOException(
+                String.format("%s, while checking updates for site at \"%s\".", e.getMessage(), updateURI), e);
         } finally {
             if (conn != null) {
                 conn.disconnect();
