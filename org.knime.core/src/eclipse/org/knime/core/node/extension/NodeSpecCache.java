@@ -160,6 +160,7 @@ final class NodeSpecCache {
                     var featureName = nameAndExts.getKey();
                     var extensions = nameAndExts.getValue();
                     NodeSpecCollectionProvider.Progress.setLoadingFeature(featureName);
+                    LOGGER.debug("Computing node specifications for " + featureName);
 
                     extensions.stream() //
                         .flatMap(this::computeNodeSpecIgnoringErrors) //

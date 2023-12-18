@@ -54,8 +54,8 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
-import java.util.function.IntFunction;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -84,6 +84,7 @@ import org.knime.core.node.workflow.CoreToDefUtil;
 import org.knime.core.node.workflow.def.DefToCoreUtil;
 import org.knime.shared.workflow.def.PortTypeDef;
 import org.knime.shared.workflow.def.VendorDef;
+import org.knime.shared.workflow.def.impl.VendorDefBuilder;
 
 /**
  * Specification for a node.
@@ -94,7 +95,6 @@ import org.knime.shared.workflow.def.VendorDef;
  * @param type
  * @param ports input and output ports
  * @param metadata node metadata, such as node type, vendor, category path, etc.
- * @param views node view information
  * @param icon node icon
  * @param deprecated whether a newer version of the node exists
  * @param hidden whether the node is hidden from the node repository
@@ -115,7 +115,7 @@ public record NodeSpec(Factory factory, NodeType type, Ports ports, Metadata met
      * @param afterID the class name of the node factory after which this node factory should be inserted into the node
      *            repository, e.g., "org.knime.rest.nodes.delete.RestDeleteNodeFactory"
      * @param hidden whether the node is hidden from the node repository
-     * @return null if the node cannot be instantiated
+     * @return empty if the node cannot be instantiated
      */
     static Optional<NodeSpec> of(final NodeFactory<NodeModel> factory, final String categoryPath,
         final Map<String, CategoryExtension> catExts, final String afterID, final boolean hidden) {
@@ -123,7 +123,7 @@ public record NodeSpec(Factory factory, NodeType type, Ports ports, Metadata met
         final Node node;
         try {
             node = new Node(factory);
-        } catch (Exception e) {
+        } catch (Exception e) { // NOSONAR guarding against extendible code
             // if the node cannot be instantiated, we probably do not want to add it to the node repo anyways
             NodeLogger.getLogger(NodeSpec.class).warn("Cannot instantiate node.", e);
             return Optional.empty();
@@ -131,13 +131,16 @@ public record NodeSpec(Factory factory, NodeType type, Ports ports, Metadata met
 
         final var fact = NodeSpec.Factory.of(factory);
         // NXT-2233 harden against buggy node descriptions
-        final var ports = tryEval(() -> Ports.of(node, factory), new Ports(List.of(), List.of(), List.of()));
-        final var nodeType = tryEval(factory::getType, NodeType.Other);
-        final var vendor = tryEval(() -> Vendor.of(factory), null);
-        final var fallBackDescription =
+        final var ports = tryEval(() -> Ports.of(node, factory), new Ports(List.of(), List.of(), List.of()), factory,
+            "Node has erroneous port information");
+        final var nodeType = tryEval(factory::getType, NodeType.Other, factory, "Node has erroneous node type");
+        final var fallbackVendor = new VendorDefBuilder().build();
+        final var vendor = tryEval(() -> Vendor.of(factory), new Vendor(fallbackVendor, fallbackVendor), factory,
+            "Node has erroneous vendor information");
+        final var fallbackDescription =
             new Metadata(vendor, factory.getNodeName(), nodeType, categoryPath, afterID, List.of(), List.of());
-        final var description =
-            tryEval(() -> Metadata.of(factory, categoryPath, catExts, afterID), fallBackDescription);
+        final var description = tryEval(() -> Metadata.of(factory, categoryPath, catExts, afterID), fallbackDescription,
+            factory, "Node has erroneous metadata");
 
         final var deprecated = factory.isDeprecated();
         final var icon = factory.getIcon();
@@ -186,7 +189,7 @@ public record NodeSpec(Factory factory, NodeType type, Ports ports, Metadata met
                     .ifPresent(nodeSpecs::add);
             }
             return nodeSpecs;
-        } catch (Exception ex) {
+        } catch (Exception ex) { // NOSONAR guarding against extendible code here
             // if the node cannot be instantiated, we probably do not want to add it to the node repo anyways
             NodeLogger.getLogger(NodeSpec.class).warn("Cannot compute node properties.", ex);
             return List.of();
@@ -212,7 +215,12 @@ public record NodeSpec(Factory factory, NodeType type, Ports ports, Metadata met
             //only set settings in case of a dynamic node factory
             if (DynamicNodeFactory.class.isAssignableFrom(factory.getClass())) {
                 factorySettings = new NodeSettings("settings");
-                factory.saveAdditionalFactorySettings(factorySettings);
+                try {
+                    factory.saveAdditionalFactorySettings(factorySettings);
+                } catch (Exception ex) { // NOSONAR guarding against extendible code
+                    NodeFactoryProvider.getInstance().logExtensionProblem(factory,
+                        "Cannot save additional factory settings", ex);
+                }
             }
             return new Factory(id, className, factorySettings);
         }
@@ -233,12 +241,8 @@ public record NodeSpec(Factory factory, NodeType type, Ports ports, Metadata met
          */
         private static Ports of(final Node node, final NodeFactory<?> factory) {
             // node counts the implicit flow variable port, the factory does not
-            final var inputPorts = ports(node.getNrInPorts() - 1, i -> node.getInportName(i + 1),
-                i -> node.getInportDescriptionName(i + 1), i -> node.getInputType(i + 1),
-                factory::getInportDescription);
-            final var outputPorts = ports(node.getNrOutPorts() - 1, i -> node.getOutportName(i + 1),
-                i -> node.getOutportDescriptionName(i + 1), i -> node.getOutputType(i + 1),
-                factory::getOutportDescription);
+            final var inputPorts = inputPorts(node, factory);
+            final var outputPorts = outputPorts(node, factory);
 
             // what the factory declares as supported input port types
             var optDeclaredInputPortTypes = getCopyOfCreationConfig(factory)//
@@ -269,28 +273,56 @@ public record NodeSpec(Factory factory, NodeType type, Ports ports, Metadata met
             }
         }
 
-        private static List<Port> ports(final int numPorts, final IntFunction<String> portName,
-            final IntFunction<String> portDescriptionName, final IntFunction<PortType> portType,
-            final IntFunction<String> portDescription) {
-
+        private static List<Port> inputPorts(final Node node, final NodeFactory<?> factory) {
             final var ports = new ArrayList<Port>();
-            for (var i = 0; i < numPorts; i++) {
-                // log info if port names provided by factory and node mismatch
-                // log info if port description name is not same as port name
-                if (!portDescriptionName.apply(i).equals(portName.apply(i))) {
-                    NodeLogger.getLogger(Ports.class).warnWithFormat(
-                        "Port name mismatch, description name is %s but port name is %s", portDescriptionName.apply(i),
-                        portName.apply(i));
+            // subtract the implicit flow variable port
+            for (var i = 0; i < node.getNrInPorts() - 1; i++) {
+
+                // skip the implicit flow variable port (only present on the node)
+                final var nodePortIndex = i + 1;
+                final var factoryPortIndex = i;
+
+                final var name =
+                    tryEval(() -> node.getInportName(nodePortIndex), "No port name provided by node description",
+                        factory, "Node provides no name for input port at index " + i);
+                final var descriptionName = node.getInportDescriptionName(i + 1);
+                if (Objects.equals(descriptionName, name)) {
+                    NodeLogger.getLogger(Ports.class).infoWithFormat(
+                        "Input port names mismatch, description name is %s, port name is %s", descriptionName, name);
                 }
-                final var portIndex = i;
-                final var type = CoreToDefUtil.toPortTypeDef(portType.apply(portIndex));
-                // NXT-2233 harden against buggy node descriptions
-                final var name = tryEval(() -> portName.apply(portIndex), "No port name provided by node description");
-                // port names are 0 based, port descriptions are 1 based
-                var description =
-                    tryEval(() -> portDescription.apply(portIndex),
-                        "No port description provided by node description");
-                ports.add(new Port(portIndex, type, name, description));
+                var description = tryEval(() -> factory.getInportDescription(factoryPortIndex),
+                    "No port description provided by node description", factory,
+                    "Node factory provides no description for input port at index " + i);
+                final var type = node.getInputType(nodePortIndex);
+                ports.add(new Port(i, CoreToDefUtil.toPortTypeDef(type), name, description));
+            }
+            return ports;
+        }
+
+        private static List<Port> outputPorts(final Node node, final NodeFactory<?> factory) {
+            final var ports = new ArrayList<Port>();
+            // subtract the implicit flow variable port
+            for (var i = 0; i < node.getNrOutPorts() - 1; i++) {
+                // skip the implicit flow variable port (only present on the node)
+                final var nodePortIndex = i + 1;
+                final var factoryPortIndex = i;
+
+                final var name =
+                    tryEval(() -> node.getOutportName(nodePortIndex), "No port name provided by node description",
+                        factory, "Node provides no name for output port at index " + i);
+                final var descriptionName = tryEval(() -> node.getOutportDescriptionName(nodePortIndex),
+                    "No port name provided by node description", factory,
+                    "Node provides no name for output port at index " + i);
+                if (Objects.equals(descriptionName, name)) {
+                    NodeLogger.getLogger(Ports.class).infoWithFormat(
+                        "Output port names mismatch, description name is %s, port name is %s", descriptionName, name);
+                }
+                var description = tryEval(() -> factory.getOutportDescription(factoryPortIndex),
+                    "No port description provided by node description", factory,
+                    "Node factory provides no description for output port at index " + i);
+                final var type = node.getOutputType(nodePortIndex);
+
+                ports.add(new Port(i, CoreToDefUtil.toPortTypeDef(type), name, description));
             }
             return ports;
         }
@@ -372,11 +404,16 @@ public record NodeSpec(Factory factory, NodeType type, Ports ports, Metadata met
 
     }
 
-    private static <T> T tryEval(final Supplier<T> supplier, final T defaultValue) {
+    /**
+     * NXT-2233: harden against buggy node descriptions
+     * @param source for logging
+     */
+    private static <T> T tryEval(final Supplier<T> supplier, final T defaultValue, final NodeFactory<?> source,
+        final String message) {
         try {
             return supplier.get();
-        } catch (Exception e) {
-            NodeLogger.getLogger(NodeSpec.class).warn("Cannot evaluate supplier.", e);
+        } catch (Exception e) { // NOSONAR guarding against publicly extendible code here
+            NodeFactoryProvider.getInstance().logExtensionProblem(source, message, e);
             return defaultValue;
         }
     }

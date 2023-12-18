@@ -65,7 +65,7 @@ public final class TestNodeFactory extends NodeFactory<TestNodeModel> {
 
     @Override
     protected int getNrNodeViews() {
-        return 1;
+        return 2;
     }
 
     @Override

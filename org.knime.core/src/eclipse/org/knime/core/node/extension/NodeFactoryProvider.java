@@ -90,6 +90,8 @@ public final class NodeFactoryProvider {
     /** ID of "nodesets" extension point */
     private static final String ID_NODE_SET = "org.knime.workbench.repository.nodesets";
 
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(NodeFactoryProvider.class);
+
     /**
      * Map of node factory class name to its {@link NodeFactoryExtension}, e.g.
      * <ul>
@@ -297,5 +299,28 @@ public final class NodeFactoryProvider {
             "Collected %s extensions... found %d nodes (%d deprecated, %d hidden) in %.1fs",
             NodeFactory.class.getSimpleName(), totalNodes, deprecatedNodes, hiddenNodes,
             (System.currentTimeMillis() - start) / 1000.0);
+    }
+
+    /**(
+     * @return empty if the factory was added at runtime {@link #addLoadedFactory(Class)}
+     */
+    private Optional<INodeFactoryExtension> getExtension(final NodeFactory<?> factory) {
+        final var fcn = factory.getClass().getName();
+        return Optional.ofNullable((INodeFactoryExtension)m_factoryNameToNodeFactoryExtensionMap.get(fcn))
+            .or(() -> Optional.ofNullable(m_factoryNameToNodeSetFactoryExtensionMap.get(fcn)));
+    }
+
+    /**
+     * @param factory that is problematic or creates the problematic node
+     * @param message describes the problem
+     * @param throwable
+     */
+    void logExtensionProblem(final NodeFactory<?> factory, final String message, final Throwable throwable) {
+        final var fcn = factory.getClass().getName();
+        final var optExt = getExtension(factory);
+        final var extName = optExt.flatMap(INodeFactoryExtension::getInstallableUnitName).orElse("providing " + fcn);
+        LOGGER.warn("Problem with extension \"%s\". Some nodes might not be available. ".formatted(extName)
+            + "Please contact the vendor of the extension. "
+            + "Node factory %s reported \"%s\"".formatted(fcn, message), throwable);
     }
 }
