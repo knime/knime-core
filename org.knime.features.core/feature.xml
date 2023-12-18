@@ -2,7 +2,7 @@
 <feature
       id="org.knime.features.core"
       label="KNIME AP Core feature"
-      version="5.2.0.qualifier"
+      version="5.2.1.qualifier"
       provider-name="KNIME AG, Zurich, Switzerland">
 
    <description>
@@ -744,7 +744,7 @@ propagated with or for interoperation with KNIME.
          download-size="0"
          install-size="0"
          version="0.0.0"/>
-         
+
    <plugin
          id="org.knime.core.table"
          download-size="0"
