@@ -69,11 +69,13 @@ import org.knime.core.data.filestore.internal.NotInWorkflowWriteFileStoreHandler
 import org.knime.core.data.util.NonClosableInputStream;
 import org.knime.core.data.util.NonClosableOutputStream;
 import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContent;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
+import org.knime.core.node.Node;
 import org.knime.core.node.port.PortObject.PortObjectSerializer;
 import org.knime.core.node.port.PortObjectSpec.PortObjectSpecSerializer;
 import org.knime.core.util.FileUtil;
@@ -235,6 +237,17 @@ public final class PortUtil {
         }
     }
 
+    /**
+     * Reads a port object from a file, previously saved via
+     * {@link #writeObjectToFile(PortObject, File, ExecutionMonitor)}.
+     *
+     * @param file To read from, not null.
+     * @param exec to report progress.
+     * @return The port object - in case of a {@link FileStorePortObject} the port object is associated with a
+     * {@link NotInWorkflowWriteFileStoreHandler}.
+     * @throws IOException If that fails
+     * @throws CanceledExecutionException If canceled
+     */
     public static PortObject readObjectFromFile(final File file, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException {
         try (FileInputStream input = new FileInputStream(file)) {
@@ -242,8 +255,27 @@ public final class PortUtil {
         }
     }
 
+    /**
+     * Reads a port object from a stream, previously saved via
+     * {@link #writeObjectToStream(PortObject, OutputStream, ExecutionMonitor)}.
+     *
+     * @param input To read from, not null.
+     * @param exec to report progress.
+     * @return The port object - in case of a {@link FileStorePortObject} the port object is associated with a
+     * {@link NotInWorkflowWriteFileStoreHandler}.
+     * @throws IOException If that fails
+     * @throws CanceledExecutionException If canceled
+     */
     public static PortObject readObjectFromStream(final InputStream input, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException {
+        return readObjectFromStreamInternal(input, exec).portObject();
+    }
+
+
+    private record PortObjectReadResult(PortObject portObject, NotInWorkflowWriteFileStoreHandler fileStoreHandler) {}
+
+    private static PortObjectReadResult readObjectFromStreamInternal(final InputStream input,
+        final ExecutionMonitor exec) throws IOException, CanceledExecutionException {
         try (ZipInputStream in = new ZipInputStream(new BufferedInputStream(input))) {
             ZipEntry entry = in.getNextEntry();
 
@@ -280,6 +312,8 @@ public final class PortUtil {
                     PortTypeRegistry.getInstance().getObjectSerializer(cl.asSubclass(PortObject.class)).orElseThrow();
                 portObject= objSer.loadPortObject(objIn, spec, exec);
             }
+
+            NotInWorkflowWriteFileStoreHandler notInWorkflowFSHandler = null;
             if (portObject instanceof FileStorePortObject) {
                 final ModelContentRO fileStoreModelContent = toc.getModelContent("filestores");
                 final UUID iFileStoreHandlerUUID = UUID.fromString(fileStoreModelContent.getString("handlerUUID"));
@@ -288,8 +322,7 @@ public final class PortUtil {
                 for (final String key : fileStoreKeysModel.keySet()) {
                     fileStoreKeys.add(FileStoreKey.load(fileStoreKeysModel.getModelContent(key)));
                 }
-                final NotInWorkflowWriteFileStoreHandler notInWorkflowFSHandler =
-                        new NotInWorkflowWriteFileStoreHandler(iFileStoreHandlerUUID);
+                notInWorkflowFSHandler = new NotInWorkflowWriteFileStoreHandler(iFileStoreHandlerUUID);
 
                 entry = in.getNextEntry();
                 if (entry != null && "filestores/".equals(entry.getName())) {
@@ -300,10 +333,51 @@ public final class PortUtil {
                 FileStoreUtil.retrieveFileStoreHandlerFrom((FileStorePortObject)portObject, fileStoreKeys,
                     notInWorkflowFSHandler.getDataRepository());
             }
-            return portObject;
+            return new PortObjectReadResult(portObject, notInWorkflowFSHandler);
         } catch (final InvalidSettingsException ex) {
             throw new IOException("Unable to parse content.xml in port object file", ex);
         }
+    }
+
+    /**
+     * Reads a {@link PortObject}, associating it with the {@link ExecutionContext} in case it's a
+     * {@link FileStorePortObject}.
+     *
+     * @param file to read from
+     * @param context The node's context
+     * @return the new object
+     * @throws IOException ...
+     * @throws CanceledExecutionException ...
+     * @since 5.3
+     */
+    public static PortObject readObjectFromFileViaContext(final File file, final ExecutionContext context)
+            throws IOException, CanceledExecutionException {
+        try (FileInputStream input = new FileInputStream(file)) {
+            return readObjectFromStreamViaContext(input, context);
+        }
+    }
+
+    /**
+     * Reads a {@link PortObject}, associating it with the {@link ExecutionContext} in case it's a
+     * {@link FileStorePortObject}.
+     *
+     * @param input to read from
+     * @param context The node's context
+     * @return the new object
+     * @throws IOException ...
+     * @throws CanceledExecutionException ...
+     * @since 5.3
+     */
+    public static PortObject readObjectFromStreamViaContext(final InputStream input, final ExecutionContext context)
+            throws IOException, CanceledExecutionException {
+        PortObjectReadResult result = readObjectFromStreamInternal(input, context);
+        final NotInWorkflowWriteFileStoreHandler notInWorkflowFileStoreHandler = result.fileStoreHandler();
+        PortObject portObject = result.portObject();
+        if (notInWorkflowFileStoreHandler != null) {
+            portObject = Node.copyPortObject(portObject, context);
+            notInWorkflowFileStoreHandler.clearAndDispose();
+        }
+        return portObject;
     }
 
     public static PortObjectSpec readObjectSpecFromFile(final File file) throws IOException {
