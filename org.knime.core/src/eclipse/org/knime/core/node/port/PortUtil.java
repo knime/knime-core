@@ -87,6 +87,7 @@ import org.knime.core.util.FileUtil;
  *
  * @author Bernd Wiswedel, University of Konstanz
  */
+@SuppressWarnings("java:S5042") // possible zip bombs but limited blast radius
 public final class PortUtil {
     private PortUtil() {
     }
@@ -127,21 +128,21 @@ public final class PortUtil {
 
     public static PortObjectSpecZipOutputStream getPortObjectSpecZipOutputStream(final OutputStream in)
         throws IOException {
-        PortObjectSpecZipOutputStream zipOut = new PortObjectSpecZipOutputStream(in);
+        final PortObjectSpecZipOutputStream zipOut = new PortObjectSpecZipOutputStream(in);
         zipOut.putNextEntry(new ZipEntry("portSpec.file"));
         return zipOut;
     }
 
     public static PortObjectZipOutputStream getPortObjectZipOutputStream(final OutputStream in) throws IOException {
-        PortObjectZipOutputStream zipOut = new PortObjectZipOutputStream(in);
+        final PortObjectZipOutputStream zipOut = new PortObjectZipOutputStream(in);
         zipOut.putNextEntry(new ZipEntry("portObject.file"));
         return zipOut;
     }
 
     public static PortObjectSpecZipInputStream getPortObjectSpecZipInputStream(final InputStream in)
         throws IOException {
-        PortObjectSpecZipInputStream zipIn = new PortObjectSpecZipInputStream(in);
-        ZipEntry entry = zipIn.getNextEntry();
+        final PortObjectSpecZipInputStream zipIn = new PortObjectSpecZipInputStream(in);
+        final ZipEntry entry = zipIn.getNextEntry();
         if (!"portSpec.file".equals(entry.getName())) {
             throw new IOException("Expected zip entry 'portSpec.file', got '" + entry.getName() + "'");
         }
@@ -149,8 +150,8 @@ public final class PortUtil {
     }
 
     public static PortObjectZipInputStream getPortObjectZipInputStream(final InputStream in) throws IOException {
-        PortObjectZipInputStream zipIn = new PortObjectZipInputStream(in);
-        ZipEntry entry = zipIn.getNextEntry();
+        final PortObjectZipInputStream zipIn = new PortObjectZipInputStream(in);
+        final ZipEntry entry = zipIn.getNextEntry();
         if (!"portObject.file".equals(entry.getName())) {
             throw new IOException("Expected zip entry 'portObject.file', got '" + entry.getName() + "'");
         }
@@ -178,28 +179,28 @@ public final class PortUtil {
             throws IOException, CanceledExecutionException {
         final boolean originalOutputIsBuffered =
             ((output instanceof BufferedOutputStream) || (output instanceof ByteArrayOutputStream));
-        OutputStream os = originalOutputIsBuffered ? output : new BufferedOutputStream(output);
+        final OutputStream os = originalOutputIsBuffered ? output : new BufferedOutputStream(output);
 
         final ZipOutputStream zipOut = new ZipOutputStream(os);
 
-        PortObjectSpec spec = po.getSpec();
+        final PortObjectSpec spec = po.getSpec();
         zipOut.putNextEntry(new ZipEntry("content.xml"));
-        ModelContent toc = new ModelContent("content");
+        final ModelContent toc = new ModelContent("content");
         toc.addInt("version", 1);
         toc.addString("port_spec_class", spec.getClass().getName());
         toc.addString("port_object_class", po.getClass().getName());
         NotInWorkflowWriteFileStoreHandler fileStoreHandler = null;
         if (po instanceof FileStorePortObject) {
             fileStoreHandler = NotInWorkflowWriteFileStoreHandler.create();
-            ModelContentWO fileStoreModelContent = toc.addModelContent("filestores");
+            final ModelContentWO fileStoreModelContent = toc.addModelContent("filestores");
             fileStoreModelContent.addString("handlerUUID", fileStoreHandler.getStoreUUID().toString());
 
             final FileStorePortObject fileStorePO = (FileStorePortObject)po;
             FileStoreUtil.invokeFlush(fileStorePO);
-            List<FileStore> fileStores = FileStoreUtil.getFileStores(fileStorePO);
-            ModelContentWO fileStoreKeysModel = fileStoreModelContent.addModelContent("port_file_store_keys");
+            final List<FileStore> fileStores = FileStoreUtil.getFileStores(fileStorePO);
+            final ModelContentWO fileStoreKeysModel = fileStoreModelContent.addModelContent("port_file_store_keys");
             for (int i = 0; i < fileStores.size(); i++) {
-                FileStoreKey key = fileStoreHandler.translateToLocal(fileStores.get(i), fileStorePO);
+                final FileStoreKey key = fileStoreHandler.translateToLocal(fileStores.get(i), fileStorePO);
                 key.save(fileStoreKeysModel.addModelContent("filestore_key_" + i));
             }
         }
@@ -208,20 +209,22 @@ public final class PortUtil {
         zipOut.putNextEntry(new ZipEntry("objectSpec.file"));
         try (PortObjectSpecZipOutputStream specOut =
                     getPortObjectSpecZipOutputStream(new NonClosableOutputStream.Zip(zipOut))) {
-            PortObjectSpecSerializer specSer = PortTypeRegistry.getInstance().getSpecSerializer(spec.getClass()).get();
+            final PortObjectSpecSerializer<PortObjectSpec> specSer =
+                PortTypeRegistry.getInstance().getSpecSerializer(spec.getClass()).orElseThrow();
             specSer.savePortObjectSpec(spec, specOut);
         } // 'close' will propagate as closeEntry
 
         zipOut.putNextEntry(new ZipEntry("object.file"));
         try (PortObjectZipOutputStream objOut = getPortObjectZipOutputStream(new NonClosableOutputStream.Zip(zipOut))) {
-            PortObjectSerializer objSer = PortTypeRegistry.getInstance().getObjectSerializer(po.getClass()).get();
+            final PortObjectSerializer<PortObject> objSer =
+                PortTypeRegistry.getInstance().getObjectSerializer(po.getClass()).orElseThrow();
             objSer.savePortObject(po, objOut, exec);
         } // 'close' will propagate as closeEntry
 
         if (fileStoreHandler != null && fileStoreHandler.hasCopiedFileStores()) {
             zipOut.putNextEntry(new ZipEntry("filestores/"));
             zipOut.closeEntry();
-            File baseDir = fileStoreHandler.getBaseDir();
+            final File baseDir = fileStoreHandler.getBaseDir();
             FileUtil.zipDir(zipOut, Arrays.asList(baseDir.listFiles()), "filestores/", FileUtil.ZIP_INCLUDEALL_FILTER,
                 exec.createSubProgress(0.5));
         }
@@ -245,7 +248,7 @@ public final class PortUtil {
             ZipEntry entry = in.getNextEntry();
 
             // Check that the given input stream really specifies a port object
-            if(entry == null) {
+            if (entry == null) {
                 throw new IOException("File does not specify a valid port object model");
             }
 
@@ -253,40 +256,44 @@ public final class PortUtil {
                 throw new IOException(
                     "Invalid stream, expected zip entry \"content.xml\", got \"" + entry.getName() + "\"");
             }
-            ModelContentRO toc = ModelContent.loadFromXML(new NonClosableInputStream.Zip(in));
-            String specClassName = toc.getString("port_spec_class");
-            String objClassName = toc.getString("port_object_class");
+            ModelContentRO toc;
+            try (final NonClosableInputStream.Zip nonCloseable = new NonClosableInputStream.Zip(in)) { // avoid sonar
+                toc = ModelContent.loadFromXML(nonCloseable);
+            }
+            final String specClassName = toc.getString("port_spec_class");
+            final String objClassName = toc.getString("port_object_class");
             // reads "objectSpec.file"
-            PortObjectSpec spec = readObjectSpec(specClassName, in);
+            final PortObjectSpec spec = readObjectSpec(specClassName, in);
 
             entry = in.getNextEntry();
             if (!"object.file".equals(entry.getName())) {
                 throw new IOException(
                     "Invalid stream, expected zip entry \"object.file\", got \"" + entry.getName() + "\"");
             }
-            Class<? extends PortObject> cl = PortTypeRegistry.getInstance().getObjectClass(objClassName)
+            final Class<? extends PortObject> cl = PortTypeRegistry.getInstance().getObjectClass(objClassName)
                 .orElseThrow(() -> new IOException("Can't load class \"" + specClassName + "\""));
 
             PortObject portObject;
-            try (PortObjectZipInputStream objIn = getPortObjectZipInputStream(new NonClosableInputStream.Zip(in))) {
-                PortObjectSerializer<?> objSer =
-                        PortTypeRegistry.getInstance().getObjectSerializer(cl.asSubclass(PortObject.class)).get();
+            try (final NonClosableInputStream.Zip nonCloseable = new NonClosableInputStream.Zip(in);
+                    final PortObjectZipInputStream objIn = getPortObjectZipInputStream(nonCloseable)) {
+                final PortObjectSerializer<?> objSer =
+                    PortTypeRegistry.getInstance().getObjectSerializer(cl.asSubclass(PortObject.class)).orElseThrow();
                 portObject= objSer.loadPortObject(objIn, spec, exec);
             }
             if (portObject instanceof FileStorePortObject) {
-                ModelContentRO fileStoreModelContent = toc.getModelContent("filestores");
-                UUID iFileStoreHandlerUUID = UUID.fromString(fileStoreModelContent.getString("handlerUUID"));
-                ModelContentRO fileStoreKeysModel = fileStoreModelContent.getModelContent("port_file_store_keys");
-                List<FileStoreKey> fileStoreKeys = new ArrayList<>();
-                for (String key : fileStoreKeysModel.keySet()) {
+                final ModelContentRO fileStoreModelContent = toc.getModelContent("filestores");
+                final UUID iFileStoreHandlerUUID = UUID.fromString(fileStoreModelContent.getString("handlerUUID"));
+                final ModelContentRO fileStoreKeysModel = fileStoreModelContent.getModelContent("port_file_store_keys");
+                final List<FileStoreKey> fileStoreKeys = new ArrayList<>();
+                for (final String key : fileStoreKeysModel.keySet()) {
                     fileStoreKeys.add(FileStoreKey.load(fileStoreKeysModel.getModelContent(key)));
                 }
-                NotInWorkflowWriteFileStoreHandler notInWorkflowFSHandler =
+                final NotInWorkflowWriteFileStoreHandler notInWorkflowFSHandler =
                         new NotInWorkflowWriteFileStoreHandler(iFileStoreHandlerUUID);
 
                 entry = in.getNextEntry();
                 if (entry != null && "filestores/".equals(entry.getName())) {
-                    File fileStoreDir = FileUtil.createTempDir("knime_fs_" + cl.getSimpleName() + "-");
+                    final File fileStoreDir = FileUtil.createTempDir("knime_fs_" + cl.getSimpleName() + "-");
                     FileUtil.unzip(in, fileStoreDir, 1);
                     notInWorkflowFSHandler.setBaseDir(fileStoreDir);
                 }
@@ -294,7 +301,7 @@ public final class PortUtil {
                     notInWorkflowFSHandler.getDataRepository());
             }
             return portObject;
-        } catch (InvalidSettingsException ex) {
+        } catch (final InvalidSettingsException ex) {
             throw new IOException("Unable to parse content.xml in port object file", ex);
         }
     }
@@ -316,7 +323,7 @@ public final class PortUtil {
      */
     public static PortObjectSpec readObjectSpecFromStream(final InputStream stream) throws IOException {
         try (ZipInputStream in = new ZipInputStream(stream)) {
-            ZipEntry entry = in.getNextEntry();
+            final ZipEntry entry = in.getNextEntry();
             if (entry == null) {
                 throw new IOException("Invalid file: No zip entry found");
             }
@@ -324,11 +331,11 @@ public final class PortUtil {
                 throw new IOException(
                     "Invalid stream, expected zip entry \"content.xml\", got \"" + entry.getName() + "\"");
             }
-            ModelContentRO toc = ModelContent.loadFromXML(new NonClosableInputStream.Zip(in));
+            final ModelContentRO toc = ModelContent.loadFromXML(new NonClosableInputStream.Zip(in));
             String specClassName;
             try {
                 specClassName = toc.getString("port_spec_class");
-            } catch (InvalidSettingsException e1) {
+            } catch (final InvalidSettingsException e1) {
                 throw new IOException("Can't parse content file", e1);
             }
             return readObjectSpec(specClassName, in);
@@ -337,17 +344,17 @@ public final class PortUtil {
 
     private static PortObjectSpec readObjectSpec(final String specClassName, final ZipInputStream in)
         throws IOException {
-        ZipEntry entry = in.getNextEntry();
+        final ZipEntry entry = in.getNextEntry();
         if (!"objectSpec.file".equals(entry.getName())) {
             throw new IOException(
                 "Invalid stream, expected zip entry \"objectSpec.file\", got \"" + entry.getName() + "\"");
         }
-        Class<? extends PortObjectSpec> cl = PortTypeRegistry.getInstance().getSpecClass(specClassName)
+        final Class<? extends PortObjectSpec> cl = PortTypeRegistry.getInstance().getSpecClass(specClassName)
             .orElseThrow(() -> new IOException("Can't load class \"" + specClassName + "\""));
         try (PortObjectSpecZipInputStream specIn =
             PortUtil.getPortObjectSpecZipInputStream(new NonClosableInputStream.Zip(in))) {
-            PortObjectSpecSerializer<?> serializer =
-                PortTypeRegistry.getInstance().getSpecSerializer(cl.asSubclass(PortObjectSpec.class)).get();
+            final PortObjectSpecSerializer<?> serializer =
+                PortTypeRegistry.getInstance().getSpecSerializer(cl.asSubclass(PortObjectSpec.class)).orElseThrow();
             return serializer.loadPortObjectSpec(specIn);
         }
     }
