@@ -571,4 +571,31 @@ public final class CredentialsStore implements Observer {
         }
 
     }
+
+    /**
+     * Non-confidential credentials properties.
+     *
+     * @param name identifies the credentials within a workflow
+     * @param login identifies the user
+     * @param isPasswordSet whether a non-empty password is set
+     *
+     * @author Carl Witt, KNIME AG, Zurich, Switzerland
+     * @since 5.3
+     */
+    public static record CredentialsProperties(String name, String login, boolean isPasswordSet) {
+        /**
+         * @param flowVariable to extract credentials properties
+         * @return empty if the variable is not of type {@link CredentialsType}
+         */
+        public static Optional<CredentialsProperties> of(final FlowVariable flowVariable) {
+            try {
+                final var value = flowVariable.getValue(CredentialsType.INSTANCE);
+                return Optional.of(new CredentialsProperties(value.getName(), value.getLogin(),
+                    value.getPassword() != null && !value.getPassword().isEmpty()));
+            } catch (IllegalArgumentException ex) {
+                return Optional.empty();
+            }
+        }
+    }
+
 }

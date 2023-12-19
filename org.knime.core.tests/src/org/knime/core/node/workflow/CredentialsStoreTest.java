@@ -139,4 +139,47 @@ public class CredentialsStoreTest {
 
     }
 
+    @Nested
+    class CredentialsPropertiesTest {
+
+        @Test
+        void testPropertiesWithPassword() throws InvalidSettingsException {
+            final var credStore = new CredentialsStore(m_wfm);
+            final var fv = CredentialsStore.newCredentialsFlowVariable("a", "b", "c", false, false);
+            credStore.addFromFlowVariable(fv);
+            final var optProps = CredentialsStore.CredentialsProperties.of(fv);
+            assertEquals(true, optProps.isPresent(), "Properties are not created.");
+            final var props = optProps.get();
+            assertEquals("a", props.name());
+            assertEquals("b", props.login());
+            assertEquals(true, props.isPasswordSet());
+        }
+
+        @Test
+        void testPropertiesWithNullPassword() throws InvalidSettingsException {
+            final var credStore = new CredentialsStore(m_wfm);
+            final var fv = CredentialsStore.newCredentialsFlowVariable("a", "b", null, false, false);
+            credStore.addFromFlowVariable(fv);
+            final var optProps = CredentialsStore.CredentialsProperties.of(fv);
+            assertEquals(true, optProps.isPresent(), "Properties are not created.");
+            final var props = optProps.get();
+            assertEquals("a", props.name());
+            assertEquals("b", props.login());
+            assertEquals(false, props.isPasswordSet());
+        }
+
+        @Test
+        void testPropertiesWithEmptyPassword() throws InvalidSettingsException {
+            final var credStore = new CredentialsStore(m_wfm);
+            final var fv = CredentialsStore.newCredentialsFlowVariable("a", "b", "", false, false);
+            credStore.addFromFlowVariable(fv);
+            final var optProps = CredentialsStore.CredentialsProperties.of(fv);
+            assertEquals(true, optProps.isPresent(), "Properties are not created.");
+            final var props = optProps.get();
+            assertEquals("a", props.name());
+            assertEquals("b", props.login());
+            assertEquals(false, props.isPasswordSet());
+        }
+    }
+
 }
