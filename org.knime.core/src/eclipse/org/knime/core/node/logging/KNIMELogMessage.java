@@ -44,51 +44,39 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   05.06.2015 (koetter): created
+ *   11 Jan 2024 (Manuel Hotz, KNIME GmbH, Konstanz, Germany): created
  */
-package org.knime.core.node;
+package org.knime.core.node.logging;
 
-import org.apache.log4j.PatternLayout;
-import org.knime.core.node.logging.KNIMELoggerPatternLayout;
+import java.io.File;
+import java.util.UUID;
+
+import org.apache.log4j.Logger;
+import org.knime.core.node.workflow.NodeID;
 
 /**
- * {@link PatternLayout} implementation that recognises KNIME specific pattern e.g. I for node id, N for node name and
- * W for the workflow directory.
+ * Class that encapsulates all information of a log message in KNIME such as the {@link NodeID} and
+ * workflow directory if the message can be assigned to them.
  *
  * @author Tobias Koetter, KNIME.com
- * @since 2.12
+ * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
+ *
+ * @param logger logger with which this message should be logged
+ * @param nodeID the nullable node ID if available
+ * @param nodeName the nullable name of the node if available
+ * @param workflowDir the nullable workflow location if available
+ * @param jobID nullable job ID
+ * @param msg nullable log message
+ *
+ * @since 5.3
+ * @noreference This class is not intended to be referenced by clients.
  */
-public class NodeLoggerPatternLayout extends KNIMELoggerPatternLayout {
-    // non-public functionality moved to logging package
-    /**
-     * Node id pattern.
-     * @since 5.3
-     * */
-    public static final char NODE_ID = 'I';
-    /**
-     * Node name pattern.
-     * @since 5.3
-     * */
-    public static final char NODE_NAME = 'N';
-    /**
-     * Qualifier pattern as a combination of node name and category.
-     * @since 5.3
-     * */
-    public static final char QUALIFIER = 'Q';
-    /**
-     * Workflow directory pattern.
-     * @since 5.3
-     * */
-    public static final char WORKFLOW_DIR = 'W';
-    /**
-     * Job id pattern.
-     * @since 5.3
-     * */
-    public static final char JOB_ID = 'J';
-    /**
-     * Correlation ID pattern.
-     * @since 5.3
-     * */
-    public static final char CORRELATION_ID = 'C';
+// originally an ordinary class in org.knime.core.node, copied as a record
+record KNIMELogMessage(Logger logger, NodeID nodeID, String nodeName, File workflowDir, UUID jobID,
+    Object msg) {
 
+    @Override
+    public String toString() {
+        return DelegatingLogger.renderMessage(logger, this);
+    }
 }
