@@ -13,8 +13,9 @@
 		-XX:+UnlockDiagnosticVMOptions -XX:+UnsyncloadClass \
 		-Dsun.net.client.defaultReadTimeout=0 -Xmx4G \
 		-XX:CompileCommand=exclude,javax/swing/text/GlyphView,getBreakSpot \
-		-Dchromium.multi_threaded_message_loop=true
+		-Dchromium.multi_threaded_message_loop=true -XstartOnFirstThread
 		</surefireArgLine>
+		<tycho.testArgLine>${surefireArgLine}</tycho.testArgLine>
 		<revision>5.3.0</revision>
 	</properties>
 
