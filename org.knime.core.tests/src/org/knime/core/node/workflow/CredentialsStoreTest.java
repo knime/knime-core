@@ -145,7 +145,7 @@ public class CredentialsStoreTest {
         @Test
         void testPropertiesWithPassword() throws InvalidSettingsException {
             final var credStore = new CredentialsStore(m_wfm);
-            final var fv = CredentialsStore.newCredentialsFlowVariable("a", "b", "c", false, false);
+            final var fv = CredentialsStore.newCredentialsFlowVariable("a", "b", "c", "2FA");
             credStore.addFromFlowVariable(fv);
             final var optProps = CredentialsStore.CredentialsProperties.of(fv);
             assertEquals(true, optProps.isPresent(), "Properties are not created.");
@@ -153,12 +153,13 @@ public class CredentialsStoreTest {
             assertEquals("a", props.name());
             assertEquals("b", props.login());
             assertEquals(true, props.isPasswordSet());
+            assertEquals(true, props.isSecondAuthenticationFactorSet());
         }
 
         @Test
         void testPropertiesWithNullPassword() throws InvalidSettingsException {
             final var credStore = new CredentialsStore(m_wfm);
-            final var fv = CredentialsStore.newCredentialsFlowVariable("a", "b", null, false, false);
+            final var fv = CredentialsStore.newCredentialsFlowVariable("a", "b", null, null);
             credStore.addFromFlowVariable(fv);
             final var optProps = CredentialsStore.CredentialsProperties.of(fv);
             assertEquals(true, optProps.isPresent(), "Properties are not created.");
@@ -166,12 +167,13 @@ public class CredentialsStoreTest {
             assertEquals("a", props.name());
             assertEquals("b", props.login());
             assertEquals(false, props.isPasswordSet());
+            assertEquals(false, props.isSecondAuthenticationFactorSet());
         }
 
         @Test
         void testPropertiesWithEmptyPassword() throws InvalidSettingsException {
             final var credStore = new CredentialsStore(m_wfm);
-            final var fv = CredentialsStore.newCredentialsFlowVariable("a", "b", "", false, false);
+            final var fv = CredentialsStore.newCredentialsFlowVariable("a", "b", "", "");
             credStore.addFromFlowVariable(fv);
             final var optProps = CredentialsStore.CredentialsProperties.of(fv);
             assertEquals(true, optProps.isPresent(), "Properties are not created.");
@@ -179,6 +181,7 @@ public class CredentialsStoreTest {
             assertEquals("a", props.name());
             assertEquals("b", props.login());
             assertEquals(false, props.isPasswordSet());
+            assertEquals(false, props.isSecondAuthenticationFactorSet());
         }
     }
 

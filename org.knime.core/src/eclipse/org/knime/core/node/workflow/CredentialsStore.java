@@ -578,11 +578,13 @@ public final class CredentialsStore implements Observer {
      * @param name identifies the credentials within a workflow
      * @param login identifies the user
      * @param isPasswordSet whether a non-empty password is set
+     * @param isSecondAuthenticationFactorSet whether a non-empty factor  is set
      *
      * @author Carl Witt, KNIME AG, Zurich, Switzerland
      * @since 5.3
      */
-    public static record CredentialsProperties(String name, String login, boolean isPasswordSet) {
+    public static record CredentialsProperties(String name, String login, boolean isPasswordSet,
+        boolean isSecondAuthenticationFactorSet) {
         /**
          * @param flowVariable to extract credentials properties
          * @return empty if the variable is not of type {@link CredentialsType}
@@ -590,9 +592,11 @@ public final class CredentialsStore implements Observer {
         public static Optional<CredentialsProperties> of(final FlowVariable flowVariable) {
             try {
                 final var value = flowVariable.getValue(CredentialsType.INSTANCE);
-                return Optional.of(new CredentialsProperties(value.getName(), value.getLogin(),
-                    value.getPassword() != null && !value.getPassword().isEmpty()));
-            } catch (IllegalArgumentException ex) {
+                final var optPassword = Optional.ofNullable(value.getPassword()).filter(v -> !v.isEmpty());
+                final var optFactor = value.getSecondAuthenticationFactor().filter(v -> !v.isEmpty());
+                return Optional.of(new CredentialsProperties(value.getName(), value.getLogin(), optPassword.isPresent(),
+                    optFactor.isPresent()));
+            } catch (IllegalArgumentException ex) { // NOSONAR we accept type errors to be able to keep the type private
                 return Optional.empty();
             }
         }
