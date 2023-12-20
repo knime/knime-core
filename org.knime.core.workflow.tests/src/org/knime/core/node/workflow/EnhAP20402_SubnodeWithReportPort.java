@@ -85,7 +85,6 @@ public class EnhAP20402_SubnodeWithReportPort extends WorkflowTestCase {
     
     @Before
     public void setUp() throws Exception {
-    	assumeThat("Disabled on Mac due to DEVOPS-2105", Platform.getOS(), not(equalTo(Platform.OS_MACOSX)));
         NodeID baseID = loadAndSetWorkflow();
         m_subnode_4 = baseID.createChild(4);
         final var subnodeWFM = m_subnode_4.createChild(0);
