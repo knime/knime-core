@@ -323,4 +323,16 @@ public final class NodeFactoryProvider {
             + "Please contact the vendor of the extension. "
             + "Node factory %s reported \"%s\"".formatted(fcn, message), throwable);
     }
+
+    /**
+     * @param ext extension that threw an error or exception
+     * @param throwable
+     */
+    static void logExtensionProblem(final INodeFactoryExtension ext, final Throwable throwable) {
+        final var extName = ext.getInstallableUnitName().orElse(ext.getPlugInSymbolicName());
+        final var extType = ext instanceof NodeSetFactoryExtension ? " set" : "";
+        LOGGER
+            .warn("Problem with node%s extension \"%s\". Some nodes might not be available.".formatted(extType, extName)
+                + " Please contact the vendor of the extension.", throwable);
+    }
 }

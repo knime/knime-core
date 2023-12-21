@@ -190,10 +190,7 @@ final class NodeSpecCache {
                 NodeSpecCollectionProvider.Progress.incrementDone(Stage.NODE_METADATA, nodeSpecs.size());
                 return nodeSpecs.stream();
             } catch (Throwable throwable) { // NOSONAR: extension point code cannot be trusted
-                final var extType = ext instanceof NodeSetFactoryExtension ? " set" : "";
-                LOGGER.warn(
-                    "Error while computing node specifications of node%s factory extensions %s".formatted(extType, ext),
-                    throwable);
+                NodeFactoryProvider.logExtensionProblem(ext, throwable);
                 return Stream.empty();
             }
         }

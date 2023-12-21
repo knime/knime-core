@@ -286,7 +286,7 @@ public record NodeSpec(Factory factory, NodeType type, Ports ports, Metadata met
                     tryEval(() -> node.getInportName(nodePortIndex), "No port name provided by node description",
                         factory, "Node provides no name for input port at index " + i);
                 final var descriptionName = node.getInportDescriptionName(i + 1);
-                if (Objects.equals(descriptionName, name)) {
+                if (!Objects.equals(descriptionName, name)) {
                     NodeLogger.getLogger(Ports.class).infoWithFormat(
                         "Input port names mismatch, description name is %s, port name is %s", descriptionName, name);
                 }
@@ -313,7 +313,7 @@ public record NodeSpec(Factory factory, NodeType type, Ports ports, Metadata met
                 final var descriptionName = tryEval(() -> node.getOutportDescriptionName(nodePortIndex),
                     "No port name provided by node description", factory,
                     "Node provides no name for output port at index " + i);
-                if (Objects.equals(descriptionName, name)) {
+                if (!Objects.equals(descriptionName, name)) {
                     NodeLogger.getLogger(Ports.class).infoWithFormat(
                         "Output port names mismatch, description name is %s, port name is %s", descriptionName, name);
                 }
