@@ -592,10 +592,10 @@ public final class CredentialsStore implements Observer {
         public static Optional<CredentialsProperties> of(final FlowVariable flowVariable) {
             try {
                 final var value = flowVariable.getValue(CredentialsType.INSTANCE);
-                final var optPassword = Optional.ofNullable(value.getPassword()).filter(v -> !v.isEmpty());
-                final var optFactor = value.getSecondAuthenticationFactor().filter(v -> !v.isEmpty());
-                return Optional.of(new CredentialsProperties(value.getName(), value.getLogin(), optPassword.isPresent(),
-                    optFactor.isPresent()));
+                final var password = value.getPassword();
+                final var hasPassword = password != null && !password.isEmpty();
+                final var has2FA = value.getSecondAuthenticationFactor().filter(f -> !f.isEmpty()).isPresent();
+                return Optional.of(new CredentialsProperties(value.getName(), value.getLogin(), hasPassword, has2FA));
             } catch (IllegalArgumentException ex) { // NOSONAR we accept type errors to be able to keep the type private
                 return Optional.empty();
             }
