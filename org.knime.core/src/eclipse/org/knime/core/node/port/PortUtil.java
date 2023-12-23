@@ -191,13 +191,12 @@ public final class PortUtil {
         toc.addInt("version", 1);
         toc.addString("port_spec_class", spec.getClass().getName());
         toc.addString("port_object_class", po.getClass().getName());
-        NotInWorkflowWriteFileStoreHandler fileStoreHandler = null;
-        if (po instanceof FileStorePortObject) {
+        final NotInWorkflowWriteFileStoreHandler fileStoreHandler;
+        if (po instanceof FileStorePortObject fileStorePO) {
             fileStoreHandler = NotInWorkflowWriteFileStoreHandler.create();
             final ModelContentWO fileStoreModelContent = toc.addModelContent("filestores");
             fileStoreModelContent.addString("handlerUUID", fileStoreHandler.getStoreUUID().toString());
 
-            final FileStorePortObject fileStorePO = (FileStorePortObject)po;
             FileStoreUtil.invokeFlush(fileStorePO);
             final List<FileStore> fileStores = FileStoreUtil.getFileStores(fileStorePO);
             final ModelContentWO fileStoreKeysModel = fileStoreModelContent.addModelContent("port_file_store_keys");
@@ -205,6 +204,8 @@ public final class PortUtil {
                 final FileStoreKey key = fileStoreHandler.translateToLocal(fileStores.get(i), fileStorePO);
                 key.save(fileStoreKeysModel.addModelContent("filestore_key_" + i));
             }
+        } else {
+            fileStoreHandler = null;
         }
         toc.saveToXML(new NonClosableOutputStream.Zip(zipOut));
 
@@ -223,12 +224,15 @@ public final class PortUtil {
             objSer.savePortObject(po, objOut, exec);
         } // 'close' will propagate as closeEntry
 
-        if (fileStoreHandler != null && fileStoreHandler.hasCopiedFileStores()) {
-            zipOut.putNextEntry(new ZipEntry("filestores/"));
-            zipOut.closeEntry();
-            final File baseDir = fileStoreHandler.getBaseDir();
-            FileUtil.zipDir(zipOut, Arrays.asList(baseDir.listFiles()), "filestores/", FileUtil.ZIP_INCLUDEALL_FILTER,
-                exec.createSubProgress(0.5));
+        if (fileStoreHandler != null) {
+            if (fileStoreHandler.hasCopiedFileStores()) {
+                zipOut.putNextEntry(new ZipEntry("filestores/"));
+                zipOut.closeEntry();
+                final File baseDir = fileStoreHandler.getBaseDir();
+                FileUtil.zipDir(zipOut, Arrays.asList(baseDir.listFiles()), "filestores/",
+                    FileUtil.ZIP_INCLUDEALL_FILTER, exec.createSubProgress(0.5));
+            }
+            fileStoreHandler.clearAndDispose();
         }
 
         zipOut.finish();
