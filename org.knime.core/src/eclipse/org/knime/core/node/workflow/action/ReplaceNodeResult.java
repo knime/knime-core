@@ -135,7 +135,9 @@ public final class ReplaceNodeResult {
             .filter(c -> m_wfm.canAddConnection(c.getSource(), c.getSourcePort(), c.getDest(), c.getDestPort()))
             .forEach(c -> {
                 var newConnection = m_wfm.addConnection(c.getSource(), c.getSourcePort(), c.getDest(), c.getDestPort());
-                newConnection.setUIInfo(ConnectionUIInformation.builder(c.getUIInfo()).build());
+                if (c.getUIInfo() != null) {
+                    newConnection.setUIInfo(ConnectionUIInformation.builder(c.getUIInfo()).build());
+                }
             });
         if (m_originalNodeAnnotation != null && !m_originalNodeAnnotation.getData().isDefault()) {
             m_wfm.getNodeContainer(m_replacedNodeID).getNodeAnnotation().copyFrom(m_originalNodeAnnotation.getData(),
