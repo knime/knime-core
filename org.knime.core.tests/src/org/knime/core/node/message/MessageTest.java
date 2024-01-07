@@ -52,6 +52,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.InstanceOfAssertFactories.type;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.util.List;
+import java.util.Optional;
+
 import org.assertj.core.api.ThrowingConsumer;
 import org.junit.jupiter.api.Test;
 import org.knime.core.internal.MessageAwareException;
@@ -89,6 +92,36 @@ class MessageTest {
         assertThat(message).extracting(m -> m.getResolutions()).asList().isEmpty();
         assertThat(message).extracting(m -> m.getIssue().orElseThrow()).asInstanceOf(type(RowIssue.class))
             .satisfies(rowIssueCondition);
+    }
+
+    /**
+     * Test method for {@link Message#fromSummary(String)} and similar.
+     */
+    @Test
+    void testFactoryMethods() {
+        final var m1 = Message.fromSummary("Summary Text");
+        assertThat(m1).as("non-null summary").extracting(Message::getSummary).isEqualTo("Summary Text");
+        assertThat(m1).as("empty resolution list").extracting(Message::getResolutions).isNotNull().asList().isEmpty();
+        assertThat(m1).as("no details").extracting(Message::getIssue).matches(Optional::isEmpty);
+
+        final var m2 = Message.fromSummaryWithResolution("Summary Text", "Resolution 1");
+        assertThat(m2).as("non-null summary").extracting(Message::getSummary).isEqualTo("Summary Text");
+        assertThat(m2).as("non-empty resolution list").extracting(Message::getResolutions).asList()
+            .isEqualTo(List.of("Resolution 1"));
+        assertThat(m2).as("no details").extracting(Message::getIssue).matches(Optional::isEmpty);
+
+        final var m3 = Message.fromSummaryWithResolution("Summary Text");
+        assertThat(m3).as("non-null summary").extracting(Message::getSummary).isEqualTo("Summary Text");
+        assertThat(m1).as("empty resolution list").extracting(Message::getResolutions).isNotNull().asList().isEmpty();
+        assertThat(m3).as("no details").extracting(Message::getIssue).matches(Optional::isEmpty);
+
+        assertThrows(IllegalArgumentException.class, () -> Message.fromSummary(null), "Null as factory argument");
+        assertThrows(IllegalArgumentException.class, () -> Message.fromSummaryWithResolution(null, "ignored"),
+            "Null as factory argument");
+        assertThrows(IllegalArgumentException.class, () -> Message.fromSummaryWithResolution("valid", (String)null),
+                "Resolution array containing null");
+        assertThrows(IllegalArgumentException.class, () -> Message.fromSummaryWithResolution("valid", (String[])null),
+                "Resolution array is null");
     }
 
     /** Change fields in message. */

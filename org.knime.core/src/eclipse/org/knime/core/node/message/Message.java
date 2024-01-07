@@ -368,7 +368,21 @@ public final class Message {
     }
 
     /**
-     * Factory method to create a message from an indivual "row issue", used to create a
+     * Factory method to create a message from just a plain summary string, incl. possible resolutions. Equivalent to
+     * <code>builder().withSummary(String).addResolutions(String...).build()</code>
+     *
+     * @param summary The summary (null causes an exception to be thrown)
+     * @param res The resolution hint(s), must not contain null (but may be empty)
+     * @return Such a message.
+     * @since 5.3
+     */
+    public static Message fromSummaryWithResolution(final String summary, final String... res) {
+        return builder().withSummary(summary).addResolutions(res).build()
+                .orElseThrow(() -> new IllegalArgumentException("argument must not be null"));
+    }
+
+    /**
+     * Factory method to create a message from an individual "row issue", used to create a
      * {@link org.knime.core.node.KNIMEException}, e.g.:
      *
      * <pre>
