@@ -57,6 +57,7 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.context.ModifiableNodeCreationConfiguration;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.ConnectionContainer;
+import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.NodeAnnotation;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -132,7 +133,12 @@ public final class ReplaceNodeResult {
         m_wfm.replaceNode(m_replacedNodeID, m_nodeCreationConfig, m_originalNodeFactory, false);
         m_removedConnections.stream()
             .filter(c -> m_wfm.canAddConnection(c.getSource(), c.getSourcePort(), c.getDest(), c.getDestPort()))
-            .forEach(c -> m_wfm.addConnection(c.getSource(), c.getSourcePort(), c.getDest(), c.getDestPort()));
+            .forEach(c -> {
+                var newConnection = m_wfm.addConnection(c.getSource(), c.getSourcePort(), c.getDest(), c.getDestPort());
+                if (c.getUIInfo() != null) {
+                    newConnection.setUIInfo(ConnectionUIInformation.builder(c.getUIInfo()).build());
+                }
+            });
         if (m_originalNodeAnnotation != null && !m_originalNodeAnnotation.getData().isDefault()) {
             m_wfm.getNodeContainer(m_replacedNodeID).getNodeAnnotation().copyFrom(m_originalNodeAnnotation.getData(),
                 true);

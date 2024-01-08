@@ -52,6 +52,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
 import static org.junit.Assert.assertNotSame;
@@ -215,7 +216,7 @@ public class ReplaceNodeTest extends WorkflowTestCase {
 	}
 
 	/**
-	 * Tests {@link ReplaceNodeResult#undo()} and makes sure that connections
+	 * Tests {@link ReplaceNodeResult#undo()} and makes sure that connections and bendpoints
 	 * removed during the node replacement are added back again on undo.
 	 */
 	@Test
@@ -228,6 +229,8 @@ public class ReplaceNodeTest extends WorkflowTestCase {
 		creationConfig.getPortConfig().get().getExtendablePorts().get("input").addPort(BufferedDataTable.TYPE);
 		wfm.replaceNode(m_concatenate_2, creationConfig);
 		ConnectionContainer newCC = wfm.addConnection(m_datagenerator_1, 1, m_concatenate_2, 3);
+		ConnectionUIInformation bendPoints = ConnectionUIInformation.builder().addBendpoint(5, 5, 0).build();
+		newCC.setUIInfo(bendPoints);
 		NativeNodeContainer newNC = (NativeNodeContainer) wfm.getNodeContainer(m_concatenate_2);
 		assertThat("unexpected number of input ports", newNC.getNrInPorts(), is(4));
 
@@ -245,6 +248,8 @@ public class ReplaceNodeTest extends WorkflowTestCase {
 		assertNotSame(newNC, undoNC);
 		assertThat("unexpected number of input ports", undoNC.getNrInPorts(), is(4));
 		assertThat("connection missing", wfm.getConnection(newCC.getID()), notNullValue());
+		assertThat("bendpoints missing", wfm.getConnection(newCC.getID()).getUIInfo().getAllBendpoints(),
+				equalTo(bendPoints.getAllBendpoints()));
 
 		waitAndCheckNodePortsChangedEventCounterIs(3);
 	}
