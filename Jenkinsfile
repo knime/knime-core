@@ -1,7 +1,7 @@
 #!groovy
 def BN = (BRANCH_NAME == 'master' || BRANCH_NAME.startsWith('releases/')) ? BRANCH_NAME : 'releases/2024-06'
 
-library "knime-pipeline@$BN"
+library "knime-pipeline@$BRANCH_NAME"
 
 properties([
     pipelineTriggers([upstream(
