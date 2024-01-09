@@ -45,29 +45,26 @@
 package org.knime.core.node.workflow;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.isA;
-import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.core.IsSame.sameInstance;
 import static org.hamcrest.object.IsCompatibleType.typeCompatibleWith;
-import static org.junit.Assume.assumeThat;
 import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 
-import java.util.Optional;
 import java.util.stream.IntStream;
 
-import org.eclipse.core.runtime.Platform;
-import org.eclipse.swt.SWT;
+import org.eclipse.swt.SwtCallable;
+import org.eclipse.swt.widgets.Display;
 import org.junit.Before;
 import org.junit.Test;
 import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.port.report.IReportPortObject;
 import org.knime.core.node.port.report.ReportConfiguration;
-import org.knime.core.node.port.report.ReportPageConfiguration.PageOrientation;
-import org.knime.core.node.port.report.ReportPageConfiguration.PageSize;
+import org.knime.js.cef.middleware.CEFMiddlewareService;
+import org.knime.js.cef.middleware.CEFMiddlewareService.PageResourceHandler;
 import org.knime.shared.workflow.storage.util.PasswordRedactor;
+
+import com.equo.chromium.ChromiumBrowser;
 
 /** 
  * Enables/disables subnode's report output and checks if connections are properly retained. 
@@ -85,6 +82,7 @@ public class EnhAP20402_SubnodeWithReportPort extends WorkflowTestCase {
     
     @Before
     public void setUp() throws Exception {
+    	Display.getDefault(); // create display on default thread
         NodeID baseID = loadAndSetWorkflow();
         m_subnode_4 = baseID.createChild(4);
         final var subnodeWFM = m_subnode_4.createChild(0);
@@ -97,6 +95,10 @@ public class EnhAP20402_SubnodeWithReportPort extends WorkflowTestCase {
 
     @Test
     public void testRegularExecute() throws Exception {
+    	
+        SwtCallable function = () -> ChromiumBrowser.windowless(CEFMiddlewareService.getPageBuilderUrl(), 0, 0, 120, 120);
+		Display.getDefault().syncCall(function);
+
     	executeAndWait(m_cache_2);
     	checkState(m_cache_2, EXECUTED);
     	checkState(m_subnodeOut_4_8, EXECUTED);
