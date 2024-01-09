@@ -220,12 +220,15 @@ public final class PortUtil {
             objSer.savePortObject(po, objOut, exec);
         } // 'close' will propagate as closeEntry
 
-        if (fileStoreHandler != null && fileStoreHandler.hasCopiedFileStores()) {
-            zipOut.putNextEntry(new ZipEntry("filestores/"));
-            zipOut.closeEntry();
-            File baseDir = fileStoreHandler.getBaseDir();
-            FileUtil.zipDir(zipOut, Arrays.asList(baseDir.listFiles()), "filestores/", FileUtil.ZIP_INCLUDEALL_FILTER,
-                exec.createSubProgress(0.5));
+        if (fileStoreHandler != null) {
+            if (fileStoreHandler.hasCopiedFileStores()) {
+                zipOut.putNextEntry(new ZipEntry("filestores/"));
+                zipOut.closeEntry();
+                File baseDir = fileStoreHandler.getBaseDir();
+                FileUtil.zipDir(zipOut, Arrays.asList(baseDir.listFiles()), "filestores/",
+                    FileUtil.ZIP_INCLUDEALL_FILTER, exec.createSubProgress(0.5));
+            }
+            fileStoreHandler.clearAndDispose();
         }
 
         zipOut.finish();
