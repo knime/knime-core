@@ -386,14 +386,14 @@ public abstract class AbstractPainterDataValueRenderer
 
     /**
      * This method is used to determine the size in which the image has to be requested when rendered into a view port
-     * with fixed dimensions. Per default, the preferred size is returned independent from the view port dimensions.
+     * with fixed dimensions. Per default, the returned dimensions are the handed in dimensions of the view port.
      *
      * @param viewPortDimension the dimensions of the view port the image is going to be rendered to.
      * @return the dimensions used when rendering the image
      * @since 5.2
      */
     public Dimension getPreferredSize(final Dimension viewPortDimension) {
-        return getPreferredSize();
+        return viewPortDimension;
     }
 
 }
