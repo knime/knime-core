@@ -54,6 +54,8 @@ import java.util.stream.IntStream;
 
 import org.knime.core.data.container.filter.TableFilter;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionContext;
 
 /**
  * Mechanisms to apply {@link Extractor}s to a {@link BufferedDataTable}.
@@ -112,24 +114,46 @@ public final class TableExtractorUtil {
         initializeExtractors(extractors, (int)numRows);
         if (numRows > 0) {
             try (final var cursor = createCursor(table, getAllIndices(extractors), numRows)) {
-                traverseData(cursor, extractors);
+                try {
+                    traverseData(cursor, null, extractors);
+                } catch (CanceledExecutionException e) { // NOSONAR
+                    // NOSONAR exception never thrown if execution context is null
+                }
             }
         }
     }
 
     /**
-     * This method traverses a table and applies extractors to each read row. The extractors are (re)initialized at the
-     * start of the process.
+     * @param table
+     * @param extractors
+     *
+     * @see TableExtractorUtil#extractData(BufferedDataTable, ExecutionContext, Extractor...)
+     */
+    public static void extractData(final BufferedDataTable table, final Extractor... extractors) {
+        try {
+            extractData(table, null, extractors);
+        } catch (CanceledExecutionException e) { // NOSONAR
+            // NOSONAR exception never thrown if execution context is null
+        }
+    }
+
+    /**
+     * This method traverses a table and applies extractors to each read row. The execution context (and consequently
+     * the thread) is checked for cancellation before each next row. The extractors are (re)initialized at the start of
+     * the process.
      *
      * @param table a {@link BufferedDataTable} with at least {@code numRows}.
      * @param extractors an array of {@link Extractor} constructed in a way that corresponding colum indices are present
      *            in the table and their {@code readValue} methods are applicable to a row of the {@code table}
      *            materialised with the union columns.
+     * @throws CanceledExecutionException To handle execution cancellation or thread interruption.
+     * @since 5.3
      */
-    public static void extractData(final BufferedDataTable table, final Extractor... extractors) {
+    public static void extractData(final BufferedDataTable table, final ExecutionContext executionContext,
+        final Extractor... extractors) throws CanceledExecutionException {
         initializeExtractors(extractors, (int)table.size());
         try (final var cursor = createCursor(table, getAllIndices(extractors))) {
-            traverseData(cursor, extractors);
+            traverseData(cursor, executionContext, extractors);
         }
     }
 
@@ -163,9 +187,16 @@ public final class TableExtractorUtil {
             .toArray();
     }
 
-    private static void traverseData(final RowCursor cursor, final Extractor[] extractors) {
+    /**
+     * Assumes CanceledExecutionException is never thrown if executionContext is null.
+     */
+    private static void traverseData(final RowCursor cursor, final ExecutionContext executionContext,
+        final Extractor[] extractors) throws CanceledExecutionException {
         var i = 0;
         while (cursor.canForward()) {
+            if (executionContext != null) {
+                executionContext.checkCanceled();
+            }
             final var row = cursor.forward();
             for (Extractor extractor : extractors) {
                 extractor.readRow(row, i);

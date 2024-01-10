@@ -92,7 +92,6 @@ import org.knime.core.data.statistics.StatisticsExtractors.StandardDeviationExtr
 import org.knime.core.data.statistics.StatisticsExtractors.ThirdQuartileExtractor;
 import org.knime.core.data.statistics.StatisticsExtractors.VarianceExtractor;
 import org.knime.core.data.v2.RowRead;
-import org.knime.core.data.v2.TableExtractorUtil;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -311,13 +310,14 @@ public final class UnivariateStatistics {
      *
      * @param inputTable The table for whose columns to compute statistics
      * @param selectedColumns The column names of the input table for which to compute statistics
-     * @param exec Execution context
+     * @param executionContext Execution context
      * @param selectedStatistics The statistics to include
      * @return A table in which each row corresponds to statistics about a selected column in the input table
      * @throws CanceledExecutionException If cancelled
      */
     public static BufferedDataTable computeStatisticsTable(final BufferedDataTable inputTable,
-        final String[] selectedColumns, final ExecutionContext exec, final Collection<Statistic> selectedStatistics)
+        final String[] selectedColumns, final ExecutionContext executionContext,
+        final Collection<Statistic> selectedStatistics)
         throws CanceledExecutionException {
         final var eligibleCols = Arrays.stream(selectedColumns)//
             .filter(name -> {
@@ -327,7 +327,7 @@ public final class UnivariateStatistics {
             .toArray(String[]::new);
 
         // trivial case -- nothing to do
-        final var statisticsTable = exec.createDataContainer(getStatisticsTableSpec(selectedStatistics));
+        final var statisticsTable = executionContext.createDataContainer(getStatisticsTableSpec(selectedStatistics));
         if (eligibleCols.length == 0) {
             statisticsTable.close();
             return statisticsTable.getTable();
@@ -335,19 +335,20 @@ public final class UnivariateStatistics {
 
         // compute statistics for each column individually
         final var selectedColumnTables =
-            StatisticsTableUtil.splitTableByColumnNames(inputTable, eligibleCols, true, true, exec);
+            StatisticsTableUtil.splitTableByColumnNames(inputTable, eligibleCols, true, true, executionContext);
         final var selectedColumnTablesWithMissingValues =
-            StatisticsTableUtil.splitTableByColumnNames(inputTable, eligibleCols, false, true, exec);
+            StatisticsTableUtil.splitTableByColumnNames(inputTable, eligibleCols, false, true, executionContext);
         for (var columnName : eligibleCols) {
             final var allColumnStatistics = new UnivariateStatistics();
-            final var sortedTable = BufferedDataTableSorter.sortTable(selectedColumnTables.get(columnName), 0, exec);
+            final var sortedTable =
+                BufferedDataTableSorter.sortTable(selectedColumnTables.get(columnName), 0, executionContext);
             final var tableWithMissingValues = selectedColumnTablesWithMissingValues.get(columnName);
-            allColumnStatistics.performStatisticsCalculationForAllColumns(sortedTable);
+            allColumnStatistics.performStatisticsCalculationForAllColumns(sortedTable, executionContext);
             boolean isStringColumn = sortedTable.getSpec().getColumnSpec(0).getType().isCompatible(StringValue.class);
             if (!isStringColumn) {
-                allColumnStatistics.performStatisticsCalculationForNumericColumns(sortedTable);
+                allColumnStatistics.performStatisticsCalculationForNumericColumns(sortedTable, executionContext);
             }
-            allColumnStatistics.performMissingValuesComputation(tableWithMissingValues);
+            allColumnStatistics.performMissingValuesComputation(tableWithMissingValues, executionContext);
             statisticsTable.addRowToTable(StatisticsTableUtil.createTableRow(allColumnStatistics, selectedStatistics));
         }
         statisticsTable.close();
@@ -478,14 +479,12 @@ public final class UnivariateStatistics {
         }).toArray(String[]::new);
     }
 
-    private void performMissingValuesComputation(final BufferedDataTable inputColumnTable) {
+    private void performMissingValuesComputation(final BufferedDataTable inputColumnTable,
+        final ExecutionContext executionContext) throws CanceledExecutionException {
         var columnIndex = 0;
 
         final var missingValuesExtractor = new CountMissingValuesExtractor(columnIndex);
-
-        // apply extractors
-        TableExtractorUtil.extractData(inputColumnTable, missingValuesExtractor);
-
+        extractData(inputColumnTable, executionContext, missingValuesExtractor);
         setNumberMissingValues(missingValuesExtractor.getOutput());
     }
 
@@ -494,17 +493,18 @@ public final class UnivariateStatistics {
      *
      * @param inputColumnTable A table containing exactly one column of either {@link DoubleValue} or
      *            {@link StringValue}.
+     * @param executionContext The current execution context
      */
-    private void performStatisticsCalculationForAllColumns(final BufferedDataTable inputColumnTable) {
+    private void performStatisticsCalculationForAllColumns(final BufferedDataTable inputColumnTable,
+        final ExecutionContext executionContext) throws CanceledExecutionException {
         var columnIndex = 0;
         var type = inputColumnTable.getSpec().getColumnSpec(columnIndex).getType();
-
         setName(inputColumnTable.getSpec().getColumnSpec(columnIndex).getName());
         setType(type);
 
         // for unique values, always consider raw values
         final var countUniqueExtractor = new CountUniqueExtractor();
-        TableExtractorUtil.extractData(inputColumnTable, countUniqueExtractor);
+        extractData(inputColumnTable, executionContext, countUniqueExtractor);
         setNumberUniqueValues(countUniqueExtractor.getNumberOfUniqueValues());
         setCommonValues(formatMostFrequentValues(countUniqueExtractor.getMostFrequentValues(10),
             inputColumnTable.getSpec().getColumnSpec(columnIndex).getType(), inputColumnTable.size()));
@@ -515,8 +515,10 @@ public final class UnivariateStatistics {
      *
      * @param sortedInputColumnTable A table containing exactly one numeric column compatible with type
      *            {@link DoubleValue}.
+     * @param executionContext The current execution context
      */
-    private void performStatisticsCalculationForNumericColumns(final BufferedDataTable sortedInputColumnTable) {
+    private void performStatisticsCalculationForNumericColumns(final BufferedDataTable sortedInputColumnTable,
+        final ExecutionContext executionContext) throws CanceledExecutionException {
         var columnIndex = 0;
 
         final var minExtractor = new MinimumExtractor(columnIndex);
@@ -535,7 +537,7 @@ public final class UnivariateStatistics {
         final var sumExtractor = new DoubleSumExtractor(columnIndex);
 
         // apply extractors
-        TableExtractorUtil.extractData(sortedInputColumnTable, minExtractor, maxExtractor, meanExtractor, sumExtractor,
+        extractData(sortedInputColumnTable, executionContext, minExtractor, maxExtractor, meanExtractor, sumExtractor,
             qExtractors[0], qExtractors[1], qExtractors[2], qExtractors[3], qExtractors[4], qExtractors[5],
             qExtractors[6], qExtractors[7], qExtractors[8]);
 
@@ -553,8 +555,8 @@ public final class UnivariateStatistics {
         final var biasedVariance = new CentralMomentExtractor(0, mean, 2);
         final var varianceExtractor = new VarianceExtractor(columnIndex, mean);
 
-        extractData(sortedInputColumnTable, meanAbsoluteDeviationExtractor, standardDeviationExtractor,
-            varianceExtractor, biasedVariance);
+        extractData(sortedInputColumnTable, executionContext, meanAbsoluteDeviationExtractor,
+            standardDeviationExtractor, varianceExtractor, biasedVariance);
 
         final var stdDeviation = standardDeviationExtractor.getOutput();
         setMeanAbsoluteDeviation(meanAbsoluteDeviationExtractor.getOutput());
@@ -564,7 +566,7 @@ public final class UnivariateStatistics {
         final var skewnessExtractor = new SkewnessExtractor(columnIndex, mean, stdDeviation);
         final var kurtosisExtractor = new KurtosisExtractor(columnIndex, mean, biasedVariance.getOutput());
 
-        extractData(sortedInputColumnTable, skewnessExtractor, kurtosisExtractor);
+        extractData(sortedInputColumnTable, executionContext, skewnessExtractor, kurtosisExtractor);
 
         setSkewness(skewnessExtractor.getOutput());
         setKurtosis(kurtosisExtractor.getOutput());
