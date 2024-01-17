@@ -95,6 +95,8 @@ public final class PortTypeRegistry {
 
     private static final PortTypeRegistry INSTANCE = new PortTypeRegistry();
 
+    private static final String GENERIC_PORT_NAME = "Generic Port";
+
     /**
      * Returns the singleton instance.
      *
@@ -119,9 +121,9 @@ public final class PortTypeRegistry {
         m_specSerializers.put(DataTableSpec.class, new DataTableSpec.Serializer());
 
         m_allPortTypes.put(PortObject.class,
-            new PortType(PortObject.class, false, "Generic Port", PortType.DEFAULT_COLOR, false));
+            new PortType(PortObject.class, false, GENERIC_PORT_NAME, PortType.DEFAULT_COLOR, false));
         m_allOptionalPortTypes.put(PortObject.class,
-            new PortType(PortObject.class, true, "Generic Port", PortType.DEFAULT_COLOR, false));
+            new PortType(PortObject.class, true, GENERIC_PORT_NAME, PortType.DEFAULT_COLOR, false));
 
         m_allPortTypes.put(BufferedDataTable.class, new PortType(BufferedDataTable.class, false, "Table", 0, false));
         m_allOptionalPortTypes.put(BufferedDataTable.class,

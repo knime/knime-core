@@ -646,7 +646,7 @@
       <portType
             color="#1eb9dc"
             hidden="false"
-            name="FilterDefinition"
+            name="Filter Definition"
             objectClass="org.knime.core.node.port.viewproperty.FilterDefinitionHandlerPortObject"
             objectSerializer="org.knime.core.node.port.viewproperty.FilterDefinitionHandlerPortObject$Serializer"
             specClass="org.knime.core.data.DataTableSpec">
@@ -695,7 +695,7 @@
       <portType
             color="#000000"
             hidden="false"
-            name="Workflow Port Object"
+            name="Workflow"
             objectClass="org.knime.core.node.workflow.capture.WorkflowPortObject"
             objectSerializer="org.knime.core.node.workflow.capture.WorkflowPortObject$Serializer"
             specClass="org.knime.core.node.workflow.capture.WorkflowPortObjectSpec"
