@@ -211,7 +211,8 @@ public final class NodeSetFactoryExtension implements INodeFactoryExtension {
             return Optional.empty();
         }
         try {
-            NodeFactory<? extends NodeModel> instance = factoryClass.get().newInstance();
+            Class<? extends NodeFactory<? extends NodeModel>> tmp = factoryClass.get();
+            NodeFactory<? extends NodeModel> instance = tmp.newInstance();
             instance.loadAdditionalFactorySettings(m_setFactory.getAdditionalSettings(id));
             if (isDeprecated()) {
                 Node.invokeNodeFactorySetDeprecated(instance);

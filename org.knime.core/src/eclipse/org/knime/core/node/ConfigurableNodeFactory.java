@@ -169,10 +169,10 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
      * <ol>
      * <li>Fixed port group, i.e., port groups that cannot be modified by the user
      * <li>Optional port group, i.e., a port group with [0,1] ports. Initially the optional port is not set
-     * <li>Extendable port group, i.e., a port group with [0,n] fixed ports and [0,n] additional ports
+     * <li>Extendable port group, i.e., a port group with [0,n] fixed ports and [0,m] additional ports
      * <li>Bound extendable port group, i.e., a port group with [0,n] fixed ports and [0,n] additional ports whose type
      * is bound to that of another port group
-     * <li>Exchangebale port group, i.e., a port group with exactly one port whose port type can be exchanged
+     * <li>Exchangeable port group, i.e., a port group with exactly one port whose port type can be exchanged
      * </ol>
      * Note that for all but the fixed port group a set of different ports can be defined from which the user can
      * choose.

@@ -295,12 +295,14 @@ public final class Node {
             throw new IllegalArgumentException("NodeFactory must not be null.");
         }
         m_factory = nodeFactory;
+
         if (creationConfig == null && m_factory instanceof ConfigurableNodeFactory) {
             m_creationConfig = ((ConfigurableNodeFactory<NodeModel>)m_factory).createNodeCreationConfig();
         } else {
             m_creationConfig = creationConfig;
         }
         if (m_creationConfig != null) {
+            // TODO Node Description must fit the input/output ports (or groups)
             m_adaptedNodeDescription = m_factory.getNodeDescription()
                 .createUpdatedNodeDescription(m_creationConfig.getPortConfig().orElse(null));
         } else {

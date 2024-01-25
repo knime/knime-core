@@ -209,10 +209,15 @@ public abstract class NodeFactory<T extends NodeModel> {
 
         var isDynamicNodeFactory = false;
         String factoryIdUniquifier = null;
-        if (this instanceof DynamicNodeFactory dynamicNodeFactory) {
+        if (this instanceof DynamicNodeFactory dynamicNodeFactory ) {
             isDynamicNodeFactory = true;
             factoryIdUniquifier = dynamicNodeFactory.getFactoryIdUniquifier();
         }
+        if (this instanceof IDynamicNodeFactory iDynamicNodeFactory){
+            isDynamicNodeFactory = true;
+            factoryIdUniquifier = iDynamicNodeFactory.getFactoryIdUniquifier();
+        }
+
 
         return NodeFactoryId.compose(factoryClassName, isDynamicNodeFactory, factoryIdUniquifier, this::getNodeName);
     }
@@ -687,6 +692,9 @@ public abstract class NodeFactory<T extends NodeModel> {
 
         if (getNrNodeViews() != nodeDescription.getViewCount()) {
             m_logger.coding("Missing or surplus view description");
+        }
+        if (m == null) {
+            System.out.println("Oh nonononono");
         }
 
         for (int i = 0; i < m.getNrInPorts(); i++) {
