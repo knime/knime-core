@@ -18,6 +18,7 @@ import org.junit.Test;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.UpdateStatus;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.util.pathresolve.URIToFileResolve;
+import org.knime.testing.util.URIToFileResolveTestUtil;
 import org.mockito.Mockito;
 
 /**
@@ -49,7 +50,7 @@ public class BugAP20451_NotAllComponentUpdatesFound extends WorkflowTestCase {
     public void setUp() throws Exception {
         // setup resolve mock to mock remote template
         URIToFileResolve resolveMock = Mockito.mock(URIToFileResolve.class);
-        m_origResolveService = EnhAP11813_EfficientTemplateUpdateCheck.replaceURIToFileResolveService(resolveMock);
+        m_origResolveService = URIToFileResolveTestUtil.replaceURIToFileResolveService(resolveMock);
 
         loadAndSetWorkflow(new File(getDefaultWorkflowDirectory(), "mainWorkflow"));
         final var templates = getManager().getNodeContainers().stream()//
@@ -85,10 +86,10 @@ public class BugAP20451_NotAllComponentUpdatesFound extends WorkflowTestCase {
                 m_upToDateComponent, UpdateStatus.UpToDate));
     }
 
-    @After
-    public void resetURIToFileResolveService() {
-        EnhAP11813_EfficientTemplateUpdateCheck.replaceURIToFileResolveService(m_origResolveService);
-    }
+	@After
+	public void resetURIToFileResolveService() {
+		URIToFileResolveTestUtil.replaceURIToFileResolveService(m_origResolveService);
+	}
 
     /**
      * Checks for updates in the order of the map given, containing expected update
@@ -128,4 +129,5 @@ public class BugAP20451_NotAllComponentUpdatesFound extends WorkflowTestCase {
         map.put(key2, value2);
         return map;
     }
+    
 }
