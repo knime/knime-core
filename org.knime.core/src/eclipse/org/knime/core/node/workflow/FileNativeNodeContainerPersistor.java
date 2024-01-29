@@ -55,6 +55,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.knime.core.internal.ReferencedFile;
@@ -184,19 +185,49 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
             throw new NodeFactoryUnknownException(nodeInfo, additionalFactorySettings, e);
         }
 
-        try {
-            if (additionalFactorySettings != null) {
+        ModifiableNodeCreationConfiguration creationConfig = null;
+        if (additionalFactorySettings != null) {
+            try {
                 nodeFactory.loadAdditionalFactorySettings(additionalFactorySettings);
+            } catch (InvalidSettingsException | RuntimeException e) {
+                handleExceptionPostNodeFactoryInstantiation(result, nodeInfo, additionalFactorySettings, nodeFactory,
+                    "Unable to load additional factory settings into", e);
             }
+        }
+        try {
+            creationConfig = loadCreationConfig(settings, nodeFactory).orElse(null);
         } catch (InvalidSettingsException | RuntimeException e) {
-            error = "Unable to load additional factory settings into node factory (node \"" + nodeInfo + "\")";
-            getLogger().error(error);
-            // setDirtyAfterLoad(); // don't set dirty, missing node placeholder
-
-            throw new InvalidSettingsException(error, e);
+            handleExceptionPostNodeFactoryInstantiation(result, nodeInfo, additionalFactorySettings, nodeFactory,
+                "Unable to instantiate creation config for", e);
         }
         m_nodeAndBundleInformation = nodeInfo;
-        m_node = new Node(nodeFactory, loadCreationConfig(settings, nodeFactory).orElse(null));
+        m_node = new Node(nodeFactory, creationConfig);
+    }
+
+    private void handleExceptionPostNodeFactoryInstantiation(final LoadResult result,
+        final NodeAndBundleInformationPersistor nodeInfo, final NodeSettingsRO additionalFactorySettings,
+        final NodeFactory<NodeModel> nodeFactory, final String summaryMsg, final Exception e)
+        throws NodeFactoryUnknownException {
+        final var nodeName = nodeInfo.getNodeName().orElseGet(nodeFactory.getClass()::getSimpleName);
+        final var error = String.format("%s node \"%s\": %s", summaryMsg, nodeName, e.getMessage());
+        getLogger().error(error);
+
+        // AP-21738 - Missing Plotly extension leads to workflow/component error on load with deleted node
+        // The node instance can be loaded but it fails to load additional settings; two cases to distinguish:
+        // (1) - The workflow file denotes as contributing plug-in the same plug-in the concrete class of the factory
+        //       lives in, for instance, a Component Output node lives in org.knime.core but it fails to load the input
+        //       port type definition
+        // (2) - The concrete factory instance lives in a different plug-in than what is stored in the workflow, e.g.
+        //       DynamicJSNodeFactory is installed but it's concrete instance (plotly) is not installed -- in
+        //       this case fail with a unknown factory exception and offer the installation of the missing extension
+        final var instanceInfo = NodeAndBundleInformationPersistor.create(nodeFactory);
+        if (Objects.equals(instanceInfo.getBundleSymbolicName(), nodeInfo.getBundleSymbolicName())) {
+            result.addError(error);
+            setDirtyAfterLoad();
+        } else {
+            // don't set dirty, missing node placeholder
+            throw new NodeFactoryUnknownException(error, nodeInfo, additionalFactorySettings, e);
+        }
     }
 
     /** {@inheritDoc} */
@@ -355,11 +386,7 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
         if (factory instanceof ConfigurableNodeFactory) {
             final ModifiableNodeCreationConfiguration creationConfig =
                 (((ConfigurableNodeFactory<NodeModel>)factory).createNodeCreationConfig());
-            try {
-                creationConfig.loadSettingsFrom(settings);
-            } catch (final InvalidSettingsException e) {
-                throw new InvalidSettingsException("Unable to load creation context", e.getCause());
-            }
+            creationConfig.loadSettingsFrom(settings);
             return Optional.of(creationConfig);
         }
         return Optional.empty();
