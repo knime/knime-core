@@ -272,29 +272,36 @@ class Workflow {
         }
     }
 
-    /** Return map of node ids connected to the given node sorted in breadth
-     * first order mapped to a set of portIDs. Note that also nodes which
-     * have another predecessors not contained in this list may be included as
-     * long as at least one input node is connected to a node in this list!
-     * The set of integers represents the indices of input ports which are
-     * actually used within the graph covered in the result list.
+    /**
+     * @see Workflow#getBreadthFirstListOfNodeAndSuccessors(NodeID, boolean, boolean)
+     */
+    LinkedHashMap<NodeID, Set<Integer>> getBreadthFirstListOfNodeAndSuccessors(final NodeID id, final boolean skipWFM) {
+        return getBreadthFirstListOfNodeAndSuccessors(id, skipWFM, false);
+    }
+
+    /**
+     * Return map of node ids connected to the given node sorted in breadth first order mapped to a set of portIDs. Note
+     * that also nodes which have another predecessors not contained in this list may be included as long as at least
+     * one input node is connected to a node in this list! The set of integers represents the indices of input ports
+     * which are actually used within the graph covered in the result list.
      *
      * @param id of node
      * @param skipWFM if true, do not include WFM in the list
+     * @param handleMetanodeAsSingleNode Whether to traverse a metanode as if it was a single node. If true, nodes
+     *            connected to <i>any</i> metanode output port will be considered successors. If false, only nodes which
+     *            are connected to the respective input are considered successors (as if the metanode was expanded).
      * @return map as described above.
      */
     LinkedHashMap<NodeID, Set<Integer>> getBreadthFirstListOfNodeAndSuccessors(
-            final NodeID id, final boolean skipWFM) {
-        // assemble unsorted list of successors
+        final NodeID id, final boolean skipWFM, final boolean handleMetanodeAsSingleNode) {
+        // assemble an unsorted list of successors
         HashSet<NodeID> inclusionList = new HashSet<NodeID>();
-        getDepthFirstListOfNodeAndSuccessors(inclusionList, id, -1, nc -> false, false, false);
-        // and then get all successors which are part of this list in a nice
-        // BFS order
+        getDepthFirstListOfNodeAndSuccessors(inclusionList, id, -1, nc -> false, false, handleMetanodeAsSingleNode);
+        // and then get all successors that are part of this list in a nice BFS order
         LinkedHashMap<NodeID, Set<Integer>> bfsSortedNodes = new LinkedHashMap<NodeID, Set<Integer>>();
-        // put the origin - note that none of it's ports (if any) are of
-        // interest -  into the map
+        // put the origin - note that none of its ports (if any) are of interest - into the map
         bfsSortedNodes.put(id, new HashSet<Integer>());
-        expandListBreadthFirst(bfsSortedNodes, inclusionList);
+        expandListBreadthFirst(bfsSortedNodes, inclusionList, handleMetanodeAsSingleNode);
         // if wanted (and contained): remove WFM itself
         if (skipWFM && bfsSortedNodes.keySet().contains(this.getID())) {
             bfsSortedNodes.remove(this.getID());
@@ -420,10 +427,9 @@ class Workflow {
      * @param includePerfectSuccessorsOnly a perfect successor is a node whose predecessors are all part of provided
      *            node set. If this parameter is <code>true</code>, only perfect successors will be included. If
      *            <code>false</code> nodes with at least one predecessor in the node set will be included.
-     * @param handleMetaNodeAsSingleNode if <code>true</code> metanodes are regarded as single nodes, i.e. the metanode
-     *            predecessors are always regarded as connected to the metanode successors no matter how the metanode's
-     *            workflow looks like. If <code>false</code>, the metanode's workflow is considered to determine wether
-     *            predecessors and successors are actually connected (through the metanode)
+     * @param handleMetaNodeAsSingleNode Whether to traverse a metanode as if it was a single node. If true, nodes
+     *            connected to <i>any</i> metanode output port will be considered successors. If false, only nodes which
+     *            are connected to the respective input are considered successors (as if the metanode was expanded).
      */
     void getDepthFirstListOfNodeAndSuccessors(final Set<NodeID> nodes, final NodeID id, final int incomingPortIndex,
         final Predicate<NodeContainer> stopCondition, final boolean includePerfectSuccessorsOnly,
@@ -496,20 +502,26 @@ class Workflow {
         }
     }
 
-    /** Expand a given list of nodes to include all successors which are
-     * connected to anyone of the nodes in a breadth first manner. Don't
-     * include any of the nodes not contained in the "inclusion" list
-     * if given.
+    private void expandListBreadthFirst(final LinkedHashMap<NodeID, Set<Integer>> bfsSortedNodes,
+        final Set<NodeID> inclusionList) {
+        expandListBreadthFirst(bfsSortedNodes, inclusionList, false);
+    }
+
+    /**
+     * Expand a given list of nodes to include all successors that are connected to any of the nodes in a breadth-first
+     * manner. Don't include any of the nodes not contained in the "inclusion" list if given.
      *
      * @param bfsSortedNodes existing, already sorted list of nodes
      * @param inclusionList complete list of nodes to be sorted breadth first
+     * @param handleMetanodeAsSingleNode Whether to traverse a metanode as if it was a single node. If true, nodes
+     *            connected to <i>any</i> metanode output port will be considered successors. If false, only nodes which
+     *            are connected to the respective input are considered successors (as if the metanode was expanded).
      */
     private void expandListBreadthFirst(
             final LinkedHashMap<NodeID, Set<Integer>> bfsSortedNodes,
-            final Set<NodeID> inclusionList) {
-        // don't add parent to list throughout search to avoid
-        // infinite loops (i.e. starting with incoming connections again
-        // but if encountered remember to node&ports at the end of the search:
+        final Set<NodeID> inclusionList, final boolean handleMetanodeAsSingleNode) {
+        // don't add parent to list throughout search to avoid infinite loops (i.e., starting with incoming connections
+        // again but if encountered, remember to node&ports at the end of the search:
         Set<Integer> parentOutgoingPorts = new HashSet<Integer>();
         // keep adding nodes until we can't find new ones anymore
         for (int i = 0; i < bfsSortedNodes.size(); i++) {
@@ -520,7 +532,7 @@ class Workflow {
             Set<Integer> currInPorts = bfsSortedNodes.get(currNode);
             Set<Integer> currOutPorts = new HashSet<Integer>();
             NodeContainer currNC = getNode(currNode);
-            if ((currNC != null) && (currNC instanceof WorkflowManager)) {
+            if (!handleMetanodeAsSingleNode && (currNC != null) && (currNC instanceof WorkflowManager)) {
                 for (int in : currInPorts) {
                      Set<Integer> outs = ((WorkflowManager)currNC).getWorkflow().connectedOutPorts(in);
                      currOutPorts.addAll(outs);
