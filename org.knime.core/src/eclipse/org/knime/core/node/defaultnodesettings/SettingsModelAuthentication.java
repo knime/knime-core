@@ -44,6 +44,8 @@
  */
 package org.knime.core.node.defaultnodesettings;
 
+import java.util.Objects;
+
 import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
@@ -62,6 +64,12 @@ import org.knime.core.node.workflow.CredentialsProvider;
  * @see DialogComponentAuthentication
  */
 public final class SettingsModelAuthentication extends SettingsModel {
+
+    private static final String EMPTY_USERNAME = "";
+
+    private static final String EMPTY_PASSWORD = "";
+
+    private static final String EMPTY_CREDENTIAL = null;
 
     private String m_username;
 
@@ -180,8 +188,8 @@ public final class SettingsModelAuthentication extends SettingsModel {
         final String defaultUsername, final String defaultPassword, final String defaultCredential) {
         CheckUtils.checkArgument(StringUtils.isNotEmpty(configName), "The configName must be a non-empty string");
 
-        m_username = defaultUsername == null ? "" : defaultUsername;
-        m_password = defaultPassword == null ? "" : defaultPassword;
+        m_username = Objects.requireNonNullElse(defaultUsername, EMPTY_USERNAME);
+        m_password = Objects.requireNonNullElse(defaultPassword, EMPTY_PASSWORD);
 
         m_credentials = defaultCredential;
         m_configName = configName;
@@ -232,10 +240,12 @@ public final class SettingsModelAuthentication extends SettingsModel {
         final String credential = config.getString(CREDENTIAL);
         final String userName = config.getString(USERNAME);
         final AuthenticationType authType = AuthenticationType.get(type);
-        final String pwd = authType.requiresPassword() ? config.getPassword(PASSWORD, secretKey) : "";
+        final String pwd = authType.requiresPassword() //
+                ? config.getPassword(PASSWORD, secretKey) //
+                : EMPTY_PASSWORD;
         switch (authType) {
             case CREDENTIALS:
-                if (credential == null || credential.isEmpty()) {
+                if (StringUtils.isEmpty(credential)) {
                     throw new InvalidSettingsException("Please select a valid credential");
                 }
                 break;
@@ -244,20 +254,20 @@ public final class SettingsModelAuthentication extends SettingsModel {
             case NONE:
                 break;
             case USER:
-                if (userName == null || userName.isEmpty()) {
+                if (StringUtils.isEmpty(userName)) {
                     throw new InvalidSettingsException("Please enter a valid user name");
                 }
                 break;
             case USER_PWD:
-                if (userName == null || userName.isEmpty()) {
+                if (StringUtils.isEmpty(userName)) {
                     throw new InvalidSettingsException("Please enter a valid user name");
                 }
-                if (pwd == null || pwd.isEmpty()) {
+                if (StringUtils.isEmpty(pwd)) {
                     throw new InvalidSettingsException("Please enter a valid password");
                 }
                 break;
             case PWD:
-                if (pwd == null || pwd.isEmpty()) {
+                if (StringUtils.isEmpty(pwd)) {
                     throw new InvalidSettingsException("Please enter a valid password");
                 }
                 break;
@@ -275,7 +285,9 @@ public final class SettingsModelAuthentication extends SettingsModel {
         Config config = settings.getConfig(m_configName);
         AuthenticationType authType = AuthenticationType.valueOf(config.getString(SELECTED_TYPE));
         String username = config.getString(USERNAME);
-        String password = authType.requiresPassword() ? config.getPassword(PASSWORD, secretKey) : "";
+        String password = authType.requiresPassword() //
+                ? config.getPassword(PASSWORD, secretKey) //
+                : EMPTY_PASSWORD;
         setValues(authType, config.getString(CREDENTIAL), username, password);
     }
 
@@ -455,5 +467,19 @@ public final class SettingsModelAuthentication extends SettingsModel {
      */
     public boolean useCredential() {
         return AuthenticationType.CREDENTIALS == getAuthenticationType();
+    }
+
+    /**
+     * Clears all stored credentials by resetting them to default values, i.e. empty
+     * strings and null values. Does not modify the stored {@link AuthenticationType}.
+     * <p>
+     * Advisable to call when stored credentials do not need to be persisted.
+     *
+     * @since 5.3
+     */
+    public void clear() {
+        setUsername(EMPTY_USERNAME);
+        setPassword(EMPTY_PASSWORD);
+        setCredential(EMPTY_CREDENTIAL);
     }
 }
