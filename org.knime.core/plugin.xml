@@ -279,7 +279,7 @@
                rendererFactoryClass="org.knime.core.data.probability.nominal.renderer.NominalDistributionBarChartRenderer$BarChartRendererFactory"
                suggestAsDefault="false">
          </renderer>
-      </dataValue>      
+      </dataValue>
    </extension>
    <extension
          point="org.knime.core.DatabaseUtility">
@@ -407,7 +407,7 @@
                serializerClass="org.knime.core.data.UnmaterializedCell$UnmaterializedSerializer">
          </serializer>
       </DataType>
-     
+
       <DataType
             cellClass="org.knime.core.data.vector.bitvector.SparseBitVectorCell"
             factoryClass="org.knime.core.data.vector.bitvector.SparseBitVectorCell$Factory">
@@ -779,6 +779,13 @@
       <provider
 	   callBeforeKNIMEApplicationStart="false"
 	   class="org.knime.core.eclipseUtil.NetAuthenticatorSuppressor">
+      </provider>
+   </extension>
+   <extension
+	   point="org.knime.core.EarlyStartup">
+      <provider
+	   callBeforeKNIMEApplicationStart="false"
+	   class="org.knime.core.eclipseUtil.URLConnectionCacheDisabler">
       </provider>
    </extension>
 </plugin>
