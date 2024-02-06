@@ -2336,6 +2336,13 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/eclipseUtil/URLConnectionCacheDisabler.java" type="org.knime.core.eclipseUtil.URLConnectionCacheDisabler">
+        <filter comment="This fixup class is not public API" id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.core.eclipseUtil.URLConnectionCacheDisabler"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/KNIMEException.java" type="org.knime.core.node.KNIMEException">
         <filter comment="moved private interface to &quot;internal&quot; package - may cause binary incompatibility of class implementation. New API in 5.0 so unlikely to cause trouble. " id="337682486">
             <message_arguments>
