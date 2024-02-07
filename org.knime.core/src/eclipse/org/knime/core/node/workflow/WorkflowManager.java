@@ -5367,7 +5367,6 @@ public final class WorkflowManager extends NodeContainer
             // called throughout subsequent calls...)
 
             // TODO this configures the metanode, too!
-            // NOTE this is what is called when the metanode is reset individually
             wfm.resetAndReconfigureAllNodesInWFM();
         }
         nc.resetJobManagerViews();
@@ -5586,73 +5585,80 @@ public final class WorkflowManager extends NodeContainer
     }
 
     /**
-     * Reset successors of a node connected to a specific out port.
+     * Reset successors of a node connected to a specific out port by recursively first resetting the next direct
+     * successor of the current node.
      *
-     * @param id The id in question
-     * @param portID port index or -1 to reset successors connected to any out port.
-     * @param propagateOutside whether to reset the reset outside of this metanode/component (iff...)
+     * @param node The ID of the node to reset successors of.
+     * @param port index of output port of which successors should be reset, or -1 to reset successors connected to any
+     *            out port.
+     * @param propagateOutside whether to propagate the reset outside this metanode/component (iff...)
      */
-    void resetSuccessors(final NodeID id, final int portID, final boolean propagateOutside, final boolean resetMetanodesFully) {
+    void resetSuccessors(final NodeID node, final int port, final boolean propagateOutside,
+        final boolean resetMetanodesFully) {
         try (WorkflowLock lock = assertLock()) {
-            assert !this.getID().equals(id);
-            Set<ConnectionContainer> outgoingConnections = m_workflow.getConnectionsBySource(id);
-            for (ConnectionContainer outgoingConnection : outgoingConnections) {
-                NodeID successorId = outgoingConnection.getDest();
-                if ((outgoingConnection.getSourcePort() == portID) || (portID < 0)) {  // TODO this should be filter
-                    // only reset successors if they are connected to the
-                    // correct port or we don't care (id==-1)
-                    if (!outgoingConnection.getType().isLeavingWorkflow()) {
-                        assert m_workflow.getNode(successorId) != null;
-                        // normal connection to another node within this workflow
-                        // first check if it is already reset
-                        NodeContainer successor = m_workflow.getNode(successorId);
-                        assert successor != null;
-                        if (successor.isResetable()) {  // TODO could be filter / continue?
-                            // first reset successors of successor
-                            if (successor instanceof SingleNodeContainer) {
-                                // for a normal node, ports don't matter
-                                this.resetSuccessors(successorId, -1, propagateOutside, resetMetanodesFully);
-                                // ..then reset immediate successor itself if it was not implicitly
-                                // reset by the successor reset (via an outer loop)
-                                if (successor.isResetable()) {
-                                    invokeResetOnSingleNodeContainer((SingleNodeContainer)successor);
-                                }
-                            } else {
-                                assert successor instanceof WorkflowManager;
-                                var metanodeSuccessor = (WorkflowManager)successor;
-                                if (resetMetanodesFully) {
-                                    resetSuccessors(successorId, -1, propagateOutside, resetMetanodesFully);
-                                    if (metanodeSuccessor.isResetable()) {  // TODO style
-                                        resetAndConfigureAffectedLoopContext(this.getID());
-                                        metanodeSuccessor.resetAndConfigureAll(); // NOTE is just override for resetAndConfigureAllInWFM
-                                    }
-                                } else {
-                                    // first reset all nodes which are connected to the out-ports of interest of this wfm
-                                    Set<Integer> outPorts = metanodeSuccessor.m_workflow.connectedOutPorts(outgoingConnection.getDestPort());
-                                    for (Integer i : outPorts) {
-                                        resetSuccessors(successorId, i, propagateOutside, resetMetanodesFully);
-                                    }
-                                    // (cleaning of  loop context affected one level down will be done in there.)
-                                    metanodeSuccessor.resetNodesInWFMConnectedToInPorts(Collections.singleton(outgoingConnection.getDestPort()));
-                                }
-                            }
-                        }
-                    } else if (propagateOutside) {
-                        assert this.getID().equals(successorId);
-                        // connection goes to a meta outport!
-                        // Only reset nodes which are connected to the currently
-                        // interesting port.
-                        int outGoingPortID = outgoingConnection.getDestPort();
-                        // clean loop context affected one level up
-                        getParent().resetAndConfigureAffectedLoopContext(this.getID(),
-                            Collections.singleton(outGoingPortID));
-                        getParent().resetSuccessors(this.getID(), outGoingPortID, propagateOutside);
-                    } else {
-                        // don't propagate reset downstream of this workflow/metanode
+            assert !this.getID().equals(node);
+            m_workflow.getConnectionsBySource(node).stream().filter(outgoingConnection -> {
+                // only reset successors if they are connected to the
+                // correct port, or we don't care about ports (id==-1)
+                return (outgoingConnection.getSourcePort() == port) || (port < 0);
+            }).forEach(outgoingConnection -> {
+                if (outgoingConnection.getType().isLeavingWorkflow()) {
+                    if (propagateOutside) {
+                        resetSuccessorsOfConnectionLeavingWorkflow(outgoingConnection, propagateOutside);
                     }
+                } else {
+                    resetSuccessorsOfConnectionWithinWorkflow(outgoingConnection, propagateOutside,
+                        resetMetanodesFully);
                 }
-            }
+            });
             lock.queueCheckForNodeStateChangeNotification(true);
+        }
+    }
+
+    private void resetSuccessorsOfConnectionLeavingWorkflow(ConnectionContainer connectionLeavingWorkflow,
+        boolean propagateOutside) {
+        // connection points to a metanode output port
+        assert connectionLeavingWorkflow.getType().isLeavingWorkflow();
+        assert this.getID().equals(connectionLeavingWorkflow.getDest());
+        // Only reset nodes which are connected to the currently interesting port.
+        int outPort = connectionLeavingWorkflow.getDestPort();
+        // clean loop context affected one level up
+        getParent().resetAndConfigureAffectedLoopContext(this.getID(), Collections.singleton(outPort));
+        getParent().resetSuccessors(this.getID(), outPort, propagateOutside);
+    }
+
+    private void resetSuccessorsOfConnectionWithinWorkflow(ConnectionContainer connection, boolean propagateOutside,
+        boolean resetMetanodesFully) {
+        NodeID successorId = connection.getDest();
+        assert m_workflow.getNode(successorId) != null;
+        NodeContainer successor = m_workflow.getNode(successorId);
+        assert successor != null;
+        if (!successor.isResetable()) {
+            // the node might already have been reset via a different path
+            return;
+        }
+        if (successor instanceof SingleNodeContainer) {
+            resetSuccessors(successorId, -1, propagateOutside, resetMetanodesFully);
+            if (successor.isResetable()) {
+                invokeResetOnSingleNodeContainer((SingleNodeContainer)successor);
+            }
+        } else { // assume metanode otherwise
+            assert successor instanceof WorkflowManager;
+            var metanodeSuccessor = (WorkflowManager)successor;
+            if (resetMetanodesFully) {
+                resetSuccessors(successorId, -1, propagateOutside, true);
+                if (metanodeSuccessor.isResetable()) {
+                    resetAndConfigureAffectedLoopContext(this.getID());
+                    metanodeSuccessor.resetAndConfigureAll();
+                }
+            } else {
+                Set<Integer> outPorts = metanodeSuccessor.m_workflow.connectedOutPorts(connection.getDestPort());
+                for (Integer i : outPorts) {
+                    resetSuccessors(successorId, i, propagateOutside, false);
+                }
+                // (cleaning of loop context affected one level down will be done in there.)
+                metanodeSuccessor.resetNodesInWFMConnectedToInPorts(Collections.singleton(connection.getDestPort()));
+            }
         }
     }
 

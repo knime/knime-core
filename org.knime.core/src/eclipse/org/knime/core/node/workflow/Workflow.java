@@ -520,70 +520,66 @@ class Workflow {
     private void expandListBreadthFirst(
             final LinkedHashMap<NodeID, Set<Integer>> bfsSortedNodes,
         final Set<NodeID> inclusionList, final boolean handleMetanodeAsSingleNode) {
-        // don't add parent to list throughout search to avoid infinite loops (i.e., starting with incoming connections
-        // again but if encountered, remember to node&ports at the end of the search:
-        Set<Integer> parentOutgoingPorts = new HashSet<Integer>();
+        // don't add parent to list throughout search to avoid infinite loops
+        Set<Integer> parentOutgoingPorts = new HashSet<>();
         // keep adding nodes until we can't find new ones anymore
         for (int i = 0; i < bfsSortedNodes.size(); i++) {
-            // Not a very nice way to iterate over the keys of a map...
-            //   (but since we constantly add to it in this loop?!)
             Object[] ani = bfsSortedNodes.keySet().toArray();
-            NodeID currNode = (NodeID)(ani[i]);
-            Set<Integer> currInPorts = bfsSortedNodes.get(currNode);
-            Set<Integer> currOutPorts = new HashSet<Integer>();
-            NodeContainer currNC = getNode(currNode);
+            NodeID node = (NodeID)(ani[i]);
+            Set<Integer> inPorts = bfsSortedNodes.get(node);
+            // Output ports to traverse to reach successors. If empty, consider all output ports.
+            Set<Integer> outPortsToTraverse = new HashSet<Integer>();
+            // Determine output ports to traverse for the case of metanodes.
+            NodeContainer currNC = getNode(node);
             if (!handleMetanodeAsSingleNode && (currNC != null) && (currNC instanceof WorkflowManager)) {
-                for (int in : currInPorts) {
-                     Set<Integer> outs = ((WorkflowManager)currNC).getWorkflow().connectedOutPorts(in);
-                     currOutPorts.addAll(outs);
+                for (int in : inPorts) {
+                     Set<Integer> connectedMetanodeOutports = ((WorkflowManager)currNC).getWorkflow().connectedOutPorts(in);
+                     outPortsToTraverse.addAll(connectedMetanodeOutports);
                 }
             }
             // look at all successors of this node
-            for (ConnectionContainer cc : m_connectionsBySource.get(currNode)) {
-                if (currOutPorts.isEmpty() || currOutPorts.contains(cc.getSourcePort())) {
-                    NodeID succNode = cc.getDest();
-                    if (this.getID().equals(succNode)) {
-                        parentOutgoingPorts.add(cc.getDestPort());
-                    } else {
-                        // don't check nodes which are already in the list...
-                        if (!bfsSortedNodes.containsKey(succNode)) {
-                            // and make sure all predecessors which are part of the
-                            // inclusion list of this successor are already
-                            // in the list
-                            boolean allContained = true;
-                            Set<Integer> incomingPorts = new HashSet<Integer>();
-                            for (ConnectionContainer cc2
-                                           : m_connectionsByDest.get(succNode)) {
-                                NodeID pred = cc2.getSource();
-                                if (!pred.equals(getID())) {
-                                    // its not a WFMIN connection...
-                                    if (!bfsSortedNodes.containsKey(pred)) {
-                                        // ...and its not already in the list...
-                                        if (inclusionList.contains(pred)) {
-                                            // ...but if it is in the inclusion list
-                                            // then do not (yet!) include it!
-                                            allContained = false;
-                                        }
-                                    } else {
-                                        // not WFMIN but source is in our list:
-                                        // needs to be remembered as "incoming"
-                                        // port within this BF search.
-                                        incomingPorts.add(cc2.getDestPort());
+            m_connectionsBySource.get(node).stream().filter(connection -> {
+                // If the collection is empty, consider all outgoing connections, else only those adjacent to the
+                // specified output ports.
+                return outPortsToTraverse.isEmpty() || outPortsToTraverse.contains(connection.getSourcePort());
+            }).forEach(connection -> {
+                NodeID successor = connection.getDest();
+                if (this.getID().equals(successor)) {
+                    parentOutgoingPorts.add(connection.getDestPort());
+                } else {
+                    // don't check nodes which are already in the list...
+                    if (!bfsSortedNodes.containsKey(successor)) {
+                        // and make sure all predecessors that are part of the inclusion list of this successor are
+                        // already in the list
+                        boolean allContained = true;
+                        Set<Integer> incomingPorts = new HashSet<Integer>();
+                        for (ConnectionContainer connectionToSuccessor : m_connectionsByDest.get(successor)) {
+                            NodeID predecessor = connectionToSuccessor.getSource();
+                            if (!predecessor.equals(getID())) {
+                                // its not a WFMIN connection...
+                                if (!bfsSortedNodes.containsKey(predecessor)) {
+                                    // ...and its not already in the list...
+                                    if (inclusionList.contains(predecessor)) {
+                                        // ...but if it is in the inclusion list then do not (yet!) include it!
+                                        allContained = false;
                                     }
+                                } else {
+                                    // not WFMIN but source is in our list: needs to be remembered as "incoming" port
+                                    // within this BF search.
+                                    incomingPorts.add(connectionToSuccessor.getDestPort());
                                 }
                             }
-                            if (allContained) {
-                                // if all predecessors are already in the BFS list
-                                // (or not to be considered): add it!
-                                bfsSortedNodes.put(succNode, incomingPorts);
-                            }
+                        }
+                        if (allContained) {
+                            // if all predecessors are already in the BFS list (or not to be considered): add it!
+                            bfsSortedNodes.put(successor, incomingPorts);
                         }
                     }
                 }
-            }
+            });
         }
-        // and finally add parents if any connections were found:
-        if (parentOutgoingPorts.size() > 0) {
+        // add parents if any connections were found
+        if (!parentOutgoingPorts.isEmpty()) {
             bfsSortedNodes.put(this.getID(), parentOutgoingPorts);
         }
     }
