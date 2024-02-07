@@ -5467,6 +5467,10 @@ public final class WorkflowManager extends NodeContainer
         resetAndConfigureNodeAndSuccessors(id, true);
     }
 
+    /**
+     * @see WorkflowManager#resetAndConfigureNodeAndSuccessors(NodeID, boolean, boolean)
+     * @since 5.3
+     */
     public void resetAndConfigureNode(final NodeID id, final boolean fullyResetSuccessorMetanodes) {
         resetAndConfigureNodeAndSuccessors(id, true, fullyResetSuccessorMetanodes);
     }
